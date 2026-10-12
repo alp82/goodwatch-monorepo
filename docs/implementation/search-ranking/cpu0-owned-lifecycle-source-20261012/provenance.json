@@ -1,0 +1,21 @@
+{
+  "schema": "cpu0-owned-lifecycle-source-review.v1",
+  "sourceCommit": "58d368c360cfe6ac72955f26b95bae085abdf6c4",
+  "sourceFreezeSha256": "00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108",
+  "sourceFreezeFile": "goodwatch-qdrant/diagnostics/pinning-prototype/cpu0-source-freeze.json",
+  "reviewArtifacts": {
+    "opus-original-block.txt": "b59f90bdf63ed6876377ca5324dcb763383d4c04d80f33cbc55a1170543ca986",
+    "opus-amendment-pass.txt": "e5eec9a50cb2cc8885bed4213aae800c232689006cd8bc2b4a6a0e86f8b75bb3",
+    "root-review.json": "95bd03924eda1f8d6760f562b2d54a34b69861966cc560b25fc11e2a950e3b64"
+  },
+  "configuredModel": "claude-opus-5-5",
+  "configuredEffort": "medium",
+  "observedModels": [
+    "claude-opus-5-5"
+  ],
+  "toolsDisabled": true,
+  "sourcePreparedOnly": true,
+  "hostOperations": 0,
+  "benchmarkPacketReady": false,
+  "productionAcceptance": false
+}

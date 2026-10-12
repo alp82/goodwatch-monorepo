@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock,patch
+from unittest.mock import Mock,MagicMock,patch
 import controller_cpu0 as control
 import daemon_cpu0 as daemon
 from test_daemon import accounting,pin_state
@@ -49,18 +49,74 @@ class CallerTests(unittest.TestCase):
                 return value
             events=[]
             with ExitStack() as stack:
-                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'cold'),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
+                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.os,'set_inheritable'),patch.object(control,'load_lifecycle',return_value=MagicMock()),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'birth_admission',return_value={}),patch.object(control,'cold',return_value={'birthAdmission':{},'cleanStop':{'schema':'clone-child-term.clean.v1','clean':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
                 for context in contexts:stack.enter_context(context)
                 with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):
                     control.stage({'queryLeaseSeconds':60,'controlReadySeconds':1200,'cachePreparation':{'helperSha256':'a'*64}},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
             failure=next(e for e in events if e['stage']=='phase-failed')
             self.assertEqual(failure['resourceLimitEvidence']['scope'],target)
+            self.assertEqual(failure['lifecycleCompletedStopReceipt'],{'schema':'clone-child-term.clean.v1','clean':True})
             self.assertEqual(failure['reason'],'phase_resource_failed')
             self.assertEqual(failure['cpuHierarchyBefore'],{'observed':True})
             self.assertIsNone(failure['cpuHierarchyAfter'])
             self.assertEqual(failure['cpuHierarchySnapshotFailure'],'cpu_metric_missing')
             self.assertEqual(events[-1]['cleanupReason'],'pin_child_cleanup')
             self.assertFalse(any(e['stage']=='query-finished' for e in events))
+
+    def test_initial_admission_refusal_precedes_archive_or_signal(self):
+        for reason in ('host_cpu_busy','cpu_metric_missing','clone_not_ready'):
+            lifecycle=MagicMock();events=[]
+            with ExitStack() as stack:
+                for item in (patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'set_inheritable'),patch.object(control.os,'close'),patch.object(control.fcntl,'flock'),patch.object(control,'load_lifecycle',return_value=lifecycle),patch.object(control,'birth_admission',side_effect=RuntimeError(reason))):stack.enter_context(item)
+                archive=stack.enter_context(patch.object(control,'verify_archive'));cold=stack.enter_context(patch.object(control,'cold'))
+                with self.assertRaisesRegex(RuntimeError,reason):control.stage({},object(),object(),'baseline',events.append,handoff_sha='a'*64)
+                archive.assert_not_called();cold.assert_not_called();lifecycle.graceful_stop.assert_not_called();lifecycle.commit_handoff.assert_not_called()
+                lifecycle.read_handoff.assert_called_once_with(control.runtime.docker,'a'*64)
+
+    def test_preflight_locked_predecessor_admission_commit(self):
+        import hashlib,cpu0_preflight,cpu0_guards
+        config={'schema':'clone-pin-control.cpu0-owned.v1','helperCodeSha256':'c'*64,'helperPolicySha256':'b'*64,'cpuIsolation':{}}
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'control.json';raw=json.dumps(config).encode();path.write_bytes(raw)
+            for failed in (False,True):
+                life=MagicMock();history=[]
+                life.read_handoff.side_effect=lambda *a:history.append('predecessor')
+                life.commit_handoff.side_effect=lambda *a:history.append('commit') or {'sha256':'d'*64}
+                def admit(*a):
+                    history.append('admission')
+                    if failed:raise RuntimeError('host_cpu_busy')
+                    return {'sourceIdentity':['fixed']}
+                with ExitStack() as stack:
+                    for item in (patch.object(cpu0_guards,'validate_policy'),patch.object(daemon,'load_config',return_value=({},object(),object())),patch.object(cpu0_preflight.os,'open',return_value=12),patch.object(cpu0_preflight.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(cpu0_preflight.os,'close'),patch.object(cpu0_preflight.os,'set_inheritable'),patch.object(cpu0_preflight.fcntl,'flock'),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'birth_admission',side_effect=admit)):stack.enter_context(item)
+                    args=(str(path),'b'*64,'c'*64,str(path),hashlib.sha256(raw).hexdigest(),'a'*64)
+                    if failed:
+                        with self.assertRaisesRegex(RuntimeError,'host_cpu_busy'):cpu0_preflight.preflight(*args)
+                        self.assertEqual(history,['predecessor','admission']);life.commit_handoff.assert_not_called()
+                    else:
+                        result=cpu0_preflight.preflight(*args);self.assertEqual(history,['predecessor','admission','commit']);self.assertEqual(result['handoffWrites'],1)
+                        life.commit_handoff.assert_called_once_with(control.runtime.docker,'a'*64,'preflight')
+                life.require_lock.assert_called_once_with(12)
+
+    def test_post_stop_refusal_preserves_successful_receipt_and_birth_binding(self):
+        life=MagicMock();receipt={'schema':'clone-child-term.clean.v1','clean':True};life.graceful_stop.return_value=receipt
+        target={'qdrant':{'pid':123,'startTicks':1}}
+        with patch.object(control.cpu0_guards,'host_cpu'),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'inspect_stopped_or_running',side_effect=[{},RuntimeError('cold_inode_changed')]),patch.object(control,'clone_command')as start:
+            with self.assertRaisesRegex(RuntimeError,'cold_inode_changed')as failure:control.cold(SimpleNamespace(container='fixed'),{},object(),12,{'target':target})
+            self.assertIs(failure.exception.lifecycleCompletedStopReceipt,receipt);self.assertEqual(life.graceful_stop.call_args.kwargs['expected'],target);start.assert_not_called()
+
+    def test_zero_child_scope_exit_failure_reaps_constructed_child(self):
+        from contextlib import contextmanager
+        import turnover_gate_cpu0 as gate
+        @contextmanager
+        def scope(*args):
+            yield
+            raise RuntimeError('lifecycle_lock_unproven')
+        life=MagicMock();life.helper_fork_scope.side_effect=scope
+        source=SimpleNamespace(cgroup_relative='/clone');child=Mock();child.gone.return_value={'childGone':True,'exitCode':0};events=[]
+        with ExitStack()as stack:
+            for item in (patch.object(control,'owned_store_files'),patch.object(control,'owned_total_budget'),patch.object(control,'host_available'),patch.object(control.cpu0_guards,'host_cpu'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'inspect_stopped_or_running',return_value={'State':{'Running':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'birth_admission',return_value={'target':{}}),patch.object(control,'frozen_helper'),patch.object(control.runtime,'accounting',return_value={}),patch.object(gate,'ZeroChild',return_value=child)):stack.enter_context(item)
+            with self.assertRaisesRegex(RuntimeError,'lifecycle_lock_unproven'):gate.stage({},SimpleNamespace(store=None),SimpleNamespace(emergency_bytes=1,reserve_bytes=1,cap_reserve_bytes=1),events.append,12,'a'*64)
+        child.gone.assert_called_once();self.assertTrue(any(e['stage']=='cleanup-observed' and e['childGone'] for e in events));life.graceful_stop.assert_not_called()
 
 class RetentionTests(unittest.TestCase):
     def test_pressure_finalization_preserves_original_and_separate_failure(self):
@@ -79,7 +135,7 @@ class RetentionTests(unittest.TestCase):
         error.hostCpuEvidence={'onlineCpus':4,'load1':3,'load5':0,'cpuSomeAvg10':0}
         output=io.StringIO()
         with patch.object(cpu0_preflight,'preflight',side_effect=error),contextlib.redirect_stdout(output):
-            self.assertEqual(cpu0_preflight.main(['a']*5),1)
+            self.assertEqual(cpu0_preflight.main(['a']*6),1)
         event=json.loads(output.getvalue())
         self.assertEqual(event['hostCpuEvidence']['load1'],3)
         self.assertNotIn('private',output.getvalue())
@@ -96,7 +152,7 @@ class BindingTests(unittest.TestCase):
         source=Path(control.__file__).parent
         with tempfile.TemporaryDirectory() as directory:
             folder=Path(directory)
-            for name in ('pin_cpu0.py','runtime_cpu0.py','daemon_cpu0.py','controller_cpu0.py','cpu0_guards.py','cpu0_preflight.py','turnover_gate_cpu0.py'):
+            for name in ('pin_cpu0.py','runtime_cpu0.py','daemon_cpu0.py','controller_cpu0.py','cpu0_guards.py','cpu0_preflight.py','turnover_gate_cpu0.py','lifecycle_cpu0.py'):
                 (folder/name).write_bytes((source/name).read_bytes())
             script=folder/'probe.py'
             script.write_text("import sys\nsys.path.insert(0,"+repr(str(folder))+")\nimport pin_cpu0 as pin, runtime_cpu0 as runtime, daemon_cpu0, controller_cpu0, cpu0_preflight, turnover_gate_cpu0\nassert runtime.Kernel is pin.Kernel\nassert runtime.Mapping is pin.Mapping\nassert runtime.Target is pin.Target\nassert runtime.selection_digest is pin.selection_digest\nassert 'pin' not in sys.modules\n")
