@@ -1,7 +1,7 @@
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
 import { assetUrl } from "~/utils/asset-url"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import {
 	type CSSProperties,
 	type ComponentProps,
@@ -11,6 +11,7 @@ import {
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
@@ -132,25 +133,18 @@ function Screen({ view }: { view: TvView }) {
 	}
 }
 
+// The wordmark on a black screen: the G scales in and "oodWatch" comes out of it to the right (living-room.css).
+// With reduced motion the finished wordmark fades in once.
 export function Boot() {
+	const reduceMotion = useReducedMotion()
 	return (
-		<div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
-			<motion.img
-				src={assetUrl(gwLogo)}
-				alt=""
-				className="h-16"
-				initial={{ scale: 0.7, opacity: 0 }}
-				animate={{ scale: 1, opacity: 1 }}
-				transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+		<div className="absolute inset-0 flex items-center justify-center bg-black">
+			<GoodWatchWordmark
+				gHeight={56}
+				className={reduceMotion ? "lr-boot-still" : "lr-boot"}
+				gClassName="lr-boot-g"
+				textClassName="lr-boot-letters"
 			/>
-			<motion.div
-				className="mt-5 text-[26px] font-bold tracking-[0.35em] text-white/90"
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ delay: 0.6, duration: 0.5 }}
-			>
-				GOODWATCH
-			</motion.div>
 		</div>
 	)
 }

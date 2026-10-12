@@ -15,7 +15,7 @@ import {
 	useRef,
 	useState,
 } from "react"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import type { Score as RatingScore } from "~/server/scores.server"
 import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
 import {
@@ -445,10 +445,7 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 				</div>
 
 				<div className="lr-caption pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
-					<img src={assetUrl(gwLogo)} alt="" className="h-6" />
-					<span className="text-[15px] font-bold uppercase tracking-[0.28em] text-white/90">
-						GoodWatch
-					</span>
+					<GoodWatchWordmark gHeight={24} />
 					<span className="text-[15px] text-white/70">Pull up a seat.</span>
 				</div>
 

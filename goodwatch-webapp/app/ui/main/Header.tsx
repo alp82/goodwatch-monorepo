@@ -1,4 +1,3 @@
-import { assetUrl } from "~/utils/asset-url"
 import {
 	Menu,
 	MenuButton,
@@ -13,7 +12,7 @@ import { useLocation } from "@remix-run/react"
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import logoCircle from "~/img/goodwatch-logo-circle.svg"
-import logo from "~/img/goodwatch-logo-white.svg"
+import { GoodWatchG, GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import Search from "~/ui/Search"
 import { SignInButton } from "~/ui/auth/SignInButton"
 import { LazyUserMenu as UserMenu } from "~/ui/main/LazyUserMenu"
@@ -207,18 +206,14 @@ export default function Header() {
 							</Menu>
 						</div>
 						{/* Logo and desktop links */}
-						<div className="flex items-baseline px-2 lg:px-0">
-							<div className="shrink-0">
-								<Link to="/" prefetch="render">
-									<img className="h-7 w-auto" src={assetUrl(logo)} alt="GoodWatch Logo" />
-								</Link>
-							</div>
-							<Link to="/" prefetch="render">
-								<div className="brand-header hidden md:block ml-0.5 text-4xl text-gray-100">
-									<span className="hidden">G</span>oodWatch
-								</div>
-							</Link>
-						</div>
+						<Link to="/" prefetch="render" aria-label="GoodWatch home" className="flex shrink-0 items-center px-2 lg:px-0">
+							<span className="md:hidden">
+								<GoodWatchG height={28} />
+							</span>
+							<span className="hidden md:flex">
+								<GoodWatchWordmark fontSize={36} />
+							</span>
+						</Link>
 						{/* Main nav */}
 						<div className="hidden lg:ml-6 lg:block">
 							<div className="flex space-x-4">

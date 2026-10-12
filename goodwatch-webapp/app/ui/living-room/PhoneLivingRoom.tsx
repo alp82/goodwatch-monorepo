@@ -23,7 +23,7 @@ import {
 	useRef,
 	useState,
 } from "react"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Icon, Remote, type RemoteProps } from "./Remote"
 import type { TvView } from "./TvScreens"
@@ -291,10 +291,10 @@ export function PhoneLivingRoom({
 							)}
 							<a
 								href="/"
-								className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/55 py-1.5 pl-2 pr-3 text-[12px] font-semibold text-white/85 ring-1 ring-white/10"
+								aria-label="GoodWatch home"
+								className="absolute left-3 top-3 flex items-center rounded-full bg-black/55 py-1.5 pl-2.5 pr-3 ring-1 ring-white/10"
 							>
-								<img src={assetUrl(gwLogo)} alt="" className="h-4" />
-								GoodWatch
+								<GoodWatchWordmark fontSize={16} />
 							</a>
 						</>
 					)}

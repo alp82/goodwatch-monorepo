@@ -4,6 +4,7 @@
 import { ChevronDownIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useNavigation } from "./NavigationContext"
 import { HeaderSearchBar, Omnibox } from "./Search"
@@ -40,15 +41,10 @@ function BrowseButton() {
 	)
 }
 
-function Wordmark({ className }: { className: string }) {
+function Wordmark({ fontSize }: { fontSize: number }) {
 	return (
-		<Link
-			to="/"
-			prefetch="intent"
-			aria-label="GoodWatch home"
-			className={`brand-header shrink-0 leading-none text-gray-100 ${className}`}
-		>
-			Good<span className="text-amber-400">Watch</span>
+		<Link to="/" prefetch="intent" aria-label="GoodWatch home" className="flex shrink-0">
+			<GoodWatchWordmark fontSize={fontSize} />
 		</Link>
 	)
 }
@@ -58,14 +54,14 @@ export function SiteHeader() {
 		<div className="fixed top-0 z-[1000] w-full text-gray-100">
 			<GlobalLoading />
 			<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950/90 px-3.5 backdrop-blur-md lg:hidden">
-				<Wordmark className="text-[20px]" />
+				<Wordmark fontSize={20} />
 				<HeaderSearchBar />
 				<AccountSlot compact />
 			</div>
 			<header className="hidden border-b border-white/[0.09] bg-gray-950/90 backdrop-blur-md lg:block">
 				<div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-[18px] px-8">
 					<div className="flex items-center gap-[18px]">
-						<Wordmark className="text-[30px]" />
+						<Wordmark fontSize={30} />
 						<BrowseButton />
 					</div>
 					<Omnibox />

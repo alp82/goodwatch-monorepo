@@ -1,5 +1,6 @@
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { WORDMARK_VERSION } from "~/ui/brand/version"
 import { OG_IMAGE } from "~/ui/og-image/format"
 import { personPath } from "~/utils/helpers"
 
@@ -19,7 +20,7 @@ export type PageItem = MovieDetails | TVDetails
 export const ogImageUrl = (pageUrl: string) => {
 	const { pathname } = new URL(pageUrl, "https://goodwatch.app")
 	const path = pathname.replace(/\/+$/, "")
-	return `https://goodwatch.app/og${path || "/index"}${OG_IMAGE.extension}`
+	return `https://goodwatch.app/og${path || "/index"}${OG_IMAGE.extension}?brand=${WORDMARK_VERSION}`
 }
 
 /**
@@ -27,7 +28,10 @@ export const ogImageUrl = (pageUrl: string) => {
  * Every other query parameter is a view of the same page and stays out of the canonical address.
  */
 export const pagedUrl = (url: string, search: string) => {
-	const page = Number.parseInt(new URLSearchParams(search).get("page") || "", 10)
+	const page = Number.parseInt(
+		new URLSearchParams(search).get("page") || "",
+		10,
+	)
 	return page > 1 ? `${url}?page=${page}` : url
 }
 

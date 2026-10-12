@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. "Bento": a square grid of rounded tiles. #1 gets the big backdrop tile,
 // the title and the brand get tiles of their own, empty ranks turn into stat tiles on export.
 import type { CSSProperties, ReactNode } from "react"
-import { alpha, col, fit, flex, kind, logo, Placeholder } from "../kit"
+import { GoodWatchWordmark, SATORI_FONT_FAMILY } from "~/ui/brand/GoodWatchWordmark"
+import { alpha, col, fit, flex, kind, Placeholder } from "../kit"
 import { type CardProps, type Design, type ListItem, THEMES } from "../model"
 
 const S = 1080
@@ -230,17 +231,14 @@ export function BentoCard({ title, items, name, theme, editing }: CardProps) {
 				{slot(4, SMALL_W, BOTTOM_H, false)}
 				{slot(5, SMALL_W, BOTTOM_H, false)}
 				<Tile w={BRAND_W} h={BOTTOM_H} style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(255,255,255,0.14)", padding: 24, justifyContent: "space-between" }}>
-					<img src={logo("#fbbf24")} width={62} height={66} style={{ width: 62, height: 66 }} />
+					<GoodWatchWordmark fontSize={34} fontFamily={SATORI_FONT_FAMILY} />
 					<div style={col({ gap: 6 })}>
 						<div style={{ display: "flex", fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 2 }}>CURATED BY</div>
 						<div data-edit="name" style={{ display: "flex", fontSize: fit(name || "someone with taste", [[12, 26], [20, 21], [999, 17]]), fontWeight: 900, color: t.accent2, lineHeight: 1.1, wordBreak: "break-all" }}>
 							{name || "someone with taste"}
 						</div>
 					</div>
-					<div style={col({ gap: 2 })}>
-						<div style={{ display: "flex", fontSize: 28, fontWeight: 900, letterSpacing: -0.5 }}>GoodWatch</div>
-						<div style={{ display: "flex", fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>goodwatch.app</div>
-					</div>
+					<div style={{ display: "flex", fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>goodwatch.app</div>
 				</Tile>
 			</div>
 		</div>

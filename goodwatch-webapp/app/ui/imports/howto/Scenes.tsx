@@ -4,6 +4,7 @@ import {
 	StarIcon,
 } from "@heroicons/react/20/solid"
 import type { CSSProperties, ReactNode } from "react"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 
 // The four scenes of the IMDb export explainer. They are schematic drawings: a neutral browser window and
 // plain lists, not IMDb's design. All motion comes from the `gwhowto-*` classes in styles.ts, so a scene
@@ -251,8 +252,8 @@ function UploadScene() {
 				<ArrowDownTrayIcon className="size-3.5 shrink-0" />
 				<span className="truncate">Downloads</span>
 			</div>
-			<div className="h-4 shrink-0 px-1 text-xs font-semibold leading-4 text-gray-300">
-				GoodWatch
+			<div className="flex h-4 shrink-0 items-center px-1">
+				<GoodWatchWordmark fontSize={15} />
 			</div>
 			<div className="relative flex min-h-0 flex-1 items-center gap-5 rounded-md border border-dashed border-indigo-400/70 bg-indigo-500/10 px-3">
 				<div

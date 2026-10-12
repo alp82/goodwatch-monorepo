@@ -1,3 +1,5 @@
+import { WORDMARK_VERSION } from "~/ui/brand/version"
+
 // Paths of share list pages and their card images. A list lives under its owner's handle, but pages look it up by id
 // alone and redirect when the handle in the URL is wrong or differently cased. The image paths carry the content hash
 // instead of the handle, so a changed list gets new image URLs and link previews refresh.
@@ -20,15 +22,21 @@ export const shareListEditPath = (handle: string, id: string) =>
 	`/u/${handle}/lists/${id}/edit`
 /** The card at full resolution: a PNG at the design's native size, for the page and sharing. */
 export const shareCardImagePath = (list: { id: string; contentHash: string }) =>
-	`/og/lists/${list.id}/${list.contentHash}.png`
+	`/og/lists/${list.id}/${list.contentHash}.png?brand=${WORDMARK_VERSION}`
 
 /**
  * The link preview is the same card as a JPEG, 900 pixels wide because Apple Messages asks for at least 900.
  * It is at most 145 KB, with a lower quality tried when the file is larger.
  */
-export const SHARE_CARD_PREVIEW = { width: 900, quality: 82, type: "image/jpeg" } as const
-export const shareCardPreviewPath = (list: { id: string; contentHash: string }) =>
-	`/og/lists/${list.id}/${list.contentHash}.jpg`
+export const SHARE_CARD_PREVIEW = {
+	width: 900,
+	quality: 82,
+	type: "image/jpeg",
+} as const
+export const shareCardPreviewPath = (list: {
+	id: string
+	contentHash: string
+}) => `/og/lists/${list.id}/${list.contentHash}.jpg?brand=${WORDMARK_VERSION}`
 /** The preview's size for a design of the given native size. */
 export const shareCardPreviewSize = (design: { w: number; h: number }) => ({
 	width: SHARE_CARD_PREVIEW.width,

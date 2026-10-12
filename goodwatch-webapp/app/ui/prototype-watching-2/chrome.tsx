@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 // PROTOTYPE - throwaway. Two kinds of chrome for /prototype/watching-2 (#371).
 // 1. Part of the design: the site header, the phone dock and the Browse panel, drawn after ui/navigation (SiteHeader,
 //    MobileDock, Hub) and laid over the real ones, because the paths to My shows and My films are in them. Tonight's
@@ -7,6 +8,7 @@ import { ChevronDownIcon, FilmIcon, FingerPrintIcon, HomeIcon, MagnifyingGlassIc
 import { BookmarkIcon } from "@heroicons/react/24/solid"
 import { type ComponentType, type SVGProps, useEffect, useState } from "react"
 import logo from "~/img/goodwatch-logo-white.svg"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { type Store, ago, code, img, isNew, waitLine } from "~/ui/prototype-watching/model"
 import { type Choice, type Facts, type Go, type Pick, SURFACES, type Surface, VARIANTS, hm, pickLine, picksOf, surfaceOf } from "./model"
 
@@ -134,20 +136,17 @@ export function SiteChrome(nav: Nav) {
 		<>
 			<div className="fixed inset-x-0 top-0 z-[1001] text-gray-100" data-proto-header>
 				<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950 pl-3.5 pr-2.5 lg:hidden">
-					<button type="button" onClick={() => go("home")} aria-label="GoodWatch home" className="cursor-pointer">
-						<img className="h-[25px] w-auto" src={logo} alt="" />
+					<button type="button" onClick={() => go("home")} aria-label="GoodWatch home" className="flex shrink-0 cursor-pointer">
+						{name ? <img className="h-[25px] w-auto" src={assetUrl(logo)} alt="" /> : <GoodWatchWordmark fontSize={24} />}
 					</button>
-					<span className="brand-header truncate text-[19px]">{name ?? "GoodWatch"}</span>
+					{name && <span className="brand-header truncate text-[19px]">{name}</span>}
 					<span className="grow" />
 					<Avatar />
 				</div>
 				<header className="hidden border-b border-white/[0.09] bg-gray-950 lg:block">
 					<div className="mx-auto flex h-16 max-w-7xl items-center gap-[18px] px-8">
-						<button type="button" onClick={() => go("home")} className="flex shrink-0 cursor-pointer items-baseline" aria-label="GoodWatch home">
-							<img className="h-7 w-auto" src={logo} alt="" />
-							<span aria-hidden className="brand-header ml-0.5 text-4xl text-gray-100">
-								oodWatch
-							</span>
+						<button type="button" onClick={() => go("home")} className="flex shrink-0 cursor-pointer" aria-label="GoodWatch home">
+							<GoodWatchWordmark fontSize={36} />
 						</button>
 						<button
 							type="button"
@@ -187,7 +186,7 @@ export function SiteChrome(nav: Nav) {
 					aria-expanded={hub}
 					className={`-mt-[26px] flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] ${hub ? "shadow-[0_0_0_2px_#fbbf24,0_0_0_6px_rgba(3,7,18,0.94)]" : "shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_0_0_6px_rgba(3,7,18,0.94),0_12px_30px_-6px_rgba(0,0,0,0.9)]"}`}
 				>
-					<img src={logo} alt="" className="h-6 w-6" />
+					<img src={assetUrl(logo)} alt="" className="h-6 w-6" />
 					<small className="max-w-[58px] truncate text-[9px] font-bold text-amber-400">{name ?? "Browse"}</small>
 				</button>
 				<span className="flex h-11 w-11 items-center justify-center justify-self-end rounded-full bg-white/[0.07] ring-1 ring-white/10" aria-hidden>

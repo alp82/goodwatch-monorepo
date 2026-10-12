@@ -57,8 +57,8 @@ test("versioned key, binary header, expiry, store hit fills memory", async () =>
 	const first = await createOgStore(deps).getOgImage(path)
 	assert.equal(first.status, "ok")
 	if (first.status === "ok") assert.equal(first.source, "rendered")
-	assert.equal(CACHE_PREFIX + path, "og-card:v1:/movie/603")
-	assert.equal(f.writes[0].key, "og-card:v1:/movie/603")
+	assert.equal(CACHE_PREFIX + path, "og-card:v2:/movie/603")
+	assert.equal(f.writes[0].key, "og-card:v2:/movie/603")
 	assert.equal(f.writes.length, 1)
 	assert.equal(f.writes[0].seconds, 1800)
 	assert.deepEqual(f.expires, [])
@@ -233,10 +233,10 @@ test("memory keeps a card once and only touches versioned keys", async () => {
 	assert.deepEqual(second, { ...first, source: "memory", kept: true })
 	await store.getOgImage(path)
 	assert.deepEqual(f.expires, [
-		{ key: "og-card:v1:/movie/603", seconds: 604800 },
+		{ key: "og-card:v2:/movie/603", seconds: 604800 },
 	])
 	assert.equal(f.writes.length, 1)
-	assert.ok(f.keys.every((key) => key.startsWith("og-card:v1:")))
+	assert.ok(f.keys.every((key) => key.startsWith("og-card:v2:")))
 })
 
 test("keeping an evicted card writes the same bytes with the long lifetime", async () => {
@@ -383,9 +383,9 @@ test("share list images keep their own key and lifetime", async () => {
 		new URL("../share-card/images.server.ts", import.meta.url),
 		"utf8",
 	)
-	assert.match(source, /const CACHE_PREFIX = "share-card:v2:"/)
+	assert.match(source, /const CACHE_PREFIX = "share-card:v3:"/)
 	assert.match(source, /const STORE_SECONDS = 30 \* 24 \* 60 \* 60\n/)
 	assert.match(source, /setex\(key, STORE_SECONDS, png\)/)
 	assert.doesNotMatch(source, /FIRST_SECONDS|og-card/)
-	assert.ok(!"share-card:v2:".startsWith(CACHE_PREFIX))
+	assert.ok(!"share-card:v3:".startsWith(CACHE_PREFIX))
 })

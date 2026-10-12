@@ -21,8 +21,9 @@ import { getRedisCluster } from "~/utils/cache"
 
 // Bump when a design changes in a way that should redraw cached images.
 // v2: cards are signed with the owner's @handle instead of a free-text signature.
+// v3: the GoodWatch wordmark (docs/implementation/goodwatch-wordmark.md).
 // Link previews use a ":preview900" suffix so cached 720-pixel previews cannot serve the 900-pixel image tags.
-const CACHE_PREFIX = "share-card:v2:"
+const CACHE_PREFIX = "share-card:v3:"
 const STORE_SECONDS = 30 * 24 * 60 * 60
 const MEMORY_CACHE_MAX_BYTES = 128 * 1024 * 1024
 const WARM_DEBOUNCE_MS = 3000

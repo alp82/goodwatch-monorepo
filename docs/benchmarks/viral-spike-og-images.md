@@ -129,7 +129,7 @@ Share list cards are the exception, because one takes about 20 seconds: a list's
 
 ## Storage
 
-- **Store:** Valkey, key `og-card:v1:<canonical path>`, for example `og-card:v1:/movie/603`. The version covers the design, the text rules, and the image format.
+- **Store:** Valkey, key `og-card:v2:<canonical path>`, for example `og-card:v2:/movie/603`. The version covers the design, the text rules, and the image format.
 - **Lifetime:** 30 minutes for a card that was rendered for its first request, and 7 days once it's requested again (`OG_CARD_FIRST_SECONDS` and `OG_CARD_KEPT_SECONDS`). See [Cards that are requested once](#cards-that-are-requested-once). After 24 hours a card is still served and redrawn once in the background, so changed title data reaches a card within a day of its next request.
 - **In process:** 32 MB per process (about 250 cards) in front of Valkey. A repeated request for a card that is in this copy reads nothing from Valkey.
 - **Before Express:** each complete answer stays under its request path for 10 seconds, see [A hot card](#a-hot-card).

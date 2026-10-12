@@ -4,10 +4,13 @@
 // axis-aligned and every size fixed and positive.
 import type { CSSProperties, ReactNode } from "react"
 import disneyLogo from "~/img/disneyplus-logo.png?inline"
-import logoAmber from "~/img/goodwatch-logo-amber.svg?raw"
 import netflixLogo from "~/img/netflix-logo.svg?raw"
 import primeLogo from "~/img/primevideo-logo.svg?raw"
-import { BRAND_NAME, SUBTEXT_MAX_LENGTH } from "~/ui/og-image/copy"
+import {
+	GoodWatchWordmark,
+	SATORI_FONT_FAMILY,
+} from "~/ui/brand/GoodWatchWordmark"
+import { SUBTEXT_MAX_LENGTH } from "~/ui/og-image/copy"
 import {
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
@@ -22,8 +25,6 @@ export const INK = "#0a0a0a"
 
 const svgUri = (svg: string) =>
 	`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
-const LOGO_AMBER = svgUri(logoAmber)
-const LOGO_INK = svgUri(logoAmber.split(AMBER).join(INK))
 
 // Streaming provider logos, keyed by TMDB watch provider id.
 export const PROVIDER_LOGOS: Record<string, string> = {
@@ -116,29 +117,17 @@ export const Frame = ({
 	</div>
 )
 
+// `size` is the height of the wordmark's line. On a light background (`dark` asks for dark ink) the wordmark keeps
+// its colors and gets an ink plate, drawn a little smaller so that the plate is about as wide as the bare wordmark.
 export const Brand = ({
 	dark = false,
 	size = 56,
 }: { dark?: boolean; size?: number }) => (
-	<div style={row({ alignItems: "center", gap: size * 0.3 })}>
-		<img
-			alt=""
-			src={dark ? LOGO_INK : LOGO_AMBER}
-			width={size * 0.95}
-			height={size}
-		/>
-		<div
-			style={{
-				fontFamily: "Gabarito",
-				fontWeight: 900,
-				fontSize: size * 0.85,
-				color: dark ? INK : "#fff",
-				letterSpacing: -0.5,
-			}}
-		>
-			{BRAND_NAME}
-		</div>
-	</div>
+	<GoodWatchWordmark
+		fontSize={dark ? size * 0.9 : size}
+		plate={dark}
+		fontFamily={SATORI_FONT_FAMILY}
+	/>
 )
 
 // A picture that covers its box. People and posters keep the top, where faces are.

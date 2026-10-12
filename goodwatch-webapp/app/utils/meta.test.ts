@@ -76,15 +76,15 @@ test("a title without actors has no actor property", () => {
 test("a page's Open Graph image is the JPEG under /og/, with index for the home page", () => {
 	assert.equal(
 		ogImageUrl("https://goodwatch.app/"),
-		"https://goodwatch.app/og/index.jpg",
+		"https://goodwatch.app/og/index.jpg?brand=D1",
 	)
 	assert.equal(
 		ogImageUrl("https://goodwatch.app/movie/603-the-matrix"),
-		"https://goodwatch.app/og/movie/603-the-matrix.jpg",
+		"https://goodwatch.app/og/movie/603-the-matrix.jpg?brand=D1",
 	)
 	assert.equal(
 		ogImageUrl("/movies/moods/"),
-		"https://goodwatch.app/og/movies/moods.jpg",
+		"https://goodwatch.app/og/movies/moods.jpg?brand=D1",
 	)
 })
 
@@ -128,7 +128,10 @@ test("the first page of a list has the list's address, with or without a page pa
 test("a later page of a list has its page number in the address and no other parameter", () => {
 	const url = "https://goodwatch.app/movies/moods/scary"
 	assert.equal(pagedUrl(url, "?page=2"), `${url}?page=2`)
-	assert.equal(pagedUrl(url, "?utm_source=x&page=12&country=DE"), `${url}?page=12`)
+	assert.equal(
+		pagedUrl(url, "?utm_source=x&page=12&country=DE"),
+		`${url}?page=12`,
+	)
 	assert.equal(pagedUrl(url, "?page=02"), `${url}?page=2`)
 })
 
@@ -144,6 +147,6 @@ test("the canonical address and og:url of a later page name that page", () => {
 	assert.equal(tags.find((tag) => tag.property === "og:url")?.content, url)
 	assert.equal(
 		tags.find((tag) => tag.property === "og:image")?.content,
-		"https://goodwatch.app/og/movies/moods/scary.jpg",
+		"https://goodwatch.app/og/movies/moods/scary.jpg?brand=D1",
 	)
 })

@@ -3,6 +3,7 @@
 // taken from your own top attributes. Sharing is stubbed; the real one would use the share card pipeline.
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
+import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import {
 	Signature,
 	type ViewProps,
@@ -114,7 +115,7 @@ export default function Card({ data }: ViewProps) {
 									style={wide ? { fontSize: "1.9cqw" } : undefined}
 								>
 									<span className="font-semibold">{who}'s taste</span>
-									<span className="font-bold tracking-tight">GoodWatch</span>
+									<GoodWatchWordmark fontSize="1.15em" />
 								</div>
 
 								<div

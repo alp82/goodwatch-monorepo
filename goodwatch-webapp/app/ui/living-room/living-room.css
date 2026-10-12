@@ -776,3 +776,44 @@ main:has(.lr-page) + footer {
 		transition: none;
 	}
 }
+
+/* The TV's boot screen (Boot in TvScreens.tsx): the G scales in, then the letters are revealed from the G outward. */
+.lr-boot .lr-boot-g {
+	animation: lr-boot-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+.lr-boot .lr-boot-letters {
+	animation: lr-boot-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+.lr-boot-still {
+	animation: lr-boot-fade 0.3s linear both;
+}
+@keyframes lr-boot-pop {
+	from {
+		transform: scale(0.7);
+		opacity: 0;
+	}
+}
+@keyframes lr-boot-reveal {
+	from {
+		clip-path: inset(-20% 100% -20% 0);
+		transform: translateX(-0.2em);
+		opacity: 0;
+	}
+	to {
+		clip-path: inset(-20% -5% -20% 0);
+	}
+}
+@keyframes lr-boot-fade {
+	from {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.lr-boot .lr-boot-g,
+	.lr-boot .lr-boot-letters {
+		animation: none;
+	}
+	.lr-boot {
+		animation: lr-boot-fade 0.3s linear both;
+	}
+}
