@@ -86,7 +86,7 @@ class HeldLockPreparationTests(unittest.TestCase):
   with patch.object(p,'snapshot',side_effect=late):
    with self.assertRaisesRegex(RuntimeError,'quiescence_bound_exceeded'):p.quiescent_snapshot(None,None,60,clock=lambda:clock[0],sleep=lambda _:None)
   with patch.object(p,'snapshot',side_effect=RuntimeError('source_changed')),patch.object(p.time,'sleep')as sleep:
-   with self.assertRaisesRegex(RuntimeError,'source_changed'):p.quiescent_snapshot(None,None,60)
+   with self.assertRaisesRegex(RuntimeError,'source_changed'):p.quiescent_snapshot(None,None,60,sleep=sleep)
    sleep.assert_not_called()
  def test_clean_near_boundary_and_old_five_second_policy_refused(self):
   clock=[0];calls=[0]
