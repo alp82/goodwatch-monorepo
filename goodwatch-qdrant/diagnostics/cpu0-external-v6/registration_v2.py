@@ -469,7 +469,15 @@ def cleanup_context(lifecycle, controller, enrolled):
     """Derive the renewal spec from bound installed bytes, never RPC data."""
     lifecycle_sha = installed(enrolled, initial=False)
     raw, _ = read_public(STAGE/'cpu0-source-freeze.json', 262144)
+    require(sha(raw) == enrolled['sourceFreezeSha256'], 'source_freeze_changed')
     source = decoded(raw)
+    require(type(source) is dict and set(source) == {'schema', 'variant', 'preparedOnly', 'files'}
+            and source['schema'] == 'search.clone-cpu0-fixed-source-freeze.v2'
+            and source['variant'] == VARIANT and source['preparedOnly'] is True
+            and type(source['files']) is dict and set(source['files']) == SOURCE_NAMES,
+            'source_freeze_changed')
+    for digest in source['files'].values():
+        hash_value(digest)
     modules = {'lifecycle_cpu0.py': lifecycle, 'controller_cpu0.py': controller,
         'pin_cpu0.py': getattr(controller, 'pin', None),
         'runtime_cpu0.py': getattr(controller, 'runtime', None),
@@ -618,7 +626,7 @@ def cleanup_birth(lifecycle, docker, enrolled, *, scope, controller=None):
             return result
         try:
             ticks = lifecycle.birth(birth['pid'])
-        except FileNotFoundError:
+        except (FileNotFoundError, ProcessLookupError):
             ticks = None
         result['exitObserved'] = bool(select.select([fd], [], [], 0)[0])
         result['birthGone'] = lifecycle.birth_gone(birth['pid'], birth['startTicks'])
@@ -663,6 +671,8 @@ def cleanup_birth(lifecycle, docker, enrolled, *, scope, controller=None):
         return result
     except BaseException as error:
         primary = error
+        if result['sourceBranch'] == 'running-renewed':
+            result['sourceBranch'] = 'uncertain'
         # A generic fixed backend refusal cannot prove stopped/missing state.
         # Keep the observed Node facts and the current-source branch UNKNOWN.
         error.consumerCleanupEvidence = result
