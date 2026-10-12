@@ -1,0 +1,73 @@
+{
+  "schema": "goodwatch.resource-window.failed.provenance.v4",
+  "association": "#100",
+  "repositoryBase": "3761bde9606a8248fa723b0a3d224ba3a1143262",
+  "executionOwner": "root-agent",
+  "agentHostOperations": 0,
+  "sourceReaderSha256": "572ad7ca417ea4e5336b1415a4d015b7095d78f21cb0b5552f360f73914394d2",
+  "transportAndAuditorSha256": {
+    "audit_window_v2.py": "b0776b3a19b9ebdaba61cb264476289e5826bb435eefb27857322f9c0988e6bf",
+    "audit_transport_window_v2.py": "e2e37e11bae7f94bda9a3cf4931d7e887045dfd053363fee9980ad8784a19304",
+    "record_guard_diagnostic_v2.py": "b5f1c208e5dc767888aba266b922a6ad771d99ccbea484dab24ff446d3819d1f",
+    "launch_guard_diagnostic_v2.py": "0ad033d9fa47a2b457b1238e361730dd516381bd5a80ae846d34badc057589b4"
+  },
+  "transportAndAuditorRepositoryBytesMatch": true,
+  "files": {
+    "resource-window-actual-20261012-1410-v4.jsonl": {
+      "sha256": "db7b3b7f24957d52e78e8b1b71b7109a204d5534ea9b475c27f90b0b3f360172",
+      "bytes": 291854
+    },
+    "resource-window-recorder-actual-20261012-1410-v4.jsonl": {
+      "sha256": "fbf53a434ed10883847bf48e356387b5967af74c7d9b929111f4cbcd92b159d7",
+      "bytes": 154
+    },
+    "full-window-root-execution-20261012-1410-v4.json": {
+      "sha256": "9fca4e4e01da6505dd1b45c19c4d7021f77d542a89044776ec935f6f139731de",
+      "bytes": 1478
+    },
+    "FULL-WINDOW-PLAN-20261012-1410-v4.json": {
+      "sha256": "ffb3bdf818a24a49637c765d0f1da915254cd49d7202bfff45ab4404f0389d2d",
+      "bytes": 2454
+    },
+    "fresh-source-fence-20261012-1405-v4.jsonl": {
+      "sha256": "4313096edae95713807aec29791b0c50f720b0e3c4aeebdaa27a1c6d2ce08eeb",
+      "bytes": 1480
+    },
+    "fresh-schedule-fence-20261012-1405-v4.jsonl": {
+      "sha256": "0535642a2ec64915e2e1e285e5d410b722cc11d2a729b37ec786f1beaafcec10",
+      "bytes": 2177
+    },
+    "fresh-executable-fence-20261012-1405-v4.jsonl": {
+      "sha256": "a111daa67715223fc0962a4dd164fd79f1b2f568ae9d9b95eb4e0f759e970940",
+      "bytes": 971
+    },
+    "strict-combined-audit.json": {
+      "sha256": "e0160d0599fb3d553d622d8c27c388890e4f8a88f1a39c363a066b90e1a05de3",
+      "bytes": 481
+    },
+    "strict-numeric-audit.json": {
+      "sha256": "f84c8d21c8a91f5c95d5a17af5fe234f14c40ed8fa3c7250ae38b8c0ba7a5335",
+      "bytes": 394
+    },
+    "failure-summary.json": {
+      "sha256": "9f670637198245adec97ff47fa0f4bf6627493eef9bf49d95a7836692229d5cb",
+      "bytes": 1313
+    }
+  },
+  "journalPublicSchemaCheck": "fixed numeric records, fixed enums, ISO timestamps and digests; no argv, queries, credentials or private path inputs",
+  "runtimeGuardRelaxed": false,
+  "readerGoneProven": true,
+  "cleanReaderExitProven": false,
+  "prior1210WindowExecuted": false,
+  "fullWindowCoverage": "UNKNOWN",
+  "futureCeilingEstablished": false,
+  "productionAcceptance": false,
+  "localVerification": {
+    "existingOfflineFixtures": 9,
+    "result": "passed",
+    "exactArtifactAndFreshFenceHashes": "passed",
+    "frozenAuditorsExecuted": "both UNKNOWN",
+    "whitespaceCheck": "passed",
+    "requestsExecuted": 0
+  }
+}
