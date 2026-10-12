@@ -1,0 +1,79 @@
+# Review: inactive idle launcher / journal / lease integration (V1 freeze)
+
+**Verdict:** I found no path in this packet that leaves an mlocked holder alive past its bounds or signals the source. There are, however, six preparation-source blockers (evidence and lease-proof) to fix before any execution gate; none requires weakening a policy, deadline or privacy guard. This is from reading only: I ran nothing and did not verify the manifest hashes.
+
+## Blockers (preparation source)
+
+**B1. Early refusals cannot be journaled.**
+- `idle_trial._run.output` stamps `scheduleSha256: schedule_hash`, which stays `None` until `backup_lease(lease_check())` succeeds.
+- `idle_journal.sanitize` rejects a non-string `scheduleSha256`, so the `complete` frame for a code-hash, `check_source` or lease refusal raises inside `_run`'s `finally`.
+- `idle_launcher._invoke` then reports `evidence_failure` with an empty journal. The most likely real outcome (lease refused) leaves no durable reason.
+- `test_schedule_and_required_metrics_refuse_before_child` uses `rows.append`, so it cannot catch this.
+- Fix: allow `None` for `scheduleSha256` only when `phase=='complete'` and `outcome=='refused'`, and add a strict-journal refusal test.
+
+**B2. `cron_minute` skips lines it does not understand.** The `script not in tokens: continue` test is exact-token, so these are ignored rather than refused:
+- `@hourly /owned/uv run /owned/backup.py >> /log 2>&1` (six fields after split, script lands outside `fields[5]`);
+- `sh -c "/owned/uv run /owned/backup.py"` (script is inside one quoted token);
+- `/owned/backup.py;` or a relative path.
+
+A table with the reviewed line plus one of these passes as a single job. Fix: raise `idle_schedule_unknown` for any non-comment line starting with `@` or containing the script path or basename as a substring unless it matches the reviewed form. Add those three fixtures to `test_real_file_cron_parser_does_not_assume_minute15_or_accept_duplicates`.
+
+**B3. The schedule config has no schema, so the UTC proof is optional.**
+- `inspect_known` and `run_reviewed` never validate `schedule_config` keys.
+- `timezoneFiles: []` passes, and the `_filesystem` fixture uses exactly that. The timezone file branch, the `TZ=` environment refusal, the namespace mismatch and `daemon_count != 1` are all untested.
+- `Lease` derives the boundary from the UTC minute, which is wrong under a :30 or :45 offset zone.
+- Only one table is read; other tables, `/etc/cron.d` and timers are outside the proof.
+- Fix: require an exact key set, a non-empty `timezoneFiles` that includes the canonical localtime path, and `/proc/self/ns/mnt` equal to the daemon's. Document the single-table limit.
+
+**B4. Evidence is not bound to the nine-file packet or the source contract.**
+- `run_reviewed` discards the return of `verify_code`. The journal's `codeSha256` is `idle_trial.code_hash()`, which covers six files and excludes `idle_journal.py`, `idle_lease.py` and `idle_launcher.py`.
+- `config` and `spec` arrive as raw objects, not through `zero_placement.contract(path, digest)`. Nothing ties the journal to the contract hash used by the zero-placement evidence.
+- `_invoke`'s result omits `journal.last_receipt`, so truncation of the journal tail is undetectable.
+- Fix: record the packet hash and contract hash in a first journal record and in the result, and return the final sequence and record hash.
+
+**B5. `_verify_code` checks nine names, not the directory.** Every module does `sys.path.insert(0, stage)`, and spawned children import afresh. A stray `json.py` or `select.py` in the stage would shadow the standard library inside the root holder. Fix: require `set(os.listdir(root)) == set(CODE_FILES)` (plus a manifest-listed entry file) and root-owned, non-writable ancestors.
+
+**B6. Launcher failures collapse to one outcome and can leak paths.**
+- `_invoke` maps every exception to `evidence_failure`: lock contention, a missing `/run/goodwatch-qdrant-pin`, a policy mismatch.
+- `run_reviewed` raises raw `KeyError`/`FileNotFoundError` before the journal exists, for example from the `memory.swap.current` read, and these carry cgroup paths.
+- Fix: map through `idle_trial.reason` to a fixed `reason` field in the result.
+
+## Known root finding: `adviceAccepted`
+
+Confirmed in `phases_idle`: only `is False` fails. Missing, `null`, `0`, `"false"` and `1` all pass on `cache_advice` completed.
+
+- **Reach:** with `backupSha256` pinned to an emitter that writes explicit `True`, rows from the pinned script are unaffected. The gap is rows from an earlier script revision still in the 128 KiB tail, or any type drift.
+- **Impact:** it weakens what `knownSnapshotPhaseIdle` means (validity of the idle premise), not holder release; the pressure and deadline guards are independent.
+- **Judgement:** keeping V1 byte-frozen is acceptable only because execution refuses. The V2 `is not True` fix is a hard prerequisite for execution.
+- **Also needed:** `IDLE-LAUNCHER.md` says incomplete or failed phases refuse without disclosing this. Both lease fixtures omit the field entirely, so the tests currently encode the permissive behaviour. V2 needs explicit-`True` fixtures and negatives for missing, `None`, `0` and `"false"`.
+
+## Significant non-blocking risks
+
+- **Journal fsync during the hold may trip the quiet guard.** `Journal.emit` fsyncs per drained row every 2 s, while `check_pressure` treats any io `full` PSI increase as `idle_quiet_pressure`. On a truly idle host the writer's own fsync wait could make every trial `inconclusive`. I could not confirm this; the fixture PSI files are static, so the 60 s test cannot show it either way. Do not loosen the guard; decide journal placement or hold-phase batching and test against live PSI.
+- **Process churn is conflated with an active job.** Any process exiting during the census raises `idle_schedule_census_changed`, which becomes `idle_schedule_expired`, a safety reason. That means SIGKILL and `safety_abort` across roughly 100 census passes. It fails closed, but ordinary churn may dominate outcomes.
+- **Schema is not per-phase.** `sanitize` would accept a `complete` frame without `outcome` or `cleanup`, and does not compare `scheduleSha256` to an expected value.
+- **Dead check.** `zero_placement.vm_locked` raises on nonzero, so the `!= 0` test in `run_reviewed` is unreachable. `test_reviewed_wrapper_requires_explicit_zero_vmlock_return_before_journal` exercises only the patched path.
+- **Cleanup ordering.** `_invoke`'s `finally` runs `owned.release()` then `journal.close()` unguarded; a raise in the first skips the writer close. Both holders' `getppid()` checks accept a subreaper parent; pipe EOF covers it, but passing the expected parent PID is cheap.
+
+## Implemented safeguards (confirmed by reading)
+
+- **Birth before reconcile.** `_run` orders `register`, `output(birth)`, `guard.attach`, then `send('reconcile')`. `Journal._request` waits at most 1 s, poisons on doubt, and checks sequence, record hash and child identity. The writer does write, fsync and read-back on an `O_EXCL` file via a fenced directory fd.
+- **PID-fd ownership.** `OwnedBirths.register` requires a direct child with matching start ticks before and after `pidfd_open`, excludes self and source, and retains the fd before the durable ACK. `release` kills only through those fds.
+- **Kernel lifetime.** The holder has PDEATHSIG, default SIGTERM/SIGALRM and a 230 s itimer; the parent has a 400 s alarm that stays armed without exit proof. Main-thread creation is enforced, which PDEATHSIG needs.
+- **Guard.** It stays attached through cleanup with a 20 s release deadline. A journal failure maps to `idle_guard_failure`, which is urgent.
+- **Core policy.** `IdlePolicy` constants, the shared locks and the fixed timings are untouched by the launcher.
+
+## Future transport responsibilities (not source gaps)
+
+- Verify the stage before starting a fresh `-I -B` direct-file interpreter. The spawn children re-execute the entry file, so it must be manifest-bound.
+- Keep the backup path out of any process argv, or the census will match the transport itself.
+- Exit promptly after any `run_reviewed` exception, since the alarm stays armed.
+- Treat SIGHUP or SIGQUIT as kernel-only release with no `complete` record.
+- Supply the zero-placement evidence and the outer owner.
+
+## Evidence limits in the packet
+
+- Validation ran three of five test modules at euid 1000. No root path ran: `run_reviewed`, `verify_code`, the real `_supervisor_lock`, `prepare_self`.
+- Nothing tests `release()` killing a live registered holder, wrong-ticks refusal, or alarm retention.
+- `coreFilesUnchangedFromReviewedPR485` is asserted without baseline hashes.
+- `CRON_BINARY` is patched in every lease test.

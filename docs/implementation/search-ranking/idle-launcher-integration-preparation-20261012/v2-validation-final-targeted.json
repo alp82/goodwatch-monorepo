@@ -1,0 +1,20 @@
+{
+  "schema": "idle-launcher-final-targeted-validation.v1",
+  "manifestSha256": "e12b4c076c5bc8dc9433c1367e50e3d9a69b617931701b4cddd72fb853a235f0",
+  "finalFrozenTests": {
+    "tests": 28,
+    "exitCode": 0,
+    "seconds": 4.028,
+    "runner": "python -B -m unittest",
+    "excluded": "test_real_public_run_full_sequence_reaches_strict_journal_with_actual_mappings",
+    "exclusionReason": "Full composed production-timing case already passed in the 29-test integration run; final delta was only fixed public refusal-reason mapping."
+  },
+  "precedingInvocationFailure": {
+    "runner": "python -B via stdin custom unittest runner",
+    "tests": 28,
+    "errors": 11,
+    "exitCode": 1,
+    "reason": "multiprocessing spawn cannot re-execute a <stdin> entry path",
+    "sourceChangedToCorrect": false
+  }
+}

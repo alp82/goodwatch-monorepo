@@ -1,0 +1,16 @@
+{
+  "fullIntegration": {
+    "command": "python -B -m unittest test_idle_journal test_idle_lease test_idle_launcher -q",
+    "tests": 29,
+    "exitCode": 0,
+    "seconds": 64.446,
+    "qualification": "After this run began, only fixed launcher refusal-reason mapping was added. Three relevant targeted tests passed afterward; the full API/journal/policy/schedule implementation was exercised by the full run."
+  },
+  "targetedFinal": {
+    "tests": 3,
+    "exitCode": 0
+  },
+  "coreFilesEqualV1": true,
+  "hostExecution": false,
+  "privateInputsIncluded": false
+}

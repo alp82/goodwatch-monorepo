@@ -1,0 +1,6 @@
+{"event": "qdrant.idle-launcher.v1", "phase": "prepared", "execution": false, "reason": "idle_launcher_not_reviewed", "queries": 0, "storageWrites": 0}
+{"event": "qdrant.idle-launcher.v1", "phase": "refused", "execution": false, "reason": "idle_launcher_not_reviewed", "queries": 0, "storageWrites": 0}
+----------------------------------------------------------------------
+Ran 33 tests in 63.179s
+
+OK

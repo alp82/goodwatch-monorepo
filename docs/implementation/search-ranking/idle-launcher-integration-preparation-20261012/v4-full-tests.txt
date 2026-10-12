@@ -1,0 +1,18 @@
+{"event": "qdrant.idle-launcher.v1", "phase": "prepared", "execution": false, "reason": "idle_launcher_not_reviewed", "queries": 0, "storageWrites": 0}
+{"event": "qdrant.idle-launcher.v1", "phase": "refused", "execution": false, "reason": "idle_launcher_not_reviewed", "queries": 0, "storageWrites": 0}
+======================================================================
+FAIL: test_holder_cleanup_failure_still_closes_writer (test_idle_launcher.LauncherTests.test_holder_cleanup_failure_still_closes_writer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/alper/projects/search-100-evidence/idle-launcher-review-v4-20261012/test_idle_launcher.py", line 234, in test_holder_cleanup_failure_still_closes_writer
+    self.assertEqual(result['reason'],'idle_guard_failure')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'holder_exit_unproven' != 'idle_guard_failure'
+- holder_exit_unproven
++ idle_guard_failure
+
+
+----------------------------------------------------------------------
+Ran 37 tests in 65.239s
+
+FAILED (failures=1)

@@ -1,0 +1,19 @@
+{
+  "command": "python -B -m unittest test_idle_journal test_idle_lease test_idle_launcher -q",
+  "executedFromFrozenSource": true,
+  "manifestSha256": "2cc242e8b760901236b88313f415626b52b49f079f8a30e9bfb80122a0d50fe4",
+  "allHashesUnchangedAfterRun": true,
+  "tests": 22,
+  "passed": true,
+  "exitCode": 0,
+  "elapsedSeconds": 61.798,
+  "fullPublicIdleSequence": true,
+  "productionBaselineSeconds": 30,
+  "productionHoldSeconds": 30,
+  "sourceAndPlacementInterfacesFaked": true,
+  "actualMappedFilesAndHolder": true,
+  "pythonVersionRecordedAfterRun": "3.14.7 (main, Aug 10 2026, 07:46:56) [GCC 16.1.1 20260728]",
+  "euidRecordedAfterRun": 1000,
+  "kernelReleaseRecordedAfterRun": "6.1.187-2-MANJARO",
+  "hostExecution": false
+}

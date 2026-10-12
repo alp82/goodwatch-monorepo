@@ -1,0 +1,21 @@
+{
+  "schema": "idle-launcher-validation.v5",
+  "command": "python -B -m unittest test_idle_journal test_idle_lease test_idle_launcher -q",
+  "cwd": "immutable V5 packet",
+  "tests": 37,
+  "seconds": 66.613,
+  "exitCode": 0,
+  "manifestSha256": "ad3ce5eea3702fde346d6585d49857052ffee84c39f80740d42637bce90adaea",
+  "allManifestHashesUnchangedAfterRun": true,
+  "implementationFilesEqualV4": true,
+  "sixCoreFilesEqualV3": true,
+  "hostExecution": false,
+  "privateInputsIncluded": false,
+  "previousV4": {
+    "tests": 37,
+    "passed": 36,
+    "failures": 1,
+    "failure": "stale test expectation for generic cleanup reason, corrected to intended holder_exit_unproven",
+    "implementationChangedToFix": false
+  }
+}

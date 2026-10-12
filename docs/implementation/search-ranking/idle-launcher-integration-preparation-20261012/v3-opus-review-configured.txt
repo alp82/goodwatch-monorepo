@@ -1,0 +1,64 @@
+# Review: V3 inactive idle launcher integration
+
+**Verdict:** N2, N3 and N4 are closed, and N1 is closed as written but the same defect survives on three paths the V2 review did not list. The `journalCreationUnknown` fix is correct and conservative. The outside-source writer check is implemented, but nothing tests it refusing, and it only proves "not the same cgroup". That leaves three small preparation-source blockers (one source, one evidence, one doc).
+
+I ran nothing and did not recompute any hash; the frozen-bytes claim is taken from the validation note. The 33 count is consistent with the pasted sources (9 journal, 10 lease, 14 launcher).
+
+## Status of the focus items
+
+| Item | Status | Basis |
+|---|---|---|
+| N1 result reason | Partly closed | `result_reason` fixes the null `completionReason` fallback and the downgrades V2 named. Three downgrade paths still report `idle_hold_complete` or a non-explanatory reason (S1). |
+| N2 full run on frozen bytes | Closed as claimed | The validation note reports 33 tests, exit 0, bytes equal before and after. It covers three modules; `test_idle_trial` and `test_production` rest on `coreFilesEqualV2`. |
+| N3 `run_reviewed` body coverage | Closed | The new wrapper test runs the real `preflight` and `lease` closures and a real `Lease`, and asserts the binding and refused records, the disarmed timer and the restored mask. |
+| N4 doc order | Closed | Paragraph 3 now matches the code order. A different stale sentence remains (D1). |
+| `journalCreationUnknown` | Closed | See below. |
+| Outside-source writer | Implemented, unproven | See E1 and the limit below. |
+
+## Mandatory preparation-source blockers
+
+**S1. Three downgrade paths still give a reason that contradicts or hides the outcome (`result_reason`, `_invoke`).**
+- **Observer shutdown or drain failure.** `_run` returns `inconclusive` when only `observerShutdownReason` or `drainReason` is set. Neither key is in the precedence list, so the result says `reason: 'idle_hold_complete'`. `test_blocked_observer_shutdown_does_not_hide_proven_holder_release` produces exactly this frame.
+- **Launcher's own downgrades.** `_invoke` sets `release_unproven` or turns `pass` into `evidence_failure` without setting `failure`. A passed trial whose writer exits non-gracefully returns `evidence_failure` with `reason: 'idle_hold_complete'`.
+- **Unproven holder exit.** `cleanupReason` ranks below `safetyReason`, `mainReason` and `firstReason`. A `release_unproven` outcome that also has a safety reason never surfaces `holder_exit_unproven`.
+- **Fix:** add the two missing keys to the precedence, set a fixed launcher reason on both `_invoke` downgrades, and put `cleanupReason` first when it is `holder_exit_unproven`. Assert the invariant that `reason == 'idle_hold_complete'` only when `outcome == 'pass'`.
+
+**E1. The new placement line in `run_reviewed` has no refusing test.**
+- `_reviewed_fixture` mocks both `production.own_group` and `production.check_source`, so the line only ever runs against a mock that returns.
+- The `original_group == source.cgroup_relative` branch of `check_source` has no negative test anywhere in the packet.
+- **Fix:** patch `runtime.inspect_source` to return a source whose `cgroup_relative` equals the parent's group. Assert `refused`, `reason: 'supervisor_placement_changed'`, `journalCreated: False`, no journal file, and that `production.Holder` is never constructed.
+
+**D1. The V2 section of `IDLE-LAUNCHER.md` is now stale (hashed packet).**
+- It says early policy/source/schedule refusals are journaled and only "packet/contract/context" failures are unjournaled.
+- In V3 the first `check_source` runs before the writer exists. Docker failure, source not running, allocation change, oom-group change and placement refusal are now unjournaled `journalCreated: False` results.
+- The trade-off is unavoidable: the writer cannot be spawned before placement is verified. The doc needs to list these reasons as unjournaled.
+
+## `journalCreationUnknown`: correct, with two notes
+
+- **Why it is right.** `Journal.__init__` discards the result of `worker.close(emergency=True)`, so the wrapper has no writer exit proof. `release_unproven` with the alarm left armed is therefore the correct label.
+- **Reason is opaque.** `idle_journal_start_failed` is in no reason set, so a reused journal path returns `idle_guard_failure`. The new test does not assert `reason`.
+- **Result shape.** There are now three shapes: `journalCreated: False`, `journalCreationUnknown: True`, or neither key. A single tri-state field would be safer for consumers.
+
+Neither note blocks.
+
+## Outside-source writer guarantee: what is and is not established
+
+- **Implemented.** The parent's cgroup is compared with the source scope before the writer spawns, and the writer inherits that cgroup. Only holders ever write `cgroup.procs`, and `_run` rechecks the parent's placement throughout.
+- **Limit: equality only.** `check_source` refuses the same cgroup, not a descendant of the source scope. A parent in a child cgroup under the scope would pass and still be charged to the source. This is unlikely for a plain docker scope, but the comment says "verified outside-source". Add a prefix test in the launcher (no core change needed) or narrow the wording.
+- **Point in time.** The writer never verifies its own placement. I see no path that moves it.
+- **Resource tracker.** The spawn start method normally also starts a `multiprocessing` resource-tracker child. It is unregistered and inherits the same cgroup; the existing "no proof of no unregistered child" disclaimer covers it.
+
+## Future caller/stager responsibilities (not source gaps)
+
+- **Persist unjournaled refusals.** More refusals now leave no journal, so the returned dict is the only record.
+- **Exit while the alarm is armed.** After `release_unproven` or `journalCreationUnknown`, the 400 s SIGALRM will kill the caller with the default action, and SIGALRM stays unblocked.
+- **Journal path hygiene.** Use a fresh path per attempt. After `journalCreationUnknown`, inspect and retire the path; do not retry on it.
+- **Launch placement.** Start from a cgroup outside the whole source subtree, not just a different one.
+- **Carried from V2.** The entry file's own hash binding, stage verification before a fresh `-I -B` interpreter, recomputing `packetSha256` from the nine-file subset, the UTC `/etc/localtime` symlink, and the zero-placement evidence all still apply.
+
+## Non-blocking test gaps
+
+- `inspect_known` is mocked in the wrapper tests, so no positive lease runs through `run_reviewed`.
+- The `idle_launcher_source_changed` branches of the preflight (PID, ticks, hash, swap) have no negative.
+- The new `_run` refusal test reaches its reason through `safetyReason`. The `mainReason` fall-through is covered only by synthetic rows.
+- The V2 non-blocking items (preflight reasons collapsing to `idle_guard_failure`, schedule hash absent from the binding, exact-argument census, unchained receipt) are unchanged.
