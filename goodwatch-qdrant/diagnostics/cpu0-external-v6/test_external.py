@@ -213,8 +213,12 @@ class NodeTests(unittest.TestCase):
                 os.utime(target,ns=(before.st_atime_ns,before.st_mtime_ns))
                 return result
             with mock.patch.object(stager,'copy_node',side_effect=changed):
-                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$'):
+                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
                     stager.copy_node_v2(stage,source,**args)
+            evidence=caught.exception.nodeVerificationEvidence
+            self.assertIs(evidence['targetRetained'],True)
+            self.assertIs(evidence['automaticRollback'],False)
+            self.assertEqual(evidence['stage'],'post-copy-verification')
             self.assertEqual((stage/'node').read_bytes(),raw[::-1])
             self.assertEqual((source/'node').read_bytes(),raw)
 
@@ -238,9 +242,23 @@ class NodeTests(unittest.TestCase):
             from contextlib import ExitStack
             with ExitStack() as scope:
                 scope.enter_context(mock.patch.object(stager,'copy_node',side_effect=copied))
-                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$'):
+                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
                     stager.copy_node_v2(stage,source,**args)
+            self.assertIs(caught.exception.nodeVerificationEvidence['targetRetained'],True)
+            self.assertIs(caught.exception.nodeVerificationEvidence['automaticRollback'],False)
             self.assertTrue((stage/'node').is_file())
+
+    def test_v2_inner_copy_failure_retains_original_rollback_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source,stage,_,args=self.node_fixture(Path(tmp))
+            args['expected_sha']='0'*64
+            with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
+                stager.copy_node_v2(stage,source,**args)
+            evidence=caught.exception.nodeVerificationEvidence
+            self.assertEqual(evidence['stage'],'inner-copy')
+            self.assertIs(evidence['automaticRollback'],True)
+            self.assertIs(evidence['targetRetained'],False)
+            self.assertFalse((stage/'node').exists())
 
     def test_real_stable_copy_receipt_and_no_source_writes(self):
         with tempfile.TemporaryDirectory() as tmp:

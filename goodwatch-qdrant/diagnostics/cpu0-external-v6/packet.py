@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import types
 import sys
@@ -15,6 +16,10 @@ SOURCE_NAMES = frozenset((
     'prepared-control-policy-cpu0.json', 'CPU0.md'))
 MAX_FILE = 262144
 MAX_PACKET = 2 * 1024**2
+V2_ADMISSION_NAMES=SOURCE_NAMES|{'cpu0-source-freeze.json','helper-config.json','controller-config.json'}
+V2_FULL_NAMES=SOURCE_NAMES|{'cpu0-source-freeze.json','helper-config.json','controller-config.json',
+    'prepare_clone_reclaim.py','consumer_cpu0.mjs','compare-contract-cpu0.mjs','audit_cpu0.mjs',
+    'transport_cpu0.mjs','compare-contract.mjs','parity.mjs'}
 
 
 def sha(raw):
@@ -61,7 +66,7 @@ def _verify_source(raw_manifest, expected_sha, files, schema, variant, closed):
         raise RuntimeError('source_freeze_changed')
     try:
         manifest = closed_json(raw_manifest) if closed else json.loads(raw_manifest)
-    except (ValueError, UnicodeError):
+    except (ValueError, UnicodeError, RecursionError):
         raise RuntimeError('source_freeze_invalid') from None
     if not isinstance(manifest, dict) or manifest.get('schema') != schema or manifest.get('variant') != variant or manifest.get('preparedOnly') is not True or (closed and set(manifest) != {'schema','variant','preparedOnly','files'}):
         raise RuntimeError('source_freeze_invalid')
@@ -135,7 +140,34 @@ def load_staged_modules(folder,raw_manifest,expected_sha,files):
 
 def load_staged_modules_v2(folder,raw_manifest,expected_sha,files):
     manifest=verify_source_v2(raw_manifest,expected_sha,files)
-    return _load_staged_modules(folder,files,manifest)
+    _v2_inventory(folder)
+    result=_load_staged_modules(folder,files,manifest)
+    _v2_inventory(folder)
+    return result
+
+
+def _v2_inventory(folder, uid=0):
+    folder=Path(folder)
+    directory(folder,uid)
+    if folder.name=='cpu0-admission-20261012-100-v2':
+        required=V2_ADMISSION_NAMES;allow_runtime=False
+    elif folder.name=='pin-control-20261012-100-cpu0-v2':
+        required=V2_FULL_NAMES|{'cpu0-external-manifest.json','node','node-provenance.json'}
+        allow_runtime=True
+    else:raise RuntimeError('staged_source_inventory_invalid')
+    names=set();writers=0
+    for entry in folder.iterdir():
+        name=entry.name;names.add(name)
+        runtime=allow_runtime and (name=='pin-instance.lock' or re.fullmatch(r'reclaim-writer-[A-Za-z0-9_.-]{1,128}\.json',name) is not None)
+        if name not in required and not runtime:raise RuntimeError('staged_source_inventory_invalid')
+        info=entry.lstat()
+        expected_mode=0o700 if name=='node' else 0o600
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1
+                or stat.S_IMODE(info.st_mode)!=expected_mode or entry.resolve(strict=True)!=entry):
+            raise RuntimeError('staged_source_inventory_invalid')
+        if runtime and name!='pin-instance.lock':writers+=1
+        if writers>18:raise RuntimeError('staged_source_inventory_invalid')
+    if not required.issubset(names):raise RuntimeError('staged_source_inventory_invalid')
 
 
 def _load_staged_modules(folder,files,manifest):
@@ -201,34 +233,69 @@ def directory(path, uid=0):
 def stage_absent_once(path, files, uid=0):
     """Spend a new public scope once; retain partial evidence without rollback."""
     path=Path(path)
-    directory(path.parent,uid)
+    parent_identity=directory(path.parent,uid)
     if not isinstance(files,dict) or not files or any(not isinstance(k,str) or Path(k).name!=k or k in ('.','..') for k in files):
         raise RuntimeError('stage_packet_invalid')
     if any(not isinstance(raw,bytes) or len(raw)>MAX_FILE for raw in files.values()) or sum(map(len,files.values()))>MAX_PACKET:
         raise RuntimeError('stage_packet_bound')
     made=None;directory_created=False;created=0;completed=0
+    parent_synced=False;directory_synced=False;creation_identity=None;close_failures=0
     try:
         os.mkdir(path,0o700)
         directory_created=True
+        info=path.lstat();creation_identity=(info.st_dev,info.st_ino)
+        _sync_owned_directory(path.parent,parent_identity,uid)
+        parent_synced=True
         made=directory(path,uid)
         for name,raw in files.items():
             fd=os.open(path/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
             created+=1
-            with os.fdopen(fd,'wb') as output:
-                output.write(raw);output.flush();os.fsync(output.fileno())
+            try:
+                info=os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1 or stat.S_IMODE(info.st_mode)!=0o600:
+                    raise RuntimeError('owned_file_metadata_changed')
+                output=os.fdopen(fd,'wb');fd=None
+                with output:
+                    output.write(raw);output.flush();os.fsync(output.fileno())
+            finally:
+                if fd is not None:
+                    original=sys.exc_info()[1]
+                    try:os.close(fd)
+                    except BaseException:
+                        close_failures+=1
+                        if original is None:raise
             completed+=1
         if directory(path,uid)!=made:raise RuntimeError('owned_directory_changed')
-        dfd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
-        try:os.fsync(dfd)
-        finally:os.close(dfd)
+        _sync_owned_directory(path,made,uid);directory_synced=True
         return {'schema':'cpu0-public-stage-once.v2','filesCreated':created,
-                'filesCompleted':completed,'directoryCreated':True,'automaticRollback':False}
+                'filesCompleted':completed,'directoryCreated':True,'automaticRollback':False,
+                'parentFsyncCompleted':parent_synced,'directoryFsyncCompleted':directory_synced}
     except BaseException as error:
+        durability={}
+        if directory_created:
+            for name,target,identity in (('directory',path,creation_identity),('parent',path.parent,parent_identity)):
+                try:
+                    if identity is None:raise RuntimeError('owned_directory_changed')
+                    _sync_owned_directory(target,identity,uid)
+                    durability[name]={'attempted':True,'fsyncCompleted':True}
+                except BaseException:durability[name]={'attempted':True,'fsyncCompleted':False}
         error.stageFailureEvidence={'schema':'cpu0-public-stage-once-failure.v2',
             'directoryCreated':directory_created,'directoryRetained':os.path.lexists(path),
             'filesCreated':created,'filesCompleted':completed,'automaticRollback':False,
+            'parentFsyncCompleted':parent_synced,'directoryFsyncCompleted':directory_synced,
+            'failureDurability':durability,'fileDescriptorCloseFailures':close_failures,
             'continuationAllowed':False}
         raise
+
+
+def _sync_owned_directory(path,identity,uid):
+    fd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        info=os.fstat(fd)
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid!=uid or (info.st_dev,info.st_ino)!=identity:
+            raise RuntimeError('owned_directory_changed')
+        os.fsync(fd)
+    finally:os.close(fd)
 
 
 def stage_absent(path, files, uid=0):

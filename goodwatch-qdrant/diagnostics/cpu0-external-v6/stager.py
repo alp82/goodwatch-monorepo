@@ -41,7 +41,7 @@ def _verify_full(manifest_raw, expected_sha, files, source_sha, schema, variant,
         raise RuntimeError('external_manifest_changed')
     try:
         manifest=closed_json(manifest_raw) if successor else json.loads(manifest_raw)
-    except (ValueError,UnicodeError):
+    except (ValueError,UnicodeError,RecursionError):
         raise RuntimeError('external_manifest_invalid') from None
     if not isinstance(manifest,dict) or set(manifest)!={'schema','variant','sourceFreezeSha256','files'} or manifest['schema']!=schema or manifest['variant']!=variant or manifest['sourceFreezeSha256']!=source_sha or not isinstance(manifest['files'],dict) or set(manifest['files'])!=FULL_NAMES or not isinstance(files,dict) or set(files)!=FULL_NAMES:
         raise RuntimeError('external_manifest_invalid')
@@ -116,9 +116,35 @@ def copy_node_v2(stage, source=OLD_STAGE, uid=0, expected_sha=NODE_SHA,
 
     The v1 copy/receipt behavior remains unchanged. A v2 failure retains the
     newly copied owned file for separate review; it never rewrites old receipts.
+    Failure inside the original copy retains its existing owned-file rollback.
     """
-    receipt, identity = copy_node(stage, source, uid, expected_sha, expected_bytes, receipt_sha)
     target = Path(stage)/'node'
+    try:
+        receipt, identity = copy_node(stage, source, uid, expected_sha, expected_bytes, receipt_sha)
+    except BaseException as error:
+        cleanup=getattr(error,'nodeCleanupEvidence',None)
+        error.nodeVerificationEvidence={'schema':'clone-node-v2-verification-failure.v2',
+            'stage':'inner-copy','automaticRollback':True,'verificationPassed':False,
+            'targetRetained':cleanup.get('targetRetained') if cleanup is not None else None,
+            'innerCleanupEvidence':cleanup}
+        raise
+    try:
+        return _verify_node_copy_v2(target,receipt,identity,uid,expected_sha,expected_bytes)
+    except BaseException as error:
+        retained=None
+        try:
+            info=target.lstat()
+            if (info.st_dev,info.st_ino)==identity:retained=True
+        except FileNotFoundError:retained=False
+        except OSError:pass
+        error.nodeVerificationEvidence={'schema':'clone-node-v2-verification-failure.v2',
+            'stage':'post-copy-verification','automaticRollback':False,
+            'verificationPassed':False,'targetRetained':retained,
+            'retentionScope':'original-inode-at-created-path'}
+        raise
+
+
+def _verify_node_copy_v2(target,receipt,identity,uid,expected_sha,expected_bytes):
     before = target.lstat()
     def stable(info):
         return (*metadata(info), info.st_ctime_ns)
