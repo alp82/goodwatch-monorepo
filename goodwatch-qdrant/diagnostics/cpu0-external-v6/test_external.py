@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import socket
 import threading
+import time
 import unittest
 from unittest import mock
 
@@ -177,6 +178,88 @@ class ConfigurationTests(unittest.TestCase):
 
 
 class NodeTests(unittest.TestCase):
+    def node_fixture(self, root):
+        source=root/'source';stage=root/'stage'
+        source.mkdir(mode=0o700);stage.mkdir(mode=0o700)
+        raw=b'fixture-node-binary'
+        node=source/'node';node.write_bytes(raw);node.chmod(0o700)
+        receipt=source/'node-provenance.json';receipt.write_bytes(b'fixture-receipt');receipt.chmod(0o600)
+        return source,stage,raw,dict(uid=os.getuid(),expected_sha=packet.sha(raw),
+                                   expected_bytes=len(raw),receipt_sha=packet.sha(receipt.read_bytes()))
+
+    def test_v2_real_copy_binds_final_timestamps_without_changing_v1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source,stage,raw,args=self.node_fixture(Path(tmp))
+            before=packet.metadata((source/'node').stat())
+            receipt,identity=stager.copy_node_v2(stage,source,**args)
+            proof=json.loads(receipt);current=(stage/'node').stat()
+            self.assertEqual(proof['schema'],'clone-node-copy-receipt.v2')
+            self.assertEqual(proof['targetMtimeNs'],current.st_mtime_ns)
+            self.assertEqual(proof['targetCtimeNs'],current.st_ctime_ns)
+            self.assertEqual(identity,(current.st_dev,current.st_ino))
+            self.assertEqual((stage/'node').read_bytes(),raw)
+            self.assertEqual(packet.metadata((source/'node').stat()),before)
+            legacy=Path(tmp)/'legacy';legacy.mkdir(mode=0o700)
+            old_receipt,_=stager.copy_node(legacy,source,**args)
+            self.assertEqual(json.loads(old_receipt)['schema'],'clone-node-copy-receipt.v1')
+            self.assertNotIn('targetCtimeNs',json.loads(old_receipt))
+
+    def test_v2_rehash_rejects_same_size_in_place_change_and_retains_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source,stage,raw,args=self.node_fixture(Path(tmp));original=stager.copy_node
+            def changed(*positional,**keywords):
+                result=original(*positional,**keywords)
+                target=stage/'node';before=target.stat();target.write_bytes(raw[::-1])
+                os.utime(target,ns=(before.st_atime_ns,before.st_mtime_ns))
+                return result
+            with mock.patch.object(stager,'copy_node',side_effect=changed):
+                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
+                    stager.copy_node_v2(stage,source,**args)
+            evidence=caught.exception.nodeVerificationEvidence
+            self.assertIs(evidence['targetRetained'],True)
+            self.assertIs(evidence['automaticRollback'],False)
+            self.assertEqual(evidence['stage'],'post-copy-verification')
+            self.assertEqual((stage/'node').read_bytes(),raw[::-1])
+            self.assertEqual((source/'node').read_bytes(),raw)
+
+    def test_v2_rejects_ctime_drift_during_stable_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source,stage,raw,args=self.node_fixture(Path(tmp));original_copy=stager.copy_node
+            original_read=os.read
+            def copied(*positional,**keywords):
+                result=original_copy(*positional,**keywords)
+                # Install the read hook after the unchanged v1 copy completes.
+                def read(fd,count):
+                    part=original_read(fd,count)
+                    if part:
+                        # This filesystem timestamps consecutive chmod calls
+                        # at tick granularity; cross a tick for a real drift.
+                        time.sleep(0.02)
+                        target=stage/'node';target.chmod(0o600);target.chmod(0o700)
+                    return part
+                scope.enter_context(mock.patch.object(stager.os,'read',side_effect=read))
+                return result
+            from contextlib import ExitStack
+            with ExitStack() as scope:
+                scope.enter_context(mock.patch.object(stager,'copy_node',side_effect=copied))
+                with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
+                    stager.copy_node_v2(stage,source,**args)
+            self.assertIs(caught.exception.nodeVerificationEvidence['targetRetained'],True)
+            self.assertIs(caught.exception.nodeVerificationEvidence['automaticRollback'],False)
+            self.assertTrue((stage/'node').is_file())
+
+    def test_v2_inner_copy_failure_retains_original_rollback_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source,stage,_,args=self.node_fixture(Path(tmp))
+            args['expected_sha']='0'*64
+            with self.assertRaisesRegex(RuntimeError,'^node_source_changed$') as caught:
+                stager.copy_node_v2(stage,source,**args)
+            evidence=caught.exception.nodeVerificationEvidence
+            self.assertEqual(evidence['stage'],'inner-copy')
+            self.assertIs(evidence['automaticRollback'],True)
+            self.assertIs(evidence['targetRetained'],False)
+            self.assertFalse((stage/'node').exists())
+
     def test_real_stable_copy_receipt_and_no_source_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);source=root/'source';stage=root/'stage'

@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import types
 import sys
@@ -15,6 +16,10 @@ SOURCE_NAMES = frozenset((
     'prepared-control-policy-cpu0.json', 'CPU0.md'))
 MAX_FILE = 262144
 MAX_PACKET = 2 * 1024**2
+V2_ADMISSION_NAMES=SOURCE_NAMES|{'cpu0-source-freeze.json','helper-config.json','controller-config.json'}
+V2_FULL_NAMES=SOURCE_NAMES|{'cpu0-source-freeze.json','helper-config.json','controller-config.json',
+    'prepare_clone_reclaim.py','consumer_cpu0.mjs','compare-contract-cpu0.mjs','audit_cpu0.mjs',
+    'transport_cpu0.mjs','compare-contract.mjs','parity.mjs'}
 
 
 def sha(raw):
@@ -31,16 +36,39 @@ def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
 
 
+def closed_json(raw):
+    def unique(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:raise ValueError('duplicate_json_key')
+            result[key]=value
+        return result
+    def finite(value):
+        raise ValueError('nonfinite_json_constant')
+    return json.loads(raw,object_pairs_hook=unique,parse_constant=finite)
+
+
 def verify_source(raw_manifest, expected_sha, files):
     """Validate the complete fourteen-file closure BEFORE executable imports."""
+    return _verify_source(raw_manifest, expected_sha, files,
+                          'search.clone-cpu0-owned-source-freeze.v1', 'cpu0-owned-lifecycle.v1', False)
+
+
+def verify_source_v2(raw_manifest, expected_sha, files):
+    """Distinct fixed-capacity recipe; old bytes never receive a new meaning."""
+    return _verify_source(raw_manifest, expected_sha, files,
+                          'search.clone-cpu0-fixed-source-freeze.v2', 'cpu0-fixed-capacity.v2', True)
+
+
+def _verify_source(raw_manifest, expected_sha, files, schema, variant, closed):
     hash_value(expected_sha)
     if not isinstance(raw_manifest, bytes) or len(raw_manifest) > MAX_FILE or sha(raw_manifest) != expected_sha:
         raise RuntimeError('source_freeze_changed')
     try:
-        manifest = json.loads(raw_manifest)
-    except (ValueError, UnicodeError):
+        manifest = closed_json(raw_manifest) if closed else json.loads(raw_manifest)
+    except (ValueError, UnicodeError, RecursionError):
         raise RuntimeError('source_freeze_invalid') from None
-    if not isinstance(manifest, dict) or manifest.get('schema') != 'search.clone-cpu0-owned-source-freeze.v1' or manifest.get('variant') != 'cpu0-owned-lifecycle.v1' or manifest.get('preparedOnly') is not True:
+    if not isinstance(manifest, dict) or manifest.get('schema') != schema or manifest.get('variant') != variant or manifest.get('preparedOnly') is not True or (closed and set(manifest) != {'schema','variant','preparedOnly','files'}):
         raise RuntimeError('source_freeze_invalid')
     expected = manifest.get('files')
     if not isinstance(expected, dict) or set(expected) != SOURCE_NAMES or not isinstance(files, dict) or set(files) != SOURCE_NAMES:
@@ -81,6 +109,25 @@ def load_first_guards(raw_manifest, expected_sha, files):
     return module
 
 
+def _load_first_v2(raw_manifest, expected_sha, files, filename, name):
+    manifest=verify_source_v2(raw_manifest,expected_sha,files)
+    module=types.ModuleType(name)
+    module.__file__='<'+name+'>'
+    exec(compile(files[filename],module.__file__,'exec'),module.__dict__)
+    module._AUTHENTICATED_SOURCE_SHA256=manifest['files'][filename]
+    return module
+
+
+def load_first_lifecycle_v2(raw_manifest, expected_sha, files):
+    return _load_first_v2(raw_manifest,expected_sha,files,'lifecycle_cpu0.py',
+                          'authenticated_cpu0_running_adoption_lifecycle_v2')
+
+
+def load_first_guards_v2(raw_manifest, expected_sha, files):
+    return _load_first_v2(raw_manifest,expected_sha,files,'cpu0_guards.py',
+                          'authenticated_cpu0_running_adoption_guards_v2')
+
+
 def load_staged_modules(folder,raw_manifest,expected_sha,files):
     """Execute authenticated raw source with real frozen sibling filenames.
 
@@ -88,6 +135,42 @@ def load_staged_modules(folder,raw_manifest,expected_sha,files):
     no unversioned adapter or bytecode loader is consulted.
     """
     manifest=verify_source(raw_manifest,expected_sha,files)
+    return _load_staged_modules(folder,files,manifest)
+
+
+def load_staged_modules_v2(folder,raw_manifest,expected_sha,files):
+    manifest=verify_source_v2(raw_manifest,expected_sha,files)
+    _v2_inventory(folder)
+    result=_load_staged_modules(folder,files,manifest)
+    _v2_inventory(folder)
+    return result
+
+
+def _v2_inventory(folder, uid=0):
+    folder=Path(folder)
+    directory(folder,uid)
+    if folder.name=='cpu0-admission-20261012-100-v2':
+        required=V2_ADMISSION_NAMES;allow_runtime=False
+    elif folder.name=='pin-control-20261012-100-cpu0-v2':
+        required=V2_FULL_NAMES|{'cpu0-external-manifest.json','node','node-provenance.json'}
+        allow_runtime=True
+    else:raise RuntimeError('staged_source_inventory_invalid')
+    names=set();writers=0
+    for entry in folder.iterdir():
+        name=entry.name;names.add(name)
+        runtime=allow_runtime and (name=='pin-instance.lock' or re.fullmatch(r'reclaim-writer-[A-Za-z0-9_.-]{1,128}\.json',name) is not None)
+        if name not in required and not runtime:raise RuntimeError('staged_source_inventory_invalid')
+        info=entry.lstat()
+        expected_mode=0o700 if name=='node' else 0o600
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1
+                or stat.S_IMODE(info.st_mode)!=expected_mode or entry.resolve(strict=True)!=entry):
+            raise RuntimeError('staged_source_inventory_invalid')
+        if runtime and name!='pin-instance.lock':writers+=1
+        if writers>18:raise RuntimeError('staged_source_inventory_invalid')
+    if not required.issubset(names):raise RuntimeError('staged_source_inventory_invalid')
+
+
+def _load_staged_modules(folder,files,manifest):
     directory(folder)
     order=('pin_cpu0','runtime_cpu0','cpu0_guards','daemon_cpu0',
            'lifecycle_cpu0','controller_cpu0','cpu0_preflight','turnover_gate_cpu0')
@@ -145,6 +228,74 @@ def directory(path, uid=0):
     if path.resolve(strict=True) != path or not stat.S_ISDIR(info.st_mode) or info.st_uid != uid or stat.S_IMODE(info.st_mode) != 0o700:
         raise RuntimeError('owned_directory_changed')
     return info.st_dev, info.st_ino
+
+
+def stage_absent_once(path, files, uid=0):
+    """Spend a new public scope once; retain partial evidence without rollback."""
+    path=Path(path)
+    parent_identity=directory(path.parent,uid)
+    if not isinstance(files,dict) or not files or any(not isinstance(k,str) or Path(k).name!=k or k in ('.','..') for k in files):
+        raise RuntimeError('stage_packet_invalid')
+    if any(not isinstance(raw,bytes) or len(raw)>MAX_FILE for raw in files.values()) or sum(map(len,files.values()))>MAX_PACKET:
+        raise RuntimeError('stage_packet_bound')
+    made=None;directory_created=False;created=0;completed=0
+    parent_synced=False;directory_synced=False;creation_identity=None;close_failures=0
+    try:
+        os.mkdir(path,0o700)
+        directory_created=True
+        info=path.lstat();creation_identity=(info.st_dev,info.st_ino)
+        _sync_owned_directory(path.parent,parent_identity,uid)
+        parent_synced=True
+        made=directory(path,uid)
+        for name,raw in files.items():
+            fd=os.open(path/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
+            created+=1
+            try:
+                info=os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1 or stat.S_IMODE(info.st_mode)!=0o600:
+                    raise RuntimeError('owned_file_metadata_changed')
+                output=os.fdopen(fd,'wb');fd=None
+                with output:
+                    output.write(raw);output.flush();os.fsync(output.fileno())
+            finally:
+                if fd is not None:
+                    original=sys.exc_info()[1]
+                    try:os.close(fd)
+                    except BaseException:
+                        close_failures+=1
+                        if original is None:raise
+            completed+=1
+        if directory(path,uid)!=made:raise RuntimeError('owned_directory_changed')
+        _sync_owned_directory(path,made,uid);directory_synced=True
+        return {'schema':'cpu0-public-stage-once.v2','filesCreated':created,
+                'filesCompleted':completed,'directoryCreated':True,'automaticRollback':False,
+                'parentFsyncCompleted':parent_synced,'directoryFsyncCompleted':directory_synced}
+    except BaseException as error:
+        durability={}
+        if directory_created:
+            for name,target,identity in (('directory',path,creation_identity),('parent',path.parent,parent_identity)):
+                try:
+                    if identity is None:raise RuntimeError('owned_directory_changed')
+                    _sync_owned_directory(target,identity,uid)
+                    durability[name]={'attempted':True,'fsyncCompleted':True}
+                except BaseException:durability[name]={'attempted':True,'fsyncCompleted':False}
+        error.stageFailureEvidence={'schema':'cpu0-public-stage-once-failure.v2',
+            'directoryCreated':directory_created,'directoryRetained':os.path.lexists(path),
+            'filesCreated':created,'filesCompleted':completed,'automaticRollback':False,
+            'parentFsyncCompleted':parent_synced,'directoryFsyncCompleted':directory_synced,
+            'failureDurability':durability,'fileDescriptorCloseFailures':close_failures,
+            'continuationAllowed':False}
+        raise
+
+
+def _sync_owned_directory(path,identity,uid):
+    fd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        info=os.fstat(fd)
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid!=uid or (info.st_dev,info.st_ino)!=identity:
+            raise RuntimeError('owned_directory_changed')
+        os.fsync(fd)
+    finally:os.close(fd)
 
 
 def stage_absent(path, files, uid=0):
