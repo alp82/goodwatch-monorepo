@@ -1,3 +1,69 @@
+# Fixed-capacity ABI v2 successor (local preparation)
+
+This source supersedes the historical poststart 5 GiB rule explicitly; it does not
+reinterpret the failed v1 trial or consume its recovery again. The owner keeps the
+VM size unchanged. Execution remains pending exact source, fixture, external
+registration and actual Opus 5.5 medium review. The initial design was conditionally
+accepted; that verdict is not a capacity or latency result.
+
+Actual running/unheld admission derives its strict floor from the frozen maximum
+new lock budget plus reserve: 2 GiB + 2 GiB. Exactly 4 GiB refuses. Actual Docker,
+wrapper/Qdrant birth, exactly two source members, VmLck/unevictable zero and real
+zero max/OOM events establish scope; no caller-supplied running phase or lower
+floor is accepted. Same-read memory refusals retain availability, MemTotal, floor
+and observed phase. Stopped-to-start remains strictly above 5 GiB. The pressure
+and query emergency floor remains 1.5 GiB; a held source is never reinterpreted as
+an unheld entry to demand 4 GiB during pressure.
+
+Fresh prepared inventory in both phases debits ALL selected lock bytes, including
+resident pages, and requires projected availability at least 2 GiB. Candidate
+pinning additionally retains current + missing + 256 MiB <= 6 GiB and every
+unchanged core/RLIMIT/mapping/cap guard. No source file/RSS credit is added to host
+MemAvailable. The observed near-cap state still refuses pinning; bounded preparation
+must actually create eligible headroom, not predict it.
+
+New paths use cpu0-lifecycle-handoff-v2.json and the fresh cpu0-v2 stage/admission.
+The first handoff must be separately authored by the running-object adoption
+protocol with owner adoption, null predecessor and its intent SHA. Every later
+controlled handoff retains that same intent. No adoption module is implemented by
+this backend step. A historical setup handoff cannot start the new chain.
+
+Query-ready/query-finished carry actual before/after memory endpoints, each at
+least the unchanged 1.5 GiB emergency floor. A failed endpoint cannot be filled from
+a later read or invented zeros. Endpoint samples do not establish continuous safety.
+The C6 ledger records actual per-birth source anon/kernel growth and positive
+outside-process RssAnon/VmPTE growth. Enrolled Node and transport baselines are
+retained; a newly spawned controller is charged in full. Source page tables are
+already included in kernel bytes; a joined holder is reported without a second
+outside debit. Growth above 512 MiB refuses without offsetting shrinking classes.
+Endpoint direct-child fences and parent inspector call counts do not prove a
+continuous process census or a sampled peak. Final registry and consumer integration
+and exact source review remain pending; this is not a frozen executable packet.
+
+The consumer preflight authenticates the whole source and full manifest before
+sibling imports, requires its actual isolated interpreter argv and `/dev/null`
+stdin, and derives the actual Node and transport parent. It publishes one exclusive
+canonical preliminary receipt before its entry sample; even a partial write remains
+addressable for independent cleanup. The preliminary receipt records immutable
+birth/exe/cgroup identities separately from mutable metrics. This metadata
+admission writes the preliminary receipt and one handoff, with no data or cap writes.
+Cleanup-only source renewal is separate from trial admission. It records current
+wrapper/Qdrant births, service connections and absolute limit counters, preserves
+static container/configuration/script/mount lineage, and renews source cgroup
+limits and CPU ancestors. Connections and nonzero counters do not veto owned Node
+cleanup. Extra source members or a stopped/uncertain source remain UNKNOWN. It
+does not prove unconstrained memory ancestors or capacity, and it performs no
+source lifecycle action.
+
+The four core modules, CPU guards, helper policy and reclaim helper remain byte exact.
+Nine actual pairs, zero exclusions, eighteen single writers, 100% selected locked
+residency, and candidate server AND wall time below 1500 ms remain required.
+
+The following material records the historical CPU0 protocol. Its statement that
+all memory floors were unchanged applies to that v1 source, not this successor.
+
+---
+
 # Prepared CPU0 clone variant
 
 This local implementation is uninstalled and unexecuted. Its complete staging and
@@ -89,8 +155,7 @@ ledgers overlap and remain non-additive, including pin-parent and query checks.
 Child runtime and reclaim reason paths remain explicitly outside this attachment.
 A failed hierarchy sample is retained as unavailable; it cannot make clean proof.
 
-Local verification: `python3 -B -m unittest discover -s
-goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
+Local verification from the repository root: `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'` and `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_lifecycle_cpu0.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
 failures through stage(), preserving their original numeric failures when cleanup
 also fails. They separately assert failed CPU snapshot status; fixture execution
 is not a physical lifecycle proof. These fixtures perform no
@@ -136,12 +201,7 @@ full admission before doing work. External mutations are unauthorized. The old
 writable store is preserved but normal startup can change it; rollback is not a
 pristine historical baseline.
 
-The lock is CLOEXEC for pin and zero multiprocessing-spawn children. A narrowly
-scoped registered at-fork callback closes it in exact f831 plain-fork reclaim
-children (and any unrelated fork inside that scope). Real local plain-fork,
-multiprocessing-spawn and actual helper-writer fixtures prove the parent still prevents
-contention while the child cannot retain ownership. The injected helper receives
-the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
+The lock is CLOEXEC across exec. PinChild's separately guarded fork and the exact f831 plain-fork reclaim helper use the scoped registered at-fork child close callback; ZeroChild keeps its spawn path. The parent remains the lock owner. This source14 set's real fork and zero-spawn fixtures prove the parent still prevents a contender and pin/zero children hold no control-lock inode. The f831 writer fixture belongs to the separately authenticated unchanged helper closure, not this self-contained source14 set. Injected helper calls retain the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
 wrappers must never generate the standalone helper CLI.
 
 Local wrapper fixtures execute the exact public script with a fake child: child
@@ -166,3 +226,14 @@ owned direct inspect client may receive cleanup TERM/KILL (up to two extra secon
 this never targets the Qdrant child or wrapper and cannot produce clean proof.
 Successful stop receipts survive subsequent failures and even pidfd-close failure
 as lifecycleCompletedStopReceipt, without authorizing continuation or recovery.
+
+
+The authenticated Node receipt matches actual binary identity and nanosecond metadata; the root stager and consumer verify binary content. The preliminary reader's metadata attestation alone is not a full binary-content verification. Independent external receipt binding remains part of the integrated closure review. A just-completed metadata HTTP request may still be visible during the strict client-socket fence; that causes a terminal refusal, with no teardown wait or retry. Consumer preflight also records one enrolment write; RPC admission records zero enrolment writes. A collision is not authority for the existing fixed receipt. Source memory.high must be max under the fixed recipe. Passing admission samples preceding an identity refusal are retained separately from failed memory admission.
+
+Source14 tests are self-contained. Pure accounting fixture data is inline. The separate unchanged f831 reclaim module and external authenticated loaders are supplied in the integrated full closure; source14 does not claim to review or execute them. Real fork scope/owned child fixtures in this set verify only local inherited-FD and lock semantics.
+
+
+PinChild uses an explicit fork context, avoiding a multiprocessing spawn resource tracker. The controller must have exactly one actual thread, only stdio/control-lock/two pipe descriptors, and no mappings under the owned root at the fork point. Its actual sampled RssAnon plus VmPTE must be at most 64 MiB, a conservative quarter of the unchanged 256 MiB cap reserve. This is an engineering admission margin, not a verified copy-on-write/page-table formula or capacity proof. The child-entry wrapper closes the parent's pipe end, resets TERM/INT handlers, and the existing at-fork hook closes the control lock only in the child. Parent signal masking covers Process.start so constructor cleanup retains ownership. The child inherits shared Python mappings; post-join anonymous growth remains charged by actual source accounting, while helper RSS is report-only and pre-join attribution remains unknown. Physical helper authority uses PID/birth/parent/executable/source-cgroup identity, never its inherited controller argv. ZeroChild retains its independent spawn path. Real isolated fixtures show no extra tracker, actual EOF exit, default TERM, and extra-FD/thread/owned-mapping/large-parent refusal. Stand-in child targets do not prove real clone placement.
+
+
+Post-enrolment refusal retains the published-verified fixed receipt and original measured cause. Constructor cleanup masks the controller's handled TERM/INT signals during the unchanged join/terminate/kill bounds; a restoration failure remains secondary. A child with an unknown or observed-live constructor endpoint cannot make released or pinChildExited true. Owned mapping refusal also covers container-view /qdrant/storage and /qdrant/snapshots paths; a shaped container-view map fixture does not attest actual kernel rendering.

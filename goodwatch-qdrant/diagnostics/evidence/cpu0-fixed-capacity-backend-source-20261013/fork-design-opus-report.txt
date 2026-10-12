@@ -1,0 +1,53 @@
+**Verdict:** the narrow fork context is acceptable for this controller, and an explicit subprocess/pipe successor is not required. But the design is not complete as written: four closures are missing, and two of them cannot be proven by a fixture alone.
+
+This is from reading the pasted `controller_cpu0.py` and `lifecycle_cpu0.py` only; nothing was run. I could not see `runtime_cpu0`, `pin_cpu0`, `daemon_cpu0`, the f831 helper or the turnover gate, so the points that depend on them are marked.
+
+## What holds
+
+- **No tracker:** fork `Process` plus `Pipe` never calls `resource_tracker.getfd()`; only spawn's launcher does. The direct-children census can be exactly `[helper]`.
+- **Control lock:** the `after_in_child` hook runs on multiprocessing's `os.fork()`. `flock` belongs to the open file description, so the child closing its copy cannot release the parent's lock, and `require_lock` on scope exit still passes.
+- **No unwinding into `_stage`:** the fork child runs `_bootstrap` then `os._exit`, so the parent's `finally` blocks (handoff commit, `released` emit) never run in the child.
+- **Stdin:** `_bootstrap` replaces fd 0 with `/dev/null`, so the child cannot consume the query-lease ack.
+- **Inspector counters:** `observed` short-circuits on `os.getpid()!=ownerPid`, so child calls are not aggregated.
+- **Code identity:** fork is slightly stronger than spawn here, because the child runs the already-authenticated in-memory modules instead of re-importing from disk.
+
+## Missing closures
+
+1. **Closing the parent's pipe end has no place to live.**
+   - The design says the child gets only the existing arguments and that `pin_child` is unchanged, but multiprocessing's fork child does not close the parent's `Connection`.
+   - This is load-bearing: if the child keeps that end, `connection.recv()` never sees EOF when the controller dies, and the helper holds up to 2 GiB of mlock in the source cgroup indefinitely.
+   - It needs a small fork-entry wrapper as the target, which closes the parent end first and then calls the unchanged `pin_child`. State that wrapper as part of the intentional diff.
+
+2. **Inherited signal handlers change `close()` semantics.**
+   - `main` installs SIGTERM/SIGINT handlers that raise `controller_interrupted`. Under spawn the child had default SIGTERM, so `process.terminate()` killed it.
+   - Under fork, `terminate()` raises inside `pin_child`, which runs the graceful release path and may report `controller_interrupted` as a child reason.
+   - Reset in the same wrapper: SIGTERM to `SIG_DFL` and SIGINT to `signal.default_int_handler`. That restores the spawn behaviour exactly.
+
+3. **The descriptor inventory needs a runtime gate, not only a fixture.**
+   - A fixture with a test-only target measures the test process, not the controller's descriptors at the real fork point. That point comes after `cold`, `prepare_cache` and `measure_source`.
+   - Spawn dropped everything above fd 2 except passed descriptors; fork inherits everything, CLOEXEC or not.
+   - Add a bounded `/proc/self/fd` census next to the thread census and refuse terminally unless the set is exactly 0, 1, 2, the control lock and the two pipe ends.
+   - This also covers what I could not see: any descriptor or flock left open by `runtime.measure_source` or the f831 helper, including one on `pin-instance.lock`, which the child would otherwise share.
+
+4. **Inherited mappings are not covered.**
+   - If the parent still maps any owned store or archive file at fork, the child inherits those mappings outside `PinSet`'s ledger, and `heldMappingCount: 0` would no longer mean what it says.
+   - Add a parent-side `/proc/self/maps` check for paths under `ROOT` before `Process.start`, with terminal refusal.
+
+## Smaller points to state in the design
+
+- **Sentinel descriptors:** the fork child also holds multiprocessing's two sentinel pipe descriptors (`child_r`, `child_w`). The child-side fixture must expect them or it will fail.
+- **Identity collision:** the helper now has the controller's exact `exe` and `cmdline`. `phase_overhead` uses only pid, birth and parent, so it is fine. Confirm that nothing in the Node consumer, the gate or `runtime.validate_source_locally` identifies the controller or helper by argv.
+- **Copy-on-write accounting:**
+  - After the join, the helper's copy-on-write faults on the inherited heap are charged to the source cgroup as anon. They are bounded by the controller's `RssAnon` at fork, not by a fresh interpreter's roughly 15 MiB.
+  - The growth ledger sees this, but the `initial_cap_fit_inconclusive` check does not include it. Confirm the controller's measured `RssAnon` is small against the 256 MiB reserve.
+  - The helper's reported `RssAnon` includes shared inherited pages, so it must stay report-only, as you already say.
+- **Existing test:** `SpawnOwnershipTests` covers both children in one loop under a spawn name. Split it so PinChild asserts fork and ZeroChild stays spawn.
+- **Interrupted construction:** a signal during `PinChild.__init__` after the fork leaves `manager` as `None` with a live child. This already exists under spawn; under fork it is safe only once closure 1 is in place.
+
+## Fixture additions
+
+- **EOF proof:** the parent closes its end without sending `close`, and the real forked child must exit within a bound. This proves no stray copy of the parent end exists, which a descriptor listing cannot.
+- **Terminate proof:** with the controller's raising handlers installed in the fixture parent, `terminate()` must end the child by signal (negative exit code).
+- **Refusal cases:** one extra open descriptor and one mapping under a stand-in root must each refuse before `Process.start`, alongside the background-thread refusal.
+
+None of this needs a schema change: the refusals can reuse `guard_or_runtime_failure` or an existing `overhead_*` reason.

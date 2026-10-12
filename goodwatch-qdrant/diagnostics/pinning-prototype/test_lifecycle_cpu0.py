@@ -20,7 +20,7 @@ class WrapperFixture:
  def __enter__(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
   (self.root/'entrypoint.sh').write_bytes(SCRIPT)
-  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready","w").write(str(os.getpid()))\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
+  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready.tmp","w").write(str(os.getpid()))\nos.rename("ready.tmp","ready")\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
   self.wrapper=subprocess.Popen(['/bin/bash','./entrypoint.sh'],cwd=self.root,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','QDRANT_ALLOW_RECOVERY_MODE':'false'})
   end=time.monotonic()+3
   while not(self.root/'ready').exists():
@@ -118,25 +118,6 @@ class Tests(unittest.TestCase):
    with self.assertRaises(RuntimeError)as failure:
     with life.helper_fork_scope(10):raise original
   self.assertIs(failure.exception,original);self.assertEqual(original.lifecycleCleanupFailure,'lifecycle_lock_unproven')
- def test_exact_f831_registered_writer_closes_parent_lock_fd(self):
-  path=Path(__file__).parent.parent/'clone-preparation/prepare_clone_reclaim.py'
-  raw=path.read_bytes();expected='f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5'
-  self.assertEqual(hashlib.sha256(raw).hexdigest(),expected)
-  spec=importlib.util.spec_from_file_location('exact_f831_fixture',path);helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
-  with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
-   root=Path(directory);root.chmod(0o700);fd=os.open(root/'control.lock',os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
-   target=os.open(root/'numeric-fixture',os.O_CREAT|os.O_WRONLY,0o600)
-   def operation(output):
-    try:os.fstat(fd)
-    except OSError as e:
-     if e.errno==errno.EBADF:os.write(output,b'closed');return
-    raise RuntimeError('unexpected inherited control fd')
-   try:
-    with life.helper_fork_scope(fd):
-     result=helper.bounded_owned_writer(target,operation,root,expected,timeout=2,grace=1)
-    self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],0)
-    self.assertEqual((root/'numeric-fixture').read_bytes(),b'closed');life.require_lock(fd)
-   finally:os.close(target);os.close(fd)
  def test_protected_target_never_signalled(self):
   fake={'qdrant':{'pid':123,'startTicks':1},'wrapper':{'pid':124,'startTicks':2}}
   with patch.object(life,'require_lock'),patch.object(life,'attest',return_value=fake),patch.object(life.os,'pidfd_open')as open_pidfd:
@@ -226,14 +207,14 @@ class AttestationTests(unittest.TestCase):
   with ProcFixture()as f:
    (f.proc/str(os.getpid())/'cgroup').write_text('0::/clone/child\n')
    with self.assertRaisesRegex(RuntimeError,'lifecycle_reader_placement'):f.attest()
-class SpawnOwnershipTests(unittest.TestCase):
- def test_real_pin_and_zero_startup_do_not_inherit_control_owner(self):
+class ZeroSpawnOwnershipTests(unittest.TestCase):
+ def test_real_zero_startup_does_not_inherit_control_owner(self):
   import controller_cpu0 as controller,turnover_gate_cpu0 as gate
   with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
    path=Path(directory)/'control.lock';fd=os.open(path,os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
    info=os.fstat(fd);config={'lockIdentity':[info.st_dev,info.st_ino]}
    try:
-    for module,attribute,target,factory in ((controller,'pin_child',fake_pin_child,lambda:controller.PinChild(None,None,False,config)),(gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config))):
+    for module,attribute,target,factory in ((gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config)),):
      with patch.object(module,attribute,target),life.helper_fork_scope(fd):holder=factory()
      try:
       self.assertTrue(holder.connection.poll(3));self.assertEqual(holder.connection.recv(),{'controlLockInherited':False})
@@ -247,8 +228,8 @@ class HandoffTests(unittest.TestCase):
  def test_real_file_commit_hash_and_cas_drift(self):
   for drift in (False,True):
    with tempfile.TemporaryDirectory() as directory:
-    root=Path(directory);path=root/'cpu0-lifecycle-handoff-v1.json'
-    prior={'schema':'clone-lifecycle-handoff.cpu0.v1','owner':'stager','previousSha256':None,'snapshot':{'fixed':1}}
+    root=Path(directory);path=root/'cpu0-lifecycle-handoff-v2.json'
+    prior={'schema':'clone-lifecycle-handoff.cpu0.v2','owner':'stager','previousSha256':'b'*64,'snapshot':{'fixed':1},'adoptionIntentSha256':'a'*64}
     raw=life.canonical(prior)+b'\n';path.write_bytes(raw);path.chmod(0o600)
     def snapshot(*args):
      if drift:
@@ -260,7 +241,7 @@ class HandoffTests(unittest.TestCase):
       self.assertEqual(path.read_bytes(),b'{"changed":true}\n');self.assertEqual(len(list(root.iterdir())),1)
      else:
       result=life.commit_handoff(object(),life.digest(raw),'controller')
-      self.assertEqual(result['sha256'],life.digest(path.read_bytes()));self.assertEqual(result['previousSha256'],life.digest(raw));self.assertEqual(result['snapshot'],{'fixed':2})
+      self.assertEqual(result['adoptionIntentSha256'],'a'*64);self.assertEqual(result['sha256'],life.digest(path.read_bytes()));self.assertEqual(result['previousSha256'],life.digest(raw));self.assertEqual(result['snapshot'],{'fixed':2})
       self.assertEqual(path.stat().st_mode&0o777,0o600);self.assertEqual(len(list(root.iterdir())),1)
  def test_positive_clean_receipt_pair_and_file_handoff(self):
   with tempfile.TemporaryDirectory()as directory:
@@ -272,16 +253,121 @@ class HandoffTests(unittest.TestCase):
    new={'state':{'running':True},'qdrant':{'pid':12,'startTicks':102}}
    with patch.object(life,'ROOT',root),patch.object(life,'birth_gone',return_value=True),patch.object(life,'container',return_value={}),patch.object(life,'state_snapshot',return_value=after),patch.object(life,'attest',return_value=new):
     life.require_clean_receipt(after,receipt);pair=life.pair_snapshot(None)
-    record={'schema':'clone-lifecycle-handoff.cpu0.v1','owner':'setup','previousSha256':None,'snapshot':pair};hp=root/'cpu0-lifecycle-handoff-v1.json';raw=life.canonical(record)+b'\n';hp.write_bytes(raw);hp.chmod(0o600)
+    record={'schema':'clone-lifecycle-handoff.cpu0.v2','owner':'adoption','previousSha256':None,'snapshot':pair,'adoptionIntentSha256':'a'*64};hp=root/'cpu0-lifecycle-handoff-v2.json';raw=life.canonical(record)+b'\n';hp.write_bytes(raw);hp.chmod(0o600)
     self.assertEqual(life.read_handoff(None,life.digest(raw)),record)
     new['qdrant']['startTicks']=103
     with self.assertRaisesRegex(RuntimeError,'lifecycle_handoff_changed'):life.read_handoff(None,life.digest(raw))
  def test_handoff_cleanup_preserves_original_guard(self):
   with tempfile.TemporaryDirectory() as directory:
-   root=Path(directory);path=root/'cpu0-lifecycle-handoff-v1.json';raw=b'{"schema":"clone-lifecycle-handoff.cpu0.v1"}\n';path.write_bytes(raw);path.chmod(0o600)
+   root=Path(directory);path=root/'cpu0-lifecycle-handoff-v2.json';raw=life.canonical({'schema':'clone-lifecycle-handoff.cpu0.v2','owner':'adoption','previousSha256':None,'snapshot':{},'adoptionIntentSha256':'a'*64})+b'\n';path.write_bytes(raw);path.chmod(0o600)
    with patch.object(life,'ROOT',root),patch.object(life,'pair_snapshot',return_value={}),patch.object(life.os,'replace',side_effect=RuntimeError('lifecycle_handoff_changed')),patch.object(life.os,'unlink',side_effect=OSError('private cleanup')):
     with self.assertRaisesRegex(RuntimeError,'lifecycle_handoff_changed') as failed:life.commit_handoff(object(),life.digest(raw),'controller')
     self.assertEqual(failed.exception.lifecycleCleanupFailure,'lifecycle_handoff_cleanup_failed')
    self.assertEqual(path.read_bytes(),raw)
+
+
+class HandoffV2Tests(unittest.TestCase):
+ def test_only_adoption_intent_can_start_v2_chain(self):
+  base={'schema':'clone-lifecycle-handoff.cpu0.v2','owner':'adoption','previousSha256':None,'snapshot':{},'adoptionIntentSha256':'a'*64}
+  self.assertEqual(life.validate_handoff_record(base),base)
+  for change in ({'owner':'setup'},{'previousSha256':'b'*64},{'adoptionIntentSha256':None},{'schema':'clone-lifecycle-handoff.cpu0.v1'}):
+   with self.subTest(change=change),self.assertRaisesRegex(RuntimeError,'lifecycle_handoff_invalid'):life.validate_handoff_record({**base,**change})
+  later={**base,'owner':'controller','previousSha256':'b'*64}
+  self.assertEqual(life.validate_handoff_record(later),later)
+  with self.assertRaisesRegex(RuntimeError,'lifecycle_handoff_invalid'):life.validate_handoff_record({**later,'previousSha256':None})
+
+class OverheadContextTests(unittest.TestCase):
+ def test_actual_own_birth_and_metrics_are_separate_and_pidfd_closed(self):
+  before=len(os.listdir('/proc/self/fd'))
+  row=life.resource_process(os.getpid(),'/never-the-current-source')
+  self.assertEqual(set(row),{'identity','metrics'})
+  self.assertEqual(row['identity']['startTicks'],life.birth(os.getpid()))
+  self.assertIs(row['identity']['outsideSourceCgroup'],True)
+  self.assertEqual(set(row['metrics']),{'RssAnonBytes','VmPTEBytes'})
+  self.assertEqual(len(os.listdir('/proc/self/fd')),before)
+  with self.assertRaisesRegex(RuntimeError,'overhead_placement_unproven'):
+   life.resource_process(os.getpid(),life.process(os.getpid())['group'])
+  self.assertEqual(len(os.listdir('/proc/self/fd')),before)
+ def test_source_context_requires_actual_classes_not_missing_zero(self):
+  from types import SimpleNamespace
+  with tempfile.TemporaryDirectory() as temp:
+   root=Path(temp);source=SimpleNamespace(cgroup=root)
+   (root/'memory.stat').write_text('anon 100\nkernel 20\npagetables 10\nunevictable 0\n')
+   (root/'memory.events').write_text('max 0\noom 0\noom_kill 0\n')
+   actual=life.entry_source_context(source)
+   self.assertEqual(actual['source'],{'anonBytes':100,'kernelBytes':20,'pageTablesBytes':10})
+   (root/'memory.stat').write_text('anon 100\nkernel 20\nunevictable 0\n')
+   with self.assertRaisesRegex(RuntimeError,'overhead_measurement_unproven'):life.entry_source_context(source)
+ def test_growth_boundary_no_shrink_offset_and_no_pagetables_double_debit(self):
+  from copy import deepcopy
+  baseline={'sourceIdentity':['a'*64,life.IMAGE,1,2],'source':{'anonBytes':100,'kernelBytes':200,'pageTablesBytes':100},'outside':{'consumer':{'identity':{'pid':3,'startTicks':4,'parentPid':5,'exeIdentityHash':'b'*64,'groupHash':'c'*64,'VmLckBytes':0,'outsideSourceCgroup':True},'metrics':{'RssAnonBytes':100,'VmPTEBytes':50}}}}
+  current=deepcopy(baseline);current['source']['anonBytes']+=512*1024**2;current['source']['kernelBytes']-=10;current['outside']['consumer']['metrics']['RssAnonBytes']=0
+  self.assertEqual(life.overhead_growth(baseline,current)['chargedGrowthBytes'],512*1024**2)
+  current['outside']['consumer']['metrics']['VmPTEBytes']+=1
+  with self.assertRaisesRegex(RuntimeError,'overhead_growth_exceeded') as failure:life.overhead_growth(baseline,current)
+  self.assertEqual(failure.exception.overheadFailureEvidence['chargedGrowthBytes'],512*1024**2+1)
+  current=deepcopy(baseline);current['source']['kernelBytes']+=10;current['source']['pageTablesBytes']+=10
+  self.assertEqual(life.overhead_growth(baseline,current)['chargedGrowthBytes'],10)
+  current['outside']['consumer']['identity']['startTicks']+=1
+  with self.assertRaisesRegex(RuntimeError,'overhead_identity_changed'):life.overhead_growth(baseline,current)
+
+class NewControllerGrowthTests(unittest.TestCase):
+ def endpoint(self):
+  row={'identity':{'pid':3,'startTicks':4,'parentPid':5,'exeIdentityHash':'b'*64,'groupHash':'c'*64,'VmLckBytes':0,'outsideSourceCgroup':True},'metrics':{'RssAnonBytes':100,'VmPTEBytes':50}}
+  return {'sourceIdentity':['a'*64,life.IMAGE,1,2],'source':{'anonBytes':100,'kernelBytes':200,'pageTablesBytes':100},'outside':{'consumer':row}}
+ def test_new_controller_full_first_debit_and_retired_no_credit(self):
+  from copy import deepcopy
+  baseline=self.endpoint();current=deepcopy(baseline)
+  controller=deepcopy(current['outside']['consumer']);controller['identity']['pid']=7;controller['identity']['startTicks']=8;controller['metrics']={'RssAnonBytes':512*1024**2,'VmPTEBytes':1};current['outside']['controller']=controller
+  current['source']['anonBytes']=0;current['outside']['consumer']['metrics']['RssAnonBytes']=0
+  with self.assertRaisesRegex(RuntimeError,'overhead_growth_exceeded')as caught:life.overhead_growth(baseline,current)
+  proof=caught.exception.overheadFailureEvidence
+  self.assertEqual(proof['chargedGrowthBytes'],512*1024**2+1);self.assertEqual(proof['newOutsideRoles'],['controller'])
+  controller['metrics']={'RssAnonBytes':10,'VmPTEBytes':1};del current['outside']['consumer']
+  proof=life.overhead_growth(baseline,current)
+  self.assertEqual(proof['chargedGrowthBytes'],11);self.assertEqual(proof['retiredOutsideRoles'],['consumer'])
+ def test_new_source_birth_never_silently_rebases(self):
+  from copy import deepcopy
+  baseline=self.endpoint();current=deepcopy(baseline);current['sourceIdentity'][3]+=1
+  with self.assertRaisesRegex(RuntimeError,'overhead_identity_changed'):life.overhead_growth(baseline,current)
+
+class CleanupAttestationTests(unittest.TestCase):
+ def renew(self,f,historical):
+  with patch.object(life,'ROOT',f.root),patch.object(life,'MOUNTS',f.mounts):return life.cleanup_attest(life.NEW,historical,lambda *_:json.dumps([f.x]),f.proc,f.cg)
+ def test_new_birth_and_active_socket_retained_without_cleanup_veto(self):
+  with ProcFixture()as f:
+   historical=f.attest()
+   (f.proc/'10/net/tcp').write_text('header\n0: 0100007F:18BD 0100007F:AAAA 01\n')
+   for pid,old,new in ((10,'100','200'),(11,'101','201')):
+    path=f.proc/str(pid)/'stat';path.write_text(path.read_text().replace(old,new))
+   f.x['State']['StartedAt']='2026-10-12T00:10:00Z';f.x['State']['OOMKilled']=True
+   current=self.renew(f,historical)
+   self.assertEqual(current['activeServiceConnections'],1);self.assertEqual(current['qdrant']['startTicks'],201)
+   self.assertEqual(current['liveMountIdentityHash'],historical['liveMountIdentityHash']);self.assertIs(current['state']['OOMKilled'],True)
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_connection_present'):life.no_clients(life.process(10,f.proc),f.proc)
+ def test_extra_holder_stopped_config_and_malformed_history_refuse(self):
+  import copy
+  with ProcFixture()as f:
+   historical=f.attest();path=f.cg/'clone/cgroup.procs';path.write_text('10\n11\n12\n')
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_membership_changed'):self.renew(f,historical)
+   path.write_text('10\n11\n');f.x['State']['Running']=False
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_clean_receipt_missing'):self.renew(f,historical)
+   f.x['State']['Running']=True;f.x['Config']['Env'].append('SAFE_FIXTURE_CHANGED=1')
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_process_changed'):self.renew(f,historical)
+   broken=copy.deepcopy(historical);broken['wrapper']['pid']=True
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_target_refused'):self.renew(f,broken)
+
+class AccountingCleanupTests(unittest.TestCase):
+ def test_actual_pidfd_close_failure_preserves_original_placement_refusal(self):
+  original_close=os.close;actual_open=os.pidfd_open;opened=[]
+  def capture(pid):
+   fd=actual_open(pid);opened.append(fd);return fd
+  try:
+   with patch.object(life.os,'pidfd_open',side_effect=capture),patch.object(life.os,'close',side_effect=OSError('fixture-close-failed')):
+    with self.assertRaisesRegex(RuntimeError,'overhead_placement_unproven')as caught:life.resource_process(os.getpid(),life.process(os.getpid())['group'])
+    self.assertEqual(caught.exception.lifecycleCleanupFailure,'lifecycle_pidfd_close_failed')
+    self.assertEqual(len(opened),1);os.fstat(opened[0])
+  finally:
+   for fd in opened:original_close(fd)
 
 if __name__=='__main__':unittest.main()

@@ -1,7 +1,8 @@
 """Explicit owned-clone child-only TERM and lifecycle continuity.
 
-No default action or production target. All callers must hold the one control
-lock and authenticate these bytes before import. PIDFD exit readiness proves
+No default action or production target. Source-changing callers must hold the
+one control lock; cleanup-only attestation has no action or lock prerequisite.
+All callers must authenticate these bytes before import. PIDFD exit readiness proves
 birth disappearance; child exit status is inferred from the reviewed wrapper
 and Docker State, never claimed as a non-parent wait result on Linux 6.8.
 """
@@ -104,7 +105,7 @@ def birth(pid, proc=Path('/proc')):
     return value
 
 
-def process(pid, proc=Path('/proc')):
+def process(pid, proc=Path('/proc'), *,allow_locked=False):
     before = birth(pid, proc)
     d = proc/str(pid)
     raw = bounded(d/'stat', 8192).decode()
@@ -116,17 +117,236 @@ def process(pid, proc=Path('/proc')):
     comm = bounded(d/'comm', 256).decode().strip()
     status = bounded(d/'status', 65536).decode()
     locked = [int(row.split()[1])*1024 for row in status.splitlines() if row.startswith('VmLck:')]
-    if len(locked) != 1 or locked[0] != 0 or birth(pid, proc) != before:
+    if len(locked) != 1 or locked[0] < 0 or (not allow_locked and locked[0] != 0) or birth(pid, proc) != before:
         raise RuntimeError('lifecycle_process_changed')
     return {'pid': pid, 'startTicks': before, 'parentPid': int(fields[1]),
             'comm': comm, 'exeBasename': Path(exe).name,
             'exeIdentityHash': digest(canonical([info.st_dev, info.st_ino, info.st_size])),
-            'group': path, 'groupHash': digest(group), 'VmLckBytes': 0}
+            'group': path, 'groupHash': digest(group), 'VmLckBytes': locked[0]}
 
 
 def public_process(value):
     return {k: value[k] for k in ('pid', 'startTicks', 'parentPid',
                                  'exeIdentityHash', 'groupHash', 'VmLckBytes')}
+
+
+def resource_process(pid, source_group, proc=Path('/proc')):
+    """Birth-fenced outside process context; file RSS is deliberately absent."""
+    if unified(('0::'+source_group+'\n').encode()) != source_group or source_group == '/':
+        raise RuntimeError('overhead_placement_unproven')
+    handle = os.pidfd_open(pid)
+    try:
+        before = process(pid, proc)
+        outside = before['group'] != source_group and not before['group'].startswith(source_group.rstrip('/')+'/')
+        if not outside:
+            raise RuntimeError('overhead_placement_unproven')
+        fields = {}
+        for row in bounded(proc/str(pid)/'status', 65536).decode('ascii').splitlines():
+            name, _, value = row.partition(':')
+            if name not in ('RssAnon', 'VmPTE'):
+                continue
+            tokens = value.split()
+            if name in fields or len(tokens) != 2 or not tokens[0].isdigit() or tokens[1] != 'kB':
+                raise RuntimeError('overhead_measurement_unproven')
+            fields[name] = int(tokens[0])*1024
+        if set(fields) != {'RssAnon','VmPTE'} or process(pid, proc) != before:
+            raise RuntimeError('overhead_measurement_unproven')
+        identity = {**public_process(before),'outsideSourceCgroup':True}
+        metrics = {'RssAnonBytes':fields['RssAnon'],'VmPTEBytes':fields['VmPTE']}
+        if any(type(value) is not int or value < 0 or value > 2**53-1 for value in (*metrics.values(),identity['pid'],identity['startTicks'],identity['parentPid'])):
+            raise RuntimeError('overhead_measurement_unproven')
+        return {'identity':identity,'metrics':metrics}
+    finally:
+        original=sys.exc_info()[1]
+        try:os.close(handle)
+        except BaseException:
+            if original is not None:original.lifecycleCleanupFailure='lifecycle_pidfd_close_failed'
+            else:raise RuntimeError('lifecycle_pidfd_close_failed')from None
+
+
+def entry_resource_context(source, proc=Path('/proc')):
+    """Derive the running-entry inspector and its real parent, never a roster."""
+    group = source.cgroup_relative
+    if not group.startswith('/'):
+        group = '/'+group
+    own = resource_process(os.getpid(), group, proc)
+    parent = resource_process(own['identity']['parentPid'], group, proc)
+    children = bounded(proc/str(os.getpid())/'task'/str(os.getpid())/'children',8192).split()
+    if children:
+        raise RuntimeError('overhead_unregistered_child')
+    return {'entryInspector':own,'transportParent':parent}
+
+
+def source_resource_context(source):
+    """Actual source cgroup anon/kernel context; pagetables are a subset."""
+    raw = bounded(source.cgroup/'memory.stat',65536)
+    values = {}
+    for row in raw.decode('ascii').splitlines():
+        parts = row.split()
+        if parts and parts[0] in ('anon','kernel','pagetables'):
+            if len(parts)!=2 or parts[0] in values or not parts[1].isdigit():
+                raise RuntimeError('overhead_measurement_unproven')
+            values[parts[0]]=int(parts[1])
+    if set(values)!={'anon','kernel','pagetables'} or any(v>2**53-1 for v in values.values()):
+        raise RuntimeError('overhead_measurement_unproven')
+    return {'anonBytes':values['anon'],'kernelBytes':values['kernel'],'pageTablesBytes':values['pagetables']}
+
+
+def entry_source_context(source):
+    """No host-memory read: the admission host sample must be last and unique."""
+    raw=bounded(source.cgroup/'memory.stat',65536)
+    values={}
+    for row in raw.decode('ascii').splitlines():
+        parts=row.split()
+        if parts and parts[0] in ('anon','kernel','pagetables','unevictable'):
+            if len(parts)!=2 or parts[0] in values or not parts[1].isdigit():
+                raise RuntimeError('overhead_measurement_unproven')
+            values[parts[0]]=int(parts[1])
+    events={}
+    for row in bounded(source.cgroup/'memory.events',8192).decode('ascii').splitlines():
+        parts=row.split()
+        if parts and parts[0] in ('max','oom','oom_kill'):
+            if len(parts)!=2 or parts[0] in events or not parts[1].isdigit():
+                raise RuntimeError('overhead_measurement_unproven')
+            events[parts[0]]=int(parts[1])
+    if set(values)!={'anon','kernel','pagetables','unevictable'} or set(events)!={'max','oom','oom_kill'} or any(v>2**53-1 for v in (*values.values(),*events.values())):
+        raise RuntimeError('overhead_measurement_unproven')
+    return {'source':{'anonBytes':values['anon'],'kernelBytes':values['kernel'],'pageTablesBytes':values['pagetables']},'accounting':{'unevictableBytes':values['unevictable'],'memoryEvents':events}}
+
+
+def overhead_growth(baseline,current):
+    """Positive per-class deltas, with no shrink offsets or file-RSS credit."""
+    for endpoint in (baseline,current):
+        try:
+            source=endpoint['source'];outside=endpoint['outside'];identity=endpoint['sourceIdentity']
+            if type(source)is not dict or set(source)!={'anonBytes','kernelBytes','pageTablesBytes'} or any(type(v)is not int or not 0<=v<=2**53-1 for v in source.values()) or source['pageTablesBytes']>source['kernelBytes'] or type(outside)is not dict or not outside or not set(outside)<=set(('consumer','transportParent','controller','entryInspector','preflight')) or type(identity)not in (list,tuple) or len(identity)!=4 or type(identity[0])is not str or re.fullmatch('[a-f0-9]{64}',identity[0])is None or identity[1]!=IMAGE or any(type(v)is not int or v<=0 for v in identity[2:]):raise ValueError()
+            for row in outside.values():validate_resource_row(row)
+        except (KeyError,TypeError,ValueError):raise RuntimeError('overhead_measurement_unproven') from None
+    if baseline['sourceIdentity']!=current['sourceIdentity']:
+        raise RuntimeError('overhead_identity_changed')
+    source_delta={key:current['source'][key]-baseline['source'][key] for key in ('anonBytes','kernelBytes','pageTablesBytes')}
+    outside_delta={}
+    new_roles=[];retired_roles=[]
+    for role,new in current['outside'].items():
+        old=baseline['outside'].get(role)
+        if old is None:
+            new_roles.append(role);outside_delta[role]=dict(new['metrics']);continue
+        if old['identity']!=new['identity']:
+            raise RuntimeError('overhead_identity_changed')
+        outside_delta[role]={key:new['metrics'][key]-old['metrics'][key] for key in ('RssAnonBytes','VmPTEBytes')}
+    retired_roles=sorted(set(baseline['outside'])-set(current['outside']))
+    # Source pageTablesBytes is already inside kernelBytes; never debit it twice.
+    charged=sum(max(0,source_delta[key]) for key in ('anonBytes','kernelBytes'))+sum(max(0,value) for row in outside_delta.values() for value in row.values())
+    result={'schema':'clone-overhead-growth.cpu0.v2','baseline':baseline,'current':current,'sourceDelta':source_delta,'outsideDelta':outside_delta,'newOutsideRoles':sorted(new_roles),'retiredOutsideRoles':retired_roles,'chargedGrowthBytes':charged,'growthAllowanceBytes':512*1024**2,'pageTablesIncludedInKernel':True,'fileRssCredited':False,'exclusiveMemorySum':False,'unsampledPeakBytes':None}
+    if charged>result['growthAllowanceBytes']:
+        error=RuntimeError('overhead_growth_exceeded');error.overheadFailureEvidence=result;raise error
+    return result
+
+
+def registry_json(path):
+    if path not in (ROOT/'cpu0-consumer-enrolment-v2.json',ROOT/'cpu0-consumer-registration-v2.json') or path.resolve(strict=True)!=path:
+        raise RuntimeError('consumer_registry_unproven')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        a=os.fstat(fd);sig=lambda s:(s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns,s.st_mode,s.st_uid,s.st_nlink)
+        if not stat.S_ISREG(a.st_mode) or a.st_uid!=0 or a.st_nlink!=1 or stat.S_IMODE(a.st_mode)!=0o600 or a.st_size>65536:raise RuntimeError('consumer_registry_unproven')
+        raw=os.read(fd,65537)
+        if len(raw)!=a.st_size or sig(a)!=sig(os.fstat(fd)) or sig(a)!=sig(path.lstat()):raise RuntimeError('consumer_registry_unproven')
+        def unique(pairs):
+            result={}
+            for key,value in pairs:
+                if key in result:raise RuntimeError('consumer_registry_unproven')
+                result[key]=value
+            return result
+        value=json.loads(raw,object_pairs_hook=unique)
+        if canonical(value)+b'\n'!=raw:raise RuntimeError('consumer_registry_unproven')
+        return value,digest(raw)
+    finally:os.close(fd)
+
+
+def stage_proof_bytes(name):
+    if name not in ('cpu0-source-freeze.json','cpu0-external-manifest.json','node-provenance.json'):raise RuntimeError('consumer_registry_unproven')
+    path=ROOT/'pin-control-20261012-100-cpu0-v2'/name
+    if path.resolve(strict=True)!=path:raise RuntimeError('consumer_registry_unproven')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        a=os.fstat(fd);sig=lambda s:(s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns,s.st_mode,s.st_uid,s.st_nlink)
+        if not stat.S_ISREG(a.st_mode) or a.st_uid!=0 or a.st_nlink!=1 or stat.S_IMODE(a.st_mode)!=0o600 or a.st_size>262144:raise RuntimeError('consumer_registry_unproven')
+        raw=os.read(fd,262145)
+        if len(raw)!=a.st_size or sig(a)!=sig(os.fstat(fd)) or sig(a)!=sig(path.lstat()):raise RuntimeError('consumer_registry_unproven')
+        return raw
+    finally:os.close(fd)
+
+
+def registered_phase_context(source,lock_fd):
+    """Current owner must be the recorded Node's actual direct child."""
+    require_lock(lock_fd)
+    preliminary,sha=registry_json(ROOT/'cpu0-consumer-enrolment-v2.json')
+    registered,registration_sha=registry_json(ROOT/'cpu0-consumer-registration-v2.json')
+    enrol_keys={'schema','variant','sourceFreezeSha256','externalManifestSha256','helperCodeSha256','helperPolicySha256','controllerPolicySha256','adoptionIntentSha256','consumerPredecessorSha256','source','consumer','transportParent','preflight','consumerArgvHash','raiseOwnNofile','nodeProvenanceSha256','nodeIdentity','sharedControlIdentity','registeredBeforeEntrySample','productionAcceptance'}
+    reg_keys={'schema','variant','consumerEnrolmentSha256','sourceFreezeSha256','externalManifestSha256','predecessorSha256','consumerPredecessorSha256','adoptionIntentSha256','raiseOwnNofile','consumerArgvHash','consumerBirth','transportParentBirth','preflightBirth','preflightExit','source','nodeProvenanceSha256','nodeIdentity','sharedControlIdentity','registeredBeforeCapture'}
+    if type(preliminary)is not dict or set(preliminary)!=enrol_keys or type(registered)is not dict or set(registered)!=reg_keys:raise RuntimeError('consumer_registry_unproven')
+    if preliminary.get('schema')!='cpu0-consumer-enrolment.v2' or registered.get('schema')!='cpu0-consumer-registration.v2' or preliminary.get('variant')!='cpu0-fixed-capacity.v2' or registered.get('variant')!='cpu0-fixed-capacity.v2' or registered.get('consumerEnrolmentSha256')!=sha:
+        raise RuntimeError('consumer_registry_unproven')
+    for role in ('consumer','transportParent','preflight'):validate_resource_row(preliminary[role])
+    if preliminary['registeredBeforeEntrySample']is not True or preliminary['productionAcceptance']is not False or type(preliminary['raiseOwnNofile'])is not bool or registered['registeredBeforeCapture']is not True:raise RuntimeError('consumer_registry_unproven')
+    for key in ('sourceFreezeSha256','externalManifestSha256','consumerPredecessorSha256','adoptionIntentSha256','consumerArgvHash','raiseOwnNofile','nodeProvenanceSha256','nodeIdentity','sharedControlIdentity','source'):
+        if registered.get(key)!=preliminary.get(key):raise RuntimeError('consumer_registry_unproven')
+    if type(preliminary['source'])is not dict or type(preliminary['source'].get('state'))is not dict or preliminary['source']['state'].get('containerIdHash')!=digest(source.identity[0].encode()):raise RuntimeError('consumer_registry_unproven')
+    fd_info=os.fstat(lock_fd)
+    if preliminary['sharedControlIdentity']!={'device':fd_info.st_dev,'inode':fd_info.st_ino}:raise RuntimeError('consumer_registry_unproven')
+    own=resource_process(os.getpid(),source.cgroup_relative)
+    node=resource_process(own['identity']['parentPid'],source.cgroup_relative)
+    parent=resource_process(node['identity']['parentPid'],source.cgroup_relative)
+    if node['identity']!=preliminary['consumer']['identity'] or node['identity']!=registered['consumerBirth'] or parent['identity']!=preliminary['transportParent']['identity'] or parent['identity']!=registered['transportParentBirth']:
+        raise RuntimeError('overhead_identity_changed')
+    stage=ROOT/'pin-control-20261012-100-cpu0-v2'
+    expected=[str(stage/'node'),str(stage/'consumer_cpu0.mjs'),'--execute-reviewed-fixed-capacity-v2','--handoff-sha256',preliminary['consumerPredecessorSha256'],'--cpu0-source-freeze-sha256',preliminary['sourceFreezeSha256'],'--external-manifest-sha256',preliminary['externalManifestSha256']]
+    if preliminary['raiseOwnNofile']:expected.append('--raise-own-nofile')
+    raw=bounded(Path('/proc')/str(node['identity']['pid'])/'cmdline',16384)
+    if raw!=b'\0'.join(value.encode() for value in expected)+b'\0' or digest(canonical(expected))!=preliminary['consumerArgvHash']:raise RuntimeError('consumer_registry_unproven')
+    info=(stage/'node').lstat();actual=(Path('/proc')/str(node['identity']['pid'])/'exe').stat()
+    identity={'device':info.st_dev,'inode':info.st_ino,'size':info.st_size,'mtimeNs':str(info.st_mtime_ns),'ctimeNs':str(info.st_ctime_ns)}
+    if not stat.S_ISREG(info.st_mode) or info.st_uid!=0 or info.st_nlink!=1 or stat.S_IMODE(info.st_mode)!=0o700 or identity!=preliminary['nodeIdentity'] or (actual.st_dev,actual.st_ino)!=(info.st_dev,info.st_ino):raise RuntimeError('consumer_registry_unproven')
+    for name,key in (('cpu0-source-freeze.json','sourceFreezeSha256'),('cpu0-external-manifest.json','externalManifestSha256'),('node-provenance.json','nodeProvenanceSha256')):
+        if digest(stage_proof_bytes(name))!=preliminary[key]:raise RuntimeError('consumer_registry_unproven')
+    # The preflight must already have exited; it cannot be an unregistered peer.
+    old=preliminary['preflight']['identity']
+    if not birth_gone(old['pid'],old['startTicks']):raise RuntimeError('overhead_unregistered_child')
+    return {'outside':{'controller':own,'consumer':node,'transportParent':parent},'consumerEnrolmentSha256':sha,'consumerRegistrationSha256':registration_sha}
+
+
+def validate_resource_row(row):
+    if type(row)is not dict or set(row)!={'identity','metrics'}:raise RuntimeError('overhead_measurement_unproven')
+    identity=row['identity'];metrics=row['metrics']
+    if type(identity)is not dict or set(identity)!={'pid','startTicks','parentPid','exeIdentityHash','groupHash','VmLckBytes','outsideSourceCgroup'} or type(metrics)is not dict or set(metrics)!={'RssAnonBytes','VmPTEBytes'}:raise RuntimeError('overhead_measurement_unproven')
+    if any(type(identity[key])is not int or not 0<identity[key]<=2**53-1 for key in ('pid','startTicks','parentPid')) or type(identity['VmLckBytes'])is not int or identity['VmLckBytes']!=0 or identity['outsideSourceCgroup']is not True or any(type(identity[key])is not str or re.fullmatch('[a-f0-9]{64}',identity[key])is None for key in ('exeIdentityHash','groupHash')) or any(type(value)is not int or not 0<=value<=2**53-1 for value in metrics.values()):raise RuntimeError('overhead_measurement_unproven')
+    return row
+
+
+def source_helper_context(source,child):
+    """Report an independently placed direct helper; do not debit it twice."""
+    pid=child.process.pid
+    if type(pid)is not int or pid<=0:raise RuntimeError('overhead_helper_unproven')
+    handle=os.pidfd_open(pid)
+    try:
+        before=process(pid,allow_locked=True)
+        if before['parentPid']!=os.getpid() or before['group']!=source.cgroup_relative:raise RuntimeError('overhead_helper_unproven')
+        values={}
+        for row in bounded(Path('/proc')/str(pid)/'status',65536).decode('ascii').splitlines():
+            key,_,rest=row.partition(':')
+            if key in ('RssAnon','VmPTE'):
+                parts=rest.split()
+                if key in values or len(parts)!=2 or not parts[0].isdigit() or parts[1]!='kB':raise RuntimeError('overhead_helper_unproven')
+                values[key]=int(parts[0])*1024
+        if set(values)!={'RssAnon','VmPTE'} or any(value>2**53-1 for value in values.values()) or any(type(before[key])is not int or not 0<=before[key]<=2**53-1 for key in ('pid','startTicks','parentPid','VmLckBytes')) or process(pid,allow_locked=True)!=before:raise RuntimeError('overhead_helper_unproven')
+        return {'identity':{**public_process(before),'outsideSourceCgroup':False},'metrics':{'RssAnonBytes':values['RssAnon'],'VmPTEBytes':values['VmPTE']},'preJoinChargeUnattributed':True,'chargedSeparately':False}
+    finally:
+        original=sys.exc_info()[1]
+        try:os.close(handle)
+        except BaseException:
+            if original is not None:original.lifecycleCleanupFailure='lifecycle_pidfd_close_failed'
+            else:raise RuntimeError('lifecycle_pidfd_close_failed')from None
 
 
 def require_lock(fd):
@@ -245,7 +465,7 @@ def script(wrapper, proc=Path('/proc')):
             'RecoveryAllowed': False}
 
 
-def no_clients(wrapper, proc=Path('/proc')):
+def connection_census(wrapper, proc=Path('/proc')):
     # Fixed Qdrant HTTP/GRPC local ports; LISTEN/TIME_WAIT are not live clients.
     count = 0
     for table in ('tcp', 'tcp6'):
@@ -261,9 +481,13 @@ def no_clients(wrapper, proc=Path('/proc')):
                     count += 1
         except (ValueError, IndexError):
             raise RuntimeError('lifecycle_connection_unknown') from None
-    if count:
-        raise RuntimeError('lifecycle_connection_present')
-    return {'activeServiceConnections': 0, 'connectionCensusComplete': True}
+    return {'activeServiceConnections': count, 'connectionCensusComplete': True}
+
+
+def no_clients(wrapper, proc=Path('/proc')):
+    proof=connection_census(wrapper,proc)
+    if proof['activeServiceConnections']:raise RuntimeError('lifecycle_connection_present')
+    return proof
 
 
 def attest(name, docker, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
@@ -294,6 +518,62 @@ def attest(name, docker, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
     if process(os.getpid(), proc) != own:
         raise RuntimeError('lifecycle_reader_placement')
     return {'state': state_snapshot(x), 'wrapper': public_process(wrapper),
+            'qdrant': public_process(child), **script_proof, **clients,
+            'liveMountIdentityHash': mount_identity,
+            'readerOutsideSourceSubtree': True, 'readerVmLckBytes': 0}
+
+
+def validate_source_observation(value):
+    keys={'state','wrapper','qdrant','scriptSha256','wrapperArgvHash','RecoveryAllowed','activeServiceConnections','connectionCensusComplete','liveMountIdentityHash','readerOutsideSourceSubtree','readerVmLckBytes'}
+    if type(value)is not dict or set(value)!=keys:raise RuntimeError('lifecycle_target_refused')
+    state=value['state']
+    if type(state)is not dict or set(state)!={'containerIdHash','running','startedAt','finishedAt','restartCount','exitCode','OOMKilled','configurationHash'} or state['running']is not True or type(state['OOMKilled'])is not bool:raise RuntimeError('lifecycle_target_refused')
+    for key in ('containerIdHash','configurationHash'):
+        if type(state[key])is not str or re.fullmatch('[a-f0-9]{64}',state[key])is None:raise RuntimeError('lifecycle_target_refused')
+    if any(type(state[key])is not int or not 0<=state[key]<=2**53-1 for key in ('restartCount','exitCode')):raise RuntimeError('lifecycle_target_refused')
+    for key in ('startedAt','finishedAt'):
+        if type(state[key])is not str or len(state[key])>64:raise RuntimeError('lifecycle_target_refused')
+        try:datetime.fromisoformat(state[key].replace('Z','+00:00'))
+        except ValueError:raise RuntimeError('lifecycle_target_refused')from None
+    for role in ('wrapper','qdrant'):
+        row=value[role]
+        if type(row)is not dict or set(row)!={'pid','startTicks','parentPid','exeIdentityHash','groupHash','VmLckBytes'} or any(type(row[key])is not int or not 0<row[key]<=2**53-1 for key in ('pid','startTicks','parentPid')) or type(row['VmLckBytes'])is not int or row['VmLckBytes']!=0 or any(type(row[key])is not str or re.fullmatch('[a-f0-9]{64}',row[key])is None for key in ('exeIdentityHash','groupHash')):raise RuntimeError('lifecycle_target_refused')
+    if value['scriptSha256']!=SCRIPT_SHA or value['RecoveryAllowed']is not False or any(type(value[key])is not str or re.fullmatch('[a-f0-9]{64}',value[key])is None for key in ('wrapperArgvHash','liveMountIdentityHash')):raise RuntimeError('lifecycle_wrapper_unreviewed')
+    if type(value['activeServiceConnections'])is not int or not 0<=value['activeServiceConnections']<=1024 or value['connectionCensusComplete']is not True or value['readerOutsideSourceSubtree']is not True or type(value['readerVmLckBytes'])is not int or value['readerVmLckBytes']!=0:raise RuntimeError('lifecycle_target_refused')
+
+
+def cleanup_attest(name, historical, docker, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
+    if name!=NEW:raise RuntimeError('lifecycle_target_refused')
+    validate_source_observation(historical)
+    x = container(name, docker)
+    if x['State']['Running'] is not True:
+        raise RuntimeError('lifecycle_clean_receipt_missing')
+    wrapper = process(x['State']['Pid'], proc)
+    group = wrapper['group']
+    cg = cgroups/group.lstrip('/')
+    if group == '/' or cg.resolve() != cg:
+        raise RuntimeError('lifecycle_membership_changed')
+    raw = bounded(cg/'cgroup.procs', 512)
+    members = [int(v) for v in raw.split()]
+    if len(members) != 2 or len(set(members)) != 2 or wrapper['pid'] not in members:
+        raise RuntimeError('lifecycle_membership_changed')
+    qpid = next(pid for pid in members if pid != wrapper['pid'])
+    child = process(qpid, proc)
+    if child['parentPid'] != wrapper['pid'] or child['comm'] != 'qdrant' or child['exeBasename'] != 'qdrant' or child['group'] != group:
+        raise RuntimeError('lifecycle_membership_changed')
+    own = process(os.getpid(), proc)
+    if own['group'] == group or own['group'].startswith(group.rstrip('/')+'/'):
+        raise RuntimeError('lifecycle_reader_placement')
+    script_proof = script(wrapper, proc)
+    mount_identity = mounted_identities(wrapper, proc)
+    clients = connection_census(wrapper, proc)
+    if mounted_identities(wrapper, proc) != mount_identity or bounded(cg/'cgroup.procs', 512) != raw or birth(wrapper['pid'], proc) != wrapper['startTicks'] or birth(child['pid'], proc) != child['startTicks'] or state_snapshot(container(name, docker)) != state_snapshot(x):
+        raise RuntimeError('lifecycle_process_changed')
+    if process(os.getpid(), proc) != own:
+        raise RuntimeError('lifecycle_reader_placement')
+    snapshot=state_snapshot(x)
+    if type(historical['state'])is not dict or snapshot['containerIdHash']!=historical['state'].get('containerIdHash') or snapshot['configurationHash']!=historical['state'].get('configurationHash') or historical['wrapperArgvHash']!=script_proof['wrapperArgvHash'] or historical['liveMountIdentityHash']!=mount_identity:raise RuntimeError('lifecycle_process_changed')
+    return {'state': snapshot, 'wrapper': public_process(wrapper),
             'qdrant': public_process(child), **script_proof, **clients,
             'liveMountIdentityHash': mount_identity,
             'readerOutsideSourceSubtree': True, 'readerVmLckBytes': 0}
@@ -478,7 +758,7 @@ def compare_handoff(previous, current):
 
 def secure_json(path):
     """Only the two fixed public lifecycle receipt paths; no private input."""
-    if path not in (ROOT/'cpu0-old-clean-receipt-v1.json', ROOT/'cpu0-lifecycle-handoff-v1.json') or path.resolve() != path:
+    if path not in (ROOT/'cpu0-old-clean-receipt-v1.json', ROOT/'cpu0-lifecycle-handoff-v2.json') or path.resolve() != path:
         raise RuntimeError('lifecycle_handoff_invalid')
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
     try:
@@ -501,27 +781,42 @@ def pair_snapshot(docker):
         raise RuntimeError('lifecycle_clean_receipt_missing')
     require_clean_receipt(old, receipt)
     new = attest(NEW, docker)
-    return {'variant': 'cpu0-owned-lifecycle.v1', 'oldStopped': old,
+    return {'variant': 'cpu0-fixed-capacity.v2', 'oldStopped': old,
             'oldCleanReceiptSha256': receipt_sha, 'newRunning': new}
+
+
+def validate_handoff_record(record):
+    if not isinstance(record,dict) or set(record)!={'schema','owner','previousSha256','snapshot','adoptionIntentSha256'} or record['schema']!='clone-lifecycle-handoff.cpu0.v2' or not isinstance(record['snapshot'],dict):
+        raise RuntimeError('lifecycle_handoff_invalid')
+    valid_sha=lambda value:type(value)is str and re.fullmatch('[a-f0-9]{64}',value)is not None
+    if not valid_sha(record['adoptionIntentSha256']):raise RuntimeError('lifecycle_handoff_invalid')
+    if record['owner']=='adoption':
+        if record['previousSha256']is not None:raise RuntimeError('lifecycle_handoff_invalid')
+    elif record['owner']in ('controller','turnover','preflight','stager','outer'):
+        if not valid_sha(record['previousSha256']):raise RuntimeError('lifecycle_handoff_invalid')
+    else:raise RuntimeError('lifecycle_handoff_invalid')
+    return record
 
 
 def read_handoff(docker, expected_sha):
     if not isinstance(expected_sha, str) or len(expected_sha) != 64 or any(c not in '0123456789abcdef' for c in expected_sha):
         raise RuntimeError('lifecycle_handoff_invalid')
-    record, found, _ = secure_json(ROOT/'cpu0-lifecycle-handoff-v1.json')
-    if found != expected_sha or record.get('schema') != 'clone-lifecycle-handoff.cpu0.v1':
+    record, found, _ = secure_json(ROOT/'cpu0-lifecycle-handoff-v2.json')
+    if found != expected_sha or record.get('schema') != 'clone-lifecycle-handoff.cpu0.v2':
         raise RuntimeError('lifecycle_handoff_changed')
+    validate_handoff_record(record)
     compare_handoff(record['snapshot'], pair_snapshot(docker))
     return record
 
 
 def commit_handoff(docker, expected_sha, owner):
-    path = ROOT/'cpu0-lifecycle-handoff-v1.json'
+    path = ROOT/'cpu0-lifecycle-handoff-v2.json'
     prior, found, identity = secure_json(path)
     if found != expected_sha or owner not in ('controller', 'turnover', 'preflight', 'stager', 'outer'):
         raise RuntimeError('lifecycle_handoff_changed')
-    record = {'schema': 'clone-lifecycle-handoff.cpu0.v1', 'owner': owner,
-              'previousSha256': found, 'snapshot': pair_snapshot(docker)}
+    validate_handoff_record(prior)
+    record = {'schema': 'clone-lifecycle-handoff.cpu0.v2', 'owner': owner,
+              'previousSha256': found, 'snapshot': pair_snapshot(docker),'adoptionIntentSha256':prior['adoptionIntentSha256']}
     raw = canonical(record)+b'\n'
     fd, temporary = tempfile.mkstemp(prefix='.cpu0-handoff-', dir=ROOT)
     temp_identity = (os.fstat(fd).st_dev, os.fstat(fd).st_ino)

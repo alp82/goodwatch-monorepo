@@ -5,7 +5,9 @@ Default prepares only. No private query payload is accepted or emitted. No produ
 import sys
 sys.dont_write_bytecode = True
 import argparse
+from contextlib import contextmanager
 import ctypes
+import errno
 from datetime import datetime, timezone
 import fcntl
 import hashlib
@@ -36,6 +38,63 @@ ARCHIVE = ROOT/'rename-proof/media-20261011T041503Z.snapshot'
 ARCHIVE_HASH = '614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb'
 ARCHIVE_BYTES = 4428863488
 
+_INSPECTOR=None
+
+
+def _own_birth():
+    raw=(Path('/proc')/str(os.getpid())/'stat').read_text()
+    value=int(raw[raw.rfind(')')+2:].split()[19])
+    if value<=0:raise RuntimeError('overhead_identity_changed')
+    return value
+
+
+@contextmanager
+def inspector_scope():
+    """Parent-only counters; inherited fork copies never aggregate child work."""
+    global _INSPECTOR
+    if _INSPECTOR is not None:raise RuntimeError('overhead_inspector_scope_active')
+    old=runtime.docker
+    record={'ownerPid':os.getpid(),'ownerStartTicks':_own_birth(),'runtimeDockerCalls':0,'totalElapsedSeconds':0.0,'maxElapsedSeconds':0.0,'callTimeoutSeconds':5,'parentOnly':True,'unsampledPeakBytes':None}
+    def observed(*args):
+        parent=os.getpid()==record['ownerPid']
+        if parent and _own_birth()!=record['ownerStartTicks']:raise RuntimeError('overhead_identity_changed')
+        started=time.monotonic()
+        try:return old(*args)
+        finally:
+            if parent:
+                elapsed=time.monotonic()-started;record['runtimeDockerCalls']+=1;record['totalElapsedSeconds']+=elapsed;record['maxElapsedSeconds']=max(record['maxElapsedSeconds'],elapsed)
+    _INSPECTOR=record;runtime.docker=observed
+    try:yield record
+    finally:runtime.docker=old;_INSPECTOR=None
+
+
+def phase_overhead(config,source,lock_fd,manager=None,*,baseline=False):
+    lifecycle=load_lifecycle(config)
+    if _INSPECTOR is None or os.getpid()!=_INSPECTOR['ownerPid'] or _own_birth()!=_INSPECTOR['ownerStartTicks']:raise RuntimeError('overhead_inspector_unproven')
+    registered=lifecycle.registered_phase_context(source,lock_fd);outside=registered['outside']
+    helper=lifecycle.source_helper_context(source,manager) if manager is not None else None
+    qdrant=lifecycle.process(source.pid);wrapper=lifecycle.process(qdrant['parentPid'])
+    expected_members=sorted([qdrant['pid'],wrapper['pid']]+([helper['identity']['pid']] if helper else []))
+    source_members=lifecycle.bounded(source.cgroup/'cgroup.procs',512)
+    if sorted(int(value) for value in source_members.split())!=expected_members or qdrant['group']!=source.cgroup_relative or wrapper['group']!=source.cgroup_relative or qdrant['comm']!='qdrant' or qdrant['exeBasename']!='qdrant':raise RuntimeError('overhead_helper_unproven')
+    lifecycle.script(wrapper)
+    raw=lifecycle.bounded(Path('/proc')/str(os.getpid())/'task'/str(os.getpid())/'children',8192)
+    members=[int(value) for value in raw.split()]
+    if members!=([helper['identity']['pid']] if helper is not None else []):raise RuntimeError('overhead_unregistered_child')
+    if baseline:
+        enrolled,_=lifecycle.registry_json(ROOT/'cpu0-consumer-enrolment-v2.json')
+        outside={role:enrolled[role] for role in ('consumer','transportParent')}
+    source_values=lifecycle.source_resource_context(source)
+    if inspect_source(source.spec).identity!=source.identity:raise RuntimeError('overhead_identity_changed')
+    # Re-fence actual current process identities without rebasing the metrics.
+    fresh_registered=lifecycle.registered_phase_context(source,lock_fd);fresh=fresh_registered['outside']
+    if any(registered[key]!=fresh_registered[key] for key in ('consumerEnrolmentSha256','consumerRegistrationSha256')):raise RuntimeError('consumer_registry_unproven')
+    if any(outside[role]['identity']!=fresh[role]['identity'] for role in outside):raise RuntimeError('overhead_identity_changed')
+    if helper is not None and lifecycle.source_helper_context(source,manager)['identity']!=helper['identity']:raise RuntimeError('overhead_identity_changed')
+    if lifecycle.process(source.pid)!=qdrant or lifecycle.process(wrapper['pid'])!=wrapper or lifecycle.bounded(source.cgroup/'cgroup.procs',512)!=source_members:raise RuntimeError('overhead_identity_changed')
+    if lifecycle.bounded(Path('/proc')/str(os.getpid())/'task'/str(os.getpid())/'children',8192)!=raw:raise RuntimeError('overhead_unregistered_child')
+    return {'schema':'clone-overhead-endpoint.cpu0.v2','sourceIdentity':list(source.identity),'source':source_values,'outside':outside,'sourceHelper':helper,'consumerEnrolmentSha256':registered['consumerEnrolmentSha256'],'consumerRegistrationSha256':registered['consumerRegistrationSha256'],'inspector':{**_INSPECTOR,'liveUnregisteredDirectChildren':0},'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic()}
+
 
 def at(): return datetime.now(timezone.utc).isoformat()
 def digest(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -46,7 +105,7 @@ def load_control(path, policy_hash, code_hash):
     if len(raw) > 16384 or hashlib.sha256(raw).hexdigest() != policy_hash or digest(__file__) != code_hash:
         raise ValueError('control_freeze_changed')
     c = json.loads(raw)
-    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds','controlReadySeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation','cpuIsolation','lifecycle'} or c['schema'] != 'clone-pin-control.cpu0-owned.v1':
+    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds','controlReadySeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation','cpuIsolation','lifecycle'} or c['schema'] != 'clone-pin-control.cpu0-fixed.v2':
         raise ValueError('explicit_control_policy_required')
     if c['pressurePlacement'] != 'controller-original-cgroup': raise ValueError('pressure_placement_required')
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
@@ -64,7 +123,7 @@ def load_control(path, policy_hash, code_hash):
     prep=c['cachePreparation']
     if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','postwriteQuiescenceSeconds','helperPath','helperSha256','writerPolicy'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=60 or prep['postwriteQuiescenceSeconds']!=60 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
     if prep['writerPolicy']!={'registrationSeconds': 10, 'prewriteAcceptanceSeconds': 60, 'prewriteSupervisionSeconds': 65, 'kernelWriteSeconds': 60, 'cleanupSeconds': 10, 'lifecycleSeconds': 145, 'receiptLimit': 18, 'censusLimit': 28}:raise ValueError('explicit_cache_preparation_required')
-    cpu0_guards.validate_policy(c['cpuIsolation'])
+    _fixed_cpu_policy(c)
     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
     if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
     if 'pin' not in config['actions']:
@@ -77,7 +136,7 @@ def load_control(path, policy_hash, code_hash):
 
 def load_lifecycle(config):
     value=config['lifecycle'];path=MODULE_DIR/'lifecycle_cpu0.py'
-    if set(value)!={'modulePath','moduleSha256','entrypointSha256','stopSeconds','handoffPath','oldCleanReceiptPath'} or value['modulePath']!=str(path) or not re.fullmatch('[a-f0-9]{64}',value['moduleSha256']) or value['entrypointSha256']!='f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e' or type(value['stopSeconds'])is not int or value['stopSeconds']!=20 or value['handoffPath']!=str(ROOT/'cpu0-lifecycle-handoff-v1.json') or value['oldCleanReceiptPath']!=str(ROOT/'cpu0-old-clean-receipt-v1.json'):
+    if set(value)!={'modulePath','moduleSha256','entrypointSha256','stopSeconds','handoffPath','oldCleanReceiptPath'} or value['modulePath']!=str(path) or not re.fullmatch('[a-f0-9]{64}',value['moduleSha256']) or value['entrypointSha256']!='f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e' or type(value['stopSeconds'])is not int or value['stopSeconds']!=20 or value['handoffPath']!=str(ROOT/'cpu0-lifecycle-handoff-v2.json') or value['oldCleanReceiptPath']!=str(ROOT/'cpu0-old-clean-receipt-v1.json'):
         raise RuntimeError('lifecycle_freeze_changed')
     if path.resolve()!=path:raise RuntimeError('lifecycle_freeze_changed')
     fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
@@ -177,21 +236,222 @@ def clone_command(*args):
     except (OSError,subprocess.SubprocessError):raise RuntimeError('clone_control_command_failed') from None
 
 
-def birth_admission(config,spec,policy):
+def host_memory(path=Path('/proc/meminfo')):
+    required={'MemTotal','MemAvailable','Dirty','Writeback','SwapTotal'}
+    try:
+        with path.open('rb') as stream: raw=stream.read(65537)
+        if len(raw)>65536: raise ValueError()
+        values={}
+        for row in raw.decode('ascii').splitlines():
+            key, rest=row.split(':',1)
+            if key not in required: continue
+            fields=rest.split()
+            if key in values or len(fields)!=2 or fields[1]!='kB' or not fields[0].isdigit(): raise ValueError()
+            values[key]=int(fields[0])*1024
+        if set(values)!=required or values['MemTotal']<=0 or values['MemAvailable']>values['MemTotal']: raise ValueError()
+        return values
+    except (OSError,ValueError,UnicodeError):
+        raise RuntimeError('host_memory_unproven') from None
+
+
+def require_unheld_scope(target,account):
+    try:
+        if target['state']['running'] is not True or target['state']['OOMKilled'] is not False or any(type(target[k]['VmLckBytes'])is not int or target[k]['VmLckBytes']!=0 for k in ('wrapper','qdrant')) or type(account['unevictableBytes'])is not int or account['unevictableBytes']!=0 or any(type(account['memoryEvents'][k])is not int or account['memoryEvents'][k]!=0 for k in ('max','oom','oom_kill')):
+            raise ValueError()
+    except (KeyError,TypeError,ValueError):
+        raise RuntimeError('running_unheld_scope_unproven') from None
+
+
+def unheld_host_admission(policy,target,account):
+    # Fixed frozen recipe, not a generic caller-provided lower floor.
+    if policy.mode!='clone' or policy.max_locked_bytes!=2*pin.GIB or policy.reserve_bytes!=2*pin.GIB or policy.emergency_bytes!=3*pin.GIB//2 or policy.cap_reserve_bytes!=256*1024**2:
+        raise RuntimeError('fixed_capacity_policy_changed')
+    require_unheld_scope(target,account)
+    memory=host_memory()
+    floor=policy.max_locked_bytes+policy.reserve_bytes
+    proof={'schema':'clone-running-headroom.cpu0-fixed.v2','admissionBasis':'frozen-max-lock-plus-reserve','observedPhase':'running-unheld','pinAdmission':False,
+           'maxLockedBytes':policy.max_locked_bytes,'reserveBytes':policy.reserve_bytes,'emergencyBytes':policy.emergency_bytes,
+           'hostMemAvailableBytes':memory['MemAvailable'],'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableFloorBytes':floor,
+           'hostDirtyBytes':memory['Dirty'],'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal'],'strictGreaterThan':True}
+    reason='swap_present' if memory['SwapTotal']!=0 else 'host_emergency_floor' if memory['MemAvailable']<=floor else None
+    if reason:
+        error=RuntimeError(reason);error.admissionFailureEvidence=proof;raise error
+    return proof
+
+
+def stopped_host_admission(state):
+    if state.get('running')is not False or state.get('OOMKilled')is not False or type(state.get('exitCode'))is not int or state['exitCode']!=0:
+        raise RuntimeError('clone_not_stopped')
+    memory=host_memory()
+    proof={'schema':'clone-stopped-headroom.cpu0.v2','admissionBasis':'unchanged-prestart-five-gib','observedPhase':'stopped','pinAdmission':False,
+           'hostMemAvailableBytes':memory['MemAvailable'],'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableFloorBytes':5*pin.GIB,
+           'hostDirtyBytes':memory['Dirty'],'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal'],'strictGreaterThan':True}
+    reason='swap_present' if memory['SwapTotal']!=0 else 'cold_start_headroom' if memory['MemAvailable']<=5*pin.GIB else None
+    if reason:
+        error=RuntimeError(reason);error.admissionFailureEvidence=proof;raise error
+    return proof
+
+
+def query_memory(policy,scope):
+    if policy.emergency_bytes!=3*pin.GIB//2 or scope not in ('before-query','after-query'):raise RuntimeError('fixed_capacity_policy_changed')
+    memory=host_memory()
+    proof={'schema':'clone-host-memory.cpu0.v2','scope':scope,'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic(),
+           'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableBytes':memory['MemAvailable'],'hostDirtyBytes':memory['Dirty'],
+           'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal'],'hostMemAvailableFloorBytes':policy.emergency_bytes}
+    reason='swap_present' if memory['SwapTotal']!=0 else 'host_emergency_floor' if memory['MemAvailable']<policy.emergency_bytes else None
+    if reason:
+        error=RuntimeError(reason);error.queryMemoryFailureEvidence=proof;raise error
+    return proof
+
+
+def working_set_admission(policy,inventory):
+    if policy.max_locked_bytes!=2*pin.GIB or policy.reserve_bytes!=2*pin.GIB:raise RuntimeError('fixed_capacity_policy_changed')
+    try:
+        page=inventory['pageBytes']
+        if type(page)is not int or page<=0:raise ValueError()
+        total=resident=0
+        for kind in ('vector','graph','sparse','other'):
+            row=inventory['classesMeasured'][kind]
+            if any(type(row[key])is not int for key in ('files','dataPages','residentDataPages')) or row['files']<=0 or row['dataPages']<=0 or not 0<=row['residentDataPages']<=row['dataPages']:raise ValueError()
+            total+=row['dataPages']*page;resident+=row['residentDataPages']*page
+        if not 0<total<=policy.max_locked_bytes:raise ValueError()
+        if not re.fullmatch('[a-f0-9]{64}',inventory['selectionHash']):raise ValueError()
+    except (KeyError,TypeError,ValueError):raise RuntimeError('working_set_inventory_unproven') from None
+    memory=host_memory()
+    proof={'schema':'clone-working-set-admission.cpu0.v2','observedPhase':'running-unheld','admissionBasis':'full-selected-lock-debit-plus-reserve',
+           'selectionHash':inventory['selectionHash'],'selectedBytes':total,'selectedResidentBytes':resident,'selectedMissingBytes':total-resident,
+           'maxLockedBytes':policy.max_locked_bytes,'reserveBytes':policy.reserve_bytes,'hostMemAvailableFloorBytes':total+policy.reserve_bytes,
+           'hostMemAvailableBytes':memory['MemAvailable'],'hostMemTotalBytes':memory['MemTotal'],'hostDirtyBytes':memory['Dirty'],
+           'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal'],'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic(),'greaterThanOrEqual':True}
+    reason='swap_present' if memory['SwapTotal']!=0 else 'projected_headroom_below_reserve' if memory['MemAvailable']-total<policy.reserve_bytes else None
+    if reason:
+        error=RuntimeError(reason);error.workingSetFailureEvidence=proof;raise error
+    return proof
+
+
+def admission_failure(error):
+    return {key:getattr(error,key) for key in ('admissionFailureEvidence','admissionPassedSampleBeforeRefence','sourceLimitFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence','overheadFailureEvidence') if getattr(error,key,None)is not None}
+
+
+def birth_admission(config,spec,policy,*,_entry_baseline=False):
     lifecycle=load_lifecycle(config)
-    host_cpu=cpu0_guards.host_cpu();host_floor=max(policy.emergency_bytes,5*pin.GIB);host_available(host_floor);allocated=owned_total_budget();disk_free=shutil.disk_usage(ROOT).free
+    host_cpu=cpu0_guards.host_cpu();allocated=owned_total_budget();disk_free=shutil.disk_usage(ROOT).free
     if disk_free<=3*pin.GIB:raise RuntimeError('owned_total_disk_budget')
-    host={l.split(':',1)[0]:int(l.split()[1])*1024 for l in Path('/proc/meminfo').read_text().splitlines()}
-    if host['SwapTotal']!=0:raise RuntimeError('swap_present')
-    if host['MemAvailable']<host_floor:raise RuntimeError('host_emergency_floor')
     source=inspect_source(spec);hierarchy=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
-    runtime.accounting(source);guard_shards(source)
+    guard_shards(source)
     request=urllib.request.Request('http://127.0.0.1:16333/collections/media_fingerprint_v1',headers={'Connection':'close'})
     with urllib.request.urlopen(request,timeout=2)as response:info=json.load(response)['result']
     if (info['status'],info['optimizer_status'],info['points_count'],info['segments_count'],info['config']['params']['shard_number'])!=('green','ok',244262,12,6):raise RuntimeError('cold_collection_shape_changed')
+    # attest proves actual running wrapper/Qdrant, exactly two source members,
+    # no client/holder and both VmLck=0; no caller-supplied phase is accepted.
     target=lifecycle.attest(spec.container,runtime.docker)
     if target['qdrant']['pid']!=source.pid or target['qdrant']['startTicks']!=source.identity[3] or inspect_source(spec).identity!=source.identity:raise RuntimeError('lifecycle_process_changed')
-    return {'schema':'clone-birth-admission.cpu0-owned.v1','variant':'cpu0-owned-lifecycle.v1','at':at(),'sourceIdentity':list(source.identity),'target':target,'hostCpu':host_cpu,'hostMemAvailableBytes':host['MemAvailable'],'hostSwapBytes':0,'hostMemAvailableFloorBytes':host_floor,'ownedAllocatedBytes':allocated,'ownedAllocatedCeilingBytes':11*pin.GIB,'diskFreeBytes':disk_free,'diskFreeFloorBytes':3*pin.GIB,'cpuHierarchy':hierarchy,'pointCount':244262,'segmentCount':12,'shardCount':6,'clientsClosed':True}
+    source_limits=_source_cgroup_limits(source,spec,lifecycle)
+    outside=lifecycle.entry_resource_context(source) if _entry_baseline else None
+    entry_source=lifecycle.entry_source_context(source) if _entry_baseline else None
+    account=entry_source['accounting'] if _entry_baseline else runtime.accounting(source)
+    headroom=unheld_host_admission(policy,target,account)
+    try:
+        if lifecycle.attest(spec.container,runtime.docker)!=target or inspect_source(spec).identity!=source.identity:raise RuntimeError('lifecycle_process_changed')
+        require_unheld_scope(target,lifecycle.entry_source_context(source)['accounting'] if _entry_baseline else runtime.accounting(source))
+        if _source_cgroup_limits(source,spec,lifecycle)!=source_limits:raise RuntimeError('source_limits_changed')
+        if _entry_baseline:
+            after=lifecycle.entry_resource_context(source)
+            if any(outside[role]['identity']!=after[role]['identity'] for role in outside):raise RuntimeError('overhead_identity_changed')
+    except BaseException as error:
+        error.admissionPassedSampleBeforeRefence=headroom
+        raise
+    proof={'schema':'clone-birth-admission.cpu0-fixed.v2','variant':'cpu0-fixed-capacity.v2','at':at(),'sourceIdentity':list(source.identity),'target':target,'hostCpu':host_cpu,
+            **{key:value for key,value in headroom.items() if key!='schema'},
+            'ownedAllocatedBytes':allocated,'ownedAllocatedCeilingBytes':11*pin.GIB,'diskFreeBytes':disk_free,'diskFreeFloorBytes':3*pin.GIB,'cpuHierarchy':hierarchy,'pointCount':244262,'segmentCount':12,'shardCount':6,'clientsClosed':True}
+    if _entry_baseline:
+        proof['overheadBaseline']={'schema':'clone-entry-overhead-baseline.cpu0.v2','sourceIdentity':list(source.identity),'source':entry_source['source'],'outside':outside,'baselineChargeBytes':0,'baselineOnly':True,'pinAdmission':False,'unsampledPeakBytes':None,'preJoinHelperChargeUnattributed':True,'pageTablesIncludedInKernel':True}
+    return proof
+
+
+def _source_cgroup_limits(source,spec,lifecycle):
+    limits={}
+    for leaf,key in (('memory.max','memoryMaxBytes'),('memory.high','memoryHighBytes'),('memory.swap.max','memorySwapMaxBytes')):
+        text=lifecycle.bounded(source.cgroup/leaf,128).decode('ascii').strip()
+        if text=='max' and leaf=='memory.high':limits[key]=None
+        elif text.isdigit() and int(text)<=2**53-1:limits[key]=int(text)
+        else:raise RuntimeError('source_limits_changed')
+    if spec.memory_bytes!=6*pin.GIB or spec.swap_bytes!=6*pin.GIB or limits['memoryMaxBytes']!=spec.memory_bytes or limits['memorySwapMaxBytes']!=0 or limits['memoryHighBytes'] is not None:
+        error=RuntimeError('source_limits_changed');error.sourceLimitFailureEvidence=limits;raise error
+    return limits
+
+
+def _fixed_cpu_policy(config):
+    expected={'periodMicros':100000,'weight':100,'cpusetCpus':'','cpusetMems':''}
+    actual=config.get('cpuIsolation')
+    cpu0_guards.validate_policy(actual)
+    if actual!=expected:raise RuntimeError('cpu_policy_required')
+    return actual
+
+
+def _entry_identity_once(config,spec,policy):
+    """Read immutable entry fences without taking an accounting baseline."""
+    cpu_policy=_fixed_cpu_policy(config)
+    lifecycle=load_lifecycle(config);source=runtime.inspect_source(spec)
+    target=lifecycle.attest(spec.container,runtime.docker)
+    if target['qdrant']['pid']!=source.pid or target['qdrant']['startTicks']!=source.identity[3]:raise RuntimeError('lifecycle_process_changed')
+    limits=_source_cgroup_limits(source,spec,lifecycle)
+    hierarchy=cpu0_guards.inspect_cpu_source(source,cpu_policy,runtime.docker)
+    rows=[]
+    for row in hierarchy['rows']:
+        item={key:row[key] for key in ('depth','groupIdentitySha256','quotaMicros','periodMicros')}
+        if 'applicability'in row:item['applicability']=row['applicability']
+        rows.append(item)
+    cpu_identity={key:hierarchy[key] for key in ('weight','cpusetCpus','cpusetMems')};cpu_identity['rows']=rows
+    own=lifecycle.process(os.getpid());parent=lifecycle.process(own['parentPid'])
+    outside={}
+    for role,value in (('entryInspector',own),('transportParent',parent)):
+        group=value['group'];source_group=source.cgroup_relative
+        if group==source_group or group.startswith(source_group.rstrip('/')+'/'):raise RuntimeError('overhead_placement_unproven')
+        outside[role]={**lifecycle.public_process(value),'outsideSourceCgroup':True}
+    if lifecycle.bounded(Path('/proc')/str(os.getpid())/'task'/str(os.getpid())/'children',8192).split():raise RuntimeError('overhead_unregistered_child')
+    return {'schema':'clone-entry-identity.cpu0.v2','sourceIdentity':list(source.identity),'target':target,'sourceLimits':limits,'cpuIdentity':cpu_identity,'outside':outside}
+
+
+def entry_identity(config,spec,policy):
+    """Pre/post intent comparison; no host sample, metrics, or caller roster."""
+    before=_entry_identity_once(config,spec,policy)
+    if _entry_identity_once(config,spec,policy)!=before:raise RuntimeError('lifecycle_process_changed')
+    return before
+
+
+def renew_cleanup(config,spec,policy,historical_source):
+    """Renew source safety for independently observed owned-Node cleanup only."""
+    if config.get('schema')!='clone-pin-control.cpu0-fixed.v2':raise RuntimeError('control_freeze_changed')
+    cpu_policy=_fixed_cpu_policy(config)
+    lifecycle=load_lifecycle(config);source=runtime.inspect_source(spec)
+    current=lifecycle.cleanup_attest(spec.container,historical_source,runtime.docker)
+    if current['qdrant']['pid']!=source.pid or current['qdrant']['startTicks']!=source.identity[3]:raise RuntimeError('lifecycle_process_changed')
+    limits=_source_cgroup_limits(source,spec,lifecycle)
+    hierarchy=cpu0_guards.inspect_cpu_source(source,cpu_policy,runtime.docker)
+    events={}
+    for row in lifecycle.bounded(source.cgroup/'memory.events',8192).decode('ascii').splitlines():
+        values=row.split()
+        if values and values[0]in ('max','oom','oom_kill'):
+            if len(values)!=2 or values[0]in events or not values[1].isdigit() or int(values[1])>2**53-1:raise RuntimeError('required_limit_metrics_missing')
+            events[values[0]]=int(values[1])
+    if set(events)!={'max','oom','oom_kill'}:raise RuntimeError('required_limit_metrics_missing')
+    after=lifecycle.cleanup_attest(spec.container,historical_source,runtime.docker)
+    if _source_cgroup_limits(source,spec,lifecycle)!=limits:raise RuntimeError('source_limits_changed')
+    hierarchy_after=cpu0_guards.inspect_cpu_source(source,cpu_policy,runtime.docker)
+    cpu_identity=lambda value:{'rows':[{key:row[key]for key in ('depth','groupIdentitySha256','quotaMicros','periodMicros')if key in row}for row in value['rows']],**{key:value[key]for key in ('weight','cpusetCpus','cpusetMems')}}
+    if cpu_identity(hierarchy)!=cpu_identity(hierarchy_after):raise RuntimeError('cpu_ancestor_changed')
+    # Absolute connection/event/CPU usage observations are not identity fences.
+    immutable=lambda value:{key:({'containerIdHash':part['containerIdHash'],'configurationHash':part['configurationHash'],'startedAt':part['startedAt']}if key=='state'else part)for key,part in value.items()if key not in ('activeServiceConnections','connectionCensusComplete')}
+    if immutable(current)!=immutable(after) or runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('lifecycle_process_changed')
+    return {'schema':'clone-cleanup-source-renewal.cpu0.v2','variant':'cpu0-fixed-capacity.v2','historicalSource':historical_source,'currentSource':current,'sourceIdentity':list(source.identity),'sourceLimits':limits,'cpuHierarchy':hierarchy,'sourceEvents':events,'lifecycleLineage':{'sameContainer':True,'sameConfiguration':True,'reviewedScript':True,'sameMountIdentity':True,'sameWrapperArgv':True,'recoveryDisallowed':True},'cleanupOnly':True,'admission':False}
+
+
+def running_entry_admission(config,spec,policy):
+    """Authenticated RPC caller gets internally derived entry context, no roster."""
+    global CPU_POLICY
+    CPU_POLICY=_fixed_cpu_policy(config)
+    return birth_admission(config,spec,policy,_entry_baseline=True)
 
 
 def cold(spec,config,policy,lock_fd,initial_admission):
@@ -215,10 +475,10 @@ def cold(spec,config,policy,lock_fd,initial_admission):
                     finally: kernel.call('munmap',address,s.st_size)
             finally: os.close(fd)
         if resident != 0: raise RuntimeError('cold_eviction_not_complete')
-        available = next(int(l.split()[1])*1024 for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:'))
-        if available <= 5*pin.GIB or shutil.disk_usage(ROOT).free <= 3*pin.GIB:
-            raise RuntimeError('cold_start_headroom')
-        lifecycle.require_clean_receipt(lifecycle.state_snapshot(inspect_stopped_or_running(spec)),stopped)
+        stopped_state=lifecycle.state_snapshot(inspect_stopped_or_running(spec))
+        lifecycle.require_clean_receipt(stopped_state,stopped)
+        stopped_admission=stopped_host_admission(stopped_state)
+        if shutil.disk_usage(ROOT).free<=3*pin.GIB:raise RuntimeError('owned_total_disk_budget')
         clone_command('start',spec.container)
         deadline = time.monotonic()+90
         while time.monotonic()<deadline:
@@ -236,7 +496,7 @@ def cold(spec,config,policy,lock_fd,initial_admission):
         source = inspect_source(spec);guard_shards(source)
         admission=birth_admission(config,spec,policy)
         return {'at':at(),'actualQdrantPid':source.pid,'sourceStartTicks':source.identity[3],'ownedFiles':len(files),'ownedAllocatedBytes':allocated,'residentPagesAfterEviction':resident,
-                'shardCount':6,'pointCount':daemon.integer(info['points_count'],1),'segmentCount':daemon.integer(info['segments_count'],1),'cleanStop':stopped,'birthAdmission':admission}
+                'shardCount':6,'pointCount':daemon.integer(info['points_count'],1),'segmentCount':daemon.integer(info['segments_count'],1),'cleanStop':stopped,'stoppedAdmission':stopped_admission,'birthAdmission':admission}
     except BaseException as error:
         error.lifecycleCompletedStopReceipt=stopped
         raise
@@ -274,10 +534,15 @@ def self_cgroup():
     return unified[0]
 
 
-def host_available(floor):
-    available=next(int(l.split()[1])*1024 for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:'))
-    if available<floor:raise RuntimeError('host_emergency_floor')
-    return available
+def host_available(floor,*,scope='archive-operation'):
+    memory=host_memory()
+    if memory['SwapTotal']!=0 or memory['MemAvailable']<floor:
+        error=RuntimeError('swap_present' if memory['SwapTotal']!=0 else 'host_emergency_floor')
+        error.pressureMemoryFailureEvidence={'schema':'clone-pressure-memory.cpu0.v2','scope':scope,'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic(),
+            'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableBytes':memory['MemAvailable'],'hostMemAvailableFloorBytes':floor,
+            'hostDirtyBytes':memory['Dirty'],'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal']}
+        raise error
+    return memory['MemAvailable']
 
 
 def owned_total_budget():
@@ -303,7 +568,7 @@ def verify_archive(floor):
         if (before.st_dev,before.st_ino) in {identity[:2] for _,identity in files}:raise RuntimeError('archive_store_inode_alias')
         if not stat.S_ISREG(before.st_mode) or before.st_size!=ARCHIVE_BYTES: raise RuntimeError('archive_scope')
         while True:
-            host_available(floor);data=os.read(fd,1024**2)
+            host_available(floor,scope='archive-verification');data=os.read(fd,1024**2)
             if not data:break
             sha.update(data);read+=len(data)
             if read>ARCHIVE_BYTES:raise RuntimeError('archive_verification_bound')
@@ -360,11 +625,88 @@ def pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile=False):
     finally:connection.close()
 
 
+
+def _fork_scope_guard(config,parent_connection,child_connection):
+    lifecycle=load_lifecycle(config)
+    try:
+        tasks=os.listdir('/proc/self/task')
+        if len(tasks)!=1 or tasks!=[str(os.getpid())]:raise RuntimeError('overhead_helper_unproven')
+        lock_fd=lifecycle._FORK_FD
+        if type(lock_fd)is not int:raise RuntimeError('overhead_helper_unproven')
+        lifecycle.require_lock(lock_fd)
+        expected={0,1,2,lock_fd,parent_connection.fileno(),child_connection.fileno()}
+        actual=set()
+        names=os.listdir('/proc/self/fd')
+        if len(names)>64:raise RuntimeError('overhead_helper_unproven')
+        for name in names:
+            if not name.isdigit():raise RuntimeError('overhead_helper_unproven')
+            fd=int(name)
+            try:os.fstat(fd)
+            except OSError as error:
+                if error.errno!=errno.EBADF:raise
+                continue  # listdir's already-closed directory descriptor
+            actual.add(fd)
+        if len(expected)!=6 or actual!=expected:raise RuntimeError('overhead_helper_unproven')
+        maps=lifecycle.bounded(Path('/proc/self/maps'),8*1024**2)
+        prefixes=(os.fsencode(ROOT)+b'/',b'/qdrant/storage/',b'/qdrant/snapshots/')
+        exact=(os.fsencode(ROOT),b'/qdrant/storage',b'/qdrant/snapshots')
+        if any(len(parts:=row.split(None,5))==6 and (parts[5]in exact or parts[5].startswith(prefixes)) for row in maps.splitlines()):raise RuntimeError('overhead_helper_unproven')
+        metrics={}
+        for row in lifecycle.bounded(Path('/proc/self/status'),65536).splitlines():
+            fields=row.split()
+            if fields and fields[0]in (b'RssAnon:',b'VmPTE:'):
+                if len(fields)!=3 or not fields[1].isdigit() or fields[2]!=b'kB':raise RuntimeError('overhead_helper_unproven')
+                metrics[fields[0].decode().rstrip(':')]=int(fields[1])*1024
+        if set(metrics)!={'RssAnon','VmPTE'} or sum(metrics.values())>64*1024**2:raise RuntimeError('overhead_helper_unproven')
+        return metrics
+    except (OSError,ValueError,KeyError):raise RuntimeError('overhead_helper_unproven') from None
+
+
+def _fork_pin_entry(parent_connection,connection,spec,policy,raise_limit,config,raise_own_nofile):
+    parent_connection.close()
+    signal.signal(signal.SIGTERM,signal.SIG_DFL)
+    signal.signal(signal.SIGINT,signal.default_int_handler)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK,{signal.SIGTERM,signal.SIGINT})
+    pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile)
+
+
 class PinChild:
     def __init__(self,spec,policy,raise_limit,config,raise_own_nofile=False):
         self.config=config;self.failure_details=None
-        multiprocessing.set_executable('/usr/bin/python3');context=multiprocessing.get_context('spawn');self.connection,child=context.Pipe()
-        self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config,raise_own_nofile));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
+        context=multiprocessing.get_context('fork');self.connection,child=context.Pipe()
+        self.process=context.Process(target=_fork_pin_entry,args=(self.connection,child,spec,policy,raise_limit,config,raise_own_nofile))
+        self.spec=spec;self.previous=None;self.pressure_active=False;start_attempted=False
+        try:
+            self.fork_scope_metrics=_fork_scope_guard(config,self.connection,child)
+            # Preserve constructor ownership if a controller signal arrives during start.
+            previous_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
+            try:
+                start_attempted=True;self.process.start()
+            finally:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask)
+            child.close()
+        except BaseException as error:
+            error.childFailureDetails={'constructorChildGone':True if not start_attempted else None,'constructorChildExitCode':None}
+            cleanup_mask=None
+            try:
+                cleanup_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
+                for endpoint in (self.connection,child):
+                    try:endpoint.close()
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+                if self.process.pid is not None:
+                    try:
+                        self.process.join(1)
+                        if self.process.is_alive():self.process.terminate();self.process.join(5)
+                        if self.process.is_alive():self.process.kill();self.process.join(5)
+                        gone=not self.process.is_alive()
+                        error.childFailureDetails={'constructorChildGone':gone,'constructorChildExitCode':self.process.exitcode}
+                        if not gone:error.childConstructorCleanupFailure='pin_child_cleanup'
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            finally:
+                if cleanup_mask is not None:
+                    try:signal.pthread_sigmask(signal.SIG_SETMASK,cleanup_mask)
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            raise
     def request(self,pressure=False):
         before=runtime.accounting(inspect_source(self.spec))
         if self.previous is not None:limits(self.previous,before,pressure=pressure and self.pressure_active,scope='held-pin-prior-to-pass')
@@ -418,17 +760,18 @@ class PinChild:
         if self.process.is_alive() or (Path('/proc')/str(self.process.pid)).exists():raise RuntimeError('pin_child_exit_unproven')
 
 
-def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,floor=None):
+def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,floor=None,overhead_check=None):
     if floor is None:raise ValueError('explicit_pressure_floor_required')
     p=config['pressure'];fd=os.open(ARCHIVE,os.O_RDONLY|os.O_NOFOLLOW)
     start=clock();started=at()
     if manager is not None:manager.begin_pressure()
-    sha=hashlib.sha256(); read=0; last_pass=start;passes=0;pass_seconds=0
+    sha=hashlib.sha256(); read=0; last_pass=start;passes=0;pass_seconds=0;last_overhead=start
     try:
         original=os.fstat(fd)
         if not stat.S_ISREG(original.st_mode) or original.st_size!=p['bytes']: raise RuntimeError('archive_identity_failed')
+        if overhead_check is not None:overhead_check()
         while True:
-            chunk_started=clock();host_available(floor);data=os.read(fd,1024**2)
+            chunk_started=clock();host_available(floor,scope='archive-pressure');data=os.read(fd,1024**2)
             if not data: break
             read+=len(data); sha.update(data)
             if read>p['bytes'] or clock()-start>p['maxSeconds']: raise RuntimeError('pressure_bound_failed')
@@ -436,6 +779,8 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             if manager is not None and clock()-last_pass>=config['reconcileIntervalSeconds']:
                 pass_start=clock();manager.request(pressure=True);last_pass=clock();passes+=1;pass_seconds+=last_pass-pass_start
                 if last_pass-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
+            if overhead_check is not None and clock()-last_overhead>=config['reconcileIntervalSeconds']:
+                overhead_check();last_overhead=clock()
             delay=len(data)/p['rateBytesPerSecond']-(clock()-chunk_started)
             if delay>0:sleep(delay)
             if clock()-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
@@ -444,6 +789,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             raise RuntimeError('archive_checksum_or_identity_changed')
         if clock()-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
         if inspect_source(source.spec).identity!=source.identity: raise RuntimeError('source_changed_during_pressure')
+        if overhead_check is not None:overhead_check()
         return {'startedAt':started,'finishedAt':at(),'bytes':read,'seconds':round(clock()-start,3),'reconcileIntervalSeconds':config['reconcileIntervalSeconds'],'reconcilePassCount':passes,'reconcileSeconds':round(pass_seconds,3),'sha256':sha.hexdigest(),'storageContentWrites':0,'mode':'readonly-existing-archive','rateMode':'per-chunk-no-catch-up','chunkBytes':1024**2,'rateBytesPerSecond':p['rateBytesPerSecond']}
     finally:
         try:
@@ -466,10 +812,15 @@ def query_lease(seconds,reader=sys.stdin,clock=time.monotonic):
 
 
 def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,raise_own_nofile=False,handoff_sha=None):
+    with inspector_scope():
+        return _stage(config,spec,policy,phase,emit,raise_own_memlock,case_tag,raise_own_nofile,handoff_sha)
+
+
+def _stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,raise_own_nofile=False,handoff_sha=None):
     if phase not in ('baseline','candidate'): raise ValueError('phase_required')
     manager=None; lock_fd=None;cpu_before=None;cpu_after=None;source=None;lifecycle=None;cold_state=None
     original_emit=emit
-    emit=lambda row:original_emit({'variant':'cpu0-owned-lifecycle.v1',**row})
+    emit=lambda row:original_emit({'variant':'cpu0-fixed-capacity.v2',**row})
     try:
         frozen_helper(config);load_cache_preparation(config)
         if ROOT.resolve()!=ROOT:raise RuntimeError('owned_root_changed')
@@ -480,25 +831,33 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         os.set_inheritable(lock_fd,False)
         lifecycle=load_lifecycle(config);lifecycle.require_lock(lock_fd);lifecycle.read_handoff(runtime.docker,handoff_sha)
         initial_admission=birth_admission(config,spec,policy)
+        entry_source=inspect_source(spec)
+        entry_baseline=phase_overhead(config,entry_source,lock_fd,baseline=True)
+        entry_overhead=lifecycle.overhead_growth(entry_baseline,phase_overhead(config,entry_source,lock_fd))
         original_group=self_cgroup();archive_verified=verify_archive(policy.emergency_bytes);cold_state=cold(spec,config,policy,lock_fd,initial_admission);source=inspect_source(spec)
         if original_group==source.cgroup_relative:raise RuntimeError('controller_pressure_already_in_clone_cgroup')
         cpu_before=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
+        overhead_baseline=phase_overhead(config,source,lock_fd,baseline=True)
+        def overhead_check():return lifecycle.overhead_growth(overhead_baseline,phase_overhead(config,source,lock_fd,manager))
+        overhead_check()
         preparation=prepare_cache(config,spec,policy,lock_fd,raise_own_nofile=raise_own_nofile)
         if inspect_source(spec).identity!=source.identity:raise RuntimeError('source_changed_after_cache_preparation')
         initial=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
-        continuity=limits(preparation['final']['accounting'],initial['accounting'],scope='preparation-to-inventory')
-        emit({'schema':'search.clone-mlock-control.v2','stage':'cache-preparation-complete','cpuHierarchyBefore':cpu_before,'phase':phase,'at':at(),'cachePreparation':preparation,'cachePreparationMode':'post-cold-owned-cgroup-reclaim','cachePreparationHelperSha256':config['cachePreparation']['helperSha256'],'preparationToInitialLimits':continuity,'queries':0,'storageContentWrites':0})
+        continuity=limits(preparation['final']['accounting'],initial['accounting'],scope='preparation-to-inventory');working_set=working_set_admission(policy,initial)
+        cache_overhead=overhead_check()
+        emit({'schema':'search.clone-mlock-control.v3','stage':'cache-preparation-complete','cpuHierarchyBefore':cpu_before,'phase':phase,'at':at(),'cachePreparation':preparation,'cachePreparationMode':'post-cold-owned-cgroup-reclaim','cachePreparationHelperSha256':config['cachePreparation']['helperSha256'],'preparationToInitialLimits':continuity,'workingSetAdmission':working_set,'overheadEvidence':cache_overhead,'queries':0,'storageContentWrites':0})
         if phase=='candidate':
             nonresident=sum((initial['classesMeasured'][k]['dataPages']-initial['classesMeasured'][k]['residentDataPages'])*initial['pageBytes'] for k in ('vector','graph','sparse','other'))
             current=daemon.account(initial['accounting']);cap=current['cgroupMaxBytes']
-            if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:raise RuntimeError('initial_cap_fit_inconclusive')
+            if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:
+                error=RuntimeError('initial_cap_fit_inconclusive');error.workingSetFailureEvidence={**working_set,'sourceCurrentBytes':current['currentBytes'],'sourceCapBytes':cap,'capReserveBytes':policy.cap_reserve_bytes};raise error
             pin_proc_before=process_counters(source)
             with lifecycle.helper_fork_scope(lock_fd):
                 manager=PinChild(spec,policy,raise_own_memlock,config,raise_own_nofile=raise_own_nofile)
             pin_state=manager.request();pin_proc_after=process_counters(source)
             limits(initial['accounting'],pin_state['accountingBefore'],scope='inventory-to-pin')
             if pin_state['selectionHash']!=initial['selectionHash']: raise RuntimeError('initial_cohort_changed')
-        before=runtime.accounting(source);limits(initial['accounting'],before,scope='baseline-inventory-to-pressure') if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
+        before=runtime.accounting(source);limits(initial['accounting'],before,scope='baseline-inventory-to-pressure') if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes,overhead_check=overhead_check); after=runtime.accounting(source)
         pressure_proc_after=process_counters(source);owned_total_budget();pressure_limits=limits(before,after,pressure=True,scope='pressure-interval')
         if self_cgroup()!=original_group:raise RuntimeError('pressure_writer_placement_changed')
         measured=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
@@ -506,17 +865,17 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         measured_account=runtime.accounting(source);limits(after,measured_account,scope='pressure-to-inventory')
         if initial['selectionHash']!=measured['selectionHash']: raise RuntimeError('pressure_cohort_changed')
         resident_loss=sum(initial['classesMeasured'][k]['residentDataPages']-measured['classesMeasured'][k]['residentDataPages'] for k in ('vector','graph','sparse','other'))
-        emit({'schema':'search.clone-mlock-control.v2','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'prequeryMissingBytes':sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other')),'negativePrequeryMissingBytes':config.get('negativePrequeryMissingBytes',64*1024**2),'pressure':pressure_state,'pressureLimits':pressure_limits,'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v3','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'prequeryMissingBytes':sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other')),'negativePrequeryMissingBytes':config.get('negativePrequeryMissingBytes',64*1024**2),'pressure':pressure_state,'pressureLimits':pressure_limits,'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
         missing_bytes=sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other'))
         if phase=='baseline' and case_tag in config.get('mechanismNegativeTags',[]) and missing_bytes<config['negativePrequeryMissingBytes']:raise RuntimeError('negative_missing_pages_inconclusive')
         if manager is not None:
             final=manager.request()
             if final['selectionHash']!=initial['selectionHash'] or final['newLockBytes']!=0 or final['rangesChanged']: raise RuntimeError('candidate_cohort_changed')
         else:final=None;pin_state=None
-        frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before,scope='inventory-to-query');query_proc_before=process_counters(source);query_started=at()
-        emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','cpuHierarchyBefore':cpu_before,'initialAdmission':initial_admission,'birthAdmission':cold_state['birthAdmission'],'phase':phase,'at':at(),'diagnosticReadySeconds':config['controlReadySeconds'],'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
+        frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before,scope='inventory-to-query');query_proc_before=process_counters(source);query_overhead_before=overhead_check();query_memory_before=query_memory(policy,'before-query');query_started=at()
+        emit({'schema':'search.clone-mlock-control.v3','stage':'query-ready','cpuHierarchyBefore':cpu_before,'initialAdmission':initial_admission,'birthAdmission':cold_state['birthAdmission'],'phase':phase,'at':at(),'diagnosticReadySeconds':config['controlReadySeconds'],'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,'queryMemoryBefore':query_memory_before,
               'selectionHash':initial['selectionHash'],'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
-              'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
+              'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'entryOverheadEvidence':entry_overhead,'overheadEvidence':query_overhead_before,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
         query_lease(config['queryLeaseSeconds'])
         if inspect_source(spec).identity!=source.identity: raise RuntimeError('query_source_changed')
         frozen_helper(config);guard_shards(source);query_after=runtime.accounting(source);query_proc_after=process_counters(source);query_limits=limits(query_before,query_after,scope='query-interval')
@@ -529,40 +888,51 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         if post['selectionHash']!=initial['selectionHash']: raise RuntimeError('query_cohort_changed')
         cpu_after=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
         cpu_deltas=cpu0_guards.cpu_delta(cpu_before,cpu_after)
-        emit({'schema':'search.clone-mlock-control.v2','stage':'query-finished','cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchyDelta':cpu_deltas,'phase':phase,'at':at(),'queryWindowStartedAt':query_started,'queryLimits':query_limits,'queryProcessDelta':counter_delta(query_proc_before,query_proc_after),
-              'selectionHash':post['selectionHash'],'parentNofileLimits':daemon.nofile_limits(post['nofileLimits']),'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
+        query_overhead_after=overhead_check();query_memory_after=query_memory(policy,'after-query')
+        emit({'schema':'search.clone-mlock-control.v3','stage':'query-finished','cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchyDelta':cpu_deltas,'phase':phase,'at':at(),'queryWindowStartedAt':query_started,'queryMemoryBefore':query_memory_before,'queryMemoryAfter':query_memory_after,'queryLimits':query_limits,'queryProcessDelta':counter_delta(query_proc_before,query_proc_after),
+              'selectionHash':post['selectionHash'],'parentNofileLimits':daemon.nofile_limits(post['nofileLimits']),'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'overheadEvidence':query_overhead_after,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
     except BaseException as error:
         cpu_snapshot_failure='cpu_phase_source_unavailable' if source is None else None
         if source is not None:
             try:cpu_after=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
             except BaseException as snapshot_error:cpu_snapshot_failure=safe_control_reason(snapshot_error)
-        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v3','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None) or getattr(error,'childFailureDetails',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0,**admission_failure(error)})
         raise
     finally:
         # Preserve the phase cause; cleanup evidence is a separate observation.
         original_error=sys.exc_info()[1];released=False;cleanup_error=None
         try:
             if manager is not None:manager.close()
-            released=True
+            constructor=getattr(original_error,'childFailureDetails',None) if manager is None else None
+            released=constructor is None or constructor.get('constructorChildGone')is True
+            if getattr(original_error,'childConstructorCleanupFailure',None):cleanup_error=RuntimeError(original_error.childConstructorCleanupFailure)
             if original_error is None:
                 lifecycle.require_lock(lock_fd)
                 handoff=lifecycle.commit_handoff(runtime.docker,handoff_sha,'controller')
-                emit({'schema':'search.clone-mlock-control.v2','stage':'handoff-complete','phase':phase,'at':at(),'handoff':handoff,'queries':0,'storageContentWrites':0})
+                emit({'schema':'search.clone-mlock-control.v3','stage':'handoff-complete','phase':phase,'at':at(),'handoff':handoff,'queries':0,'storageContentWrites':0})
         except BaseException as error:cleanup_error=error
         finally:
-            if lock_fd is not None:os.close(lock_fd)
-            gone=manager is None or (not manager.process.is_alive() and not (Path('/proc')/str(manager.process.pid)).exists())
-            emit({'schema':'search.clone-mlock-control.v2','stage':'released','phase':phase,'at':at(),'released':released,'pinChildExited':gone,'pinChildExitCode':manager.process.exitcode if manager is not None else None,'cleanupReason':safe_control_reason(cleanup_error) if cleanup_error else None,'queries':0,'storageContentWrites':0})
+            if lock_fd is not None:
+                try:os.close(lock_fd)
+                except BaseException:
+                    if cleanup_error is None:cleanup_error=RuntimeError('lifecycle_lock_close_failed')
+                    if original_error is not None:original_error.lifecycleCleanupFailure='lifecycle_lock_close_failed'
+            constructor=getattr(original_error,'childFailureDetails',None) if manager is None else None
+            gone=(constructor is None or constructor.get('constructorChildGone')is True) if manager is None else (not manager.process.is_alive() and not (Path('/proc')/str(manager.process.pid)).exists())
+            emit({'schema':'search.clone-mlock-control.v3','stage':'released','phase':phase,'at':at(),'released':released,'pinChildExited':gone,'pinChildExitCode':manager.process.exitcode if manager is not None else constructor.get('constructorChildExitCode') if constructor is not None else None,'cleanupReason':safe_control_reason(cleanup_error) if cleanup_error else None,'queries':0,'storageContentWrites':0})
         if cleanup_error is not None and original_error is None:raise cleanup_error
-    emit({'schema':'search.clone-mlock-control.v2','stage':'unpin-complete','phase':phase,'at':at(),'pinChildExited':True,'queries':0,'storageContentWrites':0})
+    emit({'schema':'search.clone-mlock-control.v3','stage':'unpin-complete','phase':phase,'at':at(),'pinChildExited':True,'queries':0,'storageContentWrites':0})
 
 
 CONTROL_REASONS=frozenset(('archive_checksum_or_identity_changed', 'archive_fd_path_identity', 'archive_identity_failed', 'archive_path_changed_before_advice', 'archive_path_scope', 'archive_scope', 'archive_store_inode_alias', 'archive_verification_bound', 'archive_verification_failed', 'candidate_cohort_changed', 'clone_control_command_failed', 'clone_identity_ambiguous', 'clone_identity_changed', 'clone_mount_changed', 'clone_not_stopped', 'clone_readiness_failed', 'clone_resource_or_port_changed', 'cold_collection_shape_changed', 'cold_eviction_not_complete', 'cold_inode_changed', 'cold_start_headroom', 'control_freeze_changed', 'controller_cgroup_missing', 'controller_interrupted', 'controller_pressure_already_in_clone_cgroup', 'counter_pid_reused', 'counter_reset', 'counter_source_changed', 'explicit_control_arguments_required', 'explicit_control_policy_required', 'explicit_pressure_floor_required', 'helper_timing_policy_changed', 'fixed_readonly_archive_required', 'gate_freeze_changed', 'gate_interrupted', 'guard_or_runtime_failure', 'helper_freeze_changed', 'host_emergency_floor', 'initial_cap_fit_inconclusive', 'initial_cohort_changed', 'invalid_control_lock', 'invalid_pin_command', 'invalid_query_ack', 'join_source_changed', 'mapped_shard_coverage_missing', 'negative_missing_pages_inconclusive', 'owned_inode_alias', 'owned_nonregular', 'owned_root_changed', 'owned_root_nonregular', 'owned_root_symlink', 'owned_size_guard', 'owned_symlink', 'owned_total_disk_budget', 'parent_already_clone_cgroup', 'parent_cgroup_changed', 'parent_inspection_inside_clone_cgroup', 'phase_required', 'phase_resource_failed', 'pin_capability_missing', 'pin_child_cleanup', 'pin_child_exit_failed', 'pin_child_exit_unproven', 'pin_child_failed', 'pin_child_placement', 'pin_child_timeout', 'pin_holder_lock_proof_missing', 'pin_release_unproven', 'predeclared_negative_control_required', 'pressure_bound_failed', 'pressure_cannot_fit_deadline', 'pressure_cohort_changed', 'pressure_ledger_missing', 'pressure_placement_required', 'pressure_writer_placement_changed', 'query_cohort_changed', 'query_lease_eof', 'query_lease_timeout', 'query_pin_cohort_changed', 'query_source_changed', 'source_changed_during_pressure', 'source_rpc_budget', 'source_rpc_failed', 'source_rpc_spec_changed', 'source_rpc_timeout', 'source_spec_changed', 'turnover_not_fresh', 'turnover_readiness_failed', 'turnover_shape_changed', 'zero_child_cleanup_failed', 'zero_child_exit_unproven', 'zero_child_lease_failed', 'zero_child_timeout', 'zero_join_failed', 'zero_join_proof_missing', 'zero_pin_proof_missing')) | pin.SAFE_REASONS
 
+CONTROL_REASONS |= frozenset(('host_memory_unproven','fixed_capacity_policy_changed','running_unheld_scope_unproven','working_set_inventory_unproven'))
 CONTROL_REASONS |= cpu0_guards.REASONS | frozenset(('cpu_phase_source_unavailable','pressure_finalization_failed'))
 CONTROL_REASONS |= frozenset(('lifecycle_target_refused','lifecycle_freeze_changed','lifecycle_process_changed','lifecycle_wrapper_unreviewed','lifecycle_recovery_allowed','lifecycle_membership_changed','lifecycle_connection_present','lifecycle_connection_unknown','lifecycle_reader_placement','lifecycle_lock_unproven','lifecycle_stop_timeout','lifecycle_stop_unclean','lifecycle_clean_receipt_missing','lifecycle_handoff_changed','lifecycle_handoff_invalid','lifecycle_fork_scope_active','lifecycle_guard_or_runtime_failure','lifecycle_pidfd_close_failed','lifecycle_lock_close_failed','lifecycle_handoff_cleanup_failed','lifecycle_interpreter_unsupported','lifecycle_docker_unavailable','lifecycle_docker_cleanup_failed'))
 
 CONTROL_REASONS |= frozenset(('explicit_cache_preparation_required','cache_preparation_freeze_changed','cache_preparation_policy_changed','source_changed_after_cache_preparation','source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded','postwrite_zero_timeout','postwrite_sample_bound_exceeded','writer_birth_unavailable','writer_birth_changed','writer_registration_failed','writer_parent_changed','writer_interrupted','writer_cleanup_unproven','writer_registration_timeout','writer_protocol_failed','writer_prewrite_timeout'))
+
+CONTROL_REASONS |= frozenset(('preflight_source_unproven','preflight_loader_unproven','preflight_stdin_unproven','preflight_argv_unproven','consumer_argv_invalid','consumer_executable_changed','node_provenance_changed','consumer_enrolment_write_failed','overhead_placement_unproven','overhead_measurement_unproven','overhead_identity_changed','overhead_unregistered_child','overhead_growth_exceeded','overhead_inspector_scope_active','overhead_inspector_unproven','consumer_registry_unproven','overhead_helper_unproven'))
 
 def safe_control_reason(error):
     return next((x for x in error.args if type(x) is str and x in CONTROL_REASONS),'guard_or_runtime_failure')
@@ -576,7 +946,7 @@ def main(argv=None):
     try:
         args=parser.parse_args(argv)
         if not args.execute_reviewed:
-            emit({'schema':'search.clone-mlock-control.v2','stage':'prepared-only','execution':False,'queries':0,'storageContentWrites':0});return 0
+            emit({'schema':'search.clone-mlock-control.v3','stage':'prepared-only','execution':False,'queries':0,'storageContentWrites':0});return 0
         if not args.config or not args.phase or not args.case_tag or not args.handoff_sha256: raise ValueError('explicit_control_arguments_required')
         def interrupted(signum,frame):raise RuntimeError('controller_interrupted')
         signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGINT,interrupted)
@@ -585,7 +955,7 @@ def main(argv=None):
         return 0
     except BaseException as error:
         reason=safe_control_reason(error)
-        emit({'schema':'search.clone-mlock-control.v2','stage':'failed','reason':reason,'queries':0,'storageContentWrites':0});return 1
+        emit({'schema':'search.clone-mlock-control.v3','stage':'failed','reason':reason,'queries':0,'storageContentWrites':0,**admission_failure(error)});return 1
 
 
 if __name__=='__main__': raise SystemExit(main())
