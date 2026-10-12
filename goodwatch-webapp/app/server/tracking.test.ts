@@ -3243,34 +3243,44 @@ function longAgo() {
 	for (const row of db.table("user_watch_log")) row.created_at = LONG_AGO
 }
 
-test("unmarking a season of a show seen long ago makes it Watching since now; its watches stay as old as they are", async () => {
+test("unmarking a season of a show seen long ago is no move to Watching: the show goes by its last remaining watch", async () => {
 	await act({ type: "pressSeen" })
 	longAgo()
 	assert.equal((await entryOf())?.watchingSince, null, "Seen is not Watching")
-	const before = Date.now()
 	await act({ type: "unmarkSeason", season: 2 })
 	const entry = await entryOf()
 	assert.equal(entry?.state, "watching")
-	assert.ok((entry?.watchingSince?.getTime() ?? 0) >= before)
 	// The press's watches have no date: they count by when they were recorded.
 	assert.equal(entry?.lastActivityAt?.getTime(), LONG_AGO)
+	assert.equal(entry?.watchingSince?.getTime(), LONG_AGO)
 })
 
-test("resuming a show, taking a Seen press back and watching it again each make it Watching since then", async () => {
+test("unticking an episode of a Seen show and taking a Seen press back are no move to Watching either", async () => {
+	await act({ type: "markSeason", season: 1 })
+	await act({ type: "pressSeen" })
+	longAgo()
+	await act({ type: "undoSeen" })
+	assert.deepEqual(
+		[(await entryOf())?.state, (await entryOf())?.watchingSince?.getTime()],
+		["watching", LONG_AGO],
+	)
+
+	await act({ type: "pressSeen" })
+	longAgo()
+	await act({ type: "unwatch", season: 1, number: 1 })
+	assert.deepEqual(
+		[(await entryOf())?.state, (await entryOf())?.watchingSince?.getTime()],
+		["watching", LONG_AGO],
+	)
+})
+
+test("resuming a show and watching it again each make it Watching since then", async () => {
 	await tick(1, 1)
 	longAgo()
 	await act({ type: "hold" })
 	assert.equal((await entryOf())?.watchingSince, null, "On hold")
 	let before = Date.now()
 	await act({ type: "resume" })
-	assert.ok(((await entryOf())?.watchingSince?.getTime() ?? 0) >= before)
-
-	longAgo()
-	await act({ type: "pressSeen" })
-	assert.equal((await entryOf())?.watchingSince, null, "Seen")
-	before = Date.now()
-	await act({ type: "undoSeen" })
-	assert.equal((await entryOf())?.state, "watching")
 	assert.ok(((await entryOf())?.watchingSince?.getTime() ?? 0) >= before)
 
 	await act({ type: "pressSeen" })

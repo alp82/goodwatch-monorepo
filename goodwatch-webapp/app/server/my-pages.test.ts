@@ -357,8 +357,8 @@ test("a Pick up row carries its Next episode as a Continue row does", async () =
 })
 
 /**
- * As seedShows, and two more Watching shows. 109 was Seen in 2024, by watches without a date, and the member
- * unmarked a season two hours ago. 110 an import made Watching two days ago, by watches without a date.
+ * As seedShows, and two more Watching shows. 109 was put On hold in 2024, with watches without a date, and the
+ * member resumed it two hours ago. 110 an import made Watching two days ago, by watches without a date.
  */
 function seedMoved() {
 	seedShows()

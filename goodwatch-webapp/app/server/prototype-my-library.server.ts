@@ -522,7 +522,7 @@ function build(
 		)
 		follow(217, SHOW_NAMES[18], "on_hold", weekly(40, 300), [], 23, 300, 10)
 		follow(218, SHOW_NAMES[9], "dropped", weekly(5, 600), [], 2, 300, 5)
-		// Seen long ago by a press without dates, and a season unmarked two days ago: the member's own move to
+		// Put on hold long ago with watches without dates, and resumed two days ago: the member's own move to
 		// Watching puts it in Continue.
 		showAt(219, "Star Trek: Picard", weekly(30, 400), [], 10)
 			.slice(0, 20)
