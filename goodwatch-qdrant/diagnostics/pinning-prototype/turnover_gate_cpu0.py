@@ -93,8 +93,9 @@ def stage(config,spec,policy,emit,lock_fd,handoff_sha):
     initial_admission=control.birth_admission(config,spec,policy)
     if parent==source.cgroup_relative:raise RuntimeError('parent_already_clone_cgroup')
     control.frozen_helper(config);before=runtime.accounting(source)
-    with lifecycle.helper_fork_scope(lock_fd):child=ZeroChild(source,config)
+    child=None;stopped=None
     try:
+        with lifecycle.helper_fork_scope(lock_fd):child=ZeroChild(source,config)
         joined=child.joined(source)
         if control.inspect_source(spec).identity!=source.identity or control.self_cgroup()!=parent:raise RuntimeError('join_source_changed')
         emit({'stage':'first-join','at':control.at(),**joined,'parentUnchanged':True,'joinLimits':control.limits(before,runtime.accounting(source))})
@@ -103,7 +104,7 @@ def stage(config,spec,policy,emit,lock_fd,handoff_sha):
         outcome=child.gone();child=None
         if outcome['exitCode']!=0:raise RuntimeError('zero_child_cleanup_failed')
         emit({'stage':'old-child-gone','at':control.at(),**outcome})
-        stopped=lifecycle.graceful_stop(spec.container,runtime.docker,lock_fd,protected_pids=(os.getpid(),os.getppid()))
+        stopped=lifecycle.graceful_stop(spec.container,runtime.docker,lock_fd,protected_pids=(os.getpid(),os.getppid()),expected=initial_admission['target'])
         if control.inspect_stopped_or_running(spec)['State']['Running']:raise RuntimeError('clone_not_stopped')
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
         control.owned_total_budget();control.host_available(max(policy.emergency_bytes,5*1024**3));control.frozen_helper(config)
@@ -124,7 +125,8 @@ def stage(config,spec,policy,emit,lock_fd,handoff_sha):
         handoff=lifecycle.commit_handoff(runtime.docker,handoff_sha,'turnover')
         emit({'stage':'complete','at':control.at(),**outcome,'parentUnchanged':True,'cacheControls':0,'archiveBytesRead':0,'storageContentWrites':0,'initialAdmission':initial_admission,'cleanStop':stopped,'birthAdmission':fresh_admission,'handoff':handoff})
     except BaseException as error:
-        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),**control.cpu0_guards.failure_evidence(error)})
+        if stopped is not None:error.lifecycleCompletedStopReceipt=stopped
+        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),**control.cpu0_guards.failure_evidence(error)})
         raise
     finally:
         original_error=sys.exc_info()[1];cleanup_error=None

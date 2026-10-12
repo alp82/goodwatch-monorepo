@@ -21,6 +21,7 @@ import stat
 import sys
 import time
 import tempfile
+import subprocess
 
 ROOT = Path('/root/goodwatch-qdrant-cold-406-20261011')
 OLD = 'gw-qdrant-cold-406-20261011'
@@ -42,7 +43,21 @@ REASONS = frozenset(('lifecycle_target_refused', 'lifecycle_freeze_changed',
     'lifecycle_clean_receipt_missing', 'lifecycle_handoff_changed',
     'lifecycle_handoff_invalid', 'lifecycle_fork_scope_active',
     'lifecycle_guard_or_runtime_failure', 'lifecycle_pidfd_close_failed',
-    'lifecycle_lock_close_failed', 'lifecycle_handoff_cleanup_failed'))
+    'lifecycle_lock_close_failed', 'lifecycle_handoff_cleanup_failed',
+    'lifecycle_interpreter_unsupported', 'lifecycle_docker_unavailable',
+    'lifecycle_docker_cleanup_failed'))
+
+
+def require_interpreter():
+    if sys.version_info < (3, 11):
+        raise RuntimeError('lifecycle_interpreter_unsupported')
+    try:
+        expected=Path('/usr/bin/python3').resolve(strict=True)
+        declared=Path(sys.executable).resolve(strict=True)
+        actual=Path('/proc/self/exe').stat();target=expected.stat()
+        if declared!=expected or (actual.st_dev,actual.st_ino)!=(target.st_dev,target.st_ino) or not stat.S_ISREG(actual.st_mode):raise ValueError()
+    except (OSError,ValueError):
+        raise RuntimeError('lifecycle_interpreter_unsupported') from None
 
 
 def digest(data):
@@ -276,6 +291,8 @@ def attest(name, docker, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
     clients = no_clients(wrapper, proc)
     if mounted_identities(wrapper, proc) != mount_identity or bounded(cg/'cgroup.procs', 512) != raw or birth(wrapper['pid'], proc) != wrapper['startTicks'] or birth(child['pid'], proc) != child['startTicks'] or state_snapshot(container(name, docker)) != state_snapshot(x):
         raise RuntimeError('lifecycle_process_changed')
+    if process(os.getpid(), proc) != own:
+        raise RuntimeError('lifecycle_reader_placement')
     return {'state': state_snapshot(x), 'wrapper': public_process(wrapper),
             'qdrant': public_process(child), **script_proof, **clients,
             'liveMountIdentityHash': mount_identity,
@@ -313,11 +330,59 @@ def clean_state(before, after, wall_start, wall_end, elapsed):
         raise RuntimeError('lifecycle_stop_unclean')
 
 
+def action_inspector(started):
+    """Fixed read-only Docker inspect consumes the same stop deadline."""
+    def inspect(*args):
+        remaining=STOP_SECONDS-(time.monotonic()-started)
+        if remaining<=0:raise RuntimeError('lifecycle_stop_timeout')
+        if len(args)!=2 or args[0]!='inspect' or args[1] not in (OLD,NEW):raise RuntimeError('lifecycle_target_refused')
+        child=None;primary=None
+        try:
+            child=subprocess.Popen(['/usr/bin/docker',*args],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,close_fds=True)
+            chunks=[];size=0
+            while True:
+                remaining=STOP_SECONDS-(time.monotonic()-started)
+                if remaining<=0:raise RuntimeError('lifecycle_stop_timeout')
+                ready,_,_=select.select([child.stdout],[],[],remaining)
+                if not ready:raise RuntimeError('lifecycle_stop_timeout')
+                raw=os.read(child.stdout.fileno(),min(65536,1024**2+1-size))
+                if not raw:break
+                chunks.append(raw);size+=len(raw)
+                if size>1024**2:raise RuntimeError('lifecycle_docker_unavailable')
+            remaining=STOP_SECONDS-(time.monotonic()-started)
+            if remaining<=0:raise RuntimeError('lifecycle_stop_timeout')
+            if child.wait(timeout=remaining)!=0:raise RuntimeError('lifecycle_docker_unavailable')
+            return b''.join(chunks).decode()
+        except subprocess.TimeoutExpired:
+            primary=RuntimeError('lifecycle_stop_timeout');raise primary from None
+        except (OSError,UnicodeError):
+            primary=RuntimeError('lifecycle_docker_unavailable');raise primary from None
+        except BaseException as error:
+            primary=error;raise
+        finally:
+            if child is not None:
+                # Only our direct inspect CLI child; never a Qdrant PID/group.
+                try:
+                    if child.poll() is None:
+                        child.terminate()
+                        try:child.wait(timeout=1)
+                        except subprocess.TimeoutExpired:
+                            child.kill();child.wait(timeout=1)
+                    child.stdout.close()
+                except BaseException:
+                    if primary is None:raise RuntimeError('lifecycle_docker_unavailable') from None
+                    primary.lifecycleCleanupFailure='lifecycle_docker_cleanup_failed'
+                    primary.lifecycleDockerCleanupEvidence={'pid':child.pid,'clientGone':child.poll() is not None,'exitCode':child.returncode}
+    return inspect
+
+
 def graceful_stop(name, docker, lock_fd, protected_pids=(), expected=None):
     """Only the authenticated Qdrant child is the explicit protected exception."""
     started = time.monotonic(); wall_start = utc()
-    before = None; after = None; fd = None; sent = False
+    before = None; after = None; fd = None; sent = False; completed = None
+    docker=action_inspector(started)
     try:
+        require_interpreter()
         require_lock(lock_fd)
         before = attest(name, docker)
         if expected is not None and before != expected:
@@ -340,13 +405,14 @@ def graceful_stop(name, docker, lock_fd, protected_pids=(), expected=None):
         wall_end = utc(); elapsed = time.monotonic()-started
         clean_state(before['state'], after, wall_start, wall_end, elapsed)
         require_lock(lock_fd)
-        return {'schema': 'clone-child-term.clean.v1', 'target': name,
+        completed = {'schema': 'clone-child-term.clean.v1', 'target': name,
                 'before': before, 'after': after, 'wallStartedAt': wall_start,
                 'wallFinishedAt': wall_end, 'elapsedSeconds': elapsed,
                 'qdrantBirthGone': True, 'wrapperBirthGone': True,
                 'childExitStatusObserved': False,
                 'childExitZeroInferredFromWrapperAndDocker': True,
                 'signal': 'SIGTERM', 'killFallback': False, 'clean': True}
+        return completed
     except BaseException as error:
         def disappearance(key):
             if before is None:
@@ -381,7 +447,10 @@ def graceful_stop(name, docker, lock_fd, protected_pids=(), expected=None):
                 os.close(fd)
             except OSError:
                 if original is None:
-                    raise
+                    error=RuntimeError('lifecycle_pidfd_close_failed')
+                    error.lifecycleCompletedStopReceipt=completed
+                    error.lifecycleCleanupFailure='lifecycle_pidfd_close_failed'
+                    raise error from None
                 original.lifecycleCleanupFailure = 'lifecycle_pidfd_close_failed'
 
 
@@ -498,6 +567,7 @@ def _child_close_control():
             os._exit(127)
 
 
+require_interpreter()
 os.register_at_fork(after_in_child=_child_close_control)
 
 

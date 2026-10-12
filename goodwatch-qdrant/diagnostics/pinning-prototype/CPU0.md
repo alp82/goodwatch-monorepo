@@ -136,9 +136,10 @@ full admission before doing work. External mutations are unauthorized. The old
 writable store is preserved but normal startup can change it; rollback is not a
 pristine historical baseline.
 
-The lock is CLOEXEC, and a narrowly scoped registered at-fork callback additionally
-closes it in pin, zero and exact f831 reclaim children. Real local plain-fork,
-multiprocessing and actual helper-writer fixtures prove the parent still prevents
+The lock is CLOEXEC for pin and zero multiprocessing-spawn children. A narrowly
+scoped registered at-fork callback closes it in exact f831 plain-fork reclaim
+children (and any unrelated fork inside that scope). Real local plain-fork,
+multiprocessing-spawn and actual helper-writer fixtures prove the parent still prevents
 contention while the child cannot retain ownership. The injected helper receives
 the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
 wrappers must never generate the standalone helper CLI.
@@ -153,3 +154,15 @@ socket teardown before acknowledgements or lifecycle actions.
 
 The local wrapper fixture used `GNU bash, version 5.3.15(1)-release (x86_64-pc-linux-gnu)`; local Bash binary SHA256
 `d854e8c4c615c73eb502c8b42f9ec938b65bf559ba4b341d6ce0fd80b5284a80`. This records fixture tooling only, not the clone image Bash version.
+
+The amended lifecycle requires Python 3.11 or newer and authenticates the actual
+interpreter's executable inode against `/usr/bin/python3` before action. A positive
+fixture uses real Docker-style nine-digit FinishedAt. Stop attestation repeats the
+reader's process/placement/zero-lock proof at the end and binds the target to the
+just-admitted birth. All action-local Docker inspections use one fixed absolute
+inspect-only adapter, at most 1 MiB stdout and private stderr suppression. Each
+call consumes the remaining shared 20-second action deadline. On refusal only the
+owned direct inspect client may receive cleanup TERM/KILL (up to two extra seconds);
+this never targets the Qdrant child or wrapper and cannot produce clean proof.
+Successful stop receipts survive subsequent failures and even pidfd-close failure
+as lifecycleCompletedStopReceipt, without authorizing continuation or recovery.

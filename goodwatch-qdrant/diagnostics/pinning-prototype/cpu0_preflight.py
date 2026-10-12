@@ -51,7 +51,7 @@ def main(argv=None):
         if len(args)!=6:raise RuntimeError('explicit_control_arguments_required')
         print(json.dumps(preflight(*args),sort_keys=True));return 0
     except BaseException as error:
-        print(json.dumps({'schema':'search.clone-cpu0-preflight.v1','stage':'failed','reason':control.safe_control_reason(error),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),**cpu0_guards.failure_evidence(error),'queries':0,'resourceWrites':0}));return 1
+        print(json.dumps({'schema':'search.clone-cpu0-preflight.v1','stage':'failed','reason':control.safe_control_reason(error),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),**cpu0_guards.failure_evidence(error),'queries':0,'resourceWrites':0}));return 1
 
 
 if __name__=='__main__':raise SystemExit(main())

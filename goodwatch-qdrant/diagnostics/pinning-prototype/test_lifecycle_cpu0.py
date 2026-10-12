@@ -61,6 +61,33 @@ class Tests(unittest.TestCase):
   life.clean_state(before,after,'2026-10-12T01:00:00+00:00','2026-10-12T01:00:02+00:00',1)
   for changes,elapsed in (({'OOMKilled':True},1),({'exitCode':137},1),({'exitCode':143},1),({},21),({'finishedAt':'2026-10-12T00:59:59Z'},1),({'running':True},1),({'exitCode':False},1)):
    with self.assertRaisesRegex(RuntimeError,'lifecycle_stop_unclean'):life.clean_state(before,{**after,**changes},'2026-10-12T01:00:00+00:00','2026-10-12T01:00:02+00:00',elapsed)
+ def test_docker_nine_digit_finished_at_is_clean(self):
+  before={'containerIdHash':'x','configurationHash':'c','startedAt':'2026-10-12T00:00:00Z','finishedAt':'0001-01-01T00:00:00Z','restartCount':0}
+  after={**before,'finishedAt':'2026-10-12T01:00:01.123456789Z','running':False,'exitCode':0,'OOMKilled':False}
+  life.clean_state(before,after,'2026-10-12T01:00:00+00:00','2026-10-12T01:00:02+00:00',1)
+ def test_interpreter_floor_and_executable_refuse_before_action(self):
+  for patcher in (patch.object(life.sys,'version_info',(3,10,0)),patch.object(life.sys,'executable','/not-reviewed/python3')):
+   with patcher,patch.object(life,'attest')as inspect,patch.object(life.signal,'pidfd_send_signal')as send:
+    with self.assertRaisesRegex(RuntimeError,'lifecycle_interpreter_unsupported'):life.graceful_stop(life.NEW,None,1)
+    inspect.assert_not_called();send.assert_not_called()
+ def test_deadline_inspector_bounded_pipe_and_no_extra_inspect(self):
+  real=subprocess.Popen
+  def fake(argv,**kwargs):
+   self.assertEqual(argv,['/usr/bin/docker','inspect',life.NEW])
+   return real(['/usr/bin/python3','-c','import sys;sys.stdout.write("x"*1048577)'],**kwargs)
+  with patch.object(life.subprocess,'Popen',side_effect=fake):
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_docker_unavailable'):life.action_inspector(time.monotonic())('inspect',life.NEW)
+  with patch.object(life.subprocess,'Popen')as start:
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_stop_timeout'):life.action_inspector(time.monotonic()-21)('inspect',life.NEW)
+   start.assert_not_called()
+ def test_pidfd_close_failure_retains_completed_receipt(self):
+  from contextlib import ExitStack
+  before={'qdrant':{'pid':123,'startTicks':1},'wrapper':{'pid':124,'startTicks':2},'state':{}}
+  after={'fixed':True}
+  with ExitStack()as stack:
+   for context in (patch.object(life,'require_lock'),patch.object(life,'attest',return_value=before),patch.object(life.os,'pidfd_open',return_value=99),patch.object(life.os,'close',side_effect=OSError('private failure')),patch.object(life,'birth',return_value=1),patch.object(life,'wait_births'),patch.object(life,'container',return_value={}),patch.object(life,'state_snapshot',return_value=after),patch.object(life,'clean_state'),patch.object(life.signal,'pidfd_send_signal')):stack.enter_context(context)
+   with self.assertRaisesRegex(RuntimeError,'lifecycle_pidfd_close_failed')as failure:life.graceful_stop(life.NEW,None,1)
+   self.assertTrue(failure.exception.lifecycleCompletedStopReceipt['clean']);self.assertEqual(failure.exception.lifecycleCompletedStopReceipt['after'],after)
  def test_stopped_state_zero_is_not_receipt(self):
   with self.assertRaisesRegex(RuntimeError,'lifecycle_clean_receipt_missing'):life.require_clean_receipt({'running':False,'exitCode':0},None)
  def test_handoff_gap_restart_refused(self):
@@ -166,6 +193,15 @@ class AttestationTests(unittest.TestCase):
   with ProcFixture()as f:
    row=f.attest();self.assertEqual(row['qdrant']['startTicks'],101);self.assertFalse(row['RecoveryAllowed']);self.assertTrue(row['connectionCensusComplete'])
    text=json.dumps(row);self.assertNotIn('/usr/bin/bash',text);self.assertNotIn('QDRANT_ALLOW',text)
+ def test_reader_moves_during_final_source_fence_refuses(self):
+  with ProcFixture()as f:
+   calls=[];original=life.container
+   def inspect(*args):
+    row=original(*args);calls.append(1)
+    if len(calls)==2:(f.proc/str(os.getpid())/'cgroup').write_text('0::/clone/child\n')
+    return row
+   with patch.object(life,'container',side_effect=inspect):
+    with self.assertRaisesRegex(RuntimeError,'lifecycle_reader_placement'):f.attest()
  def test_script_drift_rejected_before_signal(self):
   with ProcFixture()as f:
    (f.proc/'10/root/qdrant/entrypoint.sh').write_text('changed')
@@ -226,6 +262,20 @@ class HandoffTests(unittest.TestCase):
       result=life.commit_handoff(object(),life.digest(raw),'controller')
       self.assertEqual(result['sha256'],life.digest(path.read_bytes()));self.assertEqual(result['previousSha256'],life.digest(raw));self.assertEqual(result['snapshot'],{'fixed':2})
       self.assertEqual(path.stat().st_mode&0o777,0o600);self.assertEqual(len(list(root.iterdir())),1)
+ def test_positive_clean_receipt_pair_and_file_handoff(self):
+  with tempfile.TemporaryDirectory()as directory:
+   root=Path(directory)
+   before={'containerIdHash':'a'*64,'configurationHash':'b'*64,'startedAt':'2026-10-12T00:00:00Z','finishedAt':'0001-01-01T00:00:00Z','restartCount':0}
+   after={**before,'finishedAt':'2026-10-12T01:00:01.123456789Z','running':False,'exitCode':0,'OOMKilled':False}
+   receipt={'schema':'clone-child-term.clean.v1','target':life.OLD,'before':{'state':before,'scriptSha256':life.SCRIPT_SHA,'RecoveryAllowed':False,'qdrant':{'pid':11,'startTicks':101},'wrapper':{'pid':10,'startTicks':100}},'after':after,'wallStartedAt':'2026-10-12T01:00:00+00:00','wallFinishedAt':'2026-10-12T01:00:02+00:00','elapsedSeconds':1,'qdrantBirthGone':True,'wrapperBirthGone':True,'childExitStatusObserved':False,'childExitZeroInferredFromWrapperAndDocker':True,'signal':'SIGTERM','killFallback':False,'clean':True}
+   rp=root/'cpu0-old-clean-receipt-v1.json';rp.write_bytes(life.canonical(receipt)+b'\n');rp.chmod(0o600)
+   new={'state':{'running':True},'qdrant':{'pid':12,'startTicks':102}}
+   with patch.object(life,'ROOT',root),patch.object(life,'birth_gone',return_value=True),patch.object(life,'container',return_value={}),patch.object(life,'state_snapshot',return_value=after),patch.object(life,'attest',return_value=new):
+    life.require_clean_receipt(after,receipt);pair=life.pair_snapshot(None)
+    record={'schema':'clone-lifecycle-handoff.cpu0.v1','owner':'setup','previousSha256':None,'snapshot':pair};hp=root/'cpu0-lifecycle-handoff-v1.json';raw=life.canonical(record)+b'\n';hp.write_bytes(raw);hp.chmod(0o600)
+    self.assertEqual(life.read_handoff(None,life.digest(raw)),record)
+    new['qdrant']['startTicks']=103
+    with self.assertRaisesRegex(RuntimeError,'lifecycle_handoff_changed'):life.read_handoff(None,life.digest(raw))
  def test_handoff_cleanup_preserves_original_guard(self):
   with tempfile.TemporaryDirectory() as directory:
    root=Path(directory);path=root/'cpu0-lifecycle-handoff-v1.json';raw=b'{"schema":"clone-lifecycle-handoff.cpu0.v1"}\n';path.write_bytes(raw);path.chmod(0o600)

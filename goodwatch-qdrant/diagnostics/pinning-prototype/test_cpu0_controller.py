@@ -49,12 +49,13 @@ class CallerTests(unittest.TestCase):
                 return value
             events=[]
             with ExitStack() as stack:
-                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.os,'set_inheritable'),patch.object(control,'load_lifecycle',return_value=MagicMock()),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'birth_admission',return_value={}),patch.object(control,'cold',return_value={'birthAdmission':{}}),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
+                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.os,'set_inheritable'),patch.object(control,'load_lifecycle',return_value=MagicMock()),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'birth_admission',return_value={}),patch.object(control,'cold',return_value={'birthAdmission':{},'cleanStop':{'schema':'clone-child-term.clean.v1','clean':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
                 for context in contexts:stack.enter_context(context)
                 with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):
                     control.stage({'queryLeaseSeconds':60,'controlReadySeconds':1200,'cachePreparation':{'helperSha256':'a'*64}},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
             failure=next(e for e in events if e['stage']=='phase-failed')
             self.assertEqual(failure['resourceLimitEvidence']['scope'],target)
+            self.assertEqual(failure['lifecycleCompletedStopReceipt'],{'schema':'clone-child-term.clean.v1','clean':True})
             self.assertEqual(failure['reason'],'phase_resource_failed')
             self.assertEqual(failure['cpuHierarchyBefore'],{'observed':True})
             self.assertIsNone(failure['cpuHierarchyAfter'])
@@ -95,6 +96,27 @@ class CallerTests(unittest.TestCase):
                         result=cpu0_preflight.preflight(*args);self.assertEqual(history,['predecessor','admission','commit']);self.assertEqual(result['handoffWrites'],1)
                         life.commit_handoff.assert_called_once_with(control.runtime.docker,'a'*64,'preflight')
                 life.require_lock.assert_called_once_with(12)
+
+    def test_post_stop_refusal_preserves_successful_receipt_and_birth_binding(self):
+        life=MagicMock();receipt={'schema':'clone-child-term.clean.v1','clean':True};life.graceful_stop.return_value=receipt
+        target={'qdrant':{'pid':123,'startTicks':1}}
+        with patch.object(control.cpu0_guards,'host_cpu'),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'inspect_stopped_or_running',side_effect=[{},RuntimeError('cold_inode_changed')]),patch.object(control,'clone_command')as start:
+            with self.assertRaisesRegex(RuntimeError,'cold_inode_changed')as failure:control.cold(SimpleNamespace(container='fixed'),{},object(),12,{'target':target})
+            self.assertIs(failure.exception.lifecycleCompletedStopReceipt,receipt);self.assertEqual(life.graceful_stop.call_args.kwargs['expected'],target);start.assert_not_called()
+
+    def test_zero_child_scope_exit_failure_reaps_constructed_child(self):
+        from contextlib import contextmanager
+        import turnover_gate_cpu0 as gate
+        @contextmanager
+        def scope(*args):
+            yield
+            raise RuntimeError('lifecycle_lock_unproven')
+        life=MagicMock();life.helper_fork_scope.side_effect=scope
+        source=SimpleNamespace(cgroup_relative='/clone');child=Mock();child.gone.return_value={'childGone':True,'exitCode':0};events=[]
+        with ExitStack()as stack:
+            for item in (patch.object(control,'owned_store_files'),patch.object(control,'owned_total_budget'),patch.object(control,'host_available'),patch.object(control.cpu0_guards,'host_cpu'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'inspect_stopped_or_running',return_value={'State':{'Running':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'birth_admission',return_value={'target':{}}),patch.object(control,'frozen_helper'),patch.object(control.runtime,'accounting',return_value={}),patch.object(gate,'ZeroChild',return_value=child)):stack.enter_context(item)
+            with self.assertRaisesRegex(RuntimeError,'lifecycle_lock_unproven'):gate.stage({},SimpleNamespace(store=None),SimpleNamespace(emergency_bytes=1,reserve_bytes=1,cap_reserve_bytes=1),events.append,12,'a'*64)
+        child.gone.assert_called_once();self.assertTrue(any(e['stage']=='cleanup-observed' and e['childGone'] for e in events));life.graceful_stop.assert_not_called()
 
 class RetentionTests(unittest.TestCase):
     def test_pressure_finalization_preserves_original_and_separate_failure(self):

@@ -33,7 +33,7 @@
     "entrypointSha256": "f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e",
     "handoffPath": "/root/goodwatch-qdrant-cold-406-20261011/cpu0-lifecycle-handoff-v1.json",
     "modulePath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/lifecycle_cpu0.py",
-    "moduleSha256": "ecc491719b3e445cef76cf1680f4784f5bbd7d925ae82c730332e84291c88d39",
+    "moduleSha256": "6208ee00361a7481b22198797060c0729094dd782c94f383170d7afe1dfc9611",
     "oldCleanReceiptPath": "/root/goodwatch-qdrant-cold-406-20261011/cpu0-old-clean-receipt-v1.json",
     "stopSeconds": 20
   },
