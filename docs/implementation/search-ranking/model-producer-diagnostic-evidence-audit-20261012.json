@@ -25,6 +25,10 @@
       "bytes": 977,
       "sha256": "35a08542d9f77a697a496f2e871dd7ec1a72a8f3a5b5817898cc5eed7d2a035a"
     },
+    "private-producer-historical-v3-cap-refusal-20261012.json": {
+      "bytes": 2683,
+      "sha256": "2cbf0ec58c96f8c4d6fe1fe1c420a469e93ef92a42512a2de8b36d5508cf21d1"
+    },
     "private-producer-index-history-probe-20261012.json": {
       "bytes": 1299,
       "sha256": "e6535cb73204860a58618eda53b2f443264f4947858579065b62f6ac6a5a9abd"
@@ -51,7 +55,7 @@
     }
   },
   "compiledArtifactEqualityProven": false,
-  "historicalComparisonV3": "pending",
+  "historicalComparisonV3": "completed; candidate initial cap fit inconclusive; no retained paired latency",
   "productionAcceptance": false,
   "schema": "model-producer-diagnostic-evidence-audit.v1"
 }
