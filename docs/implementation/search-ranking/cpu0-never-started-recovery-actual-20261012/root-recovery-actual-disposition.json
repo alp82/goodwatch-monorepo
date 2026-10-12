@@ -1,0 +1,73 @@
+{
+  "actionState": "issued-acknowledged",
+  "attemptConsumed": true,
+  "attemptSha256": "05a58635330817946cf6302a911883f21647fe0eeb5e778cedd86703075d289a",
+  "automaticContinuationAllowed": false,
+  "cleanupProven": false,
+  "comparisonFrames": 0,
+  "completedPairs": 0,
+  "consumerAudit": null,
+  "engineAcknowledgmentNotAdmissionOrExitProof": true,
+  "engineHttpStatus": 204,
+  "executionCount": 1,
+  "files": {
+    "root-execution-public.ndjson": {
+      "bytes": 5194,
+      "sha256": "e148b102499bead3b2b3b43f42a4c1224acbc9fb66ed6dcd4d79caba641bcfe1"
+    },
+    "root-execution-return.json": {
+      "bytes": 259,
+      "sha256": "e409fd4f3fd12f96066843600c44c1f28a770488eded6bd01ad72b00d6589dc5"
+    },
+    "root-recovery-readonly-memory-public.json": {
+      "bytes": 4489,
+      "sha256": "799559e087d51b3b87798bebfea75c7b755233059f3d7c68b2baab3c5de6e094"
+    },
+    "root-recovery-readonly-memory-remote.py": {
+      "bytes": 2284,
+      "sha256": "e7fd5f2e883704e8d394cb5ea1f141a7ba5ddff64536dd4deaa5c58d71a7484c"
+    },
+    "root-run-once.py": {
+      "bytes": 2628,
+      "sha256": "506c2349b87e7a5789abb0a4d1f7da848499902c7565811f8f6724e73d857de7"
+    }
+  },
+  "historyWrites": 0,
+  "latencyPass": false,
+  "mergedPreparation": "d4e09fc2e0c0b6ebfa7522a8051cadddff40950c",
+  "newObservedRunning": true,
+  "oldObservedStopped": true,
+  "ordinarySearches": 0,
+  "preservedConstraints": [
+    "No automatic retry, rollback, stop or removal",
+    "Original proofs and consumed attempt remain immutable",
+    "Review unchanged 5 GiB full admission; no post-failure bypass",
+    "Owned diagnostic host capacity decision required before successor preparation",
+    "Source and production resource limits unchanged"
+  ],
+  "primaryReason": "host_emergency_floor",
+  "productionAcceptance": false,
+  "readonlySnapshot": {
+    "hostAvailableBytes": 4531286016,
+    "hostTotalBytes": 8127848448,
+    "memoryMaxEvents": 0,
+    "newCgroupAnonymousBytes": 2268217344,
+    "newCgroupCapBytes": 6442450944,
+    "newCgroupCurrentBytes": 6249672704,
+    "newCgroupFileBytes": 3936546816,
+    "newCgroupKernelBytes": 44908544,
+    "notOriginalFailureTimeSample": true,
+    "oomEvents": 0,
+    "pointSampleNotCapacityGuarantee": true,
+    "reviewedBirthFloorBytes": 5368709120,
+    "signals": 0,
+    "snapshotShortfallBytes": 837423104,
+    "sourceWrites": 0,
+    "swapBytes": 0
+  },
+  "result": "failed-or-cleanup-unknown",
+  "rootPty": 66749,
+  "rootPtyExitCode": 1,
+  "schema": "root-cpu0-never-started-recovery-actual-disposition.v1",
+  "sourceHead": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996"
+}
