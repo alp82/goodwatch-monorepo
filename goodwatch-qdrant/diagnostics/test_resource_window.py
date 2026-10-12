@@ -136,10 +136,10 @@ class ResourceTests(unittest.TestCase):
             result=m.process_census(root,'a'*64)
             self.assertTrue(result['complete']);self.assertEqual(result['backup']['count'],0)
     def test_reader_outside_source_and_unlocked_proof(self):
-        source=m.Source.__new__(m.Source);source.proc=Path('/proc');source.cgroot=Path('/cg');source.group=Path('/cg/source');source.reader_group=Path('/cg');source.reader_pid=1
-        with patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 0 kB'):
+        source=m.Source.__new__(m.Source);source.proc=Path('/proc');source.cgroot=Path('/cg');source.group=Path('/cg/source');source.reader_group=Path('/cg');source.reader_pid=1;source.reader_birth=100
+        with patch.object(m.os,'getpid',return_value=1),patch.object(m,'proc_identity',return_value={'startTicks':100}),patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 0 kB'):
             self.assertTrue(source.reader_proof()['outsideSourceCgroup'])
-        with patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 1 kB'):
+        with patch.object(m.os,'getpid',return_value=1),patch.object(m,'proc_identity',return_value={'startTicks':100}),patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 1 kB'):
             with self.assertRaisesRegex(ValueError,'source_locked'):source.reader_proof()
     def test_cgroup_membership_missing_actual_source_fails(self):
         source=m.Source.__new__(m.Source);source.group=Path('/cg');source.expected={'pid':99}
@@ -158,7 +158,7 @@ class ResourceTests(unittest.TestCase):
         self.assertNotIn('/private',json.dumps(m.diagnostic(caught.exception)))
 
     def test_added_group_process_still_rejects_sample_with_trigger(self):
-        source=m.Source.__new__(m.Source);source.proc=Path('/private');source.expected={'pid':9,'startTicks':100}
+        source=m.Source.__new__(m.Source);source.proc=Path('/private');source.expected={'pid':9,'startTicks':100};source.reader_birth=200
         before={'processMembershipHash':m.digest([9]),'processCount':1,'processVmLckBytes':0}
         after={'processMembershipHash':m.digest([9,10]),'processCount':2,'processVmLckBytes':0}
         def read(path,size=65536):
@@ -204,5 +204,63 @@ class ResourceTests(unittest.TestCase):
     def test_diagnostic_rejects_private_or_malformed_fields(self):
         for evidence in [{'path':'/secret'},{'expectedStartTicks':True},{'expectedGroupHash':'private'}]:
             with self.assertRaisesRegex(ValueError,'invalid_numeric'):m.GuardFailure('source_changed','source_birth','before_sample',**evidence)
+
+    def test_only_current_reader_is_excluded_and_other_python_stays_bounded(self):
+        with tempfile.TemporaryDirectory()as name:
+            root=Path(name);own=root/'42';own.mkdir();parts=['0']*22;parts[19]='100'
+            (own/'stat').write_text('42 (python3) '+' '.join(parts));(own/'comm').write_text('python3');(own/'cmdline').write_text('private'*5000)
+            with patch.object(m.os,'getpid',return_value=42):
+                result=m.process_census(root,'a'*64,own_reader_birth=100)
+                self.assertTrue(result['complete']);self.assertEqual(result['ownedReaderExcludedCount'],1)
+                with self.assertRaises(m.GuardFailure):m.process_census(root,'a'*64)
+                other=root/'43';other.mkdir();(other/'comm').write_text('python3');(other/'cmdline').write_text('other-private'*5000)
+                with self.assertRaises(m.GuardFailure)as caught:m.process_census(root,'a'*64,own_reader_birth=100)
+                self.assertEqual(caught.exception.diagnostic['trigger'],'argv_limit')
+
+    def test_reader_birth_or_missing_identity_cannot_be_exempted(self):
+        with tempfile.TemporaryDirectory()as name:
+            root=Path(name);own=root/'42';own.mkdir();parts=['0']*22;parts[19]='100';(own/'stat').write_text('42 (python3) '+' '.join(parts))
+            with patch.object(m.os,'getpid',return_value=42):
+                for birth in [99,True]:
+                    with self.assertRaisesRegex(ValueError,'reader_identity_changed'):m.process_census(root,'a'*64,own_reader_birth=birth)
+                original=m.proc_identity
+                count=0
+                def changed(path):
+                    nonlocal count
+                    count+=1;value=original(path)
+                    if count>=3:value['startTicks']=101
+                    return value
+                with patch.object(m,'proc_identity',side_effect=changed):
+                    with self.assertRaisesRegex(ValueError,'reader_identity_changed'):m.process_census(root,'a'*64,own_reader_birth=100)
+                (own/'stat').unlink()
+                with self.assertRaisesRegex(ValueError,'reader_identity_changed'):m.process_census(root,'a'*64,own_reader_birth=100)
+
+    def test_reader_mandatory_presence_even_when_stat_fence_passes(self):
+        with tempfile.TemporaryDirectory()as name:
+            root=Path(name)
+            with patch.object(m.os,'getpid',return_value=42),patch.object(m,'proc_identity',return_value={'startTicks':100}):
+                with self.assertRaisesRegex(ValueError,'reader_identity_changed'):m.process_census(root,'a'*64,own_reader_birth=100)
+
+    def test_default_census_has_zero_owned_exclusions(self):
+        with tempfile.TemporaryDirectory()as name:
+            self.assertEqual(m.process_census(Path(name),'a'*64)['ownedReaderExcludedCount'],0)
+
+    def test_reader_proof_rejects_birth_change_before_placement(self):
+        source=m.Source.__new__(m.Source);source.reader_pid=42;source.reader_birth=100;source.proc=Path('/private')
+        with patch.object(m.os,'getpid',return_value=42),patch.object(m,'proc_identity',return_value={'startTicks':101}),patch.object(m,'group_path',side_effect=AssertionError):
+            with self.assertRaisesRegex(ValueError,'reader_identity_changed'):source.reader_proof()
+
+    def test_actual_embedded_reader_proc_argv_needs_only_own_exclusion(self):
+        import subprocess,os
+        source=Path(__file__).with_name('resource_window.py').read_bytes()
+        with tempfile.TemporaryDirectory()as name:
+            prefix="import ctypes,os,signal,sys;libc=ctypes.CDLL(None,use_errno=True);expected=int(sys.argv[1]);checked=libc.prctl(1,signal.SIGKILL,0,0,0)==0 and os.getppid()==expected;checked or sys.exit(1);"
+            code=prefix+"ns={'__name__':'reviewed_resource_fixture'};exec(compile("+repr(source)+",'<reviewed-resource-window>','exec'),ns);"+"from pathlib import Path;import json;root=Path("+repr(name)+");pid=os.getpid();(root/str(pid)).symlink_to(Path('/proc')/str(pid));birth=ns['proc_identity'](root/str(pid))['startTicks'];"
+            code+="\ntry:ns['process_census'](root,'a'*64)\nexcept ns['GuardFailure'] as error:before=error.diagnostic['trigger']\nelse:before='unexpected_success'\n"
+            code+="after=ns['process_census'](root,'a'*64,own_reader_birth=birth);raw=ns['read'](Path('/proc')/str(pid)/'cmdline',65536);print(json.dumps({'beforeTrigger':before,'complete':after['complete'],'excluded':after['ownedReaderExcludedCount'],'actualArgvBytes':len(raw.encode()),'VmLckBytes':ns['fields'](ns['read'](Path('/proc')/str(pid)/'status'),('VmLck',),True)['VmLck']}))"
+            result=subprocess.run(['/usr/bin/python3','-I','-B','-c',code,str(os.getpid())],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=10,check=True)
+        row=json.loads(result.stdout)
+        self.assertEqual(row['beforeTrigger'],'argv_limit');self.assertGreater(row['actualArgvBytes'],8192)
+        self.assertTrue(row['complete']);self.assertEqual(row['excluded'],1);self.assertEqual(row['VmLckBytes'],0)
 
 if __name__=='__main__':unittest.main()

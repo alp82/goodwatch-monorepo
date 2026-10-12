@@ -33,7 +33,7 @@ SAFE = {'missing_required','invalid_numeric','source_changed','source_limits_cha
         'source_config_check_failed','source_config_check_stale','census_bound',
         'output_bound','sample_bound','window_invalid','source_preflight_required',
         'backup_identity_required','sample_failed','source_check_exit_unproven',
-        'source_cgroup_scope_invalid','sample_cadence_incomplete','source_locked'}
+        'source_cgroup_scope_invalid','sample_cadence_incomplete','source_locked','reader_identity_changed'}
 
 
 TRIGGERS = {'source_comm','source_executable','source_birth','source_cgroup',
@@ -208,14 +208,26 @@ class ConfigCheck:
             raise ValueError('source_check_exit_unproven')
 
 
-def process_census(proc, backup_hash, clock=time.monotonic):
+def process_census(proc, backup_hash, clock=time.monotonic, own_reader_birth=None):
     begun=clock();nodes=list(proc.glob('[0-9]*'))
+    own_pid=os.getpid();excluded=0
+    def own_fence():
+        if own_reader_birth is not None:
+            if type(own_reader_birth)is not int or own_reader_birth<=0 or os.getpid()!=own_pid:
+                raise ValueError('reader_identity_changed')
+            try: birth=proc_identity(proc/str(own_pid))['startTicks']
+            except FileNotFoundError: raise ValueError('reader_identity_changed') from None
+            if birth!=own_reader_birth:
+                raise ValueError('reader_identity_changed')
+    own_fence()
     if len(nodes)>4096:
         raise GuardFailure('census_bound','process_limit','process_census')
     processes={};jobs=[];races=0
     for node in nodes:
         if clock()-begun>1:
             raise GuardFailure('census_bound','deadline','process_census')
+        if own_reader_birth is not None and node.name==str(own_pid):
+            own_fence();excluded+=1;continue
         try:
             comm=read(node/'comm',128).strip()
             # Only fixed executable/path-shape hashes are retained; args never leave memory.
@@ -257,7 +269,11 @@ def process_census(proc, backup_hash, clock=time.monotonic):
         for key,value in item['memory'].items():
             classes[kind]['bytes'][key]+=value
         identities.append((pid,item['identity']['startTicks'],kind))
+    own_fence()
+    if own_reader_birth is not None and excluded!=1:
+        raise ValueError('reader_identity_changed')
     return {'classes':classes,'identityHash':digest(identities),'complete':races==0,
+            'ownedReaderExcludedCount':excluded,
             'disappearedDuringCensus':races,
             'backup':{'count':len(jobs),'running':bool(jobs),'identityHash':digest(jobs),'complete':races==0},
             'rssAccountingExact':False}
@@ -296,6 +312,7 @@ class Source:
         if self.expected_limits['memory.max']!='max'or self.expected_limits['memory.high']!='max'or self.expected_limits['cpu.max']!='max 100000'or self.expected_limits['memory.oom.group']!='0':
             raise ValueError('source_limits_changed')
         self.reader_pid=os.getpid()
+        self.reader_birth=proc_identity(proc/str(self.reader_pid))['startTicks']
         self.reader_group=group_path(proc,self.reader_pid,cgroot,allow_root=True)
         self.check=ConfigCheck(self.expected,lambda:docker_frame(proc))
     def fence(self, phase='source_fence'):
@@ -315,6 +332,10 @@ class Source:
         if limits(self.group)!=self.expected_limits or ancestors(self.group,self.cgroot)!=self.ancestor_hash:
             raise ValueError('source_limits_changed')
     def reader_proof(self):
+        try: birth=proc_identity(self.proc/str(self.reader_pid))['startTicks']
+        except FileNotFoundError: raise ValueError('reader_identity_changed') from None
+        if os.getpid()!=self.reader_pid or birth!=self.reader_birth:
+            raise ValueError('reader_identity_changed')
         group=group_path(self.proc,self.reader_pid,self.cgroot,allow_root=True)
         locked=fields(read(self.proc/str(self.reader_pid)/'status'),('VmLck',),True)['VmLck']
         outside=group!=self.group and not group.is_relative_to(self.group)
@@ -344,7 +365,7 @@ class Source:
             raise ValueError('source_limits_changed')
         pressure={'memory':psi(read(self.proc/'pressure/memory')),'io':psi(read(self.proc/'pressure/io'))}
         reclaim=fields(read(self.proc/'vmstat'),VM)
-        try: userspace=process_census(self.proc,self.backup_hash)
+        try: userspace=process_census(self.proc,self.backup_hash,own_reader_birth=self.reader_birth)
         except Exception as error:
             userspace={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed',**diagnostic(error)}
         try: other=siblings(self.group)
