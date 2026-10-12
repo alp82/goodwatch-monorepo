@@ -1,0 +1,16 @@
+{
+  "schema": "search.postcold-offline-audit.v1",
+  "status": "diagnostic-incomplete-or-failed",
+  "productionAcceptance": false,
+  "historicalMechanismOnly": true,
+  "baselineEvidence": [],
+  "pairedEvidence": [],
+  "excludedCaseCount": 0,
+  "failedFrameCount": 2,
+  "allLifecycleExitsProven": true,
+  "cloneRunning": true,
+  "pendingBaselineCount": 0,
+  "completedPairCount": 0,
+  "completeFrame": false,
+  "inputSha256": "720bb236ffed5c70df77c4310413de64f89cd654f1ac5cf40b7e32e9cd677dac"
+}
