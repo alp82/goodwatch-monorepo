@@ -1,0 +1,15 @@
+{
+  "actualExitCodes": [
+    0,
+    -15,
+    -9
+  ],
+  "actualModesExercised": [
+    "close",
+    "term",
+    "kill"
+  ],
+  "beforeFix": "invalid_public_frame on actual Holder.close holderExited field",
+  "test": "actual_zero_run_holder_close_shapes_pass_public_schema",
+  "testBoundary": "foreign cgroup placement mocked locally; actual reviewed spawned child and Holder close/PIDfd/reap produce frames"
+}

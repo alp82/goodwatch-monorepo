@@ -1,0 +1,22 @@
+{
+  "cliDeadlineSeconds": 110,
+  "codeFiles": [
+    "pin.py",
+    "runtime.py",
+    "production.py",
+    "production_journal.py",
+    "zero_placement.py"
+  ],
+  "codeSha256": "b9a9f13d851ac0a46ce30163126e698b297015b13999a4c9546fd0b0513a87e7",
+  "contractSha256": "12db49b938d8d8d6b24738c860559c098732ff351cf1b90c4637f28d0d2f1b6d",
+  "execution": false,
+  "expectedSourcePid": 3411704,
+  "expectedSourceStartTicks": 2673362807,
+  "fixtureTestsPassed": 8,
+  "hostExecutionPerformed": false,
+  "launcherSha256": "35b459499852abd7143fd0a6ed1c7b38017eab2a051feb073f5b8d7f969e83f7",
+  "outerDeadlineSeconds": 150,
+  "schema": "qdrant.zero-placement-launch-preparation.v1",
+  "stagerSha256": "d911a9ac3237b593418db540538f85369d46a2841a3125f76f2707d9dd67adaa",
+  "testsSha256": "f316f9a3d31db3b141a6a5a59f4c2ff48013af2314bf97c7e76e465376865fe8"
+}
