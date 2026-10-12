@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/home/alper/projects/search-resource-membership-diagnostic-100-v3/record_membership_diagnostic_v3.py",
+    "--execute-window",
+    "--journal",
+    "/home/alper/projects/search-resource-membership-diagnostic-100-v3/membership-diagnostic-actual-20261012-v3.jsonl",
+    "--start-utc",
+    "2026-10-12T14:46:16+00:00",
+    "--end-utc",
+    "2026-10-12T14:49:16+00:00",
+    "--expected-source-sha256",
+    "921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f",
+    "--backup-path-sha256",
+    "3a5f18b515069b168b9004e1a3fac4b83c6e4448af3ae9418758a0e4b5b9488c"
+  ],
+  "executionOwner": "root",
+  "sourceSha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+  "packetPlanSha256": "5636500856eb3656a04bd1e913715d4466ca81a93aac7d49f10b7299e8eb8fac",
+  "freshFenceSha256": "dec814b5c769d8ac1b51c7ec3bff6b7e423858a3a27888b01162ec33847e1840",
+  "startUtc": "2026-10-12T14:46:16+00:00",
+  "endUtc": "2026-10-12T14:49:16+00:00",
+  "queries": 0,
+  "cacheControls": 0,
+  "sourceResourceLimitWrites": 0,
+  "automaticRetry": false,
+  "priorResourceReaderGoneProven": true
+}

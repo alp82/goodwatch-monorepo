@@ -1,0 +1,18 @@
+{
+  "cleanReaderExitProven": false,
+  "coverage": "UNKNOWN",
+  "event": "resource-window.audit.v1",
+  "futureCeilingEstablished": false,
+  "journalSha256": "40566c81bc79370b3c2bd223e2dddcab1e7e50b64b9ae4b927c00cc1488980a5",
+  "problems": [
+    "terminal_or_start_missing",
+    "failure_record",
+    "event_order",
+    "unknown_event",
+    "clean_reader_exit_missing",
+    "required_proof_missing"
+  ],
+  "productionAcceptance": false,
+  "readerGoneProven": true,
+  "samples": 15
+}

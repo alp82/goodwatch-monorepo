@@ -1,0 +1,61 @@
+{
+  "schema": "goodwatch.resource-window.membership-short.plan.v3",
+  "preparedOnly": true,
+  "executed": false,
+  "executionOwner": "root-agent",
+  "sourceCommit": "ba6d09d64ce1c2d40cd191c7d92af341138dd993",
+  "mergedSourceCommit": "7744f84f01978e27e3381402bed02eb98483e400",
+  "sourceSha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+  "files": {
+    "launch_membership_diagnostic_v3.py": {
+      "sha256": "fff109dcaaf9e997f00e3f04f1d03802c84ce67f938572163dad3aad66ddbcb0",
+      "bytes": 6810
+    },
+    "record_membership_diagnostic_v3.py": {
+      "sha256": "97520c1707362ee4efd63420894c60a8edda2e2a5dcfbcb9c00be52d5c2b7dba",
+      "bytes": 2731
+    },
+    "audit_membership_v3.py": {
+      "sha256": "62e366ea2417c4fe67694ef1a02cd70dd31872e276fa25c962883f1fbc2fbafb",
+      "bytes": 7841
+    },
+    "audit_transport_membership_v3.py": {
+      "sha256": "3cfe728c974c06bcfb9fab9d11e475d2c6b3163652a6fd54b92493fea19bf224",
+      "bytes": 2422
+    },
+    "test_membership_transport_v3.py": {
+      "sha256": "62988c043d9af7439a592572a626468a1a37bdf4f38a25ca9f2f79dfb9814c6d",
+      "bytes": 3089
+    },
+    "test_membership_audit_v3.py": {
+      "sha256": "237b689a5936068daaaae08209d19bec195e79a3442243750b2c9add3ba66aa0",
+      "bytes": 3945
+    }
+  },
+  "durationSeconds": 180,
+  "maximumDurationSeconds": 180,
+  "intervalSeconds": 2,
+  "maximumGapSeconds": 3,
+  "expectedSamplesApproximately": 90,
+  "maximumSamples": 1500,
+  "maximumOutputBytes": 16777216,
+  "maximumRowBytes": 8192,
+  "freshSourcePreflightRequired": true,
+  "newExclusiveJournalRequired": true,
+  "journalMode": "0600",
+  "parentMode": "0700",
+  "remoteHostFilesCreated": 0,
+  "cacheControls": 0,
+  "queries": 0,
+  "sourceCapsChanged": false,
+  "fullWindowRepeat": false,
+  "automaticRetry": false,
+  "failureCanTerminateEarly": true,
+  "unavailableLedgerPossible": true,
+  "causeAttributionGuaranteed": false,
+  "productionAcceptance": false,
+  "futureCeilingEstablished": false,
+  "localFixturesPassed": 11,
+  "old1405FencesReused": false,
+  "rootRecipeSha256": "c60d487e8832a5312c14f4ad349fd05eb0b5f1c78ac46fc7b8d22e7d22c7fbcd"
+}
