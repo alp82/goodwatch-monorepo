@@ -20,6 +20,6 @@ Retained limits include:
 
 The 6 GiB source cap, fixed CPU hierarchy, swap, full selected-working-set debit, 100% locked residency, nine pairs with zero exclusions, 18-writer maximum and both candidate server/wall timing requirements remain intact. A consumed recovery cannot be reused. No failed attempt is resumed automatically.
 
-`provenance.json` binds every external source file and copied artifact. Exact execution packets and prompts are retained in the local immutable archives and referenced by byte count and SHA, avoiding duplicate megabytes. Included gzip deltas preserve their original bytes and hashes. The review preparation's pending field describes its earlier timestamp; the later invocation and root disposition record completion.
+`provenance.json` binds every external source file and copied artifact. Exact execution packets and prompts are retained in the local immutable archives and referenced by byte count and SHA, avoiding duplicate megabytes. The review preparation's pending field describes its earlier timestamp; the later invocation and root disposition record completion.
 
 Root must verify the final merged source, actual packet/closures and distinct once-only output scope before any host execution. This publication establishes an inactive source step only.
