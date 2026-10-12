@@ -1,0 +1,21 @@
+{
+  "schema": "post-cold-clone-stage-prepared.v1",
+  "execution": false,
+  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v2",
+  "stageMustBeAbsent": true,
+  "coreCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
+  "coreFiles": {
+    "pin.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+    "runtime.py": "635405593bc2d5917163745b781056e49c8111a773e19d02d6011613ee2d2a03",
+    "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
+  },
+  "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
+  "controllerSha256": "e32ef26b71ae65a8da718cbfb58361289f2b935bd1b699d980488e40ae23b5c3",
+  "cachePreparationHelperSha256": "9f45f02d7f3329990f276abc304b4af23189eae68346937ae366a12a7afce7be",
+  "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
+  "controllerPolicySha256": "c648254a6332fa5ca5d9cfff3809e5745b9c24440332762c4e9a6d6041b48b88",
+  "consumerSourceManifestSha256": "16318c7f38d7c698d9f0e101d36db221b3d2adcacf05c9d5d35728a17abde764",
+  "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
+  "originalStageUnchanged": true,
+  "productionAcceptance": false
+}

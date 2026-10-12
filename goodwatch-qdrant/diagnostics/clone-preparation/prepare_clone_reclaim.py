@@ -1,12 +1,12 @@
 """Prepared-only clone cache control. No search queries, lifecycle or resource edits."""
 import sys
 sys.dont_write_bytecode=True
-import argparse,datetime,errno,fcntl,hashlib,json,os,resource,signal,stat,time,urllib.request
+import argparse,datetime,errno,fcntl,hashlib,json,os,re,resource,signal,stat,time,urllib.request
 from pathlib import Path
 STAGE=Path('/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1')
 REQUEST=3*1024**3
 LIMIT_FILES=('memory.min','memory.low','memory.high','memory.max','memory.swap.max','cpu.max','io.max','pids.max')
-SAFE={'source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed'}
+SAFE={'source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded'}
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 def at():return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -30,7 +30,8 @@ def snapshot(c,source):
  mem=numbers(cg/'memory.stat');events=numbers(cg/'memory.events');cpu=numbers(cg/'cpu.stat')
  host={k.rstrip(':'):int(v.split()[0])*1024 for k,v in (l.split(maxsplit=1) for l in Path('/proc/meminfo').read_text().splitlines())}
  if host['SwapTotal'] or int((cg/'memory.swap.current').read_text()) or (cg/'memory.swap.max').read_text().strip()!='0':raise RuntimeError('swap_present')
- if mem['file_dirty'] or mem['file_writeback']:raise RuntimeError('dirty_source_pages')
+ if mem['file_dirty'] or mem['file_writeback']:
+  error=RuntimeError('dirty_source_pages');error.dirtyEvidence={'fileDirtyBytes':mem['file_dirty'],'fileWritebackBytes':mem['file_writeback']};raise error
  if mem['unevictable']:raise RuntimeError('locked_source_pages')
  processes=[]
  for pid in sorted(int(v) for v in(cg/'cgroup.procs').read_text().split()):
@@ -122,19 +123,47 @@ def cap_fit(measured,current,reserve):
  return out
 
 
-def run(c,config,spec,policy,emit):
- locks=[];directory=None;target=None;output={'schema':'owned-clone-reclaim-preparation.v1','queries':0,'pinning':False,'archiveBytesRead':0,'fileCacheAdvice':False,'lifecycleChanges':0,'sourceResourceLimitWrites':0,'productionBackupEquivalent':False}
+def require_held_control_lock(c,fd):
+ info=os.fstat(fd);path=c.ROOT/'control.lock';current=path.lstat()
+ if path.resolve()!=path or not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or stat.S_IMODE(info.st_mode)!=0o600 or (info.st_dev,info.st_ino)!=(current.st_dev,current.st_ino):raise RuntimeError('invalid_reclaim_lock')
+ records=(Path('/proc/self/fdinfo')/str(fd)).read_text().splitlines()
+ for line in records:
+  match=re.fullmatch(r'lock:\s+\d+:\s+FLOCK\s+ADVISORY\s+WRITE\s+(\d+)\s+([0-9a-fA-F]+):([0-9a-fA-F]+):(\d+)\s+0\s+EOF',line)
+  if match and (int(match[1]),int(match[2],16),int(match[3],16),int(match[4]))==(os.getpid(),os.major(info.st_dev),os.minor(info.st_dev),info.st_ino):return
+ raise RuntimeError('invalid_reclaim_lock')
+
+
+def quiescent_snapshot(c,source,seconds=0,clock=time.monotonic,sleep=time.sleep):
+ if seconds not in (0,5):raise RuntimeError('prepared_input_changed')
+ start=clock();attempts=0;last=None
+ while True:
+  attempts+=1
+  try:
+   state=snapshot(c,source)
+   if seconds and clock()-start>seconds:raise RuntimeError('quiescence_bound_exceeded')
+   return state,{'budgetSeconds':seconds,'samples':attempts,'seconds':round(clock()-start,3),'fileDirtyBytes':0,'fileWritebackBytes':0,'zeroDirtyAndWriteback':True}
+  except RuntimeError as error:
+   if str(error)!='dirty_source_pages':raise
+   last=getattr(error,'dirtyEvidence',None)
+   elapsed=clock()-start
+   if seconds==0 or elapsed>=seconds:
+    error.quiescenceEvidence={'budgetSeconds':seconds,'samples':attempts,'seconds':round(elapsed,3),'zeroDirtyAndWriteback':False,**(last or {})};raise
+   sleep(min(.25,seconds-elapsed))
+
+
+def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_own_nofile=False):
+ """One clone request under an already-held verified control lock; never reacquires it."""
+ directory=None;target=None;output={'schema':'owned-clone-reclaim-preparation.v1','queries':0,'pinning':False,'archiveBytesRead':0,'fileCacheAdvice':False,'lifecycleChanges':0,'sourceResourceLimitWrites':0,'productionBackupEquivalent':False}
  try:
-  locks.append(secure_lock(c.ROOT/'control.lock'))
-  if (STAGE/'pin-instance.lock').exists():locks.append(secure_lock(STAGE/'pin-instance.lock'))
+  require_held_control_lock(c,lock_fd)
   c.frozen_helper(config);container=c.inspect_stopped_or_running(spec);output['ownedAllocatedBytes']=c.owned_total_budget()
   source=c.runtime.inspect_source(spec);parent_group=c.self_cgroup()
   if parent_group==source.cgroup_relative:raise RuntimeError('parent_placement_changed')
   allowed_pids={source.pid,container['State']['Pid']}
   if set(int(v) for v in(source.cgroup/'cgroup.procs').read_text().split())!=allowed_pids:raise RuntimeError('source_changed')
   output['healthBefore']=health(c,source)
-  initial=c.runtime.measure_source(spec,raise_own_nofile=True);output['initialMeasurement']=c.daemon.public_measure(initial)
-  output['before']=snapshot(c,source)
+  initial=c.runtime.measure_source(spec,raise_own_nofile=raise_own_nofile);output['initialMeasurement']=c.daemon.public_measure(initial)
+  output['before'],output['quiescence']=quiescent_snapshot(c,source,quiescence_seconds)
   # Opening only the exact guarded cgroup directory and its write-only reclaim file.
   directory=os.open(source.cgroup,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW);directory_identity=os.fstat(directory)
   target=os.open('memory.reclaim',os.O_WRONLY|os.O_NOFOLLOW,dir_fd=directory);identity=os.fstat(target)
@@ -154,19 +183,36 @@ def run(c,config,spec,policy,emit):
   if output['writer']['timedOut']:raise RuntimeError('reclaim_timeout')
   if output['writer']['outcome']=='guard-failed':raise RuntimeError(output['writer']['reason'])
   if output['writer']['outcome'] not in ('accepted','under-reclaimed'):raise RuntimeError('reclaim_write_failed')
-  measured=c.runtime.measure_source(spec,raise_own_nofile=True);output['measurement']=c.daemon.public_measure(measured)
+  measured=c.runtime.measure_source(spec,raise_own_nofile=raise_own_nofile);output['measurement']=c.daemon.public_measure(measured)
   if measured['selectionHash']!=initial['selectionHash']:raise RuntimeError('source_changed')
   output['final']=snapshot(c,source);fence(output['before'],output['final']);output['healthAfter']=health(c,source)
   current=output['final']['accounting'];output['postCapFit']=cap_fit(measured,current,policy.cap_reserve_bytes)
   c.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes));c.frozen_helper(config)
   if c.self_cgroup()!=parent_group:raise RuntimeError('parent_placement_changed')
-  output['stage']='prepared-headroom-measured';emit(output);return 0
+  require_held_control_lock(c,lock_fd)
+  output['stage']='prepared-headroom-measured';return output
  except BaseException as error:
-  output.update({'stage':'failed','reason':reason(error),'privateErrorOmitted':True});emit(output);return 1
+  output.update({'stage':'failed','reason':reason(error),'privateErrorOmitted':True})
+  if hasattr(error,'dirtyEvidence'):output['dirtyEvidence']=error.dirtyEvidence
+  if hasattr(error,'quiescenceEvidence'):output['quiescence']=error.quiescenceEvidence
+  error.reclaimEvidence=output;raise
  finally:
   if target is not None:os.close(target)
   if directory is not None:os.close(directory)
+
+
+def run(c,config,spec,policy,emit):
+ locks=[]
+ try:
+  locks.append(secure_lock(c.ROOT/'control.lock'))
+  if (STAGE/'pin-instance.lock').exists():locks.append(secure_lock(STAGE/'pin-instance.lock'))
+  output=under_control_lock(c,config,spec,policy,locks[0],raise_own_nofile=True);emit(output);return 0
+ except BaseException as error:
+  output=getattr(error,'reclaimEvidence',{'schema':'owned-clone-reclaim-preparation.v1','stage':'failed','reason':reason(error),'privateErrorOmitted':True,'queries':0})
+  emit(output);return 1
+ finally:
   for fd in reversed(locks):os.close(fd)
+
 
 def main(argv=None):
  parser=argparse.ArgumentParser();parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--script-sha256');parser.add_argument('--controller-sha256');parser.add_argument('--policy-sha256');args=parser.parse_args(argv);emit=lambda v:print(json.dumps(v,sort_keys=True),flush=True)

@@ -52,3 +52,26 @@ class ReclaimTests(unittest.TestCase):
   self.assertEqual(p.reason(OSError('private source file')),'guard_or_runtime_failure')
 
 if __name__=='__main__':unittest.main()
+
+class HeldLockPreparationTests(unittest.TestCase):
+ def test_real_control_fd_must_already_hold_flock(self):
+  from types import SimpleNamespace
+  import fcntl
+  with tempfile.TemporaryDirectory()as td:
+   root=Path(td);path=root/'control.lock';path.touch(mode=0o600);fd=os.open(path,os.O_RDWR)
+   try:
+    with self.assertRaisesRegex(RuntimeError,'invalid_reclaim_lock'):p.require_held_control_lock(SimpleNamespace(ROOT=root),fd)
+    fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);p.require_held_control_lock(SimpleNamespace(ROOT=root),fd)
+   finally:os.close(fd)
+ def test_dirty_quiescence_bounded_without_relaxation_or_write(self):
+  clock=[0];sleep=lambda n:clock.__setitem__(0,clock[0]+n)
+  def dirty(*_):
+   e=RuntimeError('dirty_source_pages');e.dirtyEvidence={'fileDirtyBytes':4096,'fileWritebackBytes':8192};raise e
+  with patch.object(p,'snapshot',side_effect=dirty),patch.object(p.os,'write',side_effect=AssertionError('reclaim before clean')):
+   with self.assertRaises(RuntimeError)as context:p.quiescent_snapshot(None,None,5,clock=lambda:clock[0],sleep=sleep)
+  self.assertEqual(clock[0],5);self.assertEqual(context.exception.quiescenceEvidence['fileWritebackBytes'],8192);self.assertFalse(context.exception.quiescenceEvidence['zeroDirtyAndWriteback'])
+ def test_fresh_clean_snapshot_after_dirty_keeps_exact_zero_guard(self):
+  e=RuntimeError('dirty_source_pages');e.dirtyEvidence={'fileDirtyBytes':4096,'fileWritebackBytes':0};clock=[0];sleep=lambda n:clock.__setitem__(0,clock[0]+n)
+  with patch.object(p,'snapshot',side_effect=[e,{'fresh':True}]):
+   snapshot,evidence=p.quiescent_snapshot(None,None,5,clock=lambda:clock[0],sleep=sleep)
+  self.assertEqual(snapshot,{'fresh':True});self.assertTrue(evidence['zeroDirtyAndWriteback']);self.assertEqual(evidence['samples'],2);self.assertEqual(clock[0],.25)
