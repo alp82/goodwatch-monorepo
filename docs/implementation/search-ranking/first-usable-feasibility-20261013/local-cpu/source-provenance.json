@@ -1,0 +1,11 @@
+{
+  "commit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "functionNames": [
+    "quantizedCosines",
+    "meanSd",
+    "topIds"
+  ],
+  "sourceSha256": "5d843168417ffc3a5bef3945f0183e7a3e1470f247783394d6da8a3049e58370",
+  "compiledSha256": "30e9ac2c49723eae2773b7aef2f00112637b9e21b00a8b4addc980ab3bbabd2e",
+  "transform": "Bun TypeScript type erasure only; no application imports"
+}

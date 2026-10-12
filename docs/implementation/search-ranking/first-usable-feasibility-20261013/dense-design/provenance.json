@@ -1,0 +1,62 @@
+{
+  "schema": "search.description-provisional-design-review.v1",
+  "sourceCommit": "8af144909e4ed22da3ce406c037a2fb6f45b08ea",
+  "requestedModel": "claude-opus-5-5",
+  "requestedEffort": "medium",
+  "actualModelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 16130,
+      "cacheReadInputTokens": 3088,
+      "cacheCreationInputTokens": 61967,
+      "webSearchRequests": 0,
+      "costUSD": 0.8189616,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 12901,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "actualCliExit": 0,
+  "durationMs": 204034,
+  "tools": [],
+  "mcpServers": {},
+  "sourceOnly": true,
+  "sourceEdits": 0,
+  "hostsInvoked": false,
+  "privateInputsSupplied": false,
+  "firstBareAttempt": "login-refused-no-model-output",
+  "verdict": "FEASIBLE-CONDITIONAL",
+  "files": {
+    "prompt.txt": {
+      "bytes": 142899,
+      "sha256": "cd7db9943bc2d887f04c1848e0427d557cc26ea457990112e2e9cea2d0e43462"
+    },
+    "source-manifest.json": {
+      "bytes": 1531,
+      "sha256": "7926a1691fa49fe056062ec46521c16f49cdbe91bfc3ca702a8889d9574302d9"
+    },
+    "opus-review.json": {
+      "bytes": 11083,
+      "sha256": "0192c889c590148af757408a749d714a93a6e9ec5543a252118000d386ba984d"
+    },
+    "opus-report.txt": {
+      "bytes": 9118,
+      "sha256": "f5d00d3d8667aecd9aca47aed700572badc66c590aece1667c48b74d9598b684"
+    },
+    "opus-stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "opus.json": {
+      "bytes": 1214,
+      "sha256": "45ddcdfdb7c0a031555ab187767fd8784d743567f063006bf848f581fc8e2c29"
+    },
+    "opus.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

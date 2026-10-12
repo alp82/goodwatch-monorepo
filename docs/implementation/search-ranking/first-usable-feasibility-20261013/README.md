@@ -1,0 +1,31 @@
+# First usable results: feasibility evidence
+
+Map #100 remains open. This checkpoint establishes inputs for a local relevance assessment and preserves two actual Claude Code Opus 5.5 medium design reviews. It establishes no passing production latency, usable-result quality verdict, rollout, or seven-day acceptance. The owner keeps the Hetzner size unchanged; the failed diagnostic scope recorded in the preceding checkpoint remains consumed.
+
+## Current index, read only
+
+Root retrieved the published manifest and ten existing index blobs from the live search role environment. The standalone reader performs only the fixed manifest SELECT and sequential content-addressed GETs. Credentials stay in memory inside the role. It imports no application module and invokes no search, Jev, Qdrant, history write, index publication, or host mutation.
+
+The first reader refused `manifest_schema` before any blob download because it omitted the builder's `stats` field. That failed invocation is retained. The successor accepts the builder's exact sixteen public integer counts, keeps the entire manifest in its identity, and retains the original redirect, checksum, size and timeout bounds. Root read the source and ran the HTTP fixtures: four predecessor fixtures passed, then six successor fixtures passed. Root also ran all six fixtures against the final strict-stats revision: PASS in 4.129 seconds.
+
+Manifest build `20261012T041504Z` has canonical manifest SHA-256 identity `1505339c5efbfcd2413df72431158ac2ddef2331120d5d8e5f06a79baf10f097`; its emitted JSON record has byte SHA-256 `b37e2a87af286b9f21388dd70c34ab31f3d1ee54ee0b36c50d0002c8c91771cc`. The 63,194,661 compressed bytes arrived in a 63,198,953-byte framed stream, SHA-256 `06fc58cc8b25265dc0b1d494b1a42f330c892f9568de4103b7f69c58ca333a83`; the actual download exited zero in 5.688 seconds. Root independently verified every blob's SHA-1 and SHA-256, terminal receipt, exact EOF, gzip/JSON decoding, title-column lengths, identical unique title/matrix point ordering, finite positive scales, and matrix dimensions. Both title and vector files contain **42,934** aligned rows: English 768 dimensions, multilingual 384.
+
+The binary stream and ten blobs remain local evidence. This directory publishes their binding receipts rather than copying the 63 MB index into Git. The previous input-availability findings predate this retrieval and retain their stated search scope. Their absence statements do not describe the newly downloaded files. The pinned local models were subsequently found under `/tmp/goodwatch-search-models`; root independently verified all six complete file digests against deployed source pins.
+
+## CPU and upstream timing limits
+
+The local synthetic benchmark extracts actual deployed scoring and sorting functions. At the historical 50,371-row size, English scoring plus primary top-500 sorting took 244–423 ms; adding a second English scan took 416–439 ms. Allocation, a real index, filtering/blending, encoding, catalog, taste, delivery and production contention were excluded. These ranges are neither production p95 nor measurements at the newly established current row count. The larger collection-size and hypothetical quarter-mask runs remain separately qualified in the retained report.
+
+Five of the six retained initial probe cases leave arithmetic headroom of about 1.04–1.15 seconds after people, language and reading; the native-title case leaves 300 ms. This is arithmetic over fixed cases, with incomplete eighteen-probe stage coverage. It cannot establish an organic upstream percentile or traffic-class proportions.
+
+## Relevance and design boundaries
+
+The public corpus contains 168 stored readings. Existing grades cover 5,071 query/title pairs across 161 queries; seven title-lookup guards are separate. The available simplified-ranker reference lists cover thirty holdout-five queries, with twelve additional historical style references. Full current-hybrid lists, complete candidate pools and query traces for all 168 were not present in the located archive. Existing grades can assess already judged pairs; unjudged pairs must remain explicitly unjudged.
+
+The initial dense-shortlist design review is **FEASIBLE-CONDITIONAL**, source only. The index supplies approximate text cosine and negation data but no per-title raw fingerprints or BM25 document vectors. A local dense list therefore omits signals used by the final ranker. No usefulness threshold or full-final parity follows from the review. Its suggestion that `lesserKnown` makes indexed titles ineligible overstates the domain: that toggle removes the floor and still permits indexed titles. Skipping that cohort would be a conservative coverage choice. The review's preference for the pinned-clone remedy is model advice, not an owner constraint.
+
+The separate earlier-authoritative-title/person design review is **NOT READY**, with seven concrete blockers: weak lexical matches; streamed chips hidden by an empty partial reading; unknown early packet fields; incomplete history/charge handling; premature admission release; delivery ordering and overwritten first-result timing; and contradiction with the current ranking deadline. Its original design and actual report are retained unchanged. Corrections and implementation are subsequent work; this checkpoint claims no resolution of those blockers.
+
+The owner already permits a useful provisional batch followed by a full update and measures first usable latency independently of full completion. Existing strong named title-match tiers provide a conservative engineering candidate; empty or weak suggestion batches do not become usable by being labeled provisional. Pure descriptions still require separate relevance and timing evidence. Result-open feedback remains deferred.
+
+`evidence-bindings.json` binds every copied artifact to its original local bytes. Both review provenance files record actual Opus 5.5 medium usage, CLI exit zero, tools disabled and empty MCP configuration. Their source-coverage qualifications remain in the original reports. No ordinary production probes were added; the preceding probe allowance remains spent. #406 stays closed, and #407 waits for the final remedy rollout and a fresh seven-day production window.

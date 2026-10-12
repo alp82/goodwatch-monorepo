@@ -1,0 +1,37 @@
+{
+  "commit": "8af144909e4ed22da3ce406c037a2fb6f45b08ea",
+  "files": {
+    "goodwatch-webapp/app/server/combined-search/search.server.ts": {
+      "sha256": "407119375331e8f94ce3c40ba38851fd2ccc287cf19c89f73b79a516788384cb",
+      "bytes": 32442
+    },
+    "goodwatch-webapp/app/server/combined-search/search-filters.ts": {
+      "sha256": "062c0508df842f8ab7efdadc935ae636014f04de35f74da09c60db6a6a31e47d",
+      "bytes": 7546
+    },
+    "goodwatch-webapp/app/server/combined-search/catalog.server.ts": {
+      "sha256": "5079a0f9f7c688aa0498574dc97416be4aaa6b64d0a24e537a1af6acb74db07b",
+      "bytes": 4597
+    },
+    "goodwatch-webapp/app/server/search-ranking/search-index.server.ts": {
+      "sha256": "f81350535c478ec9468f1cf413db9b601d82856c84d1fce697b9100083aa4f13",
+      "bytes": 11483
+    },
+    "goodwatch-webapp/app/server/search-ranking/search-filter.server.ts": {
+      "sha256": "1b4f1b7057663c074454e538659055aeea42fbdcb638883f11ad14c1c7ea392c",
+      "bytes": 4467
+    },
+    "goodwatch-webapp/app/server/search-ranking/serve.server.ts": {
+      "sha256": "03ebb7fe9150ce44f1b31c68c83306fe7794d71d6d87fa29b16c0b35d8dea7fc",
+      "bytes": 4138
+    },
+    "goodwatch-webapp/app/server/search-ranking/rank-search.server.ts": {
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+      "bytes": 34479
+    },
+    "goodwatch-webapp/app/ui/search/SearchJourney.tsx": {
+      "sha256": "8684fbb99065e525ff3a54077f9785bbfeefa5eab9b24142807e946989dbdff6",
+      "bytes": 41022
+    }
+  }
+}

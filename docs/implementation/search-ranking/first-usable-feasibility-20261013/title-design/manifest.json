@@ -1,0 +1,127 @@
+{
+  "codeChanges": 0,
+  "files": {
+    "app/domain/for-you.ts": {
+      "bytes": 9640,
+      "sha256": "b9f6164e43f18485e6db30ce3a8b49e7ca17710f9d85f3600b30d8a3b746130a"
+    },
+    "app/routes/api.combined-search.ts": {
+      "bytes": 7181,
+      "sha256": "f4eceae83025223e75a0507192424e075f332a24be6083cb85600192b0981540"
+    },
+    "app/server/combined-search/api-route.test.ts": {
+      "bytes": 6886,
+      "sha256": "af2450511e55ed653e3d78b5225422f75c5e1d4aafceba5a93191bf70ecdfcca"
+    },
+    "app/server/combined-search/catalog-exact-title.test.ts": {
+      "bytes": 3300,
+      "sha256": "c5fbf59074ca7627d0557e5a9c902b88b9f49bd4a5b3695caa1e0be59b729d55"
+    },
+    "app/server/combined-search/catalog.server.ts": {
+      "bytes": 4597,
+      "sha256": "5079a0f9f7c688aa0498574dc97416be4aaa6b64d0a24e537a1af6acb74db07b"
+    },
+    "app/server/combined-search/search-filters.ts": {
+      "bytes": 7546,
+      "sha256": "062c0508df842f8ab7efdadc935ae636014f04de35f74da09c60db6a6a31e47d"
+    },
+    "app/server/combined-search/search.server.ts": {
+      "bytes": 32442,
+      "sha256": "407119375331e8f94ce3c40ba38851fd2ccc287cf19c89f73b79a516788384cb"
+    },
+    "app/server/combined-search/taste-rows.server.ts": {
+      "bytes": 2335,
+      "sha256": "9e11f81907768616ed14df3a22f2ddce9e9ab0e3ada113dd383bf291371d5271"
+    },
+    "app/server/combined-search/title-lookup.test.ts": {
+      "bytes": 28818,
+      "sha256": "c89504f592eaa5f542791cb0685faed69402639fb4536d7b1ab85834e34aaace"
+    },
+    "app/server/search-people/people.server.ts": {
+      "bytes": 9303,
+      "sha256": "e75b5dc9c4c37763ad5d292d67ecddfcd17abfd077d66ea805b938d6460e7c06"
+    },
+    "app/server/search-ranking/rank-search.server.ts": {
+      "bytes": 34479,
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890"
+    },
+    "app/server/search-ranking/search-reblend.server.ts": {
+      "bytes": 1095,
+      "sha256": "c215ee6ce6207ad95ab20d7432d12dcdfcb4b7561b68caa9d57d3e3d0b88d374"
+    },
+    "app/server/search-ranking/serve.server.ts": {
+      "bytes": 4138,
+      "sha256": "03ebb7fe9150ce44f1b31c68c83306fe7794d71d6d87fa29b16c0b35d8dea7fc"
+    },
+    "app/server/search-runtime/runtime.server.ts": {
+      "bytes": 14145,
+      "sha256": "8fc296eec0a09395ecf8057af7c1ff71b1b5c21d64b650bb52b9d871bf38336f"
+    },
+    "app/server/search-runtime/telemetry.server.ts": {
+      "bytes": 2275,
+      "sha256": "e6c7b23c63ee399b04acf101d171849351faa5f42653b5ef629c288dea74a6a3"
+    },
+    "app/ui/Search.tsx": {
+      "bytes": 87,
+      "sha256": "35e1f61e902172dfd2cff800df625a107e5e0c6c886cccc991d3ce290873559c"
+    },
+    "app/ui/discover/DiscoverPage.tsx": {
+      "bytes": 14275,
+      "sha256": "212cad61b9b1564d828fadacfa3ac40fefa96c0de49daa34d5fb30898555f1a1"
+    },
+    "app/ui/discover/discover-search-request.test.ts": {
+      "bytes": 3854,
+      "sha256": "b25e328c7ead2b619758baa7eb4712c6b08ac4532cd972b6af5fdda0b5af0c86"
+    },
+    "app/ui/discover/discover-search-request.ts": {
+      "bytes": 2362,
+      "sha256": "0ec3707e61338a9b554b3e2725d3744317fda49cfee6956fc225bc87e4f8deba"
+    },
+    "app/ui/discover/useDiscoverSearch.ts": {
+      "bytes": 3934,
+      "sha256": "095a2aa155e76991d17ef8d49d75f0543dc1835c00c585f926c732d16caec753"
+    },
+    "app/ui/navigation/Search.tsx": {
+      "bytes": 5889,
+      "sha256": "92440c365f14eac3124e1857937d0ed92a80a61e3d069ff52b54f9d8b665a8eb"
+    },
+    "app/ui/navigation/SearchPanel.tsx": {
+      "bytes": 2257,
+      "sha256": "adcf2820dafedec19294d9d25692bd7a265550f5500aaf9c5626324f76ee6005"
+    },
+    "app/ui/search/SearchJourney.tsx": {
+      "bytes": 41022,
+      "sha256": "8684fbb99065e525ff3a54077f9785bbfeefa5eab9b24142807e946989dbdff6"
+    },
+    "app/ui/search/SearchPeople.tsx": {
+      "bytes": 10873,
+      "sha256": "f819ee1581c356db5f359397b9462b7ad719a737de41c6d13ce2f6f9bc8d3e87"
+    },
+    "app/ui/search/search-model.tsx": {
+      "bytes": 4371,
+      "sha256": "e74d80c4d26b391e0e77913342f3ce5f4a7cce8727e91b62cfe5b6587d6a6679"
+    },
+    "app/ui/search/search-request.test.ts": {
+      "bytes": 8777,
+      "sha256": "ec772291e9f1e16843f31301181f8eafdd8765edfb9aa6d4ab4f4527e3c83840"
+    },
+    "app/ui/search/search-request.ts": {
+      "bytes": 4865,
+      "sha256": "8e96eeca1062b3e919c713774ebd16788f5c75cf3d7121e425c24b1d3b0b715d"
+    }
+  },
+  "modelReviewStatus": "not-run-by-this-agent",
+  "preparedOnly": true,
+  "privateProbeBodiesCopied": false,
+  "probeTags": [
+    "exact-title",
+    "native-title",
+    "low-vote-title",
+    "person",
+    "description",
+    "reference"
+  ],
+  "productionCalls": 0,
+  "schema": "early-authoritative-results.design-source.v1",
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+}
