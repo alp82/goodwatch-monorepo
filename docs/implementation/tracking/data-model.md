@@ -2002,8 +2002,10 @@ dates, recorded in May 2024.
   Unmark season, an unticked episode, a deleted watch or an undone group on a Seen show, and taking back a Seen
   press, make the show Watching with `state_changed_at` = the latest remaining watch's date or, without one, the
   time it was recorded (`applyShowEvent`). `watchingSince` is then no later than the last watch, so the show goes by
-  its watches: into Pick up when they are older than 90 days. State rows written between the two decisions keep the
-  time of the unmark; no statement was run on the production database for them.
+  its watches: into Pick up when they are older than 90 days. The seven state rows written this way
+  between the two decisions, all the owner's, were set to that time on the production database on 2026-10-12, one
+  `UPDATE` of `state_changed_at` each. Two other Watching rows were left: one with watches ticked after the state
+  changed, and one whose state changed 73 seconds after its last season mark, where the data does not say how.
 - **An import never counts, and neither did the migration.** No column says who wrote a state row, and none was
   added: **no statement was run on the production database.** An import inserts its watches with `created_at` = the
   import's time and then writes the state with the same time or, after a conflict, a later one. So
