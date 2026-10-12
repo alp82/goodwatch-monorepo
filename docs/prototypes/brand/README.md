@@ -1,6 +1,6 @@
 # One GoodWatch wordmark
 
-Throwaway code. A UI prototype that compares three logo systems. **Verdict: pending user selection.** Nothing here
+Throwaway code. A UI prototype that compares five logo systems. **Verdict: pending user selection.** Nothing here
 is a validated decision.
 
 ## The question
@@ -10,7 +10,7 @@ Which one GoodWatch wordmark should replace the different logo treatments across
 Today the name is drawn in five ways: a white G with near-white "oodWatch" in the headers, a G above tracked
 uppercase "GOODWATCH" on the TV boot screen and in the living-room caption, a small G with "GoodWatch" in the phone
 landscape pill, an amber G with white "GoodWatch" at weight 900 on og images and share cards, and plain gray text in
-the import walkthrough. The owner prefers the white and yellow of the main header, so all three directions hold that
+the import walkthrough. The owner prefers the white and yellow of the main header, so all five directions hold that
 palette (`#ffffff`, `#fbbf24`, ink `#0a0a0a`) and differ in structure.
 
 ## Provenance
@@ -36,11 +36,13 @@ causes a Remix initialization error on a fresh dev-server start. This workaround
 - <http://localhost:5188/prototype/rec-brand?variant=A>
 - <http://localhost:5188/prototype/rec-brand?variant=B>
 - <http://localhost:5188/prototype/rec-brand?variant=C>
+- <http://localhost:5188/prototype/rec-brand?variant=D>
+- <http://localhost:5188/prototype/rec-brand?variant=E>
 
 The white pill with the fuchsia ring switches the direction, and so do the left and right arrow keys. The site
 header above the page is today's, for comparison.
 
-## The three directions
+## The directions
 
 | | A · Initial G | B · Split word | C · Badge |
 |---|---|---|---|
@@ -50,6 +52,23 @@ header above the page is today's, for comparison.
 | Emblem only | The bare white G | The yellow tile | The G in a square plaque, the bare G under 16px |
 | Light backgrounds | A backing plate: an ink chip carries white and yellow | Ink translation: type and tile turn ink, the tile keeps a yellow G | Unchanged, the badge is its own field |
 | TV boot | G scales in, "oodWatch" wipes out of it | Tile scales in, the two words rise | The plaque opens from a line, GOOD drops, WATCH rises |
+
+### D and E, added on the owner's request
+
+The owner asked to see "A but with ood also being white and then that as the C badge variant too". A, B and C stay
+for comparison; there are five directions and no further ones.
+
+| | D · Initial G · white Good | E · Initial G badge |
+|---|---|---|
+| Structure | Exactly A's lockup: the white G symbol is the first letter, white "ood" beside it, yellow "Watch" | D inside C's plaque (ink field, yellow keyline, rounded): the white G starts the top row, followed by white "ood"; yellow "Watch" is the second row. No separate emblem beside a full "Good" |
+| Type | Gabarito 700, title case, A's ratios and spacing | Gabarito 700, title case, one size for both rows |
+| Small sizes | The same lockup at every size | D's horizontal wordmark inside C's one-line outlined pill |
+| Emblem only | As A: the bare white G | As C: the G in a square plaque, the bare G under 16px |
+| Light backgrounds | As A: the ink backing plate | Unchanged, the badge is its own field |
+| TV boot | As A: G scales in, "oodWatch" wipes out of it | C's plaque opens from a line, the top row (G + "ood") drops in, "Watch" rises |
+
+Where the review page treats a family differently (room pill, walkthrough size, light rule, coverage), D follows A
+and E follows C, by `BrandSystem.treatment`. Both have browser captures below.
 
 A follows the header's own ratios (a 28px G beside 36px type, on the baseline, 2px apart). The header's text is
 near-white (`#f3f4f6`) in the source today; A sets it yellow, as the owner asked.
@@ -93,7 +112,7 @@ living room, generated og images and share cards, and no single page shows all o
 ## Files
 
 - `goodwatch-webapp/app/routes/prototype.rec-brand.tsx`
-- `goodwatch-webapp/app/ui/prototype-rec-brand/variants.tsx` (`VariantA`, `VariantB`, `VariantC`)
+- `goodwatch-webapp/app/ui/prototype-rec-brand/variants.tsx` (`VariantA` to `VariantE`)
 - `goodwatch-webapp/app/ui/prototype-rec-brand/Review.tsx`
 - `goodwatch-webapp/app/ui/prototype-rec-brand/brand.css`
 - `goodwatch-webapp/package.json` (`prototype:brand`)
@@ -101,17 +120,24 @@ living room, generated og images and share cards, and no single page shows all o
 
 ## Browser verification and captures
 
-Checked all three directions at 1440×1050 and 390×844. Every variant answered 200, displayed all placements,
+Checked directions A, B and C at 1440×1050 and 390×844. Every variant answered 200, displayed all placements,
 and had no page-wide horizontal overflow. The fixed-size context samples scroll within their own sections;
 the large logo specimens scale to fit. Boot replay, arrow-key switching including wraparound, and the system
 reduced-motion setting were exercised. The final pass had no browser page errors. A focused TypeScript check
 reported no errors in the new prototype files. No test suite or production build was run.
+
+D and E were subsequently checked at the same desktop and phone sizes. Both answered 200 with no page-wide
+horizontal overflow or browser page errors. The white "ood" and yellow "Watch" treatments were inspected;
+boot replay, arrow-key switching and reduced motion also passed. No additional TypeScript check is claimed for
+these two variants.
 
 | Direction | Desktop | Phone |
 |---|---|---|
 | A · Initial G | [Screenshot](A-desktop.jpg) | [Screenshot](A-phone.jpg) |
 | B · Split word | [Screenshot](B-desktop.jpg) | [Screenshot](B-phone.jpg) |
 | C · Badge | [Screenshot](C-desktop.jpg) | [Screenshot](C-phone.jpg) |
+| D · White Good | [Screenshot](D-desktop.jpg) | [Screenshot](D-phone.jpg) |
+| E · Initial G badge | [Screenshot](E-desktop.jpg) | [Screenshot](E-phone.jpg) |
 
 Claude Code Opus 5.5 authored the design and prototype. Codex verified it in the browser and adjusted the preview's
 responsive containers after the phone check. The verdict remains pending user selection; implementation and an

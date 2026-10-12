@@ -87,6 +87,33 @@
 	line-height: 0.681; /* Gabarito's cap height: the line box hugs the capitals. */
 }
 
+/* E: D inside C's plaque. Title case at 700; the G is the initial of the top row. */
+.rb-e {
+	font-weight: 700;
+	text-transform: none;
+}
+.rb-e-words {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.rb-e-top {
+	display: flex;
+	align-items: baseline;
+}
+.rb-e-ood,
+.rb-e-watch {
+	display: block;
+	line-height: 0.681;
+}
+.rb-e-ood {
+	margin-left: 0.056em;
+	color: var(--rb-white);
+}
+.rb-e-watch {
+	color: var(--rb-yellow);
+}
+
 /* TV boot. Each direction animates its own parts; the last frame is the standard lockup. */
 .rb-boot {
 	display: flex;
@@ -126,6 +153,12 @@
 	animation: rb-drop 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
 }
 .rb-boot .rb-c-watch {
+	animation: rb-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
+}
+.rb-boot .rb-e-top {
+	animation: rb-drop 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+.rb-boot .rb-e-watch {
 	animation: rb-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
 }
 @keyframes rb-pop {

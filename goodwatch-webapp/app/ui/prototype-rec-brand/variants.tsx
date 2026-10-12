@@ -1,5 +1,5 @@
-// PROTOTYPE - throwaway. The three GoodWatch logo systems of /prototype/rec-brand. White and yellow are held for all
-// three; they differ in structure: where the G lives, how the name is split, and what happens on a light background.
+// PROTOTYPE - throwaway. The five GoodWatch logo systems of /prototype/rec-brand. White and yellow are held for all
+// five; D is A with a white "ood", E is D inside C's badge. They differ in structure: where the G lives, how the name is split, and what happens on a light background.
 // `size` is always the height in px that today's code gives the G at that placement, so the placements compare.
 import type { CSSProperties, ReactNode } from "react"
 import gSvg from "~/img/goodwatch-logo-amber.svg?raw"
@@ -34,7 +34,9 @@ export function G({ h, color, className = "" }: { h: number | string; color: str
 }
 
 export type BrandSystem = {
-	key: "A" | "B" | "C"
+	key: "A" | "B" | "C" | "D" | "E"
+	/** The structural family, for the placements that treat a family differently. D follows A, E follows C. */
+	treatment: "initial" | "split" | "badge"
 	name: string
 	line: string
 	/** The standard lockup. */
@@ -72,16 +74,21 @@ const Swatches = () => (
 // ---------------------------------------------------------------------------------------------------------------
 // A. Initial G: the header's own lockup. The white G symbol is the first letter, "oodWatch" follows in yellow.
 // Ratios are the header's: G 28px beside 36px type, on the baseline, 2px apart.
-function LockupA({ size, tone = "dark" }: LockupProps) {
-	const fontSize = size / 0.778
-	const mark = (
-		<span className="rb-lock rb-a" style={{ fontSize }}>
+// `whiteGood` is D's one change: "ood" joins the G in white, so the color splits at the word.
+function MarkA({ size, whiteGood }: { size: number; whiteGood?: boolean }) {
+	return (
+		<span className="rb-lock rb-a" style={{ fontSize: size / 0.778 }}>
 			<G h={size} color={WHITE} className="rb-a-g" />
-			<span className="rb-a-t">oodWatch</span>
+			<span className="rb-a-t">{whiteGood ? <span style={{ color: WHITE }}>ood</span> : "ood"}Watch</span>
 		</span>
 	)
-	return <Label>{tone === "light" ? <span className="rb-plate" style={{ fontSize }}>{mark}</span> : mark}</Label>
 }
+function InitialG({ size, tone = "dark", whiteGood }: LockupProps & { whiteGood?: boolean }) {
+	const mark = <MarkA size={size} whiteGood={whiteGood} />
+	return <Label>{tone === "light" ? <span className="rb-plate" style={{ fontSize: size / 0.778 }}>{mark}</span> : mark}</Label>
+}
+const LockupA = (p: LockupProps) => <InitialG {...p} />
+const LockupD = (p: LockupProps) => <InitialG {...p} whiteGood />
 function EmblemA({ size, tone = "dark" }: LockupProps) {
 	if (tone === "dark") return <G h={size} color={WHITE} />
 	return (
@@ -92,6 +99,7 @@ function EmblemA({ size, tone = "dark" }: LockupProps) {
 }
 export const VariantA: BrandSystem = {
 	key: "A",
+	treatment: "initial",
 	name: "Initial G",
 	line: "The header's lockup, made the rule: the white G symbol is the first letter of the name.",
 	Lockup: LockupA,
@@ -112,6 +120,25 @@ export const VariantA: BrandSystem = {
 		{ label: "Light backgrounds", value: "Backing plate: an ink chip hugs the lockup (radius 0.26 em). Colors never change." },
 		{ label: "Boot", value: "G scales in, \"oodWatch\" wipes out of it to the right, the play arrow pulses once. Reduced motion: one 0.3s fade." },
 	],
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// D. Initial G, white Good: exactly A's lockup, with "ood" in white beside the white G. Only "Watch" is yellow.
+export const VariantD: BrandSystem = {
+	...VariantA,
+	key: "D",
+	name: "Initial G · white Good",
+	line: "A's lockup with the color split at the word: white G and white \"ood\", yellow \"Watch\".",
+	Lockup: LockupD,
+	Small: LockupD,
+	bento: { ...VariantA.bento, top: <LockupD size={34} /> },
+	spec: VariantA.spec.map((row) =>
+		row.label === "Type"
+			? { ...row, value: "Gabarito 700, title case, no tracking. White \"ood\" beside the white G, yellow \"Watch\"." }
+			: row.label === "Boot"
+				? { ...row, value: "As A: the G scales in, \"oodWatch\" wipes out of it to the right, the play arrow pulses once. Reduced motion: one 0.3s fade." }
+				: row,
+	),
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -145,6 +172,7 @@ function LockupB({ size, tone = "dark" }: LockupProps) {
 }
 export const VariantB: BrandSystem = {
 	key: "B",
+	treatment: "split",
 	name: "Split word",
 	line: "The full name in strong horizontal type, split by color at the word, with the G as a separate tile.",
 	Lockup: LockupB,
@@ -215,6 +243,7 @@ function EmblemC({ size }: LockupProps) {
 }
 export const VariantC: BrandSystem = {
 	key: "C",
+	treatment: "badge",
 	name: "Badge",
 	line: "A stacked signature sealed in its own plaque: half as wide as the others, and the same on any background.",
 	Lockup: LockupC,
@@ -237,4 +266,60 @@ export const VariantC: BrandSystem = {
 	],
 }
 
-export const BRANDS = { A: VariantA, B: VariantB, C: VariantC }
+// ---------------------------------------------------------------------------------------------------------------
+// E. Initial G badge: D inside C's plaque. Same ink field, yellow keyline and stack, but title case at weight 700,
+// and the G is the initial of the top row ("ood" follows it), never a separate emblem beside a full "Good".
+function LockupE({ size }: LockupProps) {
+	const H = size * 1.6
+	const f = H * 0.42
+	return (
+		<Label>
+			<span className="rb-lock rb-c rb-e" style={{ height: H, padding: `0 ${H * 0.24}px 0 ${H * 0.2}px`, borderWidth: Math.max(1.5, H * 0.035), borderRadius: H * 0.2, fontSize: f }}>
+				<span className="rb-e-words" style={{ gap: f * 0.2 }}>
+					<span className="rb-e-top">
+						<G h={f * 0.778} color={WHITE} className="rb-e-g" />
+						<span className="rb-e-ood">ood</span>
+					</span>
+					<span className="rb-e-watch">Watch</span>
+				</span>
+			</span>
+		</Label>
+	)
+}
+// Little height: D's horizontal wordmark inside C's one-line outlined pill.
+function SmallE({ size }: LockupProps) {
+	const h = size * 1.3
+	return (
+		<Label>
+			<span className="rb-lock rb-c rb-e" style={{ height: h, padding: `0 ${h * 0.36}px 0 ${h * 0.3}px`, borderWidth: Math.max(1, h * 0.05), borderRadius: h * 0.3 }}>
+				<MarkA size={h * 0.44} whiteGood />
+			</span>
+		</Label>
+	)
+}
+export const VariantE: BrandSystem = {
+	key: "E",
+	treatment: "badge",
+	name: "Initial G badge",
+	line: "D sealed in C's plaque: the white G starts the top row with white \"ood\", yellow \"Watch\" sits below.",
+	Lockup: LockupE,
+	Small: SmallE,
+	Emblem: EmblemC,
+	bento: {
+		top: <LockupE size={52} />,
+		bottom: null,
+		note: "The stacked badge fills the emblem's slot. The separate name line goes.",
+	},
+	decorative: "Title case is the brand, so uppercase GOODWATCH in a card's own type reads clearly as costume. It stays copy.",
+	spec: [
+		{ label: "Palette", value: <Swatches /> },
+		{ label: "Type", value: "Gabarito 700, title case, one size for both rows. White G + \"ood\" over yellow \"Watch\", flush left." },
+		{ label: "Emblem", value: "Inside the word, as the initial of the top row. White. Height 0.78 em, on the baseline. No second G." },
+		{ label: "Spacing", value: "Plaque: height H, radius 0.2 H, yellow keyline 0.035 H. Type 0.42 H, G to \"ood\" 0.056 em. Clear space: 0.25 H." },
+		{ label: "Small sizes", value: "Under 32px height: D's horizontal wordmark in a one-line outlined pill. Emblem-only: C's, the G in a square plaque, the bare G under 16px." },
+		{ label: "Light backgrounds", value: "Nothing changes: the badge brings its own ink field." },
+		{ label: "Boot", value: "The plaque opens from a line, the top row (G + \"ood\") drops in, \"Watch\" rises. Reduced motion: one 0.3s fade." },
+	],
+}
+
+export const BRANDS = { A: VariantA, B: VariantB, C: VariantC, D: VariantD, E: VariantE }

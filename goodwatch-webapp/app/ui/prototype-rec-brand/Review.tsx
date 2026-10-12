@@ -176,14 +176,14 @@ function LivingRoom({ b }: { b: BrandSystem }) {
 							<div className="absolute overflow-hidden bg-black" style={{ left: 263, top: 16, width: 318, height: 172 }}>
 								<Fit w={560} h={308}><Boot b={b} run={run} /></Fit>
 							</div>
-							{b.key === "C" ? (
+							{b.treatment === "badge" ? (
 								<span className="absolute left-3 top-3"><b.Small size={18} /></span>
 							) : (
-								<span className="absolute left-3 top-3 flex items-center rounded-full bg-black/55 py-1.5 pl-2.5 pr-3 ring-1 ring-white/10"><b.Small size={b.key === "A" ? 12.5 : 13} /></span>
+								<span className="absolute left-3 top-3 flex items-center rounded-full bg-black/55 py-1.5 pl-2.5 pr-3 ring-1 ring-white/10"><b.Small size={b.treatment === "initial" ? 12.5 : 13} /></span>
 							)}
 						</div>
 					</div>
-					{b.key === "C" && <p className="mt-1 text-[12px] text-gray-400">The one-line badge is the pill: no second black pill around it.</p>}
+					{b.treatment === "badge" && <p className="mt-1 text-[12px] text-gray-400">The one-line badge is the pill: no second black pill around it.</p>}
 				</div>
 			</div>
 		</Section>
@@ -223,7 +223,7 @@ function OgBand({ b, photo }: { b: BrandSystem; photo: string }) {
 }
 function OgImages({ b }: { b: BrandSystem }) {
 	const photo = assetUrl(roomPhoto)
-	const light = b.key === "A" ? "backing plate: an ink chip carries white and yellow onto amber" : b.key === "B" ? "ink translation: type in ink, the tile keeps the yellow G; white and yellow do not appear" : "unchanged: the badge is its own ink field"
+	const light = b.treatment === "initial" ? "backing plate: an ink chip carries white and yellow onto amber" : b.treatment === "split" ? "ink translation: type in ink, the tile keeps the yellow G; white and yellow do not appear" : "unchanged: the badge is its own ink field"
 	return (
 		<Section n="05" name="Open Graph image signature" source="ui/og-image/parts.tsx (Brand) · OgCard.tsx" today="amber G + white “GoodWatch” at weight 900 on dark, all ink on the amber panel.">
 			<div className="grid gap-5 lg:grid-cols-2">
@@ -353,7 +353,7 @@ function ImportHeading({ b }: { b: BrandSystem }) {
 		<Section n="07" name="Import walkthrough: the small GoodWatch section heading" source="ui/imports/howto/Scenes.tsx (UploadScene)" today="plain text “GoodWatch”, 12px semibold, gray.">
 			<div className="flex h-[210px] w-[360px] max-w-full flex-col gap-2 rounded-lg bg-gray-950 p-3 ring-1 ring-white/10">
 				<div className="flex h-12 shrink-0 items-center gap-1.5 rounded-md bg-gray-900 pl-16 pr-3 text-xs text-gray-400 ring-1 ring-white/10">⭳ Downloads</div>
-				<div className="flex h-4 shrink-0 items-center px-1"><b.Small size={b.key === "C" ? 12.5 : 11} /></div>
+				<div className="flex h-4 shrink-0 items-center px-1"><b.Small size={b.treatment === "badge" ? 12.5 : 11} /></div>
 				<div className="flex min-h-0 flex-1 items-center gap-5 rounded-md border border-dashed border-emerald-400 bg-emerald-500/10 px-3">
 					<span className="flex h-11 w-9 items-end justify-center rounded-sm bg-gray-100 pb-1.5 text-[9.5px] font-bold text-emerald-700">CSV</span>
 					<span className="text-xs text-gray-300">ratings.csv<br /><span className="text-gray-500">Dropped. Ready to review.</span></span>
@@ -463,7 +463,7 @@ function Decorative({ b }: { b: BrandSystem }) {
 
 // --- 09 Coverage -----------------------------------------------------------------------------------------------
 function Coverage({ b }: { b: BrandSystem }) {
-	const stacked = b.key === "C"
+	const stacked = b.treatment === "badge"
 	const rows = [
 		["Main desktop header", "ui/main/Header.tsx", "Lockup"],
 		["New navigation desktop header", "ui/navigation/SiteHeader.tsx", "Lockup"],
@@ -474,7 +474,7 @@ function Coverage({ b }: { b: BrandSystem }) {
 		["Phone landscape home link", "ui/living-room/PhoneLivingRoom.tsx", stacked ? "One-line badge, replaces the pill" : "Lockup in the pill"],
 		["Open Graph images", "ui/og-image/parts.tsx", "Lockup, light rule on amber"],
 		["Share cards, 14 designs", "ui/share-card/kit.tsx", "Lockup, light rule on light cards"],
-		["Bento tile", "ui/share-card/designs/bento.tsx", b.key === "B" ? "Emblem + wordmark apart" : "One lockup"],
+		["Bento tile", "ui/share-card/designs/bento.tsx", b.treatment === "split" ? "Emblem + wordmark apart" : "One lockup"],
 		["Import walkthrough heading", "ui/imports/howto/Scenes.tsx", stacked ? "One-line badge" : "Lockup"],
 		["Decorative uppercase names", "share-card/designs/*", "Contextual copy, unchanged"],
 		["Score icons, dock G, remote emblem", "TvScreens.tsx · MobileDock.tsx · Remote.tsx", "Emblem only"],

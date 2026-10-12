@@ -1,6 +1,7 @@
 // PROTOTYPE - throwaway. Which one GoodWatch wordmark should replace the different logo treatments across the app?
-// Three logo systems in white and yellow, switchable via ?variant=, each drawn at every placement of the name:
-//   /prototype/rec-brand?variant=A|B|C     A Initial G · B Split word · C Badge
+// Five logo systems in white and yellow, switchable via ?variant=, each drawn at every placement of the name:
+//   /prototype/rec-brand?variant=A|B|C|D|E     A Initial G · B Split word · C Badge
+//                                              D Initial G · white Good (A with a white "ood") · E Initial G badge (D in C's badge)
 // A new route, not a variant of an existing page: the name is drawn in the headers, the living room, the og images
 // and the share cards, and no single page shows all of them. The contexts are mocks; no production logo component is
 // changed, nothing is read from a database, nothing is written.
