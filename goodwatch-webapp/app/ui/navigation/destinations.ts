@@ -61,7 +61,7 @@ export function getDestinations(
 	return {
 		home: {
 			key: "home",
-			label: "Living room",
+			label: "Home",
 			short: "Home",
 			href: "/",
 			icon: HomeIcon,
