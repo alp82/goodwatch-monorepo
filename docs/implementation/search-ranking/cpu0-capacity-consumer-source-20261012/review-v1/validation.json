@@ -1,0 +1,40 @@
+{
+  "backendMutableAtComparison": true,
+  "command": "node --test goodwatch-qdrant/diagnostics/pinning-prototype/test_capacity_cpu0.mjs goodwatch-qdrant/diagnostics/pinning-prototype/test_consumer_cpu0.mjs goodwatch-qdrant/diagnostics/pinning-prototype/test_audit_cpu0.mjs",
+  "durationMs": 2361.838338,
+  "exitCode": 0,
+  "failed": 0,
+  "gitDiffCheckPassed": true,
+  "hostOperations": 0,
+  "passed": 38,
+  "productionAcceptance": false,
+  "reasonEnumActualBackendCount": 273,
+  "reasonEnumConsumerCount": 273,
+  "reasonEnumExtra": [],
+  "reasonEnumMissing": [],
+  "runLocation": "author-worktree",
+  "runtimePass": false,
+  "schema": "cpu0-fixed-capacity-consumer-author-validation.v1",
+  "snapshotStandaloneTestClosureComplete": false,
+  "sourceCommit": "2461e0773a846a8e3200e22d747bfe718dd6549e",
+  "sourceFiles": {
+    "audit_cpu0.mjs": {
+      "bytes": 12627,
+      "sha256": "1e4b697638762639a19401ead62084c91afa9ce4a9bdd2ca0b9939d7b9061b68"
+    },
+    "compare-contract-cpu0.mjs": {
+      "bytes": 90386,
+      "sha256": "e6c20ec57cabd69fb9247472d28ea5937a21564ac778bd6ab4c251629f5ca814"
+    },
+    "consumer_cpu0.mjs": {
+      "bytes": 32479,
+      "sha256": "d405753751a47edfabeaabf96de7ff6b0fe244558c4deff65f88c59209eead9e"
+    },
+    "test_capacity_cpu0.mjs": {
+      "bytes": 48756,
+      "sha256": "f8ea5c8bdaba26a3a334782df678897ef2f74579503aff069aa5c2a2dcf530e0"
+    }
+  },
+  "tests": 38,
+  "validationBeforeSnapshotPackaging": true
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "cpu0-capacity-consumer-opus-invocation.v2",
+  "at": "2026-10-12T21:37:16.773798+00:00",
+  "command": "claude --print --model claude-opus-5-5 --effort medium --tools '' --strict-mcp-config --mcp-config '{\"mcpServers\":{}}' --disable-slash-commands --no-session-persistence --output-format json < opus-input.txt > opus-review.json 2> opus-stderr.txt",
+  "configuredModel": "claude-opus-5-5",
+  "configuredEffort": "medium",
+  "toolsDisabled": true,
+  "strictEmptyMcp": true,
+  "privateInputsIncluded": false,
+  "hostExecution": false,
+  "sourceManifestSha256": "b810c5fc03a56b731efab96d74c8d557c56b209e740bbf885a76d1ead968a6e4",
+  "inputSha256": "42f4780333d74142017dd7758c93f8aa815d102cebd06f75aa85d265629754ff",
+  "sessionId": 84243,
+  "sourceOnly": true,
+  "backendSourceFreezeCreated": false,
+  "hostExecutionReady": false,
+  "previousVerdict": "BLOCK preserved",
+  "exitCode": 0,
+  "isError": false,
+  "durationMs": 250835,
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 23356,
+      "cacheReadInputTokens": 535,
+      "cacheCreationInputTokens": 156890,
+      "webSearchRequests": 0,
+      "costUSD": 1.722355,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 20619,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "resultSha256": "5736f57c583e9afb68b726dee6dcceecdfce82116c16aa3dae6decf15867d60c",
+  "reportTextSha256": "dcca96aee53b7e0cf09c5680762244060d08a42b2af4dc4eff3ea7c6ecb1b014",
+  "verdictPendingRootRead": true,
+  "verdict": "BLOCK source-only preparation",
+  "mandatoryFindings": [
+    "N1-post-preflight-evidence-loss",
+    "N2-early-audit-mode-selection"
+  ],
+  "originalFindingsClosed": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "backendSourceFreezeCreated": false,
+  "fullJsTests": {
+    "count": 68,
+    "durationMs": 30791.126646,
+    "exitCode": 0,
+    "failed": 0,
+    "outputSha256": "28ab88789e568e9906c8bef9d76160069a2fe214b6f220d148cfffd0b828b0d0",
+    "passed": 68
+  },
+  "hostExecutionReady": false,
+  "productionAcceptance": false,
+  "publicFixturesUseStandinsForSourceAndPlacement": true,
+  "realLocalOwnedChildPipes": true,
+  "realLocalPreflightCloseAndSameBirthDisappearance": true,
+  "regressionAgainstOldSource": {
+    "pipeExitCode": 1,
+    "pipeSelected": 2,
+    "pureExitCode": 1,
+    "pureSelected": 3,
+    "runOrder": "Regressions were validated against the preserved old source after successor implementation; this is not a claim of test-first chronology.",
+    "sourceCommit": "2461e0773a846a8e3200e22d747bfe718dd6549e"
+  },
+  "runtimePass": false,
+  "sourceCommit": "105db1f5b16e765e82070e26feee15ff0fad5f10",
+  "sourceFiles": {
+    "audit_cpu0.mjs": {
+      "bytes": 13215,
+      "sha256": "9d48b7aacbbec9ae57e829d91d36e7c3c163da554be00f8f242a181f1f0f63bd"
+    },
+    "compare-contract-cpu0.mjs": {
+      "bytes": 92638,
+      "sha256": "d818c289025a517fd2cf816b355aeb4ff24c4d741b11dc09565647adc8192794"
+    },
+    "consumer_cpu0.mjs": {
+      "bytes": 33519,
+      "sha256": "7db2c59e3a4312aa3121c0554521227b915de195e42d5026c6bcb215077e758f"
+    },
+    "test_capacity_cpu0.mjs": {
+      "bytes": 60647,
+      "sha256": "1bc75e092e0064988aa5a38dd12f61f38d361ad92d00b450c11ccf051e7ae511"
+    }
+  },
+  "standaloneSnapshotTestClosureComplete": false
+}

@@ -1,0 +1,67 @@
+# Verdict: ACCEPT (inactive, source-only preparation of these four JS files)
+
+N1 and N2 are both closed in the executable paths the V2 report named, and I found no new mandatory defect in the three-file delta. This ACCEPT is a reading of the inline bytes only and covers nothing beyond source-only preparation.
+
+**Scope of this review**
+- Tools were disabled, so I did not recompute the manifest SHA256, any per-file hash or any byte count. The four source hashes in `manifest.json` and `validation.json` agree with each other as text.
+- I did not rerun tests; the 69 passes are the author's full-worktree result.
+- `compare-contract-cpu0.mjs` is absent from `source.diff`, which is consistent with the three-file-delta claim, but I could not compare it against the previous packet's bytes.
+- Line numbers are derived from the diff hunk offsets.
+- No host, network or trial activity took place. No nine-pair benchmark or seven-day production acceptance occurred or is claimed.
+
+## N1: closed
+
+`completeEntryAdmissionV2` (`source/consumer_cpu0.mjs:209-211`) is the seam `mainV2` actually calls (`:223`), with no injected `readBirth`, so the real `consumerBirth` is used.
+
+- **Window covered:** the birth read, the nofile check and `validateAdmissionFrameV2` all sit inside one `try`, as does construction of the frame.
+- **Evidence retained:** every refusal carries `variant`, `preflightExit`, `preflightReceipt` and `handoffAccepted:false`. The top-level handler prints `error.publicEvidence`, so the receipt, enrolment, enrolment hash and successor handoff reach the public output.
+- **No raw errors:** a non-contract error (for example a `/proc` failure) is collapsed to `cpu0_fixed_consumer_admission_invalid`; a contract reason is kept as its fixed string.
+- **Receipt is validated before retention:** in `mainV2` the receipt has already passed the closed 12-key `consumerPreflightEvidenceV2` in `runEntryPreflightV2`, so no unrecognised fields can ride along.
+- **Frame shape agrees:** the 12 receipt keys plus the six added keys match the 18-key set `validateAdmissionFrameV2` requires, and the offline audit uses the same validator.
+- **Ordering preserved:** the admission row is emitted at `:224`, only after the seam returns, and private stdin is read at `:225`.
+- **Fixture:** it runs a real owned Python preflight, then forces a nofile mismatch, a throwing birth read and a changed birth. It asserts the exit, the full receipt, `enrolmentWrites:1`, the handoff hash and the absence of the private error text.
+
+## N2: closed
+
+In `source/audit_cpu0.mjs:96` the manifest is read, size-bounded and used to set `selectedAuditMode` before the output (`:97-98`) or context (`:99`) is touched.
+
+- **Trigger A (v7, empty or truncated output):** the refusal now carries `cpu0-consumer-audit.v2` and the fixed-capacity variant.
+- **Trigger B (v6, same):** the refusal carries `cpu0-consumer-audit.v1` and the legacy variant again.
+- **Unknown or unparseable manifest:** mode stays `null`, including a manifest that parses to `null`, and the refusal is unlabelled.
+- **No promotion:** the label is only attached to a `consumerPass:false` refusal; the pass path still authenticates the manifest SHA and full closure through the mode-specific verifier.
+- **Fixture:** the real Node CLI is run for v7 and v6 against both `''` and `'{'`, asserting exit status 1, schema, variant and `consumerPass:false`.
+
+## Limitations
+
+These are not blockers.
+
+**New observations on the two corrections**
+- The refusal label comes from the manifest's `schema` field before its SHA is checked. A wrong-hash file claiming v7 produces a v2-labelled refusal.
+- `completeEntryAdmissionV2` is exported and does not revalidate the receipt before retaining it; it relies on its only caller having done so.
+- The admission-refusal fixture injects `readBirth` and does not assert the specific reason per case. The default `/proc` birth read is not exercised in the v2 path.
+- The manifest and output files are read whole before their size bounds apply (unchanged behaviour).
+- A legacy refusal with an unknown or unparseable manifest is unlabelled, as intended.
+
+**Carried over from the V2 report, still not implemented**
+- **Later phase refusals:** `cpu0_client_retained` (`consumer_cpu0.mjs:229`) and a `pairedEvidence` refusal (`:231`) still discard a completed phase whose handoff has advanced.
+- **Late birth refusal:** an unreadable controller birth is refused only at `query-ready`, not on spawn.
+- **Distinct births:** the audit does not require 18 distinct controller births, nor that they differ from the enrolled preflight.
+- **Monotonic order across ledgers:** entry ledger, cache baseline and working-set sample are not ordered against each other.
+- **Failure-path binding:** `overheadFailureEvidence` is not checked against `controllerBirth`.
+- **Node provenance in the audit:** `nodeProvenanceSha256` is taken from the context file, not hashed from the staged file.
+- **Registration digest:** `consumerRegistrationSha256` is accepted from the first entry ledger and then pinned.
+- **Coverage:** `mainV2` is never run end to end, and the composed nine-pair audit fixture reuses one controller birth and one instant.
+
+## Unresolved backend and external integration (not defects in these four files)
+
+- **Backend mode selection:** the v2 consumer still launches preflight and controller with v1-identical argv.
+- **Entry baseline inspector:** the backend must emit it as this phase's controller.
+- **Lock arithmetic:** `lockedBytes` must equal the four-class sum of `dataPages × pageBytes`, with at least one page per class.
+- **Opaque values:** the `consumerArgvHash` recipe, the registration digest definition and `sharedControlIdentity` are shape-checked only.
+- **Byte-for-byte recipes:** the handoff file, exe hash and cgroup hash encodings must match Python exactly.
+- **Stopped headroom:** the schema has no timestamp or source binding.
+- **Still outstanding:** backend source14 freeze, the external full packet, final reason-enum agreement and independent review of the combined source.
+
+## Runtime and host readiness (retained separately)
+
+`hostExecutionReady:false`, `runtimePass:false`, `backendSourceFreezeCreated:false` and `productionAcceptance:false` stand.

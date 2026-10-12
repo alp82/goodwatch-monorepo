@@ -1,0 +1,74 @@
+✖ ABI2 distinct phase times reject stale working-set and before-query actual samples (21.402264ms)
+✖ ABI2 composed refusal projector rejects contradictory same-read measurements for every kind (5.459426ms)
+✖ ABI2 actual CLI refusals preserve v2 mode and unknown manifest cannot claim v1 (65.570944ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 254.686316
+
+✖ failing tests:
+
+test at ../../../../tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:311:1
+✖ ABI2 distinct phase times reject stale working-set and before-query actual samples (21.402264ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:319:500)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ../../../../tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:321:1
+✖ ABI2 composed refusal projector rejects contradictory same-read measurements for every kind (5.459426ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:324:196)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../../../../tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:326:1
+✖ ABI2 actual CLI refusals preserve v2 mode and unknown manifest cannot claim v1 (65.570944ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'cpu0-owned-lifecycle.v1'
+  - 'cpu0-fixed-capacity.v2'
+          ^
+  
+      at TestContext.<anonymous> (file:///tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:328:231)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'cpu0-owned-lifecycle.v1',
+    expected: 'cpu0-fixed-capacity.v2',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

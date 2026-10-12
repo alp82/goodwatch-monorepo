@@ -1,0 +1,30 @@
+✖ ABI2 actual owned baseline and candidate controller births bind every C6 row (102.438903ms)
+✖ ABI2 actual null frames before and after ready refuse without crashing or losing owned exit (62.903759ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20337.592518
+
+✖ failing tests:
+
+test at ../../../../tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:242:1
+✖ ABI2 actual owned baseline and candidate controller births bind every C6 row (102.438903ms)
+  TypeError: Cannot read properties of undefined (reading 'pid')
+      at TestContext.<anonymous> (file:///tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:243:211)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at ../../../../tmp/gw-js-regression-0jesg2jb/test_capacity_cpu0.mjs:246:1
+✖ ABI2 actual null frames before and after ready refuse without crashing or losing owned exit (62.903759ms)
+  TypeError: Cannot read properties of null (reading 'stage')
+      at file:///tmp/gw-js-regression-0jesg2jb/consumer_cpu0.mjs:120:103
+      at Array.some (<anonymous>)
+      at ChildProcess.<anonymous> (file:///tmp/gw-js-regression-0jesg2jb/consumer_cpu0.mjs:120:85)
+      at ChildProcess.emit (node:events:514:20)
+      at maybeClose (node:internal/child_process:1125:16)
+      at ChildProcess._handle.onexit (node:internal/child_process:305:5)
