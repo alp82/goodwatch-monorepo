@@ -14,6 +14,7 @@
 //   &pointer=ring|cross|dot   the shape of the TV's own pointer (C)
 //   &bar=first           the expand key first in the top bar instead of last (B)
 //   &remote=below|beside the Remote under the TV or beside it, whatever the window's size would choose (R)
+//   &keys=few            the phone's Remote with fewer, taller keys (K, or the button on the phone)
 //   &pointer=cross|dot   the two pointer shapes the owner did not choose; the ring is the pointer (C)
 //   &hold                freezes the expand run for screenshots: window.__tvLeave(0..1)
 //   &chrome=off          hides the prototype's own controls, for screenshots of the TV alone
@@ -30,6 +31,7 @@ import { BarCtx, CANVAS, DIRECTIONS, DesignTv, type DirectionKey, Follower, PHON
 import { cinema } from "./cinema"
 import { glow } from "./glow"
 import { marquee } from "./marquee"
+import { PHONE_REMOTES, PHONE_REMOTE_MIN, PhoneRemote, type PhoneRemoteKey } from "./phone-remote"
 import { POINTERS, POINTER_CSS, type PointerKey, REST_TRANSFORM, TvPointer, WRIST, usePointing } from "./pointing"
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -73,6 +75,11 @@ const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 /
 const REMOTE_SHOWN = 880
 /** Under the TV it shows down to its streaming keys (they end at 522) and the fingertips under them; its end and the hand run off the window. */
 const REMOTE_SHOWN_UNDER = 548
+/**
+ * Under the TV the Remote's top reaches this far over the picture, in screen pixels: over the margin every screen
+ * keeps free at its bottom edge (40 canvas pixels and more), so it covers no type and no focus target.
+ */
+const REMOTE_OVER_TV = 18
 /** Under the TV the Remote may shrink this far to keep the TV's type at 18 px; smaller, its wheel stops being a control. */
 const REMOTE_MIN_UNDER = 0.46
 /** How far the hand reaches past the Remote's sides, in Remote widths: the fingers on the left, the palm on the right. */
@@ -80,15 +87,18 @@ const HAND_LEFT = 0.3
 const HAND_RIGHT = 0.42
 /** Type of 20 canvas pixels prints at 18 once the TV shows its canvas at 0.9. */
 const TV_MIN_WIDTH = CANVAS.w * 0.9
+/** On the phone: how far the site's dock reaches into the scene from below, and the strip this prototype's controls take. */
+const PHONE_DOCK = 20
+const PHONE_STRIP = 30
 
 export type RemotePlace = "below" | "beside"
 
 /**
  * The room. Two ways to seat the TV and the Remote in a window:
  * - `below` (the owner's choice): the TV centred and the Remote under it, in the hand, free to swing toward the
- *   cursor. The TV is as tall as the window leaves once the Remote shows down to its streaming keys: its top sits
- *   right under the picture, over the TV's lower edge and the sideboard, and in a shorter window the Remote gives
- *   way first (down to 0.46 of its size) so the TV keeps the width that holds its type at 18 px.
+ *   cursor. The TV is as tall as the window leaves once the Remote shows down to its streaming keys; in a shorter
+ *   window the Remote gives way first so the TV keeps the width that holds its type at 18 px. The Remote's top
+ *   reaches a little over the picture's bottom margin, which lets it sit higher and be larger.
  * - `beside`: for a window too small for that (under about 920 px tall or 1140 wide): the TV on the left, as large
  *   as the window allows, and the whole Remote to its right, its end on the window's bottom edge.
  * `want` forces one; "auto" takes `below` wherever it keeps 18 px type. The photo is scaled so its TV sits exactly
@@ -97,20 +107,24 @@ export type RemotePlace = "below" | "beside"
 function layoutRoom(w: number, h: number, want: RemotePlace | "auto") {
 	const aspect = ROOM.tv.w / ROOM.tv.h
 	const pad = Math.max(14, Math.min(28, w * 0.0125))
-	const top = Math.max(8, h * 0.012)
-	// Under the TV: the Remote at the size the height suggests, or smaller if that is what 18 px type costs.
-	const roomFor = (scale: number) => Math.min(h - top - 8 - REMOTE_SHOWN_UNDER * scale, ((w - 2 * pad) / aspect))
-	let under = Math.max(0.5, Math.min(0.68, h / 1800))
+	// Under the TV. The TV's size is settled first, as before: what the window leaves over a Remote of the size the
+	// height suggests, or over a smaller one if that is what 18 px type costs. Whether `below` is possible at all is
+	// decided here, and has not moved.
+	const leaves = (scale: number) => Math.min(h - Math.max(8, h * 0.012) - 8 - REMOTE_SHOWN_UNDER * scale, (w - 2 * pad) / aspect)
 	const needed = TV_MIN_WIDTH / aspect
-	if (roomFor(under) < needed) under = Math.max(REMOTE_MIN_UNDER, (h - top - 8 - needed) / REMOTE_SHOWN_UNDER)
-	const place: RemotePlace = want === "auto" ? (roomFor(under) >= needed - 0.5 ? "below" : "beside") : want
+	let tvUnder = leaves(Math.max(0.5, Math.min(0.68, h / 1800)))
+	if (tvUnder < needed) tvUnder = Math.min(needed, leaves(REMOTE_MIN_UNDER))
+	const place: RemotePlace = want === "auto" ? (tvUnder >= needed - 0.5 ? "below" : "beside") : want
 	let tv: Rect
 	let remote: { left: number; top: number; scale: number }
 	if (place === "below") {
-		const tvH = roomFor(under)
-		const tvW = tvH * aspect
-		tv = { left: (w - tvW) / 2, top, width: tvW, height: tvH }
-		remote = { left: w / 2 - (REMOTE_W * under) / 2, top: h - REMOTE_SHOWN_UNDER * under, scale: under }
+		// Then the Remote takes all the height under that TV, and a little of the TV: its top reaches over the
+		// picture's empty bottom margin. So it sits higher and is larger than the space under the TV alone allows.
+		const top = Math.max(6, h * 0.008)
+		const tvW = tvUnder * aspect
+		const scale = Math.max(REMOTE_MIN_UNDER, Math.min(0.8, (h - top - tvUnder + REMOTE_OVER_TV) / REMOTE_SHOWN_UNDER))
+		tv = { left: (w - tvW) / 2, top, width: tvW, height: tvUnder }
+		remote = { left: w / 2 - (REMOTE_W * scale) / 2, top: h - REMOTE_SHOWN_UNDER * scale, scale }
 	} else {
 		const column = (scale: number) => REMOTE_W * scale * (1 + HAND_LEFT + HAND_RIGHT)
 		// As large as the height shows all of it, and no larger than a Remote in a hand looks next to this TV.
@@ -131,8 +145,6 @@ function layoutRoom(w: number, h: number, want: RemotePlace | "auto") {
 		photo: { left: tv.left - ROOM.tv.x * s, top: tv.top - ROOM.tv.y * s, width: ROOM.w * s, height: ROOM.h * s },
 		remote,
 		hand: { left: (REMOTE_W * remote.scale) / 2 - (HAND.x + HAND.pw / 2) * k, top: -HAND.y * k, width: HAND.w * k, height: HAND.h * k },
-		/** The scene is as tall as the window: nothing to scroll to. */
-		tall: 0,
 	}
 }
 
@@ -144,6 +156,7 @@ export function TvDesignScene() {
 	const labelKey = (params.get("label") ?? "") in LABELS ? (params.get("label") as string) : "expand"
 	const shape = ((params.get("pointer") ?? "") in POINTERS ? params.get("pointer") : "ring") as PointerKey
 	const expandFirst = params.get("bar") === "first"
+	const keys: PhoneRemoteKey = params.get("keys") === "few" ? "few" : "all"
 	const wanted = params.get("remote")
 	const want: RemotePlace | "auto" = wanted === "below" || wanted === "beside" ? wanted : "auto"
 	const skin = SKINS[design]
@@ -163,6 +176,22 @@ export function TvDesignScene() {
 	const phone = Boolean(size && size.w < 768)
 	// The flow is the flow prototype's "apps", whatever the direction: the stack of screens survives a change of direction.
 	const tv = useTvEngine({ variant: "apps", member, phone, label: LABELS[labelKey], scene: root, ready: Boolean(size) })
+
+	// The phone: the scene is fixed and fills the window, but the site's page behind it (its footer) is taller than
+	// the window, and a drag on the scene would scroll that page and pull the browser's bars. So nothing scrolls
+	// while this is on a phone.
+	useEffect(() => {
+		if (!phone) return
+		const html = document.documentElement
+		const was = [html.style.cssText, document.body.style.cssText]
+		html.style.cssText += ";overflow:hidden;overscroll-behavior:none;scrollbar-gutter:auto"
+		// Fixed, so that the body is exactly the window and cuts off everything in it that is placed further down.
+		document.body.style.cssText += ";position:fixed;inset:0;overflow:hidden"
+		return () => {
+			html.style.cssText = was[0]
+			document.body.style.cssText = was[1]
+		}
+	}, [phone])
 
 	const set = (next: Record<string, string>) => {
 		const p = new URLSearchParams(params)
@@ -184,6 +213,7 @@ export function TvDesignScene() {
 			set({ pointer: next === "ring" ? "" : next })
 		},
 		bar: () => set({ bar: expandFirst ? "" : "first" }),
+		keys: () => set({ keys: keys === "few" ? "" : "few" }),
 		// The other place than the one showing; back to the window's own choice when that is the one asked for.
 		place: () => {
 			if (!size) return
@@ -199,6 +229,7 @@ export function TvDesignScene() {
 			root: (id: string) => latest.current.tv.root(id),
 			push: (id: string) => latest.current.tv.push(id),
 			focus: (id: string) => latest.current.tv.setFocus(id),
+			state: () => `${latest.current.tv.stack.join(" › ")} · focus ${latest.current.tv.focus ?? "none"}`,
 		}
 		const onKey = (e: KeyboardEvent) => {
 			if (latest.current.typing || e.metaKey || e.ctrlKey || e.altKey) return
@@ -214,30 +245,33 @@ export function TvDesignScene() {
 			if (key === "c") latest.current.controls.pointer()
 			if (key === "b") latest.current.controls.bar()
 			if (key === "r") latest.current.controls.place()
+			if (key === "k") latest.current.controls.keys()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [])
 
-	const canvas = phone ? PHONE_CANVAS : CANVAS
 	const L = useMemo(() => {
 		if (!size) return null
 		const { w, h } = size
 		if (phone) {
-			// The phone: the TV on top, the Remote under it at a size a thumb can hit (its keys 45 px and up). That is
-			// taller than the window, so the scene scrolls: the wheel shows under the TV, the rest is a short scroll down.
-			const tvH = Math.min(h * 0.68, (w * canvas.h) / canvas.w)
-			const tvW = (tvH * canvas.w) / canvas.h
-			const scale = Math.min(0.72, (w * 0.62) / REMOTE_W)
-			const top = tvH + 12
-			return { place: "phone" as const, photo: null, hand: null, tv: { left: (w - tvW) / 2, top: 0, width: tvW, height: tvH }, remote: { left: w / 2 - (REMOTE_W * scale) / 2, top, scale }, tall: top + (522 + 96) * scale }
+			// The phone: everything on one screen, nothing to scroll. The TV on top at the phone's width, the phone's
+			// own Remote at the bottom (phone-remote.tsx), and between them a strip for this prototype's controls. The
+			// TV's canvas keeps its width and gets as tall as is left, so a short phone has a shorter TV, not a
+			// smaller one. The site's dock and its round key reach up to 17 px into the scene from below.
+			const k = w / PHONE_CANVAS.w
+			const left = h - PHONE_DOCK - PHONE_STRIP
+			const panel = Math.max(PHONE_REMOTE_MIN, Math.min(240, left - PHONE_CANVAS.h * k))
+			const tvH = Math.min(PHONE_CANVAS.h * k, left - panel)
+			return { place: "phone" as const, photo: null, hand: null, tv: { left: 0, top: 0, width: w, height: tvH }, remote: null, panel: { top: tvH + PHONE_STRIP, height: panel }, canvas: { w: PHONE_CANVAS.w, h: tvH / k } }
 		}
 		if (tvOnly) {
-			const s = Math.min((w - 80) / canvas.w, (h - 80) / canvas.h)
-			return { photo: null, hand: null, tv: { left: (w - canvas.w * s) / 2, top: (h - canvas.h * s) / 2, width: canvas.w * s, height: canvas.h * s }, remote: null, tall: 0, place: "none" as const }
+			const s = Math.min((w - 80) / CANVAS.w, (h - 80) / CANVAS.h)
+			return { place: "none" as const, photo: null, hand: null, tv: { left: (w - CANVAS.w * s) / 2, top: (h - CANVAS.h * s) / 2, width: CANVAS.w * s, height: CANVAS.h * s }, remote: null, panel: null, canvas: CANVAS }
 		}
-		return layoutRoom(w, h, want)
-	}, [size, phone, tvOnly, canvas, want])
+		return { ...layoutRoom(w, h, want), panel: null, canvas: CANVAS }
+	}, [size, phone, tvOnly, want])
+	const canvas = L?.canvas ?? CANVAS
 	const place: RemotePlace = L?.place === "beside" ? "beside" : "below"
 
 	// ---- The expand run: `arm` is the brackets' way to the edge of the picture, `grow` the picture's way to the window.
@@ -307,9 +341,7 @@ export function TvDesignScene() {
 	const s = tvRect ? Math.max(tvRect.width / canvas.w, tvRect.height / canvas.h) : 1
 	const pill = "rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500"
 	return (
-		<div ref={root} data-remote-place={L?.place ?? "none"} data-bar={expandFirst ? "first" : "last"} style={phone ? { scrollbarWidth: "none" } : undefined} className={`living-room fixed inset-x-0 bottom-16 top-16 z-40 bg-[#07080b] text-white lg:bottom-0 ${phone ? "overflow-y-auto overflow-x-clip overscroll-contain" : "overflow-clip"}`}>
-			{/* On the phone the scene is taller than the window: this gives it its height to scroll. */}
-			{L && L.tall > 0 && <div aria-hidden style={{ height: L.tall }} />}
+		<div ref={root} data-remote-place={L?.place ?? "none"} data-bar={expandFirst ? "first" : "last"} className="living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0">
 			{/* As raw text: React would escape the quotes in the selectors, and a style element does not unescape them. */}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own constant CSS */}
 			<style dangerouslySetInnerHTML={{ __html: `@layer components {${BASE_CSS}${POINTER_CSS}${skin.css}}` }} />
@@ -344,6 +376,7 @@ export function TvDesignScene() {
 				</div>
 			)}
 			{remote}
+			{L?.panel && size && <PhoneRemote tv={tv} arrangement={keys} top={L.panel.top} height={L.panel.height} width={size.w} />}
 
 			{/* The real page, standing in: it fades in while the picture is still growing. */}
 			{run && grow > 0.7 && (
@@ -376,8 +409,12 @@ export function TvDesignScene() {
 			)}
 
 			{/* Prototype controls, not part of the design. */}
-			<div hidden={params.get("chrome") === "off"} className={`absolute z-50 flex gap-1.5 text-[13px] font-semibold text-black ${phone ? "bottom-6 left-2 flex-col" : "left-3 top-3 items-center"}`}>
-				<div className={`flex overflow-hidden rounded-2xl bg-white shadow-xl ring-2 ring-fuchsia-500 ${phone ? "flex-col" : ""}`}>
+			<div
+				hidden={params.get("chrome") === "off"}
+				className={`absolute z-50 flex items-center gap-1.5 font-semibold text-black ${phone ? "inset-x-0 justify-center whitespace-nowrap text-[12px] [&_button]:!py-[3px]" : "left-3 top-3 text-[13px]"}`}
+				style={phone && L ? { top: L.tv.height + 3 } : undefined}
+			>
+				<div className="flex overflow-hidden rounded-2xl bg-white shadow-xl ring-2 ring-fuchsia-500">
 					{(Object.keys(DIRECTIONS) as DirectionKey[]).map((key, i) => (
 						<button key={key} type="button" data-design={key} aria-pressed={key === design} title={`${DIRECTIONS[key].bet} (${i + 1})`} onClick={() => controls.design(key)} className={`px-3 py-1.5 ${key === design ? "bg-fuchsia-600 text-white" : "hover:bg-fuchsia-100"}`}>
 							<span className={key === design ? "opacity-70" : "opacity-45"}>{i + 1}</span> {DIRECTIONS[key].name}
@@ -392,9 +429,16 @@ export function TvDesignScene() {
 						{tvOnly ? "TV only" : "In the room"}
 					</button>
 				)}
-				<button type="button" onClick={controls.label} className={pill} title="L">
-					“{LABELS[labelKey]}”
-				</button>
+				{!phone && (
+					<button type="button" onClick={controls.label} className={pill} title="L">
+						“{LABELS[labelKey]}”
+					</button>
+				)}
+				{phone && (
+					<button type="button" data-keys={keys} onClick={controls.keys} className={pill} title="K">
+						{PHONE_REMOTES[keys]}
+					</button>
+				)}
 				{!phone && !tvOnly && (
 					<button type="button" data-place={place} onClick={controls.place} className={pill} title="R">
 						Remote {place === "below" ? "under" : "beside"}

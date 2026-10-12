@@ -46,9 +46,10 @@
 			"tv": "1271 x 686",
 			"smallestText": 22.2,
 			"remote": {
-				"width": 181,
-				"endsAt": 1261,
-				"streamingRowEndsAt": 1066,
+				"width": 199,
+				"scale": 0.62,
+				"endsAt": 1279,
+				"streamingRowEndsAt": 1064,
 				"place": "below"
 			}
 		},
@@ -56,9 +57,10 @@
 			"tv": "1080 x 583",
 			"smallestText": 18.9,
 			"remote": {
-				"width": 160,
-				"endsAt": 1099,
-				"streamingRowEndsAt": 927,
+				"width": 178,
+				"scale": 0.55,
+				"endsAt": 1117,
+				"streamingRowEndsAt": 926,
 				"place": "below"
 			}
 		},
@@ -67,6 +69,7 @@
 			"smallestText": 18.9,
 			"remote": {
 				"width": 231,
+				"scale": 0.71,
 				"endsAt": 723,
 				"streamingRowEndsAt": 474,
 				"place": "beside"
@@ -77,6 +80,7 @@
 			"smallestText": 18.9,
 			"remote": {
 				"width": 174,
+				"scale": 0.54,
 				"endsAt": 793,
 				"streamingRowEndsAt": 606,
 				"place": "beside"
@@ -87,6 +91,7 @@
 			"smallestText": 17.5,
 			"remote": {
 				"width": 160,
+				"scale": 0.5,
 				"endsAt": 643,
 				"streamingRowEndsAt": 471,
 				"place": "beside"
@@ -97,6 +102,7 @@
 			"smallestText": 16.6,
 			"remote": {
 				"width": 160,
+				"scale": 0.5,
 				"endsAt": 713,
 				"streamingRowEndsAt": 541,
 				"place": "beside"
@@ -106,20 +112,83 @@
 			"tv": "1556 x 841",
 			"smallestText": 27.2,
 			"remote": {
-				"width": 219,
-				"endsAt": 1519,
-				"streamingRowEndsAt": 1283,
+				"width": 238,
+				"scale": 0.74,
+				"endsAt": 1538,
+				"streamingRowEndsAt": 1281,
 				"place": "below"
 			}
-		},
+		}
+	},
+	"phones": {
 		"390x844": {
-			"tv": "375 x 462",
+			"tv": "390 x 474",
+			"smallestText": 15,
+			"remote": {
+				"height": 192,
+				"keys": 11,
+				"smallestKey": 48,
+				"endsAt": 750
+			}
+		},
+		"360x740": {
+			"tv": "360 x 370",
+			"smallestText": 13.8,
+			"remote": {
+				"height": 192,
+				"keys": 11,
+				"smallestKey": 48,
+				"endsAt": 646
+			}
+		},
+		"375x667": {
+			"tv": "375 x 297",
 			"smallestText": 14.4,
 			"remote": {
-				"width": 225,
-				"endsAt": 1161,
-				"streamingRowEndsAt": 913,
-				"place": "phone"
+				"height": 192,
+				"keys": 11,
+				"smallestKey": 48,
+				"endsAt": 573
+			}
+		},
+		"430x932": {
+			"tv": "430 x 529",
+			"smallestText": 16.5,
+			"remote": {
+				"height": 225,
+				"keys": 11,
+				"smallestKey": 48,
+				"endsAt": 838
+			}
+		},
+		"390x700": {
+			"tv": "390 x 330",
+			"smallestText": 15,
+			"remote": {
+				"height": 192,
+				"keys": 11,
+				"smallestKey": 48,
+				"endsAt": 606
+			}
+		},
+		"390x844-few": {
+			"tv": "390 x 474",
+			"smallestText": 15,
+			"remote": {
+				"height": 192,
+				"keys": 9,
+				"smallestKey": 48,
+				"endsAt": 750
+			}
+		},
+		"375x667-few": {
+			"tv": "375 x 297",
+			"smallestText": 14.4,
+			"remote": {
+				"height": 192,
+				"keys": 9,
+				"smallestKey": 48,
+				"endsAt": 573
 			}
 		}
 	}

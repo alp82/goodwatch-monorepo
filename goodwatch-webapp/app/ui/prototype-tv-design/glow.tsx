@@ -32,7 +32,7 @@ const SOFT = "text-[#fff4e6]/65"
 /** The actions as this direction draws them: soft outlined pills, and the expand key outlined in amber. */
 function Bar({ dest, className }: { dest?: Dest; className?: string }) {
 	const P = useTv().phone
-	return <Actions dest={dest} className={className} cls={P ? "g-act h-[54px] w-[54px]" : "g-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`g-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[64px] px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 4 }} />
+	return <Actions dest={dest} className={className} cls={P ? "g-act h-[54px] w-[54px]" : "g-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`g-x ${P ? "h-[54px] gap-2.5 px-3 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 4 }} />
 }
 
 function Frame({ name, crumb, dest, art, children }: { name: string; crumb?: string; dest: Dest; art?: string; children: ReactNode }) {
@@ -40,11 +40,11 @@ function Frame({ name, crumb, dest, art, children }: { name: string; crumb?: str
 	return (
 		<>
 			{art && <Ambient src={art} className="opacity-[0.16]" />}
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[152px] flex-col-reverse justify-end px-6 pt-4" : "h-[108px] items-center justify-between px-14"}`}>
-				<BarTitle name={name} crumb={crumb} nameClass={`font-semibold ${P ? "text-[30px]" : "text-[38px]"}`} crumbClass={`${SOFT} ${P ? "text-[21px]" : "text-[24px]"}`} />
-				<Bar dest={dest} className={P ? "justify-end" : ""} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[108px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-semibold ${P ? "text-[24px]" : "text-[38px]"}`} crumbClass={`${SOFT} ${P ? "text-[20px]" : "text-[24px]"}`} />
+				<Bar dest={dest} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[150px] overflow-hidden px-6 pb-6 pt-3" : "top-[108px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[86px] overflow-hidden px-6 pb-6 pt-3" : "top-[108px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -119,7 +119,7 @@ const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, e
 		<Frame name={name} crumb={crumb} dest={dest}>
 			<div className={`flex h-full ${P ? "flex-col gap-3" : "items-start gap-8"}`}>
 				{/* Two stills in a row; more rows page down as the focus moves. */}
-				<div className={`grid min-w-0 flex-1 content-start overflow-hidden ${P ? "-mx-6 max-h-full grid-cols-1 gap-4 px-6 py-5" : "-mx-14 -my-12 h-[calc(100%+96px)] grid-cols-2 gap-x-7 gap-y-6 px-14 py-14"}`}>
+				<div className={`grid min-w-0 flex-1 content-start overflow-hidden ${P ? "-mx-6 max-h-full grid-cols-1 gap-4 px-6 py-5" : "-mx-14 -mb-4 -mt-12 h-[calc(100%+64px)] grid-cols-2 gap-x-7 gap-y-6 px-14 py-14"}`}>
 					{items.map((i, n) => (
 						<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} className="g-tile" style={{ height: P ? 150 : 204 }}>
 							<Still title={i.title} sub={i.sub ?? `${metaOf(i.title)}${tv.taste ? ` · ${i.title.match}% match` : ""}`} className="h-full w-full" />
@@ -201,10 +201,10 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 	const P = tv.phone
 	return (
 		<Frame name={name} crumb={crumb} dest={dest} art={backdropOf(title, "w1280")}>
-			<div className="flex h-full flex-col justify-center">
+			<div className="flex min-h-full flex-col justify-center">
 				<div className={`flex ${P ? "flex-col" : "items-center gap-12"}`}>
 					<div className="min-w-0 flex-1">
-						<div className={`font-semibold uppercase tracking-[0.16em] ${SOFT} ${P ? "text-[20px]" : "text-[22px]"}`}>{kicker}</div>
+						{!P && <div className={`font-semibold uppercase tracking-[0.16em] ${SOFT} ${P ? "text-[20px]" : "text-[22px]"}`}>{kicker}</div>}
 						<div className="mt-2 font-semibold leading-[1.0] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 46, 36) : titleSize(title.title, 80, 56) }}>
 							{title.title}
 						</div>
@@ -219,14 +219,14 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 							)}
 							<span className="text-[#fff4e6]/80">On {title.service}</span>
 						</div>
-						<div className={`mt-3 leading-snug text-[#fff4e6]/90 ${P ? "text-[20px]" : "text-[26px]"}`}>{title.line}</div>
+						{!P && <div className={`mt-3 leading-snug text-[#fff4e6]/90 ${P ? "text-[20px]" : "text-[26px]"}`}>{title.line}</div>}
 					</div>
 					{!P && <Img src={backdropOf(title, "w780")} className="h-[250px] w-[430px] shrink-0 rounded-[36px] shadow-[0_0_90px_10px_rgba(251,146,60,.28),0_0_0_2px_rgba(253,186,116,.5)]" />}
 				</div>
 				{/* The actions sit in one row under both, so Left and Right reach every one of them. */}
-				<div className={`flex ${P ? "mt-5 flex-col gap-3" : "mt-9 gap-4"}`}>
+				<div className={`flex ${P ? "mt-4 flex-col gap-2" : "mt-9 gap-4"}`}>
 					{actions.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`g-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[60px] text-[21px]" : "h-[72px] px-9 text-[26px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`g-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[58px] shrink-0 text-[21px]" : "h-[72px] px-9 text-[26px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -240,7 +240,7 @@ const Taste: Skin["Taste"] = ({ rated, start, dest }) => {
 	const P = useTv().phone
 	return (
 		<Frame name="Taste" dest={dest}>
-			<div className="flex h-full flex-col items-center justify-center text-center">
+			<div className="flex min-h-full flex-col items-center justify-center text-center">
 				<div className="font-semibold leading-[1.05] tracking-tight" style={{ fontSize: P ? 38 : 64 }}>
 					Rate 5 titles you've seen.
 				</div>
@@ -290,7 +290,7 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 					{question}
 				</div>
 				{line && <div className={`mt-3 ${SOFT} ${P ? "text-[21px]" : "text-[30px]"}`}>{line}</div>}
-				<div className={`mt-11 w-full ${P ? "flex flex-col gap-3" : "grid gap-6"}`} style={P ? undefined : { gridTemplateColumns: `repeat(${answers.length}, minmax(0, 1fr))` }}>
+				<div className={`grid w-full ${P ? "mt-7 gap-3" : "mt-11 gap-6"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
 					{answers.map((a, n) => (
 						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`g-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[64px] text-[23px]" : "h-[108px] text-[30px]"}`}>
 							{a.label}
@@ -308,7 +308,7 @@ const Menu: Skin["Menu"] = ({ items }) => {
 		<div className={`absolute top-1/2 flex -translate-y-1/2 flex-col gap-4 rounded-[44px] bg-[#1d130d] shadow-[0_0_120px_20px_rgba(251,146,60,.22),0_0_0_1.5px_rgba(253,186,116,.3)] ${P ? "inset-x-5 p-6" : "right-10 w-[440px] p-9"}`}>
 			<div className={`px-4 text-[22px] font-semibold uppercase tracking-[0.2em] ${SOFT}`}>Menu</div>
 			{items.map((item, n) => (
-				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`g-btn flex items-center px-9 ${P ? "h-[60px] text-[23px]" : "h-[72px] text-[28px]"}`}>
+				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`g-btn flex items-center px-9 ${P ? "h-[54px] shrink-0 text-[22px]" : "h-[72px] text-[28px]"}`}>
 					{item.label}
 				</F>
 			))}

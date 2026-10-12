@@ -34,7 +34,7 @@ function Shade({ dim }: { dim: number }) {
 /** The actions as this direction draws them: quiet dark pills, and the expand key in amber. */
 function Bar({ dest, className }: { dest?: Dest; className?: string }) {
 	const P = useTv().phone
-	return <Actions dest={dest} className={className} cls={P ? "c-act h-[54px] w-[54px]" : "c-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`c-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[64px] px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 3 }} />
+	return <Actions dest={dest} className={className} cls={P ? "c-act h-[54px] w-[54px]" : "c-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`c-x ${P ? "h-[54px] gap-2.5 px-3 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 3 }} />
 }
 
 function Frame({ name, crumb, dest, art, dim = 0.6, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; children: ReactNode }) {
@@ -43,11 +43,11 @@ function Frame({ name, crumb, dest, art, dim = 0.6, children }: { name: string; 
 		<>
 			{art && <Ambient src={art} />}
 			<Shade dim={dim} />
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[152px] flex-col-reverse justify-end px-6 pt-4" : "h-[108px] items-center justify-between px-14"}`}>
-				<BarTitle name={name} crumb={crumb} nameClass={`font-bold ${P ? "text-[30px]" : "text-[36px]"}`} crumbClass={`text-white/70 ${P ? "text-[21px]" : "text-[24px]"}`} />
-				<Bar dest={dest} className={P ? "justify-end" : ""} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[108px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-bold ${P ? "text-[24px]" : "text-[36px]"}`} crumbClass={`text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`} />
+				<Bar dest={dest} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[152px] overflow-hidden px-6 pb-6" : "top-[108px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[86px] overflow-hidden px-6 pb-6" : "top-[108px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -115,7 +115,7 @@ const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, e
 	const x = useFocusedTitle(items)
 	return (
 		<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined}>
-			<div className="flex h-full flex-col justify-between">
+			<div className="flex min-h-full flex-col justify-between">
 				<div className={P ? "" : "w-[820px]"}>
 					{x && (
 						<div key={x.key} className="tvd-fade">
@@ -213,8 +213,8 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 	const P = tv.phone
 	return (
 		<Frame name={name} crumb={crumb} dest={dest} art={backdropOf(title, "w1280")} dim={0.45}>
-			<div className="flex h-full flex-col justify-end">
-				<div className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
+			<div className="flex min-h-full flex-col justify-end">
+				{!P && <div className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>}
 				<div className="mt-2 font-bold leading-[0.95] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 52, 38) : titleSize(title.title, 96, 66) }}>
 					{title.title}
 				</div>
@@ -229,10 +229,10 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 					)}
 					<span className="text-white/80">On {title.service}</span>
 				</div>
-				<div className={`mt-3 max-w-[760px] leading-snug text-white/90 ${P ? "text-[21px]" : "text-[28px]"}`}>{title.line}</div>
-				<div className={`flex ${P ? "mt-5 flex-col gap-3" : "mt-8 gap-4"}`}>
+				{!P && <div className={`mt-3 max-w-[760px] leading-snug text-white/90 ${P ? "text-[21px]" : "text-[28px]"}`}>{title.line}</div>}
+				<div className={`flex ${P ? "mt-4 flex-col gap-2" : "mt-8 gap-4"}`}>
 					{actions.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[60px] text-[22px]" : "h-[74px] px-9 text-[28px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[58px] shrink-0 text-[22px]" : "h-[74px] px-9 text-[28px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -246,7 +246,7 @@ const Taste: Skin["Taste"] = ({ rated, start, dest }) => {
 	const P = useTv().phone
 	return (
 		<Frame name="Taste" dest={dest} art={backdropOf("arrival", "w1280")} dim={0.8}>
-			<div className="flex h-full flex-col justify-center">
+			<div className="flex min-h-full flex-col justify-center">
 				<div className="font-bold leading-[1.02] tracking-tight" style={{ fontSize: P ? 40 : 72 }}>
 					Rate 5 titles you've seen.
 				</div>
@@ -301,7 +301,7 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 					{question}
 				</div>
 				{line && <div className={`mt-3 text-white/80 ${P ? "text-[21px]" : "text-[30px]"}`}>{line}</div>}
-				<div className={`mt-10 ${P ? "flex flex-col gap-3" : "grid gap-5"}`} style={P ? undefined : { gridTemplateColumns: `repeat(${answers.length}, minmax(0, 1fr))` }}>
+				<div className={`grid ${P ? "mt-7 gap-3" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
 					{answers.map((a, n) => (
 						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[64px] text-[24px]" : "h-[116px] text-[32px]"}`} style={P ? undefined : { borderRadius: 26 }}>
 							{a.label}
@@ -316,10 +316,10 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 const Menu: Skin["Menu"] = ({ items }) => {
 	const P = useTv().phone
 	return (
-		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-4 bg-[#0b0c11]/95 ${P ? "w-[80%] px-6" : "w-[440px] px-10"}`}>
+		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-4 bg-[#0b0c11]/95 ${P ? "w-[80%] !gap-2.5 px-6" : "w-[440px] px-10"}`}>
 			<div className="mb-2 text-[22px] font-bold uppercase tracking-[0.2em] text-white/60">Menu</div>
 			{items.map((item, n) => (
-				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`c-btn flex items-center px-9 ${P ? "h-[62px] text-[24px]" : "h-[76px] text-[30px]"}`}>
+				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`c-btn flex shrink-0 items-center px-9 ${P ? "h-[56px] text-[23px]" : "h-[76px] text-[30px]"}`}>
 					{item.label}
 				</F>
 			))}

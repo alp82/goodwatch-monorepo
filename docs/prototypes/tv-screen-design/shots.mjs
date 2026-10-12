@@ -139,7 +139,7 @@ if (!only || only === "screens") {
 	}
 	if (DESIGNS.length === 3) {
 		const before = JSON.parse(readFileSync(join(here, "sizes.json"), "utf8"))
-		writeFileSync(join(here, "sizes.json"), `${JSON.stringify({ ...sizes, viewports: before.viewports }, null, "\t")}\n`)
+		writeFileSync(join(here, "sizes.json"), `${JSON.stringify({ ...sizes, viewports: before.viewports, phones: before.phones }, null, "\t")}\n`)
 	}
 	console.log(JSON.stringify(sizes, null, 1))
 }
@@ -152,7 +152,7 @@ if (!only || only === "viewports") {
 	mkdirSync(tmp, { recursive: true })
 	const sizes = JSON.parse(readFileSync(join(here, "sizes.json"), "utf8"))
 	sizes.viewports = {}
-	const VIEWPORTS = [[1920, 1080], [1920, 940], [1536, 730], [1440, 800], [1366, 650], [1280, 720], [2560, 1300], [390, 844]]
+	const VIEWPORTS = [[1920, 1080], [1920, 940], [1536, 730], [1440, 800], [1366, 650], [1280, 720], [2560, 1300]]
 	for (const [width, height] of VIEWPORTS) {
 		const name = `${width}x${height}`
 		const { ctx, page } = await open({ width, height }, "design=cinema&as=member&chrome=off")
@@ -160,9 +160,9 @@ if (!only || only === "viewports") {
 		const m = await measure(page)
 		const tv = await tvBox(page)
 		const remote = await page.evaluate(() => {
-			const body = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
+			const body = document.querySelector("[data-remote] .remote-body")
 			const row = document.querySelector("[data-remote] button[aria-label='Only Netflix']").getBoundingClientRect()
-			return { width: Math.round(body.width), endsAt: Math.round(body.bottom), streamingRowEndsAt: Math.round(row.bottom), place: document.querySelector("[data-remote-place]").dataset.remotePlace }
+			return { width: Math.round(body.getBoundingClientRect().width), scale: Math.round((document.querySelector("[data-remote]").offsetWidth / 312) * 100) / 100, endsAt: Math.round(body.getBoundingClientRect().bottom), streamingRowEndsAt: Math.round(row.bottom), place: document.querySelector("[data-remote-place]").dataset.remotePlace }
 		})
 		sizes.viewports[name] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: m.text.px, remote }
 		await ctx.close()
@@ -172,10 +172,33 @@ if (!only || only === "viewports") {
 		await home.ctx.close()
 		console.log("viewport", name, JSON.stringify(sizes.viewports[name]))
 	}
-	writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
 	// The sheet: every window at the same scale (a third), so their sizes can be compared too.
 	const cell = (i, [w, h]) => `[${i}]scale=${Math.round(w / 3)}:${Math.round(h / 3)},pad=860:440:0:0:color=0x15171c,drawtext=text='${w} x ${h}':fontcolor=white:fontsize=22:x=12:y=h-34:box=1:boxcolor=black@0.7:boxborderw=6[c${i}]`
-	ffmpeg(...VIEWPORTS.flatMap(([w, h]) => ["-i", join(tmp, `${w}x${h}.png`)]), "-filter_complex", `${VIEWPORTS.map((v, i) => cell(i, v)).join(";")};${VIEWPORTS.map((_, i) => `[c${i}]`).join("")}xstack=inputs=8:layout=0_0|860_0|1720_0|2580_0|0_440|860_440|1720_440|2580_440`, "-q:v", "3", join(dir, "contact-sheet.jpg"))
+	ffmpeg(...VIEWPORTS.flatMap(([w, h]) => ["-i", join(tmp, `${w}x${h}.png`)]), "-filter_complex", `${VIEWPORTS.map((v, i) => cell(i, v)).join(";")};${VIEWPORTS.map((_, i) => `[c${i}]`).join("")}xstack=inputs=7:layout=0_0|860_0|1720_0|2580_0|0_440|860_440|1720_440`, "-q:v", "3", join(dir, "contact-sheet.jpg"))
+
+	// The phones: the TV and the phone's own Remote on one screen. Five sizes with all keys, two with few keys.
+	sizes.phones = {}
+	const PHONES = [[390, 844, "all"], [360, 740, "all"], [375, 667, "all"], [430, 932, "all"], [390, 700, "all"], [390, 844, "few"], [375, 667, "few"]]
+	for (const [width, height, keys] of PHONES) {
+		const name = `${width}x${height}${keys === "few" ? "-few" : ""}`
+		const { ctx, page } = await open({ width, height }, `design=cinema&as=member${keys === "few" ? "&keys=few" : ""}`)
+		await go(page, ["", "shows"])
+		const m = await measure(page)
+		const tv = await tvBox(page)
+		const remote = await page.evaluate(() => {
+			const panel = document.querySelector("[data-remote]").getBoundingClientRect()
+			const all = [...document.querySelectorAll("[data-remote] button")].map((b) => b.getBoundingClientRect())
+			return { height: Math.round(panel.height), keys: all.length, smallestKey: Math.round(Math.min(...all.map((r) => Math.min(r.width, r.height)))), endsAt: Math.round(Math.max(...all.map((r) => r.bottom))) }
+		})
+		sizes.phones[name] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: m.text.px, remote }
+		await go(page, ["", "home"])
+		await page.screenshot({ path: join(tmp, `p-${name}.png`) })
+		await ctx.close()
+		console.log("phone", name, JSON.stringify(sizes.phones[name]))
+	}
+	writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
+	const phoneCell = (i, [w, h, keys]) => `[${i}]pad=450:960:0:0:color=0x15171c,drawtext=text='${w} x ${h}${keys === "few" ? ", few keys" : ""}':fontcolor=white:fontsize=22:x=8:y=h-30:box=1:boxcolor=black@0.7:boxborderw=5[p${i}]`
+	ffmpeg(...PHONES.flatMap(([w, h, keys]) => ["-i", join(tmp, `p-${w}x${h}${keys === "few" ? "-few" : ""}.png`)]), "-filter_complex", `${PHONES.map((v, i) => phoneCell(i, v)).join(";")};${PHONES.map((_, i) => `[p${i}]`).join("")}hstack=inputs=${PHONES.length}`, "-q:v", "3", join(dir, "phones.jpg"))
 	rmSync(tmp, { recursive: true, force: true })
 }
 

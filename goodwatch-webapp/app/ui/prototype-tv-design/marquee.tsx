@@ -53,11 +53,11 @@ function Frame({ name, crumb, dest, hue, children }: { name: string; crumb?: str
 	return (
 		<>
 			<Field hue={hue} />
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[158px] flex-col-reverse justify-end px-6 pt-4" : "h-[116px] items-center justify-between px-14"}`}>
-				<BarTitle name={name} crumb={crumb} nameClass="font-black uppercase tracking-tight" style={{ fontSize: P ? 34 : 50 }} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
-				<Bar dest={dest} className={P ? "justify-end" : ""} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[116px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass="font-black uppercase tracking-tight" style={{ fontSize: P ? 20 : 50 }} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
+				<Bar dest={dest} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[158px] overflow-hidden px-6 pb-6" : "top-[116px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[86px] overflow-hidden px-6 pb-6" : "top-[116px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -128,7 +128,7 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 					</F>
 				))}
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-8 overflow-hidden ${P ? "h-[220px] px-6" : "h-[188px] px-14"}`}>
+			<div hidden={P} className="absolute inset-x-0 bottom-0 flex h-[188px] items-end justify-between gap-8 overflow-hidden px-14">
 				<div key={shown.key} className={`tvd-fade self-center font-extrabold leading-tight ${P ? "text-[26px]" : "max-w-[520px] text-[36px]"}`}>
 					{shown.line}
 				</div>
@@ -248,12 +248,12 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 		<>
 			<div className="absolute inset-0" style={{ background: hsl(title.hue, 58, 24) }} />
 			{!P && <Img src={posterOf(title, "w500")} className="absolute inset-y-0 right-0 h-full w-[34%]" />}
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[158px] flex-col-reverse justify-end px-6 pt-4" : "h-[116px] items-center justify-between px-14"}`}>
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[116px] items-center justify-between px-14"}`}>
 				<BarTitle name={name} crumb={crumb} nameClass={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[22px]" : "text-[28px]"}`} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
-				<Bar dest={dest} className={P ? "justify-end" : ""} />
+				<Bar dest={dest} />
 			</div>
-			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[158px] px-6 pb-6" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
-				<div className={`font-black uppercase tracking-[0.1em] text-white/80 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
+			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[86px] px-6 pb-6" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
+				{!P && <div className="text-[24px] font-black uppercase tracking-[0.1em] text-white/80">{kicker}</div>}
 				<div className="mt-2 font-black uppercase leading-[0.88] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 50, 36) : titleSize(title.title, 104, 62) }}>
 					{title.title}
 				</div>
@@ -262,10 +262,10 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 					{tv.taste && <span>{title.match}% match</span>}
 					<span className="text-white/80">On {title.service}</span>
 				</div>
-				<div className={`mt-2 font-semibold leading-snug text-white/90 ${P ? "text-[20px]" : "text-[26px]"}`}>{title.line}</div>
-				<div className={`flex ${P ? "mt-5 flex-col gap-3" : "mt-7 flex-wrap gap-4"}`}>
+				{!P && <div className={`mt-2 font-semibold leading-snug text-white/90 ${P ? "text-[20px]" : "text-[26px]"}`}>{title.line}</div>}
+				<div className={`flex ${P ? "mt-4 flex-col gap-2" : "mt-7 flex-wrap gap-4"}`}>
 					{actions.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[60px] text-[21px]" : "h-[80px] px-6 text-[25px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[58px] shrink-0 text-[21px]" : "h-[80px] px-6 text-[25px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -279,7 +279,7 @@ const Taste: Skin["Taste"] = ({ rated, start, dest }) => {
 	const P = useTv().phone
 	return (
 		<Frame name="Taste" dest={dest} hue={265}>
-			<div className="flex h-full flex-col justify-center">
+			<div className="flex min-h-full flex-col justify-center">
 				<div className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 44 : 88 }}>
 					Rate 5 titles you've seen.
 				</div>
@@ -331,7 +331,7 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 					{question}
 				</div>
 				{line && <div className={`mt-3 font-bold text-white/85 ${P ? "text-[21px]" : "text-[30px]"}`}>{line}</div>}
-				<div className={`mt-10 ${P ? "flex flex-col gap-3" : "grid gap-5"}`} style={P ? undefined : { gridTemplateColumns: `repeat(${answers.length}, minmax(0, 1fr))` }}>
+				<div className={`grid ${P ? "mt-7 gap-3" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
 					{answers.map((a, n) => (
 						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center px-4 text-center uppercase leading-tight ${P ? "h-[64px] text-[22px]" : "h-[124px] text-[30px]"}`}>
 							{a.label}
@@ -349,7 +349,7 @@ const Menu: Skin["Menu"] = ({ items }) => {
 		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-2 bg-white text-black ${P ? "w-[80%] px-5" : "w-[470px] px-8"}`}>
 			<div className="mb-3 px-5 text-[22px] font-black uppercase tracking-[0.2em] text-black/55">Menu</div>
 			{items.map((item, n) => (
-				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`m-menu flex items-center px-5 leading-none ${P ? "h-[62px] text-[24px]" : "h-[84px] text-[32px]"}`}>
+				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`m-menu flex items-center px-5 leading-none ${P ? "h-[56px] shrink-0 text-[23px]" : "h-[84px] text-[32px]"}`}>
 					{item.label}
 				</F>
 			))}

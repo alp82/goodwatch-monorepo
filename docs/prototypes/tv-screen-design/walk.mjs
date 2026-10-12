@@ -6,7 +6,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 const base = `${process.env.BASE ?? "http://localhost:3147"}/prototype/tv-screen-design`
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium" })
 const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } })
-const page = await ctx.newPage()
+let page = await ctx.newPage()
 page.on("pageerror", (e) => { if (!/Suspense/.test(e.message)) console.log("PAGEERROR", e.message) })
 const state = async () => (await page.locator("span.font-mono").first().innerText()).trim()
 let fails = 0
@@ -129,6 +129,48 @@ await page.locator("button[data-design=marquee]").click(); await marked("marquee
 check("a click on a direction's button chooses it and keeps the screen", `${await current()} · ${await state()}`, "2 Marquee · home › discover › discover-cozy · focus t-the-good-place")
 await keys("3"); await marked("glow"); check("the key 3 chooses Glow and keeps the screen", `${await current()} · ${await state()}`, "3 Glow · home › discover › discover-cozy · focus t-the-good-place")
 await keys("1"); await marked("cinema"); check("the key 1 chooses Cinema", await current(), "1 Cinema")
+// Under the TV the Remote's top reaches a little over the picture's bottom margin. On no screen may it cover type or
+// a focus target there, in any direction, at the two window sizes where it is under the TV by itself.
+const SCREENS = [["home"], ["tonight"], ["discover"], ["discover-cozy"], ["explorer"], ["island-heists"], ["taste"], ["quiz"], ["title-knives-out"], ["rate-knives-out"], ["search"], ["search-heist"], ["discover", "menu"], ["about"], ["shows"], ["side-dark-crime"]]
+for (const [width, height] of [[1920, 1080], [1920, 940]]) {
+	await page.setViewportSize({ width, height })
+	for (const design of ["cinema", "marquee", "glow"]) {
+		await page.mouse.move(0, 0)
+		await open(`design=${design}&as=member`)
+		const covered = []
+		for (const [root, push] of SCREENS) {
+			await page.evaluate(([r, p]) => { window.__tvDesign.root(r); if (p) setTimeout(() => window.__tvDesign.push(p), 60) }, [root, push ?? null])
+			await page.waitForTimeout(650)
+			const hits = await page.evaluate(() => {
+				const remote = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
+				const tv = document.querySelector("[data-tv-screen]")
+				// What of a box is on the picture: a row that pages in is cut by the list that holds it.
+				const shown = (from, r) => {
+					const b = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+					for (let el = from; el && el !== tv.parentElement; el = el.parentElement) {
+						if (getComputedStyle(el).overflow === "visible") continue
+						const q = el.getBoundingClientRect()
+						b.left = Math.max(b.left, q.left); b.top = Math.max(b.top, q.top); b.right = Math.min(b.right, q.right); b.bottom = Math.min(b.bottom, q.bottom)
+					}
+					return b
+				}
+				const hit = (from, rect) => { const r = shown(from, rect); return r.right - r.left > 0 && r.bottom - r.top > 0 && r.left < remote.right && r.right > remote.left && r.bottom > remote.top + 1 && r.top < remote.bottom }
+				const out = [...tv.querySelectorAll("[data-tv-item]")].filter((el) => hit(el.parentElement, el.getBoundingClientRect())).map((el) => el.dataset.tvItem)
+				const walker = document.createTreeWalker(tv, NodeFilter.SHOW_TEXT)
+				for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+					if (!node.textContent.trim()) continue
+					const range = document.createRange(); range.selectNodeContents(node)
+					if ([...range.getClientRects()].some((r) => hit(node.parentElement, r))) out.push(`"${node.textContent.trim().slice(0, 24)}"`)
+				}
+				return out
+			})
+			if (hits.length) covered.push(`${push ?? root}: ${hits.join(", ")}`)
+		}
+		check(`${design} at ${width}x${height}: the Remote covers no type and no focus target on any of ${SCREENS.length} screens`, covered.join(" | ") || "nothing", "nothing")
+	}
+}
+await page.setViewportSize({ width: 1920, height: 1080 })
+
 // Beside the TV (the layout of small windows, forced here on a large one) the Remote only nods toward the cursor,
 // so it never swings over the picture.
 await open("design=cinema&remote=beside")
@@ -180,13 +222,67 @@ await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=cross]
 await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=dot]", { state: "attached", timeout: 8000 }); check("and the one after it", await pointer("shape"), "dot")
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 check("at phone width there is no pointer", String(await page.locator("[data-tv-pointer]").count()), "0")
-// The phone: the Remote is taller than what is left under the TV, so its lower keys are reached by scrolling.
-const netflix = page.locator("[data-remote]").getByRole("button", { name: "Only Netflix" })
-check("phone: at rest the streaming row is below the window", String((await netflix.boundingBox()).y > 844 - 64), "true")
-await netflix.scrollIntoViewIfNeeded(); await page.waitForTimeout(400)
-check("phone: a scroll brings the streaming row into the window", String((await netflix.boundingBox()).y + (await netflix.boundingBox()).height <= 844), "true")
-await netflix.click(); check("phone: the Netflix key takes a tap", await toast("Only Netflix"), "shown")
-await page.locator("[data-remote]").getByRole("button", { name: "Only Prime Video" }).click(); check("phone: the Prime Video key takes a tap", await toast("Only Prime Video"), "shown")
+// The phone: the TV and the phone's own Remote on one screen. Nothing scrolls, every key of the Remote is in the
+// window, at least 44 px in both directions, not under the site's dock, and does what it says.
+const phoneState = () => page.evaluate(() => window.__tvDesign.state())
+const until = async (label, want) => {
+	const fits = (got) => (typeof want === "string" ? got === want : want.test(got))
+	let got = await phoneState()
+	for (let i = 0; i < 60 && !fits(got); i++) { await page.waitForTimeout(100); got = await phoneState() }
+	say(fits(got), label, got, want)
+}
+const key = (name) => page.locator("[data-remote]").getByRole("button", { name, exact: true })
+const phone = async (width, height, keys) => {
+	const t = (label) => `phone ${width}x${height}${keys === "few" ? ", few keys" : ""}: ${label}`
+	// A phone of its own: touch, no scrollbar. A page that crashes while loading on a loaded machine is loaded again.
+	const desktop = page
+	const mobile = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true })
+	page = await mobile.newPage()
+	await open(`design=cinema${keys === "few" ? "&keys=few" : ""}`).catch(() => open(`design=cinema${keys === "few" ? "&keys=few" : ""}`))
+	const m = await page.evaluate(() => {
+		const scene = document.querySelector("[data-remote-place]")
+		const all = [...document.querySelectorAll("[data-remote] button")].map((b) => { const r = b.getBoundingClientRect(); return { name: b.getAttribute("aria-label") ?? b.textContent.trim(), w: r.width, h: r.height, inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, free: b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) } })
+		const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect()
+		const canvas = document.querySelector("[data-tv-canvas]")
+		return { place: scene.dataset.remotePlace, names: all.map((k) => k.name).sort().join(", "), small: all.filter((k) => k.w < 44 || k.h < 44).map((k) => k.name).join(", "), outside: all.filter((k) => !k.inside).map((k) => k.name).join(", "), covered: all.filter((k) => !k.free).map((k) => k.name).join(", "), smallest: Math.round(Math.min(...all.map((k) => Math.min(k.w, k.h)))), tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, k: canvas.getBoundingClientRect().width / canvas.offsetWidth }
+	})
+	check(t("the Remote has its keys"), m.names, keys === "few" ? "Back, Down, Home, Next, OK, Only Netflix, Only Prime Video, Previous, Up" : "Back, Down, Home, Menu, Next, OK, Only Netflix, Only Prime Video, Previous, Search, Up")
+	check(t("every key is 44 px or more"), m.small || "all", "all")
+	check(t("every key is inside the window"), m.outside || "all", "all")
+	check(t("no key is under the site's dock"), m.covered || "none", "none")
+	await key("Next").tap(); await until(t("Next moves the focus"), "home · focus app-discover")
+	await key("Previous").tap(); await until(t("Previous moves it back"), "home · focus app-tonight")
+	await key("Up").tap(); await until(t("Up reaches the top bar"), "home · focus bar-search")
+	await key("Down").tap(); await until(t("Down returns to the apps"), /^home · focus app-/)
+	await key("OK").tap(); await until(t("OK opens the app"), /^home › \w+ · focus /)
+	await key("Back").tap(); await until(t("Back returns"), /^home · focus app-/)
+	if (keys !== "few") {
+		await key("Search").tap(); await until(t("Search opens search"), "home › search · focus idea-cozy")
+		await key("Home").tap(); await until(t("Home goes home"), /^home · focus /)
+		await key("Menu").tap(); await until(t("Menu opens the menu"), "home › menu · focus menu-home")
+		await key("Back").tap(); await until(t("Back closes the menu"), /^home · focus /)
+	} else {
+		await key("OK").tap(); await until(t("OK opens an app again"), /^home › \w+ · focus /)
+		await key("Home").tap(); await until(t("Home goes home"), /^home · focus /)
+	}
+	await key("Only Netflix").tap(); check(t("the Netflix key works"), await toast("Only Netflix"), "shown")
+	await key("Only Prime Video").tap(); check(t("the Prime Video key works"), await toast("Only Prime Video"), "shown")
+	console.log(`     ${t("")}TV ${m.tv}, smallest key ${m.smallest} px, type of 20 canvas px prints at ${(20 * m.k).toFixed(1)} px`)
+	// A finger drags up on the TV and on the Remote, then the page is told to scroll: nothing may have moved.
+	const cdp = await mobile.newCDPSession(page)
+	for (const y of [height * 0.3, height - 150]) await cdp.send("Input.synthesizeScrollGesture", { x: width / 2, y, yDistance: -300, gestureSourceType: "touch", speed: 1600 }).catch(() => {})
+	await page.evaluate(() => { window.scrollTo(0, 400); document.querySelector("[data-remote-place]").scrollTop = 400 }); await page.waitForTimeout(300)
+	const s = await page.evaluate(() => {
+		const scene = document.querySelector("[data-remote-place]")
+		return { scrolled: window.scrollY + document.documentElement.scrollTop + document.body.scrollTop + scene.scrollTop, taller: Math.max(scene.scrollHeight - scene.clientHeight, document.documentElement.scrollHeight - window.innerHeight) }
+	})
+	check(t("nothing scrolls: not by a drag on the TV or on the Remote, and the page is no taller than the window"), `${s.scrolled} ${s.taller <= 0}`, "0 true")
+	await mobile.close()
+	page = desktop
+}
+for (const [width, height] of [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]) await phone(width, height, "all")
+await phone(375, 667, "few")
+await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 await page.locator("button[data-design=glow]").click(); await marked("glow")
 check("at phone width the buttons are there and choose", await current(), "3 Glow")
 console.log(fails ? `${fails} FAILED, ${passed} ok` : `all ${passed} ok`)
