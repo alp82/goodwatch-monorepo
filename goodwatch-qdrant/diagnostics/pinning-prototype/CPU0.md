@@ -155,8 +155,7 @@ ledgers overlap and remain non-additive, including pin-parent and query checks.
 Child runtime and reclaim reason paths remain explicitly outside this attachment.
 A failed hierarchy sample is retained as unavailable; it cannot make clean proof.
 
-Local verification: `python3 -B -m unittest discover -s
-goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
+Local verification from the repository root: `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'` and `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_lifecycle_cpu0.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
 failures through stage(), preserving their original numeric failures when cleanup
 also fails. They separately assert failed CPU snapshot status; fixture execution
 is not a physical lifecycle proof. These fixtures perform no
@@ -202,12 +201,7 @@ full admission before doing work. External mutations are unauthorized. The old
 writable store is preserved but normal startup can change it; rollback is not a
 pristine historical baseline.
 
-The lock is CLOEXEC for pin and zero multiprocessing-spawn children. A narrowly
-scoped registered at-fork callback closes it in exact f831 plain-fork reclaim
-children (and any unrelated fork inside that scope). Real local plain-fork,
-multiprocessing-spawn and actual helper-writer fixtures prove the parent still prevents
-contention while the child cannot retain ownership. The injected helper receives
-the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
+The lock is CLOEXEC across exec. PinChild's separately guarded fork and the exact f831 plain-fork reclaim helper use the scoped registered at-fork child close callback; ZeroChild keeps its spawn path. The parent remains the lock owner. This source14 set's real fork and zero-spawn fixtures prove the parent still prevents a contender and pin/zero children hold no control-lock inode. The f831 writer fixture belongs to the separately authenticated unchanged helper closure, not this self-contained source14 set. Injected helper calls retain the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
 wrappers must never generate the standalone helper CLI.
 
 Local wrapper fixtures execute the exact public script with a fake child: child
@@ -232,3 +226,11 @@ owned direct inspect client may receive cleanup TERM/KILL (up to two extra secon
 this never targets the Qdrant child or wrapper and cannot produce clean proof.
 Successful stop receipts survive subsequent failures and even pidfd-close failure
 as lifecycleCompletedStopReceipt, without authorizing continuation or recovery.
+
+
+The authenticated Node receipt matches actual binary identity and nanosecond metadata; the root stager and consumer verify binary content. The preliminary reader's metadata attestation alone is not a full binary-content verification. Independent external receipt binding remains part of the integrated closure review. A just-completed metadata HTTP request may still be visible during the strict client-socket fence; that causes a terminal refusal, with no teardown wait or retry. Consumer preflight also records one enrolment write; RPC admission records zero enrolment writes. A collision is not authority for the existing fixed receipt. Source memory.high must be max under the fixed recipe. Passing admission samples preceding an identity refusal are retained separately from failed memory admission.
+
+Source14 tests are self-contained. Pure accounting fixture data is inline. The separate unchanged f831 reclaim module and external authenticated loaders are supplied in the integrated full closure; source14 does not claim to review or execute them. Real fork scope/owned child fixtures in this set verify only local inherited-FD and lock semantics.
+
+
+PinChild uses an explicit fork context, avoiding a multiprocessing spawn resource tracker. The controller must have exactly one actual thread, only stdio/control-lock/two pipe descriptors, and no mappings under the owned root at the fork point. Its actual sampled RssAnon plus VmPTE must be at most 64 MiB, a conservative quarter of the unchanged 256 MiB cap reserve. This is an engineering admission margin, not a verified copy-on-write/page-table formula or capacity proof. The child-entry wrapper closes the parent's pipe end, resets TERM/INT handlers, and the existing at-fork hook closes the control lock only in the child. Parent signal masking covers Process.start so constructor cleanup retains ownership. The child inherits shared Python mappings; post-join anonymous growth remains charged by actual source accounting, while helper RSS is report-only and pre-join attribution remains unknown. Physical helper authority uses PID/birth/parent/executable/source-cgroup identity, never its inherited controller argv. ZeroChild retains its independent spawn path. Real isolated fixtures show no extra tracker, actual EOF exit, default TERM, and extra-FD/thread/owned-mapping/large-parent refusal. Stand-in child targets do not prove real clone placement.

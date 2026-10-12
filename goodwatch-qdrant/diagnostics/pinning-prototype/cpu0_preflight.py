@@ -179,7 +179,7 @@ def _enrol_consumer(context,lifecycle,spec,args,predecessor,lock_fd):
             if count<=0:raise RuntimeError('consumer_enrolment_write_failed')
             view=view[count:]
         os.fsync(fd)
-        os.close(fd);fd=None
+        closing=fd;fd=None;os.close(closing)
         directory=os.open(ROOT,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
         try:os.fsync(directory)
         finally:os.close(directory)
@@ -187,7 +187,7 @@ def _enrol_consumer(context,lifecycle,spec,args,predecessor,lock_fd):
         if actual!=raw:raise RuntimeError('consumer_enrolment_write_failed')
     except BaseException as error:
         primary=error
-        error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'issued-unknown' if issued else 'not-issued','expectedReceiptSha256':hashlib.sha256(raw).hexdigest(),'consumerEnrolment':record,'cleanupAddressableByFixedReceipt':True,'continuationAllowed':False}
+        error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'issued-unknown' if issued else 'not-issued','expectedReceiptSha256':hashlib.sha256(raw).hexdigest(),'consumerEnrolment':record,'cleanupAddressableByFixedReceipt':issued,'continuationAllowed':False}
         raise
     finally:
         if fd is not None:
@@ -236,12 +236,12 @@ def _preflight(helper_path, helper_policy_sha, helper_code_sha, control_path, co
             if node!=enrolment[0]['nodeIdentity'] or node_sha!=enrolment[0]['nodeProvenanceSha256']:raise RuntimeError('consumer_executable_changed')
         handoff=lifecycle.commit_handoff(control.runtime.docker,handoff_sha,'preflight')
         result={'schema':'search.clone-cpu0-preflight.v2','variant':'cpu0-fixed-capacity.v2','birthAdmission':admission,'handoff':handoff,
-                'sourceIdentity':admission['sourceIdentity'],'queries':0,'resourceWrites':0,'handoffWrites':1,'modelsRead':0}
+                'sourceIdentity':admission['sourceIdentity'],'queries':0,'resourceWrites':0,'handoffWrites':1,'enrolmentWrites':1 if enrolment is not None else 0,'modelsRead':0}
         if enrolment is not None:result.update(consumerEnrolment=enrolment[0],consumerEnrolmentSha256=enrolment[1])
         return result
     except BaseException as error:
         primary=error
-        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':True,'continuationAllowed':False}
+        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':issued,'continuationAllowed':False}
         raise
     finally:
         if lock_fd is not None:

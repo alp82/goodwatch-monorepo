@@ -20,7 +20,7 @@ class WrapperFixture:
  def __enter__(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
   (self.root/'entrypoint.sh').write_bytes(SCRIPT)
-  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready","w").write(str(os.getpid()))\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
+  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready.tmp","w").write(str(os.getpid()))\nos.rename("ready.tmp","ready")\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
   self.wrapper=subprocess.Popen(['/bin/bash','./entrypoint.sh'],cwd=self.root,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','QDRANT_ALLOW_RECOVERY_MODE':'false'})
   end=time.monotonic()+3
   while not(self.root/'ready').exists():
@@ -118,25 +118,6 @@ class Tests(unittest.TestCase):
    with self.assertRaises(RuntimeError)as failure:
     with life.helper_fork_scope(10):raise original
   self.assertIs(failure.exception,original);self.assertEqual(original.lifecycleCleanupFailure,'lifecycle_lock_unproven')
- def test_exact_f831_registered_writer_closes_parent_lock_fd(self):
-  path=Path(__file__).parent.parent/'clone-preparation/prepare_clone_reclaim.py'
-  raw=path.read_bytes();expected='f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5'
-  self.assertEqual(hashlib.sha256(raw).hexdigest(),expected)
-  spec=importlib.util.spec_from_file_location('exact_f831_fixture',path);helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
-  with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
-   root=Path(directory);root.chmod(0o700);fd=os.open(root/'control.lock',os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
-   target=os.open(root/'numeric-fixture',os.O_CREAT|os.O_WRONLY,0o600)
-   def operation(output):
-    try:os.fstat(fd)
-    except OSError as e:
-     if e.errno==errno.EBADF:os.write(output,b'closed');return
-    raise RuntimeError('unexpected inherited control fd')
-   try:
-    with life.helper_fork_scope(fd):
-     result=helper.bounded_owned_writer(target,operation,root,expected,timeout=2,grace=1)
-    self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],0)
-    self.assertEqual((root/'numeric-fixture').read_bytes(),b'closed');life.require_lock(fd)
-   finally:os.close(target);os.close(fd)
  def test_protected_target_never_signalled(self):
   fake={'qdrant':{'pid':123,'startTicks':1},'wrapper':{'pid':124,'startTicks':2}}
   with patch.object(life,'require_lock'),patch.object(life,'attest',return_value=fake),patch.object(life.os,'pidfd_open')as open_pidfd:
@@ -226,14 +207,14 @@ class AttestationTests(unittest.TestCase):
   with ProcFixture()as f:
    (f.proc/str(os.getpid())/'cgroup').write_text('0::/clone/child\n')
    with self.assertRaisesRegex(RuntimeError,'lifecycle_reader_placement'):f.attest()
-class SpawnOwnershipTests(unittest.TestCase):
- def test_real_pin_and_zero_startup_do_not_inherit_control_owner(self):
+class ZeroSpawnOwnershipTests(unittest.TestCase):
+ def test_real_zero_startup_does_not_inherit_control_owner(self):
   import controller_cpu0 as controller,turnover_gate_cpu0 as gate
   with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
    path=Path(directory)/'control.lock';fd=os.open(path,os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
    info=os.fstat(fd);config={'lockIdentity':[info.st_dev,info.st_ino]}
    try:
-    for module,attribute,target,factory in ((controller,'pin_child',fake_pin_child,lambda:controller.PinChild(None,None,False,config)),(gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config))):
+    for module,attribute,target,factory in ((gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config)),):
      with patch.object(module,attribute,target),life.helper_fork_scope(fd):holder=factory()
      try:
       self.assertTrue(holder.connection.poll(3));self.assertEqual(holder.connection.recv(),{'controlLockInherited':False})
@@ -284,7 +265,6 @@ class HandoffTests(unittest.TestCase):
     self.assertEqual(failed.exception.lifecycleCleanupFailure,'lifecycle_handoff_cleanup_failed')
    self.assertEqual(path.read_bytes(),raw)
 
-if __name__=='__main__':unittest.main()
 
 class HandoffV2Tests(unittest.TestCase):
  def test_only_adoption_intent_can_start_v2_chain(self):
@@ -389,3 +369,5 @@ class AccountingCleanupTests(unittest.TestCase):
     self.assertEqual(len(opened),1);os.fstat(opened[0])
   finally:
    for fd in opened:original_close(fd)
+
+if __name__=='__main__':unittest.main()

@@ -10,7 +10,23 @@ import unittest
 from unittest.mock import Mock,MagicMock,patch
 import controller_cpu0 as control
 import daemon_cpu0 as daemon
-from test_daemon import accounting,pin_state
+import pin_cpu0 as pin
+def accounting():
+    return {'availableBytes': 8*pin.GIB, 'cgroupMaxBytes': 6*pin.GIB, 'anonBytes': 1, 'fileBytes': 1, 'kernelBytes': 1, 'unevictableBytes': 0, 'currentBytes': 3,
+        'memoryEvents': {'oom': 0, 'oom_kill': 0, 'max': 0}, 'cpu': {'nr_throttled': 0, 'throttled_usec': 0}}
+
+
+def nofile_state():
+    return {'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1048576,'softAfter':1048576,'hardLimit':1048576,'raised':False,'hardChanged':False}
+
+
+def pin_state():
+    return {'nofileLimits':nofile_state(), 'event': 'mapped-data-pin-state.v1', 'mode': 'clone', 'queries': 0, 'storageWrites': 0, 'lockedBytes': 16384, 'newLockBytes': 16384,
+        'selectionHash': 'a'*64, 'extentRangesHashed': True, 'qdrantPid': 123, 'sourceStartTicks': 100, 'pageBytes': 4096, 'rangesChanged': True, 'deletedMappingsExcluded':0, 'memoryEventDelta':{'oom':0,'oom_kill':0,'max':0}, 'cpuLimitDelta':{'nr_throttled':0,'throttled_usec':0}, 'clonePressureMaxAllowed':False,
+        'classesMeasured': {k: {'files': 1, 'dataLockBytes': 4096,'dataPages':1,'rawExtentCount':1,'dataRangeCount':1} for k in daemon.KINDS},
+        'lockedResidency': {k: {'lockedDataPages': 1, 'residentLockedDataPages': 1} for k in ('vector', 'graph', 'sparse', 'other')},
+        'mappingBounds':{'currentVmas':64,'maxMapCount':65530,'projectedAdditionalVmas':12,'reservedVmas':256,'projectedTotalVmas':332},'nonresidentSelectedBytes':16384,'projectedCurrentBytes':16387,'capReserveBytes':0,'capHeadroomRequired':True, 'accountingBefore': accounting(), 'accountingAfter': accounting(), 'private': 'private-source-path'}
+
 
 class CallerTests(unittest.TestCase):
     def test_parent_before_pass_refusal_preserves_scope_before_sending_command(self):
@@ -180,7 +196,6 @@ class ConfigTests(unittest.TestCase):
                 old=daemon.code_hash(folder);(folder/'cpu0_guards.py').write_text('# drift')
                 self.assertNotEqual(old,daemon.code_hash(folder))
 
-if __name__=='__main__':unittest.main()
 
 class FixedCapacityAdmissionTests(unittest.TestCase):
     def policy(self):
@@ -376,7 +391,7 @@ class PreflightAuthenticationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'preflight_source_unproven'):p._authenticate(args,'consumer')
     def test_actual_child_stdin_devnull_accepts_pipe_refuses(self):
         import subprocess
-        source='import cpu0_preflight as p;p._require_null_stdin()'
+        source='import sys;sys.path.insert(0,'+repr(str(Path(__file__).absolute().parent))+');import cpu0_preflight as p;p._require_null_stdin()'
         self.assertEqual(subprocess.run(['/usr/bin/python3','-B','-c',source],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=3).returncode,0)
         self.assertNotEqual(subprocess.run(['/usr/bin/python3','-B','-c',source],input=b'',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=3).returncode,0)
 
@@ -454,6 +469,7 @@ class EnrolmentPublicationTests(unittest.TestCase):
                 self.assertEqual((root/'cpu0-consumer-enrolment-v2.json').stat().st_mode&0o777,0o600)
                 with self.assertRaises(FileExistsError)as caught:p._enrol_consumer(context,life,SimpleNamespace(container='fixture-only'),args,{'adoptionIntentSha256':'2'*64},lock.fileno())
                 self.assertEqual(caught.exception.consumerEnrolmentFailureEvidence['publicationState'],'not-issued')
+                self.assertIs(caught.exception.consumerEnrolmentFailureEvidence['cleanupAddressableByFixedReceipt'],False)
                 self.assertEqual((root/'cpu0-consumer-enrolment-v2.json').read_bytes(),raw)
     def test_write_failure_retains_fixed_cleanup_authority_and_primary_cause(self):
         import cpu0_preflight as p
@@ -511,13 +527,129 @@ class CleanupRenewalTests(unittest.TestCase):
             (fixture.proc/'10/net/tcp').write_text('header\n0: 0100007F:18BD 0100007F:AAAA 01\n')
             spec=SimpleNamespace(container=life.NEW,memory_bytes=6*control.pin.GIB,swap_bytes=6*control.pin.GIB)
             source=SimpleNamespace(pid=11,identity=('a'*64,life.IMAGE,11,101),cgroup=cg,cgroup_relative='/clone',spec=spec)
-            config=json.loads(Path('prepared-control-policy-cpu0.json').read_text())
+            config=json.loads((Path(__file__).parent/'prepared-control-policy-cpu0.json').read_text())
             hierarchy={'rows':[{'depth':0,'groupIdentitySha256':'f'*64,'quotaMicros':None,'periodMicros':100000,'nrThrottled':2,'throttledMicros':3}],'weight':100,'cpusetCpus':'','cpusetMems':''}
             original=life.cleanup_attest
             def renew(name,history,docker):return original(name,history,docker,fixture.proc,fixture.cg)
-            with patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'CPU_POLICY',config['cpuIsolation']),patch.object(control.runtime,'inspect_source',return_value=source),patch.object(control.runtime,'docker',return_value=json.dumps([fixture.x])),patch.object(control.cpu0_guards,'inspect_cpu_source',return_value=hierarchy),patch.object(life,'ROOT',fixture.root),patch.object(life,'MOUNTS',fixture.mounts),patch.object(life,'cleanup_attest',side_effect=renew),patch.object(control,'host_memory',side_effect=AssertionError('cleanup cannot demand capacity')),patch.object(control.runtime,'accounting',side_effect=AssertionError('cleanup cannot demand admission metrics')):
+            with patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'CPU_POLICY',config['cpuIsolation'],create=True),patch.object(control.runtime,'inspect_source',return_value=source),patch.object(control.runtime,'docker',return_value=json.dumps([fixture.x])),patch.object(control.cpu0_guards,'inspect_cpu_source',return_value=hierarchy),patch.object(life,'ROOT',fixture.root),patch.object(life,'MOUNTS',fixture.mounts),patch.object(life,'cleanup_attest',side_effect=renew),patch.object(control,'host_memory',side_effect=AssertionError('cleanup cannot demand capacity')),patch.object(control.runtime,'accounting',side_effect=AssertionError('cleanup cannot demand admission metrics')):
                 result=control.renew_cleanup(config,spec,object(),historical)
                 self.assertEqual(result['sourceEvents'],{'max':11,'oom':2,'oom_kill':1});self.assertEqual(result['currentSource']['activeServiceConnections'],1)
                 self.assertIs(result['cleanupOnly'],True);self.assertIs(result['admission'],False);self.assertEqual(result['historicalSource'],historical)
                 (cg/'memory.swap.max').write_text('1\n')
                 with self.assertRaisesRegex(RuntimeError,'source_limits_changed'):control.renew_cleanup(config,spec,object(),historical)
+
+class PressureSwapTests(unittest.TestCase):
+    def test_swap_above_floor_still_refuses_with_same_read(self):
+        sample={'MemTotal':8*control.pin.GIB,'MemAvailable':5*control.pin.GIB,'Dirty':123,'Writeback':456,'SwapTotal':4096}
+        with patch.object(control,'host_memory',return_value=sample)as reader:
+            with self.assertRaisesRegex(RuntimeError,'swap_present')as failure:control.host_available(3*control.pin.GIB//2,scope='archive-pressure')
+        reader.assert_called_once_with();proof=failure.exception.pressureMemoryFailureEvidence
+        self.assertEqual(proof['hostMemAvailableBytes'],sample['MemAvailable']);self.assertEqual(proof['hostSwapBytes'],4096);self.assertEqual(proof['hostDirtyBytes'],123)
+    def test_zero_swap_exact_emergency_floor_unchanged(self):
+        floor=3*control.pin.GIB//2;sample={'MemTotal':8*control.pin.GIB,'MemAvailable':floor,'Dirty':0,'Writeback':0,'SwapTotal':0}
+        with patch.object(control,'host_memory',return_value=sample):self.assertEqual(control.host_available(floor),floor)
+
+class FixedSourceHighTests(unittest.TestCase):
+    def test_numeric_high_is_not_max_and_original_numeric_limits_survive(self):
+        import lifecycle_cpu0 as life
+        with tempfile.TemporaryDirectory()as temp:
+            root=Path(temp)
+            for leaf,value in (('memory.max',6*control.pin.GIB),('memory.high',6*control.pin.GIB),('memory.swap.max',0)):(root/leaf).write_text(str(value)+'\n')
+            source=SimpleNamespace(cgroup=root);spec=SimpleNamespace(memory_bytes=6*control.pin.GIB,swap_bytes=6*control.pin.GIB)
+            with self.assertRaisesRegex(RuntimeError,'source_limits_changed')as failure:control._source_cgroup_limits(source,spec,life)
+            self.assertEqual(failure.exception.sourceLimitFailureEvidence,{'memoryMaxBytes':6*control.pin.GIB,'memoryHighBytes':6*control.pin.GIB,'memorySwapMaxBytes':0})
+            self.assertEqual(control.admission_failure(failure.exception)['sourceLimitFailureEvidence'],failure.exception.sourceLimitFailureEvidence)
+            (root/'memory.high').write_text('max\n');self.assertIsNone(control._source_cgroup_limits(source,spec,life)['memoryHighBytes'])
+
+class RealForkScopeTests(unittest.TestCase):
+    SCRIPT=r"""import os,sys,json,time,signal,fcntl,tempfile,threading,ctypes
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0,sys.argv[1])
+import controller_cpu0 as c,lifecycle_cpu0 as life
+mode=sys.argv[2]
+with tempfile.TemporaryDirectory()as directory:
+ root=Path(directory);life.ROOT=root;c.ROOT=root
+ fd=os.open(root/'control.lock',os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX);lock_identity=os.fstat(fd)
+ extra=None;thread=None;event=threading.Event();address=None;libc=None;held_bytes=None
+ if mode=='large-parent':held_bytes=bytearray(64*1024**2)
+ def target(connection,*args):
+  try:
+   current=os.fstat(fd);inherited=(current.st_dev,current.st_ino)==(lock_identity.st_dev,lock_identity.st_ino)
+  except OSError:inherited=False
+  connection.send({'pid':os.getpid(),'startTicks':life.birth(os.getpid()),'parentPid':os.getppid(),'controlInherited':inherited})
+  try:connection.recv()
+  except EOFError:pass
+  connection.close()
+ c.pin_child=target;c.load_lifecycle=lambda _:life
+ signal.signal(signal.SIGTERM,lambda *_:(_ for _ in()).throw(RuntimeError('parent interrupted')))
+ if mode=='extra-fd':extra=os.open('/dev/null',os.O_RDONLY)
+ if mode=='thread':thread=threading.Thread(target=lambda:event.wait(10));thread.start()
+ if mode=='mapping':
+  file=os.open(root/'owned-mapping',os.O_CREAT|os.O_RDWR,0o600);os.ftruncate(file,4096)
+  libc=ctypes.CDLL(None,use_errno=True);libc.mmap.restype=ctypes.c_void_p
+  address=libc.mmap(None,4096,1,1,file,0);os.close(file)
+  if address==ctypes.c_void_p(-1).value:raise RuntimeError('fixture mmap')
+ if mode=='constructor-interrupt':
+  original_mask=signal.pthread_sigmask;parent_pid=os.getpid()
+  def interrupted_mask(how,mask):
+   result=original_mask(how,mask)
+   if how==signal.SIG_SETMASK and os.getpid()==parent_pid:raise RuntimeError('constructor interruption')
+   return result
+  signal.pthread_sigmask=interrupted_mask
+ holder=None
+ try:
+  with life.helper_fork_scope(fd):holder=c.PinChild(None,None,False,{})
+  assert holder.process._start_method=='fork'
+  assert holder.connection.poll(3);row=holder.connection.recv()
+  children=Path('/proc/self/task/'+str(os.getpid())+'/children').read_text().split()
+  assert children==[str(holder.process.pid)]
+  life.require_lock(fd)
+  contender=os.open(root/'control.lock',os.O_RDWR)
+  try:
+   try:fcntl.flock(contender,fcntl.LOCK_EX|fcntl.LOCK_NB);raise RuntimeError('parent lock lost')
+   except BlockingIOError:pass
+  finally:os.close(contender)
+  if mode=='term':holder.process.terminate()
+  elif mode=='eof':holder.connection.close()
+  else:holder.connection.send('close')
+  holder.process.join(3)
+  assert not holder.process.is_alive()
+  print(json.dumps({'refused':False,'childCount':len(children),'controlInherited':row['controlInherited'],'birthVerified':row['startTicks']>0 and row['parentPid']==os.getpid(),'exitCode':holder.process.exitcode,'parentLockHeld':True}))
+ except RuntimeError as error:
+  if mode=='constructor-interrupt':
+   assert str(error)=='constructor interruption'
+   assert error.childFailureDetails['constructorChildGone']is True
+   life.require_lock(fd)
+   print(json.dumps({'constructorChildGone':True,'originalReasonPreserved':True}))
+  elif mode not in ('extra-fd','thread','mapping','large-parent'):raise
+  else:
+   assert str(error)=='overhead_helper_unproven'
+   assert not Path('/proc/self/task/'+str(os.getpid())+'/children').read_text().split()
+   print(json.dumps({'refused':True,'childrenStarted':0}))
+ finally:
+  if holder is not None:
+   if holder.process.is_alive():holder.process.kill();holder.process.join(3)
+   holder.connection.close()
+  if extra is not None:os.close(extra)
+  if thread is not None:event.set();thread.join(3)
+  if address is not None:libc.munmap(ctypes.c_void_p(address),4096)
+  os.close(fd)
+"""
+    def invoke(self,mode):
+        import subprocess
+        with tempfile.TemporaryDirectory()as directory:
+            path=Path(directory)/'owned_fixture.py';path.write_text(self.SCRIPT)
+            result=subprocess.run(['/usr/bin/python3','-I','-B',str(path),str(Path(__file__).absolute().parent),mode],capture_output=True,text=True,timeout=15)
+            self.assertEqual(result.returncode,0,result.stderr);return json.loads(result.stdout)
+    def test_real_fork_census_birth_lock_and_clean_exit(self):
+        proof=self.invoke('normal');self.assertEqual(proof,{'refused':False,'childCount':1,'controlInherited':False,'birthVerified':True,'exitCode':0,'parentLockHeld':True})
+    def test_real_parent_pipe_eof_releases_child(self):self.assertEqual(self.invoke('eof')['exitCode'],0)
+    def test_real_parent_raising_term_handler_not_inherited(self):self.assertEqual(self.invoke('term')['exitCode'],-15)
+    def test_real_extra_fd_refuses_before_start(self):self.assertTrue(self.invoke('extra-fd')['refused'])
+    def test_real_thread_refuses_before_start(self):self.assertTrue(self.invoke('thread')['refused'])
+    def test_real_owned_mapping_refuses_before_start(self):self.assertTrue(self.invoke('mapping')['refused'])
+    def test_real_parent_anonymous_memory_above_quarter_reserve_refuses(self):self.assertTrue(self.invoke('large-parent')['refused'])
+    def test_real_interruption_after_start_keeps_child_owned_and_reaps(self):self.assertEqual(self.invoke('constructor-interrupt'),{'constructorChildGone':True,'originalReasonPreserved':True})
+
+if __name__=='__main__':unittest.main()

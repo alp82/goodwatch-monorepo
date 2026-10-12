@@ -7,6 +7,7 @@ sys.dont_write_bytecode = True
 import argparse
 from contextlib import contextmanager
 import ctypes
+import errno
 from datetime import datetime, timezone
 import fcntl
 import hashlib
@@ -122,7 +123,7 @@ def load_control(path, policy_hash, code_hash):
     prep=c['cachePreparation']
     if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','postwriteQuiescenceSeconds','helperPath','helperSha256','writerPolicy'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=60 or prep['postwriteQuiescenceSeconds']!=60 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
     if prep['writerPolicy']!={'registrationSeconds': 10, 'prewriteAcceptanceSeconds': 60, 'prewriteSupervisionSeconds': 65, 'kernelWriteSeconds': 60, 'cleanupSeconds': 10, 'lifecycleSeconds': 145, 'receiptLimit': 18, 'censusLimit': 28}:raise ValueError('explicit_cache_preparation_required')
-    cpu0_guards.validate_policy(c['cpuIsolation'])
+    _fixed_cpu_policy(c)
     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
     if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
     if 'pin' not in config['actions']:
@@ -329,7 +330,7 @@ def working_set_admission(policy,inventory):
 
 
 def admission_failure(error):
-    return {key:getattr(error,key) for key in ('admissionFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence','overheadFailureEvidence') if getattr(error,key,None)is not None}
+    return {key:getattr(error,key) for key in ('admissionFailureEvidence','admissionPassedSampleBeforeRefence','sourceLimitFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence','overheadFailureEvidence') if getattr(error,key,None)is not None}
 
 
 def birth_admission(config,spec,policy,*,_entry_baseline=False):
@@ -358,7 +359,7 @@ def birth_admission(config,spec,policy,*,_entry_baseline=False):
             after=lifecycle.entry_resource_context(source)
             if any(outside[role]['identity']!=after[role]['identity'] for role in outside):raise RuntimeError('overhead_identity_changed')
     except BaseException as error:
-        error.admissionFailureEvidence=headroom
+        error.admissionPassedSampleBeforeRefence=headroom
         raise
     proof={'schema':'clone-birth-admission.cpu0-fixed.v2','variant':'cpu0-fixed-capacity.v2','at':at(),'sourceIdentity':list(source.identity),'target':target,'hostCpu':host_cpu,
             **{key:value for key,value in headroom.items() if key!='schema'},
@@ -375,7 +376,8 @@ def _source_cgroup_limits(source,spec,lifecycle):
         if text=='max' and leaf=='memory.high':limits[key]=None
         elif text.isdigit() and int(text)<=2**53-1:limits[key]=int(text)
         else:raise RuntimeError('source_limits_changed')
-    if spec.memory_bytes!=6*pin.GIB or spec.swap_bytes!=6*pin.GIB or limits['memoryMaxBytes']!=spec.memory_bytes or limits['memorySwapMaxBytes']!=0:raise RuntimeError('source_limits_changed')
+    if spec.memory_bytes!=6*pin.GIB or spec.swap_bytes!=6*pin.GIB or limits['memoryMaxBytes']!=spec.memory_bytes or limits['memorySwapMaxBytes']!=0 or limits['memoryHighBytes'] is not None:
+        error=RuntimeError('source_limits_changed');error.sourceLimitFailureEvidence=limits;raise error
     return limits
 
 
@@ -534,8 +536,8 @@ def self_cgroup():
 
 def host_available(floor,*,scope='archive-operation'):
     memory=host_memory()
-    if memory['MemAvailable']<floor:
-        error=RuntimeError('host_emergency_floor')
+    if memory['SwapTotal']!=0 or memory['MemAvailable']<floor:
+        error=RuntimeError('swap_present' if memory['SwapTotal']!=0 else 'host_emergency_floor')
         error.pressureMemoryFailureEvidence={'schema':'clone-pressure-memory.cpu0.v2','scope':scope,'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic(),
             'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableBytes':memory['MemAvailable'],'hostMemAvailableFloorBytes':floor,
             'hostDirtyBytes':memory['Dirty'],'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal']}
@@ -623,11 +625,75 @@ def pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile=False):
     finally:connection.close()
 
 
+
+def _fork_scope_guard(config,parent_connection,child_connection):
+    lifecycle=load_lifecycle(config)
+    try:
+        tasks=os.listdir('/proc/self/task')
+        if len(tasks)!=1 or tasks!=[str(os.getpid())]:raise RuntimeError('overhead_helper_unproven')
+        lock_fd=lifecycle._FORK_FD
+        if type(lock_fd)is not int:raise RuntimeError('overhead_helper_unproven')
+        lifecycle.require_lock(lock_fd)
+        expected={0,1,2,lock_fd,parent_connection.fileno(),child_connection.fileno()}
+        actual=set()
+        names=os.listdir('/proc/self/fd')
+        if len(names)>64:raise RuntimeError('overhead_helper_unproven')
+        for name in names:
+            if not name.isdigit():raise RuntimeError('overhead_helper_unproven')
+            fd=int(name)
+            try:os.fstat(fd)
+            except OSError as error:
+                if error.errno!=errno.EBADF:raise
+                continue  # listdir's already-closed directory descriptor
+            actual.add(fd)
+        if len(expected)!=6 or actual!=expected:raise RuntimeError('overhead_helper_unproven')
+        maps=lifecycle.bounded(Path('/proc/self/maps'),8*1024**2)
+        prefix=os.fsencode(ROOT)+b'/'
+        if any(len(parts:=row.split(None,5))==6 and (parts[5]==os.fsencode(ROOT) or parts[5].startswith(prefix)) for row in maps.splitlines()):raise RuntimeError('overhead_helper_unproven')
+        metrics={}
+        for row in lifecycle.bounded(Path('/proc/self/status'),65536).splitlines():
+            fields=row.split()
+            if fields and fields[0]in (b'RssAnon:',b'VmPTE:'):
+                if len(fields)!=3 or not fields[1].isdigit() or fields[2]!=b'kB':raise RuntimeError('overhead_helper_unproven')
+                metrics[fields[0].decode().rstrip(':')]=int(fields[1])*1024
+        if set(metrics)!={'RssAnon','VmPTE'} or sum(metrics.values())>64*1024**2:raise RuntimeError('overhead_helper_unproven')
+        return metrics
+    except (OSError,ValueError,KeyError):raise RuntimeError('overhead_helper_unproven') from None
+
+
+def _fork_pin_entry(parent_connection,connection,spec,policy,raise_limit,config,raise_own_nofile):
+    parent_connection.close()
+    signal.signal(signal.SIGTERM,signal.SIG_DFL)
+    signal.signal(signal.SIGINT,signal.default_int_handler)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK,{signal.SIGTERM,signal.SIGINT})
+    pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile)
+
+
 class PinChild:
     def __init__(self,spec,policy,raise_limit,config,raise_own_nofile=False):
         self.config=config;self.failure_details=None
-        multiprocessing.set_executable('/usr/bin/python3');context=multiprocessing.get_context('spawn');self.connection,child=context.Pipe()
-        self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config,raise_own_nofile));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
+        context=multiprocessing.get_context('fork');self.connection,child=context.Pipe()
+        self.process=context.Process(target=_fork_pin_entry,args=(self.connection,child,spec,policy,raise_limit,config,raise_own_nofile))
+        self.spec=spec;self.previous=None;self.pressure_active=False
+        try:
+            self.fork_scope_metrics=_fork_scope_guard(config,self.connection,child)
+            # Preserve constructor ownership if a controller signal arrives during start.
+            previous_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
+            try:self.process.start()
+            finally:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask)
+            child.close()
+        except BaseException as error:
+            for endpoint in (self.connection,child):
+                try:endpoint.close()
+                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            if self.process.pid is not None:
+                try:
+                    self.process.join(1)
+                    if self.process.is_alive():self.process.terminate();self.process.join(5)
+                    if self.process.is_alive():self.process.kill();self.process.join(5)
+                    error.childFailureDetails={'constructorChildGone':not self.process.is_alive(),'constructorChildExitCode':self.process.exitcode}
+                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            raise
     def request(self,pressure=False):
         before=runtime.accounting(inspect_source(self.spec))
         if self.previous is not None:limits(self.previous,before,pressure=pressure and self.pressure_active,scope='held-pin-prior-to-pass')
@@ -817,7 +883,7 @@ def _stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,r
         if source is not None:
             try:cpu_after=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
             except BaseException as snapshot_error:cpu_snapshot_failure=safe_control_reason(snapshot_error)
-        emit({'schema':'search.clone-mlock-control.v3','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0,**admission_failure(error)})
+        emit({'schema':'search.clone-mlock-control.v3','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None) or getattr(error,'childFailureDetails',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0,**admission_failure(error)})
         raise
     finally:
         # Preserve the phase cause; cleanup evidence is a separate observation.
