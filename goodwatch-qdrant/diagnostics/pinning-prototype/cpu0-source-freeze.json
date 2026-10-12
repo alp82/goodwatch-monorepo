@@ -1,20 +1,22 @@
 {
-  "schema": "search.clone-cpu0-source-freeze.v1",
+  "schema": "search.clone-cpu0-owned-source-freeze.v1",
   "preparedOnly": true,
   "helperCodeSha256": "4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5",
   "files": {
     "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
     "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
     "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
-    "controller_cpu0.py": "42e21d216e7fca3bf52a5d6fec954645453b999585975bb31bbbd3c309e74ec8",
+    "controller_cpu0.py": "a832f538cbbb38f731204f8bb7487c9932c445fbb741c2c9fbe3ac3dd2b2b890",
     "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
-    "cpu0_preflight.py": "68056d9dd2c079cb3d2ad5da3431c7f080535bbc60edfb2a1f556f08be2d2219",
-    "turnover_gate_cpu0.py": "ca5d3a40987801f39bad4d40d52739ca9a2e67077f241ab0f8809313a413b46d",
+    "cpu0_preflight.py": "bb94a14dc789ec5e70e5b13fd61cf2508a950490ed85ae1f4c3dcba919e35061",
+    "turnover_gate_cpu0.py": "48c05330ff7c6b9984e227b146286e8158fe8a50c9d62fa6f152966cc7572768",
     "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
-    "prepared-control-policy-cpu0.json": "bada24aa27efb668ab72dc59994307fb17e37fa4ce0fe221b2784aa2fd705af9",
+    "prepared-control-policy-cpu0.json": "ccf8950a5d408b2aa9d3298f568062d4f7564aa1477679c7b68e0dd2e70dc608",
     "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
-    "test_cpu0_controller.py": "c2c0a44285bd1092bbb0287c453cbe7836e4bc8dacc8d458673b6bf5580f1ea3",
-    "CPU0.md": "3209f4b46708372b16db4195d1e74c71521862fda99f443f056c2099ae0b6946"
+    "test_cpu0_controller.py": "6c91f5479733a114d03ce23b671a8a35f6c0f1d8c85138017a7cf9bd4cf954f1",
+    "CPU0.md": "629c356eda4b31870f55d895642cda67756bae222516c67a7e80b9efca2ccb20",
+    "lifecycle_cpu0.py": "ecc491719b3e445cef76cf1680f4784f5bbd7d925ae82c730332e84291c88d39",
+    "test_lifecycle_cpu0.py": "8b4bc75954325982211dddb5f7c43e57127f45a81fe12abad575b777f465070c"
   },
   "pinProvenance": {
     "sourceCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
@@ -25,5 +27,6 @@
     ]
   },
   "oldFilesChanged": false,
-  "benchmarkPacketReady": false
+  "benchmarkPacketReady": false,
+  "variant": "cpu0-owned-lifecycle.v1"
 }

@@ -46,7 +46,7 @@ def load_control(path, policy_hash, code_hash):
     if len(raw) > 16384 or hashlib.sha256(raw).hexdigest() != policy_hash or digest(__file__) != code_hash:
         raise ValueError('control_freeze_changed')
     c = json.loads(raw)
-    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds','controlReadySeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation','cpuIsolation'} or c['schema'] != 'clone-pin-control.cpu0.v1':
+    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds','controlReadySeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation','cpuIsolation','lifecycle'} or c['schema'] != 'clone-pin-control.cpu0-owned.v1':
         raise ValueError('explicit_control_policy_required')
     if c['pressurePlacement'] != 'controller-original-cgroup': raise ValueError('pressure_placement_required')
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
@@ -71,7 +71,32 @@ def load_control(path, policy_hash, code_hash):
         raise ValueError('pin_capability_missing')
     global CPU_POLICY
     CPU_POLICY=c['cpuIsolation']
+    load_lifecycle(c)
     return c, spec, policy
+
+
+def load_lifecycle(config):
+    value=config['lifecycle'];path=MODULE_DIR/'lifecycle_cpu0.py'
+    if set(value)!={'modulePath','moduleSha256','entrypointSha256','stopSeconds','handoffPath','oldCleanReceiptPath'} or value['modulePath']!=str(path) or not re.fullmatch('[a-f0-9]{64}',value['moduleSha256']) or value['entrypointSha256']!='f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e' or type(value['stopSeconds'])is not int or value['stopSeconds']!=20 or value['handoffPath']!=str(ROOT/'cpu0-lifecycle-handoff-v1.json') or value['oldCleanReceiptPath']!=str(ROOT/'cpu0-old-clean-receipt-v1.json'):
+        raise RuntimeError('lifecycle_freeze_changed')
+    if path.resolve()!=path:raise RuntimeError('lifecycle_freeze_changed')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        a=os.fstat(fd);raw=os.read(fd,65537);b=os.fstat(fd);current=path.lstat()
+        sig=lambda s:(s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_mode,s.st_uid,s.st_nlink)
+        if not stat.S_ISREG(a.st_mode) or a.st_uid!=os.geteuid() or a.st_nlink!=1 or stat.S_IMODE(a.st_mode)!=0o600 or len(raw)>65536 or sig(a)!=sig(b) or sig(b)!=sig(current) or hashlib.sha256(raw).hexdigest()!=value['moduleSha256']:raise RuntimeError('lifecycle_freeze_changed')
+    finally:os.close(fd)
+    module=sys.modules.get('lifecycle_cpu0')
+    if module is not None:
+        if Path(module.__file__).resolve()!=path or getattr(module,'_AUTHENTICATED_SOURCE_SHA256',None)!=value['moduleSha256']:raise RuntimeError('lifecycle_freeze_changed')
+    else:
+        module=types.ModuleType('lifecycle_cpu0');module.__file__=str(path);sys.modules['lifecycle_cpu0']=module
+        try:
+            exec(compile(raw,str(path),'exec'),module.__dict__)
+            module._AUTHENTICATED_SOURCE_SHA256=hashlib.sha256(raw).hexdigest()
+        except BaseException:
+            sys.modules.pop('lifecycle_cpu0',None);raise
+    return module
 
 
 def load_cache_preparation(config):
@@ -93,7 +118,9 @@ def load_cache_preparation(config):
 
 def prepare_cache(config,spec,policy,lock_fd,raise_own_nofile=False):
     helper=load_cache_preparation(config)
-    return helper.under_control_lock(sys.modules[__name__],config,spec,policy,lock_fd,quiescence_seconds=config['cachePreparation']['quiescenceSeconds'],postwrite_seconds=config['cachePreparation']['postwriteQuiescenceSeconds'],raise_own_nofile=raise_own_nofile)
+    lifecycle=load_lifecycle(config)
+    with lifecycle.helper_fork_scope(lock_fd):
+        return helper.under_control_lock(sys.modules[__name__],config,spec,policy,lock_fd,quiescence_seconds=config['cachePreparation']['quiescenceSeconds'],postwrite_seconds=config['cachePreparation']['postwriteQuiescenceSeconds'],raise_own_nofile=raise_own_nofile)
 
 
 def frozen_helper(config):
@@ -144,16 +171,35 @@ def owned_store_files(store):
 
 
 def clone_command(*args):
+    if len(args)!=2 or args[0]!='start' or args[1]!='gw-qdrant-cpu0-100-20261012':raise RuntimeError('lifecycle_target_refused')
     try:
         subprocess.run(['/usr/bin/docker',*args],check=True,timeout=35,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     except (OSError,subprocess.SubprocessError):raise RuntimeError('clone_control_command_failed') from None
 
 
-def cold(spec):
+def birth_admission(config,spec,policy):
+    lifecycle=load_lifecycle(config)
+    host_cpu=cpu0_guards.host_cpu();host_floor=max(policy.emergency_bytes,5*pin.GIB);host_available(host_floor);allocated=owned_total_budget();disk_free=shutil.disk_usage(ROOT).free
+    if disk_free<=3*pin.GIB:raise RuntimeError('owned_total_disk_budget')
+    host={l.split(':',1)[0]:int(l.split()[1])*1024 for l in Path('/proc/meminfo').read_text().splitlines()}
+    if host['SwapTotal']!=0:raise RuntimeError('swap_present')
+    if host['MemAvailable']<host_floor:raise RuntimeError('host_emergency_floor')
+    source=inspect_source(spec);hierarchy=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
+    runtime.accounting(source);guard_shards(source)
+    request=urllib.request.Request('http://127.0.0.1:16333/collections/media_fingerprint_v1',headers={'Connection':'close'})
+    with urllib.request.urlopen(request,timeout=2)as response:info=json.load(response)['result']
+    if (info['status'],info['optimizer_status'],info['points_count'],info['segments_count'],info['config']['params']['shard_number'])!=('green','ok',244262,12,6):raise RuntimeError('cold_collection_shape_changed')
+    target=lifecycle.attest(spec.container,runtime.docker)
+    if target['qdrant']['pid']!=source.pid or target['qdrant']['startTicks']!=source.identity[3] or inspect_source(spec).identity!=source.identity:raise RuntimeError('lifecycle_process_changed')
+    return {'schema':'clone-birth-admission.cpu0-owned.v1','variant':'cpu0-owned-lifecycle.v1','at':at(),'sourceIdentity':list(source.identity),'target':target,'hostCpu':host_cpu,'hostMemAvailableBytes':host['MemAvailable'],'hostSwapBytes':0,'hostMemAvailableFloorBytes':host_floor,'ownedAllocatedBytes':allocated,'ownedAllocatedCeilingBytes':11*pin.GIB,'diskFreeBytes':disk_free,'diskFreeFloorBytes':3*pin.GIB,'cpuHierarchy':hierarchy,'pointCount':244262,'segmentCount':12,'shardCount':6,'clientsClosed':True}
+
+
+def cold(spec,config,policy,lock_fd):
     # Only owned container and clean owned store pages; never global drop_caches.
     cpu0_guards.host_cpu()
+    lifecycle=load_lifecycle(config)
     inspect_stopped_or_running(spec)
-    clone_command('stop','--time','20',spec.container)
+    stopped=lifecycle.graceful_stop(spec.container,runtime.docker,lock_fd,protected_pids=(os.getpid(),os.getppid()))
     if inspect_stopped_or_running(spec)['State']['Running']: raise RuntimeError('clone_not_stopped')
     files, allocated = owned_store_files(spec.store);owned_total_budget();kernel = pin.Kernel(); resident = 0
     for path,identity in files:
@@ -171,11 +217,13 @@ def cold(spec):
     available = next(int(l.split()[1])*1024 for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:'))
     if available <= 5*pin.GIB or shutil.disk_usage(ROOT).free <= 3*pin.GIB:
         raise RuntimeError('cold_start_headroom')
-    inspect_stopped_or_running(spec); clone_command('start',spec.container)
+    lifecycle.require_clean_receipt(lifecycle.state_snapshot(inspect_stopped_or_running(spec)),stopped)
+    clone_command('start',spec.container)
     deadline = time.monotonic()+90
     while time.monotonic()<deadline:
         try:
-            with urllib.request.urlopen('http://127.0.0.1:16333/collections/media_fingerprint_v1',timeout=2) as response:
+            request=urllib.request.Request('http://127.0.0.1:16333/collections/media_fingerprint_v1',headers={'Connection':'close'})
+            with urllib.request.urlopen(request,timeout=2) as response:
                 info=json.load(response)['result']
             if info['status']=='green' and info['optimizer_status']=='ok':
                 if info['points_count']!=244262 or info['segments_count']!=12 or info['config']['params']['shard_number']!=6:raise RuntimeError('cold_collection_shape_changed')
@@ -183,10 +231,11 @@ def cold(spec):
         except OSError: pass
         time.sleep(1)
     else:
-        clone_command('stop','--time','3',spec.container); raise RuntimeError('clone_readiness_failed')
+        raise RuntimeError('clone_readiness_failed')
     source = inspect_source(spec);guard_shards(source)
+    admission=birth_admission(config,spec,policy)
     return {'at':at(),'actualQdrantPid':source.pid,'sourceStartTicks':source.identity[3],'ownedFiles':len(files),'ownedAllocatedBytes':allocated,'residentPagesAfterEviction':resident,
-            'shardCount':6,'pointCount':daemon.integer(info['points_count'],1),'segmentCount':daemon.integer(info['segments_count'],1)}
+            'shardCount':6,'pointCount':daemon.integer(info['points_count'],1),'segmentCount':daemon.integer(info['segments_count'],1),'cleanStop':stopped,'birthAdmission':admission}
 
 
 def process_counters(source):
@@ -412,9 +461,11 @@ def query_lease(seconds,reader=sys.stdin,clock=time.monotonic):
     if line.count(b'\n')!=1 or not line.endswith(b'\n') or json.loads(line)!={'stage':'query-finished'}:raise RuntimeError('invalid_query_ack')
 
 
-def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,raise_own_nofile=False):
+def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,raise_own_nofile=False,handoff_sha=None):
     if phase not in ('baseline','candidate'): raise ValueError('phase_required')
-    manager=None; lock_fd=None;cpu_before=None;cpu_after=None;source=None
+    manager=None; lock_fd=None;cpu_before=None;cpu_after=None;source=None;lifecycle=None
+    original_emit=emit
+    emit=lambda row:original_emit({'variant':'cpu0-owned-lifecycle.v1',**row})
     try:
         frozen_helper(config);load_cache_preparation(config)
         if ROOT.resolve()!=ROOT:raise RuntimeError('owned_root_changed')
@@ -422,7 +473,10 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         s=os.fstat(lock_fd)
         if not stat.S_ISREG(s.st_mode) or s.st_uid!=os.geteuid() or s.st_nlink!=1: raise RuntimeError('invalid_control_lock')
         fcntl.flock(lock_fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        original_group=self_cgroup();archive_verified=verify_archive(policy.emergency_bytes);cold_state=cold(spec);source=inspect_source(spec)
+        os.set_inheritable(lock_fd,False)
+        lifecycle=load_lifecycle(config);lifecycle.require_lock(lock_fd);lifecycle.read_handoff(runtime.docker,handoff_sha)
+        initial_admission=birth_admission(config,spec,policy)
+        original_group=self_cgroup();archive_verified=verify_archive(policy.emergency_bytes);cold_state=cold(spec,config,policy,lock_fd);source=inspect_source(spec)
         if original_group==source.cgroup_relative:raise RuntimeError('controller_pressure_already_in_clone_cgroup')
         cpu_before=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
         preparation=prepare_cache(config,spec,policy,lock_fd,raise_own_nofile=raise_own_nofile)
@@ -434,7 +488,10 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
             nonresident=sum((initial['classesMeasured'][k]['dataPages']-initial['classesMeasured'][k]['residentDataPages'])*initial['pageBytes'] for k in ('vector','graph','sparse','other'))
             current=daemon.account(initial['accounting']);cap=current['cgroupMaxBytes']
             if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:raise RuntimeError('initial_cap_fit_inconclusive')
-            pin_proc_before=process_counters(source);manager=PinChild(spec,policy,raise_own_memlock,config,raise_own_nofile=raise_own_nofile);pin_state=manager.request();pin_proc_after=process_counters(source)
+            pin_proc_before=process_counters(source)
+            with lifecycle.helper_fork_scope(lock_fd):
+                manager=PinChild(spec,policy,raise_own_memlock,config,raise_own_nofile=raise_own_nofile)
+            pin_state=manager.request();pin_proc_after=process_counters(source)
             limits(initial['accounting'],pin_state['accountingBefore'],scope='inventory-to-pin')
             if pin_state['selectionHash']!=initial['selectionHash']: raise RuntimeError('initial_cohort_changed')
         before=runtime.accounting(source);limits(initial['accounting'],before,scope='baseline-inventory-to-pressure') if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
@@ -453,7 +510,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
             if final['selectionHash']!=initial['selectionHash'] or final['newLockBytes']!=0 or final['rangesChanged']: raise RuntimeError('candidate_cohort_changed')
         else:final=None;pin_state=None
         frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before,scope='inventory-to-query');query_proc_before=process_counters(source);query_started=at()
-        emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','cpuHierarchyBefore':cpu_before,'phase':phase,'at':at(),'diagnosticReadySeconds':config['controlReadySeconds'],'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
+        emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','cpuHierarchyBefore':cpu_before,'initialAdmission':initial_admission,'birthAdmission':cold_state['birthAdmission'],'phase':phase,'at':at(),'diagnosticReadySeconds':config['controlReadySeconds'],'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
               'selectionHash':initial['selectionHash'],'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
               'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
         query_lease(config['queryLeaseSeconds'])
@@ -475,7 +532,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         if source is not None:
             try:cpu_after=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
             except BaseException as snapshot_error:cpu_snapshot_failure=safe_control_reason(snapshot_error)
-        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0})
         raise
     finally:
         # Preserve the phase cause; cleanup evidence is a separate observation.
@@ -483,6 +540,10 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         try:
             if manager is not None:manager.close()
             released=True
+            if original_error is None:
+                lifecycle.require_lock(lock_fd)
+                handoff=lifecycle.commit_handoff(runtime.docker,handoff_sha,'controller')
+                emit({'schema':'search.clone-mlock-control.v2','stage':'handoff-complete','phase':phase,'at':at(),'handoff':handoff,'queries':0,'storageContentWrites':0})
         except BaseException as error:cleanup_error=error
         finally:
             if lock_fd is not None:os.close(lock_fd)
@@ -495,6 +556,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
 CONTROL_REASONS=frozenset(('archive_checksum_or_identity_changed', 'archive_fd_path_identity', 'archive_identity_failed', 'archive_path_changed_before_advice', 'archive_path_scope', 'archive_scope', 'archive_store_inode_alias', 'archive_verification_bound', 'archive_verification_failed', 'candidate_cohort_changed', 'clone_control_command_failed', 'clone_identity_ambiguous', 'clone_identity_changed', 'clone_mount_changed', 'clone_not_stopped', 'clone_readiness_failed', 'clone_resource_or_port_changed', 'cold_collection_shape_changed', 'cold_eviction_not_complete', 'cold_inode_changed', 'cold_start_headroom', 'control_freeze_changed', 'controller_cgroup_missing', 'controller_interrupted', 'controller_pressure_already_in_clone_cgroup', 'counter_pid_reused', 'counter_reset', 'counter_source_changed', 'explicit_control_arguments_required', 'explicit_control_policy_required', 'explicit_pressure_floor_required', 'helper_timing_policy_changed', 'fixed_readonly_archive_required', 'gate_freeze_changed', 'gate_interrupted', 'guard_or_runtime_failure', 'helper_freeze_changed', 'host_emergency_floor', 'initial_cap_fit_inconclusive', 'initial_cohort_changed', 'invalid_control_lock', 'invalid_pin_command', 'invalid_query_ack', 'join_source_changed', 'mapped_shard_coverage_missing', 'negative_missing_pages_inconclusive', 'owned_inode_alias', 'owned_nonregular', 'owned_root_changed', 'owned_root_nonregular', 'owned_root_symlink', 'owned_size_guard', 'owned_symlink', 'owned_total_disk_budget', 'parent_already_clone_cgroup', 'parent_cgroup_changed', 'parent_inspection_inside_clone_cgroup', 'phase_required', 'phase_resource_failed', 'pin_capability_missing', 'pin_child_cleanup', 'pin_child_exit_failed', 'pin_child_exit_unproven', 'pin_child_failed', 'pin_child_placement', 'pin_child_timeout', 'pin_holder_lock_proof_missing', 'pin_release_unproven', 'predeclared_negative_control_required', 'pressure_bound_failed', 'pressure_cannot_fit_deadline', 'pressure_cohort_changed', 'pressure_ledger_missing', 'pressure_placement_required', 'pressure_writer_placement_changed', 'query_cohort_changed', 'query_lease_eof', 'query_lease_timeout', 'query_pin_cohort_changed', 'query_source_changed', 'source_changed_during_pressure', 'source_rpc_budget', 'source_rpc_failed', 'source_rpc_spec_changed', 'source_rpc_timeout', 'source_spec_changed', 'turnover_not_fresh', 'turnover_readiness_failed', 'turnover_shape_changed', 'zero_child_cleanup_failed', 'zero_child_exit_unproven', 'zero_child_lease_failed', 'zero_child_timeout', 'zero_join_failed', 'zero_join_proof_missing', 'zero_pin_proof_missing')) | pin.SAFE_REASONS
 
 CONTROL_REASONS |= cpu0_guards.REASONS | frozenset(('cpu_phase_source_unavailable','pressure_finalization_failed'))
+CONTROL_REASONS |= frozenset(('lifecycle_target_refused','lifecycle_freeze_changed','lifecycle_process_changed','lifecycle_wrapper_unreviewed','lifecycle_recovery_allowed','lifecycle_membership_changed','lifecycle_connection_present','lifecycle_connection_unknown','lifecycle_reader_placement','lifecycle_lock_unproven','lifecycle_stop_timeout','lifecycle_stop_unclean','lifecycle_clean_receipt_missing','lifecycle_handoff_changed','lifecycle_handoff_invalid','lifecycle_fork_scope_active','lifecycle_guard_or_runtime_failure','lifecycle_pidfd_close_failed','lifecycle_lock_close_failed','lifecycle_handoff_cleanup_failed'))
 
 CONTROL_REASONS |= frozenset(('explicit_cache_preparation_required','cache_preparation_freeze_changed','cache_preparation_policy_changed','source_changed_after_cache_preparation','source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded','postwrite_zero_timeout','postwrite_sample_bound_exceeded','writer_birth_unavailable','writer_birth_changed','writer_registration_failed','writer_parent_changed','writer_interrupted','writer_cleanup_unproven','writer_registration_timeout','writer_protocol_failed','writer_prewrite_timeout'))
 
@@ -504,17 +566,18 @@ def safe_control_reason(error):
 
 def main(argv=None):
     parser=daemon.SafeParser(description=__doc__); parser.add_argument('--config');parser.add_argument('--policy-sha256');parser.add_argument('--code-sha256')
+    parser.add_argument('--handoff-sha256')
     parser.add_argument('--phase',choices=('baseline','candidate'));parser.add_argument('--case-tag',choices=('coverage-history-080628','coverage-history-083054','heldout-person','heldout-description','heldout-unseen-native','control-native-title','control-low-vote-title'));parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--raise-own-memlock',action='store_true');parser.add_argument('--raise-own-nofile',action='store_true')
     emit=lambda x:print(json.dumps(x,sort_keys=True),flush=True)
     try:
         args=parser.parse_args(argv)
         if not args.execute_reviewed:
             emit({'schema':'search.clone-mlock-control.v2','stage':'prepared-only','execution':False,'queries':0,'storageContentWrites':0});return 0
-        if not args.config or not args.phase or not args.case_tag: raise ValueError('explicit_control_arguments_required')
+        if not args.config or not args.phase or not args.case_tag or not args.handoff_sha256: raise ValueError('explicit_control_arguments_required')
         def interrupted(signum,frame):raise RuntimeError('controller_interrupted')
         signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGINT,interrupted)
         c,spec,policy=load_control(args.config,args.policy_sha256,args.code_sha256)
-        stage(c,spec,policy,args.phase,lambda x:emit({**x,'helperCodeSha256':c['helperCodeSha256'],'helperPolicySha256':c['helperPolicySha256'],'controllerCodeSha256':args.code_sha256,'controllerPolicySha256':args.policy_sha256}),args.raise_own_memlock,args.case_tag,args.raise_own_nofile)
+        stage(c,spec,policy,args.phase,lambda x:emit({**x,'helperCodeSha256':c['helperCodeSha256'],'helperPolicySha256':c['helperPolicySha256'],'controllerCodeSha256':args.code_sha256,'controllerPolicySha256':args.policy_sha256}),args.raise_own_memlock,args.case_tag,args.raise_own_nofile,args.handoff_sha256)
         return 0
     except BaseException as error:
         reason=safe_control_reason(error)

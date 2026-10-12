@@ -4,6 +4,7 @@
     "helperSha256": "f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5",
     "maxSeconds": 60,
     "mode": "post-cold-owned-cgroup-reclaim",
+    "postwriteQuiescenceSeconds": 60,
     "quiescenceSeconds": 60,
     "requestedBytes": 3221225472,
     "writerPolicy": {
@@ -15,14 +16,27 @@
       "prewriteSupervisionSeconds": 65,
       "receiptLimit": 18,
       "registrationSeconds": 10
-    },
-    "postwriteQuiescenceSeconds": 60
+    }
   },
   "controlReadySeconds": 1200,
+  "cpuIsolation": {
+    "cpusetCpus": "",
+    "cpusetMems": "",
+    "periodMicros": 100000,
+    "weight": 100
+  },
   "helperCodeSha256": "4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5",
   "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/helper-config.json",
   "helperPolicySha256": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
   "initialPinRequestSeconds": 180,
+  "lifecycle": {
+    "entrypointSha256": "f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e",
+    "handoffPath": "/root/goodwatch-qdrant-cold-406-20261011/cpu0-lifecycle-handoff-v1.json",
+    "modulePath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/lifecycle_cpu0.py",
+    "moduleSha256": "ecc491719b3e445cef76cf1680f4784f5bbd7d925ae82c730332e84291c88d39",
+    "oldCleanReceiptPath": "/root/goodwatch-qdrant-cold-406-20261011/cpu0-old-clean-receipt-v1.json",
+    "stopSeconds": 20
+  },
   "mechanismNegativeTags": [
     "control-native-title"
   ],
@@ -37,12 +51,6 @@
   "pressurePlacement": "controller-original-cgroup",
   "queryLeaseSeconds": 60,
   "reconcileIntervalSeconds": 10,
-  "schema": "clone-pin-control.cpu0.v1",
-  "steadyPinRequestSeconds": 30,
-  "cpuIsolation": {
-    "periodMicros": 100000,
-    "weight": 100,
-    "cpusetCpus": "",
-    "cpusetMems": ""
-  }
+  "schema": "clone-pin-control.cpu0-owned.v1",
+  "steadyPinRequestSeconds": 30
 }
