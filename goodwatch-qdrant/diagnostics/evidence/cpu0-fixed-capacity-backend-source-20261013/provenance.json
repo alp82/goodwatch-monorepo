@@ -10,21 +10,21 @@
     "v1-opus-result.json": "a8c86224eaf13c6eadd4f1db6847c23795df7daf45f2643c3bd8593a6ed3ea7e",
     "v1-opus-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "v1-prompt-private-retained-sha256": "1b706779c502e7a25b80944ea0446971c1da85b544266c1a40093bbb55f6d8e3",
-    "v1-source.diff": "18bf01a9ee0fbb5be0b25f8d2e224db8f4bf61d640b184f2942d74e4435f5aa8",
+    "v1-source.diff.gz": "a651e87bdf7ca5b47653d9d53a036a22be5bf98f9c62da8fe2fe629a8a9afab4",
     "v1-test-review-receipt.json": "91c93bbc2269d980f06a94eb2a90673190cd935fd3b7c7e85a1036135952bc82",
     "v2-manifest.json": "e71e94a9bd85faa7207e0437531ff4b923e93da0bf5e67f82642ba720167c9ce",
     "v2-opus-report.txt": "8d63f0c252896aec10dba4868505ee9a20e7c693724906c51eaa77b47a769f5c",
     "v2-opus-result.json": "13ca3bebd693f2e600fc76f49a5f9dd63889b55f152ec1c282c604b42ebe9c1b",
     "v2-opus-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "v2-prompt-private-retained-sha256": "f3f0fe3f3546c570641749faa3cb522afdb00101ee61e08ae00bfee713c49c85",
-    "v2-source.diff": "6e0a8f7f9ec3d643c906b69881d59a9ed9d07790ee2691e8761132536501646d",
+    "v2-source.diff.gz": "0970b3c206c0337af5b2442dd420a6e184150742815324f78f13beff7a70cebb",
     "v3-manifest.json": "e17f785d00994fa38da9d212a6f9607a2506dc4fa1125cfc0e54923104b59d93",
     "v3-opus-report.txt": "128cd8f6e9bbf2f9cef78504fb4d630708580877c243d2b8f64cb14177dc9e80",
     "v3-opus-result.json": "7edcc277233fe6bb2a4137e8f2841ecda27da452ebed1137ca260eb257c3d7a7",
     "v3-opus-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "v3-prompt-private-retained-sha256": "4e8c3e174ff423d35ea1e7ebb01c5ac6e93998b59ad306cac2030e27a3683815",
     "v3-source-review-receipt.json": "e4d86a41b40db4e0d90e8f0ed83db47a699b633a1a2f60f6c4f8afca316b2ebf",
-    "v3-source.diff": "323dcb31fab27aae6bd3ecf5c9d937519876776a4cfaf5cdcd3e0049372d02e0",
+    "v3-source.diff.gz": "021858c8f231c559b34f907dd83dd838c95935bdb4047195b4795d83df00cb04",
     "v3-test-receipt.json": "131237f3e59bb7e6777feae312f95f46c05811c1886bea367bd0c8181256ddb0"
   },
   "authorSourceHead": "1aae3c10531cd9aebaa5ed03b510dc8d1fe68c66",
@@ -48,5 +48,10 @@
     "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
     "test_lifecycle_cpu0.py": "20181fa6b5014e4a8074f7b837234122fe115150a517123fa67ae64efc513acc",
     "turnover_gate_cpu0.py": "17f4495253d3db84cb2218079d14cc614127068549f166f46184bdcb9a5278fc"
+  },
+  "uncompressedDiffSha256": {
+    "v1-source.diff.gz": "18bf01a9ee0fbb5be0b25f8d2e224db8f4bf61d640b184f2942d74e4435f5aa8",
+    "v2-source.diff.gz": "6e0a8f7f9ec3d643c906b69881d59a9ed9d07790ee2691e8761132536501646d",
+    "v3-source.diff.gz": "323dcb31fab27aae6bd3ecf5c9d937519876776a4cfaf5cdcd3e0049372d02e0"
   }
 }

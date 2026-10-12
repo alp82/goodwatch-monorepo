@@ -10,7 +10,7 @@ Historical 08ea and 990 BLOCK reports, their raw model results, and the conditio
 
 The corrected backend emits `released=false` and `pinChildExited=false` for unknown or live constructor children. Current JS requires both `released` and `pinChildExited` to be true to recognize cleanup, but its safe failure projection drops `childFailureDetails` and `released.cleanupReason`; the original backend frames retain those facts. Backend and JS closed reason enums match exactly at 273 entries. This component does not establish complete external cleanup. The historical integrated review used 990; a final successor review of the complete backend, external, registration and consumer closure remains required.
 
-`provenance.json` binds the copied reports, raw CLI results, immutable deltas and source manifest. Prompt bytes remain in the local review archive and are hash-referenced, rather than duplicated here. To check the source manifest, hash each named file under `diagnostics/pinning-prototype` and compare it with `sourceFiles`. To reproduce local fixtures from that directory, run both discovery patterns:
+`provenance.json` binds the copied reports, raw CLI results, immutable gzip-compressed deltas (original-byte hashes are also retained) and source manifest. Prompt bytes remain in the local review archive and are hash-referenced, rather than duplicated here. To check the source manifest, hash each named file under `diagnostics/pinning-prototype` and compare it with `sourceFiles`. To reproduce local fixtures from that directory, run both discovery patterns:
 
 ```sh
 /usr/bin/python3 -I -B -m unittest discover -s . -p 'test_*.py'
