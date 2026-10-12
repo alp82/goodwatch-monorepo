@@ -14,7 +14,7 @@ import types
 
 sys.dont_write_bytecode=True
 MAX_INPUT=8*1024**2
-MODULES=('packet','reason_codes','admission','census','setup','stager','registration','producer','executor')
+MODULES=('packet','reason_codes','admission','census','setup','recovery','stager','registration','producer','executor')
 NAMES=frozenset(name+'.py' for name in MODULES)
 
 
@@ -35,7 +35,7 @@ def decode(raw,expected_sha):
         content=base64.b64decode(encoded,validate=True);total+=len(content)
         if len(content)>262144 or digest(content)!=value['manifest']['files'][name]:raise RuntimeError('bootstrap_file_changed')
         files[name]=content
-    if total>2*1024**2 or value['operation'] not in ('setup','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup') or not isinstance(value['arguments'],dict):raise RuntimeError('bootstrap_operation_invalid')
+    if total>2*1024**2 or value['operation'] not in ('setup','setup-recover-never-started','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup') or not isinstance(value['arguments'],dict):raise RuntimeError('bootstrap_operation_invalid')
     return value,files
 
 
@@ -50,6 +50,7 @@ def execute(raw,expected_sha):
         module.__package__='';sys.modules[name]=module
         exec(compile(files[name+'.py'],module.__file__,'exec'),module.__dict__)
         module._AUTHENTICATED_EXTERNAL_SHA256=digest(files[name+'.py'])
+        module._AUTHENTICATED_EXTERNAL_CLOSURE_SHA256=expected_sha
     return sys.modules['executor'].dispatch(value['operation'],value['arguments'])
 
 

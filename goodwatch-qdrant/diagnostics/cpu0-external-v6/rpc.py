@@ -13,7 +13,7 @@ from packet import canonical,hash_value,sha
 from bootstrap import MODULES
 
 ROOT='/root/goodwatch-qdrant-cold-406-20261011'
-HOSTS={'setup':'root@10.0.0.32','preflight':'root@10.0.0.32','stage':'root@10.0.0.32',
+HOSTS={'setup-recover-never-started':'root@10.0.0.32','setup':'root@10.0.0.32','preflight':'root@10.0.0.32','stage':'root@10.0.0.32',
        'turnover':'root@10.0.0.32','outer-admit':'root@10.0.0.32',
        'register-consumer':'root@10.0.0.32','cleanup':'root@10.0.0.32',
        'producer-stream':'root@10.0.0.21','producer-cleanup':'root@10.0.0.21',
