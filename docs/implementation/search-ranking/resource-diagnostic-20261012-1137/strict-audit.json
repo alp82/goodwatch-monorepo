@@ -1,0 +1,11 @@
+{
+  "event": "resource-window.audit.v1",
+  "samples": 15,
+  "coverage": "complete",
+  "problems": [],
+  "readerGoneProven": true,
+  "cleanReaderExitProven": true,
+  "futureCeilingEstablished": false,
+  "productionAcceptance": false,
+  "journalSha256": "1f7ca514ffe14d6da86e04f479c774d12bfaffaa1fd1070bfc3aa15b21e16491"
+}

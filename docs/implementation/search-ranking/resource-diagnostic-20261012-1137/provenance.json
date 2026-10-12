@@ -1,0 +1,74 @@
+{
+  "schema": "goodwatch.resource-window.short-diagnostic.provenance.v2",
+  "authorPreparedCommit": "d97284314f27d17cd22c63df99d3fb3508f0d3fd",
+  "mergedReaderCommit": "5fe7d597528eecba132619ce5aba1692094ca3cf",
+  "actualJournal": true,
+  "actualReaderExitCode": 0,
+  "actualReaderGoneProven": true,
+  "actualCleanReaderExit": true,
+  "rootOwnedHostExecution": true,
+  "authorHostOperations": 0,
+  "sourceReaderSha256": "572ad7ca417ea4e5336b1415a4d015b7095d78f21cb0b5552f360f73914394d2",
+  "files": {
+    "guard-diagnostic-summary-20261012-1136-v2.json": {
+      "sha256": "0dcf0882ad157d8a14a7d559f6a76474bf3c5dfac8bb60c29b4b525adbc47dbb",
+      "bytes": 3866
+    },
+    "opus-review-provenance.json": {
+      "sha256": "6f1ec857c8480c996ac6dab3006f0a259e6671714a98aca8f2ca40d19cd11352",
+      "bytes": 627
+    },
+    "fresh-preflight-20261012-1134-v2.jsonl": {
+      "sha256": "a2ff21c89b11f62a0b06d2a648dfceddf1960b57e7101ce27fc0ebde8c3d2402",
+      "bytes": 1478
+    },
+    "guard-diagnostic-actual-20261012-1136-v2.jsonl": {
+      "sha256": "1f7ca514ffe14d6da86e04f479c774d12bfaffaa1fd1070bfc3aa15b21e16491",
+      "bytes": 70836
+    },
+    "opus-focused-review.txt": {
+      "sha256": "37768141ba05db0a44e96242b4d7441647137e2d8a2fb04d7f110d3eda472524",
+      "bytes": 4728
+    },
+    "strict-audit.json": {
+      "sha256": "9da6523e3d14a0a61df35b78d153ac33907e87b2d9ad25638e998e7db59a5f93",
+      "bytes": 321
+    }
+  },
+  "transportFiles": {
+    "audit_window_v2.py": {
+      "sha256": "b0776b3a19b9ebdaba61cb264476289e5826bb435eefb27857322f9c0988e6bf",
+      "bytes": 7841
+    },
+    "record_guard_diagnostic_v2.py": {
+      "sha256": "b5f1c208e5dc767888aba266b922a6ad771d99ccbea484dab24ff446d3819d1f",
+      "bytes": 2726
+    },
+    "test_guard_transport_v2.py": {
+      "sha256": "8f102c6e46957e9ae2cc5d1c66ed99cee3dffb397cbd1918229bd32e4cff1113",
+      "bytes": 2518
+    },
+    "launch_guard_diagnostic_v2.py": {
+      "sha256": "0ad033d9fa47a2b457b1238e361730dd516381bd5a80ae846d34badc057589b4",
+      "bytes": 6795
+    },
+    "test_guard_audit_v2.py": {
+      "sha256": "9b6fc5bdf505f1dddaddee1164ae59d2b4f1a38d06ce65f236cffb458d6ddb00",
+      "bytes": 3653
+    },
+    "audit_transport_window_v2.py": {
+      "sha256": "e2e37e11bae7f94bda9a3cf4931d7e887045dfd053363fee9980ad8784a19304",
+      "bytes": 2418
+    }
+  },
+  "originalFailedJournalSha256": "ab1c5aeebfc07335f30d69543677e34bf510e81e2d76d190bc4e799cf2830e65",
+  "originalFailureTriggerResolved": false,
+  "newFullBackupWindowExecuted": false,
+  "productionAcceptance": false,
+  "futureCeilingEstablished": false,
+  "limits": [
+    "A short clean diagnostic does not establish backup coverage or future resource ceiling.",
+    "Retained wrapper receipt proves reader exit; no separate outer-recorder exit artifact is included.",
+    "Archived absolute launcher source path is a historical execution binding, not a portable deployment command."
+  ]
+}

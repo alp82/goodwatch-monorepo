@@ -1,0 +1,34 @@
+## Verdict: PASS, no actionable blockers
+
+This is a read-through of the pasted text only: I ran nothing, so the SHA256 values, the "35 pass" result and the 27678-byte assertion are unverified. The test file does contain 35 test methods. My configuration reports Opus 5.5 (`claude-opus-5-5`); I cannot observe the effort setting.
+
+### Own-identity exemption
+- **No foreign PID path.** `own_pid` comes only from `os.getpid()` inside `process_census`; the caller supplies only a birth value, which must be a positive `int` (so `True` is rejected).
+- **Fences hold.** Birth is checked at entry, again at the excluded node, and at the end, and `excluded != 1` rejects an absent own node. A missing `stat` maps to `reader_identity_changed`.
+- **Nothing is hidden by the skip.** The reader was never eligible as backup or ssh: `READER_ARGS` sits inside the `-c` string, not as a separate argv element ending in `/backup.py`.
+- **Scope is exact.** Only the node named `str(os.getpid())` is skipped, so any other oversized `python`/`python3`/`uv` still raises `argv_limit`. Default callers return `ownedReaderExcludedCount: 0`.
+- **Failure is closed.** A `reader_identity_changed` inside the census makes that sample incomplete, and `reader_proof()` before and after still hard-fails the run on an identity change.
+
+### Privacy
+- The new path reads less than before: own `cmdline` is no longer opened.
+- `GuardFailure` restricts output to fixed reasons, triggers and phases, plus bounded ints and 64-hex hashes.
+- The supervisor re-serialises only four allow-listed event types, and stderr is discarded at every hop.
+
+### Lifetime and transport binding
+- **Binding chain is intact.** The recorder checks the launcher hash, the launcher checks the source hash locally, and the supervisor re-checks it remotely after base64 decode. A wrong path or stale file fails closed.
+- **Reader lifetime is covered.** The reader sets PDEATHSIG and checks its parent PID from argv. The supervisor signals via pidfd, escalates TERM to KILL, and proves the reader gone by birth ticks.
+- **Timeouts fit.** The supervisor deadline of end+20s covers the final fence plus the 5s thread join; the outer timeout is end+50s.
+- **Journal creation is sound.** Symlinked parents are rejected, the directory must be owner-held 0700 with matching dev/inode on the opened fd, and the file is created `O_EXCL|O_NOFOLLOW` then checked for 0600, single link and regular type.
+
+### Material limits (none blocking)
+1. **Own docker children can still mark a sample incomplete.** `ConfigCheck` forks docker every 10s. A child that exits mid-census counts as a disappearance; one caught before exec shows the parent's oversized argv and raises `argv_limit`. Both fail closed, so in a 30s window treat `complete: false` or an isolated `argv_limit` as possible self-noise.
+2. **The live-child fixture is not the v2 launcher's child expression.** It hand-builds its own (`ns=` exec, no `sys.argv` rewrite), and the reproduction test extracts `code` from the older `launch_window_v1.py`. The >8192-byte property holds either way, but no test ties the fixture to the v2 `SUPERVISOR` string.
+3. **Row budget test omits the new field.** `test_rich_numeric_row_fits_declared_budget` does not include `ownedReaderExcludedCount`. It adds about 30 bytes and likely fits, but the worst case is no longer exactly what is tested.
+4. **Recorder has no test.** `exclusive_journal` and the launcher-hash check are exercised only at runtime.
+5. **Journal is created before arguments are validated.** Bad or missing arguments leave an empty journal behind and raise before any `recorder-exit` line is printed, so the retry needs a new filename.
+6. **This launcher cannot run the preflight.** It only has `--execute-window`, and the supervisor allow-list excludes `resource-window.preflight.v1`. The preflight hash must come from a separate transport, and it embeds the Qdrant PID and start ticks, so a restart between preflight and window gives an untriggered `source_changed` from `Source.__init__`.
+7. **Clock skew fails closed.** The 0–300s start check runs on both hosts, so skew or a slow connect yields `window_invalid`; a 30s lead is adequate.
+8. **Supervisor parent check is trivially true.** `parent_death_guard(os.getppid())` compares the value with itself, so only the PDEATHSIG arming is meaningful there. The reader's check is the real one.
+9. **Stale text in the launcher.** The docstring names `--execute-preflight`, and the `MODE` and `ALLOWED_EVENT` placeholders are unused.
+
+As you state, the result is diagnostic only: `productionAcceptance` and `futureCeilingEstablished` stay false, and the historical `source_changed` is attributed only if it recurs inside the window.
