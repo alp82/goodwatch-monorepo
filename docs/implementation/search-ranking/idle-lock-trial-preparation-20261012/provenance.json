@@ -1,0 +1,64 @@
+{
+  "schema": "goodwatch.idle-trial-preparation-evidence.v1",
+  "hostExecution": false,
+  "productionTrialExecuted": false,
+  "manifestCohortTests": 161,
+  "manifestCohortPassed": true,
+  "implementationV6V7ByteIdentical": true,
+  "reviewModel": "claude-opus-5-5",
+  "reviewEffort": "medium",
+  "files": {
+    "README.md": {
+      "bytes": 2447,
+      "sha256": "32ba019fa62c94de134e9ac241bb59d7e7e970c3628565018f70f1b8433f4fb0"
+    },
+    "baseline-core-diff.patch": {
+      "bytes": 4876,
+      "sha256": "5cdaea07286204e3ee1fa16b967528bf0fc51e4805419c27160b95de1c8bd973"
+    },
+    "diff-v6-v7.patch": {
+      "bytes": 3959,
+      "sha256": "45f5d0afd2d37cc67c77e1e8a1b202881eb2982e0b411c51dc6c35814dfbe250"
+    },
+    "historical-validation.json": {
+      "bytes": 1848,
+      "sha256": "d5f64270740c43cb499ce57b28a66cc4056b8b3bb2e8a600db88647874779d65"
+    },
+    "legacy-equivalence.json": {
+      "bytes": 2046,
+      "sha256": "d73a2f8324ebb1d75edb8d982b74bc9a4cd6ff019a04c9159f6193e4908704e8"
+    },
+    "rebased-core-validation.json": {
+      "bytes": 411,
+      "sha256": "39a5a5b703b819cc437216ccd3783ad24a2918977b925191f05029774762f4b8"
+    },
+    "v6-manifest.json": {
+      "bytes": 3884,
+      "sha256": "2767b987a45a8e9919b22220265c4cef59999150e1c4f60b1c9881004d9805d9"
+    },
+    "v6-opus-provenance.json": {
+      "bytes": 792,
+      "sha256": "2bb3e947db282e992e2d61487c37977811ec8f6e84ba76c0f1831c3749a2a793"
+    },
+    "v6-opus-review.txt": {
+      "bytes": 4481,
+      "sha256": "7fbd7968d0417f3f1c04062d7d179637f11f5bcffe275015edbdb3219d20544c"
+    },
+    "v6-validation.json": {
+      "bytes": 4115,
+      "sha256": "bbdf4b495d0de0f706b67d7723a4d3a0a921f7254cd5824a0a14e6e5dac0a4a1"
+    },
+    "v7-manifest.json": {
+      "bytes": 3924,
+      "sha256": "df458da002ff01ed092add6c50954d9e727cccb016cdefbc887137bf33fccb8e"
+    },
+    "v7-validation-output.txt": {
+      "bytes": 100,
+      "sha256": "a873bf62d62d35cf956289108c23c33657aaef095b024465dacbc580282be6d4"
+    },
+    "v7-validation.json": {
+      "bytes": 4266,
+      "sha256": "baea08fc31eb1232c3af88585a9c8150ba03f5509f1ecb15f91c40c37b8ed8d1"
+    }
+  }
+}

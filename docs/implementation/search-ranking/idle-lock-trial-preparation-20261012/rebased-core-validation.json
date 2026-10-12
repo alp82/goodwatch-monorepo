@@ -1,0 +1,11 @@
+{
+  "command": "python -B -m unittest test_idle_trial test_pin test_runtime -q",
+  "baseCommit": "ed76f72137a3e263e2b756d11025f7563996fe32",
+  "sourceCommit": "0c962b316e6a06bb5cb0e5765d8363444dbc2dda",
+  "tests": 77,
+  "elapsedSeconds": 14.669,
+  "exitCode": 0,
+  "passed": true,
+  "hostExecution": false,
+  "scope": "Rebased idle/core files; frozen full-suite validation remains a distinct manifest cohort"
+}

@@ -7,6 +7,8 @@ import resource
 import stat
 import subprocess
 
+import pin
+
 from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error, close_unheld_targets
 
 
@@ -202,10 +204,13 @@ def prepare_self(source, max_locked_bytes, raise_own_limit=False, source_check=N
         raise RuntimeError('helper_accounting_not_joined')
 
 
-def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check=None, raise_own_nofile=False):
+def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check=None, raise_own_nofile=False, accounting_reader=None):
     """One guarded pass. Any source/inventory failure releases prior locks."""
     targets = []
     try:
+        if isinstance(manager.policy, pin.IdlePolicy) != (accounting_reader is not None):
+            raise ValueError('idle_accounting_adapter_required')
+        read_accounting = accounting if accounting_reader is None else accounting_reader
         if type(allow_clone_pressure_max) is not bool or allow_clone_pressure_max and spec.mode != 'clone':
             raise ValueError('clone_pressure_window_required')
         if manager.policy.mode != spec.mode:
@@ -222,12 +227,12 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
             members = [target for target in targets if target.kind == kind]
             if not members or not any(target.ranges for target in members):
                 raise RuntimeError('expected_pin_class_coverage_missing')
-        before = accounting(source)
+        before = read_accounting(source)
         state = manager.reconcile(targets, source.identity, before)
         if any(values['residentLockedDataPages'] != values['lockedDataPages'] for values in state['lockedResidency'].values()):
             raise RuntimeError('locked_data_residency_incomplete')
         after_source = source_check(spec)
-        after = accounting(after_source)
+        after = read_accounting(after_source)
         if after_source.identity != source.identity or after['availableBytes'] < manager.policy.emergency_bytes:
             raise RuntimeError('source_or_emergency_headroom_changed_after_locking')
         pressure_max_allowed = allow_clone_pressure_max and state['newLockBytes'] == 0 and not state['rangesChanged']

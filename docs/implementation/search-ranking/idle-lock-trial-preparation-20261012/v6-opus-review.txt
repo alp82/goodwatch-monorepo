@@ -1,0 +1,52 @@
+# Review: V5 source / V6 complete packet
+
+**Verdict: no new source-level safety blocker, and E1–E3 are closed as stated; one new evidence gap (N1) should be fixed or scoped out before freezing.** This is a source-only read: I ran nothing and recomputed no hashes. `controller.py`, `test_controller.py` and `prepared-control-policy.json` were not pasted, so I cannot confirm that file is public or that the fixture needs it.
+
+## V4 blockers
+
+| Item | Status | Basis |
+|---|---|---|
+| E1 final-hash validation | Closed | `validation.json` binds the 160-test pass to all 26 hashes. They match `manifest.json`, the V5 packaging hashes for the 25 shared files, and `legacy-equivalence.json`. |
+| E2 EOF positive and negative | Closed for `production.holder` | With a 60 s lease, exit 1 inside `bounded_eof_exit(worker,5)` can only come from the `EOFError` path. `ignore_eof_holder` stays alive and is rejected. |
+| E3 urgency lines pinned | Closed | Each test fails if its line is reverted. |
+
+- **`Guard.trip`:** `source_rpc_budget` is not in `SAFETY_REASONS`, so the kill in `test_guard_urgency_branch…` comes only from the new `Guard.trip` line.
+- **`_run` `finally`:** `register → False` raises before `guard.attach`, so the kill, exit −9 and `safetyReason` come only from the `finally` clause.
+
+## New evidence gap
+
+**N1. The EOF proof does not cover the holder the trial would run.**
+- `leased_holder` drives `production.holder`. `idle_trial.holder` has its own `while connection.poll(60)` loop and no EOF test.
+- It also has no parent-death test; that is exercised only for `zero_placement.child`.
+- By inspection, its EOF path closes the manager and exits 1, so this is an evidence gap, not a source fault.
+- IDLE-TRIAL.md's "the actual holder uses a 60-second lease" reads as if it covers the idle holder.
+- Fix: add an EOF-after-`state` case using `fixture_holder`, or reword the claim to name `production.holder`.
+
+## Other requested checks
+
+- **Holder pipe exceptions:** implemented and pinned. Reverting the `NON_URGENT_REASONS` rejection in `_run` gives a graceful exit 0, which fails the test. An unhashable `failed` value raises `TypeError`, which maps to `idle_guard_failure` and is still urgent.
+- **Immutable birth copy:** `register(dict(birth))` is pinned by `test_registration_callback_cannot_mutate_parent_birth`.
+- **Post-release reasons:** `safetyReason` falls through to the post-release reason only when nothing earlier is set. Removing the dead `elif` is safe, because `post_reason` requires a worker.
+- **Legacy equivalence:** seven modules are hash-identical to base. The `pin.py` and `runtime.py` patch is additive and inert for `pin.Policy`, if the patch is complete.
+- **Guards:** `main_stale=12` and `check_pressure` are untouched in the V4→V5 diff.
+
+## Should fix (not blocking)
+
+- **Stale doc sentence:** IDLE-TRIAL.md is frozen at V5 and says discovery ran on "final frozen V5 bytes". That run errored; the pass is bound to the V6 manifest. Correct this at the next revision.
+- **Legacy test drift undisclosed:** `legacy-equivalence.json` omits `test_production.py` and `test_zero_placement.py`, and both differ from their V2/V3 hashes. "Existing tests verify legacy behavior" therefore rests on edited fixtures.
+- **Unexplained duration:** V4 took 43 s; the frozen runs took 240 s and 298 s, and four fast tests do not account for that. Record per-test durations to rule out passes that exhaust a 30 s window.
+- **Run environment unrecorded:** `validation.json` has no Python version or euid, and at least one test branches on euid.
+- **Evidence files unbound:** nothing hashes `validation.json`, `asset-audit.json` or the patches.
+- **Mislabelled V5 result:** the V5 error is listed under `failures`.
+- **Negative-control window:** the EOF negative runs at 0.05 s, not 5 s. The inference to the 5 s gate is sound but not exercised.
+
+## Future execution prerequisites (not implemented here)
+
+- Run zero placement under the current hash. `zero_placement.code_hash` excludes `idle_trial.py`, so that run proves permissions and lifecycle only.
+- Build and review the strict journal, lease and launcher as separate inactive preparation.
+- The V4 launcher list still stands:
+  - bounded `register` and `emit` latency;
+  - `lease_check` on the same monotonic clock;
+  - a spawn-safe `__main__` run from an immutable code directory;
+  - a stop timeout above the 20-second cleanup bound;
+  - handling of `BlockingIOError` from `_supervisor_lock`.
