@@ -309,4 +309,16 @@ class ControllerTests(unittest.TestCase):
                 with self.assertRaises(ValueError):controller.load_control(path,controller.hashlib.sha256(raw).hexdigest(),controller.digest(controller.__file__))
                 helper.assert_not_called()
 
+    def test_v4_writer_budgets_and_receipt_bound_are_explicit_before_helper_load(self):
+        import tempfile
+        from pathlib import Path
+        for key,value in (('registrationSeconds',11),('prewriteAcceptanceSeconds',61),('prewriteSupervisionSeconds',66),('kernelWriteSeconds',61),('cleanupSeconds',11),('lifecycleSeconds',155),('receiptLimit',14),('censusLimit',36)):
+            config=json.loads((Path(controller.__file__).parent/'prepared-control-policy.json').read_text());config['cachePreparation']['writerPolicy'][key]=value
+            raw=json.dumps(config).encode()
+            with tempfile.TemporaryDirectory() as directory:
+                path=Path(directory)/'policy.json';path.write_bytes(raw)
+                with patch.object(controller.daemon,'load_config') as helper:
+                    with self.assertRaisesRegex(ValueError,'explicit_cache_preparation_required'):controller.load_control(path,controller.hashlib.sha256(raw).hexdigest(),controller.digest(controller.__file__))
+                    helper.assert_not_called()
+
 if __name__=='__main__':unittest.main()

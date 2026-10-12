@@ -1,7 +1,7 @@
 {
   "schema": "post-cold-clone-stage-prepared.v1",
   "execution": false,
-  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v3",
+  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v4",
   "stageMustBeAbsent": true,
   "coreCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
   "coreFiles": {
@@ -10,11 +10,11 @@
     "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
   },
   "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
-  "controllerSha256": "8a3c8ed473f22baf65eeb644fdad5cd99ebb7d3bd373233bd6c43a93a3f7136a",
-  "cachePreparationHelperSha256": "7ac8f17ac5159dced04995e723af56393fc30848449830dc9ef35c08291bf04d",
+  "controllerSha256": "b44a42b57a81c418b6858070c2e3a70a943e9fea255cea2948317317e8420045",
+  "cachePreparationHelperSha256": "76da971744310cdb6b21183725466a14cf8084a51eb3680ffb31c2dfe9d1439c",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
-  "controllerPolicySha256": "267f015bbe0900b358098562aba2b1f92b69826bae9eb9d2b18a1045f27c51d7",
-  "consumerSourceManifestSha256": "106f23a1d4acf5be28ae99a4270de0b4617f833e0f5ea79687afc6de69392293",
+  "controllerPolicySha256": "a7d7e6be2089ce80700e1a27676fe112f169e6f46e4da7083a6a627b7963449c",
+  "consumerSourceManifestSha256": "c7cd97dd377865421f9bb9252ca4b28cbad6d7f3b7155e26eec3a0969b23c439",
   "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
   "originalStageUnchanged": true,
   "productionAcceptance": false,
@@ -22,12 +22,40 @@
   "nodeBytes": 126595440,
   "helperConfigFilename": "helper-config.json",
   "controllerConfigFilename": "controller-config.json",
-  "maxWriterReceipts": 14,
+  "maxWriterReceipts": 18,
   "maxCleanupReceiptScan": 28,
   "diagnosticReadySeconds": 1200,
   "quiescenceSeconds": 60,
   "previousStagesUnchanged": [
     "pin-control-20261012-406-v1",
-    "pin-control-20261012-406-v2"
+    "pin-control-20261012-406-v2",
+    "pin-control-20261012-406-v3"
+  ],
+  "writerPolicy": {
+    "censusLimit": 28,
+    "cleanupSeconds": 10,
+    "kernelWriteSeconds": 60,
+    "lifecycleSeconds": 145,
+    "prewriteAcceptanceSeconds": 60,
+    "prewriteSupervisionSeconds": 65,
+    "receiptLimit": 18,
+    "registrationSeconds": 10
+  },
+  "priorReceiptPolicy": [
+    {
+      "stage": "pin-control-20261012-406-v1",
+      "expectedReceiptCount": 0,
+      "helperSha256": null
+    },
+    {
+      "stage": "pin-control-20261012-406-v2",
+      "maxReceipts": 14,
+      "helperSha256": "df5992308bc74a859a68cdb0061b702432be6c09304e24f13db4c4459e5f186e"
+    },
+    {
+      "stage": "pin-control-20261012-406-v3",
+      "maxReceipts": 14,
+      "helperSha256": "7ac8f17ac5159dced04995e723af56393fc30848449830dc9ef35c08291bf04d"
+    }
   ]
 }
