@@ -1,0 +1,19 @@
+# Production backup metadata window, 2026-10-12
+
+The passive 07:09–07:29 UTC window observed the collection snapshot archive and its destination copy together at **8,648,191,040 bytes**, at 07:17:04.573237 UTC. This is a same-sample apparent-file-size sum, not a sum of unrelated maxima or a measurement of resident memory. The records do **not** establish the existing-segment staging allowance or a future workload ceiling. No search latency was measured.
+
+This evidence supports Task406/map100 resource diagnosis. All three readers exited with code0, were proven gone, and required neither TERM nor KILL. Their SSH-stdin launchers installed zero remote host files. They read process counters, directory/file metadata and filesystem statistics; they issued no Qdrant search, file-content read, cache advice, production configuration change or service restart. Metadata inspection itself uses CPU and can populate inode/dentry caches.
+
+| Retained reader | Samples | Actual first–last sample (UTC) | Limitation |
+| --- | ---: | --- | --- |
+| [Metadata v3](production-backup-metadata-20261012-0709-v3.jsonl) | 600 | 07:09:00.424910–07:28:58.500983 | Existing-segment traversal assumed an extra replica directory; its baseline cohort was empty. |
+| [Unchanged PR446 supplement](production-backup-supplemental-20261012-0709-446.jsonl) | 600 | 07:09:00.136403–07:28:58.136439 | Aggregate process/reclaim counters include background activity and observer footprint. |
+| [Metadata v4](production-backup-metadata-20261012-0717-v4.jsonl) | 352 | 07:17:17.497361–07:28:59.181187 | Corrected layout, but started during the backup and its one-second baseline scan was truncated. |
+
+V3's producer summary incorrectly reported complete metadata despite its zero existing-segment cohort. The offline audit explicitly overrides that claim. V4 discovered 19 segment directories but retained only a partial file baseline (9,023 files); later byte differences compare unequal coverage and are not evidence of segment growth. Both audits leave valid existing-growth peaks unknown. Neither a zero shard-staging sample nor two-second sampling proves that staging never occurred between observations.
+
+The supplement recorded a minimum sampled MemAvailable of **13,311,578,112 bytes**. Over its sampled interval, Qdrant accumulated 488,291 major faults and 8,800,452,608 read bytes; host file reclaim increased by 3,267,661 pages and file refaults by 2,153,506. These are aggregate interval deltas, not per-query counters or proof that every delta came from the backup. The same source identity/process generation remained fenced across samples. Maximum sample gaps were 2.479 seconds for v3 and 2.003 seconds for the supplement; scheduled cadence is descriptive, not a guarantee of continuous visibility.
+
+[The v3 paired audit](production-backup-paired-audit-v3-20261012.json) and [the v4 paired audit](production-backup-paired-audit-v4-20261012.json) retain coverage, exit proof, observed peaks and explicitly incomparable raw deltas. [Source and artifact hashes](production-backup-metadata-source-audit-20261012.json) pin the executed collectors/launchers and exact journals. The [offline audit utility](../../../goodwatch-qdrant/diagnostics/backup-metadata-audit/README.md) reproduces both reports from sanitized inputs; eight fixtures exercise missing/truncated evidence, false zero-cohort completeness, reader survival, source turnover, private-field exclusion and non-overlapping independent maxima.
+
+A complete per-file baseline outside the next backup is still needed before evaluating existing-segment growth. A future permissible resource ceiling must remain a separately reviewed guard with fail-closed growth/overlap handling; this observation cannot predict future peaks. Production acceptance still requires the application's first usable results and a fresh seven-day error-free window with p95 below1.5 seconds.
