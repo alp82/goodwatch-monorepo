@@ -1,0 +1,19 @@
+{
+  "schema": "postcold-v4-public-evidence-provenance.v1",
+  "runtimeSourceCommit": "5a6dc066710d9c956e7876efec1d868b291841e2",
+  "preparedSourceMerge": "750b9f7e",
+  "auditorOriginalSha256": "c86a3b804be86ba6bd5395de309858995e10845eefdc439cdf6d7bcf351ec78a",
+  "auditorAdaptation": "Import only: frozen contract sibling instead of local absolute path. Actual stage/result bytes are not rewritten.",
+  "applicationAcceptance": false,
+  "comparisonResultStatus": "completed-failed",
+  "files": {
+    "execution-freeze.json": "de75389e013d117828b5b4f3d1415f32cad2b77f876616282cb44a389001454c",
+    "postcold-stage-actual-v4-result.json": "cb37b0e9d7361065dbf0b43e637d3ac3a44c8faa20de499b5239a4ebfc9e10f6",
+    "test_audit_postcold_result_v4.mjs": "8a82e62bf83ac2c4d86e7b4747eec699fbf07995d2d628f51264225ec7c9805e",
+    "compare-contract-frozen-v4.mjs": "761859cf89024c5e61e7baa1e0979f6a52508ecc4b5fd32b1d229a393dddd5e3",
+    "offline-audit-v4.json": "fcede3b57a17c7f53507773eb0ff67711090180392a5c1f754fc45ba3fc0bfb8",
+    "comparison-postcold-453-v4-result.json": "b0a1afb38bdf16946427c65ddd47bd6d173d2cfd64438606e311260ef268a710",
+    "audit_postcold_result_v4.mjs": "e2b2154f0b6e13e44c9f093207f9f96c0546a54262713d5ee267ca795f7d2362",
+    "summary.json": "bbb2227ba898f94f3a66f43a2d2068658c3c7988fa61543ca6abf31feebdc607"
+  }
+}
