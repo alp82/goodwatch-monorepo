@@ -1730,7 +1730,13 @@ export async function undoImportTrackingPlan(
 				).upToDate
 					? "seen"
 					: "watching"
-				restored = stateRowOf(record, null, Date.now())
+				// The show is where the watches that remain put it, since the last of them was recorded. The time of
+				// this undo would read as the member's own move to Watching (C3).
+				restored = stateRowOf(
+					record,
+					null,
+					Math.max(...remaining.map((row) => row.created_at)),
+				)
 			}
 			await writeState(
 				userId,

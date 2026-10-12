@@ -26,6 +26,7 @@ const seenEntry = (
 	...before,
 	...change,
 	state: "seen",
+	watchingSince: null,
 })
 
 /** A movie that is Seen only through the watch its score owns: one undated watch. */

@@ -352,6 +352,17 @@ export function watchStateEntryOf(copy: ShowCopy): WatchStateEntry | null {
 				row.watched_at ?? (row.origin !== "import" ? row.created_at : null),
 		),
 	)
+	// C3: the member's own move to Watching counts, an import's does not (`watchingSinceOf` in storage.ts).
+	const changed = copy.state?.state_changed_at ?? null
+	const imported = latest(
+		copy.log.map((row) => (row.origin === "import" ? row.created_at : null)),
+	)
+	const watchingSince =
+		state !== "watching" ||
+		changed === null ||
+		(imported !== null && changed <= imported)
+			? null
+			: changed
 	return {
 		state,
 		watchedAt: at === null ? null : new Date(at),
@@ -364,5 +375,6 @@ export function watchStateEntryOf(copy: ShowCopy): WatchStateEntry | null {
 				? null
 				: [Math.floor(furthest / EPISODE_KEY), furthest % EPISODE_KEY],
 		lastActivityAt: activity === null ? null : new Date(activity),
+		watchingSince: watchingSince === null ? null : new Date(watchingSince),
 	}
 }

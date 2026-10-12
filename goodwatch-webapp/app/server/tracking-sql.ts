@@ -13,14 +13,15 @@ SELECT tmdb_id, media_type, pass,
        max(watched_at) AS last_watched_at,
        max(CASE WHEN watched_at_precision = 'moment' THEN watched_at END) AS last_moment_at,
        max(CASE WHEN watched_at IS NOT NULL THEN watched_at
-                WHEN origin <> 'import' THEN created_at END) AS last_activity_at
+                WHEN origin <> 'import' THEN created_at END) AS last_activity_at,
+       max(created_at) FILTER (WHERE origin = 'import') AS last_import_at
 FROM user_watch_log
 WHERE user_id = ?
 GROUP BY tmdb_id, media_type, pass`
 
 /** QS. The member's states. A Not started row only remembers a prompt, so no list reads it. */
 export const STATES_QUERY = `
-SELECT tmdb_id, media_type, state, pass
+SELECT tmdb_id, media_type, state, pass, state_changed_at
 FROM user_watch_state
 WHERE user_id = ? AND state <> 'not_started'`
 

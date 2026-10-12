@@ -85,6 +85,8 @@ export const getUserData = async (
 	for (const item of Object.values(data.watchState)) {
 		item.watchedAt = date(item.watchedAt)
 		item.lastActivityAt = date(item.lastActivityAt)
+		// An entry cached by the build before has no `watchingSince`.
+		item.watchingSince = date(item.watchingSince ?? null)
 	}
 	return data
 }

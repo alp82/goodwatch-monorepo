@@ -399,7 +399,8 @@ export function mulberry32(seed: number) {
 //          min(watched_at) AS first_watched_at, max(watched_at) AS last_watched_at,
 //          max(CASE WHEN watched_at_precision = 'moment' THEN watched_at END) AS last_moment_at,
 //          max(CASE WHEN watched_at IS NOT NULL THEN watched_at WHEN origin <> 'import' THEN created_at END)
-//              AS last_activity_at
+//              AS last_activity_at,
+//          max(created_at) FILTER (WHERE origin = 'import') AS last_import_at
 //   FROM user_watch_log WHERE user_id = ? GROUP BY tmdb_id, media_type, pass
 // ---------------------------------------------------------------------------------------------------------
 
@@ -452,6 +453,9 @@ export function groupedQuery(log: readonly LogRow[]): GroupRow[] {
 							? r.created_at
 							: null,
 				),
+			),
+			last_import_at: maxOf(
+				rows.map((r) => (r.origin === "import" ? r.created_at : null)),
 			),
 		}
 	})
