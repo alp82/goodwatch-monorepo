@@ -1,0 +1,80 @@
+{
+  "sourceCommit": "8343e942708f3742d449c3e39fdfcdf9d864eda2",
+  "preparedOnly": true,
+  "execution": false,
+  "packetSha256": "9eaf423e8dbf21604b0de7a4d8e5feab6f566df6d7cf5acbf1385a8331735d55",
+  "stageLauncherSha256": "f555f72224d6ff7cf0818e1d61a7cb47504f1dab2e8c9e0710f3a3dbc1c813af",
+  "pipeSha256": "67b90d360113022bddef39f2a022b1ac604b8f302aba6fcb45d2fa8652faef15",
+  "comparisonLauncherSha256": "d8fee888bce85513ddd9f02e95d4211767dead4dd2dbf7627e09da3db3c14f2d",
+  "stageFreeze": {
+    "schema": "post-cold-clone-stage-prepared.v1",
+    "execution": false,
+    "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v5",
+    "stageMustBeAbsent": true,
+    "coreCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
+    "coreFiles": {
+      "pin.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+      "runtime.py": "635405593bc2d5917163745b781056e49c8111a773e19d02d6011613ee2d2a03",
+      "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
+    },
+    "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
+    "controllerSha256": "4cfe85cfeb5a254e227c89fd3b23f221a185090507e4f96033a81e6ecf497a3e",
+    "cachePreparationHelperSha256": "f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5",
+    "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
+    "controllerPolicySha256": "b2397708da0a427949a47d4e8059fabc0251b9fcdd340c711217a6e8c0fd4d4a",
+    "consumerSourceManifestSha256": "ee57bfb49b49865329a85e2ccef7668dc5e60671cd5494c5274662e27605fb95",
+    "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
+    "originalStageUnchanged": true,
+    "productionAcceptance": false,
+    "nodeSha256": "7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c",
+    "nodeBytes": 126595440,
+    "helperConfigFilename": "helper-config.json",
+    "controllerConfigFilename": "controller-config.json",
+    "maxWriterReceipts": 18,
+    "maxCleanupReceiptScan": 28,
+    "diagnosticReadySeconds": 1200,
+    "quiescenceSeconds": 60,
+    "previousStagesUnchanged": [
+      "pin-control-20261012-406-v1",
+      "pin-control-20261012-406-v2",
+      "pin-control-20261012-406-v3",
+      "pin-control-20261012-406-v4"
+    ],
+    "writerPolicy": {
+      "censusLimit": 28,
+      "cleanupSeconds": 10,
+      "kernelWriteSeconds": 60,
+      "lifecycleSeconds": 145,
+      "prewriteAcceptanceSeconds": 60,
+      "prewriteSupervisionSeconds": 65,
+      "receiptLimit": 18,
+      "registrationSeconds": 10
+    },
+    "priorReceiptPolicy": [
+      {
+        "stage": "pin-control-20261012-406-v1",
+        "expectedReceiptCount": 0,
+        "helperSha256": null
+      },
+      {
+        "stage": "pin-control-20261012-406-v2",
+        "maxReceipts": 14,
+        "helperSha256": "df5992308bc74a859a68cdb0061b702432be6c09304e24f13db4c4459e5f186e"
+      },
+      {
+        "stage": "pin-control-20261012-406-v3",
+        "maxReceipts": 14,
+        "helperSha256": "7ac8f17ac5159dced04995e723af56393fc30848449830dc9ef35c08291bf04d"
+      },
+      {
+        "stage": "pin-control-20261012-406-v4",
+        "maxReceipts": 18,
+        "helperSha256": "76da971744310cdb6b21183725466a14cf8084a51eb3680ffb31c2dfe9d1439c"
+      }
+    ],
+    "postwriteQuiescenceSeconds": 60,
+    "knownPreparedSubtotalSeconds": 785,
+    "offlineAuditorSha256": "aaa8e7657c5113ac1fd7f5b931c10a927aeaec6dcb729875e64d8132d665e4f4"
+  },
+  "resultFilename": "comparison-postcold-453-v5-result.json"
+}

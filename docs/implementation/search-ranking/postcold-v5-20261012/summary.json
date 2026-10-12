@@ -1,0 +1,96 @@
+{
+  "schema": "search.postcold-v5-summary.v1",
+  "historicalMechanismOnly": true,
+  "productionAcceptance": false,
+  "actualResultSha256": "4d441a51734dcf47b7535bfaf7e6f2066a641001c1dbb9527a84a3fb767b8972",
+  "ordinarySearches": 0,
+  "historyWrites": 0,
+  "completedBaselineCount": 1,
+  "completedPairCount": 0,
+  "baseline": {
+    "tag": "control-native-title",
+    "lesserKnown": true,
+    "queryCount": 7,
+    "serverMs": 6353.78094,
+    "wallMs": 6476.081459000008,
+    "majorFaults": 127006,
+    "prequeryMissingBytes": 1495171072
+  },
+  "candidateObservedOnly": {
+    "serverMs": 228.709765,
+    "wallMs": 293.79233500000555,
+    "prequeryPinnedBytes": 1725227008,
+    "prequeryMissingBytes": 0,
+    "queryFinishedPresent": false,
+    "validPairedParity": "not-established",
+    "failureReason": "phase_resource_failed",
+    "failureLedgerRetained": false
+  },
+  "cachePreparation": {
+    "baseline": {
+      "postwriteSeconds": 34.620219,
+      "postwriteSamples": 97,
+      "postwriteDirtySamples": 96,
+      "maxPostwriteDirtyBytes": 4096,
+      "postCapFit": {
+        "capBytes": 6442450944,
+        "currentBytes": 3130925056,
+        "missingSelectedBytes": 1458585600,
+        "reserveBytes": 268435456
+      },
+      "writerAttempts": 1,
+      "writerOutcome": "accepted",
+      "writerExitObserved": true,
+      "writerGone": true
+    },
+    "candidate": {
+      "postwriteSeconds": 0.106614,
+      "postwriteSamples": 1,
+      "postwriteDirtySamples": 0,
+      "maxPostwriteDirtyBytes": 0,
+      "postCapFit": {
+        "capBytes": 6442450944,
+        "currentBytes": 3121963008,
+        "missingSelectedBytes": 1555255296,
+        "reserveBytes": 268435456
+      },
+      "writerAttempts": 1,
+      "writerOutcome": "accepted",
+      "writerExitObserved": true,
+      "writerGone": true
+    }
+  },
+  "posthocOnly": {
+    "event": "clone.posthoc-resource.v1",
+    "at": "2026-10-12T13:57:20.420971+00:00",
+    "dockerStatePid": 3753440,
+    "sourcePid": 3753493,
+    "sourceStartTicks": 3064508046,
+    "posthocOnly": true,
+    "exactFailedIntervalEstablished": false,
+    "memoryEvents": {
+      "max": 1533,
+      "oom": 0,
+      "oom_kill": 0
+    },
+    "cpuEvents": {
+      "nr_throttled": 1,
+      "throttled_usec": 190249
+    },
+    "memoryCurrentBytes": 4704542720,
+    "memoryMaxBytes": 6442450944,
+    "cpuMax": "200000 100000",
+    "sourceMemberCount": 2,
+    "hostWrites": 0,
+    "queries": 0
+  },
+  "allLifecycleExitsProven": true,
+  "cloneRunning": true,
+  "limits": [
+    "CPU event appeared between retained readiness and delayed posthoc sample; exact failed interval/site cannot be recovered.",
+    "Parent query-window, PinChild prior/reconciliation-pass, and post-inventory ledgers can produce the same fixed refusal.",
+    "Candidate fast response is observed only; resource/quality/paired acceptance is not established.",
+    "Staging had zero cache writes; comparison performed guarded clone cold/reclaim/pin/query actions.",
+    "No seven-day production acceptance window has started."
+  ]
+}

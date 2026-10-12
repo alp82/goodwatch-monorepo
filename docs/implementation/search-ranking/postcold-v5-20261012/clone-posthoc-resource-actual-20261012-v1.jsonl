@@ -1,0 +1,2 @@
+{"event":"preflight.reader-born.v1","pid":3759647,"startTicks":3064549830,"sourceSha256":"f8081b5278327d0f0ef452c69d165cb73801c3af05af60a777764aa952b0e886","hostFilesCreated":0}
+{"event":"preflight.reader-exit.v1","pid":3759647,"startTicks":3064549830,"exitCode":1,"readerGoneProven":true,"termSent":false,"killSent":false,"clean":false,"reason":"bounded_transport_failure","hostFilesCreated":0}
