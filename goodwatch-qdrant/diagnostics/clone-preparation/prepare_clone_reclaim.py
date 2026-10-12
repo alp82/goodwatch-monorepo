@@ -10,7 +10,7 @@ SAFE={'source_changed','swap_present','locked_source_pages','dirty_source_pages'
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 def at():return datetime.datetime.now(datetime.timezone.utc).isoformat()
-def reason(error):return str(error) if type(error) is RuntimeError and str(error) in SAFE else 'guard_or_runtime_failure'
+def reason(error):return str(error) if type(error) is RuntimeError and str(error) in (SAFE|WRITER_SAFE) else 'guard_or_runtime_failure'
 def numbers(path):return {k:int(v) for k,v in (l.split() for l in path.read_text().splitlines())}
 def pid_identity(pid):
  p=Path('/proc')/str(pid);s=(p/'stat').read_text();v=s[s.rfind(')')+2:].split()
@@ -64,42 +64,177 @@ def writer(fd,result_fd,prewrite=None):
  try:
   try:
    if prewrite is not None:prewrite()
-   written=os.write(fd,str(REQUEST).encode());result={'outcome':'accepted','writtenBytes':written}
-   if written!=len(str(REQUEST)):result={'outcome':'write-failed','errno':0}
-  except RuntimeError as e:result={'outcome':'guard-failed','reason':reason(e)}
-  except OSError as e:result={'outcome':'under-reclaimed' if e.errno==errno.EAGAIN else 'write-failed','errno':e.errno if e.errno in (errno.EAGAIN,errno.EINVAL,errno.EPERM,errno.ENOENT,errno.EBADF) else 0}
+  except BaseException as error:
+   result={'outcome':'guard-failed','reason':reason(error),'writeAttempts':0}
+  else:
+   try:
+    written=os.write(fd,str(REQUEST).encode());result={'outcome':'accepted','writtenBytes':written,'writeAttempts':1}
+    if written!=len(str(REQUEST)):result={'outcome':'write-failed','errno':0,'writeAttempts':1}
+   except OSError as error:result={'outcome':'under-reclaimed' if error.errno==errno.EAGAIN else 'write-failed','errno':error.errno if error.errno in (errno.EAGAIN,errno.EINVAL,errno.EPERM,errno.ENOENT,errno.EBADF) else 0,'writeAttempts':1}
   os.write(result_fd,json.dumps(result).encode())
  finally:os.close(fd);os.close(result_fd)
 
 
-def bounded_write(fd,timeout=60,prewrite=None):
- read_fd,write_fd=os.pipe();pid=None;gone=False;status=None
+
+"""Prepared child ownership seam; no cgroup operation until its caller supplies one."""
+import ctypes,hashlib,json,os,re,select,signal,stat,time
+from pathlib import Path
+RETAINED_WRITERS={}
+WRITER_SAFE={'writer_birth_unavailable','writer_birth_changed','writer_registration_failed','writer_parent_changed','writer_interrupted','writer_cleanup_unproven'}
+def fixed_reason(error):return str(error) if type(error) is RuntimeError and str(error) in WRITER_SAFE else 'writer_guard_failed'
+def identity(pid):
+ path=Path('/proc')/str(pid);text=(path/'stat').read_text();parts=text[text.rfind(')')+2:].split()
+ return {'pid':pid,'startTicks':int(parts[19]),'cmdlineSha256':hashlib.sha256((path/'cmdline').read_bytes()).hexdigest(),'exeSha256':hashlib.sha256(os.readlink(path/'exe').encode()).hexdigest(),'cgroupSha256':hashlib.sha256((path/'cgroup').read_bytes()).hexdigest()}
+def same_birth(birth):return identity(birth['pid'])==birth
+
+def arm_parent_death(parent):
+ signal.signal(signal.SIGTERM,signal.SIG_DFL);signal.signal(signal.SIGINT,signal.SIG_DFL)
+ signal.pthread_sigmask(signal.SIG_UNBLOCK,{signal.SIGTERM,signal.SIGINT})
+ libc=ctypes.CDLL(None,use_errno=True)
+ if libc.prctl(1,signal.SIGTERM,0,0,0)!=0:raise RuntimeError('writer_registration_failed')
+ if os.getppid()!=parent:raise RuntimeError('writer_parent_changed')
+
+def receipt(directory,birth,parent,helper_sha256,target):
+ if directory.resolve()!=directory:raise RuntimeError('writer_registration_failed')
+ info=directory.lstat()
+ if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or stat.S_IMODE(info.st_mode)!=0o700:raise RuntimeError('writer_registration_failed')
+ opened=os.fstat(target)
+ value={'schema':'owned-reclaim-writer-birth.v1','writer':birth,'parent':parent,'helperSha256':helper_sha256,'targetDevice':opened.st_dev,'targetInode':opened.st_ino,'targetFd':target,'writeAcknowledged':False}
+ path=directory/f"reclaim-writer-{birth['pid']}-{birth['startTicks']}.json"
+ fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600)
+ with os.fdopen(fd,'wb') as output:output.write((json.dumps(value,sort_keys=True)+'\n').encode());output.flush();os.fsync(output.fileno())
+ folder=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+ try:os.fsync(folder)
+ finally:os.close(folder)
+ return value
+
+def bounded_owned_writer(target,operation,directory,helper_sha256,timeout=60,grace=5):
+ """Birth receipt fsync and pidfd ownership precede ack; operation runs only in child."""
+ if not hasattr(os,'pidfd_open') or not hasattr(signal,'pidfd_send_signal'):raise RuntimeError('writer_registration_failed')
+ parent=identity(os.getpid());ack_read,ack_write=os.pipe();pid=None;pidfd=None;birth=None;gone=False;status=None;registered=False;interrupted=None;timed_out=False
  try:
-  try:pid=os.fork()
-  except OSError:return {'outcome':'start-failed','writerGone':True,'writerExitCode':None,'timedOut':False,'requestedBytes':REQUEST,'writeAttempts':0}
+  pid=os.fork()
   if pid==0:
-   os.close(read_fd)
-   try:writer(fd,write_fd,prewrite)
-   finally:os._exit(0)
-  os.close(fd);fd=None;os.close(write_fd);write_fd=None
-  def wait(seconds):
-   nonlocal gone,status
-   deadline=time.monotonic()+seconds
-   while time.monotonic()<deadline:
-    reaped,result=os.waitpid(pid,os.WNOHANG)
-    if reaped:gone=True;status=result;return
-    time.sleep(.05)
-  wait(timeout);timed_out=not gone
-  if not gone:
-   os.kill(pid,signal.SIGTERM);wait(5)
-   if not gone:os.kill(pid,signal.SIGKILL);wait(5)
-  # Never block reading or implicitly join a surviving kernel-blocked writer.
-  raw=os.read(read_fd,4096) if gone else b''
-  result=json.loads(raw) if raw else {'outcome':'timeout' if timed_out else 'write-failed'}
-  result.update({'writerGone':gone,'writerPid':pid,'writerExitCode':os.waitstatus_to_exitcode(status) if gone else None,'timedOut':timed_out,'requestedBytes':REQUEST,'writeAttempts':1})
+   os.close(ack_write)
+   try:
+    arm_parent_death(parent['pid'])
+    if os.read(ack_read,1)!=b'1':os._exit(125)
+    if os.getppid()!=parent['pid']:os._exit(125)
+    operation(target)
+    os._exit(0)
+   except BaseException:os._exit(126)
+  os.close(ack_read);ack_read=None
+  pidfd=os.pidfd_open(pid,0);birth=identity(pid)
+  if birth['startTicks']<=0 or not same_birth(parent):raise RuntimeError('writer_birth_changed')
+  receipt(directory,birth,parent,helper_sha256,target);registered=True
+  os.write(ack_write,b'1');os.close(ack_write);ack_write=None
+  deadline=time.monotonic()+timeout
+  while time.monotonic()<deadline:
+   observed,value=os.waitpid(pid,os.WNOHANG)
+   if observed:gone=True;status=value;break
+   time.sleep(.02)
+  timed_out=not gone
+ except BaseException as error:
+  interrupted=error
+ finally:
+  # No broad PID signal: a live owned pidfd is mandatory even on failure.
+  if pid is not None and not gone:
+   for sig,seconds in ((signal.SIGTERM,grace),(signal.SIGKILL,grace)):
+    if pidfd is None:break
+    try:signal.pidfd_send_signal(pidfd,sig,None,0)
+    except ProcessLookupError:pass
+    deadline=time.monotonic()+seconds
+    while time.monotonic()<deadline:
+     observed,value=os.waitpid(pid,os.WNOHANG)
+     if observed:gone=True;status=value;break
+     time.sleep(.02)
+    if gone:break
+  if pidfd is not None and not gone:
+   RETAINED_WRITERS[pid]={'pidfd':pidfd,'birth':birth};pidfd=None
+  for fd in (ack_read,ack_write,pidfd):
+   if fd is not None:os.close(fd)
+  evidence={'schema':'owned-reclaim-writer-exit.v1','registeredBeforeWrite':registered,'writer':birth,'writerGone':gone,'writerExitObserved':gone,'writerExitCode':os.waitstatus_to_exitcode(status) if gone else None,'cleanupUnknown':not gone,'pidfdRetained':not gone and pid in RETAINED_WRITERS,'parentInterrupted':interrupted is not None,'timedOut':timed_out}
+  if interrupted is not None:interrupted.writerEvidence=evidence
+ if interrupted is not None:raise interrupted
+ return evidence
+
+def open_recorded_writer(path,helper_sha256,protected_pids=()):
+ """Outer adoption: metadata-only receipt/actual-process/target-FD identity proof."""
+ if path.resolve()!=path:raise RuntimeError('writer_birth_changed')
+ info=path.lstat()
+ if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or stat.S_IMODE(info.st_mode)!=0o600 or info.st_size>4096:raise RuntimeError('writer_birth_changed')
+ fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+ try:
+  opened=os.fstat(fd);raw=os.read(fd,4097);after=os.fstat(fd)
+  if (opened.st_dev,opened.st_ino,opened.st_size,opened.st_mtime_ns)!=(info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns) or (after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns)!=(opened.st_dev,opened.st_ino,opened.st_size,opened.st_mtime_ns):raise RuntimeError('writer_birth_changed')
+ finally:os.close(fd)
+ value=json.loads(raw)
+ if type(value) is not dict or set(value)!={'schema','writer','parent','helperSha256','targetDevice','targetInode','targetFd','writeAcknowledged'}:raise RuntimeError('writer_birth_changed')
+ for birth in (value['writer'],value['parent']):
+  if type(birth) is not dict or set(birth)!={'pid','startTicks','cmdlineSha256','exeSha256','cgroupSha256'} or any(type(birth[k]) is not int or birth[k]<=0 for k in ('pid','startTicks')) or any(type(birth[k]) is not str or not re.fullmatch('[a-f0-9]{64}',birth[k]) for k in ('cmdlineSha256','exeSha256','cgroupSha256')):raise RuntimeError('writer_birth_changed')
+ if any(type(value[k]) is not int or value[k]<0 for k in ('targetDevice','targetInode','targetFd')) or value['targetInode']<=0 or value['targetFd']<3 or value['writeAcknowledged'] is not False:raise RuntimeError('writer_birth_changed')
+ if value['schema']!='owned-reclaim-writer-birth.v1' or value['helperSha256']!=helper_sha256 or path.name!=f"reclaim-writer-{value['writer']['pid']}-{value['writer']['startTicks']}.json":raise RuntimeError('writer_birth_changed')
+ if value['writer']['pid'] in {os.getpid(),value['parent']['pid'],*protected_pids}:raise RuntimeError('writer_birth_changed')
+ try:
+  if not same_birth(value['writer']):raise RuntimeError('writer_birth_changed')
+ except FileNotFoundError:return None,value
+ pidfd=os.pidfd_open(value['writer']['pid'],0)
+ try:
+  if select.select([pidfd],[],[],0)[0]:return pidfd,value
+  if not same_birth(value['writer']):raise RuntimeError('writer_birth_changed')
+  target=Path('/proc')/str(value['writer']['pid'])/'fd'/str(value['targetFd']);info=target.stat()
+  if (info.st_dev,info.st_ino)!=(value['targetDevice'],value['targetInode']):raise RuntimeError('writer_birth_changed')
+ except BaseException:os.close(pidfd);raise
+ return pidfd,value
+
+def cleanup_recorded_writer(path,helper_sha256,grace=5,protected_pids=()):
+ """Never calls waitpid for an adopted non-child; pidfd readiness proves actual exit."""
+ pidfd,value=open_recorded_writer(path,helper_sha256,protected_pids)
+ if pidfd is None:return {'writerExitObserved':True,'writerGone':True,'proof':'recorded-birth-absent','cleanupUnknown':False}
+ try:
+  if select.select([pidfd],[],[],0)[0]:return {'writerExitObserved':True,'writerGone':True,'proof':'recorded-pidfd-exited','cleanupUnknown':False}
+  for sig in (signal.SIGTERM,signal.SIGKILL):
+   signal.pidfd_send_signal(pidfd,sig,None,0)
+   if select.select([pidfd],[],[],grace)[0]:return {'writerExitObserved':True,'writerGone':True,'proof':'recorded-pidfd-exited','cleanupUnknown':False}
+  RETAINED_WRITERS[value['writer']['pid']]={'pidfd':pidfd,'birth':value['writer']};pidfd=None
+  return {'writerExitObserved':False,'writerGone':False,'proof':'recorded-pidfd-unknown','cleanupUnknown':True,'pidfdRetained':True}
+ finally:
+  if pidfd is not None:os.close(pidfd)
+
+def census_recorded_writers(directory,helper_sha256,protected_pids,cleanup=False,max_records=14):
+ """Only the frozen bounded receipt namespace; absence does not prove unknown children gone."""
+ info=directory.lstat()
+ if directory.resolve()!=directory or not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or stat.S_IMODE(info.st_mode)!=0o700 or max_records!=14:raise RuntimeError('writer_birth_changed')
+ paths=sorted(directory.glob('reclaim-writer-*.json'))
+ if len(paths)>max_records or any(not re.fullmatch(r'reclaim-writer-[1-9][0-9]*-[1-9][0-9]*\.json',path.name) for path in paths):raise RuntimeError('writer_birth_changed')
+ results=[]
+ for path in paths:
+  if cleanup:result=cleanup_recorded_writer(path,helper_sha256,protected_pids=protected_pids)
+  else:
+   pidfd,value=open_recorded_writer(path,helper_sha256,protected_pids)
+   try:
+    exited=pidfd is None or bool(select.select([pidfd],[],[],0)[0])
+    result={'writerExitObserved':exited,'writerGone':exited,'cleanupUnknown':not exited}
+   finally:
+    if pidfd is not None:os.close(pidfd)
+  results.append(result)
+ return {'receiptCount':len(paths),'recordedWritersGone':all(r['writerGone'] for r in results),'recordedWriterResults':results,'unknownUnregisteredChildrenProvenGone':False}
+
+
+def bounded_write(fd,timeout=60,prewrite=None,receipt_directory=None):
+ read_fd,write_fd=os.pipe();result=None
+ try:
+  directory=receipt_directory if receipt_directory is not None else Path(__file__).parent
+  def operation(target):
+   os.close(read_fd);writer(target,write_fd,prewrite)
+  evidence=bounded_owned_writer(fd,operation,directory,hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),timeout=timeout)
+  os.close(write_fd);write_fd=None
+  raw=os.read(read_fd,4096) if evidence['writerGone'] else b''
+  result=json.loads(raw) if raw else {'outcome':'timeout' if evidence['timedOut'] else 'write-failed','writeAttempts':0}
+  result.update(evidence);result['requestedBytes']=REQUEST;result['writerPid']=evidence['writer']['pid'] if evidence['writer'] else None
   return result
  finally:
-  if fd is not None:os.close(fd)
+  os.close(fd)
   if write_fd is not None:os.close(write_fd)
   os.close(read_fd)
 
@@ -193,6 +328,7 @@ def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_o
   output['stage']='prepared-headroom-measured';return output
  except BaseException as error:
   output.update({'stage':'failed','reason':reason(error),'privateErrorOmitted':True})
+  if hasattr(error,'writerEvidence'):output['writerFailure']=error.writerEvidence
   if hasattr(error,'dirtyEvidence'):output['dirtyEvidence']=error.dirtyEvidence
   if hasattr(error,'quiescenceEvidence'):output['quiescence']=error.quiescenceEvidence
   error.reclaimEvidence=output;raise

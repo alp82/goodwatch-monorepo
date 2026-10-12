@@ -10,12 +10,17 @@
     "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
   },
   "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
-  "controllerSha256": "e32ef26b71ae65a8da718cbfb58361289f2b935bd1b699d980488e40ae23b5c3",
-  "cachePreparationHelperSha256": "9f45f02d7f3329990f276abc304b4af23189eae68346937ae366a12a7afce7be",
+  "controllerSha256": "0dda2930ab610879636632040363e4b8a2ae9854448cf90c55a51c1fc0fb4099",
+  "cachePreparationHelperSha256": "414fe48494753fe317257728365a9ac02ad23eb1088ef5c544c3c6c910662dc5",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
-  "controllerPolicySha256": "c648254a6332fa5ca5d9cfff3809e5745b9c24440332762c4e9a6d6041b48b88",
-  "consumerSourceManifestSha256": "16318c7f38d7c698d9f0e101d36db221b3d2adcacf05c9d5d35728a17abde764",
+  "controllerPolicySha256": "6325c24b700b84c32f352caf6f843a6ae2a2d2d62e06aad6a219350f8808fee6",
+  "consumerSourceManifestSha256": "e221e3873249ed01608de01779e6d61073adc9cb9b3b025a0674094a35066482",
   "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
   "originalStageUnchanged": true,
-  "productionAcceptance": false
+  "productionAcceptance": false,
+  "nodeSha256": "7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c",
+  "nodeBytes": 126595440,
+  "helperConfigFilename": "helper-config.json",
+  "controllerConfigFilename": "controller-config.json",
+  "maxWriterReceipts": 14
 }

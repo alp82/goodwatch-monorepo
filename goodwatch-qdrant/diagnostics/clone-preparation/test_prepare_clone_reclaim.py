@@ -11,7 +11,7 @@ class ReclaimTests(unittest.TestCase):
  def target(self):
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);path=Path(temp.name)/'target';path.write_bytes(b'');return path,os.open(path,os.O_WRONLY)
  def test_real_owned_writer_writes_bare_bytes_once_and_exits(self):
-  path,fd=self.target();result=p.bounded_write(fd,1)
+  path,fd=self.target();result=p.bounded_write(fd,1,receipt_directory=path.parent)
   self.assertEqual(path.read_text(),str(3*1024**3));self.assertEqual(result['writeAttempts'],1)
   self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],0)
   with self.assertRaises(OSError):os.fstat(fd)
@@ -20,19 +20,24 @@ class ReclaimTests(unittest.TestCase):
   def write(which,data):
    if which==fd:raise BlockingIOError(11,'private path')
    return original(which,data)
-  with patch.object(p.os,'write',side_effect=write):result=p.bounded_write(fd,1)
+  with patch.object(p.os,'write',side_effect=write):result=p.bounded_write(fd,1,receipt_directory=path.parent)
   self.assertEqual(result['outcome'],'under-reclaimed');self.assertTrue(result['writerGone'])
   self.assertEqual(path.read_bytes(),b'');self.assertEqual(result['writeAttempts'],1)
  def test_child_source_guard_blocks_actual_write_and_retains_fixed_cause(self):
   path,fd=self.target()
   def changed():raise RuntimeError('source_changed')
-  result=p.bounded_write(fd,1,prewrite=changed)
+  result=p.bounded_write(fd,1,prewrite=changed,receipt_directory=path.parent)
   self.assertEqual(result['outcome'],'guard-failed');self.assertEqual(result['reason'],'source_changed')
   self.assertTrue(result['writerGone']);self.assertEqual(path.read_bytes(),b'')
+ def test_prewrite_eagain_is_guard_failure_with_no_kernel_write_attempt(self):
+  path,fd=self.target()
+  def unavailable():raise BlockingIOError(11,'private prewrite failure')
+  result=p.bounded_write(fd,1,prewrite=unavailable,receipt_directory=path.parent)
+  self.assertEqual(result['outcome'],'guard-failed');self.assertEqual(result['writeAttempts'],0);self.assertEqual(path.read_bytes(),b'')
  def test_actual_writer_deadline_reaps_only_own_child(self):
   path,fd=self.target()
   with patch.object(p,'writer',side_effect=lambda *_:time.sleep(20)):
-   start=time.monotonic();result=p.bounded_write(fd,.1)
+   start=time.monotonic();result=p.bounded_write(fd,.1,receipt_directory=path.parent)
   self.assertLess(time.monotonic()-start,2);self.assertTrue(result['timedOut']);self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],-15)
   self.assertEqual(path.read_bytes(),b'')
  def test_process_limits_ancestor_limits_and_cap_events_each_block(self):
@@ -51,7 +56,6 @@ class ReclaimTests(unittest.TestCase):
  def test_unknown_errors_never_emit_private_text(self):
   self.assertEqual(p.reason(OSError('private source file')),'guard_or_runtime_failure')
 
-if __name__=='__main__':unittest.main()
 
 class HeldLockPreparationTests(unittest.TestCase):
  def test_real_control_fd_must_already_hold_flock(self):
@@ -75,3 +79,5 @@ class HeldLockPreparationTests(unittest.TestCase):
   with patch.object(p,'snapshot',side_effect=[e,{'fresh':True}]):
    snapshot,evidence=p.quiescent_snapshot(None,None,5,clock=lambda:clock[0],sleep=sleep)
   self.assertEqual(snapshot,{'fresh':True});self.assertTrue(evidence['zeroDirtyAndWriteback']);self.assertEqual(evidence['samples'],2);self.assertEqual(clock[0],.25)
+
+if __name__=='__main__':unittest.main()
