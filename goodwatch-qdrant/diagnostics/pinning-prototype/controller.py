@@ -70,7 +70,7 @@ def load_control(path, policy_hash, code_hash):
 
 def load_cache_preparation(config):
     prep=config['cachePreparation'];path=MODULE_DIR/'prepare_clone_reclaim.py'
-    if prep['helperPath']!=str(path) or path.resolve()!=path:raise RuntimeError('source_changed_after_cache_preparation','cache_preparation_freeze_changed')
+    if prep['helperPath']!=str(path) or path.resolve()!=path:raise RuntimeError('cache_preparation_freeze_changed')
     before=path.lstat()
     if not stat.S_ISREG(before.st_mode) or before.st_uid!=os.geteuid() or before.st_nlink!=1 or stat.S_IMODE(before.st_mode)!=0o600:raise RuntimeError('cache_preparation_freeze_changed')
     fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)

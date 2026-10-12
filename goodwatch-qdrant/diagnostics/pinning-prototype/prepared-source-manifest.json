@@ -1,7 +1,7 @@
 {
   "schema": "private-comparison-source-freeze.v1",
   "files": {
-    "compare.mjs": "4ca209be3a0c153df7f8e63a82bf2ee09e18afc5e67d1a613c5f0ba52fad87d9",
+    "compare.mjs": "fa5963fdc9bb317da26b451dd2313e8240100f60b6b1d0d11b69fee79f3e7e0d",
     "compare-contract.mjs": "609df6be7bfc8943f46d41cf740ef3afb6bfc4e3a6dbd3491068ec9a46a329a7",
     "parity.mjs": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e",
     "transport.mjs": "08825a576183065b7c3a85872b84ff5fb870821fb6c76903afa836ad100381be",

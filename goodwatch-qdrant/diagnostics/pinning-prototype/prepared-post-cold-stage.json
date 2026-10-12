@@ -10,11 +10,11 @@
     "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
   },
   "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
-  "controllerSha256": "0dda2930ab610879636632040363e4b8a2ae9854448cf90c55a51c1fc0fb4099",
+  "controllerSha256": "b6476f026647d3c2da02c78ed5e6e831019c3ee3f74ec5d500b068b1956567bc",
   "cachePreparationHelperSha256": "414fe48494753fe317257728365a9ac02ad23eb1088ef5c544c3c6c910662dc5",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
   "controllerPolicySha256": "6325c24b700b84c32f352caf6f843a6ae2a2d2d62e06aad6a219350f8808fee6",
-  "consumerSourceManifestSha256": "e221e3873249ed01608de01779e6d61073adc9cb9b3b025a0674094a35066482",
+  "consumerSourceManifestSha256": "38bf2859b231e5b7bed2617090714caa5d1f8ad789fc95b83eb95ed5516154c6",
   "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
   "originalStageUnchanged": true,
   "productionAcceptance": false,
