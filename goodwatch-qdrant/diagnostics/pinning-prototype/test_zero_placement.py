@@ -33,8 +33,9 @@ class ZeroTests(unittest.TestCase):
         with tempfile.TemporaryDirectory()as directory:
             spec,source=self.source(directory);rows=[];children=[];digest=zero.code_hash();policy='b'*64
             journal=Journal(Path(directory)/'journal',digest,policy,digest)
+            # zero.run waits for each actual joined/VmLck0 proof before close.
             def factory(_target,args):
-                worker=production.Holder(fixture_child,args,cleanup_seconds=.1);children.append(worker);return worker
+                worker=production.Holder(fixture_child,args,cleanup_seconds=5);children.append(worker);return worker
             def register(birth):
                 journal.write(json.dumps({'event':'qdrant.pin-helper.v1','at':'2026-01-01T00:00:00Z','codeSha256':digest,'policySha256':policy,'queries':0,'storageWrites':0,**birth})+'\n')
                 self.assertIn(str(birth['holderPid']),Path(directory,'journal').read_text())

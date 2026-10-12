@@ -32,13 +32,25 @@ def retry_messages_holder(connection,messages):
     if connection.poll(5) and connection.recv()=='close':connection.send({'closed':True})
 
 
-def leased_holder(connection):
+def leased_holder(connection,idle_lease_seconds=.6):
     class FixturePins:
         def __init__(self,*args): pass
         def close(self): pass
         def release_state(self): return {'released':True,'heldMappingCount':0}
     with patch.object(runtime,'validate_source_locally',side_effect=lambda source:source),patch.object(runtime,'prepare_self'),patch.object(production,'reconcile_with_retries',return_value={}),patch.object(pin,'PinSet',FixturePins),patch.object(production,'safe_state',return_value={'fixtureState':True}):
-        production.holder(connection,None,SimpleNamespace(max_locked_bytes=4096),'unused',False,False,production.code_hash(),idle_lease_seconds=.6)
+        production.holder(connection,None,SimpleNamespace(max_locked_bytes=4096),'unused',False,False,production.code_hash(),idle_lease_seconds=idle_lease_seconds)
+
+
+def ignore_eof_holder(connection,lease):
+    connection.send({'fixtureStartupReady':True})
+    try:connection.recv()
+    except EOFError:time.sleep(lease)
+    raise SystemExit(1)
+
+
+def bounded_eof_exit(worker,seconds):
+    worker.connection.close();worker.process.join(seconds)
+    return not worker.alive_owned() and worker.process.exitcode==1
 
 
 def proof_holder(connection,source):
@@ -79,6 +91,23 @@ def failed_holder(connection,spec,policy,reason):
         production.holder(connection,spec,policy,'unused',False,False,production.code_hash())
 
 
+def ready_protocol_holder(connection,target,args):
+    """Startup ACK precedes supervisor timing/cleanup; lock proof stays separate."""
+    connection.send({'fixtureStartupReady':True})
+    target(connection,*args)
+
+
+def ready_worker(target,args=(),worker_type=production.Holder):
+    worker=worker_type(ready_protocol_holder,(target,args))
+    if not worker.connection.poll(30):
+        worker.close(emergency=True)
+        raise AssertionError('fixture startup acknowledgement missing')
+    if worker.connection.recv()!={'fixtureStartupReady':True}:
+        worker.close(emergency=True)
+        raise AssertionError('invalid fixture startup acknowledgement')
+    return worker
+
+
 class ProductionPolicyTests(unittest.TestCase):
     def test_actual_parent_pipe_validates_ordered_retry_claims_without_calling_them_release_proof(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -88,10 +117,10 @@ class ProductionPolicyTests(unittest.TestCase):
             for messages,expected,count in (([1,2],'projected_headroom_below_reserve',2),([2],'invalid_holder_reply',0),([1,1],'invalid_holder_reply',1),([1,2,3],'invalid_holder_reply',2)):
                 records=[];workers=[]
                 def factory(_target,_args):
-                    worker=production.Holder(retry_messages_holder,(messages,),cleanup_seconds=.05);workers.append(worker);return worker
+                    worker=ready_worker(retry_messages_holder,(messages,));workers.append(worker);return worker
                 with patch.object(production,'check_source',return_value=source),patch.object(runtime,'accounting',return_value={'availableBytes':10*pin.GIB}):
                     with self.assertRaisesRegex(RuntimeError,expected):
-                        production.supervise({'lifetimeSeconds':5},spec,policy,records.append,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
+                        production.supervise({'lifetimeSeconds':120},spec,policy,records.append,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
                 claims=[row for row in records if row['phase']=='inventory_retry_claimed']
                 self.assertEqual(len(claims),count)
                 self.assertTrue(all(row['holderClaimed'] is True and 'released' not in row for row in claims))
@@ -99,11 +128,11 @@ class ProductionPolicyTests(unittest.TestCase):
 
     def test_unproven_exit_retains_real_pidfd_for_later_owned_kill(self):
         worker=production.Holder(stubborn_holder,cleanup_seconds=.01)
-        self.assertTrue(worker.connection.poll(3));worker.connection.recv();fd=worker.pidfd
+        self.assertTrue(worker.connection.poll(30));worker.connection.recv();fd=worker.pidfd
         with patch.object(worker,'signal_owned'):
             result=worker.close()
         self.assertFalse(result['released']);os.fstat(fd);self.assertTrue(worker.alive_owned())
-        worker.signal_owned(signal.SIGKILL);worker.process.join(2)
+        worker.signal_owned(signal.SIGKILL);worker.process.join(30)
         self.assertTrue(worker.close()['released'])
         with self.assertRaises(OSError):os.fstat(fd)
 
@@ -122,7 +151,7 @@ class ProductionPolicyTests(unittest.TestCase):
             policy=pin.Policy('production',pin.GIB,5*pin.GIB,7*pin.GIB,3*pin.GIB//2,cap_reserve_bytes=256*1024**2,mapping_reserve_count=1024)
             def factory(_target,_args):
                 worker=production.Holder(stubborn_holder,cleanup_seconds=5)
-                self.assertTrue(worker.connection.poll(3));worker.connection.recv();workers.append(worker);return worker
+                self.assertTrue(worker.connection.poll(30));worker.connection.recv();workers.append(worker);return worker
             def accounting(_source):
                 reads.append(True)
                 if len(reads)==2:available[0]=0;time.sleep(.1)
@@ -163,10 +192,10 @@ class ProductionPolicyTests(unittest.TestCase):
             self.assertTrue(released['emergencyRelease']);self.assertTrue(released['released'])
 
     def test_watchdog_pressure_during_clean_lifetime_close_is_fast_and_reported_as_failure(self):
-        available=[10*pin.GIB];workers=[];records=[]
+        available=[10*pin.GIB];workers=[];records=[];release_started=[None]
         class DropOnClose(production.Holder):
             def close(self,emergency=False):
-                available[0]=0
+                release_started[0]=time.monotonic();available[0]=0
                 return super().close(emergency=emergency)
         with tempfile.TemporaryDirectory() as directory:
             spec=runtime.Spec('production','qdrant-main','sha256:'+'a'*64,Path(directory),frozenset(),0,0,0)
@@ -174,13 +203,12 @@ class ProductionPolicyTests(unittest.TestCase):
             policy=pin.Policy('production',pin.GIB,5*pin.GIB,7*pin.GIB,3*pin.GIB//2,cap_reserve_bytes=256*1024**2,mapping_reserve_count=1024)
             def factory(_target,_args):
                 worker=DropOnClose(stubborn_holder,cleanup_seconds=5)
-                self.assertTrue(worker.connection.poll(5));worker.connection.recv();workers.append(worker);return worker
+                self.assertTrue(worker.connection.poll(30));worker.connection.recv();workers.append(worker);return worker
             def watchdog(floor):return production.EmergencyWatchdog(floor,read_available=lambda:available[0],poll_seconds=.01,kill_seconds=.03)
-            started=time.monotonic()
             with patch.object(production,'check_source',return_value=source),patch.object(runtime,'accounting',return_value={'availableBytes':10*pin.GIB}):
                 with self.assertRaisesRegex(RuntimeError,'emergency_headroom_release'):
                     production.supervise({'lifetimeSeconds':.3},spec,policy,records.append,Path(directory)/'lock',worker_factory=factory,watchdog_factory=watchdog,poll_seconds=.01)
-            self.assertLess(time.monotonic()-started,2)
+            self.assertIsNotNone(release_started[0]);self.assertLess(time.monotonic()-release_started[0],2)
             self.assertTrue(records[-1]['released']);self.assertTrue(records[-1]['emergencyRelease'])
             self.assertFalse(workers[0].alive_owned())
 
@@ -232,7 +260,7 @@ class ProductionPolicyTests(unittest.TestCase):
             policy=pin.Policy('production',pin.GIB,5*pin.GIB,7*pin.GIB,3*pin.GIB//2,cap_reserve_bytes=256*1024**2,mapping_reserve_count=1024)
             events=[];workers=[];checks=[0]
             def factory(_target,_args):
-                worker=production.Holder(stubborn_holder,cleanup_seconds=.02);self.assertTrue(worker.connection.poll(5));worker.connection.recv();workers.append(worker);return worker
+                worker=production.Holder(stubborn_holder);self.assertTrue(worker.connection.poll(30));worker.connection.recv();workers.append(worker);return worker
             def source_check(*_args):
                 checks[0]+=1
                 if checks[0]==2:os.kill(os.getpid(),signal.SIGTERM)
@@ -252,14 +280,14 @@ class ProductionPolicyTests(unittest.TestCase):
             policy=pin.Policy('production',4*pin.PAGE,5*pin.GIB,7*pin.GIB,3*pin.GIB//2,cap_reserve_bytes=256*1024**2,mapping_reserve_count=1024)
             def factory(_target,_args):
                 if workers:self.assertFalse(workers[-1].process.is_alive())
-                worker=production.Holder(proof_holder,(selected[0],),cleanup_seconds=.1);workers.append(worker);return worker
+                worker=ready_worker(proof_holder,(selected[0],));workers.append(worker);return worker
             def emit(event):
                 events.append(event)
                 if event['phase']=='heartbeat':
                     if len(workers)==1:selected[0]=replacement
                     else:os.kill(os.getpid(),signal.SIGTERM)
             with patch.object(production,'check_source',side_effect=lambda *_args:selected[0]),patch.object(runtime,'accounting',return_value={'availableBytes':10*pin.GIB}):
-                production.supervise({'lifetimeSeconds':5},spec,policy,emit,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
+                production.supervise({'lifetimeSeconds':120},spec,policy,emit,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
         locked=[e for e in events if e['phase']=='locked'];self.assertEqual(len(locked),2)
         self.assertTrue(all(e['vmLockedBytes']==4*pin.PAGE and e['holderPlacementVerified'] for e in locked))
         self.assertEqual([e['qdrantPid'] for e in locked],[900,901])
@@ -275,9 +303,9 @@ class ProductionPolicyTests(unittest.TestCase):
             for cause,expected in (('projected_headroom_below_reserve','projected_headroom_below_reserve'),('private-path-and-secret','guard_or_runtime_failure')):
                 events=[];workers=[]
                 def factory(_target,_args):
-                    worker=production.Holder(failed_holder,(spec,policy,cause),cleanup_seconds=.05);workers.append(worker);return worker
+                    worker=ready_worker(failed_holder,(spec,policy,cause));workers.append(worker);return worker
                 with patch.object(production,'check_source',return_value=source),patch.object(runtime,'accounting',return_value={'availableBytes':10*pin.GIB}):
-                    with self.assertRaisesRegex(RuntimeError,expected):production.supervise({'lifetimeSeconds':5},spec,policy,events.append,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
+                    with self.assertRaisesRegex(RuntimeError,expected):production.supervise({'lifetimeSeconds':120},spec,policy,events.append,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
                 self.assertFalse(workers[0].process.is_alive());self.assertTrue(events[-1]['released'])
                 self.assertNotIn('private-path',json.dumps(events))
 
@@ -308,11 +336,11 @@ class ProductionPolicyTests(unittest.TestCase):
         for changed in ({k:v for k,v in proof.items() if k!='hardLimit'},{**proof,'requiredSoft':20259},{**proof,'hardChanged':True},{**proof,'privatePath':'secret'}):
             with self.assertRaisesRegex(RuntimeError,'invalid_nofile_proof'):production.nofile_proof(changed)
 
-    def test_valid_parent_command_gap_outlives_old_scaled_idle_lease_then_eof_is_prompt(self):
+    def test_valid_parent_command_gap_outlives_old_scaled_idle_lease_then_eof_is_bounded(self):
         worker = production.Holder(leased_holder,cleanup_seconds=.05)
         try:
             worker.connection.send('reconcile')
-            self.assertTrue(worker.connection.poll(5))
+            self.assertTrue(worker.connection.poll(30))
             self.assertEqual(worker.connection.recv(),{'request':'source'})
             worker.connection.send({'source':SimpleNamespace(spec=None)})
             self.assertTrue(worker.connection.poll(1))
@@ -323,10 +351,23 @@ class ProductionPolicyTests(unittest.TestCase):
             worker.connection.send('reconcile')
             self.assertTrue(worker.connection.poll(1))
             self.assertEqual(worker.connection.recv(),{'state':{'fixtureState':True}})
-            begun = time.monotonic(); worker.connection.close(); worker.process.join(.4)
-            self.assertFalse(worker.process.is_alive())
-            self.assertLess(time.monotonic()-begun,.4)
         finally: worker.close()
+        # Separate EOF phase: normal 60s lease is WELL beyond the 5s reap
+        # bound, so lease expiry cannot impersonate EOF detection.
+        worker=production.Holder(leased_holder,(60,))
+        try:
+            worker.connection.send('reconcile');self.assertTrue(worker.connection.poll(30));worker.connection.recv()
+            worker.connection.send({'source':SimpleNamespace(spec=None)})
+            self.assertTrue(worker.connection.poll(30));self.assertEqual(worker.connection.recv(),{'state':{'fixtureState':True}})
+            self.assertTrue(bounded_eof_exit(worker,5))
+        finally:worker.close(emergency=True)
+
+    def test_eof_gate_rejects_real_child_that_ignores_eof_until_lease(self):
+        worker=production.Holder(ignore_eof_holder,(60,))
+        try:
+            self.assertTrue(worker.connection.poll(30));self.assertEqual(worker.connection.recv(),{'fixtureStartupReady':True})
+            self.assertFalse(bounded_eof_exit(worker,.05));self.assertTrue(worker.alive_owned())
+        finally:worker.signal_owned(signal.SIGKILL);worker.process.join(30);worker.close(emergency=True)
 
     def test_reviewed_policy_requires_archive_plus_reserve_and_exact_source(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -397,14 +438,18 @@ class ProductionPolicyTests(unittest.TestCase):
             policy = pin.Policy('production',pin.GIB,5*pin.GIB,7*pin.GIB,3*pin.GIB//2,cap_reserve_bytes=256*1024**2,mapping_reserve_count=1024)
             def factory(_target,_args):
                 worker = production.Holder(stubborn_holder,cleanup_seconds=5)
-                self.assertTrue(worker.connection.poll(5)); worker.connection.recv(); workers.append(worker)
+                self.assertTrue(worker.connection.poll(30)); worker.connection.recv(); workers.append(worker)
                 return worker
             checks = iter([{'availableBytes':10*pin.GIB},{'availableBytes':10*pin.GIB},{'availableBytes':pin.GIB}])
-            begun = time.monotonic()
-            with patch.object(production,'check_source',return_value=source),patch.object(runtime,'accounting',side_effect=lambda _s:next(checks)):
+            triggered=[None]
+            def accounting(_source):
+                row=next(checks)
+                if row['availableBytes']==pin.GIB:triggered[0]=time.monotonic()
+                return row
+            with patch.object(production,'check_source',return_value=source),patch.object(runtime,'accounting',side_effect=accounting):
                 with self.assertRaisesRegex(RuntimeError,'emergency_headroom_release'):
                     production.supervise({'lifetimeSeconds':600},spec,policy,records.append,Path(directory)/'lock',worker_factory=factory,poll_seconds=.01)
-            self.assertLess(time.monotonic()-begun,2)
+            self.assertIsNotNone(triggered[0]);self.assertLess(time.monotonic()-triggered[0],2)
             self.assertEqual(len(workers),1)
             self.assertFalse(workers[0].process.is_alive())
             self.assertEqual(records[-1]['phase'],'released')

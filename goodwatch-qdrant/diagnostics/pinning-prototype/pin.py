@@ -240,6 +240,33 @@ class Policy:
             raise ValueError('production_headroom_guard_cannot_be_relaxed')
 
 
+@dataclass(frozen=True)
+class IdlePolicy:
+    """Experimental idle admission, explicitly distinct from archive policy."""
+    max_locked_bytes: int = 2 * GIB
+    floor_bytes: int = 2 * GIB
+    transient_allowance_bytes: int = 6 * GIB
+    include_payload: bool = False
+    cap_reserve_bytes: int = 256 * 1024 ** 2
+    mapping_reserve_count: int = 1024
+
+    def __post_init__(self):
+        expected = (2*GIB, 2*GIB, 6*GIB, False, 256*1024**2, 1024)
+        actual = (self.max_locked_bytes, self.floor_bytes, self.transient_allowance_bytes,
+                  self.include_payload, self.cap_reserve_bytes, self.mapping_reserve_count)
+        if actual != expected or any(type(v) is not int for v in actual[:3]+actual[4:]) or type(actual[3]) is not bool:
+            raise ValueError('invalid_idle_policy')
+
+    @property
+    def mode(self): return 'production'
+    @property
+    def reserve_bytes(self): return self.floor_bytes + self.transient_allowance_bytes
+    @property
+    def emergency_bytes(self): return self.reserve_bytes
+    @property
+    def admission_bytes(self): return self.max_locked_bytes + self.reserve_bytes
+
+
 @dataclass
 class Target:
     fd: int
@@ -374,6 +401,8 @@ class PinSet:
             for key in ('availableBytes', 'anonBytes', 'kernelBytes', 'fileBytes', 'unevictableBytes', 'currentBytes'):
                 if type(memory[key]) is not int or memory[key] < 0:
                     raise ValueError('invalid_memory_accounting')
+            if isinstance(self.policy, IdlePolicy) and memory['availableBytes'] < self.policy.admission_bytes:
+                raise RuntimeError('idle_full_budget_admission_failed')
             if memory['availableBytes'] < self.policy.emergency_bytes:
                 raise RuntimeError('emergency_headroom_release')
             desired = {}

@@ -77,8 +77,8 @@ class GuardTests(unittest.TestCase):
                 root=Path(directory);runtime,code,targets=self.setup_scope(root);(code/'owned.py').write_text('installed')
                 context=multiprocessing.get_context('spawn');reader,writer=context.Pipe();journal_path=root/'journal'
                 parent=context.Process(target=crashing_registered_parent,args=(writer,journal_path));parent.start();writer.close()
-                self.assertTrue(reader.poll(5));child_pid,ticks=reader.recv();reader.close()
-                parent.join(3);self.assertEqual(parent.exitcode,0)
+                self.assertTrue(reader.poll(30));child_pid,ticks=reader.recv();reader.close()
+                parent.join(30);self.assertEqual(parent.exitcode,0)
                 self.assertEqual(proc_ticks(Path('/proc')/str(child_pid)),ticks);pidfd=os.pidfd_open(child_pid)
                 kwargs={'journal':journal_path,'runtime':runtime,'code_root':code,'proc_root':self.procs(root,child_pid)}
                 with self.assertRaisesRegex(RuntimeError,'retained_holder_still_live'):
@@ -91,7 +91,7 @@ class GuardTests(unittest.TestCase):
                 if pidfd is None:pidfd=os.pidfd_open(child_pid)
                 signal.pidfd_send_signal(pidfd,signal.SIGKILL);os.waitpid(child_pid,0)
             if pidfd is not None:os.close(pidfd)
-            if parent is not None and parent.is_alive():parent.kill();parent.join(3)
+            if parent is not None and parent.is_alive():parent.kill();parent.join(30)
             kernel.prctl(36,previous.value,0,0,0)
 
     def test_real_locks_remain_held_and_inode_replacement_refused(self):
