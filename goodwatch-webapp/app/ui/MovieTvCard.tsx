@@ -44,6 +44,8 @@ interface MovieTvCardProps {
 	 * a surface where they would be wrong or cramped.
 	 */
 	actions?: ActionsPlacement | false
+	/** The service the title is new on for the viewer (#489), by id: its logo is marked, see StreamingOverlay. */
+	newOn?: number | null
 }
 
 // The card rests at 95% and grows to full size under the pointer. With title actions the frame around the link
@@ -60,6 +62,7 @@ export function MovieTvCard({
 	posterPriority,
 	skipOffscreen = false,
 	actions = "bottom",
+	newOn,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
@@ -94,7 +97,7 @@ export function MovieTvCard({
 					)}
 				</RatingOverlay>
 				{details.streaming_links && (
-					<StreamingOverlay links={details.streaming_links} />
+					<StreamingOverlay links={details.streaming_links} newOn={newOn} />
 				)}
 				<Poster
 					path={details.poster_path}

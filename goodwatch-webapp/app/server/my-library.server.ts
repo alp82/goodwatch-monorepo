@@ -2,6 +2,8 @@
 // made from the member data map; the catalog is read by key only: the cards of the step's 60 titles (Q6), and, for
 // the Title sort and a search, the titles of the status's keys, which are public and kept in memory
 // (docs/implementation/tracking/data-model.md, "Reads": Library). The watch log is not read.
+// The Want to See list also says which of its titles are new on one of the member's services (#489); the route
+// passes that in, from the availability index.
 import {
 	type LibraryChoice,
 	type LibraryKind,
@@ -13,6 +15,7 @@ import {
 	libraryStep,
 	needsTitles,
 } from "~/domain/my-library"
+import type { NewOn } from "~/domain/newly-available-words"
 import { getUserData } from "~/server/userData.server"
 import {
 	type MediaKey,
@@ -21,6 +24,7 @@ import {
 	parseMediaKey,
 } from "~/types/user-data"
 import { query } from "~/utils/crate"
+import { type TitleKey, titleKey } from "~/utils/title-key"
 
 /** A title in a list of the library, with where the member stands with it. */
 export interface LibraryItem {
@@ -42,6 +46,8 @@ export interface LibraryItem {
 	/** A show: different regular episodes watched in the current pass, and how many have aired. */
 	episodesWatched: number | null
 	airedEpisodes: number | null
+	/** On the Want to See list: the service the title landed on in the last 14 days (#489). Left out otherwise. */
+	newOn?: NewOn
 }
 
 export interface LibraryPage {
@@ -146,6 +152,8 @@ export async function libraryPageOf(
 	userData: Pick<UserData, "wishlist" | "watchState" | "scores">,
 	choice: LibraryChoice,
 	offset = 0,
+	/** The services the member's titles are new on, by title: the Want to See list marks them. */
+	newOn?: ReadonlyMap<TitleKey, NewOn>,
 ): Promise<LibraryPage> {
 	const titles = needsTitles(choice)
 		? await titlesOf(libraryKeys(userData, choice.status))
@@ -165,6 +173,10 @@ export async function libraryPageOf(
 		const { mediaType, tmdbId } = parseMediaKey(key)
 		const show = mediaType === "show"
 		const aired = show ? (card.aired_episode_count ?? null) : null
+		const fresh =
+			choice.status === "want"
+				? newOn?.get(titleKey(mediaType, tmdbId))
+				: undefined
 		return [
 			{
 				key,
@@ -185,6 +197,7 @@ export async function libraryPageOf(
 							: Math.min(entry.episodesWatched, aired)
 						: null,
 				airedEpisodes: aired,
+				...(fresh ? { newOn: fresh } : {}),
 			},
 		]
 	})
@@ -207,6 +220,12 @@ export async function getLibraryPage(
 	userId: string,
 	choice: LibraryChoice,
 	offset = 0,
+	newOn?: ReadonlyMap<TitleKey, NewOn>,
 ): Promise<LibraryPage> {
-	return libraryPageOf(await getUserData({ user_id: userId }), choice, offset)
+	return libraryPageOf(
+		await getUserData({ user_id: userId }),
+		choice,
+		offset,
+		newOn,
+	)
 }

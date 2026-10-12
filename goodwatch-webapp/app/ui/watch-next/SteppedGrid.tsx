@@ -7,7 +7,7 @@ import {
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { useEffect, useRef, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
@@ -18,7 +18,7 @@ import type {
 } from "~/server/watch-next.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
-import { titleHref, useMoviesPage } from "./WatchNextHero"
+import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
 import {
 	SORT_WORDS,
 	TIER_LABEL,
@@ -80,6 +80,7 @@ function TierRow({
 	const [all, setAll] = useState(false)
 	const [ref, near] = useNear<HTMLLIElement>()
 	const movies = useMoviesPage()
+	const newOn = useContext(NewOnContext)
 	// My movies' last group is closed until asked for: what does not fit tonight, each movie saying why.
 	const misfits = tier.key === "notTonightsFit"
 	const [opened, setOpened] = useState(false)
@@ -161,7 +162,10 @@ function TierRow({
 							className={`min-w-0 ${ITEM[tier.size]}`}
 							data-key={key}
 						>
-							<TitlePosterCard card={title} />
+							<TitlePosterCard
+								card={title}
+								newOn={newOn?.serviceOf(title.tmdb_id)}
+							/>
 							{tier.size === "xl" && (
 								<div className="-mt-1 truncate px-1 text-xs text-gray-400">
 									{meta(title)}
@@ -174,7 +178,12 @@ function TierRow({
 							className={`min-w-0 ${ITEM[tier.size]}`}
 							data-key={key}
 						>
-							<Link to={titleHref(title)} className="block" title={title.title}>
+							<Link
+								to={titleHref(title)}
+								className="relative block"
+								title={title.title}
+							>
+								{newOn?.sticker(title.tmdb_id, "absolute left-1 top-1 z-10")}
 								<img
 									src={posterUrl(
 										title.poster_path,

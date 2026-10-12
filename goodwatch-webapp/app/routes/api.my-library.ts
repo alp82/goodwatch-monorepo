@@ -2,6 +2,7 @@ import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
 import { isEnabled } from "~/server/features.server"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
+import { newOnForLibrary } from "~/server/newly-available.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 // One step of a list of My library (#385), with every status's count.
@@ -24,8 +25,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			{ error: "Pass offset as a step's start" },
 			{ status: 400, headers },
 		)
+	const choice = libraryChoiceOf(params)
 	return json<LibraryPage>(
-		await getLibraryPage(userId, libraryChoiceOf(params), offset),
+		await getLibraryPage(
+			userId,
+			choice,
+			offset,
+			await newOnForLibrary(request, userId, choice.status),
+		),
 		{ headers },
 	)
 }

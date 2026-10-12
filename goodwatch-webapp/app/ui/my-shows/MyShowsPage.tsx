@@ -6,9 +6,11 @@
 // The waiting shows are one row between Continue and Pick up, which names the show that returns first and opens to
 // all of them with the day each returns, soonest first, by the member's day (#442). Opening the page is the visit
 // that clears the signal outside it, and the page says once what was new.
+// The shows that landed on the member's services in the last 14 days are one row above the list, which names the
+// latest and opens to all of them with their days, and each of them carries the service's logo on its row (#489).
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation } from "@remix-run/react"
-import { type ReactNode, useEffect, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import {
 	ACTIVE_DAYS,
 	activityWords,
@@ -24,7 +26,7 @@ import {
 	upcomingWords,
 	waitingWords,
 } from "~/domain/new-episodes"
-import type { LandedLine } from "~/domain/newly-available-signal"
+import type { LandedTitle, NewOn } from "~/domain/newly-available-words"
 import type {
 	MyShows,
 	MyShowsRow,
@@ -41,7 +43,11 @@ import {
 	plural,
 	tmdbImage,
 } from "~/ui/my-pages/bits"
-import { LandedNote } from "~/ui/my-pages/LandedNote"
+import {
+	LandedRow,
+	NewOnSticker,
+	NewOnWords,
+} from "~/ui/my-pages/LandedRow"
 import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
 
@@ -149,7 +155,18 @@ const startRow = (row: MyShowsStart): RowWords => ({
 })
 
 /** A row of the list. The whole row is the link to the show's page. */
-function Row({ row, n, big }: { row: RowWords; n: number; big: boolean }) {
+function Row({
+	row,
+	n,
+	big,
+	newOn,
+}: {
+	row: RowWords
+	n: number
+	big: boolean
+	/** The service the show is new on, when it landed in the last 14 days (#489). */
+	newOn?: NewOn
+}) {
 	return (
 		<li data-row={row.id} data-tag={row.tag}>
 			<Link
@@ -174,12 +191,24 @@ function Row({ row, n, big }: { row: RowWords; n: number; big: boolean }) {
 							className="absolute inset-0 h-full w-full object-cover"
 						/>
 					)}
+					{newOn && (
+						<NewOnSticker service={newOn} className="absolute left-2 top-2" />
+					)}
 				</span>
-				<Poster
-					path={row.poster_path}
-					size="w185"
-					className="my-3 h-24 w-16 shrink-0 rounded-md sm:hidden"
-				/>
+				<span className="relative my-3 shrink-0 sm:hidden">
+					<Poster
+						path={row.poster_path}
+						size="w185"
+						className="h-24 w-16 rounded-md"
+					/>
+					{newOn && (
+						<NewOnSticker
+							service={newOn}
+							small
+							className="absolute left-1 top-1"
+						/>
+					)}
+				</span>
 				<span
 					className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "py-5" : "py-3"}`}
 				>
@@ -241,7 +270,11 @@ const GroupLabel = ({
 )
 
 /** A show with nothing for tonight: a compact row that opens the show. */
-function QuietRow({ row, fact }: { row: MyShowsRow; fact: string }) {
+function QuietRow({
+	row,
+	fact,
+	newOn,
+}: { row: MyShowsRow; fact: string; newOn?: NewOn }) {
 	return (
 		<li data-quiet-row={row.id}>
 			<Link
@@ -258,7 +291,15 @@ function QuietRow({ row, fact }: { row: MyShowsRow; fact: string }) {
 					<span className="block truncate text-xs text-gray-400">
 						{progressWords(row)}
 					</span>
-					<span className="block truncate text-xs text-gray-500">{fact}</span>
+					{/* The poster is too small for the logo: the words carry it. */}
+					<span className="block truncate text-xs text-gray-500">
+						{newOn && (
+							<>
+								<NewOnWords service={newOn} /> ·{" "}
+							</>
+						)}
+						{fact}
+					</span>
 				</span>
 				<ChevronRightIcon
 					className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
@@ -274,19 +315,26 @@ function QuietGroup({
 	title,
 	rows,
 	fact,
+	newOn,
 	closed,
 }: {
 	id: string
 	title: string
 	rows: MyShowsRow[]
 	fact: (row: MyShowsRow) => string
+	newOn?: ReadonlyMap<number, NewOn>
 	closed?: boolean
 }) {
 	if (!rows.length) return null
 	const list = (
 		<ul className="grid gap-2 md:grid-cols-2">
 			{rows.map((row) => (
-				<QuietRow key={row.id} row={row} fact={fact(row)} />
+				<QuietRow
+					key={row.id}
+					row={row}
+					fact={fact(row)}
+					newOn={newOn?.get(row.id)}
+				/>
 			))}
 		</ul>
 	)
@@ -447,18 +495,20 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 	)
 }
 
+const NOTHING_LANDED: LandedTitle[] = []
+
 export function MyShowsPage({
 	data,
 	now,
 	arrival = null,
-	landed = null,
+	landed = NOTHING_LANDED,
 }: {
 	data: MyShows
 	now: number
 	/** What was new when the member arrived; null where nothing recorded it. */
 	arrival?: Arrival | null
-	/** The shows that landed on the member's services since their last visit (#456). */
-	landed?: LandedLine | null
+	/** The shows that landed on the member's services in the last 14 days, the latest first (#489). */
+	landed?: LandedTitle[]
 }) {
 	useMyShowsVisit()
 	// The server's day first, so that the page hydrates as it was sent; then the member's.
@@ -493,6 +543,24 @@ export function MyShowsPage({
 		</a>
 	)
 	const lastWatch = (row: MyShowsRow) => activityWords(row.lastActivityAt, now)
+	const newOn = useMemo(
+		() =>
+			new Map(
+				landed.flatMap(({ tmdbId, service }) =>
+					service ? [[tmdbId, service] as const] : [],
+				),
+			),
+		[landed],
+	)
+	// A show that landed and has a new episode says both: the row names where it is new, its line here the episode.
+	const withNewEpisode = new Set(
+		data.continue
+			.filter(
+				(row) =>
+					row.kind === "seenNew" || isNew(row.next?.airDate ?? null, now),
+			)
+			.map((row) => row.id),
+	)
 	const quiet = data.onHold.length + data.dropped.length
 	return (
 		<div className="overflow-x-clip pb-24" data-my-shows>
@@ -533,7 +601,6 @@ export function MyShowsPage({
 							</span>
 						</p>
 					)}
-					<LandedNote kind="show" landed={landed} className="mt-2" />
 					<p
 						className="mb-4 mt-1 max-w-3xl text-sm text-gray-400"
 						data-order-rule
@@ -563,6 +630,13 @@ export function MyShowsPage({
 						)}
 						{total > 0 && "A row opens the show."}
 					</p>
+					<LandedRow
+						landed={landed}
+						note={(show) =>
+							withNewEpisode.has(show.tmdbId) ? "also a new episode" : null
+						}
+						className="mb-4"
+					/>
 					{total === 0 && (
 						<Empty title="No show for tonight">
 							Want to See on a show puts it here to start, with how long it is
@@ -583,7 +657,13 @@ export function MyShowsPage({
 								/>
 							)}
 							{continues.map((row, i) => (
-								<Row key={row.id} row={row} n={i + 1} big={i === 0} />
+								<Row
+									key={row.id}
+									row={row}
+									n={i + 1}
+									big={i === 0}
+									newOn={newOn.get(row.id)}
+								/>
 							))}
 							<WaitingRow rows={data.waiting} today={today} />
 							{pickUps.length > 0 && (
@@ -600,6 +680,7 @@ export function MyShowsPage({
 									row={row}
 									n={continues.length + i + 1}
 									big={!continues.length && i === 0}
+									newOn={newOn.get(row.id)}
 								/>
 							))}
 							{pickUpLeft > 0 && (
@@ -631,6 +712,7 @@ export function MyShowsPage({
 									row={row}
 									n={continues.length + pickUps.length + i + 1}
 									big={!continues.length && !pickUps.length && i === 0}
+									newOn={newOn.get(row.id)}
 								/>
 							))}
 						</ol>
@@ -660,6 +742,7 @@ export function MyShowsPage({
 							title="On hold"
 							rows={data.onHold}
 							fact={lastWatch}
+							newOn={newOn}
 							closed
 						/>
 						<QuietGroup

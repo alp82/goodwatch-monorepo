@@ -24,13 +24,6 @@ export interface NewOnServices {
 	shows: Landings
 }
 
-/** What a page is told for its line on arrival: how many landed, the first names, and the first one's service. */
-export interface LandedLine {
-	count: number
-	titles: string[]
-	service: string | null
-}
-
 export const badgeOf = (count: number) => (count > 99 ? "99+" : String(count))
 
 /** How many of the member's shows are new: with a new episode, newly on a service, or both, each once. */

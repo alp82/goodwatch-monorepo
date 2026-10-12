@@ -24,6 +24,7 @@ export type TonightReason =
 	// With REC_TRACKING (#385):
 	| "nextEpisode" // the Next episode of the Watching show the member was last active on in the last 90 days
 	| "startShow" // no such show and no movie: the first show to start
+	| "landed" // the pick's door is led by a title that landed on the member's services in the last 14 days (#489)
 
 export interface TonightsPick {
 	title: TitleCard
@@ -36,8 +37,9 @@ export interface TonightsPick {
 
 /**
  * Tonight's pick for a member with REC_TRACKING: the Next episode of the Watching show they were last active on in
- * the last 90 days; without one, the first movie of My movies; without one, the first show to start. Null when the
- * member has none of them, and the pick is then what it is without tracking.
+ * the last 90 days; without one, the first movie of My movies; without one, the first show to start. The pick is
+ * what its door shows first, so a movie or a show to start that landed lately is the pick when its door is (#489).
+ * Null when the member has none of them, and the pick is then what it is without tracking.
  */
 async function trackedPick(
 	ctx: ViewerContext,
@@ -50,11 +52,13 @@ async function trackedPick(
 	if (choice.kind === "movie" && movie)
 		return {
 			title: movie,
-			reason: !parts.movieFits
-				? "notOnServices"
-				: parts.movieByMatch
-					? "bestMatch"
-					: "lastAdded",
+			reason: parts.newOn.movie
+				? "landed"
+				: !parts.movieFits
+					? "notOnServices"
+					: parts.movieByMatch
+						? "bestMatch"
+						: "lastAdded",
 			href: DOOR_HREF.movie,
 		}
 	if (choice.kind === "movie") return null
@@ -65,7 +69,11 @@ async function trackedPick(
 	)
 	if (!title) return null
 	if (choice.kind === "start")
-		return { title, reason: "startShow", href: DOOR_HREF.start }
+		return {
+			title,
+			reason: parts.newOn.start ? "landed" : "startShow",
+			href: DOOR_HREF.start,
+		}
 	const next = parts.shows.continue[0].next
 	return {
 		title,

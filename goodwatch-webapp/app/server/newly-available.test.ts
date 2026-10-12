@@ -1,6 +1,8 @@
 // Newly available on a member's services (#456) on the server, against the in-memory Crate of the tracking tests
 // with the offers of a country beside it: what the availability index reads to know when a service first carried a
-// title, what a member is told, and that a request sends no statement unless something landed.
+// title, what a member is told, and that a request sends no statement unless something landed. And the 14 days a
+// landing counts for (#489): what My movies and My shows list, what the Want to See list marks, and which title
+// leads a home door.
 
 // CommonJS packages are loaded before the alias hook, which would otherwise resolve their own relative requires.
 import "node-crate"
@@ -81,12 +83,21 @@ const { readFirstSeen, keptSince, launchTime, KEPT_DAYS } = await import(
 )
 const { availabilityLoaded, forgetAvailabilityForTest, landingsOnServices } =
 	await import("./availability-index.server.ts")
-const { MY_MOVIES_VISIT_KEY, getNewlyAvailable, recordMyMoviesVisit } =
-	await import("./newly-available.server.ts")
+const {
+	MY_MOVIES_VISIT_KEY,
+	getNewlyAvailable,
+	recordMyMoviesVisit,
+	getLandings,
+	getNewOn,
+	getRecentlyLanded,
+} = await import("./newly-available.server.ts")
+const { getTonightParts, homeDoorsOf } = await import("./home-doors.server.ts")
+const { getLibraryPage } = await import("./my-library.server.ts")
 const { recordMyShowsVisit } = await import("./new-episodes.server.ts")
 const { getMemberViewerContext } = await import("./viewer.server.ts")
-const { signalOf, lineOf } = await import("../domain/newly-available.ts")
+const { signalOf } = await import("../domain/newly-available.ts")
 const { titleKey } = await import("../utils/title-key.ts")
+const { tonightsPickOf } = await import("../domain/my-shows.ts")
 
 class Redis extends CacheTestRedis {
 	async set(key: string, value: string) {
@@ -174,6 +185,16 @@ class Crate {
 						: []
 				})
 			const json = [...rows("movie", movieIds), ...rows("show", showIds)]
+			return { json, rowcount: json.length }
+		}
+		// Watch next's sort facts for the movies behind home's door: a day, a score and a popularity for each.
+		if (sql.includes(" AS day, ")) {
+			const json = (params as number[]).map((id) => ({
+				tmdb_id: id,
+				day: day(-400),
+				score: 80,
+				popularity: 10,
+			}))
 			return { json, rowcount: json.length }
 		}
 		if (table !== "streaming_availability") return this.db.execute(raw, params)
@@ -273,6 +294,36 @@ const stateRow = (id: number, state: string): Row => ({
 	seen_question: "not_asked",
 	created_at: day(-20),
 	updated_at: day(-20),
+})
+
+const episodeRow = (showId: number, number: number, airDate: number): Row => ({
+	show_id: showId,
+	tmdb_id: showId * 1000 + number,
+	season_number: 1,
+	episode_number: number,
+	name: `Episode ${number}`,
+	air_date: airDate,
+	runtime: 45,
+	still_path: null,
+	episode_type: "standard",
+	removed_at: null,
+})
+const watchRow = (showId: number, number: number, at: number): Row => ({
+	user_id: user,
+	watch_id: `w-${showId}-${number}`,
+	media_type: "show",
+	tmdb_id: showId,
+	episode_tmdb_id: showId * 1000 + number,
+	season_number: 1,
+	episode_number: number,
+	watched_at: at,
+	watched_at_precision: "moment",
+	origin: "single",
+	group_id: null,
+	import_id: null,
+	pass: 1,
+	created_at: at,
+	updated_at: at,
 })
 
 /** A member in the United States with Netflix and Amazon Prime Video. */
@@ -454,13 +505,9 @@ test("a member is told the Want to See titles and the shows they watch that land
 	]
 	const fresh = await told()
 	assert.deepEqual(fresh, {
-		movies: { ids: [DUNE], titles: ["Dune"], service: "Netflix" },
-		// The latest to land first.
-		shows: {
-			ids: [SEVERANCE, PLURIBUS],
-			titles: ["Severance", "Pluribus"],
-			service: "Amazon Prime Video",
-		},
+		movies: { ids: [DUNE], only: { title: "Dune", service: "Netflix" } },
+		// The latest to land first. Several are counted, and no name is read for them.
+		shows: { ids: [SEVERANCE, PLURIBUS], only: null },
 	})
 	assert.deepEqual(signalOf(fresh), {
 		movies: {
@@ -469,11 +516,6 @@ test("a member is told the Want to See titles and the shows they watch that land
 			only: { title: "Dune", service: "Netflix" },
 		},
 		shows: { count: 2, ids: [SEVERANCE, PLURIBUS], only: null },
-	})
-	assert.deepEqual(lineOf(fresh.shows), {
-		count: 2,
-		titles: ["Severance", "Pluribus"],
-		service: "Amazon Prime Video",
 	})
 	// The two visits are read, each by its whole key, and no offer is read for the request.
 	assert.equal(visitReads().length, 2)
@@ -573,7 +615,7 @@ test("a title whose offers are unknown is not news until an offer exists", async
 	assert.equal(signalOf(await told()), null)
 })
 
-test("more than three landed titles are all counted, and three are named", async () => {
+test("several landed titles are all counted, and none is named", async () => {
 	member()
 	const ids = [DUNE, HEAT, TAR, 4, 5]
 	crate.db.seed(
@@ -584,9 +626,384 @@ test("more than three landed titles are all counted, and three are named", async
 		offer("movie", id, NETFLIX, day(5 - i * 0.1)),
 	)
 	const fresh = await told()
-	assert.deepEqual(fresh.movies, {
-		ids,
-		titles: ["Dune", "Heat", "Tár"],
-		service: "Netflix",
+	assert.deepEqual(fresh.movies, { ids, only: null })
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// Recently landed (#489): what the pages list, for 14 days from the day a title landed
+
+/** The member's context once the country's availability is loaded, with the statements so far forgotten. */
+async function loaded() {
+	const ctx = await getMemberViewerContext(user, "US")
+	await getNewlyAvailable(ctx)
+	await availabilityLoaded(ctx.country, 2000)
+	crate.db.statements.length = 0
+	return ctx
+}
+const listed = (titles: { tmdbId: number }[]) =>
+	titles.map(({ tmdbId }) => tmdbId)
+
+test("My movies and My shows are told what landed in the last 14 days, the latest first, with its service and day", async () => {
+	member()
+	crate.db.seed("user_wishlist", [
+		wish("movie", DUNE),
+		wish("movie", HEAT),
+		wish("show", PLURIBUS),
+	])
+	crate.db.seed("user_watch_state", [stateRow(SEVERANCE, "watching")])
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(3)),
+		offer("movie", HEAT, PRIME, day(8)),
+		offer("show", SEVERANCE, PRIME, day(5)),
+		offer("show", PLURIBUS, NETFLIX, day(4)),
+	]
+	const recent = await getRecentlyLanded(await loaded(), day(9))
+	assert.deepEqual(recent.movies, [
+		{
+			mediaType: "movie",
+			tmdbId: HEAT,
+			title: "Heat",
+			poster_path: null,
+			at: day(8),
+			days: 1,
+			// The short name, as the title page says it.
+			service: { id: PRIME, name: "Prime", logo_path: "/prime.png" },
+		},
+		{
+			mediaType: "movie",
+			tmdbId: DUNE,
+			title: "Dune",
+			poster_path: null,
+			at: day(3),
+			days: 6,
+			service: { id: NETFLIX, name: "Netflix", logo_path: "/netflix.png" },
+		},
+	])
+	assert.deepEqual(listed(recent.shows), [SEVERANCE, PLURIBUS])
+	// Everything is within the 14 days: no visit is read for it.
+	assert.equal(visitReads().length, 0)
+})
+
+test("opening the page clears the signal and leaves the row: the row replaces the line said once", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE), wish("show", PLURIBUS)])
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(3)),
+		offer("show", PLURIBUS, NETFLIX, day(4)),
+	]
+	const ctx = await loaded()
+	await recordMyMoviesVisit(user, day(6))
+	await recordMyShowsVisit(user, day(6))
+	assert.equal(signalOf(await getNewlyAvailable(ctx)), null)
+	const recent = await getRecentlyLanded(ctx, day(9))
+	assert.deepEqual(listed(recent.movies), [DUNE])
+	assert.deepEqual(listed(recent.shows), [PLURIBUS])
+	// Day 16 is the last of Dune's 14 days, and the 13th of the show's.
+	const last = await getRecentlyLanded(ctx, day(16))
+	assert.deepEqual(listed(last.movies), [DUNE])
+	const after = await getRecentlyLanded(ctx, day(17))
+	assert.deepEqual(listed(after.movies), [])
+	assert.deepEqual(listed(after.shows), [PLURIBUS])
+	assert.deepEqual(await getRecentlyLanded(ctx, day(18)), {
+		movies: [],
+		shows: [],
+	})
+})
+
+test("a landing older than 14 days is listed while it is still news, and then the visit is read", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE), wish("movie", HEAT)])
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(1)),
+		offer("movie", HEAT, NETFLIX, day(8)),
+	]
+	const ctx = await loaded()
+	// The member has not opened My movies since: the signal counts both, so the page says both.
+	assert.deepEqual((await getNewlyAvailable(ctx)).movies.ids, [HEAT, DUNE])
+	crate.db.statements.length = 0
+	const unseen = await getRecentlyLanded(ctx, day(20))
+	assert.deepEqual(
+		unseen.movies.map(({ tmdbId, days }) => [tmdbId, days]),
+		[
+			[HEAT, 12],
+			[DUNE, 19],
+		],
+	)
+	assert.equal(visitReads().length, 1, "the My movies visit, by its key")
+	// Opened: Dune is no longer news and past its 14 days. Heat stays for its own.
+	await recordMyMoviesVisit(user, day(20))
+	assert.deepEqual(listed((await getRecentlyLanded(ctx, day(20))).movies), [
+		HEAT,
+	])
+	// The marks and the doors go by the 14 days alone.
+	assert.deepEqual(listed((await getLandings(ctx, day(20))).movies), [HEAT])
+})
+
+test("with nothing landed the row, the marks and the doors' lead send no statement", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", HEAT), wish("movie", TAR)])
+	crate.offers = [
+		offer("movie", HEAT, PRIME, day(-900)),
+		offer("movie", TAR, MAX, day(2)),
+	]
+	const ctx = await loaded()
+	assert.deepEqual(await getRecentlyLanded(ctx), { movies: [], shows: [] })
+	assert.deepEqual(await getLandings(ctx), { movies: [], shows: [] })
+	assert.equal((await getNewOn(ctx)).size, 0)
+	assert.deepEqual(crate.db.statements, [])
+})
+
+test("a title added after it landed, a guest and a member without a service have nothing recently landed", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE, day(4))])
+	crate.offers = [offer("movie", DUNE, NETFLIX, day(3))]
+	const ctx = await loaded()
+	assert.deepEqual(await getRecentlyLanded(ctx, day(5)), {
+		movies: [],
+		shows: [],
+	})
+	assert.deepEqual(
+		await getRecentlyLanded({ ...ctx, services: [] }, day(5)),
+		{ movies: [], shows: [] },
+	)
+	assert.deepEqual(
+		await getRecentlyLanded(
+			{ ...ctx, viewer: { kind: "guest", id: null } as never },
+			day(5),
+		),
+		{ movies: [], shows: [] },
+	)
+})
+
+test("several services: the title is marked with the one it landed on, and a second one later changes nothing", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE), wish("movie", HEAT)])
+	crate.offers = [
+		// On Netflix since day 2, and on Amazon Prime Video since day 6.
+		offer("movie", DUNE, NETFLIX, day(2)),
+		offer("movie", DUNE, PRIME, day(6)),
+		// Already on Netflix for years: Amazon Prime Video adding it is no landing.
+		offer("movie", HEAT, NETFLIX, day(-900)),
+		offer("movie", HEAT, PRIME, day(6)),
+	]
+	const ctx = await loaded()
+	const marks = await getNewOn(ctx, day(8))
+	assert.deepEqual(
+		[...marks],
+		[
+			[
+				titleKey("movie", DUNE),
+				{ id: NETFLIX, name: "Netflix", logo_path: "/netflix.png" },
+			],
+		],
+	)
+	// Its 14 days run from the first service: on day 16 it is over, ten days after the second one came.
+	assert.equal((await getNewOn(ctx, day(15))).size, 1)
+	assert.equal((await getNewOn(ctx, day(16))).size, 0)
+})
+
+test("the Want to See list marks the titles that are new on a service, and no other list does", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE), wish("movie", HEAT)])
+	crate.db.seed("movie", [catalog(DUNE, "Dune"), catalog(HEAT, "Heat")])
+	crate.offers = [
+		offer("movie", DUNE, PRIME, day(3)),
+		offer("movie", HEAT, NETFLIX, day(-900)),
+	]
+	const ctx = await loaded()
+	const marks = await getNewOn(ctx, day(9))
+	const choice = { status: "want", sort: null, kind: "all", q: "" } as const
+	const want = await getLibraryPage(user, choice, 0, marks)
+	assert.deepEqual(
+		want.items.map((item) => [item.title, item.newOn ?? null]),
+		[
+			["Dune", { id: PRIME, name: "Prime", logo_path: "/prime.png" }],
+			["Heat", null],
+		].sort(
+			(a, b) =>
+				want.items.findIndex((item) => item.title === a[0]) -
+				want.items.findIndex((item) => item.title === b[0]),
+		),
+	)
+	// Without the marks the items are what they were.
+	const plain = await getLibraryPage(user, choice)
+	assert.ok(plain.items.every((item) => !("newOn" in item)))
+	const seen = await getLibraryPage(user, { ...choice, status: "seen" }, 0, marks)
+	assert.ok(seen.items.every((item) => !("newOn" in item)))
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// Home's doors (#489): a landed title leads its own door
+
+const catalog = (id: number, name: string, rest: Row = {}): Row => ({
+	tmdb_id: id,
+	title: name,
+	poster_path: `/p${id}.jpg`,
+	backdrop_path: `/b${id}.jpg`,
+	release_year: 2021,
+	status: "Ended",
+	aired_episode_count: 10,
+	number_of_seasons: 1,
+	number_of_episodes: 10,
+	episode_runtime: [45],
+	...rest,
+})
+// Best match orders the movies: Heat, then Tár, then Dune. And the shows to start: Pluribus before Severance.
+const PERCENTILE: Record<number, number> = {
+	[titleKey("movie", HEAT)]: 99,
+	[titleKey("movie", TAR)]: 90,
+	[titleKey("movie", DUNE)]: 60,
+	[titleKey("show", PLURIBUS)]: 95,
+	[titleKey("show", SEVERANCE)]: 70,
+}
+const taste = {
+	signal: "some" as const,
+	ratings: 20,
+	liked: 12,
+	vector: null,
+	match: (keys: number[]) => keys.map((key) => PERCENTILE[key] ?? null),
+	percentile: (keys: number[]) => keys.map((key) => PERCENTILE[key] ?? null),
+	reasons: () => [],
+	leanings: () => [],
+}
+const THE_BEAR = 136315
+
+/** A member with three Want to See movies and two shows to start, all on their services. */
+function doorsMember() {
+	member()
+	crate.db.seed("user_wishlist", [
+		wish("movie", DUNE),
+		wish("movie", HEAT),
+		wish("movie", TAR),
+		wish("show", PLURIBUS),
+		wish("show", SEVERANCE),
+	])
+	crate.db.seed("movie", [
+		catalog(DUNE, "Dune"),
+		catalog(HEAT, "Heat"),
+		catalog(TAR, "Tár"),
+	])
+	crate.db.seed("show", [
+		catalog(PLURIBUS, "Pluribus"),
+		catalog(SEVERANCE, "Severance"),
+		catalog(THE_BEAR, "The Bear"),
+	])
+	names({ "The Bear": ["show", THE_BEAR] })
+	crate.offers = [
+		offer("movie", HEAT, NETFLIX, day(-900)),
+		offer("movie", TAR, NETFLIX, day(-900)),
+		offer("movie", DUNE, NETFLIX, day(-900)),
+		offer("show", PLURIBUS, NETFLIX, day(-900)),
+		offer("show", SEVERANCE, NETFLIX, day(-900)),
+	]
+}
+const lands = (type: "movie" | "show", id: number, service: number, at: number) => {
+	crate.offers = [
+		...crate.offers.filter((o) => !(o.type === type && o.id === id)),
+		offer(type, id, service, at),
+	]
+}
+const doorsOn = async (now: number) => {
+	const ctx = await loaded()
+	const parts = await getTonightParts(ctx, taste as never, now)
+	return { parts, doors: homeDoorsOf(parts, ctx.services, now) }
+}
+
+test("without a landing the doors are in their own order: best match first", async () => {
+	doorsMember()
+	const { parts, doors } = await doorsOn(day(9))
+	assert.deepEqual(
+		parts.movies.map((movie) => movie.title),
+		["Heat", "Tár", "Dune"],
+	)
+	assert.deepEqual(parts.newOn, { movie: null, start: null })
+	assert.equal(doors.movie.title, "Heat")
+	assert.equal(doors.start?.title, "Pluribus")
+	assert.ok(!("newOn" in doors.movie))
+	assert.ok(doors.start && !("newOn" in doors.start))
+})
+
+test("a landed movie leads A movie and a landed show to start leads Start a show, for 14 days", async () => {
+	doorsMember()
+	lands("movie", DUNE, PRIME, day(3))
+	lands("show", SEVERANCE, NETFLIX, day(4))
+	const { parts, doors } = await doorsOn(day(9))
+	// The landed one first; the others keep their order behind it.
+	assert.deepEqual(
+		parts.movies.map((movie) => movie.title),
+		["Dune", "Heat", "Tár"],
+	)
+	assert.deepEqual(
+		parts.shows.start.map((show) => show.title),
+		["Severance", "Pluribus"],
+	)
+	assert.equal(doors.movie.title, "Dune")
+	assert.equal(doors.movie.newOn, "Prime")
+	assert.equal(doors.start?.title, "Severance")
+	assert.equal(doors.start?.newOn, "Netflix")
+	// A visit of the pages does not end it.
+	await recordMyMoviesVisit(user, day(8))
+	await recordMyShowsVisit(user, day(8))
+	assert.equal((await doorsOn(day(9))).doors.movie.title, "Dune")
+	// Day 16 is the last of Dune's 14 days; the show landed a day later.
+	const last = await doorsOn(day(16))
+	assert.equal(last.doors.movie.newOn, "Prime")
+	const after = await doorsOn(day(17))
+	assert.equal(after.doors.movie.title, "Heat")
+	assert.ok(!("newOn" in after.doors.movie))
+	assert.equal(after.doors.start?.title, "Severance")
+	const over = await doorsOn(day(18))
+	assert.equal(over.doors.start?.title, "Pluribus")
+})
+
+test("of several landed movies the latest leads, and the others follow it", async () => {
+	doorsMember()
+	lands("movie", DUNE, PRIME, day(3))
+	lands("movie", TAR, PRIME, day(6))
+	const { parts, doors } = await doorsOn(day(9))
+	assert.deepEqual(
+		parts.movies.map((movie) => movie.title),
+		["Tár", "Dune", "Heat"],
+	)
+	assert.equal(doors.movie.newOn, "Prime")
+})
+
+test("a show the member is in the middle of that landed keeps its place, and Tonight's pick keeps its order", async () => {
+	doorsMember()
+	// The Bear: watching, an episode watched yesterday, and new on Netflix since day 5.
+	crate.db.seed("user_watch_state", [
+		{ ...stateRow(THE_BEAR, "watching"), state_changed_at: day(8) },
+	])
+	crate.db.seed("episode", [
+		episodeRow(THE_BEAR, 1, day(-300)),
+		episodeRow(THE_BEAR, 2, day(-290)),
+		episodeRow(THE_BEAR, 3, day(-280)),
+	])
+	crate.db.seed("user_watch_log", [watchRow(THE_BEAR, 1, day(8))])
+	lands("show", THE_BEAR, NETFLIX, day(5))
+	lands("movie", DUNE, PRIME, day(3))
+	const ctx = await loaded()
+	// It has landed, and the page lists it.
+	assert.deepEqual(listed((await getRecentlyLanded(ctx, day(9))).shows), [
+		THE_BEAR,
+	])
+	const parts = await getTonightParts(ctx, taste as never, day(9))
+	const doors = homeDoorsOf(parts, ctx.services, day(9))
+	// Continue is the show, as before, and the shows to start are in their own order.
+	assert.equal(doors.continue?.title, "The Bear")
+	assert.equal(doors.start?.title, "Pluribus")
+	assert.deepEqual(parts.newOn, { movie: "Prime", start: null })
+	// Tonight's pick goes by the doors' order: the show the member is in, not the movie that landed.
+	const pick = tonightsPickOf(parts.shows, parts.movies[0]?.tmdb_id ?? null)
+	assert.deepEqual(pick, { kind: "episode", showId: THE_BEAR })
+})
+
+test("without a show to continue, the movie that landed is Tonight's pick, as the first of its door", async () => {
+	doorsMember()
+	lands("movie", DUNE, PRIME, day(3))
+	const { parts } = await doorsOn(day(9))
+	assert.deepEqual(tonightsPickOf(parts.shows, parts.movies[0].tmdb_id), {
+		kind: "movie",
+		movieId: DUNE,
 	})
 })

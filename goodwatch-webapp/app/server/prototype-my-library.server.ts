@@ -8,6 +8,7 @@
 // in-memory Crate of the tracking tests; the catalog (titles, runtimes, aired counts, services) is answered from the
 // fixture below. Titles are made up or borrowed by name only: nothing is read from TMDB, and posters are paths that
 // lead nowhere.
+import type { LibraryChoice } from "~/domain/my-library"
 import { utcDay } from "~/domain/tracking/machine"
 import {
 	availabilityLoaded,
@@ -23,7 +24,9 @@ import {
 	recordMyShowsVisit,
 } from "~/server/new-episodes.server"
 import {
+	getNewOn,
 	getNewlyAvailable,
+	getRecentlyLanded,
 	recordMyMoviesVisit,
 } from "~/server/newly-available.server"
 import { updateScores } from "~/server/scores.server"
@@ -168,20 +171,29 @@ interface LandedOffer {
 	service: number
 	at: number
 }
-const LANDED_OFFERS: Record<LandedKey, [type: "movie" | "show", id: number, service: number][]> = {
+// Each with the days since it appeared.
+const LANDED_OFFERS: Record<
+	LandedKey,
+	[type: "movie" | "show", id: number, service: number, days: number][]
+> = {
 	none: [],
 	// Dune: Part Two.
-	movie: [["movie", 1002, 8]],
+	movie: [["movie", 1002, 8, 1]],
 	// Station Eleven.
-	show: [["show", 303, 337]],
+	show: [["show", 303, 337, 1]],
 	several: [
-		["movie", 1002, 8],
-		["movie", 1003, 8],
-		["movie", 1006, 337],
-		["movie", 1007, 8],
-		["show", 303, 337],
-		["show", 302, 8],
+		["movie", 1002, 8, 1],
+		["movie", 1003, 8, 3],
+		["movie", 1006, 337, 5],
+		["movie", 1007, 8, 12],
+		["show", 303, 337, 1],
+		["show", 302, 8, 2],
 	],
+	// Slow Horses, which the member `new` watches and whose Next episode aired since their visit.
+	episode: [["show", 202, 8, 2]],
+	// The Holdovers, which the member added 19 days ago: before it landed, as the rule asks.
+	old: [["movie", 1003, 8, 12]],
+	gone: [["movie", 1003, 8, 15]],
 }
 
 interface Fixture {
@@ -213,12 +225,12 @@ function build(
 	const today = Math.floor(now / DAY) * DAY
 	const daysAgo = (days: number) => today - days * DAY + 20 * 3_600_000
 	const fixture: Fixture = {
-		// The latest in the list landed first, an hour apart, all about a day ago.
-		landed: LANDED_OFFERS[landed].map(([type, id, service], i) => ({
+		// At noon of its day, so that the days since read the same at any hour; the first of a day is the latest.
+		landed: LANDED_OFFERS[landed].map(([type, id, service, days], i) => ({
 			type,
 			id,
 			service,
-			at: now - DAY - i * 3_600_000,
+			at: today - days * DAY + 12 * 3_600_000 - i * 60_000,
 		})),
 		rows: {
 			user_watch_state: [],
@@ -834,9 +846,13 @@ class HarnessCrate {
 			const { landed } = this.fixture
 			const lately = (type: string, id: number) =>
 				landed.filter((offer) => offer.type === type && offer.id === id)
-			const titles = [
+			const titles: (readonly ["movie" | "show", number])[] = [
 				...ids(301, START_NAMES.length).map((id) => ["show", id] as const),
 				...ids(1001, MOVIE_NAMES.length).map((id) => ["movie", id] as const),
+				// A show the member watches has no offer here unless one landed.
+				...landed
+					.filter(({ type, id }) => type === "show" && id < 301)
+					.map(({ type, id }) => [type, id] as const),
 			]
 			// When the offers that landed first appeared (#456): the titles with one, then every service of those.
 			let rows: unknown[][]
@@ -955,7 +971,14 @@ export const harness = {
 		await availabilityLoaded("US", 5000)
 	},
 	userData: () => getUserData({ user_id: HARNESS_MEMBER }),
-	library: getLibraryPage.bind(null, HARNESS_MEMBER),
+	async library(choice: LibraryChoice, offset = 0) {
+		return getLibraryPage(
+			HARNESS_MEMBER,
+			choice,
+			offset,
+			choice.status === "want" ? await getNewOn(await viewer()) : undefined,
+		)
+	},
 	async shows(now: number) {
 		const ctx = await viewer()
 		return getMyShows(
@@ -973,6 +996,8 @@ export const harness = {
 	visit: (now: number) => recordMyShowsVisit(HARNESS_MEMBER, now),
 	/** What landed on the member's services (#456), and the visit of My movies that clears its movies. */
 	landed: async () => getNewlyAvailable(await viewer()),
+	/** What landed in the last 14 days (#489): the row and the marks of My movies and My shows. */
+	recent: async (now: number) => getRecentlyLanded(await viewer(), now),
 	visitMovies: () => recordMyMoviesVisit(HARNESS_MEMBER),
 	async movies(options: Parameters<typeof getWatchNext>[1]) {
 		return getWatchNext(

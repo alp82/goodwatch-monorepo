@@ -413,7 +413,7 @@ test("home's Continue door is the show the member moved to Watching last, and sa
 	seedMoved()
 	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
 	const doors = homeDoorsOf(
-		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true },
+		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true, newOn: { movie: null, start: null } },
 		[],
 		NOW,
 	)
@@ -435,7 +435,7 @@ test("without a show in Continue, home's door is the first show to pick up, with
 	db.seed("user_watch_log", [...[1, 2, 3, 4].map((n) => watch(102, 1, n, daysAgo(120)))])
 	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
 	const doors = homeDoorsOf(
-		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true },
+		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true, newOn: { movie: null, start: null } },
 		[],
 		NOW,
 	)
