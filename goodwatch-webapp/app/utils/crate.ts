@@ -44,6 +44,34 @@ export const toCrateError = (error: unknown): Error => {
 	)
 }
 
+// Crate's type ids of the two timestamp types (node-crate/lib/types.js).
+const TIMESTAMP_TYPES: unknown[] = [11, 15]
+
+// node-crate builds `json` with `new Date(value)` for every timestamp column (node-crate/lib/index.js), and
+// `new Date(null)` is 1 January 1970: a NULL timestamp arrived as that date, and the tracking writer stored it back
+// as the day a rate prompt was dismissed. `json` is therefore built here, from the same answer: a NULL timestamp
+// is null, a stored one a Date as before.
+const withNullTimestamps = <R extends { cols: string[]; rows: unknown[][]; col_types?: unknown[]; json: unknown[] }>(
+	result: R,
+): R => {
+	let json: Record<string, unknown>[] | undefined
+	return Object.defineProperty(result, "json", {
+		configurable: true,
+		enumerable: true,
+		get: () =>
+			(json ??= result.rows.map((row) =>
+				Object.fromEntries(
+					result.cols.map((column, i) => [
+						column,
+						row[i] !== null && TIMESTAMP_TYPES.includes(result.col_types?.[i])
+							? new Date(row[i] as number)
+							: row[i],
+					]),
+				),
+			)),
+	})
+}
+
 let captureRequest: ((request: ClientRequest) => void) | undefined
 let requestCaptureInstalled = false
 
@@ -103,7 +131,7 @@ class CrateClient {
 				const destroy = () => { request?.destroy(signal.reason) }
 				signal.addEventListener("abort", destroy, { once: true })
 				try {
-					return await pending
+					return withNullTimestamps(await pending)
 				} finally {
 					signal.removeEventListener("abort", destroy)
 				}
@@ -377,6 +405,21 @@ export const upsert = async ({
 		return { rowcount: totalRowcount }
 	}
 }
+
+/**
+ * Rows with every timestamp as epoch milliseconds, for a reader that compares or subtracts them: two Dates of the
+ * same moment are not `===`. NULL stays null.
+ */
+export const timestampsAsMillis = <T extends {}>(rows: readonly T[]): T[] =>
+	rows.map(
+		(row) =>
+			Object.fromEntries(
+				Object.entries(row).map(([column, value]) => [
+					column,
+					value instanceof Date ? value.getTime() : value,
+				]),
+			) as T,
+	)
 
 export type CrateValue = string | number | boolean | Date | null
 
