@@ -11,7 +11,7 @@
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
-		"prototype:brand": "echo 'Open http://localhost:5188/prototype/rec-brand?variant=A' && WEBAPP_ROLE=page remix vite:dev --host 0.0.0.0 --port 5188 --strictPort",
+		"prototype:brand": "echo 'Open http://localhost:5188/prototype/rec-brand?variant=A' && WEBAPP_ROLE=page remix vite:dev --config scripts/brand-vite.config.mjs --host 0.0.0.0 --port 5188 --strictPort",
 		"postinstall": "patch-package"
 	},
 	"dependencies": {

@@ -30,6 +30,8 @@ That starts the dev server on port 5188 and prints the address. The route answer
 
 The isolated worktree is `/tmp/goodwatch-wordmark-prototype`; run the command there. The preview uses the page
 process role, so it does not load the search models. Existing app-shell startup still runs normally.
+Its dedicated Vite config also skips the metrics labeler's recursive server-build import, which otherwise
+causes a Remix initialization error on a fresh dev-server start. This workaround applies only to this runner.
 
 - <http://localhost:5188/prototype/rec-brand?variant=A>
 - <http://localhost:5188/prototype/rec-brand?variant=B>
@@ -95,6 +97,7 @@ living room, generated og images and share cards, and no single page shows all o
 - `goodwatch-webapp/app/ui/prototype-rec-brand/Review.tsx`
 - `goodwatch-webapp/app/ui/prototype-rec-brand/brand.css`
 - `goodwatch-webapp/package.json` (`prototype:brand`)
+- `goodwatch-webapp/scripts/brand-vite.config.mjs` (preview-only startup workaround)
 
 ## Browser verification and captures
 
