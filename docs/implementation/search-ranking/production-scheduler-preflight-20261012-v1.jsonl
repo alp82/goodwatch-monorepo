@@ -1,0 +1,3 @@
+{"event":"preflight.reader-born.v1","pid":656504,"startTicks":2825246079,"sourceSha256":"09fac5f6cb0faaca03178396e5971fd24dfb29f2af154fdafde71033e4bb3559","hostFilesCreated":0}
+{"event":"cron-schedule-failed.v1","reason":"identity_or_timezone_unestablished"}
+{"event":"preflight.reader-exit.v1","pid":656504,"startTicks":2825246079,"exitCode":1,"readerGoneProven":true,"termSent":false,"killSent":false,"clean":false,"reason":null,"hostFilesCreated":0}

@@ -1,0 +1,9 @@
+{"event":"preflight.reader-born.v1","pid":671142,"startTicks":2825278905,"sourceSha256":"36d7e2bd606ea3f7c26228e987226855c440a31175e26eda5439d6928cd2c78f","hostFilesCreated":0}
+{"event":"cron-diagnostic.phase.v2","phase":"proc-census"}
+{"event":"cron-diagnostic.phase.v2","phase":"boot-clock"}
+{"event":"cron-diagnostic.phase.v2","phase":"daemon-census","processEntries":319}
+{"event":"cron-diagnostic.phase.v2","phase":"daemon-selection","candidateCount":1,"hostNamespaceCandidates":1}
+{"event":"cron-diagnostic.candidate.v2","mountNamespaceIsHost":true,"cgroupHash":"7eb2c41b1d316e20d40d80292c7a0e26293d946f08bc2d024b5df77b61ef28ea","pid":2662717,"startTicks":2555921687,"comm":"cron","startedEpochSeconds":1789106888.87,"daemonTimezoneSet":false,"daemonTimezoneIsUtc":null,"daemonTimezoneHash":null}
+{"event":"cron-diagnostic.phase.v2","phase":"package-query"}
+{"event":"cron-diagnostic.failed.v2","phase":"package-query","reason":"package_unknown"}
+{"event":"preflight.reader-exit.v1","pid":671142,"startTicks":2825278905,"exitCode":1,"readerGoneProven":true,"termSent":false,"killSent":false,"clean":false,"reason":null,"hostFilesCreated":0}
