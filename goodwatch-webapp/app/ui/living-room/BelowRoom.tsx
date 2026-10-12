@@ -87,7 +87,7 @@ export function BelowRoom({
 }: BelowRoomProps) {
 	const back = (
 		<a href={`#${ROOM_ID}`} onClick={onBack} className="lrb-back">
-			<span aria-hidden>↑</span> Back to the living room
+			<span aria-hidden>↑</span> Back to Home
 		</a>
 	)
 	return (
