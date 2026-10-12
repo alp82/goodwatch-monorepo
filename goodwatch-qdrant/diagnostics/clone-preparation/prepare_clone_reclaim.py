@@ -479,7 +479,7 @@ def quiescent_snapshot(c,source,seconds=0,clock=time.monotonic,sleep=time.sleep)
    sleep(min(.25,seconds-elapsed))
 
 
-def postwrite_zero_observer(sample,reference,evidence,start,seconds=60,clock=time.monotonic,sleep=time.sleep):
+def postwrite_zero_observer(sample,reference,evidence,start,seconds=60,clock=time.monotonic,sleep=time.sleep,guard=None):
  """Observe only: every completed full sample is fenced before classifying dirtiness."""
  if seconds!=60:raise RuntimeError('prepared_input_changed')
  evidence.update({'budgetSeconds':60,'sampleLimit':256,'samples':0,'dirtySamples':0,'maxFileDirtyBytes':0,'maxFileWritebackBytes':0,'zeroDirtyAndWriteback':False})
@@ -489,7 +489,9 @@ def postwrite_zero_observer(sample,reference,evidence,start,seconds=60,clock=tim
   if evidence['samples']>=256:raise RuntimeError('postwrite_sample_bound_exceeded')
   state=sample();evidence['samples']+=1
   evidence.setdefault('initial',state);evidence['terminal']=state
-  evidence['seconds']=round(clock()-start,6)
+  try:
+   if guard is not None:guard(state)
+  finally:evidence['seconds']=round(clock()-start,6)
   fence(reference,state)
   dirty=state['memory']['file_dirty'];writeback=state['memory']['file_writeback']
   evidence.update({'fileDirtyBytes':dirty,'fileWritebackBytes':writeback,'maxFileDirtyBytes':max(evidence['maxFileDirtyBytes'],dirty),'maxFileWritebackBytes':max(evidence['maxFileWritebackBytes'],writeback)})
@@ -541,13 +543,13 @@ def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_o
    c.runtime.validate_source_locally(source)
    current=os.stat('memory.reclaim',dir_fd=directory,follow_symlinks=False)
    if (current.st_dev,current.st_ino)!=(identity.st_dev,identity.st_ino):raise RuntimeError('reclaim_fd_changed')
-   state=snapshot(c,source,require_clean=False)
+   return snapshot(c,source,require_clean=False)
+  def postwrite_guard(state):
    c.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes))
    if c.self_cgroup()!=parent_group:raise RuntimeError('parent_placement_changed')
    require_held_control_lock(c,lock_fd);c.frozen_helper(config)
    if (source.cgroup.stat().st_dev,source.cgroup.stat().st_ino)!=(directory_identity.st_dev,directory_identity.st_ino):raise RuntimeError('reclaim_fd_changed')
-   return state
-  output['after']=postwrite_zero_observer(postwrite_sample,output['before'],output['postwriteQuiescence'],postwrite_start,seconds=postwrite_seconds)
+  output['after']=postwrite_zero_observer(postwrite_sample,output['before'],output['postwriteQuiescence'],postwrite_start,seconds=postwrite_seconds,guard=postwrite_guard)
   measured=c.runtime.measure_source(spec,raise_own_nofile=raise_own_nofile);output['measurement']=c.daemon.public_measure(measured)
   if measured['selectionHash']!=initial['selectionHash']:raise RuntimeError('source_changed')
   output['final']=snapshot(c,source,require_clean=False);fence(output['before'],output['final']);require_zero(output['final']);output['healthAfter']=health(c,source)
