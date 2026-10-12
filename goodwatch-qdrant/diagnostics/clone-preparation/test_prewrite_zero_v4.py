@@ -1,4 +1,4 @@
-import json,os,tempfile,time,unittest
+import ctypes,errno,json,os,tempfile,time,unittest
 from pathlib import Path
 from unittest.mock import patch
 import prepare_clone_reclaim as p
@@ -115,5 +115,40 @@ class PriorReceiptTests(unittest.TestCase):
    with patch.object(p,'read_record',return_value=record),patch.object(p.os,'pidfd_open',side_effect=openpid),patch.object(p,'identity',side_effect=reread),patch.object(p.signal,'pidfd_send_signal') as sending:
     result,_=p.open_recorded_writer(Path('/fixture'), 'a'*64,(os.getpid(),));self.assertIsNone(result);self.assertEqual(calls,['pidfd','birth']);sending.assert_not_called()
   finally:os.close(realwrite)
+
+class SingleKernelWrite(unittest.TestCase):
+ def test_eintr_is_one_libc_invocation_never_python_retry(self):
+  calls=[]
+  class Call:
+   def __call__(self,*args):calls.append(args);ctypes.set_errno(errno.EINTR);return -1
+  class Library:write=Call()
+  with patch.object(p.ctypes,'CDLL',return_value=Library()):
+   with self.assertRaises(OSError) as caught:p.kernel_write_once(123,b'3221225472')
+  self.assertEqual(caught.exception.errno,errno.EINTR);self.assertEqual(len(calls),1);self.assertEqual(calls[0][2],10)
+ def test_actual_owned_child_eintr_reports_one_attempt_and_no_bytes(self):
+  with tempfile.TemporaryDirectory() as name:
+   d=Path(name);f=d/'target';fd=os.open(f,os.O_CREAT|os.O_RDWR,0o600)
+   with patch.object(p,'kernel_write_once',side_effect=InterruptedError(errno.EINTR,'private')):
+    value=p.bounded_phase_write(fd,lambda:{'memory':{'file_dirty':0,'file_writeback':0}},d)
+   self.assertEqual(value['outcome'],'write-failed');self.assertEqual(value['errno'],errno.EINTR);self.assertEqual(value['writeAttempts'],1);self.assertEqual(f.read_bytes(),b'');self.assertTrue(value['writerGone']);self.assertTrue(value['phaseProtocol']['drainedToEof']);self.assertTrue(value['phaseProtocol']['writeStartObserved']);self.assertEqual(len(list(d.glob('reclaim-writer-*.json'))),1)
+
+class RetainedPidfds(unittest.TestCase):
+ def test_existing_retained_without_list_keeps_old_and_new_pidfds(self):
+  for changed in (False,True):
+   with tempfile.TemporaryDirectory() as name:
+    d=Path(name);fd=os.open(d/'target',os.O_CREAT|os.O_RDWR,0o600);child=os.fork()
+    if child==0:time.sleep(30);os._exit(0)
+    old=os.pidfd_open(child,0);birth=p.identity(child);parent=p.identity(os.getpid());p.receipt(d,birth,parent,'a'*64,fd);record=next(d.glob('reclaim-writer-*.json'));p.RETAINED_WRITERS[child]={'pidfd':old,'birth':birth}
+    try:
+     if changed:
+      with patch.object(p,'identity',return_value={**birth,'cmdlineSha256':'b'*64}):
+       with self.assertRaisesRegex(RuntimeError,'writer_birth_changed'):p.open_recorded_writer(record,'a'*64,{os.getpid()})
+     else:
+      evidence=p.census_recorded_writers(d,'a'*64,{os.getpid()});self.assertFalse(evidence['recordedWritersGone'])
+     held=p.RETAINED_WRITERS[child];self.assertEqual(held['pidfd'],old);self.assertEqual(len(held['additionalPidfds']),1);os.fstat(old);os.fstat(held['additionalPidfds'][0])
+    finally:
+     os.kill(child,9);os.waitpid(child,0);held=p.RETAINED_WRITERS.pop(child);os.close(held['pidfd'])
+     for other in held.get('additionalPidfds',[]):os.close(other)
+     os.close(fd)
 
 if __name__=='__main__':unittest.main()

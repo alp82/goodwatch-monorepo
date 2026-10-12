@@ -1,3 +1,5 @@
+This document retains the earlier V3 protocol description for historical evidence. It is not V4 staging guidance. The current prepared stage JSON points to fresh V4; use [the V4 protocol](../clone-preparation/PREWRITE_ZERO_V4.md) for its 18-receipt cap and 145-second child lifecycle. Prior V1/V2/V3 stages are immutable.
+
 This is a prepared clone comparison revision. It has not been staged or executed. It does not begin the production seven-day acceptance window.
 
 The prior historical capture reached the candidate controller and refused its strict initial cap-fit guard. A later read-only measurement describes the then-current clone; it does not recreate the failed admission phase. A separate one-shot preparation subsequently demonstrated present-state fit after one bare 3 GiB `memory.reclaim` request. Neither result establishes admission after a future cold restart.

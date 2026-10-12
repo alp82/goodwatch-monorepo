@@ -1,7 +1,7 @@
 {
   "cachePreparation": {
     "helperPath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v4/prepare_clone_reclaim.py",
-    "helperSha256": "d67efd8ebc1f7769ecbe26917716bc0efe6c691a8cd6f217365e09cb648f25ed",
+    "helperSha256": "348d4a35b7eb323a89b6668e523ede15fb583896d1eb969fb8c70c433701e7a9",
     "maxSeconds": 60,
     "mode": "post-cold-owned-cgroup-reclaim",
     "quiescenceSeconds": 60,

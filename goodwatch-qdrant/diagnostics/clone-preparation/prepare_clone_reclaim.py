@@ -257,7 +257,7 @@ def open_recorded_writer(path,helper_sha256,protected_pids=()):
   if (info.st_dev,info.st_ino)!=(value['targetDevice'],value['targetInode']):raise RuntimeError('writer_birth_changed')
  except BaseException:
   RETAINED_WRITERS.setdefault(value['writer']['pid'],{'birth':value['writer'],'pidfd':pidfd,'additionalPidfds':[]})
-  if RETAINED_WRITERS[value['writer']['pid']]['pidfd']!=pidfd:RETAINED_WRITERS[value['writer']['pid']]['additionalPidfds'].append(pidfd)
+  if RETAINED_WRITERS[value['writer']['pid']]['pidfd']!=pidfd:RETAINED_WRITERS[value['writer']['pid']].setdefault('additionalPidfds',[]).append(pidfd)
   raise
  return pidfd,value
 
@@ -295,7 +295,7 @@ def census_recorded_writers(directory,helper_sha256,protected_pids,cleanup=False
      if exited:os.close(pidfd)
      else:
       RETAINED_WRITERS.setdefault(value['writer']['pid'],{'pidfd':pidfd,'birth':value['writer'],'additionalPidfds':[]})
-      if RETAINED_WRITERS[value['writer']['pid']]['pidfd']!=pidfd:RETAINED_WRITERS[value['writer']['pid']]['additionalPidfds'].append(pidfd)
+      if RETAINED_WRITERS[value['writer']['pid']]['pidfd']!=pidfd:RETAINED_WRITERS[value['writer']['pid']].setdefault('additionalPidfds',[]).append(pidfd)
   except BaseException as error:result={'writerExitObserved':False,'writerGone':False,'cleanupUnknown':True,'reason':fixed_reason(error)}
   results.append(result)
  if bound_failed:results.append({'writerExitObserved':False,'writerGone':False,'cleanupUnknown':True,'reason':'writer_receipt_bound_exceeded'})
@@ -365,6 +365,15 @@ def child_zero_wait(check,acknowledged,clock=time.monotonic,sleep=time.sleep):
    sleep(min(.25,60-elapsed));continue
   return {'samples':samples,'seconds':round(elapsed,3),'budgetSeconds':60,'zeroDirtyAndWriteback':True,'fileDirtyBytes':0,'fileWritebackBytes':0},state
 
+def kernel_write_once(fd,data):
+ """One libc write call bypasses CPython's automatic EINTR retry wrapper."""
+ libc=ctypes.CDLL(None,use_errno=True);write_call=libc.write
+ write_call.argtypes=(ctypes.c_int,ctypes.c_void_p,ctypes.c_size_t);write_call.restype=ctypes.c_ssize_t
+ buffer=ctypes.create_string_buffer(data);ctypes.set_errno(0)
+ result=write_call(fd,ctypes.byref(buffer),len(data))
+ if result<0:raise OSError(ctypes.get_errno(),'single_kernel_write_failed')
+ return result
+
 def bounded_phase_write(fd,check,receipt_directory):
  result_read,result_write=os.pipe();phase_read,phase_write=os.pipe();protocol=WriterProtocol(phase_read,phase_write);evidence=None
  try:
@@ -384,8 +393,8 @@ def bounded_phase_write(fd,check,receipt_directory):
     else:
      phase_frame(phase_write,'write-start',write_stamp)
      try:
-      written=os.write(target,str(REQUEST).encode());result={'outcome':'accepted' if written==10 else 'write-failed','writtenBytes':written,'writeAttempts':1,'prewriteQuiescence':wait}
-     except OSError as error:result={'outcome':'under-reclaimed' if error.errno==errno.EAGAIN else 'write-failed','errno':error.errno if error.errno in (errno.EAGAIN,errno.EINVAL,errno.EPERM,errno.ENOENT,errno.EBADF) else 0,'writeAttempts':1,'prewriteQuiescence':wait}
+      written=kernel_write_once(target,str(REQUEST).encode());result={'outcome':'accepted' if written==10 else 'write-failed','writtenBytes':written,'writeAttempts':1,'prewriteQuiescence':wait}
+     except OSError as error:result={'outcome':'under-reclaimed' if error.errno==errno.EAGAIN else 'write-failed','errno':error.errno if error.errno in (errno.EAGAIN,errno.EINTR,errno.EINVAL,errno.EPERM,errno.ENOENT,errno.EBADF) else 0,'writeAttempts':1,'prewriteQuiescence':wait}
     raw=json.dumps(result).encode()
     if len(raw)>2048 or os.write(result_write,raw)!=len(raw):raise RuntimeError('writer_protocol_failed')
    finally:os.close(target);os.close(result_write);os.close(phase_write)
