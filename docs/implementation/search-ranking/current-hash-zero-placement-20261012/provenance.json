@@ -1,0 +1,44 @@
+{
+  "schema": "goodwatch.zero-placement-evidence.v1",
+  "association": "#100",
+  "repositoryBase": "e9ca8f6499e7aa7bd3836d5d5b4d52b25a8bfa5b",
+  "executionOwner": "root",
+  "journal": {
+    "file": "actual-zero-placement.jsonl",
+    "sha256": "2a9b79045c6cb07d1ebad6c0dacb9f128a12f54afa18bc83895b1a2c17714989",
+    "bytes": 4237,
+    "frames": 12,
+    "holderRegistrationJournalSha256": "95e9ad6c8dbd8bb4729aecee5919b74741524e7b4fac718831b70c858c8fe6c9"
+  },
+  "code": {
+    "combinedSha256": "8ceb2c6a1320376aa67f8117290a0e3e34dd5e0375fd15855db02b2609735528",
+    "combination": "ordered filename + NUL + bytes + NUL",
+    "orderedFiles": [
+      "pin.py",
+      "runtime.py",
+      "production.py",
+      "production_journal.py",
+      "zero_placement.py"
+    ],
+    "individualSha256": {
+      "pin.py": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec",
+      "runtime.py": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5",
+      "production.py": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005",
+      "production_journal.py": "20fd12fe1a2e5aa24ad5366bc584c0f410d12f6396ff84c0e2719d4fa3ebb389",
+      "zero_placement.py": "5e1cbc8b6288b4751f88b0f8c253e4569487aded8f9c028dea707680d549708d"
+    },
+    "repositoryBytesMatch": true
+  },
+  "transportSha256": {
+    "stage_and_run.py": "4e79df12154635327a403aa21faae5cc3bfd249b01b7a1b8efba367f41f719ef",
+    "launch.py": "24afe06c78d4748bc2065d6036b02816fc062ab319078cdf36d06ce5b4873255",
+    "test_launcher.py": "5ca08e2dd1563893d6d9cc5c42a6d350bd29382f03fc9d13ec5580c7f41ead74"
+  },
+  "publicProjection": "fixed scalar field allowlist; source contract and path inputs excluded",
+  "registeredHolderExits": 3,
+  "unknownEarlyChildrenPossible": true,
+  "productionActivation": false,
+  "latencyEvidence": false,
+  "headroomEvidence": false,
+  "productionAcceptance": false
+}
