@@ -37,7 +37,7 @@ export const VARIANTS10: Record<string, Variant10> = {
 		fly: true,
 		back: false,
 	},
-	// The middle is always in view: the grouping control frames a region and the middle side by side, and an island
+	// The grouping control frames the region, and an island
 	// sails over as soon as it's picked. After a pick the camera goes back out to the whole world, so the next island
 	// can come from any group.
 	harbor: {
@@ -45,7 +45,8 @@ export const VARIANTS10: Record<string, Variant10> = {
 		meta: "isles",
 		join: "dock",
 		dockFrom: 1,
-		frame: "pair",
+		// The region alone: side by side with the middle, a region came out too small to read or pick from.
+		frame: "region",
 		fly: false,
 		back: true,
 	},

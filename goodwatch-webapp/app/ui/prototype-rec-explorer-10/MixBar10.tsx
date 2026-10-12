@@ -1,6 +1,7 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer: what's picked, in one line over the map. Each picked island is a
 // chip that lets it go; empty rings show how many more can join; the line says what the combination holds, and the
 // button brings the middle (where it rises) into view.
+import { Press } from "~/ui/explorer/Tutorial"
 import type { MixKind } from "./engine10"
 
 export interface MixSide {
@@ -55,6 +56,7 @@ export function MixBar({
 	onClear,
 	onGo,
 	onAll,
+	nudge,
 }: {
 	state: MixBarState
 	onDrop: (id: string) => void
@@ -63,6 +65,8 @@ export function MixBar({
 	onGo: () => void
 	/** Goes back out to the whole world. */
 	onAll: () => void
+	/** The tutorial points at a button: on a touch screen with a finger, else with a cursor. */
+	nudge?: { at: "combined" | "separate"; touch: boolean } | null
 }) {
 	const free = Math.max(0, state.max - state.list.length)
 	return (
@@ -98,9 +102,10 @@ export function MixBar({
 					<button
 						type="button"
 						aria-pressed={state.at === "hub"}
-						className={state.at === "hub" ? "ex10-view-on" : ""}
+						className={`${state.at === "hub" ? "ex10-view-on" : ""} ${nudge?.at === "combined" ? "ex-tut-glow" : ""}`}
 						onClick={onGo}
 					>
+						{nudge?.at === "combined" && <Press touch={nudge.touch} />}
 						<svg viewBox="0 0 14 14" aria-hidden="true">
 							<path
 								d="M8.5 2H12v3.5M12 2L8 6M5.5 12H2V8.5M2 12l4-4"
@@ -123,9 +128,14 @@ export function MixBar({
 					</button>
 				</span>
 			</div>
-			<button type="button" className="ex-bar-x" onClick={onClear}>
+			<button
+				type="button"
+				className={nudge?.at === "separate" ? "ex-bar-x ex-tut-glow" : "ex-bar-x"}
+				onClick={onClear}
+			>
 				<Cross />
 				{state.list.length > 1 ? "Separate" : "Let go"}
+				{nudge?.at === "separate" && <Press touch={nudge.touch} />}
 			</button>
 		</div>
 	)

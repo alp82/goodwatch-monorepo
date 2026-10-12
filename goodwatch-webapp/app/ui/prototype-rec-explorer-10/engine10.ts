@@ -2124,6 +2124,14 @@ export function createMapEngine(
 			const r = regionAt(at.x, at.y)
 			return r === "hub" ? "hub" : r.id
 		},
+		/** The regions where they are on screen, for the tutorial's pointer. */
+		regionsOn() {
+			return regions.map((r) => ({ id: r.id, ...toScreen(r.cx, r.cy) }))
+		},
+		/** The middle on screen. */
+		hubOn() {
+			return world ? toScreen(world.hub.x, world.hub.y) : null
+		},
 		/** Whether a world circle shows whole in the free part of the view. */
 		inView(x: number, y: number, r: number) {
 			const p = hooks.current.pad()

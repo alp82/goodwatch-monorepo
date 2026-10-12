@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer: the real page (~/ui/explorer/ExplorerMap.tsx), forked for one world
 // with every grouping. The grouping control flies to a grouping's region; up to three islands from any regions are
-// picked, and their combination rises in the middle. The steps of the history, the tutorial, and the list for no
+// picked, and their combination rises in the middle. The steps of the history and the list for no
 // JavaScript are left out.
 import { useSearchParams } from "@remix-run/react"
 import {
@@ -38,7 +38,9 @@ import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import { MixBar, type MixBarState, sharedLine10, sharedNote10 } from "./MixBar10"
+import { useTutorial } from "~/ui/explorer/Tutorial"
 import { TopBar10 } from "./TopBar10"
+import { Tutorial10, type TutorialStep10 } from "./Tutorial10"
 import {
 	type Drawn,
 	type MapEngine,
@@ -914,6 +916,32 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		)
 	}, [picks, shares, engine, world])
 
+	/**
+	 * The tutorial's step: it follows what the viewer has done (a group, an island, another group, an island there,
+	 * Combined, a zoom into the combination), and ends once they've separated a combination.
+	 */
+	const [tutorial, endTutorial] = useTutorial(member, userLoading)
+	const [toldSeparate, setToldSeparate] = useState(false)
+	let tutStep: TutorialStep10 | null = null
+	if (tutorial && maps && !active?.pinned) {
+		const far = at === "all"
+		if (picks.length >= 2 && (mix || forming))
+			tutStep = focusIsland?.bridge
+				? "separate"
+				: at === "hub"
+					? "zoom"
+					: "combined"
+		else if (picks.length === 1 && at !== "hub")
+			tutStep = far ? "group2" : "two"
+		else if (!picks.length && at !== "hub") tutStep = far ? "group" : "one"
+	}
+	useEffect(() => {
+		if (tutStep === "separate") setToldSeparate(true)
+	}, [tutStep])
+	useEffect(() => {
+		if (toldSeparate && picks.length < 2 && !forming) endTutorial()
+	}, [toldSeparate, picks.length, forming])
+
 	// ------------------------------------------------------------ keyboard
 
 	const keys = useRef({ pin, unpin, flyIn })
@@ -1169,6 +1197,11 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 						onClear={() => void applyPicks([])}
 						onGo={() => goRegion("hub")}
 						onAll={() => goRegion("all")}
+						nudge={
+							tutStep === "combined" || tutStep === "separate"
+								? { at: tutStep, touch }
+								: null
+						}
 					/>
 				</div>
 			)}
@@ -1240,8 +1273,21 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 					</span>
 				</div>
 			)}
-			{maps && !active && !bar && !focusIsland && (
-				<p className="ex-hint">{hint}</p>
+			{tutStep ? (
+				<Tutorial10
+					engine={engine}
+					touch={touch}
+					step={tutStep}
+					picks={picks}
+					empty={(id) => shares?.get(id)?.count === 0}
+					onSkip={endTutorial}
+				/>
+			) : (
+				maps &&
+				!tutorial &&
+				!active &&
+				!bar &&
+				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
 			{hideToast.node}
@@ -1265,6 +1311,8 @@ function Styles10() {
 .ex10-view .ex10-view-on{background:rgba(255,255,255,.2);color:#fff}
 .ex10-view svg{width:12px;height:12px}
 .ex10-slot{width:18px;height:18px}
+.ex-bar-body:has(.ex-tut-press){overflow:visible}
+.ex10-view button.ex-tut-glow{position:relative;background:rgba(251,191,36,.28);animation:ex-tut-glow 1.3s ease-in-out infinite}
 `}</style>
 	)
 }

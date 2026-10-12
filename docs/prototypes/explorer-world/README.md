@@ -25,7 +25,17 @@ the second round changed it:
 - **One switch in the bar, "Combined" and "Show all"**, goes between the combination and the whole world. It is there
   from the first pick. The C key does the same on the map.
 
-Screenshots of this round: `harbor2-*.png`. `causeways` and `gather` are unchanged apart from the limit of five.
+Screenshots of this round: `harbor2-*.png`.
+
+Third round (owner, 2026-10-12):
+
+- **A group's control or a tap on a group frames the group alone.** Side by side with the middle, the group came out
+  too small: no names, and a tap on an island counted as a tap on the group. The switch in the bar reaches the middle.
+- **The real Explorer's tutorial, with the world's steps:** tap a group, tap an island, tap another group, tap an
+  island there, tap Combined, zoom into the combination, Separate. Each step loops until the viewer does it, as in
+  the real one; guests see it on every visit, members on their first three. `harbor3-tutorial-*.png` show the seven
+  steps.
+ `causeways` and `gather` are unchanged apart from the limit of five.
 
 ## Run it
 
@@ -63,7 +73,7 @@ Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bott
 | --- | --- | --- | --- |
 | A grouping from far out | its islands, small | one land that breaks into its islands as you come closer | its islands, small |
 | Picked islands | stay home and light up; a band of light runs from each to the middle | sail to the middle and sit against the combination; an outline stays at home | sail to the middle from the first pick |
-| The grouping control frames | the region | the region | the region and the middle side by side |
+| The grouping control frames | the region | the region | the region |
 | Camera after a pick | flies to the middle, from two islands | flies to the middle, from two islands | goes back out to the whole world |
 
 Screenshots: `causeways-*.png`, `gather-*.png`, `harbor-*.png` (1440 by 900, and one phone view).
@@ -109,7 +119,7 @@ United States holds 30, and with Talky as the fifth 15.
 
 ## Not built
 
-The steps of the browser's history, the tutorial, the list for browsers without JavaScript, and the preview of a
+The steps of the browser's history, the list for browsers without JavaScript, and the preview of a
 combination while pointing at an island. The zoom rail's first stop is a region, not the world.
 
 ## Files
