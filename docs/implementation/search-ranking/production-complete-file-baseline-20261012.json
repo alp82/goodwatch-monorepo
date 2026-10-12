@@ -1,0 +1,50 @@
+{
+  "schema": "public-complete-file-baseline-proof.v1",
+  "baseline": {
+    "aliases": 0,
+    "allocatedStatBytes": 4197601280,
+    "apparentBytes": 18773290988,
+    "atomicSnapshot": false,
+    "availableBytesAfter": 12699930624,
+    "availableBytesBefore": 12741455872,
+    "cacheControls": 0,
+    "complete": true,
+    "contentRead": false,
+    "durationSeconds": 3.758646495640278,
+    "endedAt": "2026-10-12T07:50:11.180752+00:00",
+    "entries": 40346,
+    "files": 28865,
+    "futureCeilingEstablished": false,
+    "metadataHash": "a31c8a9d3faee5f0a0f2b085f5f582cf8f7ed8bc8f457c634a8d23f0976c962e",
+    "queries": 0,
+    "remoteHostFilesCreated": 0,
+    "scannedDirectories": 11417,
+    "schema": "complete-file-metadata-baseline.v1",
+    "segmentDirectories": 25,
+    "sourceIdentityHash": "b0d69d9dbe72d2825e77d0b20b40390f4a5eda3e87bea103f8970b9a70fcf335",
+    "sourcePid": 3411704,
+    "sourceStartTicks": 2673362807,
+    "startedAt": "2026-10-12T07:50:07.152293+00:00"
+  },
+  "readerExit": {
+    "at": "2026-10-12T07:50:12.890251+00:00",
+    "deadlineStop": false,
+    "event": "backup-metadata-reader-exit",
+    "exitCode": 0,
+    "hostFilesCreated": 0,
+    "killSent": false,
+    "readerGone": true,
+    "readerPid": 262266,
+    "termSent": false
+  },
+  "privateArtifactSha256": "19290005b68cf49d40d8e0860c203afb6d50e9c14d7f956c702c9450f2041126",
+  "privateArtifactBytes": 8930536,
+  "privateArtifactPublished": false,
+  "sourceSha256": {
+    "complete_baseline.py": "1a386e673d5ecf9b53e55ca61a26c936ffe813ebea687e66f7acacefa292c21d",
+    "launch_complete_baseline.py": "1e0c79638681847bb98e9822f878837a0ae09746e5f69e232b681b2b41879615",
+    "observer_v4.py": "e133e50dfacd20c759f561716ff6ef6454363646fe1ecf4218e9bf9535a452bb"
+  },
+  "futureCeilingEstablished": false,
+  "productionAcceptance": false
+}

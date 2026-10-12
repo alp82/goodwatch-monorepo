@@ -1,0 +1,65 @@
+{
+  "schema": "complete-backup-metadata-run-proof.v1",
+  "scheduledStart": "2026-10-12T07:59:00+00:00",
+  "scheduledEnd": "2026-10-12T08:29:00+00:00",
+  "readerStarted": {
+    "at": "2026-10-12T07:56:29.350530+00:00",
+    "event": "backup-metadata-reader-started",
+    "hostFilesCreated": 0,
+    "queries": 0,
+    "readerPid": 280848
+  },
+  "readerExit": {
+    "at": "2026-10-12T08:28:09.511729+00:00",
+    "deadlineStop": true,
+    "event": "backup-metadata-reader-exit",
+    "exitCode": -15,
+    "hostFilesCreated": 0,
+    "killSent": false,
+    "readerGone": true,
+    "readerPid": 280848,
+    "termSent": true
+  },
+  "readerGoneProven": true,
+  "readerExitedCleanly": false,
+  "remoteStateUnknown": false,
+  "scheduledWindowCompleted": false,
+  "summaryRecords": 0,
+  "samples": 59,
+  "completeScans": 57,
+  "incompleteScans": 2,
+  "incompleteRecords": [
+    {
+      "sample": 29,
+      "at": "2026-10-12T08:13:31.582370+00:00",
+      "reason": "directory_changed"
+    },
+    {
+      "sample": 33,
+      "at": "2026-10-12T08:15:31.493442+00:00",
+      "reason": "directory_changed"
+    }
+  ],
+  "firstSampleAt": "2026-10-12T07:59:02.935170+00:00",
+  "lastSampleAt": "2026-10-12T08:28:02.155319+00:00",
+  "lowestSampledAvailableBytes": 12199165952,
+  "sourceProcessGenerations": 1,
+  "elapsedReaderSeconds": 1900.161199,
+  "earlyStopReason": "supervisor_1900_seconds_included_pre_window_wait",
+  "growthCoverageUnknown": true,
+  "snapshotCopyPeakScope": "available-samples-only-not-entire-window-or-lifetime",
+  "privateJournalSha256": "39614490ac0ed7ca1392bd2e7370b6d3ca3e932c022223e3160bf63065935ac8",
+  "privateJournalBytes": 360870062,
+  "privateJournalPublished": false,
+  "sourceContractPublished": false,
+  "remoteHostFilesCreated": 0,
+  "sourcesSha256": {
+    "full_cycle_metadata.py": "6b9a5ce7295ad794177b048c8d19421b2e7647cd2a445df5470f6cfcef7438c6",
+    "launch_full_cycle_metadata.py": "632249d5de364869c269b45055c1b3a9c775e6006748427cab923ed01eed9932",
+    "audit_full_cycle.py": "cce161c3dbc818bebbee052fb96b480e4c82ffee31c7290c8f3375e76dcbe3ed",
+    "complete_baseline.py": "1a386e673d5ecf9b53e55ca61a26c936ffe813ebea687e66f7acacefa292c21d",
+    "observer_v4.py": "e133e50dfacd20c759f561716ff6ef6454363646fe1ecf4218e9bf9535a452bb"
+  },
+  "latencyMeasured": false,
+  "productionAcceptance": false
+}
