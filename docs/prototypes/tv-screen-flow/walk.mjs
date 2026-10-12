@@ -9,9 +9,15 @@ const page = await ctx.newPage()
 page.on("pageerror", (e) => { if (!/Suspense/.test(e.message)) console.log("PAGEERROR", e.message) })
 const state = async () => (await page.locator("span.font-mono").first().innerText()).trim()
 let fails = 0
+// Waits up to eight seconds for the state: on a loaded machine a run or a variant change takes longer than its clock.
 const expect = async (label, want) => {
-	const got = await state()
-	const ok = typeof want === "string" ? got === want : want.test(got)
+	const fits = (got) => (typeof want === "string" ? got === want : want.test(got))
+	let got = await state()
+	for (let i = 0; i < 80 && !fits(got); i++) {
+		await page.waitForTimeout(100)
+		got = await state()
+	}
+	const ok = fits(got)
 	if (!ok) fails++
 	console.log(`${ok ? "ok  " : "FAIL"} ${label}: ${got}${ok ? "" : `   (wanted ${want})`}`)
 }
@@ -70,6 +76,22 @@ await keys("Enter", "Enter", "Enter", "Enter", "Enter"); await page.waitForTimeo
 await open("variant=apps&as=member")
 await keys("ArrowRight", "ArrowRight", "ArrowRight", "ArrowRight", "Enter"); await expect("member: the fifth app is My shows", "home › shows · focus ep-severance")
 await keys("]"); await page.waitForTimeout(500); await expect("] switches the variant and starts at home", /^home · focus/)
+// The variant buttons in the control bar, and the keys 1, 2, 3.
+const check = (label, got, want) => { const ok = got === want; if (!ok) fails++; console.log(`${ok ? "ok  " : "FAIL"} ${label}: ${got}${ok ? "" : `   (wanted ${want})`}`) }
+const current = async () => (await page.locator("button[data-variant][aria-pressed=true]").allInnerTexts()).join("|").replace(/\s+/g, " ")
+await open("variant=rows&at=discover-cozy")
+check("the control bar has one button per variant", (await page.locator("button[data-variant]").allInnerTexts()).map((t) => t.replace(/\s+/g, " ")).join(", "), "1 rows, 2 apps, 3 guided")
+check("the current variant is marked", await current(), "1 rows")
+// A variant change is a router navigation, which the dev build may commit late: wait for the mark, not a fixed time.
+const marked = (key) => page.waitForSelector(`button[data-variant=${key}][aria-pressed=true]`, { timeout: 8000 }).then(() => page.waitForTimeout(400), () => {})
+await page.locator("button[data-variant=apps]").click(); await marked("apps")
+check("a click on a variant's button chooses it", `${await current()} · ${await state()}`, "2 apps · home · focus app-tonight")
+await keys("3"); await marked("guided"); check("the key 3 chooses guided", `${await current()} · ${await state()}`, "3 guided · home · focus go-tonight")
+await keys("1"); await marked("rows"); check("the key 1 chooses rows", `${await current()} · ${await state()}`, "1 rows · home · focus hero")
+await keys("s", "2"); await page.waitForTimeout(500); check("on the search screen a digit is typed, not a variant", `${await current()} · ${await state()}`, "1 rows · home › search · focus idea-cozy")
+await page.setViewportSize({ width: 390, height: 844 }); await open("variant=rows")
+await page.locator("button[data-variant=guided]").click(); await marked("guided")
+check("at phone width the buttons are there and choose", await current(), "3 guided")
 console.log(fails ? `${fails} FAILED` : "all ok")
 await browser.close()
 process.exitCode = fails ? 1 : 0

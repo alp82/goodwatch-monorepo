@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. "Which TV screens exist, how do you move between them, and how do you leave for a real
 // page?" Three flow variants of the start page's TV, in the real room with the reworked Remote (hug-arc, the
-// verdict of prototype/living-room-remote), switchable via `?variant=` and the pill (or the [ and ] keys; the
-// arrow keys belong to the TV):
+// verdict of prototype/living-room-remote), switchable via `?variant=`, the three buttons at the top left, the
+// keys 1, 2 and 3, and the pill (or [ and ], which a German keyboard only reaches with AltGr; the arrow keys
+// belong to the TV):
 //   rows    tabs, a hero, rows of tiles (a streaming box's home)
 //   apps    a dashboard of large app tiles, each app opens on the TV (a console)
 //   guided  one question per screen, a path that ends on one title (a TV's setup)
@@ -71,10 +72,7 @@ export function TvFlowScene() {
 	const controls = {
 		person: () => set({ as: member ? "" : "member" }),
 		view: () => set({ view: tvOnly ? "" : "tv" }),
-		variant: () => {
-			const keys = Object.keys(VARIANTS)
-			set({ variant: keys[(keys.indexOf(variant) + 1) % keys.length] })
-		},
+		variant: (to: string) => set({ variant: to }),
 		label: () => {
 			const keys = Object.keys(LABELS)
 			const next = keys[(keys.indexOf(labelKey) + 1) % keys.length]
@@ -88,6 +86,10 @@ export function TvFlowScene() {
 			if (latest.current.typing || e.metaKey || e.ctrlKey || e.altKey) return
 			if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return
 			const key = e.key.toLowerCase()
+			// 1, 2 and 3 choose a variant. By position too (`code`), for layouts where the digits need Shift.
+			const digit = /^(Digit|Numpad)[123]$/.test(e.code) ? e.code.slice(-1) : key
+			const to = Object.keys(VARIANTS)[Number(digit) - 1]
+			if (to) latest.current.controls.variant(to)
 			if (key === "p") latest.current.controls.person()
 			if (key === "v") latest.current.controls.view()
 			if (key === "l") latest.current.controls.label()
@@ -233,11 +235,13 @@ export function TvFlowScene() {
 
 			{/* Prototype controls, not part of the design. */}
 			<div className={`absolute z-50 flex gap-1.5 text-[13px] font-semibold text-black ${phone ? "bottom-3 left-2 flex-col" : "left-3 top-3 items-center"}`}>
-				{phone && (
-					<button type="button" onClick={controls.variant} className="rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500">
-						{variant} →
-					</button>
-				)}
+				<div className={`flex overflow-hidden rounded-2xl bg-white shadow-xl ring-2 ring-fuchsia-500 ${phone ? "flex-col" : ""}`}>
+					{Object.keys(VARIANTS).map((key, i) => (
+						<button key={key} type="button" data-variant={key} aria-pressed={key === variant} title={`${VARIANTS[key as Variant]} (${i + 1})`} onClick={() => controls.variant(key)} className={`px-3 py-1.5 ${key === variant ? "bg-fuchsia-600 text-white" : "hover:bg-fuchsia-100"}`}>
+							<span className={key === variant ? "opacity-70" : "opacity-45"}>{i + 1}</span> {key}
+						</button>
+					))}
+				</div>
 				<button type="button" onClick={controls.person} className="rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500" title="P">
 					{member ? "Member" : "Guest"}
 				</button>

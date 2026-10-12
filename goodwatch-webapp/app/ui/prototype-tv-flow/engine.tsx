@@ -387,7 +387,7 @@ export function useTvEngine({ variant, member, phone, label, scene, ready }: { v
 			}
 			const typing = k.top === "search" && !k.leaving && k.store.power === "on"
 			if (typing && e.key === "Backspace" && k.store.draft) k.type((d) => d.slice(0, -1))
-			else if (typing && /^[a-z0-9 ]$/i.test(e.key)) k.type((d) => d + e.key)
+			else if (typing && /^[\p{L}\p{N} ]$/u.test(e.key)) k.type((d) => d + e.key)
 			else if (e.key === "ArrowUp") k.move("up")
 			else if (e.key === "ArrowDown") k.move("down")
 			else if (e.key === "ArrowLeft") k.move("left")

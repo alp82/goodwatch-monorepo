@@ -22,7 +22,8 @@ the screenshots here were made.
 
 | Control | What it does |
 | --- | --- |
-| Pill bottom right, or `[` `]` | Switch the flow variant (`?variant=rows\|apps\|guided`) |
+| `1 rows` / `2 apps` / `3 guided` at the top left, or the keys `1` `2` `3` | Choose the flow variant (`?variant=rows\|apps\|guided`); the current one is filled |
+| Pill bottom right, or `[` `]` | Step to the previous or next variant (desktop only; a German keyboard needs AltGr for these, use `1` `2` `3`) |
 | `Guest` / `Member`, or `P` | The person (`&as=member`) |
 | `In the room` / `TV only`, or `V` | The room with the Remote, or the TV alone and large (`&view=tv`) |
 | `“Expand”`, or `L` | Cycle the expand control's label (`&label=full-view` and so on) |
@@ -30,6 +31,13 @@ the screenshots here were made.
 | `H`, `M`, `S` | Home, Menu, Search (typing on the search screen goes to the TV) |
 | The Remote | All of the above by mouse or touch: wheel arrows, OK, Back, Search, Home, Menu, power, Netflix and Prime Video (only titles of that service) |
 | Mouse and touch on the TV | Pointing focuses, a click or tap chooses |
+
+Every key is a plain key on a German keyboard as well: digits, letters, the arrows, Enter, Escape and Backspace;
+none needs Shift or AltGr except `[` and `]`, which `1` `2` `3` replace. On the search screen letters and digits
+(umlauts too) go to the TV, so the prototype's own keys rest there.
+
+The control bar: ![the control bar](control-bar-desktop.png) On a phone it is a column at the bottom left
+(`control-bar-phone.png`). The other screenshots in `screens/` were taken before the variant buttons existed.
 
 The dark strip at the top left shows the state: the stack of TV screens, the focused item, and the page the TV is
 expanding into. Every screen has an address (`&at=home.discover.discover-cozy`), so a screen can be linked.
@@ -249,7 +257,7 @@ The real living room (`/`) is untouched: it still renders the Remote prototype's
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
 - `walk.mjs` drives the prototype with keys and with clicks on the Remote and checks the state after each step:
-  35 checks, among them the four directions, Back's focus, the tabs, search, and all three expand treatments
+  42 checks, among them the variant buttons and the keys 1, 2, 3 (also at phone width), the four directions, Back's focus, the tabs, search, and all three expand treatments
   including cancel and return.
 - `shots.mjs` made every screenshot, strip and clip here. Both need `playwright-core` from a scratch folder; see
   their first lines.
