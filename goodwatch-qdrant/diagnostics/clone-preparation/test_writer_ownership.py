@@ -82,4 +82,78 @@ g.bounded_owned_writer(fd,operation,root,'a'*64,timeout=40)
     if result and result['pidfdRetained']:
      held=guard.RETAINED_WRITERS.pop(result['writer']['pid']);signal.pidfd_send_signal(held['pidfd'],signal.SIGKILL,None,0);os.waitpid(result['writer']['pid'],0);os.close(held['pidfd'])
     os.close(target)
+ def test_fifteenth_registration_refuses_ack_and_actual_write(self):
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);fd=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600)
+   parent=guard.identity(os.getpid())
+   try:
+    for index in range(14):guard.receipt(root,{**parent,'pid':900000+index},parent,'a'*64,fd)
+    with self.assertRaisesRegex(RuntimeError,'writer_registration_failed') as caught:guard.bounded_owned_writer(fd,lambda target:os.write(target,b'forbidden'),root,'a'*64,timeout=.1,grace=.1)
+    self.assertFalse(caught.exception.writerEvidence['registeredBeforeWrite']);self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual((root/'target').read_bytes(),b'');self.assertEqual(len(list(root.glob('reclaim-writer-*.json'))),14)
+   finally:os.close(fd)
+ def test_stale_or_malformed_first_receipt_does_not_skip_live_owned_cleanup(self):
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);target=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600);parent=guard.identity(os.getpid());pid=None
+   try:
+    pid=os.fork()
+    if pid==0:
+     try:time.sleep(30)
+     finally:os._exit(0)
+    birth=guard.identity(pid);guard.receipt(root,birth,parent,'a'*64,target)
+    # Lexically earlier malformed evidence must block total proof while valid owned cleanup continues.
+    malformed=root/'reclaim-writer-1-1.json';malformed.write_text('{}');malformed.chmod(0o600)
+    result=guard.census_recorded_writers(root,'a'*64,(os.getpid(),),cleanup=True)
+    self.assertFalse(result['recordedWritersGone']);self.assertTrue(result['recordedWriterResults'][0]['cleanupUnknown']);self.assertTrue(result['recordedWriterResults'][1]['writerGone'])
+    os.waitpid(pid,0);pid=None
+   finally:
+    if pid:
+     try:os.kill(pid,signal.SIGKILL);os.waitpid(pid,0)
+     except ProcessLookupError:pass
+    os.close(target)
+ def test_reused_pid_is_known_original_exit_without_signaling_replacement(self):
+  from unittest.mock import patch
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);fd=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600);parent=guard.identity(os.getpid());birth={**parent,'pid':900001}
+   try:
+    guard.receipt(root,birth,parent,'a'*64,fd)
+    with patch.object(guard,'identity',return_value={**birth,'startTicks':birth['startTicks']+1}),patch.object(guard.signal,'pidfd_send_signal') as sending:
+     result=guard.census_recorded_writers(root,'a'*64,(os.getpid(),),cleanup=True)
+    self.assertTrue(result['recordedWritersGone']);sending.assert_not_called()
+   finally:os.close(fd)
+ def test_second_interrupt_is_deferred_until_owned_kill_and_reap(self):
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);fd=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600);delivered=[]
+   def interrupt(_signal,_frame):delivered.append(time.monotonic());raise RuntimeError('writer_interrupted')
+   previous_alarm=signal.signal(signal.SIGALRM,interrupt);previous_int=signal.signal(signal.SIGINT,interrupt)
+   actual_parent=os.getpid();sender=os.fork()
+   if sender==0:
+    time.sleep(.06);os.kill(actual_parent,signal.SIGINT);os._exit(0)
+   signal.setitimer(signal.ITIMER_REAL,.02)
+   def operation(_target):signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(30)
+   try:
+    with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,operation,root,'a'*64,timeout=1,grace=.1)
+    self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual(caught.exception.writerEvidence['writerExitCode'],-signal.SIGKILL);self.assertEqual(len(delivered),1);self.assertEqual(caught.exception.writerEvidence['cleanupDeferredSignalsCount'],1)
+   finally:signal.setitimer(signal.ITIMER_REAL,0);os.waitpid(sender,0);signal.signal(signal.SIGALRM,previous_alarm);signal.signal(signal.SIGINT,previous_int);os.close(fd)
+ def test_adopted_identity_unknown_retains_actual_pidfd(self):
+  from unittest.mock import patch
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);target=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600);parent=guard.identity(os.getpid());pid=None;held=None
+   try:
+    pid=os.fork()
+    if pid==0:time.sleep(30);os._exit(0)
+    birth=guard.identity(pid);guard.receipt(root,birth,parent,'a'*64,target)
+    original=guard.identity;calls=[0]
+    def changed_after_pidfd(which):
+     if which==pid:
+      calls[0]+=1
+      if calls[0]>1:return {**birth,'cgroupSha256':'0'*64}
+     return original(which)
+    with patch.object(guard,'identity',side_effect=changed_after_pidfd):result=guard.census_recorded_writers(root,'a'*64,(os.getpid(),),cleanup=True)
+    self.assertFalse(result['recordedWritersGone']);self.assertTrue(result['recordedWriterResults'][0]['cleanupUnknown']);held=guard.RETAINED_WRITERS.pop(pid);os.fstat(held['pidfd'])
+   finally:
+    if pid:
+     if held:signal.pidfd_send_signal(held['pidfd'],signal.SIGKILL,None,0);os.close(held['pidfd'])
+     else:os.kill(pid,signal.SIGKILL)
+     os.waitpid(pid,0)
+    os.close(target)
 if __name__=='__main__':unittest.main()

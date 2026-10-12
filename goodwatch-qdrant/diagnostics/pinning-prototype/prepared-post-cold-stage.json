@@ -11,9 +11,9 @@
   },
   "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
   "controllerSha256": "b6476f026647d3c2da02c78ed5e6e831019c3ee3f74ec5d500b068b1956567bc",
-  "cachePreparationHelperSha256": "414fe48494753fe317257728365a9ac02ad23eb1088ef5c544c3c6c910662dc5",
+  "cachePreparationHelperSha256": "df5992308bc74a859a68cdb0061b702432be6c09304e24f13db4c4459e5f186e",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
-  "controllerPolicySha256": "6325c24b700b84c32f352caf6f843a6ae2a2d2d62e06aad6a219350f8808fee6",
+  "controllerPolicySha256": "5e75b9377de48d180d15afd952a0cea2d7d91ea1e73621b34698ae8c11a03b0d",
   "consumerSourceManifestSha256": "38bf2859b231e5b7bed2617090714caa5d1f8ad789fc95b83eb95ed5516154c6",
   "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
   "originalStageUnchanged": true,
@@ -22,5 +22,6 @@
   "nodeBytes": 126595440,
   "helperConfigFilename": "helper-config.json",
   "controllerConfigFilename": "controller-config.json",
-  "maxWriterReceipts": 14
+  "maxWriterReceipts": 14,
+  "maxCleanupReceiptScan": 28
 }

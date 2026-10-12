@@ -25,6 +25,6 @@
     "maxSeconds": 60,
     "quiescenceSeconds": 5,
     "helperPath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v2/prepare_clone_reclaim.py",
-    "helperSha256": "414fe48494753fe317257728365a9ac02ad23eb1088ef5c544c3c6c910662dc5"
+    "helperSha256": "df5992308bc74a859a68cdb0061b702432be6c09304e24f13db4c4459e5f186e"
   }
 }
