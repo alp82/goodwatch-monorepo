@@ -37,7 +37,13 @@ import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
-import { MixBar, type MixBarState, sharedLine10, sharedNote10 } from "./MixBar10"
+import {
+	MixBar,
+	type MixBarState,
+	mixSentence10,
+	sharedLine10,
+	sharedNote10,
+} from "./MixBar10"
 import { useTutorial } from "~/ui/explorer/Tutorial"
 import { TopBar10 } from "./TopBar10"
 import { Tutorial10, type TutorialStep10 } from "./Tutorial10"
@@ -906,7 +912,15 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 			for (const [id, s] of shares) {
 				// An island that would leave the combination empty goes grey and loses its name.
 				if (!s.count) dim.set(id, 1)
-				else notes.set(id, sharedNote10(s.count, s.kind, picks.length + 1))
+				else
+					notes.set(
+						id,
+						sharedNote10(
+							s.count,
+							s.kind,
+							picks.length === 1 && groupingOf(picks[0]) === groupingOf(id),
+						),
+					)
 			}
 		e.setNotes(notes)
 		e.setDim(dim)
@@ -925,7 +939,10 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 	const [tutorial, endTutorial] = useTutorial(member, userLoading)
 	const [toldSeparate, setToldSeparate] = useState(false)
 	let tutStep: TutorialStep10 | null = null
-	if (tutorial && maps && !active?.pinned) {
+	// After Separate, one line on what else there is: more islands narrow a combination. It goes with the next pick.
+	if (tutorial && maps && toldSeparate && picks.length < 2)
+		tutStep = picks.length ? null : "more"
+	else if (tutorial && maps && !active?.pinned) {
 		const far = at === "all"
 		if (picks.length >= 2 && (mix || forming))
 			tutStep = focusIsland?.bridge
@@ -941,8 +958,11 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		if (tutStep === "separate") setToldSeparate(true)
 	}, [tutStep])
 	useEffect(() => {
-		if (toldSeparate && picks.length < 2 && !forming) endTutorial()
-	}, [toldSeparate, picks.length, forming])
+		if (!toldSeparate || picks.length > 1) return
+		if (picks.length) return endTutorial()
+		const t = setTimeout(endTutorial, 9000)
+		return () => clearTimeout(t)
+	}, [toldSeparate, picks.length])
 
 	// ------------------------------------------------------------ keyboard
 
@@ -1078,7 +1098,10 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 				status: forming
 					? "finding what they share…"
 					: mix
-						? sharedLine10(mix.count, mix.kind, mix.of.length)
+						? mix.of.length === 2 &&
+							groupingOf(mix.of[0]) === groupingOf(mix.of[1])
+							? sharedLine10(mix.count, mix.kind)
+							: mixSentence10(mix.count, picked.map(sideOf))
 						: touch
 							? "tap another island, in any group"
 							: "click another island, in any group",
@@ -1314,6 +1337,7 @@ function Styles10() {
 .ex10-view svg{width:12px;height:12px}
 .ex10-slot{width:18px;height:18px}
 .ex-bar-body:has(.ex-tut-press){overflow:visible}
+@media (max-width:639px){.ex-bar-body .ex-bar-count{white-space:normal;flex:0 1 auto;min-width:0;max-width:100%;line-height:1.25}}
 .ex10-view button.ex-tut-glow{position:relative;background:rgba(251,191,36,.28);animation:ex-tut-glow 1.3s ease-in-out infinite}
 `}</style>
 	)

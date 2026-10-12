@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer: the real Explorer's tutorial (ui/explorer/Tutorial.tsx), with the
 // steps of the world: tap a group, tap an island, tap another group, tap an island there, tap Combined, zoom into
-// the combination, and Separate. As there, each step's gesture loops on the real map until the viewer does it, and
+// the combination, Separate, and a closing line on combining more. As there, each step's gesture loops on the real map until the viewer does it, and
 // the tutorial never takes a pointer but its Skip button. The looks are the real tutorial's (explorer.css).
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import type { MapIsland } from "~/ui/explorer/island"
@@ -15,6 +15,7 @@ export type TutorialStep10 =
 	| "combined"
 	| "zoom"
 	| "separate"
+	| "more"
 
 const shown = (i: MapIsland, w: number, h: number) =>
 	i.on && !i.bridge && i.sx > 0 && i.sx < w && i.sy > 0 && i.sy < h
@@ -41,7 +42,7 @@ export function Tutorial10({
 	emptyRef.current = empty
 	const picksRef = useRef(picks)
 	picksRef.current = picks
-	const onMap = step !== "combined" && step !== "separate"
+	const onMap = step !== "combined" && step !== "separate" && step !== "more"
 	/** What the gesture is on, so its animation starts over for a new target. */
 	const [target, setTarget] = useState<string | null>(null)
 	useEffect(() => {
@@ -123,9 +124,10 @@ export function Tutorial10({
 		one: `${tap} an island`,
 		group2: `${tap} another group`,
 		two: `${tap} an island to combine them`,
-		combined: `${tap} Combined to see what they share`,
+		combined: `${tap} Combined to see what they share, or add another island`,
 		zoom: touch ? "Pinch to zoom in" : "Scroll to zoom in",
 		separate: `${tap} Separate to start over`,
+		more: "Combine up to 5 islands to narrow it down",
 	}
 	return (
 		<>
@@ -168,7 +170,7 @@ export function Tutorial10({
 					{say[step]}
 				</p>
 				<button type="button" onClick={onSkip}>
-					Skip
+					{step === "more" ? "Got it" : "Skip"}
 				</button>
 			</div>
 		</>

@@ -37,6 +37,18 @@ Third round (owner, 2026-10-12):
   steps.
  `causeways` and `gather` are unchanged apart from the limit of five.
 
+Fourth round (owner, 2026-10-12): how a combination of three or more explains itself.
+
+- **Separate, or letting the last island go, flies back out to the whole world.**
+- **The bar says a sentence:** "15 titles that are Funny, Talky, about crime, from the 1990s, from the United States".
+  Two decades or two countries read "from the 1980s or the 1990s", as the combination holds either. Two islands of
+  one group are still today's bridge and keep "in both" and "between them".
+- **Every other island says what it would leave:** "9 left" (was "9 in all 5").
+- **The tutorial** says "Tap Combined to see what they share, or add another island" after the second island, and
+  closes after Separate with "Combine up to 5 islands to narrow it down".
+
+Screenshots: `harbor4-*.png`.
+
 ## Run it
 
 ```sh
