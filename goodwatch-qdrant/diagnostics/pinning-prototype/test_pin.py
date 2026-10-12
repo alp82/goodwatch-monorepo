@@ -44,6 +44,31 @@ class PinTests(unittest.TestCase):
 
     def target(self): return pin.Target.open(self.path, 'vector')
 
+    def test_descriptor_cleanup_scans_large_mapping_set_once_and_closes_real_unheld_fds(self):
+        from types import SimpleNamespace
+        class TargetFixture:
+            def __init__(self):self.closed=0
+            def close(self):self.closed+=1
+        class CountedMappings:
+            def __init__(self,targets):self.targets=targets;self.visits=0
+            def values(self):
+                for target in self.targets:
+                    self.visits+=1
+                    yield SimpleNamespace(target=target)
+        held=[TargetFixture() for _ in range(20000)]
+        fresh=[TargetFixture() for _ in range(20000)]
+        mappings=CountedMappings(held)
+        pin.close_unheld_targets(held+fresh,mappings)
+        self.assertEqual(mappings.visits,20000)
+        self.assertTrue(all(target.closed==0 for target in held))
+        self.assertTrue(all(target.closed==1 for target in fresh))
+        retained=self.target();unheld=self.target();retained_fd=retained.fd;unheld_fd=unheld.fd
+        try:
+            pin.close_unheld_targets([retained,unheld],{'retained':SimpleNamespace(target=retained)})
+            os.fstat(retained_fd)
+            with self.assertRaises(OSError):os.fstat(unheld_fd)
+        finally:retained.close();unheld.close()
+
     def test_payload_classification_ignores_collection_and_payload_field_names(self):
         segment = '52fe6e69-16c6-4fd1-b4b4-0d36b9e76979'
         for collection in ('vector_movies', 'sparse_bm25', 'hnsw_graph_links', 'payload_movies', 'segments'):

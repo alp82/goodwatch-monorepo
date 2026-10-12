@@ -7,7 +7,7 @@ import resource
 import stat
 import subprocess
 
-from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error
+from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error, close_unheld_targets
 
 
 @dataclass(frozen=True)
@@ -247,8 +247,7 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
         release_preserving_error(manager, original)
         raise
     finally:
-        for target in targets:
-            if all(mapping.target is not target for mapping in manager.mappings.values()): target.close()
+        close_unheld_targets(targets,manager.mappings)
 
 
 def measure_source(spec, include_payload=False, source_check=None, raise_own_nofile=False):

@@ -328,6 +328,13 @@ class Mapping:
         self.address = None; self.locked = (); self.target.close()
 
 
+def close_unheld_targets(targets,mappings):
+    """Linear identity cleanup; retained mappings own their original Target FDs."""
+    held = {id(mapping.target) for mapping in mappings.values()}
+    for target in targets:
+        if id(target) not in held: target.close()
+
+
 class PinSet:
     """Caller must supply freshly validated source identity and current accounting."""
     def __init__(self, policy, lock_path, kernel=None):
@@ -452,5 +459,4 @@ class PinSet:
             release_preserving_error(self, original)
             raise
         finally:
-            for target in targets:
-                if all(mapping.target is not target for mapping in self.mappings.values()): target.close()
+            close_unheld_targets(targets,self.mappings)
