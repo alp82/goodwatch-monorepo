@@ -1,0 +1,17 @@
+{
+  "schema": "postcold-v4-execution-packet-prepared.v1",
+  "execution": false,
+  "sourceCommit": "5a6dc066710d9c956e7876efec1d868b291841e2",
+  "coreCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
+  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v4",
+  "newResult": "comparison-postcold-453-v4-result.json",
+  "producerManifest": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
+  "consumerManifest": "c7cd97dd377865421f9bb9252ca4b28cbad6d7f3b7155e26eec3a0969b23c439",
+  "files": {
+    "postcold_stage_public_packet_v4_final.json": "ce792a8045bea70fb49fea6cf32e960812918d802c26801485ad4258b83d99e2",
+    "prepare_postcold_stage_v4_final.py": "23d939d04df81516625185d4ed3d381fd736b379b06e8ff5578b050e31144ae0",
+    "private_pipe_postcold_453_v4.mjs": "2a074502107a232f215dafd9107de412ccafb4eb1f7666da8462b1e9396163ef",
+    "prepare_comparison_postcold_453_v4_final.py": "ea87eb8f8c53c2e1e409d25ecafb4c2680e24778d5ae58c0971ef98817fa63ec",
+    "audit_postcold_result_v4_final.mjs": "c86a3b804be86ba6bd5395de309858995e10845eefdc439cdf6d7bcf351ec78a"
+  }
+}

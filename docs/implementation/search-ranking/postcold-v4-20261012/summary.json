@@ -1,0 +1,50 @@
+{
+  "schema": "clone-postcold-v4-summary.v1",
+  "actualSha256": "b0a1afb38bdf16946427c65ddd47bd6d173d2cfd64438606e311260ef268a710",
+  "sourceRuntimeCommit": "5a6dc066710d9c956e7876efec1d868b291841e2",
+  "phase": "baseline",
+  "controllerReason": "dirty_source_pages",
+  "sourcePid": 3705588,
+  "sourceStartTicks": 3063657858,
+  "parentQuiescence": {
+    "budgetSeconds": 60,
+    "fileDirtyBytes": 0,
+    "fileWritebackBytes": 0,
+    "samples": 14,
+    "seconds": 4.767,
+    "zeroDirtyAndWriteback": true
+  },
+  "childPrewriteQuiescence": {
+    "budgetSeconds": 60,
+    "fileDirtyBytes": 0,
+    "fileWritebackBytes": 0,
+    "samples": 1,
+    "seconds": 0.112,
+    "zeroDirtyAndWriteback": true
+  },
+  "singleWrite": {
+    "outcome": "under-reclaimed",
+    "errno": 11,
+    "requestedBytes": 3221225472,
+    "writeAttempts": 1,
+    "writerExitCode": 0,
+    "writerExitObserved": true,
+    "writerGone": true,
+    "cleanupUnknown": false,
+    "pidfdRetained": false
+  },
+  "postwriteDirtyEvidence": {
+    "fileDirtyBytes": 4096,
+    "fileWritebackBytes": 0
+  },
+  "afterAccountingRetained": false,
+  "postwriteFitRetained": false,
+  "completedBaselines": 0,
+  "completedPairs": 0,
+  "applicationAcceptance": false,
+  "allLifecycleExitsProven": true,
+  "cloneRunning": true,
+  "receiptCount": 1,
+  "unknownUnregisteredChildrenProvenGone": false,
+  "scope": "One clone baseline preparation failed before pinning/query. Cache write may partially reclaim; amount and cause of dirtiness unproven."
+}
