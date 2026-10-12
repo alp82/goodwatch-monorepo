@@ -1,0 +1,78 @@
+# Verdict: STATIC-SOURCE-PASS (qualified, not full closure)
+
+I found no concrete source or composition blocker and no path to a false `completed`. This is a static read of the inline bytes only: I recomputed no hash or byte count, ran no test, and observed no host, Docker/Moby, kernel or stdlib behaviour. It is not an execution, capacity, latency, publication or production verdict. The integrated-v1 BLOCK stands as recorded, and the files I read for wiring only (listed under Coverage) keep this short of full closure.
+
+The pass rests on one reading that the owner should confirm: "no query during adoption" means no point search. Adoption's single entry admission issues one loopback `GET /collections/media_fingerprint_v1` (`controller_cpu0.birth_admission`) plus `docker inspect`/`top`. I treat this as metadata because every existing frame, including the consumed recovery, reports `queries:0` around the same GET. If the owner's rule covers any Qdrant HTTP, this becomes a blocker; the minimal correction is to skip the shape GET when `_entry_baseline` is set, which needs a new backend freeze.
+
+## Focused questions
+
+| Item | Status | Basis |
+|---|---|---|
+| **B1** full-stage policy | Closed | `executor_v2.context()` applies the canonical-bytes check only for `adoption.ADMISSION`. The stage is still bound by `control_raw!=expected` against the frozen multiline bytes, and by `stager_v2.verify_staged` before any loader runs. |
+| **B2** post-enrolment refusal | Closed | The `cpu0_preflight._preflight` handler uses literal `True`; the primary error, its `admissionFailureEvidence` and `published-verified` enrolment evidence reach `main()`. |
+| **Fourth cleanup close wrapper** | Consistent | See below. |
+| **Real source14 loader fixture** | Present, with limits | `test_frozen_stage_context_v2.py` runs the real loader on the hash-pinned freeze in both directories. Node, uid and paths are substituted, and `ORIGINAL_PACKET` (the JS and reclaim bytes) is not hash-pinned. |
+| **JS test dependency closure** | Closed for what runs | `test_v2_composition.py` pins nine files by hash, and the import graph it executes stays inside them. All nine hashes agree with the manifest as text. |
+| **V2 outer ordering** | Present, synthetic authority | `test_outer_ordering_v2.py` runs the real validator inside a fake RPC and stream. It shows ordering and `preflightBirthGone` gating only. |
+| **Exec-loaded ZeroChild** | Present, protocol only | Real gate bytes with real spawn and reap from a `-c` parent, using stub controller/runtime modules. No cgroup join, lock scope or `frozen_helper`. |
+
+**Cleanup close wrapper (`executor_v2.cleanup` and `control_operation`):**
+- The handoff, prior, controls and pair observations are each attempted and retained even when recipe or consumer cleanup refuses.
+- If the close fails after a commit, the error carries `executorCompletedOperationReceipt`, and `cleanupObservedHandoff` reports the newly committed SHA with the predecessor kept separately.
+- If the close fails after a refusal, the original error object and its numeric evidence survive; the close failure is attached as secondary.
+- `rootLockAvailable` is true only after an observed successful close. The outer needs it, plus both birth-gone facts, both writer censuses, the producer facts and a null primary, before `completed`.
+
+**Composed extra-holder test is still absent.** No fixture runs real `cleanup_from_receipts` → `cleanup_birth` → `cleanup_context` → `renew_cleanup` against a three-member source. The backend physical fixture shows only the `cleanup_attest` refusal, and the registry tests inject that refusal. UNKNOWN with no TERM across that chain rests on my reading.
+
+## Meaningful missing fixtures
+
+1. The composed registry-to-renewal extra-holder test above.
+2. Negative tests for `outer_local_v2` and `private_pipe_v2`: audit refusal, producer exit refusal, deadline crossings, partial frames. These exist only for the v1 files.
+3. A producer failure passing through `executor_v2.dispatch` into `private_pipe_v2.producer_failure`. The v6-to-v7 re-projection is consistent by reading but untested.
+4. A cleanup success case asserting `rootLockAvailable:true` only with a real close, and an outer case where it is false.
+5. Cleanup when the stage directory exists but the `stage` RPC never returned.
+
+## Nonblocking: fail-closed or evidence limits
+
+- **Cleanup after a failed `stage` RPC.** The outer never adds `fullFiles`/`fullManifest` to the cleanup arguments, so the recipe refuses with `external_manifest_invalid` and no handoff is committed. The four censuses still run. Sending those two fields to cleanup always would fix it.
+- **Turnover frames are dropped on refusal.** `cleanup-observed` and `recovery-required` are lost; the primary error, stop receipt and endpoint re-inspection survive.
+- **One-shot exposure.** The strict `no_clients` fence follows the GET, so a still-visible socket is a terminal refusal after the intent is spent. Roughly 44 such sequences occur across the run.
+- **Authentication-before-import gaps, unchanged.** The ZeroChild spawn child and the consumer-launched controller import siblings from disk before their hash checks. Both rely on the root-only 0700 stage.
+- **Unmeasured margins.**
+  - 64 MiB fork guard on the controller.
+  - 15 s post-acknowledgement controller budget.
+  - 60 s cleanup RPC.
+  - 18 phases inside 7,200 s.
+  - 262,144 B public line; I estimate a paired row at about half of that.
+- **Absolute zero events.** Entry admission needs zero source `memory.events`, so an event outside a measured window refuses the next phase.
+- **Reason loss.** Non-`RuntimeError` causes project as `executor_guard_or_runtime_failure`.
+- **Unsupplied v1 lifecycle recipe.** `pair_observation` depends on the v1 `state_snapshot` hash recipe; a mismatch refuses before staging.
+- **C6 is endpoint-only.** Peaks are null and pre-join helper charge is unattributed, as disclosed.
+- **Backend residuals R1–R4** from the backend v3 report are unchanged.
+- **Stale documentation.** `FIXED-CAPACITY-SUPPORT.md` and the `running_adoption.py` / `executor_v2.py` docstrings still say the dispatcher is not wired.
+
+## Consistent with the stated requirements, by reading
+
+- **Order:** one adoption with inspect-only Docker and a single sample strictly above 2 GiB + 2 GiB. The intent precedes the sample, with a re-fence before the `adoption` handoff. Enrolment precedes the consumer entry sample; registration precedes the producer spawn.
+- **Guards:**
+  - Stopped host strictly above 5 GiB.
+  - Working set leaves at least 2 GiB after the full selected debit.
+  - Emergency floor at least 1.5 GiB.
+  - Current + missing + 256 MiB within 6 GiB.
+  - All four classes fully locked and resident.
+- **Pairs:** nine pairs, zero exclusions, at most 18 writers with one libc `write` each. The native baseline needs at least 1500 ms with major faults. The candidate needs server and wall both below 1500 ms.
+- **Completion:** it cannot come from SSH exit, pidfd readiness, name absence or cleanup alone. The producer needs CLI and Engine exit 0 plus birth-gone.
+- **Schemas:** Python-to-JS key sets and hash recipes agree for admission, handoff, enrolment, registration, overhead endpoints and renewal.
+- **Closures:** both module import orders resolve within their closures. Freeze, full manifest and policy cross-references agree as text. The successor diffs match the supplied source and touch no v1 dispatch file.
+
+## Coverage
+
+- **Traced closely:**
+  - External v2: `executor_v2`, `running_adoption`, `running_adoption_proofs`, `registration_v2`, `stager_v2`, `packet`, `census_v2`, `bootstrap_v2`, `local_entry_v2`, `rpc`, `rpc_v2`, `private_pipe_v2`, `outer_local_v2`, `validate_admission_v2.mjs`, `build_packet_v2`.
+  - Backend: `controller_cpu0`, `lifecycle_cpu0`, `cpu0_preflight`, `turnover_gate_cpu0`, `runtime_cpu0`, `daemon_cpu0`, `cpu0_guards`, both policies, the freeze and full manifest.
+  - Consumer: the v2 paths of `consumer_cpu0.mjs`, `audit_cpu0.mjs` and `compare-contract-cpu0.mjs`, plus `compare-contract.mjs`.
+  - Evidence and tests: both diffs, both historical proofs, `public-fields.json`, `preparation.json`, and the tests named in the focused questions.
+- **Additional this time:** `producer.py`, the producer branch of `executor.py`, `prepare_clone_reclaim.py` (writer protocol and receipt census against `_v2_inventory`), `pin_cpu0.reconcile` arithmetic, `stager.py` node copy, `census.py`, and both reason-code tables.
+- **Wiring only, not line by line:** `setup.py`, `admission.py`, `recovery.py`, `registration.py`, `transport_cpu0.mjs`, `parity.mjs`, the v1 halves of the JS files, and the rest of `pin_cpu0.py` and `prepare_clone_reclaim.py`.
+- **Skimmed:** the remaining tests and fixtures, the five external `.md` files, `CPU0.md`, the v1 entry/outer/pipe/bootstrap/builder files, the three `backend-context` prototype files, and all historical reports and provenance.
+- **Not verified:** every SHA256 and byte count, the "legacy v1 bytes unchanged" claim, and the recorded 228 and 341 test passes. Several v1 fixtures read mutable sibling worktree paths, so those passes are not bound to these bytes.
