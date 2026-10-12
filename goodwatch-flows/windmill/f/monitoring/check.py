@@ -39,6 +39,7 @@ RUNTIME_HOURS = {
     "f/sync/copy/tmdb_episodes": 1,
     "f/tmdb_api/tmdb_fetch_episodes_from_api": 1,
     "f/tmdb_api/tmdb_fetch_episodes_from_api/changes": 1,
+    "f/tmdb_api/tmdb_fetch_details_from_api/awaited": 1,
     "f/sync/copy/title_snapshot": 1,
     "f/sync/populate_crate": 12,
     "f/dna/initialize_dna": 6,

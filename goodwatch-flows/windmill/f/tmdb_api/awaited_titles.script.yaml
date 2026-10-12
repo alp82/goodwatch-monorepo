@@ -1,0 +1,8 @@
+summary: Awaited titles list
+description: Internal shared module
+kind: script
+lock: '!inline f/tmdb_api/awaited_titles.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []

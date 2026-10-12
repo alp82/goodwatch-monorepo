@@ -1,0 +1,10 @@
+summary: Store the titles members wait for
+description: Read the Want to See titles and the Watching and On hold shows of members with a country and a saved service, so the details queue rechecks their offers once a day
+lock: '!inline f/tmdb_api/tmdb_fetch_details_from_api/awaited.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+timeout: 120
