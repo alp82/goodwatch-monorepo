@@ -36,6 +36,33 @@ SAFE = {'missing_required','invalid_numeric','source_changed','source_limits_cha
         'source_cgroup_scope_invalid','sample_cadence_incomplete','source_locked'}
 
 
+TRIGGERS = {'source_comm','source_executable','source_birth','source_cgroup',
+            'sample_membership','final_membership','process_limit','deadline',
+            'argv_limit','eligible_identity_race','ssh_limit'}
+PHASES = {'before_sample','after_sample','final','source_fence','process_census'}
+EVIDENCE_KEYS = {'expectedStartTicks','observedStartTicks','beforeCount','afterCount',
+                 'expectedGroupHash','observedGroupHash','beforeMembershipHash','afterMembershipHash'}
+
+
+class GuardFailure(ValueError):
+    """Fixed diagnostic fields only; rejection behavior is unchanged."""
+    def __init__(self, reason, trigger, phase, **evidence):
+        if reason not in SAFE or trigger not in TRIGGERS or phase not in PHASES or not set(evidence)<=EVIDENCE_KEYS:
+            raise ValueError('invalid_numeric')
+        for key,value in evidence.items():
+            if key.endswith('Hash'):
+                if not isinstance(value,str) or not re.fullmatch('[0-9a-f]{64}',value):
+                    raise ValueError('invalid_numeric')
+            elif type(value)is not int or not 0<=value<=2**64-1:
+                raise ValueError('invalid_numeric')
+        super().__init__(reason)
+        self.diagnostic={'trigger':trigger,'phase':phase,**evidence}
+
+
+def diagnostic(error):
+    return {'diagnostic':error.diagnostic} if isinstance(error,GuardFailure) else {}
+
+
 def stamp():
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
@@ -184,15 +211,21 @@ class ConfigCheck:
 def process_census(proc, backup_hash, clock=time.monotonic):
     begun=clock();nodes=list(proc.glob('[0-9]*'))
     if len(nodes)>4096:
-        raise ValueError('census_bound')
+        raise GuardFailure('census_bound','process_limit','process_census')
     processes={};jobs=[];races=0
     for node in nodes:
         if clock()-begun>1:
-            raise ValueError('census_bound')
+            raise GuardFailure('census_bound','deadline','process_census')
         try:
             comm=read(node/'comm',128).strip()
             # Only fixed executable/path-shape hashes are retained; args never leave memory.
-            args=read(node/'cmdline',8192).split('\0') if comm in ('python','python3','uv') else []
+            args=[]
+            if comm in ('python','python3','uv'):
+                try: args=read(node/'cmdline',8192).split('\0')
+                except ValueError as error:
+                    if str(error)=='census_bound':
+                        raise GuardFailure('census_bound','argv_limit','process_census') from None
+                    raise
             isbackup=any(v.startswith('/')and v.endswith('/backup.py')and hashlib.sha256(v.encode()).hexdigest()==backup_hash for v in args)
             if comm not in ('sshfs','ssh')and not isbackup:
                 continue
@@ -202,14 +235,14 @@ def process_census(proc, backup_hash, clock=time.monotonic):
             if comm in ('sshfs','ssh'):
                 processes[int(node.name)]={'comm':comm,'identity':identity,'memory':fields(read(node/'status'),RSS,True)}
             if proc_identity(node)['startTicks']!=identity['startTicks'] or read(node/'comm',128).strip()!=comm:
-                raise ValueError('census_bound')
+                raise GuardFailure('census_bound','eligible_identity_race','process_census')
         except FileNotFoundError:
             # Keep recording source/host resources but never call this census complete.
             races+=1
             processes.pop(int(node.name),None)
             jobs=[job for job in jobs if job[0]!=int(node.name)]
     if len(processes)>64:
-        raise ValueError('census_bound')
+        raise GuardFailure('census_bound','ssh_limit','process_census')
     classes={name:{'processCount':0,'bytes':{k:0 for k in RSS}}for name in ('sshfs','sshfs-child-ssh','other-ssh')}
     identities=[]
     for pid,item in processes.items():
@@ -265,10 +298,20 @@ class Source:
         self.reader_pid=os.getpid()
         self.reader_group=group_path(proc,self.reader_pid,cgroot,allow_root=True)
         self.check=ConfigCheck(self.expected,lambda:docker_frame(proc))
-    def fence(self):
+    def fence(self, phase='source_fence'):
         self.check.verify();pid=self.expected['pid'];root=self.proc/str(pid)
-        if read(root/'comm',128).strip()!='qdrant'or Path(os.readlink(root/'exe')).name!='qdrant'or proc_identity(root)['startTicks']!=self.expected['startTicks']or group_path(self.proc,pid,self.cgroot)!=self.group:
-            raise ValueError('source_changed')
+        if read(root/'comm',128).strip()!='qdrant':
+            raise GuardFailure('source_changed','source_comm',phase)
+        if Path(os.readlink(root/'exe')).name!='qdrant':
+            raise GuardFailure('source_changed','source_executable',phase)
+        birth=proc_identity(root)['startTicks']
+        if birth!=self.expected['startTicks']:
+            raise GuardFailure('source_changed','source_birth',phase,
+                               expectedStartTicks=self.expected['startTicks'],observedStartTicks=birth)
+        group=group_path(self.proc,pid,self.cgroot)
+        if group!=self.group:
+            raise GuardFailure('source_changed','source_cgroup',phase,
+                               expectedGroupHash=digest(str(self.group)),observedGroupHash=digest(str(group)))
         if limits(self.group)!=self.expected_limits or ancestors(self.group,self.cgroot)!=self.ancestor_hash:
             raise ValueError('source_limits_changed')
     def reader_proof(self):
@@ -293,7 +336,7 @@ class Source:
                 'ioPsi':psi(read(self.group/'io.pressure')),
                 'processCount':len(pids),'processVmLckBytes':locked,'processMembershipHash':digest(sorted(pids))}
     def sample(self):
-        begun=time.monotonic();started=stamp();self.fence()
+        begun=time.monotonic();started=stamp();self.fence('before_sample')
         reader_before=self.reader_proof();group_before=self.group_read();pid=self.expected['pid'];root=self.proc/str(pid)
         process={**proc_identity(root),'readBytes':fields(read(root/'io').replace(':',''),('read_bytes',))['read_bytes'],'VmLck':fields(read(root/'status'),('VmLck',),True)['VmLck']}
         host=fields(read(self.proc/'meminfo'),MEM,True)
@@ -303,13 +346,15 @@ class Source:
         reclaim=fields(read(self.proc/'vmstat'),VM)
         try: userspace=process_census(self.proc,self.backup_hash)
         except Exception as error:
-            userspace={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed'}
+            userspace={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed',**diagnostic(error)}
         try: other=siblings(self.group)
         except Exception as error:
             other={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed'}
-        group_after=self.group_read();reader_after=self.reader_proof();self.fence()
+        group_after=self.group_read();reader_after=self.reader_proof();self.fence('after_sample')
         if group_before['processMembershipHash']!=group_after['processMembershipHash']:
-            raise ValueError('source_changed')
+            raise GuardFailure('source_changed','sample_membership','after_sample',
+                               beforeCount=group_before['processCount'],afterCount=group_after['processCount'],
+                               beforeMembershipHash=group_before['processMembershipHash'],afterMembershipHash=group_after['processMembershipHash'])
         if group_before['processVmLckBytes'] or group_after['processVmLckBytes'] or process['VmLck']:
             raise ValueError('source_locked')
         return {'startedAt':started,'finishedAt':stamp(),'durationSeconds':time.monotonic()-begun,
@@ -321,10 +366,12 @@ class Source:
                 'ancestorLimitHash':self.ancestor_hash,'sourceGroupHash':digest(str(self.group)),
                 'metadataOnly':True,'archiveResidentBytesMeasured':False}
     def finish(self):
-        self.fence();before=self.group_read();reader=self.reader_proof()
-        after=self.group_read();self.fence()
+        self.fence('final');before=self.group_read();reader=self.reader_proof()
+        after=self.group_read();self.fence('final')
         if before['processMembershipHash']!=after['processMembershipHash']:
-            raise ValueError('source_changed')
+            raise GuardFailure('source_changed','final_membership','final',
+                               beforeCount=before['processCount'],afterCount=after['processCount'],
+                               beforeMembershipHash=before['processMembershipHash'],afterMembershipHash=after['processMembershipHash'])
         if before['processVmLckBytes'] or after['processVmLckBytes']:
             raise ValueError('source_locked')
         return {'reader':reader,'sourceMembershipHash':after['processMembershipHash'],
@@ -481,7 +528,7 @@ def main():
             print(json.dumps({'event':'resource-window.failed.v1','reason':'sample_failed'}));return 1
     if not args.execute:
         print(json.dumps({'event':'resource-window.prepared-only.v1','hostOperations':0}));return 0
-    output=Output(sys.stdout);source=None;failure=None
+    output=Output(sys.stdout);source=None;failure=None;failure_diagnostic={}
     try:
         if not all(re.fullmatch('[0-9a-f]{64}',v or '')for v in (args.expected_source_sha256,args.backup_path_sha256)):
             raise ValueError('source_preflight_required')
@@ -489,13 +536,14 @@ def main():
         run(source,output,args.start_utc,args.end_utc)
     except Exception as error:
         failure=str(error)if str(error)in SAFE else 'sample_failed'
+        failure_diagnostic=diagnostic(error)
     finally:
         if source:
             try:source.close()
             except Exception:failure=failure or 'source_check_exit_unproven'
     if failure:
         output.emit({'event':'resource-window.failed.v1','at':stamp(),'reason':failure,
-                     'continuousCoverage':False,'futureCeilingEstablished':False,'productionAcceptance':False})
+                     'continuousCoverage':False,'futureCeilingEstablished':False,'productionAcceptance':False,**failure_diagnostic})
         return 1
     return 0
 

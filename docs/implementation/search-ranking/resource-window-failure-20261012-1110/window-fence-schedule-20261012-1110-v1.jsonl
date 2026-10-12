@@ -1,0 +1,12 @@
+{"event":"preflight.reader-born.v1","pid":778064,"startTicks":2825530531,"sourceSha256":"4d7913345648405281ca239b538d0081ed8256084274901544ca2fbfff092f53","hostFilesCreated":0}
+{"event":"cron-diagnostic.phase.v3","phase":"proc-census"}
+{"event":"cron-diagnostic.phase.v3","phase":"boot-clock"}
+{"event":"cron-diagnostic.phase.v3","phase":"daemon-census","processEntries":318}
+{"event":"cron-diagnostic.phase.v3","phase":"daemon-selection","candidateCount":1,"hostNamespaceCandidates":1}
+{"event":"cron-diagnostic.candidate.v3","mountNamespaceIsHost":true,"cgroupHash":"7eb2c41b1d316e20d40d80292c7a0e26293d946f08bc2d024b5df77b61ef28ea","pid":2662717,"startTicks":2555921687,"comm":"cron","startedEpochSeconds":1789106888.87,"daemonTimezoneSet":false,"daemonTimezoneIsUtc":null,"daemonTimezoneHash":null}
+{"event":"cron-diagnostic.phase.v3","phase":"package-query"}
+{"event":"cron-diagnostic.phase.v3","phase":"installed-manual","installedCandidatePackages":1}
+{"event":"cron-diagnostic.phase.v3","phase":"timezone-files"}
+{"event":"cron-diagnostic.phase.v3","phase":"daemon-end-fence"}
+{"event":"cron-diagnostic.identity.v3","atEpochSeconds":1791802978.3095138,"daemon":{"mountNamespaceIsHost":true,"cgroupHash":"7eb2c41b1d316e20d40d80292c7a0e26293d946f08bc2d024b5df77b61ef28ea","pid":2662717,"startTicks":2555921687,"comm":"cron","startedEpochSeconds":1789106888.87,"daemonTimezoneSet":false,"daemonTimezoneIsUtc":null,"daemonTimezoneHash":null},"packages":[{"package":"cron","version":"3.0pl1-184ubuntu2"}],"localtimeSha256":"8b85846791ab2c8a5463c83a5be3c043e2570d7448434d41398969ed47e3e6f2","localtimeCanonicalIsUtc":true,"timezoneFileIsUtc":true,"timezoneFileHash":"81ccd71aca3037cfd3bb39e29bc324d92e45fe6f97b74a4b789d12a0ea443b63","timezoneFilesPredateDaemon":true,"installedManualSha256":"c7d050fb22c8a67246780877ae1619dec8330a10a67ed769b23be515c0cc646d","manualHasCronTzToken":false,"cronTzSupportEstablished":false,"nextBackupUtcEstablished":false,"hostWrites":0,"queries":0}
+{"event":"preflight.reader-exit.v1","pid":778064,"startTicks":2825530531,"exitCode":0,"readerGoneProven":true,"termSent":false,"killSent":false,"clean":true,"reason":null,"hostFilesCreated":0}
