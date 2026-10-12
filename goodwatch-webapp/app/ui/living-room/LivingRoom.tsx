@@ -31,7 +31,11 @@ import {
 	usePhoneOrientation,
 } from "./PhoneLivingRoom"
 import { PhoneTvScreens } from "./PhoneTvScreens"
-import { Remote, type RemoteProps } from "./Remote"
+import {
+	type PrototypeRemoteProps,
+	PrototypeRemote,
+	RemoteSwitcher,
+} from "~/ui/prototype-remote/RemoteVariants"
 import { pickKey } from "./TvQuiz"
 import { LivingRoomLinks, TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
@@ -278,7 +282,17 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		quiz,
 	}
 	const activeService = night?.service ?? null
-	const remote: RemoteProps = {
+	// PROTOTYPE (ui/prototype-remote): the Remote variants also get the TV's items, named as the Remote names them.
+	const labelState =
+		state.screen.name === "search"
+			? { ...state, screen: { name: "home" } as const }
+			: state
+	const remote: PrototypeRemoteProps = {
+		items: flow.items.map((id) => ({
+			id,
+			label: lcdLines(labelState, id, data, draft)[0],
+		})),
+		focused: flow.focused,
 		screen: state.screen,
 		power: state.power,
 		menuOpen: state.menuOpen,
@@ -289,7 +303,12 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		onOk: ok,
 	}
 	if (phone)
-		return <PhoneLivingRoom orientation={phone} view={view} remote={remote} />
+		return (
+			<>
+				<PhoneLivingRoom orientation={phone} view={view} remote={remote} />
+				<RemoteSwitcher />
+			</>
+		)
 
 	const on = state.power !== "off"
 	const tvCenter = {
@@ -466,9 +485,10 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 					className="lr-remote-scale absolute left-0 top-0 origin-top-left"
 					style={L ? { transform: `scale(${L.remote.scale})` } : undefined}
 				>
-					<Remote {...remote} />
+					<PrototypeRemote {...remote} />
 				</div>
 			</motion.div>
+			<RemoteSwitcher />
 		</div>
 	)
 }

@@ -27,7 +27,8 @@ import {
 } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import { PhoneTvScreens } from "./PhoneTvScreens"
-import { Icon, Remote, type RemoteProps } from "./Remote"
+import { PrototypeRemote } from "~/ui/prototype-remote/RemoteVariants"
+import { Icon, type RemoteProps } from "./Remote"
 import { LivingRoomLinks, type TvView } from "./TvScreens"
 import {
 	HAND_IMAGE,
@@ -374,7 +375,7 @@ function HandRemote({
 				className="absolute left-0 top-0 origin-top-left"
 				style={{ transform: `scale(${scale})` }}
 			>
-				<Remote {...remote} />
+				<PrototypeRemote {...remote} />
 			</div>
 		</motion.div>
 	)

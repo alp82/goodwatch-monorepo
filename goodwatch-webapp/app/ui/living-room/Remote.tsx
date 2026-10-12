@@ -329,7 +329,7 @@ const ARROW_LABEL: Record<Dir, string> = {
 	right: "Next",
 }
 
-function Wheel({
+export function Wheel({
 	dispatch,
 	onOk,
 }: { dispatch: (action: TvAction) => void; onOk: () => void }) {
