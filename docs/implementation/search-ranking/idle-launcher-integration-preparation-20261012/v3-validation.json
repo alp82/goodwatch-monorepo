@@ -1,0 +1,13 @@
+{
+  "schema": "idle-launcher-validation.v3",
+  "command": "python -B -m unittest test_idle_journal test_idle_lease test_idle_launcher -q",
+  "tests": 33,
+  "seconds": 63.179,
+  "exitCode": 0,
+  "sourceLocation": "isolated worktree; exact frozen bytes copied before execution and verified byte-equal after execution",
+  "manifestSha256": "bb7a53fe6917ccfc0656962ba924d7e9ef7fdb795b92e35e5ec7a8f965604e43",
+  "noSourceEditsDuringRun": true,
+  "coreFilesEqualV2": true,
+  "hostExecution": false,
+  "privateInputsIncluded": false
+}

@@ -1,0 +1,66 @@
+# Review: V2 inactive idle launcher / journal / lease integration
+
+**Verdict:** five of the six prior blockers and the `adviceAccepted` requirement are closed in source. B6 is only partly closed, because the new result `reason` field is wrong for most real trial outcomes. There are two evidence blockers and one stale doc claim. I found no new path that leaves an mlocked holder alive past its bounds or signals the source.
+
+This is from reading only: I ran nothing and did not verify the manifest hashes. I am Opus 5.5, but I cannot see or confirm the effort setting.
+
+## Status of the prior blockers
+
+| Item | Status | Basis |
+|---|---|---|
+| B1 early refusals journaled | Closed | `idle_journal.sanitize` allows a null `scheduleSha256` only for `complete` + `refused`. I traced every key of the real `_run` refusal frame through `sanitize` and it passes. |
+| B2 `cron_minute` shadow lines | Closed | `@` lines and any line mentioning the script path or basename outside the reviewed form raise `idle_schedule_unknown`. All three shadow fixtures are present. |
+| B3 schedule schema / UTC | Closed | `validate_config` enforces the exact key set and a non-empty `timezoneFiles` including `LOCALTIME` with a canonical UTC target. `inspect_known` compares `/proc/self/ns/mnt`. The single-table limit is documented. |
+| B4 evidence binding | Closed | `run_reviewed` uses the `verify_code` return and `zero_placement.contract(path, digest)`. `Journal.bind` writes both hashes as sequence 1, and the result carries `terminalReceipt`. |
+| B5 directory exactness | Closed | `_verify_code` requires `set(os.listdir(root)) == set(CODE_FILES)` and root-owned, non-group/other-writable ancestors. |
+| B6 failure mapping | Partly closed | Path leaks are closed and outcomes are separated, but the `reason` field is defective (N1). |
+| `adviceAccepted` | Closed | `phases_idle` uses `is not True`. Fixtures carry explicit `True`, with negatives for missing, `False`, `None`, `1` and `'true'`. |
+
+## Blockers
+
+**N1. `_invoke` reports the wrong `reason` for most trial outcomes (source, B6 residual).**
+- The expression is `journal.last_event.get('completionReason', journal.last_event.get('firstReason'))`.
+- The real `_run` complete frame always contains the `completionReason` key, set to `None` whenever `main_reason` is set. So `.get` returns that `None` and never falls back.
+- A `_run` lease refusal after a successful preflight therefore returns `outcome: 'refused', reason: None`. The same holds for any main-origin safety abort.
+- When the main path completes but the outcome is downgraded, the result says `reason: 'idle_hold_complete'`. This covers a post-release `idle_headroom` safety abort and a late `idle_quiet_pressure` inconclusive.
+- The journal frame itself is correct; only the launcher result is wrong. No test asserts `result['reason']` on a real `_run` frame.
+- Fix: use explicit precedence over `safetyReason`, `mainReason`, `firstReason`, `postReleaseReason`, `cleanupReason`, then `completionReason`. Assert it in the full-sequence test and in a `_run` refusal test.
+
+**N2. The full test run was not on the frozen bytes (evidence).**
+- The validation note says the refusal-reason mapping was added after the 29-test run began, and only three targeted tests ran afterwards.
+- The manifest hash of `idle_launcher.py` therefore has no full-run evidence behind it.
+- Fix: rerun all three modules against the frozen files (about 64 s).
+
+**N3. The post-verification body of `run_reviewed` has no executed coverage (evidence).**
+- V1's patched wrapper test was removed. The only `run_reviewed` test exits in the first `try`.
+- The `preflight` closure, the `lease` closure with its `lease.checked` attribute, and the alarm arm/disarm and mask restore are never executed, even under patches.
+- The preflight test in `_invoke` uses a synthetic `refused()` function, not the real closure.
+- Fix: add a patched test that drives `run_reviewed` through a real preflight refusal. It should assert the binding plus refused records, the fixed reason, the disarmed timer and the restored mask.
+
+**N4. `IDLE-LAUNCHER.md` contradicts the V2 order (doc, in the hashed packet).**
+- Paragraph 3 still says the source, VmLck and swap checks run "before creating a writer or holder".
+- In V2 the writer and journal file are created first, and those checks run inside the journaled preflight.
+- Fix: say "before any holder".
+
+## Non-blocking findings
+
+- **Launcher reasons are unreachable from preflight.** `_invoke` maps through `idle_trial.reason`, not the launcher's `reason`. So `idle_launcher_source_changed`, `zero_child_not_unlocked` and the `validate_config` errors all become `idle_guard_failure`, which is a safety reason. Separately, `Lease.__call__` still collapses every `inspect_known` cause into `idle_schedule_expired`. A fixed sub-reason in the result (not the journal) would make refusals diagnosable.
+- **`journalCreated: False` can be untrue.** If `Journal.__init__` fails after the writer's `O_EXCL` create, the file exists. A malformed `policy_hash` or an existing journal path also returns `release_unproven` with the alarm armed, though nothing was spawned. Report unknown rather than `False`.
+- **The schedule config is not in the binding record.** A preflight refusal leaves no record of which schedule config was refused. Adding its hash to `binding` is cheap.
+- **Test gaps on closed items:**
+  - No real `_run` refusal frame goes through the strict journal.
+  - There is no negative for a non-UTC canonical target, for a list without `LOCALTIME`, or for a changed sha or mtime.
+  - The self-namespace mismatch is not isolated: the `daemonMountNamespace: 1` case fails on the daemon comparison first.
+  - The ancestor check runs only at uid 0.
+- **Log path is not cross-checked.** `cron_minute` does not compare the redirect target with `phaseLogPath`. Only the config hash ties them.
+- **Census match is exact-argument.** `inspect_known` would miss the cron `sh -c "<command>"` wrapper before `uv` execs. A substring match is stricter.
+- **The receipt is not chained.** `terminalReceipt` detects tail truncation but not a rewritten middle record.
+
+## Future transport prerequisites (not source gaps)
+
+- **Caller outside the packet.** Whatever calls `run_reviewed` is outside the nine-file packet, since `main` refuses and the stage listing is exact. Spawned children re-execute that entry file, so it needs its own hash binding.
+- **Journal path.** Every attempt, including a refusal, consumes the `O_EXCL` journal path. The caller must supply a fresh one each time.
+- **Result durability.** The result dict exists only in memory. The caller must persist it and exit promptly when the alarm stays armed.
+- **Packet hash.** `packetSha256` is the hash of the nine-entry `code_rows`, not of the 15-file freeze manifest. Reviewers must recompute it from that subset.
+- **Host timezone.** The target host's `/etc/localtime` must be a symlink that resolves into `UTC_CANONICAL`. A regular-file copy refuses.
+- **Carried over from V1.** Verifying the stage before a fresh `-I -B` interpreter, keeping the backup path out of argv, and supplying the zero-placement evidence and outer owner all still apply.

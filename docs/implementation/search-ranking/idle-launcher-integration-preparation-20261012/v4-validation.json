@@ -1,0 +1,9 @@
+{
+  "tests": 37,
+  "passed": 36,
+  "failures": 1,
+  "seconds": 65.239,
+  "failure": "test_holder_cleanup_failure_still_closes_writer expected the old generic reason; implementation now explicitly reports holder_exit_unproven",
+  "sourceModifiedDuringRun": false,
+  "hostExecution": false
+}

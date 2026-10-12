@@ -1,0 +1,27 @@
+{
+  "schema": "actual-opus-review.v1",
+  "exitCode": 0,
+  "configuredModel": "claude-opus-5-5",
+  "effort": "medium",
+  "observedModelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 30765,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 105603,
+      "webSearchRequests": 0,
+      "costUSD": 1.460132,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 27412,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "durationMs": 367151,
+  "toolsDisabled": true,
+  "privateInputsIncluded": false,
+  "manifestSha256": "2cc242e8b760901236b88313f415626b52b49f079f8a30e9bfb80122a0d50fe4",
+  "reportJsonSha256": "73d1113c64afa49ba17a3e948645aafd471ed1f903f9fa292b01fdca40f0f400"
+}

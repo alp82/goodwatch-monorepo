@@ -1,0 +1,65 @@
+{
+  "schema": "idle-launcher-freeze.v3",
+  "files": {
+    "pin.py": {
+      "bytes": 22552,
+      "sha256": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec"
+    },
+    "runtime.py": {
+      "bytes": 16721,
+      "sha256": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5"
+    },
+    "production.py": {
+      "bytes": 30448,
+      "sha256": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005"
+    },
+    "production_journal.py": {
+      "bytes": 8191,
+      "sha256": "20fd12fe1a2e5aa24ad5366bc584c0f410d12f6396ff84c0e2719d4fa3ebb389"
+    },
+    "zero_placement.py": {
+      "bytes": 12415,
+      "sha256": "5e1cbc8b6288b4751f88b0f8c253e4569487aded8f9c028dea707680d549708d"
+    },
+    "idle_trial.py": {
+      "bytes": 28952,
+      "sha256": "d35f6ec06001ce65a7734ea6e76d72430467e0f46ef63e08f3dff4b92d280340"
+    },
+    "idle_journal.py": {
+      "bytes": 14947,
+      "sha256": "96575cbe80508614ce6e9def01083197168ab1626da2401a14ab08dcd9850cf1"
+    },
+    "idle_lease.py": {
+      "bytes": 9751,
+      "sha256": "29a04660f0c14c6d39e5a1e29cdd1a9d31bcd3a4d567f65ce4449d9acc958579"
+    },
+    "idle_launcher.py": {
+      "bytes": 10883,
+      "sha256": "01dd4d54bd98c0c6a956234d42096f26f534dc9665b7e90d21b66a8a0a5fc5af"
+    },
+    "test_idle_trial.py": {
+      "bytes": 42329,
+      "sha256": "3751804a187318daa2d696341b67c5aed718332e7b9d14d84c7e0e7e6a5429a2"
+    },
+    "test_production.py": {
+      "bytes": 34578,
+      "sha256": "8418e02d3d0b5e6adb87f224340f6ef79ccbf41edb9479c7e83749ce26a9c70f"
+    },
+    "test_idle_journal.py": {
+      "bytes": 6300,
+      "sha256": "1248128f3ddd446c51861082ce2d84bc473ebb5409641553479fe106d7a8f5df"
+    },
+    "test_idle_lease.py": {
+      "bytes": 10094,
+      "sha256": "a05f4a45c5473c69a6a38af6b717a45c6344cf71ce274872ed226d04082e861d"
+    },
+    "test_idle_launcher.py": {
+      "bytes": 16308,
+      "sha256": "5e683b44e06dd9d1cce71a02f73c2fe0060826606e6098797ea67314da709591"
+    },
+    "IDLE-LAUNCHER.md": {
+      "bytes": 8293,
+      "sha256": "f6e83b7abea6e1da2ab8bdeecc234356d8da72bf202d5a417697f10e804f73df"
+    }
+  }
+}

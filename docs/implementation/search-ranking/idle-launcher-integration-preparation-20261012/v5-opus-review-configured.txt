@@ -1,0 +1,42 @@
+# Review: V5 inactive idle launcher integration
+
+**Verdict:** S1, E1 and D1 are closed, and I found no new mandatory source or evidence blocker. The V5 change is the right one: the old assertion was stale against V4's intended behaviour, and the code needed no change.
+
+I ran nothing and recomputed no hashes; the frozen-bytes and V4-equality claims are taken from the validation note. The count of 37 matches the pasted sources (9 journal, 10 lease, 18 launcher).
+
+## Closure status
+
+| Item | Status | Basis |
+|---|---|---|
+| S1 result reason | Closed | `result_reason` now includes `observerShutdownReason` and `drainReason` and returns `holder_exit_unproven` first. Both `_invoke` downgrades set a fixed reason. |
+| E1 placement negative | Closed | The same-cgroup test runs the real `production.check_source` and gets `supervisor_placement_changed`, `journalCreated: False` and no journal file. The descendant test covers the new launcher-only prefix line. |
+| D1 stale prose | Closed | The V2 paragraph now lists first-source failures as unjournaled and tells the caller to retain them. |
+| V5 assertion change | Correct | A raising `OwnedBirths.release` leaves `holders_gone` false, so `_invoke` reports `release_unproven` with `holder_exit_unproven`. |
+
+- **S1 invariant:** I traced every non-pass outcome of `idle_trial._run` and each yields a non-completion reason key. Every `_invoke` path that changes the outcome also sets `failure`, so `idle_hold_complete` is reported only with `pass`.
+- **E1 holder check:** if `production.Holder` were constructed in either placement test, the mock's `AssertionError` would change the result to `journalCreationUnknown` and fail the assertions. "Must not spawn" is therefore effectively enforced.
+- **Writer exit 1:** `nongraceful_writer` drives the real `idle_journal.writer` through its own failure path, so the exit code 1 is real, not simulated.
+
+## Non-blocking residuals
+
+1. **Untested fallback (`result_reason`).** The branch that turns `idle_hold_complete` into `idle_guard_failure` for a non-pass row has no test. I believe it is unreachable from the real core, but the doc states the invariant. One synthetic row, `{'outcome':'inconclusive','completionReason':'idle_hold_complete'}`, would cover it.
+2. **Subtree check is one-time (`run_reviewed`).** The prefix test runs once, before the writer spawns. `preflight` re-reads `own_group()` into its own `original`, and it and `_run` then recheck equality only. I see no code path that moves the parent, but "verified outside the whole source cgroup subtree" holds only at that first check, and the doc should say so.
+3. **New reason strings are unenumerated (`_invoke`).** `idle_journal_release_unproven` and `idle_journal_nongraceful_exit` are in no reason set and are not named in the doc. A consumer validating against `REASONS | LAUNCHER_REASONS` would reject them.
+4. **Placement tests do not isolate the core branch.** The same-cgroup test would still pass if `check_source` lost its equality branch, because the launcher line catches the same case. There is also no sibling-prefix case (`/fixture-source-2` must be allowed).
+5. **Observer-shutdown and drain reasons are covered by synthetic rows only.** No test carries a real `_run` frame with those fields through `_invoke`.
+6. **Superseded V3 sentence.** The V3 section still gives the old precedence order. The V4 section corrects it, so it is not misleading.
+7. **Carried from V3.** `journalCreationUnknown` still has no `reason` assertion, and the result still has three shapes.
+
+## Evidence scope
+
+- **Three modules only.** The 37 tests are `test_idle_journal`, `test_idle_lease` and `test_idle_launcher`. `test_idle_trial` and `test_production` were not rerun on V5 and rest on `sixCoreFilesEqualV3`.
+- **`-B` is required.** `run_reviewed` checks `sys.flags.dont_write_bytecode`, so the wrapper tests are valid only under the recorded `python -B` command.
+- **V4 timing is unsupported.** The doc's 65.239 seconds for the V4 run does not appear in the pasted validation record.
+
+## Future caller/stager responsibilities (not source gaps)
+
+- **Retain unjournaled refusals.** The returned dict is the only record of them.
+- **Exit while the alarm is armed.** After `release_unproven` or `journalCreationUnknown`, the 400-second SIGALRM stays armed.
+- **Journal path hygiene.** Use a fresh journal path per attempt, and retire the path after `journalCreationUnknown`.
+- **Launch placement.** Start from a cgroup outside the source subtree and keep the launcher there for the whole run.
+- **Carried transport items.** Stage verification before a fresh `-I -B` interpreter, recomputing `packetSha256` from the nine-file subset, the entry file's own hash binding, the UTC `/etc/localtime` symlink, and current-hash zero-placement evidence all still apply.
