@@ -15,6 +15,12 @@ export interface PaletteTitle {
 	posterPath: string | null
 }
 
+/** The lookup's answer: the titles to show, and about how many more match (a guess, for "Show 120 more"). */
+export type PaletteTitles = {
+	titles: PaletteTitle[]
+	more: number
+}
+
 /** The prefix the lookup and its cache key use: lowercase, trimmed, one space between words, at most 80 characters. */
 export function normalizePrefix(text: string): string {
 	return text

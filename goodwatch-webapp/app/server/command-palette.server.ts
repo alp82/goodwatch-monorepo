@@ -22,21 +22,24 @@ import { cached } from "~/utils/cache"
 import {
 	MIN_PREFIX_CHARS,
 	type PaletteTitle,
+	type PaletteTitles,
 	normalizePrefix,
 } from "~/utils/command-palette"
 import { titleKey } from "~/utils/title-key"
 import { runsSearch } from "./role.server"
 
-export const PALETTE_TITLES = 5
+export const PALETTE_TITLES = 8
 const CACHE_MINUTES = 6 * 60
 
+const NONE: PaletteTitles = { titles: [], more: 0 }
+
 /**
- * Up to five movies and shows whose title or original title starts with the text, then ones with a word that starts
- * with it, each group by votes; empty for text shorter than two characters.
+ * Up to eight movies and shows whose title or original title starts with the text, then ones with a word that starts
+ * with it, each group by votes, and about how many more match; none for text shorter than two characters.
  */
-export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
+export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 	const prefix = normalizePrefix(text)
-	if (prefix.length < MIN_PREFIX_CHARS) return []
+	if (prefix.length < MIN_PREFIX_CHARS) return NONE
 	// A page instance has no search index: the proxy sends the palette to the search roles, and this is what answers
 	// when a lookup arrives here anyway.
 	if (!runsSearch()) return tmdbTitles(prefix)
@@ -44,20 +47,19 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 		startSearchIndex()
 		return tmdbTitles(prefix)
 	}
-	const { titles } = await cached({
-		name: "command-palette-titles-v3",
+	return cached({
+		name: "command-palette-titles-v4",
 		params: { prefix },
 		ttlMinutes: CACHE_MINUTES,
-		target: async () => ({ titles: await indexTitles(prefix) }),
+		target: () => indexTitles(prefix),
 	})
-	return titles
 }
 
 // ---------------------------------------------------------------- the search index
 
-async function indexTitles(prefix: string): Promise<PaletteTitle[]> {
+async function indexTitles(prefix: string): Promise<PaletteTitles> {
 	const index = await getSearchIndex()
-	const rows = matchingRows(index, fold(prefix), CANDIDATES)
+	const { rows, total } = matchingRows(index, fold(prefix), CANDIDATES)
 	const keys = rows.map((row) => index.titleTable.pointIds[row])
 	const displays = await getDisplayFields(keys)
 	const titles: PaletteTitle[] = []
@@ -78,7 +80,8 @@ async function indexTitles(prefix: string): Promise<PaletteTitle[]> {
 		})
 		if (titles.length === PALETTE_TITLES) break
 	}
-	return titles
+	// A guess: the matches past the shown ones, counting the unpresentable ones too.
+	return { titles, more: Math.max(0, total - titles.length) }
 }
 
 const CANDIDATES = PALETTE_TITLES + 3
@@ -110,16 +113,16 @@ function foldedNames(index: SearchIndex): FoldedNames {
 }
 
 /**
- * The rows whose names match, best first: a name that starts with the prefix, then a word that does; more votes first.
- * Spaces don't count, so "spiderman" matches "Spider-Man" (see title-prefix.server.ts).
+ * The first `limit` rows whose names match, best first: a name that starts with the prefix, then a word that does; more
+ * votes first. Spaces don't count, so "spiderman" matches "Spider-Man" (see title-prefix.server.ts). With how many match.
  */
 function matchingRows(
 	index: SearchIndex,
 	prefix: string,
 	limit: number,
-): number[] {
+): { rows: number[]; total: number } {
 	const query = squash(prefix).text
-	if (!query) return []
+	if (!query) return { rows: [], total: 0 }
 	const { votes } = index.titleTable
 	// The best tier each row reached: 0 starts with the prefix, 1 has a word that does.
 	const tiers = new Map<number, number>()
@@ -129,10 +132,11 @@ function matchingRows(
 		const best = tiers.get(row)
 		if (best === undefined || tier < best) tiers.set(row, tier)
 	}
-	return [...tiers]
+	const rows = [...tiers]
 		.sort(([a, tierA], [b, tierB]) => tierA - tierB || votes[b] - votes[a])
 		.slice(0, limit)
 		.map(([row]) => row)
+	return { rows, total: tiers.size }
 }
 
 const SHOW_POINT_IDS = 2_000_000_000_000
@@ -153,7 +157,7 @@ export async function paletteLookupTitles(
 	try {
 		const index = await getSearchIndex()
 		const t = index.titleTable
-		return matchingRows(index, fold(prefix), limit).map((row) => {
+		return matchingRows(index, fold(prefix), limit).rows.map((row) => {
 			const id = t.pointIds[row]
 			return {
 				id: id % TMDB_ID_RANGE,
@@ -173,7 +177,7 @@ export async function paletteLookupTitles(
 // ---------------------------------------------------------------- the fallback
 
 /** The TMDB title search (cached per query by getSearchResults), with the catalog's titles first. */
-async function tmdbTitles(prefix: string): Promise<PaletteTitle[]> {
+async function tmdbTitles(prefix: string): Promise<PaletteTitles> {
 	const results = await getSearchResults({ language: "en_US", query: prefix })
 	const titles: PaletteTitle[] = results
 		.filter((result) => !result.adult)
@@ -196,5 +200,9 @@ async function tmdbTitles(prefix: string): Promise<PaletteTitle[]> {
 			snapshot.has(titleKey(title.mediaType, title.tmdbId))
 		titles.sort((a, b) => Number(known(b)) - Number(known(a)))
 	}
-	return titles.slice(0, PALETTE_TITLES)
+	// A guess: TMDB answers one page of matches, so there may be more than the rest of it.
+	return {
+		titles: titles.slice(0, PALETTE_TITLES),
+		more: Math.max(0, titles.length - PALETTE_TITLES),
+	}
 }

@@ -5,7 +5,10 @@ import assert from "node:assert/strict"
 import { type TestContext, test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import "../../server/title-filter/test-alias.ts"
-import type { PaletteTitle } from "../../utils/command-palette.ts"
+import type {
+	PaletteTitle,
+	PaletteTitles,
+} from "../../utils/command-palette.ts"
 import {
 	busyAnswer,
 	gatewayAnswers,
@@ -26,31 +29,56 @@ const matrix: PaletteTitle = {
 
 // The palette with "matr" typed, once its lookup has settled. The app's client retries a failed lookup with a delay;
 // here the retries run at once.
-const typeMatr = async (t: TestContext, client = new QueryClient({
-	defaultOptions: { queries: { retryDelay: 0 } },
-})) => {
-	const observer = new QueryObserver<PaletteTitle[]>(client, paletteTitlesQuery("matr"))
+const typeMatr = async (
+	t: TestContext,
+	client = new QueryClient({
+		defaultOptions: { queries: { retryDelay: 0 } },
+	}),
+) => {
+	const observer = new QueryObserver<PaletteTitles>(
+		client,
+		paletteTitlesQuery("matr"),
+	)
 	t.after(observer.subscribe(() => {}))
 	t.after(() => client.clear())
 	while (observer.getCurrentResult().isFetching)
 		await new Promise((resolve) => setTimeout(resolve, 1))
 	const result = observer.getCurrentResult()
-	return { rows: shownPaletteTitles(true, result.data), result, client }
+	const shown = shownPaletteTitles(true, result.data)
+	return { rows: shown.titles, more: shown.more, result, client }
 }
 
 test("the lookup's titles are the palette's title rows", async (t) => {
 	const fetched = stubFetch(t, () => Response.json({ titles: [matrix] }))
 	const palette = await typeMatr(t)
 	assert.deepEqual(palette.rows, [matrix])
-	assert.equal((fetched.mock.calls[0].arguments as unknown[])[0], "/api/command-palette?q=matr")
+	assert.equal(
+		(fetched.mock.calls[0].arguments as unknown[])[0],
+		"/api/command-palette?q=matr",
+	)
+})
+
+test("the lookup's count of more matches comes along; a missing or odd one reads as none", async (t) => {
+	stubFetch(t, () => Response.json({ titles: [matrix], more: 42 }))
+	assert.equal((await typeMatr(t)).more, 42)
+	for (const more of [undefined, -3, "42", null]) {
+		stubFetch(t, () => Response.json({ titles: [matrix], more }))
+		assert.deepEqual(
+			await fetchPaletteTitles("matr", new AbortController().signal),
+			{ titles: [matrix], more: 0 },
+		)
+	}
 })
 
 const failures: Record<string, () => Response> = {
 	...gatewayAnswers,
 	"the search role's busy answer": busyAnswer,
-	"a 200 with an HTML body": () => new Response("<html><body>Welcome</body></html>"),
-	"a 200 with JSON that has no titles": () => Response.json({ error: "Not found" }),
-	"a 200 whose titles aren't a list": () => Response.json({ titles: "The Matrix" }),
+	"a 200 with an HTML body": () =>
+		new Response("<html><body>Welcome</body></html>"),
+	"a 200 with JSON that has no titles": () =>
+		Response.json({ error: "Not found" }),
+	"a 200 whose titles aren't a list": () =>
+		Response.json({ titles: "The Matrix" }),
 	"a 200 with the JSON null": () => Response.json(null),
 }
 for (const [name, answer] of Object.entries(failures))
@@ -80,15 +108,24 @@ test("a failed lookup isn't kept as an empty answer: the same text is looked up 
 test("text that's too short asks nothing and shows no title rows", async (t) => {
 	const fetched = stubFetch(t, () => Response.json({ titles: [matrix] }))
 	const client = new QueryClient()
-	const observer = new QueryObserver<PaletteTitle[]>(client, paletteTitlesQuery("m"))
+	const observer = new QueryObserver<PaletteTitles>(
+		client,
+		paletteTitlesQuery("m"),
+	)
 	t.after(observer.subscribe(() => {}))
 	assert.equal(fetched.mock.callCount(), 0)
-	assert.deepEqual(shownPaletteTitles(false, [matrix]), [])
+	assert.deepEqual(shownPaletteTitles(false, { titles: [matrix], more: 3 }), {
+		titles: [],
+		more: 0,
+	})
 })
 
 test("the lookup itself rejects, so the query can tell a failure from no matches", async (t) => {
 	stubFetch(t, gatewayAnswers["a 504 without a body"])
 	await assert.rejects(fetchPaletteTitles("matr", new AbortController().signal))
 	stubFetch(t, () => Response.json({ titles: [] }))
-	assert.deepEqual(await fetchPaletteTitles("matr", new AbortController().signal), [])
+	assert.deepEqual(
+		await fetchPaletteTitles("matr", new AbortController().signal),
+		{ titles: [], more: 0 },
+	)
 })

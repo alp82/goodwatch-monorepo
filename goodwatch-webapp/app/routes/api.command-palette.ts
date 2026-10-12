@@ -2,11 +2,11 @@ import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getPaletteTitles } from "~/server/command-palette.server"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { getUserIdFromRequest } from "~/utils/auth"
-import type { PaletteTitle } from "~/utils/command-palette"
+import type { PaletteTitles } from "~/utils/command-palette"
 
-// The command palette's matching titles: GET /api/command-palette?q=rea returns { titles } with up to five movies and
-// shows (see command-palette.server.ts). The palette matches its destinations in the browser, since they depend only
-// on the viewer's features. Served while REC_NAVIGATION shows the navigation to the viewer; not found otherwise.
+// The command palette's matching titles: GET /api/command-palette?q=rea returns { titles, more } with up to eight movies
+// and shows and about how many more match (see command-palette.server.ts). The palette matches its destinations in the
+// browser, since they depend only on the viewer's features. Served while REC_NAVIGATION shows the navigation to the viewer; not found otherwise.
 
 const headers = { "Cache-Control": "private, no-store" }
 
@@ -23,20 +23,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const started = performance.now()
 	const q = new URL(request.url).searchParams.get("q") ?? ""
-	let titles: PaletteTitle[] = []
+	let answer: PaletteTitles = { titles: [], more: 0 }
 	try {
-		titles = await getPaletteTitles(q)
+		answer = await getPaletteTitles(q)
 	} catch (error) {
 		// The palette still offers "Search for …" and the destinations without titles.
 		console.error("Command palette title lookup failed:", error)
 	}
-	return json<{ titles: PaletteTitle[] }>(
-		{ titles },
-		{
-			headers: {
-				...headers,
-				"Server-Timing": `titles;dur=${(performance.now() - started).toFixed(1)}`,
-			},
+	return json<PaletteTitles>(answer, {
+		headers: {
+			...headers,
+			"Server-Timing": `titles;dur=${(performance.now() - started).toFixed(1)}`,
 		},
-	)
+	})
 }

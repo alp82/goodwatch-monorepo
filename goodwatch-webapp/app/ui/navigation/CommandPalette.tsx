@@ -1,6 +1,7 @@
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search for …" (the search page), then up to five matching titles, then matching destinations ("Go to Taste"), then
-// Sign up for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
+// "Search for …" (the search page), then up to eight matching titles in a box of their own that scrolls, ending in
+// "Show 120 more" (the search page again) when more match, then matching destinations ("Go to Taste"), then Sign up
+// for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
 // are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
 // it; Escape closes the dialog around it.
 import {
@@ -22,7 +23,7 @@ import { useFeatures } from "~/hooks/useFeature"
 import { useUser } from "~/utils/auth"
 import {
 	MIN_PREFIX_CHARS,
-	type PaletteTitle,
+	type PaletteTitles,
 	normalizePrefix,
 	paletteTitlePath,
 } from "~/utils/command-palette"
@@ -61,6 +62,8 @@ interface Row {
 	compact?: boolean
 	icon?: ComponentType<SVGProps<SVGSVGElement>>
 	poster?: string | null
+	/** A matching title or the "Show … more" after them: these scroll in a box of their own. */
+	title?: boolean
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -73,7 +76,7 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 /** Matching titles for the typed text, looked up once typing pauses. None when the lookup fails. */
-function usePaletteTitles(q: string): PaletteTitle[] {
+function usePaletteTitles(q: string): PaletteTitles {
 	const prefix = useDebounced(normalizePrefix(q), DEBOUNCE_MS)
 	const typed = normalizePrefix(q).length >= MIN_PREFIX_CHARS
 	const query = useQuery(paletteTitlesQuery(prefix))
@@ -89,7 +92,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const { pick } = useTonightsPick()
 	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
 	const [active, setActive] = useState(0)
-	const titles = usePaletteTitles(q)
+	const { titles, more } = usePaletteTitles(q)
 	const id = useId()
 	const field = useRef<HTMLInputElement>(null)
 	// Headless UI moves initial focus to data-autofocus only without touch, and focuses the panel itself on phones,
@@ -121,6 +124,16 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					.join(", "),
 				href: paletteTitlePath(title),
 				poster: title.posterPath,
+				title: true,
+			})
+		if (titles.length > 0 && more > 0)
+			result.push({
+				key: "more",
+				label: `Show ${more.toLocaleString("en-US")} more`,
+				href: searchHref(trimmed, features),
+				compact: true,
+				icon: MagnifyingGlassIcon,
+				title: true,
 			})
 		for (const key of PALETTE_DESTINATIONS) {
 			const destination = destinations[key]
@@ -150,7 +163,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: ArrowRightEndOnRectangleIcon,
 			})
 		return result
-	}, [features, pathname, trimmed, needle, titles, pick, user, signUp])
+	}, [features, pathname, trimmed, needle, titles, more, pick, user, signUp])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`
@@ -164,6 +177,62 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const run = (row: Row) => {
 		navigate(row.href)
 		onDone()
+	}
+
+	const option = ({ row, index }: IndexedRow) => {
+		const Icon = row.icon
+		return (
+			<Link
+				key={row.key}
+				id={optionId(index)}
+				// biome-ignore lint/a11y/useSemanticElements: an option that is a link (see the listbox above)
+				role="option"
+				aria-selected={index === at}
+				tabIndex={-1}
+				to={row.href}
+				onMouseMove={() => index !== at && setActive(index)}
+				onClick={(event) => {
+					// Modified clicks open a new tab and leave the palette as it is.
+					if (event.metaKey || event.ctrlKey || event.shiftKey) return
+					event.preventDefault()
+					run(row)
+				}}
+				className={`flex min-w-0 shrink-0 items-center rounded-xl px-3 text-left ${row.compact ? "min-h-[38px] gap-2.5 py-1 text-gray-300" : "min-h-[50px] gap-3 py-1.5 text-gray-100"} ${index === at ? "bg-white/[0.08]" : ""}`}
+			>
+				{row.poster !== undefined ? (
+					row.poster ? (
+						<img
+							src={tmdbImage(row.poster, "w92")}
+							alt=""
+							className="h-[42px] w-7 shrink-0 rounded-[5px] object-cover"
+						/>
+					) : (
+						<span className="h-[42px] w-7 shrink-0 rounded-[5px] bg-white/10" />
+					)
+				) : (
+					Icon && (
+						<Icon
+							className={`shrink-0 text-amber-400 ${row.compact ? "h-4 w-4" : "h-5 w-5"}`}
+							aria-hidden
+						/>
+					)
+				)}
+				<span className="flex min-w-0 flex-col">
+					<b
+						className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
+					>
+						{row.label}
+					</b>
+					{row.sub && (
+						<small
+							className={`truncate text-gray-400 ${row.compact ? "text-[11.5px]" : "text-[12.5px]"}`}
+						>
+							{row.sub}
+						</small>
+					)}
+				</span>
+			</Link>
+		)
 	}
 
 	return (
@@ -228,62 +297,42 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				aria-label="Suggestions"
 				className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-4 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] lg:px-3.5 lg:pb-3.5"
 			>
-				{rows.map((row, index) => {
-					const Icon = row.icon
-					return (
-						<Link
-							key={row.key}
-							id={optionId(index)}
-							// biome-ignore lint/a11y/useSemanticElements: an option that is a link (see the listbox above)
-							role="option"
-							aria-selected={index === at}
-							tabIndex={-1}
-							to={row.href}
-							onMouseMove={() => index !== at && setActive(index)}
-							onClick={(event) => {
-								// Modified clicks open a new tab and leave the palette as it is.
-								if (event.metaKey || event.ctrlKey || event.shiftKey) return
-								event.preventDefault()
-								run(row)
-							}}
-							className={`flex min-w-0 shrink-0 items-center rounded-xl px-3 text-left ${row.compact ? "min-h-[38px] gap-2.5 py-1 text-gray-300" : "min-h-[50px] gap-3 py-1.5 text-gray-100"} ${index === at ? "bg-white/[0.08]" : ""}`}
+				{groupTitles(rows).map((group) =>
+					Array.isArray(group) ? (
+						// The titles scroll on their own, so the destinations below them stay in view.
+						<div
+							key="titles"
+							// biome-ignore lint/a11y/useSemanticElements: a group of options inside the listbox
+							role="group"
+							aria-label="Titles"
+							className="flex max-h-[min(300px,40dvh)] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain"
 						>
-							{row.poster !== undefined ? (
-								row.poster ? (
-									<img
-										src={tmdbImage(row.poster, "w92")}
-										alt=""
-										className="h-[42px] w-7 shrink-0 rounded-[5px] object-cover"
-									/>
-								) : (
-									<span className="h-[42px] w-7 shrink-0 rounded-[5px] bg-white/10" />
-								)
-							) : (
-								Icon && (
-									<Icon
-										className={`shrink-0 text-amber-400 ${row.compact ? "h-4 w-4" : "h-5 w-5"}`}
-										aria-hidden
-									/>
-								)
-							)}
-							<span className="flex min-w-0 flex-col">
-								<b
-									className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
-								>
-									{row.label}
-								</b>
-								{row.sub && (
-									<small
-										className={`truncate text-gray-400 ${row.compact ? "text-[11.5px]" : "text-[12.5px]"}`}
-									>
-										{row.sub}
-									</small>
-								)}
-							</span>
-						</Link>
-					)
-				})}
+							{group.map(option)}
+						</div>
+					) : (
+						option(group)
+					),
+				)}
 			</div>
 		</div>
 	)
+}
+
+type IndexedRow = { row: Row; index: number }
+
+/** The rows with their indexes, the run of title rows gathered in a list of its own. */
+function groupTitles(rows: Row[]): (IndexedRow | IndexedRow[])[] {
+	const groups: (IndexedRow | IndexedRow[])[] = []
+	let titles: IndexedRow[] | undefined
+	rows.forEach((row, index) => {
+		if (!row.title) {
+			titles = undefined
+			groups.push({ row, index })
+		} else if (titles) titles.push({ row, index })
+		else {
+			titles = [{ row, index }]
+			groups.push(titles)
+		}
+	})
+	return groups
 }
