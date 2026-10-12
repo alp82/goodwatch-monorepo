@@ -1,0 +1,42 @@
+{
+  "windowStart": "2026-10-12T08:44:00.000Z",
+  "windowEnd": "2026-10-12T11:00:00.000Z",
+  "sourceCount": 0,
+  "rowsFetched": 0,
+  "foreignKeyRowsExcluded": 0,
+  "authenticatedRowsIncludingControlledProbes": {
+    "rows": 0,
+    "firstResultsCount": 0,
+    "firstResultsP95Ms": null,
+    "completedComputationCount": 0,
+    "completedComputationP95Ms": null,
+    "flagFreeComputationCount": 0,
+    "flagFreeComputationP95Ms": null,
+    "missingFirstResults": 0,
+    "completionFailed": 0,
+    "completionAborted": 0,
+    "reasonPresent": 0,
+    "rankerFallbackPresent": 0
+  },
+  "anonymousCandidateRows": {
+    "rows": 0,
+    "firstResultsCount": 0,
+    "firstResultsP95Ms": null,
+    "completedComputationCount": 0,
+    "completedComputationP95Ms": null,
+    "flagFreeComputationCount": 0,
+    "flagFreeComputationP95Ms": null,
+    "missingFirstResults": 0,
+    "completionFailed": 0,
+    "completionAborted": 0,
+    "reasonPresent": 0,
+    "rankerFallbackPresent": 0
+  },
+  "excludedInsertionTimeProbeRows": 0,
+  "limits": [
+    "History insertion time differs from acceptance time; anonymous counts cannot establish exact row-request correspondence.",
+    "Ciphertext authenticated in memory without plaintext parsing/output.",
+    "Broad insertion-time probe exclusion can exclude organic traffic; no seven-day acceptance.",
+    "Full completed computation excludes aborted/failed; flag-free subset additionally excludes recorded reason/fallback."
+  ]
+}

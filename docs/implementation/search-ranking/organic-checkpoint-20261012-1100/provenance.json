@@ -1,0 +1,69 @@
+{
+  "schema": "goodwatch.organic-checkpoint.provenance.v1",
+  "windowStart": "2026-10-12T08:44:00Z",
+  "windowEnd": "2026-10-12T11:00:00Z",
+  "rootReportedExecution": {
+    "executor": "root agent",
+    "runsPerCommand": 1,
+    "commandExitCodes": [
+      0,
+      0,
+      0
+    ],
+    "remoteFilesCreated": 0,
+    "ordinarySearchesGenerated": 0,
+    "storageWritesGenerated": 0
+  },
+  "applicationAcceptance": false,
+  "issueStatesAtPreparation": {
+    "100": "OPEN",
+    "407": "OPEN",
+    "406": "CLOSED"
+  },
+  "files": {
+    "coverage-vector1-20261012-1100.json": {
+      "sha256": "5c115fc7a21f72990d68114ac8a333bd7156615e89876b775f0ea7ab4acd47d3",
+      "bytes": 3745
+    },
+    "coverage-abio-20261012-1100.json": {
+      "sha256": "d46e37759d4d800593a2744428270220f2832500eda3b157a58862f032b3ece4",
+      "bytes": 1608
+    },
+    "history-checkpoint-20261012-1100.json": {
+      "sha256": "d3b2d03631cd5c4aaa64fcbeea2a920c1eefbeb18bcdb85ab9a35bc1ff271740",
+      "bytes": 1459
+    },
+    "passive-coverage-checkpoint-20261012-1100.py": {
+      "sha256": "acc05cb45249c06689ab6a5feea58c5a030cadb9491562bf8f5bd2b8469b2ac7",
+      "bytes": 7604
+    },
+    "history-checkpoint-source-20261012-1100.mjs": {
+      "sha256": "e0d00cc8be159657b5d67d6766b6f2c9fbddaa8f81ba99f93aad618f990e390f",
+      "bytes": 4878
+    }
+  },
+  "priorSources": {
+    "passive-coverage-checkpoint-20261012-0844.py": "0c78b5088493c8638d970500c61ef667ae22ad0a57a9fbab8c56abe60c712654",
+    "history-checkpoint-source-20261012.mjs": "67ee2b1711e2c2171602870793f78f021a504830c1cdf3e121b6f9360941d315"
+  },
+  "priorOutputHashes": {
+    "coverage-vector1-20261012-0844.json": "14f38173e7c8fadb9db69def7e786d6896ca67b1e040d18b84f3ed6822e2b1af",
+    "coverage-abio-20261012-0844.json": "d616927f918d76e324cf3ac93d06b2b1ff6ee22c6054814747cecd007a20ac15"
+  },
+  "preparedExecutionRecipeSha256": "c6ea00385675c1f4dea894641a175fa32875f899998d4eedc510bb915a897e4a",
+  "independentLocalVerification": {
+    "outputBytesMatchRetainedRootFiles": true,
+    "sourceChangesOnlyClosedInterval": true,
+    "collectorServiceEntryHashesAndPidBirthMatch0844": true,
+    "searchContainerSourceImageIdentityPidBirthMatch0844": true,
+    "proxyImagesMatchActivation": true,
+    "sourceCommitMatchesAlignment": true,
+    "nodeExecutableOrBirthProven": false
+  },
+  "limitations": [
+    "Root-reported SSH exit codes are not separate retained supervisor receipts.",
+    "Collector entry hashes do not hash all dependency modules.",
+    "Container State.Pid/start ticks do not identify a Node executable; nodeProcesses is empty.",
+    "Zero traffic does not establish latency or error-free seven-day acceptance."
+  ]
+}
