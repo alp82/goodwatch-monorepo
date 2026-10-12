@@ -506,3 +506,6 @@ export async function getNearCard(
 		signUp: ctx.viewer.kind === "guest" && taste.signal !== "some",
 	}
 }
+
+// PROTOTYPE (Explorer round 10, the world map) - throwaway. The prototype's server reads the seat and the layouts.
+export const prototypeParts = { seatFor, layoutFor, treeOf, offered }
