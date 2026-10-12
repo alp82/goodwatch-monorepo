@@ -1271,7 +1271,7 @@ function Bar({ view }: { view: TvView }) {
 					{ type: "open-search" },
 					state.screen.name === "search",
 				)}
-				{btn("Menu", ICON.more, { type: "toggle-menu" }, state.menuOpen)}
+				{btn("Menu", ICON.menu, { type: "toggle-menu" }, state.menuOpen)}
 			</div>
 			<AnimatePresence>
 				{state.menuOpen && (

@@ -1,5 +1,5 @@
 // The living room on a phone (#189). Portrait is the couch: the portrait room with the TV on top and the Remote in
-// the hand below it, plus a "Turn your phone" invitation. Landscape is the main phone view: the whole room above
+// the hand below it. Landscape is the whole room above
 // the site header, the TV centered on top, and the Remote under it; drag it up, or tap "Lift for more keys", for
 // the keys a short window cuts off. The TV shows the phone edition of the screens (#224).
 //
@@ -8,7 +8,6 @@
 // nothing loops at idle, and nothing blends or blurs over the room photo.
 import { assetUrl } from "~/utils/asset-url"
 import {
-	AnimatePresence,
 	animate,
 	motion,
 	useDragControls,
@@ -17,7 +16,6 @@ import {
 	useSpring,
 } from "framer-motion"
 import {
-	type ReactNode,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -273,7 +271,7 @@ export function PhoneLivingRoom({
 						/>
 					</motion.div>
 
-					{landscape ? (
+					{landscape && (
 						<>
 							{L.lift > 0 && (
 								<button
@@ -299,8 +297,6 @@ export function PhoneLivingRoom({
 								GoodWatch
 							</a>
 						</>
-					) : (
-						<RotateHint />
 					)}
 				</>
 			)}
@@ -386,49 +382,5 @@ function HandRemote({
 				<Remote {...remote} />
 			</div>
 		</motion.div>
-	)
-}
-
-const PHONE_ICON =
-	"M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2"
-
-// Portrait: an invitation to turn the phone, at the bottom left over the hand (above the lip of the section below the room), gone by itself
-// after 7 s.
-function RotateHint(): ReactNode {
-	const [gone, setGone] = useState(false)
-	useEffect(() => {
-		const id = setTimeout(() => setGone(true), 7000)
-		return () => clearTimeout(id)
-	}, [])
-	return (
-		<AnimatePresence>
-			{!gone && (
-				<motion.button
-					type="button"
-					onClick={() => setGone(true)}
-					className={`absolute bottom-[72px] left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15`}
-					initial={{ opacity: 0, y: -6 }}
-					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0 }}
-					transition={{ delay: 1.2, duration: 0.4 }}
-				>
-					<motion.span
-						className="text-amber-300"
-						initial={{ rotate: 0 }}
-						animate={{ rotate: -90 }}
-						transition={{ delay: 2, duration: 0.7, ease: "easeInOut" }}
-					>
-						<Icon d={PHONE_ICON} className="h-7 w-7" />
-					</motion.span>
-					<span>
-						Turn your phone
-						<br />
-						<span className="font-normal text-white/70">
-							for the whole room
-						</span>
-					</span>
-				</motion.button>
-			)}
-		</AnimatePresence>
 	)
 }
