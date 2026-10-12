@@ -1,0 +1,47 @@
+{
+  "adoptionIntentSha256": "1930c7babcb7321d8324863d05350136745ca96dafb422f1cf9cb5aa75599bf7",
+  "allRegisteredLifecycleExitsProven": false,
+  "benchmarkFrameCount": 0,
+  "capacityDeficitProven": false,
+  "cleanupRemoteReason": "lifecycle_handoff_changed",
+  "consumerAuditPresent": false,
+  "continuationAllowed": false,
+  "derivativePolicySha256": "c16f3ffcb20a1800d23252d5181f091128ec1f31b0e00225684b6a7862cfd068",
+  "externalClosureSha256": "0a259faaf3f4579a21f5dc142cda8f423848b47b9583f8ad0b4c7a112626e199",
+  "externalManifestSha256": "d80f7469edf903c1149b88ecb12b3be443c6f49be5188c27d34d5427ac7dca4e",
+  "failureTimeCauseProven": false,
+  "files": {
+    "root-public.ndjson": {
+      "bytes": 57852,
+      "sha256": "de53eadf3d6dbf19506ca248b8c386f8c14f0bf0a0f55d7d120ff9d0766885ce"
+    },
+    "root-readonly-scope-context.json": {
+      "bytes": 1169,
+      "sha256": "eff68a7204ef3e3152d3b94046e95bdbea0528ea72007754a9caeb0b0306009c"
+    },
+    "root-return.json": {
+      "bytes": 688,
+      "sha256": "9d19fd59911f3e5cde8662de93b6ec472ab6660887eb01f374924c9ccca7b766"
+    },
+    "root-stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "invocationSha256": "6ded34014af54b274210eef1821299dca974705453e39240c34db1cc571fbc9c",
+  "laterContextGrantsContinuationAuthority": false,
+  "laterContextIsFailureTimeSample": false,
+  "mergedSourceCommit": "8af144909e4ed22da3ce406c037a2fb6f45b08ea",
+  "nodeReceiptSha256": "8901605db3cc211861a87e4980c94ef6eb2256dc733ba5564ce92179b1c12ea0",
+  "primaryRemoteReason": "running_unheld_scope_unproven",
+  "productionAcceptance": false,
+  "publicFrameCount": 4,
+  "publicationScope": "docs-only exact public evidence; no runtime/source/guard changes",
+  "schema": "cpu0-fixed-capacity-running-adoption-actual-evidence.v1",
+  "sourceFreezeSha256": "f13494c945e5a4fe719f848fbe9bc5fe724508f0f699491fea55b69dba8a3cad",
+  "status": "failed-or-cleanup-unknown",
+  "unknownUnregisteredChildrenAbsentProven": false,
+  "validPairs": 0,
+  "variant": "cpu0-fixed-capacity.v2",
+  "vmResize": false
+}
