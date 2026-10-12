@@ -131,8 +131,8 @@ export function workingSetAdmissionEvidenceV2(value,{selectionHash,selectedBytes
 export function fixedCapacityRefusalEvidenceV2(value){
  if(keys(value,['reason','pressureMemoryFailureEvidence'])){
   const proof=value.pressureMemoryFailureEvidence;
-  gate(value.reason==='host_emergency_floor'&&keys(proof,['schema','scope','sampledAt','sampleMonotonicSeconds','hostMemTotalBytes','hostMemAvailableBytes','hostMemAvailableFloorBytes','hostDirtyBytes','hostWritebackBytes','hostSwapBytes'])&&proof.schema==='clone-pressure-memory.cpu0.v2'&&['archive-verification','archive-pressure'].includes(proof.scope),'cpu0_fixed_pressure_refusal_invalid');
-  gate(integer(proof.hostMemTotalBytes,1)&&['hostMemAvailableBytes','hostDirtyBytes','hostWritebackBytes'].every(key=>integer(proof[key])&&proof[key]<=proof.hostMemTotalBytes)&&proof.hostMemAvailableFloorBytes===1.5*1024**3&&integer(proof.hostSwapBytes)&&utc(proof.sampledAt)&&number(proof.sampleMonotonicSeconds)&&proof.sampleMonotonicSeconds>0&&proof.hostMemAvailableBytes<proof.hostMemAvailableFloorBytes,'cpu0_fixed_pressure_refusal_not_measured');
+  gate(['host_emergency_floor','swap_present'].includes(value.reason)&&keys(proof,['schema','scope','sampledAt','sampleMonotonicSeconds','hostMemTotalBytes','hostMemAvailableBytes','hostMemAvailableFloorBytes','hostDirtyBytes','hostWritebackBytes','hostSwapBytes'])&&proof.schema==='clone-pressure-memory.cpu0.v2'&&['archive-verification','archive-pressure'].includes(proof.scope),'cpu0_fixed_pressure_refusal_invalid');
+  gate(integer(proof.hostMemTotalBytes,1)&&['hostMemAvailableBytes','hostDirtyBytes','hostWritebackBytes'].every(key=>integer(proof[key])&&proof[key]<=proof.hostMemTotalBytes)&&proof.hostMemAvailableFloorBytes===1.5*1024**3&&integer(proof.hostSwapBytes)&&utc(proof.sampledAt)&&number(proof.sampleMonotonicSeconds)&&proof.sampleMonotonicSeconds>0&&(value.reason==='swap_present'?proof.hostSwapBytes>0:proof.hostSwapBytes===0&&proof.hostMemAvailableBytes<proof.hostMemAvailableFloorBytes),'cpu0_fixed_pressure_refusal_not_measured');
   return value;
  }
  if(keys(value,['reason','workingSetFailureEvidence'])){
@@ -232,7 +232,7 @@ export function consumerEnrolmentEvidenceV2(value,expected){
 }
 
 export function consumerEnrolmentFailureEvidenceV2(value,previous,expected){
- gate(keys(value,['schema','publicationState','expectedReceiptSha256','consumerEnrolment','cleanupAddressableByFixedReceipt','continuationAllowed'])&&value.schema==='cpu0-consumer-enrolment-failure.v2'&&['not-issued','issued-unknown','published-verified'].includes(value.publicationState)&&hash(value.expectedReceiptSha256)&&value.cleanupAddressableByFixedReceipt===true&&value.continuationAllowed===false,'cpu0_fixed_enrolment_failure_invalid');
+ gate(keys(value,['schema','publicationState','expectedReceiptSha256','consumerEnrolment','cleanupAddressableByFixedReceipt','continuationAllowed'])&&value.schema==='cpu0-consumer-enrolment-failure.v2'&&['not-issued','issued-unknown','published-verified'].includes(value.publicationState)&&hash(value.expectedReceiptSha256)&&value.cleanupAddressableByFixedReceipt===(value.publicationState!=='not-issued')&&value.continuationAllowed===false,'cpu0_fixed_enrolment_failure_invalid');
  consumerEnrolmentEvidenceV2(value.consumerEnrolment,{...expected,consumerPredecessorSha256:previous.sha256,source:previous.snapshot.newRunning});
  gate(value.expectedReceiptSha256===canonicalHash(value.consumerEnrolment),'cpu0_fixed_enrolment_failure_hash_invalid');
  return value;
@@ -243,7 +243,7 @@ export function failureEvidenceV2(frames,previous,expected){
  gate(Array.isArray(frames)&&frames.length<=7,'cpu0_fixed_failure_frames_invalid');
  // The legacy projector validates unchanged stop/resource/CPU shapes. Reasons
  // and new evidence use a separate closed v2 allowlist and field validators.
- const result={...failureEvidence(frames.map(({reason,...frame})=>frame)),backendReasons:[],consumerEnrolmentFailure:null,consumerEnrolmentCleanupFailure:null,overheadFailures:[],measuredFailures:[]};
+ const result={...failureEvidence(frames.map(({reason,...frame})=>frame)),backendReasons:[],consumerEnrolmentFailure:null,consumerEnrolmentCleanupFailure:null,overheadFailures:[],measuredFailures:[],admissionPassedSamplesBeforeRefence:[],sourceLimitFailures:[]};
  for(const frame of frames){
   if(!['failed','phase-failed'].includes(frame.stage))continue;
   if(!['search.clone-mlock-control.v3','search.clone-cpu0-preflight.v2'].includes(frame.schema)){result.evidenceRejected=true;continue;}
@@ -255,15 +255,12 @@ export function failureEvidenceV2(frames,previous,expected){
    fixedCapacityOverheadEvidenceV2(proof,{...expected,consumerEnrolment:expected?.consumerEnrolment,consumerEnrolmentSha256:expected?.consumerEnrolmentSha256,sourceIdentity:proof?.baseline?.sourceIdentity,sourceGroupHash:previous.snapshot.newRunning.qdrant.groupHash},{allowExceeded:true});
    result.overheadFailures.push({stage:frame.stage,reason:CONTROL_REASONS_V2.has(frame.reason)?frame.reason:null,proof});
   }catch{result.evidenceRejected=true;}}
+  if(frame.sourceLimitFailureEvidence){try{const proof=frame.sourceLimitFailureEvidence;gate(frame.reason==='source_limits_changed'&&keys(proof,['memoryMaxBytes','memoryHighBytes','memorySwapMaxBytes'])&&Object.values(proof).every(value=>value===null||integer(value))&&(proof.memoryMaxBytes!==6*1024**3||proof.memorySwapMaxBytes!==0||proof.memoryHighBytes!==null),'cpu0_fixed_source_limit_evidence_invalid');result.sourceLimitFailures.push({stage:frame.stage,reason:frame.reason,proof});}catch{result.evidenceRejected=true;}}
+  if(frame.admissionPassedSampleBeforeRefence){try{const proof=headroomSnapshotV2(frame.admissionPassedSampleBeforeRefence);gate(CONTROL_REASONS_V2.has(frame.reason)&&!['host_emergency_floor','cold_start_headroom','swap_present'].includes(frame.reason)&&proof.hostMemAvailableBytes>proof.hostMemAvailableFloorBytes&&proof.hostSwapBytes===0,'cpu0_fixed_passed_refence_sample_invalid');result.admissionPassedSamplesBeforeRefence.push({stage:frame.stage,reason:frame.reason,proof});}catch{result.evidenceRejected=true;}}
   for(const kind of ['admissionFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence']){
    const value=frame[kind];if(value===undefined||value===null)continue;
    try{
-    if(kind==='admissionFailureEvidence')headroomSnapshotV2(value);
-    else if(kind==='queryMemoryFailureEvidence')queryMemorySnapshotV2(value,value.scope);
-    else if(kind==='workingSetFailureEvidence'){
-     const {sourceCurrentBytes,sourceCapBytes,capReserveBytes,...sample}=value;workingSetSnapshotV2(sample);
-     if(Object.hasOwn(value,'sourceCurrentBytes')||Object.hasOwn(value,'sourceCapBytes')||Object.hasOwn(value,'capReserveBytes'))gate(integer(sourceCurrentBytes)&&(sourceCapBytes===null||sourceCapBytes===6*1024**3)&&capReserveBytes===256*1024**2,'cpu0_fixed_cap_refusal_invalid');
-    }else fixedCapacityRefusalEvidenceV2({reason:frame.reason,pressureMemoryFailureEvidence:value});
+    fixedCapacityRefusalEvidenceV2({reason:frame.reason,[kind]:value});
     result.measuredFailures.push({stage:frame.stage,kind,reason:CONTROL_REASONS_V2.has(frame.reason)?frame.reason:null,proof:value});
    }catch{result.evidenceRejected=true;}
   }
@@ -271,9 +268,9 @@ export function failureEvidenceV2(frames,previous,expected){
  return result;
 }
 
-export function preflightEvidenceV2(value,previous,{adoptionIntentSha256}={}){
+export function preflightEvidenceV2(value,previous,{adoptionIntentSha256,enrolmentWrites=0}={}){
  recordedHandoffV2(previous,previous?.sha256,{adoptionIntentSha256,previousSha256:previous?.previousSha256});
- gate(keys(value,['schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead'])&&value.schema==='search.clone-cpu0-preflight.v2'&&value.variant===FIXED_CAPACITY_VARIANT&&value.queries===0&&value.resourceWrites===0&&value.modelsRead===0&&value.handoffWrites===1,'cpu0_fixed_preflight_invalid');
+ gate(keys(value,['schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','enrolmentWrites'])&&value.schema==='search.clone-cpu0-preflight.v2'&&value.variant===FIXED_CAPACITY_VARIANT&&value.queries===0&&value.resourceWrites===0&&value.modelsRead===0&&value.handoffWrites===1&&value.enrolmentWrites===enrolmentWrites,'cpu0_fixed_preflight_invalid');
  const admission=admissionEvidenceV2(value.birthAdmission);
  const next=recordedHandoffV2(value.handoff,value.handoff?.sha256,{adoptionIntentSha256,previousSha256:previous.sha256});
  gate(next.owner==='preflight'&&JSON.stringify(canonical(next.snapshot))===JSON.stringify(canonical(previous.snapshot))&&JSON.stringify(canonical(next.snapshot.newRunning))===JSON.stringify(canonical(admission.target))&&JSON.stringify(value.sourceIdentity)===JSON.stringify(admission.sourceIdentity),'cpu0_fixed_preflight_birth_changed');
@@ -281,9 +278,9 @@ export function preflightEvidenceV2(value,previous,{adoptionIntentSha256}={}){
 }
 
 export function consumerPreflightEvidenceV2(value,previous,expected){
- gate(keys(value,['schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','consumerEnrolment','consumerEnrolmentSha256'])&&hash(value.consumerEnrolmentSha256),'cpu0_fixed_consumer_preflight_invalid');
+ gate(keys(value,['schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','enrolmentWrites','consumerEnrolment','consumerEnrolmentSha256'])&&hash(value.consumerEnrolmentSha256),'cpu0_fixed_consumer_preflight_invalid');
  const {consumerEnrolment,consumerEnrolmentSha256,...receipt}=value;
- preflightEvidenceV2(receipt,previous,expected);
+ preflightEvidenceV2(receipt,previous,{...expected,enrolmentWrites:1});
  consumerEnrolmentEvidenceV2(consumerEnrolment,{...expected,consumerPredecessorSha256:previous.sha256,source:receipt.birthAdmission.target});
  gate(canonicalHash(consumerEnrolment)===consumerEnrolmentSha256,'cpu0_fixed_enrolment_hash_invalid');
  return value;
@@ -291,7 +288,7 @@ export function consumerPreflightEvidenceV2(value,previous,expected){
 
 export function validateAdmissionFrameV2(frame,previous,expected={}){
  const {sourceFreezeSha256,externalManifestSha256,adoptionIntentSha256}=expected;
- gate(keys(frame,['kind','schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','consumerBirth','sourceFreezeSha256','externalManifestSha256','productionAcceptance','consumerEnrolment','consumerEnrolmentSha256','preflightExit'])&&frame.kind==='consumer-admission'&&frame.productionAcceptance===false&&hash(sourceFreezeSha256)&&hash(externalManifestSha256)&&hash(adoptionIntentSha256)&&frame.sourceFreezeSha256===sourceFreezeSha256&&frame.externalManifestSha256===externalManifestSha256,'cpu0_fixed_consumer_admission_invalid');
+ gate(keys(frame,['kind','schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','enrolmentWrites','consumerBirth','sourceFreezeSha256','externalManifestSha256','productionAcceptance','consumerEnrolment','consumerEnrolmentSha256','preflightExit'])&&frame.kind==='consumer-admission'&&frame.productionAcceptance===false&&hash(sourceFreezeSha256)&&hash(externalManifestSha256)&&hash(adoptionIntentSha256)&&frame.sourceFreezeSha256===sourceFreezeSha256&&frame.externalManifestSha256===externalManifestSha256,'cpu0_fixed_consumer_admission_invalid');
  const receipt=Object.fromEntries(Object.entries(frame).filter(([key])=>!['kind','consumerBirth','sourceFreezeSha256','externalManifestSha256','productionAcceptance','preflightExit'].includes(key)));
  consumerPreflightEvidenceV2(receipt,previous,expected);
  const birth=frame.consumerBirth;
@@ -385,20 +382,27 @@ export function readinessEvidenceV2(frames,phase,expected,previous,{requireRed=f
  const prep=frames[0].cachePreparation;
  gate(prep?.before?.qdrantPid===current.target.qdrant.pid&&prep?.final?.qdrantPid===current.target.qdrant.pid&&prep?.before?.sourceStartTicks===current.target.qdrant.startTicks&&prep?.final?.sourceStartTicks===current.target.qdrant.startTicks,'cpu0_preparation_birth_changed');
  hierarchyEvidence(frames[0].cpuHierarchyBefore);hierarchyEvidence(ready.cpuHierarchyBefore);
+ const birth=context?.controllerBirth;gate(keys(birth,['pid','startTicks','parentPid'])&&integer(birth.pid,1)&&integer(birth.startTicks,1)&&birth.parentPid===context?.consumerEnrolment?.consumer?.identity?.pid,'cpu0_fixed_controller_birth_unproven');
  const common={consumerEnrolment:context?.consumerEnrolment,consumerEnrolmentSha256:context?.consumerEnrolmentSha256,consumerRegistrationSha256:context?.consumerRegistrationSha256};
  const entry=fixedCapacityOverheadEvidenceV2(ready.entryOverheadEvidence,{...common,sourceIdentity:initial.sourceIdentity,sourceGroupHash:initial.target.qdrant.groupHash});
  const cohort={...common,sourceIdentity:current.sourceIdentity,sourceGroupHash:current.target.qdrant.groupHash,consumerRegistrationSha256:entry.current.consumerRegistrationSha256};
  const cache=fixedCapacityOverheadEvidenceV2(frames[0].overheadEvidence,cohort),query=fixedCapacityOverheadEvidenceV2(ready.overheadEvidence,cohort);
  gate(canonicalHash(cache.baseline)===canonicalHash(query.baseline)&&cache.current.sampleMonotonicSeconds<=query.current.sampleMonotonicSeconds,'cpu0_fixed_overhead_baseline_changed');
  gate(Date.parse(entry.current.sampledAt)<=Date.parse(stop.wallStartedAt)&&Date.parse(cache.baseline.sampledAt)>=Date.parse(current.target.state.startedAt)&&Date.parse(cache.current.sampledAt)<=Date.parse(frames[0].at)&&Date.parse(query.current.sampledAt)<=Date.parse(ready.at),'cpu0_fixed_overhead_sample_order_invalid');
+ for(const growth of [entry,cache,query]){for(const endpoint of [growth.baseline,growth.current])gate(endpoint.inspector.ownerPid===birth.pid&&endpoint.inspector.ownerStartTicks===birth.startTicks,'cpu0_fixed_controller_birth_changed');const identity=growth.current.outside.controller.identity;gate(identity.pid===birth.pid&&identity.startTicks===birth.startTicks&&identity.parentPid===birth.parentPid,'cpu0_fixed_controller_birth_changed');}
  const measured=prep.measurement;
  gate(integer(measured?.pageBytes,1)&&keys(measured?.classesMeasured,['vector','graph','sparse','payload','other'])&&Object.values(measured.classesMeasured).every(row=>integer(row?.dataPages)),'cpu0_fixed_working_set_measurement_missing');
  const selectedBytes=['vector','graph','sparse','other'].reduce((sum,kind)=>sum+measured.classesMeasured[kind].dataPages*measured.pageBytes,0);
  const selected=workingSetAdmissionEvidenceV2(frames[0].workingSetAdmission,{selectionHash:ready.selectionHash,selectedBytes});
- gate(selected.selectionHash===ready.selectionHash&&Date.parse(selected.sampledAt)<=Date.parse(frames[0].at),'cpu0_fixed_working_set_cohort_changed');
+ gate(selected.selectionHash===ready.selectionHash&&Date.parse(selected.sampledAt)>=Date.parse(current.target.state.startedAt)&&Date.parse(selected.sampledAt)<=Date.parse(frames[0].at),'cpu0_fixed_working_set_cohort_changed');
  queryMemoryEvidenceV2(ready.queryMemoryBefore,'before-query');
- gate(Date.parse(ready.queryMemoryBefore.sampledAt)<=Date.parse(ready.at),'cpu0_fixed_query_sample_order_invalid');
+ gate(Date.parse(ready.queryMemoryBefore.sampledAt)>=Date.parse(frames[1].at)&&Date.parse(ready.queryMemoryBefore.sampledAt)<=Date.parse(ready.at)&&ready.queryMemoryBefore.sampleMonotonicSeconds>=selected.sampleMonotonicSeconds,'cpu0_fixed_query_sample_order_invalid');
+ if(phase==='candidate')for(const held of [ready.initialPinState,ready.pinState])fullSelectedLockV2(held,measured,selectedBytes);
  return {initialAdmission:initial,birthAdmission:current,consumerRegistrationSha256:entry.current.consumerRegistrationSha256};
+}
+
+function fullSelectedLockV2(held,measured,selected){
+ gate(held?.lockedBytes===selected&&keys(held?.lockedResidency,['vector','graph','sparse','other'])&&['vector','graph','sparse','other'].every(kind=>integer(held.lockedResidency[kind]?.lockedDataPages,1)&&held.lockedResidency[kind].lockedDataPages===measured.classesMeasured[kind].dataPages&&held.lockedResidency[kind].residentLockedDataPages===held.lockedResidency[kind].lockedDataPages),'cpu0_fixed_full_selection_not_locked');
 }
 
 export function phaseEvidenceV2(frames,exitCode,phase,expected,batch,{requireRed=false,priorHandoffSha256,priorHandoff,context}={}){
@@ -429,12 +433,8 @@ export function phaseEvidenceV2(frames,exitCode,phase,expected,batch,{requireRed
  gate(canonicalHash(beforeOverhead.baseline)===canonicalHash(afterOverhead.baseline)&&afterOverhead.current.sampleMonotonicSeconds>=beforeOverhead.current.sampleMonotonicSeconds,'cpu0_fixed_overhead_baseline_changed');
  gate(Date.parse(afterOverhead.current.sampledAt)>=Date.parse(frames[2].at)&&Date.parse(afterOverhead.current.sampledAt)<=Date.parse(frames[3].at),'cpu0_fixed_overhead_sample_order_invalid');
  queryMemoryPairEvidenceV2(frames[2].queryMemoryBefore,frames[3].queryMemoryAfter,{readyAt:frames[2].at,finishedAt:frames[3].at});
- if(phase==='candidate'){
-  const selected=frames[0].workingSetAdmission.selectedBytes,pageBytes=frames[0].cachePreparation.measurement.pageBytes;
-  for(const held of [frames[2].initialPinState,frames[2].pinState,frames[3].pinStateAfterQuery]){
-   gate(held?.lockedBytes===selected&&keys(held?.lockedResidency,['vector','graph','sparse','other'])&&['vector','graph','sparse','other'].every(kind=>integer(held.lockedResidency[kind]?.lockedDataPages,1)&&held.lockedResidency[kind].residentLockedDataPages===held.lockedResidency[kind].lockedDataPages)&&['vector','graph','sparse','other'].reduce((sum,kind)=>sum+held.lockedResidency[kind].lockedDataPages*pageBytes,0)===selected,'cpu0_fixed_full_selection_not_locked');
-  }
- }
+ const finishedBirth=context.controllerBirth;const finishedController=afterOverhead.current.outside.controller.identity;for(const endpoint of [afterOverhead.baseline,afterOverhead.current])gate(endpoint.inspector.ownerPid===finishedBirth.pid&&endpoint.inspector.ownerStartTicks===finishedBirth.startTicks,'cpu0_fixed_controller_birth_changed');gate(finishedController.pid===finishedBirth.pid&&finishedController.startTicks===finishedBirth.startTicks&&finishedController.parentPid===finishedBirth.parentPid,'cpu0_fixed_controller_birth_changed');
+ if(phase==='candidate')fullSelectedLockV2(frames[3].pinStateAfterQuery,prep.measurement,frames[0].workingSetAdmission.selectedBytes);
 
  // Header-only projection follows closed ABI2 validation. All measurements,
  // admissions, cohorts and budgets are the original emitted values.

@@ -53,10 +53,11 @@ export function auditConsumer(rows,{expected,initialHandoff,sourceFreezeSha256,e
  const final=rows.at(-1);gate(!pending&&nativePassed&&seen.size===9&&pairs<=9&&pairs+excluded===9&&final.kind==='complete'&&final.variant===VARIANT&&final.productionAcceptance===false&&final.pairs===pairs&&final.initialHandoffSha256===initialHandoff.sha256&&final.finalHandoffSha256===previous.sha256&&final.sourceFreezeSha256===sourceFreezeSha256&&final.externalManifestSha256===externalManifestSha256,'cpu0_audit_completion_invalid');
  return {schema:'cpu0-consumer-audit.v1',variant:VARIANT,consumerPass:true,pairs,excluded,maximumWriterReceipts:18,initialHandoffSha256:initialHandoff.sha256,finalHandoffSha256:previous.sha256,sourceFreezeSha256,externalManifestSha256,externalCleanupRequired:true,experimentPass:false,productionAcceptance:false};
 }
+function exitV2(value){gate(value&&Object.keys(value).sort().join(',')==='birth,code,observed,signal'&&value.code===0&&value.signal===null&&value.observed===true,'cpu0_controller_exit_unproven');return value.code;}
 function metricsV2(frames,controllerExit,transport,phase,expected,reported,previous,requireRed,context){
  gate(transport&&Object.keys(transport).join(',')==='socketClosed'&&transport.socketClosed===true,'cpu0_audit_socket_release_unproven');
  gate(reported?.variant===FIXED_CAPACITY_VARIANT&&reported.productionAcceptance===false,'cpu0_reported_variant_changed');
- const result=phaseEvidenceV2(frames,exit(controllerExit),phase,expected,{serverMs:reported.serverMs,wallMs:reported.wallMs,socketClosed:true},{context,requireRed,priorHandoffSha256:previous.sha256,priorHandoff:previous});
+ const result=phaseEvidenceV2(frames,exitV2(controllerExit),phase,expected,{serverMs:reported.serverMs,wallMs:reported.wallMs,socketClosed:true},{context:{...context,controllerBirth:controllerExit.birth},requireRed,priorHandoffSha256:previous.sha256,priorHandoff:previous});
  gate(same(result,reported),'cpu0_reported_metrics_changed');return result;
 }
 export function auditConsumerV2(rows,{expected,initialHandoff,sourceFreezeSha256,externalManifestSha256,nodeProvenanceSha256,adoptionIntentSha256}){
@@ -87,13 +88,15 @@ export function auditConsumerV2(rows,{expected,initialHandoff,sourceFreezeSha256
  return {schema:'cpu0-consumer-audit.v2',variant:FIXED_CAPACITY_VARIANT,consumerPass:true,pairs,excluded,maximumWriterReceipts:18,initialHandoffSha256:initialHandoff.sha256,finalHandoffSha256:previous.sha256,sourceFreezeSha256,externalManifestSha256,externalCleanupRequired:true,experimentPass:false,productionAcceptance:false};
 }
 // CLI takes only retained public artifacts; it never selects or reads live source identity.
+let selectedAuditMode=null;
 export function main(argv=process.argv.slice(2)){
+ selectedAuditMode=null;
  if(argv.length!==5)throw Error('cpu0_audit_arguments_invalid');
  const [outputPath,contextPath,manifestPath,manifestSha,stage]=argv;
  const raw=readFileSync(outputPath);gate(raw.length<=32*1024**2,'cpu0_audit_output_bound');
  const rows=raw.toString().trim().split('\n').map(line=>{gate(Buffer.byteLength(line)<=2*1024**2,'cpu0_audit_frame_bound');return JSON.parse(line)});
- const context=JSON.parse(readFileSync(contextPath));const manifestRaw=readFileSync(manifestPath);const fixed=JSON.parse(manifestRaw).schema==='cpu0-full-public-packet.v7';const closure=(fixed?verifyExternalPacketV2:verifyExternalPacket)(manifestRaw,manifestSha,name=>readFileSync(stage+'/'+name));
+ const context=JSON.parse(readFileSync(contextPath));const manifestRaw=readFileSync(manifestPath);gate(manifestRaw.length<=32768,'cpu0_audit_manifest_bound');const schema=JSON.parse(manifestRaw).schema;selectedAuditMode=schema==='cpu0-full-public-packet.v7'?'v2':schema==='cpu0-full-public-packet.v6'?'v1':null;const fixed=selectedAuditMode==='v2';const closure=(fixed?verifyExternalPacketV2:verifyExternalPacket)(manifestRaw,manifestSha,name=>readFileSync(stage+'/'+name));
  gate(context.externalManifestSha256===manifestSha&&context.sourceFreezeSha256===closure.externalManifest.sourceFreezeSha256,'cpu0_audit_context_changed');
  return (fixed?auditConsumerV2:auditConsumer)(rows,{...context,expected:closure.expected});
 }
-if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){try{process.stdout.write(JSON.stringify(main())+'\n')}catch{process.stdout.write(JSON.stringify({schema:'cpu0-consumer-audit.v1',variant:VARIANT,consumerPass:false,experimentPass:false,reason:'cpu0_audit_refused',productionAcceptance:false})+'\n');process.exitCode=1;}}
+if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){try{process.stdout.write(JSON.stringify(main())+'\n')}catch{process.stdout.write(JSON.stringify({...(selectedAuditMode?{schema:'cpu0-consumer-audit.'+selectedAuditMode,variant:selectedAuditMode==='v2'?FIXED_CAPACITY_VARIANT:VARIANT}:{}),consumerPass:false,experimentPass:false,reason:'cpu0_audit_refused',productionAcceptance:false})+'\n');process.exitCode=1;}}

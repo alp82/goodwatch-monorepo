@@ -107,10 +107,11 @@ export async function controlledBatch(packet,phase,expected,paths,priorHandoff,q
  }finally{clearTimeout(timer);if(!closeObserved)child.kill('SIGKILL');}
 }
 
-export async function controlledBatchV2(packet,phase,expected,paths,priorHandoff,queryBatch,{spawnControl=spawn,budgets={ready:1200000,cleanup:15000,reaped:5000},raiseOwnNofile=false,context}={}){
+export async function controlledBatchV2(packet,phase,expected,paths,priorHandoff,queryBatch,{spawnControl=spawn,budgets={ready:1200000,cleanup:15000,reaped:5000},raiseOwnNofile=false,context,procRoot='/proc'}={}){
  recordedHandoffV2(priorHandoff,priorHandoff?.sha256,{adoptionIntentSha256:context?.adoptionIntentSha256,previousSha256:priorHandoff?.previousSha256});
  if(!['baseline','candidate'].includes(phase)||realpathSync(paths.code)!==paths.code||realpathSync(paths.config)!==paths.config||digest(readFileSync(paths.code))!==expected.controllerCodeSha256||digest(readFileSync(paths.config))!==expected.controllerPolicySha256)throw Error('cpu0_control_freeze_changed');
  const child=spawnControl('/usr/bin/python3',['-I','-B',paths.code,'--execute-reviewed','--config',paths.config,'--policy-sha256',expected.controllerPolicySha256,'--code-sha256',expected.controllerCodeSha256,'--phase',phase,'--case-tag',packet.tag,'--handoff-sha256',priorHandoff.sha256,'--raise-own-memlock',...(raiseOwnNofile?['--raise-own-nofile']:[])],{stdio:['pipe','pipe','pipe'],env:CONTROL_ENV});
+ let controllerBirth=null;child.once('spawn',()=>{try{const found=procStat(procRoot+'/'+child.pid+'/stat');if(found.parentPid!==process.pid)throw Error();controllerBirth={pid:child.pid,...found};}catch{controllerBirth=null;}});
  const frames=[];let readyResolve,readyReject,closedResolve,batch,closeObserved=false,terminationSent=false,protocolError=null,operation='readiness';
  const ready=new Promise((resolve,reject)=>{readyResolve=resolve;readyReject=reject});const closed=new Promise(resolve=>{closedResolve=resolve});
  const terminate=()=>{if(!closeObserved&&!terminationSent){terminationSent=true;child.kill('SIGTERM')}};
@@ -121,9 +122,9 @@ export async function controlledBatchV2(packet,phase,expected,paths,priorHandoff
  let stdoutBytes=0;child.stdout.on('data',part=>{stdoutBytes+=part.length;if(stdoutBytes>7*131072){protocolError=Error('cpu0_control_frame_failed');readyReject(protocolError);terminate();}});
  const reader=(async()=>{try{for await(const line of readline.createInterface({input:child.stdout,crlfDelay:Infinity})){
   if(Buffer.byteLength(line)>131072||frames.length>=7)throw Error('cpu0_control_frame_failed');
-  const frame=JSON.parse(line);frames.push(frame);
+  const frame=JSON.parse(line);if(!frame||typeof frame!=='object'||Array.isArray(frame))throw Error('cpu0_control_frame_failed');frames.push(frame);
   if(frame.stage==='failed'||frame.stage==='phase-failed'){protocolError=Error('cpu0_control_phase_failed');readyReject(protocolError);continue;}
-  if(frame.stage==='query-ready'){readinessEvidenceV2(frames,phase,expected,priorHandoff,{context,requireRed:packet.tag==='control-native-title'});readyResolve();}
+  if(frame.stage==='query-ready'){readinessEvidenceV2(frames,phase,expected,priorHandoff,{context:{...context,controllerBirth},requireRed:packet.tag==='control-native-title'});readyResolve();}
  }}catch(error){protocolError=error instanceof ContractFailure?error:Error('cpu0_control_frame_failed');readyReject(protocolError);terminate()}})();
  try{
   await ready;clearTimeout(timer);if(protocolError)throw protocolError;operation='query';
@@ -133,14 +134,14 @@ export async function controlledBatchV2(packet,phase,expected,paths,priorHandoff
   child.stdin.end('{"stage":"query-finished"}\n');operation='cleanup';
   const exit=await within(closed,budgets.cleanup);if(exit===null)throw Error('cpu0_control_cleanup_timeout');
   await reader;if(protocolError)throw protocolError;operation='contract';
-  const metrics=phaseEvidenceV2(frames,exit.code,phase,expected,batch,{context,requireRed:packet.tag==='control-native-title',priorHandoffSha256:priorHandoff.sha256,priorHandoff});
-  return {metrics,frames,queryTransport:{socketClosed:batch.socketClosed},controllerExit:{code:exit.code,signal:exit.signal,observed:closeObserved},handoff:frames[4].handoff,hashes:{resultIdHash:orderedIds(batch.results),resultIdScoreHash:orderedIdsScores(batch.results),resultSetHash:idSets(batch.results),resultScoreSetHash:idScoreSets(batch.results)},counts:batch.results.map(row=>row.length)};
+  const metrics=phaseEvidenceV2(frames,exit.code,phase,expected,batch,{context:{...context,controllerBirth},requireRed:packet.tag==='control-native-title',priorHandoffSha256:priorHandoff.sha256,priorHandoff});
+  return {metrics,frames,queryTransport:{socketClosed:batch.socketClosed},controllerExit:{code:exit.code,signal:exit.signal,observed:closeObserved,birth:controllerBirth},handoff:frames[4].handoff,hashes:{resultIdHash:orderedIds(batch.results),resultIdScoreHash:orderedIdsScores(batch.results),resultSetHash:idSets(batch.results),resultScoreSetHash:idScoreSets(batch.results)},counts:batch.results.map(row=>row.length)};
  }catch(error){
   terminate();let exit=await within(closed,budgets.cleanup);if(exit===null){child.kill('SIGKILL');exit=await within(closed,budgets.reaped)}
   if(closeObserved)await reader;
   const failure=Error('cpu0_comparison_refused');
   // Project only validated fixed lifecycle/resource evidence; never retain raw failed frames.
-  failure.publicEvidence={...publicFailure(error,operation),variant:FIXED_CAPACITY_VARIANT,previousHandoffSha256:priorHandoff.sha256,controllerExitCode:exit?.code??null,controllerExitSignal:exit?.signal??null,exitObserved:closeObserved,cleanupObserved:frames.some(frame=>frame.stage==='released'&&frame.released===true&&frame.pinChildExited===true),handoffAccepted:false,failureEvidence:failureEvidenceV2(frames,priorHandoff,context)};throw failure;
+  failure.publicEvidence={...publicFailure(error,operation),variant:FIXED_CAPACITY_VARIANT,previousHandoffSha256:priorHandoff.sha256,controllerExitCode:exit?.code??null,controllerExitSignal:exit?.signal??null,controllerBirth,exitObserved:closeObserved,cleanupObserved:frames.some(frame=>frame.stage==='released'&&frame.released===true&&frame.pinChildExited===true),handoffAccepted:false,failureEvidence:failureEvidenceV2(frames,priorHandoff,context)};throw failure;
  }finally{clearTimeout(timer);if(!closeObserved)child.kill('SIGKILL');}
 }
 
@@ -202,6 +203,9 @@ export function consumerBirth(target,{procRoot='/proc',pid=process.pid}={}){
  return {pid,startTicks:first.startTicks,parentPid:first.parentPid,exeIdentityHash:exeHash(exe),groupHash:digest(ownGroup),VmLckBytes:0,outsideSourceCgroup:true};
 }
 
+export function fixedCapacityEnrolledInvocationV2(receipt,args){if(typeof args?.raiseOwnNofile!=='boolean'||receipt?.consumerEnrolment?.raiseOwnNofile!==args.raiseOwnNofile)throw new ContractFailure('cpu0_fixed_nofile_enrolment_changed');}
+export function fixedCapacityPacketInputsV2(packets){requireNineActualPacketSet(packets);if(packets.some(packet=>packet.indexBuildId!=='20261011T041503Z'))throw new ContractFailure('cpu0_fixed_private_packet_scope_invalid');}
+
 export async function mainV2(){
  const emit=value=>process.stdout.write(JSON.stringify(value)+'\n');
  const args=fixedCapacityArguments(process.argv.slice(2));
@@ -213,8 +217,9 @@ export async function mainV2(){
  recordedHandoffV2(prior,args.values['--handoff-sha256'],{adoptionIntentSha256:context.adoptionIntentSha256,previousSha256:prior.previousSha256});
  const {receipt,preflightExit}=await runEntryPreflightV2(context,prior);
  const admissionFrame={kind:'consumer-admission',...receipt,consumerBirth:consumerBirth(receipt.birthAdmission.target),preflightExit,sourceFreezeSha256:args.values['--cpu0-source-freeze-sha256'],externalManifestSha256:args.values['--external-manifest-sha256'],productionAcceptance:false};
+ fixedCapacityEnrolledInvocationV2(receipt,args);
  validateAdmissionFrameV2(admissionFrame,prior,context);context.consumerEnrolment=receipt.consumerEnrolment;context.consumerEnrolmentSha256=receipt.consumerEnrolmentSha256;prior=receipt.handoff;emit(admissionFrame);
- const packets=await packetsFrom(process.stdin);requireNineActualPacketSet(packets);packets.sort((a,b)=>(a.tag==='control-native-title'?0:1)-(b.tag==='control-native-title'?0:1));
+ const packets=await packetsFrom(process.stdin);fixedCapacityPacketInputsV2(packets);packets.sort((a,b)=>(a.tag==='control-native-title'?0:1)-(b.tag==='control-native-title'?0:1));
  const paths={code:FIXED_CAPACITY_STAGE+'/controller_cpu0.py',config:FIXED_CAPACITY_STAGE+'/controller-config.json'};let nativePassed=false,pairs=0;
  for(const packet of packets){
   if(packet.indexBuildId!=='20261011T041503Z'||(packet.tag!=='control-native-title'&&!nativePassed))throw new ContractFailure('cpu0_fixed_private_packet_scope_invalid');
@@ -252,4 +257,4 @@ export async function main(){
  }
  emit({kind:'complete',variant:VARIANT,pairs,initialHandoffSha256:values['--handoff-sha256'],finalHandoffSha256:prior.sha256,sourceFreezeSha256:values['--cpu0-source-freeze-sha256'],externalManifestSha256:values['--external-manifest-sha256'],productionAcceptance:false});
 }
-if(process.argv[1]&&fileURLToPath(import.meta.url)===realpathSync(process.argv[1]))main().catch(error=>{process.stdout.write(JSON.stringify({kind:'failed',...(error.publicEvidence||publicFailure(error))})+'\n');process.exitCode=1});
+if(process.argv[1]&&fileURLToPath(import.meta.url)===realpathSync(process.argv[1]))main().catch(error=>{process.stdout.write(JSON.stringify({kind:'failed',...(process.argv[2]===FIXED_CAPACITY_SELECTOR?{variant:FIXED_CAPACITY_VARIANT}:{}),...(error.publicEvidence||publicFailure(error))})+'\n');process.exitCode=1});
