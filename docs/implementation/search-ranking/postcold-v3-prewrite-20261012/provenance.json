@@ -1,0 +1,27 @@
+{
+  "schema": "search.postcold-prewrite-evidence.v1",
+  "actualResultSha256": "a5406e6c3a48e86c77eda7d92be9bc489a18220aea02be9d74f0d997cb82b251",
+  "artifactSha256": {
+    "offline-audit-v3-retry1.json": "ed76e9753081d699ec2671c0ff0510fde4e0540a97d880d51896ec9b27d6d263",
+    "prewrite-zero-wait-v4-plan.md": "4d731d204d7e65bcecd54c02aa7dba780c38e85e8d24cbf39a3fe1edd914f482",
+    "retry1-summary.json": "7a1699e91076c2ffc134937d31417a18298ab6410d8e14d139c1575b5e5972f6",
+    "comparison-postcold-453-v3-retry1-result.json": "a5406e6c3a48e86c77eda7d92be9bc489a18220aea02be9d74f0d997cb82b251",
+    "opus-prewrite-zero-v4-plan-review-20261012.txt": "eb87813c6776ab89c2b22b466d93fc672927e8d4ca245bbee52a8f78985511db"
+  },
+  "offlineAuditor": "../postcold-v3-freeze-20261012/audit_postcold_result_v3.mjs",
+  "offlineAuditorSchema": "search.postcold-offline-audit.v3",
+  "offlineAuditExitCode": 1,
+  "planReviewedByRoot": true,
+  "independentPlanReview": {
+    "model": "Claude Code Opus 5.5",
+    "effort": "medium",
+    "verdict": "PASS with five binding implementation clarifications",
+    "exitCode": 0,
+    "sourceHashVerifiedByReviewer": false,
+    "reviewOnly": true
+  },
+  "planImplemented": false,
+  "planExecuted": false,
+  "productionAcceptance": false,
+  "historicalMechanismOnly": true
+}
