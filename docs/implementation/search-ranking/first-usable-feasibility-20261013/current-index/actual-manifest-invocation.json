@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=5",
+    "root@10.0.0.20",
+    "docker exec -i goodwatch-search-a node --input-type=module - --manifest-only"
+  ],
+  "started": "2026-10-12T22:58:06.245437+00:00",
+  "finished": "2026-10-12T22:58:09.732779+00:00",
+  "exitCode": 1,
+  "sourceSha256": "15f003a05e81b03968c8c2096823fc3bd21d341e69a320d6385dcddf0ed2d925"
+}

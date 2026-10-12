@@ -1,0 +1,45 @@
+{
+  "schema": "search.cached-query-model-checklist.v1",
+  "sourceSha256": "7137a06d37ac8756e2b52ad447cdaf85f9675e9b720699b240de1d84163403d4",
+  "files": [
+    {
+      "model": "english",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/onnx/model.onnx",
+      "sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "bytes": 435811539
+    },
+    {
+      "model": "english",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer.json",
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+      "bytes": 711396
+    },
+    {
+      "model": "english",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer_config.json",
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+      "bytes": 366
+    },
+    {
+      "model": "multilingual",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/onnx/model.onnx",
+      "sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "bytes": 470268533
+    },
+    {
+      "model": "multilingual",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer.json",
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "bytes": 17082730
+    },
+    {
+      "model": "multilingual",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer_config.json",
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "bytes": 443
+    }
+  ],
+  "metadataOnlyPresenceAlreadyObserved": true,
+  "sha256VerificationRequiredBeforeEncode": true,
+  "networkDownloadsPermitted": false
+}

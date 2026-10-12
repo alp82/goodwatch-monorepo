@@ -1,0 +1,47 @@
+{
+  "currentRowsMeasured": false,
+  "dimensionLabelCorrection": "384 is actual deployed multilingual dimension; no 384-English claim",
+  "historicalRowCountOnly": true,
+  "productionAcceptance": false,
+  "rawResultSha256": "a7ded7f7c91ea111db03ccb36b1645b8544e0d29fd5dc92b5ca2a68196e17d5b",
+  "rows": 50371,
+  "schema": "historical-size-benchmark-interpretation.v1",
+  "summary": [
+    {
+      "dimension": 384,
+      "maxScoreMs": 187.46175400000004,
+      "maxTotalMs": 292.496177,
+      "minScoreMs": 96.07084200000008,
+      "minTotalMs": 193.571279,
+      "model": "multilingual",
+      "scans": 1
+    },
+    {
+      "dimension": 384,
+      "maxScoreMs": 252.8613190000001,
+      "maxTotalMs": 384.92945899999995,
+      "minScoreMs": 188.45978200000013,
+      "minTotalMs": 261.5176200000001,
+      "model": "multilingual",
+      "scans": 2
+    },
+    {
+      "dimension": 768,
+      "maxScoreMs": 288.76290500000005,
+      "maxTotalMs": 423.38737800000035,
+      "minScoreMs": 162.59738599999991,
+      "minTotalMs": 243.81150500000012,
+      "model": "English",
+      "scans": 1
+    },
+    {
+      "dimension": 768,
+      "maxScoreMs": 357.48652200000015,
+      "maxTotalMs": 439.0671279999997,
+      "minScoreMs": 328.1973820000003,
+      "minTotalMs": 415.808086,
+      "model": "English",
+      "scans": 2
+    }
+  ]
+}

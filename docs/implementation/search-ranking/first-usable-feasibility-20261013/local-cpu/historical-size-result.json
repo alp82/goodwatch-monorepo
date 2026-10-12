@@ -1,0 +1,199 @@
+{
+  "schema": "actual-local-quantized-primitives.historical-size.v1",
+  "historicalRows": 50371,
+  "currentIndexRowsMeasured": false,
+  "runtime": "v26.8.1",
+  "cpu": "11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz",
+  "dimensions": {
+    "384": "requested hypothetical single-channel size; deployed multilingual dimension",
+    "768": "deployed927 English dimension"
+  },
+  "scoring": "unchanged actual quantizedCosines; optional second synthetic negated-vector scan; actual topIds500 on primary scores only, no new blend algorithm",
+  "initializationIncluded": false,
+  "results": [
+    {
+      "dimension": 384,
+      "scans": 1,
+      "iteration": 0,
+      "rows": 50371,
+      "scoreMs": 116.033549,
+      "onePrimaryTop500Ms": 174.326796,
+      "totalMs": 290.360345
+    },
+    {
+      "dimension": 384,
+      "scans": 1,
+      "iteration": 1,
+      "rows": 50371,
+      "scoreMs": 128.16717999999997,
+      "onePrimaryTop500Ms": 118.55595500000004,
+      "totalMs": 246.723135
+    },
+    {
+      "dimension": 384,
+      "scans": 1,
+      "iteration": 2,
+      "rows": 50371,
+      "scoreMs": 96.07084200000008,
+      "onePrimaryTop500Ms": 97.50043699999992,
+      "totalMs": 193.571279
+    },
+    {
+      "dimension": 384,
+      "scans": 1,
+      "iteration": 3,
+      "rows": 50371,
+      "scoreMs": 187.46175400000004,
+      "onePrimaryTop500Ms": 83.94622299999992,
+      "totalMs": 271.40797699999996
+    },
+    {
+      "dimension": 384,
+      "scans": 1,
+      "iteration": 4,
+      "rows": 50371,
+      "scoreMs": 132.1247289999999,
+      "onePrimaryTop500Ms": 160.3714480000001,
+      "totalMs": 292.496177
+    },
+    {
+      "dimension": 384,
+      "scans": 2,
+      "iteration": 0,
+      "rows": 50371,
+      "scoreMs": 188.45978200000013,
+      "onePrimaryTop500Ms": 102.58422599999994,
+      "totalMs": 291.0440080000001
+    },
+    {
+      "dimension": 384,
+      "scans": 2,
+      "iteration": 1,
+      "rows": 50371,
+      "scoreMs": 241.29138599999987,
+      "onePrimaryTop500Ms": 76.2220940000002,
+      "totalMs": 317.5134800000001
+    },
+    {
+      "dimension": 384,
+      "scans": 2,
+      "iteration": 2,
+      "rows": 50371,
+      "scoreMs": 189.40851800000019,
+      "onePrimaryTop500Ms": 72.1091019999999,
+      "totalMs": 261.5176200000001
+    },
+    {
+      "dimension": 384,
+      "scans": 2,
+      "iteration": 3,
+      "rows": 50371,
+      "scoreMs": 217.20410500000025,
+      "onePrimaryTop500Ms": 79.55937300000005,
+      "totalMs": 296.7634780000003
+    },
+    {
+      "dimension": 384,
+      "scans": 2,
+      "iteration": 4,
+      "rows": 50371,
+      "scoreMs": 252.8613190000001,
+      "onePrimaryTop500Ms": 132.06813999999986,
+      "totalMs": 384.92945899999995
+    },
+    {
+      "dimension": 768,
+      "scans": 1,
+      "iteration": 0,
+      "rows": 50371,
+      "scoreMs": 162.59738599999991,
+      "onePrimaryTop500Ms": 81.21411900000021,
+      "totalMs": 243.81150500000012
+    },
+    {
+      "dimension": 768,
+      "scans": 1,
+      "iteration": 1,
+      "rows": 50371,
+      "scoreMs": 288.76290500000005,
+      "onePrimaryTop500Ms": 105.8976419999999,
+      "totalMs": 394.66054699999995
+    },
+    {
+      "dimension": 768,
+      "scans": 1,
+      "iteration": 2,
+      "rows": 50371,
+      "scoreMs": 198.9366759999998,
+      "onePrimaryTop500Ms": 74.63559999999961,
+      "totalMs": 273.5722759999994
+    },
+    {
+      "dimension": 768,
+      "scans": 1,
+      "iteration": 3,
+      "rows": 50371,
+      "scoreMs": 257.3537580000002,
+      "onePrimaryTop500Ms": 166.03362000000016,
+      "totalMs": 423.38737800000035
+    },
+    {
+      "dimension": 768,
+      "scans": 1,
+      "iteration": 4,
+      "rows": 50371,
+      "scoreMs": 173.02553699999953,
+      "onePrimaryTop500Ms": 71.09141799999998,
+      "totalMs": 244.1169549999995
+    },
+    {
+      "dimension": 768,
+      "scans": 2,
+      "iteration": 0,
+      "rows": 50371,
+      "scoreMs": 328.1973820000003,
+      "onePrimaryTop500Ms": 87.61070399999971,
+      "totalMs": 415.808086
+    },
+    {
+      "dimension": 768,
+      "scans": 2,
+      "iteration": 1,
+      "rows": 50371,
+      "scoreMs": 349.42968199999996,
+      "onePrimaryTop500Ms": 74.35464500000035,
+      "totalMs": 423.7843270000003
+    },
+    {
+      "dimension": 768,
+      "scans": 2,
+      "iteration": 2,
+      "rows": 50371,
+      "scoreMs": 337.1054490000006,
+      "onePrimaryTop500Ms": 97.84495199999947,
+      "totalMs": 434.95040100000006
+    },
+    {
+      "dimension": 768,
+      "scans": 2,
+      "iteration": 3,
+      "rows": 50371,
+      "scoreMs": 347.7988699999996,
+      "onePrimaryTop500Ms": 89.5076450000006,
+      "totalMs": 437.3065150000002
+    },
+    {
+      "dimension": 768,
+      "scans": 2,
+      "iteration": 4,
+      "rows": 50371,
+      "scoreMs": 357.48652200000015,
+      "onePrimaryTop500Ms": 81.58060599999953,
+      "totalMs": 439.0671279999997
+    }
+  ],
+  "rssBytes": 190783488,
+  "productionQueries": 0,
+  "modelCalls": 0,
+  "productionAcceptance": false
+}

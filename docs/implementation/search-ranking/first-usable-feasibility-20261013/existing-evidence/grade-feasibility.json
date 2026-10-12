@@ -1,0 +1,251 @@
+{
+  "all168CurrentHybridTop50ListAvailable": false,
+  "availableLists": [
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 260,
+      "judgedTop10": 260,
+      "judgedTop20": 289,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/holdout/lists/prod.json",
+      "queries": 28,
+      "sha256": "8e1b2cc78aa709fe4413a50d71e9565e1c23ef8e8817b914bdff3ad43099a6c7",
+      "top20Slots": 560
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 210,
+      "judgedTop10": 210,
+      "judgedTop20": 240,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/holdout2/lists/prod.json",
+      "queries": 22,
+      "sha256": "63ebb282dc48f609033ed7d3ee7061f8d79bfa000f40a8729bb01d2d52cccc98",
+      "top20Slots": 440
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 120,
+      "judgedTop10": 120,
+      "judgedTop20": 136,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/round5/holdout3/lists/prod.json",
+      "queries": 12,
+      "sha256": "d81a354c35db0e0a03c9562642988baecc08e608eb2cfb51fde339b24c5eac1d",
+      "top20Slots": 240
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 120,
+      "judgedTop10": 120,
+      "judgedTop20": 136,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/round6/holdout4/lists/prod.json",
+      "queries": 12,
+      "sha256": "87e6f69180b2fc7aa410795390b0788786cb37413cbfa8ebe082e2d022e32399",
+      "top20Slots": 240
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 120,
+      "judgedTop10": 120,
+      "judgedTop20": 166,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/round6/holdout4/lists/r6.json",
+      "queries": 12,
+      "sha256": "d90bdf36656f42bc758212a5977e619e79057705212429f3df869a1db3b66451",
+      "top20Slots": 240
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 300,
+      "judgedTop10": 300,
+      "judgedTop20": 354,
+      "minRows": 49,
+      "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v3-scan.json",
+      "queries": 30,
+      "sha256": "0f07af74bbfd1880dc46123696061ae871a6929a68fb65a0fbac4fea86a96a4e",
+      "top20Slots": 600
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 300,
+      "judgedTop10": 300,
+      "judgedTop20": 354,
+      "minRows": 49,
+      "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v3.json",
+      "queries": 30,
+      "sha256": "69a2239b67babbcc6cac42a139fade5d29fdb18d90eec269d74ecc77551ee50b",
+      "top20Slots": 600
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 300,
+      "judgedTop10": 299,
+      "judgedTop20": 329,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/prod.json",
+      "queries": 30,
+      "sha256": "1a8ddc5f26c0beb804c268d7f708ded20d9ef3221768babe9d4f09f020e1f59f",
+      "top20Slots": 600
+    },
+    {
+      "currentHybridBuildBound": false,
+      "evaluatedTop10Slots": 300,
+      "judgedTop10": 300,
+      "judgedTop20": 354,
+      "minRows": 50,
+      "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/r6.json",
+      "queries": 30,
+      "sha256": "6991a69b9e7b8fa61f730464a384015e15cfe830009173a12a6dcf4a7b84b136",
+      "top20Slots": 600
+    }
+  ],
+  "comboSafeV3AvailableQueryCount": 30,
+  "comboSafeV3Cohort": "holdout5 only",
+  "grades": {
+    "gradedCorpusQueryCount": 161,
+    "ids": "query ID then decimal point-ID string",
+    "pairCount": 5071,
+    "queryCount": 161,
+    "scale": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "ungradedTitleLookupGuardrails": 7
+  },
+  "hostsContacted": 0,
+  "independentPlanAssessment": "Feasible for descriptive-cohort signal-ablation scoring after root supplies frozen index blobs and local pinned encoder embeddings. Full168 currenthybrid comparison is not available from retained lists; use30holdout5 combo-safe-v3 and12holdout4 r6 references with historical qualification, or separately generate frozen-current final lists under approved offline backend conditions. No ranking/backend/query work was executed here.",
+  "metricPlan": {
+    "coveragePolicy": "Never invent missing grades. Existing contract treats unjudged as0 and separately reports condensed NDCG/unjudged; only judged comparisons warrant relevance conclusions. AllLists/referenceBuild/version must be explicit.",
+    "existingMetrics": [
+      "macro NDCG@10 with gain2^grade-1 and round6 alternate-cut zero",
+      "good10 grade2or3",
+      "bad5 grade0orsecondcut",
+      "anchor10/anchor50 and avoid5",
+      "own10 for style cases",
+      "title_lookup rank1 guardrails outsideNDCG",
+      "condensed NDCG+unjudged counts to distinguish missinglabels"
+    ],
+    "newComparisonsOnly": [
+      "top20 set overlap/shared count and order overlap with explicitly historical bound reference list, per query/cohort; no invented acceptance bar",
+      "per-query and cohort NDCG/bad5 deltas where existing grades cover candidates",
+      "negation anchor/avoid checks from frozen query metadata; graded soft exclusions are not equivalent to catalog hardfilter proof",
+      "catalog flag/era/policy consistency from same frozen index and independent source filter rule; genres/streaming require catalog fields not supplied by title_table alone"
+    ],
+    "noArbitraryQualityBar": "Historical simplification winner criterion NDCG drop<=0.01 per split and bad5 no higher is an existing full-ranker contract, not automatic provisionalfirstusable acceptance. Owner/root must define usefulness decision separately before calling provisional PASS."
+  },
+  "modelsRun": 0,
+  "networkRequests": 0,
+  "observationsOnly": true,
+  "publicCorpusQueries": 168,
+  "querySplits": {
+    "dev": 64,
+    "holdout": 28,
+    "holdout2": 22,
+    "holdout3": 12,
+    "holdout4": 12,
+    "holdout5": 30
+  },
+  "queryTypes": {
+    "audience": 7,
+    "creator": 3,
+    "era_genre": 6,
+    "like_x_but_y": 9,
+    "long_descriptive": 10,
+    "negation": 15,
+    "non_english": 11,
+    "person": 39,
+    "setting_mood": 9,
+    "short_vague": 12,
+    "structural": 6,
+    "studio": 7,
+    "subject_object": 23,
+    "title_lookup": 7,
+    "typo": 4
+  },
+  "referenceTrace138ListsActuallyLocated": false,
+  "referenceTraceClaim": "summary/readme asserts comparisons to138-query results/simplify/lists/combo-safe-v3.json, but that list file absent on both main and archive ref; retain summary as historical verification only.",
+  "schema": "description-provisional-offline-grade-feasibility.v1",
+  "sourceBindings": {
+    "docs/prototypes/search-arena/bench/parity/score.py": {
+      "bytes": 2448,
+      "sha256": "672bdccd5de9add3be60bedabd290c495b55da40de33bac87a4a06cebc6c4424"
+    },
+    "docs/prototypes/search-arena/evaluation-contract.md": {
+      "bytes": 7505,
+      "sha256": "baf0ae35981c9fe6e1b7ff1c43be6b318b3419aad732cff59f63064945b180fb"
+    },
+    "docs/prototypes/search-arena/harness/evalsimp.py": {
+      "bytes": 28572,
+      "sha256": "8951e7f9c41a4ca3c796955cdbaccc06c5fb587532c205fef0efb5af5d0d69a1"
+    },
+    "docs/prototypes/search-arena/harness/metrics.py": {
+      "bytes": 16353,
+      "sha256": "02c32d0ef9cbdad9abbc901bb5da87ffad82a88bb343d6e2715886ad75a57f35"
+    },
+    "docs/prototypes/search-arena/queries.json": {
+      "bytes": 156843,
+      "sha256": "48bb90f7365dd7eb86741f0733f594f1efd5015a78048c1fcd12d5a5bede482d"
+    },
+    "docs/prototypes/search-arena/results/bench/trace/summary.json": {
+      "bytes": 12935,
+      "sha256": "81a81d79d70840286848d78e916453d5cd4be5aeb29b9e9c64bf904510b6000d"
+    },
+    "docs/prototypes/search-arena/results/grades.json": {
+      "bytes": 114147,
+      "sha256": "ef96e0704632e27b60f645b25257748f1706dae73c621f0ab1b5dfa049c9a274"
+    },
+    "docs/prototypes/search-arena/results/simplify/rubric/overlay.json": {
+      "bytes": 22652,
+      "sha256": "8516aee9906d0d3e52147c850aa8ca927a07a65573ec1544a884915eb0545e89"
+    }
+  },
+  "surveyCorrection": "No models found within prior surveyed /home/alper/projects and targeted ~/.cache. Models exist outside that scope in /tmp/goodwatch-search-models, supplied by progressive/root; prior absence was not all-filesystem proof. Local pinned embedding encodes of public corpus are authorized, unlike new Jev/LLM calls. This task did not run them.",
+  "tmpLocalModelsMetadata": [
+    {
+      "bytes": 17082730,
+      "metadataOnly": true,
+      "modelRevisionInPath": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "mtimeNs": "1791746864378661865",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer.json"
+    },
+    {
+      "bytes": 443,
+      "metadataOnly": true,
+      "modelRevisionInPath": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "mtimeNs": "1791746861695371456",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer_config.json"
+    },
+    {
+      "bytes": 470268533,
+      "metadataOnly": true,
+      "modelRevisionInPath": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "mtimeNs": "1791746909237963283",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/onnx/model.onnx"
+    },
+    {
+      "bytes": 711396,
+      "metadataOnly": true,
+      "modelRevisionInPath": "4d6cd88e18e51a5e020c2c305726d76ada9c03cf",
+      "mtimeNs": "1791746862098698327",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer.json"
+    },
+    {
+      "bytes": 366,
+      "metadataOnly": true,
+      "modelRevisionInPath": "4d6cd88e18e51a5e020c2c305726d76ada9c03cf",
+      "mtimeNs": "1791746861612039458",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer_config.json"
+    },
+    {
+      "bytes": 435811539,
+      "metadataOnly": true,
+      "modelRevisionInPath": "4d6cd88e18e51a5e020c2c305726d76ada9c03cf",
+      "mtimeNs": "1791746907197994317",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/onnx/model.onnx"
+    }
+  ]
+}
