@@ -1,0 +1,5957 @@
+{
+  "archiveBytesAreDiskMetadataOnly": true,
+  "backgroundAndObserverIncluded": true,
+  "cleanArchivePageCacheMeasured": false,
+  "covariances": {
+    "host.Cached": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.29887464396476643,
+      "sampleCovarianceBytesSquared": -1.5509776857700614e+17,
+      "samples": 118
+    },
+    "host.Dirty": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": 0.02458022185806139,
+      "sampleCovarianceBytesSquared": 1201419988373528.5,
+      "samples": 118
+    },
+    "host.Writeback": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.09492113103205106,
+      "sampleCovarianceBytesSquared": -48293567452.24975,
+      "samples": 118
+    },
+    "sourceMemory.anon": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.9008811586594915,
+      "sampleCovarianceBytesSquared": -1.3404623008257723e+17,
+      "samples": 118
+    },
+    "sourceMemory.file": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.29303837464127863,
+      "sampleCovarianceBytesSquared": -1.521532869975325e+17,
+      "samples": 118
+    },
+    "sourceMemory.file_dirty": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.006322794535255525,
+      "sampleCovarianceBytesSquared": -290246232149760.25,
+      "samples": 118
+    },
+    "sourceMemory.file_writeback": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": 0.05155731179135366,
+      "sampleCovarianceBytesSquared": 81618302522.37231,
+      "samples": 118
+    },
+    "sourceMemory.kernel": {
+      "causalAttribution": false,
+      "comparable": true,
+      "pearsonCorrelation": -0.6363488296901577,
+      "sampleCovarianceBytesSquared": -6111308144607597.0,
+      "samples": 118
+    }
+  },
+  "derivedSumMeaning": "Dirty-plus-writeback sums are numeric proxies, not a deduplicated physical-page union or a clean-cache estimate.",
+  "firstSampleAt": "2026-10-12T07:59:02.935170+00:00",
+  "fullWindowCoverage": false,
+  "growthCoverageUnknown": true,
+  "lastSampleAt": "2026-10-12T08:28:02.155319+00:00",
+  "metrics": {
+    "accounting.currentBytes": {
+      "first": {
+        "bytes": 7571046400,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 5266911232,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -2304135168,
+      "maximum": {
+        "bytes": 10038751232,
+        "fence": "after",
+        "sample": 34,
+        "sampleCompletedAt": "2026-10-12T08:16:02.959679+00:00",
+        "sampleStartEstimate": "2026-10-12T08:16:00.133331+00:00"
+      },
+      "minimum": {
+        "bytes": 4928000000,
+        "fence": "before",
+        "sample": 13,
+        "sampleCompletedAt": "2026-10-12T08:05:31.993434+00:00",
+        "sampleStartEstimate": "2026-10-12T08:05:30.128875+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "derived.hostDirtyPlusWriteback": {
+      "first": {
+        "bytes": 286720,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 155648,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -131072,
+      "maximum": {
+        "bytes": 934662144,
+        "fence": "after",
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00",
+        "sampleStartEstimate": "2026-10-12T08:15:30.133049+00:00"
+      },
+      "minimum": {
+        "bytes": 32768,
+        "fence": "after",
+        "sample": 40,
+        "sampleCompletedAt": "2026-10-12T08:19:01.939695+00:00",
+        "sampleStartEstimate": "2026-10-12T08:19:00.134441+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "derived.sourceDirtyPlusWriteback": {
+      "first": {
+        "bytes": 4096,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 8192,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 4096,
+      "maximum": {
+        "bytes": 934162432,
+        "fence": "after",
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00",
+        "sampleStartEstimate": "2026-10-12T08:15:30.133049+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 19,
+        "sampleCompletedAt": "2026-10-12T08:08:31.691625+00:00",
+        "sampleStartEstimate": "2026-10-12T08:08:30.130120+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.Active(file)": {
+      "present": false,
+      "samples": 0
+    },
+    "host.Cached": {
+      "first": {
+        "bytes": 8991789056,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 7800213504,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -1191575552,
+      "maximum": {
+        "bytes": 12509650944,
+        "fence": "after",
+        "sample": 35,
+        "sampleCompletedAt": "2026-10-12T08:16:32.126929+00:00",
+        "sampleStartEstimate": "2026-10-12T08:16:30.133516+00:00"
+      },
+      "minimum": {
+        "bytes": 7468752896,
+        "fence": "before",
+        "sample": 13,
+        "sampleCompletedAt": "2026-10-12T08:05:31.993434+00:00",
+        "sampleStartEstimate": "2026-10-12T08:05:30.128875+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.Dirty": {
+      "first": {
+        "bytes": 286720,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 155648,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -131072,
+      "maximum": {
+        "bytes": 934662144,
+        "fence": "after",
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00",
+        "sampleStartEstimate": "2026-10-12T08:15:30.133049+00:00"
+      },
+      "minimum": {
+        "bytes": 32768,
+        "fence": "after",
+        "sample": 40,
+        "sampleCompletedAt": "2026-10-12T08:19:01.939695+00:00",
+        "sampleStartEstimate": "2026-10-12T08:19:00.134441+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.Inactive(file)": {
+      "present": false,
+      "samples": 0
+    },
+    "host.MemAvailable": {
+      "first": {
+        "bytes": 12736765952,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 13885571072,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 1148805120,
+      "maximum": {
+        "bytes": 14299561984,
+        "fence": "before",
+        "sample": 50,
+        "sampleCompletedAt": "2026-10-12T08:24:02.257105+00:00",
+        "sampleStartEstimate": "2026-10-12T08:24:00.136256+00:00"
+      },
+      "minimum": {
+        "bytes": 12199165952,
+        "fence": "after",
+        "sample": 4,
+        "sampleCompletedAt": "2026-10-12T08:01:02.989506+00:00",
+        "sampleStartEstimate": "2026-10-12T08:01:00.126024+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.MemFree": {
+      "present": false,
+      "samples": 0
+    },
+    "host.Mlocked": {
+      "present": false,
+      "samples": 0
+    },
+    "host.SwapFree": {
+      "first": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 0,
+      "maximum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.SwapTotal": {
+      "first": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 0,
+      "maximum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "host.Unevictable": {
+      "present": false,
+      "samples": 0
+    },
+    "host.Writeback": {
+      "first": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 0,
+      "maximum": {
+        "bytes": 4096,
+        "fence": "after",
+        "sample": 3,
+        "sampleCompletedAt": "2026-10-12T08:00:32.641437+00:00",
+        "sampleStartEstimate": "2026-10-12T08:00:30.125825+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.anon": {
+      "first": {
+        "bytes": 3953156096,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 2927439872,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -1025716224,
+      "maximum": {
+        "bytes": 4021092352,
+        "fence": "before",
+        "sample": 2,
+        "sampleCompletedAt": "2026-10-12T08:00:04.126779+00:00",
+        "sampleStartEstimate": "2026-10-12T08:00:00.125690+00:00"
+      },
+      "minimum": {
+        "bytes": 2888138752,
+        "fence": "before",
+        "sample": 37,
+        "sampleCompletedAt": "2026-10-12T08:17:32.247168+00:00",
+        "sampleStartEstimate": "2026-10-12T08:17:30.133873+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.file": {
+      "first": {
+        "bytes": 3343130624,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 2115702784,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -1227427840,
+      "maximum": {
+        "bytes": 6828994560,
+        "fence": "after",
+        "sample": 35,
+        "sampleCompletedAt": "2026-10-12T08:16:32.126929+00:00",
+        "sampleStartEstimate": "2026-10-12T08:16:30.133516+00:00"
+      },
+      "minimum": {
+        "bytes": 1811038208,
+        "fence": "before",
+        "sample": 13,
+        "sampleCompletedAt": "2026-10-12T08:05:31.993434+00:00",
+        "sampleStartEstimate": "2026-10-12T08:05:30.128875+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.file_dirty": {
+      "first": {
+        "bytes": 4096,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 8192,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 4096,
+      "maximum": {
+        "bytes": 934162432,
+        "fence": "after",
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00",
+        "sampleStartEstimate": "2026-10-12T08:15:30.133049+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 1,
+        "sampleCompletedAt": "2026-10-12T07:59:32.697880+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:30.125562+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.file_writeback": {
+      "first": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 0,
+      "maximum": {
+        "bytes": 32768,
+        "fence": "after",
+        "sample": 48,
+        "sampleCompletedAt": "2026-10-12T08:23:02.276362+00:00",
+        "sampleStartEstimate": "2026-10-12T08:23:00.135924+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.kernel": {
+      "first": {
+        "bytes": 274284544,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 223768576,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": -50515968,
+      "maximum": {
+        "bytes": 309030912,
+        "fence": "before",
+        "sample": 34,
+        "sampleCompletedAt": "2026-10-12T08:16:02.959679+00:00",
+        "sampleStartEstimate": "2026-10-12T08:16:00.133331+00:00"
+      },
+      "minimum": {
+        "bytes": 222339072,
+        "fence": "before",
+        "sample": 13,
+        "sampleCompletedAt": "2026-10-12T08:05:31.993434+00:00",
+        "sampleStartEstimate": "2026-10-12T08:05:30.128875+00:00"
+      },
+      "present": true,
+      "samples": 118
+    },
+    "sourceMemory.shmem": {
+      "present": false,
+      "samples": 0
+    },
+    "sourceMemory.unevictable": {
+      "first": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "fence": "after",
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00",
+        "sampleStartEstimate": "2026-10-12T08:28:00.137760+00:00"
+      },
+      "lastMinusFirstBytes": 0,
+      "maximum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "minimum": {
+        "bytes": 0,
+        "fence": "before",
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00",
+        "sampleStartEstimate": "2026-10-12T07:59:00.125277+00:00"
+      },
+      "present": true,
+      "samples": 118
+    }
+  },
+  "missingClasses": [
+    "host.MemFree",
+    "host.Active(file)",
+    "host.Inactive(file)",
+    "host.Mlocked",
+    "host.Unevictable",
+    "sourceMemory.shmem",
+    "sshfsProcessMemory",
+    "sshProcessMemory",
+    "otherHostCgroupMemory",
+    "perArchiveResidentOrDirtyBytes"
+  ],
+  "pressurePoints": 118,
+  "privateJournalPublished": false,
+  "privateJournalSha256": "39614490ac0ed7ca1392bd2e7370b6d3ca3e932c022223e3160bf63065935ac8",
+  "productionAcceptance": false,
+  "readerExitedCleanly": false,
+  "readerGoneProven": true,
+  "rows": [
+    {
+      "at": "2026-10-12T07:59:02.935170+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T07:59:02.935170+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T07:59:00.125277+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8991768576,
+            "Dirty": 2879488,
+            "MemAvailable": 12681760768,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7573979136,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3956510720,
+            "file": 3343130624,
+            "file_dirty": 2449408,
+            "file_writeback": 0,
+            "kernel": 274280448,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8991789056,
+            "Dirty": 286720,
+            "MemAvailable": 12736765952,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7571046400,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3953156096,
+            "file": 3343130624,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 274284544,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 0,
+      "sampleDurationSeconds": 2.8098929338157177,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T07:59:32.697880+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T07:59:32.697880+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T07:59:30.125562+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8993800192,
+            "Dirty": 315392,
+            "MemAvailable": 12668866560,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7611420672,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3993477120,
+            "file": 3343429632,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 274276352,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8993710080,
+            "Dirty": 315392,
+            "MemAvailable": 12669173760,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7606853632,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3988832256,
+            "file": 3343368192,
+            "file_dirty": 0,
+            "file_writeback": 12288,
+            "kernel": 274288640,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 1,
+      "sampleDurationSeconds": 2.5723179243505,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:00:04.126779+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:00:04.126779+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:00:00.125690+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8994979840,
+            "Dirty": 516096,
+            "MemAvailable": 12605669376,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7636467712,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 4018225152,
+            "file": 3343720448,
+            "file_dirty": 20480,
+            "file_writeback": 0,
+            "kernel": 274284544,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8994729984,
+            "Dirty": 376832,
+            "MemAvailable": 12702150656,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7639384064,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 4021092352,
+            "file": 3343720448,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 274276352,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 2,
+      "sampleDurationSeconds": 4.001089233905077,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:00:32.641437+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:00:32.641437+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:00:30.125825+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8997244928,
+            "Dirty": 585728,
+            "MemAvailable": 12582572032,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7595200512,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3975954432,
+            "file": 3343937536,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 274313216,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8997040128,
+            "Dirty": 847872,
+            "MemAvailable": 12672638976,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7585206272,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3966812160,
+            "file": 3343921152,
+            "file_dirty": 61440,
+            "file_writeback": 0,
+            "kernel": 274309120,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 3,
+      "sampleDurationSeconds": 2.515612043440342,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:01:02.989506+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:01:02.989506+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:01:00.126024+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 9356070912,
+            "Dirty": 1167360,
+            "MemAvailable": 12199165952,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7373172736,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3856273408,
+            "file": 3247697920,
+            "file_dirty": 626688,
+            "file_writeback": 0,
+            "kernel": 269201408,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 9356201984,
+            "Dirty": 917504,
+            "MemAvailable": 12394115072,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 7375138816,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3857551360,
+            "file": 3247697920,
+            "file_dirty": 446464,
+            "file_writeback": 0,
+            "kernel": 269201408,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 4,
+      "sampleDurationSeconds": 2.8634815998375416,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:01:32.465354+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:01:32.465354+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:01:30.126051+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8403058688,
+            "Dirty": 7376896,
+            "MemAvailable": 13574418432,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6467805184,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3466043392,
+            "file": 2750406656,
+            "file_dirty": 4440064,
+            "file_writeback": 0,
+            "kernel": 250736640,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8402657280,
+            "Dirty": 7467008,
+            "MemAvailable": 13573742592,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6461566976,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3460739072,
+            "file": 2750050304,
+            "file_dirty": 4431872,
+            "file_writeback": 0,
+            "kernel": 250728448,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 5,
+      "sampleDurationSeconds": 2.339302960783243,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:02:02.464340+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:02:02.464340+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:02:00.126267+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8408051712,
+            "Dirty": 364544,
+            "MemAvailable": 13369470976,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6498009088,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3492331520,
+            "file": 2754834432,
+            "file_dirty": 24576,
+            "file_writeback": 0,
+            "kernel": 250642432,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8407990272,
+            "Dirty": 303104,
+            "MemAvailable": 13394706432,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6499733504,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3493552128,
+            "file": 2754736128,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 250646528,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 6,
+      "sampleDurationSeconds": 2.3380726240575314,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:02:32.442347+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:02:32.442347+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:02:30.126409+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8410382336,
+            "Dirty": 2306048,
+            "MemAvailable": 13058322432,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6529613824,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3521495040,
+            "file": 2756538368,
+            "file_dirty": 2007040,
+            "file_writeback": 0,
+            "kernel": 250859520,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8410292224,
+            "Dirty": 2355200,
+            "MemAvailable": 13066383360,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6520520704,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3512659968,
+            "file": 2756489216,
+            "file_dirty": 2007040,
+            "file_writeback": 0,
+            "kernel": 250867712,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 7,
+      "sampleDurationSeconds": 2.315937791019678,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:03:02.651022+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:03:02.651022+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:03:00.126671+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8411242496,
+            "Dirty": 307200,
+            "MemAvailable": 12942635008,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6537351168,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3529498624,
+            "file": 2756837376,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 250650624,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8411357184,
+            "Dirty": 249856,
+            "MemAvailable": 12931747840,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6530859008,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3523121152,
+            "file": 2756812800,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 250662912,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 8,
+      "sampleDurationSeconds": 2.524350829422474,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:03:32.375774+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:03:32.375774+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:03:30.126818+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8412409856,
+            "Dirty": 495616,
+            "MemAvailable": 12888350720,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6537715712,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3529953280,
+            "file": 2757111808,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 250650624,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8412209152,
+            "Dirty": 389120,
+            "MemAvailable": 12941258752,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6537318400,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3529555968,
+            "file": 2757111808,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 250650624,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 9,
+      "sampleDurationSeconds": 2.2489564791321754,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:04:03.069009+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:04:03.069009+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:04:00.128471+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8413417472,
+            "Dirty": 352256,
+            "MemAvailable": 12973228032,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6480338944,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3470712832,
+            "file": 2757545984,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 250712064,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8413360128,
+            "Dirty": 389120,
+            "MemAvailable": 12973600768,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6473646080,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3464503296,
+            "file": 2757521408,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 250703872,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 10,
+      "sampleDurationSeconds": 2.9405380561947823,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:04:32.145432+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:04:32.145432+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:04:30.128548+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8414048256,
+            "Dirty": 819200,
+            "MemAvailable": 13022281728,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6480691200,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3471921152,
+            "file": 2757677056,
+            "file_dirty": 446464,
+            "file_writeback": 0,
+            "kernel": 250880000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8413999104,
+            "Dirty": 737280,
+            "MemAvailable": 13023252480,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6472794112,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3464257536,
+            "file": 2757656576,
+            "file_dirty": 442368,
+            "file_writeback": 0,
+            "kernel": 250880000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 11,
+      "sampleDurationSeconds": 2.0168842151761055,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:05:03.056426+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:05:03.056426+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:05:00.128678+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8290557952,
+            "Dirty": 1486848,
+            "MemAvailable": 12977070080,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6441279488,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3562266624,
+            "file": 2632957952,
+            "file_dirty": 692224,
+            "file_writeback": 0,
+            "kernel": 245932032,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8305987584,
+            "Dirty": 446464,
+            "MemAvailable": 12986408960,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 6507163648,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 3611631616,
+            "file": 2649034752,
+            "file_dirty": 102400,
+            "file_writeback": 0,
+            "kernel": 246198272,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 12,
+      "sampleDurationSeconds": 2.9277478121221066,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:05:31.993434+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:05:31.993434+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:05:30.128875+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7469821952,
+            "Dirty": 180224,
+            "MemAvailable": 13688610816,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4940197888,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2905690112,
+            "file": 1812074496,
+            "file_dirty": 20480,
+            "file_writeback": 0,
+            "kernel": 222433280,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7468752896,
+            "Dirty": 155648,
+            "MemAvailable": 13690507264,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4928000000,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2894618624,
+            "file": 1811038208,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222339072,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 13,
+      "sampleDurationSeconds": 1.8645586855709553,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:06:02.182284+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:06:02.182284+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:06:00.129109+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7474249728,
+            "Dirty": 438272,
+            "MemAvailable": 13648216064,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4948414464,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2910171136,
+            "file": 1815687168,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 222556160,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7474065408,
+            "Dirty": 155648,
+            "MemAvailable": 13680476160,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4948414464,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2910171136,
+            "file": 1815687168,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222556160,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 14,
+      "sampleDurationSeconds": 2.0531751476228237,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:06:31.829390+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:06:31.829390+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:06:30.129188+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7476510720,
+            "Dirty": 270336,
+            "MemAvailable": 13650583552,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4954759168,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2914570240,
+            "file": 1817403392,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222584832,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7476482048,
+            "Dirty": 217088,
+            "MemAvailable": 13664133120,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4954558464,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2914570240,
+            "file": 1817403392,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222572544,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 15,
+      "sampleDurationSeconds": 1.7002020962536335,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:07:02.110890+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:07:02.110890+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:07:00.129451+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7480524800,
+            "Dirty": 188416,
+            "MemAvailable": 13936820224,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4973723648,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2930274304,
+            "file": 1820860416,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222588928,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7480320000,
+            "Dirty": 98304,
+            "MemAvailable": 13968351232,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4977291264,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2933997568,
+            "file": 1820688384,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222601216,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 16,
+      "sampleDurationSeconds": 1.9814389385282993,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:07:31.904401+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:07:31.904401+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:07:30.129688+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7481458688,
+            "Dirty": 212992,
+            "MemAvailable": 13906911232,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4942635008,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2898632704,
+            "file": 1821409280,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222593024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7481430016,
+            "Dirty": 118784,
+            "MemAvailable": 13892026368,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4948865024,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2904543232,
+            "file": 1821409280,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222593024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 17,
+      "sampleDurationSeconds": 1.7747134938836098,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:08:02.160841+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:08:02.160841+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:08:00.129931+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7484403712,
+            "Dirty": 204800,
+            "MemAvailable": 13781532672,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4994576384,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2947723264,
+            "file": 1823498240,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222605312,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7483985920,
+            "Dirty": 344064,
+            "MemAvailable": 13778534400,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4990291968,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2943963136,
+            "file": 1823207424,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 222609408,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 18,
+      "sampleDurationSeconds": 2.0309097096323967,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:08:31.691625+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:08:31.691625+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:08:30.130120+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7496265728,
+            "Dirty": 77824,
+            "MemAvailable": 13730115584,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4962201600,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2913017856,
+            "file": 1824632832,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 222789632,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7496052736,
+            "Dirty": 147456,
+            "MemAvailable": 13728022528,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4955009024,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2907959296,
+            "file": 1824440320,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222609408,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 19,
+      "sampleDurationSeconds": 1.5615048110485077,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:09:02.257837+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:09:02.257837+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:09:00.130300+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7497170944,
+            "Dirty": 200704,
+            "MemAvailable": 14005321728,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4963295232,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915680256,
+            "file": 1824993280,
+            "file_dirty": 28672,
+            "file_writeback": 0,
+            "kernel": 222621696,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7497101312,
+            "Dirty": 151552,
+            "MemAvailable": 13992136704,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4973182976,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2925613056,
+            "file": 1824948224,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 222621696,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 20,
+      "sampleDurationSeconds": 2.127536930143833,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:09:32.069820+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:09:32.069820+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:09:30.130549+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7498399744,
+            "Dirty": 188416,
+            "MemAvailable": 13954330624,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4954243072,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2906177536,
+            "file": 1825447936,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222617600,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7498362880,
+            "Dirty": 143360,
+            "MemAvailable": 13948166144,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4962254848,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2914185216,
+            "file": 1825447936,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222621696,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 21,
+      "sampleDurationSeconds": 1.9392708837985992,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:10:02.470042+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:10:02.470042+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:10:00.130979+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7953899520,
+            "Dirty": 316514304,
+            "MemAvailable": 13877026816,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4959973376,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2911309824,
+            "file": 1825730560,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 222625792,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7855075328,
+            "Dirty": 221560832,
+            "MemAvailable": 13852033024,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4957978624,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909634560,
+            "file": 1825710080,
+            "file_dirty": 1556480,
+            "file_writeback": 0,
+            "kernel": 222633984,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 22,
+      "sampleDurationSeconds": 2.3390625156462193,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:10:32.191853+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:10:32.191853+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:10:30.131243+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7499456512,
+            "Dirty": 2945024,
+            "MemAvailable": 13759078400,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4967579648,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917720064,
+            "file": 1825927168,
+            "file_dirty": 204800,
+            "file_writeback": 0,
+            "kernel": 222625792,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7955415040,
+            "Dirty": 225280,
+            "MemAvailable": 13810565120,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4962988032,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2912587776,
+            "file": 1825898496,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222625792,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 23,
+      "sampleDurationSeconds": 2.0606103278696537,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:11:01.983494+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:11:01.983494+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:11:00.131460+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7500410880,
+            "Dirty": 200704,
+            "MemAvailable": 13731803136,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4959858688,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2911186944,
+            "file": 1826041856,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222629888,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7500369920,
+            "Dirty": 180224,
+            "MemAvailable": 13737492480,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4958310400,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909630464,
+            "file": 1826029568,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222638080,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 24,
+      "sampleDurationSeconds": 1.8520342335104942,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:11:32.029852+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:11:32.029852+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:11:30.131725+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7501123584,
+            "Dirty": 323584,
+            "MemAvailable": 13670350848,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4951355392,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2902605824,
+            "file": 1826119680,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222629888,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7501201408,
+            "Dirty": 393216,
+            "MemAvailable": 13640536064,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4955316224,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2906562560,
+            "file": 1826119680,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 222638080,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 25,
+      "sampleDurationSeconds": 1.8981273211538792,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:12:02.226079+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:12:02.226079+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:12:00.131937+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7502807040,
+            "Dirty": 196608,
+            "MemAvailable": 13493178368,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4974321664,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2925469696,
+            "file": 1826222080,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 222629888,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7502811136,
+            "Dirty": 159744,
+            "MemAvailable": 13488996352,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4974784512,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2925940736,
+            "file": 1826213888,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222638080,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 26,
+      "sampleDurationSeconds": 2.0941420383751392,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:12:31.859918+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:12:31.859918+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:12:30.132067+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7503745024,
+            "Dirty": 237568,
+            "MemAvailable": 13855084544,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4965871616,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2916667392,
+            "file": 1826390016,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 222814208,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7503712256,
+            "Dirty": 77824,
+            "MemAvailable": 13856415744,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4972404736,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2923200512,
+            "file": 1826390016,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222814208,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 27,
+      "sampleDurationSeconds": 1.7278505638241768,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:13:02.352151+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:13:02.352151+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:13:00.132315+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7503736832,
+            "Dirty": 122880,
+            "MemAvailable": 13850836992,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4976529408,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2927398912,
+            "file": 1826496512,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 222633984,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7503687680,
+            "Dirty": 200704,
+            "MemAvailable": 13848317952,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4971827200,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2922717184,
+            "file": 1826476032,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222633984,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 28,
+      "sampleDurationSeconds": 2.219835687428713,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:13:31.582370+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:13:31.582370+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:13:30.132385+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7504531456,
+            "Dirty": 1904640,
+            "MemAvailable": 13715701760,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4966338560,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2916876288,
+            "file": 1826656256,
+            "file_dirty": 1335296,
+            "file_writeback": 0,
+            "kernel": 222806016,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7504498688,
+            "Dirty": 3112960,
+            "MemAvailable": 13697736704,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4971606016,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2922110976,
+            "file": 1826656256,
+            "file_dirty": 2707456,
+            "file_writeback": 4096,
+            "kernel": 222838784,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 29,
+      "sampleDurationSeconds": 1.4499853514134884,
+      "scanComplete": false,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:14:02.114808+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:14:02.114808+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:14:00.132589+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7505494016,
+            "Dirty": 307200,
+            "MemAvailable": 13611466752,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4959870976,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2910396416,
+            "file": 1826836480,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 222638080,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7505432576,
+            "Dirty": 397312,
+            "MemAvailable": 13639327744,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4967235584,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917756928,
+            "file": 1826836480,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 222642176,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 30,
+      "sampleDurationSeconds": 1.9822185523808002,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:14:31.838063+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:14:31.838063+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:14:30.132768+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7506300928,
+            "Dirty": 196608,
+            "MemAvailable": 13653577728,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4957827072,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2908000256,
+            "file": 1826942976,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222642176,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7506280448,
+            "Dirty": 208896,
+            "MemAvailable": 13665865728,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4961865728,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2912284672,
+            "file": 1826942976,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222638080,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 31,
+      "sampleDurationSeconds": 1.705295391380787,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:15:02.820972+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": true,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:15:02.820972+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:15:00.132947+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7507628032,
+            "Dirty": 856064,
+            "MemAvailable": 13615828992,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4949094400,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2898558976,
+            "file": 1827139584,
+            "file_dirty": 114688,
+            "file_writeback": 0,
+            "kernel": 222715904,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7507103744,
+            "Dirty": 233472,
+            "MemAvailable": 13662867456,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 4957810688,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2908049408,
+            "file": 1827106816,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 222650368,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 32,
+      "sampleDurationSeconds": 2.688025087118149,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:15:31.493442+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": true,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 2299666432,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:15:31.493442+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:15:30.133049+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 11196956672,
+            "Dirty": 934662144,
+            "MemAvailable": 13606789120,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 8732975104,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917482496,
+            "file": 5515522048,
+            "file_dirty": 934162432,
+            "file_writeback": 0,
+            "kernel": 299692032,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 10806951936,
+            "Dirty": 632827904,
+            "MemAvailable": 13596946432,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 8339488768,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2923585536,
+            "file": 5125341184,
+            "file_dirty": 632094720,
+            "file_writeback": 0,
+            "kernel": 290562048,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 33,
+      "sampleDurationSeconds": 1.3603926710784435,
+      "scanComplete": false,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:16:02.959679+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": true,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 4331518976,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:16:02.959679+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:16:00.133331+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 12499214336,
+            "Dirty": 532480,
+            "MemAvailable": 13697515520,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 10038751232,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2913595392,
+            "file": 6819368960,
+            "file_dirty": 90112,
+            "file_writeback": 0,
+            "kernel": 305786880,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 12484050944,
+            "Dirty": 561152,
+            "MemAvailable": 13694500864,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 10032758784,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2919477248,
+            "file": 6804250624,
+            "file_dirty": 61440,
+            "file_writeback": 0,
+            "kernel": 309030912,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 34,
+      "sampleDurationSeconds": 2.8263478875160217,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:16:32.126929+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": true,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 4331518976,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:16:32.126929+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:16:30.133516+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 12509650944,
+            "Dirty": 81920,
+            "MemAvailable": 13711597568,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 10019995648,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2907152384,
+            "file": 6828994560,
+            "file_dirty": 0,
+            "file_writeback": 8192,
+            "kernel": 283848704,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 12508180480,
+            "Dirty": 221184,
+            "MemAvailable": 13714317312,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 10009890816,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2898214912,
+            "file": 6827565056,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 283852800,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 35,
+      "sampleDurationSeconds": 1.9934131242334843,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:17:02.227510+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": true,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 4331518976,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 3672109120,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:17:02.227510+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:17:00.133674+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 12468543488,
+            "Dirty": 2637824,
+            "MemAvailable": 13636538368,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 9991839744,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2937696256,
+            "file": 6787350528,
+            "file_dirty": 2134016,
+            "file_writeback": 0,
+            "kernel": 266543104,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 12413288448,
+            "Dirty": 2453504,
+            "MemAvailable": 13654073344,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 9935409152,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2937118720,
+            "file": 6732058624,
+            "file_dirty": 2134016,
+            "file_writeback": 0,
+            "kernel": 265969664,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 36,
+      "sampleDurationSeconds": 2.0938362032175064,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:17:32.247168+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:17:32.247168+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:17:30.133873+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7747428352,
+            "Dirty": 1404928,
+            "MemAvailable": 13672775680,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5229707264,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2940133376,
+            "file": 2065371136,
+            "file_dirty": 589824,
+            "file_writeback": 0,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7737028608,
+            "Dirty": 1490944,
+            "MemAvailable": 13704683520,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5166383104,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2888138752,
+            "file": 2055012352,
+            "file_dirty": 589824,
+            "file_writeback": 0,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 37,
+      "sampleDurationSeconds": 2.1132949367165565,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:18:02.034162+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:18:02.034162+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:18:00.134027+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7763349504,
+            "Dirty": 131072,
+            "MemAvailable": 13672849408,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5222215680,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2918412288,
+            "file": 2080579584,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223223808,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7763324928,
+            "Dirty": 114688,
+            "MemAvailable": 13658087424,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5222195200,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2918387712,
+            "file": 2080579584,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223227904,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 38,
+      "sampleDurationSeconds": 1.9001351036131382,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:18:32.169291+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:18:32.169291+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:18:30.134222+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7766761472,
+            "Dirty": 253952,
+            "MemAvailable": 13675761664,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5232943104,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2926419968,
+            "file": 2083287040,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7766728704,
+            "Dirty": 155648,
+            "MemAvailable": 13678485504,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5232943104,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2926419968,
+            "file": 2083287040,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 39,
+      "sampleDurationSeconds": 2.0350687988102436,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:19:01.939695+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:19:01.939695+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:19:00.134441+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7768805376,
+            "Dirty": 32768,
+            "MemAvailable": 13678477312,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5217337344,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909102080,
+            "file": 2084700160,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7768793088,
+            "Dirty": 352256,
+            "MemAvailable": 13683290112,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5217034240,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909102080,
+            "file": 2084700160,
+            "file_dirty": 0,
+            "file_writeback": 8192,
+            "kernel": 223232000,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 40,
+      "sampleDurationSeconds": 1.805253941565752,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:19:32.156784+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:19:32.156784+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:19:30.134687+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7777239040,
+            "Dirty": 2609152,
+            "MemAvailable": 13659807744,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5231558656,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915483648,
+            "file": 2092662784,
+            "file_dirty": 2187264,
+            "file_writeback": 0,
+            "kernel": 223367168,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7777189888,
+            "Dirty": 2555904,
+            "MemAvailable": 13662072832,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5231513600,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915483648,
+            "file": 2092662784,
+            "file_dirty": 2187264,
+            "file_writeback": 0,
+            "kernel": 223367168,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 41,
+      "sampleDurationSeconds": 2.022096686065197,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:20:02.527146+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:20:02.527146+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:20:00.134902+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8123289600,
+            "Dirty": 207405056,
+            "MemAvailable": 13817143296,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5266374656,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2948571136,
+            "file": 2094436352,
+            "file_dirty": 24576,
+            "file_writeback": 0,
+            "kernel": 223367168,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7953895424,
+            "Dirty": 36794368,
+            "MemAvailable": 13858488320,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5266374656,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2948571136,
+            "file": 2094436352,
+            "file_dirty": 24576,
+            "file_writeback": 0,
+            "kernel": 223367168,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 42,
+      "sampleDurationSeconds": 2.392243839800358,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:20:32.035622+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:20:32.035622+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:20:30.135076+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 8235868160,
+            "Dirty": 536576,
+            "MemAvailable": 13985427456,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5240754176,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2922528768,
+            "file": 2094870528,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223354880,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 8235913216,
+            "Dirty": 159744,
+            "MemAvailable": 13377503232,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5235851264,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917629952,
+            "file": 2094850048,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223367168,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 43,
+      "sampleDurationSeconds": 1.9005463160574436,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:21:02.192738+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:21:02.192738+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:21:00.135252+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7772860416,
+            "Dirty": 3104768,
+            "MemAvailable": 14153289728,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5239971840,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2918031360,
+            "file": 2098364416,
+            "file_dirty": 2912256,
+            "file_writeback": 0,
+            "kernel": 223576064,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7772827648,
+            "Dirty": 3006464,
+            "MemAvailable": 14189957120,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5236928512,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915053568,
+            "file": 2098188288,
+            "file_dirty": 2715648,
+            "file_writeback": 0,
+            "kernel": 223576064,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 44,
+      "sampleDurationSeconds": 2.05748600512743,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:21:32.337566+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:21:32.337566+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:21:30.135479+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7780904960,
+            "Dirty": 413696,
+            "MemAvailable": 14089433088,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5235433472,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2906157056,
+            "file": 2105544704,
+            "file_dirty": 24576,
+            "file_writeback": 0,
+            "kernel": 223617024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7780765696,
+            "Dirty": 425984,
+            "MemAvailable": 14098821120,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5238181888,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909020160,
+            "file": 2105544704,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223617024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 45,
+      "sampleDurationSeconds": 2.202087003737688,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:22:02.101759+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:22:02.101759+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:22:00.135618+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7782490112,
+            "Dirty": 225280,
+            "MemAvailable": 14102024192,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5245804544,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915516416,
+            "file": 2106626048,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223617024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7782453248,
+            "Dirty": 368640,
+            "MemAvailable": 14089478144,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5253935104,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2921512960,
+            "file": 2106589184,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223612928,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 46,
+      "sampleDurationSeconds": 1.966140802949667,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:22:32.027706+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:22:32.027706+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:22:30.135790+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7784378368,
+            "Dirty": 1159168,
+            "MemAvailable": 13995188224,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5252165632,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2921291776,
+            "file": 2107015168,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223608832,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7783460864,
+            "Dirty": 376832,
+            "MemAvailable": 14028738560,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5249372160,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2918830080,
+            "file": 2106925056,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223617024,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 47,
+      "sampleDurationSeconds": 1.891915988177061,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:23:02.276362+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:23:02.276362+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:23:00.135924+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7789326336,
+            "Dirty": 118784,
+            "MemAvailable": 14105997312,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5245956096,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2909761536,
+            "file": 2112180224,
+            "file_dirty": 0,
+            "file_writeback": 32768,
+            "kernel": 223748096,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7789281280,
+            "Dirty": 2580480,
+            "MemAvailable": 14108655616,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5250191360,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2914263040,
+            "file": 2112180224,
+            "file_dirty": 2195456,
+            "file_writeback": 0,
+            "kernel": 223748096,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 48,
+      "sampleDurationSeconds": 2.140438389033079,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:23:32.038822+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:23:32.038822+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:23:30.136092+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7790419968,
+            "Dirty": 479232,
+            "MemAvailable": 14007283712,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5244542976,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2908209152,
+            "file": 2112585728,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 223748096,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7790211072,
+            "Dirty": 274432,
+            "MemAvailable": 14042230784,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5252325376,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2915991552,
+            "file": 2112585728,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 223752192,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 49,
+      "sampleDurationSeconds": 1.90273018181324,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:24:02.257105+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:24:02.257105+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:24:00.136256+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7791321088,
+            "Dirty": 2355200,
+            "MemAvailable": 14256513024,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5256699904,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2919849984,
+            "file": 2113093632,
+            "file_dirty": 2101248,
+            "file_writeback": 0,
+            "kernel": 223756288,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7791239168,
+            "Dirty": 2342912,
+            "MemAvailable": 14299561984,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5258878976,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2922086400,
+            "file": 2113036288,
+            "file_dirty": 2097152,
+            "file_writeback": 0,
+            "kernel": 223756288,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 50,
+      "sampleDurationSeconds": 2.1208494007587433,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:24:32.234955+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:24:32.234955+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:24:30.136424+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7792427008,
+            "Dirty": 413696,
+            "MemAvailable": 14155784192,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5235388416,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2898362368,
+            "file": 2113273856,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223752192,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7792390144,
+            "Dirty": 380928,
+            "MemAvailable": 14154043392,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5240459264,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2902974464,
+            "file": 2113273856,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223756288,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 51,
+      "sampleDurationSeconds": 2.098531011492014,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:25:02.610064+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:25:02.610064+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:25:00.136535+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7793750016,
+            "Dirty": 2822144,
+            "MemAvailable": 14015148032,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5260808192,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2923044864,
+            "file": 2114002944,
+            "file_dirty": 2113536,
+            "file_writeback": 0,
+            "kernel": 223756288,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7793737728,
+            "Dirty": 2473984,
+            "MemAvailable": 14044737536,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5256486912,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2918744064,
+            "file": 2113990656,
+            "file_dirty": 2105344,
+            "file_writeback": 0,
+            "kernel": 223756288,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 52,
+      "sampleDurationSeconds": 2.473528604954481,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:25:32.068070+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:25:32.068070+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:25:30.136809+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7794876416,
+            "Dirty": 430080,
+            "MemAvailable": 13919174656,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5255442432,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917445632,
+            "file": 2114232320,
+            "file_dirty": 0,
+            "file_writeback": 0,
+            "kernel": 223760384,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7794745344,
+            "Dirty": 339968,
+            "MemAvailable": 13946900480,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 4096
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5255376896,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917392384,
+            "file": 2114232320,
+            "file_dirty": 12288,
+            "file_writeback": 0,
+            "kernel": 223752192,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 53,
+      "sampleDurationSeconds": 1.931261096149683,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:26:02.281692+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:26:02.281692+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:26:00.136973+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7796166656,
+            "Dirty": 2433024,
+            "MemAvailable": 13887344640,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5273456640,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2934591488,
+            "file": 2114772992,
+            "file_dirty": 2150400,
+            "file_writeback": 0,
+            "kernel": 223948800,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7796072448,
+            "Dirty": 3170304,
+            "MemAvailable": 13880934400,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5261479936,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2922774528,
+            "file": 2114736128,
+            "file_dirty": 2801664,
+            "file_writeback": 4096,
+            "kernel": 223969280,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 54,
+      "sampleDurationSeconds": 2.144719250500202,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:26:31.965844+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:26:31.965844+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:26:30.137095+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7797342208,
+            "Dirty": 552960,
+            "MemAvailable": 13879472128,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5260341248,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2921467904,
+            "file": 2115096576,
+            "file_dirty": 4096,
+            "file_writeback": 12288,
+            "kernel": 223776768,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7797030912,
+            "Dirty": 360448,
+            "MemAvailable": 13910990848,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5260111872,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2921238528,
+            "file": 2115096576,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223776768,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 55,
+      "sampleDurationSeconds": 1.8287487402558327,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:27:02.298881+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:27:02.298881+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:27:00.137410+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7798149120,
+            "Dirty": 299008,
+            "MemAvailable": 13886873600,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5265838080,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2926534656,
+            "file": 2115313664,
+            "file_dirty": 16384,
+            "file_writeback": 0,
+            "kernel": 223772672,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7798067200,
+            "Dirty": 356352,
+            "MemAvailable": 13919731712,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5261074432,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2921996288,
+            "file": 2115305472,
+            "file_dirty": 4096,
+            "file_writeback": 0,
+            "kernel": 223768576,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 56,
+      "sampleDurationSeconds": 2.1614710092544556,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:27:31.989167+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:27:31.989167+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:27:30.137562+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7799115776,
+            "Dirty": 163840,
+            "MemAvailable": 13937520640,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5256335360,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2917068800,
+            "file": 2115493888,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223772672,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7799066624,
+            "Dirty": 139264,
+            "MemAvailable": 13960380416,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5248634880,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2908012544,
+            "file": 2115477504,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223768576,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 57,
+      "sampleDurationSeconds": 1.8516050428152084,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    },
+    {
+      "at": "2026-10-12T08:28:02.155319+00:00",
+      "backupCensusComplete": true,
+      "backupRunning": false,
+      "diskMetadata": {
+        "shardStagingBytes": 0,
+        "sourceArchiveBytes": 0,
+        "sourceTempTruncated": false,
+        "targetCopyBytes": 0,
+        "targetMetadataTruncated": false
+      },
+      "measurementIntervalEnd": "2026-10-12T08:28:02.155319+00:00",
+      "measurementIntervalStartEstimate": "2026-10-12T08:28:00.137760+00:00",
+      "pressure": {
+        "after": {
+          "host": {
+            "Cached": 7800213504,
+            "Dirty": 155648,
+            "MemAvailable": 13885571072,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5266911232,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2927439872,
+            "file": 2115702784,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223768576,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "before": {
+          "host": {
+            "Cached": 7800180736,
+            "Dirty": 147456,
+            "MemAvailable": 13895229440,
+            "SwapFree": 0,
+            "SwapTotal": 0,
+            "Writeback": 0
+          },
+          "sourceCpuEvents": {
+            "nr_throttled": 0,
+            "throttled_usec": 0
+          },
+          "sourceCurrentBytes": 5271740416,
+          "sourceLimits": {
+            "cpuMax": "max 100000",
+            "memoryHigh": "max",
+            "memoryMax": "max"
+          },
+          "sourceMemory": {
+            "anon": 2932248576,
+            "file": 2115694592,
+            "file_dirty": 8192,
+            "file_writeback": 0,
+            "kernel": 223797248,
+            "unevictable": 0
+          },
+          "sourceMemoryEvents": {
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0
+          }
+        }
+      },
+      "sample": 58,
+      "sampleDurationSeconds": 2.0175588130950928,
+      "scanComplete": true,
+      "sourcePid": 3411704,
+      "sourceStartTicks": 2673362807
+    }
+  ],
+  "safeTransientCeilingEstablished": false,
+  "sampleRows": 59,
+  "schema": "retained-transient-memory.v1",
+  "sourceGenerations": 1,
+  "timeMeaning": "Row timestamp is sample completion; pressure reads are ordered before/after scan without individual timestamps. Start is completion minus recorded duration estimate.",
+  "twoGiBFloorValidated": false,
+  "withinSampleDeltas": {
+    "host.Cached": {
+      "first": {
+        "bytes": -20480,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 32768,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 390004736,
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00"
+      },
+      "minimum": {
+        "bytes": -455958528,
+        "sample": 23,
+        "sampleCompletedAt": "2026-10-12T08:10:32.191853+00:00"
+      },
+      "samples": 59
+    },
+    "host.Dirty": {
+      "first": {
+        "bytes": 2592768,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 8192,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 301834240,
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00"
+      },
+      "minimum": {
+        "bytes": -2461696,
+        "sample": 48,
+        "sampleCompletedAt": "2026-10-12T08:23:02.276362+00:00"
+      },
+      "samples": 59
+    },
+    "host.MemAvailable": {
+      "first": {
+        "bytes": -55005184,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": -9658368,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 607924224,
+        "sample": 43,
+        "sampleCompletedAt": "2026-10-12T08:20:32.035622+00:00"
+      },
+      "minimum": {
+        "bytes": -194949120,
+        "sample": 4,
+        "sampleCompletedAt": "2026-10-12T08:01:02.989506+00:00"
+      },
+      "samples": 59
+    },
+    "host.Writeback": {
+      "first": {
+        "bytes": 0,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 4096,
+        "sample": 3,
+        "sampleCompletedAt": "2026-10-12T08:00:32.641437+00:00"
+      },
+      "minimum": {
+        "bytes": -4096,
+        "sample": 8,
+        "sampleCompletedAt": "2026-10-12T08:03:02.651022+00:00"
+      },
+      "samples": 59
+    },
+    "sourceMemory.anon": {
+      "first": {
+        "bytes": 3354624,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": -4808704,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 51994624,
+        "sample": 37,
+        "sampleCompletedAt": "2026-10-12T08:17:32.247168+00:00"
+      },
+      "minimum": {
+        "bytes": -49364992,
+        "sample": 12,
+        "sampleCompletedAt": "2026-10-12T08:05:03.056426+00:00"
+      },
+      "samples": 59
+    },
+    "sourceMemory.file": {
+      "first": {
+        "bytes": 0,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 8192,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 390180864,
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00"
+      },
+      "minimum": {
+        "bytes": -16076800,
+        "sample": 12,
+        "sampleCompletedAt": "2026-10-12T08:05:03.056426+00:00"
+      },
+      "samples": 59
+    },
+    "sourceMemory.file_dirty": {
+      "first": {
+        "bytes": 2445312,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 302067712,
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00"
+      },
+      "minimum": {
+        "bytes": -2195456,
+        "sample": 48,
+        "sampleCompletedAt": "2026-10-12T08:23:02.276362+00:00"
+      },
+      "samples": 59
+    },
+    "sourceMemory.file_writeback": {
+      "first": {
+        "bytes": 0,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": 0,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 32768,
+        "sample": 48,
+        "sampleCompletedAt": "2026-10-12T08:23:02.276362+00:00"
+      },
+      "minimum": {
+        "bytes": -12288,
+        "sample": 1,
+        "sampleCompletedAt": "2026-10-12T07:59:32.697880+00:00"
+      },
+      "samples": 59
+    },
+    "sourceMemory.kernel": {
+      "first": {
+        "bytes": -4096,
+        "sample": 0,
+        "sampleCompletedAt": "2026-10-12T07:59:02.935170+00:00"
+      },
+      "last": {
+        "bytes": -28672,
+        "sample": 58,
+        "sampleCompletedAt": "2026-10-12T08:28:02.155319+00:00"
+      },
+      "maximum": {
+        "bytes": 9129984,
+        "sample": 33,
+        "sampleCompletedAt": "2026-10-12T08:15:31.493442+00:00"
+      },
+      "minimum": {
+        "bytes": -3244032,
+        "sample": 34,
+        "sampleCompletedAt": "2026-10-12T08:16:02.959679+00:00"
+      },
+      "samples": 59
+    }
+  }
+}

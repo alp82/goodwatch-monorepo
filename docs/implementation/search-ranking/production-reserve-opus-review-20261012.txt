@@ -1,0 +1,60 @@
+I read the three documents only; nothing was run or changed. This is a design review, not a deployment approval.
+
+## Verdict
+
+- **Yes, the 13 GiB reservation conflates the two.** The `2 × 5 GiB` archive term subtracts clean file-LRU pages from MemAvailable, which already counts them as available, so it double-charges. It is defensible only as a labelled cache/IO working-set allowance, not as required RAM.
+- **A 2 GiB-only floor is unsupported.** The observed MemAvailable swing was 2.10 GB (12.199–14.299 GB), about the size of the whole floor. Non-simultaneous ranges of anon (1.13 GB), dirty (0.93 GB) and kernel (0.09 GB) sum to about 2.15 GB.
+- **A topology change is not justified.** Nothing shows the cross-device copy creates non-reclaimable memory; it is a disk and IO cost.
+- **A guarded trial is justified,** using floor + full new locks + an explicit incremental transient ceiling, staged as below.
+
+## What the retained numbers support
+
+- **Cache is not the driver:** `host.Cached` swung 5.04 GB with a correlation of only −0.30 to MemAvailable. Source anon correlates at −0.90 and kernel at −0.64. This is descriptive, autocorrelated and not causal.
+- **Dirty is invisible to MemAvailable:** the correlation is about 0, consistent with the formula. MemAvailable therefore overstates promptly usable memory by up to the dirty backlog.
+- **Dirty is almost all in the source cgroup:** 934.16 MB of the 934.66 MB host peak. This does not tell us whether it is the local temporary tar or the SSHFS copy.
+- **Writeback sampling is blind:** the sampled maximum was 4 KB against 934 MB dirty, so flushes happened between samples.
+
+## Corrected budget
+
+Admission: `MemAvailable − Dirty − Writeback ≥ 2 GiB + 1.725 GB full new locks + T`.
+
+`T` is a declared ceiling for non-clean-cache classes, each enforced by an abort condition:
+
+| Component of `T` | Basis |
+| --- | --- |
+| Source anon growth | Delta from the admission baseline; observed range 1.13 GB, unattributed |
+| Kernel growth | Delta from baseline; observed range 0.09 GB |
+| Dirty + writeback | The configured kernel threshold (`vm.dirty_*`, FUSE BDI limits), not the 0.93 GB sample |
+| SSHFS/SSH userspace and socket memory | Unmeasured |
+| Staging | Keep the existing 1 GiB |
+
+Safety need not be cut to fit. Even `T` of about 6 GiB requires about 10.3 GB, below the lowest MemAvailable seen during the backup (12.2 GB). That is my illustrative figure, not a frozen value.
+
+## Guard conditions to add
+
+These are additions to your mandatory set, not replacements:
+
+- **Decoupled poll:** the 2 s emergency poll reads only `/proc/meminfo`, PSI and cgroup files. It never stats FUSE paths; the retained scans truncated, and an SSHFS stall must not block release.
+- **Cumulative counters:** PSI `total` for memory and IO, `allocstall`, `pgscan_direct`, `workingset_refault_file`, and `memory.events`. Deltas show that a burst happened between polls, though not when.
+- **Release on death:** pins live in one helper process, so its exit releases them. A separate poller kills it, and the helper self-releases on a missed heartbeat.
+- **OOM order:** give the helper a positive `oom_score_adj` so it is killed before Qdrant (about 4 GB anon, no swap).
+- **Release line:** set it above the 2 GiB emergency floor by the measured worst decline over one poll plus release latency.
+- **Latency treated separately:** count IO PSI or refault breaches as "trial inconclusive, release", not as memory safety.
+
+## Staging and what blocks each step
+
+1. **Idle lock/release trial: preparable now.** Run it outside the backup window, refuse if any snapshot process appears, and end with margin before the next schedule. Use fresh floors, an explicit ceiling and a short fixed hold. It measures the actual MemAvailable decrement per locked byte, release latency and recovery. Nothing in the three documents blocks this. It proves only that interval.
+2. **Holding pins across a backup: blocked** until these exist:
+   - One complete, continuous unpinned backup window. The retained one started mid-run, was terminated early and had two truncated scans.
+   - The missing classes: MemFree, active/inactive file, Mlocked/Unevictable, shmem, SSHFS/SSH process memory, other cgroups.
+   - The configured dirty thresholds and the FUSE cache mode.
+   - Decline rates at 1–2 s cadence. The retained 30 s samples cannot size the release line.
+   - Collector reliability. The same machinery failed twice, and the guard cannot depend on it.
+3. **Hold across one backup,** with `T` frozen from step 2. A pass covers that workload and interval only.
+
+## Uncertainty
+
+- The audit cites Linux 6.8 source. I could not confirm the production kernel version; check that it matches.
+- The dirty ceiling from sysctls is soft, since throttling can overshoot. FUSE with writeback-cache behaves differently from write-through.
+- The anon swing is not attributed to the snapshot rather than background optimisation, so `T` must cover both.
+- Unknown future work stays bounded only by abort and release, never by prediction.
