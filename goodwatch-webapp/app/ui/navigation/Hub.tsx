@@ -12,6 +12,7 @@ import { ArrowRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
+import { landedWords, showsWords } from "~/domain/newly-available-words"
 import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
@@ -31,8 +32,8 @@ import {
 	getDestinations,
 } from "./destinations"
 import { useDragToClose } from "./useDragToClose"
-import { useNewEpisodes } from "./useNewEpisodes"
 import { useTonightsPick } from "./useTonightsPick"
+import { useWhatsNew } from "./useWhatsNew"
 
 const HUB_TITLE = "Browse GoodWatch"
 
@@ -78,7 +79,7 @@ function Tile({
 	subtitle: string
 	here: boolean
 	backdrop?: string | null
-	/** The My shows tile: what is new for the member's shows. It takes the subtitle's place, on one line. */
+	/** My shows and My movies: what is new behind the tile. It takes the subtitle's place, on one line. */
 	fresh?: SignalWords | null
 }) {
 	const Icon = destination.icon
@@ -223,7 +224,8 @@ function HubContent() {
 	const here = currentDestination(pathname)
 	const d = getDestinations(useFeatures())
 	const { pick, wishlistCount } = useTonightsPick()
-	const fresh = useNewEpisodes()
+	// New episodes (#442) and titles that landed on the member's services (#456).
+	const { episodes, landed } = useWhatsNew()
 	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
 	const tracked = Boolean(user) && d.myShows.available
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
@@ -266,7 +268,7 @@ function HubContent() {
 							}
 							here={here === "myShows"}
 							backdrop={pickOn === "myShows" ? pick?.title.backdrop_path : null}
-							fresh={fresh}
+							fresh={showsWords(episodes, landed?.shows ?? null)}
 						/>
 						<Tile
 							destination={d.myMovies}
@@ -279,6 +281,7 @@ function HubContent() {
 							backdrop={
 								pickOn === "myMovies" ? pick?.title.backdrop_path : null
 							}
+							fresh={landedWords("movie", landed?.movies ?? null)}
 						/>
 					</>
 				) : (

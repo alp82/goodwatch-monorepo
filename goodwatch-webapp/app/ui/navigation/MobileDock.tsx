@@ -10,7 +10,7 @@ import { useFeatures } from "~/hooks/useFeature"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, NewEpisodesMark } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
-import { useNewEpisodes } from "./useNewEpisodes"
+import { useOpenerSignal } from "./useWhatsNew"
 
 const HUB_LABEL = "Browse GoodWatch"
 
@@ -22,8 +22,8 @@ function DockButton({ docked }: { docked: boolean }) {
 	const page = here ? destinations[here] : null
 	const Icon = page?.icon ?? Squares2X2Icon
 	const open = Boolean(navigation?.hubOpen)
-	// My shows is a tile inside the hub, so the key that opens the hub says that something is new there.
-	const fresh = useNewEpisodes()
+	// My shows and My movies are tiles inside the hub, so the key that opens the hub says that something is new there.
+	const fresh = useOpenerSignal()
 	const label = page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL
 	return (
 		<button

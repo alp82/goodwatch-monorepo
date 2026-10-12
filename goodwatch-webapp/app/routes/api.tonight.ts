@@ -3,6 +3,9 @@ import {
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
+import { signalOf } from "~/domain/newly-available"
+import type { NewOnServices } from "~/domain/newly-available-signal"
+import { getNewlyAvailable } from "~/server/newly-available.server"
 import { type TonightsPick, getTonightsPick } from "~/server/tonight.server"
 import { headers, watchNextViewer } from "~/server/watch-next-request.server"
 
@@ -10,12 +13,28 @@ import { headers, watchNextViewer } from "~/server/watch-next-request.server"
 // - Members: GET /api/tonight
 // - Guests: POST /api/tonight with { guest: { interactions, country, services } }.
 // Not found while REC_WATCH_NEXT hides Watch next from the viewer: the pick opens Watch next.
+//
+// With REC_TRACKING a member's answer also says which of their titles landed on one of their services (#456),
+// `landed`, left out when none did. It rides along because the navigation asks for the pick on every page, and
+// it is read from memory: no statement unless something landed.
 
 async function respond(request: Request) {
 	const viewer = await watchNextViewer(request)
 	if ("response" in viewer) return viewer.response
-	return json<{ pick: TonightsPick | null }>(
-		{ pick: await getTonightsPick(viewer.ctx, viewer.tracking) },
+	const [pick, landed] = await Promise.all([
+		getTonightsPick(viewer.ctx, viewer.tracking),
+		viewer.tracking
+			? getNewlyAvailable(viewer.ctx)
+					.then(signalOf)
+					// The pick is the answer; what landed is an addition to it.
+					.catch((error) => {
+						console.error("Tonight: reading what landed failed:", error)
+						return null
+					})
+			: null,
+	])
+	return json<{ pick: TonightsPick | null; landed?: NewOnServices }>(
+		{ pick, ...(landed ? { landed } : {}) },
 		{ headers },
 	)
 }

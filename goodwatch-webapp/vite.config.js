@@ -206,6 +206,16 @@ const FEATURE_CHUNKS = [
 	],
 ]
 
+// Rule 5: small modules that several late parts share and that must not ride with every page. Rule 3 would put them
+// into the shell, being small and shared. The words of "newly available" (#456) are needed by the hub, home's doors,
+// My shows and My movies, none of which is on a landing surface's first view.
+const LATE_CHUNKS = [
+	[
+		"newly-available",
+		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedNote)\.tsx?$/,
+	],
+]
+
 function clientChunks() {
 	const vendorChunk = (id) => {
 		if (!id.includes("/node_modules/")) return undefined
@@ -252,6 +262,7 @@ function clientChunks() {
 			return undefined
 		if (isOnEveryPage(id, graph))
 			return id.includes("/node_modules/") ? "vendor" : "shell"
+		for (const [name, pattern] of LATE_CHUNKS) if (pattern.test(id)) return name
 		if (isSharedSmallModule(id, graph)) return "shell"
 		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
 		return undefined

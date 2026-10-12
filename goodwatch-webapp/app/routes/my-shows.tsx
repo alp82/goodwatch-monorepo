@@ -8,9 +8,12 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { Arrival } from "~/domain/new-episodes"
+import { lineOf } from "~/domain/newly-available"
+import type { LandedLine } from "~/domain/newly-available-signal"
 import { isEnabled } from "~/server/features.server"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { getNewShows } from "~/server/new-episodes.server"
+import { getNewlyAvailable } from "~/server/newly-available.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { GuestPage } from "~/ui/my-pages/bits"
@@ -38,14 +41,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		throw new Response("Not found", { status: 404 })
 	if (!userId)
 		return json(
-			{ data: null as MyShows | null, now: 0, arrival: null as Arrival | null },
+			{
+				data: null as MyShows | null,
+				now: 0,
+				arrival: null as Arrival | null,
+				landed: null as LandedLine | null,
+			},
 			{ headers },
 		)
 	const ctx = await getViewerContext(request, undefined, userId)
 	const now = Date.now()
 	// What was new is read here and never written: a prefetch of this page is not a visit. The page records the
 	// visit once it is on screen (useMyShowsVisit).
-	const [data, fresh] = await Promise.all([
+	const [data, fresh, landed] = await Promise.all([
 		getMyShows(
 			{
 				userId,
@@ -60,19 +68,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			console.error("My shows: reading what is new failed:", error)
 			return null
 		}),
+		// The shows that landed on the member's services since the visit (#456): a second line, read the same way.
+		getNewlyAvailable(ctx)
+			.then((news) => lineOf(news.shows))
+			.catch((error) => {
+				console.error("My shows: reading what landed failed:", error)
+				return null
+			}),
 	])
 	const arrival: Arrival | null = fresh && {
 		since: fresh.since,
 		titles: fresh.shows.map((show) => show.title),
 	}
-	return json({ data: data as MyShows | null, now, arrival }, { headers })
+	return json(
+		{ data: data as MyShows | null, now, arrival, landed },
+		{ headers },
+	)
 }
 
 export default function MyShowsRoute() {
-	const { data, now, arrival } = useLoaderData<typeof loader>() as {
+	const { data, now, arrival, landed } = useLoaderData<typeof loader>() as {
 		data: MyShows | null
 		now: number
 		arrival: Arrival | null
+		landed: LandedLine | null
 	}
 	if (!data)
 		return (
@@ -86,5 +105,5 @@ export default function MyShowsRoute() {
 				}}
 			/>
 		)
-	return <MyShowsPage data={data} now={now} arrival={arrival} />
+	return <MyShowsPage data={data} now={now} arrival={arrival} landed={landed} />
 }

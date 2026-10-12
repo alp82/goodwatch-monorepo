@@ -20,6 +20,7 @@ import {
 	deviceDay,
 	upcomingWords,
 } from "~/domain/new-episodes"
+import type { LandedLine } from "~/domain/newly-available-signal"
 import type {
 	MyShows,
 	MyShowsRow,
@@ -36,6 +37,7 @@ import {
 	plural,
 	tmdbImage,
 } from "~/ui/my-pages/bits"
+import { LandedNote } from "~/ui/my-pages/LandedNote"
 import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
 
@@ -392,11 +394,14 @@ export function MyShowsPage({
 	data,
 	now,
 	arrival = null,
+	landed = null,
 }: {
 	data: MyShows
 	now: number
 	/** What was new when the member arrived; null where nothing recorded it. */
 	arrival?: Arrival | null
+	/** The shows that landed on the member's services since their last visit (#456). */
+	landed?: LandedLine | null
 }) {
 	useMyShowsVisit()
 	// The server's day first, so that the page hydrates as it was sent; then the member's.
@@ -465,6 +470,7 @@ export function MyShowsPage({
 							</span>
 						</p>
 					)}
+					<LandedNote kind="show" landed={landed} className="mt-2" />
 					<p
 						className="mb-4 mt-1 max-w-3xl text-sm text-gray-400"
 						data-order-rule

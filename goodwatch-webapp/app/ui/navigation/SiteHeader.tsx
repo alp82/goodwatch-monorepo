@@ -9,7 +9,7 @@ import { useNavigation } from "./NavigationContext"
 import { HeaderSearchBar, Omnibox } from "./Search"
 import { AccountSlot, NewEpisodesMark, TonightsPickThumb } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
-import { useNewEpisodes } from "./useNewEpisodes"
+import { useOpenerSignal } from "./useWhatsNew"
 
 function BrowseButton() {
 	const navigation = useNavigation()
@@ -17,8 +17,8 @@ function BrowseButton() {
 	const here = currentDestination(pathname)
 	const destinations = getDestinations(useFeatures())
 	const open = Boolean(navigation?.hubOpen)
-	// My shows is a tile inside the hub, so what opens the hub says that something is new there.
-	const fresh = useNewEpisodes()
+	// My shows and My movies are tiles inside the hub, so what opens the hub says that something is new there.
+	const fresh = useOpenerSignal()
 	return (
 		<button
 			type="button"

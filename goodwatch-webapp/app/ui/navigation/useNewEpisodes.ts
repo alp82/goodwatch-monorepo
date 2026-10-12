@@ -14,6 +14,7 @@ import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import { watchStateSignature } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
+import { clearLanded } from "./useTonightsPick"
 
 const ENDPOINT = "/api/new-episodes"
 const keyOf = (userId: string) => ["new-episodes", userId] as const
@@ -24,8 +25,8 @@ async function fetchNewEpisodes(): Promise<NewEpisodes> {
 	return (await response.json()) as NewEpisodes
 }
 
-/** What the signal says; null when nothing is new, for a guest, and while tracking is off for the viewer. */
-export function useNewEpisodes(): SignalWords | null {
+/** What the signal is told; null for a guest, a member without such a show, and while tracking is off. */
+export function useNewEpisodesData(): NewEpisodes | null {
 	const tracking = useFeature("tracking")
 	const { user } = useUser()
 	const { data } = useUserData()
@@ -46,7 +47,12 @@ export function useNewEpisodes(): SignalWords | null {
 		enabled: tracking && Boolean(user) && signature !== null,
 		placeholderData: (previous) => previous,
 	})
-	const fresh = signature === null ? null : (query.data ?? null)
+	return signature === null ? null : (query.data ?? null)
+}
+
+/** What the signal says; null when nothing is new, for a guest, and while tracking is off for the viewer. */
+export function useNewEpisodes(): SignalWords | null {
+	const fresh = useNewEpisodesData()
 	return useMemo(() => (fresh ? signalWords(fresh) : null), [fresh])
 }
 
@@ -65,6 +71,8 @@ export function useMyShowsVisit(): void {
 				await queryClient.cancelQueries({ queryKey })
 				queryClient.setQueriesData({ queryKey }, NOTHING_NEW)
 				await queryClient.invalidateQueries({ queryKey })
+				// The visit clears the shows that landed on a service too (#456).
+				await clearLanded(queryClient, userId, "shows")
 			})
 			// The signal then stays until the next visit.
 			.catch(() => {})

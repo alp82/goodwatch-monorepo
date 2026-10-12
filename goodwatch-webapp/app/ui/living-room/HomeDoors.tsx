@@ -3,14 +3,16 @@
 // Something new then takes its place as a tile; with all three doors it is a key in the head line.
 //
 // The Continue door also says when something new aired for the member's shows (#442): a pill in its corner. The
-// door itself stays Tonight's pick.
+// door itself stays Tonight's pick. Titles that landed on the member's services (#456) say so the same way: shows
+// on the door that opens My shows (Continue, or Start a show without one), movies on A movie.
 //
 // This file is a chunk of its own: only a member whose home has doors requests it (home-doors-code.tsx). It
 // imports nothing of the living room: what it needs of the TV, the
 // focusable item and the posters of Something new, comes in as props, so that the home's own chunk stays one file
 // whatever this one imports.
 import type { ReactNode } from "react"
-import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
+import { landedWords, showsWords } from "~/domain/newly-available-words"
+import { useWhatsNew } from "~/ui/navigation/useWhatsNew"
 import type { Item as TvItem, TvView } from "./TvScreens"
 import type { HomeDoors as Doors } from "./living-room-data"
 
@@ -155,7 +157,11 @@ export default function HomeDoors({
 	head: (line: ReactNode) => ReactNode
 }) {
 	const { continue: next, start, movie } = doors
-	const signal = useNewEpisodes()
+	const { episodes, landed } = useWhatsNew()
+	const pill = (words: ReturnType<typeof showsWords>) =>
+		words && (phone ? words.doorShort : words.door)
+	const showsSignal = pill(showsWords(episodes, landed?.shows ?? null))
+	const moviesSignal = pill(landedWords("movie", landed?.movies ?? null))
 	const three = Boolean(next && start)
 	const door = { Item, view, phone }
 	const somethingNew = (
@@ -203,7 +209,7 @@ export default function HomeDoors({
 						]
 							.filter(Boolean)
 							.join(" · ")}
-						signal={signal && (phone ? signal.doorShort : signal.door)}
+						signal={showsSignal}
 					/>
 				)}
 				{start && (
@@ -215,6 +221,7 @@ export default function HomeDoors({
 						title={phone ? "New show" : "Start a show"}
 						line={phone ? `${start.count} to start` : start.title}
 						sub="Best taste match first"
+						signal={next ? null : showsSignal}
 					/>
 				)}
 				<Door
@@ -234,6 +241,7 @@ export default function HomeDoors({
 					]
 						.filter(Boolean)
 						.join(" · ")}
+					signal={moviesSignal}
 				/>
 				{!three && (
 					<Door
