@@ -11,9 +11,41 @@ The signal has a second source since [#456](https://github.com/alp82/goodwatch-m
 landed on one of the member's services. What opens the hub then shows the sum, and the My shows tile counts a show
 once. See [newly-available/README.md](../newly-available/README.md).
 
+## Changed on 2026-10-12: Pick up, the waiting row, and what counts as activity
+
+Decided by the owner after looking at the page with their own shows. Still behind `REC_TRACKING`; the rule and the
+production counts are in [data-model.md](../data-model.md), section 10, "Activity".
+
+- **A member's own move of a show to Watching counts as activity:** unmarking a season of a Seen show, taking back
+  a Seen press, resuming from On hold or Dropped, Watch again. Such a show is in Continue for 90 days even when its
+  watches are old or have no date, and its row says "Watching since yesterday" or "Watching for 12 days". An
+  import never counts.
+- **The cut-off is 90 days,** not 30, for Continue, Tonight's pick and home's Continue door.
+- **Pick up** replaces "Not watched for 30 days". It is a list like Continue and Start, between them, open, the
+  show watched last first. Five rows are drawn, and a button draws the rest.
+- **Waiting for episodes is one row** between Continue and Pick up: "Shrinking S3 E6 airs tomorrow · 7 more shows
+  waiting". It opens to the list below with its day column. One waiting show without a date reads "The White Lotus
+  is waiting for episodes · No date yet"; several without a date "3 shows are waiting for episodes · No dates
+  yet"; without a waiting show there is no row.
+- **Under the list** only the shows the member set aside remain: On hold and Dropped, closed.
+
+![The waiting row closed, and Pick up, desktop](pick-up-desktop.jpg)
+![The waiting row closed, phone](waiting-closed-phone.jpg)
+
+Design choices that are the owner's to confirm:
+
+1. **The row's words.** It names one show and counts the rest. The other design looked at was the opened list as it
+   stands, always open ([desktop](waiting-desktop.jpg)): it says more and pushes Pick up eight rows down.
+2. **Pick up draws five rows first.** A member who imported a history can have dozens of shows there, and Start
+   comes after it.
+3. **"Watching since today", "Watching for 12 days"** for a row placed by the member's move. One wording for all
+   four actions; the row cannot say which one it was.
+4. **The first tick of a show is a move to Watching too.** A show started today by logging an episode with a date
+   of 2019 is in Continue, by the move and not by the watch.
+
 ## What a member sees
 
-**Waiting for episodes, on My shows.** One column, one show a line. Each line ends in a column with the day the
+**Waiting for episodes, on My shows.** Opened from its row: one column, one show a line. Each line ends in a column with the day the
 show's next episode airs: "Tomorrow" with "Mon 12 Oct" under it, "In 4 days", and from a week out the date with
 "in 6 weeks" under it. A show without a dated episode to come says "No date yet". The group is ordered soonest
 first, then the shows without a date in the order they had. The days go by the member's day, the device's date. On a
@@ -90,8 +122,8 @@ Measured on production with `goodwatch-webapp/scripts/measure-waiting-shows.mjs`
 | How many waiting shows do members have? | 148 members have a Watching or Seen show, 57 of them a waiting show. Among those: median 1, 90th percentile 3, most 10. Nobody has more than 30 |
 | What does one episode list a show cost? | For the member with 10: 163 to 236 ms (median of 15 runs, two rounds), 402 rows, all ten at once. A list now carries every episode's description |
 | What does one statement for all of them cost? | 77 to 84 ms, 19 or 20 rows. A round trip from the measuring machine is about 75 ms on its own (a statement that returns no row took 73 to 78 ms) |
-| How often does the catalog hold a dated next episode for a waiting show? | 18 of 58 shows (31%), 29 of 92 waiting rows (32%). No show had only an episode without a date. 40 shows (69%) have no episode to come listed |
-| How fresh are those shows' episodes? | All 58 were copied within the last 7 days |
+| How often does the catalog hold a dated next episode for a waiting show? | Measured again on 2026-10-12: 12 of 59 shows (20%), 22 of 94 waiting rows (23%). 7 shows (12%) have only an episode without a date, 40 (68%) have no episode to come listed. The first run, on 2026-10-11, said 18 of 58 and none without a date: the script read the driver's `json`, which turns a NULL timestamp into 1 January 1970, and so counted an undated episode as dated |
+| How fresh are those shows' episodes? | All were copied within the last 7 days |
 
 What that led to:
 
@@ -176,7 +208,7 @@ The real pages were driven in headless Chromium at 390 x 844 and 1440 x 900 on `
 harness of [#385](../my-library/README.md), with a new sample member, `member=new`: they opened My shows five days
 ago, four shows have returned since, eight are waiting. The harness now mounts the site's header, dock and hub a
 second time for the member, over the ones the shell draws for a guest, so the signal on them is the app's own.
-51 checks, all passing; the script is [`drive.mjs`](drive.mjs) and also took the pictures above:
+85 checks since 2026-10-12 (51 before), all passing; the script is [`drive.mjs`](drive.mjs) and also took the pictures above:
 
 ```
 cd goodwatch-webapp        # no .env: the harness refuses to start when CRATE_HOSTS is set
@@ -208,9 +240,8 @@ points at production, so opening My shows there writes the visit row for that me
 - **The app has not run this against the real tables.** The tests and the harness use the in-memory Crate. The
   three reads were each sent to production once, read-only: Q8 by the measuring script, Q9 for five shows (4 rows),
   Q10 for a member who does not exist (Crate plans it as a `Get` by key). The upsert of the visit row was not sent.
-- **A Watching show that returns after 30 days without a watch** is new and is named in the arrival line, but its
-  row is in "Not watched for 30 days", which is closed. A Seen show that returns goes to Continue. This is how My
-  shows groups today and was left alone.
+- **A Watching show that returns after 90 days without a watch** is new and is named in the arrival line, and its
+  row is in Pick up, which is open since 2026-10-12, with the "New" tag. A Seen show that returns goes to Continue.
 - **On the day an episode airs**, `show.aired_episode_count` can be behind for some hours. The signal goes by the
   calendar and names the show; My shows can still list it under Waiting until the count follows.
 - **The arrival line is for one page load.** Going to a show and back is a new visit, and the line is gone.

@@ -48,7 +48,7 @@ Decided by the owner on October 7, 2026. The label in the first column is the on
 | O1 | No overlap. `user_watch_state` stores only what can't be computed from the log. Counts and dates are computed from `user_watch_log` when read, by one grouped query per member, cached with the member data | Summary columns in the state row (`watch_count`, `episodes_watched`, the furthest episode, the dates) that the writer recomputes on every write: Crate has no transactions, so every copy is something a crash can leave wrong |
 | C1 | The new state table replaces `user_watch_history`, which stayed untouched as the backup until it was dropped on 2026-10-11 (planned: 30 days after the switch; the owner decided to drop it earlier) | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
 | C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
-| C3 | "Watched in the last 30 days" is the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue) |
+| C3 | "Active in the last 90 days" is the later of two times. The last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. And the member's own move of the show to Watching: the time the state changed to Watching, unless an import made it so. An import and the migration never count. (30 days and watches only until 2026-10-12, when the owner decided both; section 10, "Activity") | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue); or watches only (a show whose last season was unmarked today went to the shows not watched for 30 days) |
 | C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the date on the device; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
 | C5 | A show marked Seen while it had no episode list gets the press's group filled once the list exists: undated watches for the regular episodes that had aired by the day of the press | Leaving it Seen with every episode reading as new, as the machine alone would |
 | C6 | An import inserts log rows. It sets the state only for a show that had no row before the import, or whose state is Not started or Watching. On hold, Dropped and Seen set here are never changed by an import | Replaying the file as if the member acted now, so that an old watch resumes an On hold or Dropped show |
@@ -306,7 +306,7 @@ episode list of a show and `show.aired_episode_count`. "The entry" is the title'
 | Seen button: mark, "mark N new", take back, or off | Derived | State, the count of new episodes, and whether `seen_press_group` is set | Every read |
 | Watch count on a movie, "3×" | Derived | The entry's `count`: the movie's log rows | With the member data |
 | "Watched yesterday", "Date unknown" on a row | Derived | The entry's `watchedAt` and `precision` | With the member data |
-| Order of My shows | Derived | Continue: Watching entries with a Next episode and `lastActivityAt` within 30 days, newest first; then Seen entries with new episodes. Start: Want to See shows without a state, best taste match first | Every read |
+| Order of My shows | Derived | Continue: Watching entries with a Next episode and activity within 90 days (C3: the later of `lastActivityAt` and `watchingSince`), newest first; then Seen entries with new episodes. Pick up: the other Watching entries with a Next episode. Start: Want to See shows without a state, best taste match first | Every read |
 | Tonight's pick | Derived | The first row of Continue; without one the first movie of My movies; without one the first show of Start | Every read; its cache is reset with the member data |
 | Season matrix cell: rating | Not member data | The catalog and the IMDb ratings, as today's episode grid | With the catalog |
 | Season matrix cell: watched | Derived | Show page only: the log rows of the show in the current pass, matched to listed episodes by id, or by season and number when exactly one listed episode has them | Every read of the show page |
@@ -330,7 +330,8 @@ SELECT tmdb_id, media_type, pass,
        max(watched_at) AS last_watched_at,
        max(CASE WHEN watched_at_precision = 'moment' THEN watched_at END) AS last_moment_at,
        max(CASE WHEN watched_at IS NOT NULL THEN watched_at
-                WHEN origin <> 'import' THEN created_at END) AS last_activity_at
+                WHEN origin <> 'import' THEN created_at END) AS last_activity_at,
+       max(created_at) FILTER (WHERE origin = 'import') AS last_import_at
 FROM user_watch_log
 WHERE user_id = ?
 GROUP BY tmdb_id, media_type, pass
@@ -353,7 +354,8 @@ title without a row) needs no join. A join would also rule out `count(DISTINCT .
 | Started at all | `episodes_watched > 0` in any pass | The guard "a watch remains", for readers |
 | `watchedAt` | The largest `last_watched_at` over all passes | The latest dated watch. NULL when every watch is undated |
 | `precision` | `moment` when the largest `last_moment_at` equals `watchedAt`; else `day` when `watchedAt` is set; else `unknown` | How exact `watchedAt` is, without a second query: the latest moment-precise watch is the latest watch exactly when the two maxima are equal. When a day-precise and a moment-precise watch share the instant 00:00:00 UTC, it says moment |
-| `lastActivityAt` | The largest `last_activity_at` over all passes | C3: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. An undated imported watch gives NULL and so counts for nothing |
+| `lastActivityAt` | The largest `last_activity_at` over all passes | C3, the last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. An undated imported watch gives NULL and so counts for nothing |
+| `watchingSince` | The state row's `state_changed_at` (QS) when the state is Watching and it is later than the largest `last_import_at` over all passes; else none | C3, the member's own move to Watching. The state row does not say who wrote it. An import records its watches no later than it changes the state, so a state that changed no later than the show's latest imported watch was recorded is taken to be the import's |
 | First watched | The smallest `first_watched_at` over all passes | Returned, and not put in the map until a screen needs it |
 
 The composite `season_number * 100000 + episode_number` orders episodes by season and then number in one integer and
@@ -466,8 +468,8 @@ The member data map is what `getUserData` loads for every page (`server/userData
 Its `watched` entry is replaced by `watchState`, built from two reads that run beside the others:
 
 ```sql
--- QS. The member's states.
-SELECT tmdb_id, media_type, state, pass
+-- QS. The member's states, and when each last changed (C3).
+SELECT tmdb_id, media_type, state, pass, state_changed_at
 FROM user_watch_state
 WHERE user_id = ? AND state <> 'not_started'
 
@@ -489,6 +491,8 @@ watchState: Record<MediaKey, {
 	/** The furthest of them, as [season, episode]. */
 	furthest: [number, number] | null
 	lastActivityAt: Date | null
+	/** Since when the member has had the show in Watching by their own action; null otherwise (C3). */
+	watchingSince: Date | null
 }>
 ```
 
@@ -510,8 +514,8 @@ would cut the raw size by a third if it matters.
 | --- | --- | --- | --- | --- |
 | **Show page**: hero box, matrix, open season, watch log per episode | Q1 to Q3 below | 1 row; one log row per watched episode and pass (Supernatural: up to 327 per pass); the episode list | The state and the counts are (for the first paint of the hero); the rows are not | Q1 and Q2 are not cached on the server. The browser keeps them under a key per show and every action on the show replaces them. Q3 is public and cached per show |
 | **Movie page**: watch log | Q4, when the log opens | 1 to a handful | Seen and the count are | Not cached; the browser's copy is replaced by every action on the movie |
-| **Home doors** and **Tonight's pick** | None for the member: the Watching entry with the latest `lastActivityAt` in the last 30 days, then its Next episode from the cached episode list. The other two doors are today's Watch next reads | | Yes | With the member data: the pick's key includes the map's `watchState` entries |
-| **My shows** | None for the member: the entries of the map. Q5 reads their shows from the catalog by key; the cached episode lists of the Continue rows give the Next episode's name. Start is the Wishlist's shows from the map, ordered by taste match as Watch next does today | The member's Watching, On hold and Seen shows: up to a few hundred keys | Yes | Q5 is public data; the list is rebuilt when the member data is |
+| **Home doors** and **Tonight's pick** | None for the member: the Watching entry with the latest activity in the last 90 days (C3), then its Next episode from the cached episode list. The other two doors are today's Watch next reads | | Yes | With the member data: the pick's key includes the map's `watchState` entries |
+| **My shows** | None for the member: the entries of the map. Q5 reads their shows from the catalog by key; the cached episode lists of the Continue and Pick up rows give the Next episode's name. Start is the Wishlist's shows from the map, ordered by taste match as Watch next does today | The member's Watching, On hold and Seen shows: up to a few hundred keys | Yes | Q5 is public data; the list is rebuilt when the member data is |
 | **My movies** | No new query. It is the Wishlist's movies. A movie leaves when it is Seen because a watch, the score's included, deletes its Want to See row. A Seen movie that is put on the Wishlist afterwards (Want to rewatch) is in it again until its next watch | | The Wishlist is | As today |
 | **Library**: counts on the chips and in the drop-down | None. Counted from the map: Want to see from `wishlist`; Watching, On hold and Dropped from `watchState`; Seen is `watchState` entries with state Seen plus scored shows without one; Not rated is Seen entries without a score | | Yes | With the map |
 | **Library**: a status's list, in steps of 60 | The order is made from the map on the server (2,500 keys sort in well under a millisecond), then Q6 loads the cards of one step. Last watched: `watchedAt` newest first, then the titles without a dated watch. My score: from `scores`. Title: the titles of the member's keys are read once by key and kept with the map | 60 per step, also at 1,500 titles | The keys are | The card data is public and cached as today |
@@ -569,9 +573,9 @@ LIMIT 61;
 
 My shows is split in the server function from the entries and Q5's rows:
 
-- **Continue:** Watching with a Next episode and `lastActivityAt` in the last 30 days, newest first; then Seen with
-  `aired_episode_count > episodesWatched`.
-- **Not watched for 30 days:** Watching, older.
+- **Continue:** Watching with a Next episode and activity in the last 90 days (the later of `lastActivityAt` and
+  `watchingSince`), newest first; then Seen with `aired_episode_count > episodesWatched`.
+- **Pick up:** Watching with a Next episode, without activity in the last 90 days.
 - **Waiting for episodes:** Seen, `status` not Ended or Canceled, nothing new.
 - **On hold.**
 
@@ -1230,9 +1234,10 @@ a source's watches, statuses and Want to See have a place.
   log row may lie beyond it (invariant 6). This is a consequence of C6 that the review did not spell out.
 - **Movies:** a log row and the `seen` row; Want to See is cleared as for a watch made here. An imported watch
   replaces the score's watch.
-- **The 30 days** (C3): an import counts only through its dates. A watch with a date counts with its date, an
+- **The 90 days** (C3): an import counts only through its dates. A watch with a date counts with its date, an
   undated imported watch not at all, and the time of the import never. The grouped query's `last_activity_at` does
-  this by itself.
+  this by itself for the watches. The state an import writes carries the import's time in `state_changed_at`;
+  `watchingSince` leaves it out, because the import's watches were recorded no earlier (section 10, "Activity").
 
 **Duplicates,** decided in the preview and shown there before anything is written:
 
@@ -1923,8 +1928,10 @@ Where the build differs from the text above, or settles what it left open:
   air dates, and the browser words them by the device's date. Which shows wait and which have a Next episode stays
   the server's, by UTC.
 - **Home's doors and Tonight's pick do not read Q8.** `getMyShows` takes `upcoming: false` from them.
-- **Only dated episodes are read for the waiting group.** Measured on 2026-10-11: of the 58 shows members wait for,
-  18 have a dated episode to come, none has only an undated one, and 40 have none listed.
+- **Only dated episodes are read for the waiting group.** Measured again on 2026-10-12: of the 59 shows members
+  wait for, 12 have a dated episode to come, 7 have only an undated one, and 40 have none listed. (The numbers of
+  2026-10-11, 18 and none, counted an episode without a date as dated: the script read the driver's `json`, which
+  turns a NULL timestamp into 1 January 1970. It reads the raw rows now.)
 
 ### Newly available: titles that landed on a member's services (#456)
 
@@ -1979,3 +1986,44 @@ What the build settles:
 - **The page's loader does not write the visit,** as for My shows: the page sends the POST once it is on screen.
 - **A member without a saved country or a saved service is told nothing.** The country guessed from the request is
   used to show availability, and is not taken as theirs here.
+
+### Activity: the member's own move to Watching, 90 days, and Pick up (2026-10-12)
+
+Behind `REC_TRACKING`. Decided by the owner on 2026-10-12, after a show whose last season they had unmarked that
+morning (Seen to Watching) was listed under "Not watched for 30 days": its watches were the migration's, without
+dates, recorded in May 2024.
+
+- **A member's own move of a show to Watching counts as activity** (C3). Unmark season on a Seen show, taking back a
+  Seen press, Resume from On hold or Dropped, Watch again, and the first tick of a show all set
+  `state_changed_at` through `stateRowOf`, and only when the state changes. The member data entry carries it as
+  `watchingSince`, for the state Watching only.
+- **An import never counts, and neither did the migration.** No column says who wrote a state row, and none was
+  added: **no statement was run on the production database.** An import inserts its watches with `created_at` = the
+  import's time and then writes the state with the same time or, after a conflict, a later one. So
+  `watchingSince` is none when `state_changed_at` is not later than the show's latest imported watch was recorded
+  (`last_import_at`, one more aggregate in QG). The migration wrote Seen rows only, with the time of the old mark.
+- **Two edges of telling an import by its watches.** A member's move to Watching followed by an import that adds
+  watches of the same show no longer counts; the show then goes by its watches. And an import whose state write
+  lost a race against another write of the same show's state row gets a later time than its watches and counts.
+  Both need the member or a second upload to act on the same show within moments or within the 90 days.
+- **Undoing an import** that had made a show Seen, while watches of another import remain, re-derives the state.
+  It is dated by the latest remaining watch's `created_at` and no longer by the time of the undo, which would have
+  read as the member's own move (`undoImportTrackingPlan`).
+- **The cut-off is 90 days** (`ACTIVE_DAYS` in `domain/my-shows.ts`), for Continue, for Tonight's pick and for
+  home's Continue door: they all read the one plan.
+- **Pick up** is the group of the Watching shows with a Next episode and no activity in the 90 days. It is drawn
+  with the same rows as Continue, above Start, the most recent first, five at first. Its rows get their Next
+  episode from the cached episode lists too: Continue first, then Pick up, 30 lists a page at most.
+- **Waiting for episodes is one row** between Continue and Pick up. It names the show that returns first with its
+  episode and day and counts the others, and opens to the list with the day column. Q8 is unchanged.
+- **A row says the fact that places it:** "Watching since yesterday", "Watching for 12 days" when the member's
+  move is later than their last watch, else "Watched 3 days ago" (`placedWords`). Home's Continue door says the same.
+- **The New episodes signal is unchanged.** It never read the activity: a show is new by its Next episode's air
+  date and the last My shows visit.
+
+Measured on production on 2026-10-12, read-only (`scripts/measure-status-activity.mjs`): 8 shows are Watching, all
+of one member, and all 8 changed state in October 2026. Five of them have no watch activity in the last 90 days and
+are in Continue only through the member's move; none was made Watching by an import. No member has five or more
+shows made Watching in one minute, which is what an import or a migration would leave. The watch log holds no
+imported watch at all yet. The grouped query for the member with the most watches (31,239 watches, 82 groups) took
+198 ms as it was and 193 ms with `last_import_at`, median of 25 runs each: no measurable difference.

@@ -86,12 +86,15 @@ doors (phone). No row was added. The doors arrive with the home's loader data (`
 has hydrated.
 
 **My shows** (`ui/my-shows/MyShowsPage.tsx`, `server/my-shows.server.ts`, `domain/my-shows.ts`): one list. Continue:
-Watching shows with a Next episode and activity in the last 30 days, most recent first, then Seen shows with new
-episodes. Start: Want to See shows not started, best taste match first, with seasons, episodes, hours and whether
-it still runs. The rule is a sentence on the page and each group has a label. A row is one link to the show's page:
-no Watched button, no tick. Under the list: Not watched for 30 days (closed), Waiting for episodes, On hold
-(closed), Dropped (closed). Since [#442](../new-episodes/README.md) the waiting shows say when their next episode
-airs, and the page clears the New episodes signal.
+Watching shows with a Next episode and activity in the last 90 days, most recent first, then Seen shows with new
+episodes. Pick up: the Watching shows without activity in that time. Start: Want to See shows not started, best
+taste match first, with seasons, episodes, hours and whether it still runs. The rule is a sentence on the page and
+each group has a label. A row is one link to the show's page: no Watched button, no tick. Between Continue and Pick
+up one row says what is Waiting for episodes and opens to those shows. Under the list: On hold (closed), Dropped
+(closed). Since [#442](../new-episodes/README.md) the waiting shows say when their next episode airs, and the page
+clears the New episodes signal. Until 2026-10-12 the cut-off was 30 days, activity was a watch only, and the older
+shows were a closed group under the list ("Not watched for 30 days"); what changed and why is in
+[new-episodes/README.md](../new-episodes/README.md).
 
 **My movies** (`routes/my-movies.tsx`, `ui/my-movies/parts.tsx`, and Watch next's page and server with
 `kind: "movie"`): the Watch next page for the Wishlist's movies. Hero ("Tonight's movie · …"), Then, and the tiers
@@ -101,7 +104,7 @@ fit tonight is one closed group, Not tonight's fit, where each movie says why: "
 "Not on your services". Every word a member reads says "movie".
 
 **Tonight's pick** (`server/tonight.server.ts`, `tonightsPickOf`): the Next episode of the Watching show the member
-was last active on in the last 30 days; without one, the first movie of My movies; without one, the first show to
+was last active on in the last 90 days; without one, the first movie of My movies; without one, the first show to
 start; with none of them, what it is today.
 
 ## Reads
@@ -136,7 +139,7 @@ development route that a production build leaves out. It mounts the real pages w
 Its loader and API run **the app's own server functions** against an in-memory Crate in the dev server
 (`server/prototype-my-library.server.ts`), with round 3's sample members (6, 1 and 25 Watching shows, none, nothing
 marked) and Seen histories of 30 and 1,500. A score given in the harness goes through the real `updateScores`.
-173 checks, all passing, three runs in a row; the script is [`drive.mjs`](drive.mjs):
+175 checks since 2026-10-12 (173 before), all passing; the script is [`drive.mjs`](drive.mjs):
 
 ```
 cd goodwatch-webapp        # no .env: the harness refuses to start when CRATE_HOSTS is set
@@ -193,10 +196,10 @@ surface's first view; home grows by about 1 KB compressed.
   the rest, and the TV's first state changes in between made React drop it (error 421) on every load. Until the
   doors' code is there, the home shows its head line alone.
 - **Tonight's pick is never a Seen show with new episodes.** Such a show leads Continue when no Watching show was
-  active in the last 30 days, and the pick is then the first movie, as the glossary says.
+  active in the last 90 days, and the pick is then the first movie, as the glossary says.
 - **A Watching show with every aired episode watched** waits for episodes, like a caught-up Seen show. The machine
   makes such a show Seen, so this only happens when the catalog lost an episode.
-- **A show the catalog has no aired count for** stays in Continue or in the older group by its activity, without a
+- **A show the catalog has no aired count for** stays in Continue or in Pick up by its activity, without a
   Next episode line, until the episode catalog reaches it.
 - **My movies keeps one group for what does not fit.** Watch next has three (Other moods or Elsewhere, Close, Not
   tonight). My movies has one, closed, as the prototype had.
