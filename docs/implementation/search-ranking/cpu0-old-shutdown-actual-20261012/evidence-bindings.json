@@ -1,0 +1,32 @@
+{
+  "files": {
+    "root-actual-disposition.json": {
+      "bytes": 2087,
+      "sha256": "5cb697cd62e6327a844fc4563537bbc18f7c3b1057d8a47093afd334603d5dea"
+    },
+    "root-execution-public.ndjson": {
+      "bytes": 4717,
+      "sha256": "ad0b490d3d39d2259d86290d4883038a33461e85fe00f1842761fb214d39a84c"
+    },
+    "root-execution-return.json": {
+      "bytes": 260,
+      "sha256": "7e1c04f36a6dc313fe96e7e8a614390f040cddb39380f7bc431e34f7357891a8"
+    },
+    "root-readonly-created-config-public.json": {
+      "bytes": 1011,
+      "sha256": "27b99d3853e0048c38ce84cda33fabd7ca4e270c23e21b84f1cc8279c4df1edd"
+    },
+    "root-readonly-created-config-remote.py": {
+      "bytes": 2330,
+      "sha256": "6173f1c44c7c201f52af15a664705887d4293050ce31930dc98ee05c5f718a52"
+    }
+  },
+  "localClosureSha256": "be3cca8f2371b543470ecc46c9e58ce8bd6071bdc3d0e0e0e918fa80d33a7939",
+  "mergeHead": "1023e5c410d985b4e1ba37607fe479fd4b857a6f",
+  "packetSha256": "2ff32837c5d41e68a8dfab04af29c655bbcc9474707ff2fdf256daf1f2cc8527",
+  "productionAcceptance": false,
+  "publicationHead": "b2b61f6a7b173f84728f86840c8f31f7a62a7b1c",
+  "schema": "cpu0-old-shutdown-actual-public-evidence.v1",
+  "sourceHead": "8afd5cc9face8bcf0d10b88571a39c1ecef3d1e5",
+  "status": "failed-or-cleanup-unknown"
+}

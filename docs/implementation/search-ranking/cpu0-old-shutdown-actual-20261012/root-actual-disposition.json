@@ -1,0 +1,48 @@
+{
+  "allRegisteredLifecycleExitsProven": false,
+  "at": "2026-10-12 18:39:14 UTC",
+  "benchCleanupObserved": false,
+  "daemonVersionObservation": {
+    "api": "1.51",
+    "client": "28.5.1",
+    "localSshExitCode": 0,
+    "notBinaryDigestAttestation": true,
+    "server": "28.5.1"
+  },
+  "disposition": "FAILED after OLD shutdown and NEW creation; no NEW start or comparison; no resume",
+  "historyWrites": 0,
+  "mergeCommit": "1023e5c410d985b4e1ba37607fe479fd4b857a6f",
+  "mergedPreparationPr": 504,
+  "newCreated": true,
+  "newCreatedContainerIdHash": "c67d813c0e32872228fdc13a515e49c45b3ae68166f19531ee83bcfdf69548ea",
+  "newStoppedNeverStartedEndpointObserved": true,
+  "next": "Verify tagged primary default normalization and prepare separately reviewed exact-owned never-started recovery; preserve original refusal and stopped artifacts",
+  "oldStopReceiptObservedDurable": true,
+  "oldStopReceiptSha256": "ca4366c7673afae5f7a1680e25183ffd378f9f7888c92f5d79b855b5b4a69cc3",
+  "oldStoppedEndpointObserved": true,
+  "ordinarySearches": 0,
+  "pairsCompleted": 0,
+  "productionAcceptance": false,
+  "publicOutputBytes": 4717,
+  "publicOutputSha256": "ad0b490d3d39d2259d86290d4883038a33461e85fe00f1842761fb214d39a84c",
+  "readonlyFollowup": {
+    "availableBytes": 6833094656,
+    "configEqual": true,
+    "localSshExitCode": 0,
+    "onlyNonCpuDifference": {
+      "field": "OomKillDisable",
+      "newType": "boolean",
+      "newValue": false,
+      "oldType": "null"
+    },
+    "outputSha256": "27b99d3853e0048c38ce84cda33fabd7ca4e270c23e21b84f1cc8279c4df1edd",
+    "scope": "separate point-in-time read-only metadata, not earlier cleanup recovery",
+    "sourceSha256": "6173f1c44c7c201f52af15a664705887d4293050ce31930dc98ee05c5f718a52"
+  },
+  "reason": "setup_hostconfig_drift",
+  "receiptPresenceAloneNotCleanProof": true,
+  "returnSha256": "7e1c04f36a6dc313fe96e7e8a614390f040cddb39380f7bc431e34f7357891a8",
+  "schema": "cpu0-old-shutdown-root-actual-disposition.v1",
+  "sourceHead": "8afd5cc9face8bcf0d10b88571a39c1ecef3d1e5",
+  "unknownUnregisteredChildrenAbsentProven": false
+}
