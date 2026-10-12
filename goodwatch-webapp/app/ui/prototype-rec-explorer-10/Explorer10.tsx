@@ -40,6 +40,7 @@ import { snapshotGuestProgress } from "~/utils/guest-progress"
 import {
 	MixBar,
 	type MixBarState,
+	type MixForm,
 	mixSentence10,
 	sharedLine10,
 	sharedNote10,
@@ -54,7 +55,7 @@ import {
 	type Pad,
 	createMapEngine,
 } from "./engine10"
-import type { BarKey, Variant10 } from "./variants10"
+import type { Variant10 } from "./variants10"
 import { groupingOf, layWorld10, localId, worldId } from "./world10"
 
 const MAX_PICKS = 5
@@ -144,11 +145,11 @@ const sideOf = (island: MapIsland) => ({
  */
 export function Explorer10({
 	variant,
-	bar: barKey,
+	mixForm,
 }: {
 	variant: Variant10
-	/** The top bar's variant. */
-	bar: BarKey
+	/** The selection bar's variant. */
+	mixForm: MixForm
 }) {
 	const [params, setParams] = useSearchParams()
 	const filters = useMemo(() => filtersOf(params), [params])
@@ -1125,12 +1126,29 @@ export function Explorer10({
 						: touch
 							? "tap another island, in any group"
 							: "click another island, in any group",
+				count: mix && !forming ? mix.count : null,
 				up: !!mix || forming,
 				full: picked.length >= MAX_PICKS,
 				max: MAX_PICKS,
 				at: at === "hub" ? "hub" : atOverview ? "all" : "",
 			}
 		: null
+	const selection = bar && (
+		<MixBar
+			form={mixForm}
+			state={bar}
+			phone={width < 768}
+			onDrop={(id) => void applyPicks(picks.filter((x) => x !== id))}
+			onClear={() => void applyPicks([])}
+			onGo={() => goRegion("hub")}
+			onAll={() => goRegion("all")}
+			nudge={
+				tutStep === "combined" || tutStep === "all" || tutStep === "separate"
+					? { at: tutStep, touch }
+					: null
+			}
+		/>
+	)
 	const spoken = !bar
 		? ""
 		: `${bar.list.map((s) => s.name).join(" + ")}: ${bar.status}.`
@@ -1221,7 +1239,7 @@ export function Explorer10({
 				{form === "sheet" && cardNode}
 			</div>
 			<TopBar10
-				bar={barKey}
+				selection={bar && mixForm === "inline" ? selection : null}
 				phone={width < 768}
 				groupings={
 					maps?.map((m) => ({ id: m.grouping, islands: m.islands.length })) ?? []
@@ -1237,22 +1255,9 @@ export function Explorer10({
 				titleType={titleType}
 				onTitleType={(next) => setFilters(titleTypeParams(next))}
 			/>
-			{bar && !(phone && active?.pinned) && (
+			{bar && mixForm !== "inline" && !(phone && active?.pinned) && (
 				<div className="ex-bar-wrap" style={{ top: barTop }}>
-					<MixBar
-						state={bar}
-						onDrop={(id) => void applyPicks(picks.filter((x) => x !== id))}
-						onClear={() => void applyPicks([])}
-						onGo={() => goRegion("hub")}
-						onAll={() => goRegion("all")}
-						nudge={
-							tutStep === "combined" ||
-							tutStep === "all" ||
-							tutStep === "separate"
-								? { at: tutStep, touch }
-								: null
-						}
-					/>
+					{selection}
 				</div>
 			)}
 			<p className="sr-only" aria-live="polite">
@@ -1365,6 +1370,7 @@ function Styles10() {
 .ex-top{z-index:40}
 .ex-bar-body:has(.ex-tut-press){overflow:visible}
 @media (max-width:639px){.ex-bar-body .ex-bar-count{white-space:normal;flex:0 1 auto;min-width:0;max-width:100%;line-height:1.25}}
+.ex10-glow{background:rgba(251,191,36,.28) !important;animation:ex-tut-glow 1.3s ease-in-out infinite}
 .ex10-view button.ex-tut-glow{position:relative;background:rgba(251,191,36,.28);animation:ex-tut-glow 1.3s ease-in-out infinite}
 `}</style>
 	)

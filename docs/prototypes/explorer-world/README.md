@@ -71,6 +71,23 @@ Fifth round (owner, 2026-10-12): Harbor is locked in, and the variants are now o
 - **Known:** on phones `legend` shows the same row as `tabs` (there is no side to put a list on), and on desktop
   the legend covers the left edge of the map, which doesn't make room for it yet.
 
+Sixth round (owner, 2026-10-13): the top bar is the `menu` one ("Viewing: Whole map", filters in a strip). The
+variants are now of the selection bar, which was big and messy: on a phone three rows (chips and empty rings, the
+sentence, the two-part switch) beside a tall Separate. `?variant=strip|chips|inline`:
+
+| | `strip` | `chips` | `inline` |
+| --- | --- | --- | --- |
+| Where | one short line under the top bar | one line under the top bar | in the top bar, no line of its own |
+| Closed | the islands' colors, "281 titles", Combined, Separate | each island's name with its cross, Combined, the count, a cross | the islands' colors and the count |
+| The names and the sentence | open under the line, on a tap on the count | names always; no sentence | in a panel the button opens, with Combined and Separate |
+
+In all three the two-part switch is one button that names where it goes ("Combined", or "Show all" once there), the
+empty rings are gone ("1 of 5", and "3 more can join" in the details), and the tutorial's pointer lands on the same
+buttons (in `inline` on the button that opens the panel, then on the one inside). Rows of the screenshots
+(`selection-phone.png`, `selection-desktop.png`): strip, chips, inline; columns: one island, two, opened, five.
+
+Known: in `chips` the names scroll sideways on a phone from the second island on.
+
 ## Run it
 
 ```sh

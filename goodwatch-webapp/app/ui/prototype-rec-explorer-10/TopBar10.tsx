@@ -32,7 +32,6 @@ import {
 } from "~/ui/filter-bar/controls"
 import { MENU } from "~/ui/filter-bar/motion"
 import { useModalDialog } from "~/ui/filter-bar/useModalDialog"
-import type { BarKey } from "./variants10"
 import { REGION_COLORS } from "./world10"
 
 interface Place {
@@ -44,7 +43,8 @@ interface Place {
 }
 
 interface TopBarProps {
-	bar: BarKey
+	/** The selection, when it lives in the bar. */
+	selection?: ReactNode
 	phone: boolean
 	/** The groupings this viewer has, each with how many islands it holds. */
 	groupings: { id: Grouping; islands: number }[]
@@ -397,10 +397,13 @@ function PlaceMenu({
 	places,
 	at,
 	onGo,
+	compact = false,
 }: {
 	places: Place[]
 	at: string
 	onGo: (id: string) => void
+	/** Without its icon, where the bar is short of room. */
+	compact?: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
@@ -424,7 +427,9 @@ function PlaceMenu({
 				onClick={() => setOpen(!open)}
 				className={`flex h-12 max-w-full items-center gap-2.5 rounded-2xl px-3.5 text-left ${GLASS} hover:ring-white/25 ${FOCUS}`}
 			>
-				<MapIcon aria-hidden className="h-5 w-5 shrink-0 text-amber-300" />
+				{!compact && (
+					<MapIcon aria-hidden className="h-5 w-5 shrink-0 text-amber-300" />
+				)}
 				<span className="flex min-w-0 flex-col leading-tight">
 					<span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
 						Viewing
@@ -489,7 +494,9 @@ function PlaceMenu({
 // ------------------------------------------------------------ the bar
 
 export function TopBar10(props: TopBarProps) {
-	const { bar, phone, groupings, at, onGo, picked } = props
+	const { phone, groupings, at, onGo, picked, selection } = props
+	// The owner chose the menu (2026-10-13); the other two forms are still here to compare.
+	const bar = "menu" as "tabs" | "menu" | "legend"
 	const [open, setOpen] = useState(false)
 	const places: Place[] = [
 		{ id: "all", name: "Whole map", sub: `${groupings.length} groups` },
@@ -541,7 +548,15 @@ export function TopBar10(props: TopBarProps) {
 			<div className="ex-row">
 				<h1 className="ex-brand">Explorer</h1>
 				{bar === "tabs" && !phone && row}
-				{bar === "menu" && <PlaceMenu places={places} at={at} onGo={onGo} />}
+				{bar === "menu" && (
+					<PlaceMenu
+						places={places}
+						at={at}
+						onGo={onGo}
+						compact={phone && !!selection}
+					/>
+				)}
+				{selection}
 				{bar === "legend" && !phone && <ActiveChips p={props} />}
 				<span className="flex-1" />
 				{filters}

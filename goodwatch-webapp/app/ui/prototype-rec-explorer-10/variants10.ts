@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer. The way of combining is settled (owner, 2026-10-12): Harbor. The
-// variants (?variant=<key>) are now of the top bar: how the control that moves the map says so, and how the filters
-// look behind one Filters button. See TopBar10.tsx.
+// top bar is settled too (2026-10-13): the Viewing menu, with the filters in a strip. The variants (?variant=<key>)
+// are now of the selection bar, see MIX_FORMS in MixBar10.tsx.
 import type { Mode10 } from "./engine10"
 
 export interface Variant10 extends Mode10 {
@@ -26,10 +26,3 @@ export const HARBOR: Variant10 = {
 	fly: false,
 	back: true,
 }
-
-export const BARS = {
-	tabs: "Go to row, filters popover",
-	menu: "Viewing menu, filters strip",
-	legend: "Legend on the map, filter chips",
-} as const
-export type BarKey = keyof typeof BARS
