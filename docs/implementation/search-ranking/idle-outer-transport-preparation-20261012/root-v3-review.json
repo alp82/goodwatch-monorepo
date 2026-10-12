@@ -1,0 +1,20 @@
+{
+  "schema": "root-local-source-review.v1",
+  "supersedes": "root-idle-outer-transport-v2-review-20261012.json",
+  "sourcePacketManifestSha256": "014145917b88b4b4a476428c8a1a85e066ccb9a818fb394ac2f1346e307fcc4e",
+  "reviewed": [
+    "full V2 transport and entry",
+    "complete V2-to-V3 source/tests/docs diff"
+  ],
+  "frozenBindingsVerified": 17,
+  "independentTests": {
+    "count": 39,
+    "seconds": 16.798,
+    "outcome": "PASS",
+    "pattern": "test_idle_transport.py"
+  },
+  "nineCoreUnchanged": true,
+  "hostOperations": 0,
+  "executionAuthorized": false,
+  "publicationPendingActualOpusReview": true
+}

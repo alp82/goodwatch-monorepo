@@ -1,0 +1,99 @@
+# Readiness verdict: NOT READY
+
+The packet is not ready for a root host gate, and not yet acceptable as a "complete inactive preparation" either. There are 5 code blockers and 1 coverage blocker.
+
+This is a read-only review of the pasted code. I could not verify the byte-unchanged claim for the nine modules, and I took the 14 PASS as stated. The running integration cohort is not evidence yet.
+
+## Confirmed in code
+
+- **Signalling:** the only signal call is on the retained CLI PID-fd (`idle_transport.py:418`); the outer never signals holders or the source.
+- **Receipt flag:** `unknownEarlyChildrenPossible: True` is unconditional (`:444`).
+- **Exit proof:** exit is taken from the PID-fd and EOF is never awaited (`:398-408`).
+- **Parent death:** the fork child sets parent-death under a parent check before exec (`:362`).
+- **Normalization:** signal dispositions, mask and timer are reset before exec (`:364-367`).
+- **Launch flags:** the entry is launched `-I -B -S` (`:370`) and asserts those flags (`idle_entry.py:119`).
+- **GO:** the entry waits a finite 10 s (`idle_entry.py:105-117`), and the birth receipt is fsynced before GO is sent (`idle_transport.py:393-394`).
+- **Source triple:** it comes from the manifest, never live selection (`idle_entry.py:134`).
+- **Runtime:** inspection is `lstat`/`resolve` only (`idle_transport.py:276-289`).
+- **No retry:** a consumed path cannot be rerun, because `records/` must be empty (`:175`) and `cli-birth.json` is created `O_EXCL`.
+
+## Mandatory blockers
+
+**B1. Safety: the entry's `os._exit` is not guaranteed after invocation** (`idle_entry.py:129-139`, `:142-143`)
+- Any exception after `run_reviewed` returns (a `durable` failure such as ENOSPC, EEXIST or `entry_receipt_limit`, or a `KeyError`) falls into normal interpreter shutdown.
+- Multiprocessing's exit handler then joins non-daemon holders while the 400 s alarm is still armed, which is exactly what the plan forbids.
+- **Test:** stand-in of the real entry that starts a non-daemon sleeping child and pre-creates `records/entry-result.json` before `durable`. Assert CLI exit code 4 in under 0.8 s and `authoritativeReceiptVerified` false. Today it blocks on the join and exits 1.
+- **Fix:** wrap everything after GO in `try/except BaseException: os._exit(4)`.
+
+**B2. Operability: `kernel_fence` cannot pass on a real cgroup-v2 host** (`idle_transport.py:319-325`)
+- The loop reads `memory.max`, `memory.high` and `cpu.max` at the cgroup root, where those files do not exist.
+- The result is a raw `FileNotFoundError` carrying a path, not a fixed refusal. `idle_trial._sample` (`idle_trial.py:134`) already tolerates this.
+- The fixture masks it by writing those files into the fake root (`test_idle_transport.py:229-231`).
+- **Test:** the same fixture without limit files at `groups/`; expect a proof. Today it raises.
+- **Fix:** break at `cgroup_root` before reading, and map `OSError` to `transport_source_fence_failed`. The same raw-`OSError` leak applies to a vanished source PID (`:305`) and an absent runtime directory (`:278`).
+
+**B3. Safety/evidence: the live root path is not refused in code** (`idle_transport.py:331-348`)
+- `execute_production` is not on the real path; `run_reviewed_stage` goes straight to `_execute`.
+- The only gates are self-asserted standing booleans (`:41-46`). There is no clone-causal receipt field and no freshness bound on `resource.proofSha256`.
+- "Inactive" is therefore convention plus documentation, not implementation.
+- **Test:** patch `geteuid` to 0, make `_verify_stage`, `kernel_fence` and `inspect_runtime` succeed, and make `os.fork` raise `AssertionError`. Expect `transport_production_not_reviewed`. Today it forks.
+- **Fix:** end `run_reviewed_stage` in `execute_production(operation)` after the checks. Enabling it becomes a separately reviewed diff that adds clone-causal and freshness fields.
+
+**B4. Evidence: no caller-bound expected identity** (`idle_transport.py:102-109`, `:118`, `:178`, `:188`, `:336`)
+- Code rows, core hash, entry hash and interpreter hash are derived from whatever sits beside `idle_transport.py`, using an unguarded `read_bytes`.
+- `run_reviewed_stage` accepts whatever manifest hash is on disk. The plan requires the expected `packet_hash` and six-file `code_hash` to be bound.
+- **Test:** valid stage with a wrong expected operation SHA; expect refusal with `records/` empty.
+- **Fix:** add an `expected_operation_sha256` argument to `run_reviewed_stage`, and expected packet, core, entry and interpreter hashes to `stage_reviewed`.
+
+**B5. Evidence: the schedule hash is bound but never checked against inner evidence** (`idle_transport.py:247-255`)
+- `scheduleCanonicalSha256` is in the manifest, but journal events' `scheduleSha256` is not compared to it.
+- **Test:** an `_invoke` journal whose events carry `'c'*64`; expect `transport_journal_invalid`. Today it is accepted.
+- **Fix:** require `data['scheduleSha256'] == manifest['scheduleCanonicalSha256']`, allowing `None` only on a refused `complete` event.
+
+**B6. Coverage: plan-required seams with no red-capable test**
+
+| Seam | State | Needed |
+|---|---|---|
+| Outer deadline, TERM then KILL (`:397`, `:415-422`) | Untested; 450 is hard-coded | Private `deadline` seam; stand-in that ignores TERM; assert KILL, `cliExited`, reason |
+| Runtime or foreign lock (`:276-289`) | Zero tests; uid 0 is required with no owner seam | `_inspect_runtime(path, owner_uid)`; hold a foreign flock; patch `os.open` and `fcntl.flock` to raise |
+| Entry's own `verify` (`idle_entry.py:55-95`) | Never tested negatively; every mutation test stops in the outer | Popen harness: mutate code, add a hardlink alias, add an unknown file or `__pycache__` after staging; send correct GO; expect exit 4 and empty records |
+| Inherited ignored SIGALRM or blocked TERM | Implemented (`:364-367`), untested | Stand-in that reports its mask and dispositions |
+| CLI killed by its own alarm | Untested | Stand-in with `setitimer`; assert exit code -14, receipt unproven |
+| Torn tail, bad terminal hash, sequence gap, wrong binding, rerun | Only a trailing space is tested | Four journal mutations, plus a second `execute_fixture` on a used stage |
+| Forged holder record with a live decoy | Untested | Decoy PID in `inner.jsonl`; assert it is alive afterwards |
+| Zero outer subprocesses | Untested | Patch `subprocess.Popen` and count `os.fork` calls; expect exactly 1 |
+| Capture overflow | Untested | Stand-in writes 1 MiB; assert `captureOverflow` and prompt exit |
+| Outer death before GO; GO timeout with the gate held open | Untested | Kill the outer after ready; hold the gate silent for 10 s |
+| `_invoke` alarm/timeout under fake placement | Only a preflight refusal is exercised | Stand-in with a blocked writer |
+
+## Preparation-only versus actual coverage
+
+- **Actually exercised:**
+  - Real entry as an unprivileged refusal.
+  - Handshake EOF and wrong hash.
+  - PID-fd exit with a retained pipe.
+  - `os._exit` on the happy path.
+  - Parent-death kill.
+  - Real spawn writer under `-I -B -S`.
+  - Outer-side rejection of a re-bound code or entry replacement.
+- **Preparation-only, zero execution:**
+  - `stage_reviewed`.
+  - `run_reviewed_stage` beyond the euid check.
+  - The `reviewed-preparation` branch of `_verify_stage` (`:195-202`).
+  - `inspect_runtime` and the runtime before/after comparison (`:445-454`).
+  - The deadline kill path.
+  - Any root, source-cgroup or pinning path.
+- **Fixture only:** `kernel_fence`, and it is masked per B2.
+- **Vacuous:** `test_production_rejects_unprivileged_fixture_without_spawning` passes for any input.
+
+## Non-blocking
+
+- There is no bounded final drain after exit (`:406-408`), although the plan requires one; byte counts and the overflow flag can under-report.
+- `pidfd_open` sits outside the `try` (`:374`), so a failure leaves an unreaped CLI and no outer receipt.
+- The gate descriptor is not fixed (`:369-370`), and stdin is inherited.
+- The `kernel_fence` proof is discarded (`:346`) rather than recorded in the outer receipt.
+- The `except` at `:411` misses `KeyError` and `IndexError`.
+- `birthCommitted` is false if `sendall` fails after the birth fsync (`:393-396`).
+- On a runtime change, `helperResult` is kept while verification is cleared (`:453-454`).
+- The entry does not check the manifest `schema` or `kind`.
+- The plan's cross-bind of cron redirect target to phase log is not implemented anywhere in the outer.

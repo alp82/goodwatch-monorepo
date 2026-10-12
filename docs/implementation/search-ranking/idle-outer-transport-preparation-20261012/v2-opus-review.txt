@@ -1,0 +1,89 @@
+# Readiness verdict: NOT READY (narrowly)
+
+The packet is not ready for a root host gate, and is two small code fixes plus one coverage fix short of an acceptable complete inactive preparation. B1, B2, B3 and B5 are closed in code; B4 has one hole; B6 is substantially closed.
+
+This is a read-only review of the pasted source. I ran nothing, so the 33 PASS and the V1 51 PASS are taken as stated, and the running 70-test cohort is not evidence yet. I could not verify that the nine modules are byte-unchanged; no hashes were supplied. No root, real cgroup-v2 or source-cgroup execution is inferred from any test.
+
+## Closure of prior blockers
+
+| Item | State | Evidence in code |
+|---|---|---|
+| B1 entry `os._exit` | Closed | `idle_entry.py:144-149` wraps `main()` in `except BaseException: os._exit(4)`. An fsync or `O_EXCL` failure in `durable` always reaches it. The test at `test_idle_transport.py:334` is red-capable by exit code (4 vs 1). |
+| B2 `kernel_fence` on real cgroup-v2 | Closed, with N2 | The loop stops at the root (`idle_transport.py:379`); wrappers map `OSError` to fixed reasons (`:291-295`, `:343-347`). A missing file on a non-root ancestor is fatal and tested (`test:242-244`). |
+| B3 production refusal | Closed | `run_reviewed_stage` ends in `execute_production` (`:414`), with a red-capable test (`test:352`). No CLI or service calls it. |
+| B4 caller identities | Open: N1 | The operation SHA is bound before the manifest is parsed (`:182`). Staging identities are bound only when the argument is not `None`. |
+| B5 schedule in inner evidence | Closed | `:267-270`, with a red-capable test (`test:374`). The inner hash derivation (`idle_launcher.py:159`) matches the manifest's (`idle_transport.py:42,51`). |
+| B6 coverage | Mostly closed: N3 | All eleven seams now have tests. The four pasted cohort files contain exactly 70 tests (9 + 18 + 10 + 33). |
+
+Also confirmed:
+- **Signalling:** the only signal call is on the retained CLI PID-fd (`:505`); the PID-fd-failure path signals nothing.
+- **Receipt flags:** `unknownEarlyChildrenPossible` and `holderExitUnknown` are unconditional (`:543`).
+- **Birth flag:** `birthCommitted` is now set before GO is sent (`:471`).
+- **Launch:** the gate is fixed at fd 3 and stdin is `/dev/null` (`:438-445`).
+- **Timings:** 450/400/230 are unchanged; the timing seam cannot exceed 450 s or 1 s (`:419`).
+
+## Mandatory blockers
+
+**N1. Evidence (B4 residual): `expected_identities=None` silently disables binding** (`idle_transport.py:66`, `:83`, `:109`, `:114`, `:127`)
+- The keyword is required but its value is not checked, so `stage_reviewed(..., expected_identities=None)` creates an unbound `reviewed-preparation` stage as root.
+- That call takes the unguarded `read_bytes` branch and skips the comparison.
+- **Fix:** in `stage_reviewed`, immediately after the euid check, raise `transport_expected_code_changed` unless `expected_identities` is a dict with exactly the four keys.
+- **Test:** patch `geteuid` to 0 and call `stage_reviewed(path, {}, {}, expected_identities=None)`. Expect that reason and `path` absent.
+
+**N2. Evidence: hierarchy-root "not-applicable" is asserted, not observed** (`:314-340`, `:379`)
+- `hierarchy_root` proves only that a cgroup2 mount with root `/` and a matching device sits at the path.
+- A cgroup-namespace root or a container mount satisfies that while `memory.max`, `memory.high` and `cpu.max` exist there and may be capped.
+- The loop then skips the root unconditionally, which is weaker than the inner `idle_trial._sample` (`idle_trial.py:134`), which reads those files when present.
+- **Fix:** in `hierarchy_root`, require all three files to be absent (`lstat` raising `FileNotFoundError`), otherwise fail, and record `controllerFilesAbsent: True` in the proof.
+- **Test:** the existing fixture plus `groups/memory.max` containing `1024`. Expect `transport_source_fence_failed`; today it passes.
+
+**N3. Coverage: the PID-fd acquisition-failure claims are not red-capable** (`test_idle_transport.py:401-415`, code `:492-501`)
+- **Non-invocation is not proven.** The test asserts `inner.jsonl` is absent, but the unprivileged real entry never creates a journal even when invoked.
+  - Add assertions that `entry-result.json` and `cli-birth.json` are absent, and that `cliExitCode == 4` when `cliExited`.
+- **The "exit cannot be proved" branch has zero execution.** That is the case where `status` stays `None` after the bounded reap.
+  - Add a stand-in that sleeps 0.3 s before reading GO, run `_execute` with `release_seconds=.05`, and patch `pidfd_send_signal` to raise.
+  - Expect `cliExited` false, `cliExitCode` null, the fixed reason and a durable `outer-result.json`. Reap the finite stand-in afterwards.
+- **The real operation-SHA check at `:182` is untested.** `test:362` patches `_verify_stage`, so it only exercises the redundant check at `:409`.
+  - Add `_verify_stage(operation, 'unprivileged-refusal-fixture', 'f'*64)` expecting `transport_operation_changed`, plus the correct hash succeeding.
+- **The staging-identity test fails on shape, not identity.** `test:618` passes a one-key dict.
+  - Use the four correct identities with one field altered, plus a positive case with all four correct.
+
+## Preparation-only versus actual coverage
+
+- **Actually exercised (unprivileged):**
+  - Real entry refusal, the handshake, and the entry's own `verify` negatives.
+  - `os._exit` on both the result and exception paths.
+  - PID-fd exit proof, the deadline TERM then KILL, signal normalization, pipe overflow and the single fork.
+  - Journal mutations and the no-rerun rule.
+  - Parent death before and after GO.
+- **Stand-in only (manifest-rejected, fake placement):** journaled completion, the blocked writer and the forged holder. None of these shows `run_reviewed` executing.
+- **Fixture only:** `kernel_fence`, `hierarchy_root` and `_inspect_runtime`, all with a non-root owner seam.
+- **Zero execution:**
+  - `stage_reviewed`.
+  - `run_reviewed_stage` beyond patched checks.
+  - The `reviewed-preparation` branch of `_verify_stage` (`:207-214`).
+  - The root branch of the entry's `verify` (`idle_entry.py:66-70`).
+  - The runtime before/after comparison (`:544-553`), which is unreachable now that execution is refused.
+  - Any root, source-cgroup or pinning path.
+
+## Non-blocking
+
+- **Inactivity means "no shipped caller", not "unreachable".** As root, `stage_reviewed` plus a ten-line parent that sends the manifest hash would drive the real entry into `run_reviewed`. The entry accepts root with `reviewed-preparation` (`idle_entry.py:56`). Optional one-line hardening: have the entry refuse euid 0 until the enabling diff.
+- **Exit code 4 is overloaded.** It is both the exception path and the code for `safety_abort`, `release_unproven` and `evidence_failure`. A receipt whose fsync failed can therefore still verify for those non-pass outcomes. Use a distinct code for the wrapper.
+- **Identity mismatch is detected after files are written** (`:127` follows the copies at `:111-118`). This is documented as consumed, but comparing before `mkdir` is trivial.
+- **`_verify_stage` and the final `durable` can raise raw `OSError` with a path** (`:175`, `:554`); neither is mapped to a fixed reason.
+- **The `kernel_fence` proof and `runtime_before` are discarded** (`:411-412`). `helperResult` is still retained on a runtime change (`:540`, `:552-553`). Both belong to the enabling diff.
+- **Dead branches** at `:381-382` and `:385-386`.
+- **Inherited inheritable descriptors** other than 0-3 are not closed before exec.
+- **No private-input mutation test** exists on either the outer or the entry side.
+- **`test_production_rejects_unprivileged_fixture_without_spawning` is still vacuous.**
+- **Carried over:** the cron redirect target is still not cross-bound to the phase log. That sits in unchanged `idle_lease.py:65`, so it cannot be fixed in this packet.
+
+## Classification summary
+
+| Class | Count | Items |
+|---|---|---|
+| Safety | 0 | None |
+| Evidence | 2 | N1, N2 |
+| Coverage | 1 | N3 (four parts) |
+| Operability | 0 | Real-host `hierarchy_root` behaviour is unproven, by design |
