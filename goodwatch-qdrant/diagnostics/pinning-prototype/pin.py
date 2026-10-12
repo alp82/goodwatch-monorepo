@@ -99,6 +99,8 @@ SAFE_REASONS = frozenset((
     'source_resources_changed',
     'target_anon_kernel_exceeds_cgroup_cap',
     'target_identity_changed',
+    'target_size_changed_during_pass',
+    'mapped_file_disappeared_during_inventory',
     'target_not_owned_regular_single_link_file',
     'target_path_scope_changed',
     'unreviewed_production_container',
@@ -259,8 +261,9 @@ class Target:
 
     def check(self):
         info = os.fstat(self.fd)
-        if (info.st_dev, info.st_ino, info.st_size) != self.identity or info.st_nlink != 1:
+        if (info.st_dev, info.st_ino) != self.identity[:2] or info.st_nlink != 1:
             raise RuntimeError('target_identity_changed')
+        if info.st_size != self.identity[2]:raise RuntimeError('target_size_changed_during_pass')
 
     def close(self):
         if self.fd >= 0:

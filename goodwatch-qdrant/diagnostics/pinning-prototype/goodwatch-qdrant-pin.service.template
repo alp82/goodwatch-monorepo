@@ -1,0 +1,29 @@
+[Unit]
+Description=GoodWatch guarded Qdrant mapped data pin holder (prepared trial)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+Environment=DOCKER_CONFIG=/opt/goodwatch-qdrant-pin/docker-config
+EnvironmentFile=/etc/default/goodwatch-qdrant-pin
+ExecStart=/usr/bin/python3 -I /opt/goodwatch-qdrant-pin/production_service.py --execute-reviewed --config /etc/goodwatch-qdrant-pin/policy.json --code-sha256 ${PIN_CODE_SHA256} --policy-sha256 ${PIN_POLICY_SHA256} --service-sha256 ${PIN_SERVICE_SHA256} --journal /var/lib/goodwatch-qdrant-pin/events.ndjson --raise-own-memlock --raise-own-nofile
+Restart=no
+TimeoutStopSec=30
+KillMode=control-group
+RuntimeDirectory=goodwatch-qdrant-pin
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+UMask=0077
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=true
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_IPC_LOCK CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_KILL
+AmbientCapabilities=CAP_SYS_RESOURCE CAP_IPC_LOCK CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_KILL
+
+# The child moves into Qdrant's cgroup. Stop/rollback must prove child exit;
+# systemd KillMode alone cannot cover a process moved outside this unit.
+# No Qdrant allocation/resource/configuration settings are changed here.
