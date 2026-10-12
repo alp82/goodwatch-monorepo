@@ -1,0 +1,34 @@
+{
+  "allowOwnNofileRaise": true,
+  "codeFiles": {
+    "pin.py": "4fea5b5b30a1b294466007f0d390f0b9dbc205ee7225ef704baf55e3c7d7dabc",
+    "production.py": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005",
+    "runtime.py": "4e4cbce3e7b088cfd187af1b61b40ef633e9c9b6a4435e54e3a503921da0c1de"
+  },
+  "codeSha256": "2b956e9ad4b2297552d66524277acbc4d6d867f36cc1fdfa656a7c75a7568256",
+  "contractSha256": "12db49b938d8d8d6b24738c860559c098732ff351cf1b90c4637f28d0d2f1b6d",
+  "execution": false,
+  "expectedSourcePid": 3411704,
+  "expectedSourceStartTicks": 2673362807,
+  "fixtureTestsPassed": 9,
+  "hostExecutionPerformed": false,
+  "hostFileStaging": false,
+  "hostMemoryFields": [
+    "MemAvailable",
+    "Dirty",
+    "Writeback"
+  ],
+  "inspectorDeadlineSeconds": 90,
+  "inspectorSha256": "cb9c6a7159988ad3fdc37967dcce9584406f719c72380eea9bb4ec4d2f1bb40c",
+  "kernelReleaseRecorded": true,
+  "launcherSha256": "78af619a52dfc8389f9fea2b7809aed3bb4de5167ec23dcc74651f8314b1e5f1",
+  "ownFdIdentityCohortRestoredRequired": true,
+  "payloadSelected": false,
+  "privateContractStoredInPacketDirectory": false,
+  "schema": "qdrant.working-set-measure-prepared.v1",
+  "snapshotCannotEstablishFuturePinBudget": true,
+  "sourceCommit": "a9e75e18a0d80fa7f4a52110169a165a47214d47",
+  "sourceMappedCohortStableRequired": true,
+  "testsSha256": "8bc41b0de93837aeefbea731a1dc21e72519b652e2c1c2758360f09a70a822e5",
+  "transportDeadlineSeconds": 120
+}

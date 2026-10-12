@@ -1,0 +1,49 @@
+{
+  "actualExecutionCount": 1,
+  "artifacts": {
+    "actual-frames.jsonl": {
+      "bytes": 3242,
+      "sha256": "c6ee4169bf75b082c58a72531f257f4707d2887e1264676aeba19a193fb00a9e"
+    },
+    "inspect_measure.py": {
+      "bytes": 11775,
+      "sha256": "cb9c6a7159988ad3fdc37967dcce9584406f719c72380eea9bb4ec4d2f1bb40c"
+    },
+    "launch.py": {
+      "bytes": 2052,
+      "sha256": "78af619a52dfc8389f9fea2b7809aed3bb4de5167ec23dcc74651f8314b1e5f1"
+    },
+    "manifest.json": {
+      "bytes": 1448,
+      "sha256": "645d00ce7eca4ac64a532172e63d8878bdc1bf39493d3a587f48e42b8e295224"
+    },
+    "pin.py": {
+      "bytes": 21243,
+      "sha256": "4fea5b5b30a1b294466007f0d390f0b9dbc205ee7225ef704baf55e3c7d7dabc"
+    },
+    "production.py": {
+      "bytes": 30448,
+      "sha256": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005"
+    },
+    "receipt.json": {
+      "bytes": 1578,
+      "sha256": "1946c88acf40bc8482dcc40ab3570e32e0680fe9ba9e1f7f5dd5456f3883c4cf"
+    },
+    "runtime.py": {
+      "bytes": 16431,
+      "sha256": "4e4cbce3e7b088cfd187af1b61b40ef633e9c9b6a4435e54e3a503921da0c1de"
+    },
+    "test_measure.py": {
+      "bytes": 7794,
+      "sha256": "8bc41b0de93837aeefbea731a1dc21e72519b652e2c1c2758360f09a70a822e5"
+    },
+    "verify.py": {
+      "bytes": 6236,
+      "sha256": "6eac2dec882d890ae4630cf0482649683206b025cb255c62cf69488e842a9fdd"
+    }
+  },
+  "preparedSourceCommit": "a9e75e18a0d80fa7f4a52110169a165a47214d47",
+  "privateContractIncluded": false,
+  "rawMappedPathsIncluded": false,
+  "schema": "qdrant.working-set-public-evidence.v1"
+}
