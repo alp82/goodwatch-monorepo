@@ -151,4 +151,21 @@ class RetainedPidfds(unittest.TestCase):
      for other in held.get('additionalPidfds',[]):os.close(other)
      os.close(fd)
 
+class ExternalCleanupRetention(unittest.TestCase):
+ def test_unknown_adopted_cleanup_preserves_existing_and_new_handles(self):
+  with tempfile.TemporaryDirectory() as name:
+   d=Path(name);fd=os.open(d/'target',os.O_CREAT|os.O_RDWR,0o600);child=os.fork()
+   if child==0:time.sleep(30);os._exit(0)
+   old=os.pidfd_open(child,0);birth=p.identity(child);p.receipt(d,birth,p.identity(os.getpid()),'a'*64,fd);record=next(d.glob('reclaim-writer-*.json'));p.RETAINED_WRITERS[child]={'pidfd':old,'birth':birth}
+   try:
+    # Real live child/FD/receipt; inject unavailable exit proof and unavailable signaling.
+    with patch.object(p.select,'select',return_value=([],[],[])),patch.object(p.signal,'pidfd_send_signal') as signals:
+     evidence=p.cleanup_recorded_writer(record,'a'*64,grace=0,protected_pids={os.getpid()})
+    self.assertFalse(evidence['writerGone']);self.assertFalse(evidence['writerExitObserved']);self.assertTrue(evidence['cleanupUnknown']);self.assertTrue(evidence['pidfdRetained']);self.assertEqual(signals.call_count,2);os.kill(child,0)
+    held=p.RETAINED_WRITERS[child];self.assertEqual(held['pidfd'],old);self.assertEqual(len(held['additionalPidfds']),1);os.fstat(old);os.fstat(held['additionalPidfds'][0])
+   finally:
+    os.kill(child,9);os.waitpid(child,0);held=p.RETAINED_WRITERS.pop(child);os.close(held['pidfd'])
+    for other in held.get('additionalPidfds',[]):os.close(other)
+    os.close(fd)
+
 if __name__=='__main__':unittest.main()

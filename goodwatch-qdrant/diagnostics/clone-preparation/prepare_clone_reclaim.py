@@ -272,7 +272,9 @@ def cleanup_recorded_writer(path,helper_sha256,grace=5,protected_pids=()):
    except ProcessLookupError:
     if select.select([pidfd],[],[],0)[0]:return {'writerExitObserved':True,'writerGone':True,'proof':'recorded-pidfd-exited','cleanupUnknown':False}
    if select.select([pidfd],[],[],grace)[0]:return {'writerExitObserved':True,'writerGone':True,'proof':'recorded-pidfd-exited','cleanupUnknown':False}
-  RETAINED_WRITERS[value['writer']['pid']]={'pidfd':pidfd,'birth':value['writer']};pidfd=None
+  held=RETAINED_WRITERS.setdefault(value['writer']['pid'],{'pidfd':pidfd,'birth':value['writer']})
+  if held['pidfd']!=pidfd:held.setdefault('additionalPidfds',[]).append(pidfd)
+  pidfd=None
   return {'writerExitObserved':False,'writerGone':False,'proof':'recorded-pidfd-unknown','cleanupUnknown':True,'pidfdRetained':True}
  finally:
   if pidfd is not None:os.close(pidfd)
