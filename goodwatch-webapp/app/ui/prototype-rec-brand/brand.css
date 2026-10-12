@@ -1,0 +1,196 @@
+/* PROTOTYPE - throwaway. Scoped styles for /prototype/rec-brand (the GoodWatch wordmark comparison). */
+.rb-page {
+	--rb-white: #ffffff;
+	--rb-yellow: #fbbf24;
+	--rb-ink: #0a0a0a;
+	background: #030712;
+	color: #e5e7eb;
+}
+.rb-mono {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* The G asset, inlined so its color follows `color`. */
+.rb-g {
+	display: inline-block;
+	flex: none;
+}
+.rb-g svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* Shared by every lockup. */
+.rb-lock {
+	display: inline-flex;
+	font-family: "Gabarito Brand", "Gabarito", "Gabarito Fallback", sans-serif;
+	line-height: 1;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
+/* A: the G is the initial. */
+.rb-a {
+	align-items: baseline;
+	font-weight: 700;
+}
+.rb-a-t {
+	margin-left: 0.056em;
+	color: var(--rb-yellow);
+}
+.rb-plate {
+	display: inline-flex;
+	background: var(--rb-ink);
+	padding: 0.24em 0.42em 0.14em 0.34em;
+	border-radius: 0.26em;
+	vertical-align: middle;
+}
+
+/* B: emblem tile, then the whole name split at the word. */
+.rb-b {
+	align-items: center;
+	gap: 0.3em;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+.rb-b-tile {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 0.86em;
+	height: 0.86em;
+	border-radius: 0.2em;
+}
+.rb-b-good,
+.rb-b-watch {
+	display: inline-block;
+}
+
+/* C: one enclosed badge. Stacked at size, a one-line pill when small. */
+.rb-c {
+	box-sizing: border-box;
+	align-items: center;
+	background: var(--rb-ink);
+	border-style: solid;
+	border-color: var(--rb-yellow);
+	font-weight: 900;
+	text-transform: uppercase;
+}
+.rb-c-words {
+	display: flex;
+	flex-direction: column;
+}
+.rb-c-words span {
+	display: block;
+	line-height: 0.681; /* Gabarito's cap height: the line box hugs the capitals. */
+}
+
+/* TV boot. Each direction animates its own parts; the last frame is the standard lockup. */
+.rb-boot {
+	display: flex;
+	position: absolute;
+	inset: 0;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+}
+.rb-boot .rb-g-play {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: rb-pulse 0.5s ease-out 1.3s both;
+}
+.rb-boot .rb-a-g {
+	animation: rb-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+.rb-boot .rb-a-t {
+	animation: rb-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+.rb-boot .rb-b-tile {
+	animation: rb-pop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+.rb-boot .rb-b-good {
+	animation: rb-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+.rb-boot .rb-b-watch {
+	animation: rb-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+}
+.rb-boot .rb-c {
+	animation: rb-open 0.42s cubic-bezier(0.6, 0, 0.2, 1) 0.2s both;
+}
+.rb-boot .rb-c-g {
+	animation: rb-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+}
+.rb-boot .rb-c-good {
+	animation: rb-drop 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+}
+.rb-boot .rb-c-watch {
+	animation: rb-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both;
+}
+@keyframes rb-pop {
+	from {
+		transform: scale(0.7);
+		opacity: 0;
+	}
+}
+@keyframes rb-wipe {
+	from {
+		clip-path: inset(-20% 100% -20% 0);
+		transform: translateX(-0.2em);
+		opacity: 0;
+	}
+	to {
+		clip-path: inset(-20% -5% -20% 0);
+	}
+}
+@keyframes rb-rise {
+	from {
+		transform: translateY(0.5em);
+		opacity: 0;
+	}
+}
+@keyframes rb-drop {
+	from {
+		transform: translateY(-0.5em);
+		opacity: 0;
+	}
+}
+@keyframes rb-open {
+	from {
+		clip-path: inset(49% 0 49% 0);
+		opacity: 0.6;
+	}
+	to {
+		clip-path: inset(0);
+	}
+}
+@keyframes rb-pulse {
+	50% {
+		transform: scale(1.18);
+	}
+}
+@keyframes rb-fade {
+	from {
+		opacity: 0;
+	}
+}
+/* Reduced motion: no movement, no wipe. The finished lockup fades in once. */
+.rb-reduced .rb-boot * {
+	animation: none !important;
+}
+.rb-reduced .rb-boot > * {
+	animation: rb-fade 0.3s linear both !important;
+}
+@media (prefers-reduced-motion: reduce) {
+	.rb-boot * {
+		animation: none !important;
+	}
+	.rb-boot > * {
+		animation: rb-fade 0.3s linear both !important;
+	}
+}
+
+.rb-tvglass {
+	background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 3px);
+}
