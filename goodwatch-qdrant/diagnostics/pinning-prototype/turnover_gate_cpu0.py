@@ -37,7 +37,7 @@ def zero_child(connection, source, config):
         if not connection.poll(120) or connection.recv()!='close': raise RuntimeError('zero_child_lease_failed')
         connection.send({'stage':'released','lockedBytes':locked_bytes(os.getpid())})
     except BaseException as error:
-        try:connection.send({'stage':'failed','reason':control.safe_control_reason(error)})
+        try:connection.send({'stage':'failed','reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error)})
         except (BrokenPipeError,EOFError,OSError):pass
         raise SystemExit(1)
     finally: connection.close()
@@ -86,6 +86,7 @@ def stage(config,spec,policy,emit):
     # Metadata and self placement only: no cache advice, archive read, mapping or lock.
     if control.ROOT.resolve()!=control.ROOT:raise RuntimeError('owned_root_changed')
     control.owned_store_files(spec.store);control.owned_total_budget();control.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes))
+    control.cpu0_guards.host_cpu()
     parent=control.self_cgroup();control.inspect_stopped_or_running(spec);source=control.inspect_source(spec)
     if parent==source.cgroup_relative:raise RuntimeError('parent_already_clone_cgroup')
     control.frozen_helper(config);before=runtime.accounting(source);child=ZeroChild(source,config)
@@ -100,6 +101,7 @@ def stage(config,spec,policy,emit):
         emit({'stage':'old-child-gone','at':control.at(),**outcome})
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
         control.owned_total_budget();control.host_available(max(policy.emergency_bytes,5*1024**3));control.frozen_helper(config)
+        control.cpu0_guards.host_cpu()
         control.inspect_stopped_or_running(spec);control.clone_command('start',spec.container)
         fresh=ready(spec)
         if fresh.pid==source.pid or fresh.identity[3]==source.identity[3] or fresh.identity==source.identity:raise RuntimeError('turnover_not_fresh')
@@ -111,14 +113,14 @@ def stage(config,spec,policy,emit):
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
         emit({'stage':'complete','at':control.at(),**outcome,'parentUnchanged':True,'cacheControls':0,'archiveBytesRead':0,'storageContentWrites':0})
     except BaseException as error:
-        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error)})
+        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error)})
         raise
     finally:
         original_error=sys.exc_info()[1];cleanup_error=None
         if child is not None:
             try:outcome=child.gone()
             except BaseException as error:
-                cleanup_error=error;outcome={'childGone':False,'reason':control.safe_control_reason(error)}
+                cleanup_error=error;outcome={'childGone':False,'reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error)}
             emit({'stage':'cleanup-observed','at':control.at(),**outcome})
         if original_error is not None or cleanup_error is not None:
             try:running=bool(control.inspect_stopped_or_running(spec)['State']['Running'])
@@ -150,7 +152,7 @@ def main(argv=None):
         finally:os.close(fd)
         return 0
     except BaseException as error:
-        emit({'stage':'failed','reason':control.safe_control_reason(error),'queries':0});return 1
+        emit({'stage':'failed','reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error),'queries':0});return 1
 
 
 if __name__=='__main__':raise SystemExit(main())

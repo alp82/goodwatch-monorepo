@@ -88,7 +88,8 @@ Child runtime and reclaim reason paths remain explicitly outside this attachment
 A failed hierarchy sample is retained as unavailable; it cannot make clean proof.
 
 Local verification: `python3 -B -m unittest discover -s
-goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'`. The caller
-fixtures exercise all four possible post-ready failure scopes and preserve the
-original numeric failure when cleanup also fails. These fixtures perform no
+goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
+failures through stage(), preserving their original numeric failures when cleanup
+also fails. They separately assert failed CPU snapshot status; fixture execution
+is not a physical lifecycle proof. These fixtures perform no
 Docker, clone or production I/O and are not physical benchmark evidence.

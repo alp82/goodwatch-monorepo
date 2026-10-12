@@ -1,20 +1,20 @@
 {
   "schema": "search.clone-cpu0-source-freeze.v1",
   "preparedOnly": true,
-  "helperCodeSha256": "74f28502ca7efed3ec0cffb9e8cea376f042b01d7f752951f671c13f625a9e9c",
+  "helperCodeSha256": "4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5",
   "files": {
     "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
     "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
     "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
-    "controller_cpu0.py": "baa0b5092085935626a316cde27b772348e1367a20c3b7eb5f1e0c56af33e356",
-    "cpu0_guards.py": "d067fc7da816af500e32fed640cefb268c8f0c04ea224defcf9630c79a4457f8",
-    "cpu0_preflight.py": "585e7950ffbf519eb412d4bcb8e6d9b01ad46c530cff4b86284bebb3a55e689e",
-    "turnover_gate_cpu0.py": "741e008b6218881ad0c495d40040cb23b20aeb6333745ebb7a5c9d7424a4ddc8",
+    "controller_cpu0.py": "42e21d216e7fca3bf52a5d6fec954645453b999585975bb31bbbd3c309e74ec8",
+    "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
+    "cpu0_preflight.py": "68056d9dd2c079cb3d2ad5da3431c7f080535bbc60edfb2a1f556f08be2d2219",
+    "turnover_gate_cpu0.py": "ca5d3a40987801f39bad4d40d52739ca9a2e67077f241ab0f8809313a413b46d",
     "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
-    "prepared-control-policy-cpu0.json": "d24cdb6b68a0508fb40d72aac4b700e24a938a0a4b08e45069e34ee23e5f0dca",
-    "test_cpu0_guards.py": "8b76444db8b84a668297a04fa85a529aa564057f1260eeea89f20e649733d1d3",
-    "test_cpu0_controller.py": "30268792015111b1b4f5819d8ff7e2c7d7a0e169d287dabdadd2da3778d825a4",
-    "CPU0.md": "cec7bf420c424a32f534c2e6fdbdb71dfc79d97f7992bead87392245c878844d"
+    "prepared-control-policy-cpu0.json": "bada24aa27efb668ab72dc59994307fb17e37fa4ce0fe221b2784aa2fd705af9",
+    "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
+    "test_cpu0_controller.py": "c2c0a44285bd1092bbb0287c453cbe7836e4bc8dacc8d458673b6bf5580f1ea3",
+    "CPU0.md": "3209f4b46708372b16db4195d1e74c71521862fda99f443f056c2099ae0b6946"
   },
   "pinProvenance": {
     "sourceCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",

@@ -84,8 +84,16 @@ def source_cpu(source, policy, root=Path('/sys/fs/cgroup')):
         raise RuntimeError('cpu_ancestor_changed')
     rows=[]
     while True:
-        row=cpu_row(directory,hierarchy_root=directory==root)
-        identity=directory.stat();row['groupIdentitySha256']=hashlib.sha256((str(directory)+'\0'+str(identity.st_dev)+'\0'+str(identity.st_ino)).encode()).hexdigest()
+        try:
+            identity_before=directory.stat()
+            row=cpu_row(directory,hierarchy_root=directory==root)
+            identity=directory.stat()
+            if (identity_before.st_dev,identity_before.st_ino)!=(identity.st_dev,identity.st_ino):raise RuntimeError('cpu_ancestor_changed')
+        except (OSError,RuntimeError) as error:
+            if isinstance(error,OSError):error=RuntimeError('cpu_metric_missing')
+            error.cpuHierarchyEvidence={'rows':rows,'partial':True,'failedDepth':len(rows),'measurementUnavailable':True}
+            raise error from None
+        row['groupIdentitySha256']=hashlib.sha256((str(directory)+'\0'+str(identity.st_dev)+'\0'+str(identity.st_ino)).encode()).hexdigest()
         row['depth']=len(rows); rows.append(row)
         if row['quotaMicros'] is not None:
             error=RuntimeError('source_cpu_quota_changed' if len(rows)==1 else 'ancestor_cpu_quota_present');error.cpuHierarchyEvidence={'rows':rows,'partial':True,'failedDepth':row['depth']};raise error
@@ -163,3 +171,15 @@ def resource_limits(before,after,*,pressure,scope,account):
             'failedChecks':checks,'overlappingNonAdditive':True}
         raise error
     return {'memoryEventDelta':m,'cpuLimitDelta':c,'pressureMaxException':pressure}
+
+
+def failure_evidence(error):
+    return {name:getattr(error,name,None) for name in ('resourceLimitEvidence','cpuHierarchyEvidence','hostCpuEvidence','pressureFinalizationFailure')}
+
+
+def finalize_pressure(manager, original_error):
+    if manager is None:return
+    try:manager.end_pressure()
+    except BaseException as cleanup_error:
+        if original_error is None:raise
+        original_error.pressureFinalizationFailure={'reason': 'phase_resource_failed' if str(cleanup_error)=='phase_resource_failed' else 'pressure_finalization_failed',**failure_evidence(cleanup_error)}

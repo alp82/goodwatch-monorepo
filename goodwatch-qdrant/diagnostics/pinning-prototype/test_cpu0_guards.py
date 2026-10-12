@@ -23,7 +23,9 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(g.cpu_delta(state,copy.deepcopy(state))[-1]['applicability'],'hierarchy-root-no-bandwidth-controller')
     def test_missing_nonroot_refuses(self):
         (self.cg.parent/'cpu.stat').write_text('usage_usec 4\n')
-        with self.assertRaisesRegex(RuntimeError,'cpu_metric_missing'):g.source_cpu(self.source,self.policy,self.root)
+        with self.assertRaisesRegex(RuntimeError,'cpu_metric_missing') as failure:g.source_cpu(self.source,self.policy,self.root)
+        self.assertEqual(len(failure.exception.cpuHierarchyEvidence['rows']),1)
+        self.assertEqual(failure.exception.cpuHierarchyEvidence['failedDepth'],1)
     def test_finite_ancestor_refuses(self):
         (self.cg.parent/'cpu.max').write_text('200000 100000')
         with self.assertRaisesRegex(RuntimeError,'ancestor_cpu_quota_present'):g.source_cpu(self.source,self.policy,self.root)

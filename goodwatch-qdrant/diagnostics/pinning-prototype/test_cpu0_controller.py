@@ -49,15 +49,41 @@ class CallerTests(unittest.TestCase):
                 return value
             events=[]
             with ExitStack() as stack:
-                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'cold'),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',return_value={}),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
+                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'cold'),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
                 for context in contexts:stack.enter_context(context)
                 with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):
                     control.stage({'queryLeaseSeconds':60,'controlReadySeconds':1200,'cachePreparation':{'helperSha256':'a'*64}},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
             failure=next(e for e in events if e['stage']=='phase-failed')
             self.assertEqual(failure['resourceLimitEvidence']['scope'],target)
             self.assertEqual(failure['reason'],'phase_resource_failed')
+            self.assertEqual(failure['cpuHierarchyBefore'],{'observed':True})
+            self.assertIsNone(failure['cpuHierarchyAfter'])
+            self.assertEqual(failure['cpuHierarchySnapshotFailure'],'cpu_metric_missing')
             self.assertEqual(events[-1]['cleanupReason'],'pin_child_cleanup')
             self.assertFalse(any(e['stage']=='query-finished' for e in events))
+
+class RetentionTests(unittest.TestCase):
+    def test_pressure_finalization_preserves_original_and_separate_failure(self):
+        import cpu0_guards as guards
+        original=RuntimeError('pin_child_timeout')
+        cleanup=RuntimeError('phase_resource_failed');cleanup.resourceLimitEvidence={'scope':'pressure-end-continuity'}
+        manager=Mock();manager.end_pressure.side_effect=cleanup
+        guards.finalize_pressure(manager,original)
+        self.assertEqual(str(original),'pin_child_timeout')
+        self.assertEqual(original.pressureFinalizationFailure['resourceLimitEvidence']['scope'],'pressure-end-continuity')
+        with self.assertRaises(RuntimeError) as failure:guards.finalize_pressure(manager,None)
+        self.assertIs(failure.exception,cleanup)
+    def test_preflight_refusal_outputs_numeric_context_no_private_error(self):
+        import contextlib,io,cpu0_preflight
+        error=RuntimeError('host_cpu_busy','private unstructured message')
+        error.hostCpuEvidence={'onlineCpus':4,'load1':3,'load5':0,'cpuSomeAvg10':0}
+        output=io.StringIO()
+        with patch.object(cpu0_preflight,'preflight',side_effect=error),contextlib.redirect_stdout(output):
+            self.assertEqual(cpu0_preflight.main(['a']*5),1)
+        event=json.loads(output.getvalue())
+        self.assertEqual(event['hostCpuEvidence']['load1'],3)
+        self.assertNotIn('private',output.getvalue())
+
 
 class BindingTests(unittest.TestCase):
     def test_runtime_symbols_are_the_frozen_variant(self):

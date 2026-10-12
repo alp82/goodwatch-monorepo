@@ -28,10 +28,13 @@ def preflight(helper_path, helper_policy_sha, helper_code_sha, control_path, con
             'sourceIdentity':list(source.identity),'queries':0,'resourceWrites':0,'modelsRead':0}
 
 
-if __name__=='__main__':
+def main(argv=None):
+    args=sys.argv[1:] if argv is None else argv
     try:
-        if len(sys.argv)!=6:raise RuntimeError('explicit_control_arguments_required')
-        print(json.dumps(preflight(*sys.argv[1:]),sort_keys=True))
+        if len(args)!=5:raise RuntimeError('explicit_control_arguments_required')
+        print(json.dumps(preflight(*args),sort_keys=True));return 0
     except BaseException as error:
-        print(json.dumps({'schema':'search.clone-cpu0-preflight.v1','stage':'failed','reason':control.safe_control_reason(error),'queries':0,'resourceWrites':0}))
-        raise SystemExit(1)
+        print(json.dumps({'schema':'search.clone-cpu0-preflight.v1','stage':'failed','reason':control.safe_control_reason(error),**cpu0_guards.failure_evidence(error),'queries':0,'resourceWrites':0}));return 1
+
+
+if __name__=='__main__':raise SystemExit(main())
