@@ -1,0 +1,44 @@
+{
+	"cinema": {
+		"tv": "1204 x 650",
+		"smallestText": {
+			"px": 21.1,
+			"words": "Start",
+			"screen": "19-my-shows"
+		},
+		"smallestTarget": {
+			"w": 201,
+			"h": 64,
+			"item": "expand",
+			"screen": "02-tonight"
+		}
+	},
+	"marquee": {
+		"tv": "1204 x 650",
+		"smallestText": {
+			"px": 20.1,
+			"words": "92 score",
+			"screen": "04-discover-results"
+		},
+		"smallestTarget": {
+			"w": 239,
+			"h": 72,
+			"item": "expand",
+			"screen": "02-tonight"
+		}
+	},
+	"glow": {
+		"tv": "1204 x 650",
+		"smallestText": {
+			"px": 21.1,
+			"words": "2001 · Movie · 2h 5m",
+			"screen": "04-discover-results"
+		},
+		"smallestTarget": {
+			"w": 201,
+			"h": 64,
+			"item": "expand",
+			"screen": "02-tonight"
+		}
+	}
+}
