@@ -1,0 +1,20 @@
+{
+  "schema": "search.local-transport-freeze-diagnosis.v1",
+  "failureStage": "freeze_missing",
+  "expectedConsumerManifestSha256": "106f23a1d4acf5be28ae99a4270de0b4617f833e0f5ea79687afc6de69392293",
+  "originalVerifierDirectoryManifestSha256": "38bf2859b231e5b7bed2617090714caa5d1f8ad789fc95b83eb95ed5516154c6",
+  "actualEntryFixture": {
+    "originalMainRefusedBeforeSpawn": true,
+    "originalSpawnCount": 0,
+    "correctedMainMockSpawnCount": 2,
+    "wrongManifestCorrectedSpawnCount": 0,
+    "allSpawnCallsMocked": true,
+    "hostOperations": 0,
+    "queries": 0
+  },
+  "retryTransportChange": "Only source-freeze import directory changed from v2 to reviewed v3 source",
+  "stagedCodeChanged": false,
+  "newOuterResultMustBeAbsent": true,
+  "retryResultAtPreparation": "pending",
+  "productionAcceptance": false
+}
