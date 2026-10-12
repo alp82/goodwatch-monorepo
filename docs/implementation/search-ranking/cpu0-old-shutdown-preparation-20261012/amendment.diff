@@ -1,0 +1,196 @@
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md b/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
+index 2effcac4..fd11e760 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
+@@ -51,6 +51,8 @@ After the exact complete source and transport have passed root's review and actu
+ 
+ 1. On clone host `10.0.0.32`, setup authenticates and gracefully stops only the old owned `gw-qdrant-cold-406-20261011`, preserving it intact. It creates `gw-qdrant-cpu0-100-20261012` with the pinned image, exact configured non-CPU parity and mounts, 6 GiB memory/swap, loopback `127.0.0.1:16333`, restart disabled and CPU quota removed. A fresh writable image layer is an explicit non-parity; the shared writable store is not a pristine rollback snapshot.
+ 2. Separately owned setup, preflight, staging, zero-pin turnover and outer admission phases authenticate the predecessor handoff and renew shape, birth, CPU hierarchy and host admission. Each holds the same control lock only for its phase. No conflicting second lock is retained across an ownership handoff.
++The OLD-only graceful shutdown admission requires more than 2 GiB available memory. This is a declared engineering margin for bounded inspection and release, not a kernel capacity guarantee or comparison admission. It retains CPU, swap, disk, allocation, source and lifecycle checks. NEW creation/start and every CPU0 runtime admission continue to require more than 5 GiB. An uncertain stop remains terminal; no automatic restart, retry or capture follows. See [the focused amendment](SHUTDOWN-ADMISSION.md) for provenance and fixture limits.
++
+ 3. The authenticated consumer commits its own admission handoff. Outer registration independently verifies its exact PID/birth and reviewed argv before permitting producer capture.
+ 4. On `10.0.0.21`, the producer authenticates the retained source, both preload guards, credential receipt and exact five-key private environment before creation. Credentials stay out of argv and public output. Engine receives them in its request body and persists container `Env` configuration until removal; this existing persistence is not a RAM-only guarantee. The legacy image, 3 GiB memory/swap, 2 CPU limit, read-only root, two read-only mounts, bounded tmpfs/pids and `none` log driver remain fixed. No model download or provider request is introduced.
+ 5. Public producer creation and running-registration receipts are persisted before their corresponding exposure. The pipe demultiplexes registration and exit control frames, confirms the running birth independently and forwards only private packets into consumer memory. Private bytes do not enter journals, stderr, files or the public ledger.
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/SHUTDOWN-ADMISSION.md b/goodwatch-qdrant/diagnostics/cpu0-external-v6/SHUTDOWN-ADMISSION.md
+new file mode 100644
+index 00000000..2e2aa022
+--- /dev/null
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/SHUTDOWN-ADMISSION.md
+@@ -0,0 +1,13 @@
++# OLD shutdown admission amendment
++
++The frozen external invocation at head `131cec2913e70e963329197e8f105faffd522a89` refused before the first OLD stop because the shared host admission required more than 5 GiB. This amendment separates a bounded OLD-only graceful shutdown from operations that start a new source or admit a comparison. It does not repeat that invocation or assert runtime success.
++
++`old_shutdown_host()` has a fixed strict floor of 2 GiB and emits `cpu0-old-shutdown-host-admission.v1`, target `old-owned-shutdown`, with `diagnosticComparisonAdmission=false`. Two GiB is an explicit engineering margin for small bounded inspectors and releasing owned anonymous memory; it is not a Linux guarantee. This function has no caller-supplied lower threshold. `host()` retains its original strict 5 GiB floor before NEW creation/start. All CPU0 controller, preflight, turnover and pin resource policies are unchanged.
++
++The OLD path retains the same CPU2-only exception, zero-throttle ancestors, collection shape, physical metadata-client close, exact source/image/config/wrapper/child/birth/entrypoint fences, control and instance locks, prior writer/control census, protected PID exclusions, zero swap, more than 3 GiB disk free and less than 11 GiB owned allocation. The same 20-second child-only graceful stop, no Qdrant KILL fallback, durable clean receipt, nonzero/timeout refusal and no automatic recovery still apply. A clean OLD stop does not authorize NEW creation: full host admission must pass afresh. Failure can leave OLD stopped with no NEW start; that is not a pristine baseline or comparison result.
++
++Plan provenance: `/home/alper/projects/search-cpu0-external-plan-100-v1/CPU0-EXTERNAL-PLAN-v6.md`, SHA256 `16021ea08007a15dccf3fe09cee0cc3394c72b8c5dd3c03ae4e6361d96a83854`. Its step 2 lists bounded owned OLD shutdown fences; step 3 explicitly requires more than 5 GiB before creation and start. The historical shared pre-stop 5 GiB check was an implementation choice, not a separate owner permission requirement. The reviewed amendment is an engineering change within the existing reversible owned-clone authorization.
++
++Run local fixtures with `/usr/bin/python3 -I -B -m unittest discover -s goodwatch-qdrant/diagnostics/cpu0-external-v6 -p 'test_*.py'`. The focused tests use the real memory parser, real OLD admission and setup composition, with fake Docker/source boundaries. They show 4,549,484,544 B admitting shutdown while full host admission refuses; exactly 2 GiB and lower refusing; every other host predicate and source/shape/CPU refusal remaining active; and a failed actual setup shutdown calling neither staging nor creation. They do not test a host signal, Qdrant flush or actual shutdown capacity.
++
++Source freeze, consumer JavaScript, retained helper and model/provider protocol bytes remain unchanged. A fresh local execution packet and closure must bind the amended external bytes before any future root-owned host action. No production activation, probe, ordinary search, history write, model invocation or seven-day acceptance is part of this step.
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/admission.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/admission.py
+index b84fe6f4..1802a080 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/admission.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/admission.py
+@@ -63,6 +63,25 @@ def host(guards):
+     return evidence
+ 
+ 
++def old_shutdown_host(guards):
++    """OLD-only graceful shutdown margin; never admits creation/start or pinning.
++
++    Two GiB is a declared engineering margin for bounded inspectors and shutdown,
++    not a kernel capacity guarantee. The full host() admission stays unchanged.
++    """
++    cpu=guards.host_cpu()
++    mem=memory();used=allocated();free=shutil.disk_usage(ROOT).free
++    evidence={'schema':'cpu0-old-shutdown-host-admission.v1',
++              'target':'old-owned-shutdown','diagnosticComparisonAdmission':False,
++              'cpu':cpu,'MemAvailable':mem['MemAvailable'],'SwapTotal':mem['SwapTotal'],
++              'ownedAllocatedBytes':used,'diskFreeBytes':free,
++              'availableFloorBytes':2*GIB,'diskFloorBytes':3*GIB,
++              'ownedAllocatedCeilingBytes':11*GIB}
++    if mem['SwapTotal']!=0 or mem['MemAvailable']<=2*GIB or free<=3*GIB or used>=11*GIB:
++        error=RuntimeError('setup_host_admission_failed');error.setupHostEvidence=evidence;raise error
++    return evidence
++
++
+ def old_hierarchy(lifecycle,guards,docker,root=Path('/sys/fs/cgroup')):
+     """Explicit OLD CPU2-only admission. CPU0 runtime/guards are unchanged."""
+     old=lifecycle.container(lifecycle.OLD,docker)
+@@ -122,7 +141,7 @@ def collection_shape(connection=http.client.HTTPConnection):
+ 
+ def old_admission(lifecycle,guards,docker):
+     before=lifecycle.attest(lifecycle.OLD,docker)
+-    host_evidence=host(guards)
++    host_evidence=old_shutdown_host(guards)
+     cpu=old_hierarchy(lifecycle,guards,docker)
+     shape=collection_shape()
+     after=lifecycle.attest(lifecycle.OLD,docker)
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/setup.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/setup.py
+index e72006c1..d66fa305 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/setup.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/setup.py
+@@ -74,7 +74,8 @@ def clean_old(lifecycle,docker,lock_fd,protected_pids,old,stop_admission):
+     if old.get('State',{}).get('Running') is True:
+         if os.path.lexists(ROOT/'cpu0-old-clean-receipt-v1.json'):
+             raise RuntimeError('setup_old_receipt_already_exists')
+-        # Exact shared floors/host CPU admission run BEFORE stop. The lifecycle
++        # OLD-only shutdown floor and all host CPU/storage/swap fences run
++        # BEFORE stop; full NEW/start/runtime admission remains separate. The lifecycle
+         # owns its separate 20-second remaining-deadline inspect client scope.
+         admission=stop_admission()
+         if not isinstance(admission,dict) or admission.get('schema')!='cpu0-old-stop-admission.v6' or not isinstance(admission.get('source'),dict):
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_shutdown_admission.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_shutdown_admission.py
+new file mode 100644
+index 00000000..b1cbd2bb
+--- /dev/null
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_shutdown_admission.py
+@@ -0,0 +1,105 @@
++"""Shutdown-only resource boundary; real admission parser and caller composition.
++
++Local fixed metadata seams do not attest a host or exercise a Qdrant signal.
++"""
++import json
++import os
++from contextlib import ExitStack
++from pathlib import Path
++from types import SimpleNamespace
++import tempfile
++import unittest
++from unittest import mock
++import admission
++import packet
++import setup
++
++class ShutdownAdmissionTests(unittest.TestCase):
++    def fixture(self,available=4549484544,swap=0,free=4*admission.GIB,allocated=None):
++        if getattr(self,'active_scope',None) is not None:self.active_scope.close()
++        scope=ExitStack();self.active_scope=scope;self.addCleanup(scope.close)
++        folder=Path(scope.enter_context(tempfile.TemporaryDirectory()))
++        meminfo=folder/'meminfo';meminfo.write_text(f'MemAvailable: {available//1024} kB\nSwapTotal: {swap//1024} kB\n')
++        owned=folder/'owned';owned.mkdir(mode=0o700);(owned/'metadata').write_bytes(b'fixture')
++        original_memory=admission.memory
++        scope.enter_context(mock.patch.object(admission,'memory',side_effect=lambda:original_memory(meminfo)))
++        scope.enter_context(mock.patch.object(admission,'allocated',return_value=(owned/'metadata').stat().st_blocks*512 if allocated is None else allocated))
++        scope.enter_context(mock.patch.object(admission.shutil,'disk_usage',return_value=SimpleNamespace(free=free)))
++        guards=mock.Mock();guards.host_cpu.return_value={'fixed':'cpu-admitted'}
++        lifecycle=mock.Mock();lifecycle.attest.return_value={'state':{'fixed':'same-old-birth'}}
++        scope.enter_context(mock.patch.object(admission,'old_hierarchy',return_value={'fixed':'old-cpu2-hierarchy'}))
++        scope.enter_context(mock.patch.object(admission,'collection_shape',return_value={'clientClosed':True}))
++        return scope,guards,lifecycle
++
++    def test_actual_old_admission_accepts_shutdown_but_full_host_still_refuses(self):
++        _,guards,lifecycle=self.fixture()
++        proof=admission.old_admission(lifecycle,guards,mock.Mock())
++        host=proof['host']
++        self.assertEqual(host['schema'],'cpu0-old-shutdown-host-admission.v1')
++        self.assertEqual(host['availableFloorBytes'],2*admission.GIB)
++        self.assertEqual(host['MemAvailable'],4549484544)
++        self.assertFalse(host['diagnosticComparisonAdmission'])
++        self.assertEqual(host['target'],'old-owned-shutdown')
++        with self.assertRaisesRegex(RuntimeError,'setup_host_admission_failed') as caught:
++            admission.host(guards)
++        self.assertEqual(caught.exception.setupHostEvidence['availableFloorBytes'],5*admission.GIB)
++
++    def test_shutdown_requires_strictly_more_than_two_gib(self):
++        for available in (2*admission.GIB,2*admission.GIB-1024):
++            with self.subTest(available=available):
++                _,guards,lifecycle=self.fixture(available=available)
++                with self.assertRaisesRegex(RuntimeError,'setup_host_admission_failed'):
++                    admission.old_admission(lifecycle,guards,mock.Mock())
++                lifecycle.graceful_stop.assert_not_called()
++
++    def test_every_nonmemory_host_guard_still_refuses_shutdown(self):
++        for values in ({'swap':1024},{'free':3*admission.GIB},{'allocated':11*admission.GIB}):
++            with self.subTest(values=values):
++                _,guards,lifecycle=self.fixture(**values)
++                with self.assertRaisesRegex(RuntimeError,'setup_host_admission_failed'):
++                    admission.old_admission(lifecycle,guards,mock.Mock())
++        _,guards,lifecycle=self.fixture();guards.host_cpu.side_effect=RuntimeError('host_cpu_pressure')
++        with self.assertRaisesRegex(RuntimeError,'host_cpu_pressure'):
++            admission.old_admission(lifecycle,guards,mock.Mock())
++
++    def test_cpu_shape_and_birth_refusals_are_preserved(self):
++        for boundary,reason in (('old_hierarchy','setup_old_ancestor_refused'),('collection_shape','setup_shape_changed')):
++            with self.subTest(boundary=boundary):
++                _,guards,lifecycle=self.fixture()
++                with mock.patch.object(admission,boundary,side_effect=RuntimeError(reason)):
++                    with self.assertRaisesRegex(RuntimeError,reason):admission.old_admission(lifecycle,guards,mock.Mock())
++        _,guards,lifecycle=self.fixture();lifecycle.attest.side_effect=[{'birth':1},{'birth':2}]
++        with self.assertRaisesRegex(RuntimeError,'setup_old_identity_changed'):
++            admission.old_admission(lifecycle,guards,mock.Mock())
++
++    def test_real_setup_shutdown_refusal_never_stages_creates_or_starts(self):
++        _,guards,lifecycle=self.fixture()
++        diagnostics=Path(__file__).resolve().parent.parent;source=diagnostics/'pinning-prototype'
++        raw=(source/'cpu0-source-freeze.json').read_bytes();manifest=json.loads(raw)
++        files={name:(source/name).read_bytes() for name in manifest['files']}
++        derivative=setup.derivative_admission_policy(files['prepared-control-policy-cpu0.json'],packet.sha(files['prepared-control-policy-cpu0.json']))
++        helper=(diagnostics/'clone-preparation'/'prepare_clone_reclaim.py').read_bytes()
++        old={'State':{'Running':True}};lifecycle.container.return_value=old
++        observed={'state':{'fixed':'same-old-birth'},'wrapper':{'pid':123,'parentPid':122},'qdrant':{'pid':124}}
++        lifecycle.attest.return_value=observed;lifecycle.state_snapshot.return_value=observed['state']
++        lifecycle.graceful_stop.side_effect=RuntimeError('lifecycle_stop_unclean')
++        with tempfile.TemporaryFile() as lock, ExitStack() as scope:
++            scope.enter_context(mock.patch.object(setup,'load_first_lifecycle',return_value=lifecycle))
++            scope.enter_context(mock.patch.object(setup,'load_first_guards',return_value=guards))
++            scope.enter_context(mock.patch.object(setup,'acquire_control',side_effect=lambda value:os.dup(lock.fileno())))
++            scope.enter_context(mock.patch.object(setup,'Engine'))
++            scope.enter_context(mock.patch.object(setup,'Docker'))
++            scope.enter_context(mock.patch.object(setup.os.path,'lexists',return_value=False))
++            scope.enter_context(mock.patch.object(setup.census,'immutable_prior_files'))
++            scope.enter_context(mock.patch.object(setup.census,'prior_writers'))
++            scope.enter_context(mock.patch.object(setup.census,'proc_controls'))
++            scope.enter_context(mock.patch.object(setup,'read_owned',return_value=(helper,None)))
++            stage=scope.enter_context(mock.patch.object(setup,'stage_absent'))
++            create=scope.enter_context(mock.patch.object(setup,'create_owned_clone'))
++            with self.assertRaisesRegex(RuntimeError,'lifecycle_stop_unclean') as caught:
++                setup.run_setup(raw,packet.sha(raw),files,packet.sha(derivative),[],packet.sha(packet.canonical([])))
++            stage.assert_not_called();create.assert_not_called()
++            self.assertFalse(caught.exception.setupDurableStopEvidence['receiptObservedDurable'])
++            self.assertEqual(lifecycle.graceful_stop.call_count,1)
++
++if __name__=='__main__':unittest.main()
