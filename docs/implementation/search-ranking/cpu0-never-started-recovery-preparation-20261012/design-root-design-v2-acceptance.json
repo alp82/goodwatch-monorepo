@@ -1,0 +1,25 @@
+{
+  "schema": "root-recovery-design-acceptance.v1",
+  "atUtc": "2026-10-12T18:58:13.948556+00:00",
+  "disposition": "accepted-for-local-implementation-only",
+  "bindings": {
+    "DESIGN.md": "e550211a29e3378807c0ae8d022254675e2a2e63e06fbdda471700eda15bb2ec",
+    "DESIGN-v2.md": "36231574f3b8fe54ed46a3aecf5e430c116244eadce0c42bc0a0e3fae2f229a0",
+    "opus-report.json": "f2caddcdb06e25458a432a34377d316d2a0d30c8520dbf967d1babe60b1afd56"
+  },
+  "rootCoverage": "Full original actual Opus BLOCK report and complete v1-to-v2 design diff read; independently read tagged Moby daemon and start source and fixed readonly Docker version evidence. No model v2 PASS claimed.",
+  "acceptedCorrections": [
+    "stopped source placement proof without fabricated live attest",
+    "sole type-exact OomKillDisable canonical normalization and distinct parity evidence",
+    "poststart normalization bound to tagged verify path and actual fresh source proof",
+    "closed operation/failure/attempt-action schema and preserved primary failures",
+    "hashed target identity distinguished from private freshly inspected raw ID"
+  ],
+  "startAdapter": "Fixed Engine API1.51 POST exact freshly inspected private raw ID; bounded15seconds; HTTP204 acknowledgment distinguished from running proof and no inferred CLI0",
+  "authorization": "Local implementation/tests/freeze/actual focused Claude Code Opus5.5 medium source review only. Root complete source/closure review and merge precede any host invocation.",
+  "hostInvocationAuthorized": false,
+  "runtimePass": false,
+  "latencyPass": false,
+  "productionAcceptance": false,
+  "originalFailedEvidenceUnchanged": true
+}

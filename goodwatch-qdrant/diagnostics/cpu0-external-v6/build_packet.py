@@ -13,6 +13,7 @@ from packet import SOURCE_NAMES,canonical,sha,verify_source
 from setup import derivative_admission_policy
 from stager import FULL_NAMES,verify_full
 from census import validate_prior_policy
+import recovery
 
 SOURCE_SHA='00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108'
 CONSUMER_FREEZE_SHA='4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4'
@@ -32,7 +33,7 @@ def consumer_files(folder):
     return files
 
 
-def build(source,consumer,reclaim,external,prior):
+def build(source,consumer,reclaim,external,prior,*,recovery_output=None,recovery_config=None):
     source=Path(source).resolve(strict=True);consumer=Path(consumer).resolve(strict=True);external=Path(external).resolve(strict=True)
     backend={name:(source/name).read_bytes() for name in SOURCE_NAMES}
     raw_source=(source/'cpu0-source-freeze.json').read_bytes();verify_source(raw_source,SOURCE_SHA,backend)
@@ -58,6 +59,12 @@ def build(source,consumer,reclaim,external,prior):
             'closureFiles':{name:encode(raw) for name,raw in closure.items()},'closureSha256':sha(closure_raw),
             'admissionValidatorSha256':sha((external/'validate_admission.mjs').read_bytes()),
             'localExecutionClosureSha256':sha(local_raw)}
+    if (recovery_output is None)!=(recovery_config is None):raise RuntimeError('recovery_proof_invalid')
+    if recovery_output is not None:
+        recovery.proofs(recovery_output,recovery_config)
+        packet['initialMode']=recovery.MODE
+        packet['recoveryProof']={'mode':recovery.MODE,'originalOutput':encode(recovery_output),
+            'configProof':encode(recovery_config),'originalOutputSha256':recovery.OUTPUT_SHA,'configProofSha256':recovery.CONFIG_SHA}
     raw=canonical(packet)+b'\n'
     if len(raw)>8*1024**2:raise RuntimeError('packet_input_bound')
     return raw,local_raw
@@ -71,10 +78,11 @@ def absent(path,raw):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--prepare-reviewed-public-packet',action='store_true')
     for name in ('source-dir','consumer-dir','reclaim-helper','external-dir','prior-policy','output','local-execution-closure'):parser.add_argument('--'+name)
+    parser.add_argument('--recovery-output');parser.add_argument('--recovery-config-proof')
     args=parser.parse_args()
     if not args.prepare_reviewed_public_packet:
         print('{"schema":"cpu0-execution-packet.v6","status":"prepared-only","hostOperations":0}');return
-    raw,local_raw=build(args.source_dir,args.consumer_dir,args.reclaim_helper,args.external_dir,json.loads(Path(args.prior_policy).read_bytes()))
+    raw,local_raw=build(args.source_dir,args.consumer_dir,args.reclaim_helper,args.external_dir,json.loads(Path(args.prior_policy).read_bytes()),recovery_output=recovery.read_public_proof(args.recovery_output) if args.recovery_output else None,recovery_config=recovery.read_public_proof(args.recovery_config_proof) if args.recovery_config_proof else None)
     absent(Path(args.output),raw);absent(Path(args.local_execution_closure),local_raw)
     print(json.dumps({'schema':'cpu0-execution-packet.v6','packetSha256':sha(raw),
                       'localExecutionClosureSha256':sha(local_raw),'publicLocalFilesCreated':2,'hostOperations':0}))

@@ -13,13 +13,14 @@ from pathlib import Path
 sys.dont_write_bytecode=True
 from packet import SOURCE_NAMES,canonical,hash_value,read_owned,sha,verify_source,load_staged_modules,load_first_lifecycle
 import setup
+import recovery
 import census
 import stager
 import registration
 import producer
 from reason_codes import REASONS
 
-OPERATIONS=frozenset(('setup','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup'))
+OPERATIONS=frozenset(('setup','setup-recover-never-started','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup'))
 
 
 def backend_packet(arguments):
@@ -174,6 +175,18 @@ def dispatch(operation,arguments):
         if operation=='setup':
             raw,source_sha,files=backend_packet(arguments)
             return setup.run_setup(raw,source_sha,files,arguments['derivativePolicySha256'],arguments['priorPolicy'],arguments['priorPolicySha256'])
+        if operation=='setup-recover-never-started':
+            raw,source_sha,files=backend_packet(arguments)
+            proof=arguments['recoveryProof']
+            if not isinstance(proof,dict) or set(proof)!={'mode','originalOutput','configProof','originalOutputSha256','configProofSha256'} or proof['mode']!=recovery.MODE or proof['originalOutputSha256']!=recovery.OUTPUT_SHA or proof['configProofSha256']!=recovery.CONFIG_SHA:
+                raise RuntimeError('recovery_proof_invalid')
+            decoded=[]
+            for key in ('originalOutput','configProof'):
+                value=proof[key]
+                if not isinstance(value,str) or len(value)>90000:raise RuntimeError('recovery_proof_invalid')
+                decoded.append(base64.b64decode(value,validate=True))
+            return recovery.run_recovery(raw,source_sha,files,arguments['derivativePolicySha256'],
+                arguments['priorPolicy'],arguments['priorPolicySha256'],*decoded,arguments['externalClosureSha256'])
         if operation=='stage':return stage(arguments)
         if operation=='outer-admit':return outer_admit(arguments)
         if operation=='producer-stream':
@@ -231,7 +244,7 @@ def dispatch(operation,arguments):
         raise
 
 
-FAILURE_FIELDS=('setupCompletedStopReceipt','setupDurableStopEvidence','setupEndpointEvidence',
+FAILURE_FIELDS=('recoveryFailureEvidence','recoveryCompletedReceipt','recoveryCleanupFailure','setupCompletedStopReceipt','setupDurableStopEvidence','setupEndpointEvidence',
                 'setupFailureEvidence','receiptFailureEvidence','setupDockerCleanupEvidence',
                 'setupCleanupFailure','lifecycleCompletedStopReceipt','lifecycleFailureEvidence',
                 'lifecycleCleanupFailure','lifecycleDockerCleanupEvidence','fullStageFailureEvidence',

@@ -8,7 +8,7 @@ import stat
 import sys
 import types
 
-MODULES=('packet','reason_codes','admission','census','setup','stager','registration','producer','executor','bootstrap','rpc','private_pipe','outer_local')
+MODULES=('packet','reason_codes','admission','census','setup','recovery','stager','registration','producer','executor','bootstrap','rpc','private_pipe','outer_local')
 NAMES=frozenset(name+'.py' for name in MODULES)|{'local_entry.py','validate_admission.mjs'}
 
 

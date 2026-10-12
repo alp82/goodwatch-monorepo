@@ -1,0 +1,92 @@
+{
+  "schema": "root-never-started-recovery-source-acceptance.v1",
+  "atUtc": "2026-10-12T19:32:15.193561+00:00",
+  "sourceHead": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996",
+  "disposition": "ACCEPT exact source preparation; concrete publication review and merge required before one root-owned recovery invocation",
+  "acceptedDesignV2Sha256": "36231574f3b8fe54ed46a3aecf5e430c116244eadce0c42bc0a0e3fae2f229a0",
+  "originalDesignBlockPreserved": true,
+  "authorFullFixtures": 100,
+  "rootNewRecoveryFixtures": {
+    "count": 19,
+    "seconds": 0.59,
+    "exitCode": 0,
+    "scope": "All new recovery fixtures; composed host/source/birth/census boundaries mocked; real local Unix HTTP fixtures"
+  },
+  "rootAdditionalNegativeFixtures": {
+    "count": 5,
+    "seconds": 0.07,
+    "exitCode": 0,
+    "scope": "Actual retained proof bytes plus mutations; OLD receipt mismatch; stage symlink/inode replacement; inverse/non-null OLD field; primary failure with cleanup failure. Existing composed fixture boundaries remain mocked."
+  },
+  "independentAgentReview": {
+    "noConcreteBlocker": true,
+    "newFixtures": 19,
+    "seconds": 0.535,
+    "scope": "Full ten-file delta, recovery and new fixture source, local tests only; no actual host/source capacity"
+  },
+  "rootCoverage": {
+    "fullTenFileDeltaRead": true,
+    "fullRecovery525LinesAndFixture386LinesRead": true,
+    "externalSourceHashesVerified": 30,
+    "snapshotBindingsVerified": 40,
+    "unchangedPriorExternalFiles": 20,
+    "consumerHelperDependenciesVerified": 32,
+    "source14Full24PriorValidatorUnchanged": true,
+    "independentPacketByteReconstruction": true,
+    "realLocalAuthenticationFiles": 16,
+    "realRemoteDecodeFiles": 10,
+    "actualRetainedProofsValidated": true
+  },
+  "actualOpus": {
+    "verdict": "PASS focused static source review",
+    "reportSha256": "e7e9b6938562dd0c7e47d00f07af32ae3c7c96a36df8168ba9bc3897367fb3a0",
+    "textSha256": "491578fc22baca0a767b584c848d4ab87fde5ffb9c81fd744b92f9f6f1e361a0",
+    "model": "claude-opus-5-5",
+    "durationMs": 534625,
+    "isError": false,
+    "authorReportedCliExitCode": 0,
+    "effortFromActualInvocationRecord": "medium",
+    "rootFullReportRead": true,
+    "coverage": "Full changed source/docs/fixtures and selected unchanged external dependencies; partial backend; no computed hashes/tests, consumer/reclaim/Moby reading or host/runtime proof"
+  },
+  "closedReviewQualifications": {
+    "N1": "Original generator full-read: compact sorted JSON minus exactly three CPU fields with ensure_ascii=False. Fresh bounded root read-only inspection proves actual ensure_ascii False/True hashes identical and both exactly match original proofs for both fixed targets. No source exemption added.",
+    "N2": "Root independently ran five additional negative test groups plus real proof authentication. Local mocked boundaries still do not prove runtime.",
+    "N5": "Root explicitly accepts additive closed recovery_closure_unproven/recovery_mode_mismatch reasons and recoveryCompletedReceipt field as source closures of the accepted design."
+  },
+  "acceptedResiduals": [
+    "N3: version transport/framing failure can say recovery_start_unknown while typed action remains not-issued; strict chunked/ambiguous HTTP framing refuses.",
+    "N4: handoff can exist after later read/success-receipt publication failure without full recoveryCompletedReceipt; executor independently reports actual observed handoff SHA, no continuation or automatic resume.",
+    "N6: bounded inspection/census time can make prestart host admission stale; fresh runtime birth admission remains mandatory and no capacity prediction follows.",
+    "Post-publication reinspection refusal spends the one attempt without startup; uncertain or later refused startup leaves the existing clone state without automatic rollback/stop/retry.",
+    "Earlier external fail-closed residuals and all original failed invocations remain unchanged."
+  ],
+  "bindings": {
+    "root-source-manifest.json": "d9eca8619de7b21d0d8738f4f95133e39f7f88042d598ab1488758f0f9229d98",
+    "root-exact-source-delta.diff": "b83a3079a8e860bd462340af3148ab8ac8dddae4a4f51ca0a11567f894fe5c62",
+    "root-dependency-manifest.json": "ff2d94f6e872b0bb1b8fa08c03f05be910cdc664cd05a1cd541ebe75b9b04cad",
+    "execution-packet.json": "baef942d1cf0b1ffb4c71db15306877a6d6baa47cf8e7e2be08afe208e5c3e3e",
+    "local-execution-closure.json": "bfad2fde72fdcf5778cca56ca6812e4f846e2db6afb6644a134542ddc5d5b66e",
+    "root-real-packet-authentication.json": "7471a2eff3524ce7a1b5ca879608c053b77aa97ee00922738b87189afd07a693",
+    "root-additional-negative-cases.py": "60fcb461c5f93797061b57e5f8cba5e7730f7f260ce2aea47eae4e1271464793",
+    "root-readonly-hash-encoding-remote.py": "f61c270bf0355633081078545b5fb06bf0bd7fd1121a281d5ca2b738fddbdf76",
+    "root-readonly-hash-encoding-public.json": "7a05f9f59de8dbd1fa56554a807c17285106f944057df7a47632f2c3e3ae0a11",
+    "root-run-once.py": "506c2349b87e7a5789abb0a4d1f7da848499902c7565811f8f6724e73d857de7"
+  },
+  "packetBytes": 998252,
+  "remoteClosureSha256": "9093747aeee48f60edf011a703c14f1f3e6fb0ca57b5954ecc60ccd588cef768",
+  "readOnlyEncodingContext": {
+    "sshExitCode": 0,
+    "metadataSourceWrites": 0,
+    "signals": 0,
+    "oldObservedStopped": true,
+    "newObservedNeverStarted": true,
+    "notFreshRecoveryAuthorizationOrCapacityProof": true
+  },
+  "recoveryInvocationExecuted": false,
+  "ordinarySearches": 0,
+  "historyWrites": 0,
+  "latencyPass": false,
+  "productionAcceptance": false,
+  "historical406": "closed; remaining work tracked in100"
+}

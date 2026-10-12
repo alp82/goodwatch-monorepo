@@ -1,0 +1,126 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 9857,
+      "sha256": "63f0b375f04c4128fa34ce3b0279ca3738c47f6945aec0a357749e2597d78091"
+    },
+    "RECOVERY.md": {
+      "bytes": 6290,
+      "sha256": "0aecac4b4739771089912ee378e82f23381cf1e70b7da72d724e307bb098bb17"
+    },
+    "SHUTDOWN-ADMISSION.md": {
+      "bytes": 3097,
+      "sha256": "8881da4e00f76ab3f6e18e7e6ee5132d2523a977650f6d498ec6acf46a81c42f"
+    },
+    "admission.py": {
+      "bytes": 8306,
+      "sha256": "b073415ed668a64229a46ce94da6726bc98d01d9f392058be673b51a8a50f0da"
+    },
+    "bootstrap.py": {
+      "bytes": 5252,
+      "sha256": "3dc3147b4391a0b984f5b61f2676c36246ed041575334ccd032db557e4c1998a"
+    },
+    "build_packet.py": {
+      "bytes": 5958,
+      "sha256": "2b0c8bc3e3bdd755bdc41d952f24a13d2cbe854f1a6c98c5f3d1ec4eb75893ec"
+    },
+    "census.py": {
+      "bytes": 7881,
+      "sha256": "b935be085c9271630b7e643ecb9cd4778fb8fa269545e84e9e59d2e230d7304e"
+    },
+    "executor.py": {
+      "bytes": 16825,
+      "sha256": "8639ae100c428caec605d96e13d81bd084f9306e600856db1ee061322f698fe7"
+    },
+    "local_entry.py": {
+      "bytes": 3581,
+      "sha256": "c58f8b3157915bf9237edd9b941fb2e3803573c5d72dd02d0176c75658eba1c8"
+    },
+    "outer_local.py": {
+      "bytes": 16202,
+      "sha256": "6e0134f9c284c7e3d4ac97fc0ea35ee609e9ddd5b4a170b497d45e57119c315b"
+    },
+    "packet.py": {
+      "bytes": 8478,
+      "sha256": "018251f7df3cc8242147a1e8b4e014366a3a8b03ea55390944c259d9d2cd5d3f"
+    },
+    "private_pipe.py": {
+      "bytes": 16778,
+      "sha256": "854727a0915e7b87b6ea37f6777424eb87c18e9502ed50c23c6f2ecf6bb7a620"
+    },
+    "producer.py": {
+      "bytes": 29837,
+      "sha256": "c5cc2ab92f8d422883b3e93046b7b546c0284d82a4bc8493b6834153f7b7d90a"
+    },
+    "reason_codes.py": {
+      "bytes": 14702,
+      "sha256": "b0a854fcfedeb9951a2c61de5264963f785b501fd83ef2f493febebbbfd0b938"
+    },
+    "recovery.py": {
+      "bytes": 28744,
+      "sha256": "59b8397368f89833c766bdf3212d2124e0b53fb45b0e37f28fdfdb00d77b071f"
+    },
+    "registration.py": {
+      "bytes": 8654,
+      "sha256": "a43cc05abe9b49b5173dcb8f21171f6fd702e12628e22c1b8827098707178e5e"
+    },
+    "rpc.py": {
+      "bytes": 5714,
+      "sha256": "7e877731d620cda044eca0591c47374e8c170d672d1fd380d32863dcda5f1422"
+    },
+    "setup.py": {
+      "bytes": 24993,
+      "sha256": "6cfe836fc5240b48c5831c2583b23c1328524bc3334cf35acb3abe3618bdaab3"
+    },
+    "stager.py": {
+      "bytes": 10973,
+      "sha256": "e3d0d922e528bab658350807f5d2c1bca399d30705d555b218a616aaee27d0a6"
+    },
+    "test_bootstrap.py": {
+      "bytes": 4998,
+      "sha256": "744a6ae4cac5927a2fccdbfc90c9534ad851c22c6ed78438077cf14f40f3de80"
+    },
+    "test_external.py": {
+      "bytes": 16840,
+      "sha256": "190d555edfcf6af5903c4082405a3cc4876a597d1cde46902d8f2dfd5db62d88"
+    },
+    "test_outer.py": {
+      "bytes": 18492,
+      "sha256": "f7d379dc317862d55699610ccf1628ba1d74c6fa1ba8442bb720f026c5d5c494"
+    },
+    "test_packet.py": {
+      "bytes": 2100,
+      "sha256": "a50ede5b0bb86c3a12ea1a9304c53b3312d2a96a4f535b1380e5f9f869b96477"
+    },
+    "test_pipe.py": {
+      "bytes": 7181,
+      "sha256": "6571fbebfadeb8244b9989cfda0686de0328830b51df87f49e89c78b276dc69c"
+    },
+    "test_producer.py": {
+      "bytes": 17074,
+      "sha256": "19696d5fb095072707bea272bc1bfb06790a2ede979161cfc094a761c37abb73"
+    },
+    "test_recovery.py": {
+      "bytes": 26801,
+      "sha256": "67b5a750d3250f06eb8eb92a8b9799681f2280c3a1ffdcd4eb2bf8cd7b7cd5ec"
+    },
+    "test_refusal.py": {
+      "bytes": 3853,
+      "sha256": "4c55527f77646db2c76ae0009aa166fda3f538bbfe7a1954280003b0fba71568"
+    },
+    "test_registration.py": {
+      "bytes": 4479,
+      "sha256": "7efa51ac7a1062ac8dcf7e2785f8323e9d0f1b9f7dc83d7d866a945f8cf6fe96"
+    },
+    "test_shutdown_admission.py": {
+      "bytes": 7137,
+      "sha256": "1b05682d96e4186a20b66343a8bd8f762c8a6f8e7124a42d0371db2117f5235c"
+    },
+    "validate_admission.mjs": {
+      "bytes": 1090,
+      "sha256": "d695cafea55b07b579b9ae144bd65a6340851360f8579972002c3641b7cd8712"
+    }
+  },
+  "head": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996",
+  "schema": "root-external-source-files.v1"
+}

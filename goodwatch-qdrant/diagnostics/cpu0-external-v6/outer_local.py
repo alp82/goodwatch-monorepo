@@ -20,6 +20,7 @@ from packet import canonical,hash_value,sha
 from rpc import Rpc
 from private_pipe import stream,fixed_consumer_command
 from reason_codes import REASONS
+from recovery import MODE as RECOVERY_MODE
 
 SCHEMA='cpu0-execution-packet.v6'
 
@@ -96,14 +97,20 @@ def audit_consumer(frames,previous,packet,*,absolute_deadline):
         return value
 
 
-def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
+def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile,initial_mode='setup'):
     """No source mutation beyond reviewed setup/lifecycle/staging/handoff writes.
 
     No resumption after refusal; final cleanup observes the actual current
     handoff rather than assuming the last reported one is still current.
     """
     if packet.get('schema')!=SCHEMA or type(raise_own_nofile) is not bool:raise RuntimeError('outer_packet_invalid')
-    arguments=source_arguments(packet);ledger=[];frames=[];primary=None
+    mode=packet.get('initialMode','setup')
+    if mode not in ('setup',RECOVERY_MODE) or mode!=initial_mode or (mode=='setup' and 'recoveryProof' in packet) or (mode==RECOVERY_MODE and 'recoveryProof' not in packet):
+        raise RuntimeError('recovery_mode_mismatch')
+    arguments=source_arguments(packet)
+    if mode==RECOVERY_MODE:
+        arguments={**arguments,'recoveryProof':packet['recoveryProof'],'externalClosureSha256':packet['closureSha256']}
+    ledger=[];frames=[];primary=None
     registered_consumer=None;registered_producer=None;previous=None;transport=None;consumer_audit=None
     started=time.monotonic();absolute_deadline=started+7200
     def call(operation,values):
@@ -112,7 +119,8 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
         ledger.append(reply);emit({'kind':'external-operation','operation':operation,'receipt':reply})
         return reply['result']
     try:
-        setup=call('setup',arguments);previous=handoff(setup['handoff'])
+        setup=call('setup-recover-never-started' if mode==RECOVERY_MODE else 'setup',arguments);previous=handoff(setup['handoff'])
+        arguments=source_arguments(packet)
         preflight=call('preflight',{**arguments,'predecessorSha256':previous['sha256']})
         previous=handoff(preflight['handoff'])
         staged=call('stage',{**arguments,'predecessorSha256':previous['sha256'],
@@ -206,7 +214,7 @@ def remaining_budget(deadline):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--execute-reviewed',action='store_true')
+    parser=argparse.ArgumentParser();parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--initial-mode',choices=('setup',RECOVERY_MODE),default='setup')
     for name in ('packet','packet-sha256','contract-dir','validator','outer-sha256'):parser.add_argument('--'+name)
     parser.add_argument('--raise-own-nofile',action='store_true');args=parser.parse_args()
     if not args.execute_reviewed:
@@ -220,7 +228,7 @@ def main():
     bootstrap=base64.b64decode(packet['bootstrap'],validate=True)
     closure={name:base64.b64decode(value,validate=True) for name,value in packet['closureFiles'].items()}
     rpc=Rpc(bootstrap,packet['bootstrapSha256'],closure,packet['closureSha256'])
-    result=run(packet,rpc,lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False),flush=True),contract_dir=Path(args.contract_dir).resolve(strict=True),validator_path=Path(args.validator).resolve(strict=True),raise_own_nofile=args.raise_own_nofile)
+    result=run(packet,rpc,lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False),flush=True),contract_dir=Path(args.contract_dir).resolve(strict=True),validator_path=Path(args.validator).resolve(strict=True),raise_own_nofile=args.raise_own_nofile,initial_mode=args.initial_mode)
     return 0 if result['status']=='completed' else 1
 
 
