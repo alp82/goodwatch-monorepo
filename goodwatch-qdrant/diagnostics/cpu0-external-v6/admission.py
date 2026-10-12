@@ -63,6 +63,25 @@ def host(guards):
     return evidence
 
 
+def old_shutdown_host(guards):
+    """OLD-only graceful shutdown margin; never admits creation/start or pinning.
+
+    Two GiB is a declared engineering margin for bounded inspectors and shutdown,
+    not a kernel capacity guarantee. The full host() admission stays unchanged.
+    """
+    cpu=guards.host_cpu()
+    mem=memory();used=allocated();free=shutil.disk_usage(ROOT).free
+    evidence={'schema':'cpu0-old-shutdown-host-admission.v1',
+              'target':'old-owned-shutdown','diagnosticComparisonAdmission':False,
+              'cpu':cpu,'MemAvailable':mem['MemAvailable'],'SwapTotal':mem['SwapTotal'],
+              'ownedAllocatedBytes':used,'diskFreeBytes':free,
+              'availableFloorBytes':2*GIB,'diskFloorBytes':3*GIB,
+              'ownedAllocatedCeilingBytes':11*GIB}
+    if mem['SwapTotal']!=0 or mem['MemAvailable']<=2*GIB or free<=3*GIB or used>=11*GIB:
+        error=RuntimeError('setup_host_admission_failed');error.setupHostEvidence=evidence;raise error
+    return evidence
+
+
 def old_hierarchy(lifecycle,guards,docker,root=Path('/sys/fs/cgroup')):
     """Explicit OLD CPU2-only admission. CPU0 runtime/guards are unchanged."""
     old=lifecycle.container(lifecycle.OLD,docker)
@@ -122,7 +141,7 @@ def collection_shape(connection=http.client.HTTPConnection):
 
 def old_admission(lifecycle,guards,docker):
     before=lifecycle.attest(lifecycle.OLD,docker)
-    host_evidence=host(guards)
+    host_evidence=old_shutdown_host(guards)
     cpu=old_hierarchy(lifecycle,guards,docker)
     shape=collection_shape()
     after=lifecycle.attest(lifecycle.OLD,docker)

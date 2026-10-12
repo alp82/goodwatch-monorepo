@@ -74,7 +74,8 @@ def clean_old(lifecycle,docker,lock_fd,protected_pids,old,stop_admission):
     if old.get('State',{}).get('Running') is True:
         if os.path.lexists(ROOT/'cpu0-old-clean-receipt-v1.json'):
             raise RuntimeError('setup_old_receipt_already_exists')
-        # Exact shared floors/host CPU admission run BEFORE stop. The lifecycle
+        # OLD-only shutdown floor and all host CPU/storage/swap fences run
+        # BEFORE stop; full NEW/start/runtime admission remains separate. The lifecycle
         # owns its separate 20-second remaining-deadline inspect client scope.
         admission=stop_admission()
         if not isinstance(admission,dict) or admission.get('schema')!='cpu0-old-stop-admission.v6' or not isinstance(admission.get('source'),dict):
