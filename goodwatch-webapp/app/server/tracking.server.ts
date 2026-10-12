@@ -62,7 +62,13 @@ import {
 } from "~/server/tracking-sql"
 import { resetUserDataCache } from "~/server/userData.server"
 import { cached } from "~/utils/cache"
-import { type CrateValue, execute, insertRows, query } from "~/utils/crate"
+import {
+	type CrateValue,
+	execute,
+	insertRows,
+	query,
+	timestampsAsMillis,
+} from "~/utils/crate"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1277,13 +1283,13 @@ export async function deleteTrackingData(userId: string): Promise<void> {
 // Reads
 // ---------------------------------------------------------------------------------------------------------
 
-/** QS and QG, beside each other. Timestamps arrive as milliseconds. */
+/** QS and QG, beside each other. The driver hands a timestamp over as a Date; the groups carry milliseconds. */
 async function readStatesAndGroups(
 	userId: string,
 ): Promise<[TitleState[], GroupRow[]]> {
 	return Promise.all([
 		query<TitleState>(STATES_QUERY, [userId]),
-		query<GroupRow>(GROUPED_QUERY, [userId]),
+		query<GroupRow>(GROUPED_QUERY, [userId]).then(timestampsAsMillis),
 	])
 }
 

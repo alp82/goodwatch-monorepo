@@ -9,7 +9,7 @@ import { GROUPED_QUERY, STATES_QUERY } from "~/server/tracking-sql"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
 import { cached, declareResettableCache, resetCache } from "~/utils/cache"
-import { execute, query } from "~/utils/crate"
+import { execute, query, timestampsAsMillis } from "~/utils/crate"
 
 /**
  * v2 since `watched` became `watchState`. The build before it shares Valkey with this one while a deploy rolls, and
@@ -108,7 +108,8 @@ async function _getUserData({
 			[user_id],
 		),
 		query<TitleState>(STATES_QUERY, [user_id]),
-		query<GroupRow>(GROUPED_QUERY, [user_id]),
+		// The grouped rows are compared as milliseconds; the driver hands a timestamp over as a Date.
+		query<GroupRow>(GROUPED_QUERY, [user_id]).then(timestampsAsMillis),
 		query<{ tmdb_id: number; media_type: string; updated_at: Date }>(
 			`SELECT tmdb_id, media_type, updated_at
 			 FROM user_favorite WHERE user_id = ?`,

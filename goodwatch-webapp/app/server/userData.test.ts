@@ -498,3 +498,44 @@ for (const settings of [false, true])
 			2,
 		)
 	})
+
+test("the watch state from rows as the driver hands them over: Dates, and null for NULL", async () => {
+	// The fake stores and returns milliseconds; the driver returns a Date per timestamp column. Two Dates of one
+	// moment are not `===`, which made every dated watch "day"; and a NULL date was 1 January 1970, never "unknown".
+	const moment = 1791438939443
+	setCrateClientForTest({ execute: async (raw: string, params: unknown[] = []) => {
+		const sql = raw.trim().replace(/\s+/g, " ")
+		if (sql.includes("FROM user_watch_state"))
+			return {
+				json: ["movie", "show"].flatMap((media_type) =>
+					[1, 2].map((tmdb_id) => ({ tmdb_id, media_type, state: "seen", pass: 1 })),
+				),
+				rowcount: 4,
+			}
+		if (!sql.includes("GROUP BY tmdb_id, media_type, pass")) return db.execute(raw, params)
+		const group = { pass: 1, watch_count: 1, episodes_watched: 0, furthest: null }
+		return {
+			json: [
+				// Watched at a known moment.
+				{ ...group, tmdb_id: 1, media_type: "movie", first_watched_at: new Date(moment), last_watched_at: new Date(moment), last_moment_at: new Date(moment), last_activity_at: new Date(moment) },
+				// Watched on a known day.
+				{ ...group, tmdb_id: 2, media_type: "movie", first_watched_at: new Date(moment), last_watched_at: new Date(moment), last_moment_at: null, last_activity_at: new Date(moment) },
+				// Marked without a date by the member, a day later.
+				{ ...group, tmdb_id: 1, media_type: "show", first_watched_at: null, last_watched_at: null, last_moment_at: null, last_activity_at: new Date(moment + 86_400_000) },
+				// Imported without a date.
+				{ ...group, tmdb_id: 2, media_type: "show", first_watched_at: null, last_watched_at: null, last_moment_at: null, last_activity_at: null },
+			],
+			rowcount: 4,
+		}
+	} })
+	for (const data of [await getUserData({ user_id: user }), await getUserData({ user_id: user })]) {
+		const entry = (key: "movie-1" | "movie-2" | "show-1" | "show-2") => {
+			const { watchedAt, precision, lastActivityAt } = data.watchState[key]
+			return { watchedAt, precision, lastActivityAt }
+		}
+		assert.deepStrictEqual(entry("movie-1"), { watchedAt: new Date(moment), precision: "moment", lastActivityAt: new Date(moment) })
+		assert.deepStrictEqual(entry("movie-2"), { watchedAt: new Date(moment), precision: "day", lastActivityAt: new Date(moment) })
+		assert.deepStrictEqual(entry("show-1"), { watchedAt: null, precision: "unknown", lastActivityAt: new Date(moment + 86_400_000) })
+		assert.deepStrictEqual(entry("show-2"), { watchedAt: null, precision: "unknown", lastActivityAt: null })
+	}
+})
