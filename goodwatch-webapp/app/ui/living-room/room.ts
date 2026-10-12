@@ -129,7 +129,7 @@ export function remoteTurnToward(
 // ---------------------------------------------------------------------------------------------------------
 // Phones (#189, #224). Portrait is the couch: the portrait room with the TV on top and the Remote in the hand
 // below it. Landscape is the whole desktop room with the TV centered on top and the Remote under it; dragging
-// the Remote up reveals its feature and streaming keys.
+// the Remote up reveals its lower keys when the window is too short for them.
 
 /** The portrait room (the desktop room extended down over the viewer's lap), in 1068 x 1602 coordinates. */
 export const PHONE_ROOM = {
@@ -150,8 +150,8 @@ export const PHONE_TV_CANVAS = { w: 560, h: 308 } as const
  */
 export const PHONE_LIP = 60
 
-/** How far down the Remote its streaming keys end, in Remote pixels. */
-const REMOTE_KEYS_END = 700
+/** How far down the Remote its streaming keys end, in Remote pixels. living-room.css has the same number. */
+const REMOTE_KEYS_END = 530
 
 export type PhoneOrientation = "portrait" | "landscape"
 

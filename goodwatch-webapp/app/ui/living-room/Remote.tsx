@@ -1,12 +1,10 @@
-// The Remote ("Grid, tiles", #186): power, the IR window, and the Menu key, a one-line screen, the D-pad wheel
-// with OK, the Back / Home / Search row, a well of four feature tiles, and the four streaming keys low on the
-// body. The feature tiles open the moods on the TV or leave for a place's page. Every
+// The Remote ("Arc", round 6 of the prototype on branch prototype/living-room-remote): power, the IR window, and
+// the Menu key; the D-pad wheel with OK; Back, Search, and Home as round keys in an arc under the wheel, each with
+// its word printed on the body; and two streaming keys. It has no screen: the TV shows what is focused. Every
 // control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
 import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useEffect, useRef, useState } from "react"
-import disneyMark from "~/img/disneyplus-mark-160.webp"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import huluMark from "~/img/hulu-logo-120.webp"
 import netflixMark from "~/img/netflix-logo.svg"
 import primeMark from "~/img/primevideo-logo.svg"
 import { REMOTE_SERVICES, type RemoteServiceKey } from "./living-room-data"
@@ -19,6 +17,7 @@ export const ICON = {
 	search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5",
 	power: "M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0",
 	more: "M5 12h.01M12 12h.01M19 12h.01",
+	menu: "M4 7h16M4 12h16M4 17h16",
 	mood: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 9.5h.01M15 9.5h.01",
 	heart: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
 	info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01",
@@ -79,23 +78,17 @@ export function Icon({
 	)
 }
 
-const BRAND: Record<RemoteServiceKey, { src: string; ink: string; w: string }> =
+/** A streaming key's logo: the mark, its ink, and its width in Remote pixels (both are 28 px tall). */
+const BRAND: Record<RemoteServiceKey, { src: string; ink: string; w: number }> =
 	{
-		netflix: { src: netflixMark, ink: "#e50914", w: "48%" },
-		prime: { src: primeMark, ink: "#ffffff", w: "50%" },
-		disney: { src: disneyMark, ink: "#ffffff", w: "38%" },
-		hulu: { src: huluMark, ink: "#1ce783", w: "40%" },
+		netflix: { src: netflixMark, ink: "#e50914", w: 68 },
+		prime: { src: primeMark, ink: "#ffffff", w: 71 },
 	}
-
-type Feature = "mood" | "watch-next" | "explorer" | "taste"
-const FEATURES: Feature[] = ["mood", "watch-next", "explorer", "taste"]
 
 export type RemoteProps = {
 	screen: TvScreen
 	power: "off" | "booting" | "on"
 	menuOpen: boolean
-	/** The one-line screen: what is focused, and what the wheel does. */
-	lcd: [string, string]
 	/** The service a streaming key stands for, as the catalog spells it. */
 	serviceName: (key: RemoteServiceKey) => string
 	/** The service the picks are narrowed to, if any. */
@@ -109,19 +102,12 @@ export function Remote({
 	screen,
 	power,
 	menuOpen,
-	lcd,
 	serviceName,
 	activeService,
 	dispatch,
 	onOk,
 }: RemoteProps) {
 	const waking = useRef(false)
-	// The places leave the living room, so only the moods can be the screen showing.
-	const featureOn = (f: Feature) => f === "mood" && screen.name === "moods"
-	const runFeature = (f: Feature) =>
-		dispatch(
-			f === "mood" ? { type: "open-moods" } : { type: "open-app", app: f },
-		)
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: only drops focus after pointer presses; keys need nothing
 		<section
@@ -150,7 +136,7 @@ export function Remote({
 			}}
 		>
 			<div
-				className="remote-body relative flex flex-col items-center px-6 pb-6 pt-4"
+				className="remote-body relative flex flex-col px-5 pb-6 pt-4"
 				style={{ minHeight: REMOTE_H }}
 			>
 				<div className="flex w-full items-center justify-between">
@@ -159,9 +145,9 @@ export function Remote({
 						data-power
 						aria-label={power === "off" ? "Turn on" : "Turn off"}
 						onClick={() => dispatch({ type: "power", on: power === "off" })}
-						className="remote-key flex h-9 w-9 items-center justify-center rounded-full text-rose-400"
+						className="remote-key flex h-11 w-11 items-center justify-center rounded-full text-rose-400"
 					>
-						<Icon d={ICON.power} className="h-4 w-4" />
+						<Icon d={ICON.power} className="h-5 w-5" />
 					</button>
 					<div className="h-2 w-20 rounded-full bg-black/70" aria-hidden />
 					<button
@@ -170,128 +156,113 @@ export function Remote({
 						title="Menu"
 						aria-pressed={menuOpen}
 						onClick={() => dispatch({ type: "toggle-menu" })}
-						className="remote-key flex h-9 w-9 items-center justify-center rounded-full"
+						className="remote-key flex h-11 w-11 items-center justify-center rounded-full"
 					>
-						<Icon d={ICON.more} className="h-4 w-4" />
+						<Icon d={ICON.menu} className="h-5 w-5" />
 					</button>
 				</div>
-				{/* Ends where the hand photo leaves the window, so the streaming keys sit low but stay visible. */}
-				<div className="mt-4 flex h-[612px] w-full flex-col items-center gap-5">
-					<Lcd lines={lcd} />
-					<Wheel dispatch={dispatch} onOk={onOk} />
-					<div className="flex w-full items-center gap-3">
-						<WideKey
-							d={ICON.back}
-							label="Back"
-							onClick={() => dispatch({ type: "back" })}
-						/>
-						<button
-							type="button"
-							aria-label="Home"
-							title="Home"
-							onClick={() => dispatch({ type: "home" })}
-							className="remote-key flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
-						>
-							<Icon d={ICON.home} className="h-6 w-6" />
-						</button>
-						<WideKey
-							d={ICON.search}
-							label="Search"
-							pressed={screen.name === "search"}
-							onClick={() => dispatch({ type: "open-search" })}
-						/>
+				{/* The arc: Back and Home sit against the wheel's lower corners, Search hangs between them. */}
+				<div className="relative mt-10 h-[346px] w-full">
+					<div className="absolute left-1/2 top-0 -translate-x-1/2">
+						<Wheel dispatch={dispatch} onOk={onOk} />
 					</div>
-					{/* The well's 8 px inset and gap match the streaming keys' grid, so both blocks share columns. */}
-					<div className="remote-well grid w-full grid-cols-2 gap-2 rounded-[26px] p-2">
-						{FEATURES.map((f) => (
+					<RoundKey
+						d={ICON.back}
+						label="Back"
+						at="left-0 top-[216px]"
+						onClick={() => dispatch({ type: "back" })}
+					/>
+					<RoundKey
+						d={ICON.search}
+						label="Search"
+						at="left-1/2 top-[252px] -translate-x-1/2"
+						pressed={screen.name === "search"}
+						onClick={() => dispatch({ type: "open-search" })}
+					/>
+					<RoundKey
+						d={ICON.home}
+						label="Home"
+						at="right-0 top-[216px]"
+						onClick={() => dispatch({ type: "home" })}
+					/>
+				</div>
+				{/* Inset like the round keys, which are centered over their wider words. The keys end here
+				    (REMOTE_KEYS_END in room.ts). */}
+				<div className="mt-6 grid grid-cols-2 gap-3 px-[7px]">
+					{REMOTE_SERVICES.map(({ key }) => {
+						const name = serviceName(key)
+						const b = BRAND[key]
+						const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
+						return (
 							<button
-								key={f}
+								key={key}
 								type="button"
-								aria-pressed={featureOn(f)}
-								onClick={() => runFeature(f)}
-								className="remote-key flex h-[60px] w-full flex-col items-center justify-center gap-1.5 rounded-[18px] text-[10.5px] font-semibold uppercase tracking-wider"
+								aria-pressed={activeService === name}
+								aria-label={`Only ${name}`}
+								title={`Only ${name}`}
+								onClick={() =>
+									dispatch({ type: "service-key", service: name })
+								}
+								className="remote-key remote-service flex h-[52px] items-center justify-center rounded-full"
 							>
-								<Icon
-									d={f === "mood" ? ICON.mood : APP[f].d}
-									className="h-5 w-5"
+								{/* Quoted: small SVGs are inlined as data URLs, which break an unquoted url(). */}
+								<span
+									aria-hidden
+									className="block h-7"
+									style={{
+										width: b.w,
+										background: b.ink,
+										WebkitMask: mask,
+										mask,
+									}}
 								/>
-								{f === "mood" ? "Mood" : APP[f].name}
 							</button>
-						))}
-					</div>
-					<div className="flex-1" />
-					<div className="grid w-full grid-cols-2 gap-2 px-2">
-						{REMOTE_SERVICES.map(({ key }) => {
-							const name = serviceName(key)
-							const b = BRAND[key]
-							const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
-							return (
-								<button
-									key={key}
-									type="button"
-									aria-pressed={activeService === name}
-									aria-label={`Only ${name}`}
-									title={`Only ${name}`}
-									onClick={() =>
-										dispatch({ type: "service-key", service: name })
-									}
-									className="remote-key remote-service flex h-10 items-center justify-center rounded-full"
-								>
-									{/* Quoted: small SVGs are inlined as data URLs, which break an unquoted url(). */}
-									<span
-										aria-hidden
-										className="block h-[52%]"
-										style={{
-											width: b.w,
-											background: b.ink,
-											WebkitMask: mask,
-											mask,
-										}}
-									/>
-								</button>
-							)
-						})}
-					</div>
+						)
+					})}
 				</div>
 				<div className="flex-1" />
-				<img src={assetUrl(gwLogo)} alt="" className="mb-2 h-7 opacity-20" />
+				<img
+					src={assetUrl(gwLogo)}
+					alt=""
+					className="mx-auto mb-2 h-7 opacity-20"
+				/>
 			</div>
 		</section>
 	)
 }
 
-function WideKey({
+/** A round key with its word printed on the body under it. */
+function RoundKey({
 	d,
 	label,
+	at,
 	pressed,
 	onClick,
-}: { d: string; label: string; pressed?: boolean; onClick: () => void }) {
+}: {
+	d: string
+	label: string
+	/** Where it sits in the arc. */
+	at: string
+	pressed?: boolean
+	onClick: () => void
+}) {
 	return (
-		<button
-			type="button"
-			aria-pressed={pressed}
-			onClick={onClick}
-			className="remote-key flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-[12px] font-semibold uppercase tracking-wider"
-		>
-			<Icon d={d} className="h-[18px] w-[18px]" />
-			{label}
-		</button>
-	)
-}
-
-function Lcd({ lines: [head, line] }: { lines: [string, string] }) {
-	return (
-		<div className="remote-lcd relative h-[64px] w-full overflow-hidden rounded-[16px] px-4 py-2.5">
-			<div
-				className="lcd-font truncate text-[24px] leading-none text-[var(--lcd)]"
-				aria-live="polite"
+		<div className={`absolute ${at} flex w-[76px] flex-col items-center gap-2`}>
+			<button
+				type="button"
+				aria-label={label}
+				aria-pressed={pressed}
+				onClick={onClick}
+				className="remote-key flex h-[62px] w-[62px] items-center justify-center rounded-full"
 			>
-				{head}
-			</div>
-			<div className="mt-2 truncate text-[11px] text-[var(--lcd)] opacity-80">
-				{line}
-			</div>
-			<div className="pointer-events-none absolute inset-0 rounded-[16px] bg-[linear-gradient(160deg,rgba(255,255,255,0.10)_0%,transparent_35%)]" />
+				<Icon d={d} className="h-[26px] w-[26px]" />
+			</button>
+			<span
+				aria-hidden
+				className="text-[13px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/60"
+			>
+				{label}
+			</span>
 		</div>
 	)
 }
@@ -301,7 +272,7 @@ function Lcd({ lines: [head, line] }: { lines: [string, string] }) {
 // around the ring and scrolling step too; the four arrows and OK work as buttons.
 
 const STEP_DEG = 30
-const SIZE = 196
+const SIZE = 236
 type Dir = "top" | "bottom" | "left" | "right"
 
 const GLOW_AT: Record<Dir, string> = {
@@ -317,10 +288,10 @@ const ARROW: Record<Dir, string> = {
 	right: "M9 6l6 6-6 6",
 }
 const ARROW_AT: Record<Dir, string> = {
-	top: "left-1/2 top-3 -translate-x-1/2",
-	bottom: "bottom-3 left-1/2 -translate-x-1/2",
-	left: "left-3 top-1/2 -translate-y-1/2",
-	right: "right-3 top-1/2 -translate-y-1/2",
+	top: "left-1/2 top-3.5 -translate-x-1/2",
+	bottom: "bottom-3.5 left-1/2 -translate-x-1/2",
+	left: "left-3.5 top-1/2 -translate-y-1/2",
+	right: "right-3.5 top-1/2 -translate-y-1/2",
 }
 const ARROW_LABEL: Record<Dir, string> = {
 	top: "Up",
@@ -419,11 +390,11 @@ function Wheel({
 				<span
 					key={dir}
 					aria-hidden
-					className={`remote-glow pointer-events-none absolute ${GLOW_AT[dir]} h-12 w-12 rounded-full transition-opacity duration-200`}
+					className={`remote-glow pointer-events-none absolute ${GLOW_AT[dir]} h-14 w-14 rounded-full transition-opacity duration-200`}
 					style={{ opacity: flash?.dir === dir ? 1 : 0 }}
 				/>
 			))}
-			<div className="remote-face pointer-events-none absolute inset-[12px] rounded-full" />
+			<div className="remote-face pointer-events-none absolute inset-[14px] rounded-full" />
 			{(Object.keys(ARROW) as Dir[]).map((dir) => (
 				<ArrowKey
 					key={dir}
@@ -434,7 +405,7 @@ function Wheel({
 			<button
 				type="button"
 				onClick={onOk}
-				className="remote-ok absolute left-1/2 top-1/2 flex h-[40%] w-[40%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[13px] font-bold tracking-wider text-white/85 transition-transform active:scale-95"
+				className="remote-ok absolute left-1/2 top-1/2 flex h-[40%] w-[40%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[16px] font-bold tracking-wider text-white/85 transition-transform active:scale-95"
 			>
 				OK
 			</button>
@@ -452,11 +423,11 @@ function ArrowKey({
 			aria-label={ARROW_LABEL[dir]}
 			title={ARROW_LABEL[dir]}
 			onClick={onClick}
-			className={`remote-arrow absolute ${ARROW_AT[dir]} flex h-9 w-9 items-center justify-center rounded-full text-white/55 transition hover:text-white active:scale-90`}
+			className={`remote-arrow absolute ${ARROW_AT[dir]} flex h-11 w-11 items-center justify-center rounded-full text-white/55 transition hover:text-white active:scale-90`}
 		>
 			<svg
 				viewBox="0 0 24 24"
-				className="h-4 w-4"
+				className="h-5 w-5"
 				fill="none"
 				stroke="currentColor"
 				strokeWidth="2.6"

@@ -105,12 +105,10 @@ export function parseChoices(raw: string | null): LivingRoomChoices {
 	}
 }
 
-/** The remote's four streaming keys, by TMDB provider id. The name is the fallback when the catalog lacks it. */
+/** The remote's two streaming keys, by TMDB provider id. The name is the fallback when the catalog lacks it. */
 export const REMOTE_SERVICES = [
 	{ key: "netflix", id: 8, name: "Netflix" },
 	{ key: "prime", id: 9, name: "Amazon Prime Video" },
-	{ key: "disney", id: 337, name: "Disney Plus" },
-	{ key: "hulu", id: 15, name: "Hulu" },
 ] as const
 
 export type RemoteServiceKey = (typeof REMOTE_SERVICES)[number]["key"]

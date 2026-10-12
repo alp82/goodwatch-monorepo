@@ -578,29 +578,3 @@ function PickCard({
 		</QItem>
 	)
 }
-
-/** The Remote's one-line screen on the quiz. */
-export function quizItemLabel(item: string): string | null {
-	const [kind, arg] = item.split(":")
-	if (kind === "level") {
-		const l = RATING_LEVELS.find((r) => r.name.toLowerCase() === arg)
-		return l ? `${l.name} · ${l.score}` : null
-	}
-	if (kind === "score") return `Score ${arg}`
-	return (
-		(
-			{
-				"taste-quiz": "Rate what you've seen",
-				"quiz-skip": "Haven't seen it",
-				"quiz-want": "Want to see",
-				"quiz-save": "Continue with Google",
-				"quiz-picks": "Show my picks",
-				"back-to-picks": "Back to my picks",
-				"rate-more": "Rate more",
-				"picks-prev": "Earlier picks",
-				"picks-next": "More picks",
-				pick: "Open title",
-			} as Record<string, string>
-		)[kind] ?? null
-	)
-}

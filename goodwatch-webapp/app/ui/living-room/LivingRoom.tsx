@@ -35,7 +35,7 @@ import {
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Remote, type RemoteProps } from "./Remote"
 import { pickKey } from "./TvQuiz"
-import { TvScreens, type TvView, lcdLines } from "./TvScreens"
+import { TvScreens, type TvView } from "./TvScreens"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -289,7 +289,6 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		screen: state.screen,
 		power: state.power,
 		menuOpen: state.menuOpen,
-		lcd: lcdLines(state, flow.focused, data, draft),
 		serviceName: (key) => remoteServiceName(key, data.catalog),
 		activeService,
 		dispatch,

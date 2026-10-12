@@ -1,13 +1,8 @@
 /* The living room. Rendering budget (#190): only transform and opacity animate or follow the pointer, nothing
    loops at idle, and no blend modes or live blur sit over the room photo. */
 
-@import "../../fonts/vt323.css";
-
 .living-room {
 	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
-}
-.living-room .lcd-font {
-	font-family: "VT323", ui-monospace, monospace;
 }
 
 /* The TV turning on: a one-shot sweep from a line to the picture. */
@@ -40,7 +35,7 @@
 		rgba(255, 255, 255, 0.12);
 }
 
-/* The Remote: a dark body with the hand photo's corner radius, raised keys, and a green one-line screen. */
+/* The Remote: a dark body with the hand photo's corner radius, and raised keys. */
 .remote-body {
 	width: 312px;
 	border-radius: 38px;
@@ -93,17 +88,6 @@
 .remote-key[aria-pressed="true"]:hover {
 	color: #fed7aa;
 }
-.remote-lcd {
-	--lcd: #8ef0c6;
-	background: repeating-linear-gradient(
-			0deg,
-			rgba(0, 0, 0, 0.18) 0 1px,
-			transparent 1px 3px
-		), radial-gradient(120% 120% at 50% 0%, #11201b 0%, #070b0a 70%);
-	box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85), inset 0 0 0 1px
-		rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.08);
-	text-shadow: 0 0 8px color-mix(in srgb, var(--lcd) 45%, transparent);
-}
 .remote-wheel {
 	background: #121315;
 	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 2px 5px
@@ -137,11 +121,6 @@
 .remote-ok:hover {
 	background: radial-gradient(circle at 50% 30%, #4a4d54, #2b2c31 70%);
 	color: #fff;
-}
-.remote-well {
-	background: rgba(0, 0, 0, 0.2);
-	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45), 0 1px 0
-		rgba(255, 255, 255, 0.05);
 }
 .remote-service[aria-pressed="true"] {
 	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 2px 0 #0e0f11, 0 0 0
@@ -268,7 +247,7 @@ body:has(.living-room) {
 				66cqw /
 				312,
 				(100cqh - var(--lr-remote-top) - 10px - var(--lr-reserve, 0px)) /
-				700,
+				530,
 				1px
 			)
 		);

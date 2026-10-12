@@ -16,7 +16,7 @@ import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
 import { APP, ICON, Icon } from "./Remote"
-import { TvQuiz, quizItemLabel } from "./TvQuiz"
+import { TvQuiz } from "./TvQuiz"
 import { HomeDoorsCode, loadHomeDoors } from "./home-doors-code"
 import {
 	type LivingRoomChoices,
@@ -35,7 +35,6 @@ import {
 	type Night,
 	type TvAction,
 	type TvApp,
-	type TvScreen,
 	type TvState,
 } from "./tv-flow"
 
@@ -54,78 +53,6 @@ export type TvView = {
 	onRate?: (titleKey: string, score: RatingScore) => void
 	/** The taste quiz's titles, scores, and picks (#226). The TV flow owns its step and focus. */
 	quiz?: TasteQuiz
-}
-
-/** What the Remote's one-line screen says: the focused item, and what the wheel does. */
-export function lcdLines(
-	state: TvState,
-	focused: string | null,
-	data: LivingRoomData,
-	draft: string,
-): [string, string] {
-	if (state.power === "off") return ["", ""]
-	if (state.power === "booting") return ["Starting…", "GoodWatch"]
-	if (state.screen.name === "search")
-		return state.screen.query
-			? [`"${state.screen.query}"`, "Search again with the Search key"]
-			: [draft || "Search", "Type, then OK to search"]
-	return [
-		(focused && itemLabel(focused, state.screen, data)) || "GoodWatch",
-		"Turn to choose, OK to open",
-	]
-}
-
-function itemLabel(
-	item: string,
-	screen: TvScreen,
-	data: LivingRoomData,
-): string {
-	if (screen.name === "quiz" || item === "taste-quiz") {
-		const label = quizItemLabel(item)
-		if (label) return label
-	}
-	const [kind, ...rest] = item.split(":")
-	const arg = rest.join(":")
-	switch (kind) {
-		case "title":
-			return titleOf(data, arg)?.title ?? "Title"
-		case "menu":
-			return menuEntry(item).label
-		case "mood":
-			return arg === "any" ? "Any mood" : MOOD_BY_KEY[arg as MoodKey].name
-		case "service":
-			return arg
-		case "answer":
-			return arg === "a" ? "This one" : arg === "b" ? "That one" : "Skip"
-		case "full-page":
-			return "Open full page"
-		default:
-			return (
-				(
-					{
-						"watch-next": "Watch next",
-						door:
-							arg === "continue"
-								? "Continue"
-								: arg === "start"
-									? "Start a show"
-									: "A movie",
-						"something-new": "Something new",
-						"just-show-me": "Just show me",
-						continue: "Continue",
-						"show-picks": "Show my picks",
-						moods: "Pick a mood",
-						"switch-source": "Switch source",
-						services: "Make it mine",
-						"this-or-that": "Refine my picks",
-						watch: "Watch",
-						"want-to-see": "Want to See",
-						seen: "Seen it",
-						"not-for-me": "Not for me",
-					} as Record<string, string>
-				)[kind] ?? ""
-			)
-	}
 }
 
 // ---------------------------------------------------------------------------------------------------------

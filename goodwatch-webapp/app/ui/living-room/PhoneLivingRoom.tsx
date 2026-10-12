@@ -1,7 +1,7 @@
 // The living room on a phone (#189). Portrait is the couch: the portrait room with the TV on top and the Remote in
 // the hand below it, plus a "Turn your phone" invitation. Landscape is the main phone view: the whole room above
 // the site header, the TV centered on top, and the Remote under it; drag it up, or tap "Lift for more keys", for
-// the feature and streaming keys. The TV shows the phone edition of the screens (#224).
+// the keys a short window cuts off. The TV shows the phone edition of the screens (#224).
 //
 // Touch has no pointer to follow: tap the TV or press a key and the Remote turns a quarter of the way toward it
 // (at most 6 degrees), then settles. No beam. Rendering budget (#190): only transform and opacity animate,

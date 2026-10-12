@@ -43,7 +43,6 @@ export function Room({ desktop, phone, lcd }: { desktop: ReactNode; phone: React
 		screen: { name: "home" },
 		power: "on",
 		menuOpen: false,
-		lcd,
 		serviceName: (key) => key,
 		activeService: null,
 		dispatch: () => {},

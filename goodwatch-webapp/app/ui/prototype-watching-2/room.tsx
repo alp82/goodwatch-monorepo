@@ -62,7 +62,6 @@ export function Room({
 		screen: { name: "home" },
 		power: "on",
 		menuOpen: false,
-		lcd,
 		serviceName: (key) => key,
 		activeService: null,
 		dispatch: (action) => {
