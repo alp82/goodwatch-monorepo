@@ -1,0 +1,24 @@
+{
+  "schema": "production-mapped-data-pin.v1",
+  "source": {
+    "store": null,
+    "image": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+    "mounts": null,
+    "memoryBytes": 0,
+    "swapBytes": null,
+    "cpuNanos": 0,
+    "memoryMax": "max",
+    "memoryHigh": "max",
+    "cpuMax": null
+  },
+  "policy": {
+    "maxLockedBytes": 2147483648,
+    "archiveBytes": null,
+    "reserveBytes": null,
+    "emergencyBytes": 1610612736,
+    "includePayload": false,
+    "capReserveBytes": 268435456,
+    "mappingReserveCount": 1024
+  },
+  "lifetimeSeconds": 600
+}

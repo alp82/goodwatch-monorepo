@@ -146,9 +146,12 @@ def inventory(source, include_payload=False, source_check=None, raise_own_nofile
             host = source.spec.store / relative
             if host.resolve() != host or source.spec.store not in host.parents:
                 raise RuntimeError('target_path_scope_changed')
-            target = Target.open(PROC / str(source.pid) / 'root' / fields[5].lstrip('/'), classify(fields[5]))
-            targets.append(target)
-            info = host.lstat()
+            try:
+                target = Target.open(PROC / str(source.pid) / 'root' / fields[5].lstrip('/'), classify(fields[5]))
+                targets.append(target)
+                info = host.lstat()
+            except FileNotFoundError:
+                raise RuntimeError('mapped_file_disappeared_during_inventory') from None
             if not stat.S_ISREG(info.st_mode) or (info.st_dev, info.st_ino, info.st_size) != target.identity or info.st_ino != key[1]:
                 raise RuntimeError('host_mapped_inode_changed')
             if (os.major(info.st_dev), os.minor(info.st_dev)) != tuple(int(value, 16) for value in fields[3].split(':')):

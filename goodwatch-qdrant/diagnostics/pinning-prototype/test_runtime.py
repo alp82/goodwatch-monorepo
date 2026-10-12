@@ -48,6 +48,50 @@ class RuntimeTests(unittest.TestCase):
         manager=pin.PinSet(pin.Policy('clone',16*pin.PAGE,0,16*pin.PAGE,8*pin.PAGE,cap_reserve_bytes=16*pin.PAGE,mapping_reserve_count=16),self.root/'pin.lock',TrackingKernel())
         self.addCleanup(manager.close);return manager
 
+    def test_bounded_size_race_retry_releases_real_locks_and_preserves_resource_guards(self):
+        import production
+        manager=self.manager();baseline=locked_bytes();original=runtime.inventory;attempts=[];retry=[]
+        def racing_inventory(*args,**kwargs):
+            sampled=original(*args,**kwargs);attempts.append(True)
+            if len(attempts)==1:self.paths[0].write_bytes(b'x'*(2*pin.PAGE))
+            return sampled
+        def released(row):
+            self.assertEqual(manager.release_state(),{'released':True,'heldMappingCount':0})
+            self.assertEqual(locked_bytes(),baseline);retry.append(row)
+        with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory),patch.object(runtime,'inventory',side_effect=racing_inventory):
+            state=production.reconcile_with_retries(manager,self.spec,lambda spec:self.source,False,released)
+        self.assertEqual(len(attempts),2);self.assertEqual(retry,[{'retry':'target_size_changed_during_pass','released':True,'attempt':1}])
+        self.assertEqual(state['lockedBytes'],5*pin.PAGE)
+
+    def test_size_race_retry_is_bounded_and_resource_counter_change_is_fatal(self):
+        import production
+        original=runtime.inventory
+        for changed_counter in (False,True):
+            manager=self.manager();calls=[];events=[]
+            def racing_inventory(*args,**kwargs):
+                sample=original(*args,**kwargs);calls.append(True)
+                self.paths[0].write_bytes(b'x'*(len(calls)+2)*pin.PAGE)
+                return sample
+            changed={**self.memory,'memoryEvents':{**self.memory['memoryEvents'],'max':1}}
+            def accounting(_source):return changed if changed_counter and calls else self.memory
+            expected='inventory_retry_limit_changed' if changed_counter else 'target_size_changed_during_pass'
+            with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',side_effect=accounting),patch.object(runtime,'inventory',side_effect=racing_inventory):
+                with self.assertRaisesRegex(RuntimeError,expected):production.reconcile_with_retries(manager,self.spec,lambda spec:self.source,False,events.append)
+            self.assertEqual(len(calls),1 if changed_counter else 3)
+            self.assertEqual(len(events),0 if changed_counter else 2)
+            self.assertEqual(manager.release_state(),{'released':True,'heldMappingCount':0});manager.close()
+
+    def test_hardlink_identity_guard_is_not_a_retryable_inventory_race(self):
+        import production
+        manager=self.manager();original=runtime.inventory;calls=[];events=[]
+        os.link(self.paths[0],self.root/'alias')
+        def inventory(*args,**kwargs):calls.append(True);return original(*args,**kwargs)
+        with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory),patch.object(runtime,'inventory',side_effect=inventory):
+            with self.assertRaisesRegex(ValueError,'target_not_owned_regular_single_link_file'):
+                production.reconcile_with_retries(manager,self.spec,lambda spec:self.source,False,events.append)
+        self.assertEqual(len(calls),1);self.assertEqual(events,[])
+        self.assertEqual(manager.release_state(),{'released':True,'heldMappingCount':0})
+
     def test_inventory_closes_measure_only_payload_fd_and_skips_deleted_mapping(self):
         rows=self.write_maps(self.paths);self.paths[0].unlink();self.write_maps(self.paths[1:],rows[0])
         result=runtime.inventory(self.source)
