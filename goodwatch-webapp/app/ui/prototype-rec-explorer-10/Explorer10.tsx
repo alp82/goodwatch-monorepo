@@ -54,7 +54,7 @@ import {
 	type Pad,
 	createMapEngine,
 } from "./engine10"
-import type { Variant10 } from "./variants10"
+import type { BarKey, Variant10 } from "./variants10"
 import { groupingOf, layWorld10, localId, worldId } from "./world10"
 
 const MAX_PICKS = 5
@@ -142,7 +142,14 @@ const sideOf = (island: MapIsland) => ({
  * island picks it (up to three, from any regions) and shows what every other island shares with the picked ones; two
  * or three picked islands raise their combination in the middle. Filters hide titles; the page never scrolls.
  */
-export function Explorer10({ variant }: { variant: Variant10 }) {
+export function Explorer10({
+	variant,
+	bar: barKey,
+}: {
+	variant: Variant10
+	/** The top bar's variant. */
+	bar: BarKey
+}) {
 	const [params, setParams] = useSearchParams()
 	const filters = useMemo(() => filtersOf(params), [params])
 	const { user, loading: userLoading } = useUser()
@@ -938,22 +945,35 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 	 */
 	const [tutorial, endTutorial] = useTutorial(member, userLoading)
 	const [toldSeparate, setToldSeparate] = useState(false)
+	/** The viewer has zoomed into a combination of two: next come Show all, a third island, and Combined. */
+	const [zoomed, setZoomed] = useState(false)
 	let tutStep: TutorialStep10 | null = null
 	// After Separate, one line on what else there is: more islands narrow a combination. It goes with the next pick.
 	if (tutorial && maps && toldSeparate && picks.length < 2)
 		tutStep = picks.length ? null : "more"
 	else if (tutorial && maps && !active?.pinned) {
 		const far = at === "all"
-		if (picks.length >= 2 && (mix || forming))
-			tutStep = focusIsland?.bridge
-				? "separate"
-				: at === "hub"
+		const inside = !!focusIsland?.bridge
+		if (picks.length >= 3 && (mix || forming))
+			tutStep = at === "hub" || inside ? "separate" : "combined"
+		else if (picks.length === 2 && (mix || forming))
+			tutStep = !zoomed
+				? at === "hub"
 					? "zoom"
 					: "combined"
+				: at === "hub" || inside
+					? "all"
+					: far
+						? "group3"
+						: "three"
 		else if (picks.length === 1 && at !== "hub")
 			tutStep = far ? "group2" : "two"
 		else if (!picks.length && at !== "hub") tutStep = far ? "group" : "one"
 	}
+	const inMix = picks.length === 2 && !!focusIsland?.bridge
+	useEffect(() => {
+		if (tutorial && inMix) setZoomed(true)
+	}, [tutorial, inMix])
 	useEffect(() => {
 		if (tutStep === "separate") setToldSeparate(true)
 	}, [tutStep])
@@ -1201,16 +1221,19 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 				{form === "sheet" && cardNode}
 			</div>
 			<TopBar10
-				groupings={maps?.map((m) => m.grouping) ?? []}
+				bar={barKey}
+				phone={width < 768}
+				groupings={
+					maps?.map((m) => ({ id: m.grouping, islands: m.islands.length })) ?? []
+				}
 				at={at}
 				onGo={goRegion}
+				picked={picks.length}
 				onMyServices={onMyServices}
 				notSeenYet={notSeenYet}
 				services={map?.services ?? []}
-				onToggleServices={() =>
-					setFilters({ services: onMyServices ? "all" : null })
-				}
-				onToggleUnseen={() => setFilters({ unseen: notSeenYet ? "0" : null })}
+				onServices={(on) => setFilters({ services: on ? null : "all" })}
+				onUnseen={(on) => setFilters({ unseen: on ? null : "0" })}
 				titleType={titleType}
 				onTitleType={(next) => setFilters(titleTypeParams(next))}
 			/>
@@ -1223,7 +1246,9 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 						onGo={() => goRegion("hub")}
 						onAll={() => goRegion("all")}
 						nudge={
-							tutStep === "combined" || tutStep === "separate"
+							tutStep === "combined" ||
+							tutStep === "all" ||
+							tutStep === "separate"
 								? { at: tutStep, touch }
 								: null
 						}
@@ -1336,6 +1361,8 @@ function Styles10() {
 .ex10-view .ex10-view-on{background:rgba(255,255,255,.2);color:#fff}
 .ex10-view svg{width:12px;height:12px}
 .ex10-slot{width:18px;height:18px}
+/* The bar's menus open over the combine bar. */
+.ex-top{z-index:40}
 .ex-bar-body:has(.ex-tut-press){overflow:visible}
 @media (max-width:639px){.ex-bar-body .ex-bar-count{white-space:normal;flex:0 1 auto;min-width:0;max-width:100%;line-height:1.25}}
 .ex10-view button.ex-tut-glow{position:relative;background:rgba(251,191,36,.28);animation:ex-tut-glow 1.3s ease-in-out infinite}

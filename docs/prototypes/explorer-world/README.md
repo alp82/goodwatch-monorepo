@@ -49,6 +49,28 @@ Fourth round (owner, 2026-10-12): how a combination of three or more explains it
 
 Screenshots: `harbor4-*.png`.
 
+Fifth round (owner, 2026-10-12): Harbor is locked in, and the variants are now of the top bar.
+
+- **The tutorial** drops "or add another island" and gets three steps before Separate: tap Show all, tap a third
+  island (a group, then an island there), tap Combined. The full order: a group, an island, another group, an island,
+  Combined, zoom in, Show all, another group, a third island, Combined, Separate, and the closing line.
+- **`causeways` and `gather` are gone** from the route (they are in the branch's history, up to `8a0d40aa`).
+- **The question now:** "All" said nothing about being the control that moves the map, and the filters should sit
+  behind one Filters button and look like Discover's. Three variants, `?variant=tabs|menu|legend`:
+
+| | `tabs` | `menu` | `legend` |
+| --- | --- | --- | --- |
+| Moving the map | a row captioned "Go to": Whole map, then each group with its color | one button, "Viewing: Whole map", that opens the list of places with their island counts | the list of places at the side of the map; nothing in the bar |
+| Filters, from 768 px | a popover under the Filters button | a strip of controls in a row under the bar | a popover, and what's on shows as chips in the bar |
+| Filters on phones | Discover's bottom sheet | Discover's bottom sheet | Discover's bottom sheet |
+
+  In all three "All" is "Whole map" with a map icon, "Combined" joins the places once an island is picked, and the
+  filters are Discover's own controls (`ui/filter-bar`: the Filters button with its count, the services control, the
+  Not seen yet switch, the bottom sheet) with the type filter's segments. Screenshots: `bars-desktop.png`,
+  `bars-phone.png`.
+- **Known:** on phones `legend` shows the same row as `tabs` (there is no side to put a list on), and on desktop
+  the legend covers the left edge of the map, which doesn't make room for it yet.
+
 ## Run it
 
 ```sh
@@ -57,7 +79,8 @@ REDIS_COMMAND_TIMEOUT_MS=60000 REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NE
   REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on npx remix vite:dev --port 3110
 ```
 
-Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bottom switches variants (`?variant=`).
+Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bottom switches the top bar's variants
+(`?variant=`).
 `?mix=mood:dark,decade:1980s,country:jp` holds the picked islands, so a link opens a combination.
 
 - All eight `REC_*` flags are on, so the page around the map is the current design.

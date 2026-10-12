@@ -1,14 +1,19 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer: one world. Owner's idea: islands of different groupings should
 // combine, so every grouping is on the same map: zoomed out, each grouping as a whole; zoomed in, today's islands;
 // the grouping control at the top flies to a grouping's area; the middle is kept for the combination of up to three
-// islands. Three variants on this one route (?variant=causeways|gather|harbor), see variants10.ts. The map is the
+// islands. The way of combining is settled (Harbor); the variants on this route (?variant=tabs|menu|legend) are of the
+// top bar, see variants10.ts. The map is the
 // real Explorer's engine, forked (ui/prototype-rec-explorer-10); the data is the real Explorer's, read-only, through
 // its own endpoints and /prototype/rec-explorer-10/api. Needs REC_EXPLORER on. `?mix=mood:dark,decade:1980s` holds
 // the picked islands.
 import { useSearchParams } from "@remix-run/react"
 import explorerCss from "~/ui/explorer/explorer.css?url"
 import { Explorer10 } from "~/ui/prototype-rec-explorer-10/Explorer10"
-import { VARIANTS10 } from "~/ui/prototype-rec-explorer-10/variants10"
+import {
+	BARS,
+	type BarKey,
+	HARBOR,
+} from "~/ui/prototype-rec-explorer-10/variants10"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { assetUrl } from "~/utils/asset-url"
 
@@ -30,15 +35,13 @@ export const shouldRevalidate = () => false
 
 export default function RecExplorer10Prototype() {
 	const [params] = useSearchParams()
-	const key = params.get("variant") ?? "harbor"
-	const variant = VARIANTS10[key] ?? VARIANTS10.harbor
+	const want = params.get("variant") ?? ""
+	const bar: BarKey = want in BARS ? (want as BarKey) : "tabs"
 	return (
 		<>
-			<Explorer10 key={key} variant={variant} />
+			<Explorer10 variant={HARBOR} bar={bar} />
 			<PrototypeSwitcher
-				variants={Object.fromEntries(
-					Object.entries(VARIANTS10).map(([k, v]) => [k, v.name]),
-				)}
+				variants={BARS}
 				position="bottom-[5.75rem] left-2 right-2 justify-between lg:bottom-3 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:justify-start scale-90 origin-bottom"
 			/>
 		</>

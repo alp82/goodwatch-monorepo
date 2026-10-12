@@ -115,7 +115,7 @@ export function MixBar({
 	/** Goes back out to the whole world. */
 	onAll: () => void
 	/** The tutorial points at a button: on a touch screen with a finger, else with a cursor. */
-	nudge?: { at: "combined" | "separate"; touch: boolean } | null
+	nudge?: { at: "combined" | "all" | "separate"; touch: boolean } | null
 }) {
 	const free = Math.max(0, state.max - state.list.length)
 	return (
@@ -170,9 +170,10 @@ export function MixBar({
 					<button
 						type="button"
 						aria-pressed={state.at === "all"}
-						className={state.at === "all" ? "ex10-view-on" : ""}
+						className={`${state.at === "all" ? "ex10-view-on" : ""} ${nudge?.at === "all" ? "ex-tut-glow" : ""}`}
 						onClick={onAll}
 					>
+						{nudge?.at === "all" && <Press touch={nudge.touch} />}
 						Show all
 					</button>
 				</span>

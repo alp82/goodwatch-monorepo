@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer: the real Explorer's tutorial (ui/explorer/Tutorial.tsx), with the
 // steps of the world: tap a group, tap an island, tap another group, tap an island there, tap Combined, zoom into
-// the combination, Separate, and a closing line on combining more. As there, each step's gesture loops on the real map until the viewer does it, and
-// the tutorial never takes a pointer but its Skip button. The looks are the real tutorial's (explorer.css).
+// the combination, tap Show all, tap a third island, tap Combined, Separate, and a closing line on combining more.
+// As there, each step's gesture loops on the real map until the viewer does it, and the tutorial never takes a
+// pointer but its Skip button. The looks are the real tutorial's (explorer.css).
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import type { MapIsland } from "~/ui/explorer/island"
 import type { MapEngine as MapEngine10 } from "./engine10"
@@ -13,6 +14,9 @@ export type TutorialStep10 =
 	| "group2"
 	| "two"
 	| "combined"
+	| "all"
+	| "group3"
+	| "three"
 	| "zoom"
 	| "separate"
 	| "more"
@@ -42,7 +46,11 @@ export function Tutorial10({
 	emptyRef.current = empty
 	const picksRef = useRef(picks)
 	picksRef.current = picks
-	const onMap = step !== "combined" && step !== "separate" && step !== "more"
+	const onMap =
+		step !== "combined" &&
+		step !== "all" &&
+		step !== "separate" &&
+		step !== "more"
 	/** What the gesture is on, so its animation starts over for a new target. */
 	const [target, setTarget] = useState<string | null>(null)
 	useEffect(() => {
@@ -75,7 +83,7 @@ export function Tutorial10({
 				root.style.visibility = "visible"
 				return
 			}
-			if (step === "group" || step === "group2") {
+			if (step === "group" || step === "group2" || step === "group3") {
 				// The same group for as long as the step lasts: the first one, or the first the picked island isn't from.
 				const from = picksRef.current.map(groupingOf)
 				const regions = engine.regionsOn()
@@ -85,7 +93,7 @@ export function Tutorial10({
 				if (!to || to.x < 0 || to.x > w || to.y < 0 || to.y > h) return hide()
 				// The pointer comes in from the middle once an island sits there, else from below and to the side.
 				const hub = engine.hubOn()
-				if (step === "group2" && hub) aim(to.id, to.x, to.y, hub.x, hub.y)
+				if (step !== "group" && hub) aim(to.id, to.x, to.y, hub.x, hub.y)
 				else aim(to.id, to.x, to.y, to.x + Math.min(140, w * 0.2), to.y + 150)
 				return
 			}
@@ -124,7 +132,10 @@ export function Tutorial10({
 		one: `${tap} an island`,
 		group2: `${tap} another group`,
 		two: `${tap} an island to combine them`,
-		combined: `${tap} Combined to see what they share, or add another island`,
+		combined: `${tap} Combined to see what they share`,
+		all: `${tap} Show all to go back out`,
+		group3: `${tap} another group`,
+		three: `${tap} a third island to narrow it down`,
 		zoom: touch ? "Pinch to zoom in" : "Scroll to zoom in",
 		separate: `${tap} Separate to start over`,
 		more: "Combine up to 5 islands to narrow it down",
