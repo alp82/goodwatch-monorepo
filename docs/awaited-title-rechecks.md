@@ -163,8 +163,9 @@ publish on its own.
    ```
    Production was set up this way: the schedule was created on 2026-10-12 with the 07:00 cron.
 
-No Mongo index, no Crate change and no new Windmill variable are needed. `f/monitoring/check` observes the new
-schedule like every enabled schedule and reports it after three failed runs.
+No Mongo index, no Crate change and no new Windmill variable are needed. `f/monitoring/check` observes the
+schedule like every enabled schedule. It reports a run that did not start 30 minutes after it was due, and a run
+that is still running after 15 minutes (`RUNTIME_HOURS`; the script's timeout is 2 minutes).
 
 ## How to see that it works
 

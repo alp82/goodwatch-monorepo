@@ -470,5 +470,54 @@ class MonitorCheckTests(unittest.TestCase):
         self.assertNotIn("sensitive", str(result))
 
 
+AWAITED = "f/tmdb_api/tmdb_fetch_details_from_api/awaited"
+AWAITED_NOW = datetime(2026, 10, 14, 10, 20, tzinfo=timezone.utc)
+
+
+class HourlyAwaitedListJobTests(unittest.TestCase):
+    """The list of titles members wait for is stored every hour (docs/awaited-title-rechecks.md)."""
+
+    def report(self, runs: dict) -> dict:
+        """The checker's report at 10:20 UTC for the list job's runs, given by the hour they ran."""
+        jobs = {}
+        for hour, run in runs.items():
+            jobs[f"run-{hour:02d}"] = {
+                "id": f"run-{hour:02d}",
+                "scheduled_for": f"2026-10-14T{hour:02d}:00:00Z",
+                "started_at": f"2026-10-14T{hour:02d}:00:01Z",
+                **run,
+            }
+        schedule = {
+            "path": AWAITED,
+            "script_path": AWAITED,
+            "schedule": "0 0 * * * *",
+            "timezone": "Europe/Berlin",
+            "enabled": True,
+        }
+        result = poll(
+            Api(list(jobs), jobs, [schedule]),
+            MemoryStore(),
+            AWAITED_NOW,
+            notify=False,
+        )
+        return result["pipelines"][0]
+
+    def stored(self) -> dict:
+        return {
+            "success": True,
+            "duration_ms": 2000,
+            "result": {"listed": 1110, "added": 0, "removed": 0},
+        }
+
+    def test_a_run_that_hangs_is_reported_before_the_next_hour(self) -> None:
+        # The script's own timeout is 2 minutes.
+        runs = {hour: self.stored() for hour in range(10)}
+        runs[10] = {"running": True}
+
+        report = self.report(runs)
+
+        self.assertIn("excessive_runtime", report["causes"])
+
+
 if __name__ == "__main__":
     unittest.main()
