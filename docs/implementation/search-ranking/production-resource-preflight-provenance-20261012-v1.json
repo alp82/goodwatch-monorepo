@@ -1,0 +1,33 @@
+{
+  "event": "resource-preflight-provenance.v1",
+  "readerSha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+  "files": {
+    "launch_preflight.py": "bef89352c19fc703174926cb0f88b42ab25a0b8834ab1eeefaf5966a1c627c57",
+    "schedule_probe.py": "09fac5f6cb0faaca03178396e5971fd24dfb29f2af154fdafde71033e4bb3559",
+    "audit_window.py": "bbc3bd993fce1e6151a570e9d81d81603c730361618d438cea6758f9202261bf",
+    "test_launch_and_audit.py": "bb19ce88ba3c705acc6b7f2772cf66304e3ddacad55fcb13be7a6a04345a0e74"
+  },
+  "preflightJournalSha256": "a8375d9c55866c2f885efeb7ace56000de8bc04ec95a55bdfdac70d237e67bc0",
+  "schedulerJournalSha256": "8737cfc832376a960432ded5b5847e6e2e1a2be514828b878d79f3e208ab1888",
+  "preflightSuccessful": true,
+  "schedulerSuccessful": false,
+  "observationStarted": false,
+  "sourceHostFilesCreated": 0,
+  "queries": 0,
+  "cacheControls": 0,
+  "productionAcceptance": false,
+  "schedulerDiagnosticV2JournalSha256": "2313d3f476eb711fe2bfc7025e34201ec40074afaff96343f94b7a9888180e19",
+  "schedulerDiagnosticV2Successful": false,
+  "schedulerDiagnosticV2Files": {
+    "schedule_probe_v2.py": "36d7e2bd606ea3f7c26228e987226855c440a31175e26eda5439d6928cd2c78f",
+    "launch_schedule_diagnostic_v2.py": "d62c41855376997cf6c23006cd1e027c3f5e89f5813dc13c9a96e944b74c67c5",
+    "test_schedule_v2.py": "aec4ecdce8e76946db481db8084bcf0bc328af4cd637f8869cbb7352d414b608"
+  },
+  "schedulerDiagnosticV3JournalSha256": "04d1d32971070e6b05cd4574e5747834e734b5b0d21f3cfee66dc9e1b780a6a4",
+  "schedulerDiagnosticV3Successful": true,
+  "schedulerDiagnosticV3Files": {
+    "schedule_probe_v3.py": "4d7913345648405281ca239b538d0081ed8256084274901544ca2fbfff092f53",
+    "launch_schedule_diagnostic_v3.py": "95ba792f1257b5d6c88b29a8daa3608a43014c29dfed18395d2e92e45d110f16",
+    "test_schedule_v3.py": "3d79733f8f2710e5c6b5e2d3686c4181216ccc6f65d5cd75ced66553ba8e0d00"
+  }
+}
