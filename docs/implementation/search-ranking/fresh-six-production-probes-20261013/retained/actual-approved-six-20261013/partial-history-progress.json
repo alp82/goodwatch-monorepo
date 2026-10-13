@@ -1,0 +1,63 @@
+{
+  "window_start": "2026-10-13T01:03:33.224Z",
+  "window_end": "2026-10-13T07:35:36.736Z",
+  "audit_at": "2026-10-13T07:40:56.033Z",
+  "window_basis": "search_history created_at is history insertion time, not request start time",
+  "total_rows": 8,
+  "source_count": 8,
+  "production_rows": 8,
+  "foreign_key_rows_excluded": 0,
+  "production_outcomes": {
+    "cached": 3,
+    "ready": 5
+  },
+  "production_reasons": {
+    "null": 8
+  },
+  "production_fallbacks": {
+    "null": 8
+  },
+  "production_rankers": {
+    "hybrid-v2": 8
+  },
+  "daily_production_counts": {
+    "2026-10-13": 8
+  },
+  "first_results": {
+    "n": 8,
+    "p50_ms": 359,
+    "p95_nearest_rank_ms": 1157,
+    "max_ms": 1157
+  },
+  "full_completion": {
+    "n": 8,
+    "p50_ms": 716,
+    "p95_nearest_rank_ms": 1222,
+    "max_ms": 1222
+  },
+  "missing_first_results_rows": 0,
+  "completion_failed_rows": 0,
+  "completion_aborted_rows": 0,
+  "checks": {
+    "seven_days_elapsed_after_window_start": false,
+    "source_rows_complete": true,
+    "has_production_rows": true,
+    "all_production_rows_inside_window": true,
+    "all_production_rows_have_first_results": true,
+    "valid_completed_latency": true,
+    "p95_first_results_below_1500": true,
+    "no_recorded_reasons": true,
+    "no_ranker_fallbacks": true,
+    "no_late_completion_failures": true
+  },
+  "history_acceptance_pass": false,
+  "seven_day_acceptance_pass": false,
+  "acceptance_status": "needs independent production error coverage",
+  "limits": [
+    "Same-key development and intentional probes cannot be distinguished from organic traffic.",
+    "First-results timing measures server response enqueue after route enrichment, not browser receive or paint. Full completion reports search computation through final batch construction, before final route enrichment/enqueue.",
+    "Delivered aborted searches are included in first-results latency; aborted and failed completions are excluded from full-completion latency.",
+    "Failures before usable delivery, rejected requests, history-write failures, and searches still running are not reliably represented in search_history. Corroborate production HTTP/runtime error telemetry before asserting seven-day error-free acceptance.",
+    "Use the final deployment UTC boundary and independently confirm both role SHAs; historical total timing is never substituted for firstResults."
+  ]
+}

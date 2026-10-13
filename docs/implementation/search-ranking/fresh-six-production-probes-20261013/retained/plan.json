@@ -1,0 +1,97 @@
+{
+  "schema": "fresh-six-production-probe-plan.v1",
+  "preparedOnly": true,
+  "executionAuthorized": false,
+  "old18ProbeAllowanceConsumed": true,
+  "requests": 6,
+  "parallelism": 1,
+  "retries": 0,
+  "endpoint": "https://goodwatch.app/api/combined-search",
+  "clientFullBodyDeadlineMs": 30000,
+  "lateRankingWindowMs": 15000,
+  "cohort": "new public cohort; original six query texts were intentionally omitted from sanitized baseline",
+  "baseline": {
+    "path": "/home/alper/projects/goodwatch-bm25-evidence-100/docs/implementation/search-ranking/production-probes-baseline-20261011.jsonl",
+    "sha256": "fba0321764634cd69085f003f8e1f8205af9ad6d0f3759b3752112811663e387",
+    "bytes": 1729
+  },
+  "publicCorpus": {
+    "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/prepared-with-filters.json",
+    "sha256": "914d36f952a65927ace2c6c042097f0d53fe5d1633385550c32cff7098221c44",
+    "bytes": 1485349
+  },
+  "cases": [
+    {
+      "tag": "exact-title",
+      "queryProvenance": "core-01",
+      "body": {
+        "q": "Inception",
+        "lesserKnown": false,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    },
+    {
+      "tag": "native-title",
+      "queryProvenance": "new native exact public title; Spirited Away core-05",
+      "body": {
+        "q": "千と千尋の神隠し",
+        "lesserKnown": false,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    },
+    {
+      "tag": "low-vote-title",
+      "queryProvenance": "current public catalog row 14186/point1000000042939/votes1249/year2007",
+      "body": {
+        "q": "The Tomb",
+        "lesserKnown": true,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    },
+    {
+      "tag": "person",
+      "queryProvenance": "h5-24",
+      "body": {
+        "q": "ridley scott",
+        "lesserKnown": false,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    },
+    {
+      "tag": "description",
+      "queryProvenance": "core-06",
+      "body": {
+        "q": "tense but not bleak",
+        "lesserKnown": false,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    },
+    {
+      "tag": "reference",
+      "queryProvenance": "h5-20",
+      "body": {
+        "q": "like interstellar",
+        "lesserKnown": false,
+        "allTitles": false,
+        "discover": false,
+        "forYou": false,
+        "filters": {}
+      }
+    }
+  ]
+}
