@@ -12,6 +12,21 @@ the address opens on and the only transition the controls offer; the other eight
 for comparison. The way back is a **TV button**: on the desktop in the scroll-up bar, on the phone in the dock in
 place of its left part. It lives for two pages. See [Round three](#round-three-the-tv-button).
 
+**Implemented (2026-10-14): `main`, commit `8cf806a1`,** "leaving through the TV leans in, and a TV button leads
+back". The owner asked for it on `main` at once, ahead of the TV revamp, so it runs on today's TV:
+`ui/living-room/tv-transition.ts`, `tv-way-back.ts` (with tests), `TvWayBackHost.tsx`, `TvWayBack.tsx`, the rules
+in `main.css`, and the dock. It is transition 9 and the Set button, built without this prototype's two wrappers
+(the marks are set at the press and on `popstate`, the brackets are placed by CSS with `:has(.living-room)`). Two
+things differ from what this prototype showed, because `main` had moved on: the phone's dock is one button there,
+whose left part is the page's name and not Watch next, so the TV button replaces only that name; and the desktop's
+bar says "Back to TV" without the screen's name. This prototype stays as the record of the choice.
+
+**Decided after round three (2026-10-14):** the **Set** design, and the dock's **left part** as its place, are
+"perfect". The dock's button keeps "Back to / TV": no screen name as a second line ("No extra discover
+subtext"). Watch next two taps away for those two pages is accepted. These are what the address opens on;
+Screen, Plain and the place beside Search stay behind `T` and `L` for the record. One thing I left as it is and
+did not get an answer on: the desktop's bar still names the screen under "Back to TV" ("Discover › Funny").
+
 ## Open it
 
 `http://100.71.215.115:3157/prototype/tv-expand` (over Tailscale; the server is left running).
@@ -302,13 +317,10 @@ reachable and works for a finger. It lands on the TV screen the person left, fro
 
 ## Questions for the owner
 
-Round three's, on top:
+Round three's are answered: Set; the dock's button keeps "Back to / TV" without a screen name; Watch next two
+taps away for two pages is fine. Open:
 
-1. Set, Screen or Plain?
-2. In the dock the Set says "Back to / TV". Should its second line name the screen instead ("Discover"), as the
-   desktop's bar does? There is room for about eight letters.
-3. While the TV button stands in the left part, Watch next is two taps away instead of one. Acceptable for two
-   pages?
+1. Should the desktop's bar also drop the screen's name under "Back to TV", so that both read the same?
 
 Answered in round two: the transition (6 and 5 with 3's frame), the way back (scroll-up bar), how long it lives
 (a step or two), the phone (in the dock), Escape (yes). Open:
