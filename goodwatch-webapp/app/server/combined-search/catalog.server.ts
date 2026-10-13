@@ -105,7 +105,21 @@ export interface Metadata {
 	poster_path: string | null
 	goodwatch_overall_score_normalized_percent: number | null
 }
-export async function metadataFor(keys: string[]) {
+// The catalog read's own limit, kept when a caller's signal can end it sooner (see searchStatement's default).
+const METADATA_TIMEOUT_MS = 8000
+/**
+ * The catalog rows of the keys: one query per table that has keys. The read fails at its first failed query, while the
+ * query beside it may still run. `track` is called once with each query that was sent, as it starts, so a caller can
+ * count the queries one by one; it changes neither the queries nor when the read ends.
+ */
+export async function metadataFor(
+	keys: string[],
+	signal?: AbortSignal,
+	track?: (query: Promise<Metadata[]>) => void,
+) {
+	const bound = signal
+		? AbortSignal.any([signal, AbortSignal.timeout(METADATA_TIMEOUT_MS)])
+		: undefined
 	return (
 		await Promise.all(
 			(["movie", "show"] as const).map(async (type) => {
@@ -114,10 +128,13 @@ export async function metadataFor(keys: string[]) {
 					.map((k) => Number(k.split(":")[1]))
 					.filter(Number.isSafeInteger)
 				if (!ids.length) return []
-				return searchQuery<Metadata>(
+				const query = searchQuery<Metadata>(
 					`SELECT tmdb_id, genres, adult, imdb_id, goodwatch_overall_score_voting_count, poster_path, goodwatch_overall_score_normalized_percent, '${type}' AS media_type FROM ${type} WHERE tmdb_id IN (${ids.map(() => "?").join(",")})`,
 					ids,
+					bound,
 				)
+				track?.(query)
+				return query
 			}),
 		)
 	).flat()

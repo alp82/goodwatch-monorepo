@@ -1,0 +1,105 @@
+# Design review: earlier title/person provisional results
+
+**Verdict: the backend seam is sound, but the design is not ready to implement as written.** There are seven blockers below, each with a proposed resolution. This is a paper review of the inline source only: nothing was run, and it makes no runtime, capacity or latency claim.
+
+The seam itself holds up against `search.server.ts`:
+
+- **No new queries on the ranked path:** hoisting the one `titleMatches(initialTitlePromise, policy)` above `await languagePromise` adds no TMDB, catalog or metadata query there. The basic path already fetches title metadata a second time in `basicList` today; that is unchanged.
+- **Scope preserved:** `readPeople` is awaited before the seam, so `q`, `policy.onlyTitles` and `creditScope` are already final when the sibling starts.
+- **No auth or taste bypass:** `sendBatch` awaits `taste`, which awaits `accountId`, and the response itself waits on `auth`.
+- **Client stream:** `search-request.ts` already accepts `reading` after `provisional` and never stores a provisional as the final batch.
+
+## Blockers
+
+1. **`lexical > 0` is not sufficient relevance evidence.**
+   - `titleMatch` counts any shared word, stopwords included. "a movie about the war" gives every title containing "the" a lexical of 0.13, so the description fixture ("no provisional") cannot pass under `lexical > 0`.
+   - Lexical-0 "Catalog suggestion" rows would also ride along, ordered by popularity.
+   - Proposed rule: emit only rows in the existing named tiers at 0.9 or above ("All search words in title", "Exact phrase", "Exact title", including the original-name variants), plus gated people.
+   - Cost: prefix typing ("the godf") and "like Heat" get no early rows. This is the one decision the owner has to make.
+
+2. **The early packet's empty `reading` hides the streamed chips on both clients.**
+   - `SearchJourney`: `chips = batch?.q === q ? batch.reading ?? [] : reading…`.
+   - `useDiscoverSearch`: `current?.reading ?? streamed`, and `[]` is not nullish.
+   - Today the provisional arrives after the reading, so this never shows. With the new packet, chips stay on "Reading your request…" until the final.
+   - Fix: while the shown batch is partial with `pendingRanking`, prefer the streamed reading for the same key.
+
+3. **The early packet has required fields that are not known yet.**
+   - `SearchBatch.mode` is `language.policy.mode`, which does not exist before the language await. The design does not say what goes there; it must not be a made-up "english".
+   - `errors` is a shared mutable array and must be `[]` for this packet.
+   - The sibling must not reuse `basicList`: it pushes `BASIC_SEARCH_MESSAGE` (which flips the history outcome to basic), starts `literal()`, and calls `lap()`, corrupting stage timing.
+
+4. **The guarded region and history entry need more than "expand the try".**
+   - Throws from language, `runJevStage`, `rankedList`, `basicList` and `await shownPeople` are all outside the current try. `basicList` throws "Search interrupted" after an abort during the reading.
+   - `queueHistory` closes over `const outcome`, `served` and `fallback`. A catch that fires before `runJevStage` returns hits an unassigned binding.
+   - Proposed composition:
+     - On failure or abort after an early delivery, await the already-running reading promise and record its real `outcome` and `chargedNano`.
+     - That promise never rejects and settles on abort or its 1500 ms deadline, so this is not a new request or a retry.
+     - `executeJevStage` settles the ledger itself in every branch, so only the history row is at stake.
+   - Open case: `prepareLanguage` rejects after a delivery. The charge is unknown and no reading started. Whether history can represent "unknown" depends on `store.server.ts`, which is not in the packet.
+
+5. **An early callback failure must not reject `combinedSearch` while work is in flight.**
+   - The route's `finally` calls `release()` as soon as the search rejects, which would free admission while the reading and ranking are still running.
+   - Fix: latch the error and rethrow at the main path's next existing checkpoint.
+   - Through the route this is nearly unreachable, because `send` returns false instead of throwing. `signal.aborted` after the callback remains the real delivery check.
+
+6. **`firstResults` would be overwritten.**
+   - The existing post-rank provisional does `stageMs.firstResults = Date.now() - started`, a plain assignment. With an earlier delivery it must be `??=`.
+   - The catch also uses `firstResults !== undefined` as its "delivered" latch, so the sibling must set it only after its callback returns un-aborted.
+   - `combinedSearch` must drain the delivery queue before `onComplete` and before rethrowing.
+   - An early packet not yet started when a ranked packet is queued should be dropped, not sent late.
+
+7. **The "no basic final because a timer elapsed" sentence contradicts existing behaviour.**
+   - `rankForServing` already falls back to basic at its 1500 ms deadline while the ranking finishes in the background.
+   - The design should say "no new timer". Otherwise it changes final results and breaks the same-final guarantee for non-streaming callers.
+
+## Tests
+
+The existing `title-lookup.test` fixtures cannot make several of the required cases fail first:
+
+- **Stubs too permissive:** `eligible` and `allowsTitle` always return true, `peopleToShow` is the identity, and `readPeople` never scopes. The low-vote, `onlyTitles`, adult and person cases need the real pure functions or probe-driven stubs.
+- **Nothing can be held:** `rankForServing` and `runJevStage` resolve immediately. Both need probe-held deferreds, or "early before ranking" is a microtask race.
+- **Reading indistinguishable:** `summarizeReading` returns `[]`, so "reading arrives after early `reading: []`" cannot be told apart. It needs non-empty chips.
+
+Existing assertions that will change and need a deliberate edit:
+
+- "slow primary lookup…" asserts `provisional.length === 1`; it will now see two packets.
+- "primary lookup winning the catalog race…" asserts `early === false`; the remote winner now legitimately emits a `pendingRanking` packet.
+- "progress callback failures…" asserts one ranking and no history; this depends on blocker 5.
+
+Additions beyond the design's list:
+
+- A stopword description query yields no packet.
+- The provisional `errors` never contains the basic message, and a ranked final after an early packet records a non-basic history outcome.
+- Abort during the reading after delivery writes one history row with `completionAborted` and the real reserve charge.
+- `firstResults` is not overwritten by the second provisional.
+- Admission is not released before the reading settles.
+- Chips are visible while a `pendingRanking` partial is shown, in both Journey and Discover.
+- A late ranking failure reads as a ranking failure, not "Title matches could not finish".
+- A people-only partial in Discover does not flash the empty grid.
+
+## Source coverage
+
+- **Read closely:** `search.server.ts`, `api.combined-search.ts`, `title-lookup.test.ts`, `api-route.test.ts`, `runtime.server.ts`, `serve.server.ts`, `people.server.ts`, `catalog.server.ts`, `search-filters.ts`, `taste-rows.server.ts`, `telemetry.server.ts`, `search-model.tsx`, `search-request.ts` and its test, `discover-search-request.ts` and its test, `useDiscoverSearch.ts`, `search-reblend.server.ts`, and the `SearchJourney` controller, status, chips and list.
+- **Read for the relevant parts:** `DiscoverPage.tsx` (search status, people, grid and stale logic) and `rank-search.server.ts` (prepare/rank structure and the reblend contract; the scoring maths was skimmed).
+- **Skimmed:** `for-you.ts`, `catalog-exact-title.test.ts`, `SearchPeople.tsx`, `navigation/Search.tsx`, `SearchPanel.tsx`, `ui/Search.tsx`, and the `JourneyFilters`/`JourneyNavigation` parts of `SearchJourney.tsx`.
+- **Not in the packet, but the review depends on them:**
+  - `store.server.ts`: the history schema.
+  - `useDiscoverBrowse.ts`: what `provisional` does, and whether each packet triggers a results fetch.
+  - `matching.server.ts`: `gatePeople`.
+  - `title-blend.server.ts` and `ranking.server.ts`: the final blend and `foldCuts`.
+  - `language.server.ts`: whether `prepareLanguage` can reject.
+  - `admission.server.ts`, `search-client.ts`, `command-palette.server.ts`.
+
+## Unresolved boundaries
+
+- **Relevance:**
+  - Provisional order comes from the UI `blend`; final order comes from the server title blend. Rows can reorder or disappear.
+  - Alternate cuts cannot be folded without the index, so a cut can show early and vanish.
+  - Reference detection lives in the ranker, so only people-index names can be "reference" evidence early.
+- **History:** the unknown-charge case in blocker 4. A callback failure with no delivery still writes no history row even though the reading was paid; that is the existing behaviour.
+- **UX:**
+  - There can be up to three paints: titles, ranked with fallback titles, final.
+  - `moved` on the early packet is computed over the title-only list.
+  - Each extra packet can trigger another `/api/watchability` call (Journey with a streaming filter) and possibly a Discover results fetch.
+  - Members' first paint waits on taste load.
+  - A person from the index with empty `knownFor` still shows; that is existing policy, not a placeholder.

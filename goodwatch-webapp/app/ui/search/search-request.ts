@@ -51,7 +51,7 @@ export async function requestSearch({
 	signal: AbortSignal
 	/** The reading of the query, which arrives before the results. */
 	onReading: (chips: ReadingChip[]) => void
-	/** Usable results while title matching continues; never the completed answer. */
+	/** Usable results while the ranking or title matching continues; never the completed answer. */
 	onProgress?: (batch: SearchBatch) => void
 	/** What the page says when the search failed and the server didn't say why. */
 	unavailable: string

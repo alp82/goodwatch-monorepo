@@ -1,0 +1,30 @@
+--- /home/alper/projects/search-100-evidence/early-authoritative-final-review-v2-20261013/code/app/server/combined-search/title-lookup.test.ts	2026-10-13 02:37:22.363948030 +0200
++++ /home/alper/projects/search-100-evidence/early-authoritative-final-review-v3-20261013/code/app/server/combined-search/title-lookup.test.ts	2026-10-13 02:43:37.066523762 +0200
+@@ -89,6 +89,9 @@
+ 	}[],
+ }
+ Object.assign(globalThis, { titleLookupProbe: probe })
++// The serve stub writes probe.staged from evaluated source the compiler cannot see, so a test that reset it reads it
++// back through here, under its declared type, instead of under the null the test itself assigned.
++const stagedRanking = (): (typeof probe)["staged"] => probe.staged
+ 
+ const stubs: Record<string, string> = {
+ 	"/combined-search/reading-retrieval.server.ts": `export const attributeRequest=()=>({}); export const fingerprintRequest=()=>({}); export const describeTitles=async(_reading,rows,options)=>{const probe=globalThis.titleLookupProbe;probe.displays.push(rows.map(row=>row.key));if(probe.displayGate){const gate=probe.displayGate;probe.displayHeld++;probe.displayTimeouts.push(options?.timeoutMs);await gate;probe.displaySettled++}return []}; export const readingFields=()=>({}); export const summarizeReading=()=>[];`,
+@@ -1515,7 +1518,7 @@
+ 		held.rankSettled = probe.rankSettled - before.rankSettled
+ 		held.final = finals
+ 		held.history = probe.history.length - before.history
+-		deadline = probe.staged?.deadline
++		deadline = stagedRanking()?.deadline
+ 	} finally {
+ 		clearTimeout(safety)
+ 		release()
+@@ -1535,7 +1538,7 @@
+ 		result.rows.map((row) => [row.key, row.lexical, row.score]),
+ 		[["movie:42", 2, 3]],
+ 	)
+-	const staged = probe.staged
++	const staged = stagedRanking()
+ 	assert.ok(staged?.ranking && staged.completed && staged.deadlineCopy)
+ 	// The deadline's snapshot is RankingProgress's own, taken while round1 was pending, and nothing changed it since.
+ 	assert.ok(deadline, "the deadline passed without a snapshot")

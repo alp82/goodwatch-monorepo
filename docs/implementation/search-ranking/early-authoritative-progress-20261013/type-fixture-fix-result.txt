@@ -1,0 +1,9 @@
+✔ a late completion's history keeps the completed ranking's own stage timings, and the deadline's frozen snapshot under separate rankingDeadline names (191.074571ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1006.694989

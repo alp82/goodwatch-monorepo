@@ -1,0 +1,74 @@
+{
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "medium",
+    "--restricted",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--disable-slash-commands",
+    "--no-session-persistence",
+    "--output-format",
+    "json"
+  ],
+  "cliExit": 0,
+  "coverage": "read-only supplied exact 52-file source/diff + historical design report + peer scoped backend report; no independently executed tests/host",
+  "durationMs": 153326,
+  "effort": "medium",
+  "execution": false,
+  "files": {
+    "manifest.json": {
+      "bytes": 8635,
+      "sha256": "737d453b7ce04e1aa74e34c684206717e1110e3f05cf4745fb3330ac271ee4fd"
+    },
+    "opus-report.txt": {
+      "bytes": 6344,
+      "sha256": "35bfe73b4f98dbf1576dd928a335e1e062c62deab7a6f4ea1a10e6d6ec80328f"
+    },
+    "opus-review.json": {
+      "bytes": 8257,
+      "sha256": "4d143814104ede46059906206ac0a19e9a64215c2d2487b1216a4fcc3a5cabaf"
+    },
+    "opus-review.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "review-prompt.txt": {
+      "bytes": 824154,
+      "sha256": "69d6c7b58b1d506456ff7a41b494544e754f7c7da7ffada3ebab76e733e854b1"
+    },
+    "v2-to-v3.diff": {
+      "bytes": 2010,
+      "sha256": "ae613d3babf2b55ef885b3c6027c67018e08e30a2572a4c378efe268ab98b7c3"
+    },
+    "validation.json": {
+      "bytes": 1893,
+      "sha256": "3d535faca4cf86440c253b0f19e41ca2c09c3f87a0f9c8943778105f30dab522"
+    }
+  },
+  "model": "claude-opus-5-5",
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "cacheCreationInputTokens": 352920,
+      "cacheReadInputTokens": 535,
+      "canonicalModel": "claude-opus-5-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 3.085575,
+      "inputTokens": 2,
+      "maxOutputTokens": 128000,
+      "outputTokens": 13105,
+      "provider": "firstParty",
+      "thinkingTokens": 10779,
+      "webSearchRequests": 0
+    }
+  },
+  "schema": "actual-claude-code-review-provenance.v1",
+  "verdict": "ACCEPT"
+}
