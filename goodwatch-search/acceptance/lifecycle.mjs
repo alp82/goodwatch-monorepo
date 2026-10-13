@@ -9,7 +9,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
   const acknowledgements = [], collection = [];
   const times = [], full = [], accepted = new Map(), finished = new Map(), duplicates = [], heartbeats = [], problems = [];
   let collectorRestarts = 0, deliveredCohort = 0, acknowledgementsAfterStart = 0;
-  let historySucceeded = 0, historyFailed = 0, rejections = 0, failed = 0, aborted = 0, warningRows = 0, missingFirst = 0, wrongCommit = 0;
+  let historySucceeded = 0, historyFailed = 0, rejections = 0, failed = 0, aborted = 0, warningRows = 0, missingFirst = 0, missingComputation = 0, wrongCommit = 0;
   const keys = new Set();
   for (const record of records) {
     if (record.key) { if (keys.has(record.key)) continue; keys.add(record.key); }
@@ -46,7 +46,10 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
     if (done.titleLookupFailed || done.descriptionFailed) warningRows++;
     if (done.firstResultsMs !== null) { times.push(done.firstResultsMs); deliveredCohort++; }
     else if (done.status === 'completed') missingFirst++;
-    if (done.status === 'completed' && done.computationMs !== null) full.push(done.computationMs);
+    if (done.status === 'completed') {
+      if (typeof done.computationMs === 'number' && Number.isFinite(done.computationMs) && done.computationMs >= 0) full.push(done.computationMs);
+      else missingComputation++;
+    }
   }
   // Acknowledgements have no UUID. Include all of them conservatively through the cohort drain,
   // but never let arbitrary later traffic inflate the minimum storage-coverage count.
@@ -88,6 +91,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
     no_duplicate_lifecycle_phases: duplicates.length === 0,
     expected_commit_only: wrongCommit === 0,
     completed_rows_have_first_results: missingFirst === 0,
+    completed_rows_have_computation: missingComputation === 0,
     first_results_p95_below_1500: times.length > 0 && percentile(times, .95) < 1500,
     no_failed_requests: failed === 0,
     no_result_lookup_warnings: warningRows === 0,
@@ -100,6 +104,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
     accepted_requests: accepted.size, finished_requests: accepted.size - unfinished.length,
     failed_requests: failed, aborted_requests: aborted, lookup_warning_requests: warningRows,
     missing_finished_count: unfinished.length, duplicate_phase_count: duplicates.length,
+    missing_completed_computation_count: missingComputation,
     history_acknowledgements: { recorded: historySucceeded, failed: historyFailed, including_after_window_end: acknowledgementsAfterStart, expected_delivered_cohort: deliveredCohort }, admission_rejections: rejections,
     first_results: { n: times.length, p95_nearest_rank_ms: percentile(times, .95) },
     full_search_computation: { n: full.length, p95_nearest_rank_ms: percentile(full, .95) },
