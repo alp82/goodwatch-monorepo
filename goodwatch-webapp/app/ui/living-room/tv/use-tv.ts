@@ -319,8 +319,9 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			activeService: null,
 			serviceName,
 			press,
+			point: (item) => dispatch({ type: "focus", item }),
 		}),
-		[power, menu.open, state.screen.name, press],
+		[power, menu.open, state.screen.name, press, dispatch],
 	)
 
 	return {

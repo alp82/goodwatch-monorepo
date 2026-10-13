@@ -125,6 +125,7 @@ const roomTv: RoomTv = {
 	activeService: null,
 	serviceName: (key) => key,
 	press: () => {},
+	point: () => {},
 }
 const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 	renderToStaticMarkup(

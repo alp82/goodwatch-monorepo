@@ -249,22 +249,26 @@ export type PhoneRoomLayout = {
 	floor: Rect
 	/** The hand, for the Remote that is held: its fingers come round the body at the streaming keys. */
 	hand: Rect | null
-	/**
-	 * How the Remote aims at a finger on the picture (pointing, slice 4): the point it turns about, from there
-	 * up to its top (`arm`) and half its width, the gap between its top and the TV (`clear`), how far it may turn,
-	 * lean back and slide, and what part of the angle to the target it turns by.
-	 */
-	rig: {
-		x: number
-		y: number
-		arm: number
-		half: number
-		clear: number
-		swing: number
-		lean: number
-		slide: number
-		turn: number
-	}
+	rig: PhoneRig
+}
+
+/**
+ * How the phone's Remote aims at a spot on the picture (pointing-aim.ts): where the picture is from it, the point
+ * it turns about, from there up to its top (`arm`) and half its width, the gap over its top (`clear`: to the TV
+ * in portrait, to the scene's edge in landscape), how far it may turn, lean back and slide, and what part of the
+ * angle to the spot it turns by.
+ */
+export type PhoneRig = {
+	tv: "above" | "left"
+	x: number
+	y: number
+	arm: number
+	half: number
+	clear: number
+	swing: number
+	lean: number
+	slide: number
+	turn: number
 }
 
 /**
@@ -365,6 +369,7 @@ export function layoutPhoneRoom(
 					}
 				: null,
 		rig: {
+			tv: "above",
 			x: w / 2,
 			y: pivot,
 			arm: pivot - remoteTop,
@@ -389,6 +394,28 @@ export function layoutPhoneRoom(
 const LANDSCAPE_MAX_ASPECT = 1.34
 /** The scene's right edge cuts the palm off: this much of the scene stays free right of the held Remote. */
 const PALM = 12
+/** Turned toward the picture, the Remote's top corner stays this far from the picture's edge. */
+const LANDSCAPE_GAP = 3
+/** Held, the Remote turns no further than this however much room it has; lying, it only shifts on the table. */
+const LANDSCAPE_SWING = { hand: 22, table: 3.5 } as const
+
+/**
+ * How far a Remote may turn about its grip toward a picture on its left, in degrees: until its top corner on
+ * that side, `half` beside the grip and `arm` above it, has travelled `reach` toward the picture. At most `most`.
+ */
+export function turnLimit(
+	reach: number,
+	half: number,
+	arm: number,
+	most: number,
+): number {
+	const corner = Math.hypot(half, arm)
+	if (reach >= corner) return most
+	const turn =
+		((Math.asin(Math.max(0, reach) / corner) - Math.atan2(half, arm)) * 180) /
+		Math.PI
+	return Math.max(0, Math.min(most, turn))
+}
 
 export type LandscapeRoomLayout = {
 	form: PhoneRemoteForm
@@ -402,7 +429,7 @@ export type LandscapeRoomLayout = {
 	/** The desktop's room photo, its TV behind ours. */
 	photo: Rect
 	hand: Rect | null
-	rig: PhoneRoomLayout["rig"]
+	rig: PhoneRig
 }
 
 /**
@@ -484,6 +511,12 @@ export function layoutPhoneLandscape(
 	const kh = remoteW / HAND.pw
 	const pivot =
 		form === "hand" ? keysEnd + 30 * u : remoteTop + (R.keys * u) / 2
+	const swing = turnLimit(
+		remoteLeft + remoteW / 2 - (tv.left + tv.width) - LANDSCAPE_GAP,
+		remoteW / 2,
+		pivot - remoteTop,
+		LANDSCAPE_SWING[form],
+	)
 	return {
 		form,
 		auto,
@@ -508,18 +541,21 @@ export function layoutPhoneLandscape(
 						height: HAND.h * kh,
 					}
 				: null,
-		// The picture is left of the Remote here, not above it. Nothing is over the Remote but the scene's edge
-		// (`clear`), and what keeps a turned Remote off the TV is the room its fingers have (`beside`): pointing
-		// (slice 4) has to hold the turn to that.
+		// The picture is left of the Remote here, not above it. The Remote turns about its grip toward the spot it
+		// points at: by the angle to the spot's share of a quarter turn, so a spot straight over it leaves it
+		// upright and one level with the grip turns it as far as it may go (`swing`). That is as far as its top
+		// corner stays off the picture, and no further than a hand turns. Over the Remote is the scene's edge
+		// (`clear`); it lifts by `slide` for a spot high up.
 		rig: {
+			tv: "left",
 			x: remoteLeft + remoteW / 2,
 			y: pivot,
 			arm: pivot - remoteTop,
 			half: remoteW / 2,
 			clear: Math.max(0, remoteTop - 3),
-			...(form === "hand"
-				? { swing: 14, lean: 11, slide: 8, turn: 0.65 }
-				: { swing: 3.5, lean: 0, slide: 6, turn: 0.2 }),
+			swing,
+			turn: swing / 90,
+			...(form === "hand" ? { lean: 11, slide: 8 } : { lean: 0, slide: 6 }),
 		},
 	}
 }

@@ -15,6 +15,7 @@ import {
 	layoutPhoneLandscape,
 	layoutPhoneRoom,
 	layoutRoom,
+	turnLimit,
 } from "./room-layout.ts"
 
 const near = (actual: number, expected: number, within: number, what: string) =>
@@ -546,6 +547,54 @@ describe("the phone's room in landscape", () => {
 		assert.equal(lying.hand, null)
 		assert.equal(layoutPhoneLandscape(844, 390, TAB, "table").form, "table")
 		assert.equal(layoutPhoneLandscape(844, 390, TAB, "table").auto, "hand")
+	})
+
+	it("the Remote may turn toward the picture until its top corner is 3 px from the picture's edge", () => {
+		for (const [w, h] of sizes) {
+			const L = layoutPhoneLandscape(w, h, TAB)
+			const at = `${w} x ${h}`
+			const { rig } = L
+			assert.equal(rig.tv, "left")
+			assert.ok(
+				rig.swing > 0 && rig.swing <= (L.form === "hand" ? 22 : 3.5),
+				at,
+			)
+			// Turned as far as it may, the corner on the TV's side is still right of the picture.
+			const turn = (rig.swing * Math.PI) / 180
+			const corner =
+				rig.x - (rig.half * Math.cos(turn) + rig.arm * Math.sin(turn))
+			assert.ok(corner >= L.tv.left + L.tv.width + 3 - 1e-6, at)
+			// It turns by the angle to the spot's share of a quarter turn.
+			near(rig.turn * 90, rig.swing, 1e-9, at)
+			// The grip is the Remote's middle across, under its keys when held and at half their height when lying.
+			near(rig.x, L.remote.left + L.remote.width / 2, 1e-9, at)
+			assert.ok(
+				L.form === "hand" ? rig.y > L.remote.keysEnd : rig.y < L.remote.keysEnd,
+				at,
+			)
+		}
+	})
+
+	it("held, it has 18 to 22 degrees to turn by on the phones measured", () => {
+		for (const [w, h] of [
+			[844, 390],
+			[932, 430],
+			[915, 412],
+		]) {
+			const { rig } = layoutPhoneLandscape(w, h, TAB)
+			assert.ok(rig.swing >= 18 && rig.swing <= 22, `${w} x ${h}: ${rig.swing}`)
+		}
+	})
+
+	it("the turn limit: none without room, all of it with room to spare, the corner's angle between", () => {
+		// A Remote 200 wide whose grip is 300 under its top: its corner is 100 beside the grip at rest.
+		assert.equal(turnLimit(100, 100, 300, 22), 0)
+		assert.equal(turnLimit(60, 100, 300, 22), 0)
+		assert.equal(turnLimit(400, 100, 300, 22), 22)
+		const limit = turnLimit(180, 100, 300, 22)
+		const turn = (limit * Math.PI) / 180
+		near(100 * Math.cos(turn) + 300 * Math.sin(turn), 180, 1e-9, "the corner")
+		assert.ok(limit > 16 && limit < 17, String(limit))
 	})
 
 	it("a bar across the scene's bottom takes its height from the TV too", () => {

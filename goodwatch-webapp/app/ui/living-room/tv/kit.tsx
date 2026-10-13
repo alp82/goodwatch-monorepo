@@ -126,11 +126,13 @@ export function Item({
 			{...{ [TV_ITEM_ATTR]: id }}
 			aria-current={on || undefined}
 			aria-label={label}
-			// SEAM (slice 4): the ring pointer and touch pointing take the place of these two, and dispatch the same.
+			// The mouse: the item under the cursor takes the focus, and the ring shows it (pointing.ts). A finger
+			// points through pointing.ts, which gives the focus itself and lets go with this button's click.
 			// A move, not an enter: an item that comes to lie under a resting cursor (a new screen, a row that pages)
 			// must not take the focus from the keys.
-			onMouseMove={() => {
-				if (!on) view.dispatch({ type: "focus", item: id })
+			onPointerMove={(e) => {
+				if (!on && e.pointerType === "mouse")
+					view.dispatch({ type: "focus", item: id })
 			}}
 			onClick={() => view.dispatch({ type: "choose", item: id })}
 			className={`tvc-item ${on ? "tvc-on" : ""} ${className}`}
