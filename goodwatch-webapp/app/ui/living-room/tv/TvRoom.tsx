@@ -14,7 +14,8 @@
 // - The first paint (slice 12). The scene is laid out once it has measured itself. Until then the room's block
 //   holds the TV's screen alone, in both editions and not painted, so that the HTML has the home's H1 for every
 //   window (tv.css, `tvr-first`). tv.css gets the mirror of `layoutRoom` and `layoutPhoneRoom` then.
-// - Pointing (slice 4). The Remote rests; `remoteEl` and the `data-remote*` attributes are what it will move.
+// Pointing (TvPointer.tsx, pointing.ts): the room hands it the measured scene, the element that turns (`remoteEl`)
+// and the ring. It moves both by `transform` and sets no state here.
 // The keyboard is the TV's (use-tv.ts), which leaves the keys alone while the room is `inert`.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
@@ -29,6 +30,8 @@ import { TV_SCREEN_ATTR } from "../tv-transition"
 import { ROOM_ID, useBelowRoom } from "../use-below-room"
 import { PhoneRemote } from "./PhoneRemote"
 import { LandscapeRoom, PhoneRoom } from "./PhoneRoom"
+import { TvPointer, usePointing } from "./TvPointer"
+import type { PointingScene } from "./pointing"
 import { ROOM_ART } from "./room-art"
 import {
 	PHONE_BELOW,
@@ -174,10 +177,31 @@ export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
 	/** The phone's Remote and its hand, upright or sideways. */
 	const held = P ?? S
 
-	// SEAM (slice 4): pointing moves this element, the desktop Remote in its hand or the phone's Remote with its.
-	const remoteEl = useRef<HTMLDivElement>(null)
-
 	const on = tv.power !== "off"
+
+	// ---- Pointing moves this element, the desktop Remote in its hand or the phone's Remote with its, and the ring.
+	const remoteEl = useRef<HTMLDivElement>(null)
+	const pointerEl = useRef<HTMLDivElement>(null)
+	// Nothing points while the TV is off or booting, or the room is out of the window.
+	const live = tv.power === "on" && !travel.away
+	const point = tv.point
+	const scene = useMemo<PointingScene | null>(
+		() =>
+			L && size
+				? {
+						tv: L.tv,
+						width: size.w,
+						height: size.h,
+						live,
+						hand: D && { ...D.remote, place: D.place },
+						rig: held?.rig ?? null,
+						focus: point,
+					}
+				: null,
+		[L, D, held, size, live, point],
+	)
+	usePointing({ root, remote: remoteEl, pointer: pointerEl }, scene)
+
 	const canvas: TvCanvas | null = L && {
 		edition: held ? "phone" : "desktop",
 		w: L.canvas.w,
@@ -326,6 +350,9 @@ export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
 						/>
 					</div>
 				)}
+
+				{/* The TV's own pointer: over the picture it takes the system cursor's place. */}
+				{L && <TvPointer pointer={pointerEl} small={Boolean(held)} />}
 			</div>
 			<BelowRoom
 				titles={startTitles}
