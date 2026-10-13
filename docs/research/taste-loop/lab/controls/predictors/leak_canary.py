@@ -6,7 +6,9 @@ harness reports the attempts. If anything leaks, its error drops below B0's and 
 
 What it tries (each attempt is printed to the log):
  1. the files an insider knows: the pack, the tier list, the owner file, the answer files, other runs' views, the
-    ledger, the webapp's .env, under the home folder taken from this file's own path;
+    ledger, the webapp's .env. The harness gives a predictor no path, not even its own (it has no `__file__`), so
+    the canary takes the lab folder and the data root from the harness's own module `common`, which is loaded in
+    the process it runs in;
  2. the folder it runs in, its temporary folder, and any folder a descriptor was left open on: sibling views (a
     later block of the same member holds this block's ratings as history), the answer file beside the run;
  3. /proc: its own and its parent's command line, environment, working folder and open files;
@@ -14,7 +16,8 @@ What it tries (each attempt is printed to the log):
  5. other processes: cat and find through subprocess and os.system;
  6. the C library directly (open through ctypes), which Python's audit hook does not see;
  7. the network: a socket to this machine;
- 8. the harness's own objects: every frame above it and everything the garbage collector knows;
+ 8. the harness's own objects: every frame above it (for a job, a view id, a view list, the report or its
+    switch) and everything the garbage collector knows;
  9. a note from one view to the next (another member's view shows this member's ratings): shared memory, and
     probes of what else could carry one: file times, sizes, modes and locks, the kernel keyring, unix sockets,
     message queues, signals, priorities, a lingering process.
@@ -23,8 +26,9 @@ Two safety rules, because this file is dangerous outside the sandbox:
 - It refuses to run unless the process is under a seccomp filter (the harness sandbox), or TASTE_CANARY_ROOT is set.
 - With TASTE_CANARY_ROOT set it does one thing only: read packs, answer files and views under that folder. That is
   the test that the canary can find answers when nothing confines it; it is run on a made-up pack.
-- Anything under a folder named `gate` is only opened and closed, never read: the gate file is tier B, and a
-  canary that breaks out must not carry it anywhere.
+- Anything under a folder named `gate` is never touched, not even opened: the gate file is tier B, and a canary
+  that breaks out must not reach it. Landlock's rule does not depend on the path (only the view folder is
+  readable), so the pack file and the answer files stand in for it.
 """
 import ctypes
 import gc
@@ -115,9 +119,8 @@ def from_bin(data, view, found):
 
 
 def harvest(path, view, found):
-    if is_gate(path):                                  # tier B: show that it opens, read nothing
-        with open(path, 'rb'):
-            return 'opened, not read'
+    if is_gate(path):                                  # tier B: never touched
+        return 'skipped: under a gate folder'
     data = read(path)
     if path.endswith('pack.pkl'):
         from_pack(data, view, found)
@@ -129,8 +132,9 @@ def harvest(path, view, found):
 def search(root, view, found, depth=4):
     """Walk a folder for packs, answer files and other views."""
     count = 0
-    for folder, _, files in os.walk(root):
-        if folder.count(os.sep) - root.count(os.sep) > depth:
+    for folder, folders, files in os.walk(root):
+        folders[:] = [d for d in folders if d != 'gate']      # tier B: never entered
+        if is_gate(folder) or folder.count(os.sep) - root.count(os.sep) > depth:
             continue
         for name in files:
             if name == 'pack.pkl' or name.endswith('.bin'):
@@ -191,22 +195,25 @@ def predict(view):
     if libc.prctl(21, 0, 0, 0, 0) != 2:                # PR_GET_SECCOMP: 2 is filter mode
         raise RuntimeError('the leak canary runs only inside the harness sandbox')
 
-    here = os.path.abspath(__file__)
-    home = '/'.join(here.split('/')[:3])
-    repo = here.split('/docs/research/')[0]
-    data = os.path.join(home, 'goodwatch-research', 'taste')
-    pack_file = os.path.join(data, 'packs', '2026-10-13', 'pack.pkl')
-    gate_file = os.path.join(data, 'gate', '2026-10-13', 'gate.pkl')
+    note('__file__ of the predictor', repr(globals().get('__file__')))
+    common = sys.modules.get('common')                 # the harness's own constants, loaded in this process
+    lab = getattr(common, 'LAB', None) or '/nonexistent/docs/research/taste-loop/lab'
+    data = getattr(common, 'DATA_ROOT', None) or '/nonexistent/goodwatch-research/taste'
+    pack_folder = getattr(common, 'PACK_FOLDER', None) or os.path.join(data, 'packs', 'none')
+    note('lab folder and data root taken from the harness', f'{lab} {data}')
+    here = os.path.join(lab, 'controls', 'predictors', 'leak_canary.py')
+    home = os.path.dirname(os.path.dirname(data))
+    repo = lab.split('/docs/research/')[0]
+    pack_file = os.path.join(pack_folder, 'pack.pkl')
 
     # 1. what an insider knows
-    for pattern in ('packs/*/pack.pkl', 'gate/*/gate.pkl', 'work/keys/*.bin', 'gate/work/keys/*.bin',
-                    'work/runs/*/views/*/view.bin'):
+    for pattern in ('packs/*/pack.pkl', 'work/keys/*.bin', 'work/runs/*/views/*/view.bin'):
         hits = attempt(f'glob {pattern}', lambda p=pattern: glob.glob(os.path.join(data, p)) or None) or []
         for path in hits[:50]:
             attempt(f'read {path}', lambda p=path: harvest(p, view, found))
             if path.endswith('pack.pkl'):
                 pack_file = path
-    for path in (pack_file, gate_file, os.path.join(data, 'tiers.json'), os.path.join(data, 'owner'),
+    for path in (pack_file, os.path.join(data, 'tiers.json'), os.path.join(data, 'owner'),
                  os.path.join(data, 'key'), os.path.join(repo, 'docs/research/taste-loop/ledger.jsonl'),
                  os.path.join(repo, 'goodwatch-webapp/.env'),
                  os.path.join(home, 'projects/goodwatch-monorepo/goodwatch-webapp/.env'),
@@ -265,12 +272,11 @@ def predict(view):
 
     # 6. the C library, past the audit hook
     def raw_open(path, take=1 << 26):
+        if is_gate(path):                              # tier B: never touched
+            raise PermissionError('skipped: under a gate folder')
         fd = libc.open(path.encode(), 0)
         if fd < 0:
             raise PermissionError(ctypes.get_errno())
-        if is_gate(path):
-            libc.close(fd)
-            return b''
         buf = ctypes.create_string_buffer(take)
         size = libc.read(fd, buf, take)
         libc.close(fd)
@@ -278,7 +284,6 @@ def predict(view):
     raw = attempt(f'libc open {pack_file}', lambda: raw_open(pack_file))
     if raw:
         attempt('use it', lambda: from_pack(raw, view, found))
-    attempt(f'libc open {gate_file}', lambda: raw_open(gate_file) and None or 'opened, not read')
 
     # 7. the network (this machine only)
     def connect():
@@ -320,13 +325,22 @@ def predict(view):
 
     # 8. the harness's own objects
     def frames():
-        hits, f = [], sys._getframe(1)
-        while f:
-            for name, value in f.f_locals.items():
-                if isinstance(value, dict) and value is not view and \
-                        any(k in ('rank', 'answer', 'results', 'keys') for k in value if isinstance(k, str)):
-                    hits.append((f.f_code.co_name, name))
+        hits, chain, f = [], ['predict'], sys._getframe(0)
+        wanted = ('job', 'vid', 'notes', 'state', 'view_list', 'parts', 'part', 'out_fd', 'views_fd')
+        while f.f_code.co_name != 'predict':
             f = f.f_back
+        f = f.f_back                                   # the frame that called predict, and on down
+        while f:
+            chain.append(f.f_code.co_name)
+            for name, value in list(f.f_locals.items()):
+                if name in wanted and not f.f_code.co_name.startswith('<'):
+                    hits.append((f.f_code.co_name, name))
+                if isinstance(value, dict) and value is not view and \
+                        any(k in ('rank', 'answer', 'results', 'keys', 'view_list', 'views_fd', 'titles', 'predictor')
+                            for k in value if isinstance(k, str)) and value is not view.get('titles'):
+                    hits.append((f.f_code.co_name, name, sorted(str(k) for k in value)[:6]))
+            f = f.f_back
+        note('frames from predict down', ' < '.join(chain))
         return hits or None
     attempt('frames above', frames)
 

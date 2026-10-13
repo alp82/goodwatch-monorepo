@@ -2,7 +2,9 @@
 
 - Members: a value per member, bootstrap over members (10,000 draws, the seed is in the ledger) for the mean, 95%
   percentile interval, with the median member and, for a paired difference, the count of members improved.
-- The owner: one member, so the bootstrap is over the owner's sittings (whole sittings are drawn again).
+- The owner: one member, so the bootstrap is over the owner's sittings (whole sittings are drawn again). It gives
+  an interval only with 10 or more sittings of which none holds more than a quarter of the targets; otherwise the
+  number stands as a plain figure and `why` says so. A second, labelled figure resamples whole franchises.
 - Smallest detectable effect: the paired difference this data finds four times out of five with a two-sided 5%
   test: 2.80 standard errors. For members the standard error is the spread of the per-member differences over the
   root of their number; for the owner it is the spread of the bootstrap draws.
@@ -13,6 +15,8 @@ comparisons on the same members are resampled together.
 import numpy as np
 
 Z_POWER = 1.959964 + 0.841621        # two-sided 5%, 80% power
+MIN_CLUSTERS = 10
+MAX_CLUSTER_SHARE = 0.25
 _DRAWS = {}
 
 
@@ -61,15 +65,24 @@ def paired(candidate, reference, draws, seed, lower_is_better=True):
 
 
 def cluster_mean(values, cluster, draws, seed):
-    """Mean over rows (one member's targets) with an interval from resampling whole clusters (sittings)."""
+    """Mean over rows (one member's targets) with an interval from resampling whole clusters (sittings, or
+    franchises). No interval and no standard error when the clusters cannot carry one: fewer than MIN_CLUSTERS of
+    them, or one that holds more than MAX_CLUSTER_SHARE of the rows (drawing such clusters again gives draws with
+    two or three humps, and their percentiles are not a 95% interval). `why` then says which."""
     v, cluster = np.asarray(values, float), np.asarray(cluster)
     if len(v) == 0:
         return {'value': None, 'lo': None, 'hi': None, 'n': 0, 'clusters': 0}
     _, inv = np.unique(cluster, return_inverse=True)
     s, k = np.bincount(inv, v), np.bincount(inv).astype(float)
-    out = {'value': _r(v.mean()), 'n': int(len(v)), 'clusters': int(len(s))}
-    if len(s) < 2:
-        return {**out, 'lo': None, 'hi': None, 'se': None}
+    share = float(k.max() / k.sum())
+    out = {'value': _r(v.mean()), 'n': int(len(v)), 'clusters': int(len(s)), 'largest_share': _r(share)}
+    why = None
+    if len(s) < MIN_CLUSTERS:
+        why = f'{len(s)} clusters, fewer than {MIN_CLUSTERS}'
+    elif share > MAX_CLUSTER_SHARE:
+        why = f'the largest of {len(s)} clusters holds {share:.0%} of the rows'
+    if why:
+        return {**out, 'lo': None, 'hi': None, 'se': None, 'why': why}
     idx = _index(len(s), draws, seed)
     boot = s[idx].sum(1) / k[idx].sum(1)
     lo, hi = np.percentile(boot, [2.5, 97.5])
@@ -77,9 +90,12 @@ def cluster_mean(values, cluster, draws, seed):
 
 
 def cluster_paired(candidate, reference, cluster, draws, seed):
-    """Mean of candidate minus reference over one member's targets, resampling whole sittings."""
+    """Mean of candidate minus reference over one member's targets, resampling whole clusters. Without an interval
+    (see cluster_mean) there is no smallest detectable effect either."""
     d = np.asarray(candidate, float) - np.asarray(reference, float)
     m = cluster_mean(d, cluster, draws, seed)
     out = {'diff': m['value'], 'lo': m.get('lo'), 'hi': m.get('hi'), 'n': m['n'], 'clusters': m['clusters']}
+    if m.get('why'):
+        out['why'] = m['why']
     out['sde'] = _r(Z_POWER * m['se']) if m.get('se') is not None else None
     return out

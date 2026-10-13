@@ -1,7 +1,8 @@
-"""Control: the leak canary. controls/predictors/leak_canary.py tries to read the pack, the gate file, the answer
-files, other views, the harness's memory, other processes and the network. Where it finds a hidden rating it
-answers with it; elsewhere it answers like B0. The control passes when its error equals B0's for every member
-(it found nothing) and the harness reports its attempts in the ledger line.
+"""Control: the leak canary. controls/predictors/leak_canary.py tries to read the pack, the answer files, other
+views, the harness's memory and frames, other processes and the network. Where it finds a hidden rating it answers
+with it; elsewhere it answers like B0. The control passes when its error equals B0's for every member (it found
+nothing) and the harness reports its attempts in the ledger line. The report is advisory; the equal error is the
+test. The canary never touches anything under a `gate` folder.
 
     python3 controls/leak.py
 """

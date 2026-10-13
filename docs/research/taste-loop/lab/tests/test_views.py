@@ -33,9 +33,17 @@ def test_a_view_holds_nothing_of_the_hidden_ratings(pack, tmp_path):
         me = view['me']['ratings']
         assert not set(me['title'].tolist()) & set(targets.tolist())
         assert (me['created_at'] < cutoff).all()
-        c, first = len(me['title']), int(r['position'][t_at].min())
-        assert (me['position'] == np.arange(c)).all()                  # everything before the block, nothing after
-        assert c <= first and r['in_bulk'][mine][c:first].all()        # only bulk rows between history and targets
+        first = int(r['position'][t_at].min())
+        c = int(me['position'].max()) + 1 if len(me['position']) else 0
+        # everything before the block except ratings edited at or after its first rating, and nothing after
+        early = mine[:c]
+        kept = early[r['updated_at'][early] < cutoff]
+        assert (me['position'] == r['position'][kept]).all() and (me['score'] == r['score'][kept]).all()
+        assert (r['updated_at'][mine[me['position']]] < cutoff).all()
+        # between the history and the targets: only bulk rows, or rows edited later
+        assert c <= first and (r['in_bulk'][mine][c:first] | (r['updated_at'][mine][c:first] >= cutoff)).all()
+        assert (keys[v['vid']]['history_score'] == me['score']).all()
+        assert (keys[v['vid']]['edited'] == r['edited'][t_at]).all()
         for table in ('want_to_see', 'skip', 'not_interested'):
             assert (view['me'][table]['created_at'] < cutoff).all()
         assert not r['in_bulk'][t_at].any()                            # bulk writes are never targets
@@ -117,6 +125,11 @@ def test_others_modes(pack, tmp_path):
         cutoff = pack.ratings['created_at'][pack.ratings['member'] == u][len(view['me']['ratings']['title'])] \
             if v['kind'] == 'main' else np.inf
         assert (view['others']['ratings']['created_at'] < cutoff).all()
+        if v['kind'] == 'main':                                        # and nothing that was edited since
+            shown = set(zip(view['others']['ratings']['member'].tolist(), view['others']['ratings']['title'].tolist()))
+            r, row = pack.ratings, pack.title_index(pack.ratings['title_key'])
+            late = (r['member'] != u) & (r['created_at'] < cutoff) & (r['updated_at'] >= cutoff)
+            assert late.any() and not shown & set(zip(r['member'][late].tolist(), row[late].tolist()))
 
 
 def test_gate_members_are_predicted_from_tier_a(pack, world, tmp_path):
@@ -133,3 +146,67 @@ def test_gate_members_are_predicted_from_tier_a(pack, world, tmp_path):
     view = views.load_view(os.path.join(out, 'views', index[0]['vid']), titles)
     others = view['others']['ratings']['member']
     assert (tier[others] == 0).all() and len(np.unique(others)) == len(np.unique(pack.ratings['member']))
+
+
+def test_history_edited_after_the_cutoff_is_left_out_and_edited_targets_are_flagged(pack, tmp_path):
+    out, index, keys, _ = build(pack, tmp_path)
+    titles = views.load_titles(os.path.join(out, 'titles.npz'))
+    r = pack.ratings
+    row = pack.title_index(r['title_key'])
+    assert r['edited'].sum() > 20                                      # the made-up pack has ratings edited later
+    left_out = flagged = 0
+    for v in [v for v in index if v['kind'] == 'main']:
+        view = views.load_view(os.path.join(out, 'views', v['vid']), titles)
+        mine = np.flatnonzero(r['member'] == v['member'])
+        c = int(r['position'][mine][np.isin(row[mine], view['targets']['title'])].min())
+        cutoff = r['created_at'][mine][c]
+        edited_history = set(row[mine][:c][r['updated_at'][mine][:c] >= cutoff].tolist())
+        assert not edited_history & set(view['me']['ratings']['title'].tolist())
+        left_out += len(edited_history)
+        flagged += int(keys[v['vid']]['edited'].sum())
+        for c_view in [x for x in index if x['parent'] == v['vid']]:   # nor is it a calibration title
+            cal = views.load_view(os.path.join(out, 'views', c_view['vid']), titles)
+            assert not edited_history & (set(cal['targets']['title'].tolist())
+                                         | set(cal['me']['ratings']['title'].tolist()))
+    assert left_out > 10 and flagged > 10
+
+
+def test_a_bulk_write_after_a_block_start_is_neither_target_nor_history_of_that_block(pack, tmp_path):
+    """The rule the real pack never exercises (all its bulk writes lie before the first block): a member types 12
+    ratings, writes 10 in one moment, then types on. Through build_t1, on the made-up pack."""
+    import copy
+    counts = np.bincount(pack.ratings['member'], minlength=len(pack.members['tier']))
+    u = int(np.flatnonzero((counts >= 45) & ~pack.members['is_owner'])[0])
+    made = copy.copy(pack)
+    r = {c: v.copy() for c, v in pack.ratings.items()}
+    at = np.flatnonzero(r['member'] == u)
+    n = len(at)
+    t = 1_700_000_000_000 + 5000 * np.arange(n)
+    t[12:22] = t[12]                                                   # ratings 12 to 21 written in one moment
+    t[22:] = t[12] + 5000 * np.arange(1, n - 21)
+    r['created_at'][at], r['updated_at'][at] = t, t
+    r['in_bulk'][at] = (np.arange(n) >= 12) & (np.arange(n) < 22)
+    r['provenance'][at] = r['in_bulk'][at].astype(np.uint8)
+    r['edited'][at] = False
+    made.ratings = r
+    cuts = dict((b, c) for c, b in views.t1_cuts(t, r['in_bulk'][at]))
+    assert cuts[10] == 10 and cuts[20] == 22                           # the bulk write starts after block 10 does
+    out = str(tmp_path / 'bulk')
+    index, keys, _ = views.build_t1(made, out, members=[u])
+    views.export_titles(made, os.path.join(out, 'titles.npz'))
+    titles = views.load_titles(os.path.join(out, 'titles.npz'))
+    row = made.title_index(r['title_key'][at])
+    bulk_titles = set(row[12:22].tolist())
+    main = {v['block']: v for v in index if v['kind'] == 'main'}
+    ten = views.load_view(os.path.join(out, 'views', main[10]['vid']), titles)
+    assert sorted(ten['targets']['title'].tolist()) == sorted(row[10:12].tolist())       # the two typed ratings
+    assert set(ten['me']['ratings']['title'].tolist()) == set(row[:10].tolist())        # the bulk write is not history
+    assert sorted(keys[main[10]['vid']]['score'].tolist()) == sorted(r['score'][at][10:12].tolist())
+    twenty = views.load_view(os.path.join(out, 'views', main[20]['vid']), titles)
+    assert set(twenty['me']['ratings']['title'].tolist()) == set(row[:22].tolist())     # history of the next block
+    assert twenty['me']['ratings']['in_bulk'].sum() == 10
+    for v in index:                                                    # never a target, in any view
+        view = views.load_view(os.path.join(out, 'views', v['vid']), titles)
+        if v['kind'] == 'main':
+            assert not bulk_titles & set(view['targets']['title'].tolist())
+    assert sum(len(keys[v['vid']]['score']) for v in index if v['kind'] == 'main') == n - 5 - 10

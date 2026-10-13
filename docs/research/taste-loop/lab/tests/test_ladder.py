@@ -48,7 +48,10 @@ def test_b2_hand_checked():
     Taste = 2P - N = (20.4/15.5 - 0.8, 20.6/15.5 - 0.2) = (8, 17.5) / 15.5, direction (16, 35), length sqrt(1481).
     Cosine with X (3,4): (0.6 * 16 + 0.8 * 35) / sqrt(1481) = 37.6 / sqrt(1481). With Y (5,0): 16 / sqrt(1481).
     Not counted: H is rated 10 but has no fingerprint; A is also in Want to See but is rated; V is in Want to See
-    without a fingerprint. A missing score (255) counts as 0: X2 is (3, 4, 255, 0, ...)."""
+    without a fingerprint. A missing score (255) counts as 0: X2 is (3, 4, 255, 0, ...).
+    The rank is the percentile of the cosine in the pool, here the 11 titles with a fingerprint. Their cosines
+    times sqrt(1481): 16 for D, F, Y; 33.8 for B, W; 35 for C, G; 37.6 for A, E, X, X2. So X stands at
+    (7 below + 11 up to it) / 22 = 18/22 and Y at (0 + 3) / 22 = 3/22."""
     b2 = load('b2_taste_today')
     A, B, C, D, E, F, G, W, H, V, X, Y, Z, X2 = range(14)
     fps = [fingerprint(3, 4), fingerprint(4, 3), fingerprint(0, 5), fingerprint(5, 0), fingerprint(3, 4),
@@ -64,12 +67,18 @@ def test_b2_hand_checked():
     out = b2.predict(view)
     assert out['score'] is None and out['p_low'] is None
     x, y = 37.6 / root, 16 / root
-    assert np.allclose(out['rank'], [x, y, x, x], atol=1e-6)   # Z, no fingerprint: the median of x, y, x
+    cosine, usable = b2.cosines(view, np.array([X, Y, Z, X2]), taste)
+    assert np.allclose(cosine[usable], [x, y, x], atol=1e-6) and usable.tolist() == [True, True, False, True]
+    assert np.allclose(out['rank'], [18 / 22, 3 / 22, 18 / 22, 18 / 22])   # Z, no fingerprint: the median of the rest
+    in_pool = np.ones(14, bool)
+    in_pool[[A, E, X2]] = False                                            # a smaller pool: 16 x3, 33.8 x2, 35 x2, 37.6
+    out = b2.predict(make_view(fps, has, ratings, [W, A, V], [X, Y, Z, X2], in_pool))
+    assert np.allclose(out['rank'], [15 / 16, 3 / 16, 15 / 16, 15 / 16])
 
     # four liked titles with a fingerprint are not enough, whatever else there is
     few = make_view(fps, has, [(A, 10), (B, 8), (C, 6), (D, 7), (F, 2), (H, 10)], [W], [X, Y])
     assert b2.taste_vector(few) is None
-    assert b2.predict(few)['rank'].tolist() == [0.0, 0.0]
+    assert b2.predict(few)['rank'].tolist() == [0.5, 0.5]
 
     # without dislikes the taste is P
     only = make_view(fps, has, ratings[:5], [], [X])
@@ -151,7 +160,14 @@ def test_b3_standardizes_against_the_reference_pool():
     taste = 2 * p - unit[20]
     taste /= np.sqrt((taste * taste).sum())
     assert np.allclose(b3.taste_vector(view), taste, atol=1e-6)
-    assert np.allclose(b3.predict(view)['rank'], unit[30:60] @ taste, atol=1e-5)
+    cosine, usable = b3.cosines(view, np.arange(30, 60), b3.taste_vector(view))
+    assert np.allclose(cosine, unit[30:60] @ taste, atol=1e-5) and usable.all()
+    # the rank: where each cosine stands among the pool's (in the pool, with a fingerprint)
+    pool = np.sort((unit @ taste)[in_pool & has])
+    rank = b3.predict(view)['rank']
+    for r, c in zip(rank, cosine.astype(np.float64)):
+        assert r == pytest.approx(((pool < c - 1e-6).sum() + (pool <= c + 1e-6).sum()) / (2 * len(pool)), abs=1e-9)
+    assert rank.min() >= 0 and rank.max() <= 1 and (np.argsort(rank) == np.argsort(cosine)).all()
 
 
 def test_paired_rungs_share_their_code():
@@ -242,7 +258,8 @@ def test_b0_b1_bp_by_hand():
     b0, b1, bp = load('b0_median'), load('b1_public'), load('bp_votes')
     gw = np.array([80.0, 60.0, 70.0, np.nan, 90.0, 50.0])
     votes = np.array([1000, 10, -1, 500, 100000, 1])
-    view = {'titles': {'num': {'goodwatch_overall_score_normalized_percent': gw,
+    view = {'titles': {'in_pool': np.array([True, True, False, True, True, False]),
+                       'num': {'goodwatch_overall_score_normalized_percent': gw,
                                'goodwatch_overall_score_voting_count': votes}},
             'me': {'ratings': {'title': np.array([0, 1]), 'score': np.array([9, 4])}},
             'others': {'ratings': {'title': np.array([0, 1, 2, 3]), 'score': np.array([6, 6, 9, 1])}},
@@ -253,5 +270,30 @@ def test_b0_b1_bp_by_hand():
     # member offset: ((9-8) + (4-6) + 3 * 0) / (2 + 3) = -0.2
     out = b1.predict(view)
     assert np.allclose(out['score'], [6.8, 6.5, 8.8, 4.8]) and out['p_low'] is None      # no score: the median
+    # the pool's vote counts: 10, 500, 1000, 100000. 500 stands at (1 + 2) / 8, 100000 at (3 + 4) / 8, a single
+    # vote below all of them at 0, and so does a title without a count
     out = bp.predict(view)
-    assert out['score'] is None and np.allclose(out['rank'], [-1, np.log10(500), 5, 0])
+    assert out['score'] is None and np.allclose(out['rank'], [0, 0.375, 0.875, 0])
+
+
+@pytest.mark.parametrize('rung', ['b4_consensus', 'b5_pooled'])
+def test_b4_b5_answer_like_b1_when_the_others_hold_nothing(pack, tmp_path, rung):
+    """With `--others before` the first member to rate sees no other rating at all: the pooled fit has nothing to
+    learn from, and the rung answers as B1 does. With one other rating the fit cannot be made either."""
+    import views
+    port, b1 = load(rung), load('b1_public')
+    out = str(tmp_path / 'run')
+    index, keys, _ = views.build_t1(pack, out, members=[pack.owner])
+    views.export_titles(pack, os.path.join(out, 'titles.npz'))
+    titles = views.load_titles(os.path.join(out, 'titles.npz'))
+    for v in [v for v in index if v['kind'] == 'main'][:3]:
+        view = views.load_view(os.path.join(out, 'views', v['vid']), titles)
+        full = port.predict(view)
+        for keep in (0, 1):
+            thin = dict(view)
+            thin['others'] = {name: {c: a[:keep] for c, a in table.items()} for name, table in view['others'].items()}
+            ours, theirs = port.predict(thin), b1.predict(thin)
+            assert np.isfinite(ours['score']).all()
+            if keep == 0:
+                assert np.array_equal(ours['score'], theirs['score']) and np.array_equal(ours['rank'], theirs['rank'])
+                assert not np.allclose(ours['score'], full['score'])

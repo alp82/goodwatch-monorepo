@@ -2,7 +2,8 @@
 
 Each of the 74 attributes is standardized against its mean and standard deviation over the reference pool (titles
 with a poster, a GoodWatch score, 1,000 or more votes and a fingerprint); a missing score counts as the pool mean.
-Then the formula of B2, unchanged: unit-length vectors, P and N, 2P - N, at least 5 liked titles, cosine as rank.
+Then the formula of B2, unchanged: unit-length vectors, P and N, 2P - N, at least 5 liked titles, the cosine, and as
+rank the percentile of that cosine among the reference pool's (0..1, the same scale in every view of a member).
 The same declared fallbacks as B2. No score: the harness calibrates one from the member's history.
 """
 import numpy as np
@@ -14,6 +15,8 @@ MIN_LIKED = 5
 LIKED_FROM = 6
 WANT_TO_SEE_WEIGHT = 0.5
 MISSING = 255
+NO_ORDER = 0.5
+POOL_CHUNK = 4096
 
 
 _POOL = {}
@@ -93,12 +96,28 @@ def cosines(view, rows, taste):
     return ((v @ taste.astype(np.float64)) * inverse.astype(np.float64)).astype(np.float32), usable
 
 
+def pool_percentile(view, cosine, taste):
+    """Where a cosine stands among the cosines of the reference pool (in the pool and with a usable fingerprint)
+    with the same taste: the share of the pool below it, a tie counting a half. 0..1."""
+    titles = view['titles']
+    rows = np.flatnonzero(titles['in_pool'] & titles['has_fingerprint'])
+    parts = []
+    for a in range(0, len(rows), POOL_CHUNK):          # in chunks: the same numbers, less memory at once
+        part, usable = cosines(view, rows[a:a + POOL_CHUNK], taste)
+        parts.append(part[usable].astype(np.float64))
+    pool = np.sort(np.concatenate(parts)) if parts else np.zeros(0)
+    if len(pool) == 0:
+        return np.full(len(cosine), NO_ORDER)
+    below, upto = np.searchsorted(pool, cosine, 'left'), np.searchsorted(pool, cosine, 'right')
+    return (below + upto) / (2.0 * len(pool))
+
+
 def predict(view):
     rows = view['targets']['title']
     taste = taste_vector(view)
     if taste is None:
-        return {'rank': np.zeros(len(rows)), 'score': None, 'p_low': None}
+        return {'rank': np.full(len(rows), NO_ORDER), 'score': None, 'p_low': None}
     cosine, usable = cosines(view, rows, taste)
-    rank = cosine.astype(np.float64)
-    rank[~usable] = np.median(rank[usable]) if usable.any() else 0.0
+    rank = pool_percentile(view, cosine.astype(np.float64), taste)
+    rank[~usable] = np.median(rank[usable]) if usable.any() else NO_ORDER
     return {'rank': rank, 'score': None, 'p_low': None}

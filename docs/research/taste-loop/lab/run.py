@@ -1,31 +1,39 @@
 """The runner. Use it through run.sh, which holds the lock slot and sets the thread, time and memory limits:
 
-    ./run.sh <predictor.py> --task T1 --tier A --mode explore|registered --item NNN
-             [--ref <predictor.py> ...] [--members owner,<hash prefix>,...] [--others all|no-owner|before]
+    ./run.sh <predictor.py> --task T1 --tier A --mode explore|registered|ladder --item NNN
+             [--ref <ladder rung> ...] [--members owner,<hash prefix>,...] [--others all|no-owner|before]
              [--no-cache]
 
 What one run does:
 
-1. Refuses what the protocol refuses: a tier other than A, a registered run whose `items/NNN-*/PREREG.md` is not
-   committed or does not list the predictor's sha256, the 21st exploratory or 4th registered run of an item.
+1. Refuses what the protocol refuses (see `execute`, in order): a run that does not hold a lock slot under
+   run.sh's limits; a pack other than the one the committed MANIFEST.json names; a ledger whose committed lines
+   were edited or removed; an item without exactly one folder that holds a committed BRIEF.md; a predictor file
+   over 64 KB; a reference that is not a file of lab/ladder/; a registered run that does not match its committed
+   PREREG.md line by line; the 21st exploratory or 4th registered run of an item.
 2. Builds the views from the pack (views.py) into a run folder and the answers into a file elsewhere.
-3. Runs the candidate and every reference predictor, each view in its own sandboxed process (sandbox.py). In an
-   exploratory run a reference whose answers for exactly these views are already stored is not run again
-   (--no-cache runs everything); a registered run runs everything, one view at a time, and needs the full sandbox.
+3. Runs the candidate and every reference predictor, each view in its own sandboxed process (sandbox.py). Outside
+   registered, gate and verify runs a reference whose answers for exactly these views are already stored is not
+   run again (--no-cache runs everything).
 4. Checks every answer against the contract, turns answers into whole ratings (score.py), computes the measures
-   with intervals and smallest detectable effects (stats.py).
+   with intervals and smallest detectable effects (stats.py), and for a rank-only candidate the calibrator floor.
 5. Appends one line to ledger.jsonl and writes result.json and the log under <data root>/results/<run id>/.
 
+Modes. `explore` and `registered` are for candidate predictors and use the item's budget. `ladder` runs a file of
+lab/ladder/ only, uses no budget, and is the only mode table.py reads. `control` is used by lab/controls: only the
+six control names, only predictors under lab/ladder/ or lab/controls/predictors/; never a result. `verify` and
+`gate` are entered through verify.py and gate.py only. Whatever runs without a budget (a rung, a control predictor,
+any reference) must be a file pinned by hash in lab/pins.json, which is part of the harness hash.
+
 `--ref` names the reference rungs; the first one is the run's primary reference. Without --ref it is rung B0.
-Modes `control` and `verify` are used by lab/controls and verify.py: control lines never count as results and do
-not use the item's budget; a verify run writes no ledger line of its own.
 """
 import argparse
 import datetime
-import glob
+import fcntl
 import hashlib
 import json
 import os
+import re
 import resource
 import shutil
 import subprocess
@@ -36,11 +44,12 @@ import numpy as np
 
 import score
 import views
-from common import (BUDGET, DATA_ROOT, DRAWS, LAB, LOOP, SEED, append_ledger, git, harness_sha256, read_ledger, rel,
-                    sha256_file)
+from common import (BUDGET, CONTROL_PREDICTORS, CONTROLS, DRAWS, LAB, LADDER, LOOP, MANIFEST, OTHERS,
+                    PREDICTOR_BYTES, SEED, append_ledger, checked_ledger, git, harness_sha256, inside, loop_pack,
+                    pinned, rel, sha256_file)
 from pack import Pack
 
-B0 = os.path.join(LAB, 'ladder', 'b0_median.py')
+B0 = os.path.join(LADDER, 'b0_median.py')
 THREADS = '2'                        # the run as a whole: at most two predictor processes at a time,
 SANDBOX_THREADS = '1'                # each with one thread
 FULL_SANDBOX = ('landlock', 'seccomp', 'net_isolated', 'namespaces')
@@ -49,6 +58,9 @@ THREAD_VARS = ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NU
 MEMORY_MB = 4096
 VIEW_CPU_SECONDS = 300
 VIEW_WALL_SECONDS = 600
+MODES = ('explore', 'registered', 'ladder', 'control', 'verify', 'gate')
+LEDGER = os.path.join(LOOP, 'ledger.jsonl')
+PREREG_KEYS = ('candidate', 'reference', 'others', 'task')
 
 
 class Refused(Exception):
@@ -61,25 +73,118 @@ class Failed(Exception):
 
 # ------------------------------------------------------------------ what the protocol refuses
 
-def item_folder(loop_dir, item):
-    found = sorted(glob.glob(os.path.join(loop_dir, 'items', f'{item}-*')))
+def under_run_sh(root):
+    """None when this process holds one of the two lock slots of the data root under run.sh's limits, else what is
+    missing. Checked on the process itself, so no environment variable can stand in for run.sh."""
+    locks = os.path.join(root, 'work', 'locks')
+    try:
+        mine = os.fstat(9)
+        slots = [os.stat(os.path.join(locks, name)) for name in ('slot0.lock', 'slot1.lock')
+                 if os.path.exists(os.path.join(locks, name))]
+        if not any((s.st_dev, s.st_ino) == (mine.st_dev, mine.st_ino) for s in slots):
+            return 'descriptor 9 is not a lock slot of the data root'
+        fcntl.flock(9, fcntl.LOCK_EX | fcntl.LOCK_NB)             # succeeds only when this process holds the slot
+    except OSError:
+        return 'no lock slot is held'
+    soft = resource.getrlimit(resource.RLIMIT_AS)[0]
+    if soft == resource.RLIM_INFINITY or soft > MEMORY_MB << 20:
+        return 'no 4 GB address-space limit'
+    if any(os.environ.get(v) != THREADS for v in THREAD_VARS):
+        return 'the thread limits are not set'
+    if os.getpriority(os.PRIO_PROCESS, 0) < 10:
+        return 'not at low priority'
+    try:
+        with open(f'/proc/{os.getppid()}/comm') as f:
+            if f.read().strip() != 'timeout':
+                return 'no wall-clock limit'
+    except OSError:
+        return 'no wall-clock limit'
+    return None
+
+
+def the_pack():
+    """The one pack this loop folder's ledger belongs to: the committed MANIFEST.json names its folder and hash."""
+    folder, sha = loop_pack()
+    if folder is None:
+        raise Refused(f'{rel(MANIFEST, LOOP)} does not name a pack')
+    if git(['ls-files', '--error-unmatch', os.path.basename(MANIFEST)], LOOP).returncode != 0 or \
+            git(['status', '--porcelain', '--', os.path.basename(MANIFEST)], LOOP).stdout.strip():
+        raise Refused('MANIFEST.json is not committed, or differs from the committed version')
+    try:
+        pack = Pack(folder)
+    except OSError as e:
+        raise Refused(f'the pack named by MANIFEST.json cannot be read: {e}') from None
+    if pack.manifest['files_sha256']['pack.pkl'] != sha or sha256_file(os.path.join(folder, 'pack.pkl')) != sha:
+        raise Refused('the pack is not the one MANIFEST.json names')
+    return pack
+
+
+def item_folder(item):
+    """The item's folder: three digits, exactly one folder items/NNN-*, with a committed BRIEF.md (an item exists
+    once the orchestrator has committed its brief; a new number is not a new budget)."""
+    if not re.fullmatch(r'\d{3}', str(item)):
+        raise Refused(f'item {item!r}: an item is three digits')
+    items = os.path.join(LOOP, 'items')
+    found = sorted(d for d in (os.listdir(items) if os.path.isdir(items) else [])
+                   if d.startswith(f'{item}-') and os.path.isdir(os.path.join(items, d)))
     if len(found) != 1:
         raise Refused(f'item {item}: expected one folder items/{item}-*, found {len(found)}')
-    return found[0]
+    folder = os.path.join(items, found[0])
+    if git(['ls-files', '--error-unmatch', 'BRIEF.md'], folder).returncode != 0:
+        raise Refused(f'item {item}: items/{found[0]}/BRIEF.md is not committed')
+    return folder
 
 
-def check_prereg(loop_dir, item, sha):
-    path = os.path.join(item_folder(loop_dir, item), 'PREREG.md')
+def parse_prereg(text):
+    """PREREG.md -> {'candidate', 'reference', 'others', 'task'}. Each key stands alone on exactly one line that
+    starts with it (`candidate: <sha256>`); everything else in the file is prose and is not read."""
+    found = {k: [] for k in PREREG_KEYS}
+    for line in text.splitlines():
+        m = re.match(r'(candidate|reference|others|task):(.*)$', line)
+        if m:
+            found[m.group(1)].append(m.group(2).strip())
+    for k, v in found.items():
+        if len(v) != 1:
+            raise Refused(f'PREREG.md must hold exactly one line `{k}: ...`, found {len(v)}')
+    out = {k: v[0] for k, v in found.items()}
+    if not re.fullmatch(r'[0-9a-f]{64}', out['candidate']):
+        raise Refused('PREREG.md: candidate is not a sha256')
+    if not re.fullmatch(r'ladder/[A-Za-z0-9_]+\.py', out['reference']):
+        raise Refused('PREREG.md: reference is not ladder/<file>')
+    if out['others'] not in OTHERS:
+        raise Refused(f'PREREG.md: others is not one of {", ".join(OTHERS)}')
+    return out
+
+
+def check_prereg(folder, predictor, sha, refs, others, task, members):
+    """A registered run is the one comparison its committed PREREG.md names, on committed code."""
+    path = os.path.join(folder, 'PREREG.md')
     if not os.path.exists(path):
-        raise Refused(f'a registered run needs {rel(path, loop_dir)}')
-    folder = os.path.dirname(path)
+        raise Refused(f'a registered run needs {rel(path, LOOP)}')
     if git(['ls-files', '--error-unmatch', 'PREREG.md'], folder).returncode != 0:
         raise Refused('PREREG.md is not committed')
     if git(['status', '--porcelain', '--', 'PREREG.md'], folder).stdout.strip():
         raise Refused('PREREG.md differs from the committed version')
     with open(path) as f:
-        if sha not in f.read():
-            raise Refused(f'PREREG.md does not list the predictor\'s sha256 {sha}')
+        reg = parse_prereg(f.read())
+    if reg['candidate'] != sha:
+        raise Refused(f'PREREG.md registers candidate {reg["candidate"][:12]}, not this file ({sha[:12]})')
+    if rel(refs[0]) != reg['reference']:
+        raise Refused(f'PREREG.md registers reference {reg["reference"]}, not {rel(refs[0])}')
+    if reg['others'] != others:
+        raise Refused(f'PREREG.md registers others: {reg["others"]}, not {others}')
+    if reg['task'] != task:
+        raise Refused(f'PREREG.md registers task {reg["task"]}, not {task}')
+    if members is not None:
+        raise Refused('a registered run is on all members: --members is refused')
+    if git(['status', '--porcelain', '--', 'lab'], LOOP).stdout.strip():
+        raise Refused('lab/ has uncommitted changes: a registered run needs committed code')
+    top = git(['rev-parse', '--show-toplevel'], LOOP).stdout.strip()
+    if not top or not inside(predictor, top):
+        raise Refused('the candidate file is not in the repository')
+    done = git(['show', f'HEAD:./{os.path.basename(predictor)}'], os.path.dirname(predictor), text=False)
+    if done.returncode != 0 or hashlib.sha256(done.stdout).hexdigest() != sha:
+        raise Refused('the candidate file is not committed with the registered hash')
 
 
 def check_budget(ledger, item, mode):
@@ -88,6 +193,34 @@ def check_budget(ledger, item, mode):
     used = sum(1 for line in ledger if line.get('item') == item and line.get('mode') == mode)
     if used >= BUDGET[mode]:
         raise Refused(f'item {item} has used its {BUDGET[mode]} {mode} runs')
+
+
+def check_files(predictor, refs, mode, control):
+    """Where predictors may live. A file that runs without a budget (a reference in any mode, the predictor of a
+    ladder or control run) is one of the files pinned in lab/pins.json, unchanged: a file dropped into lab/ladder/
+    or a rung edited in place is refused until the pins, and with them the harness hash, change."""
+    for p in [predictor] + refs:
+        if not os.path.isfile(p):
+            raise Refused(f'no predictor file {p}')
+        if os.path.getsize(p) > PREDICTOR_BYTES:
+            raise Refused(f'{rel(p)} is over {PREDICTOR_BYTES >> 10} KB: a predictor is code, not a table')
+    for r in refs:
+        if not pinned(r, LADDER):
+            raise Refused(f'a reference is a rung of lab/ladder/, pinned in lab/pins.json and unchanged: '
+                          f'{rel(r)} is not')
+    if len(set(os.path.realpath(r) for r in refs)) != len(refs):
+        raise Refused('each reference rung is named once')
+    if mode == 'ladder' and not pinned(predictor, LADDER):
+        raise Refused('mode ladder runs the pinned files of lab/ladder/ only (lab/pins.json); a candidate runs in '
+                      'mode explore or registered')
+    if mode == 'control':
+        if control not in CONTROLS:
+            raise Refused(f'unknown control {control!r}: the controls are {", ".join(CONTROLS)}')
+        if not (pinned(predictor, LADDER) or pinned(predictor, CONTROL_PREDICTORS)):
+            raise Refused('mode control runs the pinned predictors under lab/ladder/ or lab/controls/predictors/ '
+                          'only (lab/pins.json)')
+    elif control:
+        raise Refused('--control names the control of a run in mode control, and only there')
 
 
 # ------------------------------------------------------------------ running predictors
@@ -109,7 +242,7 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers):
             lf.flush()
             done = subprocess.run([sys.executable, '-s', '-P', '-B', os.path.join(LAB, 'sandbox.py')],
                                   input=json.dumps(job).encode(), env=env, cwd='/', stdout=lf, stderr=lf,
-                                  pass_fds=(views_fd, out_fd))
+                                  pass_fds=(views_fd, out_fd), close_fds=True)
     finally:
         os.close(views_fd)
         os.close(out_fd)
@@ -136,7 +269,18 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers):
                 assert isinstance(r['answer'], dict)
             except (OSError, ValueError, AssertionError):
                 why = 'ran over its time limit' if r.get('timed_out') else f'ended without an answer ({r["ended"]})'
-                r['answer'] = {'returned': 'error', 'error': f'the predictor process {why}', 'attempts': []}
+                r['answer'] = {'returned': 'error', 'error': f'the predictor process {why}'}
+            r['attempts'] = []                         # what the audit hook noted, one JSON line per attempt
+            try:
+                with open(base + '.notes', 'rb') as f:
+                    for row in f.read().decode('utf-8', 'replace').splitlines():
+                        try:
+                            note = json.loads(row)
+                        except ValueError:
+                            note = ['unreadable note', row[:100]]
+                        r['attempts'].append(note if isinstance(note, list) else ['unreadable note', str(note)[:100]])
+            except OSError:
+                pass
             try:
                 with open(base + '.log', 'rb') as f:
                     text = f.read(20000).decode('utf-8', 'replace')
@@ -150,20 +294,28 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers):
             'net_isolated': facts['net_isolated'], 'namespaces': namespaces}
 
 
-def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=None, workers=2):
+def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=None, cache_key=None, workers=2):
     """Answers of one predictor for the main views and, when it gives no score, for the calibration views.
     Returns {'main': {vid: {'rank','score','p_low'}}, 'cal': {...}, 'seconds', 'peak_mb', 'attempts', 'sandbox'}
     with lists in place of arrays."""
     sha = sha256_file(predictor)
-    if cache_file and os.path.exists(cache_file):
-        with open(cache_file) as f:
-            got = json.load(f)
-        got['cached'] = True
-        return got
-    start = time.time()
     main = [v['vid'] for v in index if v['kind'] == 'main']
     cal = [v['vid'] for v in index if v['kind'] == 'cal']
-    out = {'main': {}, 'cal': {}, 'attempts': [], 'peak_mb': 0.0, 'sandbox': {}, 'cached': False, 'sha256': sha}
+    if cache_file and os.path.exists(cache_file):
+        try:
+            with open(cache_file) as f:
+                got = json.load(f)
+        except (OSError, ValueError):
+            got = {}
+        # stored answers are used only when they say they are this file's answers for exactly these views
+        if got.get('sha256') == sha and got.get('views') == cache_key and set(got.get('main', ())) == set(main) \
+                and set(got.get('cal', ())) <= set(cal):
+            got['cached'] = True
+            return got
+        os.remove(cache_file)
+    start = time.time()
+    out = {'main': {}, 'cal': {}, 'attempts': [], 'peak_mb': 0.0, 'sandbox': {}, 'cached': False, 'sha256': sha,
+           'views': cache_key}
 
     def take(vids, tag, into):
         raw = _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers)
@@ -172,10 +324,10 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
         for vid in vids:
             r = raw['results'][vid]
             out['peak_mb'] = max(out['peak_mb'], r['peak_mb'])
-            for a in r['answer'].get('attempts', []):
+            for a in r['attempts']:
                 if len(out['attempts']) < 50:
                     out['attempts'].append(a)
-            out['n_attempts'] = out.get('n_attempts', 0) + len(r['answer'].get('attempts', []))
+            out['n_attempts'] = out.get('n_attempts', 0) + len(r['attempts'])
             try:
                 ok = score.check_answer(r['answer'], len(keys[vid]['score']))
             except score.ContractError as e:
@@ -191,6 +343,8 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
             raise Failed(f'{rel(predictor)}: {name} is given for some views and None for others')
     if main and out['main'][main[0]]['score'] is None and cal:
         take(cal, 'cal', out['cal'])
+        if any(out['cal'][v]['score'] is not None for v in cal):
+            raise Failed(f'{rel(predictor)}: score is given for some views and None for others')
     out.setdefault('n_attempts', 0)
     out['seconds'] = round(time.time() - start, 2)
     if cache_file and out['n_attempts'] == 0:
@@ -202,12 +356,20 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
     return out
 
 
-def final_predictions(answers, index, keys):
-    """{'pred', 'rank', 'p_low'} aligned with the target table (main views in index order)."""
+def is_calibrated(answers):
+    """Does this predictor give no score, so that the harness calibrates one?"""
+    return any(a['score'] is None for a in answers['main'].values())
+
+
+def final_predictions(answers, index, keys, permute=None):
+    """{'pred', 'rank', 'p_low'} aligned with the target table (main views in index order). With `permute` (a
+    random generator) the ranks of a rank-only predictor are permuted within every view before they are
+    calibrated: the calibrator floor."""
     cal_of = {}
     for v in index:
         if v['kind'] == 'cal':
             cal_of.setdefault(v['parent'], []).append(v['vid'])
+    mix = (lambda x: x if permute is None else permute.permutation(x))
     pred, rank, p_low = [], [], []
     for v in index:
         if v['kind'] != 'main':
@@ -218,9 +380,8 @@ def final_predictions(answers, index, keys):
             s = np.array(a['score'], float)
         else:
             cals = [c for c in cal_of.get(v['vid'], []) if c in answers['cal']]
-            cr = np.concatenate([answers['cal'][c]['rank'] for c in cals]) if cals else np.zeros(0)
-            cs = np.concatenate([keys[c]['score'] for c in cals]) if cals else np.zeros(0)
-            s = score.calibrated(r, cr, cs, keys[v['vid']]['history_score'])
+            s = score.calibrated(mix(r), [mix(np.array(answers['cal'][c]['rank'], float)) for c in cals],
+                                 [keys[c]['score'] for c in cals], keys[v['vid']]['history_score'])
         pred.append(score.to_rating(s))
         rank.append(r)
         p_low.append(None if a['p_low'] is None else np.array(a['p_low'], float))
@@ -229,9 +390,22 @@ def final_predictions(answers, index, keys):
             'p_low': None if not p_low or p_low[0] is None else cat(p_low)}
 
 
+def calibrator_floor(answers, index, keys, table, candidate, owner):
+    """The floor of a rank-only candidate: see score.floor_measures."""
+    y = table['y']
+    err = np.zeros(len(y))
+    for k in range(score.FLOOR_PERMUTATIONS):
+        rng = np.random.default_rng([SEED, 7, k])
+        err += np.abs(final_predictions(answers, index, keys, permute=rng)['pred'] - y)
+    b0 = np.concatenate([np.full(len(keys[v['vid']]['score']),
+                                 score.to_rating(np.median(keys[v['vid']]['history_score'])))
+                         for v in index if v['kind'] == 'main'])
+    return score.floor_measures(table, candidate, err / score.FLOOR_PERMUTATIONS, b0, owner, DRAWS, SEED)
+
+
 def target_table(pack, index, keys):
     cols = {c: [] for c in ('member', 'view', 'y', 'sitting', 'same_sitting', 'block', 'media', 'provenance',
-                            'has_fingerprint', 'old_title', 'low_share')}
+                            'has_fingerprint', 'old_title', 'label_edited', 'franchise', 'low_share')}
     k = 0
     for v in index:
         if v['kind'] != 'main':
@@ -243,11 +417,12 @@ def target_table(pack, index, keys):
         cols['block'].append(np.full(n, v['block'], np.int64))
         cols['low_share'].append(np.full(n, float((key['history_score'] <= score.LOW).mean())))
         cols['y'].append(key['score'])
-        for c in ('sitting', 'same_sitting', 'media', 'provenance', 'has_fingerprint', 'old_title'):
+        cols['label_edited'].append(key['edited'])
+        for c in ('sitting', 'same_sitting', 'media', 'provenance', 'has_fingerprint', 'old_title', 'franchise'):
             cols[c].append(key[c])
         k += 1
     table = {c: (np.concatenate(v) if v else np.zeros(0, np.int64)) for c, v in cols.items()}
-    for c in ('same_sitting', 'has_fingerprint', 'old_title'):
+    for c in ('same_sitting', 'has_fingerprint', 'old_title', 'label_edited'):
         table[c] = table[c].astype(bool)
     table['provenance_names'] = list(pack.provenance_names)
     return table
@@ -270,35 +445,63 @@ def plant_signal(pred, table, effect, seed):
 
 # ------------------------------------------------------------------ one run
 
-def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None, loop_dir=LOOP, members=None,
-            others='all', shuffle_seed=None, plant=None, control=None, use_cache=True, own=None, work=None,
-            keep=False, write_ledger=True, quiet=False):
-    """Run one predictor against its references. Returns the ledger line (also when the run failed)."""
+def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=None, others='all',
+            shuffle_seed=None, plant=None, control=None, use_cache=True, keep=False, quiet=False,
+            verify_of=None, gate=None):
+    """Run one predictor against its references. Returns the ledger line (also when the run failed).
+
+    verify_of   mode verify only (verify.py): the ledger line that is run again; the run must be that line's.
+    gate        mode gate only (gate.py): {'own': the tier B ratings, 'folder': the gate's results folder, 'work':
+                the gate's work folder, 'look': the look gate.py has just written}. A tier B run writes its log
+                under that results folder and nothing else.
+    """
     started = time.time()
     if task != 'T1':
         raise Refused(f'task {task} is not built yet')
-    pack = pack or Pack()
-    root = os.path.dirname(os.path.dirname(pack.folder))
-    real = os.path.realpath(root) == os.path.realpath(DATA_ROOT)
-    if real and os.path.realpath(loop_dir) != os.path.realpath(LOOP):
-        raise Refused('the real pack is scored into the repository ledger only')
-    if (tier == 'B') != (own is not None) or tier not in ('A', 'B'):
-        raise Refused('tier B is read by gate.py only')
-    if mode not in ('explore', 'registered', 'control', 'verify', 'gate'):
+    if mode not in MODES:
         raise Refused(f'unknown mode {mode}')
+    if others not in OTHERS:
+        raise Refused(f'unknown --others {others}')
+    pack = the_pack()
+    root = os.path.dirname(os.path.dirname(pack.folder))
+    missing = under_run_sh(root)
+    if missing:
+        raise Refused(f'use run.sh: it holds the lock slot and sets the thread, time and memory limits ({missing})')
+    try:
+        ledger = checked_ledger(LEDGER)
+    except ValueError as e:
+        raise Refused(str(e)) from None
+    if tier not in ('A', 'B') or (tier == 'B') != (mode == 'gate') or (mode == 'gate') != (gate is not None):
+        raise Refused('tier B is read by gate.py only')
+    if (mode == 'verify') != (verify_of is not None):
+        raise Refused('mode verify is entered through verify.py only')
     if (plant is not None or shuffle_seed is not None) and mode not in ('control', 'verify'):
         raise Refused('shuffled labels and planted effects are controls')
+    folder = item_folder(item)
     predictor = os.path.abspath(predictor)
     refs = [os.path.abspath(r) for r in (refs or [B0])]
-    for p in [predictor] + refs:
-        if not os.path.isfile(p):
-            raise Refused(f'no predictor file {p}')
+    if mode == 'verify':                                # the files may live where the verified run's mode lets them
+        check_files(predictor, refs, verify_of.get('mode'), verify_of.get('control'))
+    else:
+        check_files(predictor, refs, mode, control)
     sha = sha256_file(predictor)
-    ledger_path = os.path.join(loop_dir, 'ledger.jsonl')
-    ledger = read_ledger(ledger_path)
-    item_folder(loop_dir, item)
+    names = {p: rel(p) for p in [predictor] + refs}
+    options = {'others': others, 'members': 'all' if members is None else sorted(members),
+               'shuffle_seed': shuffle_seed, 'plant': plant}
     if mode == 'registered':
-        check_prereg(loop_dir, item, sha)
+        check_prereg(folder, predictor, sha, refs, others, task, members)
+    if mode == 'verify':
+        same = (verify_of.get('predictor') == {'path': names[predictor], 'sha256': sha}
+                and [(r['path'], r['sha256']) for r in verify_of.get('refs', [])] ==
+                [(names[r], sha256_file(r)) for r in refs]
+                and verify_of.get('options') == options and verify_of.get('item') == item
+                and verify_of.get('task') == task and verify_of in ledger)
+        if not same:
+            raise Refused('a verify run repeats a ledgered run: same files, same options')
+    if mode == 'gate':
+        looks = checked_looks(gate['folder'])
+        if not looks or looks[-1] != gate['look'] or looks[-1].get('item') != item:
+            raise Refused('a gate run needs its look written first')
     check_budget(ledger, item, mode)
 
     rows = None
@@ -313,27 +516,23 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
 
     stamp = datetime.datetime.now(datetime.timezone.utc)
     run_id = f'{stamp:%Y%m%dT%H%M%S}-{sha[:8]}-{os.urandom(2).hex()}'
-    work = work or os.path.join(root, 'work')
+    work = gate['work'] if tier == 'B' else os.path.join(root, 'work')
     run_dir = os.path.join(work, 'runs', run_id)
-    keys_path = os.path.join(work, 'keys', f'{run_id}.npz')
-    results_dir = os.path.join(root, 'gate', 'results', 'runs', run_id) if tier == 'B' else \
-        os.path.join(root, 'results', run_id)
+    keys_path = os.path.join(work, 'keys', f'{run_id}.bin')
+    results_dir = os.path.join(gate['folder'], 'logs', run_id) if tier == 'B' else os.path.join(root, 'results', run_id)
     os.makedirs(run_dir, mode=0o700)
     os.makedirs(results_dir, mode=0o700)
     log = os.path.join(results_dir, 'log.txt')
     harness = harness_sha256()
-    commit = git(['rev-parse', 'HEAD'], loop_dir).stdout.strip() or None
+    commit = git(['rev-parse', 'HEAD'], LOOP).stdout.strip() or None
     dirty = bool(git(['status', '--porcelain', '--', '.'], LAB).stdout.strip())
-    names = {p: rel(p) for p in [predictor] + refs}
     line = {'run_id': run_id, 'time': f'{stamp:%Y-%m-%dT%H:%M:%SZ}', 'item': item, 'mode': mode, 'task': task,
             'tier': tier, 'git_commit': commit, 'lab_uncommitted': dirty, 'harness_sha256': harness,
             'pack': os.path.basename(pack.folder), 'pack_sha256': pack.manifest['files_sha256']['pack.pkl'],
             'titles_sha256': pack.manifest['files_sha256']['titles.pkl'],
             'predictor': {'path': names[predictor], 'sha256': sha},
             'refs': [{'path': names[r], 'sha256': sha256_file(r)} for r in refs],
-            'primary_ref': names[refs[0]],
-            'options': {'others': others, 'members': 'all' if members is None else sorted(members),
-                        'shuffle_seed': shuffle_seed, 'plant': plant},
+            'primary_ref': names[refs[0]], 'options': options,
             'seed': SEED, 'draws': DRAWS, 'threads': int(THREADS)}
     if control:
         line['control'] = control
@@ -348,8 +547,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
         with open(os.path.join(titles_dir, 'digest')) as f:
             titles_digest = f.read().strip()
 
-        index, keys, digest = views.build_t1(pack, run_dir, own=own, members=rows, others_mode=others,
-                                             shuffle_seed=shuffle_seed)
+        index, keys, digest = views.build_t1(pack, run_dir, own=gate['own'] if gate else None, members=rows,
+                                             others_mode=others, shuffle_seed=shuffle_seed)
         views.write_keys(keys_path, index, keys)
         main = [v for v in index if v['kind'] == 'main']
         if not main:
@@ -366,12 +565,12 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
             p_sha = sha256_file(p)
             if p_sha in answers:
                 continue
-            cache_file = os.path.join(cache_dir, f'{p_sha}.json') if use_cache and mode in ('explore', 'control') \
-                else None
+            cache_file = os.path.join(cache_dir, f'{p_sha}.json') \
+                if use_cache and mode in ('explore', 'ladder', 'control') else None
             if p == predictor and cache_file:           # the candidate itself always runs; its answers are stored
                 if os.path.exists(cache_file):
                     os.remove(cache_file)
-            got = run_predictor(p, index, keys, run_dir, titles_path, log, cache_file, workers)
+            got = run_predictor(p, index, keys, run_dir, titles_path, log, cache_file, cache_key, workers)
             if strict and not all(got['sandbox'].get(k) for k in FULL_SANDBOX):
                 raise Failed(f'a {mode} run needs the full sandbox; this machine gave {got["sandbox"]}')
             answers[p_sha] = got
@@ -382,6 +581,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
                 line['sandbox'] = {**sandbox, 'attempts': attempts, 'examples': got['attempts'][:8]}
         for r in line['refs']:
             r['cached'] = bool(answers[r['sha256']].get('cached'))
+        # which of the predictors give no score, so that the harness calibrates one
+        line['calibrated'] = sorted({names[p] for p in [predictor] + refs if is_calibrated(answers[sha256_file(p)])})
 
         table = target_table(pack, index, keys)
         cand = final_predictions(answers[sha], index, keys)
@@ -390,6 +591,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
         ref_preds = {names[r]: final_predictions(answers[sha256_file(r)], index, keys) for r in refs}
         owner = pack.owner if tier == 'A' else None
         line['measures'] = score.t1_measures(table, cand, ref_preds, owner, DRAWS, SEED)
+        if names[predictor] in line['calibrated']:
+            line['measures']['calibrator_floor'] = calibrator_floor(answers[sha], index, keys, table, cand, owner)
         line['views'].update(members=int(len(np.unique(table['member']))), targets=int(len(table['y'])))
         line['status'] = 'ok' if attempts == 0 else 'attempts'
         line['predictor_seconds'] = seconds
@@ -415,21 +618,31 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', pack=None,
                 os.remove(keys_path)
     line['seconds'] = round(time.time() - started, 1)
     result['seconds'] = line['seconds']
-    with open(os.path.join(results_dir, 'result.json'), 'w') as f:
-        json.dump(result, f, indent=1)
-    if write_ledger and mode in ('explore', 'registered', 'control'):
-        append_ledger(ledger_path, line)
+    if tier == 'A':                                     # nothing of tier B is written here: gate.py writes one line
+        with open(os.path.join(results_dir, 'result.json'), 'w') as f:
+            json.dump(result, f, indent=1)
+    if mode in ('explore', 'registered', 'ladder', 'control'):
+        append_ledger(LEDGER, line)
     if not quiet:
         print(summary(line))
         print(f'result and log: {results_dir}')
     return line
 
 
+def checked_looks(folder):
+    """The gate's looks of this pack, oldest first."""
+    path = os.path.join(folder, 'looks.jsonl')
+    if not os.path.exists(path):
+        return []
+    with open(path) as f:
+        return [json.loads(x) for x in f if x.strip()]
+
+
 def _ci(d, key='diff'):
     if d.get(key) is None:
         return 'n/a'
     if d.get('lo') is None:
-        return f'{d[key]:+.3f}'
+        return f'{d[key]:+.3f}' + (f' (no interval: {d["why"]})' if d.get('why') else '')
     return f'{d[key]:+.3f} ({d["lo"]:+.3f} to {d["hi"]:+.3f})'
 
 
@@ -440,16 +653,22 @@ def summary(line):
         return out[0] + f'\n  {line["error"]}'
     m = line['measures']
     o = m['others']
-    out.append(f'  others: {o["n_members"]} members with {m["min_targets"]}+ targets, error {o["mae"]["value"]:.3f}')
+    num = (lambda x: 'n/a' if x is None else f'{x:.3f}')
+    out.append(f'  others: {o["n_members"]} members with {m["min_targets"]}+ targets, error {num(o["mae"]["value"])}, '
+               f'pair accuracy {num(o["pair_acc"]["value"])}')
     for ref, d in o['vs'].items():
         v = d['mae']
         out.append(f'    against {ref}: {_ci(v)}, smallest detectable {v.get("sde")}, '
-                   f'{v.get("improved")} of {v["n"]} members improved')
+                   f'{v.get("improved")} of {v["n"]} members improved; pair accuracy {_ci(d.get("pair_acc", {}))}')
+    if 'calibrator_floor' in m:
+        c = m['calibrator_floor']['others']
+        out.append(f'  calibrator floor (ranks permuted within each view): against B0 {_ci(c["vs_b0"])}; '
+                   f'the rung against its floor {_ci(c["rung_vs_floor"])}')
     if 'owner' in m:
         w = m['owner']
-        out.append(f'  owner: {w["n_targets"]} targets, error {w["mae"]["value"]:.3f}')
+        out.append(f'  owner: {w["n_targets"]} targets, error {num(w["mae"]["value"])}')
         for ref, d in w['vs'].items():
-            out.append(f'    against {ref}: {_ci(d["mae"])}, smallest detectable {d["mae"].get("sde")}')
+            out.append(f'    against {ref}: {_ci(d["mae"])}; franchises drawn again: {_ci(d["mae_franchise"])}')
     if line.get('sandbox', {}).get('attempts'):
         out.append(f'  the predictor tried {line["sandbox"]["attempts"]} things the sandbox refused: '
                    f'{line["sandbox"]["examples"][:3]}')
@@ -461,28 +680,21 @@ def main(argv=None):
     ap.add_argument('predictor')
     ap.add_argument('--task', default='T1')
     ap.add_argument('--tier', default='A')
-    ap.add_argument('--mode', required=True, choices=['explore', 'registered', 'control'])
+    ap.add_argument('--mode', required=True, choices=['explore', 'registered', 'ladder', 'control'])
     ap.add_argument('--item', required=True)
     ap.add_argument('--ref', action='append')
     ap.add_argument('--members')
-    ap.add_argument('--others', default='all', choices=['all', 'no-owner', 'before'])
+    ap.add_argument('--others', default='all', choices=list(OTHERS))
     ap.add_argument('--no-cache', action='store_true')
     ap.add_argument('--control', help='the name of the control (mode control only)')
     ap.add_argument('--shuffle-seed', type=int)
     ap.add_argument('--plant', type=float)
-    ap.add_argument('--pack', help='a pack folder other than the newest (tests)')
-    ap.add_argument('--loop-dir', default=LOOP, help='the folder with ledger.jsonl and items/ (tests)')
     ap.add_argument('--keep', action='store_true', help='keep the run folder with the views')
     a = ap.parse_args(argv)
-    if os.environ.get('TASTE_RUN_SH') != '1':
-        sys.exit('use run.sh: it holds the lock slot and sets the thread, time and memory limits')
     if a.tier != 'A':
         sys.exit('refused: tier B is read by gate.py only')
-    if (a.mode == 'control') != bool(a.control):
-        sys.exit('refused: --control names the control of a run in mode control, and only there')
     try:
         line = execute(a.predictor, a.ref, item=a.item, mode=a.mode, task=a.task, tier=a.tier,
-                       pack=Pack(a.pack) if a.pack else None, loop_dir=os.path.abspath(a.loop_dir),
                        members=a.members.split(',') if a.members else None, others=a.others,
                        shuffle_seed=a.shuffle_seed, plant=a.plant, control=a.control, use_cache=not a.no_cache,
                        keep=a.keep)

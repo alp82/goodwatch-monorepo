@@ -62,6 +62,9 @@ def build(root, n_members=60, n_titles=400, seed=1):
     num['goodwatch_overall_score_voting_count'] = rng.integers(200, 500000, n_titles).astype(np.int64)
     num['release_year'][~in_catalog] = -1
     num['goodwatch_overall_score_voting_count'][~in_catalog] = -1
+    series = np.random.default_rng(seed + 1000)                  # its own generator: the rest stays as it was
+    num['movie_series_id'] = np.where(series.random(n_titles) < 0.3, series.integers(1, 30, n_titles), -1)
+    num['movie_series_id'][media == 1] = -1
     release = ((num['release_year'] - 1970) * 365.25 * 86400 * 1000).astype(np.int64)
     release[~in_catalog] = NAT
     genres = [sorted(rng.choice(GENRES, rng.integers(1, 3), replace=False).tolist()) for _ in range(n_titles)]
@@ -118,9 +121,12 @@ def build(root, n_members=60, n_titles=400, seed=1):
     R = {'member': np.array(rows['member'], np.int32), 'title_key': np.array(rows['title_key'], np.int64),
          'created_at': np.array(rows['created_at'], np.int64), 'score': np.array(rows['score'], np.int8)}
     R['updated_at'] = R['created_at'].copy()
+    late = np.random.default_rng(seed + 2000).random(len(R['member'])) < 0.03   # edited a day after the last rating
+    R['updated_at'][late] = R['created_at'].max() + 86400 * 1000
     R['sitting'], R['position'], R['in_bulk'] = entry_order(R['member'], R['created_at'])
     n = len(R['member'])
-    R['has_review'], R['edited'], R['import_score_kept'] = (np.zeros(n, bool) for _ in range(3))
+    R['has_review'], R['import_score_kept'] = (np.zeros(n, bool) for _ in range(2))
+    R['edited'] = R['updated_at'] > R['created_at']
     R['provenance'] = R['in_bulk'].astype(np.uint8)
 
     def side(table, extra):
@@ -153,7 +159,8 @@ def build(root, n_members=60, n_titles=400, seed=1):
                               ('titles_detail.pkl', {}, pack_dir), ('gate.pkl', gate, gate_dir)):
         with open(os.path.join(folder, name), 'wb') as f:
             pickle.dump(obj, f)
-    manifest = {'format': 1, 'until': 'synthetic', 'pack_folder': pack_dir, 'gate_folder': gate_dir,
+    manifest = {'format': 1, 'until': 'synthetic', 'pack_folder': os.path.abspath(pack_dir),
+                'gate_folder': os.path.abspath(gate_dir),
                 'files_sha256': {n: sha256(os.path.join(pack_dir, n)) for n in ('pack.pkl', 'titles.pkl')},
                 'gate_sha256': {'gate.pkl': sha256(os.path.join(gate_dir, 'gate.pkl'))}}
     with open(os.path.join(pack_dir, 'MANIFEST.json'), 'w') as f:

@@ -5,11 +5,13 @@
   not rated (weight 0.5). N is the weighted mean of the disliked titles (rated 5 or less, weight 6 - score).
 - The taste is 2P - N, or P without dislikes, at unit length, kept in single precision as the product keeps it.
 - No taste below 5 liked titles with a fingerprint.
-- rank is the cosine of the title's fingerprint with the taste, in single precision (poolCosines). The match the
-  product shows is a rising function of that cosine, so the order is the same.
+- The cosine of a title's fingerprint with the taste is computed in single precision (poolCosines).
+- rank is the product's own coordinate: the percentile of that cosine among the cosines of the reference pool
+  (titles in the pool with a fingerprint) with the same taste, as a share in 0..1. It means the same in every view
+  of a member, which the contract asks of a predictor without a score. Within a view the order is the cosine's.
 
-Declared fallbacks: without a taste every target gets rank 0 (no order). A target without a fingerprint gets the
-median rank of the view's targets that have one (0 when none has).
+Declared fallbacks: without a taste every target gets rank 0.5 (no order). A target without a fingerprint gets the
+median rank of the view's targets that have one (0.5 when none has).
 No score: the harness calibrates one from the member's history.
 """
 import numpy as np
@@ -21,6 +23,8 @@ MIN_LIKED = 5
 LIKED_FROM = 6
 WANT_TO_SEE_WEIGHT = 0.5
 MISSING = 255
+NO_ORDER = 0.5
+POOL_CHUNK = 4096
 
 
 _POOL = {}
@@ -100,12 +104,28 @@ def cosines(view, rows, taste):
     return ((v @ taste.astype(np.float64)) * inverse.astype(np.float64)).astype(np.float32), usable
 
 
+def pool_percentile(view, cosine, taste):
+    """Where a cosine stands among the cosines of the reference pool (in the pool and with a usable fingerprint)
+    with the same taste: the share of the pool below it, a tie counting a half. 0..1."""
+    titles = view['titles']
+    rows = np.flatnonzero(titles['in_pool'] & titles['has_fingerprint'])
+    parts = []
+    for a in range(0, len(rows), POOL_CHUNK):          # in chunks: the same numbers, less memory at once
+        part, usable = cosines(view, rows[a:a + POOL_CHUNK], taste)
+        parts.append(part[usable].astype(np.float64))
+    pool = np.sort(np.concatenate(parts)) if parts else np.zeros(0)
+    if len(pool) == 0:
+        return np.full(len(cosine), NO_ORDER)
+    below, upto = np.searchsorted(pool, cosine, 'left'), np.searchsorted(pool, cosine, 'right')
+    return (below + upto) / (2.0 * len(pool))
+
+
 def predict(view):
     rows = view['targets']['title']
     taste = taste_vector(view)
     if taste is None:
-        return {'rank': np.zeros(len(rows)), 'score': None, 'p_low': None}
+        return {'rank': np.full(len(rows), NO_ORDER), 'score': None, 'p_low': None}
     cosine, usable = cosines(view, rows, taste)
-    rank = cosine.astype(np.float64)
-    rank[~usable] = np.median(rank[usable]) if usable.any() else 0.0
+    rank = pool_percentile(view, cosine.astype(np.float64), taste)
+    rank[~usable] = np.median(rank[usable]) if usable.any() else NO_ORDER
     return {'rank': rank, 'score': None, 'p_low': None}

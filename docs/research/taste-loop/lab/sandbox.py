@@ -27,14 +27,18 @@ What the predictor process cannot do (the kernel enforces each line; the process
 - Namespaces: its own process, IPC and network namespace inside a user namespace without network, when the
   machine allows it. This repeats what seccomp already forbids; a run without it is marked in the ledger, and
   registered and gate runs refuse to run without it.
-- Descriptors: only its answer pipe and its own log pipe. Not the output folder, whose name is random and is not
-  in this process's memory.
+- Descriptors: only its answer pipe (3), its notes pipe (4) and its own log pipe (1 and 2). Not the output folder,
+  whose name is random and is not in this process's memory.
 - Limits: address space, CPU seconds, wall-clock seconds.
+- Harness state: none. Once the process is confined it raises `_Ready`, which carries the predictor's source, a
+  module name made from its hash and the view, and unwinds every harness frame up to the top of this file. `predict`
+  is then called from `_serve`, whose frame and the frames under it hold no job, no view list, no view id, no
+  folder, no report. The predictor is compiled under the name `<predictor_HASH>` and has no `__file__`.
 
 What is reported: an audit hook in the predictor process notes every attempt to open or list a path, start a
-process or open a socket, and refuses it. The notes travel with the answer. The hook is the report; Landlock and
-seccomp are the boundary (a predictor that goes around Python, through the C library, is stopped by them and not
-noted).
+process or open a socket, and refuses it. Each note is written to the notes pipe the moment it is made, so a
+predictor cannot take one back. The report is advisory: a predictor can add false notes, close the pipe, or go
+around Python through the C library, where it is stopped without a note. Landlock and seccomp are the boundary.
 
 What still connects two predictor processes that run at the same moment: the load they put on the machine. Runs
 that count (registered, gate, verify) therefore run one view at a time; other runs run two.
@@ -67,7 +71,8 @@ NET_ISOLATED = leave_network() if __name__ == '__main__' else False
 
 import ast  # noqa: E402
 import ctypes  # noqa: E402
-import linecache  # noqa: E402
+import fcntl  # noqa: E402
+import gc  # noqa: E402
 import resource  # noqa: E402
 import select  # noqa: E402
 import signal  # noqa: E402
@@ -81,6 +86,8 @@ NUMPY_PARTS = ('numpy.linalg', 'numpy.fft', 'numpy.ma', 'numpy.random', 'numpy.p
                'numpy.lib.recfunctions', 'numpy.strings', 'numpy.char', 'numpy.rec')
 ANSWER_LIMIT = 64 << 20
 LOG_LIMIT = 256 << 10
+NOTES_LIMIT = 64 << 10
+ANSWER_FD, NOTES_FD = 3, 4                             # the predictor process's two pipes, always these numbers
 
 # ------------------------------------------------------------------ Landlock: files
 
@@ -203,21 +210,26 @@ _DENIED_EVENTS = ('subprocess.Popen', 'os.system', 'os.exec', 'os.posix_spawn', 
                   'resource.setrlimit', 'resource.prlimit', 'os.setpriority', 'os.sched_setaffinity')
 
 
-def _install_hook(notes, state):
+def _install_hook():
+    """Note and refuse. The hook holds nothing but the number of the notes pipe; from here on the harness's own
+    code in this process touches descriptors only, which the hook lets pass."""
+    write, dumps, fd = os.write, json.dumps, NOTES_FD
+
     def hook(event, args):
-        if state['harness']:
-            return
         if event in _PATH_EVENTS:
             path = args[0] if args else None
             if path is None or isinstance(path, int):
                 return
-            if len(notes) < 200:
-                notes.append([event, str(path)[:300]])
-            raise PermissionError(f'the harness does not let a predictor touch {path}')
-        if event in _DENIED_EVENTS:
-            if len(notes) < 200:
-                notes.append([event, str(args[:2])[:300]])
-            raise PermissionError(f'the harness does not let a predictor call {event}')
+            what = str(path)[:300]
+        elif event in _DENIED_EVENTS:
+            what = str(args[:2])[:300]
+        else:
+            return
+        try:
+            write(fd, (dumps([event, what]) + '\n').encode())
+        except OSError:
+            pass
+        raise PermissionError(f'the harness does not let a predictor do this: {event} {what}')
 
     sys.addaudithook(hook)
 
@@ -237,9 +249,20 @@ def _describe(value, name):
 
 # ------------------------------------------------------------------ the predictor process
 
-def _predictor_process(job, vid, titles, source, answer_fd, log_fd, load_view):
-    """Runs in the innermost process. Never returns."""
-    notes, answer, state = [], {}, {'harness': True}
+class _Ready(BaseException):
+    """Raised in the predictor process once it is confined. It carries what `predict` needs (the source, a module
+    name, the view) and unwinds every harness frame on its way to the top of this file."""
+
+
+def _write_answer(fd, answer):
+    data = json.dumps(answer).encode()
+    while data:
+        data = data[os.write(fd, data):]
+
+
+def _confine(job, vid, titles, source, answer_fd, notes_fd, log_fd, load_view):
+    """Runs in the innermost process: loads the view, shuts everything else, and raises _Ready. Never returns."""
+    out = answer_fd
     try:
         LIBC.prctl(1, signal.SIGKILL, 0, 0, 0)        # die with the helper that started this process
         os.dup2(log_fd, 1)
@@ -248,46 +271,82 @@ def _predictor_process(job, vid, titles, source, answer_fd, log_fd, load_view):
         landlock(read=(view_fd,))
         data = load_view(view_fd, titles)
         os.close(0)                                   # no standard input; nothing shared with another view
-        os.closerange(3, answer_fd)
-        os.closerange(answer_fd + 1, 4096)
+        answer_fd = fcntl.fcntl(answer_fd, fcntl.F_DUPFD, 100)
+        notes_fd = fcntl.fcntl(notes_fd, fcntl.F_DUPFD, 100)
+        os.closerange(3, 100)
+        os.dup2(answer_fd, ANSWER_FD)
+        os.dup2(notes_fd, NOTES_FD)
+        out = ANSWER_FD
+        os.closerange(NOTES_FD + 1, 4096)
         os.chdir('/')
         limit = int(job['memory_mb']) << 20
         resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
         resource.setrlimit(resource.RLIMIT_CPU, (int(job['cpu_seconds']), int(job['cpu_seconds']) + 5))
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
         seccomp()
-        lines = source.decode('utf-8', 'replace').splitlines(True)
-        linecache.cache[job['predictor']] = (len(source), None, lines, job['predictor'])
-        _install_hook(notes, state)
-        module = types.ModuleType(job['module'])
-        module.__file__ = job['predictor']
-        sys.modules[job['module']] = module
-        state['harness'] = False
-        exec(compile(source, job['predictor'], 'exec'), module.__dict__)
-        result = module.predict(data)
-        state['harness'] = True
+        ready = _Ready(source, job['module'], data)
+    except BaseException as e:                        # noqa: BLE001
+        try:
+            _write_answer(out, {'returned': 'error', 'error': f'the harness could not confine the process: '
+                                                               f'{type(e).__name__}: {e}'[:2000]})
+        finally:
+            os._exit(0)
+    raise ready
+
+
+def _trace(error, source, name):
+    """A traceback without a file read: lines of the predictor's own source, names for everything else."""
+    lines = source.decode('utf-8', 'replace').splitlines()
+    out, tb = [], error.__traceback__
+    while tb is not None:
+        code = tb.tb_frame.f_code
+        row = f'  File "{code.co_filename}", line {tb.tb_lineno}, in {code.co_name}'
+        if code.co_filename == name and 0 < tb.tb_lineno <= len(lines):
+            row += '\n    ' + lines[tb.tb_lineno - 1].strip()
+        out.append(row)
+        tb = tb.tb_next
+    return ('\n'.join(out) + f'\n{type(error).__name__}: {error}')[-3000:]
+
+
+def _serve(source, name, view):
+    """The predictor process after every harness frame is gone: load the predictor, call it, write the answer.
+    This frame holds the source, the module name and the view, which is what the predictor has anyway."""
+    _install_hook()
+    try:
+        module = types.ModuleType(name)
+        sys.modules[name] = module
+        exec(compile(source, f'<{name}>', 'exec'), module.__dict__)
+        result = module.predict(view)
         if not isinstance(result, dict):
             answer = {'returned': type(result).__name__}
         else:
             answer = {'returned': 'dict', 'keys': sorted(str(k) for k in result)}
-            for name in ('rank', 'score', 'p_low'):
-                answer[name] = _describe(result.get(name), name)
+            for key in ('rank', 'score', 'p_low'):
+                answer[key] = _describe(result.get(key), key)
     except BaseException as e:                        # noqa: BLE001
-        state['harness'] = True
         answer = {'returned': 'error', 'error': f'{type(e).__name__}: {e}'[:2000],
-                  'trace': traceback.format_exc()[-3000:]}
-    answer['attempts'] = notes
+                  'trace': _trace(e, source, f'<{name}>')}
     try:
-        data = json.dumps(answer).encode()
-        with os.fdopen(answer_fd, 'wb') as f:
-            f.write(data)
+        _write_answer(ANSWER_FD, answer)
         sys.stdout.flush()
         sys.stderr.flush()
     finally:
         os._exit(0)
 
 
-def _helper(job, vid, titles, source, answer_fd, log_fd, load_view, start):
+def _child(fn, *args):
+    """What a forked child does: run fn and exit. Only _Ready passes, on its way to the top."""
+    try:
+        fn(*args)
+    except _Ready:
+        raise
+    except BaseException:                             # noqa: BLE001
+        traceback.print_exc()
+        os._exit(1)
+    os._exit(0)
+
+
+def _helper(job, vid, titles, source, answer_fd, notes_fd, log_fd, load_view, start):
     """Between the worker and the predictor process: owns the namespaces, keeps the wall clock, writes the facts
     of this one view to a file and exits. Runs no predictor code and reads no answer."""
     signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGCHLD})
@@ -299,8 +358,9 @@ def _helper(job, vid, titles, source, answer_fd, log_fd, load_view, start):
     pid = os.fork()
     if pid == 0:
         signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGCHLD})
-        _predictor_process(job, vid, titles, source, answer_fd, log_fd, load_view)
+        _confine(job, vid, titles, source, answer_fd, notes_fd, log_fd, load_view)
     os.close(answer_fd)
+    os.close(notes_fd)
     os.close(log_fd)
     timed_out = signal.sigtimedwait({signal.SIGCHLD}, float(job['wall_seconds'])) is None
     if timed_out:
@@ -315,22 +375,21 @@ def _helper(job, vid, titles, source, answer_fd, log_fd, load_view, start):
 
 
 def _run_view(job, vid, titles, source, load_view, null_fd):
-    """Fork the helper for one view and move its answer and its log into files without reading them."""
+    """Fork the helper for one view and move its answer, its notes and its log into files without reading them."""
     answer_r, answer_w = os.pipe()
+    notes_r, notes_w = os.pipe()
     log_r, log_w = os.pipe()
     start = time.time()
     pid = os.fork()
     if pid == 0:
-        try:
-            os.close(answer_r)
-            os.close(log_r)
-            _helper(job, vid, titles, source, answer_w, log_w, load_view, start)
-        finally:
-            os._exit(1)
-    os.close(answer_w)
-    os.close(log_w)
+        for fd in (answer_r, notes_r, log_r):
+            os.close(fd)
+        _child(_helper, job, vid, titles, source, answer_w, notes_w, log_w, load_view, start)
+    for fd in (answer_w, notes_w, log_w):
+        os.close(fd)
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     moved = {answer_r: [os.open(f'{vid}.answer', flags, 0o600, dir_fd=job['out_fd']), 0, ANSWER_LIMIT],
+             notes_r: [os.open(f'{vid}.notes', flags, 0o600, dir_fd=job['out_fd']), 0, NOTES_LIMIT],
              log_r: [os.open(f'{vid}.log', flags, 0o600, dir_fd=job['out_fd']), 0, LOG_LIMIT]}
     deadline = start + float(job['wall_seconds']) + 20
     live = set(moved)
@@ -353,6 +412,11 @@ def _run_view(job, vid, titles, source, load_view, null_fd):
         os.close(fd)
         os.close(to)
     os.waitpid(pid, 0)
+
+
+def _run_views(job, part, titles, source, load_view, null_fd):
+    for vid in part:
+        _run_view(job, vid, titles, source, load_view, null_fd)
 
 
 # ------------------------------------------------------------------ the worker
@@ -434,16 +498,24 @@ def main():
     for part in parts:
         pid = os.fork()
         if pid == 0:
-            try:
-                for vid in part:
-                    _run_view(job, vid, titles, source, load_view, null_fd)
-                os._exit(0)
-            finally:
-                os._exit(1)
+            _child(_run_views, job, part, titles, source, load_view, null_fd)
         pids.append(pid)
     ok = all(os.waitpid(pid, 0)[1] == 0 for pid in pids)
     finish(facts if ok else {**facts, 'error': 'a worker process ended early'}, 0)
 
 
+def _top():
+    try:
+        main()                                         # the worker returns from here by sys.exit
+    except _Ready as ready:
+        go = ready.args                                # this is a predictor process; the harness frames are gone
+    else:
+        return
+    for name in ('__file__', '__cached__', '__loader__', '__spec__'):
+        globals().pop(name, None)
+    gc.collect()
+    _serve(*go)
+
+
 if __name__ == '__main__':
-    main()
+    _top()

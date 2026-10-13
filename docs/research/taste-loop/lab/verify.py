@@ -1,9 +1,9 @@
 """Rerun a ledgered run in a fresh process and fail unless every measure matches.
 
-    python3 verify.py <run id>
+    lab/run.sh --verify <run id>
 
-The rerun goes through run.sh (lock slot, thread, time and memory limits), builds the views again from the pack,
-runs the candidate and every reference again (no stored answers are used) and compares the measures, the views
+The rerun holds a lock slot under run.sh's limits, builds the views again from the pack, runs the candidate and
+every reference again (no stored answers are used, one view at a time) and compares the measures, the views
 digest, the pack hash and the predictor hashes with the ledger line. It appends one line of mode `verify` to the
 ledger; that line holds no measures and uses no budget. Exit code 0 only when everything matches.
 """
@@ -12,7 +12,7 @@ import datetime
 import os
 import sys
 
-from common import LAB, LOOP, append_ledger, read_ledger, sha256_file
+from common import LAB, append_ledger, sha256_file
 
 
 def differences(a, b, path=''):
@@ -37,22 +37,19 @@ def count(x):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('run_id')
-    ap.add_argument('--pack')
-    ap.add_argument('--loop-dir', default=LOOP)
     a = ap.parse_args()
-    if os.environ.get('TASTE_RUN_SH') != '1':
-        os.execv(os.path.join(LAB, 'run.sh'), ['run.sh', '--verify'] + sys.argv[1:])
     import run
-    from pack import Pack
-    loop_dir = os.path.abspath(a.loop_dir)
-    ledger_path = os.path.join(loop_dir, 'ledger.jsonl')
-    lines = [x for x in read_ledger(ledger_path) if x.get('run_id') == a.run_id and 'predictor' in x]
+    try:
+        pack = run.the_pack()
+        ledger = run.checked_ledger(run.LEDGER)
+    except (run.Refused, ValueError) as e:
+        sys.exit(f'refused: {e}')
+    lines = [x for x in ledger if x.get('run_id') == a.run_id and 'predictor' in x]
     if len(lines) != 1:
         sys.exit(f'{len(lines)} ledger lines have run id {a.run_id}')
     old = lines[0]
     if old.get('tier') != 'A':
         sys.exit('only tier A runs are verified')
-    pack = Pack(a.pack) if a.pack else Pack()
     problems = []
     if pack.manifest['files_sha256']['pack.pkl'] != old['pack_sha256']:
         problems.append('the pack is not the one the run used')
@@ -65,18 +62,20 @@ def main():
     if problems:
         sys.exit('cannot verify: ' + '; '.join(problems))
     o = old['options']
-    new = run.execute(paths[old['predictor']['path']], [paths[r['path']] for r in old['refs']], item=old['item'],
-                      mode='verify', pack=pack, loop_dir=loop_dir,
-                      members=None if o['members'] == 'all' else o['members'], others=o['others'],
-                      shuffle_seed=o['shuffle_seed'], plant=o['plant'], use_cache=False, write_ledger=False,
-                      quiet=True)
+    try:
+        new = run.execute(paths[old['predictor']['path']], [paths[r['path']] for r in old['refs']], item=old['item'],
+                          mode='verify', task=old['task'], members=None if o['members'] == 'all' else o['members'],
+                          others=o['others'], shuffle_seed=o['shuffle_seed'], plant=o['plant'], use_cache=False,
+                          quiet=True, verify_of=old)
+    except run.Refused as e:
+        sys.exit(f'refused: {e}')
     diff = differences({'measures': old.get('measures'), 'views': old.get('views'), 'status': old.get('status')},
                        {'measures': new.get('measures'), 'views': new.get('views'), 'status': new.get('status')})
     stamp = datetime.datetime.now(datetime.timezone.utc)
-    append_ledger(ledger_path, {'mode': 'verify', 'item': old['item'], 'of': a.run_id, 'run_id': new['run_id'],
-                                'time': f'{stamp:%Y-%m-%dT%H:%M:%SZ}', 'match': not diff,
-                                'harness_same': new['harness_sha256'] == old['harness_sha256'],
-                                'seconds': new['seconds']})
+    append_ledger(run.LEDGER, {'mode': 'verify', 'item': old['item'], 'of': a.run_id, 'run_id': new['run_id'],
+                               'time': f'{stamp:%Y-%m-%dT%H:%M:%SZ}', 'match': not diff,
+                               'harness_same': new['harness_sha256'] == old['harness_sha256'],
+                               'seconds': new['seconds']})
     if diff:
         print(f'NOT REPRODUCED: {len(diff)} values differ')
         print('\n'.join(diff[:40]))

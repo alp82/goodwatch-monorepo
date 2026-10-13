@@ -3,7 +3,8 @@ before the views are built, for the predicted member and for everyone else. A ti
 rating, so no rung may show skill against B0:
 
 - error: for members and for the owner, no paired difference to B0 may be a win by the plan's own rule (interval
-  below zero and a gain of 0.05 points or more);
+  below zero and a gain of 0.05 points or more). The owner has no interval over sittings (stats.cluster_mean), so
+  for the owner the rule is read on the second figure, the interval with whole franchises drawn again;
 - order: every rung's pair accuracy for members must lie within 0.05 of 0.5, the value of a scorer with no order.
 
 What shuffling does not remove is the level a rung predicts for a member (B0: the median so far; B4 and B5: a mean
@@ -32,7 +33,10 @@ if __name__ == '__main__':
         runs.append(line['run_id'])
         m = line['measures']
         o = m['others']['vs']['ladder/b0_median.py']
-        w = m.get('owner', {}).get('vs', {}).get('ladder/b0_median.py', {}).get('mae', {})
+        wv = m.get('owner', {}).get('vs', {}).get('ladder/b0_median.py', {})
+        w = wv.get('mae', {})
+        if w.get('hi') is None and wv.get('mae_franchise'):
+            w = {**wv['mae_franchise'], 'figure': 'franchises drawn again'}
         pa = m['others']['pair_acc']
         bad = _lib.shows_skill(o['mae']) or _lib.shows_skill(w) or abs(pa['value'] - 0.5) > 0.05
         passed &= not bad

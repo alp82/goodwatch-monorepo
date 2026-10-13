@@ -7,6 +7,10 @@ on every title column, shrunk to zero (ridge penalty 300), from 3 ratings on. Lo
 for the model, the columns and the declared differences. tests/test_ladder.py runs the original and this file on
 the same data and requires the same numbers.
 
+Fallback, declared: when no other member has rated anything in the view (with `--others before`, every block of
+the first member to rate), or when the others are too few for the fit to give finite numbers, the answer is rung
+B1's: the GoodWatch score plus the member's shrunk offset.
+
 score   the prediction clipped to 1..10, as the original returns it
 rank    the prediction before clipping
 """
@@ -110,22 +114,46 @@ def fit_pool(x, ou, oi, oy):
     return t, mu, sig, s2
 
 
+def public(view):
+    """Rung B1's behaviour, for a view in which the others hold nothing to learn from: the GoodWatch score plus the
+    member's offset shrunk toward the population's (3 pseudo-ratings), the member's median without such a score."""
+    g = view['titles']['num']['goodwatch_overall_score_normalized_percent'] / 10.0
+    mine, others = view['me']['ratings'], view['others']['ratings']
+    d = others['score'] - g[others['title']]
+    population = float(np.nanmean(d)) if np.isfinite(d).any() else 0.0
+    d = mine['score'] - g[mine['title']]
+    ok = np.isfinite(d)
+    offset = (d[ok].sum() + 3.0 * population) / (ok.sum() + 3.0)
+    median = float(np.median(mine['score'])) if len(mine['score']) else 7.0
+    score = g[view['targets']['title']] + offset
+    score = np.where(np.isfinite(score), score, median)
+    return {'rank': score, 'score': score, 'p_low': None}
+
+
 def predict(view):
+    others, mine = view['others']['ratings'], view['me']['ratings']
+    if len(others['score']) == 0:                            # no other member has rated yet (--others before)
+        return public(view)
     rows = universe(view)
     x = features(view, rows)
     at = (lambda title: np.searchsorted(rows, title))
-    others, mine = view['others']['ratings'], view['me']['ratings']
-    t, mu, sig, s2 = fit_pool(x, others['member'], at(others['title']), others['score'].astype(float))
-    tr, te = at(mine['title']), at(view['targets']['title'])
-    y = mine['score'].astype(float)
-    si = np.linalg.inv(sig)
-    c = np.linalg.inv(si + t[tr].T @ t[tr] / s2) @ (si @ mu + t[tr].T @ y / s2)
-    p = t[te] @ c
-    if OWN > 0 and len(y) >= 3:                              # personal weights on every column, shrunk to zero
-        r = y - t[tr] @ c
-        a = x[tr]
-        if len(y) < x.shape[1]:
-            p = p + x[te] @ (a.T @ np.linalg.solve(a @ a.T + OWN * np.eye(len(y)), r))
-        else:
-            p = p + x[te] @ np.linalg.solve(a.T @ a + OWN * np.eye(x.shape[1]), a.T @ r)
+    try:
+        with np.errstate(all='ignore'):
+            t, mu, sig, s2 = fit_pool(x, others['member'], at(others['title']), others['score'].astype(float))
+            tr, te = at(mine['title']), at(view['targets']['title'])
+            y = mine['score'].astype(float)
+            si = np.linalg.inv(sig)
+            c = np.linalg.inv(si + t[tr].T @ t[tr] / s2) @ (si @ mu + t[tr].T @ y / s2)
+            p = t[te] @ c
+            if OWN > 0 and len(y) >= 3:                      # personal weights on every column, shrunk to zero
+                r = y - t[tr] @ c
+                a = x[tr]
+                if len(y) < x.shape[1]:
+                    p = p + x[te] @ (a.T @ np.linalg.solve(a @ a.T + OWN * np.eye(len(y)), r))
+                else:
+                    p = p + x[te] @ np.linalg.solve(a.T @ a + OWN * np.eye(x.shape[1]), a.T @ r)
+    except np.linalg.LinAlgError:
+        return public(view)
+    if not np.isfinite(p).all():                             # too few others for the fit to exist
+        return public(view)
     return {'rank': p, 'score': np.clip(p, 1, 10), 'p_low': None}

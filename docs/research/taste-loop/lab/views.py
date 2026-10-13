@@ -28,6 +28,11 @@ never placed between two ratings written less than 2 seconds apart (which keeps 
 the nearest place where it may be, the later one on a tie, and never below 5. Each block is predicted from what the
 member wrote before its first rating. Ratings in a bulk write are never targets.
 
+Edits. A rating keeps its first write time and carries its current score. A history rating that was edited at or
+after the block's first rating (`updated_at` not before the cutoff) is left out of the view: its score at the time
+is unknown. With `--others before` the same holds for other members' ratings. A target whose rating was edited
+later stays a target and is flagged in the answers, so the measures can be given with and without such targets.
+
     python3 views.py T1 <member hash prefix | owner> <out folder>     # writes the views of one member, to look at
 """
 import hashlib
@@ -40,7 +45,7 @@ import numpy as np
 
 from common import NAT, SEED, sha256_arrays
 
-SCHEMA = 1
+SCHEMA = 2
 NOMINAL = (5, 10, 20, 40, 80, 160, 320, 640)
 MOMENT_MS = 2000
 MIN_RATINGS = 6
@@ -219,7 +224,8 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
       index   one dict per view: vid, kind ('main' or 'cal'), member, block, parent (the main view a calibration
               view belongs to), fold.
       keys    vid -> the answers and what the measures need: title, score, sitting, same_sitting, media, provenance,
-              has_fingerprint, old_title, and history_score (the member's ratings before the block).
+              has_fingerprint, old_title, edited (the rating was edited after it was first written), franchise (the
+              movie series, else a number of the title's own), and history_score (the member's visible ratings).
       digest  one hash over everything the views hold.
     """
     assert others_mode in ('all', 'no-owner', 'before')
@@ -244,6 +250,9 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
     in_a = tier[pool['member']] == 0
     assert in_a.all()
     owner = pack.owner
+    series = T['num'].get('movie_series_id')
+    franchise = np.where(series > 0, series, -1 - np.arange(len(T['key']))).astype(np.int64) if series is not None \
+        else -1 - np.arange(len(T['key']), dtype=np.int64)
 
     counts = np.bincount(own['member'], minlength=len(tier))
     eligible = np.flatnonzero(counts >= MIN_RATINGS)
@@ -259,8 +268,8 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
         m = pool['member'] != u
         if others_mode == 'no-owner':
             m &= pool['member'] != owner
-        if before is not None:
-            m &= pool['created_at'] < before
+        if before is not None:                              # written before the block and not edited since
+            m &= (pool['created_at'] < before) & (pool['updated_at'] < before)
         rows = _rows(pool, m, RATING_COLS, pool_title)
         rows['member'] = pool['member'][m]
         arrays.update(_flat('ratings', rows))
@@ -299,7 +308,7 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
     for u in eligible.tolist():
         at = np.flatnonzero(own['member'] == u)
         at = at[np.argsort(own['position'][at], kind='stable')]
-        mine = {c: own[c][at] for c in ('title_key',) + RATING_COLS}
+        mine = {c: own[c][at] for c in ('title_key', 'updated_at') + RATING_COLS}
         mine_title = own_title[at]
         assert (np.diff(mine['created_at']) >= 0).all()
         blocks = t1_blocks(mine['created_at'], mine['in_bulk'])
@@ -324,7 +333,7 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
             else:
                 o_file, o_digest = shared
             vid = _vid(mh, 'T1', nominal, 'main')
-            history = np.arange(c)
+            history = np.flatnonzero(mine['updated_at'][:c] < cutoff)   # not edited at or after the cutoff
             order = emit(vid, u, history, targets, cutoff, o_file, o_digest)
             index.append({'vid': vid, 'kind': 'main', 'member': u, 'block': nominal, 'parent': None, 'fold': None})
             keys[vid] = {
@@ -335,9 +344,11 @@ def build_t1(pack, folder, own=None, members=None, others_mode='all', shuffle_se
                 'provenance': mine['provenance'][order].astype(np.int64),
                 'has_fingerprint': T['has_fingerprint'][mine_title[order]],
                 'old_title': (release[order] != NAT) & (mine['created_at'][order] - release[order] >= TWO_YEARS_MS),
-                'history_score': mine['score'][:c].astype(np.int64)}
-            if c >= MIN_CALIBRATION_HISTORY:
-                fold = _fold_of(mine['title_key'][:c], SEED)
+                'edited': mine['edited'][order].astype(bool) | (mine['updated_at'][order] > mine['created_at'][order]),
+                'franchise': franchise[mine_title[order]],
+                'history_score': mine['score'][history].astype(np.int64)}
+            if len(history) >= MIN_CALIBRATION_HISTORY:
+                fold = _fold_of(mine['title_key'][history], SEED)
                 for f in range(FOLDS):
                     cal = _vid(mh, 'T1', nominal, 'cal', f)
                     order = emit(cal, u, history[fold != f], history[fold == f], cutoff, o_file, o_digest)
