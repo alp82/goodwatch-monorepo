@@ -19,6 +19,7 @@ import {
 	readTvState,
 	transition,
 	tvItems,
+	watchHref,
 	writeTvParams,
 } from "./tv-machine.ts"
 import type { TvBox } from "./tv-move.ts"
@@ -853,6 +854,36 @@ describe("the title screen and the rating", () => {
 		const t = run(rate.state, member, { type: "ok" })
 		assert.equal(t.history, "back")
 		assert.deepEqual(t.effects, [{ type: "rate", title: "show-3", score: 9 }])
+	})
+
+	it("Watch names the title, and the screen stays as it is with the key focused", () => {
+		const t = choose("tv=title&title=movie-546554", "watch")
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=title&title=movie-546554")
+		assert.equal(focusedItem(t.state, guest), "watch")
+		assert.deepEqual(t.effects, [{ type: "watch", title: "movie-546554" }])
+		// What is remembered for the entry it leaves: Back from the page returns with the Watch key focused.
+		assert.equal(
+			focusLeftBehind(
+				at("tv=title&title=movie-546554", 1),
+				{ type: "choose", item: "watch" },
+				guest,
+			),
+			"watch",
+		)
+	})
+
+	it("Watch opens the title's page on GoodWatch at its streaming block", () => {
+		const named = { ...guest, titleName: "Knives Out" }
+		assert.equal(
+			watchHref("movie-546554", named),
+			"/movie/546554-knives-out#streaming",
+		)
+		assert.equal(
+			watchHref("movie-546554", named),
+			`${destinationHref({ name: "title", title: "movie-546554" }, named)}#streaming`,
+		)
+		assert.equal(watchHref("nothing", named), null)
 	})
 
 	it("ignores an action of another screen", () => {

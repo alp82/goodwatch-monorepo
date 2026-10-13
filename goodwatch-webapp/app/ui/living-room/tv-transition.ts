@@ -82,20 +82,23 @@ function leftThroughTv(): Left | null {
 	}
 }
 
-/** Navigates out of the living room, growing the TV into the window when motion is allowed. */
+/**
+ * Navigates out of the living room, growing the TV into the window when motion is allowed. `state` goes into the
+ * new history entry's state: what the page should know about this arrival and a shared link must not carry.
+ */
 export function useLeaveThroughTv() {
 	const navigate = useNavigate()
 	return useCallback(
-		(href: string) => {
+		(href: string, state?: unknown) => {
 			const inset = canAnimate() ? tvInset() : null
 			if (!inset) {
 				remember(null)
-				navigate(href)
+				navigate(href, { state })
 				return
 			}
 			mark("out", inset)
 			remember({ inset, w: window.innerWidth, h: window.innerHeight })
-			navigate(href, { viewTransition: true })
+			navigate(href, { viewTransition: true, state })
 		},
 		[navigate],
 	)

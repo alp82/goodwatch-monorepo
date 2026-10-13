@@ -15,7 +15,13 @@ import {
 	TvViewProvider,
 } from "./kit"
 import type { TvCanvas } from "./room-tv"
-import { AboutCode, MenuCode } from "./screen-code"
+import {
+	AboutCode,
+	MenuCode,
+	RateCode,
+	TitleCode,
+	TonightCode,
+} from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvAppTile } from "./tv-home"
 import {
@@ -25,6 +31,7 @@ import {
 	tvItems,
 	writeTvParams,
 } from "./tv-machine"
+import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
@@ -50,9 +57,18 @@ export type TvScreenProps = {
 	apps: readonly TvAppTile[]
 	/** What the TV says for a moment ("On your Wishlist"), or null. */
 	toast: string | null
+	/** Tonight's picks and the title on the title screen. */
+	titles?: TvTitleScreens
 }
 
-export function TvScreen({ tv, canvas, ctx, apps, toast }: TvScreenProps) {
+export function TvScreen({
+	tv,
+	canvas,
+	ctx,
+	apps,
+	toast,
+	titles,
+}: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
 	// The menu's items have the focus while it is open; the screen under it keeps showing its own.
@@ -85,7 +101,12 @@ export function TvScreen({ tv, canvas, ctx, apps, toast }: TvScreenProps) {
 							className={arrived.current.moved ? "tvc-screen" : ""}
 							away={state.menuOpen}
 						>
-							<ScreenOf screen={screen} items={items} apps={apps} />
+							<ScreenOf
+								screen={screen}
+								items={items}
+								apps={apps}
+								titles={titles}
+							/>
 						</Layer>
 					</TvViewProvider>
 					{state.menuOpen && (
@@ -124,18 +145,37 @@ function ScreenOf({
 	screen,
 	items,
 	apps,
+	titles,
 }: {
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
+	titles?: TvTitleScreens
 }): ReactNode {
+	const first = <Bare items={items} />
 	switch (screen.name) {
 		case "home":
 			return <Home apps={apps} items={items} />
 		case "about":
-			return <AboutCode.Screen items={items} first={<Bare items={items} />} />
-		// SEAM (slices 5 to 10): Tonight, the title screen and the rating, Discover, Explorer, Taste and the quiz,
-		// My shows and search each take their entry here.
+			return <AboutCode.Screen items={items} first={first} />
+		case "tonight":
+			return (
+				<TonightCode.Screen
+					items={items}
+					picks={titles?.tonight ?? []}
+					pick={screen.pick}
+					waiting={titles?.waiting ?? true}
+					first={first}
+				/>
+			)
+		case "title":
+		case "rate": {
+			if (!titles?.title) return first
+			const Code = screen.name === "title" ? TitleCode : RateCode
+			return <Code.Screen items={items} title={titles.title} first={first} />
+		}
+		// SEAM (slices 6 to 10): Discover, Explorer, Taste and the quiz, My shows and search each take their entry
+		// here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}

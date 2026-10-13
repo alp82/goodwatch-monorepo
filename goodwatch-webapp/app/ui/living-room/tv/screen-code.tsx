@@ -37,6 +37,10 @@ export function screenCode<P extends object>(
 
 export const MenuCode = screenCode(() => import("./screens/Menu"))
 export const AboutCode = screenCode(() => import("./screens/About"))
+// Tonight draws with the title screen's parts, so its chunk brings the title screen's along: Details finds it there.
+export const TonightCode = screenCode(() => import("./screens/Tonight"))
+export const TitleCode = screenCode(() => import("./screens/Title"))
+export const RateCode = screenCode(() => import("./screens/Rate"))
 
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
 export function loadFirstScreens() {

@@ -21,6 +21,8 @@ export type TvTonightPick = {
 	card: TitleCard
 	/** The member page the pick is the first thing on; null for a guest's pick. */
 	href: string | null
+	/** A guest's own Tonight's pick: the last title they added to the Wishlist in their browser. */
+	wished?: boolean
 	/** When the pick is a Next episode: "S2 E3" and its name. */
 	episode?: { code: string; name: string | null }
 }
@@ -67,27 +69,37 @@ export const tvTitleKey = (title: { media_type: string; tmdb_id: number }) =>
 
 /**
  * Tonight's picks: a member's from the loader. A guest's, and those of a member with nothing to pick from, are the
- * pool's best three, once the pool is there.
+ * pool's best three, once the pool is there. `wished` is a guest's own Tonight's pick, the last title on the
+ * Wishlist in their browser (`useTonightsPick`): it leads.
  */
 export function tonightPicks(
 	data: TvHomeData,
 	pool: TvPool | null,
+	wished: TitleCard | null = null,
 ): TvTonightPick[] {
 	if (data.tonight.length) return data.tonight.slice(0, TONIGHT_PICKS)
-	return (pool?.suggestions ?? [])
-		.slice(0, TONIGHT_PICKS)
+	const best: TvTonightPick[] = (pool?.suggestions ?? [])
+		.filter((card) => !wished || card.key !== wished.key)
 		.map((card) => ({ card, href: null }))
+	return [
+		...(wished ? [{ card: wished, href: null, wished: true }] : []),
+		...best,
+	].slice(0, TONIGHT_PICKS)
 }
 
 /**
  * The machine's context for the screens built so far: home, the menu and What is GoodWatch? Each app's slice
  * adds what its screens show (the titles of a list, the islands, the sides, the quiz's progress, the draft).
  */
-export function tvContextOf(data: TvHomeData, pool: TvPool | null): TvContext {
+export function tvContextOf(
+	data: TvHomeData,
+	pool: TvPool | null,
+	wished: TitleCard | null = null,
+): TvContext {
 	return {
 		...EMPTY_CONTEXT,
 		member: data.member,
-		tonight: tonightPicks(data, pool).map((pick) => ({
+		tonight: tonightPicks(data, pool, wished).map((pick) => ({
 			title: tvTitleKey(pick.card),
 			href: pick.href,
 		})),
@@ -129,8 +141,9 @@ export function homeApps(
 	data: TvHomeData,
 	pool: TvPool | null,
 	taste = false,
+	wished: TitleCard | null = null,
 ): TvAppTile[] {
-	const picks = tonightPicks(data, pool)
+	const picks = tonightPicks(data, pool, wished)
 	const own = data.tonight.length > 0
 	const best: { poster_path: string | null }[] =
 		pool?.suggestions ?? data.startTitles

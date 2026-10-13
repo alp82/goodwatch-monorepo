@@ -11,7 +11,11 @@ import type { TvPool } from "./tv-home"
 
 const POOL_URL = "/api/living-room/picks?view=pool"
 
-export function useTvPool(member: boolean, enabled: boolean): TvPool | null {
+/** The pool, or null until it is there. `failed`: it was asked for and did not come, after the query's retries. */
+export function useTvPoolState(
+	member: boolean,
+	enabled: boolean,
+): { pool: TvPool | null; failed: boolean } {
 	const pool = useQuery<TvPool>({
 		queryKey: ["living-room-pool", member ? "member" : "guest"],
 		enabled,
@@ -30,5 +34,9 @@ export function useTvPool(member: boolean, enabled: boolean): TvPool | null {
 			return response.json()
 		},
 	})
-	return pool.data ?? null
+	return { pool: pool.data ?? null, failed: pool.isError }
+}
+
+export function useTvPool(member: boolean, enabled: boolean): TvPool | null {
+	return useTvPoolState(member, enabled).pool
 }
