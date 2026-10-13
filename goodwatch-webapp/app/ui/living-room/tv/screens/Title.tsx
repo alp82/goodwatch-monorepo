@@ -162,7 +162,7 @@ export default function Title({
 	const keys: TitleKey[] = [
 		{ id: "watch", label: watch.label, quiet: !watch.goes },
 		{ id: "want-to-see", label: wantLabel(on.want) },
-		{ id: "seen", label: seenLabel(on.score, on.seen) },
+		{ id: "seen", label: seenLabel(on.score, on.seen, on.episode) },
 	]
 	return (
 		<TitleView

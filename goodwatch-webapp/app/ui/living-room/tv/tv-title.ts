@@ -32,6 +32,11 @@ export type TvTitleOnScreen = {
 	want: boolean
 	seen: boolean
 	score: number | null
+	/**
+	 * My shows (slice 9): the Next episode Seen it marks, as its code ("S2 E4"), on a show the member is midway
+	 * through. Absent or null on every other title.
+	 */
+	episode?: string | null
 }
 
 /** What the screens of one title draw from: Tonight's picks, and the title on the title screen and the rating. */
@@ -119,8 +124,16 @@ export function whereLine(
 export const wantLabel = (want: boolean) =>
 	want ? "On Wishlist ✓" : "Want to See"
 
-/** The Seen it key: the person's score once there is one ("8 · Great"), else that they have seen it. */
-export function seenLabel(score: number | null, seen: boolean): string {
+/**
+ * The Seen it key: the person's score once there is one ("8 · Great"), else that they have seen it. On a show the
+ * member is midway through (slice 9) it names the episode a press marks, "Seen S2 E4": `episode` is its code.
+ */
+export function seenLabel(
+	score: number | null,
+	seen: boolean,
+	episode: string | null = null,
+): string {
+	if (episode) return `Seen ${episode}`
 	if (score) return `${score} · ${scoreLabels[score]}`
 	return seen ? "Seen ✓" : "Seen it"
 }

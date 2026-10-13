@@ -72,6 +72,20 @@ export const DiscoverData = screenCode<
 	})),
 ).Screen
 
+// My shows (slice 9): the screen, what is new for the member's shows, and the Next episode of a show on the title
+// screen. The last is a chunk of its own: it brings the show page's tracking code, which only a member on a show's
+// title screen needs.
+export const ShowsCode = screenCode(() => import("./screens/Shows"))
+/** What is new for a member's shows: the New episodes signal. */
+export const ShowsData = screenCode<
+	ComponentProps<typeof import("./screens/Shows").ShowsData>
+>(() =>
+	import("./screens/Shows").then((code) => ({ default: code.ShowsData })),
+).Screen
+export const EpisodeCode = screenCode(() => import("./screens/ShowEpisode"))
+/** The Next episode of a member's show on the title screen, and its mark. */
+export const EpisodeData = EpisodeCode.Screen
+
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
 export function loadFirstScreens() {
 	for (const code of [MenuCode, AboutCode]) code.load().catch(() => {})

@@ -140,6 +140,12 @@ export type TvContext = {
 	draft: string
 	/** Taste quiz scores toward the goal. */
 	quizProgress: number
+	// My shows (slice 9).
+	/**
+	 * The title on the title screen is a show the member is midway through, and its Next episode is known: Seen it
+	 * marks that episode watched and stays, in place of asking how the show was.
+	 */
+	nextEpisode: boolean
 }
 
 /** A guest nobody knows anything about, before any data arrived. */
@@ -156,6 +162,7 @@ export const EMPTY_CONTEXT: TvContext = {
 	titleName: null,
 	draft: "",
 	quizProgress: 0,
+	nextEpisode: false,
 }
 
 export type TvEffect =
@@ -166,6 +173,8 @@ export type TvEffect =
 	/** Toggle Want to See. */
 	| { type: "want-to-see"; title: string }
 	| { type: "seen"; title: string }
+	/** Seen it on a show the member is midway through: mark its Next episode watched. */
+	| { type: "seen-episode"; title: string }
 	| { type: "rate"; title: string; score: Score }
 	/** Taste quiz: score the title on screen. */
 	| { type: "quiz-rate"; score: Score }
@@ -934,11 +943,14 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				: none(state)
 		// Seen it asks how it was.
 		case "seen":
-			return s.name === "title"
-				? push(state, { name: "rate", title: s.title }, [
-						{ type: "seen", title: s.title },
-					])
-				: none(state)
+			if (s.name !== "title") return none(state)
+			// My shows (slice 9): on a show the member is midway through it marks the Next episode and stays. The key
+			// then names the episode after it, so the next press marks that one.
+			if (ctx.nextEpisode)
+				return none(state, [{ type: "seen-episode", title: s.title }])
+			return push(state, { name: "rate", title: s.title }, [
+				{ type: "seen", title: s.title },
+			])
 		case "go":
 			return submitSearch(state, ctx.draft)
 		case "idea":
