@@ -1,0 +1,13 @@
+{
+  "startedAt": "2026-10-13T07:40:53.881497+00:00",
+  "finishedAt": "2026-10-13T07:40:56.109816+00:00",
+  "exitCode": 1,
+  "sourceSha256": "860d1cc1880cb69ef49ca9ff67c5c85329ce363254095b208d74d2521ef4a0f0",
+  "stdinSha256": "582003e1b77b5b2f37fb033e37274a2736d81f3caff72cf32c84072df6b5172f",
+  "stderrBytes": 0,
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "windowStart": "2026-10-13T01:03:33.224Z",
+  "windowEnd": "2026-10-13T07:35:36.736Z",
+  "readOnly": true,
+  "ordinarySearchRequests": 0
+}

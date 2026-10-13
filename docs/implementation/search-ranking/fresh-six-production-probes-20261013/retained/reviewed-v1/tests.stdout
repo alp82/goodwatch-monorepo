@@ -1,0 +1,12 @@
+✔ empty early frame is not usable; people-only usable and full same stream distinct (1.422815ms)
+✔ reading and error do not count first usable; duplicate final refused (0.574111ms)
+✔ one request retains provisional/final warnings, charge and full EOF (26.24504ms)
+✔ truncated final and HTTP failure do not retry or promote completion (0.762634ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.483757

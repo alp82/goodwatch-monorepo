@@ -1,0 +1,39 @@
+{
+  "schema": "fresh-six-production-probe-preparation-freeze.v2",
+  "preparedOnly": true,
+  "productionRequestsStarted": 0,
+  "ownerApprovalRequiredAfterRollout": true,
+  "files": {
+    "run.mjs": {
+      "bytes": 5846,
+      "sha256": "d3922c1c81aef35b24e2651f7cfe5b0702db24f6b11b640daa5494a5afff6c30"
+    },
+    "plan.json": {
+      "bytes": 2651,
+      "sha256": "65976c9f57025beedf5c50f62a51aa0875cb3904434c0a54c13c73163793aac9"
+    },
+    "test-run.mjs": {
+      "bytes": 3004,
+      "sha256": "f5ab2770a126bbbf8c1e14cd3403cdcc1dfa970769dfd55a280ce953adb75da4"
+    },
+    "tests.stdout": {
+      "bytes": 680,
+      "sha256": "3745efaf307f1e2851b801be5373f75298868274582274f9e63395d690a0d471"
+    },
+    "tests.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepared-output.json": {
+      "bytes": 143,
+      "sha256": "ec934de5cd68aec4ba9bc9f484b6abb3d5f4fface96a53f1051de0dee4f8ba3c"
+    },
+    "README.md": {
+      "bytes": 5120,
+      "sha256": "ed7f0c2c8e667ba057f75b8c1adaaf473870fa68ad90e6fe0ae646e9836d9d71"
+    }
+  },
+  "localFixtureGroups": 6,
+  "noNetworkDuringFixtures": true,
+  "previousManifestSha256": "7104f13c0697bf4b3a059a237733d1ce3fd5fea751f9f6eaa8a64690d980ee23"
+}
