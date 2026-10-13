@@ -1,0 +1,114 @@
+{
+	"budget": {
+		"passed": 12,
+		"failed": []
+	},
+	"numbers": {
+		"budget gpu, dev server": {
+			"following": {
+				"seconds": 6.3,
+				"frames": 360,
+				"longestFrameMs": 0.5,
+				"meanFrameMs": 0.122,
+				"tasksOver50ms": [],
+				"scriptsOver25ms": []
+			},
+			"atRest": {
+				"framesIn5s": 0,
+				"mainThreadShare": 0.0001
+			},
+			"tenFocusMovesByTheRing": {
+				"frames": 136,
+				"longestFrameMs": 1.5,
+				"tasksOver50ms": []
+			}
+		},
+		"budget software, dev server": {
+			"following": {
+				"seconds": 6,
+				"frames": 361,
+				"longestFrameMs": 0.7,
+				"meanFrameMs": 0.103,
+				"tasksOver50ms": [],
+				"scriptsOver25ms": []
+			},
+			"atRest": {
+				"framesIn5s": 0,
+				"mainThreadShare": 0.0001
+			},
+			"tenFocusMovesByTheRing": {
+				"frames": 128,
+				"longestFrameMs": 0.8,
+				"tasksOver50ms": []
+			}
+		},
+		"swing": {
+			"topLeft": -42,
+			"topRight": 42,
+			"bottomLeft": -42,
+			"bottomRight": 42,
+			"lean": [
+				22,
+				22,
+				17.15,
+				17.18
+			]
+		},
+		"nod": {
+			"topLeft": -13,
+			"topRight": 4.97,
+			"bottomLeft": -13,
+			"bottomRight": 13,
+			"roll": -25.67,
+			"gap": [
+				23.6,
+				52.5,
+				23.6,
+				32.2
+			]
+		},
+		"phone 390x844 guest": {
+			"form": "hand",
+			"mostTurn": 11,
+			"clearOfTv": 29.8
+		},
+		"phone 375x667 guest": {
+			"form": "table",
+			"mostTurn": 3.5,
+			"clearOfTv": 3
+		},
+		"phone 390x844 member": {
+			"form": "hand",
+			"mostTurn": 11,
+			"clearOfTv": 29.8
+		},
+		"landscape 844x390": {
+			"picture": "488 x 364",
+			"turn": [
+				9.17,
+				19.93
+			],
+			"clearOfPicture": 14.3
+		},
+		"landscape 932x430": {
+			"picture": "541 x 404",
+			"turn": [
+				8.95,
+				19.7
+			],
+			"clearOfPicture": 15.5
+		},
+		"landscape 667x375": {
+			"picture": "205 x 153",
+			"turn": [
+				2.83,
+				3.29
+			],
+			"clearOfPicture": 58.8
+		}
+	},
+	"checks": {
+		"passed": 400,
+		"failed": []
+	}
+}

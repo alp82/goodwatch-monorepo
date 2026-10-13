@@ -8,12 +8,17 @@ import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
 import {
+	DiscoverCode,
+	DiscoverData,
+	ExplorerData,
 	QuizCode,
 	RateCode,
 	TasteCode,
 	TasteData,
+	TitleCode,
 	TitleData,
 	TonightCode,
+	type TvDiscoverScreens,
 	TvScreen,
 	loadFirstScreens,
 } from "./TvScreen"
@@ -27,8 +32,10 @@ import {
 	tvTitleKey,
 } from "./tv-home"
 import { type TvEffect, readTvState } from "./tv-machine"
-import type { TvTitleScreens } from "./tv-title"
+import type { TvKnownTitle, TvTitleScreens } from "./tv-title"
 import { useTv } from "./use-tv"
+import type { TvDiscoverReport } from "./use-tv-discover"
+import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
@@ -95,9 +102,12 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	// and a link straight to Tonight asks for them without waiting for a sign of the person.
 	const [discoverSeen, setDiscoverSeen] = useState(false)
 	const own = data.member && data.tonight.length > 0
+	// Discover's tiles take their pictures from the pool, so a member's link straight to Discover asks for it too.
 	const { pool, failed } = useTvPoolState(
 		data.member,
-		own ? discoverSeen : interacted || screen.name === "tonight",
+		own
+			? discoverSeen || screen.name === "discover"
+			: interacted || screen.name === "tonight",
 	)
 	// A guest's own Tonight's pick, the last title on the Wishlist in their browser, leads the pool's best. The
 	// site's navigation reads it on every page, so this is the same request.
@@ -128,15 +138,42 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		[data, pool, tasted, wished],
 	)
 
+	// ---- The mini Explorer (slice 7). Its map is held by a component of the Explorer's chunk, which reports it
+	// here (`ExplorerData`, mounted below): from the moment its tile first has the focus, so the map is there by
+	// the time it opens, and for the rest of the visit, so a title opened from an island is named at once.
+	const [explorer, setExplorer] = useState<TvExplorerReport | null>(null)
+	const [mapWanted, setMapWanted] = useState(false)
+	const onExplorer = screen.name === "explorer"
+	const explorerContext = explorer?.context
+	const onMap = explorer?.known
+
 	const [toast, say] = useTvToast()
-	// What the lists on the page know of a title before its card is there. SEAM (slices 6 to 10): each app's list
-	// adds its titles here.
+	// Mini Discover: the titles of the choice on screen are held by a component of Discover's chunk, which reports
+	// them here (`DiscoverData`, mounted below).
+	const [list, setList] = useState<TvDiscoverReport | null>(null)
+	// The titles a list showed stay known after the list has left, so a title's screen names it at once.
+	// SEAM (slices 7 to 10): each app's list hands its titles to `setListed` as Discover's does.
+	const [listed, setListed] = useState<readonly TvKnownTitle[]>([])
+	const onList = useCallback((report: TvDiscoverReport | null) => {
+		setList(report)
+		if (report?.cards.length) setListed(report.cards)
+	}, [])
+	const choosing = screen.name === "discover" && Boolean(screen.choice)
+	const discover: TvDiscoverScreens = useMemo(
+		() => ({ art: pool?.choiceArt ?? {}, list }),
+		[pool, list],
+	)
+	// What the lists on the page know of a title before its card is there.
 	const known = useCallback(
 		(key: string) =>
 			tonight.find((one) => tvTitleKey(one.card) === key)?.card ??
+			listed.find((one) => tvTitleKey(one) === key) ??
+			// The mini Explorer (slice 7): an island's titles.
+			onMap?.(key) ??
+			// Slice 8: a side's titles and the quiz's picks.
 			tasteKnown.current?.(key) ??
 			null,
-		[tonight],
+		[tonight, listed, onMap],
 	)
 	// The title on the title screen and the rating: its card, the person's marks and its effects are held by a
 	// component of the title screen's chunk, which reports them here (`TitleData`, mounted below). Until it has,
@@ -144,16 +181,30 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const [one, setOne] = useState<TvTitleReport | null>(null)
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
+	// The titles of the list on screen. SEAM (slices 9 and 10): My shows' and the search's follow.
+	const listTitles = choosing ? list?.titles : undefined
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
 		() => ({
 			...tvContextOf(data, pool, wished),
 			titleName,
+			...(listTitles && { titles: listTitles }),
+			// The mini Explorer (slice 7): its islands, and an island's titles and hops, while it is on screen.
+			...explorerContext,
 			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
 			...tasteCtx,
 			exactScores: edition === "desktop",
 		}),
-		[data, pool, wished, titleName, tasteCtx, edition],
+		[
+			data,
+			pool,
+			wished,
+			titleName,
+			listTitles,
+			explorerContext,
+			tasteCtx,
+			edition,
+		],
 	)
 	const title = one?.title ?? null
 	const titles: TvTitleScreens = useMemo(
@@ -200,11 +251,25 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (tv.screen.name === "home" && tv.focused === "app:tonight")
 			TonightCode.load().catch(() => {})
 		if (tv.screen.name === "title") RateCode.load().catch(() => {})
+		// Discover's while its tile has the focus; on Discover the title screen's, which a title opens.
+		if (tv.screen.name === "home" && tv.focused === "app:discover")
+			DiscoverCode.load().catch(() => {})
+		if (tv.screen.name === "discover") TitleCode.load().catch(() => {})
 		// Slice 8: Taste's while its tile has the focus, the quiz's on Taste.
 		if (tv.screen.name === "home" && tv.focused === "app:taste")
 			TasteCode.load().catch(() => {})
 		if (tv.screen.name === "taste") QuizCode.load().catch(() => {})
 	}, [interacted, tv.screen.name, tv.focused])
+
+	// The mini Explorer (slice 7): its code and its map are asked for while its tile has the focus, or by a link
+	// straight to it.
+	useEffect(() => {
+		if (
+			onExplorer ||
+			(interacted && tv.screen.name === "home" && tv.focused === "app:explorer")
+		)
+			setMapWanted(true)
+	}, [onExplorer, interacted, tv.screen.name, tv.focused])
 
 	return (
 		<>
@@ -221,6 +286,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							apps={apps}
 							toast={toast}
 							titles={titles}
+							discover={discover}
+							explorer={explorer?.view}
 							taste={onTaste ? mine?.screens : undefined}
 						/>
 					</>
@@ -234,6 +301,17 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					known={known}
 					say={say}
 					report={setOne}
+				/>
+			)}
+			{choosing && (
+				<DiscoverData screen={screen} member={data.member} report={onList} />
+			)}
+			{/* The mini Explorer (slice 7): its map, from its tile's first focus on. */}
+			{(mapWanted || onExplorer) && (
+				<ExplorerData
+					screen={screen}
+					member={data.member}
+					report={setExplorer}
 				/>
 			)}
 			{onTaste && (

@@ -1,0 +1,8 @@
+{
+  "requestsStarted": 6,
+  "requestsMaximum": 6,
+  "retries": 0,
+  "allSixCompleted": true,
+  "productionAcceptance": false,
+  "historyCensusRequired": true
+}

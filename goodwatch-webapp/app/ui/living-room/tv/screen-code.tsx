@@ -67,6 +67,26 @@ export const TitleData = screenCode<
 	import("./screens/Title").then((code) => ({ default: code.TitleData })),
 ).Screen
 
+// Mini Discover: its tabs, the titles of one choice, and the titles' data.
+export const DiscoverCode = screenCode(() => import("./screens/Discover"))
+/** The titles of the choice on mini Discover. */
+export const DiscoverData = screenCode<
+	ComponentProps<typeof import("./screens/Discover").DiscoverData>
+>(() =>
+	import("./screens/Discover").then((code) => ({
+		default: code.DiscoverData,
+	})),
+).Screen
+
+// ---- The mini Explorer (slice 7): the map and an island are one screen's code, with the map's data.
+export const ExplorerCode = screenCode(() => import("./screens/Explorer"))
+/** The real mood map, for the Explorer's two screens. */
+export const ExplorerData = screenCode<
+	ComponentProps<typeof import("./screens/Explorer").ExplorerData>
+>(() =>
+	import("./screens/Explorer").then((code) => ({ default: code.ExplorerData })),
+).Screen
+
 // Slice 8: Taste, and the taste quiz. The quiz and the rating draw with the same strip (RatingStrip.tsx).
 export const TasteCode = screenCode(() => import("./screens/Taste"))
 export const QuizCode = screenCode(() => import("./screens/Quiz"))

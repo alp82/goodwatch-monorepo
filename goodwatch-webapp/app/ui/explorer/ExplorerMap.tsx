@@ -30,7 +30,6 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
-import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import { Minimap } from "./Minimap"
@@ -56,24 +55,12 @@ import {
 	sharedLine,
 	sharedNote,
 } from "./combination-words"
-import {
-	type Drawn,
-	type MapEngine,
-	type Mode,
-	type Pad,
-	createMapEngine,
-} from "./engine"
+import { type Drawn, type MapEngine, type Pad, createMapEngine } from "./engine"
 import type { IslandInput, MapIsland } from "./island"
 import { groupingOf, layRegions, localId, worldId } from "./regions"
 
 /** The map's filters as the URL holds them (null is the default). */
 type Filters = WorldQuery
-
-/**
- * How picked islands join: from far out each grouping is its islands, small, and an island sails to the middle as
- * soon as it's picked.
- */
-const MODE: Mode = { meta: "isles", join: "dock", dockFrom: 1 }
 
 /** The title whose card is open: nearest the focus, or pinned by a tap. */
 interface Active {
@@ -173,17 +160,13 @@ export function ExplorerMap({
 		[filters.type, filters.anime],
 	)
 	const [seenNow, setSeenNow] = useState<ReadonlySet<number>>(new Set())
-	/** Titles marked Not interested this visit: they leave the map at once (the next load leaves them out). */
-	const [hiddenNow, setHiddenNow] = useState<ReadonlySet<number>>(new Set())
-	const hideToast = useUndoToast()
 	/** The filters hide titles, never dim them, as soon as they're switched. */
 	const visible = useCallback(
 		(t: ExplorerTitle) =>
-			!hiddenNow.has(t.key) &&
 			(!onMyServices || !!map?.approximate || t.services.length > 0) &&
 			(!notSeenYet || !(t.seen || seenNow.has(t.key))) &&
 			passesTitleType(titleType, t),
-		[onMyServices, notSeenYet, titleType, seenNow, hiddenNow, map?.approximate],
+		[onMyServices, notSeenYet, titleType, seenNow, map?.approximate],
 	)
 
 	const setFilters = (next: Partial<Filters>) => {
@@ -742,7 +725,6 @@ export function ExplorerMap({
 		null as unknown as Parameters<typeof createMapEngine>[2]["current"],
 	)
 	hooks.current = {
-		mode: () => MODE,
 		onTapRegion: (id) => goRegion(id),
 		visible,
 		pad: () => padRef.current,
@@ -1090,25 +1072,6 @@ export function ExplorerMap({
 						return next
 					})
 			}}
-			onHide={(undo) => {
-				const { key, title } = active
-				const setHidden = (hidden: boolean) =>
-					setHiddenNow((s) => {
-						const next = new Set(s)
-						if (hidden) next.add(key)
-						else next.delete(key)
-						return next
-					})
-				setHidden(true)
-				unpin()
-				hideToast.say(
-					`${title.title} is hidden from your recommendations`,
-					() => {
-						undo()
-						setHidden(false)
-					},
-				)
-			}}
 		/>
 	)
 	const loading = worldQuery.isPlaceholderData || (!maps && !worldQuery.isError)
@@ -1346,7 +1309,6 @@ export function ExplorerMap({
 				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
-			{hideToast.node}
 		</div>
 	)
 }

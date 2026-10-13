@@ -51,7 +51,8 @@ function Wordmark({ fontSize }: { fontSize: number }) {
 
 export function SiteHeader() {
 	return (
-		<div className="fixed top-0 z-[1000] w-full text-gray-100">
+		// `data-site-header`: leaving the living room through its TV holds the header still (main.css).
+		<div data-site-header className="fixed top-0 z-[1000] w-full text-gray-100">
 			<GlobalLoading />
 			<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950/90 px-3.5 backdrop-blur-md lg:hidden">
 				<Wordmark fontSize={20} />

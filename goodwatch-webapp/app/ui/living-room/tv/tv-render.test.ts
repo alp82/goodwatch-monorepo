@@ -31,7 +31,7 @@ const rendered = JSON.parse(
 		| "homeGuest"
 		| "homeMember"
 		| "about"
-		| "explorer"
+		| "notBuilt"
 		| "menuGuest"
 		| "menuMember",
 		string[]
@@ -188,10 +188,10 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 })
 
 test("a screen no slice has built yet has its bar, and the Expand key's place is reserved", () => {
-	const built = rendered.items.explorer.filter((item) => item !== "expand")
+	const built = rendered.items.notBuilt.filter((item) => item !== "expand")
 	assert.deepEqual(ids(rendered.notBuilt), built)
 	assert.match(rendered.notBuilt, /data-tv-expand-place/)
-	assert.match(rendered.notBuilt, />Explorer</)
+	assert.match(rendered.notBuilt, />Search</)
 })
 
 test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {

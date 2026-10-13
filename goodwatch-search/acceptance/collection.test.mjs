@@ -49,6 +49,46 @@ test('complete role lifecycle can pass internal checks but never asserts ingress
   assert.equal(result.first_results.p95_nearest_rank_ms, 200);
   assert.equal(result.seven_day_acceptance_pass, false);
 });
+test('a sanitizer-admissible completed request missing computation fails the seven-day lifecycle audit', () => {
+  const completed = event({ ...done, computationMs: null });
+  assert.ok(completed, 'null computation is accepted by the collector sanitizer');
+  const result = verifyLifecycle([...beats, event(base), completed, event({ event: 'search.history-write.v1', at: done.at, recorded: true })], options);
+  assert.equal(result.checks.completed_rows_have_computation, false);
+  assert.equal(result.missing_completed_computation_count, 1);
+  assert.equal(result.full_search_computation.n, 0);
+  assert.equal(result.lifecycle_acceptance_pass, false);
+});
+test('completed computation requires a finite nonnegative number, including legitimate zero', () => {
+  const withComputation = computationMs => [...beats, event(base), { type: 'telemetry', data: { ...done, computationMs } }, event({ event: 'search.history-write.v1', at: done.at, recorded: true })];
+  // These malformed values normally fail collector sanitization; direct verifier inputs must not count them either.
+  for (const value of [undefined, NaN, Infinity, -1]) {
+    const result = verifyLifecycle(withComputation(value), options);
+    assert.equal(result.checks.completed_rows_have_computation, false);
+    assert.equal(result.missing_completed_computation_count, 1);
+    assert.equal(result.full_search_computation.n, 0);
+    assert.equal(result.lifecycle_acceptance_pass, false);
+  }
+  for (const value of [0, 800]) {
+    const completed = event({ ...done, computationMs: value });
+    assert.ok(completed);
+    const result = verifyLifecycle([...beats, event(base), completed, event({ event: 'search.history-write.v1', at: done.at, recorded: true })], options);
+    assert.equal(result.checks.completed_rows_have_computation, true);
+    assert.equal(result.missing_completed_computation_count, 0);
+    assert.equal(result.full_search_computation.n, 1);
+    assert.equal(result.full_search_computation.p95_nearest_rank_ms, value);
+    assert.equal(result.lifecycle_acceptance_pass, true);
+  }
+});
+test('failed and aborted requests without computation remain excluded from full-completion samples', () => {
+  for (const status of ['failed', 'aborted']) {
+    const result = verifyLifecycle([...beats, event(base), event({ ...done, status, computationMs: null }), event({ event: 'search.history-write.v1', at: done.at, recorded: true })], options);
+    assert.equal(result.checks.completed_rows_have_computation, true);
+    assert.equal(result.missing_completed_computation_count, 0);
+    assert.equal(result.full_search_computation.n, 0);
+    assert.equal(result.failed_requests, status === 'failed' ? 1 : 0);
+    assert.equal(result.aborted_requests, status === 'aborted' ? 1 : 0);
+  }
+});
 test('missing finish, late failure, lookup warnings and failed history each block coverage', () => {
   assert.equal(verifyLifecycle([...beats, event(base)], options).checks.no_missing_finished_events, false);
   for (const changed of [{ status: 'failed' }, { titleLookupFailed: true }, { firstResultsMs: null }]) {

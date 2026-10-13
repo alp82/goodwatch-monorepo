@@ -17,8 +17,13 @@
 // The focus moves in four directions by where the items sit (`tv-move.ts`): a `move` carries the boxes the hook
 // measured. `tvItems` lists a screen's items in reading order; it says which focus and which choice are valid.
 //
-// Three parts are being designed again and are each kept in one place, under "Waiting for a prototype" below:
-// Discover's choice screen, the answers of the quiz and of the rating, and the Remote's streaming keys.
+// Discover's choice screen is three tabs (Moods, Themes, Styles) of six options each: see "Mini Discover" below.
+//
+// The answers of the quiz and of the rating after Seen it are the rating strip: see "The rating strip" below.
+//
+// One part still does what the first prototype did: the Remote's streaming keys, which do nothing until their
+// screens are built (the plan's "On a service", slice 6b). It is kept in one place, under "The Remote's streaming
+// keys" below.
 import type { Score } from "~/server/scores.server"
 import { titlePath } from "../../../utils/helpers.ts"
 import { parseTitleKey } from "../../../utils/title-key.ts"
@@ -73,8 +78,11 @@ export type TvScreen =
 	| { name: "home" }
 	/** One pick at a time; `pick` counts from 0. */
 	| { name: "tonight"; pick: number }
-	/** What kind of night? without a mood, up to four titles with one (`ANY_MOOD` included). */
-	| { name: "discover"; mood: string | null }
+	/**
+	 * Mini Discover. Without a choice: its three tabs, `tab` open, with that tab's six options. With one (a mood,
+	 * a theme or a style of `tab`, by its key): up to four titles of it.
+	 */
+	| { name: "discover"; tab: TvDiscoverTab; choice: string | null }
 	/** The small map without an island, an island's titles with one. */
 	| { name: "explorer"; island: string | null }
 	/** The sides of the person's taste (or the way to one) without a side, a side's titles with one. */
@@ -120,8 +128,6 @@ export type TvContext = {
 	/** The person has a taste with sides: Taste shows them. */
 	taste: boolean
 	tonight: readonly TvPick[]
-	/** Discover's moods, without Any mood. */
-	moods: readonly string[]
 	/**
 	 * The titles of the list on screen: Discover's results, an island's or a side's titles, the search results,
 	 * and on Taste without sides the quiz's picks. On the quiz, the one title it asks about.
@@ -150,7 +156,6 @@ export const EMPTY_CONTEXT: TvContext = {
 	member: false,
 	taste: false,
 	tonight: [],
-	moods: [],
 	titles: [],
 	islands: [],
 	hops: [],
@@ -258,7 +263,7 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 		// What the old TV wrote: its moods and its picks for a mood are Discover, its other picks and the two steps
 		// before them are Tonight.
 		case "moods":
-			return DISCOVER_CHOICE
+			return discoverChoice("moods")
 		case "picks":
 			return params.get("mood")
 				? readDiscover(params)
@@ -293,7 +298,10 @@ export function readTvState(
 /** The TV's params, and the old TV's, which go when a screen is written. */
 const TV_KEYS = [
 	"tv",
+	"tab",
 	"mood",
+	"theme",
+	"style",
 	"island",
 	"side",
 	"pick",
@@ -524,8 +532,11 @@ function screenFocus(state: TvState, ctx: TvContext): string {
 	if (state.focus && items.includes(state.focus)) return state.focus
 	// The rating strip starts on Good.
 	if (items.includes(STRIP_START) && onStrip(state.screen)) return STRIP_START
-	// The focus starts on the screen's first own item, never on the Expand key; an empty screen starts on the bar.
-	return items.find((item) => item !== "expand") as string
+	// The focus starts on the screen's first own item, never on the Expand key and never on a tab (Discover starts
+	// on the open tab's first option); an empty screen starts on the bar.
+	return items.find(
+		(item) => item !== "expand" && !item.startsWith("tab:"),
+	) as string
 }
 
 /** The focused item id: the menu's while it is open, else the screen's. */
@@ -651,56 +662,151 @@ function submitSearch(state: TvState, text: string): TvTransition {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Waiting for a prototype. Three parts of the TV are being designed again (the plan's "What waits for a
-// prototype"). What each does today is the first prototype's, and all of it is here, so a result changes this
-// section and its tests.
+// Mini Discover: three tabs (Moods, Themes, Styles) of six options each, and the titles of one choice. Decided
+// as prototyped (the plan's "Mini Discover"). One choice leads to its titles; choices never combine on the TV.
 
-// 1. Discover's choice screen. Today: one grid of moods with Any mood last, then up to four titles for the mood.
-// To come: three tabs (Moods, Themes, Styles) of six options each.
-
+export type TvDiscoverTab = "moods" | "themes" | "styles"
 type DiscoverScreen = Extract<TvScreen, { name: "discover" }>
 
-/** Discover's "Any mood", as a mood in the URL and in `mood:any`. */
-export const ANY_MOOD = "any"
+/**
+ * Which six each tab offers, in order, by the app's own keys: moods of `domain/moods.ts`, themes and styles of
+ * `domain/themes-styles.ts` (tv-discover.test.ts checks that each exists there). `kind` names an option in an
+ * item id (`theme:crime`) and in the TV's URL (`theme=crime`); `param` is Discover's own parameter for it.
+ */
+export const DISCOVER_TABS: readonly {
+	tab: TvDiscoverTab
+	kind: "mood" | "theme" | "style"
+	param: "moods" | "themes" | "styles"
+	keys: readonly string[]
+}[] = [
+	{
+		tab: "moods",
+		kind: "mood",
+		param: "moods",
+		keys: ["funny", "feelgood", "romance", "action", "scary", "mind"],
+	},
+	{
+		tab: "themes",
+		kind: "theme",
+		param: "themes",
+		keys: ["crime", "mystery", "family", "growing", "future", "fantasy"],
+	},
+	{
+		tab: "styles",
+		kind: "style",
+		param: "styles",
+		keys: ["animated", "spectacle", "slow", "fast", "talky", "nonlinear"],
+	},
+]
 
-const DISCOVER_CHOICE: DiscoverScreen = { name: "discover", mood: null }
+/** A tab with what it offers. */
+export const discoverTab = (tab: TvDiscoverTab) =>
+	DISCOVER_TABS.find((one) => one.tab === tab) ?? DISCOVER_TABS[0]
 
+const discoverChoice = (tab: TvDiscoverTab): DiscoverScreen => ({
+	name: "discover",
+	tab,
+	choice: null,
+})
+
+/**
+ * `mood=`, `theme=` or `style=` with one of the TV's own options is that option's titles. An option the TV does
+ * not offer (Discover has more of each) is its tab instead. Without one, `tab=` names the open tab; Moods is
+ * open by default.
+ */
 function readDiscover(params: URLSearchParams): DiscoverScreen {
-	return { name: "discover", mood: params.get("mood") || null }
+	for (const { tab, kind, keys } of DISCOVER_TABS) {
+		const key = params.get(kind)
+		if (key)
+			return { name: "discover", tab, choice: keys.includes(key) ? key : null }
+	}
+	const open = params.get("tab")
+	return discoverChoice(
+		DISCOVER_TABS.find((one) => one.tab === open)?.tab ?? "moods",
+	)
 }
 
 function writeDiscover(screen: DiscoverScreen, out: URLSearchParams) {
-	if (screen.mood) out.set("mood", screen.mood)
+	if (screen.choice) out.set(discoverTab(screen.tab).kind, screen.choice)
+	else if (screen.tab !== "moods") out.set("tab", screen.tab)
 }
 
-/** Discover's page, with the mood that travels. */
+/** Discover's page, with the one mood, theme or style that travels. */
 function discoverHref(screen: DiscoverScreen): string {
-	return screen.mood && screen.mood !== ANY_MOOD
-		? `/discover?moods=${encodeURIComponent(screen.mood)}`
+	return screen.choice
+		? `/discover?${discoverTab(screen.tab).param}=${encodeURIComponent(screen.choice)}`
 		: "/discover"
 }
 
 function discoverItems(screen: DiscoverScreen, ctx: TvContext): string[] {
-	return screen.mood
-		? [...titleItems(ctx.titles), "change-mood"]
-		: [...ctx.moods.map((mood) => `mood:${mood}`), `mood:${ANY_MOOD}`]
+	if (screen.choice) return [...titleItems(ctx.titles), "change"]
+	const { kind, keys } = discoverTab(screen.tab)
+	return [
+		...DISCOVER_TABS.map(({ tab }) => `tab:${tab}`),
+		...keys.map((key) => `${kind}:${key}`),
+	]
 }
 
-/** A mood opens its titles. Change mood is one step back to the moods; a deep link has them take its place. */
+/**
+ * Opens a tab in place, so Back from the titles finds the tab that was open. The focus stays on the tab, so
+ * Left and Right along the tabs turn the pages.
+ */
+function openTab(
+	state: TvState,
+	screen: DiscoverScreen,
+	tab: string,
+): TvTransition {
+	const open = DISCOVER_TABS.find((one) => one.tab === tab)?.tab
+	return !open || open === screen.tab || screen.choice
+		? none(state)
+		: replace(state, discoverChoice(open), [], `tab:${open}`)
+}
+
+/**
+ * The two moves of the tabs that the direction rule does not give by itself. `to` is where the rule would land.
+ * - From outside the tabs (Up from the options, Down from the top bar), a move that would land on any tab lands
+ *   on the open one.
+ * - Along the tabs, a move that lands on a tab opens it. Only the direction keys do: the pointer over a tab and
+ *   the wheel's step give it the focus, and OK or a click opens it.
+ * Null for every other move, which the rule decides alone.
+ */
+function moveInDiscover(
+	state: TvState,
+	from: string,
+	to: string | null,
+): TvTransition | null {
+	const s = state.screen
+	if (s.name !== "discover" || s.choice || state.menuOpen) return null
+	if (!to?.startsWith("tab:")) return null
+	if (!from.startsWith("tab:"))
+		return none({ ...state, focus: `tab:${s.tab}` })
+	return openTab({ ...state, focus: to }, s, to.slice("tab:".length))
+}
+
+/**
+ * A tab opens. An option opens its titles. Change is one step back to the tabs; a deep link has them take its
+ * place, with the choice's tab open.
+ */
 function chooseInDiscover(
 	state: TvState,
+	screen: DiscoverScreen,
 	kind: string,
 	arg: string,
 ): TvTransition {
-	return kind === "mood"
-		? push(state, { name: "discover", mood: arg })
-		: leave(state, DISCOVER_CHOICE)
+	if (kind === "tab") return openTab(state, screen, arg)
+	if (kind === "change")
+		return screen.choice
+			? leave(state, discoverChoice(screen.tab))
+			: none(state)
+	return screen.choice
+		? none(state)
+		: push(state, { name: "discover", tab: screen.tab, choice: arg })
 }
 
-// 2. The rating strip: the answers of the quiz and of the rating after Seen it. Decided, and no longer waiting
-// (the plan's "The rating strip"): the app's four labelled levels from low on the left to high on the right, and
-// under them, on the desktop, the ten exact scores. OK on a level gives the level's score; "Haven't seen it" is
-// the quiz's own key.
+// ---------------------------------------------------------------------------------------------------------
+// The rating strip: the answers of the quiz and of the rating after Seen it (the plan's "The rating strip"). The
+// app's four labelled levels from low on the left to high on the right, and under them, on the desktop, the ten
+// exact scores. OK on a level gives the level's score; "Haven't seen it" is the quiz's own key.
 
 type StripScreen = Extract<TvScreen, { name: "quiz" | "rate" }>
 
@@ -781,8 +887,9 @@ function chooseScore(
 		: none(state, effects)
 }
 
-// 3. The Remote's streaming keys. To come: a key opens a "watch on this service" screen. Until then a press does
-// nothing: no narrowing, no toast, nothing in the URL.
+// ---------------------------------------------------------------------------------------------------------
+// The Remote's streaming keys. Decided (the plan's "On a service"): a key opens a "watch on this service" screen.
+// Slice 6b builds it; until then a press does nothing: no narrowing, no toast, nothing in the URL.
 
 function serviceKey(state: TvState, _service: string): TvTransition {
 	return none(state)
@@ -793,7 +900,7 @@ function serviceKey(state: TvState, _service: string): TvTransition {
 
 const APP_SCREEN: Record<TvApp, TvScreen> = {
 	tonight: { name: "tonight", pick: 0 },
-	discover: DISCOVER_CHOICE,
+	discover: discoverChoice("moods"),
 	explorer: { name: "explorer", island: null },
 	taste: { name: "taste", side: null },
 	shows: { name: "shows" },
@@ -821,9 +928,15 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	const s = state.screen
 	const [kind, ...rest] = item.split(":")
 	const arg = rest.join(":")
-	if (kind === "mood" || kind === "change-mood")
+	if (
+		kind === "tab" ||
+		kind === "mood" ||
+		kind === "theme" ||
+		kind === "style" ||
+		kind === "change"
+	)
 		return s.name === "discover"
-			? chooseInDiscover(state, kind, arg)
+			? chooseInDiscover(state, s, kind, arg)
 			: none(state)
 	if (kind === "level" || kind === "score")
 		return onStrip(s)
@@ -924,6 +1037,7 @@ export function transition(
 		case "move": {
 			const items = activeItems(state, ctx)
 			const from = focusedItem(state, ctx)
+			// The rating strip names two moves itself, before the rule.
 			const to =
 				stripMove(state, from, action.dir, items) ??
 				nextInDirection(
@@ -932,6 +1046,9 @@ export function transition(
 					action.dir,
 					action.scale,
 				)
+			// Discover's tabs name two moves themselves, on what the rule gives.
+			const named = moveInDiscover(state, from, to)
+			if (named) return named
 			return none(to ? focusOn(state, to, ctx) : state)
 		}
 		case "step": {

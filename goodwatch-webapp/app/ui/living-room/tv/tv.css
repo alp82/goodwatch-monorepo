@@ -55,6 +55,86 @@
 	}
 }
 
+/* The TV's own pointer, the ring (TvPointer.tsx): a circle with a centre dot, white with a dark edge, so it reads
+   on any picture. The pointing loop (pointing.ts) moves it by `transform` and writes its states as attributes.
+   Rendering budget (#190): it moves by `transform` and shows by `opacity`; its shape changes are one-shot
+   transitions of `transform`, and its colour changes once, over the Expand key. */
+.tvp {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 34;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.28s ease-out;
+	will-change: transform;
+	--tvp-ink: #fff;
+	--tvp-edge: rgba(0, 0, 0, 0.6);
+}
+.tvp[data-shown="true"] {
+	opacity: 1;
+}
+/* Over the Expand key it is amber, as the key's brackets are. */
+.tvp[data-out="true"] {
+	--tvp-ink: #fbbf24;
+}
+.tvp i {
+	position: absolute;
+	display: block;
+	border-radius: 50%;
+	transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), background-color
+		0.16s, border-color 0.16s;
+}
+.tvp-ring {
+	left: -27px;
+	top: -27px;
+	width: 54px;
+	height: 54px;
+	border: 4px solid var(--tvp-ink);
+	box-shadow: 0 0 0 2px var(--tvp-edge), inset 0 0 0 2px var(--tvp-edge);
+}
+.tvp-dot {
+	left: -5px;
+	top: -5px;
+	width: 10px;
+	height: 10px;
+	background: var(--tvp-ink);
+	box-shadow: 0 0 0 2px var(--tvp-edge);
+}
+/* Over an item the circle closes around the dot. */
+.tvp[data-over="true"] .tvp-ring {
+	transform: scale(0.58);
+}
+.tvp[data-over="true"] .tvp-dot {
+	transform: scale(1.5);
+}
+/* A press: the whole ring gives a little. The phone's ring is a fifth smaller, as its TV is. */
+.tvp-shape {
+	transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tvp[data-press="true"] .tvp-shape {
+	transform: scale(0.82);
+}
+.tvp-small .tvp-shape {
+	transform: scale(0.8);
+}
+.tvp-small[data-press="true"] .tvp-shape {
+	transform: scale(0.64);
+}
+/* Over the picture the TV draws its own pointer, so the system's is hidden there, and only there, and only while
+   pointing runs and the TV is on (`data-pointing`, written by pointing.ts). */
+.tvr[data-pointing="live"] .tvr-tv,
+.tvr[data-pointing="live"] .tvr-tv * {
+	cursor: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+	.tvp,
+	.tvp i,
+	.tvp-shape {
+		transition: none;
+	}
+}
+
 /* Before the window is measured, on the server and while the page hydrates, both editions of the TV's screen are
    in the HTML, so that each window finds its H1 in it; the queries show the one the measured room will draw
    (PHONE_BELOW and LANDSCAPE in TvRoom.tsx). They are not painted yet. SEAM (slice 12): the first paint places
@@ -145,6 +225,23 @@
 		color: #000;
 		transform: scale(1.06);
 		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	}
+	/* Mini Discover's tabs: quiet until open. The open one is marked whether or not it has the focus. */
+	.tvc-tab {
+		color: rgba(255, 255, 255, 0.72);
+		border-radius: 999px;
+		font-weight: 700;
+	}
+	.tvc-tab-open {
+		background: rgba(255, 255, 255, 0.2);
+		color: #fff;
+		box-shadow: inset 0 -4px 0 #fff;
+	}
+	.tvc-tab.tvc-on {
+		background: #fff;
+		color: #000;
+		transform: scale(1.05);
+		box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
 	}
 	.tvc-fade {
 		animation: tvc-fade 0.42s ease-out both;

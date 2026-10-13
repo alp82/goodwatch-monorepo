@@ -38,6 +38,7 @@ const tv: RoomTv = {
 	activeService: null,
 	serviceName: (key) => key,
 	press: () => {},
+	point: () => {},
 }
 
 const render = (power: RoomTv["power"]) =>

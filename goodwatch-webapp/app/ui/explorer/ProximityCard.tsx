@@ -1,4 +1,9 @@
-import { MapPinIcon, NoSymbolIcon, XMarkIcon } from "@heroicons/react/24/solid"
+import {
+	ArrowsPointingOutIcon,
+	ChevronRightIcon,
+	MapPinIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { forwardRef } from "react"
 import type { ExplorerCard, ExplorerTitle } from "~/domain/explorer"
@@ -36,8 +41,6 @@ interface ProximityCardProps {
 	onClose: () => void
 	/** A score, Want to See, or Seen it changed, for a short confirmation. */
 	onAction: (message: string, seen?: boolean) => void
-	/** Not interested was turned on; `undo` takes it back. */
-	onHide: (undo: () => void) => void
 }
 
 /** Title and match under a poster near the focus: the small form of the card. */
@@ -62,13 +65,16 @@ export const Caption = forwardRef<
 /**
  * The card of the title nearest the focus, over the live map: the title's backdrop, its GoodWatch score, its taste
  * match (or the viewer's rating), the services that carry it, why it fits, and the title actions: the score control,
- * Want to See, Seen it, and Not interested as a link beside the one to the title page.
+ * Want to See, and Seen it. The header is the way to the title page: all of it is the link, the title ends in an
+ * arrow, and "Details" sits with close (or the pin) as one control.
  */
 export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 	function ProximityCard(
-		{ title, where, card, pinned, form, peek, onPin, onClose, onAction, onHide },
+		{ title, where, card, pinned, form, peek, onPin, onClose, onAction },
 		ref,
 	) {
+		/** The header is the way to the title page (a peek opens the card first). */
+		const door = !peek
 		const kind = title.mediaType === "show" ? "Series" : "Film"
 		const meta = [
 			title.year ? String(title.year) : "",
@@ -84,7 +90,7 @@ export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 		return (
 			<div
 				ref={ref}
-				className={`ex-card ex-card-${form} ${peek ? "ex-card-peek" : ""} ${pinned ? "ex-card-pinned" : ""}`}
+				className={`ex-card ex-card-${form} ${peek ? "ex-card-peek" : ""} ${pinned ? "ex-card-pinned" : ""} ${door ? "ex-card-door" : ""}`}
 				style={{ "--isl": where.color } as React.CSSProperties}
 				aria-live="polite"
 				aria-label={title.title}
@@ -108,10 +114,28 @@ export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 							<span className="ex-dot" style={{ background: where.color }} />
 							{where.name}
 						</span>
-						<h2 className="ex-card-t">{title.title}</h2>
+						<h2 className="ex-card-t">
+							{title.title}
+							{door && (
+								<ChevronRightIcon className="ex-door-arrow" aria-hidden />
+							)}
+						</h2>
 						<p className="ex-card-meta">{meta}</p>
 					</div>
+					{door && (
+						<Link
+							to={titlePath(title)}
+							className="ex-door"
+							aria-label={`Details of ${title.title}`}
+						/>
+					)}
 					<div className="ex-card-tools">
+						{door && (
+							<Link to={titlePath(title)} className="ex-door-details">
+								<ArrowsPointingOutIcon className="h-4 w-4" aria-hidden />
+								Details
+							</Link>
+						)}
 						{pinned ? (
 							<button
 								type="button"
@@ -153,7 +177,7 @@ export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 									Looking at why it fits you…
 								</p>
 							)}
-							<Actions title={title} onAction={onAction} onHide={onHide} />
+							<Actions title={title} onAction={onAction} />
 						</>
 					)}
 					{peek && (
@@ -220,15 +244,13 @@ function Services({
 	)
 }
 
-/** The score control, Want to See and Seen it as the title page draws them, and the two links under them. */
+/** The score control, and Want to See and Seen it as the title page draws them. */
 function Actions({
 	title,
 	onAction,
-	onHide,
 }: {
 	title: ExplorerTitle
 	onAction: ProximityCardProps["onAction"]
-	onHide: ProximityCardProps["onHide"]
 }) {
 	const media = {
 		mediaType: title.mediaType,
@@ -265,30 +287,10 @@ function Actions({
 							// A rated movie stays Seen through its score: the press says so and sends nothing. With the
 							// movie watch log the press goes to the log, which answers with its own toast.
 							if (!a.toggleSeen(event)) return
-							onAction(
-								a.seen ? "Unmarked as seen" : "Marked as seen",
-								!a.seen,
-							)
+							onAction(a.seen ? "Unmarked as seen" : "Marked as seen", !a.seen)
 						}}
 					/>
 				</UserAction>
-			</div>
-			<div className="flex items-center justify-between gap-3">
-				<Link to={titlePath(title)} className="ex-open">
-					Open the title page
-				</Link>
-				{/* For a title the person hasn't seen: not offered once it's seen or scored. */}
-				{!seen && a.score == null && title.rating == null && !a.hidden && (
-					<button
-						type="button"
-						className="ex-open cursor-pointer gap-1.5"
-						disabled={a.hidePending}
-						onClick={() => onHide(a.hide())}
-					>
-						<NoSymbolIcon className="h-4 w-4" aria-hidden />
-						Not interested
-					</button>
-				)}
 			</div>
 		</>
 	)

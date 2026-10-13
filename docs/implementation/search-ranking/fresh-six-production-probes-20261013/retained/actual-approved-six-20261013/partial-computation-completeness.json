@@ -1,0 +1,10 @@
+{
+  "acceptedCount": 8,
+  "finishedCount": 8,
+  "completedCount": 8,
+  "validCompletedComputationCount": 8,
+  "missingOrInvalidCompletedComputationCount": 0,
+  "manualSupplementPass": true,
+  "sevenDayAcceptancePass": false,
+  "basis": "existing immutable partial lifecycle snapshot; no new production searches"
+}

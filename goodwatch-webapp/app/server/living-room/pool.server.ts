@@ -3,6 +3,7 @@ import { loadTaste } from "~/server/taste/index.server"
 import {
 	MAX_KEYS,
 	type TitleCard,
+	getDisplayFields,
 	getServiceCards,
 	getTitleCards,
 } from "~/server/title-cards.server"
@@ -16,6 +17,7 @@ import type {
 import { livingRoomServices } from "./data.server"
 import { LivingRoomUnavailable, rankOf } from "./picks.server"
 import { poolCandidates, selectPoolKeys } from "./pool-keys.server"
+import { type ChoiceArt, loadChoiceArt } from "./tv-choice-art.server"
 
 // Contrasting moods for "Which one, tonight?".
 const PAIRS: [MoodKey, MoodKey][] = [
@@ -29,7 +31,7 @@ const PAIRS: [MoodKey, MoodKey][] = [
 
 export async function getLivingRoomPool(
 	ctx: ViewerContext,
-): Promise<LivingRoomData> {
+): Promise<LivingRoomData & { choiceArt: ChoiceArt }> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot)
 		throw new LivingRoomUnavailable("The title snapshot is loading")
@@ -47,11 +49,13 @@ export async function getLivingRoomPool(
 		ctx.forYou && taste.signal === "some" ? (key) => rankOf(taste, key) : null,
 	)
 
-	const [cards, wishlist, saved, catalog] = await Promise.all([
+	const [cards, wishlist, saved, catalog, choiceArt] = await Promise.all([
 		getTitleCards(keys.slice(0, MAX_KEYS), ctx, taste),
 		member ? livingRoomWishlistCards(ctx, taste) : [],
 		getServiceCards(ctx.services),
 		livingRoomServices(ctx.country, ctx.services),
+		// The new TV's mini Discover: a picture per option of its tabs, the same for everyone.
+		loadChoiceArt(snapshot, candidates, getDisplayFields),
 	])
 	const withMoods = (card: TitleCard): LivingRoomTitle => ({
 		...card,
@@ -89,6 +93,7 @@ export async function getLivingRoomPool(
 		catalog,
 		savedServices: member ? saved.map((s) => s.name) : [],
 		pairs,
+		choiceArt,
 	}
 }
 

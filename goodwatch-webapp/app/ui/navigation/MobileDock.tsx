@@ -1,5 +1,6 @@
 // The phone dock (below the large breakpoint): the current page on the left, the raised round G key in the middle,
-// and "Go to…" on the right. The whole bar is one button that opens the hub. A page's filter strip docks above it
+// and "Go to…" on the right. The whole bar is one button that opens the hub. For two pages after a person left the
+// living room through its TV, the TV button stands in the left part instead (a key of its own, over the bar). A page's filter strip docks above it
 // (the slab) through DockStrip; the G key then shrinks and drops into the row. The dock's height is published as
 // --nav-dock-height so full-screen pages such as Explorer can keep clear of it.
 import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
@@ -7,6 +8,7 @@ import { useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useFeatures } from "~/hooks/useFeature"
+import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, NewEpisodesMark } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
@@ -14,7 +16,7 @@ import { useOpenerSignal } from "./useWhatsNew"
 
 const HUB_LABEL = "Browse GoodWatch"
 
-function DockButton({ docked }: { docked: boolean }) {
+function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }) {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
 	const destinations = getDestinations(useFeatures())
@@ -35,9 +37,10 @@ function DockButton({ docked }: { docked: boolean }) {
 			aria-label={fresh ? `${label}. ${fresh.door}` : label}
 			className="grid h-[72px] w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 text-left"
 		>
+			{/* The page's name gives its place to the TV button, which is laid over it (see MobileDock). */}
 			<span
 				aria-hidden
-				className="flex min-w-0 items-center gap-2 justify-self-start"
+				className={`flex min-w-0 items-center gap-2 justify-self-start ${leftFree ? "invisible" : ""}`}
 			>
 				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] text-amber-400">
 					<Icon className="h-5 w-5" />
@@ -75,6 +78,7 @@ export function MobileDock() {
 	const dock = useRef<HTMLDivElement>(null)
 	const setStripTarget = navigation?.setStripTarget
 	const docked = Boolean(navigation?.strips)
+	const wayBack = useTvWayBack()
 
 	useEffect(() => {
 		const element = dock.current
@@ -112,8 +116,14 @@ export function MobileDock() {
 						docked ? "flex items-end gap-1.5 px-2.5 pt-2.5 pb-2" : "hidden"
 					}
 				/>
-				<nav aria-label="Site">
-					<DockButton docked={docked} />
+				<nav aria-label="Site" className="relative">
+					<DockButton docked={docked} leftFree={Boolean(wayBack)} />
+					{wayBack && (
+						// From the dock's edge to just short of the round key.
+						<div className="absolute top-1/2 left-3 flex max-w-[calc(50%-52px)] -translate-y-1/2">
+							<TvBackDockKey wayBack={wayBack} />
+						</div>
+					)}
 				</nav>
 			</div>
 		</>

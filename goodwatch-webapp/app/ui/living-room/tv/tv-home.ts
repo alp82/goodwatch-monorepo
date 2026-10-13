@@ -67,6 +67,11 @@ export type TvPool = {
 	savedServices?: string[]
 	/** A guest's saved services, by id: what their browser sent with the request (use-tv-pool.ts adds it). */
 	ownServiceIds?: number[]
+	/**
+	 * Mini Discover's tile pictures: a backdrop's path per option, by its item (`mood:funny`, `theme:crime`,
+	 * `style:slow`). An option without a title has none. The same for everyone.
+	 */
+	choiceArt?: Record<string, string>
 }
 
 /** A title's key on the TV and in its URL: `<media_type>-<tmdb_id>`. */

@@ -5,6 +5,7 @@ import { searchHref } from "../../navigation/destinations.ts"
 import { DOOR_HREF as OLD_DOOR_HREF } from "../tv-flow.ts"
 import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
 import {
+	DISCOVER_TABS,
 	DOOR_HREF,
 	EMPTY_CONTEXT,
 	STRIP_LEVELS,
@@ -36,7 +37,6 @@ const guest: TvContext = {
 		{ title: "show-3" },
 		{ title: "movie-4" },
 	],
-	moods: ["funny", "feelgood", "crime"],
 	titles: ["movie-11", "show-12", "movie-13", "movie-14", "movie-15"],
 	islands: ["i1", "i2", "i3", "i4", "i5", "i6", "i7"],
 	hops: ["i2", "i4", "i5"],
@@ -56,6 +56,7 @@ const member: TvContext = {
 }
 
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 /** The rating strip: its levels low to high, and the exact scores the desktop shows under them. */
 const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
 const SCORES = Array.from({ length: 10 }, (_, at) => `score:${at + 1}`)
@@ -92,8 +93,11 @@ describe("TV state in the URL", () => {
 			"tv=tonight",
 			"tv=tonight&pick=2",
 			"tv=discover",
+			"tv=discover&tab=themes",
+			"tv=discover&tab=styles",
 			"tv=discover&mood=funny",
-			"tv=discover&mood=any",
+			"tv=discover&theme=crime",
+			"tv=discover&style=slow",
 			"tv=explorer",
 			"tv=explorer&island=i3",
 			"tv=taste",
@@ -158,6 +162,11 @@ describe("old addresses", () => {
 			url(at("tv=picks&mood=funny&from=new&service=Netflix")),
 			"tv=discover&mood=funny",
 		)
+	})
+
+	it("the picks for a mood the TV no longer offers, and for Any mood, are Discover's moods", () => {
+		for (const mood of ["heavy", "history", "crime", "any", "cozy"])
+			assert.equal(url(at(`tv=picks&mood=${mood}`)), "tv=discover", mood)
 	})
 
 	it("the picks without a mood are Tonight", () => {
@@ -230,27 +239,61 @@ describe("the screens and their items, in reading order", () => {
 		assert.deepEqual(items("tv=tonight", EMPTY_CONTEXT), ["expand", ...BAR])
 	})
 
-	it("Discover without a mood: every mood, Any mood last", () => {
+	it("Discover, the choice: the three tabs, then the open tab's six", () => {
 		assert.deepEqual(items("tv=discover"), [
+			...TABS,
 			"mood:funny",
 			"mood:feelgood",
-			"mood:crime",
-			"mood:any",
+			"mood:romance",
+			"mood:action",
+			"mood:scary",
+			"mood:mind",
+			"expand",
+			...BAR,
+		])
+		assert.deepEqual(items("tv=discover&tab=themes"), [
+			...TABS,
+			"theme:crime",
+			"theme:mystery",
+			"theme:family",
+			"theme:growing",
+			"theme:future",
+			"theme:fantasy",
+			"expand",
+			...BAR,
+		])
+		assert.deepEqual(items("tv=discover&tab=styles"), [
+			...TABS,
+			"style:animated",
+			"style:spectacle",
+			"style:slow",
+			"style:fast",
+			"style:talky",
+			"style:nonlinear",
 			"expand",
 			...BAR,
 		])
 	})
 
-	it("Discover with a mood: up to four titles and Change mood", () => {
-		assert.deepEqual(items("tv=discover&mood=funny"), [
-			"title:movie-11",
-			"title:show-12",
-			"title:movie-13",
-			"title:movie-14",
-			"change-mood",
-			"expand",
-			...BAR,
+	it("Discover, the titles of a mood, a theme or a style: up to four titles and Change", () => {
+		for (const query of [
+			"tv=discover&mood=funny",
+			"tv=discover&theme=crime",
+			"tv=discover&style=slow",
 		])
+			assert.deepEqual(
+				items(query),
+				[
+					"title:movie-11",
+					"title:show-12",
+					"title:movie-13",
+					"title:movie-14",
+					"change",
+					"expand",
+					...BAR,
+				],
+				query,
+			)
 	})
 
 	it("Explorer without an island: six islands", () => {
@@ -446,11 +489,17 @@ describe("history: what pushes", () => {
 		assert.equal(choose("", "app:shows").history, "none")
 	})
 
-	it("a mood, and Any mood", () => {
-		const mood = choose("tv=discover", "mood:crime")
-		assert.equal(mood.history, "push")
-		assert.equal(mood.url, "tv=discover&mood=crime")
-		assert.equal(choose("tv=discover", "mood:any").url, "tv=discover&mood=any")
+	it("a mood, a theme and a style: one choice leads to its titles", () => {
+		for (const [from, item, to] of [
+			["tv=discover", "mood:scary", "tv=discover&mood=scary"],
+			["tv=discover&tab=themes", "theme:future", "tv=discover&theme=future"],
+			["tv=discover&tab=styles", "style:talky", "tv=discover&style=talky"],
+		]) {
+			const t = choose(from, item)
+			assert.equal(t.history, "push", item)
+			assert.equal(t.url, to)
+			assert.deepEqual(t.effects, [])
+		}
 	})
 
 	it("an island", () => {
@@ -639,11 +688,13 @@ describe("history: what goes back", () => {
 		}
 	})
 
-	it("Change mood, when the moods are one step back", () => {
-		assert.equal(
-			choose("tv=discover&mood=funny", "change-mood").history,
-			"back",
-		)
+	it("Change, when the tabs are one step back", () => {
+		for (const query of [
+			"tv=discover&mood=funny",
+			"tv=discover&theme=crime",
+			"tv=discover&style=slow",
+		])
+			assert.equal(choose(query, "change").history, "back", query)
 	})
 })
 
@@ -676,10 +727,16 @@ describe("history: a deep link has nothing to go back to", () => {
 		assert.deepEqual(t.effects, [{ type: "rate", title: "movie-1", score: 5 }])
 	})
 
-	it("Change mood shows the moods", () => {
-		const t = choose("tv=discover&mood=funny", "change-mood", guest, 0)
-		assert.equal(t.history, "replace")
-		assert.equal(t.url, "tv=discover")
+	it("Change shows the tabs, with the choice's tab open", () => {
+		for (const [from, to] of [
+			["tv=discover&mood=funny", "tv=discover"],
+			["tv=discover&theme=crime", "tv=discover&tab=themes"],
+			["tv=discover&style=slow", "tv=discover&tab=styles"],
+		]) {
+			const t = choose(from, "change", guest, 0)
+			assert.equal(t.history, "replace", from)
+			assert.equal(t.url, to)
+		}
 	})
 })
 
@@ -769,12 +826,23 @@ describe("the Expand key's destinations", () => {
 		assert.equal(dest("tv=discover"), "/discover")
 	})
 
-	it("Discover, the titles: the mood travels", () => {
-		assert.equal(dest("tv=discover&mood=funny"), "/discover?moods=funny")
+	it("Discover, the choice, whichever tab is open: nothing travels", () => {
+		assert.equal(dest("tv=discover&tab=themes"), "/discover")
+		assert.equal(dest("tv=discover&tab=styles"), "/discover")
 	})
 
-	it("Discover, Any mood: Discover without a mood", () => {
-		assert.equal(dest("tv=discover&mood=any"), "/discover")
+	it("Discover, the titles: the one mood, theme or style travels, as Discover's own filter", () => {
+		assert.equal(dest("tv=discover&mood=funny"), "/discover?moods=funny")
+		assert.equal(dest("tv=discover&theme=crime"), "/discover?themes=crime")
+		assert.equal(dest("tv=discover&style=slow"), "/discover?styles=slow")
+	})
+
+	it("Discover's addresses are ones the Discover page reads back as that one filter", () => {
+		for (const { param, keys } of DISCOVER_TABS)
+			for (const key of keys) {
+				const href = dest(`tv=discover&${param.slice(0, -1)}=${key}`)
+				assert.equal(href, `/discover?${param}=${key}`)
+			}
 	})
 
 	it("Discover never carries a streaming service", () => {
@@ -1324,6 +1392,8 @@ describe("focus", () => {
 			["", "app:tonight"],
 			["tv=tonight", "details"],
 			["tv=discover", "mood:funny"],
+			["tv=discover&tab=themes", "theme:crime"],
+			["tv=discover&tab=styles", "style:animated"],
 			["tv=discover&mood=funny", "title:movie-11"],
 			["tv=explorer", "island:i1"],
 			["tv=quiz", "level:7"],
@@ -1339,7 +1409,7 @@ describe("focus", () => {
 		const empty = { ...guest, titles: [] }
 		assert.equal(
 			focusedItem(at("tv=discover&mood=funny"), empty),
-			"change-mood",
+			"change",
 		)
 		assert.equal(focusedItem(at("tv=explorer&island=i1"), empty), "hop:i2")
 	})
@@ -1436,24 +1506,285 @@ describe("focus", () => {
 	})
 
 	it("remembers the focus of the screen an action leaves", () => {
-		const screen = at("tv=discover&focus=mood%3Acrime", 1)
-		assert.equal(focusLeftBehind(screen, { type: "ok" }, guest), "mood:crime")
+		const screen = at("tv=discover&focus=mood%3Ascary", 1)
+		assert.equal(focusLeftBehind(screen, { type: "ok" }, guest), "mood:scary")
 		assert.equal(
 			focusLeftBehind(at("tv=discover"), { type: "home" }, guest),
 			"mood:funny",
 		)
 		assert.equal(
-			focusLeftBehind(screen, { type: "choose", item: "mood:any" }, guest),
-			"mood:any",
+			focusLeftBehind(screen, { type: "choose", item: "mood:mind" }, guest),
+			"mood:mind",
 		)
 		assert.equal(
 			focusLeftBehind(screen, { type: "choose", item: "title:gone" }, guest),
-			"mood:crime",
+			"mood:scary",
 		)
 		const menu = run(screen, guest, { type: "toggle-menu" }).state
 		assert.equal(
 			focusLeftBehind(menu, { type: "choose", item: "menu:about" }, guest),
-			"mood:crime",
+			"mood:scary",
+		)
+	})
+})
+
+describe("mini Discover: the tabs", () => {
+	// The choice screen as the desktop lays it out: the bar at the top right, the tabs at the left under it, the
+	// six options three by three, the Expand key at the bottom right.
+	const box = (
+		id: string,
+		left: number,
+		top: number,
+		width = 340,
+		height = 150,
+	): TvBox => ({ id, left, top, width, height })
+	const layout = (kind: string, keys: readonly string[]): TvBox[] => [
+		box("bar:back", 700, 20, 120, 60),
+		box("bar:search", 830, 20, 140, 60),
+		box("bar:menu", 980, 20, 120, 60),
+		box("tab:moods", 56, 108, 150, 64),
+		box("tab:themes", 218, 108, 160, 64),
+		box("tab:styles", 390, 108, 150, 64),
+		...keys.map((key, n) =>
+			box(`${kind}:${key}`, 56 + (n % 3) * 370, 192 + Math.floor(n / 3) * 182),
+		),
+		box("expand", 900, 560, 200, 64),
+	]
+	const boxesOf = (state: TvState) => {
+		const screen = state.screen as Extract<TvScreen, { name: "discover" }>
+		const { kind, keys } =
+			DISCOVER_TABS.find((one) => one.tab === screen.tab) ?? DISCOVER_TABS[0]
+		return layout(kind, keys)
+	}
+	/** Presses direction keys one after another, each over the boxes of the tab then open. */
+	function press(start: TvState, ...dirs: ("up" | "down" | "left" | "right")[]) {
+		let state = start
+		let last = transition(state, { type: "focus", item: "" }, guest)
+		for (const dir of dirs) {
+			last = transition(
+				state,
+				{ type: "move", dir, boxes: boxesOf(state) },
+				guest,
+			)
+			state = last.state
+		}
+		return { ...last, url: url(state), focus: focusedItem(state, guest) }
+	}
+
+	it("has six options on each tab, eighteen in all, none twice", () => {
+		assert.deepEqual(
+			DISCOVER_TABS.map((one) => one.tab),
+			["moods", "themes", "styles"],
+		)
+		for (const { tab, keys } of DISCOVER_TABS)
+			assert.equal(new Set(keys).size, 6, tab)
+		assert.deepEqual(
+			DISCOVER_TABS.map((one) => [one.tab, ...one.keys]),
+			[
+				["moods", "funny", "feelgood", "romance", "action", "scary", "mind"],
+				["themes", "crime", "mystery", "family", "growing", "future", "fantasy"],
+				["styles", "animated", "spectacle", "slow", "fast", "talky", "nonlinear"],
+			],
+		)
+	})
+
+	it("reads the open tab from the address; Moods is open without one, and for a tab it does not know", () => {
+		assert.deepEqual(at("tv=discover").screen, {
+			name: "discover",
+			tab: "moods",
+			choice: null,
+		})
+		assert.deepEqual(at("tv=discover&tab=styles").screen, {
+			name: "discover",
+			tab: "styles",
+			choice: null,
+		})
+		assert.equal(url(at("tv=discover&tab=moods")), "tv=discover")
+		assert.equal(url(at("tv=discover&tab=genres")), "tv=discover")
+	})
+
+	it("a choice names its tab; an option the TV does not offer is its tab, open", () => {
+		assert.deepEqual(at("tv=discover&theme=future").screen, {
+			name: "discover",
+			tab: "themes",
+			choice: "future",
+		})
+		// A choice goes before `tab=`.
+		assert.equal(
+			url(at("tv=discover&tab=styles&mood=funny")),
+			"tv=discover&mood=funny",
+		)
+		// Discover has these; the TV's tabs do not.
+		assert.equal(url(at("tv=discover&mood=heavy")), "tv=discover")
+		assert.equal(url(at("tv=discover&theme=war")), "tv=discover&tab=themes")
+		assert.equal(
+			url(at("tv=discover&style=documentary")),
+			"tv=discover&tab=styles",
+		)
+		// A key of another tab is no option of this one.
+		assert.equal(url(at("tv=discover&mood=crime")), "tv=discover")
+		assert.equal(url(at("tv=discover&style=funny")), "tv=discover&tab=styles")
+	})
+
+	it("opens a tab when the direction keys land on it, in place, and keeps the focus on the tab", () => {
+		const start = at("tv=discover&focus=tab%3Amoods", 1)
+		const themes = press(start, "right")
+		assert.equal(themes.history, "replace")
+		assert.equal(themes.url, "tv=discover&tab=themes")
+		assert.equal(themes.focus, "tab:themes")
+		assert.equal(themes.state.depth, 1)
+		const styles = press(themes.state, "right")
+		assert.equal(styles.history, "replace")
+		assert.equal(styles.url, "tv=discover&tab=styles")
+		assert.equal(styles.focus, "tab:styles")
+		// The last tab: nothing further right in the row.
+		const end = press(styles.state, "right")
+		assert.equal(end.history, "none")
+		assert.equal(end.url, "tv=discover&tab=styles")
+		const back = press(styles.state, "left", "left")
+		assert.equal(back.url, "tv=discover")
+		assert.equal(back.focus, "tab:moods")
+	})
+
+	it("Down from a tab reaches that tab's options", () => {
+		const t = press(at("tv=discover&tab=themes&focus=tab%3Athemes"), "down")
+		assert.equal(t.history, "none")
+		assert.match(t.focus, /^theme:/)
+	})
+
+	it("Up from the options lands on the open tab, not on the nearest one", () => {
+		for (const [query, option, open] of [
+			["tv=discover", "mood:romance", "tab:moods"],
+			["tv=discover&tab=themes", "theme:crime", "tab:themes"],
+			["tv=discover&tab=themes", "theme:family", "tab:themes"],
+			["tv=discover&tab=styles", "style:animated", "tab:styles"],
+		]) {
+			const t = press(at(`${query}&focus=${encodeURIComponent(option)}`), "up")
+			assert.equal(t.history, "none", option)
+			assert.equal(t.focus, open, option)
+			assert.equal(t.url, query)
+		}
+	})
+
+	it("Up again reaches the top bar, and Down from the bar lands on the open tab again", () => {
+		const start = at("tv=discover&tab=themes&focus=theme%3Afamily")
+		const bar = press(start, "up", "up")
+		assert.match(bar.focus, /^bar:/)
+		assert.equal(bar.url, "tv=discover&tab=themes")
+		for (const key of ["bar:back", "bar:search", "bar:menu"]) {
+			const down = press(
+				{ ...start, focus: key },
+				"down",
+			)
+			assert.equal(down.history, "none", key)
+			assert.equal(down.focus, "tab:themes", key)
+			assert.equal(down.url, "tv=discover&tab=themes")
+		}
+	})
+
+	it("OK on a tab opens it, and on the open tab does nothing", () => {
+		const start = at("tv=discover&focus=tab%3Astyles", 1)
+		const t = run(start, guest, { type: "ok" })
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "tv=discover&tab=styles")
+		assert.equal(focusedItem(t.state, guest), "tab:styles")
+		const again = run(t.state, guest, { type: "ok" })
+		assert.equal(again.history, "none")
+		assert.equal(again.state, t.state)
+	})
+
+	it("the pointer over a tab only gives it the focus; a click or a tap opens it", () => {
+		const start = at("tv=discover", 1)
+		const over = run(start, guest, { type: "focus", item: "tab:themes" })
+		assert.equal(over.history, "none")
+		assert.equal(over.url, "tv=discover")
+		assert.equal(focusedItem(over.state, guest), "tab:themes")
+		// The options on show are still the open tab's.
+		assert.ok(tvItems(over.state.screen, guest).includes("mood:funny"))
+		const click = run(over.state, guest, { type: "choose", item: "tab:themes" })
+		assert.equal(click.history, "replace")
+		assert.equal(click.url, "tv=discover&tab=themes")
+		assert.equal(focusedItem(click.state, guest), "tab:themes")
+		// A tap, without a focus before it.
+		const tap = run(start, guest, { type: "choose", item: "tab:styles" })
+		assert.equal(tap.url, "tv=discover&tab=styles")
+		assert.equal(focusedItem(tap.state, guest), "tab:styles")
+	})
+
+	it("the wheel's step gives a tab the focus without opening it, so every option stays in reach", () => {
+		const start = at("tv=discover&focus=tab%3Amoods", 1)
+		const t = run(start, guest, { type: "step", by: 1 })
+		assert.equal(t.history, "none")
+		assert.equal(focusedItem(t.state, guest), "tab:themes")
+		assert.equal(t.url, "tv=discover")
+		const on = run(t.state, guest, { type: "step", by: 1 }, { type: "step", by: 1 })
+		assert.equal(focusedItem(on.state, guest), "mood:funny")
+	})
+
+	it("a tab the pointer focused moves on with the keys from where it is", () => {
+		// Styles has the focus, Moods is open: Left lands on Themes and opens it.
+		const start = at("tv=discover&focus=tab%3Astyles", 1)
+		const t = press(start, "left")
+		assert.equal(t.url, "tv=discover&tab=themes")
+		assert.equal(t.focus, "tab:themes")
+		// Themes has the focus, Moods is open: Left lands on the open tab, and nothing changes but the focus.
+		const open = press(at("tv=discover&focus=tab%3Athemes", 1), "left")
+		assert.equal(open.history, "none")
+		assert.equal(open.focus, "tab:moods")
+	})
+
+	it("Back from the titles finds the tab that was open: the choice is one step on from it", () => {
+		const tab = press(at("tv=discover&focus=tab%3Amoods", 1), "right")
+		const option = press(tab.state, "down")
+		const titles = run(option.state, guest, { type: "ok" })
+		assert.equal(titles.history, "push")
+		assert.equal(titles.state.depth, 2)
+		assert.match(titles.url, /^tv=discover&theme=/)
+		// The entry under the titles is the tab's own address.
+		assert.equal(option.url, "tv=discover&tab=themes")
+		assert.equal(run(titles.state, guest, { type: "back" }).history, "back")
+	})
+
+	it("choices do not combine: on the titles a tab or an option does nothing", () => {
+		const start = at("tv=discover&theme=crime", 1)
+		for (const item of ["tab:styles", "mood:funny", "theme:future"]) {
+			const t = run(start, guest, { type: "choose", item })
+			assert.equal(t.history, "none", item)
+			assert.equal(t.url, "tv=discover&theme=crime")
+		}
+	})
+
+	it("the menu's own moves are not the tabs'", () => {
+		const menu = run(at("tv=discover&focus=mood%3Afunny"), guest, {
+			type: "toggle-menu",
+		}).state
+		const t = transition(
+			menu,
+			{
+				type: "move",
+				dir: "down",
+				boxes: [box("menu:home", 0, 0), box("menu:search", 0, 200)],
+			},
+			guest,
+		)
+		assert.equal(t.state.menuFocus, "menu:search")
+		assert.equal(t.state.focus, menu.focus)
+	})
+
+	it("a change of tab is a TV-only change of the address", () => {
+		assert.equal(
+			isTvOnlyChange(
+				new URL("https://x/?tv=discover"),
+				new URL("https://x/?tv=discover&tab=themes"),
+			),
+			true,
+		)
+		assert.equal(
+			isTvOnlyChange(
+				new URL("https://x/?tv=discover&tab=themes"),
+				new URL("https://x/?tv=discover&theme=crime"),
+			),
+			true,
 		)
 	})
 })
@@ -1569,7 +1900,11 @@ describe("every screen", () => {
 		"",
 		"tv=tonight",
 		"tv=discover",
+		"tv=discover&tab=themes",
+		"tv=discover&tab=styles",
 		"tv=discover&mood=funny",
+		"tv=discover&theme=crime",
+		"tv=discover&style=slow",
 		"tv=explorer",
 		"tv=explorer&island=i1",
 		"tv=taste",

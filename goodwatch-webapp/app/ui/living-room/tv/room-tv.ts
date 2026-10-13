@@ -33,6 +33,8 @@ export type RoomTv = {
 	/** The service a streaming key stands for, as the catalog spells it. */
 	serviceName: (key: RemoteServiceKey) => string
 	press: (key: RoomKey) => void
+	/** Pointing at an item of the TV's screen gives it the focus (pointing.ts): a finger has no hover to do it. */
+	point: (item: string) => void
 }
 
 /** The canvas the TV's screens are drawn on: the desktop's, or the phone's with as much height as its picture shows. */

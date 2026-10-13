@@ -1,0 +1,810 @@
+{
+  "at": "2026-10-13T07:32:22.129175+00:00",
+  "boundedTailBytes": 523952,
+  "telemetry": [
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:15.503068221Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:15.502Z",
+        "id": "6f2daca2-6dc8-4eba-8d03-8ace7830fd52",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "59fa89addd416df3769fafc11a941c312ccbc2b71c6d83ec70967d86d407926c"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:16.132151657Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:16.131Z",
+        "id": "713089fe-3885-470f-a197-661a927e7768",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": false,
+        "socketMs": 1.2922750003635883,
+        "dnsMs": null,
+        "connectMs": 2.594497002661228,
+        "secureConnectMs": null,
+        "headersMs": 72.59300500154495,
+        "responseEndMs": 72.93371900171041,
+        "parseMs": 0.9164840020239353,
+        "serverMs": 64.298759,
+        "totalMs": 74.30339500308037,
+        "responseBytes": 56014
+      },
+      "key": "6ece28eb158b87695baa558e54e07cb112aead22ee328ee1e088202b094b8bc2"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:16.154657161Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:16.154Z",
+        "id": "20c4713b-b4e5-4bfc-86b4-f7a600b14099",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 2,
+        "reusedSocket": true,
+        "socketMs": 1.4795019999146461,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 18.40650700032711,
+        "responseEndMs": 18.957012001425028,
+        "parseMs": 1.6365770027041435,
+        "serverMs": 12.966781000000001,
+        "totalMs": 21.083096001297235,
+        "responseBytes": 101521
+      },
+      "key": "eea496e274d9af7631dc2a9f6dec567a552be11931fc0d4274559658bd1208d2"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:16.224494732Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:16.224Z",
+        "id": "6f2daca2-6dc8-4eba-8d03-8ace7830fd52",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 235,
+        "computationMs": 716,
+        "lifetimeMs": 722,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "c708ba04dff58572abb0c15bbcc7d0b34b908cdcc01163eca2fe8fa475133ee4"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:16.247545707Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:16.247Z",
+        "recorded": true
+      },
+      "key": "018c94aae12cf0d2f1aaaab2aa84e7d27bf45088a4712a36e86c64635038118a"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:16.526382450Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:16.525Z",
+        "id": "3c49c92f-5e04-406b-93f7-10051256a4bb",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "e6b9c8c757f8e3aa813679d6f86a745ba3e8aeb58be416657b09e156cfdc9d45"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:17.490837016Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:17.490Z",
+        "id": "fa065514-3b4d-46e9-aeaf-2647a0714a5c",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": false,
+        "socketMs": 1.3144509978592396,
+        "dnsMs": null,
+        "connectMs": 1.5250450000166893,
+        "secureConnectMs": null,
+        "headersMs": 14.192562997341156,
+        "responseEndMs": 14.886273000389338,
+        "parseMs": 1.369167000055313,
+        "serverMs": 8.854705,
+        "totalMs": 16.71109999716282,
+        "responseBytes": 89046
+      },
+      "key": "a6c7127608e5d961b1f0c31ef774ea771cda14183ceed14ad7c42df9a873a47b"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:17.504512891Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:17.503Z",
+        "id": "f71cc66f-f701-4610-9938-8dced4615160",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 2,
+        "reusedSocket": true,
+        "socketMs": 0.9570519998669624,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 9.881400998681784,
+        "responseEndMs": 10.204459000378847,
+        "parseMs": 1.4951389990746975,
+        "serverMs": 4.219640999999999,
+        "totalMs": 12.212657000869513,
+        "responseBytes": 62246
+      },
+      "key": "cbf50abc6cf3153bdcf5ca961d6228fe593e1ee7eee527f274966904b27350b6"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:17.540667169Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:17.540Z",
+        "id": "65edb446-f149-483b-8ec9-5435f7402abf",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 2.4159949980676174,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 16.014213997870684,
+        "responseEndMs": 16.63280699774623,
+        "parseMs": 2.4892880022525787,
+        "serverMs": 7.692796,
+        "totalMs": 19.6026719994843,
+        "responseBytes": 149788
+      },
+      "key": "9564389027c870073e880251d3440fb8f32412f1abb15777db60a319eddb654d"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:17.623273064Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:17.622Z",
+        "id": "3c49c92f-5e04-406b-93f7-10051256a4bb",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 211,
+        "computationMs": 1090,
+        "lifetimeMs": 1097,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "4886aea0527dd3fa8b4492dd032fbf9df7e17c08cb0773e6d8041f85cb673d4e"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:17.638542165Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:17.638Z",
+        "recorded": true
+      },
+      "key": "76851e66f47e06b660dec4194db2e12f88dc662d2291c6cbfe85c1b4a082fea5"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:17.890348858Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:17.889Z",
+        "id": "f0a8ca4f-dd56-49ca-94d5-83046d616117",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "32168c5deac5538aa1434c746d9d577cc1ccd4471b7991c9747f8d7c06b2be42"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:18.967054154Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:18.966Z",
+        "id": "23eba404-6fb2-4768-8765-04936f206d8e",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 0.9150290004909039,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 54.76399599760771,
+        "responseEndMs": 55.20058000087738,
+        "parseMs": 1.1342049986124039,
+        "serverMs": 50.728822,
+        "totalMs": 56.70202000066638,
+        "responseBytes": 65136
+      },
+      "key": "c005b323f6cbb775b2434d5a77982fa686dc05e7ee992ea9fa18adf17afe9903"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:19.051334566Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:19.050Z",
+        "id": "f37f0143-252f-476f-b44f-a531b4177121",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 1.9282689988613129,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 73.17390299960971,
+        "responseEndMs": 74.47479400038719,
+        "parseMs": 6.071020998060703,
+        "serverMs": 64.010304,
+        "totalMs": 81.06590899825096,
+        "responseBytes": 284683
+      },
+      "key": "1ccb7877aa72f58be8067e3f4611e9e950f670ef41c96e34318b0bcdf56e7d0f"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:19.115545150Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:19.115Z",
+        "id": "f0a8ca4f-dd56-49ca-94d5-83046d616117",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 360,
+        "computationMs": 1222,
+        "lifetimeMs": 1226,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "14d37909fbd6f2ed77ac85b41a820f3aebcb20f32c77568fea68a932cc03bc8e"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:19.133486036Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:19.132Z",
+        "recorded": true
+      },
+      "key": "b4fe49979b5879b6d9a2637bee84e9f5d35a6997f1accc81e61abdfec4e11080"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.267943380Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:19.267Z",
+        "id": "eca98fb0-b418-4242-bf0e-d66e223af64c",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "606a601a72e69ce68b7038f785cb47d28bf760822bd9e9e2a50cc204667f5f20"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.325180578Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:19.324Z",
+        "id": "840d9e4a-53db-4c59-b53f-e6798c66e4c7",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": true,
+        "socketMs": 0.5093620009720325,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 3.427087999880314,
+        "responseEndMs": 3.5993980020284653,
+        "parseMs": 0.20592400059103966,
+        "serverMs": 0.9356679999999999,
+        "totalMs": 4.0863079987466335,
+        "responseBytes": 2936
+      },
+      "key": "6ce81ce688f0b67d95c90974c391c1cdb00b9d8ae392048da8ae776e735b4074"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.705249335Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:19.704Z",
+        "id": "2baa0e8e-de25-49ac-8111-980e966312e4",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 0.9058489985764027,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 46.34748400002718,
+        "responseEndMs": 46.770427998155355,
+        "parseMs": 1.5743109993636608,
+        "serverMs": 42.360279,
+        "totalMs": 48.68531899899244,
+        "responseBytes": 101112
+      },
+      "key": "29703963d32a273cb9abe7cf609130579b593e49a040f3a0dba230601ae97d60"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.749423557Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:19.748Z",
+        "id": "c6931a0c-eed1-4fe2-b94d-c98aca3b6212",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 3.172697000205517,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 33.567373998463154,
+        "responseEndMs": 34.89929199963808,
+        "parseMs": 5.917955998331308,
+        "serverMs": 21.07508,
+        "totalMs": 41.55042099952698,
+        "responseBytes": 361899
+      },
+      "key": "eea358ff86713341b6af13bce99ab4094fafefc50c8083d2e44a140b5be13a1a"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.822600344Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:19.822Z",
+        "id": "eca98fb0-b418-4242-bf0e-d66e223af64c",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 155,
+        "computationMs": 551,
+        "lifetimeMs": 555,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "46bdecdc81768a48a3d77c259e3e35ceba86a48523c4c6c32e4d1be18eb24eb3"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:19.836867932Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:19.836Z",
+        "recorded": true
+      },
+      "key": "e17085f3586764c3f381bb0008d9bc29bd545920dd666a2a471ec19fb28089c9"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:19.979410641Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:19.978Z",
+        "id": "da54da4c-58ce-4a07-a526-7738cd25ea40",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "d966e97225f90730394c174aec007a71c92fe9cb1f76ed1051fd96f78ec22f43"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:20.390060332Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:20.389Z",
+        "id": "8a290bad-6613-4012-8582-2ff5ea930e99",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 1.5924100019037724,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 30.63314500078559,
+        "responseEndMs": 31.083956003189087,
+        "parseMs": 1.3361889980733395,
+        "serverMs": 26.064555,
+        "totalMs": 32.81068600341678,
+        "responseBytes": 72094
+      },
+      "key": "d6ce2d08ea28b3819de20dd7e8cf3f681533f35595b8986fbb64a3f280d68485"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:20.415161780Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:20.414Z",
+        "id": "5879651b-da8c-4c80-80ed-b9f504a27ee5",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 1.6430060006678104,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 18.504642002284527,
+        "responseEndMs": 19.14825800061226,
+        "parseMs": 3.2947460003197193,
+        "serverMs": 10.807642,
+        "totalMs": 23.035796999931335,
+        "responseBytes": 208561
+      },
+      "key": "38808d16ac65e8cfba0bf48d3b22417dffeac68027d2e0eb5d2fc78e2354d680"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:20.477538639Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:20.477Z",
+        "id": "da54da4c-58ce-4a07-a526-7738cd25ea40",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 498,
+        "computationMs": 496,
+        "lifetimeMs": 499,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "79dd65bcc61ff1b40545e7af4837280bae37e2c3e85dee6c1c389e8ce4ffc1c4"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "a",
+        "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+        "dockerAt": "2026-10-13T07:31:20.490497640Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:20.490Z",
+        "recorded": true
+      },
+      "key": "c863a1f1a9eb4d7134d081bc5f98973391c45bcc570f78711bd34e9e9796938b"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.150548807Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:30.150Z",
+        "id": "348e8bfe-4c87-4346-8aab-2ea8e43b66c9",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "accepted"
+      },
+      "key": "e7703f8d6ea349ad6dd7577fce63455758395faba3d1cbc7a817d6a94cd79264"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.251036498Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:30.250Z",
+        "id": "fae8ceef-1790-48b2-913e-a5dd39b91824",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": false,
+        "socketMs": 2.187832999974489,
+        "dnsMs": null,
+        "connectMs": 3.615047000348568,
+        "secureConnectMs": null,
+        "headersMs": 9.110865000635386,
+        "responseEndMs": 9.524430997669697,
+        "parseMs": 0.3389139994978905,
+        "serverMs": 1.6424429999999999,
+        "totalMs": 10.492670997977257,
+        "responseBytes": 26587
+      },
+      "key": "34bdd8a28618ed5f05a14b8b518f755585bfcf29f1680eec552e3964c069ead8"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.633487982Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:30.632Z",
+        "id": "f2746766-c85d-44be-ad5e-fdb46bd04d41",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 1.668920997530222,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 46.38953499868512,
+        "responseEndMs": 46.85479899868369,
+        "parseMs": 1.650203000754118,
+        "serverMs": 40.5704,
+        "totalMs": 48.883447997272015,
+        "responseBytes": 113940
+      },
+      "key": "9b2de42e5afffe5e5708779396bb10cadf70821bf3a66c741a94ce5c19fb83d1"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.671658198Z"
+      },
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-13T07:31:30.671Z",
+        "id": "76b77f5b-3278-41cc-ba6b-16a71bd05ac8",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 1.8074179999530315,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 31.072566997259855,
+        "responseEndMs": 31.761943999677896,
+        "parseMs": 2.3382709994912148,
+        "serverMs": 20.563516,
+        "totalMs": 34.64573199674487,
+        "responseBytes": 265668
+      },
+      "key": "b97f37c227511f6444af8f597fa215e9f531f173ba07acb941c8cf2131d943de"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.736469294Z"
+      },
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-13T07:31:30.736Z",
+        "id": "348e8bfe-4c87-4346-8aab-2ea8e43b66c9",
+        "role": "search",
+        "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+        "phase": "finished",
+        "status": "completed",
+        "firstResultsMs": 586,
+        "computationMs": 583,
+        "lifetimeMs": 587,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      },
+      "key": "50158c3873667ea5c4804c4813373168242406b9998e53afddcdc0f5660b3eb5"
+    },
+    {
+      "type": "telemetry",
+      "source": {
+        "role": "b",
+        "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+        "dockerAt": "2026-10-13T07:31:30.753608512Z"
+      },
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-13T07:31:30.753Z",
+        "recorded": true
+      },
+      "key": "4f07ad1e284dacf33beebbbfb9d77b5fe1b25697ef30352e42b1f1891affbc23"
+    }
+  ]
+}

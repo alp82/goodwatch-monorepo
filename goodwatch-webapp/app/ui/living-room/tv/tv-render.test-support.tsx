@@ -125,6 +125,7 @@ const roomTv: RoomTv = {
 	activeService: null,
 	serviceName: (key) => key,
 	press: () => {},
+	point: () => {},
 }
 const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 	renderToStaticMarkup(
@@ -184,10 +185,11 @@ console.log(
 			CANVAS.desktop,
 			stateOf(HOME, { menuOpen: true }),
 		),
+		// Discover, the Explorer and Taste are built; search is not yet.
 		notBuilt: screenHtml(
 			guest,
 			CANVAS.desktop,
-			stateOf({ name: "explorer", island: null }),
+			stateOf({ name: "search", query: "heist" }),
 		),
 		booting: screenHtml(
 			guest,
@@ -207,7 +209,7 @@ console.log(
 			homeGuest: tvItems(HOME, guestCtx),
 			homeMember: tvItems(HOME, memberCtx),
 			about: tvItems(ABOUT, guestCtx),
-			explorer: tvItems({ name: "explorer", island: null }, guestCtx),
+			notBuilt: tvItems({ name: "search", query: "heist" }, guestCtx),
 			menuGuest: menuItems(guestCtx),
 			menuMember: menuItems(memberCtx),
 		},

@@ -18,6 +18,8 @@ import {
 import type { TvCanvas } from "./room-tv"
 import {
 	AboutCode,
+	DiscoverCode,
+	ExplorerCode,
 	MenuCode,
 	QuizCode,
 	RateCode,
@@ -26,6 +28,7 @@ import {
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
+import type { TvExplorerView } from "./tv-explorer"
 import type { TvAppTile } from "./tv-home"
 import {
 	type TvContext,
@@ -37,18 +40,24 @@ import {
 import type { TvTasteScreens } from "./tv-taste"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
+import type { TvDiscoverReport } from "./use-tv-discover"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
 export {
+	DiscoverCode,
+	DiscoverData,
 	QuizCode,
 	RateCode,
 	TasteCode,
 	TasteData,
+	TitleCode,
 	TitleData,
 	TonightCode,
 	loadFirstScreens,
 } from "./screen-code"
+// The mini Explorer (slice 7).
+export { ExplorerData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -75,9 +84,22 @@ export type TvScreenProps = {
 	toast: string | null
 	/** Tonight's picks and the title on the title screen. */
 	titles?: TvTitleScreens
+	/** Mini Discover: a picture per option, and the titles of the choice on screen. */
+	discover?: TvDiscoverScreens
+	/** The mini Explorer's map and island (slice 7). Null until its data component has reported. */
+	explorer?: TvExplorerView | null
 	/** The person's taste and the quiz, on Taste, a side's screen and the quiz. */
 	taste?: TvTasteScreens
 }
+
+/** What mini Discover draws from. */
+export type TvDiscoverScreens = {
+	/** A backdrop's path per option, by its item (`theme:crime`). Empty until the pool is there. */
+	art: Readonly<Record<string, string>>
+	/** The titles of the choice on screen; null until their data component has reported. */
+	list: TvDiscoverReport | null
+}
+const NO_ART: TvDiscoverScreens["art"] = {}
 
 export function TvScreen({
 	tv,
@@ -86,6 +108,8 @@ export function TvScreen({
 	apps,
 	toast,
 	titles,
+	discover,
+	explorer,
 	taste,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
@@ -100,7 +124,12 @@ export function TvScreen({
 		[canvas, focused, dispatch],
 	)
 	// A screen arrives with a short zoom out of the picture. The screen the TV starts on is there at once.
-	const key = writeTvParams(screen).toString()
+	// Discover's tabs are one screen: a change of tab is no arrival.
+	const key = writeTvParams(
+		screen.name === "discover" && !screen.choice
+			? { ...screen, tab: "moods" }
+			: screen,
+	).toString()
 	const arrived = useRef({ first: key, moved: false })
 	if (key !== arrived.current.first) arrived.current.moved = true
 
@@ -134,6 +163,8 @@ export function TvScreen({
 								items={items}
 								apps={apps}
 								titles={titles}
+								discover={discover}
+								explorer={explorer}
 								taste={taste}
 							/>
 						</Layer>
@@ -183,12 +214,16 @@ function ScreenOf({
 	items,
 	apps,
 	titles,
+	discover,
+	explorer,
 	taste,
 }: {
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
 	titles?: TvTitleScreens
+	discover?: TvDiscoverScreens
+	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
 }): ReactNode {
 	const first = <Bare items={items} />
@@ -213,6 +248,23 @@ function ScreenOf({
 			const Code = screen.name === "title" ? TitleCode : RateCode
 			return <Code.Screen items={items} title={titles.title} first={first} />
 		}
+		case "discover":
+			return (
+				<DiscoverCode.Screen
+					items={items}
+					screen={screen}
+					art={discover?.art ?? NO_ART}
+					list={discover?.list ?? null}
+					first={first}
+				/>
+			)
+		// The mini Explorer (slice 7): the map without an island, an island's titles with one.
+		case "explorer":
+			return explorer ? (
+				<ExplorerCode.Screen items={items} view={explorer} first={first} />
+			) : (
+				first
+			)
 		// Slice 8: Taste, a side's screen and the quiz, once their data is there.
 		case "taste":
 			if (!taste) return first
@@ -227,7 +279,7 @@ function ScreenOf({
 		case "quiz":
 			if (!taste) return first
 			return <QuizCode.Screen items={items} quiz={taste.quiz} first={first} />
-		// SEAM (slices 6 to 10): Discover, Explorer, My shows and search each take their entry here.
+		// SEAM (slices 9 and 10): My shows and search each take their entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}
