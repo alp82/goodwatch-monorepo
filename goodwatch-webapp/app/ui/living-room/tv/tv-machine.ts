@@ -159,7 +159,7 @@ export const EMPTY_CONTEXT: TvContext = {
 export type TvEffect =
 	/** The Expand key: grow the picture into the page at `href`. */
 	| { type: "expand"; href: string }
-	/** "Watch on <service>": open the service. */
+	/** "Watch on <service>": open the title's page at its streaming block (`watchHref`), which it highlights. */
 	| { type: "watch"; title: string }
 	/** Toggle Want to See. */
 	| { type: "want-to-see"; title: string }
@@ -399,6 +399,25 @@ export function destinationHref(
 		default:
 			return null
 	}
+}
+
+/** The id of the title page's block that says where a title streams (ui/details/hero/WhereToWatch.tsx). */
+export const STREAMING_BLOCK = "streaming"
+
+/**
+ * Where "Watch on <service>" takes a title: the page the title's Expand key opens, at its streaming block. On
+ * GoodWatch, not the service. The fragment is all that travels in the address; the wish to highlight the block
+ * goes in the history entry's state, so a shared link scrolls and does not glow.
+ */
+export function watchHref(
+	title: string,
+	ctx: Pick<TvContext, "titleName">,
+): string | null {
+	const href = destinationHref(
+		{ name: "title", title },
+		{ ...EMPTY_CONTEXT, titleName: ctx.titleName },
+	)
+	return href && `${href}#${STREAMING_BLOCK}`
 }
 
 // ---------------------------------------------------------------------------------------------------------

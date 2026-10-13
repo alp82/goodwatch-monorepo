@@ -207,3 +207,41 @@ test("a member with nothing to pick from gets the pool's best, as a guest does",
 		["movie-1", "movie-2", "movie-3"],
 	)
 })
+
+test("a guest's own Tonight's pick leads the pool's best, and is not named twice", () => {
+	const keyed = (media_type: "movie" | "show", tmdb_id: number) => ({
+		...card(media_type, tmdb_id),
+		key: tmdb_id,
+	})
+	const best: TvPool = {
+		suggestions: [keyed("movie", 1), keyed("show", 2), keyed("movie", 3)],
+	}
+	const wished = keyed("movie", 9)
+	assert.deepEqual(tonightPicks(guest, best, wished), [
+		{ card: wished, href: null, wished: true },
+		{ card: best.suggestions[0], href: null },
+		{ card: best.suggestions[1], href: null },
+	])
+	// The pick is among the pool's best: once, first.
+	assert.deepEqual(
+		tonightPicks(guest, best, best.suggestions[1]).map((pick) => pick.card.key),
+		[2, 1, 3],
+	)
+	// It is there before the pool is, and the machine's Tonight and the tile's picture follow it.
+	assert.deepEqual(tonightPicks(guest, null, wished), [
+		{ card: wished, href: null, wished: true },
+	])
+	assert.deepEqual(tvContextOf(guest, best, wished).tonight[0], {
+		title: "movie-9",
+		href: null,
+	})
+	assert.deepEqual(homeApps(guest, best, false, wished)[0].art, {
+		kind: "backdrop",
+		path: "/backdrop-9.jpg",
+	})
+})
+
+test("a member's Tonight is their own: a pick from a browser's Wishlist changes nothing", () => {
+	const wished = { ...card("movie", 9), key: 9 }
+	assert.deepEqual(tonightPicks(member, pool, wished), member.tonight)
+})

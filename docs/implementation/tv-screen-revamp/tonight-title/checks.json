@@ -1,0 +1,22 @@
+{
+	"passed": 261,
+	"failed": [],
+	"numbers": {
+		"guest 1920x1080: the title screen's keys, px tall": 78.7,
+		"guest 390x844: the title screen's keys, px tall": 37.8,
+		"member 1920x1080: the title screen's keys, px tall": 78.5,
+		"member 390x844: the title screen's keys, px tall": 37.6,
+		"the Watch key 1920x1080: samples taken during the transition from the TV": 3,
+		"the Watch key 1920x1080: the block's top on arrival, px": 173,
+		"the Watch key 1920x1080: the pulse lasted, ms": 4006,
+		"the Watch key 390x844: samples taken during the transition from the TV": 6,
+		"the Watch key 390x844: the block's top on arrival, px": 223,
+		"the Watch key 390x844: the pulse lasted, ms": 3934,
+		"reduced motion: the outline stayed, ms": 4024,
+		"a typed address 1920x1080: the block's top, px": 173,
+		"a typed address 390x844: the block's top, px": 223,
+		"a title of the pool that streams nowhere in the United States": "Spider-Man: Brand New Day",
+		"the title page's HTML, bytes (dev server)": 291281,
+		"the streaming block's opening tag, bytes": 215
+	}
+}
