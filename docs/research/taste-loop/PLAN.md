@@ -75,6 +75,13 @@ needs members. T5 runs offline with model readers, then with members.
 
 **T1. Forward rating prediction.** Feeds D2 and the few-ratings part of D1.
 
+> Amended October 13, 2026 after review (Sol 6.1, Fable). As implemented, a block may start anywhere two ratings are
+> 2 seconds or more apart, not only at sitting boundaries; with sitting boundaries only 18 members other than the
+> owner would qualify instead of 72. So for other members 93% of targets are typed in the same sitting as the
+> history, a median of 6 seconds later. T1 therefore measures **learning from the ratings a member has entered so
+> far in a sitting**, which is the first-sitting case. It is weak evidence about ratings of titles watched later:
+> that stratum has 16 members and 276 targets on this pack and is reported apart, never pooled into a claim.
+
 - Per member, sort ratings by write time. Block boundaries at 5, 10, 20, 40, 80, 160, 320, 640 ratings, moved to
   the nearest sitting or bulk boundary. Predict each block from everything the member wrote before it. Bulk writes
   are history, never targets.
