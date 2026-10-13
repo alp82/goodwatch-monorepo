@@ -1,0 +1,86 @@
+{
+  "boundedOnly": true,
+  "continuousAcceptanceCoverageProven": false,
+  "retainedRawSha256": "cf53fc3d88989653b04ef91e8d1e4181a546fbe7e27e26ea6163d8fe58b41705",
+  "schema": "search.collector-window-fence.public.v1",
+  "sites": [
+    {
+      "at": "2026-10-13T01:03:33.054030+00:00",
+      "heartbeatAgeSeconds": {
+        "ingress": 7.43503,
+        "lifecycle": 6.22003
+      },
+      "inspectionExit": 0,
+      "site": "vector1",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "streams": {
+        "ingress": {
+          "bytes": 7604138,
+          "heartbeatCountInBoundedTail": 581,
+          "latestHeartbeatAt": "2026-10-13T01:03:25.619Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "vector1",
+              "imageId": "sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88",
+              "loggingFingerprint": "3e43c9b2d4d3be558ccb5b144ff60191f1e0438e46a5ca6f31c3a45720785c98",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "bytes": 7773324,
+          "heartbeatCountInBoundedTail": 538,
+          "latestHeartbeatAt": "2026-10-13T01:03:26.834Z",
+          "problemsInBoundedTail": 0,
+          "roles": [
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+              "role": "a",
+              "running": true
+            },
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+              "role": "b",
+              "running": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-10-13T01:03:32.103688+00:00",
+      "heartbeatAgeSeconds": {
+        "ingress": 9.688688
+      },
+      "inspectionExit": 0,
+      "site": "abio",
+      "stderrBytes": 222,
+      "stderrSha256": "048e2ba89ae430962e02f5341cf60c694fb7e131cb417790075a56b32ca09992",
+      "streams": {
+        "ingress": {
+          "bytes": 7501675,
+          "heartbeatCountInBoundedTail": 588,
+          "latestHeartbeatAt": "2026-10-13T01:03:22.415Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "abio",
+              "imageId": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+              "loggingFingerprint": "e52804ea3c6f414e807163014d0500de2835abd99125c38c4a2832b02e6b8d69",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "present": false
+        }
+      }
+    }
+  ]
+}
