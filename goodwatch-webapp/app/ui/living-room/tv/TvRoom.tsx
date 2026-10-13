@@ -11,10 +11,11 @@
 // nothing here animates but one-shot opacity and shadow changes with the power.
 //
 // Not here yet, on purpose:
-// - The first paint (slice 12). The scene is laid out once it has measured itself, so the server's HTML holds
-//   the room's block without its parts. tv.css gets the mirror of `layoutRoom` and `layoutPhoneRoom` then.
+// - The first paint (slice 12). The scene is laid out once it has measured itself. Until then the room's block
+//   holds the TV's screen alone, in both editions and not painted, so that the HTML has the home's H1 for every
+//   window (tv.css, `tvr-first`). tv.css gets the mirror of `layoutRoom` and `layoutPhoneRoom` then.
 // - Pointing (slice 4). The Remote rests; `remoteEl` and the `data-remote*` attributes are what it will move.
-// - The keyboard (slice 3), which needs the machine.
+// The keyboard is the TV's (use-tv.ts), which leaves the keys alone while the room is `inert`.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { useHasDock } from "~/ui/navigation"
@@ -31,6 +32,7 @@ import { LandscapeRoom, PhoneRoom } from "./PhoneRoom"
 import { ROOM_ART } from "./room-art"
 import {
 	PHONE_BELOW,
+	PHONE_TV_CANVAS,
 	type PhoneRemoteForm,
 	REMOTE_H,
 	REMOTE_REST_TRANSFORM,
@@ -38,6 +40,7 @@ import {
 	REMOTE_WRIST,
 	ROOM_PHOTO,
 	type RemotePlace,
+	TV_CANVAS,
 	layoutPhoneLandscape,
 	layoutPhoneRoom,
 	layoutRoom,
@@ -66,6 +69,12 @@ export type TvRoomProps = {
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */
 	want?: { place?: RemotePlace; form?: PhoneRemoteForm }
 }
+
+/** The canvases the screen is drawn on before the window is measured: one per edition, at their full size. */
+const FIRST_CANVASES: TvCanvas[] = [
+	{ edition: "desktop", ...TV_CANVAS, scale: 1, first: true },
+	{ edition: "phone", ...PHONE_TV_CANVAS, scale: 1, first: true },
+]
 
 /** The desktop Remote speaks the old TV's actions (ui/living-room/tv-flow.ts) until the old TV is gone. */
 function keyOf(action: TvAction): RoomKey | null {
@@ -221,6 +230,19 @@ export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
 						/>
 					</div>
 				)}
+				{/* Before the window is measured: the screen in both editions, so the HTML is the same for every window. */}
+				{!L &&
+					renderScreen &&
+					FIRST_CANVASES.map((first) => (
+						<div
+							key={first.edition}
+							data-tv-canvas={first.edition}
+							className={`tvr-first tvr-first-${first.edition}`}
+							style={{ width: first.w, height: first.h }}
+						>
+							{on && renderScreen(first)}
+						</div>
+					))}
 				{P && <PhoneRoom L={P} on={on} />}
 				{S && <LandscapeRoom L={S} on={on} />}
 

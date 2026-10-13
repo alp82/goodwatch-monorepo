@@ -52,8 +52,9 @@ export async function getTonightParts(
 				services: ctx.services,
 				taste,
 			},
-			// Only the first Continue row's Next episode is shown, and no waiting show.
-			{ episodeLists: 1, now, upcoming: false },
+			// The first three Continue rows' Next episodes are shown (the new TV's My shows; home's Continue door shows
+			// the first), and no waiting show.
+			{ episodeLists: 3, now, upcoming: false },
 		),
 		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
 		// A door led by what landed is an addition: without it the doors are in their own order.
