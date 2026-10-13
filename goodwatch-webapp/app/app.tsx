@@ -12,6 +12,7 @@ import {
 	SearchDialog,
 	SiteHeader,
 } from "~/ui/navigation"
+import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
@@ -90,6 +91,8 @@ function App() {
 			<Footer />
 			{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
 			{tracking && <WatchLogHost />}
+			{/* The way back to the TV for a person who left the living room through it: nothing renders before that. */}
+			<TvWayBackHost />
 			{navigation ? (
 				<>
 					<MobileDock />

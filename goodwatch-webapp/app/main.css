@@ -84,39 +84,182 @@
 	}
 }
 
-/* Leaving the living room through its TV (#232, app/ui/living-room/tv-transition.ts). Out: the new page grows
-   from the TV's box to the window. In (browser Back): the page shrinks into the TV while the room waits under it. */
+/* Leaving the living room through its TV (#232, app/ui/living-room/tv-transition.ts). Out: the room zooms into
+   the TV until its picture is the window, the next page already in the picture, and four brackets ride from the
+   picture's edge to the window's. In (browser Back, the TV button, Escape): the same backwards. The script hands
+   over the TV's box as --tv-* properties; only transform, clip-path and opacity animate, once. */
 html[data-tv-transition]::view-transition-old(root),
 html[data-tv-transition]::view-transition-new(root) {
 	animation: none;
 	mix-blend-mode: normal;
+	transform-origin: 0 0;
 }
 
+html[data-tv-transition="out"]::view-transition-old(root) {
+	animation: living-room-tv-room-out 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* The page fades into the picture during the first quarter second, over the TV's own screen. */
 html[data-tv-transition="out"]::view-transition-new(root) {
-	animation: living-room-tv-grow 0.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+	animation:
+		living-room-tv-page-out 0.9s cubic-bezier(0.65, 0, 0.35, 1) both,
+		living-room-tv-fade-in 0.26s linear both;
+}
+
+html[data-tv-transition="in"]::view-transition-new(root) {
+	animation: living-room-tv-room-in 0.6s cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 
 html[data-tv-transition="in"]::view-transition-old(root) {
 	z-index: 1;
-	animation: living-room-tv-shrink 0.45s cubic-bezier(0.65, 0, 0.35, 1) both;
+	animation:
+		living-room-tv-page-in 0.6s cubic-bezier(0.65, 0, 0.35, 1) both,
+		living-room-tv-fade-out 0.2s linear 0.4s both;
 }
 
-@keyframes living-room-tv-grow {
-	from {
-		clip-path: var(--tv-inset);
-	}
+@keyframes living-room-tv-room-out {
 	to {
-		clip-path: inset(0 0 0 0 round 0);
+		transform: var(--tv-room);
 	}
 }
 
-@keyframes living-room-tv-shrink {
+@keyframes living-room-tv-room-in {
 	from {
-		clip-path: inset(0 0 0 0 round 0);
+		transform: var(--tv-room);
+	}
+}
+
+@keyframes living-room-tv-page-out {
+	from {
+		transform: var(--tv-page);
+		clip-path: var(--tv-page-clip);
 	}
 	to {
-		clip-path: var(--tv-inset);
+		transform: none;
+		clip-path: inset(0 0 0 0);
 	}
+}
+
+@keyframes living-room-tv-page-in {
+	from {
+		transform: none;
+		clip-path: inset(0 0 0 0);
+	}
+	to {
+		transform: var(--tv-page);
+		clip-path: var(--tv-page-clip);
+	}
+}
+
+@keyframes living-room-tv-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes living-room-tv-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+/* The site's header is the same on both sides: with a name of its own it stands still while the room moves. */
+html[data-tv-transition] [data-site-header] {
+	view-transition-name: living-room-tv-header;
+}
+
+html[data-tv-transition]::view-transition-group(living-room-tv-header),
+html[data-tv-transition]::view-transition-new(living-room-tv-header) {
+	animation: none;
+}
+
+html[data-tv-transition]::view-transition-old(living-room-tv-header) {
+	display: none;
+}
+
+/* The brackets: four corners (0 to 3 from the top left), each an element of its own with its own name, so the
+   transition moves them and stretches none. They stand 14 px inside the window's edge, and 14 px inside the
+   picture's while the room is in the document. */
+[data-tv-bracket] {
+	position: fixed;
+	z-index: 1100;
+	inset: 14px;
+	box-sizing: border-box;
+	width: var(--tv-arm, 0);
+	height: var(--tv-arm, 0);
+	border: 0 solid #fbbf24;
+	pointer-events: none;
+}
+
+[data-tv-bracket]:is([data-tv-bracket="0"], [data-tv-bracket="1"]) {
+	bottom: auto;
+	border-top-width: 3px;
+}
+
+[data-tv-bracket]:is([data-tv-bracket="2"], [data-tv-bracket="3"]) {
+	top: auto;
+	border-bottom-width: 3px;
+}
+
+[data-tv-bracket]:is([data-tv-bracket="0"], [data-tv-bracket="2"]) {
+	right: auto;
+	border-left-width: 3px;
+}
+
+[data-tv-bracket]:is([data-tv-bracket="1"], [data-tv-bracket="3"]) {
+	left: auto;
+	border-right-width: 3px;
+}
+
+html:has(.living-room) [data-tv-bracket] {
+	inset: calc(var(--tv-t) + 14px) auto auto calc(var(--tv-l) + 14px);
+}
+
+html:has(.living-room) [data-tv-bracket]:is([data-tv-bracket="2"], [data-tv-bracket="3"]) {
+	top: calc(var(--tv-t) + var(--tv-h) - 14px - var(--tv-arm));
+}
+
+html:has(.living-room) [data-tv-bracket]:is([data-tv-bracket="1"], [data-tv-bracket="3"]) {
+	left: calc(var(--tv-l) + var(--tv-w) - 14px - var(--tv-arm));
+}
+
+/* While the page is on its way they breathe: the press has been taken. Escape calls the page off. */
+html[data-tv-transition="out"]:has(.living-room) [data-tv-bracket] {
+	animation: living-room-tv-wait 0.7s ease-in-out 0.3s infinite alternate;
+}
+
+@keyframes living-room-tv-wait {
+	to {
+		opacity: 0.35;
+	}
+}
+
+html[data-tv-transition="out"]::view-transition-group(*) {
+	animation-duration: 0.9s;
+	animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html[data-tv-transition="in"]::view-transition-group(*) {
+	animation-duration: 0.6s;
+	animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* The TV button (app/ui/living-room/TvWayBack.tsx) stays out of sight until the way out has ended: the brackets
+   arrive at it, and then it is there. On the desktop its tab slides away under the header while the page scrolls
+   down. */
+.tv-back {
+	transition: opacity 0.3s;
+}
+
+html[data-tv-transition="out"] .tv-back {
+	opacity: 0;
+}
+
+.tv-back-bar {
+	z-index: 999;
+	transition:
+		translate 0.2s,
+		opacity 0.2s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -124,6 +267,10 @@ html[data-tv-transition="in"]::view-transition-old(root) {
 	::view-transition-old(*),
 	::view-transition-new(*) {
 		animation: none !important;
+	}
+
+	.tv-back-bar {
+		transition: none;
 	}
 }
 
