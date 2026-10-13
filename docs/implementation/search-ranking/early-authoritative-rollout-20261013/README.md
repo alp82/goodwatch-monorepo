@@ -1,0 +1,15 @@
+# Earlier authoritative progress rollout
+
+PR #521 was merged as `44b46dc663b92ab67ce66960cbc9bb450ad25bb7` and rolled out to both page deployments and both search roles. The role-state inspection at 00:57:46 UTC on 2026-10-13 observed both search roles healthy and running the merged source and identical image, with zero restarts. Each rolling deployment reported models loaded and healthy after 22 seconds.
+
+The two page checks each passed 68 checks with zero failures and warnings. Search roles each passed 31 checks without failures or warnings; the final public check passed 70 with zero failures and warnings. The intermediate page/public check had two aggregate warnings before the search-role rollout; those are retained in the receipt and are not represented as final failures. Skipped checks remain explicit.
+
+The required landing-page budget command exited 0. All six surfaces (home, movie, show, person, discover and share-list) passed across three runs each, producing 18 reports. `final-checks.json` is the exact root-sanitized summary with full measured numbers and a SHA-256 binding to the retained complete result. This is the page budget, not a search first-usable or full-completion latency measurement. Private share URLs and raw budget logs remain outside Git.
+
+The fresh 01:03 UTC collector fence observed ingress heartbeats on both sites and lifecycle heartbeats on the search-role site, each less than 20 seconds old, with zero problems in the inspected tails. Search-role source identity and approved ingress-logging fingerprints are retained. This bounded inspection does not prove continuous acceptance coverage. The other site has no lifecycle stream, so its `present: false` remains explicit.
+
+A candidate seven-day window starts at `2026-10-13T01:03:33.224Z` and ends at `2026-10-20T01:03:33.224Z`. Its status is **collecting-unverified**. Acceptance requires nonempty eligible traffic, first-usable p95 strictly below 1,500 ms, zero required errors, and a closed-window drain and complete coverage review. Full completion must be reported separately; no full-completion threshold is inferred from the first-usable requirement. Further remedies or failing checks invalidate/reset this candidate window.
+
+No ordinary search, history write, Jev call or additional diagnostic probe was issued by this evidence task. The previous 18 diagnostic approvals are consumed. The proposed fresh six-query diagnostic cohort has not executed and requires new authorization. No 1.5-second target or seven-day acceptance is claimed. Existing-tab limitations from the feature review still apply. Tracked in #100 and #407; #406 stays closed.
+
+`rollout-receipt.json` contains closed numeric/hash/source summaries extracted from retained local logs. `collector-window-fence.json` publishes the fixed-field fence with site labels and the exact original receipt hash. SHA-256 bindings identify retained raw evidence without publishing raw logs or private URLs. No application code or host state was changed by this documentation step.

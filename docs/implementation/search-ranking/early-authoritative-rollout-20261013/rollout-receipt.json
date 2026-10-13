@@ -1,0 +1,574 @@
+{
+  "acceptanceMetrics": {
+    "firstUsableP95StrictlyBelowMs": 1500,
+    "fullCompletionLatencyTargetMs": null,
+    "fullCompletionReportedSeparately": true,
+    "productionAcceptance": false
+  },
+  "budget": {
+    "exitCode": 0,
+    "fullResultSha256": "63c5b8296dbc1bc5a1a2bc3b19858276bf00efc554b9e3b8eabe53e2b9ec9230",
+    "pass": true,
+    "runsPerSurface": 3,
+    "surfaces": {
+      "discover": {
+        "measured": {
+          "benchmark_index": 1251.5,
+          "blocking_requests": 1,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 1,
+          "host_requests": 39,
+          "html_bytes": 28574,
+          "image_bytes": 367290,
+          "image_count": 16,
+          "lcp_ms": 5897.558000000001,
+          "observed_fcp_ms": 510,
+          "origin_requests": 3,
+          "score": 65,
+          "script_bytes": 336025,
+          "script_count": 31,
+          "static_requests": 36,
+          "tbt_ms": 82.5,
+          "third_party_origins": 1,
+          "total_bytes": 802429
+        },
+        "pass": true,
+        "runs": 3
+      },
+      "home": {
+        "measured": {
+          "benchmark_index": 1194,
+          "blocking_requests": 2,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 1,
+          "host_requests": 28,
+          "html_bytes": 18524,
+          "image_bytes": 320224,
+          "image_count": 28,
+          "lcp_ms": 5234.746,
+          "observed_fcp_ms": 662,
+          "origin_requests": 3,
+          "score": 71,
+          "script_bytes": 254420,
+          "script_count": 16,
+          "static_requests": 25,
+          "tbt_ms": 55.5,
+          "third_party_origins": 1,
+          "total_bytes": 683095
+        },
+        "pass": true,
+        "runs": 3
+      },
+      "movie": {
+        "measured": {
+          "benchmark_index": 1263.5,
+          "blocking_requests": 1,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 1,
+          "host_requests": 37,
+          "html_bytes": 53983,
+          "image_bytes": 75128,
+          "image_count": 14,
+          "lcp_ms": 5296.024250000001,
+          "observed_fcp_ms": 410,
+          "origin_requests": 3,
+          "score": 70,
+          "script_bytes": 276027,
+          "script_count": 22,
+          "static_requests": 34,
+          "tbt_ms": 44,
+          "third_party_origins": 1,
+          "total_bytes": 482733
+        },
+        "pass": true,
+        "runs": 3
+      },
+      "person": {
+        "measured": {
+          "benchmark_index": 1200,
+          "blocking_requests": 1,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 1,
+          "host_requests": 22,
+          "html_bytes": 32219,
+          "image_bytes": 179501,
+          "image_count": 17,
+          "lcp_ms": 4137.349,
+          "observed_fcp_ms": 582,
+          "origin_requests": 2,
+          "score": 78,
+          "script_bytes": 192933,
+          "script_count": 14,
+          "static_requests": 20,
+          "tbt_ms": 90,
+          "third_party_origins": 1,
+          "total_bytes": 475193
+        },
+        "pass": true,
+        "runs": 3
+      },
+      "share_list": {
+        "measured": {
+          "benchmark_index": 1222,
+          "blocking_requests": 1,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 2,
+          "host_requests": 22,
+          "html_bytes": 21725,
+          "image_bytes": 174609,
+          "image_count": 28,
+          "lcp_ms": 4348.496999999999,
+          "observed_fcp_ms": 541,
+          "origin_requests": 3,
+          "score": 77,
+          "script_bytes": 201620,
+          "script_count": 11,
+          "static_requests": 19,
+          "tbt_ms": 27.499999999999545,
+          "third_party_origins": 1,
+          "total_bytes": 479652
+        },
+        "pass": true,
+        "runs": 3
+      },
+      "show": {
+        "measured": {
+          "benchmark_index": 1210,
+          "blocking_requests": 1,
+          "cls": 0,
+          "cpu_slowdown": 2.7,
+          "font_requests": 1,
+          "host_requests": 36,
+          "html_bytes": 53031,
+          "image_bytes": 122132,
+          "image_count": 11,
+          "lcp_ms": 5384.628999999999,
+          "observed_fcp_ms": 459,
+          "origin_requests": 3,
+          "score": 69,
+          "script_bytes": 276349,
+          "script_count": 22,
+          "static_requests": 33,
+          "tbt_ms": 65.5,
+          "third_party_origins": 1,
+          "total_bytes": 527246
+        },
+        "pass": true,
+        "runs": 3
+      }
+    }
+  },
+  "candidateWindow": {
+    "collectorFenceSha256": "cf53fc3d88989653b04ef91e8d1e4181a546fbe7e27e26ea6163d8fe58b41705",
+    "end": "2026-10-20T01:03:33.224Z",
+    "invalidateOnLaterRemedyOrFailedChecks": true,
+    "requiredErrors": 0,
+    "requiredFirstUsableP95StrictlyBelowMs": 1500,
+    "requiredNonemptyTraffic": true,
+    "requiresClosedWindowAndDrainAndFullCoverageReview": true,
+    "start": "2026-10-13T01:03:33.224Z",
+    "status": "collecting-unverified"
+  },
+  "collectors": [
+    {
+      "at": "2026-10-13T00:56:01.514981+00:00",
+      "inspectionExit": 0,
+      "site": "vector1",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "streams": {
+        "ingress": {
+          "bytes": 7583550,
+          "heartbeatCountInBoundedTail": 581,
+          "latestHeartbeatAt": "2026-10-13T00:55:55.603Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "vector1",
+              "imageId": "sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88",
+              "loggingFingerprint": "3e43c9b2d4d3be558ccb5b144ff60191f1e0438e46a5ca6f31c3a45720785c98",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "bytes": 7751544,
+          "heartbeatCountInBoundedTail": 538,
+          "latestHeartbeatAt": "2026-10-13T00:55:56.670Z",
+          "problemsInBoundedTail": 0,
+          "roles": [
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+              "role": "a",
+              "running": true
+            },
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+              "role": "b",
+              "running": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-10-13T00:56:00.425588+00:00",
+      "inspectionExit": 0,
+      "site": "abio",
+      "stderrBytes": 222,
+      "stderrSha256": "048e2ba89ae430962e02f5341cf60c694fb7e131cb417790075a56b32ca09992",
+      "streams": {
+        "ingress": {
+          "bytes": 7481360,
+          "heartbeatCountInBoundedTail": 589,
+          "latestHeartbeatAt": "2026-10-13T00:55:52.408Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "abio",
+              "imageId": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+              "loggingFingerprint": "e52804ea3c6f414e807163014d0500de2835abd99125c38c4a2832b02e6b8d69",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "present": false
+        }
+      }
+    }
+  ],
+  "collectorsWindowFence": [
+    {
+      "at": "2026-10-13T01:03:33.054030+00:00",
+      "heartbeatAgeSeconds": {
+        "ingress": 7.43503,
+        "lifecycle": 6.22003
+      },
+      "inspectionExit": 0,
+      "site": "vector1",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "streams": {
+        "ingress": {
+          "bytes": 7604138,
+          "heartbeatCountInBoundedTail": 581,
+          "latestHeartbeatAt": "2026-10-13T01:03:25.619Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "vector1",
+              "imageId": "sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88",
+              "loggingFingerprint": "3e43c9b2d4d3be558ccb5b144ff60191f1e0438e46a5ca6f31c3a45720785c98",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "bytes": 7773324,
+          "heartbeatCountInBoundedTail": 538,
+          "latestHeartbeatAt": "2026-10-13T01:03:26.834Z",
+          "problemsInBoundedTail": 0,
+          "roles": [
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+              "role": "a",
+              "running": true
+            },
+            {
+              "commit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+              "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+              "role": "b",
+              "running": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-10-13T01:03:32.103688+00:00",
+      "heartbeatAgeSeconds": {
+        "ingress": 9.688688
+      },
+      "inspectionExit": 0,
+      "site": "abio",
+      "stderrBytes": 222,
+      "stderrSha256": "048e2ba89ae430962e02f5341cf60c694fb7e131cb417790075a56b32ca09992",
+      "streams": {
+        "ingress": {
+          "bytes": 7501675,
+          "heartbeatCountInBoundedTail": 588,
+          "latestHeartbeatAt": "2026-10-13T01:03:22.415Z",
+          "problemsInBoundedTail": 0,
+          "sources": [
+            {
+              "accessLoggingReady": true,
+              "host": "abio",
+              "imageId": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+              "loggingFingerprint": "e52804ea3c6f414e807163014d0500de2835abd99125c38c4a2832b02e6b8d69",
+              "running": true
+            }
+          ]
+        },
+        "lifecycle": {
+          "present": false
+        }
+      }
+    }
+  ],
+  "deployedSourceCommit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+  "freshDiagnosticCohort": {
+    "executed": 0,
+    "newAuthorizationRequired": true,
+    "proposedCases": 6
+  },
+  "freshDiagnosticProbes": 0,
+  "implementationPr": 521,
+  "priorDiagnosticApprovalsConsumed": 18,
+  "productionLatencyAccepted": false,
+  "rawArtifactBindings": {
+    "collectors-post-rollout.json": {
+      "bytes": 2468,
+      "publishedRaw": false,
+      "sha256": "bf14cab8ea2c4cd0dc23b06ee7eca92bc4cfae10e682a31a48077cf085c9822e"
+    },
+    "collectors-window-fence.json": {
+      "bytes": 2468,
+      "publishedRaw": false,
+      "sha256": "cf53fc3d88989653b04ef91e8d1e4181a546fbe7e27e26ea6163d8fe58b41705"
+    },
+    "final-checks.json": {
+      "bytes": 5016,
+      "publishedRaw": true,
+      "sha256": "d083fa1a06e4f0983745315f9cd5a02a3d89811bd812991adc6770f5c22036d8"
+    },
+    "final-public-smoke.txt": {
+      "bytes": 12322,
+      "publishedRaw": false,
+      "sha256": "3a5ef909f019063e726c5f64c9337ae6abf8b7993b978862dbba1e69f00dec81"
+    },
+    "page-abio-smoke.txt": {
+      "bytes": 5753,
+      "publishedRaw": false,
+      "sha256": "1cfe8ae819d298ab71a812b572fa3ec961374836df57467133a0f54dd2fb18a5"
+    },
+    "page-public-smoke.txt": {
+      "bytes": 14000,
+      "publishedRaw": false,
+      "sha256": "d502d3a8f993801b81985a70d88ec5b708c1067c9f73f048c306467f95e3abb7"
+    },
+    "page-vector1-smoke.txt": {
+      "bytes": 6871,
+      "publishedRaw": false,
+      "sha256": "8fd10b37b310294213d0b06a0755308ac1231f2472ba24b954eabb3c7391acba"
+    },
+    "role-state.json": {
+      "bytes": 1039,
+      "publishedRaw": false,
+      "sha256": "7681d6c8dda517f7767cfaf1fe284abce445166d4986055b14ba6fc4889e68b1"
+    },
+    "search-a-smoke.txt": {
+      "bytes": 3297,
+      "publishedRaw": false,
+      "sha256": "088a8218f0b01bcd1e3c93a144463d8a07c1540510f3932730615f8c9f9c9374"
+    },
+    "search-b-smoke.txt": {
+      "bytes": 3841,
+      "publishedRaw": false,
+      "sha256": "21f013c097bb3881a7b6458fb887f6a59326dea7db85a46b33dd3283c9126af1"
+    },
+    "search-rolling-deploy.txt": {
+      "bytes": 688,
+      "publishedRaw": false,
+      "sha256": "e5f55a0ee8b794a5b7cf6342fbd0d26a6a472a0316929ee3c4b50da7a8b8c650"
+    }
+  },
+  "roleStateAt": "2026-10-13T00:57:46.635221+00:00",
+  "roles": [
+    {
+      "containerId": "008da17a13a4c9b258a2b40a9c4f4206ac22607e6a3b92f3a1b3b9470ba64198",
+      "health": "healthy",
+      "imageId": "sha256:01b5f683d34d2e86323da3669eb53cd33c94e82b1cadab0df8b3365f6c649ac6",
+      "memoryBytes": 4294967296,
+      "nanoCpus": 4000000000,
+      "restarts": 0,
+      "role": "a",
+      "running": true,
+      "sourceCommit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+      "startedAt": "2026-10-13T00:54:51.340577089Z",
+      "webappRole": "search"
+    },
+    {
+      "containerId": "6515580c36766030a6482c07fe4d5eec61b8d1b659ec272320cf34f42874dc69",
+      "health": "healthy",
+      "imageId": "sha256:01b5f683d34d2e86323da3669eb53cd33c94e82b1cadab0df8b3365f6c649ac6",
+      "memoryBytes": 4294967296,
+      "nanoCpus": 4000000000,
+      "restarts": 0,
+      "role": "b",
+      "running": true,
+      "sourceCommit": "44b46dc663b92ab67ce66960cbc9bb450ad25bb7",
+      "startedAt": "2026-10-13T00:55:22.37185375Z",
+      "webappRole": "search"
+    }
+  ],
+  "rollingReadiness": [
+    {
+      "elapsedSeconds": 22,
+      "healthy": true,
+      "queryModelsLoaded": true,
+      "role": "a"
+    },
+    {
+      "elapsedSeconds": 22,
+      "healthy": true,
+      "queryModelsLoaded": true,
+      "role": "b"
+    }
+  ],
+  "schema": "search.early-authoritative-rollout.v1",
+  "smoke": [
+    {
+      "queryModelsReadyMs": [],
+      "source": "page-abio-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 140,
+          "failed": 0,
+          "passed": 68,
+          "skipped": 8,
+          "status": "passed",
+          "warnings": 0
+        }
+      ]
+    },
+    {
+      "queryModelsReadyMs": [],
+      "source": "page-vector1-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 200,
+          "failed": 0,
+          "passed": 68,
+          "skipped": 8,
+          "status": "passed",
+          "warnings": 0
+        }
+      ]
+    },
+    {
+      "queryModelsReadyMs": [
+        9229,
+        10130
+      ],
+      "source": "page-public-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 13,
+          "failed": 0,
+          "passed": 30,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 1
+        },
+        {
+          "elapsedSeconds": 13,
+          "failed": 0,
+          "passed": 30,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 1
+        },
+        {
+          "elapsedSeconds": 173,
+          "failed": 0,
+          "passed": 70,
+          "skipped": 6,
+          "status": "passed",
+          "warnings": 2
+        }
+      ]
+    },
+    {
+      "queryModelsReadyMs": [
+        10337
+      ],
+      "source": "search-a-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 14,
+          "failed": 0,
+          "passed": 31,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 0
+        }
+      ]
+    },
+    {
+      "queryModelsReadyMs": [
+        9191
+      ],
+      "source": "search-b-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 38,
+          "failed": 0,
+          "passed": 31,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 0
+        }
+      ]
+    },
+    {
+      "queryModelsReadyMs": [
+        10337,
+        9191
+      ],
+      "source": "final-public-smoke.txt",
+      "summaries": [
+        {
+          "elapsedSeconds": 13,
+          "failed": 0,
+          "passed": 31,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 0
+        },
+        {
+          "elapsedSeconds": 13,
+          "failed": 0,
+          "passed": 31,
+          "skipped": 2,
+          "status": "passed",
+          "warnings": 0
+        },
+        {
+          "elapsedSeconds": 36,
+          "failed": 0,
+          "passed": 70,
+          "skipped": 6,
+          "status": "passed",
+          "warnings": 0
+        }
+      ]
+    }
+  ],
+  "tracking": {
+    "100": "open",
+    "406": "closed",
+    "407": "open"
+  }
+}
