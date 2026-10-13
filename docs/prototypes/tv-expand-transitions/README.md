@@ -7,10 +7,10 @@ on seamless transitions and easy navigation back".
 Nine transitions from the approved Cinema TV into the **real** page behind its Expand key, on one route, and the
 ways back from the real page into the same TV screen with the same focus.
 
-**Where it stands (round two, 2026-10-13).** The owner picked a combination: 6 and 5 with 3's frame, and the
-scroll-up bar for the way back. That is built as **8 Lean in**, and it is what the address opens on. See
-[Round two](#round-two-the-owners-picks). My first-round recommendation (3 Frame, corner key) is kept further
-down for the reasoning.
+**Where it stands (round three, 2026-10-14).** The owner chose **9 Lean in, light** ("9 is better"): it is what
+the address opens on and the only transition the controls offer; the other eight stay behind the keys `1` to `8`
+for comparison. The way back is a **TV button**: on the desktop in the scroll-up bar, on the phone in the dock in
+place of its left part. It lives for two pages. See [Round three](#round-three-the-tv-button).
 
 ## Open it
 
@@ -21,7 +21,9 @@ results, `/movie/546554-knives-out` from the title screen. Any other TV screen w
 
 | Key | Button | What it does |
 | --- | --- | --- |
-| `1` to `9` | `1 Today` … `9 Lean in, light` | The transition (`?t=today\|grow\|frame\|morph\|camera\|live\|wipe\|lean\|leanlite`). Without `t`: 8 Lean in |
+| `1` to `9` | `Lean in` | The transition (`?t=today\|grow\|frame\|morph\|camera\|live\|wipe\|lean\|leanlite`). Without `t`: 9, the chosen one, shown as "Lean in". The button names another one only while it is being compared, and leads back to the chosen one |
+| `T` | `TV button: set` | How the TV button is drawn: set, screen, plain (`&button=set\|screen\|plain`). Works on the real page too |
+| `L` | `Dock: left part` (phone) | Where the TV button stands in the phone's dock: in place of the left part, or beside Search as in round two (`&dock=left\|between`). Works on the real page too |
 | `B` | `Back: scroll-up bar` | The way back the real page shows on the desktop: scroll-up bar, corner key, Escape only (`&back=bar\|key\|esc`). Works on the real page too. Without `back`: the bar. On a phone the way back is a key in the dock, whichever is chosen |
 | `W` | `Slow page` | The page's data takes 1.5 s longer (`&slow=1`) |
 | `R` | `Reduced motion` | Reduced motion, whatever the system says (`&calm=1`) |
@@ -56,6 +58,58 @@ The pages are served by this branch's dev server from production Crate and Valke
 - **Not changed:** over the Tailscale address the site's own analytics run (PostHog, the Google tag and Sentry are
   off only on `localhost`). Page views of the real pages from this server are sent like from any dev server viewed
   that way. All captures here used `localhost`.
+
+## Round three: the TV button
+
+The owner, on round two: "Expand: 9 is better." "Make the TV button nicer, should be rectangular too." Two pages
+of life is right. On the phone: "search can lose its word, but i think it would be even better to replace the
+left part with the TV button, a better designed one." From the second page the way back goes to the TV in one
+transition, as built.
+
+9 with the final button: [desktop](clips/9-leanlite-desktop.mp4) ![out](strips/9-leanlite-desktop-out.jpg)
+![back](strips/9-leanlite-desktop-back.jpg) and [phone](clips/9-leanlite-phone.mp4)
+![out](strips/9-leanlite-phone-out.jpg) ![back](strips/9-leanlite-phone-back.jpg)
+
+The desktop clip waits about 3 s before it moves. That is the recording on a busy machine: measured without
+recording, the motion starts 0.5 to 0.8 s after the press and the page stands after 1.5 s, desktop and phone.
+
+### Three designs (`T` switches, in the room and on the real page)
+
+![the three designs](back/buttons.jpg)
+
+All three are rectangular, show a TV in 16:9 with its bezel and the Expand key's brackets pointing inward, and
+are the target the brackets fold into on arrival.
+
+| | What it is | For | Against |
+| --- | --- | --- | --- |
+| **Set** (recommended) | A small TV set (picture, bezel, foot) showing the backdrop of the screen the person left, and words beside it. In the bar: "Back to TV" over the screen's name ("Discover › Funny"). In the dock: "Back to" over "TV", the two-line form of the part it replaces | Says what it does and shows where it leads; in the dock it reads like the key it stands in for, so the row keeps its rhythm | The widest of the three: 127 px in the dock at 390 px wide, 124 at 360 |
+| **Screen** | The key is the TV itself: the picture with "TV" written on it, nothing beside it | The smallest and the most like an object; the picture is the hint | No word says "back"; 13 px letters on a picture are only as readable as the picture lets them be |
+| **Plain** | A drawn TV and "Back to TV" in an amber outline, like the site's other keys. No picture | The calmest, and it needs no image | It is a labelled key, not the TV the person came from |
+
+**Recommendation: Set.** It is the only one that is both a TV at a glance and says in words what a tap does, and
+the picture of the screen the person left costs one small image (the 300 px file of the backdrop the TV showed).
+
+### The phone's dock: in place of the left part (default; `L` shows round two's place)
+
+While the way back lives, the dock's left part (the tiny poster with "Wishlist / Watch next") does not show and the
+TV button stands in its place; Search keeps its word. Two pages on, the left part is back.
+
+![two pages of life in the dock](back/dock-life.jpg)
+
+**What it costs:** for those two pages the one-tap way to Watch next is gone from the dock, and with it the tiny
+poster of Tonight's pick. Watch next stays two taps away: the round key opens the menu, and Watch next is its
+first tile ([the menu](back/round-key-menu.jpg)); the menu also has "Living room". On the desktop nothing is
+replaced: the header keeps its Wishlist key and the TV button hangs under the header.
+
+Checked by script with no parameters in the address, at 390 and 360 px: the button stands at the dock's left
+edge, 28 and 16 px clear of the round key, and takes the tap; the left part is hidden while it is there and shows
+again three pages from the TV; the round key's menu links to `/watch-next`; Escape with that menu open closes
+only the menu; from two pages the button lands on the TV screen the person left, with the focus on the Expand key.
+On the desktop: the three designs in the bar, each taking the click, gone at three pages, Escape from two pages
+lands on the same TV screen.
+
+A fix on the way: Escape went back to the TV while the round key's menu was open. The site's menus now take Escape
+first (they say on their key that they are open).
 
 ## Round two: the owner's picks
 
@@ -247,6 +301,14 @@ moment of all seven).
 reachable and works for a finger. It lands on the TV screen the person left, from any depth.
 
 ## Questions for the owner
+
+Round three's, on top:
+
+1. Set, Screen or Plain?
+2. In the dock the Set says "Back to / TV". Should its second line name the screen instead ("Discover"), as the
+   desktop's bar does? There is room for about eight letters.
+3. While the TV button stands in the left part, Watch next is two taps away instead of one. Acceptable for two
+   pages?
 
 Answered in round two: the transition (6 and 5 with 3's frame), the way back (scroll-up bar), how long it lives
 (a step or two), the phone (in the dock), Escape (yes). Open:

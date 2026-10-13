@@ -3,9 +3,9 @@
 // back to the TV. root.tsx mounts it in development only. See trip.ts and
 // docs/prototypes/tv-expand-transitions/README.md.
 import { useLocation } from "@remix-run/react"
-import { useEffect, useReducer, useRef, useState } from "react"
+import { type ReactNode, useEffect, useReducer, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { AMBER, BACK_LIVES, BACKS, type BackKey, EASE, MS, TRANSITIONS, type Trip, backToTv, depthFromTv, install, readTrip, subscribe, transitionRunning, writeTrip } from "./trip"
+import { AMBER, BACK_LIVES, BACKS, BUTTONS, type ButtonKey, CHOSEN, DOCKS, EASE, MS, TRANSITIONS, type Trip, backToTv, depthFromTv, install, next, readTrip, subscribe, transitionRunning, writeTrip } from "./trip"
 
 const CORNERS = ["tvx-c0", "tvx-c1", "tvx-c2", "tvx-c3"]
 const FLYING = ["tvx-m0", "tvx-m1", "tvx-m2", "tvx-m3", "tvx-art", "tvx-title"]
@@ -77,26 +77,107 @@ html[data-tvx="wipe-in"]::view-transition-old(root) { z-index: 1; animation: tvx
 @keyframes tvx-wipe-grow { from { clip-path: circle(var(--tvx-wipe-r0) at var(--tvx-wipe-at)); } to { clip-path: circle(var(--tvx-wipe-r) at var(--tvx-wipe-at)); } }
 @keyframes tvx-wipe-shrink { from { clip-path: circle(var(--tvx-wipe-r) at var(--tvx-wipe-at)); } to { clip-path: circle(var(--tvx-wipe-r0) at var(--tvx-wipe-at)); } }
 
-/* The phone: the TV key takes a place in the dock's row, and Search gives up its word for it. */
-html[data-tvx-dock] nav[aria-label="Site"] [data-search-entry] { width: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
+/* The phone, while the way back lives: the TV button stands in place of the dock's left part (Watch next), which
+   keeps its room but does not show. For comparison, round two's place: between the round key and Search, which
+   gives up its word for it. */
+html[data-tvx-dock="left"] nav[aria-label="Site"] > a:first-child { visibility: hidden; }
+html[data-tvx-dock="between"] nav[aria-label="Site"] [data-search-entry] { width: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
 
 .tvx-back { transition: opacity .3s ease, transform .3s cubic-bezier(.2,.8,.2,1); }
 .tvx-back[data-shown="false"] { opacity: 0; transform: scale(.85); pointer-events: none; }
-.tvx-back-more { display: grid; grid-template-columns: 0fr; transition: grid-template-columns .22s ease; }
-.tvx-back:hover .tvx-back-more, .tvx-back:focus-visible .tvx-back-more { grid-template-columns: 1fr; }
+.tvx-back:focus-visible { outline: 2px solid ${AMBER}; outline-offset: 2px; }
+.tvx-back:hover .tvx-screen, .tvx-back:focus-visible .tvx-screen { box-shadow: 0 0 0 1px rgba(251,191,36,.9), 0 0 16px rgba(251,191,36,.45); }
+.tvx-back:active { transform: scale(.97); }
 .tvx-bar { transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .25s ease; }
-@media (prefers-reduced-motion: reduce) { .tvx-back, .tvx-back-more, .tvx-bar { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tvx-back, .tvx-bar { transition: none; } }
 `
 
-/** A TV with its corner brackets pointing inward: the Expand key's motif, reversed. */
-function TvIcon({ size = 30 }: { size?: number }) {
+/** The Expand key's brackets, pointing inward: what the TV button does is the reverse of what brought the person here. */
+function InwardBrackets({ className = "" }: { className?: string }) {
 	return (
-		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative, the control around it carries the label
-		<svg width={size} height={(size * 24) / 30} viewBox="0 0 30 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-			<rect x="1.5" y="1.5" width="27" height="17" rx="2.5" />
-			<path d="M10 22.5h10" />
-			<path d="M7.5 9H11V5.5M22.5 9H19V5.5M7.5 11H11v3.5M22.5 11H19v3.5" stroke={AMBER} />
+		<svg viewBox="0 0 32 18" fill="none" stroke={AMBER} strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+			<title>Back into the TV</title>
+			{/* Small, and near the corners: they frame the picture and leave its middle free. */}
+			<path d="M7 2.6V5.4H4.2M25 2.6V5.4H27.8M7 15.4V12.6H4.2M25 15.4V12.6H27.8" />
 		</svg>
+	)
+}
+
+/**
+ * A TV in small: a 16:9 picture in a dark bezel, with the backdrop of the screen the person left and the inward
+ * brackets on it. `stand` adds the foot. `children` is written on the picture.
+ */
+function MiniTv({ width, art, stand, children }: { width: number; art: string | null; stand?: boolean; children?: ReactNode }) {
+	const height = Math.round((width * 9) / 16)
+	return (
+		<span className="relative block shrink-0" style={{ width, height: height + (stand ? 5 : 0) }}>
+			<span className="tvx-screen absolute inset-x-0 top-0 block overflow-hidden rounded-[4px] bg-black p-[2px] shadow-[0_0_0_1px_rgba(255,255,255,.22),0_0_12px_rgba(251,191,36,.22)] transition-shadow duration-200" style={{ height }}>
+				<span className="relative block h-full w-full overflow-hidden rounded-[2px] bg-[linear-gradient(135deg,#1f2937,#0b1220)]">
+					{art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />}
+					<span className="absolute inset-0 bg-black/35" />
+					<InwardBrackets className="absolute inset-0 h-full w-full" />
+					{children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}
+				</span>
+			</span>
+			{stand && <span className="absolute bottom-0 left-1/2 block h-[2.5px] w-[42%] -translate-x-1/2 rounded-full bg-white/40" />}
+		</span>
+	)
+}
+
+/** The TV as a line drawing, for the key without a picture. */
+function TvGlyph({ width = 30 }: { width?: number }) {
+	return (
+		<svg width={width} height={(width * 20) / 32} viewBox="0 0 32 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden>
+			<title>TV</title>
+			<rect x="1.5" y="1.5" width="29" height="17" rx="2" />
+			<path d="M9 4.6V7.6H6M23 4.6V7.6H26M9 15.4V12.4H6M23 15.4V12.4H26" stroke={AMBER} strokeWidth="1.5" />
+		</svg>
+	)
+}
+
+/**
+ * The TV button in its three designs (T switches). `room` is how much the place gives it: `full` in the desktop's
+ * bar (which is its frame already), `slot` in the dock's left part, `short` in the gap beside Search.
+ *   set     a small TV set with the screen the person left, and in words where the key leads
+ *   screen  the key is the TV: its picture, its bezel, the word on it
+ *   plain   a drawn TV and words, like the site's other keys; no picture
+ */
+function TvButton({ design, trip, room }: { design: ButtonKey; trip: Trip; room: "full" | "slot" | "short" }) {
+	if (design === "screen")
+		return (
+			<span className="block p-[3px]">
+				<MiniTv width={room === "slot" ? 92 : room === "full" ? 80 : 66} art={trip.art} stand>
+					<span className="text-[13px] font-black tracking-[0.16em] text-white [text-shadow:0_1px_6px_rgba(0,0,0,.95)]">TV</span>
+				</MiniTv>
+			</span>
+		)
+	if (design === "plain")
+		return (
+			<span className="flex h-11 items-center gap-2 rounded-lg border border-amber-400/55 bg-amber-400/[0.09] px-3 text-[13.5px] font-bold whitespace-nowrap text-white">
+				<TvGlyph />
+				{room === "short" ? "TV" : "Back to TV"}
+			</span>
+		)
+	// In the bar the tab is the key's frame; in the dock the key brings its own.
+	const frame = room === "full" ? "" : "rounded-lg border border-amber-400/35 bg-amber-400/[0.06]"
+	return (
+		<span className={`flex h-[50px] min-w-0 items-center gap-2.5 py-1 pr-3 pl-1.5 text-left ${frame}`}>
+			<MiniTv width={room === "full" ? 60 : room === "slot" ? 56 : 46} art={trip.art} stand />
+			{room === "full" && (
+				<span className="flex min-w-0 flex-col leading-tight">
+					<span className="text-[10.5px] font-bold tracking-wide whitespace-nowrap text-amber-400 uppercase">Back to TV</span>
+					<span className="truncate text-[13.5px] font-bold text-white">{trip.screen}</span>
+				</span>
+			)}
+			{/* The dock's left part reads in two lines (Wishlist over Watch next); the button keeps that. */}
+			{room === "slot" && (
+				<span className="flex flex-col leading-[1.15]">
+					<span className="text-[11px] font-bold whitespace-nowrap text-amber-400">Back to</span>
+					<span className="text-[15px] font-bold text-white">TV</span>
+				</span>
+			)}
+			{room === "short" && <span className="text-[13.5px] font-bold text-white">TV</span>}
+		</span>
 	)
 }
 
@@ -136,15 +217,16 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 	const label = `Back to the TV: ${trip.screen}`
 	// After a step or two the TV is no longer where the person is coming from: the way back is gone, Escape too.
 	const alive = depth <= BACK_LIVES
-	// On a phone the way back is a key in the dock's row, whichever control the desktop shows.
+	// On a phone the way back is the TV button in the dock, whichever control the desktop shows.
 	const inDock = alive && Boolean(dockEl) && trip.back !== "esc"
+	const dockAt = inDock ? trip.dock : null
 	useEffect(() => {
-		if (!inDock) return
-		document.documentElement.dataset.tvxDock = ""
+		if (!dockAt) return
+		document.documentElement.dataset.tvxDock = dockAt
 		return () => {
 			delete document.documentElement.dataset.tvxDock
 		}
-	}, [inDock])
+	}, [dockAt])
 
 	// Escape goes back to the TV, unless something of the page's own is open or being typed into.
 	useEffect(() => {
@@ -159,15 +241,19 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 					const b = el.getBoundingClientRect()
 					return b.width > 0 && b.height > 0 && getComputedStyle(el).visibility !== "hidden"
 				})
-				if (e.defaultPrevented || open) return
+				// The site's own menus (the round key's, the header's) say that they are open on the key that opened them.
+				const expanded = document.querySelector('[aria-haspopup][aria-expanded="true"], #site-hub')
+				if (e.defaultPrevented || open || expanded) return
 				e.preventDefault()
 				backToTv()
 			}
-			// The prototype's own key: B switches between the ways back, in place.
-			if (e.key.toLowerCase() === "b") {
-				const now = readTrip()
-				if (now) writeTrip({ ...now, back: BACKS[(BACKS.findIndex((b) => b.key === now.back) + 1) % BACKS.length].key })
-			}
+			// The prototype's own keys, in place: B the way back, T the button's design, L its place in the dock.
+			const now = readTrip()
+			const key = e.key.toLowerCase()
+			if (!now) return
+			if (key === "b") writeTrip({ ...now, back: next(BACKS, now.back) })
+			if (key === "t") writeTrip({ ...now, button: next(BUTTONS, now.button) })
+			if (key === "l") writeTrip({ ...now, dock: next(DOCKS, now.dock) })
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
@@ -200,81 +286,73 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 		return () => clearTimeout(timer)
 	}, [trip.back, pathname])
 
-	const name = TRANSITIONS.find((x) => x.key === trip.t)?.name
-	const narrow = typeof window !== "undefined" && window.innerWidth < 350
+	const design = trip.button
+	const name = trip.t === CHOSEN ? "Lean in" : TRANSITIONS.find((x) => x.key === trip.t)?.name
 	return (
 		<div data-tvx-chrome>
 			{inDock &&
 				dockEl &&
 				createPortal(
-					// Between the round key and Search, which stands 12 px from the edge and is 44 px wide while this is here.
 					<button
 						type="button"
 						data-tvx-back
 						data-tvx-chrome
+						data-design={design}
 						data-shown={shown}
 						onClick={backToTv}
 						aria-label={label}
-						className={`tvx-back absolute flex h-11 items-center justify-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-400/10 text-[13.5px] font-bold text-white ${narrow ? "w-11" : "pl-2.5 pr-3.5"}`}
-						style={{ right: 64, bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}
+						className="tvx-back absolute flex items-center rounded-lg"
+						style={
+							trip.dock === "left"
+								? // Where Watch next stands: from the dock's edge to just short of the round key.
+									{ left: 12, bottom: "calc(env(safe-area-inset-bottom, 0px) + 36px)", transform: "translateY(50%)", maxWidth: "calc(50vw - 56px)" }
+								: // Between the round key and Search, which stands 12 px from the edge and is 44 px wide meanwhile.
+									{ right: 64, bottom: "calc(env(safe-area-inset-bottom, 0px) + 36px)", transform: "translateY(50%)" }
+						}
 					>
-						<TvIcon size={26} />
-						{!narrow && "TV"}
+						<TvButton design={design} trip={trip} room={trip.dock === "left" ? "slot" : "short"} />
 					</button>,
 					dockEl,
 				)}
 			{alive && !inDock && trip.back === "key" && (
-				<button
-					type="button"
-					data-tvx-back
-					data-shown={shown}
-					onClick={backToTv}
-					aria-label={label}
-					title={`${label} (Esc)`}
-					className="tvx-back fixed z-[1100] flex h-11 items-center rounded-xl border border-amber-400/60 bg-gray-950/90 pl-2.5 pr-3 text-white shadow-[0_6px_24px_rgba(0,0,0,.55)] backdrop-blur-md hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-amber-300"
-					style={{ right: 16, bottom: dock + 16 }}
-				>
-					<TvIcon />
-					<span className="ml-2 text-sm font-bold tracking-wide">TV</span>
-					<span className="tvx-back-more">
-						<span className="overflow-hidden whitespace-nowrap text-sm text-white/70">
-							<span className="pl-2">{trip.screen}</span>
-						</span>
-					</span>
+				<button type="button" data-tvx-back data-design={design} data-shown={shown} onClick={backToTv} aria-label={label} title={`${label} (Esc)`} className="tvx-back fixed z-[1100] flex items-center rounded-lg bg-gray-950/90 shadow-[0_6px_24px_rgba(0,0,0,.55)] backdrop-blur-md" style={{ right: 16, bottom: dock + 16 }}>
+					<TvButton design={design} trip={trip} room="full" />
 				</button>
 			)}
 			{alive && !inDock && trip.back === "bar" && (
+				// The tab hangs from the header's lower edge like a set on its mount: square at the top, the button in it.
 				<button
 					type="button"
 					data-tvx-back
+					data-design={design}
 					data-shown={shown}
 					onClick={backToTv}
 					aria-label={label}
 					title={`${label} (Esc)`}
-					className="tvx-back tvx-bar fixed left-1/2 z-[999] flex h-9 items-center gap-2 rounded-b-xl border border-t-0 border-amber-400/50 bg-gray-950/95 px-3.5 text-sm text-white shadow-[0_6px_24px_rgba(0,0,0,.5)] backdrop-blur-md"
+					className="tvx-back tvx-bar fixed left-1/2 z-[999] flex items-center gap-2 rounded-b-xl border border-t-0 border-white/[0.09] bg-gray-950/95 p-1.5 pt-1 shadow-[0_10px_30px_rgba(0,0,0,.55)] backdrop-blur-md"
 					style={{ top: 64, transform: `translate(-50%, ${up || top ? "0" : "-110%"})`, opacity: up || top ? 1 : 0 }}
 				>
-					<TvIcon size={24} />
-					<span className="font-bold">TV</span>
-					{!top && <span className="whitespace-nowrap text-white/70">{trip.screen}</span>}
-					{!phone && !top && <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-white/70">Esc</kbd>}
+					<TvButton design={design} trip={trip} room="full" />
+					{!phone && <kbd className="mr-1 rounded bg-white/10 px-1.5 py-0.5 font-sans text-[11px] text-white/60">Esc</kbd>}
 				</button>
 			)}
 			{alive && trip.back === "esc" && (
 				<div aria-live="polite" className="tvx-back pointer-events-none fixed left-1/2 z-[1100] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-gray-950/90 px-3.5 py-2 text-sm text-white/85 shadow-lg backdrop-blur-md" data-shown={shown && hint} style={{ bottom: dock + (phone ? 60 : 16) }}>
-					<TvIcon size={22} />
+					<TvGlyph width={24} />
 					{phone ? "The browser's Back returns to the TV" : "Esc returns to the TV"}
 				</div>
 			)}
 			{/* The prototype's own readout, not part of the design. */}
 			<button
 				type="button"
-				onClick={() => writeTrip({ ...trip, back: BACKS[(BACKS.findIndex((b) => b.key === trip.back) + 1) % BACKS.length].key })}
-				title="B: the next way back"
+				data-tvx-readout
+				onClick={() => writeTrip({ ...trip, button: next(BUTTONS, trip.button) })}
+				title="T: the next TV button. B: the next way back. L: the other place in the dock"
 				className="fixed left-3 z-[1100] max-w-[70vw] truncate rounded-full bg-white px-3 py-1.5 text-left text-[12px] font-semibold text-black shadow-xl ring-2 ring-fuchsia-500"
 				style={{ bottom: dock + 12 }}
 			>
-				{name} · {depth === 1 ? "1 page" : `${depth} pages`} from the TV · {alive ? `back: ${inDock ? "in the dock" : BACKS.find((b) => b.key === trip.back)?.name.toLowerCase()}` : "the way back has gone"}
+				{name} · {depth === 1 ? "1 page" : `${depth} pages`} from the TV ·{" "}
+				{alive ? `TV button: ${BUTTONS.find((b) => b.key === design)?.name.toLowerCase()}${inDock ? `, in the dock (${trip.dock === "left" ? "left part" : "beside Search"})` : `, ${BACKS.find((b) => b.key === trip.back)?.name.toLowerCase()}`}` : "the way back has gone"}
 			</button>
 		</div>
 	)
@@ -297,7 +375,7 @@ export default function TvExpandHost() {
 		<>
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own constant CSS */}
 			<style dangerouslySetInnerHTML={{ __html: CSS }} />
-			{trip && depth > 0 && <BackControls key={trip.back as BackKey} trip={trip} depth={depth} shown={!transitionRunning()} />}
+			{trip && depth > 0 && <BackControls key={trip.back} trip={trip} depth={depth} shown={!transitionRunning()} />}
 		</>
 	)
 }

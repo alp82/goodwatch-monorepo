@@ -3,9 +3,11 @@
 // screen or a title screen. Its Expand key opens the REAL page (/discover?moods=funny, /movie/546554-knives-out)
 // through one of nine transitions; the browser's Back, Escape and a Back to TV control on the real page come back
 // into the same TV screen with the same focus.
-//   &t=today|grow|frame|morph|camera|live|wipe|lean|leanlite   the transition (the keys 1 to 9). Without it: lean,
-//                        the owner's pick of round two (6 and 5 combined, with 3's frame)
+//   &t=today|grow|frame|morph|camera|live|wipe|lean|leanlite   the transition (the keys 1 to 9). Without it:
+//                        leanlite, the owner's choice ("9 is better"). The others are for comparison only
 //   &back=bar|key|esc    the way back that the real page shows (B, also on the real page). Without it: bar
+//   &button=set|screen|plain   how the TV button is drawn (T, also on the real page)
+//   &dock=left|between   where the TV button stands in the phone's dock (L, also on the real page)
 //   &slow=1              the page's data takes 1.5 s longer (W)
 //   &calm=1              reduced motion, whatever the system says (R)
 //   &at=home.discover.discover-funny   the TV's screens, as in the design prototype (D switches results and title)
@@ -31,7 +33,12 @@ import {
 	AMBER,
 	ARM_MS,
 	BACKS,
+	BUTTONS,
 	type BackKey,
+	type ButtonKey,
+	CHOSEN,
+	DOCKS,
+	type DockKey,
 	FRAME,
 	GROW_MS,
 	SLOW_MS,
@@ -47,6 +54,7 @@ import {
 	livePreload,
 	liveShowing,
 	measureTv,
+	next,
 	readTrip,
 	reducedMotion,
 	sleep,
@@ -156,7 +164,9 @@ export function TvExpandScene() {
 	const navigate = useNavigate()
 	const leaveToday = useLeaveThroughTv()
 	useReturnIntoTv()
-	const t = (TRANSITIONS.find((x) => x.key === params.get("t"))?.key ?? "lean") as TransitionKey
+	const t = (TRANSITIONS.find((x) => x.key === params.get("t"))?.key ?? CHOSEN) as TransitionKey
+	const button = (BUTTONS.find((x) => x.key === params.get("button"))?.key ?? "set") as ButtonKey
+	const dockAt = (DOCKS.find((x) => x.key === params.get("dock"))?.key ?? "left") as DockKey
 	const back = (BACKS.find((x) => x.key === params.get("back"))?.key ?? "bar") as BackKey
 	// 6 and 8 load the real page inside the TV.
 	const inTv = t === "live" || t === "lean"
@@ -269,8 +279,8 @@ export function TvExpandScene() {
 	const framed = engine.focus === "expand" && !run && top !== "menu" && engine.store.power === "on"
 
 	// ---- Leaving through the Expand key.
-	const latest = useRef({ t, back, slow, calmAsked, run, engine, size })
-	latest.current = { t, back, slow, calmAsked, run, engine, size }
+	const latest = useRef({ t, back, button, dockAt, slow, calmAsked, run, engine, size })
+	latest.current = { t, back, button, dockAt, slow, calmAsked, run, engine, size }
 	const leave: Tv["leave"] = (dest, from, how) => {
 		const now = latest.current
 		const scene = root.current
@@ -287,6 +297,8 @@ export function TvExpandScene() {
 		writeTrip({
 			t: now.t,
 			back: now.back,
+			button: now.button,
+			dock: now.dockAt,
 			slow: now.slow,
 			calm,
 			tvIdx: idx(),
@@ -295,6 +307,8 @@ export function TvExpandScene() {
 			key: { left: b.left, top: b.top, width: b.width, height: b.height },
 			dest: { name: dest.name, href: dest.href },
 			focus: now.engine.focus ?? from,
+			// The picture's backdrop is the screen's first image; a small file of it is enough for the button.
+			art: scene.querySelector<HTMLImageElement>("[data-tv-screen] [data-tv-layer] img")?.src.replace(/\/t\/p\/w\d+\//, "/t/p/w300/") ?? null,
 			screen: dest.carries ? `${dest.name} › ${dest.carries}` : dest.name,
 		})
 		const slowly = now.slow ? sleep(SLOW_MS) : null
@@ -379,8 +393,10 @@ export function TvExpandScene() {
 		setParams(p, { replace: true, preventScrollReset: true })
 	}
 	const controls = {
-		transition: (key: string) => set({ t: key === "lean" ? "" : key }),
-		back: () => set({ back: BACKS[(BACKS.findIndex((x) => x.key === back) + 1) % BACKS.length].key.replace(/^bar$/, "") }),
+		transition: (key: string) => set({ t: key === CHOSEN ? "" : key }),
+		back: () => set({ back: next(BACKS, back).replace(/^bar$/, "") }),
+		button: () => set({ button: next(BUTTONS, button).replace(/^set$/, "") }),
+		dock: () => set({ dock: next(DOCKS, dockAt).replace(/^left$/, "") }),
 		slow: () => set({ slow: slow ? "" : "1" }),
 		calm: () => set({ calm: calmAsked ? "" : "1" }),
 		screen: () => {
@@ -418,6 +434,8 @@ export function TvExpandScene() {
 			const to = TRANSITIONS[Number(digit) - 1]
 			if (to) k.controls.transition(to.key)
 			else if (key === "b") k.controls.back()
+			else if (key === "t") k.controls.button()
+			else if (key === "l") k.controls.dock()
 			else if (key === "w") k.controls.slow()
 			else if (key === "r") k.controls.calm()
 			else if (key === "d") k.controls.screen()
@@ -564,16 +582,21 @@ export function TvExpandScene() {
 				</button>
 			)}
 			<div hidden={params.get("chrome") === "off" || (phone && !panel)} className={`absolute z-50 flex flex-wrap items-center gap-1.5 font-semibold text-black ${phone ? "inset-x-0 justify-center bg-black/80 px-2 py-2 text-[12px] [&_button]:!py-[5px]" : "left-3 right-3 top-3 text-[13px]"}`} style={phone && PL ? { top: PL.seam + 30 } : undefined}>
-				<div className={`flex overflow-hidden rounded-2xl bg-white shadow-xl ring-2 ring-fuchsia-500 ${phone ? "flex-wrap justify-center" : ""}`}>
-					{TRANSITIONS.map((x, i) => (
-						<button key={x.key} type="button" data-transition={x.key} aria-pressed={x.key === t} title={`${x.bet} (${i + 1})`} onClick={() => controls.transition(x.key)} className={`whitespace-nowrap px-2.5 py-1.5 ${x.key === t ? "bg-fuchsia-600 text-white" : "hover:bg-fuchsia-100"}`}>
-							<span className={x.key === t ? "opacity-70" : "opacity-45"}>{i + 1}</span> {x.name}
-						</button>
-					))}
-				</div>
+				{/* Only the chosen transition is offered. The others are still behind the keys 1 to 9, to compare. */}
+				<button type="button" data-transition={t} onClick={() => controls.transition(CHOSEN)} className={`${pill} ${t === CHOSEN ? "!bg-fuchsia-600 text-white" : ""}`} title={t === CHOSEN ? "The chosen transition" : "Back to the chosen transition"}>
+					{t === CHOSEN ? "Lean in" : `${TRANSITIONS.findIndex((x) => x.key === t) + 1} ${chosen.name}, for comparison`}
+				</button>
 				<button type="button" data-back={back} onClick={controls.back} className={pill} title="The way back that the real page shows (B)">
 					Back: {BACKS.find((x) => x.key === back)?.name.toLowerCase()}
 				</button>
+				<button type="button" data-button={button} onClick={controls.button} className={pill} title="How the TV button is drawn (T)">
+					TV button: {BUTTONS.find((x) => x.key === button)?.name.toLowerCase()}
+				</button>
+				{phone && (
+					<button type="button" data-dock={dockAt} onClick={controls.dock} className={pill} title="Where the TV button stands in the dock (L)">
+						{dockAt === "left" ? "Dock: left part" : "Dock: beside Search"}
+					</button>
+				)}
 				<button type="button" aria-pressed={slow} onClick={controls.slow} className={`${pill} ${slow ? "!bg-fuchsia-600 text-white" : ""}`} title="The page's data takes 1.5 s longer (W)">
 					Slow page
 				</button>
@@ -591,7 +614,7 @@ export function TvExpandScene() {
 				)}
 				<div className={`w-full ${phone ? "text-center" : ""}`}>
 					<span className="inline-block max-w-[980px] rounded-2xl bg-black/80 px-3 py-1.5 text-[12px] font-normal leading-snug text-white/90">
-						<b className="text-fuchsia-300">{chosen.name}.</b> {chosen.bet}
+						<b className="text-fuchsia-300">{t === CHOSEN ? "Lean in" : chosen.name}.</b> {t === CHOSEN ? "The room zooms into the TV until the screen is the window, the page already on the screen, and the brackets ride the picture's edge out and fold into the way back. Chosen by the owner; the keys 1 to 8 show the others." : chosen.bet}
 					</span>
 				</div>
 			</div>

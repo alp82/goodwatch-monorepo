@@ -16,6 +16,9 @@
 
 export type TransitionKey = "today" | "grow" | "frame" | "morph" | "camera" | "live" | "wipe" | "lean" | "leanlite"
 export type BackKey = "key" | "bar" | "esc"
+/** How the TV button is drawn (T), and where it stands in the phone's dock (L). */
+export type ButtonKey = "set" | "screen" | "plain"
+export type DockKey = "left" | "between"
 export type Box = { left: number; top: number; width: number; height: number }
 
 export const TRANSITIONS: { key: TransitionKey; name: string; bet: string }[] = [
@@ -35,6 +38,19 @@ export const BACKS: { key: BackKey; name: string }[] = [
 	{ key: "key", name: "Corner key" },
 	{ key: "esc", name: "Escape only" },
 ]
+
+/** Round three: the owner chose 9. The others stay behind their keys, for comparison. */
+export const CHOSEN: TransitionKey = "leanlite"
+export const BUTTONS: { key: ButtonKey; name: string; idea: string }[] = [
+	{ key: "set", name: "Set", idea: "A small TV set showing the screen you left, and beside it in words where the key leads." },
+	{ key: "screen", name: "Screen", idea: "The key is the TV itself: its picture, its bezel, the word TV on it. Nothing else." },
+	{ key: "plain", name: "Plain", idea: "A drawn TV and the words Back to TV, in the look of the site's other keys. No picture." },
+]
+export const DOCKS: { key: DockKey; name: string }[] = [
+	{ key: "left", name: "Dock: in place of the left part" },
+	{ key: "between", name: "Dock: between the round key and Search" },
+]
+export const next = <T extends { key: string }>(list: T[], now: string) => list[(list.findIndex((x) => x.key === now) + 1) % list.length].key as T["key"]
 
 export const TV_PATH = "/prototype/tv-expand"
 /**
@@ -65,6 +81,8 @@ export const AMBER = "#fbbf24"
 export type Trip = {
 	t: TransitionKey
 	back: BackKey
+	button: ButtonKey
+	dock: DockKey
 	slow: boolean
 	/** Reduced motion, asked for by the system or by the prototype's switch. */
 	calm: boolean
@@ -77,6 +95,8 @@ export type Trip = {
 	dest: { name: string; href: string }
 	/** The TV item that had the focus. */
 	focus: string
+	/** The backdrop the TV's picture showed on leaving, small: the TV button's hint of where it leads. */
+	art: string | null
 	/** What the Back to TV control names: "Discover › Funny". */
 	screen: string
 }
