@@ -1,0 +1,152 @@
+{
+  "format": 1,
+  "until": "2026-10-13T08:50:00Z",
+  "until_ms": 1791881400000,
+  "pull_started": "2026-10-13T08:50:57Z",
+  "pull_finished": "2026-10-13T08:53:06Z",
+  "git_commit": "56f050719c8fb7795be9260318466ffc4361122f",
+  "lab_has_uncommitted_changes": true,
+  "code_sha256": {
+    "pull.py": "494d728e976e8eda466a550290511706b216b201c1f01bd6837fb8304563cd04",
+    "crate.py": "e147f45ed3bad076e9ad4606df2a71fb43b8b807b389a35553fd64cd3f128cf2",
+    "pack.py": "857a0d2b28cd1d913c0b82f2abc45f6a413b631f320fc447d63015b711e47385"
+  },
+  "pack_folder": "~/goodwatch-research/taste/packs/2026-10-13",
+  "gate_folder": "~/goodwatch-research/taste/gate/2026-10-13",
+  "files_sha256": {
+    "emb_text_en_v1.npy": "bdd521e02a44cf2086495d9960a5525b1ec0976daa95b65e47757a9cbf013592",
+    "emb_text_multi_v1.npy": "542cd0a3c63ff81970e5f3266142a7e8423faaecec9db41efbce3d7821a8c6c4",
+    "pack.pkl": "ac1341f55c9b4d14e6514b91ee16dd9b5b2804ee86f1f821b3d40bc806b82bef",
+    "titles.pkl": "7695a0b486ae73f15dd4f3debc3afc828147e148c53b7e3361352fa35cc8c24c",
+    "titles_detail.pkl": "8ee7b204d981eb426df621e2a5e304e1bae1ec6b3e0f93bdc0849b9266b138ab"
+  },
+  "gate_sha256": {
+    "gate.pkl": "978675c9f6c0b8723e26da5d8ede9df8de69ce0e7cdb93b7ebfe551138b5a67d"
+  },
+  "rows": {
+    "favorite": {
+      "rows": 72,
+      "members": 25
+    },
+    "import_items": {
+      "rows": 3534,
+      "members": 2
+    },
+    "imports": {
+      "rows": 4,
+      "members": 2
+    },
+    "not_interested": {
+      "rows": 2,
+      "members": 1
+    },
+    "ratings": {
+      "rows": 9017,
+      "members": 231
+    },
+    "setting_members": {
+      "rows": 1793,
+      "members": 391
+    },
+    "settings": {
+      "rows": 702,
+      "members": 358
+    },
+    "skipped": {
+      "rows": 13812,
+      "members": 170
+    },
+    "watch_log": {
+      "rows": 254966,
+      "members": 255
+    },
+    "watch_state": {
+      "rows": 8159,
+      "members": 255
+    },
+    "wishlist": {
+      "rows": 2072,
+      "members": 150
+    }
+  },
+  "rows_match_aggregate_count": true,
+  "ratings": {
+    "all": 9017,
+    "tier_a_in_pack": 6525,
+    "tier_b_in_gate": 2492,
+    "by_provenance": {
+      "typed": 8117,
+      "bulk": 431,
+      "import": 469
+    }
+  },
+  "members": {
+    "all": 405,
+    "tier_a": 264,
+    "tier_b": 141,
+    "with_ratings": 231,
+    "by_ratings_per_member": {
+      "0": {
+        "A": 113,
+        "B": 61
+      },
+      "1 to 4": {
+        "A": 40,
+        "B": 22
+      },
+      "5 to 19": {
+        "A": 47,
+        "B": 25
+      },
+      "20 to 59": {
+        "A": 42,
+        "B": 22
+      },
+      "60 or more": {
+        "A": 22,
+        "B": 11
+      }
+    }
+  },
+  "split": {
+    "seed": 20261013,
+    "tier_b_share": 0.35,
+    "strata": [
+      "0",
+      "1 to 4",
+      "5 to 19",
+      "20 to 59",
+      "60 or more"
+    ],
+    "owner": "always tier A, flagged is_owner",
+    "kept_in": "~/goodwatch-research/taste/tiers.json",
+    "members_newly_assigned": 404
+  },
+  "reference_pool": {
+    "rule": "movies and shows with a poster, a GoodWatch score and 1,000 or more votes",
+    "where": "poster_path is not null and goodwatch_overall_score_normalized_percent is not null and goodwatch_overall_score_voting_count >= 1000",
+    "titles": 71839,
+    "with_fingerprint": 60759
+  },
+  "titles": {
+    "all": 72101,
+    "touched": 4666,
+    "touched_missing_from_catalog": 92,
+    "with_embeddings": 4516,
+    "rows_rewritten_in_production_after_until": 0
+  },
+  "imports_running_at_pull": 0,
+  "rules": {
+    "write_time": "created_at",
+    "sitting_gap_hours": 6,
+    "bulk": "5 or more of the member's rows written within 2 seconds",
+    "provenance": "import if an applied import item exists for the member and title, else bulk, else typed",
+    "member_id": "HMAC-SHA256 with a key kept outside the pack, first 16 hex characters"
+  },
+  "notes": [
+    "pack.pkl holds the ratings of tier A members only. gate.pkl holds the ratings of tier B members.",
+    "Everything else of tier B members stays in pack.pkl: Want to See, Skip, Not interested, favorites, watch state, watch log, settings, and their number of ratings. T2b has no gate. Watch state and the watch log therefore show which titles a tier B member has seen, not how they rated them.",
+    "The rating columns of tier B members' import items (raw rating, source, current, prior and applied score) are blanked in pack.pkl and kept in gate.pkl.",
+    "Member tables are filtered on created_at <= until. Title files are as of the pull: their hashes repeat only while production's title rows did not change. titles.rows_rewritten_in_production_after_until counts the rows a run found changed since until; `python3 pack.py diff A B` lists what differs."
+  ]
+}
