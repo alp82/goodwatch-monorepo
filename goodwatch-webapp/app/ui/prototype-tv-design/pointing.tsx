@@ -85,8 +85,7 @@ const DRAG = 10
 /** Dragged, the pointer stands this far above the finger. It goes there in `LIFT_MS`, so the target does not jump. */
 const LIFT = 46
 const LIFT_MS = 220
-/** After a touch handled here the browser's own click on the picture is dropped for this long. */
-const CLICK_GUARD_MS = 700
+
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
 /**
@@ -144,7 +143,8 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		// The finger on the picture: where it went down, where it is, and since when it drags (0: it has not moved).
 		let touch: { id: number; x: number; y: number; fx: number; fy: number; hold: boolean; since: number } | null = null
 		let lastType = "mouse"
-		let guardUntil = 0
+		// After a touch that was acted on here, the browser's own click for it is still to come, and is dropped.
+		let owed = false
 		let ours = false
 
 		const inside = (r: Rect, pad = 0) => cursor.x >= r.left - pad && cursor.x <= r.left + r.width + pad && cursor.y >= r.top - pad && cursor.y <= r.top + r.height + pad
@@ -320,6 +320,8 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		const onDown = (e: PointerEvent) => {
 			const g = geo.current
 			lastType = e.pointerType
+			// A new press: the click of the one before has come by now, or never will (a drag has none).
+			owed = false
 			if (!g) return
 			if (e.pointerType === "mouse") {
 				// A key of the Remote: the pointer steps aside, as it does for the keyboard.
@@ -363,7 +365,7 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			touch = null
 			// Letting go is OK on the item the pointer is over. The browser's own click, if one follows, is dropped.
 			const target = shown && item?.isConnected ? item : null
-			guardUntil = performance.now() + CLICK_GUARD_MS
+			owed = true
 			set(pointer.current, "hold", false)
 			set(pointer.current, "press", Boolean(target))
 			if (target) {
@@ -384,7 +386,9 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		}
 		/** The browser's click after a touch on the picture: the touch was already acted on. */
 		const onClick = (e: MouseEvent) => {
-			if (ours || performance.now() > guardUntil || !root.querySelector("[data-tv-screen]")?.contains(e.target as Node)) return
+			// Not by the clock: a slow device brings that click late, onto whatever the screen shows by then.
+			if (ours || !owed || !e.isTrusted) return
+			owed = false
 			e.stopPropagation()
 			e.preventDefault()
 		}

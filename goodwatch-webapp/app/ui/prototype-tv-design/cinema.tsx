@@ -3,10 +3,17 @@
 // the focused one comes forward (larger, lit, a white edge) while the others sit back in the dark. Type is large
 // and quiet. Screens arrive with a short zoom out of the picture.
 import type { ReactNode } from "react"
+import type { Score } from "~/server/scores.server"
+import netflixMark from "~/img/netflix-logo.svg"
+import primeMark from "~/img/primevideo-logo.svg"
 import { type Dest, ISLANDS, SIDES, islandTitles } from "~/ui/prototype-tv-flow/data"
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F, metaOf } from "~/ui/prototype-tv-flow/kit"
+import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
+import { assetUrl } from "~/utils/asset-url"
+import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { backdropOf, posterOf } from "./art"
+import { SERVICES, type ServiceKey } from "./choices"
 import { Actions, Ambient, AppArt, BarTitle, Corner, Cross, Img, type Skin, titleSize, useExpandAt, useFocusedTitle } from "./base"
 
 const CSS = `
@@ -20,6 +27,13 @@ const CSS = `
 .tvd-cinema .c-act.tvf-on { background: #fff; color: #000; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
 .tvd-cinema .c-x { background: rgba(0,0,0,.5); color: #fbbf24; border-radius: 999px; box-shadow: inset 0 0 0 2px rgba(251,191,36,.6); font-weight: 700; }
 .tvd-cinema .c-x.tvf-on { background: #fbbf24; color: #000; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.tvd-cinema .c-tab { color: rgba(255,255,255,.72); border-radius: 999px; font-weight: 700; }
+.tvd-cinema .c-tab.c-tab-on { background: rgba(255,255,255,.2); color: #fff; box-shadow: inset 0 -4px 0 #fff; }
+.tvd-cinema .c-tab.tvf-on { background: #fff; color: #000; transform: scale(1.05); box-shadow: 0 14px 34px rgba(0,0,0,.55); }
+.tvd-cinema .c-lvl { background: rgba(255,255,255,.12); border-radius: 18px; font-weight: 800; }
+.tvd-cinema .c-lvl.tvf-on { background: rgba(255,255,255,.24); transform: scale(1.04); box-shadow: 0 0 0 4px #fff, 0 18px 40px rgba(0,0,0,.6); z-index: 2; }
+.tvd-cinema .c-num { border-radius: 12px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.tvd-cinema .c-num.tvf-on { color: #0b0c10; transform: scale(1.12); box-shadow: 0 0 0 4px #fff, 0 16px 36px rgba(0,0,0,.6); z-index: 2; }
 .tvd-cinema .tvd-screen { animation: c-in .3s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes c-in { from { opacity: 0; transform: scale(1.04); } }
 .tvd-cinema .tvd-menu { background: rgba(0,0,0,.6); animation: tvd-fade .2s both; }
@@ -45,7 +59,7 @@ function Bar({ dest, className }: { dest?: Dest; className?: string }) {
  * `reserve` keeps the whole band under the content free for it on the desktop, where a screen fills its width.
  * On the phone every screen leaves the corner free itself.
  */
-function Frame({ name, crumb, dest, art, dim = 0.6, reserve, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; reserve?: boolean; children: ReactNode }) {
+function Frame({ name, crumb, dest, art, dim = 0.6, reserve, mark, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; reserve?: boolean; mark?: ReactNode; children: ReactNode }) {
 	const P = useTv().phone
 	const B = useExpandAt() === "bottom"
 	return (
@@ -53,6 +67,8 @@ function Frame({ name, crumb, dest, art, dim = 0.6, reserve, children }: { name:
 			{art && <Ambient src={art} />}
 			<Shade dim={dim} />
 			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[78px] items-center justify-between px-5" : "h-[108px] items-center justify-between px-14"}`}>
+				{/* A service's screen leads with the service's own mark. */}
+				{mark}
 				<BarTitle name={name} crumb={crumb} nameClass={`font-bold ${P ? "text-[24px]" : "text-[36px]"}`} crumbClass={`text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`} />
 				<Bar dest={dest} />
 			</div>
@@ -93,10 +109,179 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 					<F key={a.key} id={`app-${a.key}`} first={n === 0} onOk={() => open(a.key)} className="c-tile shrink-0" style={P ? { width: 172, height: 110 } : { width: 200, height: 128 }}>
 						<AppArt app={a} className="absolute inset-0 h-full w-full" />
 						<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-						<span className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}>{a.name}</span>
+						{a.service ? (
+							<span className="absolute bottom-3 left-4">
+								<Mark service={a.service} height={P ? 24 : 28} />
+							</span>
+						) : (
+							<span className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}>{a.name}</span>
+						)}
 					</F>
 				))}
 			</div>
+		</>
+	)
+}
+
+const MARK: Record<ServiceKey, { src: string; ratio: number }> = { netflix: { src: netflixMark, ratio: 3.7 }, prime: { src: primeMark, ratio: 3.25 } }
+
+/** A streaming service's own mark, in its own colour. */
+function Mark({ service, height }: { service: ServiceKey; height: number }) {
+	const mask = `url("${assetUrl(MARK[service].src)}") center / contain no-repeat`
+	return <span aria-hidden className="block shrink-0" style={{ height, width: height * MARK[service].ratio, background: SERVICES[service].ink, WebkitMask: mask, mask }} />
+}
+
+/** An option's tile on mini Discover's first screen: its picture under its own colour, its name on it. */
+const tint = (color: string) => `linear-gradient(0deg, color-mix(in srgb, ${color} 26%, #05060a) 0%, color-mix(in srgb, ${color} 34%, transparent) 100%)`
+
+/**
+ * Mini Discover's first screen with the app's real names. Either six moods and Any mood beside them, or three tabs
+ * (Moods, Themes, Styles) of six options each. A tab opens when the direction keys land on it, so Left and Right
+ * along the tabs turn the pages; the pointer and a finger open it with a click or a tap. Up from the tiles lands on
+ * the open tab, and Up again reaches the top bar.
+ */
+const Choice: NonNullable<Skin["Choice"]> = ({ tabs, tab, setTab, options, any, pick, dest }) => {
+	const tv = useTv()
+	const P = tv.phone
+	const shown = options.find((o) => o.item === tv.focus) ?? (any && any.item === tv.focus ? any : options[0])
+	const tile = (o: (typeof options)[number], n: number) => (
+		<F key={o.item} id={o.item} first={n === 0} onOk={() => pick(o)} className="c-tile" style={P ? undefined : { height: 158 }}>
+			<Img src={backdropOf(o.art)} className="absolute inset-0 h-full w-full" />
+			<span className="absolute inset-0" style={{ background: tint(o.color) }} />
+			<span className={`absolute ${P ? "inset-x-3 bottom-2.5" : "inset-x-5 bottom-4"}`}>
+				<span className={`block font-bold leading-none ${P ? "text-[22px]" : "text-[38px]"}`}>{o.name}</span>
+				{!P && <span className="mt-1.5 line-clamp-2 text-[22px] leading-tight text-white/85">{o.line}</span>}
+			</span>
+		</F>
+	)
+	const row = tabs && (
+		// A group: coming from the tiles, the focus lands on the tab that is open.
+		<div data-tv-group data-tv-prefer={`tab-${tab}`} role="tablist" className={`flex shrink-0 ${P ? "h-[52px] gap-2" : "mb-5 h-[64px] gap-3"}`}>
+			{tabs.map((t) => (
+				<F key={t.key} id={`tab-${t.key}`} onOk={() => setTab(t.key)} onKeyFocus={() => setTab(t.key)} label={t.name} className={`c-tab tvx flex items-center justify-center ${t.key === tab ? "c-tab-on" : ""} ${P ? "flex-1 text-[22px]" : "px-9 text-[28px]"}`}>
+					{t.name}
+				</F>
+			))}
+		</div>
+	)
+	const anyKey = any && (
+		<F id={any.item} onOk={() => pick(any)} className={`c-btn flex shrink-0 items-center whitespace-nowrap ${P ? "h-[54px] px-5 text-[21px]" : "h-[64px] px-8 text-[26px]"}`}>
+			{any.name}
+		</F>
+	)
+	const art = backdropOf(shown.art, "w1280")
+	// The phone: six options three by three, and beside the expand key Any mood or the focused option's line.
+	if (P)
+		return (
+			<Frame name="Discover" crumb={tabs ? undefined : "What kind of night?"} dest={dest} art={art} dim={0.86}>
+				<div className="flex h-full flex-col">
+					{row}
+					<div key={tab} className={`grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3 ${tabs ? "pt-2.5" : "pt-1"}`}>{options.map(tile)}</div>
+					<Foot>
+						{anyKey}
+						<span key={shown.item} className="tvd-fade line-clamp-2 min-w-0 text-[20px] leading-tight text-white/85">
+							{shown.line}
+						</span>
+					</Foot>
+				</div>
+			</Frame>
+		)
+	return (
+		<Frame name="Discover" dest={dest} art={art} dim={0.86} reserve>
+			{row ?? <div className="mb-6 text-[46px] font-bold leading-none">What kind of night?</div>}
+			<div key={tab} className="grid grid-cols-3 gap-6">
+				{options.map(tile)}
+			</div>
+			{/* Any mood stands in the band the expand key has, at its other end. */}
+			{anyKey && <div className="mt-6 flex">{anyKey}</div>}
+		</Frame>
+	)
+}
+
+/**
+ * A score for a title, on the app's rating strip (ui/title-actions/ScoreControl.tsx): the four named levels, each
+ * as wide as its scores, low on the left; under them the ten exact scores. OK on a level gives the level's score
+ * (3, 5, 7, 9), as in the app; Down from a level goes to the exact scores under it. The level the focus is in
+ * lights its scores. On the phone the levels are four equal keys and the scores stand in two rows of five, so
+ * every key is 44 px or more.
+ */
+const Rate: NonNullable<Skin["Rate"]> = ({ kicker, question, line, title, onScore, skip }) => {
+	const tv = useTv()
+	const P = tv.phone
+	const focus = tv.focus ?? ""
+	const at = focus.startsWith("level-") ? RATING_LEVELS.findIndex((l) => `level-${l.name.toLowerCase()}` === focus) : focus.startsWith("score-") ? levelOf(Number(focus.slice(6))) : -1
+	const exact = focus.startsWith("score-") ? Number(focus.slice(6)) : null
+	// What the focus would give, in words: the app's own label for an exact score, the level's score for a level.
+	const says = exact ? `${exact} · ${scoreLabels[exact]}` : at >= 0 ? `${RATING_LEVELS[at].name} · OK gives it ${RATING_LEVELS[at].score}` : line
+	// The phone has one line for it, where the kicker stands until the focus is on the strip.
+	const short = exact ? `${exact} · ${scoreLabels[exact]}` : at >= 0 ? `${RATING_LEVELS[at].name} · gives ${RATING_LEVELS[at].score}` : kicker
+	const levels = RATING_LEVELS.map((l) => (
+		<F key={l.name} id={`level-${l.name.toLowerCase()}`} first={l.name === "Good"} onOk={() => onScore(l.score)} label={`${l.name}, ${l.score}`} className={`c-lvl flex items-center ${P ? "h-[68px] flex-col justify-center gap-1 px-1" : "h-[92px] gap-4 px-5"}`} style={P ? undefined : { gridColumn: `span ${l.hi - l.lo + 1}` }}>
+			<span className={`shrink-0 rounded-full ${P ? "h-1.5 w-10" : "h-10 w-2"}`} style={{ background: getVibeColorValue(l.score) }} />
+			{P ? (
+				<span className="text-[20px] leading-none">{l.name}</span>
+			) : (
+				// The name over its scores, as the app's strip shows them at its roomy size.
+				<span className="flex min-w-0 flex-col gap-1.5 leading-none">
+					<span className="text-[28px]">{l.name}</span>
+					<span className="whitespace-nowrap text-[21px] font-semibold tabular-nums text-white/55">
+						{l.lo}–{l.hi}
+					</span>
+				</span>
+			)}
+		</F>
+	))
+	const scores = Array.from({ length: 10 }, (_, i) => (i + 1) as Score).map((score) => {
+		const lit = at >= 0 && levelOf(score) === at
+		const on = exact === score
+		return (
+			<F key={score} id={`score-${score}`} onOk={() => onScore(score)} label={`${score}, ${scoreLabels[score]}`} className={`c-num flex items-center justify-center ${P ? "h-[68px] text-[26px]" : "h-[64px] text-[30px]"} ${lit || at < 0 ? "text-white" : "text-white/60"}`} style={{ background: `${getVibeColorValue(score)}${on ? "" : lit ? "88" : at < 0 ? "55" : "30"}` }}>
+				{score}
+			</F>
+		)
+	})
+	// The ten scores are one group: coming down from a level, the focus lands on that level's lowest score.
+	const under = { "data-tv-group": true, "data-tv-prefer": at >= 0 ? `score-${RATING_LEVELS[at].lo}` : undefined }
+	const pass = skip && (
+		<F id={skip.id} onOk={skip.onOk} className={`c-btn flex shrink-0 items-center whitespace-nowrap ${P ? "h-[68px] px-4 text-[20px]" : "h-[64px] px-8 text-[26px]"}`}>
+			{skip.label}
+		</F>
+	)
+	return (
+		<>
+			<Ambient src={backdropOf(title, "w1280")} />
+			<Shade dim={0.82} />
+			<Bar className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`} />
+			{P ? (
+				<div className="absolute inset-x-0 bottom-0 top-[74px] flex flex-col justify-end gap-1.5 px-5 pb-3">
+					<div className="flex min-h-0 flex-1 items-center gap-3">
+						<div className="min-w-0 flex-1">
+							<div className="truncate text-[20px] font-bold uppercase leading-tight tracking-[0.12em] text-white/75">{short}</div>
+							<div className="truncate text-[26px] font-bold leading-tight tracking-tight">{question}</div>
+						</div>
+						{pass}
+					</div>
+					<div className="grid shrink-0 grid-cols-4 gap-1.5">{levels}</div>
+					<div {...under} className="grid shrink-0 grid-cols-5 gap-1.5">
+						{scores}
+					</div>
+				</div>
+			) : (
+				<div className="absolute inset-0 flex flex-col justify-center px-14 pt-16">
+					<div className="text-[24px] font-bold uppercase tracking-[0.16em] text-white/75">{kicker}</div>
+					<div className="mt-2 font-bold leading-[1.02] tracking-tight" style={{ fontSize: titleSize(question, 72, 54) }}>
+						{question}
+					</div>
+					<div className="mt-3 h-[40px] text-[30px] text-white/85">{says}</div>
+					<fieldset aria-label="Your score" className="mt-7 grid grid-cols-10 gap-2">
+						{levels}
+						<div {...under} className="col-span-10 grid grid-cols-10 gap-2">
+							{scores}
+						</div>
+					</fieldset>
+					{pass && <div className="mt-7 flex">{pass}</div>}
+				</div>
+			)}
 		</>
 	)
 }
@@ -138,17 +323,40 @@ const Moods: Skin["Moods"] = ({ moods, pick, dest }) => {
 	)
 }
 
-const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, empty }) => {
+type ListProps = Parameters<Skin["List"]>[0]
+
+const List: Skin["List"] = (p) => <ListView {...p} />
+
+/**
+ * What to watch on one streaming service: the list of titles as everywhere, under the service's own mark, with a
+ * line of its colour under the top bar and nothing else of it. The expand key leads to the real Discover with
+ * that service alone.
+ */
+const Service: NonNullable<Skin["Service"]> = ({ service, items, dest }) => {
+	// On the phone the mark says the name: beside it there is room for the count only.
+	const P = useTv().phone
+	return <ListView name={P ? `${items.length} to watch` : `On ${service.name}`} crumb={P ? undefined : `${items.length} titles, best match first`} dest={dest} items={items} actions={[]} brand={service.key} />
+}
+
+function ListView({ name, crumb, dest, items, actions, actionsLabel, empty, brand }: ListProps & { brand?: ServiceKey }) {
 	const tv = useTv()
 	const P = tv.phone
 	const B = useExpandAt() === "bottom"
 	const x = useFocusedTitle(items)
+	const mark = brand && (
+		<>
+			<div className="pointer-events-none absolute inset-x-0 top-0 h-1" style={{ background: SERVICES[brand].accent }} />
+			<span className={`flex shrink-0 items-center rounded-[10px] bg-black/55 ${P ? "h-[46px] px-3" : "h-[64px] px-5"}`}>
+				<Mark service={brand} height={P ? 20 : 28} />
+			</span>
+		</>
+	)
 	const facts = x && `${metaOf(x)} · ${x.score} score${tv.taste ? ` · ${x.match}% match` : ""} · On ${x.service}`
 	// The phone: one line of name, one of facts, the posters as tall as is left, and the actions beside the expand key.
 	if (P) {
 		const sub = items.find((i) => i.title === x)?.sub
 		return (
-			<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined}>
+			<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined} mark={mark}>
 				<div className="flex h-full flex-col">
 					{x && (
 						<div key={x.key} className="tvd-fade shrink-0">
@@ -176,7 +384,7 @@ const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, e
 		)
 	}
 	return (
-		<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined} reserve>
+		<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined} reserve mark={mark}>
 			<div className="flex min-h-full flex-col justify-between">
 				<div className="w-[820px]">
 					{x && (
@@ -403,4 +611,4 @@ const Menu: Skin["Menu"] = ({ items }) => {
 	)
 }
 
-export const cinema: Skin = { css: CSS, Home, Moods, List, Map: IslandMap, TitleView, Taste, Sides, Ask, Menu }
+export const cinema: Skin = { css: CSS, Home, Moods, List, Map: IslandMap, TitleView, Taste, Sides, Ask, Menu, Choice, Rate, Service }

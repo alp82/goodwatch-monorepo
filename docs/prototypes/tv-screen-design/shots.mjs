@@ -42,6 +42,17 @@ const MEMBER = [
 	["18-side", "side-dark-crime"],
 	["19-my-shows", "shows"],
 ]
+// Cinema's own: mini Discover's tabs, a theme's titles, the streaming services, and home on a service's tile.
+// [file name, the screen, a screen pushed on top, the focused item, keys pressed before the focus is set]
+const CINEMA = [
+	["20-discover-themes", "discover", null, "theme-crime", ["ArrowUp", "ArrowRight"]],
+	["21-discover-styles", "discover", null, "style-animated", ["ArrowUp", "ArrowRight", "ArrowRight"]],
+	["22-theme-results", "discover-theme.crime"],
+	["23-on-netflix", "service-netflix"],
+	["24-on-prime-video", "service-prime"],
+	["25-home-services", "home", null, "app-service-netflix"],
+	["26-quiz-exact-score", "quiz", null, "score-8"],
+]
 const COMPARE = [
 	["home", "home"],
 	["discover-moods", "discover"],
@@ -73,10 +84,12 @@ const open = async (viewport, query, tries = 3) => {
 	return { ctx, page }
 }
 /** Jumps to a screen and waits until its art is there and its motion is over. */
-const go = async (page, [, root, push, focus]) => {
+const go = async (page, [, root, push, focus, keys]) => {
 	await page.evaluate((id) => window.__tvDesign.root(id), root)
 	await page.waitForTimeout(150)
 	if (push) await page.evaluate((id) => window.__tvDesign.push(id), push)
+	// Keys first (they turn the tabs of mini Discover), then the focus.
+	for (const key of keys ?? []) { await page.keyboard.press(key); await page.waitForTimeout(300) }
 	if (focus) await page.evaluate((id) => window.__tvDesign.focus(id), focus)
 	await page.waitForTimeout(150)
 	await page.waitForFunction(() => [...document.querySelectorAll("[data-tv-screen] img")].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 30000 }).catch(() => console.log("art missing on", root))
@@ -116,7 +129,7 @@ if (!only || only === "screens") {
 			["phone", PHONE],
 		]) {
 			for (const [as, screens] of [
-				["guest", GUEST],
+				["guest", design === "cinema" ? [...GUEST, ...CINEMA] : GUEST],
 				["member", MEMBER],
 			]) {
 				// The phone's pictures are without the prototype's own key, so they show the real proportions.
@@ -138,6 +151,39 @@ if (!only || only === "screens") {
 		const tv = await tvBox(page)
 		await ctx.close()
 		sizes[design] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: worst.text, smallestTarget: worst.target }
+	}
+	// Mini Discover's two first screens side by side, on the desktop and on the phone: the three tabs (the
+	// direction) with each tab open, and the six moods (the other way, behind T).
+	if (DESIGNS.includes("cinema")) {
+		const dir = join(here, "compare")
+		const tmp = join(dir, "tmp-choice")
+		mkdirSync(tmp, { recursive: true })
+		const VIEWS = [
+			["B  three tabs, Moods open", "", ["", "discover"]],
+			["B  Themes", "", ["", "discover", null, "theme-crime", ["ArrowUp", "ArrowRight"]]],
+			["B  Styles", "", ["", "discover", null, "style-animated", ["ArrowUp", "ArrowRight", "ArrowRight"]]],
+			["A  six moods", "&choice=six", ["", "discover"]],
+		]
+		for (const [size, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
+			const files = []
+			for (const [i, [text, query, screen]] of VIEWS.entries()) {
+				const { ctx, page } = await open(viewport, `design=cinema&chrome=off${query}`)
+				await go(page, screen)
+				const file = join(tmp, `${size}-${i}.png`)
+				if (size === "desktop") {
+					const b = await tvBox(page)
+					await page.screenshot({ path: file, clip: { x: b.x, y: b.y, width: Math.floor(b.width / 2) * 2, height: Math.floor(b.height / 2) * 2 } })
+				} else await page.screenshot({ path: file })
+				files.push([file, text])
+				if (query) await page.screenshot({ path: join(here, "screens", "cinema", `27-discover-six-moods-${size}.jpg`), type: "jpeg", quality: size === "desktop" ? 58 : 78 })
+				await ctx.close()
+			}
+			const label = (i, text) => `[${i}]drawtext=text='${text}':fontcolor=white:fontsize=${size === "desktop" ? 26 : 20}:x=16:y=h-${size === "desktop" ? 44 : 34}:box=1:boxcolor=black@0.75:boxborderw=8[l${i}]`
+			const stack = size === "desktop" ? "[l0][l1]hstack=inputs=2[a];[l2][l3]hstack=inputs=2[b];[a][b]vstack" : "[l0][l1][l2][l3]hstack=inputs=4"
+			ffmpeg(...files.flatMap(([file]) => ["-i", file]), "-filter_complex", `${files.map(([, text], i) => label(i, text)).join(";")};${stack}`, "-q:v", "3", join(dir, size === "desktop" ? "discover-choice.jpg" : "discover-choice-phone.jpg"))
+		}
+		rmSync(tmp, { recursive: true, force: true })
+		console.log("compare discover-choice")
 	}
 	if (DESIGNS.length === 3) {
 		const before = JSON.parse(readFileSync(join(here, "sizes.json"), "utf8"))
@@ -486,11 +532,11 @@ if (!only || only === "touch") {
 	strip(tap, join(dir, "tap-strip.jpg"))
 
 	// The long press: down on Funny and held still (the ring stays under the finger), then dragged: the ring steps
-	// out above the finger, goes across the moods to Thrilling and on to Dark, and the finger lets go there.
+	// out above the finger, goes across the moods to Romance and on to Scary, and the finger lets go there.
 	await go(page, ["", "discover"])
 	;[x, y] = await mid("mood-funny")
-	const [x2, y2] = await mid("mood-dark")
-	const [x3, y3] = await mid("mood-thrilling")
+	const [x2, y2] = await mid("mood-scary")
+	const [x3, y3] = await mid("mood-romance")
 	const drag = async (ax, ay, bx, by, steps = 14) => { for (let i = 1; i <= steps; i++) { await touch("touchMove", ax + ((bx - ax) * i) / steps, ay + ((by - ay) * i) / steps); await page.waitForTimeout(34) } }
 	const LIFT = 46
 	await record(page, tmp, async () => {
@@ -505,7 +551,7 @@ if (!only || only === "touch") {
 		await page.waitForTimeout(1500)
 	})
 	clip(join(dir, "hold.mp4"))
-	// The strip: held still on Funny, dragged to Thrilling, on to Dark, let go.
+	// The strip: held still on Funny, dragged to Romance, on to Scary, let go.
 	await go(page, ["", "discover"])
 	await touch("touchStart", x, y)
 	await page.waitForTimeout(900)

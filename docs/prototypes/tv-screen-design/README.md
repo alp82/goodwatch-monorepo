@@ -34,6 +34,7 @@ needs the internet but nothing needs a key).
 | `Remote under`, or `R` | The other place for the Remote than the one the window's size chose: under the TV or beside it (`&remote=below\|beside`) |
 | `Remote: in the hand` / `on the table` on a phone, or `K` | The other form of the phone's Remote than the one the phone's height chose (`&form=hand\|table`) |
 | `⋯` on a phone | Unfolds these controls: on a phone they are behind one small key under the TV's left corner, so the picture shows the real proportions |
+| `Discover: three tabs` / `six moods` (Cinema), or `T` | Mini Discover's first screen: the three tabs (the direction), or six moods for comparison (`&choice=six`) |
 | `C` | The two pointer shapes that were not chosen, crosshair and dot; the ring is the pointer (`&pointer=cross`) |
 | `Expand at the bottom`, or `B` | The expand key's place: at the picture's bottom right (where it is), or for comparison in the top bar, last or first (`&bar=last\|first`) |
 | Arrow keys, Enter, Escape or Backspace | Directions, OK, Back |
@@ -52,6 +53,10 @@ Every key is a plain key on a German keyboard: none needs Shift or AltGr. `&chro
   only in very small windows; the pointer is the **ring**, for the mouse and for a finger; the expand key is
   **at the picture's bottom right**, on the desktop as on the phone; the phone's Remote is **in the hand**, and
   lies on the table only in the shortest windows; the room photo stays.
+- Decided after that, and built in Cinema only (the other two directions keep what they had): mini Discover
+  starts with **three tabs, Moods / Themes / Styles**, and the real Discover gets Theme and Style filters; a
+  title is scored on **the app's rating strip**; the Remote's streaming keys open **On Netflix** and **On Prime
+  Video**. See [Three follow-ups](#three-follow-ups-cinema).
 
 ## The top bar
 
@@ -63,7 +68,7 @@ pointer, and by touch.
 | Screen | Back | Search | Menu | Expand |
 | --- | --- | --- | --- | --- |
 | Home | no: nothing to go back to | yes | yes | no: home has no page of its own |
-| Tonight, the moods, the titles, the map, an island, Taste, a side, My shows, a title | yes | yes | yes | yes |
+| Tonight, mini Discover's first screen, the titles, the map, an island, Taste, a side, My shows, a title, a streaming service | yes | yes | yes | yes |
 | The quiz, rating a title, What is GoodWatch? | yes | yes | yes | no: no page to grow into |
 | Search (typing) | yes | no: you are there | yes | no |
 | Search results | yes | no | yes | yes |
@@ -82,7 +87,7 @@ owner's decision; until this round the desktop had it last in the bar). It alone
 - Down or Right from the last item of a screen reaches it: Right along a title's actions ends on it in Cinema
   and Marquee, where it stands in their row, and Down from them in Glow, whose actions stand higher. The brackets
   grow into the page from there.
-- `walk.mjs` checks on all 16 screens per direction that the key covers no type and no focus target, and that the
+- `walk.mjs` checks on all 18 screens per direction that the key covers no type and no focus target, and that the
   top bar holds only Back, Search and Menu.
 - **For comparison** (`B`): the two places it had in the bar, last (the top right corner) and first.
   [compare/top-bar.jpg](compare/top-bar.jpg) shows both in each direction.
@@ -209,7 +214,9 @@ speed (0.85 s).
 `screens/<direction>/<nn-name>-desktop.jpg` (1920x1080, in the room) and `-phone.jpg` (390x844, without the
 prototype's own key): 19 screens per direction, taken with every `REC_*` flag on and with the top bar. 01 home, 02 Tonight, 03 the moods, 04 the titles, 05 the expand key focused, 06 the map, 07 an island,
 08 Taste before a taste, 09 the quiz, 10 a title, 11 rating, 12 search, 13 search results, 14 the menu, 15 What is
-GoodWatch?, and for a member 16 home, 17 the three sides, 18 a side, 19 My shows.
+GoodWatch?, and for a member 16 home, 17 the three sides, 18 a side, 19 My shows. Cinema has eight more: 20 the
+Themes tab, 21 the Styles tab, 22 a theme's titles, 23 On Netflix, 24 On Prime Video, 25 home on the Netflix tile,
+26 the quiz on an exact score, 27 the six moods.
 
 ## The room: the TV and the Remote
 
@@ -227,7 +234,7 @@ window. `R` shows the other one for comparison.
   2560 x 1300. Its streaming row still ends inside the window. Before and after:
   [1920 x 1080](viewports/remote-raised-1920x1080.jpg), [1920 x 940](viewports/remote-raised-1920x940.jpg).
 - **It covers no content.** The 18 px it takes of the picture are in the bottom margin, in the middle (about 200
-  px wide), where no direction puts type or a focus target: `walk.mjs` checks all 16 kinds of screen in each
+  px wide), where no direction puts type or a focus target: `walk.mjs` checks all 18 kinds of screen in each
   direction at both sizes. For that, Glow's list of stills now ends 16 canvas pixels above the bottom margin
   instead of running to the picture's edge (its third row, which pages in, used to peek out there). The nearest
   type or focus target above the Remote's top is 48 px away on 1920 x 1080 and 38 px on 1920 x 940 in Cinema and
@@ -359,7 +366,7 @@ On the phone, as now on the desktop, the expand key is **out of the top bar, in 
 picture**, amber as before; the bar keeps Back, Search and Menu. The brackets that grow into the page start from there. Every screen keeps the
 corner free for it, and uses the row beside it: the focused mood's line, a list's "Change mood" or its two "Sail
 to" islands, Taste's "Rate more"; on a title the three actions stand in a column on the left and the key beside
-the last of them. `walk.mjs` checks on all 16 screens, at every size and in both forms, that the key covers no type
+the last of them. `walk.mjs` checks on all 18 screens, at every size and in both forms, that the key covers no type
 and no focus target, and that no focus target runs off the picture's bottom edge. A toast ("Only Netflix") stands
 above that row, clear of the key.
 
@@ -410,6 +417,142 @@ size in both forms. [viewports/phone-before-after.jpg](viewports/phone-before-af
   posters on home and the poster on a title, Glow the stills on home and on a title. A long line under a screen's
   name is cut with an ellipsis. Not built: swiping, landscape.
 
+## Three follow-ups (Cinema)
+
+Built in Cinema. Marquee and Glow keep what they had (their six sample moods, four answers for a rating,
+streaming keys that narrow the lists), and a screen opened in Cinema still shows its titles after a change of
+direction.
+
+### 1. Mini Discover starts with three tabs
+
+The real Discover has eleven moods plus Any mood: too many for one TV screen. The owner asked for two ways out to
+compare, then chose: **three tabs, Moods / Themes / Styles, six options each**, and "let's add them to discover
+too" for the two filters the real Discover does not have. `T` (or `&choice=six`) shows the other way, six moods.
+[compare/discover-choice.jpg](compare/discover-choice.jpg) has both on the desktop,
+[compare/discover-choice-phone.jpg](compare/discover-choice-phone.jpg) on the phone.
+
+**How the tabs work**
+
+- They stand under the top bar, at the left, where the question "What kind of night?" stood: the bar keeps Back,
+  Search and Menu and nothing is added to it. A tab is 64 canvas pixels tall with 28 px type (68 px on a 1080p
+  window); on the phone the three share the width.
+- **A tab opens when the direction keys land on it.** Left and Right along the tabs turn the pages at once, as
+  on a TV; OK on a tab does the same. With the **pointer**, hovering a tab only gives it the focus (opening on
+  hover would flip the page whenever the pointer crosses the row); a **click** opens it. A **tap** opens it.
+- Up from the options lands on the tab that is open, not on the nearest one; Up again reaches the top bar; Down
+  from the bar lands on the open tab again.
+- **One choice leads to its titles, as before.** Choices do not combine: not within a tab, not across tabs. That
+  is the simple answer and the one I recommend for the TV: one press, four titles. Combining stays where it is
+  today, in the real Discover, which the expand key opens with that one filter already set.
+- Coming back from the titles, the tab that was open is still open.
+
+**The options, and what each is in the real app.** Moods are Discover's own (`domain/moods.ts`): names, lines
+and colours are read from that list. Themes and Styles are the Explorer's islands of those two groupings
+(`server/explorer/islands.server.ts`): ids, names and colours are copied from there. **The real Discover has no
+theme or style filter today**, so for those twelve the address after Expand is invented, and their titles can
+today only come from the Explorer.
+
+| Tab | Option | Real id | Its rule in the app | Titles would come from, today | Expand goes to | New Discover filter? |
+| --- | --- | --- | --- | --- | --- | --- |
+| Moods | Funny | mood `funny` | any humour score 8+, bleakness 5 or less | `/api/discover/results?moods=funny` | `/discover?moods=funny` (real) | no |
+| Moods | Feel-good | mood `feelgood` | wholesome 7+, hopefulness 7+, bleakness 3 or less | `…?moods=feelgood` | `/discover?moods=feelgood` (real) | no |
+| Moods | Romance | mood `romance` | romance 7+ | `…?moods=romance` | `/discover?moods=romance` (real) | no |
+| Moods | Action | mood `action` | adrenaline 8+ and spectacle 7+ | `…?moods=action` | `/discover?moods=action` (real) | no |
+| Moods | Scary | mood `scary` | scare 7+, or Horror with scare 5+ | `…?moods=scary` | `/discover?moods=scary` (real) | no |
+| Moods | Mind-bending | mood `mind` | surrealism 6+, or complexity 8+ with philosophy or a non-linear story | `…?moods=mind` | `/discover?moods=mind` (real) | no |
+| Themes | Crime | island `crime` | crime 8+ | `/api/explorer/island?grouping=theme&id=crime` | `/discover?themes=crime` (**does not exist yet**) | yes |
+| Themes | Mystery | island `mystery` | mystery 8+ | `…&id=mystery` | `/discover?themes=mystery` (not yet) | yes |
+| Themes | Family | island `family` | family dynamics 8+ | `…&id=family` | `/discover?themes=family` (not yet) | yes; `genres=Family` is family-friendly, another thing |
+| Themes | Growing up | island `growing` | coming of age 8+ | `…&id=growing` | `/discover?themes=growing` (not yet) | yes, but it is the mood Coming of age (`moods=growing`) under another name: keep one |
+| Themes | Future | island `future` | futuristic, or technology and humanity, 7+ | `…&id=future` | `/discover?themes=future` (not yet) | yes |
+| Themes | Fantasy | island `fantasy` | fantasy 7+ | `…&id=fantasy` | `/discover?themes=fantasy` (not yet) | yes |
+| Styles | Animated | island `animated` | the genre Animation | `/api/explorer/island?grouping=style&id=animated` | `/discover?styles=animated` (not yet) | yes, but `genres=Animation` is the same rule: the filter could be an alias |
+| Styles | Spectacle | island `spectacle` | spectacle 8+ | `…&id=spectacle` | `/discover?styles=spectacle` (not yet) | yes |
+| Styles | Slow burn | island `slow` | slow burn 8+ | `…&id=slow` | `/discover?styles=slow` (not yet) | yes |
+| Styles | Fast-paced | island `fast` | fast pace 8+ | `…&id=fast` | `/discover?styles=fast` (not yet) | yes |
+| Styles | Talky | island `talky` | dialogue centrality 8+ | `…&id=talky` | `/discover?styles=talky` (not yet) | yes |
+| Styles | Nonlinear | island `nonlinear` | non-linear narrative 7+ | `…&id=nonlinear` | `/discover?styles=nonlinear` (not yet) | yes |
+
+- **The invented addresses** are spelled like the real `moods=`: `themes=<island id>` and `styles=<island id>`.
+  The stand-in page after Expand says "a filter Discover does not have yet". Until the filter exists, the one
+  real page with the same titles is the Explorer's island, `/explorer?grouping=theme&island=crime`.
+- **Why these twelve can become filters.** An island's rule has the shape of a mood's rule: a level read from the
+  title's fingerprint (or its genres) and a threshold (`level`, `from` in `islands.server.ts`). Discover filters
+  moods by a bit mask over the same fingerprint in the title snapshot (`moodMaskOf`). Themes and styles can be
+  two more masks from the island rules, once those rules move from the server folder into a shared module, as
+  the moods are.
+- **Which six.** The Explorer has 14 themes and 10 styles. Themes: Crime, Mystery, Family, Growing up, Future,
+  Fantasy; left out: War, Politics, True stories, History, The mind, Showbiz, Sports, Money. Styles: Animated,
+  Spectacle, Slow burn, Fast-paced, Talky, Nonlinear; left out: Documentary, Stylized, Music, Graphic. I took
+  the broadest ones that do not repeat a mood of the first tab, and, honestly, ones the 25 sample titles can
+  fill: True stories and Documentary would be my first two to swap in, and the samples have none of either.
+- **The Moods tab** has six of the eleven moods. Crime & mystery is not among them because Crime and Mystery
+  are themes one tab on; Other worlds is covered by Future and Fantasy, Coming of age by Growing up. Heavy and
+  History are on no tab: they stay in the real Discover.
+- **The sample lists are stand-ins**: the 25 samples have one animated title and no horror, so Animated shows
+  two titles and Scary shows the darkest four.
+
+**The other way, for comparison (A, `T`):** six moods, one screen, no tabs: Funny, Feel-good, Romance, Action,
+Scary, Crime & mystery (one per well-known kind of evening: comedy, feel-good, romance, action, horror, crime),
+with **Any mood** as its own key beside the expand key. Every option is a real Discover filter today. It is the
+simpler screen and needs nothing new; it offers 6 choices where the tabs offer 18, and it leaves five moods and
+all themes and styles to the real page.
+
+### 2. A score on the app's rating strip
+
+The quiz and "How was it?" had four answers, best first. They now have **the app's own rating strip**, low on
+the left to high on the right, as the owner asked: the four named levels, and under them the ten exact scores.
+
+- **What it is in the app.** The strip is `ui/title-actions/ScoreControl.tsx` (the title page and the taste
+  quiz use it), and the real start page's TV quiz (`ui/living-room/TvQuiz.tsx`) already draws the same thing.
+  The prototype reads the real definitions, it does not copy them: the levels from `RATING_LEVELS`
+  (`ui/taste-quiz/quiz-flow.ts`: **Dislike** 1–4, **Okay** 5–6, **Good** 7–8, **Excellent** 9–10), the colours
+  from `getVibeColorValue` and the names of the scores ("8 · Great") from `scoreLabels` (`utils/ratings.ts`).
+- **The look, at TV size.** Each level is as wide as its scores (Dislike spans four, the others two), with its
+  colour bar, its name (28 canvas pixels) and its range under the name; 92 px tall. Under them the ten scores,
+  64 px tall, each in its own colour. The level the focus is in lights its scores; a line over the strip says
+  what the focus would give ("Good · OK gives it 7", "8 · Great").
+- **How the levels and the scores relate.** The levels are the big targets, and the focus starts on Good. Left
+  and Right move along them. **OK on a level gives the level's score** (3, 5, 7, 9), as in the app. **Down goes
+  to the exact scores under that level** and lands on its lowest; Left and Right move along all ten; Up returns
+  to the level over the score. Down again reaches "Haven't seen it".
+- **"Haven't seen it"** stays its own key, under the strip (the quiz only; rating a title has Back instead).
+- After a score in the quiz the focus stays where it was, so the same answer for the next title is one press.
+- Rating a title keeps the exact score: its key on the title screen then reads "8 · Great".
+- **The pointer and a finger** work on every key: hover or drag gives the focus, a click or a tap gives the score.
+- **On the phone, simplified:** the four levels are equal keys in one row (no longer as wide as their scores,
+  with a dash of their colour, without the range); the ten scores stand in **two rows of five** (1 to 5, 6 to
+  10); the line of words takes the place of the kicker; "Haven't seen it" stands beside the title. Every key of
+  the strip is 68 canvas pixels tall, **45 px or more on every phone**, and every score is one tap.
+- **In small desktop windows** nothing is simplified: at 1280 x 720, the smallest window, a score is 80 x 50 px.
+
+### 3. The streaming keys open "On Netflix" and "On Prime Video"
+
+The owner: "The netflix and prime buttons do almost nothing. Show watch on pages instead". A streaming key of the
+Remote now opens a TV screen for that service.
+
+- **The screen.** The service's own mark at the left of the top bar and a line of its colour along the top
+  edge (Netflix red, Prime Video blue), nothing more of it. Under that the list as everywhere in Cinema: the
+  focused title's name and facts, and a row of posters in the same size, paging sideways (13 sample titles on
+  Netflix, 5 on Prime Video, best match first). A title leads to its screen, Back returns.
+- **The key** shows it is on while its screen is open. The same key again leaves the screen; the other key
+  opens the other service in its place.
+- **Expand** leads to the real page that lists what streams on that service: Discover with that one service,
+  **`/discover?services=8`** for Netflix and `/discover?services=9` for Prime Video. `services` is Discover's
+  real parameter and takes TMDB provider ids (`domain/filter-state.ts`); 8 and 9 are the ids the real Remote
+  uses for the two (`REMOTE_SERVICES` in `ui/living-room/living-room-data.ts`).
+- **On the TV itself:** home has a tile for each service after the apps, with the service's mark; focusing it
+  shows a picture from that service across the TV, as the apps do. I chose home over the menu: the menu has the
+  set's own five entries and no pictures, and on home the two are one Right after the last app.
+- **For a member, which keys?** The real start page gives every Remote the same four keys (Netflix 8, Prime
+  Video 9, Disney Plus 337, Hulu 15, fixed in `REMOTE_SERVICES`), named through the country's catalog, and a
+  press only narrows Tonight's picks to that service. The page already knows the member's saved services
+  (`LivingRoomData.savedServices`, from `server/living-room/pool.server.ts`) and the country's catalog
+  (`/api/living-room/services`). **The real build should** give a member keys for their own first two saved
+  services, with the mark the Remote has (it has four) or else the service's logo from the catalog
+  (`logo_path`), and give a guest the first two of the country's catalog instead of a fixed pair (Hulu, for
+  one, exists in few countries). The screen and its Expand work for any provider id.
+
 ## Not in this round, and what I did not check
 
 - **Rendering cost.** Cinema cross-fades a full-picture image on every focus move, Glow draws large soft shadows,
@@ -424,26 +567,22 @@ size in both forms. [viewports/phone-before-after.jpg](viewports/phone-before-af
 
 ## Questions for the owner
 
-1. A press that is held points under the finger, and the ring steps out above the finger only once it drags.
-   So a finger that is held still hides the ring; what shows the target then is the focused item itself. Fine,
-   or should a held finger show something more (for example a halo around the finger)?
-2. The phone's Remote turns 11 degrees at most and leans back as much. That is what fits under the TV without
-   touching it. Enough to read as aiming, or should it move more and be allowed over the sideboard and the TV's
-   lower edge while it does?
-3. On the table the Remote only turns 3.5 degrees and slides. Enough for the two short windows, or should those
-   windows show no aiming at all?
-4. The TV on a phone is at most 1.2 times wider than tall, so that it reads as a TV. A tall phone therefore shows
-   more room, not more TV. Right, or should the TV take more of a tall phone?
-5. With the expand key at the bottom right on the desktop, four kinds of screen gave up a little for it (see The
-   top bar). Fine as they are, or should any of them be laid out again around the key?
-6. Is the Remote under the desktop's TV high enough now (18 px over the picture's bottom edge, a tenth larger)?
-   There is room for about 20 px more in Cinema before it comes close to a title's buttons.
-7. On the smallest desktop windows (1366 x 650, 1280 x 720) the TV's smallest type is 16.6 to 17.5 px.
-   Acceptable, or should the TV's content itself change there (fewer, larger things) rather than scale?
-8. Cinema shows no name on a poster in a list (the name stands above for the focused one). Enough, or should
-   every poster carry its name?
-9. The app pictures (the map, the fingerprint) are drawn in code as stand-ins. Should they be illustrated, or
-   made from real art as Tonight and My shows are?
+1. The six themes and six styles: right? True stories and Documentary are the two I would swap in first; the
+   sample titles could not fill them.
+2. Growing up (theme) is the mood Coming of age under another name, and Animated (style) is the genre Animation.
+   When Discover gets Theme and Style filters, should each of these exist twice, or once?
+3. The Moods tab has six of the eleven moods; Heavy and History are on no tab. Fine, or should the tabs page
+   further (a second row of moods)?
+4. After a score in the quiz the focus stays on that score for the next title. Right, or should every title
+   start on Good again?
+5. On the phone the levels are four equal keys and the scores two rows of five. Enough like the app's strip?
+6. The services have a tile each on home, after the apps. Right place, or the menu?
+7. A member's streaming keys: their own first two services, as proposed above?
+8. A finger held still hides the ring, so only the focused item shows the target. Fine, or should a held finger
+   show something more (for example a halo around the finger)?
+9. The phone's Remote turns 11 degrees at most and leans back as much. Enough to read as aiming?
+10. On the smallest desktop windows (1366 x 650, 1280 x 720) the TV's smallest type is 16.6 to 17.5 px.
+    Acceptable, or should the TV's content itself change there?
 
 ## Files
 
@@ -455,6 +594,7 @@ Added:
 - `.../cinema.tsx`, `.../marquee.tsx`, `.../glow.tsx`: the three directions
 - `.../art.ts`: TMDB poster and backdrop paths of the 25 sample titles
 - `.../pointing.tsx`: the Remote aiming at the cursor or at a finger on the picture, and the TV's own pointer
+- `.../choices.ts`: mini Discover's options with the app's real names (moods, themes, styles) and the streaming services, each with what it is in the real app
 - `.../phone-room.tsx`: the phone's room (the wall, the TV's body and stand, the sideboard) and where the TV and the Remote sit in it
 - `.../phone-remote.tsx`: the phone's Remote, in its two forms
 - `docs/prototypes/tv-screen-design/`: this file, `shots.mjs`, `walk.mjs`, `sizes.json`, `screens/`, `compare/`, `focus/`, `expand/`, `pointing/`, `touch/`, `viewports/`
@@ -467,7 +607,7 @@ are imported as they are, and the flow prototype works as before.
 ## Proof
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
-- `walk.mjs`: 839 checks pass. 63 per direction: the apps, a mood, titles, Want to See, rating, the top bar
+- `walk.mjs`: 1127 checks pass. 63 per direction: the apps, a mood, titles, Want to See, rating, the top bar
   (Back, Search and Menu and nothing else, reached with Up), the expand key (at the picture's bottom right,
   reached with Right along a title's actions or Down from them and with Down from the last mood, OK growing the
   picture from there, Back coming back to it; and behind `B` its two places in the bar), the menu, the map in four
@@ -475,7 +615,7 @@ are imported as they are, and the flow prototype works as before.
   appears over the TV and the system cursor is hidden, the item under it takes the focus, a click is OK, it hides
   on a key and after 3.2 s, the Remote swings far toward each of the four corners, the streaming row stays in the
   window while it is turned, it settles over its own keys and is at rest after the cursor left).
-- 12 for what may cover the picture, each on 16 screens: the raised Remote in each direction at 1920 x 1080 and
+- 12 for what may cover the picture, each on 18 screens: the raised Remote in each direction at 1920 x 1080 and
   1920 x 940, and the expand key at the bottom right in each direction, cover no type and no focus target (what
   a list cuts off does not count, nor the menu that opens over a screen); and in each direction the top bar holds
   Back, Search and Menu only.
@@ -484,14 +624,14 @@ are imported as they are, and the flow prototype works as before.
   streaming keys take a click, beside the TV the whole Remote is inside the window, and the smallest type is
   18 px or more (under 18 px at the two smallest, as stated above); the same for Marquee and Glow at 1920 x 940
   and Glow at 1536 x 730.
-- **550 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
-  390 x 700, with the Remote in the hand and on the table (49 each):
+- **780 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
+  390 x 700, with the Remote in the hand and on the table (72 each):
   - the layout is the phone's and the Remote has the form asked for; the TV has its body on every side of the
     picture and wall beside it, and is wider than tall; the Remote starts under the TV;
   - it has its 11 keys, each 44 px or more, inside the window and under nothing (the site's dock included), and a
     tap on each does what it says;
   - the expand key is at the picture's bottom right and not in the bar, covers no type and no focus target on any
-    of 16 screens, and a tap on it grows the picture into the page and Back returns; no focus target runs off the
+    of 18 screens, and a tap on it grows the picture into the page and Back returns; no focus target runs off the
     picture's bottom edge;
   - **a tap**: the ring shows where the finger landed, the Remote's transform changes, the tapped app opens, then
     the ring is gone and the Remote has no transform again;
@@ -508,6 +648,27 @@ are imported as they are, and the flow prototype works as before.
   Marquee and Glow at 375 x 667 and 430 x 932 (15 each): the same without the keys' effects and the pointing.
 - 15 for the Remote's form by itself: in the hand at 390 x 844, 360 x 740 and 430 x 932, on the table at
   375 x 667 and 390 x 700; `K` forces the other and `K` again gives the choice back.
+- **58 for the three follow-ups on the desktop**, in Cinema, with the keys and the pointer. The tabs (three
+  tabs and six options; the bar holds Back, Search, Menu and the tabs stand under it; a tab is TV-sized; Up from
+  the options lands on the open tab, Right opens the next at once, Up again reaches the bar and Down returns to
+  the open tab; one choice leads to its titles; Expand from a theme and from a style lead to
+  `/discover?themes=crime` and `/discover?styles=animated`; Back returns to the tab that was open; the pointer
+  over a tab gives it the focus and does not open it, a click does) and the six moods behind `T` (six moods, no
+  tabs, a mood's titles, Expand to `/discover?moods=crime`, Any mood as its own key that covers nothing). The
+  rating strip (four levels and ten scores, low on the left, the scores under the levels, each level as wide as
+  its scores; the focus starts on Good; Left and Right along the levels and along all ten scores; Down to the
+  scores under the level, Up back to it, "Haven't seen it" under the strip; the app's name for the focused score;
+  OK on a level and a click on a score both rate; rating a title returns with the exact score on the title; at
+  1280 x 720 every target is 44 px or more). The services (the Remote's Netflix key opens On Netflix and shows it
+  is on; its 13 titles; a title's screen and back; Expand to `/discover?services=8`; the other key opens Prime
+  Video in its place, Expand to `/discover?services=9`; the key again leaves; home has a tile for each after the
+  apps, reached with Right and opened with OK and with a click; in Marquee the key still narrows the lists).
+- Of the phone's checks, 22 in each of Cinema's ten runs are the three follow-ups with a finger and the phone Remote's keys: a tap on a
+  tab opens it, Up from the options lands on the open tab, Next opens the next, a tap on an option leads to its
+  titles and Back returns to its tab; the strip has its levels and scores low to high with every target 44 px or
+  more, a tap on a score rates, Next and Down and Previous move along it and OK rates, "Haven't seen it" goes on
+  without a score; the Netflix key opens On Netflix, the Prime Video key replaces it, the key again leaves, and
+  Expand there leads to Discover with that service.
 - And 18 more: the nod and the `R` key with the Remote forced beside the TV, the direction buttons and the keys
   1, 2, 3, the ring and the two shapes behind `C`, the pointer waiting hidden at phone width, the phone's controls
   folded away and unfolding (a direction, the Remote's other form), a tap with reduced motion (the ring shows, the

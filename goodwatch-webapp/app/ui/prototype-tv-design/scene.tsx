@@ -14,6 +14,7 @@
 //   &pointer=ring|cross|dot   the shape of the TV's own pointer (C)
 //   &bar=last|first      the expand key in the top bar, last or first, instead of at the picture's bottom right (B)
 //   &remote=below|beside the Remote under the TV or beside it, whatever the window's size would choose (R)
+//   &choice=six          mini Discover's first screen with six moods instead of the three tabs (Moods, Themes, Styles) (T)
 //   &form=hand|table     the phone's Remote held in the hand or lying in front of the TV, whatever the phone's height would choose (K, or the phone's controls)
 //   &pointer=cross|dot   the two pointer shapes the owner did not choose; the ring is the pointer (C)
 //   &hold                freezes the expand run for screenshots: window.__tvLeave(0..1)
@@ -27,7 +28,8 @@ import { LABELS, type Rect, TvCtx, parseId, useTvEngine } from "~/ui/prototype-t
 import { Corners } from "~/ui/prototype-tv-flow/kit"
 import { HugRemote } from "~/ui/prototype-remote/RemoteVariants"
 import { assetUrl } from "~/utils/asset-url"
-import { BarCtx, CANVAS, DIRECTIONS, DesignTv, type DirectionKey, EXPAND_AT, type ExpandAt, Follower, type Skin } from "./base"
+import { BarCtx, CANVAS, ChoiceCtx, DIRECTIONS, DesignTv, type DirectionKey, EXPAND_AT, type ExpandAt, Follower, type Skin } from "./base"
+import { CHOICES, type ChoiceKey, SERVICES, type TabKey, serviceOfName } from "./choices"
 import { cinema } from "./cinema"
 import { glow } from "./glow"
 import { marquee } from "./marquee"
@@ -156,6 +158,9 @@ export function TvDesignScene() {
 	const expandAt = ((params.get("bar") ?? "") in EXPAND_AT ? params.get("bar") : "bottom") as ExpandAt
 	const formWanted = params.get("form")
 	const wantForm: PhoneRemoteKey | "auto" = formWanted === "hand" || formWanted === "table" ? formWanted : "auto"
+	const choice: ChoiceKey = params.get("choice") === "six" ? "six" : "tabs"
+	// The tab that is open on mini Discover's first screen. It lives here, so it is still open on the way back.
+	const [tab, setTab] = useState<TabKey>("moods")
 	// The phone's own controls are folded away, so the picture shows the real proportions.
 	const [panel, setPanel] = useState(false)
 	const wanted = params.get("remote")
@@ -217,6 +222,7 @@ export function TvDesignScene() {
 			const next = ({ bottom: "last", last: "first", first: "" } as const)[expandAt]
 			set({ bar: next })
 		},
+		choice: () => set({ choice: choice === "six" ? "" : "six" }),
 		// The other form than the one showing; back to the phone's own choice when that is the one asked for.
 		form: () => {
 			if (!size) return
@@ -256,6 +262,7 @@ export function TvDesignScene() {
 			if (key === "b") latest.current.controls.bar()
 			if (key === "r") latest.current.controls.place()
 			if (key === "k") latest.current.controls.form()
+			if (key === "t") latest.current.controls.choice()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
@@ -298,6 +305,16 @@ export function TvDesignScene() {
 	// A finger on the picture points too, and the phone's Remote aims at it in its own way (`rig`).
 	usePointing(root, remoteEl, pointerEl, L && size ? { tv: L.tv, remote: L.remote, width: size.w, height: size.h, phone, live, swing: place === "below" ? 42 : 13, rig: PL?.rig, focus: tv.setFocus } : null)
 
+	// A streaming key of the Remote. Cinema opens what there is to watch on that service (a screen of the TV, which
+	// the home has a tile for too); the key again leaves it. The other directions narrow their lists, as before.
+	const streaming = (name: string) => {
+		const key = serviceOfName(name)
+		if (!skin.Service || !key) return tv.service(name)
+		const id = `service-${key}`
+		if (tv.top === id) return tv.back()
+		return parseId(tv.top)[0] === "service" ? tv.replace(id) : tv.push(id)
+	}
+	const openService = skin.Service && parseId(tv.top)[0] === "service" ? (SERVICES[parseId(tv.top)[1] as keyof typeof SERVICES]?.name ?? null) : null
 	const dispatch = (action: TvAction) => {
 		switch (action.type) {
 			case "step":
@@ -311,7 +328,7 @@ export function TvDesignScene() {
 			case "open-search":
 				return tv.openSearch()
 			case "service-key":
-				return tv.service(action.service)
+				return streaming(action.service)
 			case "power":
 				return tv.power(action.on)
 		}
@@ -332,7 +349,7 @@ export function TvDesignScene() {
 					menuOpen={tv.top === "menu"}
 					lcd={["", ""]}
 					serviceName={(key) => SERVICE_NAMES[key]}
-					activeService={tv.store.service}
+					activeService={skin.Service ? openService : tv.store.service}
 					dispatch={dispatch}
 					onOk={tv.ok}
 					onDirection={tv.move}
@@ -342,6 +359,7 @@ export function TvDesignScene() {
 	)
 
 	const bar = useMemo(() => ({ expand: expandAt }), [expandAt])
+	const choosing = useMemo(() => ({ choice, tab, setTab }), [choice, tab])
 	const s = tvRect ? Math.max(tvRect.width / canvas.w, tvRect.height / canvas.h) : 1
 	const pill = "rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500"
 	return (
@@ -365,6 +383,7 @@ export function TvDesignScene() {
 				<div data-tv-screen className={`absolute touch-none select-none overflow-hidden bg-black [-webkit-touch-callout:none] ${phone ? "rounded-[3px]" : "rounded-[4px]"} ${live ? "tv-nocursor" : ""}`} style={{ ...tvRect, zIndex: run ? 30 : undefined, boxShadow: L.photo && tv.store.power === "on" ? "0 0 120px 10px rgba(251,191,36,0.14), 0 0 22px 1px rgba(251,191,36,0.18)" : "none" }}>
 					<div data-tv-canvas className="absolute left-0 top-0 origin-top-left" style={{ width: canvas.w, height: canvas.h, transform: `translate(${(tvRect.width - canvas.w * s) / 2}px, ${(tvRect.height - canvas.h * s) / 2}px) scale(${s})` }}>
 						<BarCtx.Provider value={bar}>
+						<ChoiceCtx.Provider value={choosing}>
 						<TvCtx.Provider value={tv}>
 							{tv.store.power === "off" ? (
 								<div className="absolute inset-0 bg-black" aria-hidden />
@@ -376,6 +395,7 @@ export function TvDesignScene() {
 								</div>
 							)}
 						</TvCtx.Provider>
+						</ChoiceCtx.Provider>
 						</BarCtx.Provider>
 					</div>
 				</div>
@@ -390,7 +410,7 @@ export function TvDesignScene() {
 							<img src={assetUrl(HAND_IMAGE.webp)} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={PL.hand} draggable={false} />
 						</picture>
 					)}
-					<PhoneRemote tv={tv} form={form} at={PL.remote} bottom={PL.h} />
+					<PhoneRemote tv={tv} form={form} at={PL.remote} bottom={PL.h} onService={streaming} active={skin.Service ? openService : tv.store.service} />
 				</div>
 			)}
 
@@ -459,6 +479,11 @@ export function TvDesignScene() {
 					<button type="button" data-form={form} onClick={controls.form} className={pill} title="K">
 						Remote: {PHONE_REMOTES[form].toLowerCase()}
 						{wantForm === "auto" ? "" : " (forced)"}
+					</button>
+				)}
+				{design === "cinema" && (
+					<button type="button" data-choice={choice} onClick={controls.choice} className={pill} title="T">
+						{CHOICES[choice]}
 					</button>
 				)}
 				{!phone && (

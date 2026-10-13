@@ -3,10 +3,12 @@
 // focused item. How anything looks is the direction's business (a `Skin`): cinema.tsx, marquee.tsx, glow.tsx.
 import { type CSSProperties, type FC, type ReactNode, createContext, createElement, useContext, useEffect, useRef, useState } from "react"
 import { ICON, Icon } from "~/ui/living-room/Remote"
-import { DEST, type Dest, LEVELS, MOODS, NEXT_EPISODES, POPULAR, QUIZ, QUIZ_GOAL, SEARCH_IDEAS, SIDES, TO_START, type Title, discover, islandOf, islandTitles, moodName, search, sideOf, titleOf } from "~/ui/prototype-tv-flow/data"
+import { DEST, type Dest, LEVELS, MOODS, NEXT_EPISODES, POPULAR, QUIZ, QUIZ_GOAL, SEARCH_IDEAS, SIDES, TITLES, TO_START, type Title, discover, islandOf, islandTitles, moodName, search, sideOf, titleOf } from "~/ui/prototype-tv-flow/data"
 import { parseId, useTv } from "~/ui/prototype-tv-flow/engine"
 import { Corners, F, Layer, metaOf, useTitleActions } from "~/ui/prototype-tv-flow/kit"
+import { scoreLabels } from "~/utils/ratings"
 import { backdropOf, posterOf } from "./art"
+import { ANY_MOOD, type ChoiceKey, type Option, SERVICES, SIX_MOODS, type ServiceKey, TABS, type TabKey, optionOf, serviceDest, tabOf } from "./choices"
 
 export type DirectionKey = "cinema" | "marquee" | "glow"
 export const DIRECTIONS: Record<DirectionKey, { name: string; bet: string }> = {
@@ -23,7 +25,7 @@ export const PHONE_CANVAS = { w: 500, h: 417 }
 export type Action = { id: string; label: string; onOk: () => void }
 export type Item = { title: Title; id: string; sub?: string; onOk: () => void }
 /** `title` lends the app its backdrop; `preview` is what the home shows of the app while it has the focus. */
-export type AppInfo = { key: string; name: string; line: string; hue: number; title: Title; preview: Title[] }
+export type AppInfo = { key: string; name: string; line: string; hue: number; title: Title; preview: Title[]; service?: ServiceKey }
 export type MoodInfo = { key: string; name: string; line: string; hue: number; title: Title }
 
 /** A visual direction: every screen of the apps flow, drawn its way. The flow hands it what to show and what each item does. */
@@ -42,6 +44,14 @@ export type Skin = {
 	/** One question, a few big answers: rating, the quiz, search, What is GoodWatch? */
 	Ask: (p: { kicker: string; question: string; line?: string; answers: Action[]; title?: Title }) => ReactNode
 	Menu: (p: { items: Action[] }) => ReactNode
+	// The three below are drawn by Cinema only. A direction without them keeps what it had: its six tiles for the
+	// moods, four answers for a rating, and streaming keys that narrow the lists.
+	/** Mini Discover's first screen with the app's real names: six moods, or three tabs of six options. */
+	Choice?: (p: { tabs: { key: TabKey; name: string; options: Option[] }[] | null; tab: TabKey; setTab: (key: TabKey) => void; options: Option[]; any: Option | null; pick: (option: Option) => void; dest: Dest }) => ReactNode
+	/** A score for a title on the app's rating strip: four named levels over the ten exact scores. */
+	Rate?: (p: { kicker: string; question: string; line?: string; title: Title; onScore: (score: number) => void; skip?: Action }) => ReactNode
+	/** What to watch on one streaming service. */
+	Service?: (p: { service: (typeof SERVICES)[ServiceKey]; items: Item[]; dest: Dest }) => ReactNode
 }
 
 /**
@@ -60,11 +70,17 @@ export const useExpandAt = (): ExpandAt => {
 	return useTv().phone ? "bottom" : expand
 }
 
+/** Which of the two first screens mini Discover has, and the tab that is open on the one with tabs. */
+export const ChoiceCtx = createContext<{ choice: ChoiceKey; tab: TabKey; setTab: (key: TabKey) => void }>({ choice: "tabs", tab: "moods", setTab: () => {} })
+
 /** The sample member's Tonight: from the Wishlist, the liveliest picture first. */
 const TONIGHT_MEMBER = [titleOf("spirited-away"), titleOf("knives-out"), titleOf("palm-springs")]
 
 /** A skin's screen as an element: skins use hooks, so they are rendered, never called. */
 const h = <P extends object>(component: (p: P) => ReactNode, props: P) => createElement(component as FC<P>, props)
+
+/** The sample moods of the first round that the real list names otherwise. */
+const OLD_MOODS: Record<string, string> = { cozy: "feelgood", thrilling: "action", dark: "scary" }
 
 /** A representative title per mood, for its art. */
 const MOOD_ART: Record<string, string> = { funny: "the-good-place", cozy: "paddington-2", thrilling: "edge-of-tomorrow", mind: "arrival", dark: "severance", any: "spirited-away" }
@@ -111,6 +127,7 @@ export function DesignTv({ skin }: { skin: Skin }) {
 
 function Screen({ id, skin }: { id: string; skin: Skin }) {
 	const tv = useTv()
+	const { choice } = useContext(ChoiceCtx)
 	const [kind, arg] = parseId(id)
 	const item = (title: Title, sub?: string, prefix = "t"): Item => ({ title, id: `${prefix}-${title.key}`, sub, onOk: () => tv.push(`title-${title.key}`) })
 	switch (kind) {
@@ -131,6 +148,21 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 			})
 		}
 		case "discover": {
+			// Cinema: the app's real moods, or three tabs with the Explorer's themes and styles (choices.ts).
+			// The ids of the first round's sample moods still lead somewhere in Cinema, so a screen survives a change of
+			// direction; and a direction without the new first screen can still list an option's titles.
+			const option = arg ? optionOf(skin.Choice ? (OLD_MOODS[arg] ?? arg) : MOODS.some((m) => m.key === arg) || arg === "any" ? "" : arg) : null
+			if (skin.Choice || option) {
+				if (!option) return <ChoiceScreen skin={skin} />
+				return h(skin.List, {
+					name: "Discover",
+					crumb: option.name,
+					dest: option.dest,
+					items: option.titles.map((x) => item(x)),
+					actions: [{ id: "change", label: choice === "tabs" ? "Change" : "Change mood", onOk: tv.back }],
+					empty: "Nothing fits.",
+				})
+			}
 			if (!arg) {
 				const moods = [...MOODS, { key: "any", name: "Any mood", line: "Surprise me.", hue: 180 }].map((m) => ({ ...m, title: titleOf(MOOD_ART[m.key]) }))
 				return h(skin.Moods, { moods, pick: (key) => tv.push(`discover-${key}`), dest: DEST.discover() })
@@ -145,6 +177,14 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 				actions: [{ id: "change", label: "Change mood", onOk: tv.back }],
 				empty: "Nothing fits.",
 			})
+		}
+		case "service": {
+			// What to watch on one streaming service: the Remote's streaming keys open it, and so do two tiles on home.
+			const service = SERVICES[arg as ServiceKey] ?? SERVICES.netflix
+			const items = TITLES.filter((x) => x.service === service.name)
+				.sort((a, b) => b.match - a.match)
+				.map((x) => item(x))
+			return skin.Service ? h(skin.Service, { service, items, dest: serviceDest(service.key) }) : h(skin.List, { name: `On ${service.name}`, dest: serviceDest(service.key), items, actions: [] })
 		}
 		case "explorer":
 			return h(skin.Map, { open: (key) => tv.push(`island-${key}`), dest: DEST.explorer() })
@@ -179,6 +219,17 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 			return <TitleScreen skin={skin} titleKey={arg} />
 		case "rate": {
 			const x = titleOf(arg)
+			// Cinema: the app's rating strip. The title keeps the exact score ("8 · Great").
+			if (skin.Rate)
+				return h(skin.Rate, {
+					kicker: "Seen it",
+					question: `How was ${x.title}?`,
+					title: x,
+					onScore: (score) => {
+						tv.rate(x.key, `${score} · ${scoreLabels[score]}`)
+						tv.back()
+					},
+				})
 			return h(skin.Ask, {
 				kicker: "Seen it",
 				question: `How was ${x.title}?`,
@@ -198,6 +249,15 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 			const answer = (level: string | null) => () => {
 				if (tv.quiz(level)) tv.back()
 			}
+			if (skin.Rate)
+				return h(skin.Rate, {
+					kicker: `Taste · ${Math.min(tv.store.rated, QUIZ_GOAL)} of ${QUIZ_GOAL} rated`,
+					question: x.title,
+					line: `${metaOf(x)}. Have you seen it?`,
+					title: x,
+					onScore: (score) => answer(`Rated ${score}`)(),
+					skip: { id: "q-skip", label: "Haven't seen it", onOk: answer(null) },
+				})
 			return h(skin.Ask, {
 				kicker: `Taste · ${Math.min(tv.store.rated, QUIZ_GOAL)} of ${QUIZ_GOAL} rated`,
 				question: x.title,
@@ -239,6 +299,13 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 				{ key: "explorer", name: "Explorer", hue: 200, line: "Sail a small map of islands.", title: titleOf("interstellar"), preview: islandTitles("space").slice(0, 3) },
 				{ key: "taste", name: "Taste", hue: 265, line: tv.taste ? "Three sides of you." : `Rate ${QUIZ_GOAL} titles, get picks made for you.`, title: titleOf("arrival"), preview: SIDES[1].titles.slice(0, 3) },
 				...(tv.member ? [{ key: "shows", name: "My shows", hue: 150, line: "Your next episodes.", title: NEXT_EPISODES[0].title, preview: NEXT_EPISODES.map((e) => e.title) }] : []),
+				// Everything on the Remote is on the TV too: what its streaming keys open has a tile each, after the apps.
+				...(skin.Service
+					? Object.values(SERVICES).map((service) => {
+							const on = TITLES.filter((x) => x.service === service.name).sort((a, b) => b.match - a.match)
+							return { key: `service-${service.key}`, name: service.name, hue: service.key === "netflix" ? 357 : 207, line: `What to watch on ${service.name}.`, title: on[service.key === "netflix" ? 1 : 0], preview: on.slice(0, 3), service: service.key }
+						})
+					: []),
 			]
 			return h(skin.Home, { apps, greeting: tv.member ? "Welcome back" : "Good evening", open: tv.push })
 		}
@@ -249,6 +316,28 @@ function TitleScreen({ skin, titleKey }: { skin: Skin; titleKey: string }) {
 	const x = titleOf(titleKey)
 	const actions = useTitleActions(x)
 	return h(skin.TitleView, { name: x.kind === "movie" ? "Movie" : "Show", title: x, kicker: metaOf(x), actions, dest: DEST.title(x) })
+}
+
+/** Mini Discover's first screen: the six moods with Any mood, or the three tabs. One choice leads to its titles. */
+function ChoiceScreen({ skin }: { skin: Skin }) {
+	const tv = useTv()
+	const { choice, tab, setTab } = useContext(ChoiceCtx)
+	const tabs = choice === "tabs" ? TABS : null
+	const options = tabs ? (tabs.find((t) => t.key === tab) ?? tabs[0]).options : SIX_MOODS
+	if (!skin.Choice) return null
+	return h(skin.Choice, {
+		tabs,
+		tab,
+		setTab,
+		options,
+		any: tabs ? null : ANY_MOOD,
+		pick: (option) => {
+			// Coming back from the titles, the tab of the choice is the one that is open.
+			if (tabs) setTab(tabOf(option.id))
+			tv.push(`discover-${option.id}`)
+		},
+		dest: DEST.discover(),
+	})
 }
 
 // ---------------------------------------------------------------------------------------------------------

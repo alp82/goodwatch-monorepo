@@ -37,7 +37,7 @@ const WORD = "pointer-events-none whitespace-nowrap text-[8px] font-semibold upp
 
 type Layout = { left: number; top: number; u: number; width: number }
 
-export function PhoneRemote({ tv, form, at, bottom }: { tv: Tv; form: PhoneRemoteKey; at: Layout; bottom: number }) {
+export function PhoneRemote({ tv, form, at, bottom, onService, active }: { tv: Tv; form: PhoneRemoteKey; at: Layout; bottom: number; onService: (name: string) => void; active: string | null }) {
 	// A dark set: the first key only turns it on.
 	const press = (run: () => void) => () => (tv.store.power === "off" ? tv.power(true) : run())
 	const round = (label: string, d: string, run: () => void, pressed?: boolean) => (
@@ -48,7 +48,7 @@ export function PhoneRemote({ tv, form, at, bottom }: { tv: Tv; form: PhoneRemot
 	const service = (name: string, mark: string, ink: string, logo: number) => {
 		const src = `url("${assetUrl(mark)}") center / contain no-repeat`
 		return (
-			<button type="button" aria-label={`Only ${name}`} aria-pressed={tv.store.service === name} onClick={press(() => tv.service(name))} className="remote-key remote-service flex w-full items-center justify-center rounded-full" style={{ height: KEY }}>
+			<button type="button" aria-label={`Only ${name}`} aria-pressed={active === name} onClick={press(() => onService(name))} className="remote-key remote-service flex w-full items-center justify-center rounded-full" style={{ height: KEY }}>
 				<span aria-hidden className="block" style={{ width: logo, height: logo * 0.42, background: ink, WebkitMask: src, mask: src }} />
 			</button>
 		)
