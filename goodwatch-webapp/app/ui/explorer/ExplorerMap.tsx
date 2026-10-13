@@ -1,4 +1,7 @@
-import { useLocation, useSearchParams } from "@remix-run/react"
+// The Explorer's page: one map with every grouping's islands, each grouping in a region of its own around a middle
+// kept free. The Viewing menu flies to a region; a tap picks an island, which sails to the middle, and two to five
+// picked islands raise their combination there.
+import { useSearchParams } from "@remix-run/react"
 import {
 	keepPreviousData,
 	useQuery,
@@ -13,12 +16,11 @@ import {
 	useState,
 } from "react"
 import {
-	type BridgeKind,
-	DEFAULT_GROUPING,
-	type ExplorerPair,
+	type CombinationKind,
 	type ExplorerTitle,
+	type ExplorerWorld,
 	GROUPING_NAMES,
-	type ExplorerMap as MapData,
+	MAX_PICKS,
 	isGrouping,
 } from "~/domain/explorer"
 import {
@@ -28,43 +30,50 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
+import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
-import {
-	type BarState,
-	CombineBar,
-	type Side,
-	sharedLine,
-	sharedNote,
-} from "./CombineBar"
-import { HistoryBar, type StepView } from "./HistoryBar"
 import { Minimap } from "./Minimap"
-import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { Caption, ProximityCard } from "./ProximityCard"
+import { Selection, type SelectionState } from "./Selection"
 import { TopBar } from "./TopBar"
 import { Tutorial, type TutorialStep, useTutorial } from "./Tutorial"
 import { ZoomRail } from "./ZoomRail"
 import {
 	type MapQuery,
+	type WorldQuery,
 	explorerKeys,
-	fetchBridge,
 	fetchCard,
+	fetchCombination,
 	fetchIsland,
-	fetchMap,
-	fetchPairs,
-	pairKey,
+	fetchParts,
+	fetchShares,
+	fetchWorld,
 } from "./api"
 import { rgbCss } from "./color"
-import { type Drawn, type MapEngine, type Pad, createMapEngine } from "./engine"
 import {
-	type MapFocus,
-	focusOf,
-	sameFocus,
-	useSteps,
-	withFocus,
-} from "./history"
+	combinationSentence,
+	sharedLine,
+	sharedNote,
+} from "./combination-words"
+import {
+	type Drawn,
+	type MapEngine,
+	type Mode,
+	type Pad,
+	createMapEngine,
+} from "./engine"
 import type { IslandInput, MapIsland } from "./island"
-import { layWorld } from "./world"
+import { groupingOf, layRegions, localId, worldId } from "./regions"
+
+/** The map's filters as the URL holds them (null is the default). */
+type Filters = WorldQuery
+
+/**
+ * How picked islands join: from far out each grouping is its islands, small, and an island sails to the middle as
+ * soon as it's picked.
+ */
+const MODE: Mode = { meta: "isles", join: "dock", dockFrom: 1 }
 
 /** The title whose card is open: nearest the focus, or pinned by a tap. */
 interface Active {
@@ -74,116 +83,94 @@ interface Active {
 	pinned: boolean
 }
 
-/** The bridge that's up: the islands it joins (in the order picked), what it holds, and its titles. */
-interface Bridge {
+/** The combination that's up: the islands it joins (in the order picked) and what it holds. */
+interface Mix {
 	id: string
-	a: string
-	b: string
-	kind: BridgeKind
+	of: string[]
+	kind: CombinationKind
 	count: number
-	titles: ExplorerTitle[]
 }
 
-/**
- * The map's query from the URL: `grouping`, `services=mine|all`, `unseen=0|1`, `type=movie|show`, `anime=only|none`;
- * defaults are left out.
- */
-export function mapQueryOf(params: URLSearchParams): MapQuery {
-	const grouping = params.get("grouping")
+/** The filters from the URL: `services=mine|all`, `unseen=0|1`, `type=movie|show`, `anime=only|none`. */
+function filtersOf(params: URLSearchParams): Filters {
 	const services = params.get("services")
 	const unseen = params.get("unseen")
 	return {
-		grouping: isGrouping(grouping) ? grouping : DEFAULT_GROUPING,
 		services: services === "mine" || services === "all" ? services : null,
 		unseen: unseen === "0" || unseen === "1" ? unseen : null,
 		...titleTypeParams(parseTitleType(params)),
 	}
 }
-
-const sameQuery = (a: MapQuery, b: MapQuery) =>
-	a.grouping === b.grouping &&
-	a.services === b.services &&
-	a.unseen === b.unseen &&
-	a.type === b.type &&
-	a.anime === b.anime
+const filterKey = (f: Filters) =>
+	`${f.services}|${f.unseen}|${f.type}|${f.anime}`
 
 const currentParams = () => new URLSearchParams(window.location.search)
 
 const clampN = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
-const side = (island: MapIsland): Side => ({
+const sideOf = (island: MapIsland) => ({
 	id: island.id,
 	name: island.name,
 	color: rgbCss(island.tint),
+	group: GROUPING_NAMES[groupingOf(island.id)],
+	total: island.count,
+	posters: (island.top.length ? island.top : island.titles)
+		.slice(0, 3)
+		.map((t) => t.poster),
 })
 
 /**
- * The Explorer's islands map: the grouping's islands on the sea, their titles as lit posters that grow as you zoom in,
- * and the card of the title nearest the focus over the live map. Tapping an island lights it and shows what every other
- * island shares with it; tapping another raises the bridge between them. Every grouping, island entered, and bridge is
- * a step in the browser's history. Filters hide titles; the page never scrolls.
+ * The Explorer: every grouping's islands on one map, each grouping in a region of its own around a middle kept free.
+ * Tapping an island picks it (up to five, from any regions) and shows what every other island would leave; two to
+ * five picked islands raise their combination in the middle. Filters hide titles; the page never scrolls.
  */
 export function ExplorerMap({
-	initialMap,
+	initialWorld,
 	fallback,
 }: {
-	/** The map the server rendered (a member's own; a guest's first map comes from their browser's progress). */
-	initialMap: MapData | null
+	/** The world the server rendered (a member's own; a guest's comes from their browser's progress). */
+	initialWorld: ExplorerWorld | null
 	/** What shows until the page runs: the islands as a list, for no JavaScript and search engines. */
 	fallback?: ReactNode
 }) {
 	const [params, setParams] = useSearchParams()
-	const query = useMemo(() => mapQueryOf(params), [params])
+	const filters = useMemo(() => filtersOf(params), [params])
 	const { user, loading: userLoading } = useUser()
 	const member = !!user
 	const viewer = user?.id ?? "guest"
 	const queryClient = useQueryClient()
-	const location = useLocation()
-	const history = useSteps()
 
 	// ------------------------------------------------------------ data
 
-	const initialQuery = useRef(query)
-	const mapQuery = useQuery({
-		queryKey: explorerKeys.map(viewer, query),
-		// Each answer carries the query it answers: while the next one loads, the previous map stays up.
-		queryFn: async () => ({ query, map: await fetchMap(query, member) }),
+	const initialFilters = useRef(filters)
+	const worldQuery = useQuery({
+		queryKey: explorerKeys.world(viewer, filters),
+		// Each answer carries the filters it answers: while the next one loads, the previous world stays up.
+		queryFn: async () => ({
+			filters,
+			maps: (await fetchWorld(filters, member)).maps,
+		}),
 		enabled: !userLoading,
 		placeholderData: keepPreviousData,
-		// The server rendered the member's own map; a guest's depends on the progress their browser holds.
+		// The server rendered the member's own world; a guest's depends on the progress their browser holds.
 		initialData:
-			member && initialMap && query === initialQuery.current
-				? { query, map: initialMap }
+			member && initialWorld && filters === initialFilters.current
+				? { filters, maps: initialWorld.maps }
 				: undefined,
 	})
-	const map = mapQuery.data?.map ?? null
-	/** The query the shown map answers (the previous one while the next loads). */
-	const shownQuery = mapQuery.data?.query ?? null
-	const shownRef = useRef(shownQuery)
-	shownRef.current = shownQuery
-
-	/** What every pair of islands shares, for the counts on the islands. */
-	const pairsQuery = useQuery({
-		queryKey: explorerKeys.pairs(viewer, shownQuery ?? query),
-		queryFn: () => fetchPairs(shownQuery ?? query, member),
-		enabled: !!shownQuery && !userLoading,
-	})
-	const pairs = useMemo(() => {
-		const data = pairsQuery.data
-		if (!data || data.grouping !== map?.grouping) return null
-		return new Map<string, ExplorerPair>(
-			data.pairs.map((p) => [pairKey(p.a, p.b), p]),
-		)
-	}, [pairsQuery.data, map?.grouping])
-	const pairsRef = useRef(pairs)
-	pairsRef.current = pairs
+	const maps = worldQuery.data?.maps ?? null
+	const map = maps?.[0] ?? null
+	/** The filters the shown world answers (the previous ones while the next loads). */
+	const shown = worldQuery.data?.filters ?? null
+	const shownRef = useRef(shown)
+	shownRef.current = shown
 
 	const hasServices = (map?.services.length ?? 0) > 0
-	const onMyServices = hasServices && query.services !== "all"
-	const notSeenYet = query.unseen !== "0"
+	const onMyServices = hasServices && filters.services !== "all"
+	const notSeenYet = filters.unseen !== "0"
 	const titleType = useMemo(
-		() => titleTypeOf(query.type, query.anime),
-		[query.type, query.anime],
+		() => titleTypeOf(filters.type, filters.anime),
+		[filters.type, filters.anime],
 	)
 	const [seenNow, setSeenNow] = useState<ReadonlySet<number>>(new Set())
 	/** Titles marked Not interested this visit: they leave the map at once (the next load leaves them out). */
@@ -196,52 +183,28 @@ export function ExplorerMap({
 			(!onMyServices || !!map?.approximate || t.services.length > 0) &&
 			(!notSeenYet || !(t.seen || seenNow.has(t.key))) &&
 			passesTitleType(titleType, t),
-		[
-			onMyServices,
-			notSeenYet,
-			titleType,
-			seenNow,
-			hiddenNow,
-			map?.approximate,
-		],
+		[onMyServices, notSeenYet, titleType, seenNow, hiddenNow, map?.approximate],
 	)
 
-	/** Island names and colors of every grouping seen this visit, for the history's labels. */
-	const names = useRef(new Map<string, { name: string; color: string }>())
-	useEffect(() => {
-		if (!map) return
-		for (const island of map.islands)
-			names.current.set(`${map.grouping}|${island.id}`, {
-				name: island.name,
-				color: island.color,
-			})
-	}, [map])
-
-	/** A new grouping is a step; the filters change the step shown, keeping what it's focused on. */
-	const setQuery = (next: Partial<MapQuery>) => {
-		const q = { ...query, ...next }
+	const setFilters = (next: Partial<Filters>) => {
+		const q = { ...filters, ...next }
 		const out = currentParams()
-		const put = (key: string, value: string | null) => {
+		for (const key of ["services", "unseen", "type", "anime"] as const) {
+			const value = q[key]
 			if (value == null) out.delete(key)
 			else out.set(key, value)
 		}
-		const regroup = q.grouping !== query.grouping
-		put("grouping", q.grouping === DEFAULT_GROUPING ? null : q.grouping)
-		put("services", q.services)
-		put("unseen", q.unseen)
-		put("type", q.type)
-		put("anime", q.anime)
-		if (regroup) {
-			out.delete("island")
-			out.delete("bridge")
-		}
-		setParams(out, { replace: !regroup, preventScrollReset: true })
+		setParams(out, { replace: true, preventScrollReset: true })
 	}
-	/** Moves the URL's focus: a new step, unless it's already there. */
-	const navigateFocus = (focus: MapFocus) => {
-		const now = currentParams()
-		if (sameFocus(focusOf(now), focus)) return
-		setParams(withFocus(now, focus), { preventScrollReset: true })
+	/** The picked islands are in the URL (`mix=mood:dark,decade:1980s`), so a link or a reload keeps them. */
+	const writePicks = (ids: readonly string[], step: boolean) => {
+		const out = currentParams()
+		const was = out.get("mix") ?? ""
+		if (was === ids.join(",")) return
+		if (ids.length) out.set("mix", ids.join(","))
+		else out.delete("mix")
+		// A pick the viewer made is a step of the browser's history, so Back lets the island go again.
+		setParams(out, { replace: !step, preventScrollReset: true })
 	}
 
 	// ------------------------------------------------------------ the stage
@@ -298,21 +261,23 @@ export function ExplorerMap({
 	}, [])
 
 	const world = useMemo(
-		() => (map && aspect ? layWorld(map.islands, aspect) : null),
-		[map, aspect],
+		() => (maps && aspect ? layRegions(maps, aspect) : null),
+		[maps, aspect],
 	)
 	const inputs = useMemo<IslandInput[]>(
 		() =>
-			map?.islands.map((island) => ({
-				id: island.id,
-				name: island.name,
-				color: island.color,
-				count: island.count,
-				medianMatch: island.medianMatch,
-				logo: null,
-				titles: island.titles,
-			})) ?? [],
-		[map],
+			maps?.flatMap((m) =>
+				m.islands.map((island) => ({
+					id: worldId(m.grouping, island.id),
+					name: island.name,
+					color: island.color,
+					count: island.count,
+					medianMatch: island.medianMatch,
+					logo: null,
+					titles: island.titles,
+				})),
+			) ?? [],
+		[maps],
 	)
 
 	// ------------------------------------------------------------ the active title and its card
@@ -326,16 +291,16 @@ export function ExplorerMap({
 	const [captions, setCaptions] = useState<Drawn[]>([])
 	const [focusIsland, setFocusIsland] = useState<MapIsland | null>(null)
 	const [atOverview, setAtOverview] = useState(true)
+	/** The region in the middle of the view, "hub" for the middle, "all" out at the world. */
+	const [at, setAt] = useState<string>("all")
 	const [toast, setToast] = useState<string | null>(null)
 	const [touch, setTouch] = useState(false)
 	useEffect(() => {
 		setTouch(window.matchMedia?.("(pointer: coarse)").matches ?? false)
 	}, [])
-	const [tutorial, endTutorial] = useTutorial(member, userLoading)
 	const cardEl = useRef<HTMLDivElement>(null)
 	const anchorEl = useRef<HTMLDivElement>(null)
 	const goEl = useRef<HTMLDivElement>(null)
-	const previewEl = useRef<HTMLDivElement>(null)
 	const captionEls = useRef(new Map<string, HTMLDivElement>())
 	const layerEl = useRef<HTMLDivElement>(null)
 
@@ -436,186 +401,154 @@ export function ExplorerMap({
 
 	// ------------------------------------------------------------ combining islands
 
-	const [lit, setLitState] = useState<string[]>([])
-	const litRef = useRef<string[]>([])
-	const setLit = (ids: string[]) => {
-		litRef.current = ids
-		setLitState(ids)
-		engineRef.current?.setLit(ids)
+	/** The picked islands, in the order picked: one to three, from any regions. */
+	const [picks, setPicksState] = useState<string[]>([])
+	const picksRef = useRef<string[]>([])
+	const [mix, setMixState] = useState<Mix | null>(null)
+	const mixRef = useRef<Mix | null>(null)
+	const setMix = (m: Mix | null) => {
+		mixRef.current = m
+		setMixState(m)
 	}
-	const [bridge, setBridgeState] = useState<Bridge | null>(null)
-	const bridgeRef = useRef<Bridge | null>(null)
-	const setBridge = (b: Bridge | null) => {
-		bridgeRef.current = b
-		setBridgeState(b)
+	/** The combination is up, waiting for its titles. */
+	const [forming, setForming] = useState(false)
+
+	/** What every other island would hold with the picked ones, for the counts on the islands. */
+	const sharesQuery = useQuery({
+		queryKey: explorerKeys.picked("shares", viewer, shown ?? filters, picks),
+		queryFn: () => fetchShares(shown as Filters, picks, member),
+		enabled:
+			!!shown && !userLoading && picks.length > 0 && picks.length < MAX_PICKS,
+	})
+	const shares = useMemo(() => {
+		const data = sharesQuery.data
+		if (!data || [...data.of].sort().join(",") !== [...picks].sort().join(","))
+			return null
+		return new Map(data.shares.map((s) => [s.id, s]))
+	}, [sharesQuery.data, picks])
+	/** What each picked island does to the combination, for its row in the selection. */
+	const partsQuery = useQuery({
+		queryKey: explorerKeys.picked("parts", viewer, shown ?? filters, picks),
+		queryFn: () => fetchParts(shown as Filters, picks, member),
+		enabled: !!shown && !userLoading && picks.length > 1,
+	})
+	const parts =
+		partsQuery.data && partsQuery.data.of.join(",") === picks.join(",")
+			? partsQuery.data.without
+			: null
+	const sharesRef = useRef(shares)
+	sharesRef.current = shares
+
+	const namesOf = (ids: readonly string[]) => {
+		const list = ids.map((id) => engineRef.current?.island(id)?.name ?? id)
+		return list.length > 2
+			? `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`
+			: list.join(" and ")
 	}
-	/** Islands being combined while their bridge loads. */
-	const [forming, setForming] = useState<[string, string] | null>(null)
-	const [hover, setHover] = useState<MapIsland | null>(null)
-	/** The tutorial has asked for Separate: the next time the bridge goes, it's done. */
-	const [toldSeparate, setToldSeparate] = useState(false)
-	/** Combining has been used once: the hint steps aside. */
-	const [combined, setCombined] = useState(false)
-	/** Changes with every grouping, filter, and layout, so answers for an earlier map are dropped. */
-	const worldToken = useRef(0)
 
 	/**
-	 * Raises the bridge between two islands: it rises between them at once and pulses while its titles load. A new step
-	 * unless it comes from the history. False when there's nothing to raise.
+	 * Sets the picked islands. Two to five raise their combination in the middle at once; it pulses while its titles
+	 * load. A combination that holds nothing lets the last island go again.
 	 */
-	const combine = async (a: string, b: string, step = true) => {
+	const applyPicks = async (next: string[], move = true): Promise<void> => {
 		const e = engineRef.current
 		const q = shownRef.current
-		if (!e || !q || a === b || !e.island(a) || !e.island(b)) return false
-		const token = worldToken.current
-		setLit([])
-		const known = pairsRef.current?.get(pairKey(a, b))
-		if (known && !known.count) {
-			say(
-				`${e.island(a)?.name ?? "They"} and ${e.island(b)?.name ?? "the other"} share no titles with these filters`,
-			)
-			return false
-		}
-		if (bridgeRef.current) setBridge(null)
-		// Up at once, pulsing until its titles arrive.
-		if (!e.raiseBridge(a, b, null, known ?? null)) return false
-		setForming([a, b])
+		if (!e || !q) return
+		const was = picksRef.current
+		picksRef.current = next
+		setPicksState(next)
+		writePicks(next, move)
+		e.setLit(next)
 		unpin()
+		if (next.length < 2) {
+			e.lowerMix()
+			setMix(null)
+			setForming(false)
+			// Back out to the whole map, so the next island can come from any group.
+			if (move && next.length > was.length) e.overview()
+			// Everything let go: the middle is empty again, so back out to the whole world.
+			if (!next.length && was.length) e.overview()
+			return
+		}
+		const known =
+			was.length < next.length
+				? sharesRef.current?.get(next[next.length - 1])
+				: null
+		setMix(null)
+		if (!e.raiseMix(next, null, known ?? null)) return
+		setForming(true)
+		// Back out to the world while more can join; with every place taken, to the combination.
+		if (move && was.length < next.length) {
+			if (next.length < MAX_PICKS) e.overview()
+			else e.flyToHub()
+		}
 		const tree = await queryClient
 			.fetchQuery({
-				queryKey: explorerKeys.bridge(viewer, q, a, b),
-				queryFn: () => fetchBridge(q, a, b, member),
+				queryKey: explorerKeys.picked("combination", viewer, q, next),
+				queryFn: () => fetchCombination(q, next, member),
 			})
 			.catch(() => null)
-		if (engineRef.current !== e || worldToken.current !== token) return false
-		setForming(null)
-		const A = e.island(a)
-		const B = e.island(b)
-		// Still the bridge that's waiting: not let go, and not replaced by another, since.
-		const waiting = e.bridge()
+		// Still the combination that's waiting: not changed since.
 		if (
-			!waiting?.bridge?.pending ||
-			pairKey(...waiting.bridge.of) !== pairKey(a, b)
+			engineRef.current !== e ||
+			picksRef.current.join(",") !== next.join(",")
 		)
-			return false
-		if (!tree || !tree.titles.length || !A || !B) {
-			e.lowerBridge()
+			return
+		setForming(false)
+		if (!tree || !tree.titles.length) {
 			say(
 				tree
-					? `${A?.name ?? "They"} and ${B?.name ?? "the other"} share no titles with these filters`
-					: "That bridge couldn't be raised. Try again in a moment.",
+					? `${namesOf(next)} share no titles with these filters`
+					: "That combination couldn't be raised. Try again in a moment.",
 			)
-			return false
+			return applyPicks(next.slice(0, -1), false)
 		}
-		const island = e.fillBridge(tree)
-		if (!island) return false
-		setBridge({
-			id: island.id,
-			a,
-			b,
-			kind: tree.kind,
-			count: tree.count,
-			titles: tree.titles,
-		})
-		setCombined(true)
-		if (step) navigateFocus({ island: null, bridge: [a, b] })
-		return true
+		const island = e.fillMix(tree)
+		if (!island) return
+		setMix({ id: island.id, of: next, kind: tree.kind, count: tree.count })
 	}
-	/** Lets the bridge go without a step of its own (the history, or going into an island out of its focus). */
-	const dropBridge = () => {
-		const e = engineRef.current
-		const b = bridgeRef.current
-		if (!e || !(b || waitingBridge())) return
-		if (b && activeRef.current?.island === b.id) unpin()
-		e.lowerBridge()
-		setBridge(null)
-		setForming(null)
-	}
-	/** A bridge is up without its titles yet. */
-	const waitingBridge = () => !!engineRef.current?.bridge()?.bridge?.pending
-	/** Separate: the map springs back, a step of its own so Back raises the bridge again. */
-	const separate = (keepLit: string[] = []) => {
-		if (!bridgeRef.current && !waitingBridge()) return
-		dropBridge()
-		setLit(keepLit)
-		navigateFocus({ island: null, bridge: null })
-		engineRef.current?.overview()
-	}
-	/** Goes into an island. One out of the bridge's focus lets the bridge go (Back raises it again). */
-	const flyIn = (island: MapIsland) => {
+	const goRegion = (id: string) => {
 		const e = engineRef.current
 		if (!e) return
 		unpin()
-		const b = bridgeRef.current
-		const inFocus =
-			!!b && (island.id === b.id || b.a === island.id || b.b === island.id)
-		if (b && !inFocus) dropBridge()
-		setLit([])
-		e.flyToIsland(island)
-		navigateFocus({
-			island: island.bridge ? null : island.id,
-			bridge: b && inFocus ? [b.a, b.b] : null,
-		})
+		if (id === "all") e.overview()
+		else if (id === "hub") e.flyToHub()
+		else e.flyToRegion(id)
 	}
-	/** A tap on an island out at the map: light it, let it go, raise a bridge to the lit one, or undo a bridge. */
+	/** Goes into an island. */
+	const flyIn = (island: MapIsland) => {
+		unpin()
+		engineRef.current?.flyToIsland(island)
+	}
+	/** A tap on an island in among a region: pick it, let it go, or go into the combination. */
 	const tapIsland = (island: MapIsland) => {
 		if (island.bridge) return flyIn(island)
-		const b = bridgeRef.current
-		if (b && (b.a === island.id || b.b === island.id)) {
-			// Tapping an island the bridge joins takes it out: the bridge goes, the other island stays lit.
-			separate([b.a === island.id ? b.b : b.a])
-			return
-		}
-		// A bridge joins two islands only: tapping a third lets it go and lights the tapped one on its own.
-		if (b) return separate([island.id])
-		const cur = litRef.current
-		if (cur.includes(island.id)) return setLit([])
-		if (cur.length === 1) {
-			void combine(cur[0], island.id)
-			return
-		}
-		setLit([island.id])
+		const cur = picksRef.current
+		if (cur.includes(island.id))
+			return void applyPicks(cur.filter((id) => id !== island.id))
+		if (cur.length >= MAX_PICKS)
+			return say(`${MAX_PICKS} islands at most. Let one go to pick another.`)
+		if (cur.length && sharesRef.current?.get(island.id)?.count === 0)
+			return say(
+				`${namesOf([...cur, island.id])} share no titles with these filters`,
+			)
+		void applyPicks([...cur, island.id])
 	}
-
-	/**
-	 * Shows what the URL's step is focused on: raises or lets go the bridge, then goes into the island or out to the
-	 * whole map. `how` is "history" for Back and Forward, "world" once a map is laid out.
-	 */
-	const applyFocus = (focus: MapFocus, how: "history" | "world") => {
+	const applyRef = useRef(applyPicks)
+	applyRef.current = applyPicks
+	// Back and Forward: the URL's picked islands changed without a pick here.
+	const mixParam = params.get("mix") ?? ""
+	useEffect(() => {
 		const e = engineRef.current
-		if (!e) return
-		unpin()
-		setLit([])
-		setHover(null)
-		const enter = () => {
-			const island = focus.island ? e.island(focus.island) : null
-			if (island) e.flyToIsland(island)
-			else if (how === "history" && !focus.bridge) e.overview()
-		}
-		const b = bridgeRef.current
-		const want = focus.bridge ? pairKey(...focus.bridge) : null
-		const have = b ? pairKey(b.a, b.b) : null
-		// Already rising and waiting for its titles.
-		const rising = e.bridge()?.bridge
-		if (want && rising?.pending && pairKey(...rising.of) === want) return
-		if (want !== have) {
-			dropBridge()
-			if (focus.bridge) {
-				void combine(focus.bridge[0], focus.bridge[1], false).then((ok) => {
-					if (ok && focus.island) enter()
-				})
-				return
-			}
-		} else if (b && !focus.island && how === "history") {
-			e.overview()
+		if (!e || !shownRef.current || mixParam === picksRef.current.join(","))
 			return
-		}
-		enter()
-	}
-	const applyRef = useRef(applyFocus)
-	applyRef.current = applyFocus
-	/** When the history last moved: the camera settling right after doesn't make a step of its own. */
-	const appliedAt = useRef(0)
+		const want = mixParam
+			.split(",")
+			.filter((id) => e.island(id))
+			.slice(0, MAX_PICKS)
+		void applyRef.current(want, false)
+		if (!want.length) e.overview()
+	}, [mixParam])
 
 	// ------------------------------------------------------------ the title nearest the focus
 
@@ -688,10 +621,7 @@ export function ExplorerMap({
 		place()
 	}
 
-	/**
-	 * Positions the card beside its poster, the captions under theirs (clear of each other), "Go in" on a lit island,
-	 * and the label of a previewed bridge at its seed of light.
-	 */
+	/** Positions the card beside its poster, the captions under theirs (clear of each other), and "Go in" on a lone picked island. */
 	const place = () => {
 		const e = engineRef.current
 		if (!e) return
@@ -758,7 +688,8 @@ export function ExplorerMap({
 		// "Go in" on a lit island: inside it, low, when it fits; otherwise next to it, wherever it covers the least of
 		// the other islands.
 		const go = goEl.current
-		const gi = litRef.current.length === 1 ? e.island(litRef.current[0]) : null
+		const gi =
+			picksRef.current.length === 1 ? e.island(picksRef.current[0]) : null
 		if (go && gi) {
 			const gw = go.offsetWidth || 110
 			const gh = go.offsetHeight || 40
@@ -797,30 +728,13 @@ export function ExplorerMap({
 			go.style.transform = `translate3d(${Math.round(best.x)}px,${Math.round(best.y)}px,0)`
 			go.style.visibility = gi.on ? "visible" : "hidden"
 		}
-		// The previewed bridge's label, at its seed of light.
-		const pv = previewEl.current
-		const at = e.previewAnchor()
-		if (pv) {
-			if (at) {
-				const gw = pv.offsetWidth || 160
-				const gh = pv.offsetHeight || 42
-				const x = clampN(
-					at.x - gw / 2,
-					Math.max(8, p.l),
-					w - gw - Math.max(8, p.r),
-				)
-				const y = clampN(at.y - gh / 2, p.t, h - gh - Math.max(8, p.b - 20))
-				pv.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`
-				pv.style.visibility = "visible"
-			} else pv.style.visibility = "hidden"
-		}
 	}
 	const placeRef = useRef(place)
 	placeRef.current = place
 	useEffect(() => {
 		placeRef.current()
 		engineRef.current?.invalidate()
-	}, [active, captions, card, lit, hover, forming])
+	}, [active, captions, card, picks, forming])
 
 	// ------------------------------------------------------------ the engine
 
@@ -828,6 +742,8 @@ export function ExplorerMap({
 		null as unknown as Parameters<typeof createMapEngine>[2]["current"],
 	)
 	hooks.current = {
+		mode: () => MODE,
+		onTapRegion: (id) => goRegion(id),
 		visible,
 		pad: () => padRef.current,
 		center,
@@ -862,13 +778,12 @@ export function ExplorerMap({
 		onDoubleTapIsland: (island) => flyIn(island),
 		onTapWater: () => {
 			if (activeRef.current?.pinned) unpin()
-			else if (litRef.current.length) setLit([])
 		},
 		onLongPress: (d) => pin(d),
 		needTree: (island) => needTree.current(island),
 		onFrame: () => compute(),
 		onPointer: () => compute(),
-		onHoverIsland: (island) => setHover(island),
+		onHoverIsland: () => {},
 		holdsPointer: (to) =>
 			to instanceof Node && !!anchorEl.current?.contains(to),
 	}
@@ -877,16 +792,17 @@ export function ExplorerMap({
 	const needTree = useRef<(island: MapIsland) => void>(() => {})
 	const asked = useRef(new Set<string>())
 	needTree.current = (island) => {
-		const q = shownQuery
-		if (!q || island.bridge) return
-		const keyOf = explorerKeys.island(viewer, q, island.id)
+		if (!shown || island.bridge) return
+		const q: MapQuery = { ...shown, grouping: groupingOf(island.id) }
+		const local = localId(island.id)
+		const keyOf = explorerKeys.island(viewer, q, local)
 		const id = keyOf.join("|")
 		if (asked.current.has(id)) return
 		asked.current.add(id)
 		queryClient
 			.fetchQuery({
 				queryKey: keyOf,
-				queryFn: () => fetchIsland(q, island.id, member),
+				queryFn: () => fetchIsland(q, local, member),
 			})
 			.then((tree) => {
 				const e = engineRef.current
@@ -906,18 +822,8 @@ export function ExplorerMap({
 		setEngine(e)
 		if (import.meta.env.DEV)
 			(window as unknown as { __explorer?: unknown }).__explorer = {
+				engine: e,
 				view: () => e.view(),
-				drawn: () =>
-					e.drawn().map((d) => ({
-						key: d.title.key,
-						title: d.title.title,
-						x: d.x,
-						y: d.y,
-						w: d.w,
-						h: d.h,
-						island: d.island.id,
-						t: d.t,
-					})),
 				islands: () =>
 					e.islands().map((i) => ({
 						id: i.id,
@@ -926,29 +832,19 @@ export function ExplorerMap({
 						y: i.sy,
 						r: i.sr,
 						on: i.on,
-						loaded: i.loaded,
 						role: i.role,
+						count: i.count,
+						loaded: i.loaded,
 						bridge: i.bridge && { ...i.bridge },
-						look: { ...i.look },
-						target: { ...i.target },
 					})),
-				active: () =>
-					activeRef.current && {
-						key: activeRef.current.key,
-						title: activeRef.current.title.title,
-						pinned: activeRef.current.pinned,
-					},
-				lit: () => litRef.current,
-				bridge: () =>
-					bridgeRef.current && {
-						...bridgeRef.current,
-						titles: bridgeRef.current.titles.length,
-					},
-				preview: () => e.previewAnchor(),
-				layoutBox: () => e.layoutBox(),
-				stats: () => e.stats(),
+				drawn: () => e.drawn().length,
+				picks: () => picksRef.current,
+				mix: () => mixRef.current,
 				sea: () => e.seaKind(),
 				busy: () => e.busy(),
+				stats: () => e.stats(),
+				pick: (ids: string[]) => applyRef.current(ids),
+				go: (id: string) => goRef.current(id),
 			}
 		return () => {
 			e.destroy()
@@ -956,23 +852,28 @@ export function ExplorerMap({
 		}
 	}, [])
 
+	const opened = useRef(false)
+	const goRef = useRef(goRegion)
+	goRef.current = goRegion
 	useEffect(() => {
-		if (!engine || !world || !map || !shownQuery) return
-		worldToken.current++
-		engine.setWorld(
-			world,
-			inputs,
-			`${map.grouping}|${shownQuery.services}|${shownQuery.unseen}`,
-		)
+		if (!engine || !world || !shown) return
+		engine.setWorld(world, inputs, filterKey(shown))
 		setActive(null)
-		litRef.current = []
-		setLitState([])
-		bridgeRef.current = null
-		setBridgeState(null)
-		setForming(null)
-		setHover(null)
-		// The step's island or bridge, on the new map (after a reload, a new grouping, or other filters).
-		applyRef.current(focusOf(currentParams()), "world")
+		picksRef.current = []
+		setPicksState([])
+		setMix(null)
+		setForming(false)
+		// The URL's picked islands, on the new world (after a reload, or other filters).
+		const want = (currentParams().get("mix") ?? "")
+			.split(",")
+			.filter((id) => engine.island(id))
+			.slice(0, MAX_PICKS)
+		if (want.length) void applyRef.current(want)
+		// A link to a grouping (`grouping=decade`, as older links have it) opens on its region, once.
+		const to = currentParams().get("grouping")
+		if (!opened.current && !want.length && to && isGrouping(to))
+			engine.flyToRegion(to)
+		opened.current = true
 	}, [engine, world])
 	useEffect(() => {
 		engine?.refilter()
@@ -980,132 +881,133 @@ export function ExplorerMap({
 		if (a && !visible(a.title) && !a.pinned) setActive(null)
 	}, [visible])
 
-	// Back and Forward: the map shows the step's island or bridge (a step with another grouping or other filters waits
-	// for its map, and is shown once that's laid out).
-	const firstKey = useRef(location.key)
-	useEffect(() => {
-		if (location.key === firstKey.current || !history.popped) return
-		const shown = shownRef.current
-		if (
-			!engineRef.current ||
-			!shown ||
-			!sameQuery(shown, mapQueryOf(currentParams()))
-		)
-			return
-		appliedAt.current = performance.now()
-		applyRef.current(focusOf(currentParams()), "history")
-	}, [location.key])
-
 	useEffect(() => {
 		if (!engine) return
 		let raf = 0
-		let settle: ReturnType<typeof setTimeout> | null = null
 		const off = engine.subscribe(() => {
 			if (raf) return
 			raf = requestAnimationFrame(() => {
 				raf = 0
 				const v = engine.view()
 				const inside =
-					v.focus && v.cam.s >= (v.stops[1] ?? v.fit * 3) * 0.8 ? v.focus : null
+					v.focus && v.cam.s >= (v.stops[1] ?? v.base * 3) * 0.8
+						? v.focus
+						: null
 				setFocusIsland((x) => (x === inside ? x : inside))
 				const overview = v.cam.s <= v.fit * 1.05
 				setAtOverview((x) => (x === overview ? x : overview))
-				// Once the camera settles: going into an island, or back out to the whole map, is a step.
-				if (settle) clearTimeout(settle)
-				settle = setTimeout(() => {
-					if (engine.busy() || performance.now() - appliedAt.current < 900)
-						return
-					const f = engine.view()
-					const into =
-						f.focus && f.cam.s >= (f.stops[1] ?? f.fit * 3) * 0.8
-							? f.focus
-							: null
-					const now = focusOf(currentParams())
-					const want = into
-						? into.bridge
-							? null
-							: into.id
-						: f.cam.s <= f.fit * 1.05
-							? null
-							: now.island
-					if (want !== now.island) navigateRef.current({ ...now, island: want })
-				}, 650)
+				const near = engine.regionNear() ?? "all"
+				setAt((x) => (x === near ? x : near))
 			})
 		})
 		return () => {
 			off()
 			cancelAnimationFrame(raf)
-			if (settle) clearTimeout(settle)
 		}
 	}, [engine])
-	const navigateRef = useRef(navigateFocus)
-	navigateRef.current = navigateFocus
 
-	// Going into an island lets its light go ("Go in" has done its job).
-	useEffect(() => {
-		if (focusIsland && litRef.current.length) setLit([])
-	}, [focusIsland])
-
-	// A lit island: every other island's name says what it shares with it.
+	// Picked islands: every other island's name says what the combination would hold with it, and the islands that
+	// would leave it empty go grey. With three picked nothing more can join.
 	useEffect(() => {
 		const e = engineRef.current
 		if (!e) return
 		const notes = new Map<string, string>()
-		if (lit.length === 1 && pairs)
-			for (const o of e.islands()) {
-				if (o.id === lit[0] || o.bridge) continue
-				const p = pairs.get(pairKey(lit[0], o.id))
-				if (p) notes.set(o.id, sharedNote(p.count, p.kind))
+		const dim = new Map<string, number>()
+		if (picks.length && picks.length < MAX_PICKS && shares)
+			for (const [id, s] of shares) {
+				// An island that would leave the combination empty goes grey and loses its name.
+				if (!s.count) dim.set(id, 1)
+				else
+					notes.set(
+						id,
+						sharedNote(
+							s.count,
+							s.kind,
+							picks.length === 1 && groupingOf(picks[0]) === groupingOf(id),
+						),
+					)
 			}
 		e.setNotes(notes)
-	}, [lit, pairs, engine, bridge])
-	// Pointing at another island previews the bridge.
-	const previewPair =
-		lit.length === 1 &&
-		hover &&
-		hover.id !== lit[0] &&
-		!hover.bridge &&
-		!forming
-			? { from: lit[0], to: hover.id }
-			: null
-	useEffect(() => {
-		engineRef.current?.setPreview(previewPair)
-	}, [previewPair?.from, previewPair?.to])
+		e.setDim(dim)
+		const first = picks.length === 1 ? e.island(picks[0]) : null
+		e.setHubNote(
+			first
+				? {
+						title: `${first.name} +`,
+						sub: "Pick another island, from any group",
+					}
+				: {
+						title: "Combine",
+						sub: `Pick up to ${MAX_PICKS} islands, from any group`,
+					},
+		)
+	}, [picks, shares, engine, world])
 
-	/** The tutorial's step: it follows what the viewer has done, and ends once they've separated a bridge. */
+	/**
+	 * The tutorial's step: it follows what the viewer has done (a group, an island, another group, an island there,
+	 * Combined, a zoom into the combination), and ends once they've separated a combination.
+	 */
+	const [tutorial, endTutorial] = useTutorial(member, userLoading)
+	const [toldSeparate, setToldSeparate] = useState(false)
+	/** The viewer has zoomed into a combination of two: next come Show all, a third island, and Combined. */
+	const [zoomed, setZoomed] = useState(false)
 	let tutStep: TutorialStep | null = null
-	if (tutorial && map && !active?.pinned) {
-		if (bridge || forming) tutStep = focusIsland ? "separate" : "zoom"
-		else if (lit.length === 1) tutStep = "two"
-		else if (!lit.length && atOverview) tutStep = "one"
+	// After Separate, one line on what else there is: more islands narrow a combination. It goes with the next pick.
+	if (tutorial && maps && toldSeparate && picks.length < 2)
+		tutStep = picks.length ? null : "more"
+	else if (tutorial && maps && !active?.pinned) {
+		const far = at === "all"
+		const inside = !!focusIsland?.bridge
+		if (picks.length >= 3 && (mix || forming))
+			tutStep = at === "hub" || inside ? "separate" : "combined"
+		else if (picks.length === 2 && (mix || forming))
+			tutStep = !zoomed
+				? at === "hub"
+					? "zoom"
+					: "combined"
+				: at === "hub" || inside
+					? "all"
+					: far
+						? "group3"
+						: "three"
+		else if (picks.length === 1 && at !== "hub")
+			tutStep = far ? "group2" : "two"
+		else if (!picks.length && at !== "hub") tutStep = far ? "group" : "one"
 	}
+	const inMix = picks.length === 2 && !!focusIsland?.bridge
+	useEffect(() => {
+		if (tutorial && inMix) setZoomed(true)
+	}, [tutorial, inMix])
 	useEffect(() => {
 		if (tutStep === "separate") setToldSeparate(true)
 	}, [tutStep])
 	useEffect(() => {
-		if (toldSeparate && !bridge && !forming) endTutorial()
-	}, [toldSeparate, bridge, forming])
+		if (!toldSeparate || picks.length > 1) return
+		if (picks.length) return endTutorial()
+		const t = setTimeout(endTutorial, 9000)
+		return () => clearTimeout(t)
+	}, [toldSeparate, picks.length])
 
 	// ------------------------------------------------------------ keyboard
 
-	const keys = useRef({ pin, unpin, separate, flyIn, setLit })
-	keys.current = { pin, unpin, separate, flyIn, setLit }
+	const keys = useRef({ pin, unpin, flyIn })
+	keys.current = { pin, unpin, flyIn }
 	useEffect(() => {
 		const onKey = (ev: KeyboardEvent) => {
 			const e = engineRef.current
 			const el = stage.current
 			const target = ev.target as HTMLElement | null
 			if (!e || !el || !target || !el.contains(target)) return
-			if (target.closest("input, textarea, select, .ex-hist-menu")) return
+			if (target.closest("input, textarea, select")) return
 			const onMap = target === posterCanvas.current
 			const a = activeRef.current
 			const k = keys.current
 			if (ev.key === "Escape") {
-				// Undo, one layer at a time: the card, the lit island, the bridge, then a zoom step out.
+				// Undo, one layer at a time: the card, the island picked last, then a zoom step out.
 				ev.preventDefault()
 				if (a) k.unpin()
-				else if (litRef.current.length) k.setLit([])
-				else if (bridgeRef.current || e.bridge()?.bridge?.pending) k.separate()
+				else if (picksRef.current.length)
+					void applyRef.current(picksRef.current.slice(0, -1), false)
 				else e.stepZoom(-1)
 				return
 			}
@@ -1135,6 +1037,10 @@ export function ExplorerMap({
 			} else if (ev.key === "-" || ev.key === "_") {
 				ev.preventDefault()
 				e.stepZoom(-1)
+			} else if (ev.key === "c" || ev.key === "C") {
+				// One key between the two views: the combination, and the whole world.
+				ev.preventDefault()
+				goRef.current(e.regionNear() === "hub" ? "all" : "hub")
 			} else if (ev.key === "0") {
 				ev.preventDefault()
 				k.unpin()
@@ -1142,7 +1048,7 @@ export function ExplorerMap({
 			} else if (ev.key === "Enter") {
 				ev.preventDefault()
 				const lone =
-					litRef.current.length === 1 ? e.island(litRef.current[0]) : null
+					picksRef.current.length === 1 ? e.island(picksRef.current[0]) : null
 				if (lone) return k.flyIn(lone)
 				const c = center()
 				const d =
@@ -1205,92 +1111,60 @@ export function ExplorerMap({
 			}}
 		/>
 	)
-	const loadingGrouping =
-		mapQuery.isPlaceholderData && shownQuery?.grouping !== query.grouping
-	const groupingName =
-		GROUPING_NAMES[map?.grouping ?? query.grouping].toLowerCase()
+	const loading = worldQuery.isPlaceholderData || (!maps && !worldQuery.isError)
 
 	const islandOf = (id: string) => (engine ? engine.island(id) : null)
-	const sides = (ids: string[]) =>
-		ids
-			.map(islandOf)
-			.filter((x): x is MapIsland => !!x)
-			.map(side)
-	const litIsland = lit.length === 1 ? islandOf(lit[0]) : null
-	let bar: BarState | null = null
-	if (forming) bar = { k: "forming", list: sides(forming) }
-	else if (litIsland)
-		bar = {
-			k: "lit",
-			lit: side(litIsland),
-			next: touch
-				? "tap another island to combine"
-				: "point at another island, click to combine",
-		}
-	else if (bridge) {
-		const list = sides([bridge.a, bridge.b])
-		if (list.length === 2)
-			bar = { k: "bridge", list, count: bridge.count, kind: bridge.kind }
-	}
+	const picked = picks.map(islandOf).filter((x): x is MapIsland => !!x)
+	const litIsland = picks.length === 1 ? islandOf(picks[0]) : null
+	const bar: SelectionState | null = picked.length
+		? {
+				list: picked.map((island, k) => ({
+					...sideOf(island),
+					without: parts?.[k] ?? null,
+				})),
+				status: forming
+					? "finding what they share…"
+					: mix
+						? mix.of.length === 2 &&
+							groupingOf(mix.of[0]) === groupingOf(mix.of[1])
+							? sharedLine(mix.count, mix.kind)
+							: combinationSentence(mix.count, picked.map(sideOf))
+						: touch
+							? "tap another island, in any group"
+							: "click another island, in any group",
+				count: mix && !forming ? mix.count : null,
+				up: !!mix || forming,
+				full: picked.length >= MAX_PICKS,
+				max: MAX_PICKS,
+				at: at === "hub" ? "hub" : atOverview ? "all" : "",
+			}
+		: null
+	const selection = bar && (
+		<Selection
+			state={bar}
+			phone={width < 768}
+			onDrop={(id) => void applyPicks(picks.filter((x) => x !== id))}
+			onClear={() => void applyPicks([])}
+			onGo={() => goRegion("hub")}
+			onAll={() => goRegion("all")}
+			nudge={
+				tutStep === "combined" || tutStep === "all" || tutStep === "separate"
+					? { at: tutStep, touch }
+					: null
+			}
+		/>
+	)
 	const spoken = !bar
 		? ""
-		: bar.k === "lit"
-			? `${bar.lit.name} lit. Its count of shared titles is on every other island.`
-			: bar.k === "forming"
-				? `Finding what ${bar.list.map((s) => s.name).join(" and ")} share.`
-				: `${bar.list.map((s) => s.name).join(" + ")}: ${sharedLine(bar.count, bar.kind)}.`
+		: `${bar.list.map((s) => s.name).join(" + ")}: ${bar.status}.`
 
-	const preview =
-		previewPair && engine
-			? (() => {
-					const A = engine.island(previewPair.from)
-					const B = engine.island(previewPair.to)
-					const p = pairs?.get(pairKey(previewPair.from, previewPair.to))
-					return A && B
-						? {
-								label: `${A.name} + ${B.name}`,
-								sub: p ? sharedLine(p.count, p.kind) : "",
-								color: rgbCss(B.tint),
-							}
-						: null
-				})()
-			: null
-
-	/** Labels of the history's steps, from their URLs and the island names seen this visit. */
-	const stepViews: StepView[] = history.steps.map((s) => {
-		const sp = new URLSearchParams(s.search)
-		const g = mapQueryOf(sp).grouping
-		const f = focusOf(sp)
-		const named = (id: string) => names.current.get(`${g}|${id}`)
-		if (f.island) {
-			const n = named(f.island)
-			return {
-				key: s.key,
-				label: n?.name ?? f.island,
-				kind: "island",
-				color: n?.color ?? null,
-			}
-		}
-		if (f.bridge) {
-			const [a, b] = f.bridge.map(named)
-			return {
-				key: s.key,
-				label: `${a?.name ?? f.bridge[0]} + ${b?.name ?? f.bridge[1]}`,
-				kind: "bridge",
-				color: a?.color ?? null,
-			}
-		}
-		return {
-			key: s.key,
-			label: `All by ${GROUPING_NAMES[g].toLowerCase()}`,
-			kind: "map",
-			color: null,
-		}
-	})
-
-	const hint = touch
-		? "Tap an island to see how much it shares with every other island."
-		: "Click an island to see how much it shares with every other island."
+	const hint = atOverview
+		? touch
+			? "Tap a group to go to its islands."
+			: "Click a group to go to its islands."
+		: touch
+			? "Tap an island to pick it. Up to five, from any groups, combine in the middle."
+			: "Click an island to pick it. Up to five, from any groups, combine in the middle."
 	return (
 		<div ref={stage} className="ex-stage" data-bar={bar ? "" : undefined}>
 			{/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: a canvas isn't focusable; the sea is decoration. */}
@@ -1309,8 +1183,8 @@ export function ExplorerMap({
 					} as FocusOptions)
 				}
 				aria-label={
-					map
-						? `Islands map of ${map.total.toLocaleString("en")} films and shows by ${groupingName}, ${map.islands.length} islands. Arrow keys move between titles, plus and minus zoom, Enter opens a title, Escape steps back.`
+					maps
+						? `Islands map of films and shows in ${maps.length} groups. Arrow keys move between titles, plus and minus zoom, Enter opens a title, Escape steps back.`
 						: "Islands map"
 				}
 			/>
@@ -1330,21 +1204,6 @@ export function ExplorerMap({
 						/>
 					)
 				})}
-				{preview && (
-					<div
-						ref={previewEl}
-						className="ex-on"
-						style={{ visibility: "hidden" }}
-					>
-						<div
-							className="ex-ghost"
-							style={{ "--c": preview.color } as React.CSSProperties}
-						>
-							<b>{preview.label}</b>
-							{preview.sub && <span>{preview.sub}</span>}
-						</div>
-					</div>
-				)}
 				{litIsland && !forming && (
 					<div ref={goEl} className="ex-on" style={{ visibility: "hidden" }}>
 						<button
@@ -1385,50 +1244,28 @@ export function ExplorerMap({
 				{form === "sheet" && cardNode}
 			</div>
 			<TopBar
-				groupings={map?.groupings ?? [query.grouping]}
-				grouping={map?.grouping ?? query.grouping}
-				onGrouping={(grouping) => setQuery({ grouping })}
+				selection={bar && !(phone && active?.pinned) ? selection : null}
+				phone={width < 768}
+				groupings={
+					maps?.map((m) => ({ id: m.grouping, islands: m.islands.length })) ??
+					[]
+				}
+				at={at}
+				onGo={goRegion}
+				picked={picks.length}
 				onMyServices={onMyServices}
 				notSeenYet={notSeenYet}
 				services={map?.services ?? []}
-				onToggleServices={() =>
-					setQuery({ services: onMyServices ? "all" : null })
-				}
-				onToggleUnseen={() => setQuery({ unseen: notSeenYet ? "0" : null })}
+				onServices={(on) => setFilters({ services: on ? null : "all" })}
+				onUnseen={(on) => setFilters({ unseen: on ? null : "0" })}
 				titleType={titleType}
-				onTitleType={(next) => setQuery(titleTypeParams(next))}
-				history={
-					<HistoryBar steps={stepViews} at={history.at} onGo={history.go} />
-				}
+				onTitleType={(next) => setFilters(titleTypeParams(next))}
 			/>
-			{bar && !(phone && active?.pinned) && (
-				<div className="ex-bar-wrap" style={{ top: barTop }}>
-					<CombineBar
-						state={bar}
-						onUndo={() => {
-							if (bar?.k === "bridge" || bar?.k === "forming") separate()
-							else setLit([])
-						}}
-						onGo={() => {
-							const e = engineRef.current
-							const b = bridgeRef.current
-							const island = b && e?.island(b.id)
-							if (e && island) e.flyToIsland(island)
-						}}
-						nudge={tutStep === "separate" ? { touch } : null}
-					/>
-				</div>
-			)}
 			<p className="sr-only" aria-live="polite">
 				{spoken}
 			</p>
-			{(loadingGrouping || (!map && !mapQuery.isError)) && (
-				<p className="ex-loading">
-					Laying the islands out by{" "}
-					{GROUPING_NAMES[query.grouping].toLowerCase()}…
-				</p>
-			)}
-			{map && !map.islands.length && !loadingGrouping && (
+			{loading && <p className="ex-loading">Laying the world out…</p>}
+			{maps && !inputs.length && !loading && (
 				<p className="ex-loading" role="status">
 					{isAllTitleTypes(titleType) ? (
 						"No titles pass these filters. Turn a filter off."
@@ -1436,19 +1273,19 @@ export function ExplorerMap({
 						<NoTitlesOfType
 							value={titleType}
 							where="with these filters"
-							onReset={(all) => setQuery(titleTypeParams(all))}
+							onReset={(all) => setFilters(titleTypeParams(all))}
 						/>
 					)}
 				</p>
 			)}
-			{mapQuery.isError && !map && (
+			{worldQuery.isError && !maps && (
 				<p className="ex-loading" role="alert">
 					The islands aren't ready yet. They'll appear in a moment.
 				</p>
 			)}
 			{world && !(phone && active) && (
 				<Minimap
-					engine={engine}
+					engine={engine as unknown as MapEngine}
 					world={world}
 					phone={phone}
 					onGo={(x, y) => {
@@ -1458,23 +1295,18 @@ export function ExplorerMap({
 						e.flyTo({
 							x,
 							y,
-							s: Math.max(v.cam.s, (v.stops[1] ?? v.fit * 3) * 0.9),
+							s: Math.max(v.cam.s, v.base),
 						})
 					}}
 				/>
 			)}
 			{!(phone && active?.pinned) && (
 				<ZoomRail
-					engine={engine}
+					engine={engine as unknown as MapEngine}
 					onStop={(s) => {
 						const e = engineRef.current
 						if (!e) return
 						const v = e.view()
-						if (s <= v.fit * 1.01) {
-							unpin()
-							e.overview()
-							return
-						}
 						const island = v.focus
 						if (island && Math.abs(Math.log(s / (v.stops[1] ?? 0))) < 0.01)
 							return e.flyToIsland(island)
@@ -1482,7 +1314,7 @@ export function ExplorerMap({
 					}}
 				/>
 			)}
-			{!active && !bar && !preview && focusIsland && (
+			{!active && !bar && focusIsland && (
 				<div className="ex-where" aria-live="polite">
 					<span
 						className="ex-dot"
@@ -1502,17 +1334,16 @@ export function ExplorerMap({
 					engine={engine}
 					touch={touch}
 					step={tutStep}
-					lit={lit.length === 1 ? lit[0] : null}
-					shares={(a, b) => pairs?.get(pairKey(a, b))?.count !== 0}
+					picks={picks}
+					empty={(id) => shares?.get(id)?.count === 0}
 					onSkip={endTutorial}
 				/>
 			) : (
-				map &&
+				maps &&
 				!tutorial &&
 				!active &&
 				!bar &&
-				!combined &&
-				atOverview && <p className="ex-hint">{hint}</p>
+				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
 			{hideToast.node}

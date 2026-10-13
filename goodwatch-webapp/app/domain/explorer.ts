@@ -32,7 +32,7 @@ export const DEFAULT_GROUPING: Grouping = "mood"
 export const isGrouping = (value: unknown): value is Grouping =>
 	GROUPINGS.includes(value as Grouping)
 
-/** No grouping has more islands than this; with a bridge the renderer holds 15. */
+/** No grouping has more islands than this. */
 export const MAX_ISLANDS = 14
 
 /** Children per title in each generation of a tree after the first posters: 6 around each first poster, then 2 and 2. */
@@ -155,26 +155,37 @@ export interface ExplorerIslandTree extends ExplorerTree {
  */
 export type BridgeKind = "both" | "between"
 
-export interface ExplorerBridge extends ExplorerTree {
-	grouping: Grouping
-	a: string
-	b: string
-	kind: BridgeKind
+/** How many islands combine at most. */
+export const MAX_PICKS = 5
+
+/**
+ * What a combination holds. Two islands of one grouping make a bridge ("both" or "between", as above). Any other
+ * combination holds the titles on all of its islands ("both" for two, "all" for more); islands of one grouping where a
+ * title sits on one island only count as either: 1980s + 1990s + Dark is Dark from both decades.
+ */
+export type CombinationKind = BridgeKind | "all"
+
+/** Every grouping the viewer can choose, each with its islands: the Explorer's one map. */
+export interface ExplorerWorld {
+	maps: ExplorerMap[]
 }
 
-export interface ExplorerPair {
-	a: string
-	b: string
-	kind: BridgeKind
-	/** Titles the bridge holds. */
-	count: number
-	/** 0 to 1: how much more the islands share than their sizes suggest (both), or how alike they are (between). */
-	strength: number
+/** The combination of two to five islands, from any groupings, as a tree. `of` holds "grouping:island" ids. */
+export interface ExplorerCombination extends ExplorerTree {
+	of: string[]
+	kind: CombinationKind
 }
 
-export interface ExplorerPairs {
-	grouping: Grouping
-	pairs: ExplorerPair[]
+/** For every island not picked: what the picked islands would hold with it added. */
+export interface ExplorerShares {
+	of: string[]
+	shares: { id: string; count: number; kind: CombinationKind }[]
+}
+
+/** Per picked island, in order: how many titles the other picked islands hold without it. */
+export interface ExplorerParts {
+	of: string[]
+	without: number[]
 }
 
 export interface ExplorerCard {

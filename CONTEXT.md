@@ -181,13 +181,19 @@ One of five groups of fingerprint attributes (Feel, Humor, World, Story, and Cra
 The comparison of a person's ratings with the GoodWatch score of the same titles. "Everyone" means the GoodWatch score, not other members.
 
 **Explorer**:
-The page where a person browses by moving across a map of islands.
+The page where a person browses by moving across a map of islands. Every grouping's islands are on the one map.
 
 **Island**:
-The titles of one group on the Explorer map under the chosen grouping, such as one mood, theme, genre, or decade.
+The titles of one group on the Explorer map under one grouping, such as one mood, theme, or decade.
+
+**Region**:
+The part of the Explorer map that holds one grouping's islands. The regions lie around a middle kept free for the combination.
+
+**Combination**:
+The island that rises in the middle of the Explorer map from two to five islands a person picks, from any groupings. It holds the titles on all of them; two islands of a grouping where a title belongs to one island only (two decades, two countries) count as either.
 
 **Bridge**:
-The island that forms between two islands a person combines, holding the titles they share or, for groupings where a title belongs to one island only, the titles closest to both.
+The combination of two islands of one grouping, holding the titles they share or, for groupings where a title belongs to one island only, the titles closest to both.
 
 **Guest rating limit**:
 The maximum number of distinct titles a guest can hold ratings for before an account is required for additional ratings.

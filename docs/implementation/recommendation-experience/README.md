@@ -491,7 +491,7 @@ Each surface has one server module that composes the ones above and returns what
 | `app/server/watch-next.server.ts` | `getWatchNext(ctx, { sort, moods, onMyServices }) → { hero, then[], tiers[], moodCounts, note }` |
 | `app/server/discover-results.server.ts` | `getDiscoverResults(ctx, { state, sort, forYou, page, query? }) → { cards, FilterResult fields, explanation }` |
 | `app/server/taste-portrait/` | `getTastePortrait(ctx, tab) → SidesView \| EveryoneView \| FingerprintView` |
-| `app/server/explorer/` | `getExplorerMap`, `getIsland`, `getBridge`, `getIslandPairs`, `getNearCard` |
+| `app/server/explorer/` | `getExplorerMap`, `getExplorerWorld`, `getIsland`, `getCombination`, `getShares`, `getParts`, `getNearCard` |
 | `app/server/tonight.server.ts` | `getTonightsPick(ctx) → { title, reason } \| null` |
 | `app/server/features.server.ts` | `isEnabled(feature, viewer) → boolean`; see [Rollout](#rollout) |
 
@@ -504,7 +504,7 @@ Each surface has one server module that composes the ones above and returns what
 | `app/ui/watch-next/` | Docked strip, mood grid dropdown, hero with its Then column, stepped grid, three mobile drawers |
 | `app/ui/taste/` | The three tabs; the old unlock-ladder files are deleted with the cleanup |
 | `app/ui/discover/` | The browse and search heading, For you control, explanation chips, glide transition |
-| `app/ui/explorer/` | The map engine (camera, layout, level of detail, lit posters, input, history), overlays, and `sea/` |
+| `app/ui/explorer/` | The map engine (camera, regions, layout, level of detail, lit posters, input), overlays, and `sea/` |
 | `app/ui/explorer/sea/` | One `SeaRenderer` interface with three adapters: WebGL2, WebGL1, Canvas 2D |
 | `app/ui/navigation/` | Mobile dock, hub sheet, desktop Browse panel, omnibox, command palette |
 | `app/ui/sign-up-prompt/` | The sign-up call to action for taste-dependent features, in inline, chip, and card sizes |
@@ -567,7 +567,8 @@ body; member variants take `GET` and read the session.
 | `GET/POST /api/taste/portrait?tab=` | One tab's view model | 400 ms uncached, 50 ms cached |
 | `GET/POST /api/taste/match` | Match and reasons for up to 100 keys | 50 ms |
 | `GET/POST /api/explorer/map?grouping=` | Islands, positions, counts, first posters, personal flags | 300 ms cold, 80 ms warm |
-| `GET/POST /api/explorer/island`, `/bridge`, `/pairs`, `/card` | Island trees, bridge members, pair counts, a near card | 150 ms |
+| `GET/POST /api/explorer/world` | Every grouping's map, for the one map | not measured in production yet |
+| `GET/POST /api/explorer/island`, `/combination`, `/shares`, `/parts`, `/card` | Island trees, a combination's tree, what each island would leave, what each picked island does, a near card | 150 ms |
 | `GET/POST /api/tonight` | Tonight's pick, or null | 100 ms |
 | `GET /api/command-palette?q=` | Destinations and up to 5 matching titles | 120 ms |
 
@@ -865,8 +866,9 @@ confirmed by the owner).
 A full-viewport map at `/explorer`. The page never scrolls; nothing sits below the map. Controls are always visible and
 at least 44 px.
 
-**Groupings**, chosen up front in a segmented control: Mood (the default), Theme, Style, Occasion, Decade, Country,
-Your taste.
+**Groupings**, all on the one map (owner, 2026-10-13; before, one grouping at a time, chosen in a segmented control):
+Mood, Theme, Style, Occasion, Decade, Country, Your taste. Each grouping's islands lie in a region of their own; the
+regions lie on an ellipse around a middle kept free for the combination.
 
 | Grouping | Islands | Membership |
 |---|---|---|
@@ -910,10 +912,16 @@ personal part (match, Seen, Want to See, on my services) is added per request.
 
 - `getIsland` returns an island's tree: its first 2 to 5 posters, then each title's closest titles in the island by
   cosine plus `0.2 * quality`, generation by generation.
-- `getBridge(a, b)` returns titles on both islands for multi-membership groupings when at least 6 exist ("both"),
-  sorted by quality. Otherwise ("between") it scores each candidate from the chosen islands by its smallest cosine to
-  the islands' mean vectors and interleaves the best from each island.
-- `getIslandPairs` returns, for every pair, the shared count (Ochiai for "both", cosine between means for "between").
+- `getExplorerWorld` returns every grouping the viewer has, each as `getExplorerMap` returns it.
+- `getCombination(of)` returns the combination of two to five islands from any groupings (`world.server.ts`):
+  - Two islands of one grouping are the bridge: titles on both islands for multi-membership groupings when at least 6
+    exist ("both"), sorted by quality. Otherwise ("between") each candidate from the two islands is scored by its
+    smallest cosine to the islands' mean vectors, and the best from each island are interleaved.
+  - Any other combination holds the titles on all of its islands. Islands of one grouping where a title sits on one
+    island only (Decade, Country, Your taste) count as either: 1980s + 1990s + Dark is Dark from both decades. Titles
+    are ordered by where they stand on each island together (`combine.server.ts`).
+- `getShares(of)` returns, for every island not picked, what the picked islands would hold with it added.
+- `getParts(of)` returns, per picked island, what the others hold without it.
 - `getNearCard` returns a title's why line (the top two reasons plus "like X", the closest title the person rated 8 or
   more), match, services, and actions.
 - All of these run in memory over the snapshot. There is no Crate or Qdrant call per request besides display fields.
@@ -928,18 +936,34 @@ personal part (match, Seen, Want to See, on my services) is added per request.
   draw as dots.
 - **Proximity card:** the nearest title opens as a card over the live map: match, why, services, Want to See, Seen it.
   Two wheel notches from the overview reach a title's card.
-- **Combining islands:** tapping an island lights it and relabels every other island with what they share ("570 in
-  both"). Hovering another previews the bridge and its count; a tap raises it. The bridge forms between the joined
-  islands and grows to the main thing on screen; the joined islands stay medium; the rest shrink, grey, dim, and
-  simplify. The bridge shows 3 to 5 posters at map level. The view zooms out slightly when a bridge layout spills over
-  the edges. Let go, Separate, Escape, and the browser's back button spring the map back.
-- **A bridge rises at once:** combining shows the bridge immediately, pulsing until its titles arrive (owner,
-  2026-10-03); it doesn't wait for the request.
+- **Two levels:** out at the whole map a tap on a region flies to it; in among a region's islands a tap picks an
+  island. From far out a region shows its islands small, painted flat; the sea draws 24 islands at most, so it gets
+  the picked islands, the combination, and the islands nearest the middle of the view.
+- **Combining islands** (owner, 2026-10-13; prototype and its rounds in `docs/prototypes/explorer-world/`): a tap picks
+  an island, up to five, from any regions. A picked island sails to the middle and sits against the combination, and
+  the camera goes back out to the whole map, so the next island can come from any group (with the fifth it goes to the
+  combination). Every other island says what it would leave ("9 left"); the ones that would leave nothing go grey and
+  lose their name, and a tap on one says so. Two to five picked islands raise the combination in the middle; it shows
+  3 to 5 posters at map level and has a tree like an island's. Separate, or letting the last island go, flies back out
+  to the whole map.
+- **A combination rises at once:** it shows immediately, pulsing until its titles arrive (owner, 2026-10-03); it
+  doesn't wait for the request. One that turns out empty lets the last island go again and says so.
+- **Top bar:** "Viewing: Whole map" is a menu of the places (the whole map, the combination once an island is picked,
+  each region with its color and island count) and flies there. The selection sits next to it (on phones in a row of
+  its own): the picked islands' colors and the count, a switch between the combination and the whole map, and
+  Separate. It opens one row per island: its first posters, name and group, and what it does ("narrows 31 to 15").
+- **Tutorial:** one step at a time on the real map, each looping until the viewer does it: a group, an island, another
+  group, an island, Combined, zoom in, Show all, a third island, Combined, Separate, and a closing line. Guests see it
+  on every visit, members on their first three; never with reduced motion.
 - **Order on an island:** where titles sit on several islands, an island's titles are ordered by how well they fit it
   (`FIT_WEIGHT`) together with quality, so one well-known title doesn't lead every island it sits on.
-- **History:** every grouping change, island entry, and bridge is a history entry (`history.pushState`), so the
-  browser's back and forward buttons work. The top bar has one icon button that opens the steps (owner, 2026-10-03).
-- **Filters:** On my services and Not seen yet hide titles (never dim them).
+- **History:** the picked islands are in the URL (`mix=mood:funny,theme:crime`), and each pick is a history entry,
+  so the browser's back and forward buttons let an island go and bring it back. The bar that listed the steps, and
+  the steps for entering an island, went with the one map (2026-10-13). A link to `grouping=decade` opens on that
+  region.
+- **Filters:** behind one Filters button with its count: the type and anime segments, the filter bar's services
+  control and Not seen yet switch, in a strip under the bar (on phones the filter bar's bottom sheet). They hide
+  titles (never dim them).
 - **Minimap**, keyboard, pinch, and wheel as in [Accessibility](#accessibility-and-reduced-motion).
 - **Level of detail and budget:** device pixel ratio capped at 1.5 for WebGL and 2 for Canvas 2D; posters load at
   w92 to w500 by on-screen size; an image cache with a size limit (the prototype's never evicted); the frame loop stops
