@@ -1,0 +1,20 @@
+{
+  "schema": "offline-bm25-validator-local-fixtures.v1",
+  "command": "python3 -B -m unittest -q test_validate.py",
+  "exitCode": 0,
+  "tests": 9,
+  "actualAcquisitionValidated": false,
+  "hosts": 0,
+  "appImports": 0,
+  "modelCalls": 0,
+  "stdout": {
+    "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/tests.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/tests.stderr",
+    "bytes": 98,
+    "sha256": "8f089dbd5dc63d5c50480dc25b4f1f8f4eca55e416314fe36e0241a29701377f"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "goodwatch-webapp/app/server/search-ranking/rank-search.server.ts": {
+    "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+    "bytes": 34479,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-webapp/app/server/search-ranking/ranking.server.ts": {
+    "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7",
+    "bytes": 11065,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-webapp/app/server/search-ranking/text-rules.server.ts": {
+    "sha256": "d93d570ce750fd4a5b3312d97255c5589217ffbbf11fb22650d589eb4c508f6c",
+    "bytes": 4468,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-webapp/app/server/search-ranking/qdrant-http.server.ts": {
+    "sha256": "43a7500ea555e936848e9d0530dab605cce710be30363dc520b1a1274c44c95f",
+    "bytes": 7936,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-webapp/app/server/search-ranking/search-index.server.ts": {
+    "sha256": "f81350535c478ec9468f1cf413db9b601d82856c84d1fce697b9100083aa4f13",
+    "bytes": 11483,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-flows/windmill/f/sync/models/qdrant_schemas.py": {
+    "sha256": "a455ccc654d6d3c61dae0d3256e5c6ddf4aa6b04bc7373e05f55a0fa37e5553a",
+    "bytes": 9469,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-flows/windmill/f/search/terms.py": {
+    "sha256": "411990881c3bde3b1f9e502f7ae661549d1d57143fb0675f97ff33a2f495caee",
+    "bytes": 5005,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-flows/windmill/f/search/embed_titles.py": {
+    "sha256": "bf3577458e4493fc8fa1c01db27613438dc9e78c98bfff1a0cb4aa5da45f84c4",
+    "bytes": 21777,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  },
+  "goodwatch-flows/windmill/f/search/index_builders.py": {
+    "sha256": "f52cd9cafc3489aff88bcfe092e47bda82e6c97e614e264c8dc018c2ba934db7",
+    "bytes": 37404,
+    "gitCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+  }
+}
