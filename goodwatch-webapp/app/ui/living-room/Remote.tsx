@@ -95,7 +95,11 @@ export type RemoteProps = {
 	dispatch: (action: TvAction) => void
 	/** OK: submits the search draft on the keyboard screen, otherwise opens the focused item. */
 	onOk: () => void
+	/** The new TV (ui/living-room/tv): an arrow of the wheel reports its direction here in place of a step. */
+	onDirection?: (dir: WheelDirection) => void
 }
+
+export type WheelDirection = "up" | "down" | "left" | "right"
 
 export function Remote({
 	screen,
@@ -105,6 +109,7 @@ export function Remote({
 	activeService,
 	dispatch,
 	onOk,
+	onDirection,
 }: RemoteProps) {
 	const waking = useRef(false)
 	return (
@@ -163,7 +168,11 @@ export function Remote({
 				{/* The arc: Back and Home sit against the wheel's lower corners, Search hangs between them. */}
 				<div className="relative mt-10 h-[346px] w-full">
 					<div className="absolute left-1/2 top-0 -translate-x-1/2">
-						<Wheel dispatch={dispatch} onOk={onOk} />
+						<Wheel
+							dispatch={dispatch}
+							onOk={onOk}
+							onDirection={onDirection}
+						/>
 					</div>
 					<RoundKey
 						d={ICON.back}
@@ -302,7 +311,12 @@ const ARROW_LABEL: Record<Dir, string> = {
 function Wheel({
 	dispatch,
 	onOk,
-}: { dispatch: (action: TvAction) => void; onOk: () => void }) {
+	onDirection,
+}: {
+	dispatch: (action: TvAction) => void
+	onOk: () => void
+	onDirection?: (dir: WheelDirection) => void
+}) {
 	const ref = useRef<HTMLDivElement>(null)
 	const drag = useRef<{ angle: number; acc: number } | null>(null)
 	const [flash, setFlash] = useState<{ dir: Dir; n: number } | null>(null)
@@ -398,7 +412,12 @@ function Wheel({
 				<ArrowKey
 					key={dir}
 					dir={dir}
-					onClick={() => turn(dir === "top" || dir === "left" ? -1 : 1, dir)}
+					onClick={() => {
+						if (!onDirection)
+							return turn(dir === "top" || dir === "left" ? -1 : 1, dir)
+						setFlash((f) => ({ dir, n: (f?.n ?? 0) + 1 }))
+						onDirection(dir === "top" ? "up" : dir === "bottom" ? "down" : dir)
+					}}
 				/>
 			))}
 			<button

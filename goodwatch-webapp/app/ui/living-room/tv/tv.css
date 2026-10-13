@@ -1,0 +1,56 @@
+/* The new TV's room (ui/living-room/tv, docs/implementation/tv-screen-revamp). Linked beside living-room.css,
+   which keeps the Remote's materials, the room as the first screen of a page, the lip and the section below;
+   the switch folds this file into it.
+
+   Rendering budget (#190): the room photo's softening is in the image file. Nothing here blurs or blends over
+   the photo, nothing loops, and only opacity and a shadow change, once, with the power. */
+
+/* The room's lights: a plain dark layer over the photo, lower with the TV off. */
+.tvr-dim {
+	background: #05060a;
+	transition: opacity 700ms;
+}
+
+/* The desktop TV's light on the wall while it is on. */
+.tvr[data-room="desktop"][data-tv-power="on"] .tvr-tv {
+	box-shadow: 0 0 120px 10px rgba(251, 191, 36, 0.14), 0 0 22px 1px
+		rgba(251, 191, 36, 0.18);
+}
+
+/* The phone's TV has a body: a thin dark bezel, and its light on the wall while it is on. */
+.tvr-body {
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13), inset 0 0 0 4px #0b0c0e,
+		0 10px 24px rgba(0, 0, 0, 0.55);
+	transition: box-shadow 700ms;
+}
+.tvr-body[data-tv-power="on"] {
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.13), inset 0 0 0 4px
+		#0b0c0e, 0 10px 24px rgba(0, 0, 0, 0.55), 0 0 70px 8px
+		rgba(251, 191, 36, 0.16), 0 0 16px 1px rgba(251, 191, 36, 0.2);
+}
+
+/* Beside the TV the Remote stands at the right, where the lip's tab is. With its second line the tab is wide
+   enough to reach the TV's corner in a small window (1366 x 650), so beside the TV it is its first line alone.
+   It then lies over the Remote's grip, clear of its keys and of the TV at every size. */
+@media (min-width: 768px) {
+	.tvr[data-remote-place="beside"] + .lrb .lrb-lip small {
+		display: none;
+	}
+}
+
+/* A phone in landscape: the TV is on the left, down to the room's bottom edge, so the lip's tab, which
+   living-room.css puts at the bottom left, goes to the right, under the keys of the Remote. */
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
+	.tvr + .lrb .lrb-lip {
+		left: auto;
+		right: 12px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tvr-dim,
+	.tvr-body {
+		transition: none;
+	}
+}

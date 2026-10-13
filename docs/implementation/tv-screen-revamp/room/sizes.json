@@ -1,0 +1,142 @@
+{
+	"1920 x 1080": {
+		"scene": "1905 x 1016",
+		"remote": "below",
+		"tv": "1271 x 686",
+		"canvasShownAt": 1.059,
+		"remoteSize": 0.619,
+		"remoteTopUnderTv": 4.6
+	},
+	"1920 x 940": {
+		"scene": "1905 x 876",
+		"remote": "below",
+		"tv": "1080 x 583",
+		"canvasShownAt": 0.9,
+		"remoteSize": 0.554,
+		"remoteTopUnderTv": 0.8
+	},
+	"2560 x 1300": {
+		"scene": "2545 x 1236",
+		"remote": "below",
+		"tv": "1556 x 841",
+		"canvasShownAt": 1.297,
+		"remoteSize": 0.736,
+		"remoteTopUnderTv": 12.1
+	},
+	"1536 x 730": {
+		"scene": "1521 x 666",
+		"remote": "beside",
+		"tv": "1080 x 583",
+		"canvasShownAt": 0.9,
+		"remoteSize": 0.715
+	},
+	"1440 x 800": {
+		"scene": "1425 x 736",
+		"remote": "beside",
+		"tv": "1080 x 583",
+		"canvasShownAt": 0.9,
+		"remoteSize": 0.543
+	},
+	"1366 x 650": {
+		"scene": "1351 x 586",
+		"remote": "beside",
+		"tv": "998 x 539",
+		"canvasShownAt": 0.832,
+		"remoteSize": 0.5
+	},
+	"1280 x 720": {
+		"scene": "1265 x 656",
+		"remote": "beside",
+		"tv": "949 x 513",
+		"canvasShownAt": 0.791,
+		"remoteSize": 0.5
+	},
+	"390 x 844": {
+		"scene": "390 x 708",
+		"remote": "hand",
+		"tv": "362 x 302",
+		"canvas": "500 x 417",
+		"canvasShownAt": 0.724,
+		"smallestKey": 49,
+		"keysEndAt": 672,
+		"lipAt": 712
+	},
+	"360 x 740": {
+		"scene": "360 x 604",
+		"remote": "hand",
+		"tv": "332 x 277",
+		"canvas": "500 x 417",
+		"canvasShownAt": 0.664,
+		"smallestKey": 46,
+		"keysEndAt": 598,
+		"lipAt": 608
+	},
+	"375 x 667": {
+		"scene": "375 x 531",
+		"remote": "table",
+		"tv": "347 x 258",
+		"canvas": "500 x 372",
+		"canvasShownAt": 0.694,
+		"smallestKey": 44,
+		"keysEndAt": 518,
+		"lipAt": 535
+	},
+	"430 x 932": {
+		"scene": "430 x 796",
+		"remote": "hand",
+		"tv": "402 x 335",
+		"canvas": "500 x 417",
+		"canvasShownAt": 0.804,
+		"smallestKey": 55,
+		"keysEndAt": 745,
+		"lipAt": 800
+	},
+	"390 x 700": {
+		"scene": "390 x 564",
+		"remote": "table",
+		"tv": "362 x 291",
+		"canvas": "500 x 402",
+		"canvasShownAt": 0.724,
+		"smallestKey": 44,
+		"keysEndAt": 551,
+		"lipAt": 568
+	},
+	"844 x 390": {
+		"scene": "844 x 390",
+		"remote": "hand",
+		"tv": "488 x 364",
+		"canvas": "500 x 373",
+		"canvasShownAt": 0.976,
+		"smallestKey": 45,
+		"keysEndAt": 273,
+		"lipAt": 344
+	},
+	"932 x 430": {
+		"scene": "932 x 430",
+		"remote": "hand",
+		"tv": "541 x 404",
+		"canvas": "500 x 373",
+		"canvasShownAt": 1.083,
+		"smallestKey": 50,
+		"keysEndAt": 304,
+		"lipAt": 384
+	},
+	"820 x 1180": {
+		"scene": "805 x 1044",
+		"room": "desktop",
+		"remote": "beside",
+		"tv": "495 x 267"
+	},
+	"1024 x 768": {
+		"scene": "1009 x 704",
+		"room": "desktop",
+		"remote": "beside",
+		"tv": "699 x 377"
+	},
+	"667 x 375": {
+		"scene": "667 x 239",
+		"room": "landscape",
+		"remote": "table",
+		"tv": "205 x 153"
+	}
+}
