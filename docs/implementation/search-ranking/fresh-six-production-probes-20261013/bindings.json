@@ -1,0 +1,179 @@
+{
+  "schema": "fresh-six-production-probe-evidence-bindings.v1",
+  "baseCommit": "b83fc113fb7790e65a914c3cb2111cf8c0bd56ae",
+  "files": {
+    "README.md": {
+      "bytes": 6331,
+      "sha256": "1c00233b9b30106f93d4f171a18fc68e441229334313a59a683e703f40e493fc"
+    },
+    "retained/README.md": {
+      "bytes": 5120,
+      "sha256": "ed7f0c2c8e667ba057f75b8c1adaaf473870fa68ad90e6fe0ae646e9836d9d71"
+    },
+    "retained/actual-approved-six-20261013/completion.json": {
+      "bytes": 160,
+      "sha256": "6b8b594b00ba789e5589c987a8672339d287e99dff5d2b2e6ad5c90f0fd7e57e"
+    },
+    "retained/actual-approved-six-20261013/description.json": {
+      "bytes": 1853,
+      "sha256": "47c6a7050fa6126e642e02dd4804f5dee49121f841b0148cd38a4ab5c2ecdd6f"
+    },
+    "retained/actual-approved-six-20261013/exact-title.json": {
+      "bytes": 2500,
+      "sha256": "70059a756e68fc384cafd01309c650aee7bb54f762a3d3a2a071a8a673c0ad00"
+    },
+    "retained/actual-approved-six-20261013/ingress-20.json": {
+      "bytes": 2850,
+      "sha256": "0c8ff9155fa5a7b7faeade5e15ed1ddc7e9f6776db3164eb6be510180ea91b40"
+    },
+    "retained/actual-approved-six-20261013/ingress-21.json": {
+      "bytes": 2831,
+      "sha256": "a0a7ad45823265c2a04f125033c088066a1e560661c6f8a3d3ab1af12df8f739"
+    },
+    "retained/actual-approved-six-20261013/intent.json": {
+      "bytes": 314,
+      "sha256": "924626cd486a4c307fde84e1fd20fe7344ca3e652ca55cecab2a08a16f5c7414"
+    },
+    "retained/actual-approved-six-20261013/lifecycle-progress-snapshot.ndjson": {
+      "bytes": 8939544,
+      "sha256": "b90801d381138db62d159d10390a4753378ab19e16eafae1b56d0e9d57ee4fad"
+    },
+    "retained/actual-approved-six-20261013/low-vote-title.json": {
+      "bytes": 4616,
+      "sha256": "30d1b3cccc59d592c01a4da1908085f137792ec1d60652c2b48bdee9d385cdd1"
+    },
+    "retained/actual-approved-six-20261013/native-title.json": {
+      "bytes": 2400,
+      "sha256": "05bf6fcacd93a2de7d36ff5082100028ca8099cedba1094c2a3650f734834a79"
+    },
+    "retained/actual-approved-six-20261013/partial-computation-completeness.json": {
+      "bytes": 314,
+      "sha256": "be032c946011f4f366d2d990c6c9be4b3f3016ae6a33afa1f97128b678f3b6c8"
+    },
+    "retained/actual-approved-six-20261013/partial-history-progress.json": {
+      "bytes": 2379,
+      "sha256": "9f6425a78610f51412aac08d27da32d2428fbee581d128d64a69aea054f7a15f"
+    },
+    "retained/actual-approved-six-20261013/partial-history-receipt.json": {
+      "bytes": 539,
+      "sha256": "e45be44a52549e99d3322ca1c256890756a70a23ecdcaf1c143a9024a1251d77"
+    },
+    "retained/actual-approved-six-20261013/partial-ingress-abio-progress.json": {
+      "bytes": 2097,
+      "sha256": "8316df9cab1cfeead9aa90c37957d1ac9951a274498e5c7594749169b89fe940"
+    },
+    "retained/actual-approved-six-20261013/partial-ingress-abio-receipt.json": {
+      "bytes": 2605,
+      "sha256": "2d7fb84764819bea145e882efd2efa20f56e6a20166dfa6d81f8c15f3751c293"
+    },
+    "retained/actual-approved-six-20261013/partial-ingress-vector1-progress.json": {
+      "bytes": 2100,
+      "sha256": "72578e06224fe1596947bca74749e92c243b993cdb4bb5619e114a55a6bbbed9"
+    },
+    "retained/actual-approved-six-20261013/partial-lifecycle-progress.json": {
+      "bytes": 2940,
+      "sha256": "fa8fd677bbe6d9a1a789138148e54e346b23d5f0ecba6f57c7a387490c87d6e5"
+    },
+    "retained/actual-approved-six-20261013/person.json": {
+      "bytes": 2480,
+      "sha256": "01135d516b8b942a0b1716ee652e4afb8786492604b53078b9ddf4e9090bdc92"
+    },
+    "retained/actual-approved-six-20261013/reference.json": {
+      "bytes": 1837,
+      "sha256": "1d3b8d030782ab63fa4538625406275da7e7f79d6ead08a8d1400dc19caebeb3"
+    },
+    "retained/actual-approved-six-20261013/root-invocation.json": {
+      "bytes": 224,
+      "sha256": "437479a607aa64b29ab6a53e98bd296e3433513a4015952bea3014cdd8641971"
+    },
+    "retained/actual-approved-six-20261013/telemetry-window.json": {
+      "bytes": 27280,
+      "sha256": "f402043b6febff727069cb09b45896dd986352fca43e4ca4335a0c82483ceee5"
+    },
+    "retained/approval-20261013.json": {
+      "bytes": 386,
+      "sha256": "f2604b64f75ab44565224faf9041683e84d04014105a89d647608fe0fe2f3b25"
+    },
+    "retained/independent-result-audit-v1.json": {
+      "bytes": 3297,
+      "sha256": "8e56104b2ba87de295d077670bf2be9cb7522cd5ec42f8674851c53d1e9edf06"
+    },
+    "retained/independent-telemetry-association-v1.json": {
+      "bytes": 4016,
+      "sha256": "24490dfc0483d93e1d292abde60f336515ed486bf8f4df01972904ab9e5c7ac1"
+    },
+    "retained/plan.json": {
+      "bytes": 2651,
+      "sha256": "65976c9f57025beedf5c50f62a51aa0875cb3904434c0a54c13c73163793aac9"
+    },
+    "retained/prepared-output.json": {
+      "bytes": 143,
+      "sha256": "ec934de5cd68aec4ba9bc9f484b6abb3d5f4fface96a53f1051de0dee4f8ba3c"
+    },
+    "retained/reviewed-v1/README.md": {
+      "bytes": 4352,
+      "sha256": "d5830942730d2d0332d53ac447e1b8b1010afe6237cfb0b6afe90431220c68b5"
+    },
+    "retained/reviewed-v1/plan.json": {
+      "bytes": 2651,
+      "sha256": "65976c9f57025beedf5c50f62a51aa0875cb3904434c0a54c13c73163793aac9"
+    },
+    "retained/reviewed-v1/prepared-output.json": {
+      "bytes": 143,
+      "sha256": "ec934de5cd68aec4ba9bc9f484b6abb3d5f4fface96a53f1051de0dee4f8ba3c"
+    },
+    "retained/reviewed-v1/run.mjs": {
+      "bytes": 5133,
+      "sha256": "834e1ccdd7550ceb9e3e64cd19bfc4a9b18257f471296c55b335ad32f204b91f"
+    },
+    "retained/reviewed-v1/source-manifest.json": {
+      "bytes": 1172,
+      "sha256": "7104f13c0697bf4b3a059a237733d1ce3fd5fea751f9f6eaa8a64690d980ee23"
+    },
+    "retained/reviewed-v1/test-run.mjs": {
+      "bytes": 2057,
+      "sha256": "fdd3fd7e787c96cf0e7fbf89d66e37b2c878cf9ba114524329ee8543d1345c53"
+    },
+    "retained/reviewed-v1/tests.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retained/reviewed-v1/tests.stdout": {
+      "bytes": 470,
+      "sha256": "12fcc61ab240a00de36666f4cff4e0af7a25101703aa1404237ba27232569647"
+    },
+    "retained/run.mjs": {
+      "bytes": 5846,
+      "sha256": "d3922c1c81aef35b24e2651f7cfe5b0702db24f6b11b640daa5494a5afff6c30"
+    },
+    "retained/source-manifest.json": {
+      "bytes": 1268,
+      "sha256": "35bfc4cb9cf657d25904e7758694ebc4eb5dc0f80b49f320c36a61a22b535ff1"
+    },
+    "retained/test-run.mjs": {
+      "bytes": 3004,
+      "sha256": "f5ab2770a126bbbf8c1e14cd3403cdcc1dfa970769dfd55a280ce953adb75da4"
+    },
+    "retained/tests.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retained/tests.stdout": {
+      "bytes": 680,
+      "sha256": "3745efaf307f1e2851b801be5373f75298868274582274f9e63395d690a0d471"
+    }
+  },
+  "exactOriginalCopies": 39,
+  "approvedProductionRequestsTotal": 24,
+  "approvedProductionRequestsConsumed": 24,
+  "approvedProductionRequestsRemaining": 0,
+  "productionRequestsDuringEvidencePreparation": 0,
+  "sourceEdits": 0,
+  "modelCalls": 0,
+  "serverSixCaseFirstResultsP95Ms": 586,
+  "clientSixCaseFirstUsableP95Ms": 10148.922401,
+  "sevenDayAcceptance": false,
+  "organicOnlyCohortProven": false,
+  "exactCaseLifecycleUuidLinkageProven": false,
+  "exactHistoryLifecycleUuidLinkageProven": false
+}

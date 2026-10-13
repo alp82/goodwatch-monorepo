@@ -1,0 +1,93 @@
+{
+  "schema": "fresh-six-local-telemetry-association.v1",
+  "telemetrySha256": "f402043b6febff727069cb09b45896dd986352fca43e4ca4335a0c82483ceee5",
+  "clientAuditSha256": "8e56104b2ba87de295d077670bf2be9cb7522cd5ec42f8674851c53d1e9edf06",
+  "rows": [
+    {
+      "tag": "exact-title",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "6f2daca2-6dc8-4eba-8d03-8ace7830fd52",
+      "serverAcceptedAt": "2026-10-13T07:31:15.502Z",
+      "serverFinishedAt": "2026-10-13T07:31:16.224Z",
+      "serverFirstResultsMs": 235,
+      "serverComputationMs": 716,
+      "serverLifetimeMs": 722,
+      "clientFirstUsableMs": 819.880845,
+      "clientCompletionMs": 1424.221695,
+      "serverFirstResultsUnder1500": true
+    },
+    {
+      "tag": "native-title",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "3c49c92f-5e04-406b-93f7-10051256a4bb",
+      "serverAcceptedAt": "2026-10-13T07:31:16.525Z",
+      "serverFinishedAt": "2026-10-13T07:31:17.622Z",
+      "serverFirstResultsMs": 211,
+      "serverComputationMs": 1090,
+      "serverLifetimeMs": 1097,
+      "clientFirstUsableMs": 427.97615699999983,
+      "clientCompletionMs": 1368.824556,
+      "serverFirstResultsUnder1500": true
+    },
+    {
+      "tag": "low-vote-title",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "f0a8ca4f-dd56-49ca-94d5-83046d616117",
+      "serverAcceptedAt": "2026-10-13T07:31:17.889Z",
+      "serverFinishedAt": "2026-10-13T07:31:19.115Z",
+      "serverFirstResultsMs": 360,
+      "serverComputationMs": 1222,
+      "serverLifetimeMs": 1226,
+      "clientFirstUsableMs": 484.8904940000002,
+      "clientCompletionMs": 1377.6146709999998,
+      "serverFirstResultsUnder1500": true
+    },
+    {
+      "tag": "person",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "eca98fb0-b418-4242-bf0e-d66e223af64c",
+      "serverAcceptedAt": "2026-10-13T07:31:19.267Z",
+      "serverFinishedAt": "2026-10-13T07:31:19.822Z",
+      "serverFirstResultsMs": 155,
+      "serverComputationMs": 551,
+      "serverLifetimeMs": 555,
+      "clientFirstUsableMs": 332.7465320000001,
+      "clientCompletionMs": 708.1613010000001,
+      "serverFirstResultsUnder1500": true
+    },
+    {
+      "tag": "description",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "da54da4c-58ce-4a07-a526-7738cd25ea40",
+      "serverAcceptedAt": "2026-10-13T07:31:19.978Z",
+      "serverFinishedAt": "2026-10-13T07:31:20.477Z",
+      "serverFirstResultsMs": 498,
+      "serverComputationMs": 496,
+      "serverLifetimeMs": 499,
+      "clientFirstUsableMs": 10148.922401,
+      "clientCompletionMs": 10148.922401,
+      "serverFirstResultsUnder1500": true
+    },
+    {
+      "tag": "reference",
+      "caseAssociation": "serial six-case order within bounded window; client response lacks lifecycle UUID",
+      "serverLifecycleId": "348e8bfe-4c87-4346-8aab-2ea8e43b66c9",
+      "serverAcceptedAt": "2026-10-13T07:31:30.150Z",
+      "serverFinishedAt": "2026-10-13T07:31:30.736Z",
+      "serverFirstResultsMs": 586,
+      "serverComputationMs": 583,
+      "serverLifetimeMs": 587,
+      "clientFirstUsableMs": 1037.7034469999999,
+      "clientCompletionMs": 1037.7034469999999,
+      "serverFirstResultsUnder1500": true
+    }
+  ],
+  "serverFirstResultsNearestRankP95SixMs": 586,
+  "allSixServerFirstResultsUnder1500": true,
+  "clientFirstUsableNearestRankP95SixMs": 10148.922401,
+  "historyAcknowledgmentsRecordedTrue": 6,
+  "historyAcknowledgmentCaseAssociation": "temporal bounded-window association, not request UUID equality",
+  "productionSevenDayAcceptance": false,
+  "causeOfPostEnqueueClientGapProven": false,
+  "newRequests": 0
+}

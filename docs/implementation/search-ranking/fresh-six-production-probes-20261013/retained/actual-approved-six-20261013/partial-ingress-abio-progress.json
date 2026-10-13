@@ -1,0 +1,42 @@
+{
+  "host": "abio",
+  "expected_image_id": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+  "approved_logging_fingerprint": "e52804ea3c6f414e807163014d0500de2835abd99125c38c4a2832b02e6b8d69",
+  "window_start": "2026-10-13T01:03:33.224Z",
+  "window_end": "2026-10-13T07:35:36.736Z",
+  "observed_drain_cutoff": "2026-10-13T07:35:36.736Z",
+  "routed_post_responses": 8,
+  "statuses": {
+    "200": 8
+  },
+  "five_xx": 0,
+  "four_xx": 0,
+  "no_status": 0,
+  "heartbeat_gap_count": 0,
+  "unavailable_heartbeat_count": 0,
+  "collector_restart_count": 0,
+  "collection_problem_count": 0,
+  "invalid_record_count": 0,
+  "checks": {
+    "full_seven_day_window": false,
+    "window_and_observed_drain_closed": true,
+    "valid_journal_records": true,
+    "heartbeat_fences_complete": true,
+    "no_heartbeat_gaps": true,
+    "proxy_running_with_approved_logging_and_image": true,
+    "no_collector_restarts": true,
+    "no_collection_problems": true,
+    "has_routed_post_responses": true,
+    "no_proxy_or_origin_5xx": true,
+    "all_responses_have_http_status": true
+  },
+  "ingress_response_checks_pass": false,
+  "seven_day_acceptance_pass": false,
+  "limits": [
+    "Use both host summaries together with history and application lifecycle evidence; this summary alone never establishes full acceptance.",
+    "Only POST on the fixed search router is collected. POST on the palette path is conservatively included. Other routers/methods and unmatched requests are ignored; routing loss cannot be ruled out from these logs.",
+    "4xx statuses are reported but do not fail the HTTP 5xx check. Review them alongside application rejections and failures.",
+    "StartUTC defines the response cohort. Finishes after the window end are included when observed. Requests still pending without an access record require the application lifecycle drain check and cannot be proven complete from access logs alone.",
+    "Heartbeat fences detect known collector outages, not silent Docker sink loss. DNS, TLS and connection failures before router selection remain outside coverage."
+  ]
+}
