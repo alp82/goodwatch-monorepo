@@ -19,12 +19,19 @@
 //
 // Discover's choice screen is three tabs (Moods, Themes, Styles) of six options each: see "Mini Discover" below.
 //
-// Two parts are being designed again and are each kept in one place, under "Waiting for a prototype" below: the
-// answers of the quiz and of the rating, and the Remote's streaming keys.
+// The answers of the quiz and of the rating after Seen it are the rating strip: see "The rating strip" below.
+//
+// One part still does what the first prototype did: the Remote's streaming keys, which do nothing until their
+// screens are built (the plan's "On a service", slice 6b). It is kept in one place, under "The Remote's streaming
+// keys" below.
 import type { Score } from "~/server/scores.server"
 import { titlePath } from "../../../utils/helpers.ts"
 import { parseTitleKey } from "../../../utils/title-key.ts"
-import { QUIZ_GOAL, RATING_LEVELS } from "../../taste-quiz/quiz-flow.ts"
+import {
+	QUIZ_GOAL,
+	RATING_LEVELS,
+	levelOf,
+} from "../../taste-quiz/quiz-flow.ts"
 import { type TvBox, type TvDir, nextInDirection } from "./tv-move.ts"
 
 /** The apps on home, in order. My shows is a member's. */
@@ -80,7 +87,7 @@ export type TvScreen =
 	| { name: "explorer"; island: string | null }
 	/** The sides of the person's taste (or the way to one) without a side, a side's titles with one. */
 	| { name: "taste"; side: string | null }
-	/** The taste quiz: one title, four answers. */
+	/** The taste quiz: one title at a time, on the rating strip. */
 	| { name: "quiz" }
 	/** A member's My shows. */
 	| { name: "shows" }
@@ -123,7 +130,7 @@ export type TvContext = {
 	tonight: readonly TvPick[]
 	/**
 	 * The titles of the list on screen: Discover's results, an island's or a side's titles, the search results,
-	 * and on Taste without sides the quiz's picks.
+	 * and on Taste without sides the quiz's picks. On the quiz, the one title it asks about.
 	 */
 	titles: readonly string[]
 	/** The mini Explorer's islands, in reading order. */
@@ -140,6 +147,8 @@ export type TvContext = {
 	draft: string
 	/** Taste quiz scores toward the goal. */
 	quizProgress: number
+	/** The rating strip shows the ten exact scores under its levels: on the desktop, not on the phone. */
+	exactScores: boolean
 }
 
 /** A guest nobody knows anything about, before any data arrived. */
@@ -156,6 +165,7 @@ export const EMPTY_CONTEXT: TvContext = {
 	titleName: null,
 	draft: "",
 	quizProgress: 0,
+	exactScores: false,
 }
 
 export type TvEffect =
@@ -206,7 +216,8 @@ export type TvTransition = {
 
 const HOME: TvScreen = { name: "home" }
 
-const TITLE_KEY = /^(movie|show)-([1-9]\d*)$/
+/** A title's key on the TV and in its URL: `movie-603`. */
+export const TITLE_KEY = /^(movie|show)-([1-9]\d*)$/
 
 /**
  * A title's key from the URL. The old TV wrote the catalog's number (`utils/title-key.ts`), which is converted;
@@ -464,7 +475,7 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			]
 		case "quiz":
 		case "rate":
-			return answerItems(screen)
+			return stripItems(screen, ctx)
 		case "shows":
 			return [
 				...titleItems(ctx.nextEpisodes, SHOWS_PER_GROUP),
@@ -519,6 +530,8 @@ export function activeItems(state: TvState, ctx: TvContext): string[] {
 function screenFocus(state: TvState, ctx: TvContext): string {
 	const items = tvItems(state.screen, ctx)
 	if (state.focus && items.includes(state.focus)) return state.focus
+	// The rating strip starts on Good.
+	if (items.includes(STRIP_START) && onStrip(state.screen)) return STRIP_START
 	// The focus starts on the screen's first own item, never on the Expand key and never on a tab (Discover starts
 	// on the open tab's first option); an empty screen starts on the bar.
 	return items.find(
@@ -791,59 +804,92 @@ function chooseInDiscover(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Waiting for a prototype. Two parts of the TV are being designed again (the plan's "What waits for a
-// prototype"). What each does today is the first prototype's, and all of it is here, so a result changes this
-// section and its tests.
+// The rating strip: the answers of the quiz and of the rating after Seen it (the plan's "The rating strip"). The
+// app's four labelled levels from low on the left to high on the right, and under them, on the desktop, the ten
+// exact scores. OK on a level gives the level's score; "Haven't seen it" is the quiz's own key.
 
-// 1. The answers of the quiz and of the rating after Seen it. Today: four answers each. To come: a strip from
-// low to high with labels and the ten exact scores.
+type StripScreen = Extract<TvScreen, { name: "quiz" | "rate" }>
 
-type AnswerScreen = Extract<TvScreen, { name: "quiz" | "rate" }>
+const onStrip = (screen: TvScreen): screen is StripScreen =>
+	screen.name === "quiz" || screen.name === "rate"
 
-/** The quiz's answers that store a score. `answer:skip` ("Haven't seen it") stores none. */
-export const QUIZ_ANSWER_SCORES = {
-	loved: 9,
-	liked: 7,
-	disliked: 3,
-} as const satisfies Record<string, Score>
-
-/** The scores of "How was it?" after Seen it, best first: the four rating levels. */
-export const RATE_SCORES: readonly Score[] = RATING_LEVELS.map(
+/** The scores the strip's levels give, low to high: 3, 5, 7 and 9. */
+export const STRIP_LEVELS: readonly Score[] = RATING_LEVELS.map(
 	(level) => level.score,
-).reverse()
+)
 
-function answerItems(screen: AnswerScreen): string[] {
-	return screen.name === "quiz"
-		? [...Object.keys(QUIZ_ANSWER_SCORES), "skip"].map(
-				(answer) => `answer:${answer}`,
-			)
-		: RATE_SCORES.map((score) => `level:${score}`)
+/** The exact scores under the levels, low to high. */
+export const STRIP_SCORES: readonly Score[] = Array.from(
+	{ length: 10 },
+	(_, at) => (at + 1) as Score,
+)
+
+/** The level a score is under, as its item. */
+const levelItem = (score: number) =>
+	`level:${RATING_LEVELS[levelOf(score)].score}`
+
+/** Where the strip's focus starts: Good, the level a 7 is in. */
+export const STRIP_START = levelItem(7)
+
+/**
+ * The strip's items in reading order: the levels, the exact scores where they show, and in the quiz "Haven't seen
+ * it". The quiz has them while it has a title to ask about (`titles`); the rating's title is in its address.
+ */
+function stripItems(screen: StripScreen, ctx: TvContext): string[] {
+	if (screen.name === "quiz" && !ctx.titles.length) return []
+	return [
+		...STRIP_LEVELS.map((score) => `level:${score}`),
+		...(ctx.exactScores ? STRIP_SCORES.map((score) => `score:${score}`) : []),
+		...(screen.name === "quiz" ? ["skip"] : []),
+	]
 }
 
-/** `answer` is what follows the colon in the item: a quiz answer's name, or a rating level's score. */
-function chooseAnswer(
+/**
+ * The two moves of the strip that the direction rule does not give by itself (a level spans two or four scores,
+ * so from it the rule goes to the row's left end or to either score): Down from a level lands on the lowest exact
+ * score under it, Up from a score on the level over it. Null for every other move, which is the rule's.
+ */
+function stripMove(
 	state: TvState,
-	screen: AnswerScreen,
-	answer: string,
+	from: string,
+	dir: TvDir,
+	items: readonly string[],
+): string | null {
+	if (state.menuOpen || !onStrip(state.screen)) return null
+	const [kind, arg] = from.split(":")
+	const score = Number(arg)
+	const to =
+		kind === "level" && dir === "down"
+			? `score:${RATING_LEVELS[levelOf(score)].lo}`
+			: kind === "score" && dir === "up"
+				? levelItem(score)
+				: null
+	return to && items.includes(to) ? to : null
+}
+
+/** A level's score or an exact score, for the title of the rating or the quiz's title on screen. */
+function chooseScore(
+	state: TvState,
+	screen: StripScreen,
+	score: Score,
 	ctx: TvContext,
 ): TvTransition {
 	// A rating returns to the title.
 	if (screen.name === "rate")
 		return leave(state, { name: "title", title: screen.title }, [
-			{ type: "rate", title: screen.title, score: Number(answer) as Score },
+			{ type: "rate", title: screen.title, score },
 		])
-	if (answer === "skip") return none(state, [{ type: "quiz-skip" }])
-	const score = QUIZ_ANSWER_SCORES[answer as keyof typeof QUIZ_ANSWER_SCORES]
 	const effects: TvEffect[] = [{ type: "quiz-rate", score }]
-	// The answer that reaches the goal ends the quiz. Until then, and when rating more after it, the focus stays
-	// on the answer, so the next title takes the same press.
+	// The score that reaches the goal ends the quiz. Until then, and when rating more after it, the focus stays
+	// where it was, so the next title takes the same press.
 	return ctx.quizProgress + 1 === QUIZ_GOAL
 		? leave(state, { name: "taste", side: null }, effects)
 		: none(state, effects)
 }
 
-// 2. The Remote's streaming keys. To come: a key opens a "watch on this service" screen. Until then a press does
-// nothing: no narrowing, no toast, nothing in the URL.
+// ---------------------------------------------------------------------------------------------------------
+// The Remote's streaming keys. Decided (the plan's "On a service"): a key opens a "watch on this service" screen.
+// Slice 6b builds it; until then a press does nothing: no narrowing, no toast, nothing in the URL.
 
 function serviceKey(state: TvState, _service: string): TvTransition {
 	return none(state)
@@ -892,9 +938,14 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		return s.name === "discover"
 			? chooseInDiscover(state, s, kind, arg)
 			: none(state)
-	if (kind === "answer" || kind === "level")
-		return s.name === "quiz" || s.name === "rate"
-			? chooseAnswer(state, s, arg, ctx)
+	if (kind === "level" || kind === "score")
+		return onStrip(s)
+			? chooseScore(state, s, Number(arg) as Score, ctx)
+			: none(state)
+	// "Haven't seen it" goes on to the next title and never ends the quiz.
+	if (kind === "skip")
+		return s.name === "quiz"
+			? none(state, [{ type: "quiz-skip" }])
 			: none(state)
 	switch (kind) {
 		case "app":
@@ -986,13 +1037,16 @@ export function transition(
 		case "move": {
 			const items = activeItems(state, ctx)
 			const from = focusedItem(state, ctx)
-			const to = nextInDirection(
-				action.boxes.filter((box) => items.includes(box.id)),
-				from,
-				action.dir,
-				action.scale,
-			)
-			// Discover's tabs name two moves themselves, before the rule.
+			// The rating strip names two moves itself, before the rule.
+			const to =
+				stripMove(state, from, action.dir, items) ??
+				nextInDirection(
+					action.boxes.filter((box) => items.includes(box.id)),
+					from,
+					action.dir,
+					action.scale,
+				)
+			// Discover's tabs name two moves themselves, on what the rule gives.
 			const named = moveInDiscover(state, from, to)
 			if (named) return named
 			return none(to ? focusOn(state, to, ctx) : state)

@@ -21,7 +21,9 @@ import {
 	DiscoverCode,
 	ExplorerCode,
 	MenuCode,
+	QuizCode,
 	RateCode,
+	TasteCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
@@ -35,6 +37,7 @@ import {
 	tvItems,
 	writeTvParams,
 } from "./tv-machine"
+import type { TvTasteScreens } from "./tv-taste"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
@@ -44,7 +47,10 @@ import type { TvDiscoverReport } from "./use-tv-discover"
 export {
 	DiscoverCode,
 	DiscoverData,
+	QuizCode,
 	RateCode,
+	TasteCode,
+	TasteData,
 	TitleCode,
 	TitleData,
 	TonightCode,
@@ -82,6 +88,8 @@ export type TvScreenProps = {
 	discover?: TvDiscoverScreens
 	/** The mini Explorer's map and island (slice 7). Null until its data component has reported. */
 	explorer?: TvExplorerView | null
+	/** The person's taste and the quiz, on Taste, a side's screen and the quiz. */
+	taste?: TvTasteScreens
 }
 
 /** What mini Discover draws from. */
@@ -102,6 +110,7 @@ export function TvScreen({
 	titles,
 	discover,
 	explorer,
+	taste,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -156,6 +165,7 @@ export function TvScreen({
 								titles={titles}
 								discover={discover}
 								explorer={explorer}
+								taste={taste}
 							/>
 						</Layer>
 					</TvViewProvider>
@@ -206,6 +216,7 @@ function ScreenOf({
 	titles,
 	discover,
 	explorer,
+	taste,
 }: {
 	screen: Screen
 	items: readonly string[]
@@ -213,6 +224,7 @@ function ScreenOf({
 	titles?: TvTitleScreens
 	discover?: TvDiscoverScreens
 	explorer?: TvExplorerView | null
+	taste?: TvTasteScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -253,7 +265,21 @@ function ScreenOf({
 			) : (
 				first
 			)
-		// SEAM (slices 8 to 10): Taste and the quiz, My shows and search each take their entry here.
+		// Slice 8: Taste, a side's screen and the quiz, once their data is there.
+		case "taste":
+			if (!taste) return first
+			return (
+				<TasteCode.Screen
+					items={items}
+					taste={taste.taste}
+					side={screen.side}
+					first={first}
+				/>
+			)
+		case "quiz":
+			if (!taste) return first
+			return <QuizCode.Screen items={items} quiz={taste.quiz} first={first} />
+		// SEAM (slices 9 and 10): My shows and search each take their entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}

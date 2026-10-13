@@ -263,6 +263,32 @@
 		font-weight: 700;
 	}
 }
+/* The rating strip (RatingStrip.tsx): the app's score control at TV size. A level is a quiet plate, an exact
+   score a block of its own colour; the focused one comes forward with the white edge a focused tile has. */
+@layer components {
+	.tvc-lvl {
+		background: rgba(255, 255, 255, 0.12);
+		border-radius: 18px;
+		font-weight: 800;
+	}
+	.tvc-lvl.tvc-on {
+		background: rgba(255, 255, 255, 0.24);
+		transform: scale(1.04);
+		box-shadow: 0 0 0 4px #fff, 0 18px 40px rgba(0, 0, 0, 0.6);
+		z-index: 2;
+	}
+	.tvc-num {
+		border-radius: 12px;
+		font-weight: 900;
+		font-variant-numeric: tabular-nums;
+	}
+	.tvc-num.tvc-on {
+		color: #0b0c10;
+		transform: scale(1.12);
+		box-shadow: 0 0 0 4px #fff, 0 16px 36px rgba(0, 0, 0, 0.6);
+		z-index: 2;
+	}
+}
 @keyframes tvc-fade {
 	from {
 		opacity: 0;

@@ -3,9 +3,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { TvTonightPick } from "./tv-home.ts"
-import { tvItems, EMPTY_CONTEXT } from "./tv-machine.ts"
 import {
-	RATE_ANSWERS,
 	parseTvTitleKey,
 	ratedToast,
 	recordsWatch,
@@ -121,17 +119,21 @@ test("Want to See and Seen it say what is", () => {
 	assert.equal(ratedToast(7), "Rated 7 · Good")
 })
 
-test("the rating's answers are the machine's items, each with its word", () => {
-	const rate = tvItems({ name: "rate", title: "movie-603" }, EMPTY_CONTEXT)
-	assert.deepEqual(
-		RATE_ANSWERS.map((answer) => answer.item),
-		rate.filter((item) => item.startsWith("level:")),
+test("the Seen it key reads every score the strip can give with its name", () => {
+	const names = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) =>
+		seenLabel(score, true),
 	)
-	assert.deepEqual(RATE_ANSWERS, [
-		{ item: "level:9", label: "Excellent" },
-		{ item: "level:7", label: "Good" },
-		{ item: "level:5", label: "Mediocre" },
-		{ item: "level:3", label: "Bad" },
+	assert.deepEqual(names, [
+		"1 · Unwatchable",
+		"2 · Terrible",
+		"3 · Bad",
+		"4 · Weak",
+		"5 · Mediocre",
+		"6 · Decent",
+		"7 · Good",
+		"8 · Great",
+		"9 · Excellent",
+		"10 · Masterpiece",
 	])
 })
 

@@ -11,7 +11,10 @@ import {
 	DiscoverCode,
 	DiscoverData,
 	ExplorerData,
+	QuizCode,
 	RateCode,
+	TasteCode,
+	TasteData,
 	TitleCode,
 	TitleData,
 	TonightCode,
@@ -19,6 +22,8 @@ import {
 	TvScreen,
 	loadFirstScreens,
 } from "./TvScreen"
+import { useReport } from "./kit"
+import type { TvCanvas } from "./room-tv"
 import {
 	type TvHomeData,
 	homeApps,
@@ -32,6 +37,7 @@ import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
+import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
 
 /** How long the TV's toast stays. */
@@ -48,6 +54,25 @@ function useTvToast() {
 		timer.current = setTimeout(() => setText(null), TOAST_MS)
 	}, [])
 	return [text, say] as const
+}
+
+/**
+ * Slice 8. Tells the scene which edition the measured room draws its TV in: the rating strip has its exact scores
+ * on the desktop only, and the machine's context says so. Draws nothing; before the window is measured, when both
+ * editions are in the HTML, it says nothing.
+ */
+function Edition({
+	canvas,
+	report,
+}: {
+	canvas: TvCanvas
+	report: (edition: TvCanvas["edition"] | null) => void
+}) {
+	useReport<TvCanvas["edition"] | null>(
+		report,
+		canvas.first ? null : canvas.edition,
+	)
+	return null
 }
 
 export function TvLivingRoom({ data }: { data: TvHomeData }) {
@@ -92,9 +117,25 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		() => tonightPicks(data, pool, wished),
 		[data, pool, wished],
 	)
+	// Slice 8. The person's taste and the quiz are held by a component of Taste's chunk, which reports them here
+	// (`TasteData`, mounted below) while the address names Taste, a side or the quiz.
+	const [mine, setMine] = useState<TvTasteReport | null>(null)
+	const onTaste = screen.name === "taste" || screen.name === "quiz"
+	// Once Taste has shown sides, home's tile says so for the rest of the visit.
+	const [tasted, setTasted] = useState(false)
+	const hasSides = mine?.ctx.taste ?? false
+	useEffect(() => {
+		if (hasSides) setTasted(true)
+	}, [hasSides])
+	// What Taste's lists knew of a title is still wanted on the title's own screen, where Taste's data is gone.
+	const tasteKnown = useRef<TvTasteReport["known"] | null>(null)
+	if (mine) tasteKnown.current = mine.known
+	// The edition the room draws the TV in (`Edition`, drawn with the screen).
+	const [edition, setEdition] = useState<TvCanvas["edition"] | null>(null)
+
 	const apps = useMemo(
-		() => homeApps(data, pool, false, wished),
-		[data, pool, wished],
+		() => homeApps(data, pool, tasted, wished),
+		[data, pool, tasted, wished],
 	)
 
 	// ---- The mini Explorer (slice 7). Its map is held by a component of the Explorer's chunk, which reports it
@@ -129,6 +170,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			listed.find((one) => tvTitleKey(one) === key) ??
 			// The mini Explorer (slice 7): an island's titles.
 			onMap?.(key) ??
+			// Slice 8: a side's titles and the quiz's picks.
+			tasteKnown.current?.(key) ??
 			null,
 		[tonight, listed, onMap],
 	)
@@ -138,8 +181,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const [one, setOne] = useState<TvTitleReport | null>(null)
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
-	// The titles of the list on screen. SEAM (slices 7 to 10): an island's, a side's and the search's follow.
+	// The titles of the list on screen. SEAM (slices 9 and 10): My shows' and the search's follow.
 	const listTitles = choosing ? list?.titles : undefined
+	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
 		() => ({
 			...tvContextOf(data, pool, wished),
@@ -147,8 +191,20 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			...(listTitles && { titles: listTitles }),
 			// The mini Explorer (slice 7): its islands, and an island's titles and hops, while it is on screen.
 			...explorerContext,
+			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
+			...tasteCtx,
+			exactScores: edition === "desktop",
 		}),
-		[data, pool, wished, titleName, listTitles, explorerContext],
+		[
+			data,
+			pool,
+			wished,
+			titleName,
+			listTitles,
+			explorerContext,
+			tasteCtx,
+			edition,
+		],
 	)
 	const title = one?.title ?? null
 	const titles: TvTitleScreens = useMemo(
@@ -159,10 +215,13 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const google = useContinueWithGoogle()
 	const leave = useLeaveThroughTv()
 	const titleEffect = one?.onEffect
+	const tasteEffect = mine?.onEffect
 	const onEffect = useCallback(
 		(effect: TvEffect) => {
 			// The title's own effects: Watch, Want to See, Seen it, the rating.
 			if (titleEffect?.(effect)) return
+			// Slice 8. The quiz's: a score and "Haven't seen it" go to `useTasteQuiz`.
+			if (tasteEffect?.(effect)) return
 			switch (effect.type) {
 				// The Expand key: the picture grows into the page.
 				case "expand":
@@ -174,12 +233,11 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 						say("Sign in isn't working right now"),
 					)
 					return
-				// SEAM (slice 8): `quiz-rate` and `quiz-skip` go to `useTasteQuiz`.
 				default:
 					return
 			}
 		},
-		[google, say, leave, titleEffect],
+		[google, say, leave, titleEffect, tasteEffect],
 	)
 	const tv = useTv(ctx, onEffect)
 	useEffect(() => {
@@ -197,6 +255,10 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (tv.screen.name === "home" && tv.focused === "app:discover")
 			DiscoverCode.load().catch(() => {})
 		if (tv.screen.name === "discover") TitleCode.load().catch(() => {})
+		// Slice 8: Taste's while its tile has the focus, the quiz's on Taste.
+		if (tv.screen.name === "home" && tv.focused === "app:taste")
+			TasteCode.load().catch(() => {})
+		if (tv.screen.name === "taste") QuizCode.load().catch(() => {})
 	}, [interacted, tv.screen.name, tv.focused])
 
 	// The mini Explorer (slice 7): its code and its map are asked for while its tile has the focus, or by a link
@@ -215,16 +277,20 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 				tv={tv.room}
 				startTitles={data.startTitles}
 				renderScreen={(canvas) => (
-					<TvScreen
-						tv={tv}
-						canvas={canvas}
-						ctx={ctx}
-						apps={apps}
-						toast={toast}
-						titles={titles}
-						discover={discover}
-						explorer={explorer?.view}
-					/>
+					<>
+						<Edition canvas={canvas} report={setEdition} />
+						<TvScreen
+							tv={tv}
+							canvas={canvas}
+							ctx={ctx}
+							apps={apps}
+							toast={toast}
+							titles={titles}
+							discover={discover}
+							explorer={explorer?.view}
+							taste={onTaste ? mine?.screens : undefined}
+						/>
+					</>
 				)}
 			/>
 			{/* A screen's data, once for both editions. It draws nothing. */}
@@ -247,6 +313,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					member={data.member}
 					report={setExplorer}
 				/>
+			)}
+			{onTaste && (
+				<TasteData screen={screen} member={data.member} report={setMine} />
 			)}
 		</>
 	)
