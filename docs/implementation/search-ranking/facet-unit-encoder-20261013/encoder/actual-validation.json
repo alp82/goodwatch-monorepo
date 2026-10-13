@@ -1,0 +1,23 @@
+{
+  "schema": "local-public-facet-unit-encoder-actual-validation.v1",
+  "CLIExit0": true,
+  "uniqueNewEnglishVectors": 132,
+  "dim": 768,
+  "maxUnitNormError": 5.1725211891451295e-09,
+  "allNewValuesExactlyFloat32": true,
+  "planRolesAndBatchOrderExact": true,
+  "oldVectorsBitExact": 269,
+  "mergedVectors": 401,
+  "modelPrePostStableFiles": 6,
+  "modelPinnedBytes": 923875007,
+  "mergedCacheSha256": "df96f124ef1e85b5c997a58ff9e69550f500d37b784fc93cf475c7ef4e6734d3",
+  "additionsSha256": "3a8a86b4bbed5f1696dfc800761e46342d8034d2b1b9ea43456de415ad37b407",
+  "encodingResultsSha256": "3589671913aff9716fb5926325c3d4d80c960b3ff831759bd61a85a46b5cfa2b",
+  "outerElapsedSeconds": 22.130115929001477,
+  "startupObservedWallMs": 8637.485232,
+  "encodingObservedSumMs": 3726.220887000005,
+  "runObservedWallMs": 15372.781293999999,
+  "newScoringStudyExecuted": false,
+  "productionTiming": false,
+  "productionAcceptance": false
+}

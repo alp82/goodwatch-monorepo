@@ -1,0 +1,38 @@
+{
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "planSha256": "5889f120be2dd2ed85e6d6b817b3b92a5458cf9b79823f027d9b8d91c070fd53",
+  "oldCacheSha256": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854",
+  "oldEncoderFreezeSha256": "814c785ab60c2decff063e42d44db96eff28f72ed18ff60bc14d28c4cbbc365c",
+  "workerSha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+  "nodeVersion": "v26.8.1",
+  "dependencyVersions": {
+    "onnxruntime-node": {
+      "version": "1.30.0",
+      "packageJsonSha256": "0871cd56ac2b9c9dfc834c7eabba819e5d4f966f005388515abb3402b14e0874"
+    },
+    "@huggingface/tokenizers": {
+      "version": "0.2.0",
+      "packageJsonSha256": "f6b9849b58de625c4fd79583242dd4506914b92082f9af17719d39416658ef24"
+    },
+    "typescript": {
+      "version": "5.6.3",
+      "packageJsonSha256": "16af7ea27880259b39ff8f123566aaec815cdca1c3ab8d28330c8b652055ccf0"
+    }
+  },
+  "dependencyFilesChecked": 72,
+  "uniqueRequestedModelTexts": 132,
+  "requestedBatches": 17,
+  "threads": 2,
+  "interOpThreads": 1,
+  "serial": true,
+  "originalWorkerWarmupBatches": 6,
+  "originalWorkerWarmupTexts": 12,
+  "outerSafetySeconds": 300,
+  "startupSafetySeconds": 120,
+  "requestSafetySeconds": 60,
+  "network": false,
+  "downloads": 0,
+  "JevOrLLM": 0,
+  "productionSearches": 0,
+  "productionTiming": false
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "local-public-facet-unit-encoder-invocation.v1",
+  "sourceManifestSha256": "fbaf07168d2e59e7b894dccbbe03cb70c8faf13ec2ddc138cce737bfb6247528",
+  "argv": [
+    "/usr/bin/node",
+    "run.mjs"
+  ],
+  "cwd": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013",
+  "outerTimeoutSeconds": 330,
+  "authorizedOnePass": true,
+  "requestedTexts": 132,
+  "originalWorkerWarmupTexts": 12,
+  "hostOperations": 0,
+  "networkRequests": 0,
+  "JevOrLLM": 0,
+  "productionSearches": 0,
+  "startedAt": "2026-10-12T23:53:18.905856+00:00",
+  "exitCode": 0,
+  "timedOut": false,
+  "finishedAt": "2026-10-12T23:53:41.035953+00:00",
+  "elapsedSeconds": 22.130115929001477,
+  "actual.stdout": {
+    "sha256": "ac84df6ec260068b20c4651643fb1c908c4b3806b066bcf5b0b0361acd0e0308",
+    "bytes": 177
+  },
+  "actual.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "prepared-local-facet-unit-encoder-source.v1",
+  "preparedOnly": true,
+  "actualEncodingExecuted": false,
+  "planSha256": "5889f120be2dd2ed85e6d6b817b3b92a5458cf9b79823f027d9b8d91c070fd53",
+  "files": {
+    "guards.mjs": {
+      "sha256": "e2edcb8258a2ad3d06f17435d3ca9f409dd620b7537744e2ef21b032ced03b50",
+      "bytes": 2656
+    },
+    "run.mjs": {
+      "sha256": "ed4efbc325cb310e40d0823d1d712c25cc600e94c5b87b28d3bd8869363ee80e",
+      "bytes": 7137
+    },
+    "test-guards.mjs": {
+      "sha256": "1bb88bc3e7e8ef3a21e0511687ca5b55f67810f11dcd1a768242f8c3a6b35833",
+      "bytes": 2905
+    },
+    "source/query-encoder.worker.js": {
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+      "bytes": 5877
+    },
+    "local-tests.txt": {
+      "sha256": "b7c382010d642f7589f574e12d1384ddfe083bc98d58b6edb42dadc832102228",
+      "bytes": 613
+    },
+    "README.md": {
+      "sha256": "d1b8e27164e5270fdbbf4ce182c0d479ea7c3aea6ce4e1b9dc3a7fc69ce8aa7e",
+      "bytes": 3262
+    }
+  },
+  "testsPassed": 5
+}
