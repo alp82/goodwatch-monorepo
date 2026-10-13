@@ -1,10 +1,15 @@
 // Slice 5 of the new TV (Tonight, the title screen, the rating and the Watch key): walks home, Tonight, a title and
 // the rating on /home-preview with the keyboard, both Remotes' keys and the pointer, as a guest on real data and as
 // a member on the tracking harness; asks /api/title-cards directly; follows the Watch key to the title page and
-// watches its streaming block; and takes the screenshots in shots/ and the sheets beside the prototype's own.
+// watches its streaming block; measures every key, the toast and the Expand key's corner on every phone of the
+// room's table; checks the order of Tonight's picks; and takes the screenshots in shots/ and the sheets beside the
+// prototype's own.
 //
 //   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs GUEST=http://localhost:3191 \
 //   MEMBER=http://localhost:3192 node drive.mjs [checks|shots]
+//
+// A whole run takes a quarter of an hour on two dev servers. PARTS=walk,watch,sizes,order,html runs some of the
+// checks.
 //
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
@@ -51,6 +56,14 @@ const check = (ok, what) => {
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 const is = (got, want, what) => check(same(got, want), `${what}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
+
+/** Tonight's order of the pool's titles, as tv-home.ts (`tonightOrder`) decides it, for a viewer with these services. */
+const watchRank = (card, own) => (!card.services?.length ? 2 : card.services.some((service) => own.includes(service.id)) ? 0 : 1)
+const tonightOrder = (suggestions, own = []) =>
+	suggestions
+		.map((card, at) => ({ card, at, rank: watchRank(card, own) }))
+		.sort((a, b) => a.rank - b.rank || a.at - b.at)
+		.map(({ card }) => card)
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium", args: ["--use-angle=gl", "--ignore-gpu-blocklist"] })
 
@@ -266,8 +279,22 @@ async function walk(who, url, size) {
 	const at = (tv) => (member ? `?member=six${tv ? `&${tv}` : ""}` : tv ? `?${tv}` : "")
 	const home = at("")
 	// The keys along a row on the desktop stand in a column on the phone.
+	// Tonight's two keys: a row on the desktop, the left column on the phone.
 	const next = phone ? "ArrowDown" : "ArrowRight"
 	const previous = phone ? "ArrowUp" : "ArrowLeft"
+	// The title's three keys: a row on the desktop; on the phone two to a row, Seen it under Watch.
+	const toSeen = phone ? "ArrowDown" : "ArrowRight"
+	/** Moves the focus to the Watch key from wherever it is on the title screen. */
+	const toWatch = async () => {
+		// From the bar down into the keys; then along the desktop's row, or left and up the phone's two rows.
+		for (const press of phone ? ["ArrowDown", "ArrowLeft", "ArrowUp"] : ["ArrowDown", "ArrowLeft", "ArrowLeft"]) {
+			const focus = (await read(page)).focus[0]
+			if (focus === "watch") return
+			if (press === "ArrowDown" && !focus?.startsWith("bar:")) continue
+			await page.keyboard.press(press)
+			await page.waitForTimeout(150)
+		}
+	}
 	where = `${who} ${size.join("x")}`
 	console.log(where)
 	// The harness's catalog has pictures that lead nowhere, and its page paints real ones into what its loader
@@ -294,6 +321,7 @@ async function walk(who, url, size) {
 	let s = await read(page)
 	is(s.focus, ["app:tonight"], "the focus starts on Tonight's tile")
 	is(code("Tonight").length + code("Title").length + code("Rate").length, 0, "Tonight's, the title screen's and the rating's code are not in the first view")
+	is(asked("/tv/use-tv-title").length + asked("/tv/tv-title.ts").length, 0, "nor is the title's data hook, with its mutations and words")
 	is(cards().length, 0, "no card is asked for on arrival")
 	const history = s.history
 	// What the member's loader answered, for the pictures and for what Tonight must show.
@@ -304,6 +332,7 @@ async function walk(who, url, size) {
 	s = await key(page, "ArrowDown", "app:tonight", "Down from the tiles stays")
 	await until(page, () => code("Tonight").length > 0 && code("Title").length > 0, "the first interaction asked for Tonight's code, which brings the title screen's")
 	is(code("Rate").length, 0, "the rating's code waits for the title screen")
+	await until(page, () => asked("/tv/use-tv-title").length > 0, "the title's data hook arrives with the title screen's code")
 
 	// ---- Tonight.
 	await page.keyboard.press("Enter")
@@ -311,9 +340,11 @@ async function walk(who, url, size) {
 	is(s.history, history + 1, "opening Tonight is one history entry")
 	is(s.name, "Tonight", "the bar says Tonight")
 	if (!member) await until(page, () => answers.some((a) => a.path === "/api/living-room/picks" && a.json?.suggestions), "the pool's answer is read")
-	const picks = member ? loaded.tonight.slice(0, 3).map((p) => p.card) : (answers.find((a) => a.path === "/api/living-room/picks" && a.json?.suggestions)?.json.suggestions.slice(0, 3) ?? [])
+	// A guest's picks: the pool's titles that stream in their country first (this guest has saved no services).
+	const picks = member ? loaded.tonight.slice(0, 3).map((p) => p.card) : tonightOrder(answers.find((a) => a.path === "/api/living-room/picks" && a.json?.suggestions)?.json.suggestions ?? []).slice(0, 3)
 	check(picks.length >= 2, `there are picks to step through: ${picks.map((p) => p.title).join(", ")}`)
-	is(s.heading, picks[0]?.title, member ? "a member's first pick is the loader's" : "a guest's first pick is the pool's best")
+	is(s.heading, picks[0]?.title, member ? "a member's first pick is the loader's" : "a guest's first pick is the pool's best that streams in their country")
+	if (!member) check(picks.every((pick) => pick.services?.length) && !s.text.includes("Not streaming"), `a guest's three picks all stream: ${picks.map((pick) => `${pick.title} (${pick.services?.[0]?.name ?? "nowhere"})`).join(", ")}`)
 	if (member) check(/^Next episode: S\d+ E\d+$/.test(s.crumb ?? ""), `a member's Tonight's pick is their next episode, and the bar names it: ${s.crumb}`)
 	else is(s.crumb, "Best rated right now", "a guest's picks are the best rated right now")
 	check(s.picture?.includes(`/${phone ? "w780" : "w1280"}/`), `the pick's picture is a ${phone ? "w780" : "w1280"} backdrop: ${s.picture}`)
@@ -355,43 +386,34 @@ async function walk(who, url, size) {
 	is(s.heading, title.title, "the card names the same title")
 	await until(page, () => code("Rate").length > 0, "on the title screen the rating's code is asked for")
 
-	// ---- The keys: a row on the desktop, a column on the phone, the bar above, the corner free.
-	s = await key(page, next, "want-to-see")
-	s = await key(page, next, "seen")
-	s = await key(page, next, "seen", "the keys end at Seen it")
-	s = await key(page, previous, "want-to-see")
-	s = await key(page, previous, "watch")
+	// ---- The keys: a row on the desktop, two to a row on the phone, the bar above, the corner free.
+	s = await key(page, "ArrowRight", "want-to-see")
+	if (phone) {
+		s = await key(page, "ArrowRight", "want-to-see", "Right on the row's last key stays")
+		s = await key(page, "ArrowDown", "seen", "Down reaches Seen it in the second row")
+		s = await key(page, "ArrowRight", "seen", "Right of Seen it is the Expand key's corner: the focus stays")
+		s = await key(page, "ArrowDown", "seen", "Down on the last row stays")
+		s = await key(page, "ArrowUp", "watch", "Up from Seen it reaches Watch")
+	} else {
+		s = await key(page, "ArrowRight", "seen")
+		s = await key(page, "ArrowRight", "seen", "the keys end at Seen it")
+		s = await key(page, "ArrowLeft", "want-to-see")
+		s = await key(page, "ArrowLeft", "watch")
+	}
 	await page.keyboard.press("ArrowUp")
 	s = await until(page, (x) => x.focus[0]?.startsWith("bar:"), "Up from the keys reaches the bar")
 	await page.keyboard.press("ArrowDown")
 	s = await until(page, (x) => ["watch", "want-to-see", "seen"].includes(x.focus[0]), "Down from the bar returns to the keys")
-	const boxes = await page.evaluate(() => {
-		const layer = [...document.querySelectorAll("#room [data-tv-layer]")].at(-1)
-		const box = (el) => el.getBoundingClientRect()
-		const tv = box(layer)
-		const place = box(layer.querySelector("[data-tv-expand-place]"))
-		const keys = ["watch", "want-to-see", "seen"].map((id) => box(layer.querySelector(`[data-tv-item="${id}"]`)))
-		return {
-			inside: keys.every((k) => k.left >= tv.left && k.right <= tv.right && k.top >= tv.top && k.bottom <= tv.bottom),
-			height: Math.round(Math.min(...keys.map((k) => k.height)) * 10) / 10,
-			// The corner: from the Expand key's place 158 canvas px to the left (the prototype's key on the phone).
-			clear: keys.every((k) => k.right < place.right - 158 * (tv.width / layer.offsetWidth) || k.bottom < place.bottom - 54 * (tv.width / layer.offsetWidth)),
-		}
-	})
-	check(boxes.inside, "the three keys are inside the picture")
-	if (phone) check(boxes.clear, "on the phone the keys leave the Expand key's corner free")
-	numbers[`${where}: the title screen's keys, px tall`] = boxes.height
+	fits(await layout(page), "the title screen", { touch: phone })
 
 	// ---- Want to See: a toggle, stored in the browser for anyone without a session.
 	const mark = (type, score) => ({ media_type: title.media_type, tmdb_id: title.tmdb_id, type, ...(score ? { score } : {}) })
 	const marksOf = async () => (await progress(page)).filter((m) => m.tmdb_id === title.tmdb_id && m.media_type === title.media_type)
-	for (let n = 0; n < 4 && (await read(page)).focus[0] !== "watch"; n++) {
-		await page.keyboard.press(previous)
-		await page.waitForTimeout(150)
-	}
-	s = await key(page, next, "want-to-see")
+	await toWatch()
+	s = await key(page, "ArrowRight", "want-to-see")
 	await page.keyboard.press("Enter")
 	s = await until(page, (x) => x.toast === "On your Wishlist" && x.labels["want-to-see"] === "On Wishlist ✓", "Want to See puts the title on the Wishlist, says so, and the key says what is")
+	fits(await layout(page), "the title screen with its toast", { touch: phone, toast: true })
 	is([s.search, s.focus], [titleAt, ["want-to-see"]], "the screen stays, with the focus on the key")
 	is(await marksOf(), [mark("plan")], "the title is on the Wishlist in the browser's progress")
 	await page.keyboard.press("Enter")
@@ -401,7 +423,7 @@ async function walk(who, url, size) {
 	s = await until(page, (x) => x.labels["want-to-see"] === "On Wishlist ✓", "Want to See again")
 
 	// ---- Seen it asks how it was; the answer is stored and returns to the title.
-	s = await key(page, next, "seen")
+	s = await key(page, toSeen, "seen")
 	await page.keyboard.press("Enter")
 	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "Seen it opens the rating")
 	is(s.history, history + 3, "the rating is one more history entry")
@@ -468,7 +490,7 @@ async function walk(who, url, size) {
 	s = await until(page, focusIs("details"), "the Remote's arrow moves back to Details")
 	await remote(page, "OK", phone)
 	s = await until(page, (x) => x.search.includes("tv=title&title=") && focusIs("watch")(x) && same(x.items, TITLE), "the Remote's OK opens the title")
-	await remote(page, phone ? "Down" : "Next", phone)
+	await remote(page, "Next", phone)
 	s = await until(page, focusIs("want-to-see"), "the Remote's arrow moves along the title's keys")
 	await remote(page, "Home", phone)
 	s = await until(page, screenIs(home, "app:tonight"), "the Remote's Home shows home")
@@ -491,6 +513,187 @@ async function walk(who, url, size) {
 	is(noise(logs), [], "nothing in the console")
 	is(beyondTelemetry(left), [], "no request left the machine but the site's own telemetry, which was stopped")
 	await ctx.close()
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// What is where on the TV: every key's box, the toast's, the Expand key's corner.
+
+/** The boxes of the topmost layer on the window, as they are drawn at rest (a focused key grows a little). */
+const layout = (page) =>
+	page.evaluate(() => {
+		const room = document.getElementById("room")
+		const layer = [...room.querySelectorAll("[data-tv-layer]")].at(-1)
+		const tv = layer.getBoundingClientRect()
+		const k = tv.width / layer.offsetWidth
+		const rest = (el) => {
+			const b = el.getBoundingClientRect()
+			const [w, h] = [el.offsetWidth * k, el.offsetHeight * k]
+			const [x, y] = [b.left + b.width / 2 - w / 2, b.top + b.height / 2 - h / 2]
+			return { left: x, top: y, right: x + w, bottom: y + h, width: w, height: h }
+		}
+		const place = layer.querySelector("[data-tv-expand-place]")
+		const toast = room.querySelector(".tvc-toast")
+		const heading = layer.querySelector(".line-clamp-2.font-bold")
+		return {
+			k,
+			tv: { left: tv.left, top: tv.top, right: tv.right, bottom: tv.bottom },
+			items: [...layer.querySelectorAll("[data-tv-item]")].map((el) => ({
+				id: el.getAttribute("data-tv-item"),
+				...rest(el),
+				// What a key says is cut short where it does not fit.
+				cut: [...el.querySelectorAll(".truncate")].some((text) => text.scrollWidth > text.clientWidth + 1),
+			})),
+			// A box that cuts off what does not fit (the Frame's content on the phone) holds more than it shows.
+			clipped: [...layer.querySelectorAll(".overflow-hidden")].filter((el) => !el.hasAttribute("data-tv-row") && el.scrollHeight > el.clientHeight + 1).length,
+			heading: heading ? rest(heading) : null,
+			place: place ? rest(place) : null,
+			toast: toast ? rest(toast) : null,
+		}
+	})
+
+const meet = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5
+const within = (a, b) => a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5
+
+/** A screen holds what it shows: touch targets, nothing over anything, nothing cut off, the corner free. */
+function fits(l, what, { touch = false, toast = false, paged = false } = {}) {
+	const small = l.items.filter((item) => Math.min(item.width, item.height) < 44 - 0.05)
+	if (touch) check(small.length === 0, `${what}: every key is 44 px or more on the phone's screen: ${small.map((item) => `${item.id} ${item.width.toFixed(1)} x ${item.height.toFixed(1)}`).join(", ") || "all"}`)
+	// A row that pages sideways holds keys outside the picture.
+	if (!paged) {
+		const out = l.items.filter((item) => !within(item, l.tv))
+		check(out.length === 0, `${what}: every key is inside the picture: ${out.map((item) => item.id).join(", ") || "all"}`)
+		const over = l.items.flatMap((a, n) => l.items.slice(n + 1).filter((b) => meet(a, b)).map((b) => `${a.id} and ${b.id}`))
+		check(over.length === 0, `${what}: no key lies over another: ${over.join(", ") || "none"}`)
+	}
+	check(l.clipped === 0, `${what}: nothing is cut off by its box`)
+	check(!l.items.some((item) => item.cut), `${what}: every key says its words in full`)
+	if (l.heading) check(within(l.heading, l.tv) && !l.items.some((item) => meet(item, l.heading)), `${what}: its large line is inside the picture and under no key`)
+	if (l.place) {
+		// The Expand key's cell: 158 canvas px wide on the phone, 220 on the desktop, as tall as a key.
+		const size = touch ? [158, 54] : [220, 64]
+		const corner = { right: l.place.right, bottom: l.place.bottom, left: l.place.right - size[0] * l.k, top: l.place.bottom - Math.max(size[1] * l.k, touch ? 44 : 0) }
+		const inCorner = l.items.filter((item) => meet(item, corner))
+		check(inCorner.length === 0, `${what}: the Expand key's corner is free: ${inCorner.map((item) => item.id).join(", ") || "free"}`)
+	}
+	if (toast) {
+		check(Boolean(l.toast), `${what}: the toast shows`)
+		if (l.toast) {
+			const under = l.items.filter((item) => meet(item, l.toast))
+			check(under.length === 0, `${what}: the toast covers no key: ${under.map((item) => item.id).join(", ") || "none"}`)
+			check(within(l.toast, l.tv), `${what}: the toast is inside the picture`)
+		}
+	}
+	return { key: Math.min(...l.items.map((item) => Math.min(item.width, item.height))) }
+}
+
+/** The phones of the room's table: the Remote in the hand on the tall ones, on the table on the short, and landscape. */
+const PHONES = [
+	[360, 740],
+	[375, 667],
+	[390, 700],
+	[390, 844],
+	[430, 932],
+	[844, 390],
+]
+/** A long name and a long service, for the worst case of a title screen. */
+const LONG = "movie-120"
+
+async function sizes() {
+	for (const size of [...PHONES, DESKTOP]) {
+		const touch = size !== DESKTOP
+		where = `sizes ${size.join("x")}`
+		console.log(where)
+		const smallest = {}
+		// Home: the bar's keys are every screen's.
+		let { ctx, page } = await open(GUEST, size, { touch, storage: { country: "US" } })
+		smallest.home = fits(await layout(page), "home", { touch, paged: true }).key
+		numbers[`${where}: the room`] = await page.evaluate(() => {
+			const room = document.getElementById("room")
+			return [room.dataset.room, room.dataset.remotePlace].filter(Boolean).join(", ")
+		})
+		// Tonight, by its link: the picks are asked for without waiting for a sign of the person.
+		await page.goto(`${GUEST}?tv=tonight`, { waitUntil: "load", timeout: 180000 })
+		await page.waitForSelector("#room:not([data-room=unmeasured]) [data-tv-item]", { timeout: 180000 })
+		await until(page, (x) => same(x.items, TONIGHT) && Boolean(x.picture), "Tonight by its link shows its picks", 60000)
+		smallest.tonight = fits(await layout(page), "Tonight", { touch }).key
+		await ctx.close()
+
+		// A title with a long name, Want to See with its toast, the rating.
+		;({ ctx, page } = await open(`${GUEST}?tv=title&title=${LONG}`, size, { touch, storage: { country: "US" } }))
+		let s = await until(page, (x) => same(x.items, TITLE) && /^(Watch on |On |Not streaming)/.test(x.labels.watch ?? "") && Boolean(x.picture), "the title screen", 60000)
+		numbers["the long title"] = s.heading
+		smallest.title = fits(await layout(page), "a title", { touch }).key
+		await key(page, "ArrowRight", "want-to-see")
+		await page.keyboard.press("Enter")
+		await until(page, (x) => x.toast === "On your Wishlist", "Want to See")
+		fits(await layout(page), "a title with its toast", { touch, toast: true })
+		await key(page, touch ? "ArrowDown" : "ArrowRight", "seen")
+		await page.keyboard.press("Enter")
+		await until(page, (x) => same(x.items, RATE) && focusIs("level:9")(x), "the rating")
+		// The toast of the screen before is still up: it covers no answer either.
+		smallest.rate = fits(await layout(page), "the rating", { touch }).key
+		await page.keyboard.press("ArrowDown")
+		await page.keyboard.press("Enter")
+		s = await until(page, (x) => same(x.items, TITLE) && /^Rated \d+ · /.test(x.toast ?? ""), "an answer, and its toast")
+		numbers[`${where}: the longest toast seen`] = s.toast
+		fits(await layout(page), "a title with the rating's toast", { touch, toast: true })
+		// The menu lies over everything: no toast while it is open.
+		await page.keyboard.press("m")
+		s = await until(page, (x) => x.layers === 2 && x.items.includes("menu:home"), "the menu")
+		is(s.toast, null, "no toast while the menu is open")
+		const menu = await layout(page)
+		// The menu and What is GoodWatch? are slice 3's screens: measured here, not held to the rule.
+		numbers[`${where}: the menu's smallest key (slice 3), px`] = Math.round(Math.min(...menu.items.map((item) => item.height)) * 10) / 10
+		await ctx.close()
+		numbers[`${where}: the smallest key, px`] = Object.fromEntries(Object.entries(smallest).map(([screen, px]) => [screen, Math.round(px * 10) / 10]))
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Tonight is for watching tonight: what streams on the person's services, then what streams, then the rest.
+
+async function order(pool) {
+	where = "Tonight's order"
+	console.log(where)
+	const all = pool.suggestions ?? []
+	const streaming = all.filter((card) => card.services?.length)
+	numbers["the pool for a guest in the United States"] = `${all.length} titles, ${streaming.length} of them streaming; its first three by its own order: ${all.slice(0, 3).map((card) => `${card.title} (${card.services?.[0]?.name ?? "not streaming"})`).join(", ")}`
+	/** Opens Tonight by its link and reads its three picks. */
+	const picksOf = async (storage) => {
+		const { ctx, page } = await open(`${GUEST}?tv=tonight`, DESKTOP, { storage })
+		const seen = []
+		let s = await until(page, (x) => same(x.items, TONIGHT) && Boolean(x.heading), "Tonight shows its picks", 60000)
+		for (let n = 0; n < 3; n++) {
+			seen.push({ title: s.heading, text: s.text })
+			await key(page, "ArrowRight", "another")
+			await page.keyboard.press("Enter")
+			s = await until(page, (x) => x.heading !== seen.at(-1).title || x.search === "?tv=tonight", "the next pick")
+		}
+		await ctx.close()
+		return seen
+	}
+
+	// Without saved services: what streams in the country first, in the pool's order.
+	let want = tonightOrder(all).slice(0, 3)
+	let got = await picksOf({ country: "US" })
+	is(got.map((pick) => pick.title), want.map((card) => card.title), "without saved services Tonight's picks are the pool's first three that stream in the country")
+	if (streaming.length >= 3) check(got.every((pick) => !pick.text.includes("Not streaming")), "none of the three says Not streaming")
+	check(want[0].title !== all[0].title || Boolean(all[0].services?.length), `the pool's own first title leads only when it streams: ${all[0].title} against ${want[0].title}`)
+
+	// With a saved service: the titles on it lead. A service whose first title is not the first that streams.
+	const service = streaming.flatMap((card) => card.services).find((candidate) => tonightOrder(all, [candidate.id])[0].key !== want[0].key)
+	numbers["Tonight with a saved service"] = service ? service.name : "no service in the pool changes the first pick today: not checked"
+	if (service) {
+		// The pool as the server answers it for that guest: the same titles, each with the guest's service first.
+		const theirs = await (await fetch(`${ORIGIN}/api/living-room/picks?view=pool`, json({ guest: guestOf({ services: String(service.id) }) }))).json()
+		want = tonightOrder(theirs.suggestions, [service.id]).slice(0, 3)
+		got = await picksOf({ country: "US", withStreamingProviders: String(service.id) })
+		is(got.map((pick) => pick.title), want.map((card) => card.title), `with ${service.name} saved, the titles on it lead Tonight's picks`)
+		check(want[0].services.some((s) => s.id === service.id), `the first pick streams on ${service.name}`)
+		const on = theirs.suggestions.filter((card) => card.services?.some((s) => s.id === service.id)).length
+		numbers[`the pool's titles on ${service.name}`] = on
+		if (on < 3) check(want.slice(on).every((card) => card.services?.length), "with fewer than three on it, the picks are filled up with titles that stream elsewhere")
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -840,7 +1043,7 @@ async function shots(own, pool) {
 			}
 			await until(page, (x) => x.search.includes("tv=title") && /^(Watch on |On |Not streaming)/.test(x.labels.watch ?? ""), "the title screen", 60000)
 			await shot(page, `title-${who}-${device}`)
-			await page.keyboard.press(phone ? "ArrowDown" : "ArrowRight")
+			await page.keyboard.press("ArrowRight")
 			await page.keyboard.press("Enter")
 			await until(page, (x) => x.toast === "On your Wishlist", "Want to See")
 			await shot(page, `title-wishlist-${who}-${device}`)
@@ -999,12 +1202,22 @@ failed.length = 0
 
 const { own, pool } = await endpoint()
 if (only !== "shots") {
-	for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
-	for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
-	for (const size of [DESKTOP, PHONE]) await watch(size, own)
-	await watchEdges(own, pool)
-	await html()
-	writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	// PARTS=walk,watch,sizes,order,html runs some of the checks; checks.json is written by a whole run only.
+	const parts = process.env.PARTS?.split(",")
+	const part = (name) => !parts || parts.includes(name)
+	if (part("walk")) {
+		for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
+		for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
+	}
+	if (part("watch")) {
+		for (const size of [DESKTOP, PHONE]) await watch(size, own)
+		await watchEdges(own, pool)
+	}
+	if (part("sizes")) await sizes()
+	if (part("order")) await order(pool)
+	if (part("html")) await html()
+	if (!parts) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	else console.log(JSON.stringify(numbers, null, 1))
 }
 if (only !== "checks") await shots(own, pool)
 await browser.close()

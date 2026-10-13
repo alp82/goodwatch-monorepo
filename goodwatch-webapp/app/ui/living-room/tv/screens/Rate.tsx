@@ -13,6 +13,7 @@ import {
 	Item,
 	Shade,
 	backdropSize,
+	useKeySize,
 	usePhone,
 	useTvView,
 } from "../kit"
@@ -21,6 +22,8 @@ import { RATE_ANSWERS, type TvTitleOnScreen } from "../tv-title"
 /** The answer control. */
 function Answers({ items }: { items: readonly string[] }) {
 	const P = usePhone()
+	// On the phone an answer is a touch target, 44 px or more on the phone's screen.
+	const height = useKeySize(52)
 	const answers = RATE_ANSWERS.filter((answer) => items.includes(answer.item))
 	return (
 		<fieldset
@@ -34,7 +37,8 @@ function Answers({ items }: { items: readonly string[] }) {
 				<Item
 					key={answer.item}
 					id={answer.item}
-					className={`tvc-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[52px] text-[22px]" : "h-[116px] rounded-[26px] text-[32px]"}`}
+					className={`tvc-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "text-[22px]" : "h-[116px] rounded-[26px] text-[32px]"}`}
+					style={P ? { height } : undefined}
 				>
 					{answer.label}
 				</Item>
@@ -64,7 +68,8 @@ export default function Rate({
 			)}
 			<Shade dim={0.82} />
 			<div
-				className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[70px]" : "px-14 pt-16"}`}
+				// On the phone the question starts under the bar's keys, which are touch targets.
+				className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[84px]" : "px-14 pt-16"}`}
 			>
 				<div
 					className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}

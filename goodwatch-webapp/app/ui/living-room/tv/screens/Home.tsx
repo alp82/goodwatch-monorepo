@@ -145,7 +145,8 @@ export function Home({
 			</Cross>
 			<Shade dim={0.5} />
 			<div
-				className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 ${P ? "left-5 top-[28px] text-[20px]" : "left-14 top-11 text-[22px]"}`}
+				// The toast takes this place while it shows (TvScreen.tsx).
+				className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 transition-opacity [[data-tv-toast]_&]:opacity-0 ${P ? "left-5 top-[28px] text-[20px]" : "left-14 top-11 text-[22px]"}`}
 			>
 				GoodWatch
 			</div>

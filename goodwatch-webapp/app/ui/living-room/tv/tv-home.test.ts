@@ -7,8 +7,10 @@ import {
 	type TvHomeData,
 	type TvPool,
 	homeApps,
+	tonightOrder,
 	tonightPicks,
 	tvContextOf,
+	watchRank,
 } from "./tv-home.ts"
 import { destinationHref, tvItems } from "./tv-machine.ts"
 
@@ -244,4 +246,96 @@ test("a guest's own Tonight's pick leads the pool's best, and is not named twice
 test("a member's Tonight is their own: a pick from a browser's Wishlist changes nothing", () => {
 	const wished = { ...card("movie", 9), key: 9 }
 	assert.deepEqual(tonightPicks(member, pool, wished), member.tonight)
+})
+
+// ---- Tonight is for watching tonight.
+
+const service = (id: number, name: string) => ({ id, name, logo_path: "" })
+const NETFLIX = service(8, "Netflix")
+const DISNEY = service(337, "Disney Plus")
+const PRIME = service(9, "Amazon Prime Video")
+/** A card of the pool with where it streams: a list, none (`[]`), or nobody knows (`null`). */
+const streams = (
+	tmdb_id: number,
+	services: ReturnType<typeof service>[] | null,
+) => ({ ...card("movie", tmdb_id), key: tmdb_id, services }) as TitleCard
+const titlesOf = (cards: { tmdb_id: number }[]) => cards.map((c) => c.tmdb_id)
+
+test("a title streams on the person's own service, on another one, or nowhere they can tell", () => {
+	const mine = { ownServiceIds: [8] }
+	assert.equal(watchRank(streams(1, [DISNEY, NETFLIX]), mine), 0)
+	assert.equal(watchRank(streams(1, [DISNEY]), mine), 1)
+	assert.equal(watchRank(streams(1, []), mine), 2)
+	// While the country's availability loads, nobody knows.
+	assert.equal(watchRank(streams(1, null), mine), 2)
+	// A member's saved services come by name, a guest's by id.
+	assert.equal(watchRank(streams(1, [DISNEY]), { savedServices: ["Disney Plus"] }), 0)
+	// Without saved services nothing is the person's own.
+	assert.equal(watchRank(streams(1, [NETFLIX]), {}), 1)
+})
+
+test("Tonight offers what streams on the person's services first, then what streams, then the rest", () => {
+	const pool: TvPool = {
+		ownServiceIds: [8],
+		suggestions: [
+			streams(1, []),
+			streams(2, [DISNEY]),
+			streams(3, [NETFLIX]),
+			streams(4, [PRIME]),
+			streams(5, [PRIME, NETFLIX]),
+			streams(6, []),
+		],
+	}
+	// Inside each group the pool's own order stays, and nothing is left out.
+	assert.deepEqual(titlesOf(tonightOrder(pool)), [3, 5, 2, 4, 1, 6])
+	assert.deepEqual(
+		titlesOf(tonightPicks(guest, pool).map((pick) => pick.card)),
+		[3, 5, 2],
+	)
+	// The tile on home shows the first pick's picture.
+	assert.deepEqual(homeApps(guest, pool)[0].art, {
+		kind: "backdrop",
+		path: "/backdrop-3.jpg",
+	})
+})
+
+test("a person without saved services gets what streams in their country first", () => {
+	const pool: TvPool = {
+		suggestions: [streams(1, []), streams(2, [DISNEY]), streams(3, [NETFLIX])],
+	}
+	assert.deepEqual(titlesOf(tonightOrder(pool)), [2, 3, 1])
+})
+
+test("when too few titles stream, the picks are filled up with the pool's best of the rest", () => {
+	const pool: TvPool = {
+		ownServiceIds: [8],
+		suggestions: [streams(1, []), streams(2, []), streams(3, [DISNEY]), streams(4, [])],
+	}
+	assert.deepEqual(
+		titlesOf(tonightPicks(guest, pool).map((pick) => pick.card)),
+		[3, 1, 2],
+	)
+	// Nothing streams, or nobody knows yet: the pool's own order.
+	for (const services of [[], null])
+		assert.deepEqual(
+			titlesOf(
+				tonightOrder({
+					suggestions: [1, 2, 3, 4].map((id) => streams(id, services)),
+				}),
+			),
+			[1, 2, 3, 4],
+		)
+})
+
+test("a guest's own pick still leads, and a member's Tonight is not reordered", () => {
+	const pool: TvPool = {
+		ownServiceIds: [8],
+		suggestions: [streams(1, []), streams(2, [NETFLIX]), streams(3, [NETFLIX])],
+	}
+	const wished = streams(9, [])
+	assert.deepEqual(
+		titlesOf(tonightPicks(guest, pool, wished).map((pick) => pick.card)),
+		[9, 2, 3],
+	)
+	assert.deepEqual(tonightPicks(member, pool), member.tonight)
 })

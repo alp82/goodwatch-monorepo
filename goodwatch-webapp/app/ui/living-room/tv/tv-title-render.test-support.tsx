@@ -3,7 +3,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import { TvScreen } from "./TvScreen"
-import { Layer, TvViewProvider } from "./kit"
+import { Layer, TvViewProvider, keySize } from "./kit"
 import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
 import type { TvCanvas } from "./room-tv"
 import Rate from "./screens/Rate"
@@ -82,6 +82,20 @@ const CANVAS: Record<"desktop" | "phone" | "short", TvCanvas> = {
 	// A short phone shows less of the canvas's height.
 	short: { edition: "phone", w: PHONE_TV_CANVAS.w, h: 372, scale: 0.69 },
 }
+
+/**
+ * The phones of the room's table (docs/implementation/tv-screen-revamp/room): the window, how large the canvas is
+ * shown and how much of its height. The Remote is in the hand on the tall ones and on the table on the short.
+ */
+const PHONES = [
+	{ phone: "360x740", scale: 332 / 500, h: 417 },
+	{ phone: "375x667", scale: 347 / 500, h: 372 },
+	{ phone: "390x700", scale: 362 / 500, h: 402 },
+	{ phone: "390x844", scale: 362 / 500, h: 417 },
+	{ phone: "430x932", scale: 402 / 500, h: 417 },
+	// Landscape: the canvas is shown at about its own size.
+	{ phone: "844x390", scale: 0.98, h: 373 },
+]
 
 /** A screen drawn as it is once its code is there. */
 const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
@@ -167,8 +181,68 @@ const titles: TvTitleScreens = {
 	title: on(),
 }
 
+const picksOf = tonightPicks(guest, pool)
+const state = (screen: Screen, menuOpen = false): TvState => ({
+	screen,
+	focus: null,
+	power: "on",
+	menuOpen,
+	menuFocus: null,
+	depth: 0,
+})
+/** The TV with a toast, as the server draws it. */
+const toastHtml = (screen: Screen, canvas: TvCanvas, menuOpen = false) => {
+	const tv = state(screen, menuOpen)
+	return renderToStaticMarkup(
+		<TvScreen
+			tv={{
+				state: tv,
+				focused: focusedItem(tv, titleCtx),
+				screenFocus: focusedItem({ ...tv, menuOpen: false }, titleCtx),
+				dispatch: () => {},
+			}}
+			canvas={canvas}
+			ctx={titleCtx}
+			apps={homeApps(guest, pool)}
+			toast="Rated 10 · Masterpiece"
+		/>,
+	)
+}
+
 console.log(
 	`__TV_TITLE_RENDER__${JSON.stringify({
+		// Every screen of the slice on every phone of the room's table.
+		phones: PHONES.map(({ phone, scale, h }) => {
+			const canvas: TvCanvas = { edition: "phone", w: PHONE_TV_CANVAS.w, h, scale }
+			return {
+				phone,
+				scale,
+				key: keySize(canvas, 52),
+				title: html(canvas, "watch", <Title items={titleItems} title={on()} />),
+				tonight: html(
+					canvas,
+					"details",
+					<Tonight
+						items={tvItems({ name: "tonight", pick: 0 }, tvContextOf(guest, pool))}
+						picks={picksOf}
+						pick={0}
+						waiting={false}
+					/>,
+				),
+				rate: html(canvas, "level:9", <Rate items={rateItems} title={on()} />),
+				toast: toastHtml(TITLE, canvas),
+			}
+		}),
+		keySizes: {
+			desktop: keySize(CANVAS.desktop, 74),
+			// Before the window is measured nobody knows the scale.
+			first: keySize({ ...CANVAS.phone, scale: 1, first: true }, 52),
+		},
+		toast: {
+			desktop: toastHtml(TITLE, CANVAS.desktop),
+			phone: toastHtml(TITLE, CANVAS.phone),
+			menuOpen: toastHtml(TITLE, CANVAS.desktop, true),
+		},
 		tonight: {
 			guest: tonightOf(guest, pool, 0),
 			second: tonightOf(guest, pool, 1),

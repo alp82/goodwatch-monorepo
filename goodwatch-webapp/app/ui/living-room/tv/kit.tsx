@@ -16,6 +16,7 @@ import {
 	createContext,
 	useContext,
 	useEffect,
+	useLayoutEffect,
 	useState,
 } from "react"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
@@ -43,6 +44,42 @@ export function useTvView(): TvView {
 
 /** The phone edition: its canvas is 500 wide and its bar's keys are icons. */
 export const usePhone = () => useTvView().canvas.edition === "phone"
+
+/** The smallest side of a touch target, in pixels of the phone's screen. */
+export const TOUCH_TARGET = 44
+
+/**
+ * How tall a key is on this canvas, in canvas pixels: `drawn`, and on a phone never under 44 px of the phone's
+ * screen. A phone's canvas is shown smaller than it is drawn (at 0.66 on a phone 360 wide, at 0.8 on one 430
+ * wide), so its keys are drawn that much larger: 67 canvas px on the narrowest phone. Every key of every screen
+ * takes its height on the phone from here. Before the window is measured nobody knows the scale, and nothing is
+ * painted.
+ */
+export function keySize(canvas: TvCanvas, drawn: number): number {
+	if (canvas.edition !== "phone" || canvas.first) return drawn
+	return Math.max(drawn, Math.ceil(TOUCH_TARGET / canvas.scale))
+}
+
+/** `keySize` for the canvas a screen is drawn on. */
+export const useKeySize = (drawn: number) => keySize(useTvView().canvas, drawn)
+
+// ---------------------------------------------------------------------------------------------------------
+// A screen's data. See "How a screen loads its data" in docs/implementation/tv-screen-revamp/tonight-title.
+
+const useIsoLayoutEffect =
+	typeof window === "undefined" ? useEffect : useLayoutEffect
+
+/**
+ * Hands what a screen's data component holds up to the scene, and takes it back when the component leaves.
+ * Before the paint, so the screen is drawn in the same frame as its data component mounts. `value` must keep its
+ * identity while nothing in it changed (`useMemo`): every new one is another render of the scene.
+ */
+export function useReport<T>(report: (value: T | null) => void, value: T) {
+	useIsoLayoutEffect(() => {
+		report(value)
+	}, [report, value])
+	useIsoLayoutEffect(() => () => report(null), [report])
+}
 
 /** A screen, or an overlay on top of one. The focus moves inside the topmost layer only. */
 export function Layer({
@@ -252,6 +289,8 @@ export function Bar({
 	className = "",
 }: { items: readonly string[]; className?: string }) {
 	const P = usePhone()
+	// On the phone a key is a round touch target.
+	const side = useKeySize(54)
 	return (
 		<div
 			className={`flex shrink-0 items-center ${P ? "gap-2" : "gap-2.5"} ${className}`}
@@ -261,7 +300,8 @@ export function Bar({
 					key={key.id}
 					id={key.id}
 					label={key.label}
-					className={`tvc-act flex shrink-0 items-center justify-center whitespace-nowrap ${P ? "h-[54px] w-[54px]" : "h-[64px] gap-2.5 px-5 text-[24px]"}`}
+					className={`tvc-act flex shrink-0 items-center justify-center whitespace-nowrap ${P ? "" : "h-[64px] gap-2.5 px-5 text-[24px]"}`}
+					style={P ? { width: side, height: side } : undefined}
 				>
 					<Icon
 						d={key.d}
@@ -331,7 +371,8 @@ export function Frame({
 			<div
 				className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[78px] px-5" : "h-[108px] px-14"}`}
 			>
-				<div className="min-w-0 flex-1">
+				{/* The toast takes this place while it shows (TvScreen.tsx). */}
+				<div className="min-w-0 flex-1 transition-opacity [[data-tv-toast]_&]:opacity-0">
 					<div
 						className={`truncate font-bold leading-none ${P ? "text-[24px]" : "text-[36px]"}`}
 					>

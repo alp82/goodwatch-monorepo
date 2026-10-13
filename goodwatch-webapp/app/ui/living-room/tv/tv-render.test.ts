@@ -194,13 +194,25 @@ test("a screen no slice has built yet has its bar, and the Expand key's place is
 	assert.match(rendered.notBuilt, />Explorer</)
 })
 
-test("while the TV boots it shows the wordmark and no item; the toast stands over the screen", () => {
+test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {
 	assert.deepEqual(ids(rendered.booting), [])
 	assert.match(rendered.booting, /lr-boot/)
 	assert.match(rendered.booting, /aria-label="GoodWatch"/)
-	for (const html of Object.values(rendered.toast))
-		assert.match(html, /<output class="tvc-toast">On your Wishlist<\/output>/)
+	// The toast stands in the bar's row at the left, where it covers no key, and the home's wordmark steps back.
+	assert.match(
+		rendered.toast.desktop,
+		/<div class="pointer-events-none absolute left-0 top-0 z-30 [^"]*" style="max-width:640px"><output class="tvc-toast">On your Wishlist<\/output>/,
+	)
+	assert.match(
+		rendered.toast.phone,
+		/<output class="tvc-toast [^"]*text-\[20px\][^"]*">On your Wishlist<\/output>/,
+	)
+	for (const html of Object.values(rendered.toast)) {
+		assert.match(html, /^<div class="tvc [^"]*" data-tv-toast="">/)
+		assert.match(html, /\[\[data-tv-toast\]_&amp;\]:opacity-0[^>]*>GoodWatch</)
+	}
 	assert.ok(!rendered.home.guest.desktop.includes("tvc-toast"))
+	assert.ok(!rendered.home.guest.desktop.includes("data-tv-toast="))
 })
 
 test("before the window is measured the room holds both editions of the screen, one H1 each", () => {

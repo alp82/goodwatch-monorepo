@@ -13,6 +13,7 @@ import {
 	Shade,
 	type TvView,
 	TvViewProvider,
+	keySize,
 } from "./kit"
 import type { TvCanvas } from "./room-tv"
 import {
@@ -33,6 +34,15 @@ import {
 } from "./tv-machine"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
+
+// What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
+// screen-code.tsx (see there).
+export {
+	RateCode,
+	TitleData,
+	TonightCode,
+	loadFirstScreens,
+} from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -87,8 +97,17 @@ export function TvScreen({
 
 	const phone = canvas.edition === "phone"
 	const items = tvItems(screen, ctx)
+	// The toast stands in the top bar's row, at the left, where a screen's name is: no screen has a focus target
+	// there, so it never covers a key, least of all the one it is about. The name steps back while it shows
+	// (`data-tv-toast`; kit.tsx's Frame and the home's wordmark listen). It ends before the bar's keys, which are
+	// three touch targets on the phone. The menu lies over everything: while it is open there is no toast.
+	const says = state.power === "on" && !state.menuOpen ? toast : null
+	const toastWidth = phone ? canvas.w - 72 - 3 * keySize(canvas, 54) : 640
 	return (
-		<div className="tvc absolute inset-0 overflow-hidden">
+		<div
+			className="tvc absolute inset-0 overflow-hidden"
+			data-tv-toast={says ? "" : undefined}
+		>
 			{state.power === "booting" ? (
 				<TvViewProvider value={under}>
 					<Boot />
@@ -129,12 +148,20 @@ export function TvScreen({
 			<div aria-live="polite" className="sr-only">
 				{state.power === "on" ? SCREEN_NAME[screen.name] : ""}
 			</div>
-			{toast && state.power === "on" && (
-				// On the phone it stands over the last row, clear of the Expand key in the corner.
+			{says && (
 				<div
-					className={`pointer-events-none absolute inset-x-0 z-30 flex justify-center ${phone ? "bottom-[88px]" : "bottom-8"}`}
+					className={`pointer-events-none absolute left-0 top-0 z-30 flex items-center ${phone ? "h-[78px] pl-5" : "h-[108px] pl-14"}`}
+					style={{ maxWidth: toastWidth }}
 				>
-					<output className="tvc-toast">{toast}</output>
+					<output
+						className={
+							phone
+								? "tvc-toast rounded-[22px] px-4 py-2 text-[20px] leading-tight"
+								: "tvc-toast"
+						}
+					>
+						{says}
+					</output>
 				</div>
 			)}
 		</div>

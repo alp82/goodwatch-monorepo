@@ -7,9 +7,13 @@
 // browser, so a key says what is the moment it is pressed.
 //
 // The effects: Want to See and the rating are the mutations every title surface uses, and work for a guest. Seen
-// is a member's: the server refuses a guest's watch, and a guest's score counts as Seen. Watch and the Expand key
-// leave through the TV (ui/living-room/tv-transition.ts); Watch asks the title's page to highlight its streaming
-// block, in the history entry's state.
+// is a member's: the server refuses a guest's watch, and a guest's score counts as Seen. Watch leaves through the
+// TV (ui/living-room/tv-transition.ts) and asks the title's page to highlight its streaming block, in the history
+// entry's state.
+//
+// None of this is in the page's first view: the hook runs in `TitleData` (screens/Title.tsx), which arrives with
+// the title screen's chunk and reports up to the scene (`TvTitleReport`). The scene imports this file's types
+// only.
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useRef } from "react"
 import {
@@ -58,6 +62,16 @@ async function fetchCards(
 	return response.json()
 }
 
+/** What the title's data component reports up to the scene. */
+export type TvTitleReport = {
+	/** The title the title screen and the rating show. */
+	title: TvTitleOnScreen | null
+	/** Its name, for its page's address in the machine's context, once anything knows it. */
+	titleName: string | null
+	/** Carries out an effect of the machine that is the title's; answers whether it was. */
+	onEffect: (effect: TvEffect) => boolean
+}
+
 export function useTvTitle({
 	screen,
 	member,
@@ -70,7 +84,7 @@ export function useTvTitle({
 	known: (key: string) => TvKnownTitle | null
 	/** The TV's toast. */
 	say: (text: string) => void
-}) {
+}): TvTitleReport {
 	const key =
 		screen.name === "title" || screen.name === "rate" ? screen.title : null
 	const ref = useMemo(() => (key ? parseTvTitleKey(key) : null), [key])
@@ -109,13 +123,8 @@ export function useTvTitle({
 	const latest = useRef({ title, marks, signedIn })
 	latest.current = { title, marks, signedIn }
 
-	/** Carries out an effect of the machine that is this hook's; answers whether it was. */
 	const onEffect = useCallback(
 		(effect: TvEffect): boolean => {
-			if (effect.type === "expand") {
-				leave(effect.href)
-				return true
-			}
 			if (
 				effect.type !== "watch" &&
 				effect.type !== "want-to-see" &&
@@ -172,11 +181,10 @@ export function useTvTitle({
 		[leave, setWish, setWatched, setScore, say],
 	)
 
-	return {
-		/** The title the title screen and the rating show; null on every other screen. */
-		title,
-		/** Its name, for its page's address, once anything knows it. */
-		titleName: title?.title?.title ?? null,
-		onEffect,
-	}
+	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
+	const titleName = title?.title?.title ?? null
+	return useMemo(
+		() => ({ title, titleName, onEffect }),
+		[title, titleName, onEffect],
+	)
 }

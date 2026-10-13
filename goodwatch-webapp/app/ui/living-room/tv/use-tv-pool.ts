@@ -11,6 +11,13 @@ import type { TvPool } from "./tv-home"
 
 const POOL_URL = "/api/living-room/picks?view=pool"
 
+/** The ids in a browser's saved services, "8,337". */
+const serviceIds = (saved: string | null) =>
+	(saved ?? "")
+		.split(",")
+		.map(Number)
+		.filter((id) => Number.isInteger(id) && id > 0)
+
 /** The pool, or null until it is there. `failed`: it was asked for and did not come, after the query's retries. */
 export function useTvPoolState(
 	member: boolean,
@@ -20,18 +27,22 @@ export function useTvPoolState(
 		queryKey: ["living-room-pool", member ? "member" : "guest"],
 		enabled,
 		queryFn: async () => {
+			const guest = member ? null : snapshotGuestProgress()
 			const response = await fetch(
 				POOL_URL,
-				member
-					? undefined
-					: {
+				guest
+					? {
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ guest: snapshotGuestProgress() }),
-						},
+							body: JSON.stringify({ guest }),
+						}
+					: undefined,
 			)
 			if (!response.ok) throw new Error("Unable to load the TV's pool")
-			return response.json()
+			const pool: TvPool = await response.json()
+			// The pool names a member's saved services. A guest's are what their browser just sent: Tonight puts
+			// the titles that stream on them first (tv-home.ts, `tonightOrder`).
+			return guest ? { ...pool, ownServiceIds: serviceIds(guest.services) } : pool
 		},
 	})
 	return { pool: pool.data ?? null, failed: pool.isError }

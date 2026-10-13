@@ -4,8 +4,19 @@
 //
 // The title screen's three keys are the machine's (`tvItems`). Watch opens the title's page on GoodWatch at its
 // streaming block; leaving for the page itself is the Expand key, whose place the Frame keeps at the bottom right.
+//
+// On the phone the keys are touch targets, 44 px or more on the phone's screen (`keySize` in kit.tsx), and stand
+// two to a row: three keys fill the two by two but its bottom right cell, two keys stand in its left column.
+// That cell is the Expand key's corner.
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { Frame, Item, backdropSize, useTvView } from "../kit"
+import {
+	Frame,
+	Item,
+	backdropSize,
+	keySize,
+	useReport,
+	useTvView,
+} from "../kit"
 import {
 	type TvKnownTitle,
 	type TvTitleOnScreen,
@@ -16,9 +27,22 @@ import {
 	watchKey,
 	whereLine,
 } from "../tv-title"
+import { type TvTitleReport, useTvTitle } from "../use-tv-title"
 
-/** A phone's canvas shorter than this is a short phone's: the keys are a little lower, so three still fit. */
-const SHORT_PHONE = 400
+/**
+ * The title's data: its card, the person's marks and the title's effects (use-tv-title.ts). Draws nothing. The
+ * scene mounts it once while the address names a title or its rating, and gets what it holds through `report`.
+ * It is in this chunk, so the title's data costs no request of its own and nothing in the page's first view.
+ */
+export function TitleData({
+	report,
+	...title
+}: Parameters<typeof useTvTitle>[0] & {
+	report: (title: TvTitleReport | null) => void
+}) {
+	useReport(report, useTvTitle(title))
+	return null
+}
 
 /** A long name is set smaller, so it stays on two lines. */
 const nameSize = (name: string, large: number, small: number) =>
@@ -58,7 +82,6 @@ export function TitleView({
 }) {
 	const { canvas } = useTvView()
 	const P = canvas.edition === "phone"
-	const short = P && canvas.h < SHORT_PHONE
 	const shown = title?.title ?? heading ?? ""
 	const score = title?.goodwatch_overall_score_normalized_percent
 	return (
@@ -108,17 +131,16 @@ export function TitleView({
 						{line}
 					</div>
 				)}
-				{/* The phone: the keys in a column on the left; the corner beside the last one is the Expand key's. */}
-				<div
-					className={`flex ${P ? "mt-3.5 w-[292px] flex-col gap-2" : "mt-8 gap-4"}`}
-				>
+				{/* The phone: two keys to a row; the last row's right half is the Expand key's corner. */}
+				<div className={P ? "mt-3.5 grid grid-cols-2 gap-2" : "mt-8 flex gap-4"}>
 					{keys.map((key) => (
 						<Item
 							key={key.id}
 							id={key.id}
-							className={`tvc-btn flex items-center justify-center whitespace-nowrap ${key.quiet ? "[&:not(.tvc-on)]:text-white/55" : ""} ${P ? `shrink-0 text-[21px] ${short ? "h-[46px]" : "h-[52px]"}` : "h-[74px] px-9 text-[28px]"}`}
+							className={`tvc-btn flex items-center justify-center ${key.quiet ? "[&:not(.tvc-on)]:text-white/55" : ""} ${P ? `min-w-0 px-3 text-[21px] ${keys.length < 3 ? "col-start-1" : ""}` : "h-[74px] whitespace-nowrap px-9 text-[28px]"}`}
+							style={P ? { height: keySize(canvas, 52) } : undefined}
 						>
-							{key.label}
+							<span className="truncate">{key.label}</span>
 						</Item>
 					))}
 				</div>
