@@ -1,0 +1,310 @@
+{
+  "schema": "published-local-facet-incomplete-coverage-evidence-bindings.v1",
+  "exactCopies": {
+    "v1/DESIGN.md": {
+      "sha256": "5b2fe2a11efbb2239c4e3e374995fae37103371e1a514fbc30e1ba9f316234be",
+      "bytes": 7578,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/DESIGN.md"
+    },
+    "v1/README.md": {
+      "sha256": "4d0ea946329aca14238e5d2fd8d332a91fa3cd1f21c22236fccaee9c8dbf121e",
+      "bytes": 3240,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/README.md"
+    },
+    "v1/actual-run-invocation.json": {
+      "sha256": "036054633827ba50ad94da8c876f0aaef992bf4bf5848d347f7583422051d5eb",
+      "bytes": 749,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/actual-run-invocation.json"
+    },
+    "v1/actual-run-prepared.json": {
+      "sha256": "461b5d2078a4c3c55e5ea5857b14d22c6f3e4f904d4dd4e0d44615f4f83c041e",
+      "bytes": 350,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/actual-run-prepared.json"
+    },
+    "v1/actual-run.stderr": {
+      "sha256": "7ace2f242731362ebae4967b7983685d56ea39aef633eb1e407a8715ee7e3cb6",
+      "bytes": 760,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/actual-run.stderr"
+    },
+    "v1/actual-run.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/actual-run.stdout"
+    },
+    "v1/bindings.json": {
+      "sha256": "0e2c93f302fe182608fdaf878bc05900771be23a9c2cb71891aab40e89534c4d",
+      "bytes": 2044,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/bindings.json"
+    },
+    "v1/engine.mjs": {
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5",
+      "bytes": 1826,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/engine.mjs"
+    },
+    "v1/evaluate.py": {
+      "sha256": "092408651dc17e26fe498934e7de7be71a2d4ababd5153e8e6146cd2a5342960",
+      "bytes": 9301,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/evaluate.py"
+    },
+    "v1/gates.mjs": {
+      "sha256": "c95af5538ca94c923dd13c6080819d326260e1938e71112857542beee50c20fa",
+      "bytes": 751,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/gates.mjs"
+    },
+    "v1/input-bindings.json": {
+      "sha256": "5963fab9fc317c09c59698a197821ec96db53ae468ae312b6501c2e9916f28e6",
+      "bytes": 12430,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/input-bindings.json"
+    },
+    "v1/partials.mjs": {
+      "sha256": "50c817f720c41214d920c645abab3d7b64d369b9fe4ca0dc29efccf9487bf40a",
+      "bytes": 1434,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/partials.mjs"
+    },
+    "v1/primitives.mjs": {
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+      "bytes": 1591,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/primitives.mjs"
+    },
+    "v1/run.mjs": {
+      "sha256": "f9e63988e167ec571318cc45b7581a86b7c6f7f3af10ccb0ebdea5784efc1707",
+      "bytes": 12713,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/run.mjs"
+    },
+    "v1/source-manifest.json": {
+      "sha256": "670ea62c9d5f446ff54f9ed8c25771e0500e995cc358008337a233ca68aa2d44",
+      "bytes": 2199,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/source-manifest.json"
+    },
+    "v1/test-evaluate.py": {
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31",
+      "bytes": 1139,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/test-evaluate.py"
+    },
+    "v1/test-gates.mjs": {
+      "sha256": "d22f3c1618037e80dfbc5d0dade47430633307a909f0a48ad0350366d8195e05",
+      "bytes": 1769,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/test-gates.mjs"
+    },
+    "v1/test-partials.mjs": {
+      "sha256": "ca6a43ec4068994c151b922ca2591e05db18b455eef78c0d17b0a0bc72591233",
+      "bytes": 3381,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/test-partials.mjs"
+    },
+    "v2/ACTUAL-INTERPRETATION.md": {
+      "sha256": "2669cf25314d8b2108ac3618924181a6b7f485d25fb007e25f98977b7b78c96a",
+      "bytes": 3656,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/ACTUAL-INTERPRETATION.md"
+    },
+    "v2/DESIGN.md": {
+      "sha256": "5b2fe2a11efbb2239c4e3e374995fae37103371e1a514fbc30e1ba9f316234be",
+      "bytes": 7578,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/DESIGN.md"
+    },
+    "v2/README.md": {
+      "sha256": "4ec90127051e4c9030d23c741e0ffad93cf680da929e4fec852b093c265b02d4",
+      "bytes": 3950,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/README.md"
+    },
+    "v2/actual-v2-derived-summary.json": {
+      "sha256": "7ac79fa099d2137a36e46c0127f42f19272a9525361342ca09ad7ab98d4a6517",
+      "bytes": 10270,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-derived-summary.json"
+    },
+    "v2/actual-v2-evaluate-invocation.json": {
+      "sha256": "c1afcc2a2ff220022d016809b9fcbd3dc655f792ae93f88da30e5df34682934c",
+      "bytes": 810,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-evaluate-invocation.json"
+    },
+    "v2/actual-v2-evaluate-prepared.json": {
+      "sha256": "1afc8b0e5d184b12c340f5e26eea1dd780a898d073616383ee4888a7b5e13792",
+      "bytes": 443,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-evaluate-prepared.json"
+    },
+    "v2/actual-v2-evaluate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-evaluate.stderr"
+    },
+    "v2/actual-v2-evaluate.stdout": {
+      "sha256": "cbaa1daed774587355c9ac2f0852095ac36eb8116440b09edf4d1e3d5ad00cc9",
+      "bytes": 1471,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-evaluate.stdout"
+    },
+    "v2/actual-v2-final-freeze.json": {
+      "sha256": "8e4fa81e685f204648c99653da5b05bd1ce66aaa8bf29148a93fcfd4750619b1",
+      "bytes": 3230,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-final-freeze.json"
+    },
+    "v2/actual-v2-freeze.json": {
+      "sha256": "000948abcfc501273fe96884c0f6401be91bedec54a1a4d52c315624a9969fcb",
+      "bytes": 2648,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-freeze.json"
+    },
+    "v2/actual-v2-partial-cosine-validation.json": {
+      "sha256": "e8f8770acfad70bee535578842a9e2260d165f2f26043ee5cc930f0b781b01e8",
+      "bytes": 308,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-partial-cosine-validation.json"
+    },
+    "v2/actual-v2-result-validation.json": {
+      "sha256": "870429b59eb48703ba0c75e44a2c351a34b27d60f52da343071404bcebeeadd6",
+      "bytes": 703,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-result-validation.json"
+    },
+    "v2/actual-v2-run-invocation.json": {
+      "sha256": "ae8c301bdd000a95361e460f9acb7754f7c34b899709a7d8bc21de99994bdddf",
+      "bytes": 748,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-run-invocation.json"
+    },
+    "v2/actual-v2-run-prepared.json": {
+      "sha256": "d5e304f1cd6d54f0bc334680921fbc3da0b1a7e44ee8f23fb8cedfb8a3d57894",
+      "bytes": 350,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-run-prepared.json"
+    },
+    "v2/actual-v2-run.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-run.stderr"
+    },
+    "v2/actual-v2-run.stdout": {
+      "sha256": "2769d25fa0a342f23515a9fcd5f028888132b5c2b48a8fcc84a37096ea14a87d",
+      "bytes": 142,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/actual-v2-run.stdout"
+    },
+    "v2/bindings.json": {
+      "sha256": "0e2c93f302fe182608fdaf878bc05900771be23a9c2cb71891aab40e89534c4d",
+      "bytes": 2044,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/bindings.json"
+    },
+    "v2/consumed-inputs.json": {
+      "sha256": "f712021d15d95137596cd3fbc43767b1aa5bd33f2b742089a29b075573085b0f",
+      "bytes": 25723,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/consumed-inputs.json"
+    },
+    "v2/engine.mjs": {
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5",
+      "bytes": 1826,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/engine.mjs"
+    },
+    "v2/evaluate.py": {
+      "sha256": "d1a8019535d7ace2e5718d01918c4d17cb5ef493020755fe35cdae683dc896e6",
+      "bytes": 9477,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/evaluate.py"
+    },
+    "v2/gates.mjs": {
+      "sha256": "c95af5538ca94c923dd13c6080819d326260e1938e71112857542beee50c20fa",
+      "bytes": 751,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/gates.mjs"
+    },
+    "v2/input-bindings.json": {
+      "sha256": "c2a54d55676c77ac1acaca46f0940ff008fee28ff3d75ce359818912cb78e83f",
+      "bytes": 54431,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/input-bindings.json"
+    },
+    "v2/metrics.json": {
+      "sha256": "a51c265b1fecd3eb9685efe5463df5ca53efd6bf9dcfde5007f5c0b643adce09",
+      "bytes": 341143,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/metrics.json"
+    },
+    "v2/partials.mjs": {
+      "sha256": "50c817f720c41214d920c645abab3d7b64d369b9fe4ca0dc29efccf9487bf40a",
+      "bytes": 1434,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/partials.mjs"
+    },
+    "v2/preflight.mjs": {
+      "sha256": "10b08ae43a66a3e76c27f353017950e177e0f47eaac2d21a9420548a7f27910d",
+      "bytes": 881,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/preflight.mjs"
+    },
+    "v2/primitives.mjs": {
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+      "bytes": 1591,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/primitives.mjs"
+    },
+    "v2/run.mjs": {
+      "sha256": "3cbbda83739add27faee4127978ae72aee99e8f59e50f74252228e4f80d25315",
+      "bytes": 12912,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/run.mjs"
+    },
+    "v2/source-manifest.json": {
+      "sha256": "02ab33edb0b0ffd6df5e22db52ada590aa78bb02f6de22a066f10f4893e3bd63",
+      "bytes": 2843,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/source-manifest.json"
+    },
+    "v2/test-evaluate.py": {
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31",
+      "bytes": 1139,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/test-evaluate.py"
+    },
+    "v2/test-gates.mjs": {
+      "sha256": "d22f3c1618037e80dfbc5d0dade47430633307a909f0a48ad0350366d8195e05",
+      "bytes": 1769,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/test-gates.mjs"
+    },
+    "v2/test-partials.mjs": {
+      "sha256": "ca6a43ec4068994c151b922ca2591e05db18b455eef78c0d17b0a0bc72591233",
+      "bytes": 3381,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/test-partials.mjs"
+    },
+    "v2/test-preflight.mjs": {
+      "sha256": "d0d011bc02eb7cbe2a0981408728c10f26d3897b365ae64c0c221a6f17942ce9",
+      "bytes": 2874,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/test-preflight.mjs"
+    },
+    "v2/validate-actual.py": {
+      "sha256": "a3968beded8fc9551a13edfd72289868afd6429f93c264b62cb7e3ee923d3a47",
+      "bytes": 4817,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/validate-actual.py"
+    },
+    "v2/validate-partial-cosines.mjs": {
+      "sha256": "2794eb1f9a30bf7bef6c97122c52bf880b799069f1c1280e557e84ca646f2b70",
+      "bytes": 2167,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/validate-partial-cosines.mjs"
+    }
+  },
+  "omittedLargeArtifacts": {
+    "v2/rankings.json": {
+      "sha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+      "bytes": 57383197,
+      "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/rankings.json"
+    }
+  },
+  "externalInputs": "Exact existing input byte hashes are retained in v2/input-bindings.json; caches, matrices, index files and full corpus captures are not duplicated.",
+  "originalFailurePreserved": true,
+  "productionAcceptance": false,
+  "issues": {
+    "100": "open",
+    "407": "open",
+    "406": "closed"
+  },
+  "verification": {
+    "authorNodeFixtures": 11,
+    "authorPythonFixtures": 2,
+    "knownMetricChecks": 3,
+    "rootIndependentNodeFixtures": 11,
+    "rootIndependentPythonFixtures": 2,
+    "rootIndependentAll101C0Exact": true,
+    "rootIndependent153Columns": true,
+    "rootIndependentGradeZeroTop5Counts": [
+      33,
+      31,
+      29,
+      36,
+      35
+    ],
+    "qualification": "Root independently inspected retained arithmetic/results and exact bytes; no independent full study rerun or production runtime claim."
+  },
+  "compressedExactArtifacts": {
+    "v2/v1-to-v2.diff.gz": {
+      "sha256": "54783fb99cbb07ea37581633d3b189edfad60614d756c8ed30ad1f9ff499f353",
+      "bytes": 14990,
+      "decompressed": {
+        "sha256": "90f34629968dd37d8a28e3ea5f02c7ce667995b536f689729a98ad58f4050638",
+        "bytes": 55969,
+        "source": "/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-v2-20261013/v1-to-v2.diff"
+      },
+      "codec": "gzip",
+      "decompressedBytesExact": true
+    }
+  }
+}

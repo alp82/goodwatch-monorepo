@@ -1,0 +1,27 @@
+{
+  "schema": "local-facet-incomplete-coverage-invocation.v1",
+  "sourceManifestSha256": "670ea62c9d5f446ff54f9ed8c25771e0500e995cc358008337a233ca68aa2d44",
+  "argv": [
+    "node",
+    "run.mjs"
+  ],
+  "outerTimeoutSeconds": 300,
+  "started": "2026-10-13T00:00:56.122710+00:00",
+  "retries": 0,
+  "models": 0,
+  "hostOperations": 0,
+  "network": 0,
+  "finished": "2026-10-13T00:00:57.891881+00:00",
+  "elapsedSeconds": 1.7687891089881305,
+  "exitCode": 1,
+  "outerTimeout": false,
+  "stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "bytes": 760,
+    "sha256": "7ace2f242731362ebae4967b7983685d56ea39aef633eb1e407a8715ee7e3cb6"
+  },
+  "productionAcceptance": false
+}

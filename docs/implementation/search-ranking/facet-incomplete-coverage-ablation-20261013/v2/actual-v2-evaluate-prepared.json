@@ -1,0 +1,14 @@
+{
+  "schema": "local-facet-incomplete-coverage-evaluation-invocation.v2",
+  "sourceManifestSha256": "02ab33edb0b0ffd6df5e22db52ada590aa78bb02f6de22a066f10f4893e3bd63",
+  "rankingSha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+  "argv": [
+    "python3",
+    "-B",
+    "evaluate.py"
+  ],
+  "outerTimeoutSeconds": 60,
+  "started": "2026-10-13T00:07:23.354862+00:00",
+  "retries": 0,
+  "productionAcceptance": false
+}

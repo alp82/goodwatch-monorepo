@@ -1,0 +1,17 @@
+{
+  "schema": "local-facet-incomplete-coverage-result-validation.v1",
+  "rankingSha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+  "queries": 101,
+  "facetQueries": 36,
+  "unitQueries": 34,
+  "checkedPartialColumns": 153,
+  "maxExpandedPool": 1874,
+  "allPoolsMaskedUniqueAligned": true,
+  "allC0ScoresAndIdsExactPrior": true,
+  "allFiveVariantTop100Validated": true,
+  "maxComponentScoreError": 2.6645352591003757e-15,
+  "unitBm25Observed": false,
+  "incompleteCoverage": true,
+  "productionAcceptance": false,
+  "qualification": "Reconstructs retained component arithmetic/pools/masks/gates and top100; does not rerun full dense scans or observe production Qdrant/BM25."
+}

@@ -1,0 +1,397 @@
+{
+  "schema": "local-facet-incomplete-coverage-derived-summary.v1",
+  "rankingSha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+  "metricsSha256": "a51c265b1fecd3eb9685efe5463df5ca53efd6bf9dcfde5007f5c0b643adce09",
+  "byMode": {
+    "C0-base": {
+      "queries": 94,
+      "meanNdcg10": 0.4592336358407837,
+      "meanGood10": 4.308510638297872,
+      "bad5": 33,
+      "unjudgedTop10": 412,
+      "judgedTop10": 528,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.732456657850547,
+      "avoid5": 2
+    },
+    "CX-base": {
+      "queries": 94,
+      "meanNdcg10": 0.4779370229408324,
+      "meanGood10": 4.4787234042553195,
+      "bad5": 31,
+      "unjudgedTop10": 397,
+      "judgedTop10": 543,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.7442434050548276,
+      "avoid5": 2
+    },
+    "CX-facets": {
+      "queries": 94,
+      "meanNdcg10": 0.49174650245968593,
+      "meanGood10": 4.638297872340425,
+      "bad5": 29,
+      "unjudgedTop10": 383,
+      "judgedTop10": 557,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.7494255919395548,
+      "avoid5": 2
+    },
+    "CX-incomplete-dense-coverage": {
+      "queries": 94,
+      "meanNdcg10": 0.4851693752644494,
+      "meanGood10": 4.553191489361702,
+      "bad5": 36,
+      "unjudgedTop10": 399,
+      "judgedTop10": 541,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.7549751945721559,
+      "avoid5": 2
+    },
+    "CX-facets-incomplete-dense-coverage": {
+      "queries": 94,
+      "meanNdcg10": 0.49902278759676166,
+      "meanGood10": 4.712765957446808,
+      "bad5": 35,
+      "unjudgedTop10": 380,
+      "judgedTop10": 560,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.7587766782159512,
+      "avoid5": 2
+    }
+  },
+  "titleGuards": {
+    "C0-base": {
+      "guards": 7,
+      "rank1": 5,
+      "top20": 6
+    },
+    "CX-base": {
+      "guards": 7,
+      "rank1": 5,
+      "top20": 6
+    },
+    "CX-facets": {
+      "guards": 7,
+      "rank1": 5,
+      "top20": 6
+    },
+    "CX-incomplete-dense-coverage": {
+      "guards": 7,
+      "rank1": 5,
+      "top20": 6
+    },
+    "CX-facets-incomplete-dense-coverage": {
+      "guards": 7,
+      "rank1": 5,
+      "top20": 6
+    }
+  },
+  "changes": {
+    "C0-base": {
+      "vsCXBase": {
+        "ndcgImproved": 11,
+        "ndcgWorse": 29,
+        "badIncreaseQueries": [
+          "ho2-01",
+          "ho2-11",
+          "ho2-14",
+          "lab-03",
+          "lab-11"
+        ]
+      },
+      "gradeZeroTop5Count": 33
+    },
+    "CX-base": {
+      "vsCXBase": {
+        "ndcgImproved": 0,
+        "ndcgWorse": 0,
+        "badIncreaseQueries": []
+      },
+      "gradeZeroTop5Count": 31
+    },
+    "CX-facets": {
+      "vsCXBase": {
+        "ndcgImproved": 23,
+        "ndcgWorse": 11,
+        "badIncreaseQueries": []
+      },
+      "gradeZeroTop5Count": 29
+    },
+    "CX-incomplete-dense-coverage": {
+      "vsCXBase": {
+        "ndcgImproved": 13,
+        "ndcgWorse": 17,
+        "badIncreaseQueries": [
+          "h5-14",
+          "h5-19",
+          "ho2-01",
+          "lab-05",
+          "lab-08"
+        ]
+      },
+      "gradeZeroTop5Count": 36
+    },
+    "CX-facets-incomplete-dense-coverage": {
+      "vsCXBase": {
+        "ndcgImproved": 28,
+        "ndcgWorse": 22,
+        "badIncreaseQueries": [
+          "h5-14",
+          "h5-19",
+          "ho2-01",
+          "lab-05",
+          "lab-08"
+        ]
+      },
+      "gradeZeroTop5Count": 35
+    }
+  },
+  "byClass": {
+    "C0-base": {
+      "subject_object": {
+        "queries": 23,
+        "meanNdcg10": 0.46597267728109215,
+        "meanGood10": 4.3478260869565215,
+        "bad5": 11,
+        "unjudgedTop10": 92,
+        "judgedTop10": 138,
+        "top10Slots": 230,
+        "meanCondensedNdcg10": 0.7012590485595627,
+        "avoid5": 1
+      },
+      "setting_mood": {
+        "queries": 9,
+        "meanNdcg10": 0.42096036668693365,
+        "meanGood10": 3.4444444444444446,
+        "bad5": 5,
+        "unjudgedTop10": 44,
+        "judgedTop10": 46,
+        "top10Slots": 90,
+        "meanCondensedNdcg10": 0.6714408480102975,
+        "avoid5": 0
+      },
+      "like_x_but_y": {
+        "queries": 1,
+        "meanNdcg10": 0.0,
+        "meanGood10": 0.0,
+        "bad5": 0,
+        "unjudgedTop10": 6,
+        "judgedTop10": 4,
+        "top10Slots": 10,
+        "meanCondensedNdcg10": 0.0,
+        "avoid5": 0
+      }
+    },
+    "CX-base": {
+      "subject_object": {
+        "queries": 23,
+        "meanNdcg10": 0.5035664913424192,
+        "meanGood10": 4.608695652173913,
+        "bad5": 10,
+        "unjudgedTop10": 85,
+        "judgedTop10": 145,
+        "top10Slots": 230,
+        "meanCondensedNdcg10": 0.7215325851783569,
+        "avoid5": 1
+      },
+      "setting_mood": {
+        "queries": 9,
+        "meanNdcg10": 0.4824666829367453,
+        "meanGood10": 4.333333333333333,
+        "bad5": 4,
+        "unjudgedTop10": 36,
+        "judgedTop10": 54,
+        "top10Slots": 90,
+        "meanCondensedNdcg10": 0.7180356233773327,
+        "avoid5": 0
+      },
+      "like_x_but_y": {
+        "queries": 1,
+        "meanNdcg10": 0.0,
+        "meanGood10": 0.0,
+        "bad5": 1,
+        "unjudgedTop10": 6,
+        "judgedTop10": 4,
+        "top10Slots": 10,
+        "meanCondensedNdcg10": 0.0,
+        "avoid5": 0
+      }
+    },
+    "CX-facets": {
+      "subject_object": {
+        "queries": 23,
+        "meanNdcg10": 0.539749612031153,
+        "meanGood10": 5.043478260869565,
+        "bad5": 8,
+        "unjudgedTop10": 77,
+        "judgedTop10": 153,
+        "top10Slots": 230,
+        "meanCondensedNdcg10": 0.7397385974991096,
+        "avoid5": 1
+      },
+      "setting_mood": {
+        "queries": 9,
+        "meanNdcg10": 0.4810834901227758,
+        "meanGood10": 4.333333333333333,
+        "bad5": 4,
+        "unjudgedTop10": 38,
+        "judgedTop10": 52,
+        "top10Slots": 90,
+        "meanCondensedNdcg10": 0.7291163010312021,
+        "avoid5": 0
+      },
+      "like_x_but_y": {
+        "queries": 1,
+        "meanNdcg10": 0.0,
+        "meanGood10": 0.0,
+        "bad5": 1,
+        "unjudgedTop10": 6,
+        "judgedTop10": 4,
+        "top10Slots": 10,
+        "meanCondensedNdcg10": 0.0,
+        "avoid5": 0
+      }
+    },
+    "CX-incomplete-dense-coverage": {
+      "subject_object": {
+        "queries": 23,
+        "meanNdcg10": 0.5225321912557981,
+        "meanGood10": 4.739130434782608,
+        "bad5": 11,
+        "unjudgedTop10": 90,
+        "judgedTop10": 140,
+        "top10Slots": 230,
+        "meanCondensedNdcg10": 0.7586250375852571,
+        "avoid5": 1
+      },
+      "setting_mood": {
+        "queries": 9,
+        "meanNdcg10": 0.5221543597609356,
+        "meanGood10": 5.111111111111111,
+        "bad5": 5,
+        "unjudgedTop10": 35,
+        "judgedTop10": 55,
+        "top10Slots": 90,
+        "meanCondensedNdcg10": 0.7517357973382088,
+        "avoid5": 0
+      },
+      "like_x_but_y": {
+        "queries": 1,
+        "meanNdcg10": 0.0,
+        "meanGood10": 0.0,
+        "bad5": 4,
+        "unjudgedTop10": 5,
+        "judgedTop10": 5,
+        "top10Slots": 10,
+        "meanCondensedNdcg10": 0.0,
+        "avoid5": 0
+      }
+    },
+    "CX-facets-incomplete-dense-coverage": {
+      "subject_object": {
+        "queries": 23,
+        "meanNdcg10": 0.5634545686118182,
+        "meanGood10": 5.217391304347826,
+        "bad5": 10,
+        "unjudgedTop10": 80,
+        "judgedTop10": 150,
+        "top10Slots": 230,
+        "meanCondensedNdcg10": 0.7715158098324933,
+        "avoid5": 1
+      },
+      "setting_mood": {
+        "queries": 9,
+        "meanNdcg10": 0.5128663865083014,
+        "meanGood10": 5.0,
+        "bad5": 5,
+        "unjudgedTop10": 36,
+        "judgedTop10": 54,
+        "top10Slots": 90,
+        "meanCondensedNdcg10": 0.7601648756373707,
+        "avoid5": 0
+      },
+      "like_x_but_y": {
+        "queries": 1,
+        "meanNdcg10": 0.0,
+        "meanGood10": 0.0,
+        "bad5": 4,
+        "unjudgedTop10": 5,
+        "judgedTop10": 5,
+        "top10Slots": 10,
+        "meanCondensedNdcg10": 0.0,
+        "avoid5": 0
+      }
+    }
+  },
+  "holdout5": {
+    "C0-base": {
+      "queries": 22,
+      "meanNdcg10": 0.3630840993282709,
+      "meanGood10": 3.6818181818181817,
+      "bad5": 3,
+      "unjudgedTop10": 117,
+      "judgedTop10": 103,
+      "top10Slots": 220,
+      "meanCondensedNdcg10": 0.7312480364378519,
+      "avoid5": 0
+    },
+    "CX-base": {
+      "queries": 22,
+      "meanNdcg10": 0.38105263737592754,
+      "meanGood10": 3.909090909090909,
+      "bad5": 5,
+      "unjudgedTop10": 112,
+      "judgedTop10": 108,
+      "top10Slots": 220,
+      "meanCondensedNdcg10": 0.7364849942404839,
+      "avoid5": 0
+    },
+    "CX-facets": {
+      "queries": 22,
+      "meanNdcg10": 0.3976770637196511,
+      "meanGood10": 4.045454545454546,
+      "bad5": 5,
+      "unjudgedTop10": 109,
+      "judgedTop10": 111,
+      "top10Slots": 220,
+      "meanCondensedNdcg10": 0.7447468396103463,
+      "avoid5": 0
+    },
+    "CX-incomplete-dense-coverage": {
+      "queries": 22,
+      "meanNdcg10": 0.3822086004856821,
+      "meanGood10": 4.045454545454546,
+      "bad5": 9,
+      "unjudgedTop10": 108,
+      "judgedTop10": 112,
+      "top10Slots": 220,
+      "meanCondensedNdcg10": 0.7276362654497983,
+      "avoid5": 0
+    },
+    "CX-facets-incomplete-dense-coverage": {
+      "queries": 22,
+      "meanNdcg10": 0.40462220138192534,
+      "meanGood10": 4.2727272727272725,
+      "bad5": 9,
+      "unjudgedTop10": 103,
+      "judgedTop10": 117,
+      "top10Slots": 220,
+      "meanCondensedNdcg10": 0.732498859900666,
+      "avoid5": 0
+    }
+  },
+  "poolCoverage": {
+    "gradedCatalogPairs": 1763,
+    "inC0": 1358,
+    "inCX": 1362,
+    "addedByPartialRetrieval": 4,
+    "qualification": "denominator is all existing grade>=2 catalog pairs; includes titles outside current filtered/common-valid universe, so this is catalog judged-pair coverage, not eligible recall; added raw retrieval pairs are directly retained pool membership, not inferred from top100"
+  },
+  "runnerSeconds": 29.99844856800337,
+  "evaluatorSeconds": 1.2693626489926828,
+  "summedQueryComputeSeconds": 26.00949249700002,
+  "incompleteCoverage": true,
+  "unitBm25Observed": false,
+  "productionAcceptance": false,
+  "acceptanceThresholdIntroduced": false
+}
