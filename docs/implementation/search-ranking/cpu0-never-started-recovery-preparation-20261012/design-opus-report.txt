@@ -1,0 +1,66 @@
+## Verdict: BLOCK (focused design)
+
+The one-shot existing-object recovery shape is sound and fits the source, but five points must be fixed in the design text before implementation. All five are textual amendments to DESIGN.md with no architecture change. This is a read-only review with no runtime claim.
+
+## Blockers
+
+**B1. Pre-start own-outside placement cannot be produced as written (step 2).**
+- "Existing lifecycle machinery" only proves outside-source placement inside `attest`, which refuses a non-running target (`lifecycle_cpu0.py:271`) and needs a live wrapper cgroup (`:273-288`). Stopped OLD/NEW have neither.
+- Amend step 2 to say that before start only this is checked:
+  - own `process(os.getpid())` is birth-stable with VmLck 0;
+  - the own cgroup path contains neither exact container ID as a path component;
+  - where a cgroup directory for the NEW ID exists, its `cgroup.procs` is empty.
+- The receipt must carry an explicit "no pre-start source process proof" field.
+- The real proof is the post-start `attest(NEW)` inside `birth_admission` and `pair_snapshot`.
+
+**B2. Post-start NEW configuration fence is undefined (steps 6–7).**
+- Step 6 names only StartedAt as legitimately changing; step 7 says "NEW exact running object".
+- The cited L441–448 discard-to-nil path may also run at start, which would flip NEW's `OomKillDisable` from false to null and change `configurationHash` (`lifecycle_cpu0.py:211`). This is my inference; I could not read the moby source.
+- A strict post-start equality against the original hash could then fail terminally with NEW running and the attempt spent.
+- Specify:
+  - post-start identity is the ID hash, Image and name;
+  - post-start `OomKillDisable` may be literal False or None only, anything else terminal;
+  - the receipt records the post-start raw non-CPU hash and whether normalization is still needed;
+  - the handoff snapshot is the fresh post-start one.
+
+**B3. Type-exact comparison is not provided by `configured_pair` (step 4).**
+- It compares with Python `!=` (`setup.py:181,188`), so `0 == False` and `1 == True` pass. "Reject integer0" and "every key" therefore need recovery's own checks first:
+  - `is None` / `is False` plus key presence on the raw values;
+  - canonical-bytes equality for Config and for the normalized non-CPU HostConfig.
+- Its return value says `nonCpuHostConfigEqual: True` under `cpu0-configured-parity.v6` (`setup.py:198-202`). That must not be forwarded as is, nor a `cpu0-never-started-creation.v6` record reconstructed; use a distinct recovery schema with raw-equal false.
+
+**B4. Closed public allowlists are not listed, so failure evidence would be dropped.**
+- `executor.py:206-210` collapses unknown reasons to `executor_guard_or_runtime_failure` and emits only attributes in `FAILURE_FIELDS` (`:234-241`).
+- The design must enumerate:
+  - the new reason codes in `reason_codes.py`;
+  - the new evidence attribute, with a start-command state of not issued, issued and nonzero, or issued and unknown;
+  - the operation name in `bootstrap.py:38`, `executor.OPERATIONS` and `rpc.HOSTS` (`test_bootstrap.py:42` asserts the last two are equal);
+  - `recovery` placed after `setup` and before `executor` in `bootstrap.MODULES`, because modules are exec'd in order (`bootstrap.py:48-52`).
+
+**B5. The frozen target constants are ambiguous between ID and hash of ID.**
+- The original outputs carry only `sha(Id)` (`setup.py:433,444`, `lifecycle_cpu0.py:207`).
+- State that the c67d… and 30aca… constants are `sha256(Id)`, or say so if they are raw IDs.
+- State that the raw ID comes from the live by-name inspect, must hash-match, is the literal start argument, and is never emitted.
+
+## Non-blocking notes
+
+- **Loopback fence:** "No other source sharing the loopback/store" has no mechanism. Add a pre-receipt check that 127.0.0.1:16333 refuses connections, so a port conflict refuses cleanly instead of spending the one-shot attempt.
+- **Ordering:** put every checkable fence and the 5GiB host admission before the `O_EXCL` receipt. After it, do only the final exact-ID re-inspect and the start.
+- **Receipt I/O:** `write_root_absent` and `secure_json` are scoped to two names (`setup.py:33`, `lifecycle_cpu0.py:481`). Recovery needs its own writer and should read with `packet.read_owned`, keeping `setup.py` unchanged.
+- **Proof blobs:** declare a byte bound for each embedded blob, and cross-bind the config proof to the failed output's ID and configuration hashes.
+- **Absence checks:** also require `registration.RECORD` to be absent.
+- **Start bound:** state the start timeout; the existing setup client uses 15s.
+- **First-time checks:** `setup.py:190-197` (OLD CPU, cpuset, mounts) were never reached for this pair, because the drift raised first. They may refuse cleanly on first execution.
+
+## What holds
+
+- A separate operation is necessary: `run_setup` refuses when the admission directory exists (`setup.py:325-327`) and requires NEW absent.
+- The admission directory should hold exactly 17 files: the 14 backend files, the source freeze and the two config files (`setup.py:349-352`).
+- The stopped-OLD receipt path (`setup.py:99-103`), `admission.host`, the 90s shape loop, `birth_admission`, `first_handoff` and the outer handoff ABI (`outer_local.py:27-31,115`) are reusable unchanged.
+- The 7200s, 1200s/60s and read bounds are untouched by the design.
+
+## Read coverage
+
+- **Full:** DESIGN.md, AGENTS.md; `setup.py`, `admission.py`, `bootstrap.py`, `executor.py`, `outer_local.py`, `local_entry.py`, `build_packet.py`, `packet.py`, `census.py`, `rpc.py`, `reason_codes.py`; `lifecycle_cpu0.py`, `controller_cpu0.py`.
+- **Grep excerpts only:** `stager.py`, `registration.py`, `private_pipe.py`, `producer.py`, `cpu0_guards.py`, `runtime_cpu0.py`, `test_outer.py`, `test_bootstrap.py`.
+- **Not read:** `prompt.txt`, `opus-report.json`, the original proof blobs, the moby source, `pin_cpu0.py`, `daemon_cpu0.py`, the JS consumer and validator, and the remaining tests.

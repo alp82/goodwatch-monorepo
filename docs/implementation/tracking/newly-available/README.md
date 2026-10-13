@@ -1,10 +1,12 @@
 # Newly available on your services
 
 What [#456](https://github.com/alp82/goodwatch-monorepo/issues/456) built: a second source of the signal that
-[new episodes](../new-episodes/README.md) introduced. In the app only: no email, no push. Everything is behind
-`REC_TRACKING`. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md) (Newly available, My movies visit, New episodes
-signal). Reads: [data-model.md](../data-model.md), section 10. Paths without a prefix are under
-`goodwatch-webapp/app/`.
+[new episodes](../new-episodes/README.md) introduced. And what
+[#489](https://github.com/alp82/goodwatch-monorepo/issues/489) added on 2026-10-12: for 14 days a title that landed
+is listed on its page, marked with the service's logo, and first on its own home door. In the app only: no email,
+no push. Everything is behind `REC_TRACKING`. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md) (Newly available,
+Recently landed, My movies visit, New episodes signal). Reads: [data-model.md](../data-model.md), section 10. Paths
+without a prefix are under `goodwatch-webapp/app/`.
 
 In the code a title that becomes newly available has **landed** on a service. "Arrival" is already the member's
 arrival on My shows, and the line the page says then.
@@ -33,27 +35,57 @@ One title is named with its service, several are counted:
 ![Home with a new episode and landed titles, desktop](together-home-desktop.jpg)
 ![The hub, phone](together-hub-phone.jpg)
 
-**On arrival.** My movies says once, under its head, what landed: "Dune: Part Two is now on Netflix", and with
-several "Now on your services: Dune: Part Two, The Holdovers, Aftersun and 1 more". My shows says the same under its
-line about new episodes. The line stays for that visit and is gone on the next one.
-
-![My movies on arrival, desktop](several-page-desktop.jpg)
-![My shows on arrival, phone](together-page-phone.jpg)
-
 **It clears by opening the page.** A visit of My movies clears the movies, a visit of My shows the shows. What opens
 the hub then shows what is left.
+
+**For 14 days (#489).** A title that landed stays visible for 14 days from the day it landed, whether the member
+has opened the page since or not. This replaces the line the pages said once on arrival ("Dune: Part Two is now on
+Netflix"), which is gone.
+
+- **One row on My movies and on My shows** names the latest title with its service and its day ("Dune: Part Two is
+  new on Netflix · yesterday · and 3 more") and opens to all of them, the latest first, each with its service and
+  the day it landed. A row of the list opens the title. On My movies it is under the page's head, on My shows above
+  Continue.
+- **The service's logo on the title**, ringed in the signal's sky blue with a "New" tab: on the posters of My
+  movies (the Then column and the grid) and on a show's picture in My shows. The Want to See list of My library has
+  posters of 40 pixels, too small for it: there the logo stands beside the words "New on Netflix" in the row's
+  line. The same goes for a show On hold.
+- **The title is first on its own home door**: a movie on A movie, a show not started on Start a show. The door's
+  small line says "New on Netflix" in sky blue; on a phone it takes the place of the count. Continue is untouched,
+  and so is the order of the doors, so Tonight's pick is still the show the member is in the middle of.
+
+![My movies with the row open, desktop](several-page-open-desktop.jpg)
+![The grid of My movies, phone](several-grid-phone.jpg)
+![My shows: a show with a new episode that also landed, desktop](episode-page-desktop.jpg)
+![Want to See, phone](several-library-phone.jpg)
+![Home after My movies was opened, desktop](one-movie-home-visited-desktop.jpg)
+
+**The pill and the door do not say the same thing twice.** The pill is as it was. While it names the door's first
+title with its service (one landing, on a wide screen), the door's own line leaves that to it. Once the page was
+opened the pill is gone and the line says it.
+
+| | The pill | The door's lines |
+| --- | --- | --- |
+| One movie, not seen yet, desktop | Dune: Part Two is now on Netflix | Dune: Part Two · 2h 47m |
+| The same, after My movies was opened | none | Dune: Part Two · **New on Netflix** · 2h 47m |
+| Several, not seen yet, desktop | 4 movies are now on your services | Dune: Part Two · **New on Netflix** · 2h 47m |
+| Phone, not seen yet | 1 movie, 4 movies | **New on Netflix** |
 
 ### Every case, at 390 x 844 and 1440 x 900
 
 | Case | Home | Hub | Page |
 | --- | --- | --- | --- |
 | Nothing new | [desktop](nothing-home-desktop.jpg), [phone](nothing-home-phone.jpg) | [desktop](nothing-hub-desktop.jpg), [phone](nothing-hub-phone.jpg) | |
-| One movie | [desktop](one-movie-home-desktop.jpg), [phone](one-movie-home-phone.jpg) | [desktop](one-movie-hub-desktop.jpg), [phone](one-movie-hub-phone.jpg) | [desktop](one-movie-page-desktop.jpg), [phone](one-movie-page-phone.jpg) |
+| One movie | [desktop](one-movie-home-desktop.jpg), [phone](one-movie-home-phone.jpg); after My movies was opened [desktop](one-movie-home-visited-desktop.jpg), [phone](one-movie-home-visited-phone.jpg) | [desktop](one-movie-hub-desktop.jpg), [phone](one-movie-hub-phone.jpg) | [desktop](one-movie-page-desktop.jpg), [phone](one-movie-page-phone.jpg) |
 | One show | [desktop](one-show-home-desktop.jpg), [phone](one-show-home-phone.jpg) | [desktop](one-show-hub-desktop.jpg), [phone](one-show-hub-phone.jpg) | [desktop](one-show-page-desktop.jpg), [phone](one-show-page-phone.jpg) |
-| Several: 4 movies, 2 shows | [desktop](several-home-desktop.jpg), [phone](several-home-phone.jpg) | [desktop](several-hub-desktop.jpg), [phone](several-hub-phone.jpg) | [desktop](several-page-desktop.jpg), [phone](several-page-phone.jpg), after My movies was opened |
+| Several: 4 movies and 2 shows on two services, 1 to 12 days ago | [desktop](several-home-desktop.jpg), [phone](several-home-phone.jpg) | [desktop](several-hub-desktop.jpg), [phone](several-hub-phone.jpg) | My movies [desktop](several-page-desktop.jpg), [phone](several-page-phone.jpg); the row open [desktop](several-page-open-desktop.jpg), [phone](several-page-open-phone.jpg); the grid [desktop](several-grid-desktop.jpg), [phone](several-grid-phone.jpg); My shows [desktop](several-shows-page-desktop.jpg), [phone](several-shows-page-phone.jpg); Want to See [desktop](several-library-desktop.jpg), [phone](several-library-phone.jpg) |
 | A new episode and landed titles together | [desktop](together-home-desktop.jpg), [phone](together-home-phone.jpg) | [desktop](together-hub-desktop.jpg), [phone](together-hub-phone.jpg) | [desktop](together-page-desktop.jpg), [phone](together-page-phone.jpg) |
+| One show with a new episode that also landed | [desktop](episode-home-desktop.jpg), [phone](episode-home-phone.jpg) | | [desktop](episode-page-desktop.jpg), [phone](episode-page-phone.jpg) |
+| One movie, 12 days ago | after My movies was opened [desktop](old-home-desktop.jpg), [phone](old-home-phone.jpg) | | [desktop](old-page-desktop.jpg), [phone](old-page-phone.jpg) |
+| One movie, 15 days ago, not seen yet | | | [desktop](gone-page-desktop.jpg), [phone](gone-page-phone.jpg); opened again, nothing is left |
 
-Posters and backdrops in the pictures are painted tiles: the harness's titles are names only.
+Posters, backdrops and logos in the pictures are painted tiles: the harness's titles and services are names only.
+The pictures were taken on 2026-10-12 with every `REC_*` flag on.
 
 ## The rule
 
@@ -93,13 +125,61 @@ Decided while building, also for the owner to confirm:
    the same way.
 9. **A landing older than 90 days is not news.** The index keeps the times of the last 90 days (see below). A member
    who was away for longer is not told about what landed before that.
-10. **The page names the titles when several landed** ("Now on your services: Dune: Part Two, The Holdovers,
-    Aftersun and 1 more"), where the default was a count. The ticket asks for a line "that says what came", and My
-    shows names its new episodes the same way. The tile, the door and the number still count.
+10. **The page named the titles when several landed**, in one line said once on arrival. That line is gone since
+    #489: the row of the 14 days says what came, and for longer. The tile, the door's pill and the number still
+    count.
 11. **A phone's tile leads with the service** ("Now on Netflix: Dune: Part Two"). A tile's line is cut after about
     22 characters, and "Dune: Part Two is no…" no longer said what happened.
 12. **A show with a new episode that also landed** is one show on the tile and the door, and its episode is what is
     said when it is the only one.
+
+### The 14 days (#489)
+
+Decided by the owner on 2026-10-12, after the prototypes of #489
+([mark and order](../../../prototypes/arrival-mark/README.md), picks):
+
+- **A landing counts for 14 days, flat,** for the row, the logo and the door. No louder first week, no "until the
+  title is opened", and nothing stored per member and title.
+- **The row replaces the line said once** on My movies and My shows.
+- **The logo of the service is on the title's poster,** where the prototype's row had a dot.
+- **A landed title leads its own home door, and the door's small line names the service.** Tonight's pick keeps its
+  order.
+- **The pill on a door and the number on what opens the hub stay as they are,** and still clear with a visit.
+- **What counts as landed is the rule of #456,** unchanged: from none of the member's services to at least one,
+  subscription and free offers only, and a title added after it landed is not news.
+
+Decided while building, for the owner to confirm:
+
+13. **The days are counted by the calendar, in UTC, and the day a title landed is the first of the 14.** A title
+    that landed on 12 October counts through 25 October. "Yesterday" and "12 days ago" are counted the same way,
+    so the last thing a row says before it goes is "13 days ago".
+14. **A landing older than 14 days that the member has not seen yet is still listed,** until they open the page.
+    The signal counts a landing until the visit (up to the 90 days of 9), and a number that leads to a page
+    which says nothing would be worse than a row that stays a little longer. Such a title is on the row and marked
+    on its page for that one visit. It leads no door, and the Want to See list does not mark it: both go by the 14
+    days alone.
+15. **A show the member is in the middle of that lands keeps its place.** It is on the row and carries the logo in
+    Continue or Pick up, and it leads no door: Continue stays the show watched last. Only a show not started can
+    lead Start a show.
+16. **Tonight's pick is the first title of its door,** as before. For a member with no show to continue the door
+    is A movie, so the movie that landed is the pick for its 14 days. `/api/tonight` then says `reason: "landed"`.
+17. **Several landed titles of a door:** the latest leads, the others follow it in the door's fan of posters, and
+    everything else keeps its order.
+18. **Several services:** the title is marked with the one service it landed on first. A second service that
+    comes later is not a landing by the rule of #456, so it changes neither the logo nor the 14 days.
+19. **Where the logo is left off.** A poster under 64 pixels wide carries no logo: the Want to See list and the
+    On hold rows say "New on Netflix" in words with the logo beside them. The shows waiting for episodes (36
+    pixels) and the large title at the top of My movies, which has no poster, carry no mark; the row names them.
+20. **On a poster card the logo covers the Want to See bookmark,** as the service logos of a wide card already
+    do. It is drawn also on a card too narrow for the other logos.
+21. **Short service names in the new words:** "New on Prime", "New on Disney+", as the title page and Watch next
+    say them, so that a phone's door and a row's line hold them. The pill and the tile keep the catalog's names.
+22. **A phone's door says "New on Netflix" in place of its count** ("17 movies", "9 to start"). The door has one
+    small line there.
+23. **The row lists up to 30 titles of a kind.** More than that in a fortnight is a catch-up the index let
+    through.
+24. **Not built:** a line on the title page ("on Netflix since"), a sort or a filter by landing (the phone's slab
+    of My movies is untouched), and anything on Watch next, which is the page of a member without `REC_TRACKING`.
 
 Known noise, and what happens to it:
 
@@ -121,6 +201,9 @@ The row is written by `POST /api/newly-available`, which the page sends once it 
 The page's loader never writes: the hub's links load My movies ahead of a tap, and that must not clear the signal.
 Shows use the row of #442, `my_shows_visited_at`, which `POST /api/new-episodes` writes.
 
+**The 14 days store nothing** (#489). Whether a title is on the row, marked, or first on a door is worked out on
+each request from the time it landed, which the index holds, and the time of the request.
+
 ## Routes
 
 | Route | Flag off | Flag on, member | Flag on, guest |
@@ -128,10 +211,12 @@ Shows use the row of #442, `my_shows_visited_at`, which `POST /api/new-episodes`
 | `GET /api/tonight` | As before | As before, with `landed` when something landed: `{ movies, shows }`, each `{ count, ids, only }` | As before |
 | `POST /api/newly-available` | 404 | Stores the My movies visit and answers `{ ok: true }` | 401 |
 | `GET /api/new-episodes` | 404 | As before, with `ids`, the shows that are new, so that a show is counted once | 401 |
-| `/my-movies`, `/my-shows` | As before | As before, with the line on arrival | As before |
+| `/my-movies`, `/my-shows` | As before | As before, with `landed`: the titles of the page's kind on the row, each `{ mediaType, tmdbId, title, poster_path, at, days, service }` | As before |
+| `/my-library`, `GET /api/my-library` | As before | As before; on the Want to See list an item that landed in the last 14 days has `newOn`: `{ id, name, logo_path }` | As before |
+| `/` (home's doors) | As before | As before; `doors.movie` and `doors.start` have `newOn`, the service's short name, when their first title leads because it landed | As before |
 
 No request was added to a page. What landed rides along with Tonight's pick, which the navigation asks for on every
-page already.
+page already, and with the loaders of the pages that list it.
 
 ## Measured first, and the path chosen
 
@@ -176,7 +261,9 @@ without them.
 | The index's load | Every 6 hours for a country in use | As before, then the two kinds of statement above |
 | The member data, the settings | Every request for Tonight's pick | Both cached, both read for the pick already |
 | Q10, twice | Only when a title landed after the launch | The My movies visit and the My shows visit, each by its whole key |
-| Names | Only when a landing is news | The display fields of up to three titles a kind (cached), and the service's name (in memory) |
+| Names | Only when a landing is news | The display fields of the title when it is the only one of its kind (cached), and the service's name (in memory) |
+| The row of My movies and My shows | Only when a title landed in the last 14 days, or an older one is still news | The display fields of the listed titles (cached). Q10 for the page's visit only when one of the member's landings is older than 14 days |
+| The marks of Want to See, the first title of a door | Never a statement of their own | The index and the names of the services, both in memory. The door reads the cards of its first three movies as before |
 
 For a member with nothing landed that is no statement, which the server test asserts.
 
@@ -205,6 +292,26 @@ send a small module that several parts share there (680 bytes Brotli more). They
 or My movies. The hub's chunk grows by 69 bytes and the doors' by 100. My shows and My movies load one script more
 (1.2 and 1.5 KB more in all); neither is a landing surface.
 
+**With the 14 days (#489),** measured the same way on 2026-10-12 against the `origin/main` of that day. Both builds
+carry a release id of the same length: without one, each chunk of a build is about 200 bytes smaller, which a
+first comparison mistook for growth.
+
+| Surface | Scripts | Script bytes, before | after | More | More in gzip |
+| --- | --- | --- | --- | --- | --- |
+| Home | 15, as before | 240,769 | 240,898 | 129 | 46 |
+| Movie page | 20, as before | 243,993 | 244,243 | 250 | 178 |
+| Show page | 20, as before | 244,251 | 244,515 | 264 | 179 |
+| Person page | 13, as before | 179,655 | 179,924 | 269 | 187 |
+| Discover | 32, as before | 316,137 | 316,444 | 307 | 181 |
+
+The shell is the same size, to the byte. What grows on a landing surface is the poster card, by 177 bytes in gzip
+(3,098 to 3,275): it draws the marked logo. Home loads no card and grows by the 34 bytes of the hero's chunk, which
+passes the marks on My movies along. The words and the row are in the `newly-available` chunk, which grows from
+932 to 2,135 bytes Brotli and still loads only with the hub, home's doors and the three pages. My movies loads
+1,738 bytes more in gzip, My shows 1,536, and My library 2,439 with one script more, the chunk it did not need
+before. None of the three is a landing surface. The row's file draws its own poster and logo and does not import
+the pages' shared pieces, so that the hub and the doors do not load them with the chunk.
+
 `./bench.sh budget` measures the deployed site, so it cannot check a branch. No limit in `urls/budget.json` was
 raised. **Run the budget again after the deploy**: only that run measures this code.
 
@@ -212,14 +319,17 @@ raised. **Run the budget again after the deploy**: only that run measures this c
 
 | What | Where |
 | --- | --- |
-| The rules: when a title landed, which landings are news | `domain/newly-available.ts` |
+| The rules: when a title landed, which landings are news, the 14 days, which title leads a door | `domain/newly-available.ts` |
 | What the navigation is told, and the sum for what opens the hub | `domain/newly-available-signal.ts` |
-| What the tiles, the doors and the pages say | `domain/newly-available-words.ts` |
+| What the tiles, the doors, the row and the mark say | `domain/newly-available-words.ts` |
 | The times, read with the index's load | `server/availability-first-seen.server.ts`, `landingsOnServices` in `server/availability-index.server.ts` |
-| What a member is told, and the My movies visit | `server/newly-available.server.ts` |
+| What a member is told, what the pages list and mark, and the My movies visit | `server/newly-available.server.ts` |
+| The door a landed title leads, and Tonight's pick | `server/home-doors.server.ts`, `server/tonight.server.ts` |
+| The mark on the Want to See list | `server/my-library.server.ts`, `routes/my-library.tsx`, `routes/api.my-library.ts` |
 | The endpoints | `routes/api.tonight.ts`, `routes/api.newly-available.ts` |
 | The hooks | `ui/navigation/useWhatsNew.ts`, `ui/navigation/useTonightsPick.ts`, `ui/my-movies/useMyMoviesVisit.ts` |
-| The pages | `ui/my-pages/LandedNote.tsx`, `ui/my-movies/MyMoviesPage.tsx`, `ui/my-shows/MyShowsPage.tsx`, `ui/navigation/{SiteHeader,MobileDock,Hub}.tsx`, `ui/living-room/HomeDoors.tsx` |
+| The row and the mark | `ui/my-pages/LandedRow.tsx`; on a poster card `ui/streaming/StreamingOverlay.tsx` |
+| The pages | `ui/my-movies/MyMoviesPage.tsx`, `ui/watch-next/{SteppedGrid,WatchNextHero}.tsx`, `ui/my-shows/MyShowsPage.tsx`, `ui/my-library/MyLibraryPage.tsx`, `ui/navigation/{SiteHeader,MobileDock,Hub}.tsx`, `ui/living-room/HomeDoors.tsx` |
 
 ## How it was checked
 
@@ -229,29 +339,37 @@ Tests, from `goodwatch-webapp`:
 node --test app/domain/newly-available.test.ts app/server/newly-available.test.ts
 ```
 
-22 tests of the rules: the times the index keeps, duplicates, a title already watchable, a member without services,
+33 tests of the rules: the times the index keeps, duplicates, a title already watchable, a member without services,
 which titles can land, the launch, the visit of each page, a title added after its offer appeared, and every
-wording. 13 tests of the server against the in-memory Crate of the tracking tests with a country's offers beside
-it: the statements the index sends, what a member is told, that nothing landed means no statement, the two visits,
-a member without a country or a service, and a failed read of the times. The whole suite: 1,574 tests, 1,573 pass,
-1 is skipped, as before this work.
+wording. Since #489 also: the 14 days and how they are counted, that a visit does not end them, a second service
+that comes later, what the row lists and says, which title leads a door and when the door says so, and a show with
+a new episode that also landed. 25 tests of the server against the in-memory Crate of the tracking tests with a
+country's offers beside it: the statements the index sends, what a member is told, that nothing landed means no
+statement, the two visits, a member without a country or a service, and a failed read of the times. Since #489
+also: what the pages are told for 14 days and after a visit, a landing older than that, the marks of the Want to
+See list, and the doors (the order without a landing, a landed movie and show, several, a show in progress, and
+Tonight's pick). The whole suite: 1,645 tests, 1,644 pass, 1 is skipped, as before this work with 23 tests fewer.
 
 The real pages were driven in headless Chromium at 390 x 844 and 1440 x 900 on `/prototype/my-library-real`, the
-harness of [#385](../my-library/README.md), which has a new parameter: `landed=movie|show|several` puts titles of
-the sample member's Wishlist on their services a day ago. 102 checks, all passing; the script is
-[`drive.mjs`](drive.mjs) and also took the pictures. The 51 checks of [new episodes](../new-episodes/drive.mjs)
-still pass.
+harness of [#385](../my-library/README.md), with the parameter `landed`, which puts titles of the sample member on
+their services: `movie`, `show`, `several` (four movies and two shows on two services, 1 to 12 days ago),
+`episode` (for `member=new`: a show whose new episode aired also landed), `old` (one movie 12 days ago) and `gone`
+(the same movie 15 days ago). 162 checks, all passing (102 before #489); the script is [`drive.mjs`](drive.mjs)
+and also took the pictures. The 85 checks of [new episodes](../new-episodes/drive.mjs) still pass.
 
 ```
 cd goodwatch-webapp        # no .env: the harness refuses to start when CRATE_HOSTS is set
-REC_TRACKING=on REC_WATCH_NEXT=on REC_NAVIGATION=on REC_TASTE_MATCH=on \
+REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on REC_NAVIGATION=on \
+  REC_AGE_FILTER=on REC_TRACKING=on \
   node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1
-HARNESS=http://127.0.0.1:3107 node drive.mjs <screenshot dir>   # with playwright-core beside it, and system Chromium
+HARNESS=http://127.0.0.1:3107 node drive.mjs <screenshot dir>   # with system Chromium, and playwright-core beside
+                                                                # it or in the folder PLAYWRIGHT names
 ```
 
-`/prototype/my-library-real?page=home|shows|movies&member=six|new|none&landed=movie|show|several&reset=1`, and
-`&hub=open` for the hub. `member=new` with a `landed` is a new episode and a landing together. `reset=1` starts the
-member over, which brings the signal back after a visit.
+`/prototype/my-library-real?page=home|shows|movies|library&member=six|new|none&landed=movie|show|several|episode|old|gone&reset=1`,
+and `&hub=open` for the hub. `member=new` with `landed=several` is a new episode and a landing together. `reset=1`
+starts the member over, which brings the signal back after a visit; the row, the logos and the door's first title
+do not need it.
 
 ## To try it signed in
 
@@ -261,9 +379,11 @@ After the deploy, for a member with a saved country and a saved service:
    Fewer than ten such landings a week happen across all members, so most members see nothing for a while.
 2. When one lands: the Browse button (or the dock's key) and the My movies or My shows tile carry a number, and the
    door on home has a pill.
-3. Open My movies: the line under the head names the movie and the service, and the movie is among the ones On my
-   services lists.
-4. Go back to home: the number and the pill are gone.
+3. Open My movies: the row under the head names the movie, the service and the day, and opens to a list. The
+   movie carries the service's logo with "New" among the ones On my services lists, and its row on the Want to See
+   list of My library says "New on" and the service.
+4. Go back to home: the number and the pill are gone. A movie still names the movie, and says "New on" and the
+   service under it. Both stay for 14 days from the day it landed.
 
 To see it without waiting, on a dev server only: set `NEWLY_AVAILABLE_SINCE` to a day in the past week, which makes
 that week's real landings news. Its `.env` points at production, so opening My movies there writes the visit row
@@ -283,6 +403,11 @@ for that member.
   is told that it landed.
 - **Account deletion.** `user_setting` has no deletion yet (data-model.md, section 8); the visit row is covered when
   that flow is built.
+- **The logos were looked at as painted tiles only.** The harness's services have no pictures, so a real logo
+  under the sky blue ring, at 24 and 32 pixels, has not been seen. Nor has the TV edition of home beyond the doors
+  the harness draws.
+- **A member who was away for more than 14 days** sees the number, and the row on the page it leads to, for that
+  one visit (see 14). The owner decided 14 days flat; this exception is a choice made while building.
 - **The harness check of #385** ([`my-library/drive.mjs`](../my-library/drive.mjs)) does not run through on this
   machine, on the commit this starts from either: it waits for the network to fall idle, and stops at different
   steps from run to run. Found on the way: the answer of the visit's POST was never read, which keeps its request

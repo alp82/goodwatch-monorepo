@@ -1,0 +1,94 @@
+# Verdict: PASS for the five mandated fixes, by static reading only
+
+All five fixes are present in the changed source and behave as specified. I found no blocker, but there are four residuals you should read before any host action; each fails closed and none can produce `completed`.
+
+I ran nothing. The manifest and freeze hashes, the 74-fixture pass, and the packet and closure bytes are not verified by me.
+
+## Fix verification
+
+**1. Turnover handoff — verified.**
+- `outer_local.py:122` selects `stage=='complete'` and takes `handoff` from that frame.
+- `turnover_gate_cpu0.py:126` is the only emitter of `complete`, and it carries `handoff`; a failure raises, so no frames are returned.
+- `test_outer.py` now runs the real `turnover_gate_cpu0.stage` with faked OS seams and asserts the four-frame sequence.
+
+**2. Consumer cleanup — verified, with residual A.**
+- `registration.py:53-58` drops only `parentPid` from the comparison. Birth, exe identity, group hash, `VmLck`, exe inode, exact argv, the outside-source check and the protected-PID check all still apply.
+- The pidfd is opened before the identity read and held through the signal (`registration.py:127-140`).
+- A zombie or readable pidfd returns `birthGone` from `/proc`, not from the pidfd, and sends no signal (`:132-133`).
+- `executor.py:120-168` catches a consumer refusal, still attempts the handoff, writer and pair reads, and re-raises the original error with `cleanupIndependentEvidence` attached.
+
+**3. Producer failure projection — verified, with residual B.**
+- `private_pipe.py:173-176` intercepts a `cpu0-external-failure.v6` frame before the registration and grammar branches; it is never appended to `pending`.
+- `producer_failure` (`:77-93`) requires a string reason in `REASONS` and closed evidence shapes. I checked every `producerCleanupEvidence` shape built in `producer.py:203-216` against it; all pass.
+- `executor.py:238` now projects `producerCleanupEvidence`, `producerClientCleanupFailure` and `producerPidfdCleanupFailure`.
+- Container cleanup still precedes attach-client close (`producer.py:199-222`).
+- Every reason literal raised in `producer.py`, `private_pipe.py`, `rpc.py`, `registration.py`, `bootstrap.py`, `local_entry.py` and `outer_local.py` is in `reason_codes.py`. The three fallbacks and the three previously missing names are present.
+- I did not exhaustively compare backend and helper reason literals against the list; a missing one collapses to `executor_guard_or_runtime_failure`.
+
+**4. Producer process identity — verified.**
+- `producer.py:99-139` brackets a pidfd and start ticks around the cgroup, cmdline, exe, `comm` and `VmLck` reads.
+- The cgroup check matches an exact path component (`<id>` or `docker-<id>.scope`), not a substring; the cmdline match is exact.
+- Identity is recomputed at registration (`:183`), at `producer-confirm` (`:397-398`) and before any stop (`:157-159`).
+
+**5. Deadline — verified, with residual C.**
+- `outer_local.py:154-156` checks before and after the audit; the audit timeout is `min(10, remaining)` (`:90`), with a further check at `:91`.
+- `:178` vetoes `completed` if cleanup crosses the deadline.
+- The lease is built by a callable at `private_pipe.py:217-218`, after consumer registration and a deadline check, immediately before spawn.
+- Every Engine call, the wait socket, the attach loop, `private_chunks` and `wait` use `self.remaining(...)`. There is no fresh 7200.
+- Cleanup gets a separate 60 seconds (`producer.py:321`).
+
+**README — verified.** The `Env` persistence and `--sig-proxy=false` wording match `producer.py:3` and `:295`.
+
+## Residuals (nonblocking)
+
+**A. Cleanup still cannot signal the consumer when the clone is not attestable.**
+- `registration.py:123` calls `lifecycle.attest(NEW)` before any signal; `prior()` and `pair_snapshot` call it too.
+- `attest` requires exactly two cgroup members (`lifecycle_cpu0.py:280`) and a running container.
+- If a failure lands while the clone is stopped or a helper child is joined, all three reads refuse and no TERM is sent. Only the handoff hash is observed.
+- I have not re-read the controller phases to confirm when a helper is joined.
+- This follows from your requirement to keep outside-source protection at cleanup. The result is reported unknown.
+
+**B. A failure frame after a torn private line loses its reason.**
+- `executor.py:180-181` forwards raw 64 KiB chunks, so a mid-stream failure (for example `producer_private_total_bound`) can append the frame to a partial line.
+- `json.loads` at `private_pipe.py:171` then raises, and the outer reports `outer_guard_or_runtime_failure` without the remote evidence.
+- Fix: have `bootstrap.py:80` write a newline before the frame on `producer-stream`. In the pipe, on an undecodable line, check whether the next complete line is a valid failure frame before raising.
+
+**C. Blocking stdout writes on the producer host are not lease-clamped.**
+- `private_bytes` and the registration `print` (`executor.py:180-183`) can block past the lease if the local side stops reading without closing.
+- In the normal case the local kill at the deadline gives EPIPE and cleanup runs. A silent network loss would leave the write blocked.
+- The remote lease also starts later than the local clock by SSH latency.
+- Fix: arm `signal.setitimer` for the lease in `producer-stream`, with a handler that raises `producer_global_deadline`.
+
+**D. The cleanup census now runs outside the control lock.**
+- `executor.py:135-146` reads writers and the pair before `acquire_control` (`:150`); the previous code read them under the lock.
+- `proc_controls` does not depend on the lock, so the census itself is sound. The reported `pairSnapshot` can differ from the one inside the committed handoff.
+- Fix: on the no-refusal path, repeat `prior()` after `acquire_control`.
+
+Smaller points:
+- An identity mismatch at cleanup leaves the owned container running and reported `containerGone: False` (`producer.py:216`, `:385-386`).
+- `cleanupAttempted: False` is reported even if a stop was sent and then failed (`producer.py:216`).
+- Secondary census errors keep only their reason code, not `currentWriterEvidence`.
+- `rpc.py:73` passes remote failure dicts through without the closed-shape check the pipe applies.
+- An audit timeout surfaces as `outer_guard_or_runtime_failure`.
+- `producer-confirm` uses its own 60-second lease.
+- `primary_fixture` is in the production reason list.
+
+## Coverage
+
+- **Read in full:**
+  - Changed source and its neighbours: `outer_local.py`, `executor.py`, `private_pipe.py`, `producer.py`, `registration.py`, `rpc.py`, `bootstrap.py`, `reason_codes.py`, `local_entry.py`, `packet.py`, `build_packet.py`, `census.py`.
+  - Tests: `test_registration.py`, `test_refusal.py`, `test_pipe.py`.
+  - Backend: `turnover_gate_cpu0.py`.
+  - Review inputs: the whole `successor.diff`, the original report, the root disposition and the manifest.
+- **Read in part:**
+  - `lifecycle_cpu0.py`: process, birth, attest, handoff and snapshot functions.
+  - `setup.py`: `acquire_control` only.
+  - `test_outer.py` and `test_producer.py`: diff hunks plus the harness.
+  - `README.md`: diff hunks.
+  - `consumer_cpu0.mjs`: grep for signal handling.
+- **Not read:**
+  - External source and tests: `admission.py`, `stager.py`, `validate_admission.mjs`, the rest of `setup.py`, `test_bootstrap.py`, `test_external.py`, `test_packet.py`.
+  - Dependencies and helper: the other backend and consumer files, `prepare_clone_reclaim.py`.
+  - Review-folder artefacts: `prior-policy.json`, the execution packet, the local closure, and the existing `opus-report.txt` in the successor folder.
+
+This is not a full-closure review. All Docker, Engine, `/proc`, cgroup, sshd and overlay behaviour is inferred from source, not host proof. In particular, the exe comparison through `/proc/<pid>/root`, the timing of the first identity read after start, and reparenting keeping the same session cgroup are unproven on these hosts.

@@ -1,0 +1,42 @@
+✔ consumer accepts actual immutable runtime emitted identity expression, rejects invented fifth field (61.348562ms)
+✔ static consumer reason enum equals actual frozen producer scalar CONTROL_REASONS union (73.578752ms)
+✔ offline nine-pair audit validates chain and expressly cannot promote external cleanup or app acceptance (70.346428ms)
+✔ offline audit refuses missing exit, native red failure, omitted unpin and cross-phase predecessor drift (197.93233ms)
+✔ real filesystem metadata birth matches lifecycle hash bytes and refuses source membership/nonzero locks (8.499532ms)
+✔ pure admission frame binds complete receipt and independent consumer birth for outer registration (7.185138ms)
+✔ real controller pipe waits for admission, actual socket closure and all seven lifecycle stages (80.33944ms)
+✔ invalid actual ready birth refuses before query and proves owned child exit (37.632347ms)
+✔ handoff alone cannot resume when actual release or unpin is missing (37.331465ms)
+✔ unclosed client is rejected before controller acknowledgement (35.238851ms)
+✔ producer fence rejects truncated, missing, failed or extra post-completion input (2.58302ms)
+✔ nine slots require native anchor and reject ambiguous excluded historical slots (0.795078ms)
+✔ completed clean-stop evidence survives later refusal without raw private failures (34.771409ms)
+✔ actual entry preflight process validates its successor before private producer selection (73.87494ms)
+✔ actual reader preserves prequery ContractFailure reason instead of classifying it as malformed JSON (36.560463ms)
+✔ actual preflight refusal retains allowlisted resource-unavailable evidence and observed exit (28.088845ms)
+✔ exact owned handoff binds predecessor and canonical file hash (7.831095ms)
+✔ CPU0 admission requires complete root applicability and actual new birth (2.044237ms)
+✔ success requires all seven CPU0 stages, teardown and new handoff before continuing (50.197686ms)
+✔ initial setup requires null predecessor and exact CPU row closure (1.225958ms)
+✔ failure projection preserves typed quota/throttle and cleanup facts while dropping raw fields (1.316526ms)
+✔ failed stop retains admitted birth and observed nonclean after state without promoting clean (1.387855ms)
+✔ numeric failed resource endpoints survive with exact signed deltas and explicit unavailable evidence (1.184681ms)
+✔ fixed backend causes and busy-host/finalization evidence retain provenance while raw reasons are omitted (1.293693ms)
+✔ closed fourteen-file source derives CPU0 code and policy bindings without reading models (6.068548ms)
+✔ CPU2 consistent caller hashes and previous twelve-file schema cannot pass CPU0 closure (7.183257ms)
+✔ external closure rejects canonical adapter, missing pure dependency and changed policy alias (11.852452ms)
+✔ real direct request uses close and proves local socket exit before returning (41.606873ms)
+✔ malformed response closes socket and emits only fixed error class (6.398577ms)
+✔ baseline and candidate use separate sockets with no previous client retained (5.484473ms)
+✔ scope refuses other endpoints and collections before any connection (0.712854ms)
+✔ real response abort closes the owned socket without exposing raw error (5.233563ms)
+✔ actual unchanged thirty-second timeout closes a stalled-header socket (30002.105959ms)
+✔ malformed points refuse parity while empty results and UUID numeric scores remain valid (6.556116ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30225.132863

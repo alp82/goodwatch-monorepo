@@ -49,6 +49,7 @@ import {
 import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
+import { NewOnWords } from "~/ui/my-pages/LandedRow"
 import {
 	Empty,
 	MY_MOVIES,
@@ -495,6 +496,9 @@ function Row({
 				inProgress && item.watchedAt
 				? `Last watched ${/^(Today|Yesterday)$/.test(watchedOn) ? watchedOn.toLowerCase() : watchedOn}`
 				: watchedOn
+	// The service a Want to See title is new on (#489). The poster here is too small for the logo, so the words
+	// carry it, with the logo beside them.
+	const fresh = item.newOn && <NewOnWords service={item.newOn} />
 	return (
 		<li
 			className="flex items-center gap-2 border-b border-white/5"
@@ -525,11 +529,14 @@ function Row({
 						className="block truncate text-xs text-gray-400 sm:hidden"
 						data-fact
 					>
+						{fresh}
+						{fresh && fact && " · "}
 						{fact}
 					</span>
 				</span>
-				<span className="hidden w-56 shrink-0 truncate text-xs text-gray-300 sm:block">
-					{fact}
+				<span className="hidden w-56 shrink-0 text-xs text-gray-300 sm:block">
+					{fresh && <span className="block truncate">{fresh}</span>}
+					<span className="block truncate">{fact}</span>
 				</span>
 				{!seen && (
 					<ChevronRightIcon

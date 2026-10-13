@@ -1,0 +1,66 @@
+{
+  "schema": "offline-bm25-independent-validator-source.v1",
+  "preparedOnly": true,
+  "actualAcquisitionValidated": false,
+  "files": {
+    "validate.py": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/validate.py",
+      "bytes": 15326,
+      "sha256": "d3063122156c176d3749852e3aec23531b81a9fef1b2cfbac76bdf6dfb73675a"
+    },
+    "test_validate.py": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/test_validate.py",
+      "bytes": 8971,
+      "sha256": "d5606e220c0a9fc5a12bcf1b502f39fd2ace249f40f0434189ad8e75d0df6296"
+    },
+    "README.md": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/README.md",
+      "bytes": 2856,
+      "sha256": "72355312daf108def5f684cc1d80b937b024c83b047b11febaf25af8bf29f6ba"
+    },
+    "local-test-receipt.json": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/local-test-receipt.json",
+      "bytes": 675,
+      "sha256": "1192d03ecdf4a851b13d4cb99cd00b2b4b5a2a645926b893c5b501c1849276e1"
+    },
+    "tests.stdout": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/tests.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tests.stderr": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-validator-20261013/tests.stderr",
+      "bytes": 98,
+      "sha256": "8f089dbd5dc63d5c50480dc25b4f1f8f4eca55e416314fe36e0241a29701377f"
+    }
+  },
+  "authenticatedInputs": {
+    "PLAN-v2.json": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-reader-20261013/PLAN-v2.json",
+      "bytes": 602788,
+      "sha256": "a7264d2519d7a68275c4600fc57c48eda93896c389cf6432efb6c087cefc3600"
+    },
+    "reader.mjs": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-reader-20261013/reader.mjs",
+      "bytes": 11359,
+      "sha256": "c42fad2c9d2cc9c7a2b707d261bdc1a54c8ef9b0ce72b2663a6c4fc165ae5774"
+    },
+    "eval-driver.mjs": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-reader-20261013/eval-driver.mjs",
+      "bytes": 15841,
+      "sha256": "81edd90eb4f51344269a1070a5f17fc7c2bcd3b4c14b50973b6a82999a3f8cad"
+    },
+    "run-root.py": {
+      "path": "/home/alper/projects/search-100-evidence/offline-bm25-acquisition-20261013/run-root.py",
+      "bytes": 5555,
+      "sha256": "520a99e83c0fba53453e6d3cb737f43151a936792f1b8049132f7498ad9c6e8e"
+    },
+    "term_statistics.json.gz": {
+      "path": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/verified-index/term_statistics.json.gz",
+      "bytes": 5046424,
+      "sha256": "579851bd4019016c8bd0c32705ef39e077c8b03e074ac83d344305f00164e8c0"
+    }
+  },
+  "executedSourceSha256": "f0770a2c84006ad6a87a4be0e016be7d80d4d132d07c371ec33bff317d05f98a",
+  "coverage": "Standalone stdlib source and full-size synthetic fixtures; actual acquisition not yet independently run by this validator."
+}

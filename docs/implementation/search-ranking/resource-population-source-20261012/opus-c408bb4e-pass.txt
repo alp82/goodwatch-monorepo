@@ -1,0 +1,53 @@
+# Verdict: PASS (source-only, exact c408bb4e)
+
+All three blockers from the 9d099487 review are corrected in source, and the easy corrections hold by reading. I executed and hashed nothing, so every sha256, byte count and the "60 fixtures passed" claim are unverified by me. This verdict authorizes no observation, transport, publication, capacity or idle step.
+
+The path you gave for the previous BLOCK review under the evidence directory does not exist. I read the in-tree copy, `resource-population-v1/review-9d099487-block.txt`, instead.
+
+## The three previous blockers
+
+| # | Previous blocker | Status in c408bb4e |
+|---|---|---|
+| 1 | Original auditor and two original tests not hash-bound | Fixed. `test_population.py:317` hashes `../resource-window-membership-v3/audit_membership_v3.py` against `oldAuditorSha256`; `:318-319` hash both original tests; `:320` keeps the copy check. All three originals exist at those paths. |
+| 2 | Unvalidated `membershipHash` echoed | Fixed. `auditor.py:50` refuses any non-null, non-SHA value on an `unavailable` population. Both sample endpoints are validated (`:184`) before evidence is appended (`:185`), and `population_evidence` re-validates before copying (`:83-84`), so a refused report cannot carry it either. |
+| 3 | Mid-read process exit fatal and mislabelled | Fixed for the process census (`reader.py:308`): typed `process_disappeared`, known sums kept. Required paths stay fatal: `own_fence` (`:283-285`), the main `io`/`status` reads (`:466`) and `reader_proof`. The sibling half is only nominal; see note 1. |
+
+## Easy corrections
+
+- **Terminal time:** `auditor.py:154` requires UTC `at >= samplingEndedAt`. A missing, naive or non-UTC value raises inside `utc()` and refuses. Real rows satisfy it, since `reader.py:646` stamps sampling end before `:652` stamps `at`.
+- **Main birth in partial ledgers:** `auditor.py:60` refuses any verified main tuple with a different birth, whatever the ledger status. The fixture at `test_population.py:362-364` would pass without that line, so it is a real test.
+- **Immediate main lock:** `reader.py:467` raises before the `meminfo` read, with `lockedBytes` and `memberPid`; the deferred check is gone.
+- **Final endpoints:** `auditor.py:195` emits typed counts and reasons for both, and `:196` with `:200` keeps a final `unavailable` as `unavailable`. On refusal `finalAuxiliaryEndpoints` is either fully validated or `null`.
+- **Full-row fixture:** `test_population.py:158-159` now carries `byteListTruncated`, `ledgerTimeBoundReached` and all four reasons on both censuses, and `:164` requires a counted removal. Its key set matches the real row from `reader.py:480-488` plus `:641-642`.
+- **Unchanged:** metric tuples, the 2 s/3 s/2 s/1 s limits, 1500 rows, 8192 bytes, 16 MiB and the all-false permissions do not appear in the diff.
+
+## Freeze and provenance bindings
+
+- `source-freeze.json` lists all 13 other files in the directory, including both preserved reviews; it does not hash itself.
+- The table hash is the same in `reader.py:17`, `auditor.py:15`, `provenance.json:11` and the freeze.
+- Old reader, old auditor and the two audit-test hashes are the same in provenance and freeze.
+- `secondSourceReviewSha256` and `firstSourceReviewSha256` equal the freeze entries for the two review files.
+- `transportPrepared` and `actualObservation` remain false.
+
+## Optional notes (non-blocking)
+
+1. **Sibling race fix targets the wrong errno** — `reader.py:348`. A cgroup removed between open and read returns `ENODEV`, which Python raises as plain `OSError`, not `ProcessLookupError`. That case still ends as `sample_failed`, and the fixture at `test_population.py:349-353` simulates an error the kernel does not produce there. I am not blocking because it fails closed, cannot create false evidence, and the window is one open-to-read pair per sibling. This is from kernel knowledge, not a run. If the source changes again, catch `OSError` with `errno.ENODEV` there.
+2. **Unbounded counts on `unavailable`** — `auditor.py:47-48, 84`. Counts are checked only as non-negative integers, and `duplicateCount` and `truncatedCount` escape the accounting check when status is `unavailable`. They are echoed, so an arbitrarily large integer could pass through; requiring zero would close it.
+3. **Final-fence latency has no upper bound** — `auditor.py:154`. `at` is bounded only from below.
+4. **Non-UTF-8 `comm` or `cmdline` is fatal** — `reader.py:88, 311`. `UnicodeDecodeError` is a `ValueError` outside the allowlist. This is unchanged and consistent with the table's unclassified-error rule, but it depends on what runs on the host.
+5. **Freeze fixture ignores `bytes`** — `test_population.py:313` compares only sha256, and no fixture ties the provenance review hashes to the freeze entries; they match by reading.
+6. **Redundant validation** — each sample population is validated twice (`auditor.py:184`, then `:185` via `population_evidence`), each final one too (`:193, 195`). Harmless.
+7. **Carried over unchanged:**
+   - the `partial-or-unavailable` label at `reader.py:599`;
+   - the unreachable `census_bound` branch at `reader.py:476-478`;
+   - an over-long `cmdline` recorded as `optional_unreadable` (`reader.py:311-312`);
+   - the operator-supplied source hash (`auditor.py:145`);
+   - bare `source_changed` with no typed evidence at `reader.py:426`;
+   - the dead ledger helpers at `reader.py:136-192`.
+
+## Not verified
+
+- Any sha256 or byte count in `provenance.json` or `source-freeze.json`.
+- Whether the three original files are git-tracked; I confirmed only that they exist.
+- That the fixtures pass; my reading of each new fixture agrees with its assertions.
+- The root JSON covers 9d099487 with 53 tests and is not evidence for this commit.

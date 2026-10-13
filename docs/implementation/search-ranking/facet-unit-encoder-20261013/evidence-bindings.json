@@ -1,0 +1,161 @@
+{
+  "schema": "published-local-facet-unit-encoder-evidence.v1",
+  "sourceManifestSha256": "fbaf07168d2e59e7b894dccbbe03cb70c8faf13ec2ddc138cce737bfb6247528",
+  "previousReviewedSourceManifestSha256": "47f21caa44147063d6644c8ffcbb8e88390548411205eecc9d35d279aa0b6e5b",
+  "actualFreezeSha256": "a580a5a600af04bddb7bc3565864346d8fbde4c84fac755b682dbc83e3d60cd4",
+  "files": {
+    "encoder/guards.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/guards.mjs",
+      "sha256": "7df3f61056fdf79548ed828e4e71e316df029e494f94a4a7a0c8833493dec64e",
+      "bytes": 3241
+    },
+    "encoder/run.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run.mjs",
+      "sha256": "6f9bd438db4f03cece883e4307147332da110a68db599a4fe690bb89a9716df9",
+      "bytes": 7285
+    },
+    "encoder/test-guards.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/test-guards.mjs",
+      "sha256": "b68679110387c21931288e5370197a905942888df6b31db9e30513b778da7f1b",
+      "bytes": 3792
+    },
+    "encoder/source/query-encoder.worker.js": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/source/query-encoder.worker.js",
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+      "bytes": 5877
+    },
+    "encoder/local-tests.txt": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/local-tests.txt",
+      "sha256": "aba4252f354d35169ad0390728e29c8369de2d9c9131357889cb084eb87fc769",
+      "bytes": 874
+    },
+    "encoder/README.md": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/README.md",
+      "sha256": "b5336aade789d5e6fe8ab399e15c39010da159c81ec14aebc91794aaaa6d5654",
+      "bytes": 3961
+    },
+    "encoder/source-manifest.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/source-manifest.json",
+      "sha256": "fbaf07168d2e59e7b894dccbbe03cb70c8faf13ec2ddc138cce737bfb6247528",
+      "bytes": 1163
+    },
+    "encoder/actual.stdout": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/actual.stdout",
+      "sha256": "ac84df6ec260068b20c4651643fb1c908c4b3806b066bcf5b0b0361acd0e0308",
+      "bytes": 177
+    },
+    "encoder/actual.stderr": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/actual.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "encoder/actual-invocation.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/actual-invocation.json",
+      "sha256": "19c4aca34a0c0dca9328e1db469d38f00e2558403133dbecd511768545b04b7d",
+      "bytes": 945
+    },
+    "encoder/validate-actual.py": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/validate-actual.py",
+      "sha256": "967240297f6f0809b4170b3fe5a5de17607b09beb33e43b278bae0911aa95bbf",
+      "bytes": 3622
+    },
+    "encoder/actual-validation.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/actual-validation.json",
+      "sha256": "1a444be26228b932992868bf28e4b81ff0382e86901b67938bd6aab7c53f4a9d",
+      "bytes": 927
+    },
+    "encoder/run/encoding-results.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/encoding-results.json",
+      "sha256": "3589671913aff9716fb5926325c3d4d80c960b3ff831759bd61a85a46b5cfa2b",
+      "bytes": 47181
+    },
+    "encoder/run/invocation.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/invocation.json",
+      "sha256": "176691d8c6f828c0a26fff2ccd5c8bdd5fe061838cc81a62b2232718ab049cb0",
+      "bytes": 1361
+    },
+    "encoder/run/model-preflight.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/model-preflight.json",
+      "sha256": "17ff65025b181381ebfca24d1e2c5950d42355f76c62e0bc45c9e7177f8716e5",
+      "bytes": 1832
+    },
+    "encoder/run/query-encoder.worker.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/query-encoder.worker.mjs",
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+      "bytes": 5877
+    },
+    "encoder/run/startup.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/startup.json",
+      "sha256": "2a25e530419fe51e30b808100acc7e805dd4d5985d0b3574bce5a9383bfccbce",
+      "bytes": 248
+    },
+    "encoder/actual-freeze.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/actual-freeze.json",
+      "sha256": "a580a5a600af04bddb7bc3565864346d8fbde4c84fac755b682dbc83e3d60cd4",
+      "bytes": 3432
+    },
+    "encoder/reviewed-v1/README.md": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/README.md",
+      "sha256": "d1b8e27164e5270fdbbf4ce182c0d479ea7c3aea6ce4e1b9dc3a7fc69ce8aa7e",
+      "bytes": 3262
+    },
+    "encoder/reviewed-v1/guards.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/guards.mjs",
+      "sha256": "e2edcb8258a2ad3d06f17435d3ca9f409dd620b7537744e2ef21b032ced03b50",
+      "bytes": 2656
+    },
+    "encoder/reviewed-v1/local-tests.txt": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/local-tests.txt",
+      "sha256": "b7c382010d642f7589f574e12d1384ddfe083bc98d58b6edb42dadc832102228",
+      "bytes": 613
+    },
+    "encoder/reviewed-v1/run.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/run.mjs",
+      "sha256": "ed4efbc325cb310e40d0823d1d712c25cc600e94c5b87b28d3bd8869363ee80e",
+      "bytes": 7137
+    },
+    "encoder/reviewed-v1/source-manifest.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/source-manifest.json",
+      "sha256": "47f21caa44147063d6644c8ffcbb8e88390548411205eecc9d35d279aa0b6e5b",
+      "bytes": 1053
+    },
+    "encoder/reviewed-v1/test-guards.mjs": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/reviewed-v1/test-guards.mjs",
+      "sha256": "1bb88bc3e7e8ef3a21e0511687ca5b55f67810f11dcd1a768242f8c3a6b35833",
+      "bytes": 2905
+    },
+    "plan/plan.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-facet-unit-encoder-plan-20261013/plan.json",
+      "sha256": "5889f120be2dd2ed85e6d6b817b3b92a5458cf9b79823f027d9b8d91c070fd53",
+      "bytes": 42235
+    },
+    "plan/PLAN.md": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-facet-unit-encoder-plan-20261013/PLAN.md",
+      "sha256": "82a9305a5b8c97f844c46e7f38bd1f751e55a35ba83a937534890c0f79d1981a",
+      "bytes": 3893
+    },
+    "plan/manifest.json": {
+      "originalPath": "/home/alper/projects/search-100-evidence/offline-facet-unit-encoder-plan-20261013/manifest.json",
+      "sha256": "927af9b7c0d26a243a159c6164ab33e524d631874b98d8ad439b14914eda4119",
+      "bytes": 396
+    }
+  },
+  "omittedLargeFiles": {
+    "run/query-vector-additions.json": {
+      "retainedOriginalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/query-vector-additions.json",
+      "sha256": "3a8a86b4bbed5f1696dfc800761e46342d8034d2b1b9ea43456de415ad37b407",
+      "bytes": 2852773
+    },
+    "run/query-vectors-merged.json": {
+      "retainedOriginalPath": "/home/alper/projects/search-100-evidence/offline-public-facet-unit-encoder-20261013/run/query-vectors-merged.json",
+      "sha256": "df96f124ef1e85b5c997a58ff9e69550f500d37b784fc93cf475c7ef4e6734d3",
+      "bytes": 8072134
+    }
+  },
+  "dependenciesAndModelsNotCopied": true,
+  "old269VectorsBitExact": true,
+  "localPublicEmbeddingOnly": true,
+  "subsequentScoringStudyExecuted": false,
+  "productionTiming": false,
+  "productionAcceptance": false
+}

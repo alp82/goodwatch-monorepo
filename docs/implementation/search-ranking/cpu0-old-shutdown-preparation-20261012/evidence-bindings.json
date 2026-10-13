@@ -1,0 +1,40 @@
+{
+  "files": {
+    "amendment.diff": {
+      "bytes": 16799,
+      "sha256": "419277721c5301243573d7df6764fc3b5fee3c218ffa16b9f339c672d29edfde"
+    },
+    "manifest.json": {
+      "bytes": 2743,
+      "sha256": "8eac7b121519e3ae08cf017c872c1d7ea5068157d55c6e57051b1e50b5a882aa"
+    },
+    "opus-report.json": {
+      "bytes": 8533,
+      "sha256": "ed609d1bd4fad455afd0b958da2d81e1d6669ae0ae29bca85f119b01661ddebd"
+    },
+    "opus-report.txt": {
+      "bytes": 6650,
+      "sha256": "12ea0c9e98ab9911c821496c7971521d9a78dac1ce0f2789bf230ae068372bfa"
+    },
+    "original-v6-plan.md": {
+      "bytes": 30997,
+      "sha256": "16021ea08007a15dccf3fe09cee0cc3394c72b8c5dd3c03ae4e6361d96a83854"
+    },
+    "prompt.txt": {
+      "bytes": 2866,
+      "sha256": "1f6c1939bfab4c784321393fdc4fd5a8f6387b7b00ac2303ddbad65b1d24a4cf"
+    },
+    "provenance.json": {
+      "bytes": 691,
+      "sha256": "a9dc15c64838892c6822f51c4ad56c55cc5e97aa509da9e297f3551de341d1af"
+    },
+    "root-source-acceptance.json": {
+      "bytes": 2737,
+      "sha256": "7ba8425c290cd86d11e6924d49affe6b8d4067ffc74e77031a81246d70fc93ab"
+    }
+  },
+  "hostOperations": 0,
+  "productionAcceptance": false,
+  "schema": "cpu0-old-shutdown-publication-evidence.v1",
+  "sourceHead": "8afd5cc9face8bcf0d10b88571a39c1ecef3d1e5"
+}

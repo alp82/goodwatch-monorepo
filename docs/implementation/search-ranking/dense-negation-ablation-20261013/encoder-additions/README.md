@@ -1,0 +1,9 @@
+# Authorized missing EARLY text vectors
+
+This successor adds exactly the 52 distinct model/text pairs missing from the original 168-query cache after exact 927 synchronous `prepareSearch` text preparation against pinned index build `20261012T041504Z`. The original worker is unchanged. Six original model files passed full SHA-256, byte-size and stable-FD metadata checks before and after this run. Existing dependency installation and two-thread worker settings were reused. No network, download, Jev call, application search or production action was used.
+
+One pass computed eight serial batches, with at most eight texts per batch, grouped by model. Its original startup performs six warmup batches separately. All additions are finite, correct-dimensional and unit-normalized Float32-derived vectors. The observed sum of addition batch wall times was 1,437.21 ms, separate from recorded worker startup. These are local cache-construction timings, not production search latency.
+
+The original 217 cached model/text vectors are reused bit-exactly in `query-vectors-merged.json`, with no collision or overwrite. The first run's files remain unchanged. `coverage.json` binds both source caches and prepared input evidence and confirms all synchronous EARLY text lists are covered for 168 captures. This does not establish full `PreparedSearch` or rank parity: later facets/coverage units/English chips, intent-vector selection, reference profiles and store candidate retrieval remain separate. Late avoided-chip text coverage is reported explicitly and never silently substituted.
+
+No rerun is intended. The initial 168 corpus allowance and separately authorized 52 additions have been consumed once. Any further missing text requires a separate scoped authorization. `freeze.json` binds this successor's source, output and original evidence references; the original dependency file hashes remain in the referenced first-run freeze.

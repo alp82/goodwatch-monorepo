@@ -1,0 +1,19 @@
+{
+  "host": "root@10.0.0.20",
+  "container": "goodwatch-search-a",
+  "nodeArgv": [
+    "node",
+    "--input-type=module",
+    "-e",
+    "<exact source bound by sourceSha256>",
+    "read-index",
+    "--download-pinned"
+  ],
+  "started": "2026-10-12T23:00:37.585060+00:00",
+  "finished": "2026-10-12T23:00:43.273115+00:00",
+  "exitCode": 0,
+  "sourceSha256": "13b1407b988b879adab523c31250ce42d39040c814a614f1bf7a90a49f97b7a0",
+  "inputSha256": "b37e2a87af286b9f21388dd70c34ab31f3d1ee54ee0b36c50d0002c8c91771cc",
+  "outputBytes": 63198953,
+  "outputSha256": "06fc58cc8b25265dc0b1d494b1a42f330c892f9568de4103b7f69c58ca333a83"
+}

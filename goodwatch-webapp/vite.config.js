@@ -212,7 +212,7 @@ const FEATURE_CHUNKS = [
 const LATE_CHUNKS = [
 	[
 		"newly-available",
-		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedNote)\.tsx?$/,
+		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedRow)\.tsx?$/,
 	],
 ]
 

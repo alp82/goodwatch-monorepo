@@ -1,0 +1,10 @@
+// Independent candidate-column reconstruction only; no full scan/encoder/runner.
+import fs from 'node:fs';import path from 'node:path';import {gunzipSync} from 'node:zlib';import {createHash} from 'node:crypto';
+const root=path.dirname(new URL(import.meta.url).pathname),base=path.dirname(root),read=p=>JSON.parse(fs.readFileSync(p)),sha=b=>createHash('sha256').update(b).digest('hex');
+const result=read(root+'/rankings.json'),cache=read(base+'/offline-public-facet-unit-encoder-20261013/run/query-vectors-merged.json'),titles=JSON.parse(gunzipSync(fs.readFileSync(base+'/index-readonly-acquisition-20261013/verified-index/title_table.json.gz'))),mix=JSON.parse(gunzipSync(fs.readFileSync(base+'/index-readonly-acquisition-20261013/verified-index/mix_vectors.json.gz'))),q=mix.text_en_v1;
+const scaleBytes=Buffer.from(q.scale.float32,'base64'),scale=new Float32Array(scaleBytes.buffer,scaleBytes.byteOffset,scaleBytes.byteLength/4),int8=Buffer.from(q.values.int8,'base64'),values=new Int8Array(int8.buffer,int8.byteOffset,int8.byteLength),rows=new Map(titles.point_ids.map((id,i)=>[id,i]));
+let columns=0,scores=0,maxError=0;for(const query of result.queries)for(const column of [...query.partialComponents.facetColumns,...query.partialComponents.unitColumns]){
+ const vector=Float32Array.from(cache.english[column.text]),scaled=new Float32Array(768);for(let d=0;d<768;d++)scaled[d]=vector[d]*scale[d];
+ for(let i=0;i<query.partialComponents.populationIds.length;i++){let dot=0;const row=rows.get(query.partialComponents.populationIds[i]);for(let d=0;d<768;d++)dot+=values[row*768+d]*scaled[d];const error=Math.abs(dot-column.cosines[i]);maxError=Math.max(maxError,error);if(error!==0)throw Error('retained_partial_cosine_changed');scores++;}columns++;
+}
+const proof={schema:'local-retained-partial-cosine-validation.v1',rankingSha256:sha(fs.readFileSync(root+'/rankings.json')),checkedColumns:columns,checkedCandidateCosines:scores,maxError,fullIndexRescan:false,modelCalls:0,productionAcceptance:false};fs.writeFileSync(root+'/actual-v2-partial-cosine-validation.json',JSON.stringify(proof,null,2)+'\n',{flag:'wx',mode:0o600});console.log(JSON.stringify(proof));

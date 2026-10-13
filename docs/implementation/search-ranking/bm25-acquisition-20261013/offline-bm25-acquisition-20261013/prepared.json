@@ -1,0 +1,20 @@
+{
+  "schema": "root-readonly-bm25-acquisition.v1",
+  "wrapperSha256": "520a99e83c0fba53453e6d3cb737f43151a936792f1b8049132f7498ad9c6e8e",
+  "readerSha256": "c42fad2c9d2cc9c7a2b707d261bdc1a54c8ef9b0ce72b2663a6c4fc165ae5774",
+  "driverSha256": "81edd90eb4f51344269a1070a5f17fc7c2bcd3b4c14b50973b6a82999a3f8cad",
+  "executedSourceSha256": "f0770a2c84006ad6a87a4be0e016be7d80d4d132d07c371ec33bff317d05f98a",
+  "planSha256": "a7264d2519d7a68275c4600fc57c48eda93896c389cf6432efb6c087cefc3600",
+  "planBytes": 602788,
+  "container": "9de6d8c048ccf99644cffe43066ca74193f82d345538263ffd281229be58a326",
+  "requiredCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "nodeLifetimeMs": 620000,
+  "remoteTimeoutSeconds": 630,
+  "transportTimeoutSeconds": 650,
+  "requestsMax": 88,
+  "outputBytesMax": 2147483648,
+  "stderrBytesMax": 1048576,
+  "authorization": "existing task scope: fixed public catalog vector retrieval; no production writes or searches",
+  "retries": 0,
+  "started": "2026-10-13T00:33:20.405576+00:00"
+}

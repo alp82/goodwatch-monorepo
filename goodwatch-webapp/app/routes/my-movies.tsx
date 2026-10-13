@@ -9,10 +9,9 @@ import {
 	redirect,
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import { lineOf } from "~/domain/newly-available"
-import type { LandedLine } from "~/domain/newly-available-signal"
+import type { LandedTitle } from "~/domain/newly-available-words"
 import { isEnabled } from "~/server/features.server"
-import { getNewlyAvailable } from "~/server/newly-available.server"
+import { getRecentlyLanded } from "~/server/newly-available.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
 import { MyMoviesPage } from "~/ui/my-movies/MyMoviesPage"
@@ -59,16 +58,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const query = apiQuery(choice)
 	try {
 		const ctx = await getViewerContext(request, undefined, userId)
-		// What landed on the member's services (#456) is read here and never written: a prefetch of this page is not
-		// a visit. The page stores the visit once it is on screen (useMyMoviesVisit).
+		// The movies that landed on the member's services in the last 14 days (#489), for the row above the movies and
+		// the mark on their posters. Nothing is written here: the page stores the visit that clears the signal (#456)
+		// once it is on screen (useMyMoviesVisit), and the row does not depend on it.
 		const [data, landed] = await Promise.all([
 			getWatchNext(ctx, { ...choice, kind: "movie" }),
-			getNewlyAvailable(ctx)
-				.then((news) => lineOf(news.movies))
-				// The line above the movies is an addition: without it the page is still the member's movies.
-				.catch((error) => {
+			getRecentlyLanded(ctx)
+				.then((recent) => recent.movies)
+				// The row is an addition: without it the page is still the member's movies.
+				.catch((error): LandedTitle[] => {
 					console.error("My movies: reading what landed failed:", error)
-					return null
+					return []
 				}),
 		])
 		return json({ query, data: data as WatchNext | null, landed }, { headers })
@@ -76,7 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		// The page asks /api/watch-next again from the browser.
 		console.error("My movies: the first view failed", error)
 		return json(
-			{ query, data: null as WatchNext | null, landed: null },
+			{ query, data: null as WatchNext | null, landed: [] as LandedTitle[] },
 			{ headers },
 		)
 	}
@@ -86,7 +86,7 @@ export default function MyMoviesRoute() {
 	const { landed, ...initial } = useLoaderData<typeof loader>() as {
 		query: string
 		data: WatchNext | null
-		landed: LandedLine | null
+		landed: LandedTitle[]
 	}
 	return <MyMoviesPage initial={initial} landed={landed} />
 }

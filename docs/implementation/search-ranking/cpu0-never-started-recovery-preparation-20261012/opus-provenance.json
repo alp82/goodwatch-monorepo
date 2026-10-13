@@ -1,0 +1,35 @@
+{
+  "actualCliExitCode": 0,
+  "actualModels": [
+    "claude-opus-5-5"
+  ],
+  "actualRecoveryHostActions": 0,
+  "authorFullTestCount": 100,
+  "authorNewTestCount": 19,
+  "base": "1023e5c410d985b4e1ba37607fe479fd4b857a6f",
+  "coverageLimits": [
+    "Review is static and focused; no runtime/latency/acceptance claim.",
+    "Backend reading was partial; no embedded-byte, consumer, reclaim or primary Moby verification by model.",
+    "Author tests use fake Docker/source/resource boundaries and do not attest a host.",
+    "Actual root validated real packet authentication/decode and exact retained public proofs without dispatch.",
+    "Nonblocking findings N1-N6 remain in the exact full report for root disposition."
+  ],
+  "designV2RootAcceptanceOnly": true,
+  "durationMs": 534625,
+  "localClosureSha256": "bfad2fde72fdcf5778cca56ca6812e4f846e2db6afb6644a134542ddc5d5b66e",
+  "opusReportSha256": "e7e9b6938562dd0c7e47d00f07af32ae3c7c96a36df8168ba9bc3897367fb3a0",
+  "originalDesignVerdict": "BLOCK",
+  "packetSha256": "baef942d1cf0b1ffb4c71db15306877a6d6baa47cf8e7e2be08afe208e5c3e3e",
+  "productionAcceptance": false,
+  "requestedEffort": "medium",
+  "requestedModel": "claude-opus-5-5",
+  "reviewManifestSha256": "176acd122eddefdc83328fc840f0f0f63636b0d8a8af9aaab3ea563a60816124",
+  "reviewVerdict": "PASS-static-focused",
+  "reviewerComputedHashes": false,
+  "reviewerExecutedTests": false,
+  "rootDesignAcceptanceSha256": "20f1d4bc36442237762e1331fcdf4117cbe33bd95bd552bb93b01275d2bf9b88",
+  "rootIndependentNewTestCount": 19,
+  "schema": "cpu0-never-started-recovery-source-review-provenance.v1",
+  "source14Full24PriorUnchanged": true,
+  "sourceHead": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996"
+}

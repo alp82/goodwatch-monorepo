@@ -11,6 +11,7 @@ export function TitlePosterCard({
 	posterPriority,
 	skipOffscreen,
 	actions,
+	newOn,
 }: {
 	card: TitleCard
 	prefetch?: boolean
@@ -20,6 +21,8 @@ export function TitlePosterCard({
 	skipOffscreen?: boolean
 	/** Where the title actions sit on the poster, see MovieTvCard. */
 	actions?: ActionsPlacement | false
+	/** The service the title is new on for the viewer (#489), by id, see MovieTvCard. */
+	newOn?: number | null
 }) {
 	const details = {
 		...card,
@@ -37,6 +40,7 @@ export function TitlePosterCard({
 			posterPriority={posterPriority}
 			skipOffscreen={skipOffscreen}
 			actions={actions}
+			newOn={newOn}
 			taste={{ match: card.match, reasons: card.reasons }}
 			rating={card.rating}
 		/>

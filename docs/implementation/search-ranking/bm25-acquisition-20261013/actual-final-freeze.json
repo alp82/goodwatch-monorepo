@@ -1,0 +1,76 @@
+{
+  "schema": "offline-bm25-actual-evidence-freeze.v1",
+  "acquisitionExecutedBy": "root",
+  "acquisitionInvocation": {
+    "schema": "root-readonly-bm25-acquisition.v1",
+    "wrapperSha256": "520a99e83c0fba53453e6d3cb737f43151a936792f1b8049132f7498ad9c6e8e",
+    "readerSha256": "c42fad2c9d2cc9c7a2b707d261bdc1a54c8ef9b0ce72b2663a6c4fc165ae5774",
+    "driverSha256": "81edd90eb4f51344269a1070a5f17fc7c2bcd3b4c14b50973b6a82999a3f8cad",
+    "executedSourceSha256": "f0770a2c84006ad6a87a4be0e016be7d80d4d132d07c371ec33bff317d05f98a",
+    "planSha256": "a7264d2519d7a68275c4600fc57c48eda93896c389cf6432efb6c087cefc3600",
+    "planBytes": 602788,
+    "container": "9de6d8c048ccf99644cffe43066ca74193f82d345538263ffd281229be58a326",
+    "requiredCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+    "nodeLifetimeMs": 620000,
+    "remoteTimeoutSeconds": 630,
+    "transportTimeoutSeconds": 650,
+    "requestsMax": 88,
+    "outputBytesMax": 2147483648,
+    "stderrBytesMax": 1048576,
+    "authorization": "existing task scope: fixed public catalog vector retrieval; no production writes or searches",
+    "retries": 0,
+    "started": "2026-10-13T00:33:20.405576+00:00",
+    "finished": "2026-10-13T00:33:47.801159+00:00",
+    "elapsedSeconds": 27.39443236500665,
+    "sshDockerNodeExitCode": 0,
+    "outerRefusal": null,
+    "output": {
+      "bytes": 329073034,
+      "sha256": "d89f291b931209bfd73fce7684164a98687b2d1b1c546c69b237157b29f9d9ed"
+    },
+    "privateStderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "terminalValidationPending": true
+  },
+  "strictValidator": {
+    "executedBy": "root",
+    "exitCode": 0,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "startTimeRecorded": false,
+    "elapsedTimeRecorded": false,
+    "report": {
+      "bytes": 1236,
+      "sha256": "d9b900c12d52eacd528a76cf793bee026b8641c661462593eba4000e19d7a265"
+    },
+    "sourceManifestSha256": "2efd723cba79dde884f05c4dcce73e7223f4cdd36849faa09294ba21c504800a",
+    "rootIndependentFixtureGroups": 9,
+    "rootIndependentFixtureSeconds": 26.654
+  },
+  "independentRootValidator": {
+    "bytes": 870,
+    "sha256": "aa0f2e39492382e561bf0da6ce3d9330db0c5faf98cf0c31bb8af291e8383499"
+  },
+  "unknownSidecar": {
+    "bytes": 19437,
+    "sha256": "1ff58d72fc6c2905725b6e387371dbd977dbb6bbe7d5efb6dbcada2a2be47e44"
+  },
+  "rootSeparatelyReportedUniqueUnknownIds": 1641,
+  "omittedCorpus": {
+    "localPath": "/home/alper/projects/search-100-evidence/offline-bm25-acquisition-20261013/actual.ndjson",
+    "bytes": 329073034,
+    "sha256": "d89f291b931209bfd73fce7684164a98687b2d1b1c546c69b237157b29f9d9ed"
+  },
+  "omittedTermStatistics": {
+    "localPath": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/verified-index/term_statistics.json.gz",
+    "bytes": 5046424,
+    "sha256": "579851bd4019016c8bd0c32705ef39e077c8b03e074ac83d344305f00164e8c0"
+  },
+  "historicalSnapshotEqualityProven": false,
+  "productionCandidateParityProven": false,
+  "qualityPass": false,
+  "productionLatencyMeasured": false,
+  "automaticRepeatAuthorized": false
+}

@@ -1,29 +1,21 @@
 {
-  "schema": "search.clone-cpu0-source-freeze.v1",
-  "preparedOnly": true,
-  "helperCodeSha256": "4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5",
   "files": {
-    "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
-    "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
-    "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
-    "controller_cpu0.py": "42e21d216e7fca3bf52a5d6fec954645453b999585975bb31bbbd3c309e74ec8",
+    "CPU0.md": "6113cb6c197c7c2938e1fac074039cb5ef46da36e770302fc4640cd6fc1d7c16",
+    "controller_cpu0.py": "6a9fddc29d036d2eddd5d6faa2b3e9ac9e0e34a72785ad335911d10904a71c7e",
     "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
-    "cpu0_preflight.py": "68056d9dd2c079cb3d2ad5da3431c7f080535bbc60edfb2a1f556f08be2d2219",
-    "turnover_gate_cpu0.py": "ca5d3a40987801f39bad4d40d52739ca9a2e67077f241ab0f8809313a413b46d",
+    "cpu0_preflight.py": "fc879a5d8c36ba5cca38376d58e62f1bdf0b426807dd82501e0c99bb497d459d",
+    "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
+    "lifecycle_cpu0.py": "b0e52f5b51dc52db307424e3d904df2903aedc7e95d63678b46b6362b3274273",
+    "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+    "prepared-control-policy-cpu0.json": "3c99f666d1c6728682e9cf349c9a837ada1f1f3635b8f59b9bd7b1a5403cf1a4",
     "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
-    "prepared-control-policy-cpu0.json": "bada24aa27efb668ab72dc59994307fb17e37fa4ce0fe221b2784aa2fd705af9",
+    "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
+    "test_cpu0_controller.py": "536a4c9b6d7717438619e34bb04812cd0f12dd9b2d047c887f624de3f41d8fb0",
     "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
-    "test_cpu0_controller.py": "c2c0a44285bd1092bbb0287c453cbe7836e4bc8dacc8d458673b6bf5580f1ea3",
-    "CPU0.md": "3209f4b46708372b16db4195d1e74c71521862fda99f443f056c2099ae0b6946"
+    "test_lifecycle_cpu0.py": "20181fa6b5014e4a8074f7b837234122fe115150a517123fa67ae64efc513acc",
+    "turnover_gate_cpu0.py": "17f4495253d3db84cb2218079d14cc614127068549f166f46184bdcb9a5278fc"
   },
-  "pinProvenance": {
-    "sourceCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
-    "exactPinBytes": true,
-    "runtimeChanges": [
-      "versioned pin import",
-      "explicit new owned clone name"
-    ]
-  },
-  "oldFilesChanged": false,
-  "benchmarkPacketReady": false
+  "preparedOnly": true,
+  "schema": "search.clone-cpu0-fixed-source-freeze.v2",
+  "variant": "cpu0-fixed-capacity.v2"
 }

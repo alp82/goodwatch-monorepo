@@ -1,0 +1,86 @@
+## Verdict: PASS (focused source review, static only)
+
+I found no concrete operational, safety or spec blocker in the frozen recovery source. This is a read-only review: I executed no tests, computed no hashes, and make no runtime, latency or owner-approval claim. The 100/19 test counts are the author's.
+
+## Findings (all non-blocking)
+
+**N1. The live binding to the config-proof hashes cannot be confirmed from the packet.**
+- `recovery.py:121` requires `sha(canonical(non_cpu(old)))` to equal `OLD_HOST_SHA` (and likewise for NEW). The read-only script that produced `root-readonly-created-config-public.json` is not in the packet.
+- The proof's scalar hashes do look like SHA256 of JSON `null` and `false` (recognised from memory, not computed), but that says nothing about the separators or excluded fields used for the whole-dict hash.
+- If the generator differed, the first root run refuses with `recovery_config_proof_changed` at the first parity check. That is before the attempt receipt and before any mutation, so it fails closed.
+- Minimal fix: none in source. Root should confirm the generator used compact sorted JSON over HostConfig minus exactly `NanoCpus`, `CpuQuota`, `CpuPeriod` before invoking.
+
+**N2. DESIGN-v2's test gate is only partly met by `test_recovery.py`.**
+- Not exercised:
+  - `proofs()` on the real frozen bytes or a modified proof (it is always patched, `test_recovery.py:201`);
+  - a mismatched OLD receipt hash;
+  - a symlink or inode change in the admission directory;
+  - the inverse null pair or a non-null OLD value;
+  - a primary refusal combined with a lock-close failure (only the success path is tested, `:291`).
+- The composed fixture also mocks `prior_census`, `port_closed`, `own_stopped_placement`, `admission.host`, `collection_shape`, `StartEngine`, `attest`, `pair_snapshot` and `read_handoff`. "Composed" therefore covers ordering and ledger shape, not those boundaries.
+- I traced `proofs()` by hand against both real blobs and it accepts them; the packet also carries `initialMode`, and `build_packet.py:64` runs `proofs()` when it sets that.
+- Minimal fix: add those five cases in a successor, or have root accept the gap explicitly.
+
+**N3. A pre-publication `/version` transport failure is labelled `recovery_start_unknown`.**
+- `recovery.py:272-310` uses that reason for every transport or framing failure, including the GET.
+- The typed ledger stays correct (`actionState: not-issued`, `attemptObserved: false`), but the top-level `reason` reads as if a start may have been issued.
+- Also unverified: the parser refuses chunked responses (`:299`). My recollection is that dockerd sends `Content-Length` for a `/version` body of this size, but I could not check that here.
+- Minimal fix: have `version()` re-raise transport failures as `recovery_normalization_refused`.
+
+**N4. A failure after the handoff is committed does not carry the completed result.**
+- If `read_handoff` or `publish(SUCCESS_NAME)` fails (`recovery.py:496`, `:508`), the reason is `recovery_attempt_publish_failed` and `recoveryCompletedReceipt` is not attached. That attribute is only set on lock-close failure (`:523`).
+- The executor still reports `observedCommittedHandoffSha256` (`executor.py:236-238`) and continuation stays false, so this is not unsafe.
+- I estimate the result at well under the 64 KiB cap, from reading `birth_admission`.
+- Minimal fix: attach `result` to the error when `publish(SUCCESS_NAME, …)` fails.
+
+**N5. Small deltas from the hash-bound DESIGN-v2 text.**
+- Two reason codes are not in the v2 list: `recovery_closure_unproven` and `recovery_mode_mismatch` (`reason_codes.py:6,27`).
+- `recoveryCompletedReceipt` is an extra entry in `FAILURE_FIELDS` (`executor.py:247`).
+- Both are additive and stay closed. Root should acknowledge them, since the acceptance is bound to the v2 hash.
+
+**N6. Operational notes, all failing closed before publication unless stated.**
+- **Cgroup walk:** `own_stopped_placement` walks all of `/sys/fs/cgroup` (`recovery.py:171`). A scope that vanishes mid-walk gives `recovery_placement_unknown`. All three calls are before publication.
+- **Post-publication re-inspect:** two docker CLI inspects run between the attempt receipt and the POST (`:442`). A transient failure there spends the one attempt without a start. This matches the design.
+- **Admission staleness:** nothing bounds the time between the last `admission.host` (`:425`) and the POST. It is realistically under two seconds; the worst case is roughly a minute of inspect timeouts.
+- **Strict POST parsing:** a 304 or oddly framed reply after the POST becomes `issued-unknown`. That is conservative, but it happens after the action.
+- **Cosmetic:**
+  - `http.client` and `stat` are unused imports (`:8,14`).
+  - A receipt-identity mismatch is labelled `recovery_placement_unknown` (`:422-423`).
+  - A 204 with a non-empty body would be labelled `issued-nonzero`.
+  - On a failed first call, the cleanup RPC arguments still carry `recoveryProof`, which the executor ignores (`outer_local.py:173`).
+
+## Focus closures confirmed by reading
+
+| Closure | Where | Result |
+|---|---|---|
+| Bool/int parity | `recovery.py:113-128` | Canonical bytes for Config and normalized non-CPU HostConfig run before `configured_pair`; `is None` / `is False` plus key presence. CPU fields are type-exact in `setup.py:185` and `lifecycle_cpu0.py:171-173`. |
+| Never-started state | `recovery.py:88-98` | Type-exact PID 0, exit 0, restart 0, OOM false; Dead/Paused/Restarting false; `created`; both year-one times; snapshot canonically equal to the original endpoint. A failed start cannot pass the exit-code check (from memory of Moby, not read). |
+| Stopped vs live placement | `:162-188`, `:486-489` | `preStartSourceProcessProof: False`, no fabricated `attest`; the live proof is `attest(NEW)` twice plus `pair_snapshot`. |
+| Deadlines | `:268-278` | One absolute deadline per request; every connect, send and recv gets the remainder. |
+| POST vs GET evidence | `:283`, `:323`, `:448-453` | `postIssued` is set only for POST, just before `sendall`, and reset in `start()`. A connect failure or a target drift after publication yields `not-issued`. |
+| Receipt, census, protected IDs | `:99-102`, `:198-209`, `:482-488` | Receipt hash is pinned and clean semantics re-checked. The final census protects own, parent, wrapper, wrapper parent, Qdrant and Qdrant parent. |
+| Closure marker | `bootstrap.py:53`, `recovery.py:379` | The marker is set only after bootstrap verifies the manifest hash. `local_entry` never sets it, so a local import cannot run recovery. |
+| Module order and mode | `bootstrap.py:17,38`, `local_entry.py:11`, `executor.py:23`, `rpc.py:16`, `outer_local.py:107-109,217` | `recovery` sits after `setup` and before `executor` in both orders. Packet mode and CLI mode must agree, and a mismatch raises before any RPC. |
+| Default no action | `outer_local.py:220`, `local_entry.py:41`, `build_packet.py:83` | All three are prepared-only by default; `recovery.py` has no `__main__`. |
+| Proof cap, O_EXCL, raw ID | `recovery.py:48`, `:234-243`, `:447`, `:264-265` | 64 KiB cap; exclusive create with fsync of file and directory; the raw ID comes from the post-publication inspect, is hash-checked twice, and is never emitted. |
+| Fresh object after publication | `:442-447` | Re-inspect, parity, receipt identity, admission files and lock all rerun before the POST. |
+| Poststart normalization | `:123-128`, `:459`, `:481` | Only the same present field may be `False` or `None`; everything else is exact against both OLD and prestart NEW. |
+| Result and cause retention | `:510-525` | Success plus close failure keeps the completed receipt and `issued-acknowledged`; failure plus close failure keeps the primary cause. |
+| No fallback | `outer_local.py:122-123`, `setup.py:325-326` | Exactly one fixed first operation. A setup-mode run would refuse on the existing admission directory. |
+| No other lifecycle path | `recovery.py` (whole file) | No create, remove, stop, update, relabel, reclaim, pin or retry. `Docker('start', NEW)` exists in `setup.py:126` but recovery never calls it. |
+
+## Files inspected and actual coverage
+
+- **Read in full (packet copies):**
+  - Design and docs: `prompt.txt`, `manifest.json`, `design-DESIGN-v2.md`, `design-root-design-v2-acceptance.json`, `design-opus-report.txt`, `code/RECOVERY.md`.
+  - Changed code: `code/recovery.py`, `code/test_recovery.py`, `code/bootstrap.py`, `code/build_packet.py`, `code/executor.py`, `code/local_entry.py`, `code/outer_local.py`, `code/reason_codes.py`, `code/rpc.py`.
+  - Unchanged dependencies: `code/setup.py`, `code/packet.py`, `code/admission.py`, `code/census.py`.
+  - Evidence: `root-execution-public.ndjson`, `root-readonly-created-config-public.json`, `local-execution-closure.json`.
+- **`amendment.diff`:** lines 1–793 and 872–1277 read. Lines 794–871 (the tail of `recovery.py`) were not read in the diff; I read those lines in `code/recovery.py` itself. The diff touches ten files and none of the unchanged dependencies.
+- **Backend, from the worktree and not from the embedded base64:** `lifecycle_cpu0.py` in full; `controller_cpu0.py` lines 120–249 plus grep excerpts; grep excerpts of `daemon_cpu0.py`, `runtime_cpu0.py`, `cpu0_guards.py`, `pin_cpu0.py`. I did not verify these bytes equal the packet's embedded copies.
+- **Grep only:** `execution-packet.json` (mode and hash fields), `test_bootstrap.py`, `stager.py`, `registration.py`, `private_pipe.py`, `producer.py`.
+- **Not read:**
+  - `design-DESIGN.md` (v1), `design-opus-report.json`, and the packet's existing `opus-report.json`;
+  - `code/README.md`, `SHUTDOWN-ADMISSION.md`, `validate_admission.mjs`, and the other test files;
+  - the base64 payloads, the consumer JS, the reclaim helper, and the Moby source.
+- **Hashes:** I did not compute the manifest SHA or any file hash. The only check was a visual match of all 16 entries in `local-execution-closure.json` against `manifest.json`.

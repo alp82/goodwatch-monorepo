@@ -1,0 +1,53 @@
+{
+  "schema": "root-local-source-review.v1",
+  "sourceCommit": "58d368c360cfe6ac72955f26b95bae085abdf6c4",
+  "sourceFreezeSha256": "00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108",
+  "reviewed": [
+    "full original frozen9380 lifecycle/preflight/turnover/controller source and policies",
+    "full final58d amendment source/test/docs/freeze differences",
+    "complete prior Opus BLOCK and final amendment-scope PASS"
+  ],
+  "frozenBindingsVerified": 14,
+  "unchangedCoreBindingsVerified": 4,
+  "independentTests": [
+    {
+      "count": 31,
+      "scope": "lifecycle",
+      "seconds": 1.134,
+      "outcome": "PASS"
+    },
+    {
+      "count": 12,
+      "scope": "controller",
+      "seconds": 0.346,
+      "outcome": "PASS"
+    }
+  ],
+  "authorFullSuite": {
+    "count": 259,
+    "seconds": 130.116,
+    "outcome": "PASS"
+  },
+  "actualOpusReview": {
+    "reportSha256": "e5eec9a50cb2cc8885bed4213aae800c232689006cd8bc2b4a6a0e86f8b75bb3",
+    "configuredModel": "claude-opus-5-5",
+    "configuredEffort": "medium",
+    "observedModels": [
+      "claude-opus-5-5"
+    ],
+    "durationMs": 274757,
+    "scope": "source amendments; prior blockers closed; no consumer/stager or benchmark readiness"
+  },
+  "hostOperations": 0,
+  "executionAuthorized": false,
+  "publicationAuthorized": true,
+  "benchmarkPacketReady": false,
+  "productionAcceptance": false,
+  "retainedCaveats": [
+    "single post-stop Docker observation and proc disappearance races fail closed",
+    "local wrapper fixtures do not establish actual Qdrant stop/durability",
+    "interrupted receipt emission may lose stop proof; requires terminal refusal",
+    "consumer must require handoff/cleanup and reject all signalSent failures",
+    "external must authenticate all14 before import and bound/sanitize invocation environment"
+  ]
+}

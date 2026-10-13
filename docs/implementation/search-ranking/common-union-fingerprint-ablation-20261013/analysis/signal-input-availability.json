@@ -1,0 +1,1806 @@
+{
+  "schema": "offline-omitted-signal-input-availability.v1",
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "rows": [
+    {
+      "id": "core-01",
+      "positive": "Inception",
+      "searchedPhrases": [
+        "inception"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-02",
+      "positive": "Breaking Bad",
+      "searchedPhrases": [
+        "breaking bad"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-03",
+      "positive": "The Matrix",
+      "searchedPhrases": [
+        "matrix"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-04",
+      "positive": "Incepton",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-05",
+      "positive": "Spirited Away",
+      "searchedPhrases": [
+        "spirited away"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "spirited",
+        "away"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "spirited",
+        "away"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-06",
+      "positive": "tense",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-07",
+      "positive": "car chases",
+      "searchedPhrases": [
+        "car chases"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "car",
+        "chases"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "car",
+        "chases"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-08",
+      "positive": "sunglasses",
+      "searchedPhrases": [
+        "sunglasses"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-09",
+      "positive": "unreliable narrator",
+      "searchedPhrases": [
+        "unreliable narrator"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-10",
+      "positive": "dark comedy about rich people",
+      "searchedPhrases": [
+        "dark comedy",
+        "rich people"
+      ],
+      "facetTexts": [
+        "dark comedy",
+        "rich people"
+      ],
+      "coverageUnits": [
+        "dark",
+        "comedy",
+        "rich"
+      ],
+      "missingFacetTexts": [
+        "dark comedy",
+        "rich people"
+      ],
+      "missingCoverageTexts": [
+        "dark",
+        "rich"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-11",
+      "positive": "gritty crime show",
+      "searchedPhrases": [
+        "gritty crime",
+        "crime show"
+      ],
+      "facetTexts": [
+        "gritty crime",
+        "crime show"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "gritty crime",
+        "crime show"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-12",
+      "positive": "with my parents",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-13",
+      "positive": "I want something tense that keeps me guessing, but I",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-14",
+      "positive": "Rich people being absolutely awful to each other, preferably funny.",
+      "searchedPhrases": [
+        "rich people"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-15",
+      "positive": "A crime show that feels grubby and real.",
+      "searchedPhrases": [
+        "crime show"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-16",
+      "positive": "Something where halfway through you realism the person telling the story has been feeding you nonsense.",
+      "searchedPhrases": [
+        "feeding nonsense",
+        "halfway through"
+      ],
+      "facetTexts": [
+        "feeding nonsense",
+        "halfway through"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "feeding nonsense",
+        "halfway through"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-17",
+      "positive": "Give me car chases, but make it more getaway driver",
+      "searchedPhrases": [
+        "getaway driver",
+        "car chases"
+      ],
+      "facetTexts": [
+        "getaway driver",
+        "car chases"
+      ],
+      "coverageUnits": [
+        "getaway",
+        "driver",
+        "car",
+        "chases"
+      ],
+      "missingFacetTexts": [
+        "getaway driver"
+      ],
+      "missingCoverageTexts": [
+        "getaway",
+        "driver",
+        "car",
+        "chases"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-18",
+      "positive": "Brain's fried. Something warm and funny,",
+      "searchedPhrases": [
+        "warm funny",
+        "brain fried"
+      ],
+      "facetTexts": [
+        "warm funny",
+        "brain fried"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "warm funny",
+        "brain fried"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-19",
+      "positive": "cozy",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-20",
+      "positive": "bleak",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-21",
+      "positive": "funny",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-22",
+      "positive": "time loop",
+      "searchedPhrases": [
+        "time loop"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "core-23",
+      "positive": "slow atmospheric science fiction",
+      "searchedPhrases": [
+        "science fiction",
+        "slow atmospheric"
+      ],
+      "facetTexts": [
+        "science fiction",
+        "slow atmospheric"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "science fiction",
+        "slow atmospheric"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-24",
+      "positive": "a hopeful space adventure",
+      "searchedPhrases": [
+        "space adventure"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "space",
+        "adventure"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "space",
+        "adventure"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "core-25",
+      "positive": "something short to watch after work",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "dev6-01",
+      "positive": "fantasy series",
+      "searchedPhrases": [
+        "fantasy series",
+        "dragons"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "dev6-02",
+      "positive": "zombie movie",
+      "searchedPhrases": [
+        "zombie movie"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "dev6-03",
+      "positive": "detective show with",
+      "searchedPhrases": [
+        "detective show"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "dev6-04",
+      "positive": "sci-fi movie",
+      "searchedPhrases": [
+        "sci-fi movie"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "dev6-05",
+      "positive": "Krimi",
+      "searchedPhrases": [
+        "ohne mord",
+        "krimi ohne"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-01",
+      "positive": "something to cheer me up",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-02",
+      "positive": "date night",
+      "searchedPhrases": [
+        "date night"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-03",
+      "positive": "something to fall asleep to",
+      "searchedPhrases": [
+        "fall asleep"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-04",
+      "positive": "rainy sunday afternoon",
+      "searchedPhrases": [
+        "rainy sunday",
+        "sunday afternoon"
+      ],
+      "facetTexts": [
+        "rainy sunday",
+        "sunday afternoon"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "rainy sunday",
+        "sunday afternoon"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-05",
+      "positive": "i need a good cry",
+      "searchedPhrases": [
+        "good cry"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-06",
+      "positive": "adrenaline rush",
+      "searchedPhrases": [
+        "adrenaline rush"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-07",
+      "positive": "background show while cooking",
+      "searchedPhrases": [
+        "background show",
+        "while cooking"
+      ],
+      "facetTexts": [
+        "background show",
+        "while cooking"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "background show",
+        "while cooking"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-08",
+      "positive": "halloween night with friends",
+      "searchedPhrases": [
+        "halloween night",
+        "halloween"
+      ],
+      "facetTexts": [
+        "halloween night",
+        "halloween"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "halloween night",
+        "halloween"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-09",
+      "positive": "con artists pulling off elaborate scams",
+      "searchedPhrases": [
+        "con artists",
+        "elaborate scams"
+      ],
+      "facetTexts": [
+        "con artists",
+        "elaborate scams"
+      ],
+      "coverageUnits": [
+        "con",
+        "artists",
+        "elaborate",
+        "scams"
+      ],
+      "missingFacetTexts": [
+        "con artists",
+        "elaborate scams"
+      ],
+      "missingCoverageTexts": [
+        "con",
+        "artists",
+        "elaborate",
+        "scams"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-10",
+      "positive": "robot who wants to be human",
+      "searchedPhrases": [
+        "robot who",
+        "robot"
+      ],
+      "facetTexts": [
+        "robot who",
+        "robot"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "robot who",
+        "robot"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-11",
+      "positive": "survivors after a plane crash",
+      "searchedPhrases": [
+        "plane crash"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "plane",
+        "crash"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "plane",
+        "crash"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-12",
+      "positive": "complicated mother daughter relationship",
+      "searchedPhrases": [
+        "mother daughter"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "mother",
+        "daughter"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "mother",
+        "daughter"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-13",
+      "positive": "journalists uncovering a cover up",
+      "searchedPhrases": [
+        "journalists uncovering",
+        "uncovering cover"
+      ],
+      "facetTexts": [
+        "journalists uncovering",
+        "uncovering cover"
+      ],
+      "coverageUnits": [
+        "journalists",
+        "uncovering",
+        "cover"
+      ],
+      "missingFacetTexts": [
+        "journalists uncovering",
+        "uncovering cover"
+      ],
+      "missingCoverageTexts": [
+        "journalists",
+        "uncovering",
+        "cover"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-14",
+      "positive": "revenge planned for years",
+      "searchedPhrases": [
+        "revenge planned",
+        "revenge"
+      ],
+      "facetTexts": [
+        "revenge planned",
+        "revenge"
+      ],
+      "coverageUnits": [
+        "revenge",
+        "planned"
+      ],
+      "missingFacetTexts": [
+        "revenge planned",
+        "revenge"
+      ],
+      "missingCoverageTexts": [
+        "revenge",
+        "planned"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-15",
+      "positive": "anime",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-16",
+      "positive": "horror",
+      "searchedPhrases": [
+        "jump scares",
+        "horror"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-17",
+      "positive": "miniseries i can finish in a weekend",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-18",
+      "positive": "funny movie under 90 minutes",
+      "searchedPhrases": [
+        "funny movie"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-19",
+      "positive": "harry potter but for adults",
+      "searchedPhrases": [
+        "harry potter"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "harry",
+        "potter"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "harry",
+        "potter"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-28",
+      "positive": "ailecek izlenecek komik film",
+      "searchedPhrases": [
+        "komik film"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "h5-29",
+      "positive": "80s teen motives",
+      "searchedPhrases": [
+        "80s teen",
+        "teen moives"
+      ],
+      "facetTexts": [
+        "80s teen",
+        "teen moives"
+      ],
+      "coverageUnits": [
+        "teen",
+        "motives"
+      ],
+      "missingFacetTexts": [
+        "80s teen",
+        "teen moives"
+      ],
+      "missingCoverageTexts": [
+        "teen",
+        "motives"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "h5-30",
+      "positive": "film noir from the 40s",
+      "searchedPhrases": [
+        "film noir"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "ho2-01",
+      "positive": "horror on a submarine",
+      "searchedPhrases": [
+        "horror submarine"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "horror",
+        "submarine"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "submarine"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-02",
+      "positive": "comedy set in a prison",
+      "searchedPhrases": [
+        "set prison",
+        "prison"
+      ],
+      "facetTexts": [
+        "set prison",
+        "prison"
+      ],
+      "coverageUnits": [
+        "set",
+        "prison"
+      ],
+      "missingFacetTexts": [
+        "set prison",
+        "prison"
+      ],
+      "missingCoverageTexts": [
+        "set",
+        "prison"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-03",
+      "positive": "anime about pirates",
+      "searchedPhrases": [
+        "anime pirates",
+        "pirates"
+      ],
+      "facetTexts": [
+        "anime pirates",
+        "pirates"
+      ],
+      "coverageUnits": [
+        "anime",
+        "pirates"
+      ],
+      "missingFacetTexts": [
+        "anime pirates",
+        "pirates"
+      ],
+      "missingCoverageTexts": [
+        "pirates"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-04",
+      "positive": "western with samurai",
+      "searchedPhrases": [
+        "western samurai"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "western",
+        "samurai"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "western",
+        "samurai"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-05",
+      "positive": "war film about snipers",
+      "searchedPhrases": [
+        "snipers",
+        "film snipers"
+      ],
+      "facetTexts": [
+        "snipers",
+        "film snipers"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "snipers",
+        "film snipers"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-09",
+      "positive": "space opera",
+      "searchedPhrases": [
+        "space opera"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "ho2-10",
+      "positive": "animated movie that is",
+      "searchedPhrases": [
+        "animated movie"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "ho2-11",
+      "positive": "claustrophobic thriller in the Arctic",
+      "searchedPhrases": [
+        "claustrophobic thriller",
+        "thriller arctic"
+      ],
+      "facetTexts": [
+        "claustrophobic thriller",
+        "thriller arctic"
+      ],
+      "coverageUnits": [
+        "claustrophobic",
+        "thriller",
+        "arctic"
+      ],
+      "missingFacetTexts": [
+        "claustrophobic thriller",
+        "thriller arctic"
+      ],
+      "missingCoverageTexts": [
+        "claustrophobic",
+        "thriller",
+        "arctic"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-12",
+      "positive": "lazy sunny summer on the Italian coast",
+      "searchedPhrases": [
+        "italian coast"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "italian",
+        "coast"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "italian",
+        "coast"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-13",
+      "positive": "70s paranoid conspiracy thrillers",
+      "searchedPhrases": [
+        "conspiracy thrillers",
+        "paranoid conspiracy"
+      ],
+      "facetTexts": [
+        "conspiracy thrillers",
+        "paranoid conspiracy"
+      ],
+      "coverageUnits": [
+        "conspiracy",
+        "thrillers",
+        "paranoid"
+      ],
+      "missingFacetTexts": [
+        "conspiracy thrillers",
+        "paranoid conspiracy"
+      ],
+      "missingCoverageTexts": [
+        "conspiracy",
+        "paranoid"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-14",
+      "positive": "2000s British gangster comedies",
+      "searchedPhrases": [
+        "gangster comedies",
+        "british gangster"
+      ],
+      "facetTexts": [
+        "gangster comedies",
+        "british gangster"
+      ],
+      "coverageUnits": [
+        "gangster",
+        "comedies",
+        "british"
+      ],
+      "missingFacetTexts": [
+        "gangster comedies",
+        "british gangster"
+      ],
+      "missingCoverageTexts": [
+        "gangster",
+        "comedies",
+        "british"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-17",
+      "positive": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.",
+      "searchedPhrases": [
+        "small-town cop",
+        "investigates murder"
+      ],
+      "facetTexts": [
+        "small-town cop",
+        "investigates murder"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "small-town cop",
+        "investigates murder"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-18",
+      "positive": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet,",
+      "searchedPhrases": [
+        "soldier"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "ho2-20",
+      "positive": "epic",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "ho2-21",
+      "positive": "dystopian depth game series",
+      "searchedPhrases": [
+        "dystopain deth",
+        "deth game"
+      ],
+      "facetTexts": [
+        "dystopain deth",
+        "deth game"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "dystopain deth",
+        "deth game"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "ho2-22",
+      "positive": "the expanse",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "lab-00",
+      "positive": "complete nonsense",
+      "searchedPhrases": [
+        "complete nonsense",
+        "nonsense"
+      ],
+      "facetTexts": [
+        "complete nonsense",
+        "nonsense"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "nonsense"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-02",
+      "positive": "feel good cooking show",
+      "searchedPhrases": [
+        "cooking show",
+        "feel good"
+      ],
+      "facetTexts": [
+        "cooking show",
+        "feel good"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "cooking show",
+        "feel good"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-03",
+      "positive": "slow burn space horror",
+      "searchedPhrases": [
+        "space horror"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "space",
+        "horror"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "space"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-04",
+      "positive": "tense heist thriller,",
+      "searchedPhrases": [
+        "heist thriller"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "heist",
+        "thriller"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "heist",
+        "thriller"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-05",
+      "positive": "grief after losing a child",
+      "searchedPhrases": [
+        "losing child"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "losing",
+        "child"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "losing",
+        "child"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-06",
+      "positive": "furious",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "lab-07",
+      "positive": "crazy",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "lab-08",
+      "positive": "melancholy lighthouse keeper mystery",
+      "searchedPhrases": [
+        "lighthouse keeper",
+        "keeper mystery"
+      ],
+      "facetTexts": [
+        "lighthouse keeper",
+        "keeper mystery"
+      ],
+      "coverageUnits": [
+        "lighthouse",
+        "keeper",
+        "mystery"
+      ],
+      "missingFacetTexts": [
+        "lighthouse keeper",
+        "keeper mystery"
+      ],
+      "missingCoverageTexts": [
+        "lighthouse",
+        "keeper",
+        "mystery"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-09",
+      "positive": "scifi with cars",
+      "searchedPhrases": [
+        "scifi cars"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "scifi",
+        "cars"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "scifi",
+        "cars"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-10",
+      "positive": "sunglasses at night",
+      "searchedPhrases": [
+        "sunglasses night",
+        "sunglasses"
+      ],
+      "facetTexts": [
+        "sunglasses night",
+        "sunglasses"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "sunglasses night"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-11",
+      "positive": "fantasy with dragons",
+      "searchedPhrases": [
+        "fantasy dragons",
+        "dragons"
+      ],
+      "facetTexts": [
+        "fantasy dragons",
+        "dragons"
+      ],
+      "coverageUnits": [
+        "fantasy",
+        "dragons"
+      ],
+      "missingFacetTexts": [
+        "fantasy dragons"
+      ],
+      "missingCoverageTexts": [
+        "fantasy"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "lab-13",
+      "positive": "time travel complex",
+      "searchedPhrases": [
+        "time travel"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-01",
+      "positive": "heist on a train",
+      "searchedPhrases": [
+        "heist train"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "heist",
+        "train"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "heist",
+        "train"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-02",
+      "positive": "two geniuses in a battle of wits",
+      "searchedPhrases": [
+        "battle wits",
+        "geniuses battle"
+      ],
+      "facetTexts": [
+        "battle wits",
+        "geniuses battle"
+      ],
+      "coverageUnits": [
+        "battle",
+        "wits",
+        "geniuses"
+      ],
+      "missingFacetTexts": [
+        "battle wits",
+        "geniuses battle"
+      ],
+      "missingCoverageTexts": [
+        "battle",
+        "wits",
+        "geniuses"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-03",
+      "positive": "satire about politics or big corporations",
+      "searchedPhrases": [
+        "satire politics",
+        "big corporations"
+      ],
+      "facetTexts": [
+        "satire politics",
+        "big corporations"
+      ],
+      "coverageUnits": [
+        "satire",
+        "politics",
+        "corporations"
+      ],
+      "missingFacetTexts": [
+        "satire politics",
+        "big corporations"
+      ],
+      "missingCoverageTexts": [
+        "satire",
+        "politics",
+        "corporations"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-04",
+      "positive": "quiet and lonely in deep space",
+      "searchedPhrases": [
+        "deep space"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "deep",
+        "space"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "deep",
+        "space"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-05",
+      "positive": "rainy neon cyberpunk city",
+      "searchedPhrases": [
+        "cyberpunk city"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "cyberpunk",
+        "city"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "cyberpunk",
+        "city"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-06",
+      "positive": "kung fu comedy",
+      "searchedPhrases": [
+        "kung comedy"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "kung",
+        "comedy"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "kung"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-09",
+      "positive": "80s sci-fi action",
+      "searchedPhrases": [
+        "sci-fi action",
+        "80s sci-fi"
+      ],
+      "facetTexts": [
+        "sci-fi action",
+        "80s sci-fi"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "sci-fi action",
+        "80s sci-fi"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-10",
+      "positive": "90s crime movies with great dialogue",
+      "searchedPhrases": [
+        "crime movies",
+        "90s crime"
+      ],
+      "facetTexts": [
+        "crime movies",
+        "90s crime"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "crime movies",
+        "90s crime"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-11",
+      "positive": "comedy",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-12",
+      "positive": "war movie that",
+      "searchedPhrases": [
+        "war movie"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-13",
+      "positive": "smart sci-fi for adults",
+      "searchedPhrases": [
+        "smart sci-fi",
+        "sci-fi adults"
+      ],
+      "facetTexts": [
+        "smart sci-fi",
+        "sci-fi adults"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "smart sci-fi",
+        "sci-fi adults"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-14",
+      "positive": "good first anime for someone who never watched anime",
+      "searchedPhrases": [
+        "first anime"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-15",
+      "positive": "nonlinear storytelling",
+      "searchedPhrases": [
+        "nonlinear storytelling"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-16",
+      "positive": "whole movie takes place in one room",
+      "searchedPhrases": [
+        "one room"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-17",
+      "positive": "mindbending",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-18",
+      "positive": "wholesome",
+      "searchedPhrases": [],
+      "facetTexts": [],
+      "coverageUnits": [],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": true
+    },
+    {
+      "id": "new-19",
+      "positive": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun",
+      "searchedPhrases": [
+        "crew misfits",
+        "beat-up spaceship"
+      ],
+      "facetTexts": [
+        "crew misfits",
+        "beat-up spaceship"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "crew misfits",
+        "beat-up spaceship"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-20",
+      "positive": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.",
+      "searchedPhrases": [
+        "life staged",
+        "staged fake"
+      ],
+      "facetTexts": [
+        "life staged",
+        "staged fake"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "life staged",
+        "staged fake"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-23",
+      "positive": "psychological thriller with a big twist",
+      "searchedPhrases": [
+        "psycological thriler",
+        "big twist"
+      ],
+      "facetTexts": [
+        "psycological thriler",
+        "big twist"
+      ],
+      "coverageUnits": [
+        "psychological",
+        "thriller",
+        "twist"
+      ],
+      "missingFacetTexts": [
+        "psycological thriler",
+        "big twist"
+      ],
+      "missingCoverageTexts": [
+        "psychological",
+        "thriller",
+        "twist"
+      ],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-24",
+      "positive": "hunter x hunter",
+      "searchedPhrases": [
+        "hunter",
+        "hunter hunter"
+      ],
+      "facetTexts": [
+        "hunter",
+        "hunter hunter"
+      ],
+      "coverageUnits": [],
+      "missingFacetTexts": [
+        "hunter",
+        "hunter hunter"
+      ],
+      "missingCoverageTexts": [],
+      "allEmbeddingInputsCached": false
+    },
+    {
+      "id": "new-25",
+      "positive": "code glass",
+      "searchedPhrases": [
+        "code geass"
+      ],
+      "facetTexts": [],
+      "coverageUnits": [
+        "code",
+        "glass"
+      ],
+      "missingFacetTexts": [],
+      "missingCoverageTexts": [
+        "code",
+        "glass"
+      ],
+      "allEmbeddingInputsCached": false
+    }
+  ],
+  "facetsQueries": 36,
+  "coverageQueries": 34,
+  "allFacetUnitInputsCachedQueries": 47,
+  "missingUniqueEnglishTexts": 132,
+  "missingTexts": [
+    "80s sci-fi",
+    "80s teen",
+    "90s crime",
+    "adventure",
+    "anime pirates",
+    "arctic",
+    "artists",
+    "away",
+    "background show",
+    "battle",
+    "battle wits",
+    "beat-up spaceship",
+    "big corporations",
+    "big twist",
+    "brain fried",
+    "british",
+    "british gangster",
+    "car",
+    "cars",
+    "chases",
+    "child",
+    "city",
+    "claustrophobic",
+    "claustrophobic thriller",
+    "coast",
+    "code",
+    "comedies",
+    "con",
+    "con artists",
+    "conspiracy",
+    "conspiracy thrillers",
+    "cooking show",
+    "corporations",
+    "cover",
+    "crash",
+    "crew misfits",
+    "crime movies",
+    "crime show",
+    "cyberpunk",
+    "dark",
+    "dark comedy",
+    "daughter",
+    "deep",
+    "deth game",
+    "driver",
+    "dystopain deth",
+    "elaborate",
+    "elaborate scams",
+    "fantasy",
+    "fantasy dragons",
+    "feeding nonsense",
+    "feel good",
+    "film snipers",
+    "gangster",
+    "gangster comedies",
+    "geniuses",
+    "geniuses battle",
+    "getaway",
+    "getaway driver",
+    "glass",
+    "gritty crime",
+    "halfway through",
+    "halloween",
+    "halloween night",
+    "harry",
+    "heist",
+    "hunter",
+    "hunter hunter",
+    "investigates murder",
+    "italian",
+    "journalists",
+    "journalists uncovering",
+    "keeper",
+    "keeper mystery",
+    "kung",
+    "life staged",
+    "lighthouse",
+    "lighthouse keeper",
+    "losing",
+    "mother",
+    "motives",
+    "mystery",
+    "nonsense",
+    "paranoid",
+    "paranoid conspiracy",
+    "pirates",
+    "plane",
+    "planned",
+    "politics",
+    "potter",
+    "prison",
+    "psychological",
+    "psycological thriler",
+    "rainy sunday",
+    "revenge",
+    "revenge planned",
+    "rich",
+    "rich people",
+    "robot",
+    "robot who",
+    "samurai",
+    "satire",
+    "satire politics",
+    "scams",
+    "sci-fi action",
+    "sci-fi adults",
+    "science fiction",
+    "scifi",
+    "set",
+    "set prison",
+    "slow atmospheric",
+    "small-town cop",
+    "smart sci-fi",
+    "snipers",
+    "space",
+    "spirited",
+    "staged fake",
+    "submarine",
+    "sunday afternoon",
+    "sunglasses night",
+    "teen",
+    "teen moives",
+    "thriller",
+    "thriller arctic",
+    "train",
+    "twist",
+    "uncovering",
+    "uncovering cover",
+    "warm funny",
+    "western",
+    "while cooking",
+    "wits"
+  ],
+  "newEncodes": 0,
+  "bm25": {
+    "queryTextAndIdfAvailable": true,
+    "perTitleSparseVectorsOrPostingsAvailable": false,
+    "termStatisticsOnlyFields": [
+      "n",
+      "terms",
+      "ids",
+      "df"
+    ]
+  },
+  "qualification": "original facets/unit parsing and <=5 token/concrete gate; pure word-frequency adapter matches loadBuild; no scoring/candidate retrieval performed; omission suppression is unproven until a controlled comparison"
+}

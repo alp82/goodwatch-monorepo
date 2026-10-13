@@ -10,6 +10,7 @@ import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { libraryChoiceOf } from "~/domain/my-library"
 import { isEnabled } from "~/server/features.server"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
+import { newOnForLibrary } from "~/server/newly-available.server"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
 import { GuestPage } from "~/ui/my-pages/bits"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -48,7 +49,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		throw new Response("Not found", { status: 404 })
 	if (!userId) return json<Loaded>(null, { headers })
 	const choice = libraryChoiceOf(new URL(request.url).searchParams)
-	const page = await getLibraryPage(userId, choice)
+	const page = await getLibraryPage(
+		userId,
+		choice,
+		0,
+		await newOnForLibrary(request, userId, choice.status),
+	)
 	return json<Loaded>({ page, now: Date.now(), viewer: userId }, { headers })
 }
 

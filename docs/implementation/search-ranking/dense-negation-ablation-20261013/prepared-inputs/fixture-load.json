@@ -1,0 +1,60 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "sha1": "bd269b4138c61c089e7845ef03979e3736433577",
+      "bytes": 1530102
+    },
+    {
+      "method": "GET",
+      "sha1": "0a84c1ef03d965a0fa9de1ec049354e0271030fc",
+      "bytes": 5046424
+    },
+    {
+      "method": "GET",
+      "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+      "bytes": 60395
+    },
+    {
+      "method": "GET",
+      "sha1": "386a01b7102620cd31fcbe1c48be6c5479ff6b63",
+      "bytes": 258119
+    },
+    {
+      "method": "GET",
+      "sha1": "f5f83c283ea6b443fbb344e665e42b078131e578",
+      "bytes": 602396
+    },
+    {
+      "method": "GET",
+      "sha1": "62a175cedb6e9348e7d14525d98e4a0bd920b384",
+      "bytes": 49555130
+    },
+    {
+      "method": "GET",
+      "sha1": "5ad192b47b3605a2de6a8f096a84020f944a032d",
+      "bytes": 1788534
+    },
+    {
+      "method": "GET",
+      "sha1": "fab2359bd468431435335cdc51eaf49145269c12",
+      "bytes": 796795
+    },
+    {
+      "method": "GET",
+      "sha1": "cfc594fbac51fed336fb5e212503b56db6ad27d6",
+      "bytes": 3555880
+    },
+    {
+      "method": "GET",
+      "sha1": "0eaeff1b3b932b8c5facbde99a84ed81e1fbf7c0",
+      "bytes": 886
+    }
+  ],
+  "loadMs": 7672.892515,
+  "networkPolicy": "only owned loopback fixture requests; https and fetch refused",
+  "manifestFileSha256": "b37e2a87af286b9f21388dd70c34ab31f3d1ee54ee0b36c50d0002c8c91771cc",
+  "validationFileSha256": "ee84f7e1777d7b1a9bfb6d0b9aa8933c3190cfe0838e1186e9fa737d22a8b14a",
+  "encoderCacheSha256": "b88e062f32ba9f45b6b192676808cfe8dda910ac4af6971579326d0650747893",
+  "prepareExtractSha256": "6b10421bd285f56b4eb31818f3c1568decf2acd1355d8b70331299b15b0c8a69"
+}

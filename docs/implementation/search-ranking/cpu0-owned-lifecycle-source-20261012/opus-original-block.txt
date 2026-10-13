@@ -1,0 +1,52 @@
+# Verdict: BLOCK
+
+Two blocking findings, both small fixes in the pasted files. The signal targeting, no-kill path, lock ownership and fork closure hold up on reading.
+
+**Provenance:** I am `claude-opus-5-5`; I cannot observe my effort setting, so I can't attest "medium". No tools were used, so no SHA256 (freeze, script, f831) was recomputed. `runtime_cpu0`, `daemon_cpu0`, `cpu0_guards` and `pin_cpu0` were not pasted and are assumed as called.
+
+## Blocking
+
+**B1. A clean stop followed by any later failure discards the clean receipt** (`controller_cpu0.cold`, `turnover_gate_cpu0.stage`).
+- `stopped` lives only in a local variable and is emitted only in success rows (`query-ready` via `cold.cleanStop`, turnover `complete`).
+- If anything fails after `graceful_stop` returns (eviction, headroom, `clone_command`, readiness, shape, `birth_admission`), `phase-failed` carries `lifecycleFailureEvidence: None` and no receipt.
+- The result is NEW stopped with Docker ExitCode 0 and no surviving proof, which your own rule says is not clean-stop proof. Ownership is uncertain exactly where the stop actually succeeded.
+- Fix: emit the receipt as its own row immediately after `graceful_stop` returns in both callers, or attach it to the propagating error and include it in `phase-failed`.
+
+**B2. `lifecycle_cpu0.clean_state` is not shown to accept real Docker `FinishedAt`.**
+- Docker emits nanosecond timestamps (nine fractional digits). `datetime.fromisoformat` only parses that on Python 3.11+; on 3.10 it raises `ValueError`, which becomes `lifecycle_stop_unclean`.
+- That refusal would be deterministic and would happen after SIGTERM was sent, on every real stop.
+- The only fixture (`test_stop_state_rejects_oom_zero_elapsed_or_unclean`) uses whole-second timestamps, and nothing in the freeze pins the `/usr/bin/python3` version.
+- Fix: add a nine-digit positive fixture and an explicit interpreter floor.
+
+## Caveats (non-blocking)
+
+- **Post-signal single-sample races, fail-closed:**
+  - `birth_gone` catches only `FileNotFoundError`. A process reaped between open and read of `/proc/PID/stat` raises `ProcessLookupError`, which escapes `wait_births` and `require_clean_receipt` as `lifecycle_guard_or_runtime_failure`.
+  - `graceful_stop` inspects Docker once, right after the wrapper's `/proc` entry disappears. If dockerd has not yet processed the exit, the row says `running: true` and a real clean stop is recorded as unclean.
+  - Both are low probability but spend the one-shot stop. A re-inspect inside the existing 20 s budget would close the second.
+- **`expected=` is never passed.** `cold` and the turnover gate do not bind the stop to the birth just admitted or to the handoff's `newRunning`; `graceful_stop` re-attests whatever is running under the name. Passing the admission's `target` would close this.
+- **No durable marker after `signalSent: true` failure.** The handoff file is unchanged, so if Qdrant survives the TERM, the next `read_handoff` still passes. The stager must treat any such row as terminal.
+- **`commit_handoff` does not check continuity itself.** It verifies only the prior file's SHA and writes a fresh snapshot; callers must run `read_handoff` first. If the directory `fsync` fails after `os.replace`, the file is replaced but the new SHA is never returned.
+- **Fork-closure attribution in CPU0.md is inaccurate for pin and zero children.** Those use multiprocessing spawn, where `register_at_fork` callbacks do not run; closure there comes from CLOEXEC and exec. The callback is only effective for the f831 plain `os.fork`, which the real test does prove.
+- **The 20 s bound is enforced on evidence, not wall time.** Docker calls before and after the signal are limited only by whatever timeout `runtime.docker` has (not pasted).
+- **First `ZeroChild` is created before the `try`** in the turnover gate. If the scope-exit `require_lock` raises, the child is not reaped by the `finally`; it self-exits on pipe EOF.
+- **Pidfd close failure on the success path** raises a raw `OSError` and drops the receipt; `lifecycle_pidfd_close_failed` is never the emitted reason there.
+- **Consumer ordering:** `query-finished` is emitted before the handoff commit, so it is not phase completion.
+- **Fail-closed environment sensitivities:**
+  - The fdinfo device match in `require_lock` can never match on btrfs.
+  - A missing `/proc/PID/net/tcp6` refuses.
+  - A census taken immediately after the admission HTTP call can see a half-closed socket.
+- **Test coverage gaps:**
+  - `read_handoff`, `pair_snapshot` and the positive path of `require_clean_receipt` have no test.
+  - `graceful_stop` is exercised only with mocks.
+  - `test_handoff_gap_restart_refused` tests only dict equality.
+
+## Checked and sound
+
+- **Signal targeting:** SIGTERM goes only through a pidfd opened before the second full attest and birth recheck. Target names are whitelisted, protected PIDs are refused, and there is no SIGKILL or `docker stop` path; `clone_command` allows only `start` of NEW.
+- **Exit inference:** given the script bytes and a recovery flag that is unset or `false`, wrapper exit 0 implies child exit 0. Wrapper-TERM gives 143 and child-KILL gives 137, matching the fixtures. `childExitStatusObserved: False` is stated honestly.
+- **Failure evidence:** `graceful_stop` preserves the original error, makes no late Docker call, and never promotes a late observation to clean. The cleanup paths in `commit_handoff`, `helper_fork_scope` and preflight annotate rather than mask.
+- **Admission ordering:** `read_handoff` then `birth_admission` runs before the archive read and before any stop, and again after each new birth, in the controller, turnover gate and preflight. The two-member cgroup requirement holds because pin and zero children are proven gone before each attest and commit.
+- **Same-fd lock:** f831 receives the parent's fd, and its child-side `prewrite` never touches the lock fd. Closing the child's copy does not release the flock.
+
+Consumer and external stager remain unreviewed; nothing here indicates benchmark readiness.

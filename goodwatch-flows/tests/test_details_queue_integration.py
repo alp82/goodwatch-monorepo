@@ -5,6 +5,9 @@ Run against a disposable local MongoDB. Each test uses its own temporary databas
 The completeness queue must read never-selected and stale titles through an index
 in popularity order. The previous $or query fetched and sorted every never-selected
 title (175k movies in production), which outgrew the 60 s step timeout.
+
+The refetch cycle must read the titles that are due and no others. A read that walks
+the fetched titles in any order passes every title deleted on TMDB (112k in production).
 """
 
 import os
@@ -23,6 +26,7 @@ from f.imdb_web.models import ImdbMovieRating, ImdbTvRating
 from f.metacritic_web.models import MetacriticMovieRating, MetacriticTvRating
 from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from f.tmdb_api.refetch_cycle import ids_due, titles_due
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 
 URL = os.environ.get("TEST_MONGO_URL")
@@ -154,6 +158,32 @@ class DetailsQueueIntegrationTests(unittest.TestCase):
 
         self.assertEqual(len(entries), BATCH)
         self.assertTrue(all(STALE_ID <= e.tmdb_id % 1_000_000 for e in entries))
+
+    def test_the_refetch_cycle_reads_only_the_titles_that_are_due(self):
+        db = self.client[self.db_name]
+        models = [TmdbMovieDetails, TmdbTvDetails]
+        start = datetime(2026, 10, 14, 6, 0)
+        start_second = int((start - datetime(1970, 1, 1)).total_seconds())
+        titles_due(db, models, BATCH, start)  # the first run starts the cycle
+        due = [ids_due(start_second + offset, 3_000_000)[0] for offset in range(1, 16)]
+        fetched = start - timedelta(days=20)
+        TmdbMovieDetails._get_collection().delete_many({"tmdb_id": {"$in": due}})
+        TmdbMovieDetails._get_collection().insert_many(
+            [{"tmdb_id": tmdb_id, "popularity": 1.0, "selected_at": fetched} for tmdb_id in due[:-1]]
+            + [{"tmdb_id": due[-1], "popularity": 1.0, "selected_at": fetched, "tmdb_deleted": True}]
+        )
+
+        def read():
+            return db.command("serverStatus")["metrics"]["queryExecutor"]
+
+        before = read()
+        entries = titles_due(db, models, BATCH, start + timedelta(seconds=15))
+        after = read()
+
+        seeded = {entry.tmdb_id for entry in entries if isinstance(entry, TmdbMovieDetails)} & set(due)
+        self.assertEqual(seeded, set(due[:-1]))
+        self.assertLess(after["scannedObjects"] - before["scannedObjects"], BATCH)
+        self.assertLess(after["scanned"] - before["scanned"], BATCH * 3)
 
 
 if __name__ == "__main__":

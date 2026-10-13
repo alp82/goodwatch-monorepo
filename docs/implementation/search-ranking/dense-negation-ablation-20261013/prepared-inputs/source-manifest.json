@@ -1,0 +1,65 @@
+{
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "files": [
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/search-index-build.server.ts",
+      "sha256": "ba0e06955370e24bf37ff478d41271b1e937640eeb067575e2fce9e3c7bc91b6",
+      "bytes": 11411
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/references.server.ts",
+      "sha256": "7d6d19e678b017c0d2afc223f9a65398fba6aad32202b2b2bf0a963d56b56754",
+      "bytes": 13135
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/query-parsing.server.ts",
+      "sha256": "d8e3a14d799b72bad35fdfe4367a52ce530003f519aa0c31a5b628a23640b25e",
+      "bytes": 18393
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/text-rules.server.ts",
+      "sha256": "d93d570ce750fd4a5b3312d97255c5589217ffbbf11fb22650d589eb4c508f6c",
+      "bytes": 4468
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/negation-words.json",
+      "sha256": "a1494345f939b0e84eba87c1842d9a972aade69d02339ddd6066b95f2daa54f5",
+      "bytes": 10161
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/rank-search.server.ts",
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+      "bytes": 34479
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/utils/backend-timeout.ts",
+      "sha256": "ff2d659d0d08b11641b2090fca160559f54dd2cb69b009c67b55577e5fe3f561",
+      "bytes": 2725
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/combined-search/reading-retrieval.server.ts",
+      "sha256": "a939d65b2193e4e31f111fec2992da5a2acf04f0dc52ad5eb2e259257d291b3f",
+      "bytes": 28657
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/combined-search/search-filters.ts",
+      "sha256": "062c0508df842f8ab7efdadc935ae636014f04de35f74da09c60db6a6a31e47d",
+      "bytes": 7546
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/search-ranking/search-filter.server.ts",
+      "sha256": "1b4f1b7057663c074454e538659055aeea42fbdcb638883f11ad14c1c7ea392c",
+      "bytes": 4467
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/ui/fingerprint/fingerprintMeta.ts",
+      "sha256": "811beb6f3f7680e173de9d3185ee44dbe8f076e219b0e57716f1c3bf8226fdcd",
+      "bytes": 10034
+    },
+    {
+      "gitPath": "goodwatch-webapp/app/server/utils/fingerprint.ts",
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7",
+      "bytes": 11309
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+import {execFileSync} from 'node:child_process';import {writeFileSync,chmodSync} from 'node:fs';import {createHash} from 'node:crypto';
+const commit='927d38b2cca815f02a0b1636ec06f63c24603396',base='goodwatch-webapp/app/server/search-ranking/';
+const rank=execFileSync('git',['show',commit+':'+base+'rank-search.server.ts'],{cwd:'/home/alper/projects/goodwatch-monorepo',encoding:'utf8'});
+const pure=execFileSync('git',['show',commit+':'+base+'ranking.server.ts'],{cwd:'/home/alper/projects/goodwatch-monorepo',encoding:'utf8'});
+const q=rank.slice(rank.indexOf('function quantizedCosines('),rank.indexOf('\nconst toMap ='));
+const m=pure.slice(pure.indexOf('export function meanSd('),pure.indexOf('/** Missing values'));
+const t=pure.slice(pure.indexOf('export function topIds('),pure.indexOf('/** The L2-normalized'));
+if(!q.startsWith('function quantizedCosines')||!m.startsWith('export function meanSd')||!t.startsWith('export function topIds'))throw Error('source-extraction-failed');
+const ts=q+'\n'+m+'\n'+t+'\nexport {quantizedCosines};';const js=new Bun.Transpiler({loader:'ts',target:'node'}).transformSync(ts);
+const dir='/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/';writeFileSync(dir+'actual-primitives.mjs',js);chmodSync(dir+'actual-primitives.mjs',0o600);writeFileSync(dir+'source-provenance.json',JSON.stringify({commit,functionNames:['quantizedCosines','meanSd','topIds'],sourceSha256:createHash('sha256').update(ts).digest('hex'),compiledSha256:createHash('sha256').update(js).digest('hex'),transform:'Bun TypeScript type erasure only; no application imports'},null,2)+'\n');chmodSync(dir+'source-provenance.json',0o600);

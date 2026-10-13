@@ -1,0 +1,37 @@
+{
+  "schema": "root-local-source-review.v1",
+  "sourceCommit": "c408bb4e04329cecbdd8c3ef8c45a89299ed83f6",
+  "sourceFreezeSha256": "f11432866ed1623765950a43f02c24e97070f1b943b45f6b13a519f355aa1521",
+  "reviewed": [
+    "full original reader and auditor source and prior successor differences",
+    "complete 9d099487-to-c408bb4e source/test/documentation/provenance differences",
+    "complete actual Opus c408bb4e source-only PASS report"
+  ],
+  "frozenBindingsVerified": 13,
+  "sha256AndBytesVerified": true,
+  "originalAuditorAndTestsVerified": true,
+  "independentTests": {
+    "count": 60,
+    "seconds": 0.129,
+    "outcome": "PASS",
+    "scope": "local source fixtures; run in preceding confirmed progress"
+  },
+  "actualOpusReview": {
+    "verdict": "PASS source-only",
+    "reportSha256": "9c0eda51ee85b4a2db3d8f66615ba641d03f02ccb43b1bbb79dc2a89898b6c4c",
+    "configuredModel": "claude-opus-5-5",
+    "configuredEffort": "medium",
+    "outputFormat": "text",
+    "cliExitCode": 0,
+    "observedModelUsage": null,
+    "durationMs": null,
+    "previousReviewPathFallback": "reviewer read exact in-tree BLOCK copy after supplied path was missing"
+  },
+  "hostOperations": 0,
+  "executionAuthorized": false,
+  "publicationAuthorized": true,
+  "capacityPermission": false,
+  "idleAdmission": false,
+  "productionAcceptance": false,
+  "futureCeilingEstablished": false
+}

@@ -24,6 +24,7 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/20/solid";
 import { Highlight, type Row } from "./search-model";
+import { foundSoFar, selectReading, showsNoResults } from "./search-partial";
 import {
 	SEARCH_PAGE_UNAVAILABLE,
 	offerRetry,
@@ -132,9 +133,10 @@ function useController() {
 	const [provisional, setProvisional] = useState<{ key: string; batch: Batch } | null>(null);
 	const requestGeneration = useRef(0);
 	const liveSearch = useRef("");
-	// The interpretation arrives before the results, so it is kept apart from the batch.
+	// The interpretation arrives before the results, so it is kept apart from the batch, under the batch key of the
+	// search it was streamed for: the same query with other filters is another search.
 	const [reading, setReading] = useState<{
-		q: string;
+		key: string;
 		chips: ReadingChip[];
 	} | null>(null);
 	const [revision, setRevision] = useState(0);
@@ -317,7 +319,7 @@ function useController() {
 				},
 				signal,
 				onReading: (chips) => {
-					if (current()) setReading({ q: requested, chips });
+					if (current()) setReading({ key: batchKey, chips });
 				},
 				onProgress: (batch) => {
 					if (current()) setProvisional({
@@ -440,15 +442,20 @@ function useController() {
 		});
 	};
 	const candidates = dedupe(batch);
-	// Chips describe the current request only: the streamed reading while its results
-	// are on their way, then the reading stored with the batch. Batches saved before
-	// readings existed have none.
+	// Chips describe the current request only, filters and allTitles included: the streamed
+	// reading while its results are on their way, then the reading stored with the batch.
+	// Batches saved before readings existed have none. A partial list sent ahead of the
+	// ranking has no reading of its own, so the streamed one stays. A batch of this query
+	// that is only narrowed locally shows no reading: it was read for another request.
+	const pendingRanking = Boolean(partial?.pendingRanking) && batch === partial;
 	const chips: ReadingChip[] =
-		batch?.q === q
-			? (batch.reading ?? [])
-			: reading?.q === q
-				? reading.chips
-				: [];
+		selectReading(
+			batchKey,
+			batch
+				? { key: batch.cacheKey, reading: batch.reading, pendingRanking }
+				: null,
+			reading,
+		) ?? [];
 	const watch = useQuery<{
 		results: { key: string; result: { state: string } }[];
 	}>({
@@ -569,10 +576,20 @@ function useController() {
 	const pendingTitleLookup = Boolean(partial);
 	// The search failed after its partial list arrived, and nothing is on its way.
 	const lateFailure = pendingTitleLookup && !loading && Boolean(search.error);
-	const status = pendingTitleLookup
+	// A partial list can name people without a title row yet: the count says so, with the people shown above the titles.
+	const partialPeople =
+		partial && batch === partial ? (partial.people?.length ?? 0) : 0;
+	const soFar = foundSoFar(rows.length, partialPeople);
+	// The people stay on screen when the search fails after them, so the empty list does not say it found nothing.
+	const noResults = showsNoResults(rows.length, Boolean(loading), partialPeople);
+	const status = pendingRanking
 		? lateFailure
-			? `Title matches could not finish. Showing the ${rows.length} results found so far.`
-			: `Still checking title matches. ${rows.length} results so far.`
+			? `The search could not finish. Showing the ${soFar} found so far.`
+			: `Still ranking${partial?.pendingTitleLookup ? " and checking title matches" : " results"}. ${soFar} so far.`
+		: pendingTitleLookup
+		? lateFailure
+			? `Title matches could not finish. Showing the ${soFar} found so far.`
+			: `Still checking title matches. ${soFar} so far.`
 		: loading
 		? refining && draft === q && batch?.q === q
 			? `Refining results for “${q}”… ${rows.length} matching so far.`
@@ -614,6 +631,7 @@ function useController() {
 		loading,
 		status,
 		lateFailure,
+		noResults,
 		chips,
 		watch,
 		mode,
@@ -961,7 +979,7 @@ function JourneyList() {
 					</div>
 				</nav>
 			)}
-			{!j.rows.length && !j.loading && (
+			{j.noResults && (
 				<div className="py-6 text-gray-400">
 					{j.batch
 						? j.filtersActive

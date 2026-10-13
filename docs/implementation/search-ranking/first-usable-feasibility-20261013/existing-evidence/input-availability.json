@@ -1,0 +1,78 @@
+{
+  "corpusCanCurrentlyBePairedWithBoundLocalTitleVectors": false,
+  "corpusCanCurrentlyBePairedWithCachedQueryEncodings": false,
+  "existingPublicReadings": {
+    "archiveCommit": "965bfb99c795e8eb602746d69fd53e97ca36cd3b",
+    "captureCount": 168,
+    "capturesPath": "docs/prototypes/search-arena/data/captures",
+    "finalListsAtLeast20": 168,
+    "snapshotBuildParityCurrentProven": false,
+    "storedRawReadings": 168
+  },
+  "hostsContacted": 0,
+  "localQueryModelFilesFound": false,
+  "missingExpectedFiles": [
+    "data/catalog.pkl",
+    "data/catalog.jsonl.gz",
+    "data/emb-ids.json",
+    "data/emb-bge-base-en-v1.5-notitle.npy",
+    "data/emb-multilingual-e5-small.npy",
+    "data/query-emb-bge-base-en-v1.5.json",
+    "data/query-emb-multilingual-e5-small.json",
+    "results/bench/trace/trace.jsonl",
+    "results/bench/trace/vectors.json",
+    "title_table blob",
+    "mix_vectors blob"
+  ],
+  "missingFileMetadata": {
+    "buildBinding": null,
+    "mtime": null,
+    "size": null
+  },
+  "modelCalls": 0,
+  "networkRequests": 0,
+  "observationsOnly": true,
+  "qualification": "Stored historical D4 returned-row scores enable limited truncated-pool comparisons only, not modern full-index provisional ranking. No retrieval, implementation, new encoding or quality/PASS prediction performed.",
+  "schema": "description-provisional-local-input-availability.v1",
+  "scope": "Filename/metadata search across /home/alper/projects including ignored files; targeted /home/alper/.cache filename search. Public source and archive Git objects only. No secrets/private history read.",
+  "smallestPublishedIndexRetrieval": {
+    "countOnly": "GET title_table blob only; gunzip and inspect point_ids count and aligned columns.",
+    "denseShortlistInputs": "GET title_table and mix_vectors, only those two of10 published blobs; SHA1 checks on gzipped bytes, bounded bytes from manifest, decode int8 matrix+float32 per-dimension scales and require exact point_id order equality.",
+    "fingerprintBlocker": "Published index contains peer centroids, not per-title raw/normalized fingerprint arrays. fp+dense ablation needs separately existing catalog/Qdrant candidate signal artifact; those were not located.",
+    "first": "One SELECT manifest FROM search_index_builds WHERE build_id = ? against explicit reviewed build (current pointer only if captured/frozen once); bind raw manifest bytes/SHA/build_id and file SHA1/bytes.",
+    "historicalFirstBuildSizeEstimate": {
+      "actualCurrentSizesProven": false,
+      "mixVectorsGzipApproxMB": 58,
+      "titleTableGzipApproxMB": 1.6
+    },
+    "historicalTotalAll10Bytes": 63078980,
+    "historicalTotalBuild": "20261011T041503Z",
+    "negationAndCuts": "Additionally GET negation_labels for actual label penalty, alternate_cuts for actual cut folding; word_frequencies/collocations if faithfully reproducing preparation text rules. Needed exact set depends reviewed offline ablation scope.",
+    "performed": false,
+    "readOnlyAuthority": "Existing app loader uses POST /_sql with SELECT-only manifest read and GET blob reads; documented validated from webapp host in #142. This is a retrieval proposal, not authorization or an executed request.",
+    "remainingBlocker": "No per-corpus query encodings in published index. intent_examples contains fixed39 intent vectors, not168 corpus vectors. Under no-model/no-network rule retrieval alone cannot complete cosine evaluation.",
+    "urlTemplate": "GET /_blobs/search_index_files/<manifest sha1> on existing Crate HTTP endpoint; loader follows bounded redirects and authenticates, never print credentials."
+  },
+  "sourceBindings": {
+    "/home/alper/projects/goodwatch-cpu0-running-adoption-failure-evidence-100/docs/implementation/search-ranking/README.md": {
+      "bytes": 93907,
+      "mtimeNs": "1791844760502857691",
+      "sha256": "1707d02b85afd69444aa79d7514f8fb2f86e68b045a45ae3fea1320f8d18cc09"
+    },
+    "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/harness/catalog.py": {
+      "bytes": 8278,
+      "mtimeNs": "1790624460595333529",
+      "sha256": "b6fff4d450075cfb3b912a30bc6ddd7cd0cf46d9134145884f541da540cf8590"
+    },
+    "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/harness/qemb.py": {
+      "bytes": 1724,
+      "mtimeNs": "1790624460595333529",
+      "sha256": "4a08e3e7a3d47452bfce272596233664ee8fa46e61ad7ed30654e490c164437a"
+    },
+    "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/app/server/search-ranking/search-index-build.server.ts": {
+      "bytes": 11411,
+      "mtimeNs": "1791405484149277243",
+      "sha256": "ba0e06955370e24bf37ff478d41271b1e937640eeb067575e2fce9e3c7bc91b6"
+    }
+  }
+}

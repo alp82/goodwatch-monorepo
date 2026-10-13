@@ -1,0 +1,93 @@
+{
+  "createdConfigProofInputSha256": "27b99d3853e0048c38ce84cda33fabd7ca4e270c23e21b84f1cc8279c4df1edd",
+  "files": {
+    "amendment.diff": {
+      "bytes": 79541,
+      "sha256": "b83a3079a8e860bd462340af3148ab8ac8dddae4a4f51ca0a11567f894fe5c62"
+    },
+    "design-DESIGN-v2.md": {
+      "bytes": 12643,
+      "sha256": "36231574f3b8fe54ed46a3aecf5e430c116244eadce0c42bc0a0e3fae2f229a0"
+    },
+    "design-DESIGN.md": {
+      "bytes": 8448,
+      "sha256": "e550211a29e3378807c0ae8d022254675e2a2e63e06fbdda471700eda15bb2ec"
+    },
+    "design-opus-report.json": {
+      "bytes": 7901,
+      "sha256": "f2caddcdb06e25458a432a34377d316d2a0d30c8520dbf967d1babe60b1afd56"
+    },
+    "design-opus-report.txt": {
+      "bytes": 5988,
+      "sha256": "0f22efb4e8c51ec5c5dfc7d3215d921e6dc4ece236c5068a8c99c96726eb8e54"
+    },
+    "design-prompt.txt": {
+      "bytes": 2026,
+      "sha256": "76f95de7677631dd38973a31643f38709235d6525cf654d41522d387caee8ce6"
+    },
+    "design-root-design-v2-acceptance.json": {
+      "bytes": 1652,
+      "sha256": "20f1d4bc36442237762e1331fcdf4117cbe33bd95bd552bb93b01275d2bf9b88"
+    },
+    "local-execution-closure.json": {
+      "bytes": 1368,
+      "sha256": "bfad2fde72fdcf5778cca56ca6812e4f846e2db6afb6644a134542ddc5d5b66e"
+    },
+    "manifest.json": {
+      "bytes": 4248,
+      "sha256": "176acd122eddefdc83328fc840f0f0f63636b0d8a8af9aaab3ea563a60816124"
+    },
+    "opus-provenance.json": {
+      "bytes": 1706,
+      "sha256": "a259edd5f0116947d8c29572dfd4bc4d4c8bf203daeb771f02a2a06d19ecab69"
+    },
+    "opus-report.json": {
+      "bytes": 11941,
+      "sha256": "e7e9b6938562dd0c7e47d00f07af32ae3c7c96a36df8168ba9bc3897367fb3a0"
+    },
+    "opus-report.txt": {
+      "bytes": 10000,
+      "sha256": "491578fc22baca0a767b584c848d4ab87fde5ffb9c81fd744b92f9f6f1e361a0"
+    },
+    "prompt.txt": {
+      "bytes": 3960,
+      "sha256": "195e021df97d2cc050e300a1e1db95532739eeb03d585aef107cf1823153962c"
+    },
+    "root-additional-negative-cases.py": {
+      "bytes": 3757,
+      "sha256": "60fcb461c5f93797061b57e5f8cba5e7730f7f260ce2aea47eae4e1271464793"
+    },
+    "root-dependency-manifest.json": {
+      "bytes": 3721,
+      "sha256": "ff2d94f6e872b0bb1b8fa08c03f05be910cdc664cd05a1cd541ebe75b9b04cad"
+    },
+    "root-readonly-hash-encoding-public.json": {
+      "bytes": 1261,
+      "sha256": "7a05f9f59de8dbd1fa56554a807c17285106f944057df7a47632f2c3e3ae0a11"
+    },
+    "root-readonly-hash-encoding-remote.py": {
+      "bytes": 2160,
+      "sha256": "f61c270bf0355633081078545b5fb06bf0bd7fd1121a281d5ca2b738fddbdf76"
+    },
+    "root-real-packet-authentication.json": {
+      "bytes": 379,
+      "sha256": "7471a2eff3524ce7a1b5ca879608c053b77aa97ee00922738b87189afd07a693"
+    },
+    "root-source-acceptance.json": {
+      "bytes": 5568,
+      "sha256": "886674a85da4b454a7d06d9c68e52e7127a50a48450986165bfd519b6c7e2e5b"
+    },
+    "root-source-manifest.json": {
+      "bytes": 4175,
+      "sha256": "d9eca8619de7b21d0d8738f4f95133e39f7f88042d598ab1488758f0f9229d98"
+    }
+  },
+  "hostOperations": 0,
+  "originalProofInputSha256": "ad0b490d3d39d2259d86290d4883038a33461e85fe00f1842761fb214d39a84c",
+  "productionAcceptance": false,
+  "recoveryInvocationExecuted": false,
+  "schema": "cpu0-never-started-recovery-publication-evidence.v1",
+  "separateRootReadonlyMetadataObserved": true,
+  "sourceHead": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996",
+  "status": "accepted-source-preparation-pending-publication-review-and-merge"
+}

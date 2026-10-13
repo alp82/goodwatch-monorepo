@@ -10,8 +10,9 @@
 // The member `new` (#442) opened My shows five days ago: shows have returned since and others are waiting. The site's
 // header, dock and hub are mounted a second time for the member, over the ones a guest sees, so that the signal on
 // them can be looked at; `hub=open` starts with the hub open.
-// `landed=movie|show|several` (#456) puts titles of the member's Wishlist on their services a day ago, for any member:
-// the signal then counts them too, and My movies and My shows say so on arrival.
+// `landed=movie|show|several|episode|old|gone` (#456, #489) puts titles of the member on their services, 1 to 15 days
+// ago, for any member: the signal counts them until the page is opened, and for 14 days My movies and My shows list
+// and mark them and home's doors lead with them (ui/prototype-my-library/setup.ts).
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import {
 	type LinksFunction,
@@ -34,8 +35,7 @@ import {
 } from "react"
 import { libraryChoiceOf } from "~/domain/my-library"
 import type { Arrival } from "~/domain/new-episodes"
-import { lineOf } from "~/domain/newly-available"
-import type { LandedLine } from "~/domain/newly-available-signal"
+import type { LandedTitle } from "~/domain/newly-available-words"
 import type { LibraryPage } from "~/server/my-library.server"
 import type { MyShows } from "~/server/my-shows.server"
 import {
@@ -91,13 +91,13 @@ type Loaded =
 			now: number
 			shows: MyShows
 			arrival: Arrival
-			landed: LandedLine | null
+			landed: LandedTitle[]
 	  }
 	| {
 			page: "movies"
 			now: number
 			movies: { query: string; data: WatchNext }
-			landed: LandedLine | null
+			landed: LandedTitle[]
 	  }
 	| { page: "home"; now: number; room: LivingRoomData }
 
@@ -121,7 +121,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		const [shows, fresh, landed] = await Promise.all([
 			harness.shows(now),
 			harness.newShows(now),
-			harness.landed(),
+			harness.recent(now),
 		])
 		return json<Loaded>({
 			page,
@@ -131,7 +131,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				since: fresh.since,
 				titles: fresh.shows.map((show) => show.title),
 			},
-			landed: lineOf(landed.shows),
+			landed: landed.shows,
 		})
 	}
 	if (page === "movies") {
@@ -140,7 +140,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			page,
 			now,
 			movies: { query: apiQuery(choice), data: await harness.movies(choice) },
-			landed: lineOf((await harness.landed()).movies),
+			landed: (await harness.recent(now)).movies,
 		})
 	}
 	return json<Loaded>({

@@ -1,0 +1,377 @@
+--- v1/consumer_cpu0.mjs
++++ v2/consumer_cpu0.mjs
+@@ -1,12 +1,12 @@
+ // CPU0 owned-lifecycle consumer. Private packets stay in memory; no canonical controller adapter.
+ import readline from 'node:readline';
+ import {spawn} from 'node:child_process';
+-import {readFileSync,realpathSync,openSync,closeSync,fstatSync,readdirSync,constants} from 'node:fs';
++import {readFileSync,realpathSync,openSync,closeSync,fstatSync,readdirSync,readSync,statSync,constants} from 'node:fs';
+ import crypto from 'node:crypto';
+ import {fileURLToPath} from 'node:url';
+ import {orderedIds,orderedIdsScores,idSets,idScoreSets,signal} from './parity.mjs';
+ import {ContractFailure} from './compare-contract.mjs';
+-import {VARIANT,CPU0_SOURCE_FILES,verifyCpu0Freeze,recordedHandoff,readinessEvidence,phaseEvidence,pairedEvidence,failureEvidence,preflightEvidence,verifyExternalPacket,FULL_NAMES} from './compare-contract-cpu0.mjs';
++import {VARIANT,CPU0_SOURCE_FILES,verifyCpu0Freeze,recordedHandoff,readinessEvidence,phaseEvidence,pairedEvidence,failureEvidence,preflightEvidence,validateAdmissionFrame,verifyExternalPacket,FULL_NAMES} from './compare-contract-cpu0.mjs';
+ import {createDirectClient} from './transport_cpu0.mjs';
+ export const ROOT='/root/goodwatch-qdrant-cold-406-20261011';
+ export const STAGE=ROOT+'/pin-control-20261012-100-cpu0-v1';
+@@ -72,7 +72,7 @@
+   const frame=JSON.parse(line);frames.push(frame);
+   if(frame.stage==='failed'||frame.stage==='phase-failed'){protocolError=Error('cpu0_control_phase_failed');readyReject(protocolError);continue;}
+   if(frame.stage==='query-ready'){readinessEvidence(frames,phase,expected,priorHandoff,{requireRed:packet.tag==='control-native-title'});readyResolve();}
+- }}catch{protocolError=Error('cpu0_control_frame_failed');readyReject(protocolError);terminate()}})();
++ }}catch(error){protocolError=error instanceof ContractFailure?error:Error('cpu0_control_frame_failed');readyReject(protocolError);terminate()}})();
+  try{
+   await ready;clearTimeout(timer);if(protocolError)throw protocolError;operation='query';
+   batch=await queryBatch(packet.collection,packet.queries,{timeoutMs:30000});
+@@ -82,7 +82,7 @@
+   const exit=await within(closed,budgets.cleanup);if(exit===null)throw Error('cpu0_control_cleanup_timeout');
+   await reader;if(protocolError)throw protocolError;operation='contract';
+   const metrics=phaseEvidence(frames,exit.code,phase,expected,batch,{requireRed:packet.tag==='control-native-title',priorHandoffSha256:priorHandoff.sha256,priorHandoff});
+-  return {metrics,frames,controllerExit:{code:exit.code,signal:exit.signal,observed:closeObserved},handoff:frames[4].handoff,hashes:{resultIdHash:orderedIds(batch.results),resultIdScoreHash:orderedIdsScores(batch.results),resultSetHash:idSets(batch.results),resultScoreSetHash:idScoreSets(batch.results)},counts:batch.results.map(row=>row.length)};
++  return {metrics,frames,queryTransport:{socketClosed:batch.socketClosed},controllerExit:{code:exit.code,signal:exit.signal,observed:closeObserved},handoff:frames[4].handoff,hashes:{resultIdHash:orderedIds(batch.results),resultIdScoreHash:orderedIdsScores(batch.results),resultSetHash:idSets(batch.results),resultScoreSetHash:idScoreSets(batch.results)},counts:batch.results.map(row=>row.length)};
+  }catch(error){
+   terminate();let exit=await within(closed,budgets.cleanup);if(exit===null){child.kill('SIGKILL');exit=await within(closed,budgets.reaped)}
+   if(closeObserved)await reader;
+@@ -99,9 +99,22 @@
+  const closed=new Promise(resolve=>{child.on('error',()=>resolve({code:null,signal:null}));child.on('close',(code,signal)=>resolve({code,signal}));});
+  let exit=await within(closed,budgets.operation);
+  if(exit===null){child.kill('SIGTERM');exit=await within(closed,budgets.cleanup);if(exit===null){child.kill('SIGKILL');exit=await within(closed,budgets.reaped);}}
+- if(!exit||exit.code!==0||invalid)throw Error('cpu0_preflight_refused');
+- let value;try{const lines=raw.trim().split('\n');if(lines.length!==1)throw Error();value=JSON.parse(lines[0]);}catch{throw Error('cpu0_preflight_invalid');}
++ let value;try{const lines=raw.trim().split('\n');if(lines.length!==1||invalid)throw Error();value=JSON.parse(lines[0]);}catch{const error=Error('cpu0_preflight_invalid');error.publicEvidence={...publicFailure(error,'preflight'),exitObserved:exit!==null,controllerExitCode:exit?.code??null,controllerExitSignal:exit?.signal??null,evidenceUnavailable:true};throw error;}
++ if(!exit||exit.code!==0){const error=Error('cpu0_preflight_refused');error.publicEvidence={...publicFailure(error,'preflight'),exitObserved:exit!==null,controllerExitCode:exit?.code??null,controllerExitSignal:exit?.signal??null,failureEvidence:failureEvidence([value]),handoffAccepted:false};throw error;}
++
+  return preflightEvidence(value,prior);
++}
++
++export function baselineRow(packet,baseline){return {kind:'baseline-batch',variant:VARIANT,tag:packet.tag,lesserKnown:packet.lesserKnown,indexBuildId:packet.indexBuildId,queryCount:packet.queries.length,signals:packet.queries.map(signal),baseline:baseline.metrics,baselineControlEvidence:baseline.frames,baselineControllerExit:baseline.controllerExit,baselineTransport:baseline.queryTransport,baselineHashes:baseline.hashes,resultCounts:baseline.counts,productionAcceptance:false};}
++export function pairedRow(packet,baseline,candidate,parity){return {...baselineRow(packet,baseline),kind:'paired-batch',candidate:candidate.metrics,...parity,candidateControlEvidence:candidate.frames,candidateControllerExit:candidate.controllerExit,candidateTransport:candidate.queryTransport,candidateHashes:candidate.hashes};}
++function procBytes(path,limit){const fd=openSync(path,constants.O_RDONLY);try{const bytes=Buffer.alloc(limit+1);const n=readSync(fd,bytes,0,bytes.length,0);if(n>limit)throw Error('cpu0_consumer_birth_invalid');return bytes.subarray(0,n);}finally{closeSync(fd);}}
++function procStat(path){const raw=procBytes(path,8192).toString();const fields=raw.slice(raw.lastIndexOf(')')+2).trim().split(/\s+/);const ticks=Number(fields[19]),parentPid=Number(fields[1]);if(!Number.isSafeInteger(ticks)||ticks<=0||!Number.isSafeInteger(parentPid)||parentPid<=0)throw Error('cpu0_consumer_birth_invalid');return{startTicks:ticks,parentPid};}
++function procGroup(bytes){const rows=bytes.toString().trim().split('\n');if(rows.length!==1||!rows[0].startsWith('0::/'))throw Error('cpu0_consumer_birth_invalid');const group=rows[0].slice(3);if(group.split('/').some(x=>['.','..'].includes(x))||group.includes('//')||(group!=='/'&&group.endsWith('/'))||/[\x00-\x1f]/.test(group))throw Error('cpu0_consumer_birth_invalid');return group;}
++export function consumerBirth(target,{procRoot='/proc',pid=process.pid}={}){
++ const own=procRoot+'/'+pid,source=procRoot+'/'+target.qdrant.pid;const first=procStat(own+'/stat'),sourceFirst=procStat(source+'/stat');const ownGroup=procBytes(own+'/cgroup',8192),sourceGroup=procBytes(source+'/cgroup',8192);const ownPath=procGroup(ownGroup),sourcePath=procGroup(sourceGroup);
++ const exe=statSync(own+'/exe'),sourceExe=statSync(source+'/exe');const exeHash=info=>digest(Buffer.from(JSON.stringify([info.dev,info.ino,info.size])));const status=procBytes(own+'/status',65536).toString();const rows=status.split('\n').filter(row=>row.startsWith('VmLck:'));const vm=rows.length===1&&/^VmLck:\s+0\s+kB$/.test(rows[0]);
++ const final=procStat(own+'/stat'),sourceFinal=procStat(source+'/stat');if(!vm||exeHash(exe)!==exeHash(statSync(own+'/exe'))||exeHash(sourceExe)!==target.qdrant.exeIdentityHash||exeHash(sourceExe)!==exeHash(statSync(source+'/exe'))||sourceFirst.startTicks!==target.qdrant.startTicks||sourceFinal.startTicks!==sourceFirst.startTicks||digest(sourceGroup)!==target.qdrant.groupHash||!sourceGroup.equals(procBytes(source+'/cgroup',8192))||!ownGroup.equals(procBytes(own+'/cgroup',8192))||JSON.stringify(first)!==JSON.stringify(final)||ownPath===sourcePath||ownPath.startsWith(sourcePath+'/'))throw Error('cpu0_consumer_birth_invalid');
++ return {pid,startTicks:first.startTicks,parentPid:first.parentPid,exeIdentityHash:exeHash(exe),groupHash:digest(ownGroup),VmLckBytes:0,outsideSourceCgroup:true};
+ }
+ 
+ export async function main(){
+@@ -115,17 +128,17 @@
+  const closure=verifyExternalPacket(privateRead(STAGE+'/cpu0-external-manifest.json',32768,0o600),values['--external-manifest-sha256'],name=>privateRead(STAGE+'/'+name,1024**2,0o600));
+  if(closure.externalManifest.sourceFreezeSha256!==values['--cpu0-source-freeze-sha256'])throw Error('cpu0_source_manifest_changed');
+  const receiptBytes=privateRead(ROOT+'/cpu0-lifecycle-handoff-v1.json',32768,0o600);let prior={...JSON.parse(receiptBytes),sha256:digest(receiptBytes)};recordedHandoff(prior,values['--handoff-sha256']);
+- const admission=await runEntryPreflight(closure.expected,prior);prior=admission.handoff;emit({kind:'consumer-admission',variant:VARIANT,...admission,sourceFreezeSha256:values['--cpu0-source-freeze-sha256'],externalManifestSha256:values['--external-manifest-sha256'],productionAcceptance:false});
++ const admission=await runEntryPreflight(closure.expected,prior);const admissionFrame={kind:'consumer-admission',variant:VARIANT,...admission,consumerBirth:consumerBirth(admission.birthAdmission.target),sourceFreezeSha256:values['--cpu0-source-freeze-sha256'],externalManifestSha256:values['--external-manifest-sha256'],productionAcceptance:false};validateAdmissionFrame(admissionFrame,prior,{sourceFreezeSha256:values['--cpu0-source-freeze-sha256'],externalManifestSha256:values['--external-manifest-sha256']});prior=admission.handoff;emit(admissionFrame);
+  const packets=await packetsFrom(process.stdin);requireV4PacketSet(packets);packets.sort((a,b)=>(a.tag==='control-native-title'?0:1)-(b.tag==='control-native-title'?0:1));
+  const paths={code:STAGE+'/controller_cpu0.py',config:STAGE+'/controller-config.json'};let nativePassed=false,pairs=0;
+  for(const packet of packets){
+   if(packet.kind==='private-excluded'){emit({kind:'excluded',variant:VARIANT,tag:packet.tag,reason:'private_source_or_coverage_unavailable',productionAcceptance:false});continue;}
+   if(packet.indexBuildId!=='20261011T041503Z'||(packet.tag!=='control-native-title'&&!nativePassed))throw Error('cpu0_private_packet_scope_invalid');
+   const run=async phase=>{const client=createDirectClient();const result=await controlledBatch(packet,phase,closure.expected,paths,prior,client.queryBatch.bind(client),{raiseOwnNofile});if(client.openSockets!==0)throw Error('cpu0_client_retained');prior=result.handoff;return result;};
+-  const baseline=await run('baseline');emit({kind:'baseline-batch',variant:VARIANT,tag:packet.tag,lesserKnown:packet.lesserKnown,indexBuildId:packet.indexBuildId,queryCount:packet.queries.length,signals:packet.queries.map(signal),baseline:baseline.metrics,baselineControlEvidence:baseline.frames,baselineControllerExit:baseline.controllerExit,baselineHashes:baseline.hashes,resultCounts:baseline.counts,productionAcceptance:false});
++  const baseline=await run('baseline');emit(baselineRow(packet,baseline));
+   const candidate=await run('candidate');const parity=pairedEvidence(baseline.metrics,candidate.metrics,baseline.hashes,candidate.hashes);pairs++;if(packet.tag==='control-native-title')nativePassed=true;
+-  emit({kind:'paired-batch',variant:VARIANT,tag:packet.tag,lesserKnown:packet.lesserKnown,indexBuildId:packet.indexBuildId,queryCount:packet.queries.length,signals:packet.queries.map(signal),baseline:baseline.metrics,candidate:candidate.metrics,...parity,baselineControlEvidence:baseline.frames,candidateControlEvidence:candidate.frames,candidateControllerExit:candidate.controllerExit,baselineHashes:baseline.hashes,candidateHashes:candidate.hashes,resultCounts:baseline.counts,productionAcceptance:false});
++  emit(pairedRow(packet,baseline,candidate,parity));
+  }
+  emit({kind:'complete',variant:VARIANT,pairs,initialHandoffSha256:values['--handoff-sha256'],finalHandoffSha256:prior.sha256,sourceFreezeSha256:values['--cpu0-source-freeze-sha256'],externalManifestSha256:values['--external-manifest-sha256'],productionAcceptance:false});
+ }
+-if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1])main().catch(error=>{process.stdout.write(JSON.stringify({kind:'failed',...(error.publicEvidence||publicFailure(error))})+'\n');process.exitCode=1});
++if(process.argv[1]&&fileURLToPath(import.meta.url)===realpathSync(process.argv[1]))main().catch(error=>{process.stdout.write(JSON.stringify({kind:'failed',...(error.publicEvidence||publicFailure(error))})+'\n');process.exitCode=1});
+--- v1/compare-contract-cpu0.mjs
++++ v2/compare-contract-cpu0.mjs
+@@ -3,6 +3,8 @@
+ // CPU0 lifecycle evidence validation. No source inspection, query or control.
+ import crypto from 'node:crypto';
+ export const VARIANT='cpu0-owned-lifecycle.v1';
++// Exact scalar enum exported from frozen backend58d CONTROL_REASONS; no backend imports.
++export const CONTROL_REASONS=new Set(["action_not_in_frozen_policy", "actual_qdrant_comm_changed", "actual_qdrant_pid_ambiguous", "ancestor_cpu_quota_present", "ancestor_cpu_throttled", "ancestor_limits_changed", "archive_checksum_or_identity_changed", "archive_fd_path_identity", "archive_identity_failed", "archive_path_changed_before_advice", "archive_path_scope", "archive_scope", "archive_store_inode_alias", "archive_verification_bound", "archive_verification_failed", "cache_preparation_freeze_changed", "cache_preparation_policy_changed", "candidate_cohort_changed", "clone_control_command_failed", "clone_identity_ambiguous", "clone_identity_changed", "clone_loopback_changed", "clone_mount_changed", "clone_not_stopped", "clone_ownership_changed", "clone_pressure_window_required", "clone_readiness_failed", "clone_resource_or_port_changed", "cold_collection_shape_changed", "cold_eviction_not_complete", "cold_inode_changed", "cold_start_headroom", "control_freeze_changed", "controller_cgroup_missing", "controller_interrupted", "controller_pressure_already_in_clone_cgroup", "counter_pid_reused", "counter_reset", "counter_source_changed", "cpu_ancestor_changed", "cpu_isolation_changed", "cpu_metric_invalid", "cpu_metric_missing", "cpu_phase_source_unavailable", "cpu_policy_required", "dirty_source_pages", "docker_inspection_failed", "duplicate_target_inode", "emergency_headroom_release", "expected_pin_class_coverage_missing", "explicit_actions_required", "explicit_cache_preparation_required", "explicit_cap_and_mapping_reserves_required", "explicit_control_arguments_required", "explicit_control_policy_required", "explicit_frozen_config_required", "explicit_measure_selection_required", "explicit_own_memlock_raise_required", "explicit_own_nofile_raise_required", "explicit_policy_required", "explicit_pressure_floor_required", "explicit_source_required", "extent_inventory_bound_exceeded", "extent_ranges_changed_during_locking", "extent_semantics_invalid", "extent_semantics_unavailable", "fixed_clone_resources_required", "fixed_clone_source_required", "fixed_readonly_archive_required", "four_class_policy_required", "frozen_digests_required", "frozen_input_changed", "gate_freeze_changed", "gate_interrupted", "guard_or_runtime_failure", "helper_accounting_not_joined", "helper_freeze_changed", "helper_timing_policy_changed", "host_cpu_busy", "host_cpu_metrics_missing", "host_emergency_floor", "host_mapped_inode_changed", "initial_cap_fit_inconclusive", "initial_cap_headroom_inconclusive", "initial_cohort_changed", "initial_pin_cpu_limit_event", "initial_pin_memory_limit_event", "invalid_cli_arguments", "invalid_control_lock", "invalid_instance_lock", "invalid_measure_state", "invalid_memory_accounting", "invalid_numeric_policy", "invalid_own_nofile_policy", "invalid_pin_command", "invalid_query_ack", "invalid_reclaim_lock", "invalid_residency_accounting", "invalid_runtime_state", "invalid_selection_digest", "join_source_changed", "lifecycle_clean_receipt_missing", "lifecycle_connection_present", "lifecycle_connection_unknown", "lifecycle_docker_cleanup_failed", "lifecycle_docker_unavailable", "lifecycle_fork_scope_active", "lifecycle_freeze_changed", "lifecycle_guard_or_runtime_failure", "lifecycle_handoff_changed", "lifecycle_handoff_cleanup_failed", "lifecycle_handoff_invalid", "lifecycle_interpreter_unsupported", "lifecycle_lock_close_failed", "lifecycle_lock_unproven", "lifecycle_membership_changed", "lifecycle_pidfd_close_failed", "lifecycle_process_changed", "lifecycle_reader_placement", "lifecycle_recovery_allowed", "lifecycle_stop_timeout", "lifecycle_stop_unclean", "lifecycle_target_refused", "lifecycle_wrapper_unreviewed", "limit_metrics_reset_during_pass", "local_source_identity_changed", "lock_budget_or_rlimit_unavailable", "locked_data_residency_incomplete", "locked_residency_incomplete", "locked_source_pages", "mapped_device_changed", "mapped_file_inventory_bound_exceeded", "mapped_shard_coverage_missing", "mapping_limit_unavailable", "measure_cannot_raise_limits", "metadata_health_changed", "negative_missing_pages_inconclusive", "outside_source_inspector_required", "own_nofile_baseline_bound_exceeded", "own_nofile_hard_limit_insufficient", "own_nofile_raise_failed", "own_nofile_state_changed", "own_nofile_state_unavailable", "owned_inode_alias", "owned_nonregular", "owned_root_changed", "owned_root_nonregular", "owned_root_symlink", "owned_size_guard", "owned_symlink", "owned_total_disk_budget", "parent_already_clone_cgroup", "parent_cgroup_changed", "parent_inspection_inside_clone_cgroup", "parent_placement_changed", "phase_required", "phase_resource_failed", "pin_capability_missing", "pin_child_cleanup", "pin_child_exit_failed", "pin_child_exit_unproven", "pin_child_failed", "pin_child_placement", "pin_child_timeout", "pin_holder_lock_proof_missing", "pin_kernel_operation_failed", "pin_release_failed", "pin_release_unproven", "policy_source_mode_mismatch", "post_cap_fit_inconclusive", "postwrite_sample_bound_exceeded", "postwrite_zero_timeout", "predeclared_negative_control_required", "prepared_input_changed", "pressure_bound_failed", "pressure_cannot_fit_deadline", "pressure_cohort_changed", "pressure_finalization_failed", "pressure_ledger_missing", "pressure_placement_required", "pressure_writer_placement_changed", "production_headroom_guard_cannot_be_relaxed", "projected_headroom_below_reserve", "projected_mapping_limit_exceeded", "query_cohort_changed", "query_lease_eof", "query_lease_timeout", "query_pin_cohort_changed", "query_source_changed", "quiescence_bound_exceeded", "range_identity_missing", "range_outside_file", "readonly_mapping_failed", "reclaim_fd_changed", "reclaim_resource_event", "reclaim_timeout", "reclaim_write_failed", "reclaim_writer_survived", "required_limit_metrics_missing", "residency_measurement_failed", "resource_metrics_unavailable", "resource_scope_invalid", "root_helper_required", "selected_target_descriptor_required", "source_cgroup_changed", "source_changed", "source_changed_after_cache_preparation", "source_changed_before_helper_accounting", "source_changed_during_inventory", "source_changed_during_measurement", "source_changed_during_pressure", "source_children_present", "source_cpu_quota_changed", "source_freeze_changed", "source_identity_changed", "source_image_or_running_changed", "source_limits_changed", "source_mounts_changed", "source_or_emergency_headroom_changed_after_locking", "source_resources_changed", "source_rpc_budget", "source_rpc_failed", "source_rpc_spec_changed", "source_rpc_timeout", "source_spec_changed", "swap_present", "target_anon_kernel_exceeds_cgroup_cap", "target_identity_changed", "target_not_owned_regular_single_link_file", "target_path_scope_changed", "turnover_not_fresh", "turnover_readiness_failed", "turnover_shape_changed", "unreviewed_production_container", "unreviewed_source_spec", "writer_birth_changed", "writer_birth_unavailable", "writer_cleanup_unproven", "writer_interrupted", "writer_parent_changed", "writer_prewrite_timeout", "writer_protocol_failed", "writer_registration_failed", "writer_registration_timeout", "writer_start_failed", "zero_child_cleanup_failed", "zero_child_exit_unproven", "zero_child_lease_failed", "zero_child_timeout", "zero_join_failed", "zero_join_proof_missing", "zero_pin_proof_missing"]);
+ const HASH=/^[a-f0-9]{64}$/;
+ const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|\+00:00)$/;
+ export const CPU0_CORE_SHA256='4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5';
+@@ -49,7 +51,7 @@
+ }
+ 
+ export function hierarchyEvidence(cpu){
+-gate(keys(cpu,['schema','rows','weight','cpusetCpus','cpusetMems','identityUnchangedRequired'])&&cpu.schema==='search.clone-cpu-hierarchy.v1'&&cpu.weight===100&&cpu.cpusetCpus===''&&cpu.cpusetMems===''&&cpu.identityUnchangedRequired===true&&Array.isArray(cpu.rows)&&cpu.rows.length>=2&&cpu.rows.length<=32);
++gate(keys(cpu,['schema','rows','weight','cpusetCpus','cpusetMems','identityUnchangedRequired'])&&cpu.schema==='search.clone-cpu-hierarchy.v1'&&cpu.weight===100&&cpu.cpusetCpus===''&&cpu.cpusetMems===''&&cpu.identityUnchangedRequired===true&&Array.isArray(cpu.rows)&&cpu.rows.length>=2&&cpu.rows.length<=33);
+  cpu.rows.forEach((row,index)=>{
+   const root=index===cpu.rows.length-1;
+   gate(keys(row,['depth','groupIdentitySha256','quotaMicros','periodMicros','nrThrottled','throttledMicros',...(root?['applicability','usageMicros','userMicros','systemMicros']:[])])&&hash(row.groupIdentitySha256)&&row.depth===index&&row.quotaMicros===null);
+@@ -133,28 +135,42 @@
+  gate(['containerIdHash','configurationHash','startedAt','restartCount'].every(key=>stop.before.state[key]===stop.after[key])&&utc(stop.wallStartedAt)&&utc(stop.wallFinishedAt)&&number(stop.elapsedSeconds)&&stop.elapsedSeconds<=20&&Date.parse(stop.wallFinishedAt)>=Date.parse(stop.wallStartedAt)&&Date.parse(stop.after.finishedAt)>=Date.parse(stop.wallStartedAt)&&Date.parse(stop.after.finishedAt)<=Date.parse(stop.wallFinishedAt));return stop;
+ }
+ const lifecycleReasons=new Set(['lifecycle_target_refused','lifecycle_freeze_changed','lifecycle_process_changed','lifecycle_wrapper_unreviewed','lifecycle_recovery_allowed','lifecycle_membership_changed','lifecycle_connection_present','lifecycle_connection_unknown','lifecycle_reader_placement','lifecycle_lock_unproven','lifecycle_stop_timeout','lifecycle_stop_unclean','lifecycle_clean_receipt_missing','lifecycle_handoff_changed','lifecycle_handoff_invalid','lifecycle_fork_scope_active','lifecycle_guard_or_runtime_failure','lifecycle_pidfd_close_failed','lifecycle_lock_close_failed','lifecycle_handoff_cleanup_failed','lifecycle_interpreter_unsupported','lifecycle_docker_unavailable','lifecycle_docker_cleanup_failed']);
+-export function failureEvidence(frames){
+- const result={completedCleanStop:null,lifecycleFailure:null,cpuHierarchy:null,resourceFailure:null,cpuFailure:null,lifecycleCleanupFailure:null,lifecycleDockerCleanup:null,evidenceRejected:false};
++function observedState(value){
++ gate(keys(value,['containerIdHash','running','startedAt','finishedAt','restartCount','exitCode','OOMKilled','configurationHash'])&&hash(value.containerIdHash)&&hash(value.configurationHash)&&typeof value.running==='boolean'&&typeof value.OOMKilled==='boolean'&&integer(value.restartCount)&&Number.isSafeInteger(value.exitCode)&&utc(value.startedAt)&&utc(value.finishedAt));return value;
++}
++function normalizedAccount(value){
++ const names=['availableBytes','anonBytes','fileBytes','kernelBytes','unevictableBytes','currentBytes','cgroupMaxBytes','memoryEvents','cpu'];gate(keys(value,names)&&names.slice(0,6).every(key=>integer(value[key]))&&(value.cgroupMaxBytes===null||integer(value.cgroupMaxBytes))&&keys(value.memoryEvents,['max','oom','oom_kill'])&&keys(value.cpu,['nr_throttled','throttled_usec'])&&[...Object.values(value.memoryEvents),...Object.values(value.cpu)].every(value=>integer(value)));return value;
++}
++function hostCpuFailure(value){gate(keys(value,['onlineCpus','load1','load5','cpuSomeAvg10','loadCeiling','psiCeilingPercent'])&&integer(value.onlineCpus,1)&&[value.load1,value.load5,value.cpuSomeAvg10].every(number)&&value.loadCeiling===.5*value.onlineCpus&&value.psiCeilingPercent===10);return value;}
++export function failureEvidence(frames,depth=0){
++ const result={completedCleanStop:null,lifecycleFailure:null,cpuHierarchy:null,resourceFailure:null,cpuFailure:null,hostCpu:null,pressureFinalization:null,lifecycleCleanupFailure:null,lifecycleDockerCleanup:null,backendReasons:[],evidenceRejected:false};
++ const scopes=new Set(['turnover-join','held-pin-prior-to-pass','held-pin-pass','pressure-start-continuity','pressure-end-continuity','preparation-to-inventory','inventory-to-pin','baseline-inventory-to-pressure','pressure-interval','pressure-to-inventory','inventory-to-query','query-interval','post-query-inventory']);
+  for(const frame of frames){
++  if(['failed','phase-failed'].includes(frame.stage)&&frame.reason!==undefined){if(CONTROL_REASONS.has(frame.reason))result.backendReasons.push({stage:frame.stage,reason:frame.reason});else result.evidenceRejected=true;}
+   const stop=frame.lifecycleCompletedStopReceipt||frame.cold?.cleanStop;
+   if(stop){try{result.completedCleanStop=cleanStopEvidence(stop);}catch{result.evidenceRejected=true;}}
+   const failed=frame.lifecycleFailureEvidence;
+-  if(failed){
++  if(failed){try{
+    const required=['schema','target','reason','before','after','beforeStatus','afterStatus','wallStartedAt','wallFinishedAt','elapsedSeconds','signalSent','signal','qdrantBirthGone','wrapperBirthGone','childExitStatusObserved','killFallback','clean','lateObservationCannotPromoteClean','privateErrorOmitted'];
+-   if(keys(failed,required)&&failed.schema==='clone-child-term.failed.v1'&&failed.target==='gw-qdrant-cpu0-100-20261012'&&lifecycleReasons.has(failed.reason)&&utc(failed.wallStartedAt)&&utc(failed.wallFinishedAt)&&number(failed.elapsedSeconds)&&typeof failed.signalSent==='boolean'&&failed.signal===(failed.signalSent?'SIGTERM':null)&&[failed.qdrantBirthGone,failed.wrapperBirthGone].every(value=>value===null||typeof value==='boolean')&&failed.childExitStatusObserved===false&&failed.killFallback===false&&failed.clean===false&&failed.lateObservationCannotPromoteClean===true&&failed.privateErrorOmitted===true){
+-    result.lifecycleFailure=Object.fromEntries(['schema','target','reason','beforeStatus','afterStatus','wallStartedAt','wallFinishedAt','elapsedSeconds','signalSent','signal','qdrantBirthGone','wrapperBirthGone','childExitStatusObserved','killFallback','clean','lateObservationCannotPromoteClean','privateErrorOmitted'].map(key=>[key,failed[key]]));
+-    for(const key of ['beforeStatus','afterStatus'])if(!['observed','unavailable'].includes(result.lifecycleFailure[key])){result.lifecycleFailure=null;result.evidenceRejected=true;}
+-   }else result.evidenceRejected=true;
+-  }
++   gate(keys(failed,required)&&failed.schema==='clone-child-term.failed.v1'&&failed.target==='gw-qdrant-cpu0-100-20261012'&&lifecycleReasons.has(failed.reason)&&utc(failed.wallStartedAt)&&utc(failed.wallFinishedAt)&&number(failed.elapsedSeconds)&&typeof failed.signalSent==='boolean'&&failed.signal===(failed.signalSent?'SIGTERM':null)&&[failed.qdrantBirthGone,failed.wrapperBirthGone].every(value=>value===null||typeof value==='boolean')&&failed.childExitStatusObserved===false&&failed.killFallback===false&&failed.clean===false&&failed.lateObservationCannotPromoteClean===true&&failed.privateErrorOmitted===true);
++   for(const key of ['before','after']){gate(failed[key+'Status']===(failed[key]===null?'unavailable':'observed'));if(failed[key]!==null){if(key==='before')target(failed[key]);else observedState(failed[key]);}}
++   result.lifecycleFailure=failed;
++  }catch{result.evidenceRejected=true;}}
+   if(frame.cpuHierarchyBefore){try{result.cpuHierarchy=hierarchyEvidence(frame.cpuHierarchyBefore);}catch{result.evidenceRejected=true;}}
+   if(frame.lifecycleCleanupFailure){if(lifecycleReasons.has(frame.lifecycleCleanupFailure))result.lifecycleCleanupFailure=frame.lifecycleCleanupFailure;else result.evidenceRejected=true;}
+   if(frame.lifecycleDockerCleanupEvidence){const value=frame.lifecycleDockerCleanupEvidence;if(keys(value,['pid','clientGone','exitCode'])&&integer(value.pid,1)&&typeof value.clientGone==='boolean'&&(value.exitCode===null||Number.isSafeInteger(value.exitCode)))result.lifecycleDockerCleanup=value;else result.evidenceRejected=true;}
+   if(frame.cpuHierarchyEvidence){try{result.cpuFailure=cpuFailureEvidence(frame.cpuHierarchyEvidence);}catch{result.evidenceRejected=true;}}
+-
++  if(frame.hostCpuEvidence){try{result.hostCpu=hostCpuFailure(frame.hostCpuEvidence);}catch{result.evidenceRejected=true;}}
+   const resource=frame.resourceLimitEvidence;
+-  if(resource){const checks=new Set(['counter_regression','oom','oom_kill','memory_max','cpu_nr_throttled','cpu_throttled_usec']);const scopes=new Set(['turnover-join','held-pin-prior-to-pass','held-pin-pass','pressure-start-continuity','pressure-end-continuity','preparation-to-inventory','inventory-to-pin','baseline-inventory-to-pressure','pressure-interval','pressure-to-inventory','inventory-to-query','query-interval','post-query-inventory']);
+-   if(resource.schema==='search.clone-resource-window.v1'&&scopes.has(resource.scope)&&utc(resource.checkedAt)&&typeof resource.pressureMaxException==='boolean'&&resource.overlappingNonAdditive===true&&Array.isArray(resource.failedChecks)&&resource.failedChecks.every(key=>checks.has(key))&&keys(resource.memoryEventDelta,['max','oom','oom_kill'])&&keys(resource.cpuLimitDelta,['nr_throttled','throttled_usec'])&&[...Object.values(resource.memoryEventDelta),...Object.values(resource.cpuLimitDelta)].every(Number.isSafeInteger))result.resourceFailure=Object.fromEntries(['schema','scope','checkedAt','pressureMaxException','overlappingNonAdditive','failedChecks','memoryEventDelta','cpuLimitDelta'].map(key=>[key,resource[key]]));else result.evidenceRejected=true;
+-  }
++  if(resource){try{
++   gate(resource.schema==='search.clone-resource-window.v1'&&scopes.has(resource.scope)&&resource.overlappingNonAdditive===true);
++   if(resource.measurementsAvailable===false){gate(keys(resource,['schema','scope','measurementsAvailable','overlappingNonAdditive']));result.resourceFailure=resource;}
++   else{
++    gate(keys(resource,['schema','scope','checkedAt','before','after','memoryEventDelta','cpuLimitDelta','pressureMaxException','failedChecks','overlappingNonAdditive'])&&utc(resource.checkedAt)&&typeof resource.pressureMaxException==='boolean'&&Array.isArray(resource.failedChecks)&&resource.failedChecks.every(key=>['counter_regression','oom','oom_kill','memory_max','cpu_nr_throttled','cpu_throttled_usec'].includes(key))&&keys(resource.memoryEventDelta,['max','oom','oom_kill'])&&keys(resource.cpuLimitDelta,['nr_throttled','throttled_usec'])&&[...Object.values(resource.memoryEventDelta),...Object.values(resource.cpuLimitDelta)].every(Number.isSafeInteger));
++    const before=normalizedAccount(resource.before),after=normalizedAccount(resource.after);for(const [source,delta] of [['memoryEvents','memoryEventDelta'],['cpu','cpuLimitDelta']])for(const key of Object.keys(before[source]))gate(resource[delta][key]===after[source][key]-before[source][key]);result.resourceFailure=resource;
++   }
++  }catch{result.evidenceRejected=true;}}
++  if(frame.pressureFinalizationFailure){const value=frame.pressureFinalizationFailure;if(depth===0&&keys(value,['reason','resourceLimitEvidence','cpuHierarchyEvidence','hostCpuEvidence','pressureFinalizationFailure'])&&['phase_resource_failed','pressure_finalization_failed'].includes(value.reason)){const nested=failureEvidence([value],1);result.pressureFinalization={reason:value.reason,...nested};}else result.evidenceRejected=true;}
+  }
+  return result;
+ }
+@@ -213,6 +229,12 @@
+ 
+ function cpuFailureEvidence(value){
+  const rowCheck=row=>{const root=row?.applicability==='hierarchy-root-no-bandwidth-controller';gate(keys(row,['depth','groupIdentitySha256','quotaMicros','periodMicros','nrThrottled','throttledMicros',...(root?['applicability','usageMicros','userMicros','systemMicros']:[])])&&integer(row.depth)&&hash(row.groupIdentitySha256));if(root)gate(row.quotaMicros===null&&row.periodMicros===null&&row.nrThrottled===null&&row.throttledMicros===null&&[row.usageMicros,row.userMicros,row.systemMicros].every(value=>integer(value)));else gate((row.quotaMicros===null||integer(row.quotaMicros))&&integer(row.periodMicros,1)&&integer(row.nrThrottled)&&integer(row.throttledMicros));};
+- if(value?.partial===true){gate((keys(value,['rows','partial','failedDepth'])||keys(value,['rows','partial','failedDepth','measurementUnavailable']))&&integer(value.failedDepth)&&Array.isArray(value.rows)&&value.rows.length<=32&&(value.measurementUnavailable===undefined||value.measurementUnavailable===true));value.rows.forEach(rowCheck);return value;}
++ if(value?.partial===true){gate((keys(value,['rows','partial','failedDepth'])||keys(value,['rows','partial','failedDepth','measurementUnavailable']))&&integer(value.failedDepth)&&Array.isArray(value.rows)&&value.rows.length<=33&&(value.measurementUnavailable===undefined||value.measurementUnavailable===true));value.rows.forEach(rowCheck);return value;}
+  gate(keys(value,['before','after','failedDepth','delta'])&&integer(value.failedDepth)&&keys(value.delta,['nrThrottled','throttledMicros'])&&Object.values(value.delta).every(Number.isSafeInteger));hierarchyEvidence(value.before);hierarchyEvidence(value.after);return value;
+ }
++
++export function validateAdmissionFrame(frame,previous,{sourceFreezeSha256,externalManifestSha256}){
++ gate(keys(frame,['kind','schema','variant','birthAdmission','handoff','sourceIdentity','queries','resourceWrites','handoffWrites','modelsRead','consumerBirth','sourceFreezeSha256','externalManifestSha256','productionAcceptance'])&&frame.kind==='consumer-admission'&&frame.productionAcceptance===false&&hash(sourceFreezeSha256)&&hash(externalManifestSha256)&&frame.sourceFreezeSha256===sourceFreezeSha256&&frame.externalManifestSha256===externalManifestSha256,'cpu0_consumer_admission_invalid');
++ const receipt=Object.fromEntries(Object.entries(frame).filter(([key])=>!['kind','consumerBirth','sourceFreezeSha256','externalManifestSha256','productionAcceptance'].includes(key)));preflightEvidence(receipt,previous);
++ const birth=frame.consumerBirth;gate(keys(birth,['pid','startTicks','parentPid','exeIdentityHash','groupHash','VmLckBytes','outsideSourceCgroup'])&&integer(birth.pid,1)&&integer(birth.startTicks,1)&&integer(birth.parentPid,1)&&hash(birth.exeIdentityHash)&&hash(birth.groupHash)&&birth.VmLckBytes===0&&birth.outsideSourceCgroup===true&&birth.groupHash!==receipt.birthAdmission.target.qdrant.groupHash,'cpu0_consumer_birth_invalid');return{receipt,consumerBirth:birth};
++}
+--- v1/audit_cpu0.mjs
++++ v2/audit_cpu0.mjs
+@@ -1,13 +1,14 @@
+ // Offline CPU0 consumer audit. Imports no controller, consumer, query or placement code.
+ import {readFileSync} from 'node:fs';
+ import {fileURLToPath} from 'node:url';
+-import {VARIANT,canonicalHash,recordedHandoff,preflightEvidence,phaseEvidence,pairedEvidence,verifyExternalPacket} from './compare-contract-cpu0.mjs';
++import {VARIANT,canonicalHash,recordedHandoff,preflightEvidence,validateAdmissionFrame,phaseEvidence,pairedEvidence,verifyExternalPacket} from './compare-contract-cpu0.mjs';
+ const HASH=/^[a-f0-9]{64}$/;
+ const CASES={'coverage-history-080628':[false,true],'coverage-history-083054':[false,true],'heldout-person':[true],'heldout-description':[true],'heldout-unseen-native':[true],'control-native-title':[true],'control-low-vote-title':[true]};
+ const gate=(ok,reason)=>{if(!ok)throw Error(reason);};
+ const same=(a,b)=>canonicalHash(a)===canonicalHash(b);
+ function exit(value){gate(value&&Object.keys(value).sort().join(',')==='code,observed,signal'&&value.code===0&&value.signal===null&&value.observed===true,'cpu0_controller_exit_unproven');return value.code;}
+-function metrics(frames,controllerExit,phase,expected,reported,previous,requireRed){
++function metrics(frames,controllerExit,transport,phase,expected,reported,previous,requireRed){
++ gate(transport&&Object.keys(transport).join(',')==='socketClosed'&&transport.socketClosed===true,'cpu0_audit_socket_release_unproven');
+  gate(reported?.variant===VARIANT&&reported.productionAcceptance===false,'cpu0_reported_variant_changed');
+  const result=phaseEvidence(frames,exit(controllerExit),phase,expected,{serverMs:reported.serverMs,wallMs:reported.wallMs,socketClosed:true},{requireRed,priorHandoffSha256:previous.sha256,priorHandoff:previous});
+  gate(same(result,reported),'cpu0_reported_metrics_changed');return result;
+@@ -16,7 +17,7 @@
+  gate(Array.isArray(rows)&&rows.length>=3&&rows.length<=21&&HASH.test(sourceFreezeSha256||'')&&HASH.test(externalManifestSha256||''),'cpu0_audit_scope_invalid');
+  recordedHandoff(initialHandoff,initialHandoff?.sha256);let previous=initialHandoff;
+  const admission=rows[0];gate(admission.kind==='consumer-admission'&&admission.productionAcceptance===false&&admission.sourceFreezeSha256===sourceFreezeSha256&&admission.externalManifestSha256===externalManifestSha256,'cpu0_consumer_admission_missing');
+- const receipt=Object.fromEntries(Object.entries(admission).filter(([key])=>!['kind','productionAcceptance','sourceFreezeSha256','externalManifestSha256'].includes(key)));preflightEvidence(receipt,previous);previous=receipt.handoff;
++ const {receipt}=validateAdmissionFrame(admission,previous,{sourceFreezeSha256,externalManifestSha256});previous=receipt.handoff;
+  const seen=new Set();let pending=null,pairs=0,excluded=0,nativePassed=false;
+  for(const row of rows.slice(1,-1)){
+   gate(row.variant===VARIANT&&row.productionAcceptance===false,'cpu0_audit_variant_changed');
+@@ -26,11 +27,11 @@
+   const key=row.tag+':'+row.lesserKnown;
+   if(row.kind==='baseline-batch'){
+    gate(!pending&&!seen.has(key)&&(row.tag==='control-native-title'||nativePassed),'cpu0_audit_pair_order_invalid');
+-   metrics(row.baselineControlEvidence,row.baselineControllerExit,'baseline',expected,row.baseline,previous,row.tag==='control-native-title');previous=row.baselineControlEvidence[4].handoff;pending=row;continue;
++   metrics(row.baselineControlEvidence,row.baselineControllerExit,row.baselineTransport,'baseline',expected,row.baseline,previous,row.tag==='control-native-title');previous=row.baselineControlEvidence[4].handoff;pending=row;continue;
+   }
+   gate(row.kind==='paired-batch'&&pending&&pending.tag===row.tag&&pending.lesserKnown===row.lesserKnown,'cpu0_audit_pair_missing');
+-  gate(same(pending.baseline,row.baseline)&&same(pending.baselineControlEvidence,row.baselineControlEvidence)&&same(pending.baselineHashes,row.baselineHashes)&&same(pending.baselineControllerExit,row.baselineControllerExit),'cpu0_audit_baseline_changed');
+-  metrics(row.candidateControlEvidence,row.candidateControllerExit,'candidate',expected,row.candidate,previous,false);
++  gate(same(pending.baseline,row.baseline)&&same(pending.baselineControlEvidence,row.baselineControlEvidence)&&same(pending.baselineHashes,row.baselineHashes)&&same(pending.baselineControllerExit,row.baselineControllerExit)&&same(pending.baselineTransport,row.baselineTransport),'cpu0_audit_baseline_changed');
++  metrics(row.candidateControlEvidence,row.candidateControllerExit,row.candidateTransport,'candidate',expected,row.candidate,previous,false);
+   const parity=pairedEvidence(row.baseline,row.candidate,row.baselineHashes,row.candidateHashes);for(const [name,value] of Object.entries(parity))gate(row[name]===value,'cpu0_audit_parity_changed');
+   previous=row.candidateControlEvidence[4].handoff;seen.add(key);pairs++;if(row.tag==='control-native-title')nativePassed=true;pending=null;
+  }
+--- v1/transport_cpu0.mjs
++++ v2/transport_cpu0.mjs
+@@ -20,12 +20,12 @@
+       response.on('error',()=>reject(Error('cpu0_query_transport_failure')));
+      });
+      request.on('socket',value=>{socket=value;sockets.add(value);closed=new Promise(resolveClose=>value.once('close',()=>{sockets.delete(value);resolveClose();}));});
+-     request.on('error',error=>reject(Error(error.message==='cpu0_query_timeout'?'cpu0_query_timeout':'cpu0_query_transport_failure')));
++     request.on('error',error=>reject(Error(['cpu0_query_timeout','cpu0_query_response_invalid'].includes(error.message)?error.message:'cpu0_query_transport_failure')));
+      timer=setTimeout(()=>request.destroy(Error('cpu0_query_timeout')),timeoutMs);
+      request.end(body);
+     });
+     let parsed;try{parsed=JSON.parse(received.body);}catch{throw Error('cpu0_query_response_invalid');}
+-    if(received.status!==200||typeof parsed.time!=='number'||!Number.isFinite(parsed.time)||parsed.time<0||!Array.isArray(parsed.result)||parsed.result.length!==queries.length||parsed.result.some(row=>!Array.isArray(row.points)))throw Error('cpu0_query_response_invalid');
++    if(received.status!==200||typeof parsed.time!=='number'||!Number.isFinite(parsed.time)||parsed.time<0||!Array.isArray(parsed.result)||parsed.result.length!==queries.length||parsed.result.some(row=>!Array.isArray(row.points)||row.points.some(point=>!point||!((Number.isSafeInteger(point.id)&&point.id>=0)||(typeof point.id==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(point.id)))||typeof point.score!=='number'||!Number.isFinite(point.score))))throw Error('cpu0_query_response_invalid');
+     // Include teardown in wall time; no query acknowledgement precedes it.
+     if(socket&&!socket.destroyed)socket.destroy();await closed;
+     return {results:parsed.result.map(row=>row.points),serverMs:parsed.time*1000,wallMs:performance.now()-start,socketClosed:true};
+--- v1/test_consumer_cpu0.mjs
++++ v2/test_consumer_cpu0.mjs
+@@ -49,3 +49,12 @@
+  assert.equal((await runEntryPreflight(fixtureExpected,prior(),{spawnControl})).handoff.sha256,h.sha256);assert.equal(child.exitCode,0);
+  frame.handoff.previousSha256='f'.repeat(64);await assert.rejects(runEntryPreflight(fixtureExpected,prior(),{spawnControl}));
+ });
++
++test('actual reader preserves prequery ContractFailure reason instead of classifying it as malformed JSON',async()=>{
++ const f=fixture(frames=>frames[2].cold.cleanStop.killFallback=true);try{await assert.rejects(controlledBatch(input,'baseline',f.expected,f.paths,prior(),async()=>{throw Error('must not query')},{spawnControl:f.spawnControl}),error=>error.publicEvidence.reason==='cpu0_clean_stop_unproven'&&error.publicEvidence.failureKind==='contract'&&error.publicEvidence.exitObserved===true);}finally{f.cleanup();}
++});
++test('actual preflight refusal retains allowlisted resource-unavailable evidence and observed exit',async()=>{
++ const {runEntryPreflight}=await import('./consumer_cpu0.mjs');const frame={schema:'search.clone-cpu0-preflight.v1',stage:'failed',reason:'resource_metrics_unavailable',resourceLimitEvidence:{schema:'search.clone-resource-window.v1',scope:'turnover-join',measurementsAvailable:false,overlappingNonAdditive:true}};
++ const spawnControl=()=>spawn(process.execPath,['-e','process.stdout.write(process.env.PUBLIC_RECEIPT+"\\n");process.exitCode=1'],{stdio:['ignore','pipe','pipe'],env:{PUBLIC_RECEIPT:JSON.stringify(frame)}});
++ await assert.rejects(runEntryPreflight(fixtureExpected,prior(),{spawnControl}),error=>error.publicEvidence.exitObserved===true&&error.publicEvidence.controllerExitCode===1&&error.publicEvidence.failureEvidence.resourceFailure.measurementsAvailable===false&&error.publicEvidence.failureEvidence.backendReasons[0].reason==='resource_metrics_unavailable');
++});
+--- v1/test_contract_cpu0.mjs
++++ v2/test_contract_cpu0.mjs
+@@ -38,3 +38,23 @@
+  assert.equal(failureEvidence([evidence]).cpuFailure.rows[0].quotaMicros,200000);assert.equal(failureEvidence([evidence]).lifecycleDockerCleanup.clientGone,false);
+  const privateEvidence=structuredClone(evidence);privateEvidence.cpuHierarchyEvidence.rows[0].rawError='private data';assert.equal(failureEvidence([privateEvidence]).cpuFailure,null);assert.equal(JSON.stringify(failureEvidence([privateEvidence])).includes('private data'),false);
+ });
++
++test('failed stop retains admitted birth and observed nonclean after state without promoting clean',async()=>{
++ const {failureEvidence}=await import('./compare-contract-cpu0.mjs');const before=handoff().snapshot.newRunning;const after={...before.state,running:false,exitCode:137,OOMKilled:true,finishedAt:utc};
++ const failed={schema:'clone-child-term.failed.v1',target:'gw-qdrant-cpu0-100-20261012',reason:'lifecycle_stop_unclean',before,after,beforeStatus:'observed',afterStatus:'observed',wallStartedAt:utc,wallFinishedAt:utc,elapsedSeconds:1,signalSent:true,signal:'SIGTERM',qdrantBirthGone:true,wrapperBirthGone:true,childExitStatusObserved:false,killFallback:false,clean:false,lateObservationCannotPromoteClean:true,privateErrorOmitted:true};
++ const result=failureEvidence([{stage:'phase-failed',reason:'lifecycle_stop_unclean',lifecycleFailureEvidence:failed}]);assert.deepEqual(result.lifecycleFailure,failed);assert.equal(result.lifecycleFailure.after.exitCode,137);assert.equal(result.lifecycleFailure.after.OOMKilled,true);assert.equal(result.lifecycleFailure.clean,false);
++ const wrong=structuredClone(failed);wrong.after.rawCommand='secret';const rejected=failureEvidence([{lifecycleFailureEvidence:wrong}]);assert.equal(rejected.lifecycleFailure,null);assert.equal(rejected.evidenceRejected,true);assert.equal(JSON.stringify(rejected).includes('secret'),false);
++});
++test('numeric failed resource endpoints survive with exact signed deltas and explicit unavailable evidence',async()=>{
++ const {failureEvidence}=await import('./compare-contract-cpu0.mjs');const before={availableBytes:1,anonBytes:2,fileBytes:3,kernelBytes:4,unevictableBytes:5,currentBytes:6,cgroupMaxBytes:6*1024**3,memoryEvents:{max:2,oom:0,oom_kill:0},cpu:{nr_throttled:3,throttled_usec:9}};
++ const after=structuredClone(before);after.memoryEvents.max++;after.cpu.throttled_usec+=2;
++ const resource={schema:'search.clone-resource-window.v1',scope:'query-interval',checkedAt:utc,before,after,memoryEventDelta:{max:1,oom:0,oom_kill:0},cpuLimitDelta:{nr_throttled:0,throttled_usec:2},pressureMaxException:false,failedChecks:['memory_max','cpu_throttled_usec'],overlappingNonAdditive:true};
++ assert.deepEqual(failureEvidence([{stage:'phase-failed',reason:'phase_resource_failed',resourceLimitEvidence:resource}]).resourceFailure,resource);
++ const wrong=structuredClone(resource);wrong.memoryEventDelta.max=0;assert.equal(failureEvidence([{resourceLimitEvidence:wrong}]).resourceFailure,null);
++ const unavailable={schema:'search.clone-resource-window.v1',scope:'query-interval',measurementsAvailable:false,overlappingNonAdditive:true};const result=failureEvidence([{stage:'failed',reason:'resource_metrics_unavailable',resourceLimitEvidence:unavailable}]);assert.deepEqual(result.resourceFailure,unavailable);assert.equal(result.evidenceRejected,false);
++});
++test('fixed backend causes and busy-host/finalization evidence retain provenance while raw reasons are omitted',async()=>{
++ const {failureEvidence}=await import('./compare-contract-cpu0.mjs');for(const reason of ['post_cap_fit_inconclusive','reclaim_write_failed','cpu_metric_missing'])assert.deepEqual(failureEvidence([{stage:'phase-failed',reason}]).backendReasons,[{stage:'phase-failed',reason}]);
++ const host={onlineCpus:4,load1:8,load5:3,cpuSomeAvg10:20,loadCeiling:2,psiCeilingPercent:10};const result=failureEvidence([{stage:'phase-failed',reason:'host_cpu_busy',hostCpuEvidence:host,pressureFinalizationFailure:{reason:'pressure_finalization_failed',resourceLimitEvidence:null,cpuHierarchyEvidence:null,hostCpuEvidence:host,pressureFinalizationFailure:null}}]);assert.deepEqual(result.hostCpu,host);assert.deepEqual(result.pressureFinalization.hostCpu,host);
++ const invalid=failureEvidence([{stage:'failed',reason:'private query/secret'}]);assert.equal(invalid.evidenceRejected,true);assert.equal(JSON.stringify(invalid).includes('private query'),false);
++});
+--- v1/test_audit_cpu0.mjs
++++ v2/test_audit_cpu0.mjs
+@@ -1,20 +1,21 @@
++import {baselineRow,pairedRow} from './consumer_cpu0.mjs';
+ import test from 'node:test';import assert from 'node:assert/strict';
+ import {auditConsumer} from './audit_cpu0.mjs';import {prior,admission,chainedFrames,expected} from './cpu0_consumer_fixture.mjs';import {canonicalHash,phaseEvidence,pairedEvidence} from './compare-contract-cpu0.mjs';
+ function fixture(){
+  const initial=prior();initial.owner='setup';initial.previousSha256=null;const {sha256,...record}=initial;initial.sha256=canonicalHash(record);
+  const next={...record,owner:'preflight',previousSha256:initial.sha256};const receipt={...next,sha256:canonicalHash(next)};
+  const sourceFreezeSha256='c'.repeat(64),externalManifestSha256='d'.repeat(64);const a=admission();a.target=initial.snapshot.newRunning;a.sourceIdentity[2]=a.target.qdrant.pid;
+- const rows=[{kind:'consumer-admission',schema:'search.clone-cpu0-preflight.v1',variant:'cpu0-owned-lifecycle.v1',birthAdmission:a,handoff:receipt,sourceIdentity:a.sourceIdentity,queries:0,resourceWrites:0,handoffWrites:1,modelsRead:0,productionAcceptance:false,sourceFreezeSha256,externalManifestSha256}];
++ const rows=[{kind:'consumer-admission',schema:'search.clone-cpu0-preflight.v1',variant:'cpu0-owned-lifecycle.v1',birthAdmission:a,handoff:receipt,sourceIdentity:a.sourceIdentity,queries:0,resourceWrites:0,handoffWrites:1,modelsRead:0,productionAcceptance:false,sourceFreezeSha256,externalManifestSha256,consumerBirth:{pid:777,startTicks:888,parentPid:666,exeIdentityHash:'e'.repeat(64),groupHash:'f'.repeat(64),VmLckBytes:0,outsideSourceCgroup:true}}];
+  const cases=[['control-native-title',true],['coverage-history-080628',false],['coverage-history-080628',true],['coverage-history-083054',false],['coverage-history-083054',true],['heldout-person',true],['heldout-description',true],['heldout-unseen-native',true],['control-low-vote-title',true]];
+  let previous=receipt,pid=101;
+  const hashes={resultIdHash:'a'.repeat(64),resultIdScoreHash:'b'.repeat(64),resultSetHash:'c'.repeat(64),resultScoreSetHash:'d'.repeat(64)},controllerExit={code:0,signal:null,observed:true};
+  for(const [tag,lesserKnown]of cases){
+   const baselineFrames=chainedFrames('baseline',previous,pid);pid+=2;
+   const baseline=phaseEvidence(baselineFrames,0,'baseline',expected,{serverMs:1900,wallMs:1920,socketClosed:true},{requireRed:tag==='control-native-title',priorHandoffSha256:previous.sha256,priorHandoff:previous});previous=baselineFrames[4].handoff;
+-  const base={variant:'cpu0-owned-lifecycle.v1',tag,lesserKnown,indexBuildId:'20261011T041503Z',queryCount:1,baseline,baselineControlEvidence:baselineFrames,baselineControllerExit:controllerExit,baselineHashes:hashes,productionAcceptance:false};rows.push({kind:'baseline-batch',...base});
++  const packet={tag,lesserKnown,indexBuildId:'20261011T041503Z',queries:[{query:[1]}]};const baselineResult={metrics:baseline,frames:baselineFrames,controllerExit,queryTransport:{socketClosed:true},hashes,counts:[1]};rows.push(baselineRow(packet,baselineResult));
+   const candidateFrames=chainedFrames('candidate',previous,pid);pid+=2;
+   const candidate=phaseEvidence(candidateFrames,0,'candidate',expected,{serverMs:20,wallMs:25,socketClosed:true},{priorHandoffSha256:previous.sha256,priorHandoff:previous});previous=candidateFrames[4].handoff;
+-  rows.push({kind:'paired-batch',...base,candidate,candidateControlEvidence:candidateFrames,candidateControllerExit:controllerExit,candidateHashes:hashes,...pairedEvidence(baseline,candidate,hashes,hashes)});
++  const candidateResult={metrics:candidate,frames:candidateFrames,controllerExit,queryTransport:{socketClosed:true},hashes,counts:[1]};rows.push(pairedRow(packet,baselineResult,candidateResult,pairedEvidence(baseline,candidate,hashes,hashes)));
+  }
+  rows.push({kind:'complete',variant:'cpu0-owned-lifecycle.v1',pairs:9,initialHandoffSha256:initial.sha256,finalHandoffSha256:previous.sha256,sourceFreezeSha256,externalManifestSha256,productionAcceptance:false});
+  return{rows,context:{expected,initialHandoff:initial,sourceFreezeSha256,externalManifestSha256}};
+@@ -23,5 +24,5 @@
+  const {rows,context}=fixture();const result=auditConsumer(rows,context);assert.equal(result.consumerPass,true);assert.equal(result.pairs,9);assert.equal(result.experimentPass,false);assert.equal(result.externalCleanupRequired,true);assert.equal(result.productionAcceptance,false);
+ });
+ test('offline audit refuses missing exit, native red failure, omitted unpin and cross-phase predecessor drift',()=>{
+- for(const mutate of [rows=>rows[1].baselineControllerExit.observed=false,rows=>rows[1].baseline.serverMs=20,rows=>rows[2].candidateControlEvidence.pop(),rows=>rows[2].candidateControlEvidence[4].handoff.previousSha256='f'.repeat(64),rows=>rows[2].resultScoreSetHashParity=false,rows=>rows.at(-1).finalHandoffSha256='f'.repeat(64),rows=>rows[0].sourceFreezeSha256='f'.repeat(64),rows=>rows.splice(1,2)]){const {rows,context}=fixture();mutate(rows);assert.throws(()=>auditConsumer(rows,context));}
++ for(const mutate of [rows=>rows[1].baselineControllerExit.observed=false,rows=>rows[1].baseline.serverMs=20,rows=>rows[2].candidateControlEvidence.pop(),rows=>rows[2].candidateControlEvidence[4].handoff.previousSha256='f'.repeat(64),rows=>rows[2].resultScoreSetHashParity=false,rows=>rows.at(-1).finalHandoffSha256='f'.repeat(64),rows=>rows[0].sourceFreezeSha256='f'.repeat(64),rows=>delete rows[2].baselineControllerExit,rows=>rows[2].candidateTransport.socketClosed=false,rows=>rows.splice(1,2)]){const {rows,context}=fixture();mutate(rows);assert.throws(()=>auditConsumer(rows,context));}
+ });
+--- v1/test_abi_cpu0.mjs
++++ v2/test_abi_cpu0.mjs
+@@ -15,3 +15,24 @@
+  assert.equal(result.status,0);const a=admission();a.sourceIdentity=JSON.parse(result.stdout);assert.equal(a.sourceIdentity.length,4);admissionEvidence(a);
+  a.sourceIdentity.push('/invented-group');assert.throws(()=>admissionEvidence(a));
+ });
++
++test('static consumer reason enum equals actual frozen producer scalar CONTROL_REASONS union',async()=>{
++ const {CONTROL_REASONS}=await import('./compare-contract-cpu0.mjs');const folder=fileURLToPath(new URL('.',import.meta.url));
++ const result=spawnSync('/usr/bin/python3',['-I','-B','-c',`from pathlib import Path
++import ast,json,sys
++base=Path(sys.argv[1])
++def literal(node,env):
++ if isinstance(node,ast.Constant) and isinstance(node.value,str):return node.value
++ if isinstance(node,(ast.Tuple,ast.List,ast.Set)):return tuple(literal(n,env) for n in node.elts)
++ if isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=='frozenset' and len(node.args)==1 and not node.keywords:return frozenset(literal(node.args[0],env))
++ if isinstance(node,ast.BinOp) and isinstance(node.op,ast.BitOr):return literal(node.left,env)|literal(node.right,env)
++ if isinstance(node,ast.Attribute) and isinstance(node.value,ast.Name):return env[(node.value.id,node.attr)]
++ raise ValueError('non-scalar expression')
++def named(name,file):
++ tree=ast.parse((base/file).read_text());return literal(next(n.value for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id==name for t in n.targets)),{})
++env={('pin','SAFE_REASONS'):named('SAFE_REASONS','pin_cpu0.py'),('cpu0_guards','REASONS'):named('REASONS','cpu0_guards.py')};reasons=set()
++for node in ast.parse((base/'controller_cpu0.py').read_text()).body:
++ if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='CONTROL_REASONS' for t in node.targets):reasons=set(literal(node.value,env))
++ if isinstance(node,ast.AugAssign) and isinstance(node.target,ast.Name) and node.target.id=='CONTROL_REASONS':reasons|=literal(node.value,env)
++print(json.dumps(sorted(reasons)))`,folder],{encoding:'utf8'});assert.equal(result.status,0);assert.deepEqual([...CONTROL_REASONS].sort(),JSON.parse(result.stdout));
++});
+--- v1/test_transport_cpu0.mjs
++++ v2/test_transport_cpu0.mjs
+@@ -53,3 +53,8 @@
+  const server=http.createServer(request=>request.resume());await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  try{const client=createDirectClient({endpoint:`http://127.0.0.1:${server.address().port}/`});const started=performance.now();await assert.rejects(client.queryBatch('media_fingerprint_v1',[{query:[1]}]),error=>error.message==='cpu0_query_timeout');assert.ok(performance.now()-started>=30000);assert.equal(client.openSockets,0);}finally{await new Promise(resolve=>server.close(resolve));}
+ });
++
++test('malformed points refuse parity while empty results and UUID numeric scores remain valid',async()=>{
++ let points=[];const server=http.createServer((request,response)=>{request.resume();request.on('end',()=>response.end(JSON.stringify({time:.001,result:[{points}]})));});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
++ try{const client=createDirectClient({endpoint:`http://127.0.0.1:${server.address().port}/`});for(const point of [{},{id:1,score:null},{id:null,score:1},{id:1,score:'1'},{id:'raw unsupported',score:1}]){points=[point];await assert.rejects(client.queryBatch('media_fingerprint_v1',[{query:[1]}]),/cpu0_query_response_invalid/);assert.equal(client.openSockets,0);}for(const valid of [[],[{id:'8c79e9dd-04f3-4dd5-b0b4-bc1826b43931',score:-.5}]]){points=valid;assert.deepEqual((await client.queryBatch('media_fingerprint_v1',[{query:[1]}])).results,[valid]);}}finally{await new Promise(resolve=>server.close(resolve));}
++});
+--- v1/test_consumer_birth_cpu0.mjs
++++ v2/test_consumer_birth_cpu0.mjs
+@@ -0,0 +1,6 @@
++import test from 'node:test';import assert from 'node:assert/strict';import {mkdtempSync,mkdirSync,writeFileSync,statSync,rmSync} from 'node:fs';import {tmpdir} from 'node:os';import path from 'node:path';import crypto from 'node:crypto';
++import {consumerBirth} from './consumer_cpu0.mjs';import {validateAdmissionFrame,canonicalHash} from './compare-contract-cpu0.mjs';import {prior,admission} from './cpu0_consumer_fixture.mjs';
++const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
++function procFixture(){const root=mkdtempSync(path.join(tmpdir(),'cpu0-public-proc-'));function row(pid,ppid,ticks,group){mkdirSync(root+'/'+pid);const fields=Array(20).fill('0');fields[0]='R';fields[1]=String(ppid);fields[19]=String(ticks);writeFileSync(root+'/'+pid+'/stat',pid+' (node public fixture) '+fields.join(' ')+'\n');writeFileSync(root+'/'+pid+'/cgroup','0::'+group+'\n');writeFileSync(root+'/'+pid+'/status','VmLck:\t0 kB\n');writeFileSync(root+'/'+pid+'/exe','public executable metadata fixture');}row(777,666,888,'/fixture/consumer');row(101,100,99,'/fixture/source');const target=admission().target;target.qdrant.groupHash=digest('0::/fixture/source\n');const stat=statSync(root+'/101/exe');target.qdrant.exeIdentityHash=digest(JSON.stringify([stat.dev,stat.ino,stat.size]));return{root,target,clean:()=>rmSync(root,{recursive:true,force:true})};}
++test('real filesystem metadata birth matches lifecycle hash bytes and refuses source membership/nonzero locks',()=>{const f=procFixture();try{const birth=consumerBirth(f.target,{procRoot:f.root,pid:777});assert.equal(birth.startTicks,888);assert.equal(birth.parentPid,666);assert.equal(birth.VmLckBytes,0);const stat=statSync(f.root+'/777/exe');assert.equal(birth.exeIdentityHash,digest(JSON.stringify([stat.dev,stat.ino,stat.size])));assert.notEqual(birth.exeIdentityHash,canonicalHash([stat.dev,stat.ino,stat.size]));assert.equal(birth.outsideSourceCgroup,true);writeFileSync(f.root+'/777/cgroup','0::/fixture/source/child\n');assert.throws(()=>consumerBirth(f.target,{procRoot:f.root,pid:777}));writeFileSync(f.root+'/777/cgroup','0::/fixture/consumer\n');writeFileSync(f.root+'/777/status','VmLck:\t4 kB\n');assert.throws(()=>consumerBirth(f.target,{procRoot:f.root,pid:777}));}finally{f.clean();}});
++test('pure admission frame binds complete receipt and independent consumer birth for outer registration',()=>{const initial=prior(),a=admission();a.target=initial.snapshot.newRunning;a.sourceIdentity[2]=a.target.qdrant.pid;const record={...initial,owner:'preflight',previousSha256:initial.sha256};delete record.sha256;const h={...record,sha256:canonicalHash(record)};const binding={sourceFreezeSha256:'b'.repeat(64),externalManifestSha256:'c'.repeat(64)};const frame={kind:'consumer-admission',schema:'search.clone-cpu0-preflight.v1',variant:'cpu0-owned-lifecycle.v1',birthAdmission:a,handoff:h,sourceIdentity:a.sourceIdentity,queries:0,resourceWrites:0,handoffWrites:1,modelsRead:0,consumerBirth:{pid:777,startTicks:888,parentPid:666,exeIdentityHash:'d'.repeat(64),groupHash:'e'.repeat(64),VmLckBytes:0,outsideSourceCgroup:true},...binding,productionAcceptance:false};assert.equal(validateAdmissionFrame(frame,initial,binding).consumerBirth.pid,777);for(const mutate of [r=>r.consumerBirth.VmLckBytes=1,r=>r.consumerBirth.outsideSourceCgroup=false,r=>r.consumerBirth.groupHash=a.target.qdrant.groupHash,r=>delete r.birthAdmission,r=>r.handoffWrites=0,r=>r.externalManifestSha256='f'.repeat(64),r=>r.consumerBirth.rawPath='/private']){const r=structuredClone(frame);mutate(r);assert.throws(()=>validateAdmissionFrame(r,initial,binding));}});
+--- v1/CPU0-CONSUMER.md
++++ v2/CPU0-CONSUMER.md
+@@ -4,16 +4,18 @@
+ 
+ The actual caller must bind the reviewed fourteen-file owned-lifecycle source freeze, the closed external public manifest, and the existing committed predecessor handoff. The consumer derives its four code/policy identities from the verified source freeze. It rejects the previous twelve-file schema, canonical comparison adapter, CPU2 policy, missing lifecycle source, changed core aggregate, alias drift, and changed reclaim helper. The four immutable CPU0 core files remain unchanged. Node and its copy provenance are separately pinned by the outer transport, outside the public manifest; their presence in the same stage is expected. Public files and policies are mode 0600 in an owned canonical mode-0700 stage; Node is mode 0700. Phase-created instance locks and bounded writer receipts are authenticated by the independent outer, rather than treated as arbitrary new public code.
+ 
+-The consumer invokes the reviewed six-argument preflight with a fixed environment containing only PATH, LANG, LC_ALL and the local Unix Docker socket selector. That entry acquires the shared control lock, checks the supplied predecessor, admits the current source, and commits one owned handoff. Its public `consumer-admission` frame carries the source and external manifest hashes. The external pipe must see and authenticate this frame before it selects or starts the private producer. Preflight therefore performs a public handoff write; it is not globally read-only.
++The consumer invokes the reviewed six-argument preflight with a fixed environment containing only PATH, LANG, LC_ALL and the local Unix Docker socket selector. That entry acquires the shared control lock, checks the supplied predecessor, admits the current source, and commits one owned handoff. Its public `consumer-admission` frame carries the source and external manifest hashes, the complete preflight receipt and the actual consumer birth. Bounded metadata reads fence own and source PID/start ticks, cgroup and executable identities before and after; own VmLck must be zero and its cgroup must lie outside the source subtree. The executable identity uses compact JSON bytes without a newline, matching the lifecycle inspector; persisted handoffs alone include a newline. The pure `validateAdmissionFrame(frame, previous, {sourceFreezeSha256, externalManifestSha256})` export validates the complete frame and returns its receipt and consumer birth. The external pipe must independently confirm and register that reported real birth before releasing producer capture. The external pipe must see and authenticate this frame before it selects or starts the private producer. Preflight therefore performs a public handoff write; it is not globally read-only.
+ 
+ Private packets are bounded in memory and remain unread until entry preflight succeeds. EOF and a successful producer-completion frame must precede every clone query. The external transport separately proves the real producer exit. Nine historical slots allow at most nine pairs and eighteen registered reclaim writers. Ambiguous excluded history slots, lookup-based query payloads, duplicate slots, a missing native anchor, wrong cached-index version, truncated input and data after completion refuse the run.
+ 
+ Each phase passes its exact predecessor handoff to the owned controller. Before querying, the consumer validates the three ready frames, fresh admitted births, actual four-element runtime source identity, completed child-only graceful stop, cache-preparation/writer/quiescence/resource proofs, shape, CPU hierarchy and fixed policies. Initial setup alone permits owner `setup` and a null predecessor. Successor receipts require the previous SHA. The source identity is `(container ID, image, actual Qdrant PID, start ticks)`; cgroup identities are retained separately. Non-root CPU rows contain quota, period and throttle counters. Hierarchy-root rows also contain required usage/user/system counters with typed bandwidth non-applicability. Root counter changes are not added to overlapping descendant counters.
+ 
+-Each direct HTTP batch owns a new socket, sends `Connection: close`, preserves the thirty-second timeout, and closes the socket before the query acknowledgement. Wall time includes teardown. There are no query retries. A phase advances only after the authenticated controller handoff, released and unpin-complete frames and actual observed CLI exit zero. Any failed frame, missing cleanup, changed handoff, connection failure or refused proof terminates the comparison. Failure output preserves validated completed clean-stop, lifecycle, CPU and resource facts while omitting raw failed frames and errors.
++Each direct HTTP batch owns a new socket, sends `Connection: close`, preserves the thirty-second timeout, and closes the socket before the query acknowledgement. Wall time includes teardown. There are no query retries. A phase advances only after the authenticated controller handoff, released and unpin-complete frames and actual observed CLI exit zero. Any failed frame, missing cleanup, changed handoff, connection failure or refused proof terminates the comparison. Failure output preserves validated completed clean-stop receipts, admitted failed-stop births and observed nonclean final states, the fixed backend cause, CPU/host-CPU facts, resource endpoints with checked signed deltas, explicit missing measurements, and cleanup/finalization evidence. Nonzero exit codes and observed OOM flags remain failure evidence; they never promote a clean stop. Raw failed frames and errors are omitted. The static backend cause set is tested against the frozen producer scalar enum without importing or executing its runtime.
+ 
+-The offline auditor imports only pure contracts. It recomputes the phase chain, mandatory native red mechanism, candidate tail threshold, ID/score parity and all nine slots from retained public frames. Its result explicitly keeps `experimentPass: false` and requires the independent external cleanup audit. It cannot establish writer/holder disappearance from a remote SSH exit, and it cannot turn clone results into application acceptance. The external completion ABI remains a separate reviewed dependency.
++The offline auditor imports only pure contracts. It recomputes the phase chain, mandatory native red mechanism, candidate tail threshold, ID/score parity and all nine slots from retained public frames. Both row kinds use the same consumer emit builders; they retain both actual controller exits and explicit socket-closure facts. This closes a V1 review finding where the real paired row omitted its baseline exit while synthetic audit fixtures included it. Result points require supported Qdrant scalar IDs and finite numeric scores before any parity hash; valid empty results remain supported. Its result explicitly keeps `experimentPass: false` and requires the independent external cleanup audit. It cannot establish writer/holder disappearance from a remote SSH exit, and it cannot turn clone results into application acceptance. The external completion ABI remains a separate reviewed dependency.
+ 
+ The public test cohort uses real owned child pipes, actual socket teardown, aborted HTTP responses and the unchanged thirty-second stalled-header timeout. It also evaluates only the actual immutable runtime's source-identity return expression with public scalar inputs; that fixture does not invoke source inspection or Docker. Synthetic numeric phase fixtures are labeled public fixtures and do not claim measured latency.
+ 
+ Actual host execution still requires root's final packet review, independent lifecycle and cleanup proofs, fresh resource admission and the separately reviewed external setup/pipe. No service, production source, archive, model, query history or ordinary search API is modified by preparing this source.
++
++The unchanged consumer post-ack cleanup/reap budgets are 15/5 seconds. Earlier CPU2 timing is context only and does not establish that every CPU0 phase fits this window. A terminal timeout cannot produce PASS, advance the handoff, or resume a pair; the independent outer must retain cleanup uncertainty. The 131072-byte per-controller-frame limit is likewise a caller protocol bound, not an assertion about unobserved future frame sizes. Aggregate public rows are bounded separately by the offline reader.

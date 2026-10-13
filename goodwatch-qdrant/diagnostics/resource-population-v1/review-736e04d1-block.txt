@@ -1,0 +1,97 @@
+Review finished; report follows.
+
+# Verdict: BLOCK (source-only, commit 736e04d1)
+
+Six concrete defects block the source freeze. Nothing was executed, hashed or run, so test results and every sha256 in `provenance.json` and `source-freeze.json` are unverified by me. This is not observation authorization and says nothing about production results.
+
+## Blocking defects
+
+1. **Auditor dimensions report "observed" for failed dimensions** — `auditor.py:130-131`
+   - `sampling`, `primaryIdentity` and `requiredMetrics` are set to their positive values whenever no exception was raised, regardless of what is in `reasons`.
+   - A journal with `sample-gap`, `clock-drift`, `source-or-reader-turnover`, `reader-placement` or `source-lock-or-swap` returns `observation-incomplete-or-refused` alongside `sampling: scheduled-samples-observed` and `primaryIdentity: observed-brackets`.
+   - Optional dimensions collapse to `partial-or-unavailable` (also `reader.py:583-587`) with no counts or reasons, so the table's partial/unavailable split is not expressed in output (requirement 1).
+
+2. **Auditor never reads the optional census evidence and drops the reader-exclusion proof** — `auditor.py:115-116`
+   - `sshCensus`, `backupCensus` and `siblingCensus` are decided only from the reader's own label string; `sshUserspace` and `otherCgroups` are never opened.
+   - A row with those objects missing, or with `complete: false`, still audits as `observed-endpoints-only`.
+   - The old auditor required `ownedReaderExcludedCount == 1` (`strict-auditor-v3.py:66`); the new one has no equivalent, so the mandatory exclusion proof is optional at the audit layer (requirement 5).
+
+3. **A census bound can become a false fatal `reader_identity_changed`** — `reader.py:287, 289, 302, 310`
+   - The 4096-node cut, the 1 s deadline and the 64-process break all stop the scan early.
+   - If the reader's own PID was not reached before the stop, `excluded != 1` raises `reader_identity_changed`.
+   - The table maps `optional_census_bound` to dimension-partial, so one condition has two outcomes depending on enumeration order, and the retained reason is wrong (requirement 1).
+   - It fails closed, but with no retry allowed it would burn the observation on a mislabelled cause.
+
+4. **The worst-case row fixture does not cover the real row** — `test_population.py:100, 140-156`
+   - The fixture row omits `sshUserspace`, `otherCgroups`, `metadataOnly` and `archiveResidentBytesMeasured`, roughly 2 KB at maximum magnitude.
+   - By my hand estimate the inflated test row is about 7.8 KB, so `bound_ledgers` truncation (`reader.py:594-600`) likely never runs in any test; the `members + truncatedCount == 16` assertion holds trivially.
+   - For the real schema I estimate the zero-member row at 7.7–8.0 KB against 8192, a margin within my estimating error. Requirement 9 asks for this to be shown, and it is not.
+   - The member tuples used (`birth` set with `unknown` proof) are a shape the auditor rejects.
+
+5. **Main and reader refusals carry no typed numeric or hash evidence** — `reader.py:379-380, 403-404, 478-479, 462-463, 393-394`
+   - Positive main VmLck raises without `lockedBytes`, both in the fence and in the sample.
+   - Reader lock and reader placement change share one bare `source_locked`, with no bytes and no group hashes.
+   - The `SwapTotal` refusal and the limit/ancestor change carry no value or hash.
+   - Plan line 18 and requirement 3 require typed evidence on these; only the auxiliary lock (`reader.py:432`) and the directory identity (`reader.py:377`) comply.
+
+6. **"Byte-unchanged, proven by hash" is recorded but not proven in source** — `test_population.py:81-82`, `provenance.json:12-51`
+   - The only hash assertion is on the `strict-reader-v3.py` copy.
+   - No fixture checks the `strict-auditor-v3.py` copy, the two originals, the four original tests, the four idle files or `source-freeze.json` (requirement 13).
+
+## Provenance: what reading does and does not establish
+
+- **Copies match by text:** `strict-reader-v3.py` against `resource_window.py` (635 lines) and `strict-auditor-v3.py` against `audit_membership_v3.py` (96 lines) read identically line for line. Whitespace and line-ending equality needs a hash.
+- **One corroboration:** the reader hash pinned inside the old auditor (`strict-auditor-v3.py:12`) equals `oldReaderSha256` in provenance.
+- **Not confirmed:** the four original test files were not opened, so "tests untouched" is unconfirmed.
+
+## Confirmed by reading
+
+- **Required metrics:** the meminfo, vmstat, memory.stat, events.local, cpu.stat, swap, cgroup PSI, host PSI and main stat/io/VmLck sets equal the old reader's; `SwapTotal != 0` stays fatal (`reader.py:462`). Nothing moved to optional.
+- **Lock asymmetry:**
+  - a positive auxiliary VmLck raises before the second birth read (`reader.py:428-432`);
+  - zero counts only after list, birth, status, birth and proc-cgroup match (`:435-437`);
+  - zombie, vanish and reuse become unknown (`:433, 439-440`);
+  - nothing upgrades unknown from `Mlocked` or `unevictable`.
+- **Degraded list:** main absent from a complete unique list is fatal (`:420`); duplicate, over-64 or byte-truncated lists go partial, with main proven by the fences.
+- **Directory inode:** captured at construction with `lstat` and a symlink refusal, then fenced before and after each sample, before the final and twice inside it (`:361, 369-377, 458, 477, 490-491, 649`).
+- **Reader identity in the census:** own-birth fence and exactly-one exclusion sit outside the downgrade `try`; `sample()` re-raises anything but `census_bound` (`:281-285, 290, 309-310, 466-476`).
+- **Docker top:** the exactly-one-qdrant-comm refusal is unchanged (`:245-248`), documented in the README, with a fixture.
+- **Namespaces:**
+  - all events are `resource-population.*`;
+  - the new auditor returns `not-applicable` for any foreign or failed row (`auditor.py:72-73`);
+  - the old auditor returns UNKNOWN via `unknown_event`;
+  - permission fields are forced false after the record merge (`reader.py:608`);
+  - there is no top-level `coverage` and no PASS.
+- **Bounds:** 8192 / 1500 / 16 MiB, 2 s cadence, 3 s gap, 2 s sample ceiling, 1 s drift, no retry, in both reader and auditor. Truncation is counted and downgrades locks to unknown.
+- **Placement:** Docker children are ordinary `subprocess.run` children; the README correctly limits the inheritance fixture to not proving immunity to administrator moves.
+- **Comm labels:** used only as a tuple label; the auditor never uses them for identity.
+- **Member laundering:** an unknown member must be exactly `[pid, null, "unavailable", null, "unknown"]`, and endpoint-verified requires zero unknown, truncated and duplicate counts (`auditor.py:54-64`).
+- **Idle consumers:**
+  - `idle_trial.py`, `idle_lease.py`, `idle_launcher.py` and `idle_journal.py`, read in full, import only stdlib and their own packet modules.
+  - They take fresh `_sample` readings and accept only `qdrant.idle-lock-trial.v1`.
+  - The launcher requires its directory to hold exactly the nine packet files.
+  - None references `resource-population` or reads a resource journal.
+  - The five transitive modules were checked by import lines and a string search only, not read in full.
+
+## Optional findings
+
+- **Outcome table is decorative:** `reader.py` embeds and hashes it but never derives constants from it. The name test compares the table to the old module, not to the new reader's tuples.
+- **Allowlist differs from the table:** `reader.py:307, 347` also downgrade `missing_required` and `invalid_numeric`, remapped to `optional_unreadable`. No fatal read sits inside those `try` blocks today.
+- **Requirement 8 wording:** nested `complete: true/false` booleans remain in `sshUserspace`, `backup` and `otherCgroups`, and the terminal event is named `complete.v1`.
+- **Auditor gaps:**
+  - `schema` is never checked;
+  - there is no `journalSha256` in the result (the old auditor had one);
+  - `membershipHash` is unvalidated;
+  - main PID presence in an endpoint-verified ledger is not rechecked;
+  - `all()` at `auditor.py:127` short-circuits past the final `sourceAfter` population.
+- **Auditor crash path:** a non-dict row or receipt, or a non-string `event`, raises an uncaught `AttributeError` and prints a traceback instead of a refusal (`auditor.py:72, 152`).
+- **False-refusal risks with no retry:**
+  - `ProcessLookupError` and `UnicodeDecodeError` in the optional census are fatal;
+  - the 0.1 s `clock-ledger` tolerance (`auditor.py:96`) can be exceeded by a final fence with two 0.25 s ledgers.
+- **List truncation flag:** byte truncation of `cgroup.procs` is recorded only as `+1` in `truncatedCount` (`reader.py:422`), and that path has no fixture; the over-bound test uses 68 short PIDs.
+- **Birth zero:** the reader accepts birth `0` as verified but the auditor rejects it.
+- **Thin fixtures:**
+  - the qdrant-comm fixture tests `docker_frame` only, not the `source_config_check_failed` path;
+  - the old auditor's between-sample membership UNKNOWN is not reproduced in this directory.
+- **Dead code:** `membership_ledger`, `ledger_evidence`, `membership_failure` and the `_membership_ledger` reads in `reader.py`; `failures` in `auditor.py:80`.
+- **Stray bytecode:** `__pycache__/reader.cpython-314.pyc` sits in the directory. It is gitignored and outside the freeze list, but should not travel with a transport packet.

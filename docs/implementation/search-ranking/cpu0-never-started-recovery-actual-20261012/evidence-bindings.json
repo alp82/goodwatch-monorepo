@@ -1,0 +1,36 @@
+{
+  "files": {
+    "root-execution-public.ndjson": {
+      "bytes": 5194,
+      "sha256": "e148b102499bead3b2b3b43f42a4c1224acbc9fb66ed6dcd4d79caba641bcfe1"
+    },
+    "root-execution-return.json": {
+      "bytes": 259,
+      "sha256": "e409fd4f3fd12f96066843600c44c1f28a770488eded6bd01ad72b00d6589dc5"
+    },
+    "root-recovery-actual-disposition.json": {
+      "bytes": 2592,
+      "sha256": "2253a310cca43a47c2f1e768244c8d26105480c772233c5c03a44a7880775b1d"
+    },
+    "root-recovery-readonly-memory-public.json": {
+      "bytes": 4489,
+      "sha256": "799559e087d51b3b87798bebfea75c7b755233059f3d7c68b2baab3c5de6e094"
+    },
+    "root-recovery-readonly-memory-remote.py": {
+      "bytes": 2284,
+      "sha256": "e7fd5f2e883704e8d394cb5ea1f141a7ba5ddff64536dd4deaa5c58d71a7484c"
+    },
+    "root-run-once.py": {
+      "bytes": 2628,
+      "sha256": "506c2349b87e7a5789abb0a4d1f7da848499902c7565811f8f6724e73d857de7"
+    }
+  },
+  "localClosureSha256": "bfad2fde72fdcf5778cca56ca6812e4f846e2db6afb6644a134542ddc5d5b66e",
+  "mergeHead": "d4e09fc2e0c0b6ebfa7522a8051cadddff40950c",
+  "packetSha256": "baef942d1cf0b1ffb4c71db15306877a6d6baa47cf8e7e2be08afe208e5c3e3e",
+  "productionAcceptance": false,
+  "publicationHead": "7d5ef56e07695c7fc9f1dd44a4bd336f5db2ee91",
+  "schema": "cpu0-never-started-recovery-actual-public-evidence.v1",
+  "sourceHead": "5ec9632d274d611b1dbbe3ae8cd794a2a8817996",
+  "status": "failed-or-cleanup-unknown"
+}

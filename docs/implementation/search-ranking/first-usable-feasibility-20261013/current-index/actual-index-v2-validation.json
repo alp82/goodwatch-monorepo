@@ -1,0 +1,102 @@
+{
+  "schema": "search.index-local-validation.v1",
+  "buildId": "20261012T041504Z",
+  "manifestSha256": "1505339c5efbfcd2413df72431158ac2ddef2331120d5d8e5f06a79baf10f097",
+  "binarySha256": "06fc58cc8b25265dc0b1d494b1a42f330c892f9568de4103b7f69c58ca333a83",
+  "terminalComplete": true,
+  "exactEof": true,
+  "rowCount": 42934,
+  "uniquePointIds": true,
+  "titleMixPointOrderEqual": true,
+  "files": [
+    {
+      "bytes": 1530102,
+      "name": "title_table",
+      "sha1": "bd269b4138c61c089e7845ef03979e3736433577",
+      "sha256": "1dd9f4b57031632d99e86d34416d82af5c1c6ffb1f09de1eb2f62ab15ab62ed7",
+      "uncompressedBytes": 4887058,
+      "jsonSha256": "b27aaa4df7f136f4b310311b94a82d341baf81c48bd7959aabcb99239081120d"
+    },
+    {
+      "bytes": 5046424,
+      "name": "term_statistics",
+      "sha1": "0a84c1ef03d965a0fa9de1ec049354e0271030fc",
+      "sha256": "579851bd4019016c8bd0c32705ef39e077c8b03e074ac83d344305f00164e8c0",
+      "uncompressedBytes": 17104523,
+      "jsonSha256": "8a9df8a96cda5b4419a9242f333b40c16669b02019183be1a35fbf8957137771"
+    },
+    {
+      "bytes": 258119,
+      "name": "word_frequencies",
+      "sha1": "386a01b7102620cd31fcbe1c48be6c5479ff6b63",
+      "sha256": "8cbe6c3c6e06b5fbe9babb10cf46f721582316eaa28ce57d766a7d405f8d596c",
+      "uncompressedBytes": 812804,
+      "jsonSha256": "13797bf06741470eac8f29c5ad866d19dcc941b41f87e70b25e8f6c2585dc0b0"
+    },
+    {
+      "bytes": 602396,
+      "name": "collocations",
+      "sha1": "f5f83c283ea6b443fbb344e665e42b078131e578",
+      "sha256": "682d5353fa86c54e126ce52c8d7753c9dd44f65b7ac8bc6d4bacfad572c3452a",
+      "uncompressedBytes": 1572521,
+      "jsonSha256": "4e61c2b7457483d7b5ce359a86ced4732b6487c5e1a7139004c727cb6958a2c2"
+    },
+    {
+      "bytes": 1788534,
+      "name": "name_index",
+      "sha1": "5ad192b47b3605a2de6a8f096a84020f944a032d",
+      "sha256": "f06cf8b663925840029f6644ccbc238de9352b586f7bab019e8c154b70d6c4e0",
+      "uncompressedBytes": 7494014,
+      "jsonSha256": "d13c55a57f5a243210dd0d0baefdb10e046d6fa3ab740fabe6c25ad6faf6b75d"
+    },
+    {
+      "bytes": 796795,
+      "name": "peers",
+      "sha1": "fab2359bd468431435335cdc51eaf49145269c12",
+      "sha256": "b7438e38434ee9af9bf9a6587d1dd2200159002cabc2abc96ed3dd87ab5aa70f",
+      "uncompressedBytes": 1268537,
+      "jsonSha256": "b7b8a5bb6b63063e41099a5e7faba6377e370465235e9971b06972b67c291679"
+    },
+    {
+      "bytes": 3555880,
+      "name": "negation_labels",
+      "sha1": "cfc594fbac51fed336fb5e212503b56db6ad27d6",
+      "sha256": "d152e4a8ab9beb39c88d46f58dc92ebdf6dfd5e83b6225e74d550c143ba518d5",
+      "uncompressedBytes": 14741853,
+      "jsonSha256": "e5b5248bb889e738830876b17ffe3d3281418dac5c9bf9ba2659a1ff9f7af61e"
+    },
+    {
+      "bytes": 886,
+      "name": "alternate_cuts",
+      "sha1": "0eaeff1b3b932b8c5facbde99a84ed81e1fbf7c0",
+      "sha256": "5944928ead5eb25ba882139511b6e227bc41607aff2789748c5b2ea8a8aa8d3d",
+      "uncompressedBytes": 3191,
+      "jsonSha256": "d7ff9c74087e545f18f42bc55f8153c204b5ba6f304d517a822cbd080ada4d7a"
+    },
+    {
+      "bytes": 60395,
+      "name": "intent_examples",
+      "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+      "sha256": "960aec53b54f3ad24f96de3d649781256620e37375608c3ebdfe66f8a2d84feb",
+      "uncompressedBytes": 81082,
+      "jsonSha256": "43a310e87736b745e444c806042285775dd46fd6e17acf919dc45550012219a9"
+    },
+    {
+      "bytes": 49555130,
+      "name": "mix_vectors",
+      "sha1": "62a175cedb6e9348e7d14525d98e4a0bd920b384",
+      "sha256": "298c50754869c47c604666a221d35cd57ddcdffe8f4db4b14fe03aba5175f17e",
+      "uncompressedBytes": 66554048,
+      "jsonSha256": "5775cb9ae0c43f3ce38484957eed9dcef8d4071f511256c49f18f4a19f71dc37"
+    }
+  ],
+  "englishShape": [
+    42934,
+    768
+  ],
+  "multilingualShape": [
+    42934,
+    384
+  ],
+  "scalesFinitePositive": true
+}

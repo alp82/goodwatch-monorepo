@@ -1,0 +1,17 @@
+{
+  "schema": "cpu0-capacity-consumer-opus-invocation.v1",
+  "at": "2026-10-12T21:21:27.118284+00:00",
+  "command": "claude --print --model claude-opus-5-5 --effort medium --tools '' --strict-mcp-config --mcp-config '{\"mcpServers\":{}}' --disable-slash-commands --no-session-persistence --output-format json < opus-input.txt > opus-review.json 2> opus-stderr.txt",
+  "configuredModel": "claude-opus-5-5",
+  "configuredEffort": "medium",
+  "toolsDisabled": true,
+  "strictEmptyMcp": true,
+  "privateInputsIncluded": false,
+  "hostExecution": false,
+  "sourceManifestSha256": "b3bc0a83bb915c698c192b9aace72ec705a7b4fcde9e9ec51cc6d5318552ef35",
+  "inputSha256": "9f5ae6c7271bba33290387f6e303a02d8735dcf42e4cc19876a570815365f8f6",
+  "sessionId": 6159,
+  "sourceOnly": true,
+  "backendSourceFreezeCreated": false,
+  "hostExecutionReady": false
+}

@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "nodeVersion": "v26.8.1",
+  "threads": 2,
+  "serial": true,
+  "maxPhrasesPerBatch": 8,
+  "authorizedUniqueModelTexts": 52,
+  "originalFreezeSha256": "814c785ab60c2decff063e42d44db96eff28f72ed18ff60bc14d28c4cbbc365c",
+  "oldCacheSha256": "b88e062f32ba9f45b6b192676808cfe8dda910ac4af6971579326d0650747893",
+  "missingInputSha256": "000bdf314e8f93ed3a36be4c2104076388912a4a2f17a512eae6aece5693daa2",
+  "workerSha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+  "nodeDependencyInvocationSha256": "dc6067e399ee9fca5a8047dedf82104328b06996a5035c50b9a4fff40e873f86",
+  "productionTiming": false
+}

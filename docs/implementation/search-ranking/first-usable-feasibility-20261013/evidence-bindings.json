@@ -1,0 +1,263 @@
+{
+  "schema": "search.first-usable-feasibility.evidence.v1",
+  "files": [
+    {
+      "path": "dense-design/prompt.txt",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/prompt.txt",
+      "bytes": 142899,
+      "sha256": "cd7db9943bc2d887f04c1848e0427d557cc26ea457990112e2e9cea2d0e43462"
+    },
+    {
+      "path": "dense-design/source-manifest.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/source-manifest.json",
+      "bytes": 1531,
+      "sha256": "7926a1691fa49fe056062ec46521c16f49cdbe91bfc3ca702a8889d9574302d9"
+    },
+    {
+      "path": "dense-design/opus-report.txt",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/opus-report.txt",
+      "bytes": 9118,
+      "sha256": "f5d00d3d8667aecd9aca47aed700572badc66c590aece1667c48b74d9598b684"
+    },
+    {
+      "path": "dense-design/opus-review.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/opus-review.json",
+      "bytes": 11083,
+      "sha256": "0192c889c590148af757408a749d714a93a6e9ec5543a252118000d386ba984d"
+    },
+    {
+      "path": "dense-design/opus-stderr.txt",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/opus-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dense-design/provenance.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/provenance.json",
+      "bytes": 1874,
+      "sha256": "9f2f7aad43ce9e78646fbf97a0d729b5f20cd2cdbbf7a24ea85050122ab300b1"
+    },
+    {
+      "path": "dense-design/invocation.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/invocation.json",
+      "bytes": 625,
+      "sha256": "00a06aecdb0a77818f80988b58820c4005d8a1a7790f3f2541c152e30230849e"
+    },
+    {
+      "path": "dense-design/opus.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/opus.json",
+      "bytes": 1214,
+      "sha256": "45ddcdfdb7c0a031555ab187767fd8784d743567f063006bf848f581fc8e2c29"
+    },
+    {
+      "path": "dense-design/opus.stderr",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-design-20261013/opus.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "existing-evidence/findings.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-existing-evidence-20261013/findings.json",
+      "bytes": 11280,
+      "sha256": "a21cf1e755f295dda301c483dd412997f6bf659ac2a6adc1682b8e790b33f164"
+    },
+    {
+      "path": "existing-evidence/input-availability.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-existing-evidence-20261013/input-availability.json",
+      "bytes": 4688,
+      "sha256": "69645d8e9c5f069d8ae30d4df2057804f7d33683e5d64bc0df30b99665baaa2f"
+    },
+    {
+      "path": "existing-evidence/grade-feasibility.json",
+      "source": "/home/alper/projects/search-100-evidence/description-provisional-existing-evidence-20261013/grade-feasibility.json",
+      "bytes": 10351,
+      "sha256": "c25ffbc5e15984c48b6e7a7ba41cc77d2ebc3c8490d1b161a94790aedadf098d"
+    },
+    {
+      "path": "local-cpu/FINDINGS.md",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/FINDINGS.md",
+      "bytes": 5491,
+      "sha256": "9d8925bfdb45cc8014ff16dc7fef954b9308c57983b8a07b0bce1deb900749a4"
+    },
+    {
+      "path": "local-cpu/source-provenance.json",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/source-provenance.json",
+      "bytes": 385,
+      "sha256": "4504eb68d1b5633a17101c3744e8ed11c810996ddaf75094c99d32ab695557dc"
+    },
+    {
+      "path": "local-cpu/result.json",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/result.json",
+      "bytes": 2866,
+      "sha256": "8a9864bca18989ed3551f8ac8978ad567687a440ee4ef57db456047acf99dc3d"
+    },
+    {
+      "path": "local-cpu/historical-size-result.json",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/historical-size-result.json",
+      "bytes": 4982,
+      "sha256": "a7ded7f7c91ea111db03ccb36b1645b8544e0d29fd5dc92b5ca2a68196e17d5b"
+    },
+    {
+      "path": "local-cpu/historical-size-summary.json",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/historical-size-summary.json",
+      "bytes": 1328,
+      "sha256": "40e54b1fa1742f619a4d82fa0247a2da4eb41978cc020d8ccc301a400a350eed"
+    },
+    {
+      "path": "local-cpu/extract.ts",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/extract.ts",
+      "bytes": 1674,
+      "sha256": "28d4762a38be9e1de4e6742c8117bb7583b15e325879c476f40be69151c75a6a"
+    },
+    {
+      "path": "local-cpu/actual-primitives.mjs",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/actual-primitives.mjs",
+      "bytes": 947,
+      "sha256": "30e9ac2c49723eae2773b7aef2f00112637b9e21b00a8b4addc980ab3bbabd2e"
+    },
+    {
+      "path": "local-cpu/run.mjs",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/run.mjs",
+      "bytes": 2114,
+      "sha256": "ff4c2baa0580f716944132ed299c7a71402ab120bf0177d4b12cf13b5f7b1a03"
+    },
+    {
+      "path": "local-cpu/run-historical.mjs",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/run-historical.mjs",
+      "bytes": 2052,
+      "sha256": "4c8678e68fd2812e464c0e6a447f1c539cd55996616d6fa456779f5b9c42e596"
+    },
+    {
+      "path": "local-cpu/EXISTING-PIPELINE-OPTIONS.md",
+      "source": "/home/alper/projects/search-100-evidence/local-mix-vector-microbench-20261013/EXISTING-PIPELINE-OPTIONS.md",
+      "bytes": 6825,
+      "sha256": "0e0833e306c48cd1a429f8b65e7e91b52bbe5540416c2ba7bba0209048e5b5fe"
+    },
+    {
+      "path": "current-index/read-index.mjs",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/read-index.mjs",
+      "bytes": 9721,
+      "sha256": "15f003a05e81b03968c8c2096823fc3bd21d341e69a320d6385dcddf0ed2d925"
+    },
+    {
+      "path": "current-index/test-read-index.mjs",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/test-read-index.mjs",
+      "bytes": 5483,
+      "sha256": "5788fd10b51a370821592e895237952f3d2a5badb0a0a44dc399d7fe5cb26079"
+    },
+    {
+      "path": "current-index/read-index-v2.mjs",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/read-index-v2.mjs",
+      "bytes": 10551,
+      "sha256": "13b1407b988b879adab523c31250ce42d39040c814a614f1bf7a90a49f97b7a0"
+    },
+    {
+      "path": "current-index/test-read-index-v2.mjs",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/test-read-index-v2.mjs",
+      "bytes": 6816,
+      "sha256": "ffc03a670d51491f5a91b980e820f54056a82510534dd5c590005e85fdf7c7fd"
+    },
+    {
+      "path": "current-index/actual-manifest.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "current-index/actual-manifest.stderr",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest.stderr",
+      "bytes": 90,
+      "sha256": "b9290c7cea623a6fe71cfd8c29f505bd55904410c9027e23f968bbd4a78e59c4"
+    },
+    {
+      "path": "current-index/actual-manifest-invocation.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest-invocation.json",
+      "bytes": 413,
+      "sha256": "d0a02c95764e46dcc78e4baac6ffb1b2652dd629ec27d610ba1c878309fb5547"
+    },
+    {
+      "path": "current-index/actual-manifest-v2.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest-v2.json",
+      "bytes": 1536,
+      "sha256": "b37e2a87af286b9f21388dd70c34ab31f3d1ee54ee0b36c50d0002c8c91771cc"
+    },
+    {
+      "path": "current-index/actual-manifest-v2.stderr",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest-v2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "current-index/actual-manifest-v2-invocation.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest-v2-invocation.json",
+      "bytes": 413,
+      "sha256": "d3146d3b5fbc9f6720071ab645cf2ec635e81d2b33714d2be9e03f5eb85b98fd"
+    },
+    {
+      "path": "current-index/actual-index-v2.stderr",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-index-v2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "current-index/actual-index-v2-invocation.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-index-v2-invocation.json",
+      "bytes": 624,
+      "sha256": "6477006f0a4a348c9a59b6451e4f3968e570f60a2acabb5b607cf8a170ccb195"
+    },
+    {
+      "path": "current-index/actual-index-v2-validation.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-index-v2-validation.json",
+      "bytes": 3843,
+      "sha256": "ee84f7e1777d7b1a9bfb6d0b9aa8933c3190cfe0838e1186e9fa737d22a8b14a"
+    },
+    {
+      "path": "current-index/model-checklist.json",
+      "source": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/model-checklist.json",
+      "bytes": 1969,
+      "sha256": "cab479902bdd00e6ac1a7e975ced394d33c8803d7e6ef017531b012bce736325"
+    },
+    {
+      "path": "title-design/DESIGN.md",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/DESIGN.md",
+      "bytes": 7774,
+      "sha256": "60f6a35360994ca34ac841a92dd7b4a5225ccca8ceda6006d74c4cadf293d16c"
+    },
+    {
+      "path": "title-design/manifest.json",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/manifest.json",
+      "bytes": 4736,
+      "sha256": "a02dc043e0905bf26a2a3e41262f33124e2014e0961038896b3c971e84375683"
+    },
+    {
+      "path": "title-design/review-prompt.txt",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/review-prompt.txt",
+      "bytes": 282468,
+      "sha256": "b0ab99d255bfa31261d9a2be8b3a8c11396258bf020dc01be35df4b54be5d97a"
+    },
+    {
+      "path": "title-design/opus-report.txt",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/opus-report.txt",
+      "bytes": 9412,
+      "sha256": "a2a8744a844d0bb0ff1c75436bde0306d1c52a5629b4472e05aefae105b7a864"
+    },
+    {
+      "path": "title-design/opus-review.json",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/opus-review.json",
+      "bytes": 11396,
+      "sha256": "d102082c91b91e998e29c43833bb9369e41fce6ee649e573687bf22ffd5194a9"
+    },
+    {
+      "path": "title-design/opus-stderr.txt",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/opus-stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "title-design/opus-provenance.json",
+      "source": "/home/alper/projects/search-100-evidence/early-authoritative-results-design-packet-20261013/opus-provenance.json",
+      "bytes": 1938,
+      "sha256": "5f69c953fbfce5932a355ec79466641e0611d945e8e9239234935ccf245431a2"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+# Verdict: no concrete blocker found in the supplied source (static read only)
+
+I ran nothing, read no host and recomputed no hash. This is not a runtime, capacity, latency or production PASS, and the historical 990 BLOCK stands as written. N1 is fixed, and U1, U2 and U3 are closed as specified, with the residuals below.
+
+## Closure of the delta
+
+| Item | Status | Basis |
+|---|---|---|
+| **N1** undefined `issued` | Closed | The `published-verified` handler in `_preflight` uses literal `True` again, matching the lock-close branch. No other name in the post-enrolment path is undefined. |
+| **N1** fixture | Closed | Traced by read: real `O_EXCL` receipt, real lock file and flock, then mocked `birth_admission` raising. On 990 the handler's `NameError` is not a `RuntimeError`, so the test errors there as stated. |
+| **U1** container-view maps | Closed as specified | `_fork_scope_guard` refuses exact and prefixed `/qdrant/storage` and `/qdrant/snapshots` as well as `ROOT`. `CPU0.md` correctly says the shaped row does not attest kernel rendering. |
+| **U2** constructor facts | Closed | `childFailureDetails` is always set: gone `True` when start was never attempted, `None` (unknown) after an attempt, then the observed value after reaping. `_stage` makes `released` and `pinChildExited` true only when gone is exactly `True`, and surfaces `pin_child_cleanup` as `cleanupReason`. |
+| **U3** masked cleanup | Closed, with R1 | TERM/INT are blocked across close, join, terminate and kill, with the 1/5/5 bounds unchanged. A raise at cleanup-mask restore is caught and recorded as secondary; the primary is re-raised. |
+
+- **Scope:** the diff touches only `CPU0.md`, `controller_cpu0.py`, `cpu0_preflight.py`, `test_cpu0_controller.py` and the freeze. There is no new success-frame field or schema, and no timing, floor or retry change.
+- **Freeze:** all 14 section-header hashes agree with the freeze, and the control policy's lifecycle and helper-policy references agree. This is text agreement only.
+- **For the integrated review:** the freeze's own hash and the preflight hash changed. The external manifest's `sourceFreezeSha256` and the RPC loader's authenticated preflight hash must follow.
+
+## Residual issues (non-blocking)
+
+**R1. A signal consumed inside a `SIG_BLOCK` call skips cleanup and leaves TERM/INT blocked.**
+- This rests on CPython behaviour as I recall it, not an observed run: `signal.pthread_sigmask` runs pending Python handlers before returning.
+- If a second signal lands between the start-mask restore and the cleanup `SIG_BLOCK`, the handler raises inside that call. The kernel mask is already applied, but `cleanup_mask` stays `None`.
+- Effect: the endpoint closes and the reap are skipped, and the mask is never restored.
+- The emitted facts stay truthful: unknown after a start attempt, so `released` is false.
+- The unreaped child exits only on pipe EOF. If the parent's end is still open at interpreter exit, multiprocessing's exit-time join of a non-daemon child could hang, with TERM blocked.
+- The first `SIG_BLOCK` before `start` has the same mask-left-blocked property, with no child; that was already true in 990.
+- This is much narrower than the 990 U3 window. Suggested fix: run the cleanup body whether or not the block call raised, and restore to a mask captured once up front.
+
+**R2. Unknown without a reason.** If `start` was attempted and `process.pid` is still `None`, the stream reports `released: false` and `pinChildExited: false` with `cleanupReason: null`. This is truthful but unexplained, and no fixture reaches it.
+
+**R3. Start failure plus a pending signal.** The restore-time `controller_interrupted` replaces the `start` error as primary. The start error survives only as `__context__` and is not emitted. Behaviour is unchanged from 990.
+
+**R4. Carried from 990, unchanged.**
+- U4: all guard refusals share `overhead_helper_unproven` with no numbers.
+- U5: fd 0 inheritance, the temp-directory symlink assumption and the dead `fake_pin_child`.
+- The new N1 test adds one more dependence on the temp directory not being behind a symlink.
+
+## Exact static fixture coverage
+
+**N1: `test_real_enrolment_then_admission_failure_preserves_primary_and_published_authority`**
+- Real: `O_EXCL` create, write, fsync, directory fsync, `_read` re-verification, lock open, mode check and flock.
+- Stand-ins: lifecycle (`MagicMock`), source, `_node`, `load_config` and `birth_admission`.
+- Asserts:
+  - the same primary object and its `admissionFailureEvidence`;
+  - `published-verified` and addressable `True`;
+  - the SHA equals the on-disk receipt hash;
+  - the receipt JSON equals the evidence record;
+  - no handoff commit.
+- Not covered:
+  - `main()` output composition;
+  - post-admission failures after enrolment (role, argv and Node re-fences, `commit_handoff`); these are covered by read only.
+
+**U1: `magic-mapping` mode**
+- A real `PinChild` attempt, with `lifecycle.bounded` replaced to return one shaped `/qdrant/storage/...` row.
+- Asserts refusal with no child started.
+- The reason string is shared with the other guards; attribution rests on contrast with `normal`.
+- Not covered: the exact-name forms, the `/qdrant/snapshots/` prefix and real kernel rendering.
+
+**U2: `constructor-unknown` and `constructor-live` through `stage()`**
+- `PinChild` is mocked to raise with gone `None` or `False` plus the cleanup marker.
+- Asserts:
+  - reason `overhead_helper_unproven` and `childFailureDetails` passed through;
+  - `released` and `pinChildExited` false, exit code null;
+  - `cleanupReason` is `pin_child_cleanup`.
+- Not covered through `_stage`: gone `True`, and R2's unknown without marker.
+
+**U3: `constructor-interrupt` mode**
+- A real fork, with an injected raise on every parent `SIG_SETMASK`, so both the start-mask and cleanup-mask restores raise.
+- Asserts the message and `constructorChildGone is True`.
+- Primary retention is shown only indirectly: the second injected instance has the same message but would lack `childFailureDetails`.
+- Not asserted: `childConstructorCleanupFailure`.
+- Not covered: real signal delivery during `start` or cleanup, and R1's window.
+
+**Unchanged from 990:** the direct default-TERM, EOF, extra-descriptor, thread, host-path mapping and large-parent fixtures.
+
+## Qualification
+
+- Source and process authority remain stand-ins in every new fixture.
+- Still unproven by any fixture:
+  - real cgroup join and clone placement;
+  - the controller's real descriptors, maps and RssAnon at the fork point;
+  - `phase_overhead` with a live helper.
+- Not supplied, not reviewed, not approved here:
+  - the RPC loader and adopter;
+  - the Node receipt and all `.mjs` files;
+  - `prepare_clone_reclaim.py`;
+  - the external manifest and config aliases.
+
+  The separate integrated source14/external/JS review is still required.

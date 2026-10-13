@@ -1,0 +1,182 @@
+{
+  "schema": "public-common-union-fingerprint-evidence.v1",
+  "productionAcceptance": false,
+  "copiedFiles": [
+    {
+      "path": "study/README.md",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/README.md",
+      "bytes": 3664,
+      "sha256": "e74bb3b5eb5ce77b5a584ceda61e4b2bcc46f72b55f257f9f291e79fbc853196"
+    },
+    {
+      "path": "study/engine.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/engine.mjs",
+      "bytes": 1826,
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5"
+    },
+    {
+      "path": "study/primitives.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/primitives.mjs",
+      "bytes": 1591,
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9"
+    },
+    {
+      "path": "study/run.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/run.mjs",
+      "bytes": 8870,
+      "sha256": "98ec02c2a289e50df743a7979ec3276f0db3d4d46ba3e4f4ef914a1f72a3f552"
+    },
+    {
+      "path": "study/evaluate.py",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/evaluate.py",
+      "bytes": 8891,
+      "sha256": "e4149c72aa957fadf480654dd3512398d2d39efa2daf24909b685472d94096d5"
+    },
+    {
+      "path": "study/test-engine.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/test-engine.mjs",
+      "bytes": 2515,
+      "sha256": "c7f6fd38966327aa7943540ecfa27fea31a4f9d4507f5e4f037f8a9059adc34d"
+    },
+    {
+      "path": "study/test-evaluate.py",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/test-evaluate.py",
+      "bytes": 1139,
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31"
+    },
+    {
+      "path": "study/input-bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/input-bindings.json",
+      "bytes": 5200,
+      "sha256": "390d5724c6717b76383860b02989df63ae7945dad915add3b96c14856423bb7a"
+    },
+    {
+      "path": "study/catalog-drift.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/catalog-drift.json",
+      "bytes": 345841,
+      "sha256": "7b0a4c1416447ad011518903ed64baf265f8c5c827f36e8837d53853adde7ef5"
+    },
+    {
+      "path": "study/study-source-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/study-source-manifest.json",
+      "bytes": 1572,
+      "sha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea"
+    },
+    {
+      "path": "study/metrics.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/metrics.json",
+      "bytes": 215387,
+      "sha256": "fd089b4c71b4a7892e1ae854446fd962548f50d24c3e740b271edd8d86b145d4"
+    },
+    {
+      "path": "study/root-run-invocation.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run-invocation.json",
+      "bytes": 608,
+      "sha256": "08ea5d72c80aa94ced417036e3f23d63f9ec0c1efa328fee911fa2a67794ab14"
+    },
+    {
+      "path": "study/root-evaluate-invocation.json",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate-invocation.json",
+      "bytes": 475,
+      "sha256": "20721999ae73a32add6ba5b21812a0db7f056ebddf8db469a2c3291b45cdc38e"
+    },
+    {
+      "path": "study/root-run.stdout",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run.stdout",
+      "bytes": 142,
+      "sha256": "95c320491d8701ddb4f3d3f16dd99a2d300e86dba21029d9fdcdb14f76dac9f7"
+    },
+    {
+      "path": "study/root-run.stderr",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "study/root-evaluate.stdout",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate.stdout",
+      "bytes": 1011,
+      "sha256": "514f3941087efcc501b7a05676f50728672b117b89fb9d1efa7fc0ee1027617c"
+    },
+    {
+      "path": "study/root-evaluate.stderr",
+      "original": "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "analysis/INTERPRETATION.md",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/INTERPRETATION.md",
+      "bytes": 5945,
+      "sha256": "944e9d6491955cac97b7ea06f39646cc967310d7455aee5369a1a843a8ce7c14"
+    },
+    {
+      "path": "analysis/actual-study-bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/actual-study-bindings.json",
+      "bytes": 4189,
+      "sha256": "3a177a800aed5eeb34dd2ad1db6cd51d09b4479a3e4b737bd1cd3b75b3fd25e9"
+    },
+    {
+      "path": "analysis/analysis-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/analysis-manifest.json",
+      "bytes": 1335,
+      "sha256": "9e2d0911cc7eef39d5344348ec3054c6abcf186dcf3f1cd9e70d24562cda2b8a"
+    },
+    {
+      "path": "analysis/analyze.py",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/analyze.py",
+      "bytes": 5102,
+      "sha256": "6c7cc39e3f690405d9360db4538f01dbfa55988b732610d76ef914ef52190015"
+    },
+    {
+      "path": "analysis/derived-summary.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/derived-summary.json",
+      "bytes": 27513,
+      "sha256": "6ca388d7d515105365b686abf8389e8d632a23cb897d9ddc582cf7ede389bf9d"
+    },
+    {
+      "path": "analysis/ranking.server.ts",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/ranking.server.ts",
+      "bytes": 11065,
+      "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7"
+    },
+    {
+      "path": "analysis/signal-input-availability.mjs",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/signal-input-availability.mjs",
+      "bytes": 4228,
+      "sha256": "8c34e6026ca3f1c75b787e6edc11b4c913f23caf56f7cf7ef38a7495d2d8078d"
+    },
+    {
+      "path": "analysis/signal-input-availability.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/signal-input-availability.json",
+      "bytes": 40793,
+      "sha256": "94da10c637d493676c056fa06fb9589b1d8987989dcdf9243e71ace00dac0c64"
+    },
+    {
+      "path": "independent-validation/validate.mjs",
+      "original": "/home/alper/projects/search-100-evidence/common-union-independent-validation-20261013/validate.mjs",
+      "bytes": 6067,
+      "sha256": "915e9f59e5cfec88d77f7a55bfc46bb2600fa7101f4922582d1bc6c794ed76d7"
+    },
+    {
+      "path": "independent-validation/score-validation.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-independent-validation-20261013/score-validation.json",
+      "bytes": 576,
+      "sha256": "e3ba07b7a701a0691e1e57cf54ea1c225fe3aeae546148e3332238885586bf9d"
+    },
+    {
+      "path": "independent-validation/baseline-validation.json",
+      "original": "/home/alper/projects/search-100-evidence/common-union-independent-validation-20261013/baseline-validation.json",
+      "bytes": 567,
+      "sha256": "096607cddb4a9c862dea2156dc5b1ef7615f15cadcf918465bebde1a813c31a8"
+    }
+  ],
+  "omittedLargeInputs": [
+    "completed rankings.json (hash bound by actual-study-bindings.json)",
+    "index and fingerprint matrices",
+    "embedding vector cache",
+    "full public captures and prepared records",
+    "filter-mask binary"
+  ],
+  "validationScope": "source inspection, local fixtures, independent actual retained-candidate/raw scoring checks; no application runtime or production acceptance"
+}

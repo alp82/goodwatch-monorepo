@@ -189,6 +189,24 @@ test("provisional results arrive before full completion and never resolve the re
 	assert.deepEqual(progress, [partial])
 })
 
+// The wire only: which reading the page then shows is chosen inside the search page's controller.
+test("a reading streamed after a pendingRanking batch still arrives, after that batch and never after the completed answer", async (t) => {
+	const early = { q: "fixture", rows: [{ key: "movie:42" }], reading: [], pendingRanking: true }
+	const final = { q: "fixture", rows: [{ key: "movie:43" }], reading: [{ label: "heist" }], pendingRanking: false }
+	stubFetch(t, () => streamAnswer(
+		{ kind: "provisional", batch: early },
+		{ kind: "reading", reading: [{ label: "heist" }] },
+		{ kind: "batch", batch: final },
+		{ kind: "reading", reading: [{ label: "late" }] },
+	))
+	const events: unknown[] = []
+	const answer = await requestSearch({ body: { q: "fixture" }, signal: new AbortController().signal,
+		onReading: chips => events.push(["reading", chips]), onProgress: batch => events.push(["provisional", batch]),
+		unavailable: SEARCH_PAGE_UNAVAILABLE })
+	assert.deepEqual(events, [["provisional", early], ["reading", [{ label: "heist" }]]])
+	assert.deepEqual(answer, final)
+})
+
 test("a failure after provisional results rejects without discarding delivered progress", async (t) => {
 	const partial = { q: "fixture", rows: [{ key: "movie:42" }] }
 	stubFetch(t, () => streamAnswer({ kind: "provisional", batch: partial }, { kind: "error", error: "Title check failed" }))

@@ -1,0 +1,14 @@
+{
+  "actualHostPlacementProven": false,
+  "elapsedSeconds": 130.732,
+  "exitCode": 0,
+  "fixtureCount": 341,
+  "fixtureSourceAuthority": "stand-in",
+  "head": "1aae3c10531cd9aebaa5ed03b510dc8d1fe68c66",
+  "productionAcceptance": false,
+  "readOnlySourceReviewPending": true,
+  "realEnrolmentRefusalRegression": "old990-nameerror-new-primary-preserved",
+  "realLocalForkScope": true,
+  "schema": "cpu0-backend-source-fixtures.v3",
+  "sourceFreezeSha256": "f13494c945e5a4fe719f848fbe9bc5fe724508f0f699491fea55b69dba8a3cad"
+}

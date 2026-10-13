@@ -1,0 +1,14 @@
+{
+  "actualProductionSearches": 0,
+  "backendSourceFreezeSha256": "00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108",
+  "command": "node --test code/test_abi_cpu0.mjs code/test_audit_cpu0.mjs code/test_consumer_cpu0.mjs code/test_contract_cpu0.mjs code/test_source_freeze_cpu0.mjs code/test_transport_cpu0.mjs",
+  "durationMs": 30301.814184,
+  "execution": false,
+  "exitCode": 0,
+  "failed": 0,
+  "passed": 25,
+  "schema": "cpu0-consumer-validation.v1",
+  "sourceManifestSha256": "4c95f57fc20e02492862b2e5f33f5025553bfecca11888667f1ad9c9d1f5a7c2",
+  "tests": 25,
+  "validationSha256": "9d6bd89dad5ca2f059045c228d6b0e89ac633070835bb7c02364fceb1e410bc7"
+}

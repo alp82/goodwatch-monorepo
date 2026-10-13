@@ -1,0 +1,113 @@
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md b/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
+index 5eafe919..2effcac4 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/README.md
+@@ -67,6 +67,6 @@ The pipe bounds private buffering to 2 MiB, each public line to 262,144 bytes an
+ 
+ Producer completion requires actual attached Docker CLI exit `0`, independently observed Engine container exit `0`, private-stream completion and registered birth disappearance before the completion marker. SSH exit or `--rm` absence cannot substitute. The [tagged Moby v27.0.3 wait route](https://raw.githubusercontent.com/moby/moby/v27.0.3/api/server/router/container/container_routes.go) installs the waiter before flushing successful headers, providing protocol context for the headers-before-start fence. This is not attestation of the actual abio daemon version; unsupported behavior refuses.
+ 
+-A missing registration, replaced birth, incomplete census, timeout, nonzero stop or cleanup uncertainty stays terminal and unknown. No missing receipt implies absence; no late exit upgrades an earlier refusal. Evidence proves only the registered instances actually checked. Universal absence of unknown early children remains unproven. Clone child SIGTERM is narrowly bound to the reviewed actual wrapper/child identities; there is no Qdrant SIGKILL fallback or automatic restart after an uncertain stop. KILL of an owned transport client is a different action. The producer attach CLI explicitly uses `--sig-proxy=false`, so its TERM/KILL cleanup is not intended to forward that signal to the container; container cleanup still requires its independently verified registered birth.
++A missing registration, replaced birth, incomplete census, timeout, nonzero stop or cleanup uncertainty stays terminal and unknown. No missing receipt implies absence; no late exit upgrades an earlier refusal. Evidence proves only the registered instances actually checked. Universal absence of unknown early children remains unproven. Clone child SIGTERM is narrowly bound to the reviewed actual wrapper/child identities; there is no Qdrant SIGKILL fallback or automatic restart after an uncertain stop. KILL of an owned transport client is a different action. The supported producer command is `docker start --attach <exact-created-container-ID>`. Its non-TTY attach forwards signals, so TERM of this direct client may also reach the exact owned producer container; this cleanup is not local-only. It does not signal a clone or production Qdrant. Container cleanup still requires its independently verified registered birth, and any nonzero exit remains a refusal. The [tagged Docker CLI start implementation](https://github.com/docker/cli/blob/v27.0.3/cli/command/container/start.go) attaches and installs its wait before starting, and registers no `--sig-proxy` option; the [start reference](https://docs.docker.com/reference/cli/docker/container/start/) documents signal forwarding. These primary sources describe the supported protocol, not the actual abio CLI version.
+ 
+ This packet introduces no ordinary application searches, history writes, Jev calls, production mutation or model downloads. Cached private reconstruction can perform the existing read-only SQL reads. A successful clone comparison would still not establish application first-usable latency, production headroom, seven-day error-free coverage or map #100 acceptance.
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
+index 7e08629a..287e5b1b 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
+@@ -155,7 +155,7 @@ def cleanup_phase(arguments,lifecycle,docker,source_sha):
+             if fd is not None:
+                 try:os.close(fd)
+                 except BaseException as error:
+-                    evidence['controlClose']={'observed':False,'reason':'lock_close_failed'}
++                    evidence['controlClose']={'observed':False,'reason':'setup_lock_close_failed'}
+                     if primary is None:primary=error
+     if primary is not None:
+         primary.cleanupIndependentEvidence=evidence
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/producer.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/producer.py
+index 08f0012e..99c66fd1 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/producer.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/producer.py
+@@ -292,7 +292,7 @@ class DockerBackend:
+             finally:connection.close()
+         threading.Thread(target=waiter,daemon=True).start()
+         if not ready.wait(self.remaining(15)) or not self.wait_ready:fail('producer_wait_refused')
+-        self.child=subprocess.Popen(['/usr/bin/docker','start','--attach','--sig-proxy=false',ident],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','DOCKER_HOST':'unix:///var/run/docker.sock'},close_fds=True)
++        self.child=subprocess.Popen(['/usr/bin/docker','start','--attach',ident],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','DOCKER_HOST':'unix:///var/run/docker.sock'},close_fds=True)
+         until=time.monotonic()+self.remaining(15)
+         while time.monotonic()<until:
+             observed=self.inspect(ident)
+@@ -322,6 +322,9 @@ class DockerBackend:
+     def remove_stopped(self,ident):engine('DELETE','/containers/'+ident,timeout=self.remaining(15))
+     def stop(self,ident,grace,timeout):engine('POST','/containers/'+ident+'/stop?t='+str(grace),timeout=self.remaining(timeout))
+     def close_client(self):
++        # Supported start --attach forwards signals for this non-TTY producer.
++        # TERM of this exact direct client may therefore stop its owned container;
++        # client cleanup is never container exit-zero or birth-gone evidence.
+         self.credentials=None
+         if self.wait_connection is not None:self.wait_connection.close()
+         if self.child and self.child.poll() is None:
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_producer.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_producer.py
+index 5f0f0db8..c4d68eb1 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_producer.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_producer.py
+@@ -194,7 +194,7 @@ class ProcessAndLeaseTests(unittest.TestCase):
+    engine.assert_not_called()
+   for invalid in (None,False,0,-1,7201,float('nan'),float('inf')):
+    with self.assertRaisesRegex(RuntimeError,'producer_global_deadline_invalid'):p.DockerBackend(remaining_seconds=invalid)
+- def test_attach_signal_proxy_explicitly_disabled(self):
++ def test_supported_start_attach_argv_without_attach_only_flags(self):
+   events=[]
+   class Response:
+    status=200
+@@ -209,4 +209,25 @@ class ProcessAndLeaseTests(unittest.TestCase):
+    def poll(self):return None
+   with patch.object(p,'UnixConnection',Connection),patch.object(p.subprocess,'Popen',lambda argv,**k:(events.append(argv) or Child())):
+    backend=p.DockerBackend(remaining_seconds=10);backend.inspect=lambda i:info(True);backend.start_attach('a'*64)
+-  self.assertIn('--sig-proxy=false',events[0])
++  self.assertEqual(events[0],['/usr/bin/docker','start','--attach','a'*64])
++  self.assertEqual(set(arg for arg in events[0] if arg.startswith('--')),{'--attach'})
++
++ def test_direct_client_term_cleanup_does_not_upgrade_container_or_cli_exit(self):
++  events=[]
++  class Child:
++   code=None
++   def poll(self):return self.code
++   def terminate(self):events.append('term');self.code=143
++   def wait(self,timeout):events.append(('wait',timeout));return self.code
++   def kill(self):events.append('kill');self.code=-9
++  backend=p.DockerBackend(remaining_seconds=30);backend.child=Child();backend.registered={}
++  backend.birth_gone=lambda receipt:True
++  backend.wait_queue.put({'StatusCode':143})
++  self.assertIsNone(backend.close_client())
++  proof=backend.wait()
++  self.assertEqual(events[0],'term');self.assertNotIn('kill',events)
++  self.assertEqual(proof['cliExitCode'],143);self.assertEqual(proof['containerExitCode'],143)
++  self.assertTrue(proof['birthGone'])
++  fake=Backend();fake.proof=proof
++  with self.assertRaisesRegex(RuntimeError,'producer_exit_unproven'):
++   p.execute(fake,lambda raw:None,lambda value:None,remaining_seconds=30,authenticate_fn=lambda sink=None:{})
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_refusal.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_refusal.py
+index 51a52c27..2eb707bd 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_refusal.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_refusal.py
+@@ -28,6 +28,20 @@ class RefusalTests(unittest.TestCase):
+         self.assertEqual(original.cleanupObservedHandoff['observedCommittedHandoffSha256'],'h'*64)
+         self.assertTrue(original.cleanupIndependentEvidence['prior']['observed'])
+ 
++    def test_control_close_failure_uses_closed_reason_and_preserves_evidence(self):
++        life=types.SimpleNamespace(
++            secure_json=lambda path:({},'a'*64,None),
++            pair_snapshot=lambda docker:{'observed':'fixture'},
++            read_handoff=lambda *args:None,
++            commit_handoff=lambda *args:{'sha256':'b'*64})
++        with mock.patch.object(executor.os.path,'lexists',return_value=False),mock.patch.object(executor,'prior',return_value={}),mock.patch.object(executor.setup,'acquire_control',return_value=42),mock.patch.object(executor.os,'close',side_effect=OSError(5,'fixture')):
++            with self.assertRaises(OSError) as caught:
++                executor.cleanup_phase({},life,None,'c'*64)
++        reason=caught.exception.cleanupIndependentEvidence['controlClose']['reason']
++        self.assertEqual(reason,'setup_lock_close_failed')
++        self.assertIn(reason,executor.REASONS)
++        self.assertFalse(caught.exception.cleanupIndependentEvidence['controlClose']['observed'])
++
+     def test_unified_outer_fixed_reason_keeps_pipe_audit_and_bootstrap_literals(self):
+         for reason in ('pipe_deadline','outer_consumer_audit_refused','bootstrap_guard_or_runtime_failure','control_freeze_changed','writer_birth_changed'):
+             self.assertEqual(outer_local.fixed_reason(RuntimeError(reason)),reason)

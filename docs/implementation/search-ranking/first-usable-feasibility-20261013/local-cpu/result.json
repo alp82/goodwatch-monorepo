@@ -1,0 +1,102 @@
+{
+  "schema": "actual-local-quantized-primitives.synthetic.v1",
+  "runtime": "v26.8.1",
+  "cpu": "11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz",
+  "localLogicalCpus": 8,
+  "collectionPointCountUpperBound": 244262,
+  "actualLocalIndexRowCountMeasured": false,
+  "dimensions": [
+    384,
+    768
+  ],
+  "vectorBytes": 281394432,
+  "filter": "actual Uint8Array mask loop, full and quarter-selected synthetic rows",
+  "topK": 500,
+  "results": [
+    {
+      "selectedRows": 244262,
+      "iteration": 0,
+      "scoreTwoDimensionsMs": 11323.334107,
+      "meanSdTwoMs": 14.219696999998632,
+      "top500TwoMs": 2525.361763000001,
+      "totalMs": 13862.915567
+    },
+    {
+      "selectedRows": 244262,
+      "iteration": 1,
+      "scoreTwoDimensionsMs": 1647.1115919999993,
+      "meanSdTwoMs": 12.859679000001051,
+      "top500TwoMs": 1039.595497000002,
+      "totalMs": 2699.5667680000024
+    },
+    {
+      "selectedRows": 244262,
+      "iteration": 2,
+      "scoreTwoDimensionsMs": 2504.699592000001,
+      "meanSdTwoMs": 10.57251499999984,
+      "top500TwoMs": 1537.564026,
+      "totalMs": 4052.8361330000007
+    },
+    {
+      "selectedRows": 244262,
+      "iteration": 3,
+      "scoreTwoDimensionsMs": 1769.0431510000017,
+      "meanSdTwoMs": 2.106250999997428,
+      "top500TwoMs": 1635.4549020000013,
+      "totalMs": 3406.6043040000004
+    },
+    {
+      "selectedRows": 244262,
+      "iteration": 4,
+      "scoreTwoDimensionsMs": 1316.6064130000013,
+      "meanSdTwoMs": 2.2919549999969604,
+      "top500TwoMs": 1397.3146250000027,
+      "totalMs": 2716.212993000001
+    },
+    {
+      "selectedRows": 61066,
+      "iteration": 0,
+      "scoreTwoDimensionsMs": 297.5568149999999,
+      "meanSdTwoMs": 0.5658689999982016,
+      "top500TwoMs": 445.9304510000002,
+      "totalMs": 744.0531349999983
+    },
+    {
+      "selectedRows": 61066,
+      "iteration": 1,
+      "scoreTwoDimensionsMs": 391.83616800000163,
+      "meanSdTwoMs": 0.5566220000000612,
+      "top500TwoMs": 273.2511429999977,
+      "totalMs": 665.6439329999994
+    },
+    {
+      "selectedRows": 61066,
+      "iteration": 2,
+      "scoreTwoDimensionsMs": 403.17271399999663,
+      "meanSdTwoMs": 0.5851650000004156,
+      "top500TwoMs": 236.036632000003,
+      "totalMs": 639.794511
+    },
+    {
+      "selectedRows": 61066,
+      "iteration": 3,
+      "scoreTwoDimensionsMs": 358.75126100000125,
+      "meanSdTwoMs": 0.6219359999995504,
+      "top500TwoMs": 190.03587799999877,
+      "totalMs": 549.4090749999996
+    },
+    {
+      "selectedRows": 61066,
+      "iteration": 4,
+      "scoreTwoDimensionsMs": 504.25205899999855,
+      "meanSdTwoMs": 1.1035620000002382,
+      "top500TwoMs": 350.5117150000042,
+      "totalMs": 855.867336000003
+    }
+  ],
+  "rssBytes": 464334848,
+  "productionQueries": 0,
+  "productionIndexBytesRead": 0,
+  "modelCalls": 0,
+  "productionAcceptance": false
+}

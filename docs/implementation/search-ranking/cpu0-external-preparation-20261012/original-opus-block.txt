@@ -1,0 +1,73 @@
+# Verdict: BLOCK
+
+Five blockers, found by static reading only. I ran nothing, so the manifest and freeze hashes and the 59-fixture pass are not re-verified by me.
+
+**Coverage.** I read every non-test file in `cpu0-external-v6` in full, plus `lifecycle_cpu0.py`, `cpu0_preflight.py`, `turnover_gate_cpu0.py`, `consumer_cpu0.mjs` and `audit_cpu0.mjs` in full. I read only the relevant parts of `controller_cpu0.py`, `compare-contract-cpu0.mjs` and `prepare_clone_reclaim.py`. I did not read the bodies of `pin_cpu0.py`, `runtime_cpu0.py`, `daemon_cpu0.py`, `cpu0_guards.py`, `transport_cpu0.mjs`, `compare-contract.mjs` or `parity.mjs`, nor the test files other than `test_bootstrap.py` and `test_outer.py`. So this is not the full closure you asked for.
+
+## Blockers
+
+**1. Turnover handoff frame never matches; every run refuses after the first stop.**
+- `outer_local.py:118` requires exactly one frame with `stage=='handoff-complete'`.
+- `turnover_gate_cpu0.py:126` emits the handoff under `stage:'complete'`; `executor.py:141-144` passes those frames through unchanged.
+- The only `handoff-complete` emitter is `controller_cpu0.py:550`, which is the consumer phase path, not turnover.
+- Result: `outer_turnover_handoff_missing` on every run, after OLD is stopped, NEW is created and started, and turnover has stopped and restarted NEW.
+- Fix: select `stage=='complete'` carrying `handoff` at `outer_local.py:118`.
+
+**2. Consumer cleanup refuses to TERM a live consumer once its SSH client is gone.**
+- `registration.py:130` calls `confirm_birth`, which at `registration.py:51` requires `public_process(observed)` to equal the registered birth, including `parentPid` (`lifecycle_cpu0.py:121,127-129`).
+- On any pipe failure or deadline, `private_pipe.py:210-212` kills the local ssh client first. The remote node should then be reparented, which is standard sshd behaviour without a pty but unproven on this host.
+- `cleanup` then raises `consumer_birth_changed`, sends no signal, and `executor.py:157` aborts before the writer census and handoff observation.
+- The consumer does not watch stdin during phases (`consumer_cpu0.mjs:132-141`), so it keeps running stop/start phases past the deadline until its next stdout write fails.
+- Fix: gate cleanup-time identity on pidfd, `startTicks`, exe identity, group and argv; record `parentPid` without requiring equality. Catch a consumer-cleanup refusal as evidence so the census still runs.
+
+**3. Typed reason ledger is not closed, and producer refusals are dropped.**
+- A `producer-stream` refusal is printed on the private stream (`bootstrap.py:68-73`). The pipe rejects it as `pipe_producer_registration_missing` or `pipe_producer_frame_invalid` and discards the value (`private_pipe.py:150-165`).
+- `executor.py:212-218` omits `producerCleanupEvidence` and `producerClientCleanupFailure`.
+- `outer_local.py:189-197` allows 14 names only. Every other `pipe_*` and `rpc_*` reason and `outer_consumer_audit_refused` become `outer_guard_or_runtime_failure`.
+- Refusals raised in `bootstrap.py` itself (`bootstrap_*`, `authenticated_namespace_not_absent`) surface as `bootstrap_guard_or_runtime_failure`.
+- None of the three `*_guard_or_runtime_failure` fallbacks is in `reason_codes.py`. Neither are `authenticated_namespace_not_absent`, `control_freeze_changed` (`cpu0_preflight.py:19,21`) or `writer_birth_changed` (`prepare_clone_reclaim.py:309-318`).
+- Fix: demux a `cpu0-external-failure.v6` frame in the pipe and attach it as `remoteFailureEvidence`; add the missing names; have `fixed_reason` use `reason_codes.REASONS`; emit bootstrap's own literals.
+
+**4. Producer registration does not observe actual argv or cgroup.**
+- `producer.py:90-93` and `320-329` bind Engine `State.Pid`, `/proc` `startTicks`, `StartedAt` and configured `Entrypoint`/`Cmd`.
+- There is no `/proc/<pid>/cmdline`, exe or cgroup check, unlike the consumer (`registration.py:41-59`). Your criterion names birth, argv and cgroup for both.
+- Fix: in `confirm_registration`, read the PID's cgroup and require it to contain the container ID, and require the exact cmdline.
+
+**5. The 7200-second bound is not strict for `completed`.**
+- `outer_local.py:150` runs the audit with no deadline check; `private_pipe.py:102-108` checks only at loop top. `completed` can be issued after the deadline.
+- `producer.py:239` and `:217` use their own 7200 from producer start, not the global deadline.
+- No remote operation receives the deadline; only the local client is killed (`rpc.py:49-57`). Combined with blocker 2, remote lifecycle actions can continue past it.
+- Fix: check the deadline before and after the audit and cap its timeout to the remainder; pass the remaining seconds to `producer-stream`.
+
+## Checked and found correct in source
+
+- **Authentication before imports:** the remote closure is hashed before any `exec` (`bootstrap.py:24-53`) and the local closure likewise (`local_entry.py:28-58`). Backend load order satisfies every sibling import.
+- **Before first stop:** prior-policy closed scope, writers, control census, host, CPU2 hierarchy, shape and double attest all precede `graceful_stop` (`setup.py:310-347`, `admission.py:123-131`).
+- **No create or start after uncertainty:** a stop failure or ambiguous Engine create propagates with no start, removal or retry (`setup.py:85-97`, `:425`). The receipt is required before create (`:421-422`).
+- **Config parity:** only the three CPU fields may differ; the writable layer is declared non-parity (`setup.py:165-201`).
+- **Handoff:** lock proof and CAS hold on every commit (`lifecycle_cpu0.py:132-155`, `518-541`).
+- **Refusal evidence:** retained in `setup.py:384-399` and `executor.py:189-207`.
+- **Producer ordering:** authentication precedes create; wait headers precede start (`producer.py:225-226`); receipts precede exposure.
+- **Registration gates:** consumer registration precedes producer spawn; producer confirmation precedes forwarding.
+- **Exit gates:** CLI exit, container exit and SSH exit are separate claims.
+- **Cleanup:** both sites run despite one failure (`outer_local.py:157-164`); old and current writers are both required (`:169-170`).
+- **Audit:** mandatory inside the `try` before `completed`.
+- **Private persistence:** none found in pipe, outer or executor.
+
+## Nonblocking notes
+
+- **Isolation is by invocation only.** Stdlib shadowing is prevented by `-I`; `local_entry.py:2-9` has no `sys.flags.isolated` refusal.
+- **Cleanup writes a handoff after refusal.** `executor.py:168` commits a new `outer` handoff, replacing the on-disk one. Only the prior hash is reported.
+- **Some preflight runs after the first stop.** Image resolution and volume classification (`setup.py:355-359`) and all producer source and env authentication can only refuse once OLD is already stopped.
+- **Cleanup needs a healthy clone.** It requires a loadable STAGE and an attestable NEW (`executor.py:134`, `registration.py:116`); otherwise the census is skipped and reported unknown.
+- **Local trust is unpinned.** `ssh` runs without `-F none`, local `/usr/bin/node` is not hash-bound, and the validator is hashed and then executed by path (`outer_local.py:50-51`).
+- **Attach-client TERM may reach the container.** `producer.py:258` terminates `docker start --attach`, which proxies signals by default.
+- **Credentials reach Engine disk.** Engine persists `Env` in container config until removal, so the README's "RAM and request bodies" wording is too strong.
+- **Some refusals carry no numbers.** `admission.py:84-85` and `:108-109` refuse without the observed values.
+- **Exit labelling.** `rpc.py:89-90` labels other signals as no exit code and no signal; `registration.py:122` reports `exitObserved:True` from ESRCH alone.
+
+## Test limitations
+
+- `test_outer.py:34` fakes the turnover frame as `handoff-complete`, which hides blocker 1. No fixture composes real backend frame shapes with the outer.
+- No fixture covers a reparented consumer, a producer failure frame on the pipe, or audit timing at the deadline.
+- All Docker, Engine, `/proc`, cgroup and sshd behaviour is fake or inferred; none of it is host proof.

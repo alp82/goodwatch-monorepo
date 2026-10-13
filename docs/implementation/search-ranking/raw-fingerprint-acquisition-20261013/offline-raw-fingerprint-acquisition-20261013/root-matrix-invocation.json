@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/build.py",
+    "--plan",
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-retrieval-plan-20261013/retrieval-plan.json",
+    "--reader",
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/reader.mjs",
+    "--title-table-gzip",
+    "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/verified-index/title_table.json.gz",
+    "--index-validation",
+    "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-index-v2-validation.json",
+    "--stream",
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/actual.ndjson",
+    "--output",
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrices-20261013"
+  ],
+  "sourceSha256": "f60a74ed8f3ea23aac098a8b4c0945ff0de5a96a180e5609d978d54a67fd6195",
+  "started": "2026-10-12T23:26:21.186493+00:00",
+  "finished": "2026-10-12T23:26:33.829287+00:00",
+  "exitCode": 0,
+  "stdout": "{\"status\": \"validated-current-catalog-acquisition\", \"validRows\": 42933, \"invalidRows\": 0, \"missingRows\": 1}\n",
+  "stderrBytes": 0,
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "rootOwnFullSizeFixtures": {
+    "tests": 10,
+    "passed": 10,
+    "durationSeconds": 50.261
+  }
+}

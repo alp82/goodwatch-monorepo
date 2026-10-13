@@ -17,9 +17,19 @@ export type SeenSize = (typeof SEEN_SIZES)[number]
 
 /**
  * What landed on the member's services (#456), for any sample member: nothing, one movie, one show, or four movies
- * and two shows. The offers appeared a day ago, after the member's last visit of either page.
+ * and two shows on two services, 1 to 12 days ago. `episode` (#489) is for the member `new`: Slow Horses, whose new
+ * episode aired since their visit, landed two days ago. `old` is one movie 12 days ago, which still counts, and
+ * `gone` the same movie 15 days ago, which does not. Every offer is after the member's last visit of either page.
  */
-export const LANDED = ["none", "movie", "show", "several"] as const
+export const LANDED = [
+	"none",
+	"movie",
+	"show",
+	"several",
+	"episode",
+	"old",
+	"gone",
+] as const
 export type LandedKey = (typeof LANDED)[number]
 
 export const landedOf = (value: string | null): LandedKey =>

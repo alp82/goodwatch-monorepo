@@ -1,0 +1,51 @@
+{
+  "actualOpus": {
+    "durationMs": 113014,
+    "effort": "medium",
+    "isError": false,
+    "model": "claude-opus-5-5",
+    "reportSha256": "ed609d1bd4fad455afd0b958da2d81e1d6669ae0ae29bca85f119b01661ddebd",
+    "reportedCliExitCode": 0,
+    "scope": "Full five-file amendment, plan and manifest source-reading; partial worktree and grep; no computed hashes/test execution/host/fullclosure",
+    "verdict": "PASS focused amendment"
+  },
+  "at": "2026-10-12 18:31:53 UTC",
+  "authorFullFixtures": 81,
+  "deltaSha256": "419277721c5301243573d7df6764fc3b5fee3c218ffa16b9f339c672d29edfde",
+  "disposition": "ACCEPT focused inactive source amendment; final publication review and merge required before root fresh invocation",
+  "fullSetupCreationStartFloorBytes": 5368709120,
+  "historyWrites": 0,
+  "hostOperations": 0,
+  "independentAgentReview": "No concrete blocker; narrow five-file delta only; no tests or host",
+  "localClosureSha256": "be3cca8f2371b543470ecc46c9e58ce8bd6071bdc3d0e0e0e918fa80d33a7939",
+  "manifestSha256": "8eac7b121519e3ae08cf017c872c1d7ea5068157d55c6e57051b1e50b5a882aa",
+  "oldShutdownFloorBytes": 2147483648,
+  "oldShutdownFloorStrict": true,
+  "ordinarySearches": 0,
+  "packetBytes": 949324,
+  "packetSha256": "2ff32837c5d41e68a8dfab04af29c655bbcc9474707ff2fdf256daf1f2cc8527",
+  "productionAcceptance": false,
+  "residuals": [
+    "Missing full composition fixture for clean OLD stop followed by full NEW-admission refusal; source ordering verified",
+    "Admission directory can remain after later failure; fresh operation does not authorize automatic retry/resume",
+    "Successful shutdown admission evidence remains unprojected; source/runtime binding does not supply measured host sample",
+    "Declared2GiB engineering margin is not a kernel capacity guarantee; actual TERM/flush/headroom still unproven",
+    "Original external fail-closed residuals remain retained in502; original503 refusal unchanged"
+  ],
+  "rootReview": {
+    "backend14Full24AndPriorPacketBytesUnchanged": true,
+    "consumerDependenciesVerified": 32,
+    "focusedFixtures": 5,
+    "focusedSeconds": 0.08,
+    "fullFiveFileDeltaRead": true,
+    "fullHostOldHierarchyCollectionShapeAstUnchanged": true,
+    "independentPacketByteReconstruction": true,
+    "sourceHashesVerified": 27,
+    "unchangedPriorFiles": 22
+  },
+  "rootRunnerSha256": "6c104ee9db85fe935c89def1b7b4bdf547237d8f55eeadd85763ef5a69ce2a09",
+  "runtimeBoundaryQualification": "Some frozen runtime birth checks accept exactly5GiB; setup and cold-start require strictly more; README shorthand does not alter code",
+  "runtimePolicyUnchanged": true,
+  "schema": "cpu0-old-shutdown-root-source-review.v1",
+  "sourceHead": "8afd5cc9face8bcf0d10b88571a39c1ecef3d1e5"
+}

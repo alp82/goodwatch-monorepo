@@ -8,12 +8,11 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { Arrival } from "~/domain/new-episodes"
-import { lineOf } from "~/domain/newly-available"
-import type { LandedLine } from "~/domain/newly-available-signal"
+import type { LandedTitle } from "~/domain/newly-available-words"
 import { isEnabled } from "~/server/features.server"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { getNewShows } from "~/server/new-episodes.server"
-import { getNewlyAvailable } from "~/server/newly-available.server"
+import { getRecentlyLanded } from "~/server/newly-available.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { GuestPage } from "~/ui/my-pages/bits"
@@ -45,7 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				data: null as MyShows | null,
 				now: 0,
 				arrival: null as Arrival | null,
-				landed: null as LandedLine | null,
+				landed: [] as LandedTitle[],
 			},
 			{ headers },
 		)
@@ -68,12 +67,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			console.error("My shows: reading what is new failed:", error)
 			return null
 		}),
-		// The shows that landed on the member's services since the visit (#456): a second line, read the same way.
-		getNewlyAvailable(ctx)
-			.then((news) => lineOf(news.shows))
-			.catch((error) => {
+		// The shows that landed on the member's services in the last 14 days (#489): the row above the list, and
+		// the mark on their rows. It does not depend on the visit.
+		getRecentlyLanded(ctx, now)
+			.then((recent) => recent.shows)
+			.catch((error): LandedTitle[] => {
 				console.error("My shows: reading what landed failed:", error)
-				return null
+				return []
 			}),
 	])
 	const arrival: Arrival | null = fresh && {
@@ -91,7 +91,7 @@ export default function MyShowsRoute() {
 		data: MyShows | null
 		now: number
 		arrival: Arrival | null
-		landed: LandedLine | null
+		landed: LandedTitle[]
 	}
 	if (!data)
 		return (

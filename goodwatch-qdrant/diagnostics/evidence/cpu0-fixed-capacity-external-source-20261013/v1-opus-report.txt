@@ -1,0 +1,81 @@
+# Verdict: BLOCK
+
+This is a static read of the inline bytes only. Tools were disabled, so I recomputed no hash or byte count, ran no test, and make no execution, capacity, latency or production claim.
+
+Both blockers fail closed. Neither can produce a false `completed`, but B1 makes the run unable to finish after the one-shot adoption is spent, and B2 destroys the original refusal evidence.
+
+## Blockers
+
+### B1. `executor_v2.context()` refuses the full stage for every operation that loads it
+
+- **Where:** `external/executor_v2.py`, `context()`, the final `if canonical(config)+b'\n'!=control_raw: raise RuntimeError('executor_policy_changed')`.
+- **Cause:** for `path==adoption.STAGE`, `control_raw` is the frozen `prepared-control-policy-cpu0.json` (3c99f666…, 2289 B), which is indented multi-line JSON. Its compact canonical form can never equal those bytes. Only the admission derivative is canonical.
+- **Affected operations:** `turnover`, `outer-admit`, `register-consumer`, and `cleanup` once the stage exists.
+- **Consequence:** `adopt-running-clone`, `preflight` and `stage` succeed. The intent, the v2 admission scope, the adoption handoff and the full stage are all spent; then `turnover` refuses permanently. `cleanup` also loses its recipe and controller, so no handoff is committed and cleanup is reported unknown.
+- **Minimal correction:** apply the canonical-bytes check only when `path==adoption.ADMISSION`. The preceding `control_raw!=expected` already binds the stage bytes exactly. No guard is lowered.
+- **Why tests miss it:** `test_executor_v2.py` builds a canonical synthetic policy, and `test_executor_v2_close.py` / `test_executor_v2_cleanup.py` mock `context`.
+
+### B2. Consumer preflight masks any refusal after enrolment with a `NameError`
+
+- **Where:** `backend14/cpu0_preflight.py`, `_preflight()`, the `except BaseException as error:` block: `'cleanupAddressableByFixedReceipt':issued`.
+- **Cause:** `issued` is a local of `_enrol_consumer` and is undefined in `_preflight`.
+- **Trigger:** any failure after the preliminary receipt is published — the entry sample (`host_emergency_floor`, `swap_present`), `lifecycle_connection_present`, a re-fence drift, or a handoff commit failure.
+- **Consequence:** `main()` emits `guard_or_runtime_failure` with no `admissionFailureEvidence` and no `consumerEnrolmentFailureEvidence`. The original reason and the same-read numeric sample are lost at the most likely refusal point.
+- **Minimal correction:** replace `issued` with `True`, as the `finally` branch already does.
+- **Why tests miss it:** the `enrolled-failure` case in `test_capacity_cpu0.mjs` uses a synthetic Python stand-in, and `test_cpu0_controller.py` exercises `_preflight` only without `consumer_context`.
+
+## Missing negative and positive fixtures
+
+1. `executor_v2.context(…, STAGE)` and `installed_recipe` against the real frozen policy bytes (red today).
+2. Real `_preflight(consumer_context=…)` with `birth_admission` raising `host_emergency_floor`, asserting the reason, the numeric sample and `published-verified` enrolment evidence all survive (red today).
+3. `load_staged_modules_v2` on the real backend14 bytes in both directories. The external suite uses `# public fixture` sources and a v1 backend worktree.
+4. A v2 `outer_local_v2.run` ordering harness. `test_outer.py` is v1 only, so the register arguments, `nodeReceiptSha256` propagation and `preflightBirthGone` gating are untested.
+5. Real `cleanup_from_receipts` → `cleanup_birth` → `cleanup_context` → `renew_cleanup` with a live Node and a three-member source, asserting UNKNOWN and no TERM.
+6. A real `ZeroChild` spawn from an exec-loaded `python -c` parent.
+
+## Nonblocking: fail-closed or coverage limits
+
+- **Adoption makes one HTTP request.** `running_entry_admission` → `birth_admission` issues one loopback `GET /collections/media_fingerprint_v1` plus `docker top`. It is a metadata read, not a search, and the intent records `queries:0`. If the owner's "no query" covers any Qdrant HTTP, this becomes a blocker.
+- **That GET can consume the one-shot.** The strict `no_clients` fence follows the GET, and `CPU0.md` acknowledges a still-visible socket causes a terminal refusal after the intent is spent.
+- **No per-operation handoff reread in v2.** The `executor_v2.dispatch` refusal projection keeps `refusalEndpointEvidence` but drops v1's `observedCommittedHandoffSha256`. The reread happens only in the `cleanup` operation.
+- **Authentication before import has two gaps.**
+  - The `ZeroChild` spawn child re-imports `turnover_gate_cpu0`, the controller and the core modules from disk.
+  - The consumer-launched `controller_cpu0.py` imports the four core modules before `code_hash` is checked.
+  - Both rely on the root-only 0700 stage.
+- **Entry admission needs absolute zero events.** `require_unheld_scope` requires the source `memory.events` max/oom/oom_kill counters to be zero at every phase entry, so an in-phase pressure max event would refuse the next phase.
+- **Thin, unmeasured margins.**
+  - The 64 MiB RssAnon+VmPTE bound in `_fork_scope_guard`.
+  - The 15 s post-acknowledgement controller budget.
+  - 18 phases inside 7,200 s.
+  - The 262,144 B public line for a `paired-batch` row.
+- **Reason loss for non-`RuntimeError` causes.** A `ValueError` from `daemon.load_config`, for example, projects as `executor_guard_or_runtime_failure`.
+- **Historical equality depends on unsupplied v1 bytes.** `pair_observation` assumes the v1 `state_snapshot` hash recipe matches. A mismatch refuses before staging.
+- **C6 is endpoint-only.** Peaks are null, pre-join helper charge is unattributed, and there is no global or continuous proof, as disclosed.
+- **Test provenance is not closed.** `test_v2_composition.py` reads a mutable consumer worktree by absolute path, so the recorded 219 passes are not bound to these bytes.
+
+## Read and found consistent with the stated requirements
+
+- **Adoption order:** scope and legacy fences, stage 17 files once, identity-only intent, exactly one strict sample above 2 GiB + 2 GiB, re-fence, `owner:'adoption'` handoff with null predecessor. `InspectOnly` cannot mutate.
+- **Enrolment and registration order:** the O_EXCL preliminary receipt precedes the entry sample; `register-consumer` precedes the producer spawn in `private_pipe_v2.stream`.
+- **Registration authority:** pidfds are opened before `/proc` confirmation; argv, executable inode, Node ctime receipt, cgroup group, preflight birth-gone and lock identity are all checked.
+- **Memory guards:** stopped strictly above 5 GiB, working set A−T ≥ 2 GiB, emergency ≥ 1.5 GiB, and current + missing + 256 MiB ≤ 6 GiB in both the reclaim helper and the candidate path.
+- **Lock and pair gates:**
+  - All four classes must be fully locked and resident in three pin states.
+  - Nine pairs with zero exclusions are required, at most 18 single-`write` writers.
+  - The native baseline must be ≥ 1500 ms with major faults and ≥ 64 MiB missing.
+  - The candidate needs server and wall both below 1500 ms.
+- **C6 arithmetic** agrees between `overhead_growth` and `fixedCapacityOverheadEvidenceV2`.
+- **Completion:** it requires audit pass, CLI and Engine exit 0, producer and consumer birth-gone, both writer censuses and the root lock. SSH exit, pidfd readiness, name absence or cleanup alone cannot promote it.
+- **Schemas:** the Python-to-JS key sets and hash recipes for admission, handoff, enrolment, registration, endpoints and renewal match by reading.
+
+## Coverage
+
+- **Read closely:**
+  - Backend: `controller_cpu0.py`, `lifecycle_cpu0.py`, `cpu0_preflight.py`, `turnover_gate_cpu0.py`, `runtime_cpu0.py`, `daemon_cpu0.py`, `cpu0_guards.py`, both policies, the freeze and full manifest.
+  - External: `packet.py`, `executor_v2.py`, `running_adoption.py`, `running_adoption_proofs.py`, `registration_v2.py`, `stager_v2.py`, `stager.py`, `census.py`, `census_v2.py`, `bootstrap_v2.py`, `local_entry_v2.py`, `rpc.py`, `rpc_v2.py`, `private_pipe_v2.py`, `outer_local_v2.py`, `validate_admission_v2.mjs`.
+  - Consumer and evidence: `consumer_cpu0.mjs` and `audit_cpu0.mjs` v2 paths, the v2 functions of `compare-contract-cpu0.mjs`, `compare-contract.mjs`, both historical proofs, `public-fields.json`, `preparation.json`, all historical reports and provenance.
+- **Read for wiring only, not line by line:** `pin_cpu0.py`, `prepare_clone_reclaim.py`, `producer.py`, `executor.py`, `setup.py`, `admission.py`, `recovery.py`, `registration.py`, `reason_codes*.py`, `transport_cpu0.mjs`, `parity.mjs`, and the v1 halves of the JS files.
+- **Skimmed:** every test file and fixture, the five `.md` documents, the v1 `build_packet.py`, `local_entry.py`, `outer_local.py`, `private_pipe.py`, `bootstrap.py`, `validate_admission.mjs`, and the three `backend-context` prototype files.
+- **Not verified:** any SHA256 or byte count, the "legacy v1 bytes unchanged" claim, test results, and all host, Docker/Moby, kernel and stdlib behaviour.
+
+Because of the skimmed and unverified items, I do not claim full closure. The separate backend review remains pending, and this verdict cannot approve host execution or publication.

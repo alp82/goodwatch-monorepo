@@ -1,0 +1,13 @@
+{
+  "schema": "cpu0-fixed-capacity-enum-integration.v1",
+  "backendSourceCommit": "9902791d140d870fce68d6799d823daf002d2795",
+  "consumerSourceCommit": "1c758daaf5cd9b7524bd7ed06d165409570fde92",
+  "backendCount": 273,
+  "consumerCount": 273,
+  "missing": [],
+  "extra": [],
+  "equal": true,
+  "hostOperations": 0,
+  "sourceOnly": true,
+  "executionReady": false
+}

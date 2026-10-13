@@ -1,0 +1,15 @@
+{
+  "actualModel": "claude-opus-5-5",
+  "elapsedSeconds": 145.246,
+  "exitCode": 0,
+  "fixtureCount": 329,
+  "hostExecution": false,
+  "productionAcceptance": false,
+  "reviewDurationMilliseconds": 228354,
+  "reviewExitCode": 0,
+  "reviewReportSha256": "4ce4325ad069c61d04c6444966ff6f8fa964b02425f778e3c5e3ac63f7e7f019",
+  "reviewVerdict": "BLOCK",
+  "schema": "cpu0-backend-source-fixtures.v1",
+  "sourceFreezeSha256": "6102b6fcf1390fbbfbffc913a3ff68aedee755162a4193b1a92f8dad342ec725",
+  "sourceHead": "08ea734159f8fa7cf37fa802fd74fce4fa17f4d4"
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "local-facet-incomplete-coverage-invocation.v2",
+  "sourceManifestSha256": "02ab33edb0b0ffd6df5e22db52ada590aa78bb02f6de22a066f10f4893e3bd63",
+  "argv": [
+    "node",
+    "run.mjs"
+  ],
+  "outerTimeoutSeconds": 300,
+  "started": "2026-10-13T00:06:22.579462+00:00",
+  "retries": 0,
+  "models": 0,
+  "hostOperations": 0,
+  "network": 0
+}

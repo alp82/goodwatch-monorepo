@@ -1,16 +1,13 @@
 // Newly available on a member's services (#456): the rules. A title lands when none of the member's saved services
 // carried it and one does now; a landing is news when it came after the member last opened the page the title
-// lives on, after the launch, and after the member had the title. Pure, and the server's alone: what the
-// navigation is told and what it says are in domain/newly-available-signal.ts and newly-available-words.ts
-// (docs/implementation/tracking/newly-available/README.md).
+// lives on, after the launch, and after the member had the title. For 14 days from the day it landed the title
+// also counts as recently landed, whether the member opened the page or not (#489). Pure, and the server's alone:
+// what the navigation is told and what it says are in domain/newly-available-signal.ts and
+// newly-available-words.ts (docs/implementation/tracking/newly-available/README.md).
 
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
-import type {
-	LandedLine,
-	Landings,
-	NewOnServices,
-} from "./newly-available-signal"
+import type { Landings, NewOnServices } from "./newly-available-signal"
 
 // Duplicate service ids are one service: Amazon Video and the second Amazon Prime Video are Amazon Prime Video,
 // Apple TV Plus is Apple TV.
@@ -157,15 +154,87 @@ export function newlyAvailableOf(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// What the signal and the pages are told
+// Recently landed: what the row on My movies and My shows lists, a poster marks and a home door leads with (#489)
 
-/** The titles of one kind that landed, the latest first, with what is read to say them. */
+/** How many days a landing counts, the day it landed included. */
+export const LANDED_DAYS = 14
+
+const DAY_MS = 86_400_000
+
+/** Days since a title landed, by the calendar (UTC), as a watch's day reads elsewhere: 0 on the day itself. */
+export const daysSinceLanding = (at: number, now: number) =>
+	Math.max(0, Math.floor(now / DAY_MS) - Math.floor(at / DAY_MS))
+
+/**
+ * The landings that still count, movies and shows apart, the latest first: after the launch, after the member
+ * added the title, and in the last `LANDED_DAYS` days. Flat: a visit of the page does not end it, and nothing is
+ * stored for it.
+ */
+export function recentlyLandedOf(
+	candidates: readonly Candidate[],
+	rule: { launch: number; now: number },
+): { movies: Landed[]; shows: Landed[] } {
+	const landed = newlyAvailableOf(candidates, {
+		launch: rule.launch,
+		visits: { movie: null, show: null },
+	})
+	const counts = ({ at }: Landed) =>
+		daysSinceLanding(at, rule.now) < LANDED_DAYS
+	return {
+		movies: landed.movies.filter(counts),
+		shows: landed.shows.filter(counts),
+	}
+}
+
+/**
+ * What the row of My movies and of My shows lists, the latest first: the landings of the last `LANDED_DAYS` days,
+ * and after them the older ones that are still news to the member. The signal counts those until the page is
+ * opened (#456), and the page it leads to has to say what they are.
+ */
+export function listedLandingsOf(
+	candidates: readonly Candidate[],
+	rule: {
+		launch: number
+		now: number
+		visits: { movie: number | null; show: number | null }
+	},
+): { movies: Landed[]; shows: Landed[] } {
+	const recent = recentlyLandedOf(candidates, rule)
+	const news = newlyAvailableOf(candidates, rule)
+	const withNews = (counted: Landed[], unseen: Landed[]) => {
+		const keys = new Set(counted.map(({ key }) => key))
+		return [...counted, ...unseen.filter(({ key }) => !keys.has(key))]
+	}
+	return {
+		movies: withNews(recent.movies, news.movies),
+		shows: withNews(recent.shows, news.shows),
+	}
+}
+
+/**
+ * A home door's titles with the recently landed ones in front, the latest landing first; everything else keeps
+ * its place. `behind` says whether a landed title is behind the door at all: a movie that fits tonight, a show
+ * not started.
+ */
+export function landedFirst<T>(
+	order: readonly T[],
+	landed: readonly T[],
+	behind: (item: T) => boolean,
+): T[] {
+	const lead = landed.filter(behind)
+	if (!lead.length) return [...order]
+	const led = new Set(lead)
+	return [...lead, ...order.filter((item) => !led.has(item))]
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// What the signal is told
+
+/** The titles of one kind that landed and are news, the latest first, with what is read to say them. */
 export interface LandedTitles {
 	ids: number[]
-	/** The names of the first of them: as many as a page's line says. */
-	titles: string[]
-	/** The name of the service the first one landed on. */
-	service: string | null
+	/** The title and the service it landed on, when it is one and both have a name. */
+	only: { title: string; service: string } | null
 }
 
 export interface NewlyAvailable {
@@ -173,13 +242,10 @@ export interface NewlyAvailable {
 	shows: LandedTitles
 }
 
-const landingsOf = ({ ids, titles, service }: LandedTitles): Landings => ({
+const landingsOf = ({ ids, only }: LandedTitles): Landings => ({
 	count: ids.length,
 	ids,
-	only:
-		ids.length === 1 && titles[0] && service
-			? { title: titles[0], service }
-			: null,
+	only: ids.length === 1 ? only : null,
 })
 
 /** What the navigation and home's doors are told; null when nothing landed. */
@@ -187,11 +253,3 @@ export function signalOf(fresh: NewlyAvailable): NewOnServices | null {
 	if (!fresh.movies.ids.length && !fresh.shows.ids.length) return null
 	return { movies: landingsOf(fresh.movies), shows: landingsOf(fresh.shows) }
 }
-
-/** What a page is told for its line on arrival; null when nothing of its kind landed. */
-export const lineOf = ({
-	ids,
-	titles,
-	service,
-}: LandedTitles): LandedLine | null =>
-	ids.length ? { count: ids.length, titles, service } : null

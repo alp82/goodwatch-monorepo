@@ -1,0 +1,30 @@
+{
+  "configuredEffort": "medium",
+  "configuredModel": "claude-opus-5-5",
+  "durationMs": 329164,
+  "exitCode": 0,
+  "hostExecution": false,
+  "isError": false,
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "cacheCreationInputTokens": 108726,
+      "cacheReadInputTokens": 3088,
+      "canonicalModel": "claude-opus-5-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 1.4750736,
+      "inputTokens": 2,
+      "maxOutputTokens": 128000,
+      "outputTokens": 30232,
+      "provider": "firstParty",
+      "thinkingTokens": 27601,
+      "webSearchRequests": 0
+    }
+  },
+  "privateInputsIncluded": false,
+  "promptSha256": "38c46f13e2ea4ad62cc2eee1d68573b1c2abc8844e39b4d6de303b24fbde05f9",
+  "resultSha256": "33cb51de47a16da328ac0b72109c35ec457b4febc11bd274706df8f384c48748",
+  "schema": "cpu0-consumer-opus-review.v1",
+  "sourceManifestSha256": "4c95f57fc20e02492862b2e5f33f5025553bfecca11888667f1ad9c9d1f5a7c2",
+  "toolsDisabled": true
+}

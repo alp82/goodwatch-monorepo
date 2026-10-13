@@ -1,0 +1,43 @@
+{
+  "actualOpus": {
+    "effort": "medium",
+    "exitCode": 0,
+    "limitations": "No full closure, independent computed hashes, test execution or host proof",
+    "model": "claude-opus-5-5",
+    "reportSha256": "b3d73f1a67213e7f4e4387158cc14be9b23ebd56961ce529691bebb6d1732cf7",
+    "verdict": "narrow static PASS"
+  },
+  "at": "2026-10-12 18:17:26 UTC",
+  "authorTests": {
+    "finalFullFixtures": 76,
+    "seconds": 7.927
+  },
+  "disposition": "ACCEPT inactive preparation source; unsupported CLI operational block lifted only for this exact source",
+  "historyWrites": 0,
+  "hostOperations": 0,
+  "localClosureSha256": "2a52f37786da479bce96eb133b1bb47564d1c3f4d492a8c6aa93359ccb5d9d47",
+  "manifestSha256": "d3a718239f88141a578c61b9bc3577745c03349285c7c6eacbc9a0fd22ecabd5",
+  "ordinarySearches": 0,
+  "packetSha256": "b1746c047cf6d651f4fdfc3a4be4e04c691c535d4d489949c60c0a6e44fbee02",
+  "priorBlockedSourcesRemainBlocked": true,
+  "productionAcceptance": false,
+  "requiresRootExecutionReview": true,
+  "residuals": [
+    "Admission refusal may leave consumer cleanup unknown",
+    "Torn private line may mask failure reason",
+    "Remote stdout writes not independently lease-clamped",
+    "Cleanup snapshot outside lock may differ from committed snapshot",
+    "Attached CLI signals may forward to exact owned producer despite Engine birth-fence refusal",
+    "Actual host Docker/Node TERM behavior unproven",
+    "Lock-close refusal can retain nested stale pre-commit handoff hash; actual disk must be observed again; no resume"
+  ],
+  "rootReview": "Previously full-read original closure and all successor changes; final five-file delta fully read, all25 source hashes verified; packet and local closure independently reconstructed byte-identically",
+  "rootTests": {
+    "finalChangedProducerFixtures": 18,
+    "finalChangedRefusalFixtures": 4,
+    "successorFullFixtures": 74,
+    "successorSeconds": 11.543
+  },
+  "schema": "cpu0-external-root-source-acceptance.v6",
+  "sourceHead": "131cec2913e70e963329197e8f105faffd522a89"
+}

@@ -27,6 +27,16 @@ import { DISPLAY, EASE, WRAP, backdropUrl, logoUrl, posterUrl } from "./style"
 export const MoviesPageContext = createContext(false)
 export const useMoviesPage = () => useContext(MoviesPageContext)
 
+/**
+ * The movies that are new on one of the member's services (#489), as My movies marks them: the id of the service
+ * for a poster card, and the sticker for a bare poster. Null on Watch next, which marks nothing.
+ */
+export interface NewOnMark {
+	serviceOf: (tmdbId: number) => number | null
+	sticker: (tmdbId: number, className: string) => React.ReactNode
+}
+export const NewOnContext = createContext<NewOnMark | null>(null)
+
 export const titleHref = (
 	title: Pick<TitleCard, "media_type" | "tmdb_id" | "title">,
 ) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(title.title)}`
@@ -185,6 +195,7 @@ function ThenColumn({
 	mine,
 }: { titles: WatchNextTitle[]; mine: CardService[] }) {
 	const movieWord = useMoviesPage() ? "Movie" : undefined
+	const newOn = useContext(NewOnContext)
 	if (!titles.length) return null
 	return (
 		<div className="min-w-0" data-then>
@@ -211,6 +222,7 @@ function ThenColumn({
 										alt=""
 										className="aspect-[2/3] w-full rounded-md object-cover md:h-24 md:w-16"
 									/>
+									{newOn?.sticker(title.tmdb_id, "absolute left-1 top-1")}
 									<span
 										className={`${DISPLAY} absolute -bottom-1 left-1 text-3xl text-white [text-shadow:0_2px_8px_#000]`}
 										aria-hidden

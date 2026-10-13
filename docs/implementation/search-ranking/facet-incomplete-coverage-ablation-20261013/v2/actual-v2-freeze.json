@@ -1,0 +1,77 @@
+{
+  "schema": "completed-local-facet-incomplete-coverage-evidence.v2",
+  "actualCLIExit": 0,
+  "actualEvaluatorCLIExit": 0,
+  "productionAcceptance": false,
+  "unitBm25Observed": false,
+  "files": {
+    "source-manifest.json": {
+      "sha256": "02ab33edb0b0ffd6df5e22db52ada590aa78bb02f6de22a066f10f4893e3bd63",
+      "bytes": 2843
+    },
+    "input-bindings.json": {
+      "sha256": "c2a54d55676c77ac1acaca46f0940ff008fee28ff3d75ce359818912cb78e83f",
+      "bytes": 54431
+    },
+    "consumed-inputs.json": {
+      "sha256": "f712021d15d95137596cd3fbc43767b1aa5bd33f2b742089a29b075573085b0f",
+      "bytes": 25723
+    },
+    "rankings.json": {
+      "sha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+      "bytes": 57383197
+    },
+    "metrics.json": {
+      "sha256": "a51c265b1fecd3eb9685efe5463df5ca53efd6bf9dcfde5007f5c0b643adce09",
+      "bytes": 341143
+    },
+    "actual-v2-run-prepared.json": {
+      "sha256": "d5e304f1cd6d54f0bc334680921fbc3da0b1a7e44ee8f23fb8cedfb8a3d57894",
+      "bytes": 350
+    },
+    "actual-v2-run-invocation.json": {
+      "sha256": "ae8c301bdd000a95361e460f9acb7754f7c34b899709a7d8bc21de99994bdddf",
+      "bytes": 748
+    },
+    "actual-v2-run.stdout": {
+      "sha256": "2769d25fa0a342f23515a9fcd5f028888132b5c2b48a8fcc84a37096ea14a87d",
+      "bytes": 142
+    },
+    "actual-v2-run.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "actual-v2-evaluate-prepared.json": {
+      "sha256": "1afc8b0e5d184b12c340f5e26eea1dd780a898d073616383ee4888a7b5e13792",
+      "bytes": 443
+    },
+    "actual-v2-evaluate-invocation.json": {
+      "sha256": "c1afcc2a2ff220022d016809b9fcbd3dc655f792ae93f88da30e5df34682934c",
+      "bytes": 810
+    },
+    "actual-v2-evaluate.stdout": {
+      "sha256": "cbaa1daed774587355c9ac2f0852095ac36eb8116440b09edf4d1e3d5ad00cc9",
+      "bytes": 1471
+    },
+    "actual-v2-evaluate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "validate-actual.py": {
+      "sha256": "a3968beded8fc9551a13edfd72289868afd6429f93c264b62cb7e3ee923d3a47",
+      "bytes": 4817
+    },
+    "actual-v2-result-validation.json": {
+      "sha256": "870429b59eb48703ba0c75e44a2c351a34b27d60f52da343071404bcebeeadd6",
+      "bytes": 703
+    },
+    "actual-v2-derived-summary.json": {
+      "sha256": "7ac79fa099d2137a36e46c0127f42f19272a9525361342ca09ad7ab98d4a6517",
+      "bytes": 10270
+    },
+    "v1-to-v2.diff": {
+      "sha256": "90f34629968dd37d8a28e3ea5f02c7ce667995b536f689729a98ad58f4050638",
+      "bytes": 55969
+    }
+  }
+}

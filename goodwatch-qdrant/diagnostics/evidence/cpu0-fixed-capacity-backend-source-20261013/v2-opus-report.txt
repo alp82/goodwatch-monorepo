@@ -1,0 +1,103 @@
+# Verdict: BLOCK (one concrete supplied-source defect)
+
+The fork successor closes historical B1, B2 and the test half of B3 on a static read, but the delta introduces a new defect in `cpu0_preflight.py::_preflight` that blocks. I ran nothing, read no host, and recomputed no hash; this is not a capacity, latency, runtime or production statement. The original BLOCK and the conditional fork design verdict stand as historical records.
+
+## Blocking issue
+
+**N1. `cpu0_preflight.py::_preflight` — the outer `except` references an undefined name `issued`.**
+- The delta changed `'cleanupAddressableByFixedReceipt':True` to `issued` in the `published-verified` handler. `issued` is a local of `_enrol_consumer`; it does not exist in `_preflight` or at module level.
+- On the consumer path, any failure after a successful enrolment raises `NameError` inside the handler. That covers `birth_admission`, the role, argv and Node re-fences, and `commit_handoff`.
+- **Effect on output:** the `NameError` replaces the primary. `main` then reports `guard_or_runtime_failure` and `consumerEnrolmentFailureEvidence: null`, and drops the admission, source-limit and CPU evidence. The published receipt exists on disk but the failure output no longer addresses it.
+- **Coverage:** no fixture reaches this. `test_preflight_locked_predecessor_admission_commit` runs with `consumer_context=None`, so `enrolment` is `None` and the line is skipped.
+- **Fix:** restore `True` there (the receipt is published and verified at that point; the lock-close branch below already uses `True`). Add a fixture that fails `birth_admission` after a real enrolment and asserts the primary reason and `published-verified` evidence.
+- The fix changes the `cpu0_preflight.py` and test hashes, so the freeze must be regenerated.
+
+## Closure of historical blockers
+
+| Item | Status | Basis |
+|---|---|---|
+| **B1** tracker breaks census | Closed | `PinChild` uses `get_context('fork')` with no `set_executable`, so nothing launches a resource tracker. The `normal` fixture builds a real `PinChild` and asserts children equal exactly the helper pid. |
+| **B2** discovery pattern | Closed | `CPU0.md` gives two root-relative commands covering all three test files. |
+| **B2** mid-file main guards | Closed | Both guards are now at end of file. |
+| **B2** CWD-relative policy path | Closed | Resolved from `__file__`. |
+| **B2** `CPU_POLICY` order dependence | Closed | `create=True` added. |
+| **B3** test dependencies | Closed | `test_daemon` data is inline; the f831 fixture is removed; the stdin test inserts its own path. |
+| **B3** RPC loader and callers | Not supplied | Qualification by your scoping, not a supplied-source blocker. |
+
+B1's closure rests on stdlib behaviour and the fixture as written, not an observed run. The fixture does not exercise `phase_overhead` or ledger roles against a real `PinChild`; that composition is still mocked.
+
+## Closure of historical required fixes
+
+1. **Node content:** closed as a narrowed claim in `CPU0.md`; the code still attests metadata only, and receipt binding is deferred to the integrated closure.
+2. **Collision evidence:** closed in `_enrol_consumer` (`issued` is false on `FileExistsError`, asserted by test). The same edit caused N1.
+3. **Double close:** closed.
+4. **Mislabelled passing sample:** closed; `admissionPassedSampleBeforeRefence` is separate and carried by `admission_failure`.
+5. **Finite `memory.high`:** closed; it refuses with `sourceLimitFailureEvidence`, and has a real-file fixture.
+6. **CPU policy on stage path:** closed for `load_control`. `_preflight` still calls only `validate_policy`; this is tolerable only because the config must byte-match the authenticated frozen policy.
+7. **`enrolmentWrites`:** closed.
+8. **HTTP probe race:** closed as a documented terminal refusal with no wait or retry.
+
+**Pressure swap:** `host_available` refuses nonzero swap from the same read, with a fixture. It also now applies during archive verification, which is consistent.
+
+## Fork design requirements
+
+1. **Parent pipe end:** closed. `_fork_pin_entry` closes it before `pin_child`; the `eof` fixture needs a real exit on parent close.
+2. **Signal handlers:** closed. TERM goes to `SIG_DFL`, INT to `default_int_handler`, then both are unblocked; the `term` fixture expects exit code -15 with a raising parent handler installed.
+3. **Descriptor gate:** closed. `_fork_scope_guard` requires exactly 0, 1, 2, the scoped lock and the two pipe ends, before `Process.start`. The thread census is exact.
+4. **Mapping gate:** closed as literally specified, with a gap (U1 below).
+
+**Constructor cause and ownership:**
+- TERM and INT are masked across `start`.
+- On any failure both ends are closed and the child is joined, terminated, then killed.
+- The primary error is re-raised unchanged.
+- The child never unwinds into the constructor.
+
+**Copy-on-write margin:**
+- The 64 MiB check passes at exactly 64 MiB and refuses above it.
+- The cap reserve and its guards are unchanged.
+- `fork_scope_metrics` is stored but never emitted.
+- I treat the margin as the stated engineering choice, not a verified bound.
+
+## Unresolved issues (non-blocking individually)
+
+**U1. The mapping gate matches host paths only.**
+- `measure_source` maps store files through `/proc/<pid>/root/qdrant/storage/...`. I expect `/proc/self/maps` to show those with the container-view path, not a path under `ROOT`, so a leaked mapping of that kind would pass.
+- This is inferred from kernel path rendering, not observed. In the supplied source, `measure_source` and `cold` either unmap or raise, so I see no silent leak path.
+- Either also refuse `/qdrant/storage/` and `/qdrant/snapshots/` prefixes, or narrow the `CPU0.md` sentence.
+
+**U2. Constructor cleanup failure is never emitted.**
+- `childConstructorCleanupFailure` is set but read nowhere.
+- With `manager` still `None`, the `released` event reports `released: true` and `pinChildExited: true`, even when `constructorChildGone` is false or unset.
+- The surviving child holds no lock yet and exits on EOF, so the exposure is small, but the stream can assert an unproven exit.
+
+**U3. Constructor cleanup is not itself masked.** A second signal between its `try` blocks can replace the primary.
+
+**U4. All guard refusals share `overhead_helper_unproven` with no numeric evidence.** This follows from your no-new-field decision. If the real controller's RssAnon exceeds 64 MiB after inventory, every candidate refuses and the output will not say why.
+
+**U5. Fixture robustness.**
+- `invoke` inherits the runner's stdin, so the `normal`, `eof`, `term` and `constructor-interrupt` modes fail if fd 0 is closed.
+- The mapping mode assumes the temp directory is not behind a symlink.
+- `constructor-interrupt` injects a raise at mask restore; it does not deliver a real signal during `start`.
+- `fake_pin_child` in `test_lifecycle_cpu0.py` is now dead.
+
+## Coverage
+
+- **Exact read:** all 14 supplied files and `cpu0-source-freeze.json`. Section-header hashes agree with the freeze, and with the control policy's lifecycle and helper-policy references. This is text agreement only.
+- **Real-semantics fixtures:**
+  - Fork guard and child: fork census, lock non-inheritance, parent lock retention, EOF, TERM, refusals for extra descriptor, thread, mapping and large parent, and constructor reap.
+  - Receipts and reads: receipt filesystem, `memory.high` files and the meminfo reader.
+  - Processes and locks: argv/stdin, pidfd and one-page mlock.
+  - All use stand-in targets and roots.
+- **Not proven by any fixture:**
+  - real cgroup join or clone placement;
+  - the controller's actual descriptors and RssAnon at the real fork point;
+  - `phase_overhead` with a live helper;
+  - N1's path.
+- **Not supplied, not reviewed:**
+  - the RPC loader and the callers of `running_entry_admission`, `entry_identity` and `renew_cleanup`;
+  - adoption;
+  - all `.mjs` files;
+  - `prepare_clone_reclaim.py`;
+  - the external manifest, `node-provenance.json` and the config aliases.
+
+  These need the separate whole-closure review; nothing here is a backend implementation PASS.

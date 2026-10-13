@@ -1,0 +1,47 @@
+{
+  "schema": "offline-facet-incomplete-coverage-design.v1",
+  "designSha256": "5b2fe2a11efbb2239c4e3e374995fae37103371e1a514fbc30e1ba9f316234be",
+  "preparedOnly": true,
+  "actualStudyExecuted": false,
+  "futureEncoderCacheSha256": null,
+  "futureCacheEvidence": "unavailable until reviewed successor actual encoding/termination/postflight proof",
+  "bindings": {
+    "common-union-analysis-20261013/ranking.server.ts": {
+      "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7",
+      "bytes": 11065
+    },
+    "common-union-analysis-20261013/signal-input-availability.json": {
+      "sha256": "94da10c637d493676c056fa06fb9589b1d8987989dcdf9243e71ace00dac0c64",
+      "bytes": 40793
+    },
+    "offline-prepared-inputs-20261013/source/rank-search.server.ts": {
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+      "bytes": 34479
+    },
+    "offline-prepared-inputs-20261013/source/query-parsing.server.mjs": {
+      "sha256": "01c0c627f427064e06c7fa3116ae1ad2b174d927931a088735d31ef7bdedece4",
+      "bytes": 31844
+    },
+    "offline-prepared-inputs-20261013/source/reading-retrieval.server.mjs": {
+      "sha256": "bc8099ac30be34e06654a189a3892bfc78fa72d12d9e024f833d5627b3876d4e",
+      "bytes": 25618
+    },
+    "local-fingerprint-common-union-study-20261013/study-source-manifest.json": {
+      "sha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+      "bytes": 1572
+    },
+    "local-fingerprint-common-union-study-20261013/rankings.json": {
+      "sha256": "24388dbc06e8fef0782fe97a2d841e7e41d0334ea5085a6aa76014681a9fe051",
+      "bytes": 8355875
+    },
+    "local-fingerprint-common-union-study-20261013/metrics.json": {
+      "sha256": "fd089b4c71b4a7892e1ae854446fd962548f50d24c3e740b271edd8d86b145d4",
+      "bytes": 215387
+    },
+    "offline-facet-unit-encoder-plan-20261013/plan.json": {
+      "sha256": "5889f120be2dd2ed85e6d6b817b3b92a5458cf9b79823f027d9b8d91c070fd53",
+      "bytes": 42235
+    }
+  },
+  "productionAcceptance": false
+}

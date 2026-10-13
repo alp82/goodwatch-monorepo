@@ -18,6 +18,8 @@ export interface DiscoverSearchResult {
 	/** Non-empty when the basic search served, or a part of the search failed. */
 	errors: string[]
 	pendingTitleLookup?: boolean
+	/** Set on a partial list of title and people matches sent ahead of the reading and the ranking. */
+	pendingRanking?: boolean
 }
 
 const rankedKeys = (batch: SearchBatch): TitleKey[] => {
@@ -39,6 +41,7 @@ const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
 	creditScope: batch.creditScope ?? null,
 	errors: batch.errors ?? [],
 	pendingTitleLookup: batch.pendingTitleLookup,
+	...(batch.pendingRanking ? { pendingRanking: true } : {}),
 })
 
 /**

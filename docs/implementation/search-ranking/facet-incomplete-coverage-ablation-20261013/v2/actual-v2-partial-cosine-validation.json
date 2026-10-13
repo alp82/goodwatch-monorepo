@@ -1,0 +1,10 @@
+{
+  "schema": "local-retained-partial-cosine-validation.v1",
+  "rankingSha256": "6e170a03e10ab3216a334f71de833605fd7f6557edacf2424cf91de40c82d61c",
+  "checkedColumns": 153,
+  "checkedCandidateCosines": 200593,
+  "maxError": 0,
+  "fullIndexRescan": false,
+  "modelCalls": 0,
+  "productionAcceptance": false
+}

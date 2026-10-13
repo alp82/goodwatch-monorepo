@@ -1,24 +1,21 @@
-// Newly available on a member's services (#456): what the hub's tiles, home's doors and the two pages say. Apart
-// from domain/newly-available-signal.ts, which the navigation loads on every page: these words load with the hub,
-// the doors and the pages.
+// Newly available on a member's services (#456): what the hub's tiles, home's doors and the pages say, and what
+// they are told about the titles that landed in the last 14 days (#489). Apart from
+// domain/newly-available-signal.ts, which the navigation loads on every page: these words load with the hub, the
+// doors and the pages.
 
 import {
 	type NewEpisodes,
 	type SignalWords,
 	signalWords,
 } from "./new-episodes-signal"
-import {
-	type LandedLine,
-	type Landings,
-	badgeOf,
-	newShowCount,
-} from "./newly-available-signal"
+import { type Landings, badgeOf, newShowCount } from "./newly-available-signal"
 
 type Kind = "movie" | "show"
 
 const counted = (count: number, kind: Kind) =>
 	`${count} ${kind}${count === 1 ? "" : "s"}`
 const are = (count: number) => (count === 1 ? "is" : "are")
+const IS_NOW_ON = " is now on "
 
 /**
  * What a tile and a door say about the titles that landed: one is named with its service, several are counted.
@@ -37,7 +34,7 @@ export function landedWords(
 		return {
 			badge,
 			tile: `Now on ${only.service}: ${only.title}`,
-			door: `${only.title} is now on ${only.service}`,
+			door: `${only.title}${IS_NOW_ON}${only.service}`,
 			doorShort,
 		}
 	return {
@@ -70,33 +67,85 @@ export function showsWords(
 	}
 }
 
-/** How many names a page's line says before it counts the rest, as My shows does for new episodes. */
-export const LINE_NAMES = 3
+// ---------------------------------------------------------------------------------------------------------
+// Recently landed (#489): the row on My movies and My shows, the mark on a poster, the line of a home door
+
+/** The service a title is new on, as a poster and a line show it: its short name ("Prime") and its logo. */
+export interface NewOn {
+	id: number
+	name: string
+	logo_path: string
+}
+
+/** A title that landed on the member's services in the last 14 days, as the pages are told. */
+export interface LandedTitle {
+	mediaType: Kind
+	tmdbId: number
+	title: string
+	poster_path: string | null
+	/** When it landed, in milliseconds, and how many days ago by the calendar (UTC): 0 on the day itself. */
+	at: number
+	days: number
+	/** The service it landed on; null when the catalog has no name for it. */
+	service: NewOn | null
+}
+
+/** "New on Netflix": the mark on a title, and the small line of a home door. */
+export const newOn = (service: string | null) =>
+	`New on ${service ?? "your services"}`
 
 /**
- * The one line a page says on arrival about what landed: "Dune is now on Netflix", and with several the names. The
- * lead is set in bold. Null when nothing landed.
+ * What the row says while it is closed: the latest title with its service and its day, and how many more it opens
+ * to. Null when nothing landed.
  */
-export function landedLine(
-	kind: Kind,
-	landed: LandedLine | null,
-): { lead: string; rest: string } | null {
-	if (!landed?.count) return null
-	const { count, titles, service } = landed
-	if (!titles.length)
-		return {
-			lead: counted(count, kind),
-			rest: `${are(count)} now on your services`,
-		}
-	if (count === 1)
-		return {
-			lead: titles[0],
-			rest: `is now on ${service ?? "your services"}`,
-		}
-	const names = titles.slice(0, LINE_NAMES)
-	const more = count - names.length
+export function landedRowWords(landed: readonly LandedTitle[]): {
+	title: string
+	says: string
+	when: string
+	more: string | null
+} | null {
+	const [latest] = landed
+	if (!latest) return null
 	return {
-		lead: "Now on your services:",
-		rest: names.join(", ") + (more > 0 ? ` and ${more} more` : ""),
+		title: latest.title,
+		says: `is new on ${latest.service?.name ?? "your services"}`,
+		when: ago(latest.days),
+		more: landed.length > 1 ? `and ${landed.length - 1} more` : null,
 	}
 }
+
+const DAY_MONTH = new Intl.DateTimeFormat("en-GB", {
+	day: "numeric",
+	month: "short",
+	timeZone: "UTC",
+})
+const ago = (days: number) =>
+	days < 1 ? "today" : days === 1 ? "yesterday" : `${days} days ago`
+
+/**
+ * The day a title landed, in the row's list: within a week the distance leads and the date follows ("Yesterday",
+ * "11 Oct"); after that the date leads ("30 Sept", "12 days ago").
+ */
+export function landedDayWords(
+	at: number,
+	days: number,
+): { when: string; detail: string } {
+	const date = DAY_MONTH.format(at)
+	const distance = ago(days)
+	return days < 7
+		? { when: distance[0].toUpperCase() + distance.slice(1), detail: date }
+		: { when: date, detail: distance }
+}
+
+/**
+ * The small line of a home door whose first title is recently landed: "New on Netflix". Null for a door that is
+ * not led by one, and while the pill on home already names that title with its service: the door then does not
+ * say it a second time.
+ */
+export const doorNewOn = (
+	lead: { title: string | null; newOn?: string | null },
+	pill: string | null | false,
+): string | null =>
+	lead.newOn && !(lead.title && pill && pill.startsWith(lead.title + IS_NOW_ON))
+		? newOn(lead.newOn)
+		: null

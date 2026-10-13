@@ -1,0 +1,258 @@
+{
+  "schema": "search.dense-negation-ablation-public-evidence.v1",
+  "productionAcceptance": false,
+  "files": [
+    {
+      "path": "study/README.md",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/README.md",
+      "bytes": 8191,
+      "sha256": "e374e4c9915860d66dcc4a7050dcb923cfd40d24c3ad26286f7c69301571d190"
+    },
+    {
+      "path": "study/metrics-v2.json",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/metrics-v2.json",
+      "bytes": 167925,
+      "sha256": "667856fb7a96e64199c3851ea508f83e4e4cec8d8e76f3f6f85a34424e815dd0"
+    },
+    {
+      "path": "study/summary-v2.json",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/summary-v2.json",
+      "bytes": 19085,
+      "sha256": "51af96f3f95c927fb3d05c3936da8c5a008a13e012a94320f2656f203b9481f3"
+    },
+    {
+      "path": "study/primitive-provenance.json",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/primitive-provenance.json",
+      "bytes": 591,
+      "sha256": "b1a4c79d7abf5ed8e52a8485cccb4cc23728078471b654ddc3e053b217e3987f"
+    },
+    {
+      "path": "study/grade-source-provenance.json",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/grade-source-provenance.json",
+      "bytes": 1284,
+      "sha256": "f84b42fba105f421ea2edf7b31834eea1a2feadc3266900336911e05d53c22de"
+    },
+    {
+      "path": "study/study-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/study-manifest.json",
+      "bytes": 6924,
+      "sha256": "ea79cc5e12aaf51964890f94cd710cb0643b1859635df67803cf8fe09e6cd38b"
+    },
+    {
+      "path": "study/extract.ts",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/extract.ts",
+      "bytes": 1560,
+      "sha256": "20cde1b220272a809f4e3f6c172ee3aab0e77c5a9d33094a39de98dd2263c9b7"
+    },
+    {
+      "path": "study/primitives.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/primitives.mjs",
+      "bytes": 1591,
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9"
+    },
+    {
+      "path": "study/run-v2.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/run-v2.mjs",
+      "bytes": 6185,
+      "sha256": "34a5df088cddec89d55cc29be37349f15a810d9578aaec120c252d9550f2aebd"
+    },
+    {
+      "path": "study/evaluate-v2.py",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/evaluate-v2.py",
+      "bytes": 6045,
+      "sha256": "ff6f27ebce16096a8d918d1e33d1f5f867573471c6eb3eb34811b6a18fce2a84"
+    },
+    {
+      "path": "study/summarize.py",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/summarize.py",
+      "bytes": 3624,
+      "sha256": "6643392f45175b9804188e648f3383c04fe6dae97fd53cb8dd74b7253eb2f395"
+    },
+    {
+      "path": "study/check-primitives.mjs",
+      "original": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/check-primitives.mjs",
+      "bytes": 1369,
+      "sha256": "68b361bad91d40ab02c13997f6253802ea1b627e216f435ccadfe5ceaaa7b3b9"
+    },
+    {
+      "path": "encoder-initial/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/README.md",
+      "bytes": 3432,
+      "sha256": "d742a86182a03b11f3562a4af2efdfe9210a51eea56a5e51a58db991ae67b28a"
+    },
+    {
+      "path": "encoder-initial/invocation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/invocation.json",
+      "bytes": 993,
+      "sha256": "dc6067e399ee9fca5a8047dedf82104328b06996a5035c50b9a4fff40e873f86"
+    },
+    {
+      "path": "encoder-initial/freeze.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/freeze.json",
+      "bytes": 47222,
+      "sha256": "814c785ab60c2decff063e42d44db96eff28f72ed18ff60bc14d28c4cbbc365c"
+    },
+    {
+      "path": "encoder-initial/source-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source-manifest.json",
+      "bytes": 37316,
+      "sha256": "6beb0c156bcc6b15dac3068220bcfeabebc07d6791fbb55cc25595b8a6e48b60"
+    },
+    {
+      "path": "encoder-initial/validation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/validation.json",
+      "bytes": 1899,
+      "sha256": "d29a8b6f780d9d1b6307494ed6836fa4098bc8f08f5399a30ff660183425e6f2"
+    },
+    {
+      "path": "encoder-initial/model-preflight.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/model-preflight.json",
+      "bytes": 2723,
+      "sha256": "7141b66f43acd2522b01e277f48a528f6c623732eb6e5ab3c2ef07d354ce3f5f"
+    },
+    {
+      "path": "encoder-initial/startup.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/startup.json",
+      "bytes": 289,
+      "sha256": "8d98975acc6b7a6956c0ddef5fd4e9b9b9d4bdbcec6f58e390c320c6a190d838"
+    },
+    {
+      "path": "encoder-initial/encoding-results.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/encoding-results.json",
+      "bytes": 90985,
+      "sha256": "824ebd50e334f4ee247298c3d18e23fc26236134cfa45e8cf0d0354ac5fdf510"
+    },
+    {
+      "path": "encoder-initial/run.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/run.mjs",
+      "bytes": 6728,
+      "sha256": "310933aecf864452e0177e1202cdbf7b1f46b422e6b369a1be4258daef4374b8"
+    },
+    {
+      "path": "encoder-additions/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/README.md",
+      "bytes": 1933,
+      "sha256": "f9286f0c8cfeb0656c4fdc2dc477f078461e87dba14240f92068d19ca84646e0"
+    },
+    {
+      "path": "encoder-additions/invocation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/invocation.json",
+      "bytes": 683,
+      "sha256": "9ae3a61aa4ff18b34a3e851f07089e45640fc205ccad1aa23842f5f05d213c31"
+    },
+    {
+      "path": "encoder-additions/freeze.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/freeze.json",
+      "bytes": 1679,
+      "sha256": "b0535782d4d1dbe93c0771a4d4e4328c7d8e53c875da7706d5f96ee2830ac7c6"
+    },
+    {
+      "path": "encoder-additions/coverage.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/coverage.json",
+      "bytes": 36196,
+      "sha256": "a8a45c8c649f77e6acbb70ccc4d4601b9a8e0a452c8dc701161bb9c798e2e3ef"
+    },
+    {
+      "path": "encoder-additions/model-preflight.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/model-preflight.json",
+      "bytes": 1832,
+      "sha256": "17ff65025b181381ebfca24d1e2c5950d42355f76c62e0bc45c9e7177f8716e5"
+    },
+    {
+      "path": "encoder-additions/startup.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/startup.json",
+      "bytes": 268,
+      "sha256": "7372baae5de3e13770b3a0f671c743eda04c0d5ceca26fbeb6e631c17683c020"
+    },
+    {
+      "path": "encoder-additions/encoding-results.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/encoding-results.json",
+      "bytes": 11740,
+      "sha256": "35d5a52f43dccfd4d0b269e01aca9d5b70d59794a4d5707e69bb053539edf9b1"
+    },
+    {
+      "path": "encoder-additions/add.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/add.mjs",
+      "bytes": 6044,
+      "sha256": "f34c6295a9047995db31719cd9fbda1a1bac95fbb45d39a0c9d88718cf44d538"
+    },
+    {
+      "path": "prepared-inputs/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/README.md",
+      "bytes": 3005,
+      "sha256": "4c2528abc09552f48c9f5e5b0a5a43a76b94c05902668fde90fdc59189dd27d1"
+    },
+    {
+      "path": "prepared-inputs/freeze.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/freeze.json",
+      "bytes": 5895,
+      "sha256": "7fde954da469c69a2aa53edb4b916934edd5c0934a38f44cb9c20d39e3eeee6d"
+    },
+    {
+      "path": "prepared-inputs/source-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source-manifest.json",
+      "bytes": 2480,
+      "sha256": "299241937faeefbd8913ec17f27af8ff0bef2ab4db68e0412a9e1e1c5d8af53d"
+    },
+    {
+      "path": "prepared-inputs/validation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/validation.json",
+      "bytes": 338,
+      "sha256": "6df1e4a24e5c8b83bb2f49e529b765eb3fbca94b8663b3913e441fed23053e65"
+    },
+    {
+      "path": "prepared-inputs/filter-mask-manifest.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-mask-manifest.json",
+      "bytes": 149116,
+      "sha256": "d490395fb9e62fe3d8926344fb959b3175bd8548ab023a5b0987e4e4e9d2e4aa"
+    },
+    {
+      "path": "prepared-inputs/filter-fixture-load.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-fixture-load.json",
+      "bytes": 1672,
+      "sha256": "714f52fbd1f9b7d4a5d0ec1a729577a1ee8812bfc4cc9e83a6c1b2686cdf2233"
+    },
+    {
+      "path": "prepared-inputs/fixture-load.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/fixture-load.json",
+      "bytes": 1666,
+      "sha256": "0b842e71d618db56debefefe3ca42583f984e97ff9439e325fd46e9279cf1d7d"
+    },
+    {
+      "path": "prepared-inputs/prepare.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/prepare.mjs",
+      "bytes": 7375,
+      "sha256": "f3873e86d52f107e9b3ce0a9440f004baf56c9824205340b28a4c418162e9207"
+    },
+    {
+      "path": "prepared-inputs/bind-filters.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/bind-filters.mjs",
+      "bytes": 9998,
+      "sha256": "5ebce61ea9f61640d0b45181b155639e7262df55ecd3e2ac3aae4b1709ee102e"
+    },
+    {
+      "path": "encoder-qualification/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-qualifications-20261013/README.md",
+      "bytes": 1070,
+      "sha256": "3f2d76e339fde21dd164872f323e849c2cb596de8a3f73ba84af8c3ecf6968dd"
+    },
+    {
+      "path": "encoder-qualification/bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-public-encoder-qualifications-20261013/bindings.json",
+      "bytes": 790,
+      "sha256": "c98fd317477590c70cea9a3f230d69c7bdb64b277aa542243791df8bdcea3f3e"
+    },
+    {
+      "path": "raw-fingerprint-gap/README.md",
+      "original": "/home/alper/projects/search-100-evidence/raw-fingerprint-gap-math-20261013/README.md",
+      "bytes": 3908,
+      "sha256": "a51a425f36bcaa12e8d7b71e8b33bd63f78b01dcfe62124fc6d900d6590be016"
+    },
+    {
+      "path": "raw-fingerprint-gap/gap-math.json",
+      "original": "/home/alper/projects/search-100-evidence/raw-fingerprint-gap-math-20261013/gap-math.json",
+      "bytes": 17727,
+      "sha256": "ab8e17f2a696f34b57cd47bed43e3d8959f62531730a88e2cdcc0b88dad4675e"
+    }
+  ]
+}

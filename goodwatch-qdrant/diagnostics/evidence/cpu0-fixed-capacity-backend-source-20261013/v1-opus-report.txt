@@ -1,0 +1,81 @@
+# Verdict: BLOCK
+
+This is a static read of the 14 supplied files plus `cpu0-source-freeze.json`. I ran nothing, read no host or file, and recomputed no hash. I make no runtime, capacity, latency or production claim.
+
+## Blocking issues
+
+**B1. `controller_cpu0.py::phase_overhead` — the direct-child census cannot hold once `PinChild` exists.**
+- `PinChild.__init__` starts the helper with `multiprocessing.get_context('spawn')`. On POSIX, CPython's `popen_spawn_posix.Popen._launch` calls `resource_tracker.getfd()`, which starts a long-lived resource-tracker process as a second direct child of the controller.
+- `phase_overhead` requires `/proc/<pid>/task/<pid>/children` to equal exactly `[helper pid]` when a manager is present. The first such call is the `overhead_check()` at the top of `pressure()`.
+- Expected result: every candidate phase refuses with `overhead_unregistered_child` before any pressure read. It fails closed, but no candidate can complete, so nine pairs are unreachable.
+- The tracker is also an outside-cgroup process whose RssAnon/VmPTE is never debited by `lifecycle_cpu0.py::overhead_growth`, so "controller charged in full" under-covers the controller's own process tree.
+- No fixture can catch this: the `stage()` composition test patches `phase_overhead`, and `SpawnOwnershipTests` checks only lock-fd inheritance.
+- This rests on stdlib behaviour, not an observed run.
+- **Fix:** either launch the pin helper without the multiprocessing tracker (explicit `subprocess` plus pipe), or register the tracker as a birth-fenced outside role with full first debit and an exact two-child census. Add a real-spawn fixture that builds a real `PinChild` and asserts the census and ledger roles.
+
+**B2. Fixtures — the ABI2 tests are not reliably run by the documented command.**
+- **Discovery pattern:** `CPU0.md` gives `discover ... -p 'test_cpu0*.py'`, which does not match `test_lifecycle_cpu0.py`. `HandoffV2Tests`, `OverheadContextTests`, `NewControllerGrowthTests`, `CleanupAttestationTests`, `AccountingCleanupTests` and all lifecycle fixtures are therefore not discovered.
+- **Mid-file main guard:** both `test_cpu0_controller.py` and `test_lifecycle_cpu0.py` call `unittest.main()` before the v2 classes are defined. Direct execution silently skips everything from `FixedCapacityAdmissionTests` onward, and from `HandoffV2Tests` onward.
+- **CWD-relative path:** `CleanupRenewalTests` opens `Path('prepared-control-policy-cpu0.json')` relative to the working directory. Under the documented repo-root invocation this errors.
+- **Order dependence:** the same test uses `patch.object(control,'CPU_POLICY',…)` without `create=True`. `controller_cpu0` has no module-level `CPU_POLICY`; the test only works because an earlier `CallerTests` case leaks one through `_preflight`.
+- **Fix:** move the main guards to end of file; resolve the policy path from `__file__`; define `CPU_POLICY=None` at module level or use `create=True`; correct the documented command to cover all three test files.
+
+**B3. Source completeness — the freeze does not close.**
+- `test_cpu0_controller.py` imports `accounting, pin_state` from `test_daemon`, which is not among the 14 frozen files.
+- `test_lifecycle_cpu0.py` reads `../clone-preparation/prepare_clone_reclaim.py` from outside the freeze.
+- The loader that sets `_AUTHENTICATED_SOURCE_SHA256` on `cpu0_preflight` for the RPC path, and whatever calls `running_entry_admission`, `entry_identity` and `renew_cleanup`, are not supplied.
+- **Fix:** freeze or inline the test dependencies, and supply the RPC loader for review.
+
+## Required fixes (non-blocking individually)
+
+1. **`cpu0_preflight.py::_node` — Node binary is not authenticated by content.**
+   - The 126 MB binary is never hashed. It is matched on size/inode/mtime/ctime against `node-provenance.json`, which is in neither the freeze nor the external manifest.
+   - "Stdlib-authenticates the closure" is therefore false for `node`. Bind the provenance receipt's hash into the manifest, or hash the binary, or narrow the claim.
+
+2. **`cpu0_preflight.py::_enrol_consumer` — misleading evidence on `FileExistsError`.**
+   - It emits `publicationState:'not-issued'` together with `cleanupAddressableByFixedReceipt:True`, while the fixed path holds a different, earlier receipt.
+   - Set the flag false for `not-issued` and say explicitly that the existing receipt is foreign.
+
+3. **`_enrol_consumer` — double close.** If `os.close(fd)` raises, `fd` stays set and `finally` closes it again. Clear `fd` before the close attempt.
+
+4. **`controller_cpu0.py::birth_admission` — mislabelled evidence.** The re-fence `except` attaches a passing headroom proof as `admissionFailureEvidence` to non-memory failures such as `lifecycle_process_changed`. Use a separate key (for example `admissionPassedSampleBeforeRefence`) or add an explicit `refused:false`.
+
+5. **`controller_cpu0.py::_source_cgroup_limits` — finite `memory.high` is accepted.** Any numeric value passes and is only compared for stability. A value below 6 GiB changes the fixed-capacity semantics. Require `max` or document why not.
+
+6. **`controller_cpu0.py::load_control` — weaker CPU policy check on the stage path.** It uses `validate_policy`, while the entry and cleanup paths use `_fixed_cpu_policy`. Use the fixed check in both.
+
+7. **`cpu0_preflight.py::_preflight` — result omits the enrolment write.** It reports `resourceWrites:0, handoffWrites:1` only. Add an explicit `enrolmentWrites:1`.
+
+8. **`birth_admission` — HTTP probe immediately before `attest`.** The `no_clients` check can see the server-side socket still tearing down behind the loopback publication. This is a fail-closed race I could not characterise statically; it needs an explicit teardown wait or documentation as an expected refusal.
+
+## What I checked and found consistent with the stated ABI
+
+- **Running unheld floor:** `unheld_host_admission` uses strict `<=` against 2 GiB + 2 GiB with exact policy pins. Scope is proven before the single `host_memory` read, and the same-read evidence is retained.
+- **Stopped floor:** `stopped_host_admission` is strict above 5 GiB.
+- **Working-set debit:** `working_set_admission` debits the full selected bytes and requires A−T ≥ 2 GiB.
+- **Candidate cap:** C + missing + 256 MiB ≤ cap, with a null cap refusing.
+- **Pressure/query floor:** 1.5 GiB with `<`; `birth_admission` is never called while a pin is held.
+- **Source caps:** `memory.max` must equal 6 GiB and `memory.swap.max` must be 0.
+- **C6 ledger (`overhead_growth`):**
+  - positive deltas are clamped per class, with no shrink offsets;
+  - source charge is anon + kernel only, so page tables are not debited twice;
+  - no file RSS is credited;
+  - a new role gets full debit, and a source-birth change refuses;
+  - the enrolled consumer/transport baseline is retained; the joined helper is reported with `chargedSeparately:False`;
+  - peaks are null.
+- **Entry ordering (`running_entry_admission`):** outside → source → one host sample → immutable re-fence, with no `runtime.accounting` on that path. `entry_identity` reads no memory baseline.
+- **Preflight ordering:** the O_EXCL preliminary is published before `birth_admission`, and argv, Node identity and births are re-fenced afterwards.
+- **Cleanup renewal (`renew_cleanup` / `cleanup_attest`):** no host floor, HTTP, load, lock or handoff gate. Exactly two members are required; connections and events are retained without veto; extra members or a stopped source refuse.
+- **Cause preservation:** the `_stage`, `finalize_pressure`, `graceful_stop`, `commit_handoff` and `helper_fork_scope` cleanup paths attach secondary failures without replacing the primary.
+- **Hashes:** the SHA values in the supplied section headers match `cpu0-source-freeze.json` and the cross-references in the control policy (lifecycle module, helper policy). This is text agreement only.
+
+## Coverage and fixture qualifications
+
+- **Not supplied, not reviewed:** `consumer_cpu0.mjs`, `transport_cpu0.mjs`, `audit_cpu0.mjs`, `compare-contract*.mjs`, `parity.mjs`, `prepare_clone_reclaim.py`, `cpu0-external-manifest.json`, `node-provenance.json`, and the two config aliases.
+- **Consumer-side requirements unverifiable here:** nine pairs, zero exclusions, server AND wall < 1500 ms, the writer of `cpu0-consumer-registration-v2.json`, and retirement of the O_EXCL enrolment file between runs. Only the 100% locked-residency check (`daemon_cpu0.public_state`) is in the supplied source.
+- **Adoption:** no adoption module exists. `validate_handoff_record` accepts any well-formed v2 record, and `adoptionIntentSha256` is opaque and not bound to anything in this source.
+- **Self-authentication:** `cpu0_preflight.py` checks itself; the real trust root is the unsupplied caller.
+- **Partial enrolment:** it is addressable only through the emitted failure evidence. A kill between create and write leaves an empty file with no identities.
+- **Stand-ins:** composition tests mock the source, Docker engine, CPU hierarchy and `phase_overhead`. Real-semantics fixtures are limited to argv/stdin, pidfd, the receipt filesystem, one-page mlock and fork/spawn fd scope.
+- **Evidence limits:** endpoint samples, direct-child fences and parent-only inspector counts do not prove a continuous census or peaks. Pre-join helper charge attribution is unknown.
+- **Status:** the freeze and policies are prepared hashes, not proof of installation. I did not run any fixtures.

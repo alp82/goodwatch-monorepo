@@ -1,0 +1,16 @@
+✔ exact plan accepted; duplicate existing/wrongmodel/hash/role changes refuse before worker scope (9.370658ms)
+✔ missing/duplicate/out of order index batch cannot silently encode fewer or repeated texts (5.188019ms)
+✔ vectors must have correct typed shape, unitnorm and finite components (1.593916ms)
+✔ derived merge refuses overwrite and preserves old array bit values independently (0.544034ms)
+✔ stableFD pin rejects changed same-size contents and symlink model aliases (1.154555ms)
+✔ delayed termination cannot complete past remaining wall budget (20.486225ms)
+✔ termination resolution is rechecked against completion clock, not only timer (0.579474ms)
+✔ synchronous publication crossing deadline refuses later completion/log (0.297137ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 273.456254

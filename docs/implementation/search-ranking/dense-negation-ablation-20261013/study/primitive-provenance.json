@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "sourceFiles": {
+    "rank-search.server.ts": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+    "ranking.server.ts": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7"
+  },
+  "extractedTsSha256": "575b37bbdc1a0b462070237985f0912c1b49b0b8dff2e05c9921c75970809eef",
+  "compiledSha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+  "functions": [
+    "quantizedCosines",
+    "z",
+    "filled",
+    "WEIGHTS"
+  ],
+  "transform": "Bun TypeScript type erasure only"
+}

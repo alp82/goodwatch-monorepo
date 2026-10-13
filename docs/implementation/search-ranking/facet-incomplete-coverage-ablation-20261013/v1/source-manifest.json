@@ -1,0 +1,67 @@
+{
+  "schema": "prepared-offline-facet-incomplete-coverage-source.v1",
+  "preparedOnly": true,
+  "actualStudyExecuted": false,
+  "productionAcceptance": false,
+  "files": {
+    "DESIGN.md": {
+      "sha256": "5b2fe2a11efbb2239c4e3e374995fae37103371e1a514fbc30e1ba9f316234be",
+      "bytes": 7578
+    },
+    "bindings.json": {
+      "sha256": "0e2c93f302fe182608fdaf878bc05900771be23a9c2cb71891aab40e89534c4d",
+      "bytes": 2044
+    },
+    "README.md": {
+      "sha256": "4d0ea946329aca14238e5d2fd8d332a91fa3cd1f21c22236fccaee9c8dbf121e",
+      "bytes": 3240
+    },
+    "engine.mjs": {
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5",
+      "bytes": 1826
+    },
+    "primitives.mjs": {
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+      "bytes": 1591
+    },
+    "partials.mjs": {
+      "sha256": "50c817f720c41214d920c645abab3d7b64d369b9fe4ca0dc29efccf9487bf40a",
+      "bytes": 1434
+    },
+    "gates.mjs": {
+      "sha256": "c95af5538ca94c923dd13c6080819d326260e1938e71112857542beee50c20fa",
+      "bytes": 751
+    },
+    "run.mjs": {
+      "sha256": "f9e63988e167ec571318cc45b7581a86b7c6f7f3af10ccb0ebdea5784efc1707",
+      "bytes": 12713
+    },
+    "evaluate.py": {
+      "sha256": "092408651dc17e26fe498934e7de7be71a2d4ababd5153e8e6146cd2a5342960",
+      "bytes": 9301
+    },
+    "input-bindings.json": {
+      "sha256": "5963fab9fc317c09c59698a197821ec96db53ae468ae312b6501c2e9916f28e6",
+      "bytes": 12430
+    },
+    "test-partials.mjs": {
+      "sha256": "ca6a43ec4068994c151b922ca2591e05db18b455eef78c0d17b0a0bc72591233",
+      "bytes": 3381
+    },
+    "test-gates.mjs": {
+      "sha256": "d22f3c1618037e80dfbc5d0dade47430633307a909f0a48ad0350366d8195e05",
+      "bytes": 1769
+    },
+    "test-evaluate.py": {
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31",
+      "bytes": 1139
+    }
+  },
+  "fixtures": {
+    "nodePassed": 8,
+    "pythonEvaluatorPassed": 2,
+    "knownMetricChecks": 3
+  },
+  "actualEncoderFreezeSha256": "a580a5a600af04bddb7bc3565864346d8fbde4c84fac755b682dbc83e3d60cd4",
+  "newCacheSha256": "df96f124ef1e85b5c997a58ff9e69550f500d37b784fc93cf475c7ef4e6734d3"
+}

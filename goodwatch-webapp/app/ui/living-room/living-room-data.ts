@@ -60,15 +60,23 @@ export type HomeDoors = {
 		/** Other shows the member can continue. */
 		more: number
 	} | null
-	start: { count: number; title: string; posters: (string | null)[] } | null
+	start: {
+		count: number
+		title: string
+		posters: (string | null)[]
+		/** The short name of the service the first show landed on in the last 14 days (#489): it leads for that. */
+		newOn?: string
+	} | null
 	movie: {
 		count: number
-		/** The first movie of My movies; null without a Want to See movie. */
+		/** The first movie of My movies, or the movie that landed last (#489); null without a Want to See movie. */
 		title: string | null
 		runtime: number | null
 		/** The member's service that carries it. */
 		service: string | null
 		posters: (string | null)[]
+		/** The short name of the service the first movie landed on in the last 14 days: it leads for that. */
+		newOn?: string
 	}
 }
 

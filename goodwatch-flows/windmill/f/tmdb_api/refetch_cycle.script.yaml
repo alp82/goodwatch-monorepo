@@ -1,0 +1,8 @@
+summary: Details refetch cycle
+description: Internal shared module
+kind: script
+lock: '!inline f/tmdb_api/refetch_cycle.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []

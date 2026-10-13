@@ -1,0 +1,163 @@
+{
+  "schema": "resource-population-outcomes.v1",
+  "measurementOnly": true,
+  "requiredMetrics": {
+    "hostMeminfo": [
+      "MemTotal",
+      "MemFree",
+      "MemAvailable",
+      "Buffers",
+      "Cached",
+      "Active(file)",
+      "Inactive(file)",
+      "Dirty",
+      "Writeback",
+      "WritebackTmp",
+      "Mlocked",
+      "Unevictable",
+      "AnonPages",
+      "Shmem",
+      "SReclaimable",
+      "SUnreclaim",
+      "KernelStack",
+      "PageTables",
+      "SwapTotal",
+      "SwapFree"
+    ],
+    "hostPsi": [
+      "memory.some",
+      "memory.full",
+      "io.some",
+      "io.full"
+    ],
+    "hostVmstat": [
+      "allocstall_dma",
+      "allocstall_dma32",
+      "allocstall_normal",
+      "allocstall_movable",
+      "allocstall_device",
+      "pgscan_direct",
+      "pgsteal_direct",
+      "pgscan_file",
+      "pgsteal_file",
+      "workingset_refault_file",
+      "pswpin",
+      "pswpout"
+    ],
+    "sourceMemoryCurrent": true,
+    "sourceMemoryStat": [
+      "anon",
+      "file",
+      "kernel",
+      "shmem",
+      "file_dirty",
+      "file_writeback",
+      "unevictable",
+      "pagetables",
+      "sock",
+      "active_file",
+      "inactive_file"
+    ],
+    "sourceMemoryEventsLocal": [
+      "max",
+      "high",
+      "oom",
+      "oom_kill"
+    ],
+    "sourceCpuStat": [
+      "nr_throttled",
+      "throttled_usec",
+      "usage_usec"
+    ],
+    "sourceSwapCurrent": true,
+    "sourcePsi": [
+      "memory.some",
+      "memory.full",
+      "io.some",
+      "io.full"
+    ],
+    "mainProcess": [
+      "startTicks",
+      "parentPid",
+      "minorFaults",
+      "majorFaults",
+      "rssBytes",
+      "read_bytes",
+      "VmLck"
+    ],
+    "readerProcess": [
+      "startTicks",
+      "VmLck",
+      "cgroup"
+    ],
+    "requiredSwapTotal": 0
+  },
+  "fatalTerminate": [
+    "primary_birth_executable_or_placement_changed",
+    "container_config_changed",
+    "source_or_ancestor_limits_changed",
+    "cgroup_directory_identity_changed",
+    "reader_identity_or_placement_changed",
+    "reader_exclusion_invalid",
+    "required_metric_missing_or_invalid",
+    "host_swap_present",
+    "observed_positive_main_reader_or_aux_lock",
+    "main_absent_from_complete_unique_list",
+    "multiple_qdrant_comm_docker_top",
+    "transport_or_output_bound",
+    "unclassified_optional_census_error",
+    "required_reader_enumeration_or_exclusion_unavailable"
+  ],
+  "dimensionPartial": [
+    "membership_duplicate_or_truncated",
+    "member_birth_reuse",
+    "member_disappeared",
+    "member_lock_unknown",
+    "optional_census_identity_race",
+    "optional_census_disappeared",
+    "optional_census_bound",
+    "sample_duration_or_cadence_or_clock_outcome",
+    "optional_census_entry_unreadable"
+  ],
+  "dimensionUnavailable": [
+    "membership_unreadable",
+    "sibling_census_root_unreadable"
+  ],
+  "optionalDowngradeAllowlist": [
+    "census_bound",
+    "eligible_identity_race",
+    "process_disappeared",
+    "optional_unreadable"
+  ],
+  "permissions": {
+    "capacityPermission": false,
+    "idleAdmission": false,
+    "productionAcceptance": false,
+    "futureCeilingEstablished": false
+  },
+  "auxiliaryZeroProof": [
+    "bounded-list",
+    "birth-before",
+    "status-VmLck",
+    "birth-after",
+    "proc-cgroup-match"
+  ],
+  "positiveLockRefusesBeforeLaterBirthValidation": true,
+  "bounds": {
+    "rowBytes": 8192,
+    "rows": 1500,
+    "outputBytes": 16777216,
+    "cadenceSeconds": 2,
+    "gapSeconds": 3,
+    "sampleSeconds": 2,
+    "clockDriftSeconds": 1,
+    "memberLedgerPerEndpoint": 16
+  },
+  "countSemantics": {
+    "observedCount": "decoded bounded PID-prefix entries, including duplicates",
+    "duplicateCount": "observedCount minus unique decoded PIDs",
+    "truncatedCount": "known omitted unique decoded PIDs plus one unknown-suffix sentinel only when byteListTruncated is true",
+    "byteListTruncated": "literal boolean; not a numeric estimate of unknown suffix population",
+    "mainIdentity": "endpoint-verified main entry binds PID and startTicks to required main identity"
+  }
+}

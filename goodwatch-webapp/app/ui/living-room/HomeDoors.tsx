@@ -6,12 +6,20 @@
 // door itself stays Tonight's pick. Titles that landed on the member's services (#456) say so the same way: shows
 // on the door that opens My shows (Continue, or Start a show without one), movies on A movie.
 //
+// For 14 days a title that landed leads its own door (#489): A movie, or Start a show. The door's small line then
+// says "New on Netflix" in the signal's sky blue, on a phone in place of the count. While a pill already names that
+// title with its service, the line leaves it to the pill.
+//
 // This file is a chunk of its own: only a member whose home has doors requests it (home-doors-code.tsx). It
 // imports nothing of the living room: what it needs of the TV, the
 // focusable item and the posters of Something new, comes in as props, so that the home's own chunk stays one file
 // whatever this one imports.
 import type { ReactNode } from "react"
-import { landedWords, showsWords } from "~/domain/newly-available-words"
+import {
+	doorNewOn,
+	landedWords,
+	showsWords,
+} from "~/domain/newly-available-words"
 import { useWhatsNew } from "~/ui/navigation/useWhatsNew"
 import type { Item as TvItem, TvView } from "./TvScreens"
 import type { HomeDoors as Doors } from "./living-room-data"
@@ -58,6 +66,12 @@ function Fan({
 	)
 }
 
+const NewOn = ({ children }: { children: ReactNode }) => (
+	<span className="font-bold text-sky-300" data-door-new-on>
+		{children}
+	</span>
+)
+
 function Door({
 	Item,
 	view,
@@ -70,6 +84,7 @@ function Door({
 	line,
 	sub,
 	signal,
+	news,
 }: {
 	Item: typeof TvItem
 	view: TvView
@@ -83,6 +98,8 @@ function Door({
 	sub?: string | null
 	/** A pill in the door's corner: what is new behind it. */
 	signal?: string | null
+	/** "New on Netflix": why the door's first title leads. It heads the small line; on a phone it is the line. */
+	news?: string | null
 }) {
 	return (
 		<Item
@@ -126,10 +143,12 @@ function Door({
 				<span
 					className={`block truncate text-white/85 ${phone ? "mt-1 text-[18px] leading-tight" : "mt-2 text-[16px] font-semibold"}`}
 				>
-					{line}
+					{phone && news ? <NewOn>{news}</NewOn> : line}
 				</span>
-				{!phone && sub && (
+				{!phone && (news || sub) && (
 					<span className="mt-0.5 block truncate text-[13.5px] text-white/55">
+						{news && <NewOn>{news}</NewOn>}
+						{news && sub ? " · " : ""}
 						{sub}
 					</span>
 				)}
@@ -162,6 +181,8 @@ export default function HomeDoors({
 		words && (phone ? words.doorShort : words.door)
 	const showsSignal = pill(showsWords(episodes, landed?.shows ?? null))
 	const moviesSignal = pill(landedWords("movie", landed?.movies ?? null))
+	const movieNews = doorNewOn(movie, moviesSignal)
+	const startNews = start && doorNewOn(start, showsSignal)
 	const three = Boolean(next && start)
 	const door = { Item, view, phone }
 	const somethingNew = (
@@ -220,8 +241,10 @@ export default function HomeDoors({
 						eyebrow={`${plural(start.count, "show")} to start`}
 						title={phone ? "New show" : "Start a show"}
 						line={phone ? `${start.count} to start` : start.title}
-						sub="Best taste match first"
+						// A show that leads because it landed is not the best match.
+						sub={start.newOn ? null : "Best taste match first"}
 						signal={next ? null : showsSignal}
+						news={startNews}
 					/>
 				)}
 				<Door
@@ -237,11 +260,13 @@ export default function HomeDoors({
 					}
 					sub={[
 						movie.runtime ? duration(movie.runtime) : null,
-						movie.service ? `on ${movie.service}` : null,
+						// The service is in the line that says the movie is new on it, or in the pill.
+						movie.service && !movie.newOn ? `on ${movie.service}` : null,
 					]
 						.filter(Boolean)
 						.join(" · ")}
 					signal={moviesSignal}
+					news={movieNews}
 				/>
 				{!three && (
 					<Door
