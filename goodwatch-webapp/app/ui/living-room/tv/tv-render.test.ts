@@ -1,0 +1,234 @@
+// The TV's screens in the server's HTML: the items in the markup are the machine's, in its order; the home holds
+// the page's H1 once per edition; and a guest's HTML holds nothing personal.
+import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
+import { test } from "node:test"
+
+type Editions = { desktop: string; phone: string }
+const rendered = JSON.parse(
+	execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/living-room/tv/tv-render.test-support.tsx",
+		],
+		{ encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+	)
+		.split("__TV_RENDER__")
+		.at(-1) ?? "",
+) as {
+	home: { guest: Editions; member: Editions; focusOnBar: string }
+	about: Editions
+	aboutFirst: string
+	menu: { guest: Editions; member: Editions }
+	menuOpen: string
+	notBuilt: string
+	booting: string
+	toast: Editions
+	room: { guest: string; again: string; member: string; off: string }
+	items: Record<
+		| "homeGuest"
+		| "homeMember"
+		| "about"
+		| "explorer"
+		| "menuGuest"
+		| "menuMember",
+		string[]
+	>
+}
+
+/** The item ids in the markup, in its order. */
+const ids = (html: string) =>
+	[...html.matchAll(/data-tv-item="([^"]+)"/g)].map((match) => match[1])
+/** The ids of the items marked as focused. */
+const focused = (html: string) =>
+	[...html.matchAll(/data-tv-item="([^"]+)" aria-current="true"/g)].map(
+		(match) => match[1],
+	)
+const count = (html: string, part: string) => html.split(part).length - 1
+const H1 = "Let&#x27;s find something good for tonight."
+
+test("home's items in the markup are exactly the machine's, in reading order, in both editions", () => {
+	for (const edition of ["desktop", "phone"] as const) {
+		assert.deepEqual(
+			ids(rendered.home.guest[edition]),
+			rendered.items.homeGuest,
+		)
+		assert.deepEqual(
+			ids(rendered.home.member[edition]),
+			rendered.items.homeMember,
+		)
+	}
+	assert.deepEqual(rendered.items.homeGuest, [
+		"app:tonight",
+		"app:discover",
+		"app:explorer",
+		"app:taste",
+		"bar:search",
+		"bar:menu",
+	])
+	assert.ok(rendered.items.homeMember.includes("app:shows"))
+})
+
+test("every item is a real button, and exactly one has the focus", () => {
+	const html = rendered.home.guest.desktop
+	assert.equal(count(html, "<button"), rendered.items.homeGuest.length)
+	assert.equal(count(html, '<button type="button" data-tv-item='), 6)
+	assert.deepEqual(focused(html), ["app:tonight"])
+	assert.deepEqual(focused(rendered.home.focusOnBar), ["bar:menu"])
+	// On the phone the bar's keys are icons, so they carry their names.
+	assert.match(
+		rendered.home.guest.phone,
+		/data-tv-item="bar:menu" aria-label="Menu"/,
+	)
+	assert.match(
+		rendered.home.guest.phone,
+		/data-tv-item="bar:search" aria-label="Search"/,
+	)
+})
+
+test("the home is the page's H1, the same sentence for a guest and a member, once per edition", () => {
+	for (const html of [
+		...Object.values(rendered.home.guest),
+		...Object.values(rendered.home.member),
+	]) {
+		assert.equal(count(html, "<h1"), 1)
+		assert.ok(html.includes(`>${H1}</h1>`))
+	}
+	// No other screen has one.
+	for (const html of [
+		rendered.about.desktop,
+		rendered.notBuilt,
+		rendered.booting,
+	])
+		assert.equal(count(html, "<h1"), 0)
+})
+
+test("the home shows the focused app large, and while the focus is on the bar the first app", () => {
+	assert.match(rendered.home.guest.desktop, />Tonight<\/div>/)
+	assert.match(
+		rendered.home.guest.desktop,
+		/One pick at a time, best rated right now\./,
+	)
+	assert.match(rendered.home.focusOnBar, />Tonight<\/div>/)
+	assert.match(
+		rendered.home.member.desktop,
+		/One pick at a time, your next episode first\./,
+	)
+})
+
+test("a guest's first picture is the first start title's backdrop: w1280 on the desktop, w780 on the phone", () => {
+	const picture = (size: string) =>
+		`https://image.tmdb.org/t/p/${size}/first-picture.jpg`
+	// The whole picture and the Tonight tile take the same file.
+	assert.equal(count(rendered.home.guest.desktop, picture("w1280")), 2)
+	assert.equal(count(rendered.home.guest.desktop, picture("w780")), 0)
+	assert.equal(count(rendered.home.guest.phone, picture("w780")), 2)
+	assert.equal(count(rendered.home.guest.phone, "w1280"), 0)
+	// The Discover tile: four posters of the start titles, nothing else of them.
+	for (const html of Object.values(rendered.home.guest)) {
+		assert.equal(count(html, "https://image.tmdb.org/t/p/w154/poster"), 4)
+		assert.equal(count(html, "<img"), 6)
+	}
+})
+
+test("a member's tiles show their own Tonight and My shows", () => {
+	const html = rendered.home.member.desktop
+	assert.ok(html.includes("/w1280/show-backdrop-10.jpg"))
+	// The first show to continue is Tonight's pick, so the My shows tile shows the next one.
+	assert.ok(html.includes("/w1280/show-backdrop-11.jpg"))
+	assert.ok(!html.includes("first-picture"))
+})
+
+test("What is GoodWatch? and the menu draw the machine's items", () => {
+	for (const edition of ["desktop", "phone"] as const) {
+		assert.deepEqual(ids(rendered.about[edition]), rendered.items.about)
+		assert.deepEqual(
+			ids(rendered.menu.guest[edition]),
+			rendered.items.menuGuest,
+		)
+		assert.deepEqual(
+			ids(rendered.menu.member[edition]),
+			rendered.items.menuMember,
+		)
+	}
+	assert.deepEqual(rendered.items.about, [
+		"got-it",
+		"rate",
+		"bar:back",
+		"bar:search",
+		"bar:menu",
+	])
+	assert.deepEqual(rendered.items.menuGuest, [
+		"menu:home",
+		"menu:search",
+		"menu:sign-in",
+		"menu:about",
+		"menu:off",
+	])
+	// A member has no Sign in.
+	assert.ok(!rendered.items.menuMember.includes("menu:sign-in"))
+	assert.match(rendered.menu.guest.desktop, />Sign in</)
+	assert.match(rendered.menu.guest.desktop, />Turn off</)
+	assert.match(rendered.about.desktop, />Got it</)
+})
+
+test("a screen in a chunk of its own is not in the server's HTML: its bar alone is", () => {
+	assert.deepEqual(ids(rendered.aboutFirst), [
+		"bar:back",
+		"bar:search",
+		"bar:menu",
+	])
+	assert.ok(!rendered.aboutFirst.includes("<template"))
+	// Under the open menu the screen takes no input; the menu's code follows after hydration.
+	assert.match(rendered.menuOpen, /data-tv-layer="" inert=""/)
+	assert.equal(count(rendered.menuOpen, "data-tv-layer"), 2)
+	assert.deepEqual(ids(rendered.menuOpen), rendered.items.homeGuest)
+})
+
+test("a screen no slice has built yet has its bar, and the Expand key's place is reserved", () => {
+	const built = rendered.items.explorer.filter((item) => item !== "expand")
+	assert.deepEqual(ids(rendered.notBuilt), built)
+	assert.match(rendered.notBuilt, /data-tv-expand-place/)
+	assert.match(rendered.notBuilt, />Explorer</)
+})
+
+test("while the TV boots it shows the wordmark and no item; the toast stands over the screen", () => {
+	assert.deepEqual(ids(rendered.booting), [])
+	assert.match(rendered.booting, /lr-boot/)
+	assert.match(rendered.booting, /aria-label="GoodWatch"/)
+	for (const html of Object.values(rendered.toast))
+		assert.match(html, /<output class="tvc-toast">On your Wishlist<\/output>/)
+	assert.ok(!rendered.home.guest.desktop.includes("tvc-toast"))
+})
+
+test("before the window is measured the room holds both editions of the screen, one H1 each", () => {
+	const html = rendered.room.guest
+	const room = html.slice(0, html.indexOf('<section id="browse"'))
+	assert.equal(count(room, 'class="tvr-first tvr-first-'), 2)
+	assert.match(
+		room,
+		/<div data-tv-canvas="desktop" class="tvr-first tvr-first-desktop" style="width:1200px;height:648px">/,
+	)
+	assert.match(
+		room,
+		/<div data-tv-canvas="phone" class="tvr-first tvr-first-phone" style="width:500px;height:417px">/,
+	)
+	assert.equal(count(room, "<h1"), 2)
+	assert.equal(count(html, "<h1"), 2)
+	// Each edition's pictures are lazy, so the edition CSS hides does not request them.
+	assert.equal(count(room, "<img"), 12)
+	assert.equal(count(room, 'loading="lazy"'), 12)
+	assert.deepEqual(ids(room), [
+		...rendered.items.homeGuest,
+		...rendered.items.homeGuest,
+	])
+})
+
+test("a guest's HTML is the same on every render, and the TV that is off draws no screen", () => {
+	assert.equal(rendered.room.guest, rendered.room.again)
+	assert.notEqual(rendered.room.member, rendered.room.guest)
+	assert.equal(count(rendered.room.off, "data-tv-item"), 0)
+	assert.equal(count(rendered.room.off, 'class="tvr-first tvr-first-'), 2)
+})

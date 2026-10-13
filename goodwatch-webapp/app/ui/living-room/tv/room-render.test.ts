@@ -45,11 +45,20 @@ test("the server renders the room as the block the section below relies on", () 
 test("the room's HTML is the same on every render and holds nothing that depends on the window", () => {
 	assert.equal(rendered.on, rendered.again)
 	const room = rendered.on.slice(0, rendered.on.indexOf('<section id="browse"'))
-	// Until the window is measured there is no TV, no Remote and no photo in it: the first paint is slice 12.
-	assert.equal(room, `${roomTag(rendered.on)}</div>`)
+	// Until the window is measured there is no TV, no Remote and no photo in it (the first paint is slice 12):
+	// only what the TV shows, once per edition and not painted, so the HTML has the screen for every window.
+	const first = (edition: string, w: number, h: number, screen: string) =>
+		`<div data-tv-canvas="${edition}" class="tvr-first tvr-first-${edition}" style="width:${w}px;height:${h}px">${screen}</div>`
+	const editions = (screen: string) =>
+		first("desktop", 1200, 648, screen) + first("phone", 500, 417, screen)
+	assert.equal(
+		room,
+		`${roomTag(rendered.on)}${editions('<div data-screen="true"></div>')}</div>`,
+	)
+	// A TV that is off draws no screen.
 	assert.equal(
 		rendered.off.replace('data-tv-power="off"', 'data-tv-power="on"'),
-		rendered.on,
+		rendered.on.replace(editions('<div data-screen="true"></div>'), editions("")),
 	)
 })
 

@@ -1,8 +1,7 @@
-// SEAM between the room (slice 2) and the TV's machine (slice 1, tv-machine.ts) with its hook (slice 3,
-// use-tv.ts). The room draws no TV screen and holds no TV state: it shows what `RoomTv` says and reports every
-// key of the Remotes as a `RoomKey`. use-tv.ts turns a `RoomKey` into the machine's action (a `move` needs the
-// measured boxes of the items, which the hook adds) and fills `RoomTv` from the machine's state. Until then
-// room-stand-in.tsx plays that part on the preview address.
+// The seam between the room (TvRoom.tsx) and the TV's machine (tv-machine.ts) with its hook (use-tv.ts). The room
+// draws no TV screen and holds no TV state: it shows what `RoomTv` says and reports every key of the Remotes as a
+// `RoomKey`. use-tv.ts turns a `RoomKey` into the machine's action (a `move` needs the measured boxes of the
+// items, which the hook adds) and fills `RoomTv` from the machine's state.
 import type { RemoteServiceKey } from "../living-room-data"
 
 export type RoomDirection = "up" | "down" | "left" | "right"
@@ -43,4 +42,9 @@ export type TvCanvas = {
 	h: number
 	/** How large the canvas is shown: its type prints at this times its size. */
 	scale: number
+	/**
+	 * Drawn before the window is measured, on the server and while the page hydrates: both editions are in the
+	 * HTML then and CSS shows the one that fits the window (tv.css, `tvr-first`). The scale is not known yet.
+	 */
+	first?: boolean
 }

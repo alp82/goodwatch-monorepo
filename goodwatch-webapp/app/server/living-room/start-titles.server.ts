@@ -20,26 +20,38 @@ export async function loadStartTitles(
 	displayFields: (keys: number[]) => Promise<Map<number, TitleDisplay>>,
 	today = Math.floor(Date.now() / 86_400_000),
 ): Promise<StartTitle[]> {
-	if (!snapshot) return []
+	return (await loadStartTitlesAndPicture(snapshot, displayFields, today))
+		.titles
+}
+
+/**
+ * The start titles with the first one's backdrop: the new TV's home shows it as its first picture. For a visitor
+ * nobody knows anything about, the first start title is the pool's best title, so the picture in the HTML is the
+ * real first pick. One field for one title, because the start page's HTML has a byte budget. Null without titles,
+ * and when the first title has no backdrop.
+ */
+export async function loadStartTitlesAndPicture(
+	snapshot: Pick<TitleSnapshot, "version" | "forEach" | "factsAt"> | null,
+	displayFields: (keys: number[]) => Promise<Map<number, TitleDisplay>>,
+	today = Math.floor(Date.now() / 86_400_000),
+): Promise<{ titles: StartTitle[]; picture: string | null }> {
+	if (!snapshot) return { titles: [], picture: null }
 	try {
 		const keys = startTitleKeys(poolCandidates(snapshot, today))
 		const displays = await displayFields(keys)
-		return keys.flatMap((key) => {
-			const display = displays.get(key)
-			return display
-				? [
-						{
-							media_type: display.media_type,
-							tmdb_id: display.tmdb_id,
-							title: display.title,
-							release_year: display.release_year,
-							poster_path: display.poster_path,
-						},
-					]
-				: []
-		})
+		const found = keys.flatMap((key) => displays.get(key) ?? [])
+		return {
+			titles: found.map((display) => ({
+				media_type: display.media_type,
+				tmdb_id: display.tmdb_id,
+				title: display.title,
+				release_year: display.release_year,
+				poster_path: display.poster_path,
+			})),
+			picture: found[0]?.backdrop_path ?? null,
+		}
 	} catch (error) {
 		console.error("Living room: loading the start titles failed", error)
-		return []
+		return { titles: [], picture: null }
 	}
 }

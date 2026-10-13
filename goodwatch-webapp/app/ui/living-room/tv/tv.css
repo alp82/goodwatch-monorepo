@@ -54,3 +54,134 @@
 		transition: none;
 	}
 }
+
+/* Before the window is measured, on the server and while the page hydrates, both editions of the TV's screen are
+   in the HTML, so that each window finds its H1 in it; the queries show the one the measured room will draw
+   (PHONE_BELOW and LANDSCAPE in TvRoom.tsx). They are not painted yet. SEAM (slice 12): the first paint places
+   them, with the photo and the Remote, where `layoutRoom` and `layoutPhoneRoom` will. */
+.tvr-first {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	opacity: 0;
+	pointer-events: none;
+}
+.tvr-first-desktop {
+	display: none;
+}
+@media (min-width: 768px) {
+	.tvr-first-desktop {
+		display: block;
+	}
+	.tvr-first-phone {
+		display: none;
+	}
+}
+@media (orientation: landscape) and (max-height: 540px) {
+	.tvr-first-desktop {
+		display: none;
+	}
+	.tvr-first-phone {
+		display: block;
+	}
+}
+
+/* The TV's screens, in the look "Cinema" (kit.tsx). In the components layer, so a utility on an item wins.
+   Rendering budget (#190): transform, opacity, a shadow and a colour change once per focus move; nothing loops. */
+@layer components {
+	.tvc {
+		color: #fff;
+		background: #05060a;
+	}
+	.tvc-item {
+		position: relative;
+		display: block;
+		text-align: left;
+		outline: none;
+		border-radius: 14px;
+		-webkit-tap-highlight-color: transparent;
+		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s,
+			background-color 0.18s, color 0.18s;
+	}
+	/* A tile is a picture without a frame. The focused one comes forward; the others sit back in the dark, under
+	   a plain overlay (a brightness filter would repaint every picture). */
+	.tvc-tile {
+		overflow: hidden;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+	}
+	.tvc-tile::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: #000;
+		opacity: 0.38;
+		transition: opacity 0.18s;
+		pointer-events: none;
+	}
+	.tvc-tile.tvc-on {
+		transform: scale(1.09);
+		box-shadow: 0 0 0 4px #fff, 0 26px 60px rgba(0, 0, 0, 0.75);
+		z-index: 2;
+	}
+	.tvc-tile.tvc-on::after {
+		opacity: 0;
+	}
+	.tvc-btn {
+		background: rgba(255, 255, 255, 0.16);
+		border-radius: 999px;
+		font-weight: 700;
+	}
+	/* The top bar's keys: quiet dark pills. */
+	.tvc-act {
+		background: rgba(0, 0, 0, 0.4);
+		color: rgba(255, 255, 255, 0.88);
+		border-radius: 999px;
+		font-weight: 700;
+	}
+	.tvc-btn.tvc-on,
+	.tvc-act.tvc-on {
+		background: #fff;
+		color: #000;
+		transform: scale(1.06);
+		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	}
+	.tvc-fade {
+		animation: tvc-fade 0.42s ease-out both;
+	}
+	/* A screen arrives with a short zoom out of the picture. */
+	.tvc-screen {
+		animation: tvc-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	}
+	.tvc-menu {
+		background: rgba(0, 0, 0, 0.6);
+		animation: tvc-fade 0.2s both;
+	}
+	.tvc-toast {
+		background: #fff;
+		color: #000;
+		border-radius: 999px;
+		padding: 12px 30px;
+		font-size: 26px;
+		font-weight: 700;
+	}
+}
+@keyframes tvc-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes tvc-in {
+	from {
+		opacity: 0;
+		transform: scale(1.04);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tvc *,
+	.tvc *::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
