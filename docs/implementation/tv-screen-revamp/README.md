@@ -5,8 +5,9 @@ the new TV's state machine works, where each TV screen gets real data, how the E
 page, which budgets apply, and in which slices to build it.
 
 Status: a plan, written on October 13, 2026 against `origin/main` at `a6b28b08` and amended the same day with
-the owner's answers. Slices 1 and 2 are being built. Four parts of the design are being prototyped again and
-wait for their results: see [What waits for a prototype](#what-waits-for-a-prototype). What is decided and what
+the owner's answers, three times. Slices 1 and 2 are being built on the integration branch
+`feat/tv-screen-revamp`; there is no feature flag ([How it ships](#how-it-ships)). Four parts of the design are
+being prototyped again and wait for their results: see [What waits for a prototype](#what-waits-for-a-prototype). What is decided and what
 is still open is in [Decisions for the owner](#7-decisions-for-the-owner).
 
 Every thread that builds a slice starts here and needs nothing else to begin.
@@ -44,8 +45,8 @@ the next section.
   the prototype's.
 - **The look "Cinema".** Marquee and Glow are dropped.
 - **Two ways out of the TV, no more:** the Expand key (amber corner brackets with the label "Expand", at the
-  picture's bottom right on desktop and phone, with the growing frame), and "Watch on <service>". No "Open full X"
-  label anywhere.
+  picture's bottom right on desktop and phone, with the growing frame), and "Watch on <service>", which opens the
+  title's page at its streaming block. No "Open full X" label anywhere.
 - **The top bar on every screen:** Back, Search and Menu where they apply.
 - **Desktop:** the Remote under the TV, swinging toward the cursor; the TV as large as measured; the Remote
   beside the TV in small windows (below about 918 px of height or 1110 px of width); no TV type under 18 px in the
@@ -67,7 +68,7 @@ and is provisional; each place says so.
 
 | Part | What is being prototyped | What it changes here | Build now | Wait |
 | --- | --- | --- | --- | --- |
-| Mini Discover's choice screen | Three tabs, Moods, Themes and Styles, with six options each, in place of one grid of moods | The `discover` screen, its URL keys and items in the machine (slice 1); the data behind a choice ([Mini Discover](#mini-discover)); slice 6 | The list of titles for a choice that is already made, read with `useDiscoverResults`; its Expand address; what it shows for a 503 and for an empty result | The choice screen itself, its items and tabs, and where Themes and Styles get their titles |
+| Mini Discover's choice screen | Decided: three tabs, Moods, Themes and Styles, with six options each. Still with the prototype thread: which six per tab, and how the tabs look | The `discover` screen, its URL keys and items in the machine (slice 1); slice 6. The filters themselves are [slice 5b](#slice-5b-theme-and-style-filters-on-discover) | The list of titles for a choice named in the URL (`mood=`, and after slice 5b `theme=` and `style=`), read with `useDiscoverResults`; its Expand address; what it shows for a 503 and for an empty result | The choice screen itself: its tabs, its six tiles per tab and their pictures |
 | The quiz's answers | A rating strip from low on the left to high on the right, with labels and the ten exact scores, in place of four answers | The `quiz` and `rate` screens' items in the machine (slice 1); the `rate` screen of slice 5; slice 8 | Taste's three states, a side, the quiz's frame (the title, its picture, the progress) and its wiring to `useTasteQuiz`, which takes any score from 1 to 10 already | The answer control, its item ids, its keys, and its wording |
 | The Expand transition | Several transitions, compared | [The hand-over](#the-hand-over) in section 4; slice 11 | What travels to each page, Back into the same TV screen with the same focus, the reload case, plain navigation with reduced motion | The frame while the key has the focus, the motif's motion, the brackets, the timing |
 | The Remote's Netflix and Prime Video keys | A key opens a "watch on this service" TV screen, in place of narrowing the list on show | The `service-key` action and a new screen in the machine (slice 1); the toast and the `service` key in the URL; the parts of slices 2 to 5 named below | The two keys on both Remotes, sending `service-key` with the service's name as today (`ui/living-room/Remote.tsx:190-221`) | Everything a press does: no toast, no narrowing, no `services=` on an Expand address until the result is in |
@@ -76,16 +77,16 @@ and is provisional; each place says so.
 transitions of `discover`, the items of `quiz` and `rate`, the transition of `service-key`), so that a result
 changes one place and its tests. The `service-key` transition does nothing for now.
 
-**A gap the Discover prototype must close.** Discover's filters have moods and genres, and no themes or styles
-(`domain/filter-state.ts:163-211`). Themes and Styles exist as groupings of the Explorer, with 14 and 10 islands
-(`domain/explorer.ts:7-15`, `server/explorer/islands.server.ts:150`, `:254`). Six options per tab can be drawn from them, but
-their titles would then come from `/api/explorer/map?grouping=theme` and `style`, and Expand would have to open
-the Explorer at that island, or Discover needs two new filters. The prototype's result has to say which.
+**Themes and Styles on Discover.** Discover had no theme or style filter (`domain/filter-state.ts:163-211`);
+they existed only as groupings of the Explorer. The owner decided to add both to Discover.
+[Slice 5b](#slice-5b-theme-and-style-filters-on-discover) does that, and the TV's choice then travels into
+Discover as a filter like a mood does.
 
 ## 1. What exists today, and what happens to it
 
-Read from the code on `origin/main`. "At the switch" means the pull request that puts the new TV on `/`
-([slice 13](#slice-13-the-switch)); "cleanup" is the one after it.
+Read from the code on `origin/main`. "At the switch" and "at cleanup" both mean
+[slice 13](#slice-13-the-switch-and-the-cleanup), which puts the new TV on `/` and deletes the old one on the
+integration branch. The two were separate slices while the plan had a flag.
 
 ### The TV and the room (`ui/living-room/`)
 
@@ -177,8 +178,8 @@ islands, sides), as `pickKeys` is today (`tv-flow.ts:100-123`).
 | --- | --- | --- | --- |
 | `home` | no `tv` | `app:tonight`, `app:discover`, `app:explorer`, `app:taste`, and for a member `app:shows` | No |
 | `tonight` | `tv=tonight`, `pick=1` | `details`, `another` | Yes |
-| `discover` without a mood | `tv=discover` | `mood:<key>` for every mood, `mood:any` last | Yes |
-| `discover` with a mood | `tv=discover&mood=<key>`, `service=<name>` | `title:<key>` for up to four titles, `change-mood` | Yes |
+| `discover`, the choice | `tv=discover`, `tab=moods`, `themes` or `styles` | `tab:moods`, `tab:themes`, `tab:styles`, then six of `mood:<key>`, `theme:<key>` or `style:<key>` | Yes |
+| `discover`, the titles | `tv=discover&mood=<key>`, or `theme=<key>`, or `style=<key>` | `title:<key>` for up to four titles, `change` | Yes |
 | `explorer` without an island | `tv=explorer` | `island:<id>` for six islands | Yes |
 | `explorer` with an island | `tv=explorer&island=<id>` | `title:<key>` for up to four, `hop:<id>` for two islands next door | Yes |
 | `taste` without a side | `tv=taste` | Without a taste: `start-quiz`. With one: `side:<id>` for each side, `start-quiz` ("Rate more") | Yes |
@@ -200,7 +201,8 @@ islands, sides), as `pickKeys` is today (`tv-flow.ts:100-123`).
 - **Power and boot** stay as they are (`tv-flow.ts:757-769`, `use-tv-flow.ts:19`, `:66-70`). The phone's Remote
   has no power key; "Turn off" is in the menu, and any key turns a dark TV on (`LivingRoom.tsx:544-548`).
 - **Item ids** keep today's `kind:argument` form (`tv-flow.ts:657-658`), not the prototype's `kind-argument`.
-- **Provisional rows:** `discover` without a mood, `quiz` and `rate`, and the `service` key of the lists. They
+- **Provisional rows:** the look and the six tiles of `discover`'s choice (a change of tab is `replace`),
+  `quiz` and `rate`, and the `service` key. They
   wait for a prototype, see [What waits for a prototype](#what-waits-for-a-prototype).
 - **A guest who opens `tv=shows`** gets home, as an unknown screen does today (`tv-flow.ts:213`).
 
@@ -209,7 +211,7 @@ islands, sides), as `pickKeys` is today (`tv-flow.ts:100-123`).
 - **One address per TV screen**, as today: `/?tv=discover&mood=funny`. `writeTvParams` keeps parameters that are
   not the TV's (`tv-flow.ts:274-298`), and `isTvOnlyChange` keeps the loader from rerunning (`:304-313`,
   `routes/_index.tsx:34-42`).
-- **The keys:** `tv`, `mood`, `island`, `side`, `pick`, `title`, `q`, `service`. A title's key is
+- **The keys:** `tv`, `tab`, `mood`, `theme`, `style`, `island`, `side`, `pick`, `title`, `q`, `service`. A title's key is
   `<media_type>-<tmdb_id>`, the form the quiz's picks use today (`ui/living-room/TvQuiz.tsx:531-532`). Today's
   title screen writes the numeric catalog key, which nobody can read in a link; `titleKey` converts
   (`utils/title-key.ts:10`).
@@ -297,7 +299,7 @@ What the page carries out. The machine only names them.
 | Effect | Carried out by |
 | --- | --- |
 | `expand` with a destination | `useLeaveThroughTv`, see [section 4](#4-the-expand-key-into-a-real-page) |
-| `watch` with a title | Opens the service, see [the title screen](#the-title-screen) |
+| `watch` with a title | Leaves for the title's page at its streaming block, which it highlights, see [the title screen](#the-title-screen) |
 | `want-to-see` with a title (a toggle) | `useWishlistMutation` (`hooks/useUserDataMutations.ts:206`); it works for a guest |
 | `seen` with a title | A member: `useWatchedMutation` (`:258`), then the `rate` screen. A guest: the `rate` screen only, because the server refuses a guest's watch (`server/watchHistory.server.ts:144`) and a guest's score counts as seen (`server/viewer.server.ts:123-125`) |
 | `rate` with a title and a score | `useScoreMutation` (`:140`); it works for a guest |
@@ -329,13 +331,13 @@ Three rules decide every row below.
 | Home, a guest | The tiles and one picture, the same for everyone | The pool, at the first interaction | The start titles in the loader; `POST /api/living-room/picks?view=pool` | The first start title's `backdrop_path` in the loader data |
 | Home, a member | Tonight's three picks and the My shows preview | The pool, when the Discover tile first has the focus | `getTonightParts` in the loader | A small shaping function over `TonightParts` |
 | Tonight | The same as home | Nothing | A guest: the pool's best three. A member: the loader | Nothing more |
-| Discover, the choice | Nothing | The pool, for the tiles' art | Waiting for the prototype of three tabs. For moods: `domain/moods.ts:224` for the list; the pool for a picture per mood | A source for Themes and Styles, see [What waits for a prototype](#what-waits-for-a-prototype) |
-| Discover, the titles | Nothing | On choosing a mood | `/api/discover/results?moods=<key>` through `useDiscoverResults` | Nothing |
+| Discover, the choice | Nothing | The pool, for the tiles' art | The moods: `domain/moods.ts:224`. The themes and styles: the shared rules of slice 5b. Six of each, named by the prototype thread | A picture per theme and style, see [Mini Discover](#mini-discover) |
+| Discover, the titles | Nothing | On choosing a tile | `/api/discover/results` with `moods=<key>`, `themes=<key>` or `styles=<key>`, through `useDiscoverResults` | The two filters, slice 5b |
 | Explorer, the map and an island | Nothing | When the Explorer tile first has the focus | `/api/explorer/map?grouping=mood` through `fetchMap` | A pure function that chooses six islands and their neighbours |
 | Taste | Nothing | When the Taste tile first has the focus | `/api/taste/portrait?tab=sides` | A fallback when a taste has no sides yet |
 | The quiz | Nothing | On opening the quiz | `useTasteQuiz` | Nothing |
 | My shows | In the member's loader | Nothing | `getTonightParts` with three episode lists | The loader exposes more of `MyShows` |
-| A title | What the list it came from knows | The full card, on opening | **New:** `/api/title-cards?keys=` | The endpoint; a link for "Watch on <service>" |
+| A title | What the list it came from knows | The full card, on opening | **New:** `/api/title-cards?keys=` | The endpoint; the highlight of the title page's streaming block |
 | Search | Nothing | On OK | `POST /api/combined-search` through `requestSearch` | Nothing |
 
 ### Home
@@ -395,17 +397,21 @@ focus.
 
 ### Mini Discover
 
-- **The choice screen waits for a prototype:** three tabs, Moods, Themes and Styles, with six options each
-  ([What waits for a prototype](#what-waits-for-a-prototype)). What follows about the moods describes the first
-  prototype.
-- **The moods** are the eleven of `domain/moods.ts:12-24` and "Any mood". The first prototype shows five moods
-  and Any mood in a 3 by 2 grid; the real list makes twelve tiles. With six options to a tab, the new prototype
-  has to say which six.
+- **The choice screen** has three tabs, Moods, Themes and Styles, with six options each (decided). Which six,
+  and how the tabs look, comes from the prototype thread
+  ([What waits for a prototype](#what-waits-for-a-prototype)).
+- **The moods** are six of the eleven of `domain/moods.ts:12-24`. **The themes and styles** are six each of the
+  Explorer's 14 and 10, which [slice 5b](#slice-5b-theme-and-style-filters-on-discover) turns into filters of
+  Discover.
 - **A mood tile's picture** is the backdrop of the pool's first title with that mood, at TMDB's `w300`. Until the
-  pool is there, the tile is the mood's own colour (`MOODS[n].hue`).
-- **The titles** are the first four cards of `/api/discover/results?moods=<key>&page=1`
+  pool is there, the tile is the mood's own colour (`MOODS[n].hue`). **A theme's or a style's picture** has no
+  source yet: the pool is grouped by mood only (`server/living-room/pool-keys.server.ts:56-62`). Slice 6 either
+  adds a first title per theme and style to the pool or draws those tiles in the rule's colour, by what the
+  prototype's look needs.
+- **The titles** are the first four cards of `/api/discover/results?moods=<key>&page=1`, or with
+  `themes=<key>` or `styles=<key>`
   (`routes/api.discover_.results.ts:67-108`, guests through the action at `:161-178`), read with
-  `useDiscoverResults` (`:116`). "Any mood" is the same request without `moods`.
+  `useDiscoverResults` (`:116`).
   - The request returns 40 cards; there is no smaller page (`server/discover-results.server.ts:27`). It is kept
     that way on purpose: it is the request the Discover page makes for the same filters, so both show the same
     titles in the same order.
@@ -494,16 +500,49 @@ focus.
 - **The first paint of the screen** uses what the list knew (title, poster or backdrop), then the card.
 - **The one-line description** is the card's `tagline`, which can be null; the line is then left out. The
   prototype's lines are made up (`prototype-tv-flow/data.ts:25-51`).
-- **"Watch on <service>".** The label follows today's rule (`ui/living-room/TvScreens.tsx:1024-1028`, built on
-  `offersOf` and `watchLine`, `ui/watch-next/services.ts:14`, `:36`): "Watch on Netflix" on one of the person's
-  services, "On Netflix" on another, "Not streaming" as a key that does nothing.
-  - Today the key opens the title's page (`routes/_index.tsx:185-187`). In the approved design it opens the
-    service.
-  - A card's service has no link (`CardService`, `server/title-cards.server.ts:55`). The link comes from
-    `POST /api/watchability` (`routes/api.watchability.ts:19`), which returns each offer's `stream_url`; without
-    one, `tmdbWatchUrl` gives TMDB's page for the title in the person's country (`utils/streaming-links.ts:48`).
-  - The title screen asks for it on opening, so the address is there by the time of the press: a new tab opened
-    after a wait is blocked as a pop-up.
+- **"Watch on <service>".** Decided by the owner: the key keeps today's behaviour. It opens the title's page on
+  GoodWatch, not the service (`routes/_index.tsx:185-187`), and, new, the page then highlights its streaming
+  block, "like we do in explorer tutorials".
+  - **The label** follows today's rule (`ui/living-room/TvScreens.tsx:1024-1028`, built on `offersOf` and
+    `watchLine`, `ui/watch-next/services.ts:14`, `:36`): "Watch on Netflix" on one of the person's services,
+    "On Netflix" on another, "Not streaming" as a key that does nothing.
+  - **Where it lands.** The title page's "Where to watch" block is in the card at the top of the page and has
+    the id `streaming` (`ui/details/hero/WhereToWatch.tsx:202-207`, mounted at
+    `ui/details/hero/DetailsHero.tsx:76`). The page already scrolls to a fragment once its real heights are
+    known (`ui/details/below-fold.tsx:62-85`). Nothing in the app links to `#streaming` today (searched).
+  - **How the Explorer's tutorial highlights an element** (verified). When the tutorial asks for Separate, the
+    button in the combine bar gets the class `ex-tut-glow` (`ui/explorer/CombineBar.tsx:98`,
+    `ui/explorer/ExplorerMap.tsx:1418`): an amber tint and an amber ring that pulses outward every 1.3 seconds,
+    by `box-shadow`, without end (`ui/explorer/explorer.css:1412-1421`), and a drawn cursor or fingertip presses
+    it (`Press`, `ui/explorer/Tutorial.tsx:188-193`, `explorer.css:1422-1441`). It ends when the viewer does
+    what it asks, or presses Skip (`ExplorerMap.tsx:1075-1086`, `Tutorial.tsx:180-182`). With reduced motion
+    the tutorial does not play at all (`Tutorial.tsx:32`, `explorer.css:1498-1502`).
+  - **The same treatment for the streaming block** (a proposal).
+    - *What travels in the address:* the fragment, `/movie/603-the-matrix#streaming`. A fragment is not sent to
+      the server, so the page cache keeps one page per title, and the link scrolls without script.
+    - *What does not travel in the address:* the wish to highlight. It goes in the history entry's state with
+      the navigation (`useLeaveThroughTv` passes it on to `navigate`), so a shared link, a bookmark or a typed
+      address with `#streaming` scrolls and does not glow. The block reads it once and clears it, so a reload
+      and a Back to the page do not glow again.
+    - *The look:* the tutorial's amber tint and pulsing ring around the whole block, with the block's own
+      corner radius. No drawn cursor: the tutorial's cursor says "press this", and the block has several things
+      to press. The keyframes are copied into the title page's own styles; `explorer.css` is the Explorer
+      route's stylesheet and is not loaded on a title page.
+    - *How it ends:* after three pulses (about four seconds), or sooner at the first press or key inside the
+      block. Unlike the tutorial it does not wait for the viewer, because the title page is a landing surface
+      and nothing may animate there at rest ([the rendering budget](#the-rendering-budget)).
+    - *When it starts:* after the transition from the TV has ended, so the ring is not cut by the growing
+      frame.
+    - *Reduced motion:* no pulse. The block has a still amber outline for the same four seconds, as the
+      episode list's flashed row has a still outline instead of its flash
+      (`ui/tracking/EpisodeList.tsx:388`).
+    - *A screen reader* gets nothing extra: the block's heading is "Where to watch" already
+      (`WhereToWatch.tsx:210-212`), and the focus is moved to the block on arrival.
+  - **Does it use the Expand transition?** Yes. It leaves the TV for the same page the Expand key of this
+    screen opens, so it leaves the same way, through `useLeaveThroughTv`, as today's key does. Whatever the
+    Expand prototype decides applies to both. The amber brackets stay the Expand key's own sign: the Watch key
+    has no brackets and no frame while it has the focus. Back returns to the title's TV screen with the Watch
+    key focused.
 - **Seen it** for a member's show with a Next episode marks that episode ("Seen S2 E4") in the prototype
   (`kit.tsx:248-260`). Not verified which mutation of `ui/tracking` does this from outside the title page; the My
   shows slice finds it, and without one the key rates the show as for any title.
@@ -533,12 +572,13 @@ A pure function `destinationHref(screen, context)` in the machine, with a test p
 | Tonight, a member | The pick's own page: `TonightsPick.href` (`/my-shows`, `/my-shows#start` or `/my-movies`, `ui/living-room/tv-flow.ts:40-44`) | Nothing: the pick is the first thing on that page |
 | Tonight, a guest | `/discover` | Nothing. `/watch-next` shows a guest nothing (`routes/watch-next.tsx:58-59`) |
 | Discover, the choice | `/discover` | Nothing |
-| Discover, the titles | `/discover?moods=<key>` | The mood (`domain/filter-state.ts:163-185`). A theme or a style: waiting for the prototype |
+| Discover, the titles | `/discover?moods=<key>`, `?themes=<key>` or `?styles=<key>` | The mood (`domain/filter-state.ts:163-185`), or the theme or style once slice 5b has added the two filters |
 | Explorer, the map | `/explorer?grouping=mood` | The grouping |
 | Explorer, an island | `/explorer?grouping=mood&island=<id>` | The island (`ui/explorer/history.ts:14-22`) |
 | Taste, and a side | `/taste` | Nothing. Not verified: whether the page can open on one side |
 | My shows | `/my-shows` | Nothing |
 | A title | `titlePath(media_type, tmdb_id, title)` (`utils/helpers.ts:13`) | The title |
+| A title, by the Watch key (not Expand) | The same address with `#streaming` | The title, and in the history entry's state the wish to highlight the block |
 | Search results | `searchHref(q, features)` | The query |
 
 Home, the quiz, the rating, the search screen without a query and What is GoodWatch? have no Expand key.
@@ -754,39 +794,49 @@ The rules for the new TV:
 9. **The beside layout and the lip.** From 768 px the lip is a tab at the bottom right
    (`living-room.css:452-478`), where the Remote stands when it is beside the TV.
 10. **A search costs inference budget** on every OK, as it does from the header.
+11. **No measurement on production before the merge.** Without a flag the budget's Lighthouse run sees the new
+    TV only once it is live ([How it ships](#how-it-ships)).
+12. **A long-lived branch.** `main` changes under it; every merge from `main` can touch files the branch has
+    replaced.
 
 ## 6. Slices
 
 ### How it ships
 
-**Recommendation: build on a preview address behind a flag, and put it on `/` by replacement.**
+**Decided by the owner: no flag. The new TV replaces today's.**
 
-- **The flag** is `HOME_TV`, with the feature key `homeTv`. It has no `REC_` prefix, by the owner's decision,
-  and otherwise works as the others do (`server/features.server.ts:13-25`, `utils/features.ts:4-13`): `off`,
-  `preview`, `on`.
-  - `off`: `/home-preview` answers 404.
-  - `preview`: the members in `REC_PREVIEW_USERS`, the one list of preview members there is
-    (`server/features.server.ts:46-52`), get the new TV there, with their own data.
-  - `on`: anyone with the address does, for guest checks, Lighthouse and the rendering measurements.
-  - Always `noindex`, with the canonical of `/`, in no sitemap and linked from nowhere.
-- **The switch** is one pull request: `routes/_index.tsx` renders the new TV. The old TV's files stay in the
-  repository, unused, until the cleanup, so a revert of that one pull request is the way back.
-- **Why not a flag on `/` itself.** A flag is read on the server at run time. To let it choose between two TVs
-  on one route, the route has to import both, and every visitor would download both: the old TV's screens and flow
-  are about 4,000 lines. The line it would break has no margin (`script_count` 16) and the next one has 5%. The ways
-  around that (drawing the new TV only after hydration, or awaiting its chunk before hydration) each give up the
-  server-rendered H1 or add a Suspense boundary to the room, which are the two things the start page must not
-  do.
-- **Why not replace at once, slice by slice.** The new TV is useless until home, a title and at least one app
-  work together, and the start page is the page crawlers read most.
-- **What the preview address costs:** one small route file and a flag that both go at the cleanup.
+- **One integration branch.** The revamp is built on `feat/tv-screen-revamp`. Every slice from 1 to 13 is a pull
+  request into that branch, not into `main`. The branch is merged into `main` once, when the new TV is complete
+  and slices 12 and 13 have passed.
+- **The two TVs never ship together.** `main`, and so production, has the old TV until that merge and only the
+  new one after it. There is no moment in which a visitor downloads both, so the script budget is compared
+  between two states only: `main` before the merge and the branch after slice 13.
+- **`/home-preview` is a build aid on the branch.** It shows the new TV while `/` on the branch still shows the
+  old one, so slices can be built and compared side by side. It has no flag. It is `noindex`, linked from
+  nowhere and in no sitemap, and slice 13 deletes it. It never reaches `main`.
+- **The way back is a revert of the merge.** The merge into `main` is one commit (a merge commit or a squash),
+  and reverting it brings back the old TV with every file it had. If it was a merge commit, the branch can be
+  merged again later only after that revert is itself reverted.
+- **`main` keeps moving under the branch.** `main` is merged into the branch before every slice starts and
+  before slice 12 measures. A change on `main` to a file the branch deletes or replaces needs a look each time:
+  the old TV's files, `routes/_index.tsx`, `server/living-room.server.ts`, `ui/living-room/living-room.css`.
+- **What this costs: nothing is measured on production before the merge.** `./bench.sh budget` and
+  `./bench.sh smoke` measure the deployed site (`goodwatch-benchmark/README.md:164-206`), and without a flag the
+  new TV is not deployed until it is merged. Before the merge the proofs are the ones a branch allows: the first
+  view's scripts of two builds, the rendering measurements, the SEO and hydration checks, and a Lighthouse run
+  against a production build of the branch served on the build machine. The first budget run on production comes
+  right after the merge's deploy, with the revert at hand. **A question for the owner:** if the branch can be
+  deployed somewhere the benchmark's generator reaches, slice 12 runs the real budget there before the merge.
 
 ### What no slice before the switch touches
 
 `routes/_index.tsx`, every file of the old TV listed in section 1 as "delete at cleanup", `BelowRoom.tsx`,
 `use-below-room.ts` and their test, the meta block, `goodwatch-benchmark/urls/budget.json`, and the pages the TV
-expands into. New files go to `ui/living-room/tv/`. Where a kept file must change before the switch, the slice
-says so.
+expands into (two slices have a named exception: 5 for the title page's streaming block, 5b for Discover). New
+files go to `ui/living-room/tv/`. Where a kept file must change before the switch, the slice says so.
+
+This rule no longer protects production, which the branch cannot reach. It keeps merges from `main` clean and
+keeps slices that run side by side out of each other's files.
 
 ### What every slice proves
 
@@ -794,7 +844,7 @@ says so.
 - `npm run build` passes. It fails on a prototype import.
 - `npm run typecheck` and `npx biome lint` on the changed files add nothing to the failing baseline of `main`.
   There is no CI for the webapp (`.github/workflows/` has one workflow, for `goodwatch-flows`).
-- Screenshots on the preview address at 1920 x 1080 and 390 x 844, as a guest and as a member, with every
+- Screenshots of `/home-preview` on the branch at 1920 x 1080 and 390 x 844, as a guest and as a member, with every
   `REC_*` flag on, beside the prototype's shot of the same screen in `docs/prototypes/tv-screen-design/screens/cinema/`.
 - A drive script in `docs/implementation/tv-screen-revamp/` that walks the slice's screens with keys and checks
   the state after each step, as the prototype's `walk.mjs` does. No browser driver is among the repository's
@@ -806,8 +856,9 @@ says so.
 
 ### The slices
 
-Order: 1 and 2 first, side by side. 3 needs both. 4 and 5 need 3 and can run side by side. 4b needs 4. 6 to 10
-need 5 and can all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14, then 15.
+Order: 1 and 2 first, side by side. 3 needs both. 4 and 5 need 3 and can run side by side. 4b needs 4. 5b needs
+nothing of the TV and can start at once. 6 to 10 need 5 and can all run side by side; 6 also needs 5b. 11 needs
+5. 12 needs everything before it. 13 follows, then the merge into `main`, then 15 on `main`.
 
 **Waiting for a prototype** ([the table](#what-waits-for-a-prototype)): slices 6, 8 and 11, and in slices 2 to 5
 what a press of a streaming key does. Each of these slices says below what can be built before the result and
@@ -832,7 +883,8 @@ what cannot.
   forms, the phone with the lip's reserve as a parameter, as `layoutPhone` has it today, `room.ts:211-217`);
   `tv/TvRoom.tsx`, `tv/PhoneRoom.tsx`, `tv/PhoneRemote.tsx`; the softened photos in `img/living-room/`;
   `routes/home-preview.tsx`; `ui/living-room/tv/tv.css`.
-- **Files, changed:** `utils/features.ts` and `server/features.server.ts` (the flag `HOME_TV`, key `homeTv`); `ui/living-room/Remote.tsx`
+- **No flag.** `routes/home-preview.tsx` is plain: `noindex`, the canonical of `/`, linked from nowhere.
+- **Files, changed:** `ui/living-room/Remote.tsx`
   (the wheel's optional direction callback, the prototype's change).
 - **Must not touch:** `room.ts` and `living-room.css`. The preview route links `tv.css` beside
   `living-room.css`.
@@ -911,19 +963,120 @@ result before it merges.
 
 #### Slice 5: Tonight and the title screen
 
-- **Goal:** the first complete path: home, Tonight, a title, Want to See, Seen it with the rating, Watch on the
-  service, and Expand as plain navigation through `useLeaveThroughTv` as it is today.
+- **Goal:** the first complete path: home, Tonight, a title, Want to See, Seen it with the rating, the Watch
+  key, and Expand as plain navigation through `useLeaveThroughTv` as it is today.
 - **Files, new:** `tv/screens/Tonight.tsx`, `tv/screens/Title.tsx`, `tv/screens/Rate.tsx`,
   `routes/api.title-cards.ts` with its server function and a test, the effects in the preview route.
+- **The Watch key and the title page's highlight**, as planned under [the title screen](#the-title-screen):
+  the key leaves for the title's page with `#streaming` and the wish to highlight in the history entry's state;
+  `ui/living-room/tv-transition.ts` passes a state on; `ui/details/hero/WhereToWatch.tsx` reads it once, plays
+  the highlight and clears it. This is the one change this slice makes to a page the TV opens. The title page
+  is a landing surface: the highlight adds no script to its first view beyond the few lines in the block, and
+  its rule is CSS.
 - **Not yet:** the pool keeps `wishlist` and `pairs` until the switch, because the old TV reads them.
-- **Waiting, the streaming keys:** Tonight is not narrowed to a service. "Watch on <service>" on a title is a
+- **Waiting, the streaming keys:** Tonight is not narrowed to a service. The Watch key on a title is a
   different control and is built here.
 - **Waiting, the rating:** the `rate` screen after "Seen it" will take the control the quiz prototype decides.
   Build the screen with the four levels of the first prototype behind one component and one function of the
   machine, so the strip replaces them in one place.
 - **Proof:** the drive script, as a guest and as a member, on production data through the dev server; a guest's
-  Want to See and rating land in the browser's guest progress; the watch key's address is ready before the
-  press.
+  Want to See and rating land in the browser's guest progress. For the Watch key: the title page opens at its
+  streaming block and the block pulses three times and stops; it stops at once on a press inside it; a reload
+  and a Back to the page do not pulse again; a typed address with `#streaming` scrolls and does not pulse; with
+  reduced motion there is a still outline and no pulse; Back from the page returns to the title's TV screen
+  with the Watch key focused; the title page's first-view scripts beside `main`.
+
+#### Slice 5b: Theme and Style filters on Discover
+
+Decided by the owner: mini Discover's choice screen has three tabs, Moods, Themes and Styles, with six options
+each, and Discover itself gets the two filters it lacks ("let's add them to discover too"). This slice changes
+the real Discover page. It comes before slice 6, which reads its results. The exact six Themes and six Styles
+for the TV come from the prototype thread; this slice gives Discover all of them.
+
+**Verified in the code:**
+
+- **The Explorer's themes and styles are rules over a title's fingerprint.** `THEMES` has 14 entries and
+  `STYLES` has 10 (`server/explorer/islands.server.ts:150`, `:254`). Each has an id, a name, a colour, a
+  `level` worked out from the fingerprint's scores and the TMDB genres, and a threshold `from`; a title is in
+  when its level is at least `from` (`:4-9`, `:47-50`). Animated and Documentary go by genre alone (`:9`,
+  `:256-270`).
+  - Themes: Crime, Mystery, War, Politics, True stories, History, Growing up, Family, The mind, Showbiz,
+    Sports, Money, Future, Fantasy.
+  - Styles: Animated, Documentary, Spectacle, Stylized, Music, Slow burn, Fast-paced, Talky, Nonlinear,
+    Graphic.
+- **On the Explorer the threshold moves.** It rises while an island holds more than a quarter of the
+  Explorer's pool and drops one step when it holds under 1% (`server/explorer/groupings.server.ts:200-208`,
+  `islands.server.ts:404-409`), and the pool is 9,000 movies and 3,000 shows
+  (`server/explorer/pool-select.server.ts:9-10`), not the catalog.
+- **The Explorer reads the same bytes Discover's filter has.** It applies the rules to the title snapshot's
+  fingerprints, a missing score counting as 0 (`groupings.server.ts:184-198`).
+- **Moods are the model to follow.** The snapshot keeps every title's fingerprint and genres and derives one
+  bit mask of moods per title when it loads, in a worker (`server/title-snapshot/snapshot.server.ts:131-156`,
+  `domain/moods.ts:196-209`); nothing about moods is stored in Crate or in the published snapshot.
+  - The filter state has `moods`, up to three, any of them (`domain/filter-state.ts:98-99`, `domain/moods.ts:28`).
+  - The address has `moods=funny,scary`, read at `domain/filter-state.ts:181-187` and written at `:241`.
+  - The filter tests one mask per title (`server/title-filter/passes.server.ts:310-311`), built from the state
+    at `server/title-filter/index.server.ts:213-216`, and counts what each option would leave with `bitGroup`
+    (`passes.server.ts:491`).
+  - The filter bar lists the moods as one group (`ui/filter-bar/FilterGroups.tsx:170-191`), with its chip
+    (`ui/filter-bar/labels.ts:337-343`), its colours (`:207`) and its recovery line (`:258-259`).
+  - `dropFilter` knows each group (`domain/filter-state.ts`, from `:293`), and Discover's cache key lists
+    every field of the state, so a new field fails the type check until it is added there
+    (`server/discover-filter-cache.server.ts:57-73`).
+- **Every filter group is one bit of a title's fail mask**, in the order of `FILTER_NAMES`
+  (`domain/filter-state.ts:27-43`, `passes.server.ts:33-35`), and the masks are 16 bits wide (`:239`). There
+  are 14 groups today.
+- **In search mode** moods are applied in memory over the ranked list, not in the ranking
+  (`domain/discover-search.ts:4-7`).
+- **Only Discover mounts the filter bar** (`ui/discover/DiscoverPage.tsx:353`; the other uses are the old
+  Discover route and two development routes).
+- **Four of Discover's moods are close to a theme by name:** Crime & mystery, History, Coming of age and
+  Mind-bending (`domain/moods.ts:12-24`) beside Crime, Mystery, History, Growing up and The mind.
+
+**The plan (a proposal):**
+
+- **Where the data comes from.** The rules move out of the Explorer's server file into a module both sides
+  import, as `domain/moods.ts` is for moods: the keys, names, colours, `level` and `from` of the 14 themes and
+  the 10 styles, with `themeMaskOf` and `styleMaskOf`. The Explorer builds its islands from it as before. The
+  snapshot derives two more masks per title next to the mood mask, in the same loop and the same worker. No
+  Crate change, no change to the published snapshot or its Windmill job, 4 more bytes per title in memory.
+- **A fixed threshold.** Discover uses each rule's own `from`. So a theme on Discover and the island of the
+  same name on the Explorer can differ at the edges, because the island's threshold may have moved for the
+  pool. The filter needs the same answer for every viewer and every pool; the difference is stated in the
+  module.
+- **The address.** `themes=war,future` and `styles=animated,slow`, lists like `moods`. Inside a group any of
+  the chosen fits; the groups narrow each other, as moods and genres do today. Up to three per group, the
+  moods' limit, for the same reason: more reads as no choice.
+- **The filter state** gains `themes` and `styles`, and `FILTER_NAMES` gains both. That makes 16 groups and
+  uses the fail mask's last bit, so the masks become 32 bits wide in the same change.
+- **The server.** Two more mask tests and two more `bitGroup` counts in `runPasses`; two more fields in the
+  cache key. No SQL: like moods, both run over the snapshot in memory, and in search mode over the ranked
+  list.
+- **The filter bar.** Two groups after Mood, "Theme" and "Style", each "Up to three", with the rule's colour as
+  the swatch, the count per option, a chip per chosen option and a recovery line ("12 in other themes").
+- **The names that overlap.** The owner or the prototype thread decides whether a theme that repeats a mood is
+  offered on Discover beside it, renamed, or left out. Until then the slice builds all 14 and all 10, and the
+  list a page shows is one constant.
+- **How the TV's choice travels.** The TV screen is `tv=discover&theme=war` or `&style=slow`, as it is
+  `&mood=funny`. Its titles are the first four of `/api/discover/results` with `themes=war`. Expand opens
+  `/discover?themes=war`, and Discover shows the filter as chosen, with its chip, on the same titles.
+- **Tests.** The rules: one fingerprint per theme and style that is in and one that is out, and the two genre
+  styles. The state: the address round trip, the limit of three, an unknown key dropped. The passes: the fail
+  bit, the counts per option, the recovery, with a mood, a theme and a style chosen together. The cache key.
+  The labels. The Explorer: its islands for a fixed pool are the same before and after the rules moved.
+- **Where it is built.** Recommended: as its own pull request into `main`, not into the integration branch. It
+  is useful to Discover by itself, it touches none of the TV's files, and the branch gets it with the next
+  merge from `main`. Slice 6 then needs that merge.
+- **Files.** New: `domain/themes-styles.ts` and its test. Changed: `server/explorer/islands.server.ts` and
+  `groupings.server.ts`; `server/title-snapshot/snapshot.server.ts` and its tests; `domain/filter-state.ts` and
+  its test; `server/title-filter/passes.server.ts`, `index.server.ts` and `passes.test.ts`;
+  `server/discover-filter-cache.server.ts`; `ui/filter-bar/FilterGroups.tsx`, `labels.ts` and `labels.test.ts`.
+- **Must not touch:** the moods and their rules; the search ranking; the Explorer's map as a visitor sees it.
+- **Proof:** the tests; `/discover?themes=war&styles=slow` as a guest and as a member, with the counts on the
+  options adding up against the result; search mode with a theme chosen; Discover is a landing surface, so the
+  first view's scripts beside `main` and `./bench.sh budget` after the deploy.
+- **Not verified:** whether `ui/discover/ReadAsChips.tsx` or the sitemap's category pages would want themes
+  and styles too. Neither is in this slice.
 
 #### Slices 6 to 10: the apps
 
@@ -931,12 +1084,14 @@ Each adds one file under `tv/screens/`, its data hook, and one entry in the scre
 app's files. Each proves its screens against the prototype's shots and walks them in the drive script. None
 builds anything for the streaming keys, which wait for their prototype.
 
-- **6, mini Discover. Waiting for the prototype of the choice screen** (three tabs, six options each).
-  - Build now: the titles for a mood named in the URL (`tv=discover&mood=<key>`), from `useDiscoverResults`,
-    with "Change mood" as Back and Expand to `/discover?moods=<key>`. Proof: the four titles are the first four
-    of `/discover?moods=<key>` for the same person.
-  - Wait: `Discover.tsx`'s choice screen, its tabs and items, the titles of a theme or a style, and anything a
-    streaming key does to the list.
+- **6, mini Discover. Needs slice 5b. The choice screen waits for the prototype thread's six per tab and its
+  look.**
+  - Build now: the titles for a choice named in the URL (`tv=discover&mood=<key>`, and with slice 5b
+    `theme=<key>` and `style=<key>`), from `useDiscoverResults`, with Back to the choice and Expand to
+    `/discover` with the same filter. Proof: the four titles are the first four of that Discover address for
+    the same person, and Discover shows the filter as chosen.
+  - Wait: `Discover.tsx`'s choice screen with its three tabs and six tiles each, the tiles' pictures, and
+    anything a streaming key does to the list.
 - **7, mini Explorer:** `Explorer.tsx`. The six islands as decided, an island, "Sail to". Proof also: the map's
   payload in bytes, and the four directions on the map.
 - **8, mini Taste and the quiz. Waiting for the prototype of the answers** (a strip with labels and the ten
@@ -973,44 +1128,50 @@ not wait:
 
 #### Slice 12: the first paint, access and the budgets
 
-- **Goal:** the preview address is ready to be the start page.
+- **Goal:** the new TV at `/home-preview` on the branch is ready to be the start page.
 - **Files, changed:** `tv.css` (the first-paint mirror), the scenes, and whatever the measurements ask for.
 - **Proof:** the SSR, SEO, access and rendering proofs of section 5, each written down with its numbers in
-  `docs/verification/`; the first view's scripts of this branch beside `main`; a Lighthouse mobile run against
-  the preview address on production with the flag `on`, read against the home's limits (a copy of
-  `urls/budget.json` whose home path is `/home-preview`).
+  `docs/verification/`; a Lighthouse mobile run against a production build of the branch, read against the
+  home's limits in `urls/budget.json`. Production itself cannot be measured before the merge
+  ([How it ships](#how-it-ships)); if the owner names a place where the branch can be deployed, the real
+  `./bench.sh budget` runs there with a copy of `urls/budget.json` whose home path is `/home-preview`. The
+  comparison of first-view scripts belongs to slice 13, where the old TV is gone.
 
-#### Slice 13: the switch
+#### Slice 13: the switch and the cleanup
 
-- **Goal:** `/` is the new TV.
+One slice, by the owner's decision to replace without a flag. On a branch that production cannot reach, keeping
+the old TV's files after the switch buys nothing: the way back is the revert of the merge into `main`, and that
+brings every file back. What was slice 14 is part of this slice; there is no slice 14.
+
+- **Goal:** on the branch, `/` is the new TV and the old one is gone. After this slice the branch is ready to
+  merge into `main`.
 - **Files, changed:** `routes/_index.tsx` (the component, the new loader, and the pool asked for at the first
-  interaction); `server/living-room/pool.server.ts` (the Wishlist cards and the pairs go); `living-room.css` takes `tv.css` in, so the route has one stylesheet;
-  `ui/living-room/room.ts` if the new layout file replaces it; `CONTEXT.md` (the doors leave the entries New
-  episodes signal, Newly available and Recently landed; TV screen names its new examples);
-  `goodwatch-benchmark/urls/budget.json` only where a limit must move, with the reason; the benchmark's captured
-  page view of home, which holds the pool request (`goodwatch-benchmark/README.md:113`).
+  interaction); `server/living-room/pool.server.ts` (the Wishlist cards and the pairs go); `living-room.css`
+  takes `tv.css` in, so the route has one stylesheet, and loses its dead rules; `ui/living-room/room.ts` if the
+  new layout file replaces it; `server/tonight.server.ts:16` takes `DOOR_HREF` from where the machine keeps the
+  member pages' addresses; `CONTEXT.md` (the doors leave the entries New episodes signal, Newly available and
+  Recently landed; TV screen names its new examples); `docs/cache-identity.md:79-81` and `:129`;
+  `goodwatch-benchmark/urls/budget.json` only where a limit must move, with the reason; the benchmark's
+  captured page view of home, which holds the pool request (`goodwatch-benchmark/README.md:113`).
+- **Deletes:** `routes/home-preview.tsx`; every file marked "delete at cleanup" in section 1; the old loader in
+  `server/living-room.server.ts`; `routes/api.living-room.services.ts`, and `routes/api.living-room.ts` if the
+  owner confirms ([decision 7c](#7-decisions-for-the-owner)); the picks form of the picks route.
 - **Must not touch:** the meta block.
-- **Proof:** `./bench.sh budget` and `./bench.sh smoke` after the deploy; the SEO check of
-  `docs/verification/235-living-room-seo.md` run again; old addresses (`/?tv=picks&mood=funny`,
-  `/living-room?tv=moods`) land on the mapped screens.
-
-#### Slice 14: cleanup
-
-- **Goal:** one TV in the repository.
-- **Deletes:** every file marked "delete at cleanup" in section 1, the old loader in
-  `server/living-room.server.ts`, the flag `HOME_TV`, `routes/home-preview.tsx`, the dead
-  rules of `living-room.css`, `routes/api.living-room.services.ts`, `routes/api.living-room.ts` if confirmed,
-  the picks form of the picks route.
-- **Changes:** `docs/cache-identity.md:79-81` and `:129`; `server/tonight.server.ts:16` takes `DOOR_HREF` from
-  where the machine keeps the member pages' addresses.
-- **Proof:** build, tests, and the first view's scripts once more.
+- **Proof, on the branch:** build and tests; the first view's scripts of the branch beside `main`, which is now
+  the old TV against the new one and nothing else; the SEO check of
+  `docs/verification/235-living-room-seo.md` run again on `/`; old addresses (`/?tv=picks&mood=funny`,
+  `/living-room?tv=moods`) land on the mapped screens; a search of the branch finds no import of a deleted file
+  and no `home-preview`.
+- **Proof, after the merge into `main` and its deploy:** `./bench.sh budget` and `./bench.sh smoke`, at once.
+  A failing line that a small fix does not clear is answered with the revert.
 
 #### Slice 15: the `REC_*` flags go
 
-Decided by the owner: after the cleanup, every `REC_*` flag is removed, what `on` does becomes what the site
+Decided by the owner: after the revamp is merged, every `REC_*` flag is removed, what `on` does becomes what the site
 does, and the code, routes, assets and settings that only `off` or `preview` reached are deleted.
 
-- **Goal:** no feature flag in the webapp. One thread, one pull request per flag, each revertable by itself, as
+- **Goal:** no feature flag in the webapp. It is built on `main` after the integration branch has been merged,
+  because it touches the whole app. One thread, one pull request per flag, each revertable by itself, as
   the recommendation plan asked for its own cleanup
   (`docs/implementation/recommendation-experience/README.md`, "Cleanup of replaced code").
 - **How the flags work today.** `server/features.server.ts` reads one variable per feature on every call
@@ -1038,8 +1199,7 @@ does, and the code, routes, assets and settings that only `off` or `preview` rea
 
 **Goes at the end, with the last flag:** `server/features.server.ts`, `utils/features.ts`, `hooks/useFeature.ts`,
 `features` in the root loader's data (`root.tsx:112`, `:148`), the `features` argument of `getDestinations` and
-`searchHref` and the `available` field (`ui/navigation/destinations.ts:45-59`), and `HOME_TV` if slice 14 left
-anything of it.
+`searchHref` and the `available` field (`ui/navigation/destinations.ts:45-59`).
 
 **Other places that name a flag:**
 
@@ -1113,21 +1273,26 @@ the right one.
 
 ### Decided on October 13, 2026
 
-- **1. How it ships.** The flag is `HOME_TV` (feature key `homeTv`), without the `REC_` prefix. The plan stays
-  as recommended: the new TV is built at `/home-preview` behind that flag and goes onto `/` by replacement.
+- **1. How it ships.** No flag at all: "we will replace the current behaviour". The revamp is built on the
+  integration branch `feat/tv-screen-revamp` and merged into `main` once, complete. The switch and the cleanup
+  are one slice, and the way back is a revert of that merge ([How it ships](#how-it-ships)).
+- **2. Mini Discover's choice screen** has three tabs, Moods, Themes and Styles, with six options each, and
+  Discover itself gets Theme and Style filters
+  ([slice 5b](#slice-5b-theme-and-style-filters-on-discover)). Which six per tab is the prototype thread's.
 - **3. The mini Explorer shows six islands**, as recommended: the six with the most titles for the person, in
   the prototype's six places, each joined to its nearest; "Sail to" offers the two nearest.
 - **5, the second half. Phone landscape:** the TV on the left, the phone's Remote on the right, tilting
   properly toward the spot it points at ([slice 4b](#slice-4b-phone-landscape)).
-- **New. Every `REC_*` flag is removed** after the cleanup, and what `on` does becomes the default
+- **7a. The Watch key on a title's TV screen** keeps today's behaviour: it opens the title's page on GoodWatch,
+  not the service. New: the page highlights its streaming block on arrival, as the Explorer's tutorial
+  highlights a button ([the title screen](#the-title-screen), built in slice 5).
+- **New. Every `REC_*` flag is removed** after the revamp is merged, and what `on` does becomes the default
   ([slice 15](#slice-15-the-rec_-flags-go)). Two checks in that slice are the owner's: what production is set
   to, and whether `REC_RELATED_MAP` goes too.
 
 ### Waiting for a prototype
 
-- **2. The moods on Discover's choice screen.** Being prototyped again as three tabs, Moods, Themes and Styles,
-  with six options each. The result also has to say where Themes and Styles get their titles
-  ([What waits for a prototype](#what-waits-for-a-prototype)).
+- **2, what is left of it. The six options per tab** of Discover's choice screen, and how the tabs look.
 - **4. The quiz's answers.** Being prototyped again as a strip from low to high with labels and the ten exact
   scores. One point of the old question remains whatever the result: "Not for me" is what today's TV calls
   Not interested (`ui/living-room/tv-flow.ts:133`), a title the person has not seen, so a rating should not be
@@ -1145,14 +1310,19 @@ the right one.
 - **6. Where the doors' signals go.** The glossary puts the New episodes signal and titles that landed "on
   home's door". Recommended: the My shows tile carries the count, and the Tonight tile says "New on Netflix"
   when its pick landed in the last 14 days. The glossary changes with the switch.
-- **7a. The "Watch on Netflix" button on a title.** Today, pressing it on the TV opens that title's page on
-  GoodWatch. Proposed: pressing it opens Netflix itself (or whichever service is named on the button), at that
-  title, in a new browser tab, and the TV stays where it was.
 - **7b. No "Account" entry in the TV's menu.** The site's header above the room has the account already, and an
   entry on the TV would be a third way to leave it. "Sign in" stays in the menu: it goes to Google and comes
   back to the same TV screen.
 - **7c. Two addresses nobody in the repository calls**, `/api/living-room` and `/api/living-room/services`, are
-  deleted at the cleanup unless something outside the repository uses them.
+  deleted in slice 13 unless something outside the repository uses them.
+- **New. Where the branch can be measured before the merge.** Without a flag, production's budget run happens
+  only after the merge. If the branch can be deployed somewhere the benchmark's generator reaches, the budget is
+  run there first ([How it ships](#how-it-ships)).
+- **New. Themes that repeat a mood.** Four of Discover's moods are close to a theme by name (Crime & mystery,
+  History, Coming of age, Mind-bending). Whether Discover offers both, renames one or leaves one out is open
+  ([slice 5b](#slice-5b-theme-and-style-filters-on-discover)).
+- **New. Where slice 5b is built.** Recommended: straight into `main`, because Discover gains from it without
+  the TV.
 
 Two changes to the first prototype's look that the rendering budget forces, for the owner to know: the Expand
 key's brackets move twice and then rest instead of moving for as long as the key has the focus, and the tiles
