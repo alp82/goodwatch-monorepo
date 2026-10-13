@@ -61,6 +61,17 @@ export const TitleData = screenCode<
 	import("./screens/Title").then((code) => ({ default: code.TitleData })),
 ).Screen
 
+// Mini Discover: its tabs, the titles of one choice, and the titles' data.
+export const DiscoverCode = screenCode(() => import("./screens/Discover"))
+/** The titles of the choice on mini Discover. */
+export const DiscoverData = screenCode<
+	ComponentProps<typeof import("./screens/Discover").DiscoverData>
+>(() =>
+	import("./screens/Discover").then((code) => ({
+		default: code.DiscoverData,
+	})),
+).Screen
+
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
 export function loadFirstScreens() {
 	for (const code of [MenuCode, AboutCode]) code.load().catch(() => {})

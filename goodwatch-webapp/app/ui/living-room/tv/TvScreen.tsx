@@ -18,6 +18,7 @@ import {
 import type { TvCanvas } from "./room-tv"
 import {
 	AboutCode,
+	DiscoverCode,
 	MenuCode,
 	RateCode,
 	TitleCode,
@@ -34,11 +35,15 @@ import {
 } from "./tv-machine"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
+import type { TvDiscoverReport } from "./use-tv-discover"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
 export {
+	DiscoverCode,
+	DiscoverData,
 	RateCode,
+	TitleCode,
 	TitleData,
 	TonightCode,
 	loadFirstScreens,
@@ -69,7 +74,18 @@ export type TvScreenProps = {
 	toast: string | null
 	/** Tonight's picks and the title on the title screen. */
 	titles?: TvTitleScreens
+	/** Mini Discover: a picture per option, and the titles of the choice on screen. */
+	discover?: TvDiscoverScreens
 }
+
+/** What mini Discover draws from. */
+export type TvDiscoverScreens = {
+	/** A backdrop's path per option, by its item (`theme:crime`). Empty until the pool is there. */
+	art: Readonly<Record<string, string>>
+	/** The titles of the choice on screen; null until their data component has reported. */
+	list: TvDiscoverReport | null
+}
+const NO_ART: TvDiscoverScreens["art"] = {}
 
 export function TvScreen({
 	tv,
@@ -78,6 +94,7 @@ export function TvScreen({
 	apps,
 	toast,
 	titles,
+	discover,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -91,7 +108,12 @@ export function TvScreen({
 		[canvas, focused, dispatch],
 	)
 	// A screen arrives with a short zoom out of the picture. The screen the TV starts on is there at once.
-	const key = writeTvParams(screen).toString()
+	// Discover's tabs are one screen: a change of tab is no arrival.
+	const key = writeTvParams(
+		screen.name === "discover" && !screen.choice
+			? { ...screen, tab: "moods" }
+			: screen,
+	).toString()
 	const arrived = useRef({ first: key, moved: false })
 	if (key !== arrived.current.first) arrived.current.moved = true
 
@@ -125,6 +147,7 @@ export function TvScreen({
 								items={items}
 								apps={apps}
 								titles={titles}
+								discover={discover}
 							/>
 						</Layer>
 					</TvViewProvider>
@@ -173,11 +196,13 @@ function ScreenOf({
 	items,
 	apps,
 	titles,
+	discover,
 }: {
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
 	titles?: TvTitleScreens
+	discover?: TvDiscoverScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -201,8 +226,17 @@ function ScreenOf({
 			const Code = screen.name === "title" ? TitleCode : RateCode
 			return <Code.Screen items={items} title={titles.title} first={first} />
 		}
-		// SEAM (slices 6 to 10): Discover, Explorer, Taste and the quiz, My shows and search each take their entry
-		// here.
+		case "discover":
+			return (
+				<DiscoverCode.Screen
+					items={items}
+					screen={screen}
+					art={discover?.art ?? NO_ART}
+					list={discover?.list ?? null}
+					first={first}
+				/>
+			)
+		// SEAM (slices 7 to 10): Explorer, Taste and the quiz, My shows and search each take their entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}

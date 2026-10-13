@@ -107,6 +107,7 @@ export function Layer({
 export function Item({
 	id,
 	label,
+	pressed,
 	className = "",
 	style,
 	children,
@@ -114,6 +115,8 @@ export function Item({
 	id: string
 	/** For a screen reader, where the item shows a picture or an icon alone. */
 	label?: string
+	/** For an item that is on or off, such as a tab: whether it is on. */
+	pressed?: boolean
 	className?: string
 	style?: CSSProperties
 	children: ReactNode
@@ -126,6 +129,7 @@ export function Item({
 			{...{ [TV_ITEM_ATTR]: id }}
 			aria-current={on || undefined}
 			aria-label={label}
+			aria-pressed={pressed}
 			// SEAM (slice 4): the ring pointer and touch pointing take the place of these two, and dispatch the same.
 			// A move, not an enter: an item that comes to lie under a resting cursor (a new screen, a row that pages)
 			// must not take the focus from the keys.
