@@ -17,6 +17,7 @@ import {
 	dropFilter,
 } from "~/domain/filter-state"
 import { MOOD_BY_KEY } from "~/domain/moods"
+import { STYLE_BY_KEY, THEME_BY_KEY } from "~/domain/themes-styles"
 import {
 	ANIME_NAMES,
 	ANIME_STATE_NAMES,
@@ -205,6 +206,8 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
 		anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
 		moods: { dot: "bg-indigo-400", bar: "bg-indigo-500" },
+		themes: { dot: "bg-orange-400", bar: "bg-orange-500" },
+		styles: { dot: "bg-green-400", bar: "bg-green-500" },
 		genres: { dot: "bg-fuchsia-400", bar: "bg-fuchsia-500" },
 		minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
 		minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
@@ -257,6 +260,10 @@ export function recoveryLabel(
 			return hidesAnime ? `${n} anime` : `${n} that aren't anime`
 		case "moods":
 			return `${n} in other moods`
+		case "themes":
+			return `${n} in other themes`
+		case "styles":
+			return `${n} in other styles`
 		case "genres":
 			return `${n} in other genres`
 		case "minScore":
@@ -340,6 +347,20 @@ export function activeChips(
 			group: "moods",
 			label: MOOD_BY_KEY[mood]?.name ?? mood,
 			remove: (s) => ({ ...s, moods: s.moods.filter((m) => m !== mood) }),
+		})
+	for (const theme of state.themes)
+		chips.push({
+			key: `theme-${theme}`,
+			group: "themes",
+			label: THEME_BY_KEY[theme]?.name ?? theme,
+			remove: (s) => ({ ...s, themes: s.themes.filter((t) => t !== theme) }),
+		})
+	for (const style of state.styles)
+		chips.push({
+			key: `style-${style}`,
+			group: "styles",
+			label: STYLE_BY_KEY[style]?.name ?? style,
+			remove: (s) => ({ ...s, styles: s.styles.filter((t) => t !== style) }),
 		})
 	for (const genre of state.genres)
 		chips.push({

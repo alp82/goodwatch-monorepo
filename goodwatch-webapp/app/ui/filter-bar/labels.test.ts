@@ -220,3 +220,48 @@ test("the age limit and every changed kind have a chip", () => {
 	)
 	assert.equal(hidden[0].remove(state).content, undefined)
 })
+
+test("each chosen theme and style is a chip that removes itself, after the moods", () => {
+	const chosen = {
+		...state,
+		moods: ["funny" as const],
+		themes: ["war" as const, "true" as const],
+		styles: ["slow" as const],
+		genres: ["Drama"],
+	}
+	const chips = activeChips(chosen)
+	assert.deepEqual(
+		chips.map((chip) => [chip.group, chip.key, chip.label]),
+		[
+			["moods", "mood-funny", "Funny"],
+			["themes", "theme-war", "War"],
+			["themes", "theme-true", "True stories"],
+			["styles", "style-slow", "Slow burn"],
+			["genres", "genre-Drama", "Drama"],
+		],
+	)
+	assert.deepEqual(chips[1].remove(chosen).themes, ["true"])
+	assert.deepEqual(chips[1].remove(chosen).styles, ["slow"])
+	assert.deepEqual(chips[3].remove(chosen).styles, [])
+	assert.deepEqual(chips[3].remove(chosen).themes, ["war", "true"])
+	// A mood and a theme with the same key are two chips with keys of their own.
+	const both = activeChips({
+		...state,
+		moods: ["history"],
+		themes: ["history"],
+	})
+	assert.deepEqual(
+		both.map((chip) => chip.key),
+		["mood-history", "theme-history"],
+	)
+	assert.equal(new Set(both.map((chip) => chip.group)).size, 2)
+})
+
+test("the recovery says what other themes or styles would show", () => {
+	assert.equal(recoveryLabel("themes", 12, state), "12 in other themes")
+	assert.equal(recoveryLabel("styles", 1_234, state), "1,234 in other styles")
+	assert.equal(recoveryLabel("themes", 12, state, true), "12 more")
+	assert.equal(recoveryLabel("styles", 12, state, true), "12 more")
+	assert.equal(FILTER_ACCENTS.themes.dot, "bg-orange-400")
+	assert.equal(FILTER_ACCENTS.styles.dot, "bg-green-400")
+})

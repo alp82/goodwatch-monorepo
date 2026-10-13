@@ -17,6 +17,7 @@ import {
 	MIN_SCORES,
 } from "~/domain/filter-state"
 import { MOOD_KEYS } from "~/domain/moods"
+import { STYLE_KEYS, THEME_KEYS } from "~/domain/themes-styles"
 import type { AnimeChoice } from "~/domain/title-type"
 import type { CountryServices } from "~/server/availability-index.server"
 import {
@@ -30,9 +31,13 @@ import {
 import type { TitleKey } from "~/utils/title-key"
 
 const SHOW_BASE = 2e12
+// A fail mask is 32 bits wide (FailMasks), one bit per filter group.
+if (FILTER_NAMES.length > 32)
+	throw new Error("A title's fail mask holds at most 32 filter groups")
 const BIT = Object.fromEntries(
 	FILTER_NAMES.map((name, i) => [name, 1 << i]),
 ) as Record<FilterName, number>
+const FailMasks = Uint32Array
 // Per-service option counts are reported for the services the most titles would show on, and the chosen ones.
 const MAX_SERVICE_OPTIONS = 60
 
@@ -168,6 +173,10 @@ export interface PassInput {
 	anime: AnimeChoice
 	/** Mood bits a title needs one of; 0 when off. */
 	moods: number
+	/** Theme bits a title needs one of; 0 when off. */
+	themes: number
+	/** Style bits a title needs one of; 0 when off. */
+	styles: number
 	/** Genre bits a title needs one of; 0 when off. `genresChosen` says whether the filter is on (a genre not in the table has no bit). */
 	genres: number
 	genresChosen: boolean
@@ -235,8 +244,8 @@ class ToggleCounts {
 export function runPasses(input: PassInput): PassOutput {
 	const { columns, rows, keys, services } = input
 	const n = rows.length
-	const { genres, moods, scores, releaseDays, flags } = columns
-	const masks = new Uint16Array(n)
+	const { genres, moods, themes, styles, scores, releaseDays, flags } = columns
+	const masks = new FailMasks(n)
 
 	// The type filter's rule (passesTitleType) over the columns: the format by the key, anime by the flag.
 	const typeWanted = input.type === "all" ? -1 : input.type === "show" ? 1 : 0
@@ -247,6 +256,8 @@ export function runPasses(input: PassInput): PassOutput {
 		return row >= 0 && (flags[row] & FLAG_ANIME) !== 0
 	}
 	const moodMask = input.moods
+	const themeMask = input.themes
+	const styleMask = input.styles
 	const genreMask = input.genres >>> 0
 	const genresOn = input.genresChosen
 	const minScore = input.minScore
@@ -309,6 +320,10 @@ export function runPasses(input: PassInput): PassOutput {
 			mask |= BIT.anime
 		if (moodMask && (row < 0 || (moods[row] & moodMask) === 0))
 			mask |= BIT.moods
+		if (themeMask && (row < 0 || (themes[row] & themeMask) === 0))
+			mask |= BIT.themes
+		if (styleMask && (row < 0 || (styles[row] & styleMask) === 0))
+			mask |= BIT.styles
 		if (genresOn && (row < 0 || (genres[row] & genreMask) === 0))
 			mask |= BIT.genres
 		if (
@@ -450,7 +465,7 @@ export function runPasses(input: PassInput): PassOutput {
 		optionCounts.services = services.onMyServices ? { all, mine } : { all }
 	}
 
-	// Moods and genres: OR within the group, one bit per option.
+	// Moods, themes, styles and genres: OR within the group, one bit per option.
 	const bitGroup = (
 		bit: number,
 		column: Uint16Array | Uint32Array,
@@ -489,6 +504,8 @@ export function runPasses(input: PassInput): PassOutput {
 		return out
 	}
 	optionCounts.moods = bitGroup(BIT.moods, moods, moodMask, MOOD_KEYS)
+	optionCounts.themes = bitGroup(BIT.themes, themes, themeMask, THEME_KEYS)
+	optionCounts.styles = bitGroup(BIT.styles, styles, styleMask, STYLE_KEYS)
 	optionCounts.genres = bitGroup(
 		BIT.genres,
 		genres,
