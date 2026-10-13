@@ -48,6 +48,11 @@ MEMBER=http://localhost:3282 node drive.mjs
 `drive.mjs shots` do one of the two, and `PARTS=walk,sides,rate,member,sizes,html` runs some of the checks. A
 whole run takes about twenty minutes on a busy machine.
 
+On a machine with room for one dev server at a time, the script runs in two halves: `SIDE=guest node drive.mjs`
+with the reading server alone, then `SIDE=member node drive.mjs` with the harness's alone. The guest's half keeps
+the real answers the member's half stands in with, and its count of checks, in a file; the member's half writes
+`checks.json` for both. The drive scripts of slices 5, 6 and 7 take `SIDE=` the same way, for their checks.
+
 **No score of a run reaches a real account or database.** A guest's goes to the browser's own storage. The
 member is the harness's, who does not exist. Every request to `/api/update-*` is stopped in the browser and
 counted, on both servers, and every request to another host is stopped too.
@@ -79,7 +84,7 @@ counted, on both servers, and every request to another host is stopped too.
 
 ## What the checks say
 
-497 checks pass, none fail.
+499 checks pass, none fail.
 
 - **The walk, as a guest on real data, at 1920 x 1080 and 390 x 844.** After every step the script reads the
   TV's state from the page.
@@ -203,6 +208,56 @@ Brotli. "Before" is the integration branch at `1eb114fc`.
 The prototype's shots show the Expand key at the bottom right, which is slice 11's, and on the phone the ten
 exact scores in two rows of five, which the owner took out after the prototype. Its levels are named Dislike
 and Okay where the app's list says Bad and Mediocre today.
+
+## After the merge, and the one list of titles
+
+The integration branch (pointing, mini Discover, the mini Explorer, the lean-in transition from `main`) is merged
+into this slice's branch. Everything above was taken again after it; the numbers in this section are that run's.
+
+- **One list of titles** (`tv/TitleList.tsx`). Taste, Discover and the Explorer each had their own copy of the
+  prototype's one list: the focused title's name and facts over a row of posters, its backdrop behind, and the
+  screen's own keys beside the row. They now draw with the same component. What an app says of itself is its
+  props:
+
+  | | Discover | Explorer | Taste |
+  | --- | --- | --- | --- |
+  | Under the screen's name | The option ("Crime") | The island, and on the desktop what sets it apart | The side, or "Made for you" |
+  | Its keys | Change | The islands to sail to, under "Sail to", each with its colour on the map and "Sail to <island>" for a screen reader | Rate more on "Made for you"; none on a side |
+  | Without a title | "Titles are on their way." or "Nothing fits." | "Nothing on this island right now." | Its own two lines |
+  | A picture while no title has one | None | The island's | None |
+
+  What changed in each to make them one: the phone's posters are top-aligned under the name in all three (the
+  Explorer's stood in the middle of the row); a long name takes two lines in three sizes on the desktop
+  (Discover had two sizes, Taste one line); a poster has a dark plate until its picture is there and the phone
+  takes the small file (Taste took the larger one); the words without a title are 24 px on the phone (they were
+  26, 22 and 24); Taste's Rate more in a list is 68 px tall like the other lists' keys (it was 70).
+- **`screen-code.tsx`** keeps this slice's fix for every screen and data component, `DiscoverData`,
+  `ExplorerData` and `TitleData` included: a lazy screen keeps the component it was first drawn with.
+- **The machine's header** and the heading "Waiting for a prototype" are brought up to date: the strip is its
+  own section, and only the Remote's streaming keys still do what the first prototype did (slice 6b).
+- **The first view** against the integration branch at `5331ec25`, raw / gzip / Brotli:
+
+  | Page | Integration branch | With slice 8 and the one list |
+  | --- | --- | --- |
+  | `/home-preview` | 12 files, 667,222 / 222,390 / 192,857 | 12 files, 669,192 / 222,987 / 193,429 (+1,970 / +597 / +572), its own chunk alone |
+  | `/` (the old TV) | 17 files, 865,878 | The same bytes |
+  | A movie's page | 20 files, 859,743 | The same bytes |
+  | `shell`, on every page | 170,770 | 170,770: `tv-title.ts` is still a chunk of its own (1,971) |
+
+  The list is a chunk of its own, 3,548 / 1,467 / 1,314, and the three screens are smaller by more than that:
+  Discover 8,493 to 6,259, the Explorer 10,714 to 8,477, Taste 8,840 to 6,944.
+- **Tests:** `npm test` 2,230 tests, 2,229 pass, 1 skipped, none fail. `tsc` at the baseline of 212. Lint clean.
+- **The drive scripts**, each in its two halves, one dev server at a time: 
+
+  | Script | Guest's half | Member's half | Failed |
+  | --- | --- | --- | --- |
+  | `taste/drive.mjs` (this slice) | 449 | 50 | None |
+  | `tonight-title/drive.mjs` (slice 5), run for the first time since it follows the strip | 521 | 110 | One: the Watch key's pulse on the desktop was seen for 3,282 ms where the check wants 3,500 to 4,500. It counted exactly three pulses, and the phone's passed |
+  | `discover/drive.mjs` (slice 6) | 502 | 118 | None |
+  | `explorer/drive.mjs` (slice 7) | 470 | 131 | None |
+
+  `checks.json`, the shots and the sheets here are this run's. Those of slices 5, 6 and 7 are as their slices
+  left them: their halves ran the checks alone.
 
 ## Where this differs from the plan
 

@@ -8,6 +8,11 @@
 //
 // PARTS=walk,sides,rate,member,sizes,html runs some of the checks.
 //
+// On a machine with room for one dev server at a time: SIDE=guest with the reading server alone, then SIDE=member
+// with the harness's alone. The guest's half keeps what the member's half needs of the reading server's answers,
+// and its count of checks, in a file (STOCK=, by default in the system's temporary folder); the member's half
+// writes checks.json for both.
+//
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
 // commands). PROTOTYPE= is the folder of the prototype's notes (docs/prototypes/tv-screen-design on
@@ -20,6 +25,7 @@
 // - every request to /api/update-* is stopped in the browser and counted, on both servers, and requests that
 //   would leave the machine are stopped too.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -32,6 +38,10 @@ const MEMBER = `${MEMBER_ORIGIN}/prototype/my-library-real/tv?member=six&session
 const HARNESS_API = `${MEMBER_ORIGIN}/prototype/my-library-real/api`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
+const SIDE = process.env.SIDE ?? "both"
+const guestSide = SIDE !== "member"
+const memberSide = SIDE !== "guest"
+const STOCK = process.env.STOCK ?? join(tmpdir(), "tv-drive-taste-stock.json")
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
 const DESKTOP = [1920, 1080]
@@ -457,6 +467,8 @@ async function walk(size) {
 	is(stored.map((one) => one.score), phone ? [3, 5, 7, 9, 7] : [3, 5, 7, 9, 8], "OK on the four levels stored 3, 5, 7 and 9")
 	s = await until(page, (x) => x.search === "?tv=taste" && (x.crumb === "Made for you" || / sides? of you$/.test(x.crumb ?? "")), "Taste now shows the person's taste: their picks, or their sides", 120000)
 	numbers[`${where}: after five scores Taste shows`] = s.crumb
+	// The page has its answer a moment before this script has read the same answer's body.
+	await eventually(page, () => portraits().length > 0 && portraits().every((a) => a.json), "the portrait's answer is read", 30000)
 	is(portraits().map((a) => [a.method, a.status]), [["POST", 200]], "now the portrait is asked for, once, with the guest's progress")
 	const sent = JSON.parse(portraits()[0]?.body ?? "{}").guest
 	is((sent?.interactions ?? []).filter((i) => i.type === "score").map((i) => i.score), stored.map((one) => one.score), "the request carries the five scores from the browser")
@@ -646,6 +658,8 @@ async function rating(size) {
 
 /** Real answers of the guest server, to stand in for what a server without services cannot answer. */
 async function fixtures() {
+	// The member's half alone: what the guest's half kept.
+	if (!guestSide) return JSON.parse(readFileSync(STOCK, "utf8")).stock
 	const quiz = await (await fetch(`${ORIGIN}/api/smart-titles?count=20`)).json()
 	const portrait = await (await fetch(`${ORIGIN}/api/taste/portrait?tab=sides`, json({ guest: guestOf(WITH_SIDES) }))).json()
 	// The portrait of eighteen sample scores, as a member's.
@@ -924,6 +938,10 @@ async function shots(stock) {
 		[PHONE, "phone"],
 	]) {
 		const phone = device === "phone"
+		if (guestSide) await guestShots(size, device, phone)
+		if (memberSide) await memberShots(size, device)
+	}
+	async function guestShots(size, device, phone) {
 		where = `shots guest ${device}`
 		console.log(where)
 		// A guest without scores: Taste, the quiz, the quiz on another level and on an exact score.
@@ -998,11 +1016,12 @@ async function shots(stock) {
 		await until(page, (x) => x.crumb === "Made for you" && x.items.some((id) => id.startsWith("title:")) && Boolean(x.picture), "Made for you", 180000)
 		await shot(page, `taste-picks-guest-${device}`)
 		await ctx.close()
-
+	}
+	async function memberShots(size, device) {
 		// A member, on the harness.
 		where = `shots member ${device}`
 		console.log(where)
-		;({ ctx, page } = await open(`${MEMBER}&reset=1&tv=taste`, size, { before: standIn(stock) }))
+		const { ctx, page } = await open(`${MEMBER}&reset=1&tv=taste`, size, { before: standIn(stock) })
 		await until(page, (x) => / sides? of you$/.test(x.crumb ?? "") && Boolean(x.picture), "a member's sides", 120000)
 		await shot(page, `taste-sides-member-${device}`)
 		await page.keyboard.press("Enter")
@@ -1098,8 +1117,8 @@ async function shots(stock) {
 // would cut a walk short: load each page once before the real run, through Taste and the quiz.
 const stock = await fixtures()
 for (const [url, before] of [
-	[`${GUEST}?tv=taste`, undefined],
-	[`${MEMBER}&tv=taste`, standIn(stock)],
+	...(guestSide ? [[`${GUEST}?tv=taste`, undefined]] : []),
+	...(memberSide ? [[`${MEMBER}&tv=taste`, standIn(stock)]] : []),
 ]) {
 	where = "warming the dev server"
 	const { ctx, page } = await open(url, DESKTOP, { before, storage: FRESH })
@@ -1109,7 +1128,7 @@ for (const [url, before] of [
 	await page.waitForTimeout(6000)
 	await ctx.close()
 }
-{
+if (guestSide) {
 	const { ctx, page } = await open(`${GUEST}?tv=rate&title=${MATRIX.key}`, DESKTOP, { storage: FRESH })
 	await page.waitForTimeout(5000)
 	await ctx.close()
@@ -1121,15 +1140,24 @@ if (only !== "shots") {
 	// PARTS=walk,sides,rate,member,sizes,html runs some of the checks; checks.json is written by a whole run only.
 	const parts = process.env.PARTS?.split(",")
 	const part = (name) => !parts || parts.includes(name)
-	if (part("walk")) for (const size of [DESKTOP, PHONE]) await walk(size)
-	if (part("sides")) for (const size of [DESKTOP, PHONE]) await sides(size)
-	if (part("rate")) for (const size of [DESKTOP, PHONE]) await rating(size)
-	if (part("member")) for (const size of [DESKTOP, PHONE]) await member(size, stock)
-	if (part("sizes")) await sizes()
-	if (part("html")) await html()
-	if (!parts) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
-	else console.log(JSON.stringify(numbers, null, 1))
-}
+	if (guestSide) {
+		if (part("walk")) for (const size of [DESKTOP, PHONE]) await walk(size)
+		if (part("sides")) for (const size of [DESKTOP, PHONE]) await sides(size)
+		if (part("rate")) for (const size of [DESKTOP, PHONE]) await rating(size)
+	}
+	if (memberSide && part("member")) for (const size of [DESKTOP, PHONE]) await member(size, stock)
+	if (guestSide) {
+		if (part("sizes")) await sizes()
+		if (part("html")) await html()
+	}
+	if (parts) console.log(JSON.stringify(numbers, null, 1))
+	// The guest's half alone keeps its count for the member's half, which writes the file for both.
+	else if (SIDE === "guest") writeFileSync(STOCK, JSON.stringify({ stock, passed, failed, numbers }))
+	else {
+		const before = SIDE === "member" ? JSON.parse(readFileSync(STOCK, "utf8")) : { passed: 0, failed: [], numbers: {} }
+		writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed: before.passed + passed, failed: [...before.failed, ...failed], numbers: { ...before.numbers, ...numbers } }, null, "\t")}\n`)
+	}
+} else if (SIDE === "guest") writeFileSync(STOCK, JSON.stringify({ stock, passed: 0, failed: [], numbers: {} }))
 if (only !== "checks") await shots(stock)
 await browser.close()
 console.log(`${passed} checks passed, ${failed.length} failed`)

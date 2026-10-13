@@ -13,16 +13,15 @@
 // island holds the two islands to sail to.
 import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { TitleList } from "../TitleList"
 import {
 	Frame,
-	Img,
 	Item,
 	backdropSize,
 	keySize,
 	useReport,
 	useTvView,
 } from "../kit"
-import { TV_ROW_ATTR } from "../tv-dom"
 import {
 	MAP_PLACES,
 	type TvExplorerView,
@@ -210,10 +209,7 @@ function IslandMap({
 	)
 }
 
-/** A long name is set smaller, so it stays on two lines. */
-const nameSize = (name: string) =>
-	name.length > 28 ? 38 : name.length > 16 ? 46 : 62
-
+/** An island's titles and the islands to sail to, in the list every app shows its titles in (../TitleList.tsx). */
 function IslandTitles({
 	items,
 	island,
@@ -221,131 +217,25 @@ function IslandTitles({
 	items: readonly string[]
 	island: Exclude<TvExplorerView["island"], "missing" | null>
 }) {
-	const { canvas } = useTvView()
-	const P = canvas.edition === "phone"
-	const { titles, hops } = island
-	const shownKey = useShown(
-		titles.map((title) => title.key),
-		"title",
-	)
-	const shown = titles.find((title) => title.key === shownKey) ?? titles[0]
-	const art = useArt(shown?.backdrop ?? island.picture)
-	const key = keySize(canvas, 54)
-	const posters = titles.map((title) => (
-		<Item
-			key={title.key}
-			id={`title:${title.key}`}
-			label={title.title}
-			// The phone: as tall as the row, and no taller than lets four stand side by side.
-			className={`tvc-tile shrink-0 ${P ? "aspect-[2/3] h-full max-h-[156px]" : ""}`}
-			style={P ? undefined : { width: 172, height: 258 }}
-		>
-			<Img
-				src={tmdbImageUrl(title.poster, P ? "w185" : "w342")}
-				className="absolute inset-0 h-full w-full"
-			/>
-		</Item>
-	))
-	const empty = "Nothing on this island right now."
-	if (P)
-		return (
-			<Frame name="Explorer" crumb={island.name} items={items} art={art}>
-				<div className="flex h-full flex-col">
-					{shown ? (
-						<div key={shown.key} className="tvc-fade shrink-0">
-							<div className="truncate text-[30px] font-bold leading-none tracking-tight">
-								{shown.title}
-							</div>
-							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
-								{shown.facts}
-							</div>
-						</div>
-					) : (
-						<div className="text-[22px] text-white/70">{empty}</div>
-					)}
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="-mx-5 flex min-h-0 flex-1 items-center gap-3.5 overflow-hidden px-5 py-3.5"
-					>
-						{posters}
-					</div>
-					{/* The last row: the islands to sail to, beside the Expand key's corner. */}
-					<div
-						className="flex shrink-0 items-center gap-2"
-						style={{ height: key, paddingRight: PHONE_CORNER }}
-					>
-						{hops.map((hop) => (
-							<Item
-								key={hop.id}
-								id={`hop:${hop.id}`}
-								label={`Sail to ${hop.name}`}
-								className="tvc-btn flex min-w-0 items-center px-4 text-[21px]"
-								style={{ height: key }}
-							>
-								<span className="truncate">{hop.name}</span>
-							</Item>
-						))}
-					</div>
-				</div>
-			</Frame>
-		)
+	const P = useTvView().canvas.edition === "phone"
 	return (
-		<Frame
+		<TitleList
 			name="Explorer"
-			crumb={`${island.name} · ${island.apart}`}
+			// The desktop has room for what sets the island apart.
+			crumb={P ? island.name : `${island.name} · ${island.apart}`}
 			items={items}
-			art={art}
-			reserve
-		>
-			<div className="flex min-h-full flex-col justify-between">
-				<div className="w-[820px]">
-					{shown ? (
-						<div key={shown.key} className="tvc-fade">
-							<div
-								className="line-clamp-2 font-bold leading-none tracking-tight"
-								style={{ fontSize: nameSize(shown.title) }}
-							>
-								{shown.title}
-							</div>
-							<div className="mt-3 text-[26px] text-white/75">
-								{shown.facts}
-							</div>
-						</div>
-					) : (
-						<div className="text-[32px] text-white/70">{empty}</div>
-					)}
-				</div>
-				<div className="flex items-end gap-8">
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="-mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-7"
-					>
-						{posters}
-					</div>
-					{hops.length > 0 && (
-						<div className="flex shrink-0 flex-col gap-3 pb-7">
-							<span className="text-[24px] text-white/70">Sail to</span>
-							{hops.map((hop) => (
-								<Item
-									key={hop.id}
-									id={`hop:${hop.id}`}
-									label={`Sail to ${hop.name}`}
-									className="tvc-btn flex h-[68px] items-center gap-3.5 whitespace-nowrap px-8 text-[26px]"
-								>
-									{/* The island, as it is on the map. */}
-									<span
-										aria-hidden="true"
-										className="h-[22px] w-[30px] shrink-0 rounded-[50%]"
-										style={{ background: hop.color }}
-									/>
-									{hop.name}
-								</Item>
-							))}
-						</div>
-					)}
-				</div>
-			</div>
-		</Frame>
+			titles={island.titles}
+			empty="Nothing on this island right now."
+			// The islands next door, each with its colour on the map.
+			actions={island.hops.map((hop) => ({
+				id: `hop:${hop.id}`,
+				label: hop.name,
+				says: `Sail to ${hop.name}`,
+				mark: hop.color,
+			}))}
+			actionsLabel="Sail to"
+			art={island.picture}
+		/>
 	)
 }
 

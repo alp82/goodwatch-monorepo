@@ -3,6 +3,7 @@
 // machine lists for each.
 import { renderToStaticMarkup } from "react-dom/server"
 import { TvScreen } from "./TvScreen"
+import type { TvListTitle } from "./TitleList"
 import { Layer, TvViewProvider } from "./kit"
 import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
 import type { TvCanvas } from "./room-tv"
@@ -18,7 +19,6 @@ import {
 	tvItems,
 } from "./tv-machine"
 import {
-	type TvListTitle,
 	type TvQuizOnScreen,
 	type TvSide,
 	type TvTasteOnScreen,

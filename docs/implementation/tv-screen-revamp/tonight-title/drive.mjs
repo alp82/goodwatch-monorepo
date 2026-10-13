@@ -11,6 +11,9 @@
 // A whole run takes a quarter of an hour on two dev servers. PARTS=walk,watch,sizes,order,html runs some of the
 // checks.
 //
+// On a machine with room for one dev server at a time: SIDE=guest with the reading server alone, then SIDE=member
+// with the harness's alone. Each runs the checks of its half; checks.json and the screenshots are a whole run's.
+//
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
 // commands). PROTOTYPE= is the folder of the prototype's notes (docs/prototypes/tv-screen-design on
@@ -28,6 +31,9 @@ const GUEST = `${ORIGIN}/home-preview`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3192"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
+const SIDE = process.env.SIDE ?? "both"
+const guestSide = SIDE !== "member"
+const memberSide = SIDE !== "guest"
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
 const DESKTOP = [1920, 1080]
@@ -1185,7 +1191,7 @@ async function shots(own, pool) {
 
 // A dev server's first page load after a start reloads itself once Vite has optimized its dependencies, which
 // would cut a walk short: load each page once before the real run, through every screen and the title page.
-for (const url of [GUEST, MEMBER]) {
+for (const url of [...(guestSide ? [GUEST] : []), ...(memberSide ? [MEMBER] : [])]) {
 	where = "warming the dev server"
 	const { ctx, page } = await open(url, DESKTOP)
 	await page.keyboard.press("Enter")
@@ -1198,33 +1204,35 @@ for (const url of [GUEST, MEMBER]) {
 	await page.waitForTimeout(4000)
 	await ctx.close()
 }
-{
+if (guestSide) {
 	const { ctx } = await open(`${ORIGIN}${MATRIX.path}`, DESKTOP, { room: false })
 	await ctx.close()
 }
 passed = 0
 failed.length = 0
 
-const { own, pool } = await endpoint()
+const { own, pool } = guestSide ? await endpoint() : {}
 if (only !== "shots") {
 	// PARTS=walk,watch,sizes,order,html runs some of the checks; checks.json is written by a whole run only.
 	const parts = process.env.PARTS?.split(",")
 	const part = (name) => !parts || parts.includes(name)
 	if (part("walk")) {
-		for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
-		for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
+		if (guestSide) for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
+		if (memberSide) for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
 	}
-	if (part("watch")) {
-		for (const size of [DESKTOP, PHONE]) await watch(size, own)
-		await watchEdges(own, pool)
+	if (guestSide) {
+		if (part("watch")) {
+			for (const size of [DESKTOP, PHONE]) await watch(size, own)
+			await watchEdges(own, pool)
+		}
+		if (part("sizes")) await sizes()
+		if (part("order")) await order(pool)
+		if (part("html")) await html()
 	}
-	if (part("sizes")) await sizes()
-	if (part("order")) await order(pool)
-	if (part("html")) await html()
-	if (!parts) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	if (!parts && SIDE === "both") writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
 	else console.log(JSON.stringify(numbers, null, 1))
 }
-if (only !== "checks") await shots(own, pool)
+if (only !== "checks" && SIDE === "both") await shots(own, pool)
 await browser.close()
 console.log(`${passed} checks passed, ${failed.length} failed`)
 for (const line of failed) console.log(" -", line)

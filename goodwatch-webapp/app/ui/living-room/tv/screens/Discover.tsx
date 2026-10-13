@@ -15,8 +15,8 @@
 // share the width, the six tiles stand three by three, and the last row holds the focused option's line, or
 // Change, beside the Expand key's corner at the bottom right.
 import { useRef } from "react"
-import type { TitleCard } from "~/server/title-cards.server"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { TitleList, type TvListTitle } from "../TitleList"
 import {
 	Frame,
 	Img,
@@ -34,7 +34,6 @@ import {
 	listEmptyLine,
 	listFacts,
 } from "../tv-discover"
-import { TV_ROW_ATTR } from "../tv-dom"
 import { tvTitleKey } from "../tv-home"
 import type { TvDiscoverTab, TvScreen } from "../tv-machine"
 import { type TvDiscoverReport, useTvDiscover } from "../use-tv-discover"
@@ -66,10 +65,6 @@ const tint = (color: string) =>
 /** An option's own colour alone, for a tile without a picture. */
 const plain = (color: string) =>
 	`linear-gradient(160deg, color-mix(in srgb, ${color} 58%, #05060a) 0%, color-mix(in srgb, ${color} 20%, #05060a) 100%)`
-
-/** A long name is set smaller, so it stays on two lines. */
-const nameSize = (name: string, large: number, small: number) =>
-	name.length > 16 ? small : large
 
 function Choice({
 	items,
@@ -198,6 +193,10 @@ function Choice({
 	)
 }
 
+/** Change: the way back to the tabs. */
+const CHANGE = [{ id: "change", label: "Change" }]
+
+/** The titles of one choice, in the list every app shows its titles in (../TitleList.tsx). */
 function List({
 	items,
 	option,
@@ -207,137 +206,22 @@ function List({
 	option: TvDiscoverOption | null
 	list: TvDiscoverReport | null
 }) {
-	const { canvas, focused } = useTvView()
-	const P = canvas.edition === "phone"
-	const cards = (list?.cards ?? []).filter((card) =>
-		items.includes(`title:${tvTitleKey(card)}`),
-	)
-	// The title the screen names and shows behind everything: the one with the focus, and while the focus is on
-	// Change or the bar, the one that had it last.
-	const last = useRef<string | null>(null)
-	const at = cards.find((card) => `title:${tvTitleKey(card)}` === focused)
-	if (at) last.current = tvTitleKey(at)
-	const shown: TitleCard | null =
-		cards.find((card) => tvTitleKey(card) === last.current) ?? cards[0] ?? null
-	const empty = listEmptyLine(list?.waiting ?? true)
-	const behind = shown?.backdrop_path
-		? tmdbImageUrl(shown.backdrop_path, backdropSize(canvas))
-		: undefined
-	const change = items.includes("change")
-	const poster = (card: TitleCard, size: string) =>
-		card.poster_path && (
-			<Img
-				src={tmdbImageUrl(card.poster_path, size)}
-				className="absolute inset-0 h-full w-full"
-			/>
-		)
-
-	// The phone: one line of name, one of facts, the posters as tall as is left, and Change beside the Expand
-	// key's corner.
-	if (P)
-		return (
-			<Frame name="Discover" crumb={option?.name} items={items} art={behind}>
-				<div className="flex h-full flex-col">
-					{shown ? (
-						<div key={tvTitleKey(shown)} className="tvc-fade shrink-0">
-							<div className="truncate text-[30px] font-bold leading-none tracking-tight">
-								{shown.title}
-							</div>
-							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
-								{listFacts(shown)}
-							</div>
-						</div>
-					) : (
-						<div className="shrink-0 text-[26px] text-white/70">{empty}</div>
-					)}
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="relative -mx-5 flex min-h-0 flex-1 gap-3.5 overflow-hidden px-5 py-3.5"
-					>
-						{cards.map((card) => (
-							<Item
-								key={card.key}
-								id={`title:${tvTitleKey(card)}`}
-								label={card.title}
-								// Four posters fit the row: a taller phone leaves the rest under them.
-								className="tvc-tile aspect-[2/3] h-full max-h-[156px] shrink-0 bg-[#10131c]"
-							>
-								{poster(card, "w185")}
-							</Item>
-						))}
-					</div>
-					<div
-						className={`flex shrink-0 items-center ${CORNER}`}
-						style={{ height: keySize(canvas, 54) }}
-					>
-						{change && (
-							<Item
-								id="change"
-								className="tvc-btn flex h-full min-w-0 items-center px-6 text-[21px]"
-							>
-								<span className="truncate">Change</span>
-							</Item>
-						)}
-					</div>
-				</div>
-			</Frame>
-		)
+	const titles: TvListTitle[] = (list?.cards ?? []).map((card) => ({
+		key: tvTitleKey(card),
+		title: card.title,
+		poster: card.poster_path,
+		backdrop: card.backdrop_path,
+		facts: listFacts(card),
+	}))
 	return (
-		<Frame
+		<TitleList
 			name="Discover"
 			crumb={option?.name}
 			items={items}
-			art={behind}
-			reserve
-		>
-			<div className="flex min-h-full flex-col justify-between">
-				<div className="w-[820px]">
-					{shown ? (
-						<div key={tvTitleKey(shown)} className="tvc-fade">
-							<div
-								className="line-clamp-2 font-bold leading-none tracking-tight"
-								style={{ fontSize: nameSize(shown.title, 62, 46) }}
-							>
-								{shown.title}
-							</div>
-							<div className="mt-3 truncate text-[26px] text-white/75">
-								{listFacts(shown)}
-							</div>
-						</div>
-					) : (
-						<div className="text-[32px] text-white/70">{empty}</div>
-					)}
-				</div>
-				<div className="flex items-end gap-8">
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="relative -mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-7"
-					>
-						{cards.map((card) => (
-							<Item
-								key={card.key}
-								id={`title:${tvTitleKey(card)}`}
-								label={card.title}
-								className="tvc-tile shrink-0 bg-[#10131c]"
-								style={{ width: 172, height: 258 }}
-							>
-								{poster(card, "w342")}
-							</Item>
-						))}
-					</div>
-					{change && (
-						<div className="flex shrink-0 flex-col gap-3 pb-7">
-							<Item
-								id="change"
-								className="tvc-btn flex h-[68px] items-center justify-center whitespace-nowrap px-8 text-[26px]"
-							>
-								Change
-							</Item>
-						</div>
-					)}
-				</div>
-			</div>
-		</Frame>
+			titles={titles}
+			empty={listEmptyLine(list?.waiting ?? true)}
+			actions={CHANGE}
+		/>
 	)
 }
 

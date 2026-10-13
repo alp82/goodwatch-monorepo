@@ -216,7 +216,11 @@ test("a side's screen lists the titles of it the person rated, under the side's 
 		assert.match(html, />Slow-burning crime stories</)
 		assert.match(html, />Title 10</)
 		assert.match(html, />2019 · Movie · 810 score · You gave it 10</)
-		assert.equal(count(html, "/t/p/w342/poster-"), 4)
+		// The shared list's posters: the small file on the phone.
+		assert.equal(
+			count(html, `/t/p/${edition === "phone" ? "w185" : "w342"}/poster-`),
+			4,
+		)
 		// No Rate more here.
 		assert.ok(!html.includes("Rate more"))
 		// There can be fewer than four.

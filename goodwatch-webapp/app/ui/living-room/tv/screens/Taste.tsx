@@ -6,6 +6,7 @@
 import { type ReactNode, useRef } from "react"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { TitleList } from "../TitleList"
 import {
 	Frame,
 	Img,
@@ -15,10 +16,8 @@ import {
 	useReport,
 	useTvView,
 } from "../kit"
-import { TV_ROW_ATTR } from "../tv-dom"
 import type { TvScreen } from "../tv-machine"
 import {
-	type TvListTitle,
 	type TvSide,
 	type TvTasteOnScreen,
 	sidesCrumb,
@@ -73,10 +72,6 @@ export function TasteData(props: DataProps) {
 
 // ---------------------------------------------------------------------------------------------------------
 // The screens.
-
-/** A long name is set smaller, so it stays on one line. */
-const nameSize = (name: string, large: number, small: number) =>
-	name.length > 16 ? small : large
 
 /** The words and one key: before the person has five scores, and while the portrait is on its way. */
 function Ask({
@@ -266,122 +261,8 @@ function Sides({
 	)
 }
 
-/**
- * A handful of titles: the focused one's name and facts over a row of posters. A side's titles, and the quiz's
- * picks with Rate more.
- */
-function List({
-	items,
-	crumb,
-	titles,
-	empty,
-}: {
-	items: readonly string[]
-	crumb: string
-	titles: readonly TvListTitle[]
-	/** What the list says while it has no title. */
-	empty: string
-}) {
-	const { canvas, focused } = useTvView()
-	const P = canvas.edition === "phone"
-	const more = items.includes("start-quiz")
-	const on = titles.filter((title) => items.includes(`title:${title.key}`))
-	// The name and the picture follow the focused title, and stay on the last one while the focus is elsewhere.
-	const last = useRef(on[0]?.key)
-	const at = on.find((title) => `title:${title.key}` === focused)
-	if (at) last.current = at.key
-	const x = on.find((title) => title.key === last.current) ?? on[0]
-	const frame = {
-		name: "Taste",
-		crumb,
-		items,
-		art: x?.backdrop
-			? tmdbImageUrl(x.backdrop, backdropSize(canvas))
-			: undefined,
-	}
-	const poster = (title: TvListTitle) => (
-		<Item
-			key={title.key}
-			id={`title:${title.key}`}
-			label={title.title}
-			className={`tvc-tile shrink-0 ${P ? "aspect-[2/3] h-full" : ""}`}
-			style={P ? undefined : { width: 172, height: 258 }}
-		>
-			{title.poster && (
-				<Img
-					src={tmdbImageUrl(title.poster, "w342")}
-					className="absolute inset-0 h-full w-full"
-				/>
-			)}
-		</Item>
-	)
-	// The phone: one line of name, one of facts, the posters as tall as is left, and Rate more beside the Expand
-	// key's corner.
-	if (P)
-		return (
-			<Frame {...frame}>
-				<div className="flex h-full flex-col">
-					{x ? (
-						<div key={x.key} className="tvc-fade shrink-0">
-							<div className="truncate text-[30px] font-bold leading-none tracking-tight">
-								{x.title}
-							</div>
-							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
-								{x.facts}
-							</div>
-						</div>
-					) : (
-						<div className="text-[24px] leading-tight text-white/70">
-							{empty}
-						</div>
-					)}
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="-mx-5 flex min-h-0 flex-1 gap-3.5 overflow-hidden px-5 py-3.5"
-					>
-						{on.map(poster)}
-					</div>
-					<Foot>{more && <RateMore />}</Foot>
-				</div>
-			</Frame>
-		)
-	return (
-		<Frame {...frame} reserve>
-			<div className="flex min-h-full flex-col justify-between">
-				<div className="w-[820px]">
-					{x ? (
-						<div key={x.key} className="tvc-fade">
-							<div
-								className="truncate font-bold leading-none tracking-tight"
-								style={{ fontSize: nameSize(x.title, 62, 46) }}
-							>
-								{x.title}
-							</div>
-							<div className="mt-3 truncate text-[26px] text-white/75">
-								{x.facts}
-							</div>
-						</div>
-					) : (
-						<div className="text-[32px] text-white/70">{empty}</div>
-					)}
-				</div>
-				<div className="flex items-end gap-8">
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						className="-mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-7"
-					>
-						{on.map(poster)}
-					</div>
-					{more && (
-						<div className="flex shrink-0 flex-col gap-3 pb-7">
-							<RateMore />
-						</div>
-					)}
-				</div>
-			</div>
-		</Frame>
-	)
-}
+/** "Rate more" as a list's key. */
+const RATE_MORE = [{ id: "start-quiz", label: "Rate more" }]
 
 export default function Taste({
 	items,
@@ -398,7 +279,8 @@ export default function Taste({
 		const sides = taste.state === "sides" ? taste.sides : []
 		const shown = sides.find((one) => one.id === side)
 		return (
-			<List
+			<TitleList
+				name="Taste"
 				items={items}
 				crumb={shown?.name ?? "A side of you"}
 				titles={shown?.titles ?? []}
@@ -432,10 +314,12 @@ export default function Taste({
 			return <Sides items={items} sides={taste.sides} />
 		case "picks":
 			return (
-				<List
+				<TitleList
+					name="Taste"
 					items={items}
 					crumb="Made for you"
 					titles={taste.picks}
+					actions={RATE_MORE}
 					empty={
 						taste.waiting
 							? "Your picks are on their way."

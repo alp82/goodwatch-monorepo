@@ -266,11 +266,10 @@ test("on every phone of the room's table the keys are touch targets, and the cor
 				const side = Number(/width:(\d+)px/.exec(tag(html, id))?.[1])
 				assert.ok(side * p.scale >= 44, `${p.phone} ${id}`)
 			}
-		// The last row of both screens is as tall as a key and ends before the corner.
+		// The last row of both screens is as tall as a key and ends before the corner. The island's is the shared
+		// list's (TitleList.tsx), which writes the corner as a class.
 		assert.ok(p.map.includes(`style="height:${p.key}px;padding-right:158px"`))
-		assert.ok(
-			p.island.includes(`style="height:${p.key}px;padding-right:158px"`),
-		)
+		assert.ok(p.island.includes(`pr-[158px]" style="height:${p.key}px"`))
 		// What a key says is cut short before it spills.
 		assert.equal(count(p.island, '<span class="truncate">'), 2)
 	}

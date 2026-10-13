@@ -8,6 +8,11 @@
 //
 // PARTS=walk,person,links,sizes,html runs some of the checks.
 //
+// On a machine with room for one dev server at a time: SIDE=guest with the reading server alone, then SIDE=member
+// with the harness's alone. Each runs the checks of its half; checks.json and the screenshots are a whole run's.
+// The guest's half keeps the two maps the member's half plays back, in a file (STOCK=, by default in the system's
+// temporary folder).
+//
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
 // commands). PROTOTYPE= is the folder of the prototype's notes (docs/prototypes/tv-screen-design on
@@ -17,6 +22,7 @@
 // browser. The harness has no title snapshot, so its Explorer answers nothing: there the script plays back the
 // map the reading server gives a person with ratings and two services, which is what a member's map is.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { brotliCompressSync, gzipSync } from "node:zlib"
@@ -27,6 +33,10 @@ const GUEST = `${ORIGIN}/home-preview`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3208"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
+const SIDE = process.env.SIDE ?? "both"
+const guestSide = SIDE !== "member"
+const memberSide = SIDE !== "guest"
+const STOCK = process.env.STOCK ?? join(tmpdir(), "tv-drive-explorer-stock.json")
 const parts = (process.env.PARTS ?? "walk,person,links,sizes,html").split(",")
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
@@ -687,49 +697,57 @@ async function warm(url, options) {
 	}
 }
 
-const answer = await askMap()
-check(answer.status === 200, `the map answers: ${answer.status}`)
-const person = await askMap(PERSON)
+// The member's half alone plays back the maps the guest's half kept.
+const kept = guestSide ? null : JSON.parse(readFileSync(STOCK, "utf8"))
+const answer = kept ? { map: kept.answer } : await askMap()
+if (guestSide) check(answer.status === 200, `the map answers: ${answer.status}`)
+const person = kept ? { map: kept.person } : await askMap(PERSON)
+if (SIDE === "guest") writeFileSync(STOCK, JSON.stringify({ answer: answer.map, person: person.map }))
 const weigh = (text) => ({ bytes: Buffer.byteLength(text), gzip: gzipSync(text).length, brotli: brotliCompressSync(text).length })
 const storage = { [PROGRESS_KEY]: JSON.stringify(PERSON.interactions), country: PERSON.country, withStreamingProviders: PERSON.services }
 
 if (only !== "shots") {
-	where = "the map's answer"
-	console.log(where)
-	is(answer.headers.get("cache-control"), "private, no-store", "the map is never stored by a cache")
-	is(answer.map.grouping, "mood", "it is the mood map")
-	check(answer.map.islands.length >= 6, `it has ${answer.map.islands.length} islands`)
-	check(answer.map.islands.every((island) => island.titles.length >= 4), "every island carries at least four titles")
-	check(person.map.taste.signal === "some" && person.map.filters.onMyServices, "a person with ratings and services gets their own map: a taste, and On my services")
-	check(!same(sixOf(answer.map).map((i) => i.id).sort(), sixOf(person.map).map((i) => i.id).sort()), `their six are their own: ${sixOf(person.map).map((i) => i.id)} against ${sixOf(answer.map).map((i) => i.id)}`)
-	// Three more times, warm, for the time it takes.
-	const times = []
-	for (let n = 0; n < 3; n++) times.push((await askMap()).ms)
-	numbers["the map"] = {
-		"a guest nobody knows": { ...weigh(answer.text), islands: answer.map.islands.length, titlesPerIsland: `${Math.min(...answer.map.islands.map((i) => i.titles.length))} to ${Math.max(...answer.map.islands.map((i) => i.titles.length))}` },
-		"a person with a taste and two services": { ...weigh(person.text), islands: person.map.islands.length, titlesPerIsland: `${Math.min(...person.map.islands.map((i) => i.titles.length))} to ${Math.max(...person.map.islands.map((i) => i.titles.length))}` },
-		warmMs: times,
+	if (guestSide) {
+		where = "the map's answer"
+		console.log(where)
+		is(answer.headers.get("cache-control"), "private, no-store", "the map is never stored by a cache")
+		is(answer.map.grouping, "mood", "it is the mood map")
+		check(answer.map.islands.length >= 6, `it has ${answer.map.islands.length} islands`)
+		check(answer.map.islands.every((island) => island.titles.length >= 4), "every island carries at least four titles")
+		check(person.map.taste.signal === "some" && person.map.filters.onMyServices, "a person with ratings and services gets their own map: a taste, and On my services")
+		check(!same(sixOf(answer.map).map((i) => i.id).sort(), sixOf(person.map).map((i) => i.id).sort()), `their six are their own: ${sixOf(person.map).map((i) => i.id)} against ${sixOf(answer.map).map((i) => i.id)}`)
+		// Three more times, warm, for the time it takes.
+		const times = []
+		for (let n = 0; n < 3; n++) times.push((await askMap()).ms)
+		numbers["the map"] = {
+			"a guest nobody knows": { ...weigh(answer.text), islands: answer.map.islands.length, titlesPerIsland: `${Math.min(...answer.map.islands.map((i) => i.titles.length))} to ${Math.max(...answer.map.islands.map((i) => i.titles.length))}` },
+			"a person with a taste and two services": { ...weigh(person.text), islands: person.map.islands.length, titlesPerIsland: `${Math.min(...person.map.islands.map((i) => i.titles.length))} to ${Math.max(...person.map.islands.map((i) => i.titles.length))}` },
+			warmMs: times,
+		}
+
 	}
 
-	await warm(GUEST)
-	await warm(MEMBER, { playback: person.map })
+	if (guestSide) await warm(GUEST)
+	if (memberSide) await warm(MEMBER, { playback: person.map })
 	if (parts.includes("walk")) {
-		for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size, { map: answer.map })
-		for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size, { map: person.map, playback: person.map })
+		if (guestSide) for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size, { map: answer.map })
+		if (memberSide) for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size, { map: person.map, playback: person.map })
 	}
-	// A guest with ratings and services of their own: their six, with the match and where each title streams.
-	if (parts.includes("person")) for (const size of [DESKTOP, PHONE]) await walk("guest with a taste", GUEST, size, { map: person.map, storage })
-	if (parts.includes("links")) await links(answer.map)
-	if (parts.includes("sizes")) await sizes(answer.map, person.map)
-	if (parts.includes("html")) await html()
+	if (guestSide) {
+		// A guest with ratings and services of their own: their six, with the match and where each title streams.
+		if (parts.includes("person")) for (const size of [DESKTOP, PHONE]) await walk("guest with a taste", GUEST, size, { map: person.map, storage })
+		if (parts.includes("links")) await links(answer.map)
+		if (parts.includes("sizes")) await sizes(answer.map, person.map)
+		if (parts.includes("html")) await html()
+	}
 
 	console.log(`${passed} checks pass, ${failed.length} fail`)
 	for (const line of failed) console.log("  ", line)
-	if (!process.env.PARTS) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	if (!process.env.PARTS && SIDE === "both") writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
 	else console.log(JSON.stringify(numbers, null, 1))
 }
 
-if (only !== "checks") {
+if (only !== "checks" && SIDE === "both") {
 	const dir = join(here, "shots")
 	mkdirSync(dir, { recursive: true })
 	const settle = async (page) => {

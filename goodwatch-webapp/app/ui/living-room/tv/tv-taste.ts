@@ -17,6 +17,7 @@ import type {
 import type { ScoringMedia } from "~/ui/scoring/types"
 import type { QuizPick } from "~/ui/taste-quiz/use-quiz-picks"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
+import type { TvListTitle } from "./TitleList.tsx"
 import {
 	LIST_TITLES,
 	TASTE_SIDES,
@@ -25,17 +26,6 @@ import {
 	type TvScreen,
 } from "./tv-machine.ts"
 import { type TvKnownTitle, parseTvTitleKey } from "./tv-title.ts"
-
-/** A title in one of Taste's lists: a side's titles, or the quiz's picks. */
-export type TvListTitle = {
-	/** `movie-603`, as in the URL. */
-	key: string
-	title: string
-	poster: string | null
-	backdrop: string | null
-	/** "2019 · Movie · 87 score · You gave it 8". */
-	facts: string
-}
 
 /** One side of the person's taste, as its tile and its screen show it. */
 export type TvSide = {
