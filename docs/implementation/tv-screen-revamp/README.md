@@ -4,8 +4,10 @@ This plan takes the approved TV prototype to production. It says what happens to
 the new TV's state machine works, where each TV screen gets real data, how the Expand key hands over to a real
 page, which budgets apply, and in which slices to build it.
 
-Status: a plan, written on October 13, 2026 against `origin/main` at `a6b28b08`. Nothing is built. Seven points
-need the owner; they are in [Decisions for the owner](#7-decisions-for-the-owner).
+Status: a plan, written on October 13, 2026 against `origin/main` at `a6b28b08` and amended the same day with
+the owner's answers. Slices 1 and 2 are being built. Four parts of the design are being prototyped again and
+wait for their results: see [What waits for a prototype](#what-waits-for-a-prototype). What is decided and what
+is still open is in [Decisions for the owner](#7-decisions-for-the-owner).
 
 Every thread that builds a slice starts here and needs nothing else to begin.
 
@@ -34,11 +36,12 @@ Paths below are relative to `goodwatch-webapp/app/` unless they start with `docs
 
 ## What is fixed
 
-Approved by the owner; this plan does not reopen any of it.
+Approved by the owner; this plan does not reopen any of it. The owner has reopened four parts since; they are in
+the next section.
 
 - **The flow "apps":** home with large app tiles and a preview of the focused one; Tonight, Discover, Explorer,
   Taste and, for a member, My shows as mini apps on the TV; a title screen; search; the menu. A guest's steps are
-  the prototype's (a quiz with four answers).
+  the prototype's.
 - **The look "Cinema".** Marquee and Glow are dropped.
 - **Two ways out of the TV, no more:** the Expand key (amber corner brackets with the label "Expand", at the
   picture's bottom right on desktop and phone, with the growing frame), and "Watch on <service>". No "Open full X"
@@ -53,7 +56,31 @@ Approved by the owner; this plan does not reopen any of it.
 - **The room photo stays**, softened in the image file, not by a live blur. The start page's label is "Home"
   (`ui/navigation/destinations.ts:62-65` says so already).
 - **Every `REC_*` flag is on** in production (`server/features.server.ts:13-25`). The plan names the flag-on
-  pages only: `/discover?moods=`, `/explorer`, `/taste`, `/my-shows`, `/my-movies`.
+  pages only: `/discover?moods=`, `/explorer`, `/taste`, `/my-shows`, `/my-movies`. The flags themselves are
+  removed in [slice 15](#slice-15-the-rec_-flags-go).
+
+## What waits for a prototype
+
+On October 13, 2026 the owner sent four parts of the approved design back to prototyping. Other threads build
+those prototypes. Until a result is in, the text about these parts further down describes the first prototype
+and is provisional; each place says so.
+
+| Part | What is being prototyped | What it changes here | Build now | Wait |
+| --- | --- | --- | --- | --- |
+| Mini Discover's choice screen | Three tabs, Moods, Themes and Styles, with six options each, in place of one grid of moods | The `discover` screen, its URL keys and items in the machine (slice 1); the data behind a choice ([Mini Discover](#mini-discover)); slice 6 | The list of titles for a choice that is already made, read with `useDiscoverResults`; its Expand address; what it shows for a 503 and for an empty result | The choice screen itself, its items and tabs, and where Themes and Styles get their titles |
+| The quiz's answers | A rating strip from low on the left to high on the right, with labels and the ten exact scores, in place of four answers | The `quiz` and `rate` screens' items in the machine (slice 1); the `rate` screen of slice 5; slice 8 | Taste's three states, a side, the quiz's frame (the title, its picture, the progress) and its wiring to `useTasteQuiz`, which takes any score from 1 to 10 already | The answer control, its item ids, its keys, and its wording |
+| The Expand transition | Several transitions, compared | [The hand-over](#the-hand-over) in section 4; slice 11 | What travels to each page, Back into the same TV screen with the same focus, the reload case, plain navigation with reduced motion | The frame while the key has the focus, the motif's motion, the brackets, the timing |
+| The Remote's Netflix and Prime Video keys | A key opens a "watch on this service" TV screen, in place of narrowing the list on show | The `service-key` action and a new screen in the machine (slice 1); the toast and the `service` key in the URL; the parts of slices 2 to 5 named below | The two keys on both Remotes, sending `service-key` with the service's name as today (`ui/living-room/Remote.tsx:190-221`) | Everything a press does: no toast, no narrowing, no `services=` on an Expand address until the result is in |
+
+**For slice 1, which is running:** keep each of these four behind one function of the machine (the items and
+transitions of `discover`, the items of `quiz` and `rate`, the transition of `service-key`), so that a result
+changes one place and its tests. The `service-key` transition does nothing for now.
+
+**A gap the Discover prototype must close.** Discover's filters have moods and genres, and no themes or styles
+(`domain/filter-state.ts:163-211`). Themes and Styles exist as groupings of the Explorer, with 14 and 10 islands
+(`domain/explorer.ts:7-15`, `server/explorer/islands.server.ts:150`, `:254`). Six options per tab can be drawn from them, but
+their titles would then come from `/api/explorer/map?grouping=theme` and `style`, and Expand would have to open
+the Explorer at that island, or Discover needs two new filters. The prototype's result has to say which.
 
 ## 1. What exists today, and what happens to it
 
@@ -73,7 +100,7 @@ Read from the code on `origin/main`. "At the switch" means the pull request that
 | `TvQuiz.tsx` (580 lines) | The taste quiz on the TV: four levels over a 1 to 10 strip, "Keep these 5?", picks three at a time (`:1-5`) | **Delete** at cleanup | The new quiz is one question with four answers. It keeps using `useTasteQuiz` (`ui/taste-quiz/use-taste-quiz.ts:24`) |
 | `Remote.tsx` (441 lines) | The Remote the owner chose in the Remote prototype, already shipped (`:1-4`, commit `b9df2353`): power, Menu, the wheel with OK, Back, Search and Home in an arc, two streaming keys. The prototype's `HugRemote` with `streaming="arc"` is this component. The wheel's four arrows send `step` forwards or backwards (`:401`) | **Change**, small | The wheel's arrows send their direction. The prototype's only change to the file is that (`onDirection` on `Wheel`). Dragging around the wheel and scrolling over it keep stepping (`:331-347`, `:360-379`). `ICON` and `Icon` stay. `APP` (`:26-58`) goes at cleanup: its addresses move into the machine's destinations |
 | `LivingRoom.tsx` (665 lines) | The start page's scene: chooses the phone scene (`:109`, `:305-317`), renders the section below the room (`:297-304`), keeps a guest's services and answers in `localStorage` (`:97-124`), runs the quiz hook (`:129-137`), carries out effects (`:158-189`), the keyboard (`:505-607`), measures the window once per resize (`:223-239`), turns the Remote at most 6 degrees with a `framer-motion` spring (`:242-274`), and draws the desktop scene, placed by CSS until measured (`:73-78`, `:330-500`) | **Replace**; delete at cleanup | Patterns that stay: `useIsoLayoutEffect` (`:70-71`), measuring once per resize, the CSS-placed first paint, `inert` while the room is out of the window (`:336`), `useReturnIntoTv` (`:113`), the keyboard handler's guards (`:535-548`). Gone: the stored choices, the spring (the pointing loop replaces it), the quiz effects (`:610-665`) |
-| `PhoneLivingRoom.tsx` (386 lines) | The phone scenes: portrait with the room photo, the TV on top and the Remote in the hand; landscape with a Remote that lifts (`:114-131`, `:274-291`). `usePhoneOrientation` and its two media queries (`:50-73`) | **Replace**; delete at cleanup | Portrait becomes the prototype's framed TV in the room. **Landscape is not designed** (the prototype's notes: "Not built: swiping, landscape"), see [decision 5](#7-decisions-for-the-owner) |
+| `PhoneLivingRoom.tsx` (386 lines) | The phone scenes: portrait with the room photo, the TV on top and the Remote in the hand; landscape with a Remote that lifts (`:114-131`, `:274-291`). `usePhoneOrientation` and its two media queries (`:50-73`) | **Replace**; delete at cleanup | Portrait becomes the prototype's framed TV in the room. Landscape was not in the prototype ("Not built: swiping, landscape"); the owner has decided it: the TV on the left and the phone's Remote on the right, see [slice 4b](#slice-4b-phone-landscape) |
 | `room.ts` (288 lines) | Geometry, pure: the photos and where the TV sits in them (`:16-28`, `:135-142`), the canvases (`:33`, `:145`), the Remote's size and the hand (`:36-46`), `layoutRoom` (`:64-111`), `layoutPhone` (`:211-270`), the two turn functions (`:117-127`, `:276-288`), `PHONE_LIP` (`:151`). It has no tests | **Change** | The photo, hand and Remote constants stay. `layoutRoom` and `layoutPhone` are replaced by the prototype's `layoutRoom` (`scene.tsx:105-147`) and `layoutPhoneRoom` (`phone-room.tsx:41-90`), written as pure functions with tests. The turn functions go (pointing replaces them). Until the switch the new functions live in a new file, because the old scene uses the old ones |
 | `living-room.css` (819 lines) | The Remote's materials (`:38-128`), the first paint placed by CSS, mirroring `layoutRoom` and `layoutPhone` (`:147-265`), the room as the first screen of a page with its lock, the lip and the section below (`:267-778`), the boot screen (`:780-819`) | **Change** | Stays: the Remote, the page lock, the lip, the section below, the boot. Rewritten: the first-paint mirror, for the new layouts. Added: Cinema's rules, the pointer, the phone's room. The route must end up with one stylesheet of its own, see [script and byte budgets](#script-and-byte-budgets) |
 | `HomeDoors.tsx` (289 lines), `home-doors-code.tsx` (38 lines) | A member's three doors (Continue, Start a show, A movie), which leave for My shows and My movies on the first press, with the New episodes and landed signals (`HomeDoors.tsx:1-16`). A chunk only a member with doors requests, drawn after hydration (`home-doors-code.tsx:1-7`) | **Delete** at cleanup | The new home has app tiles for everyone, and nothing on it leaves the TV. What the doors said moves to the Tonight and My shows tiles, see [decision 6](#7-decisions-for-the-owner). `home-doors-code.tsx` is the template for every lazy chunk of the new TV |
@@ -169,10 +196,12 @@ islands, sides), as `pickKeys` is today (`tv-flow.ts:100-123`).
   `docs/prototypes/tv-screen-design/README.md`, "The top bar".
 - **The menu** is an overlay, not a screen: `menu:home`, `menu:search`, `menu:sign-in` for a guest,
   `menu:about`, `menu:off`. It is React state and not in the URL, as today (`tv-flow.ts:93-95`). The prototype's
-  "Account" entry is left out, see [decision 7](#7-decisions-for-the-owner).
+  "Account" entry is left out, see [decision 7b](#7-decisions-for-the-owner).
 - **Power and boot** stay as they are (`tv-flow.ts:757-769`, `use-tv-flow.ts:19`, `:66-70`). The phone's Remote
   has no power key; "Turn off" is in the menu, and any key turns a dark TV on (`LivingRoom.tsx:544-548`).
 - **Item ids** keep today's `kind:argument` form (`tv-flow.ts:657-658`), not the prototype's `kind-argument`.
+- **Provisional rows:** `discover` without a mood, `quiz` and `rate`, and the `service` key of the lists. They
+  wait for a prototype, see [What waits for a prototype](#what-waits-for-a-prototype).
 - **A guest who opens `tv=shows`** gets home, as an unknown screen does today (`tv-flow.ts:213`).
 
 ### The URL
@@ -194,7 +223,8 @@ islands, sides), as `pickKeys` is today (`tv-flow.ts:100-123`).
 | Transition | History |
 | --- | --- |
 | Opening an app, a mood, an island, a side, a title, the quiz, the rating, search | `push` |
-| "Another one" on Tonight, "Sail to" an island, a streaming key on a list, What is GoodWatch? from the menu, a new query on the results | `replace` |
+| "Another one" on Tonight, "Sail to" an island, What is GoodWatch? from the menu, a new query on the results | `replace` |
+| A streaming key | Waiting for the prototype of the service screen; `none` until then |
 | Back with history from this visit (`depth > 0`) | `back` |
 | Back on a deep link | `replace` with home; on home, nothing (`tv-flow.ts:490-507`) |
 | The Home key | `push` home unless home is showing (`tv-flow.ts:516-520`, `:565-567`) |
@@ -299,9 +329,9 @@ Three rules decide every row below.
 | Home, a guest | The tiles and one picture, the same for everyone | The pool, at the first interaction | The start titles in the loader; `POST /api/living-room/picks?view=pool` | The first start title's `backdrop_path` in the loader data |
 | Home, a member | Tonight's three picks and the My shows preview | The pool, when the Discover tile first has the focus | `getTonightParts` in the loader | A small shaping function over `TonightParts` |
 | Tonight | The same as home | Nothing | A guest: the pool's best three. A member: the loader | Nothing more |
-| Discover, the moods | Nothing | The pool, for the tiles' art | `domain/moods.ts:224` for the list; the pool for a picture per mood | Twelve tiles against six in the design, [decision 2](#7-decisions-for-the-owner) |
+| Discover, the choice | Nothing | The pool, for the tiles' art | Waiting for the prototype of three tabs. For moods: `domain/moods.ts:224` for the list; the pool for a picture per mood | A source for Themes and Styles, see [What waits for a prototype](#what-waits-for-a-prototype) |
 | Discover, the titles | Nothing | On choosing a mood | `/api/discover/results?moods=<key>` through `useDiscoverResults` | Nothing |
-| Explorer, the map and an island | Nothing | When the Explorer tile first has the focus | `/api/explorer/map?grouping=mood` through `fetchMap` | Choosing six islands and their neighbours, [decision 3](#7-decisions-for-the-owner) |
+| Explorer, the map and an island | Nothing | When the Explorer tile first has the focus | `/api/explorer/map?grouping=mood` through `fetchMap` | A pure function that chooses six islands and their neighbours |
 | Taste | Nothing | When the Taste tile first has the focus | `/api/taste/portrait?tab=sides` | A fallback when a taste has no sides yet |
 | The quiz | Nothing | On opening the quiz | `useTasteQuiz` | Nothing |
 | My shows | In the member's loader | Nothing | `getTonightParts` with three episode lists | The loader exposes more of `MyShows` |
@@ -365,8 +395,12 @@ focus.
 
 ### Mini Discover
 
-- **The moods** are the eleven of `domain/moods.ts:12-24` and "Any mood". The prototype shows five moods and Any
-  mood in a 3 by 2 grid; the real list makes twelve tiles. See [decision 2](#7-decisions-for-the-owner).
+- **The choice screen waits for a prototype:** three tabs, Moods, Themes and Styles, with six options each
+  ([What waits for a prototype](#what-waits-for-a-prototype)). What follows about the moods describes the first
+  prototype.
+- **The moods** are the eleven of `domain/moods.ts:12-24` and "Any mood". The first prototype shows five moods
+  and Any mood in a 3 by 2 grid; the real list makes twelve tiles. With six options to a tab, the new prototype
+  has to say which six.
 - **A mood tile's picture** is the backdrop of the pool's first title with that mood, at TMDB's `w300`. Until the
   pool is there, the tile is the mood's own colour (`MOODS[n].hue`).
 - **The titles** are the first four cards of `/api/discover/results?moods=<key>&page=1`
@@ -377,8 +411,10 @@ focus.
     titles in the same order.
   - It answers 503 with `Retry-After` until the title snapshot is loaded (`api.discover_.results.ts:89-93`).
     The list then says "Nothing fits." after its retries, as an empty result does.
-- **A streaming key** adds `services=<id>` (`domain/filter-state.ts:167-175`); the ids are in
-  `REMOTE_SERVICES` (`ui/living-room/living-room-data.ts:117-120`).
+- **The streaming keys wait for a prototype** and narrow nothing until its result is in. For the "watch on this
+  service" screen they are to open, the read is at hand: Discover's results take `services=<id>`
+  (`domain/filter-state.ts:167-175`), and the two ids are in `REMOTE_SERVICES`
+  (`ui/living-room/living-room-data.ts:117-120`).
 - **Not used:** `getLivingRoomPicks`. It would show other titles than the page behind Expand, and it walks the
   snapshot on every request (`server/living-room/picks.server.ts:47-83`).
 
@@ -389,8 +425,11 @@ focus.
   (`ui/explorer/api.ts:65-89`), the Explorer page's own query. Every island carries its top titles
   (`domain/explorer.ts:100-117`), so an island's screen needs no second request.
 - **The grouping "mood" has twelve islands** (`server/explorer/islands.server.ts:61-142`); they are not the
-  eleven moods of Discover. The mini map shows six. Which six, where they sit and what "next door" means is
-  [decision 3](#7-decisions-for-the-owner).
+  eleven moods of Discover.
+- **The mini map shows six, as the owner decided:** the six islands with the most titles for the person
+  (`ExplorerIsland.count`, `domain/explorer.ts:104-105`), in the prototype's six places
+  (`prototype-tv-design/cinema.tsx:220`), given out by the islands' real positions from left to right and top to
+  bottom, so that neighbours on the real map stay neighbours here. A pure function with a test.
 - **There is no list of neighbours.** Islands have a position (`x`, `y` from -1 to 1, "islands with similar
   titles sit close together", `domain/explorer.ts:110`). "Sail to" offers the two nearest of the six by that
   distance, and the map's dotted bridges join each island to its nearest.
@@ -423,7 +462,8 @@ focus.
 - **The quiz** is `useTasteQuiz({ titles: [], member, enabled })`, as today (`LivingRoom.tsx:129-137`): it
   fetches its titles from `/api/smart-titles` (`routes/api.smart-titles.ts:8`) and stores a guest's ratings in
   the browser (`utils/guest-progress.ts:49-53`; at most 20 scores, `:90-97`). The four answers store scores through its `rate`
-  and `skip`; which scores is [decision 4](#7-decisions-for-the-owner). The quiz ends when `progress` reaches
+  and `skip`. The answer control waits for a prototype (a strip with the ten exact scores,
+  [What waits for a prototype](#what-waits-for-a-prototype)); `rate` takes any score from 1 to 10. The quiz ends when `progress` reaches
   `QUIZ_GOAL`, 5 (`ui/taste-quiz/quiz-flow.ts:10`).
 
 ### My shows
@@ -492,8 +532,8 @@ A pure function `destinationHref(screen, context)` in the machine, with a test p
 | --- | --- | --- |
 | Tonight, a member | The pick's own page: `TonightsPick.href` (`/my-shows`, `/my-shows#start` or `/my-movies`, `ui/living-room/tv-flow.ts:40-44`) | Nothing: the pick is the first thing on that page |
 | Tonight, a guest | `/discover` | Nothing. `/watch-next` shows a guest nothing (`routes/watch-next.tsx:58-59`) |
-| Discover, the moods | `/discover` | `services=<id>` when a streaming key is on |
-| Discover, the titles | `/discover?moods=<key>` | The mood, and `services=<id>` (`domain/filter-state.ts:163-185`) |
+| Discover, the choice | `/discover` | Nothing |
+| Discover, the titles | `/discover?moods=<key>` | The mood (`domain/filter-state.ts:163-185`). A theme or a style: waiting for the prototype |
 | Explorer, the map | `/explorer?grouping=mood` | The grouping |
 | Explorer, an island | `/explorer?grouping=mood&island=<id>` | The island (`ui/explorer/history.ts:14-22`) |
 | Taste, and a side | `/taste` | Nothing. Not verified: whether the page can open on one side |
@@ -504,6 +544,10 @@ A pure function `destinationHref(screen, context)` in the machine, with a test p
 Home, the quiz, the rating, the search screen without a query and What is GoodWatch? have no Expand key.
 
 ### The hand-over
+
+**Waiting for a prototype.** Several Expand transitions are being compared. What is certain is the first
+paragraph below (what the code does today) and everything in the next subsection (Back, the screen, the focus,
+the data). The numbered list describes the first prototype's transition and is provisional.
 
 Today (#232): `useLeaveThroughTv` measures the TV's box, writes it to `--tv-inset` on `<html>`, sets
 `data-tv-transition="out"` and navigates with `viewTransition: true` (`ui/living-room/tv-transition.ts:86-102`).
@@ -717,10 +761,12 @@ The rules for the new TV:
 
 **Recommendation: build on a preview address behind a flag, and put it on `/` by replacement.**
 
-- **The flag** is `REC_TV`, in the style of the others (`server/features.server.ts:13-25`,
-  `utils/features.ts:4-13`): `off`, `preview`, `on`.
+- **The flag** is `HOME_TV`, with the feature key `homeTv`. It has no `REC_` prefix, by the owner's decision,
+  and otherwise works as the others do (`server/features.server.ts:13-25`, `utils/features.ts:4-13`): `off`,
+  `preview`, `on`.
   - `off`: `/home-preview` answers 404.
-  - `preview`: the members in `REC_PREVIEW_USERS` get the new TV there, with their own data.
+  - `preview`: the members in `REC_PREVIEW_USERS`, the one list of preview members there is
+    (`server/features.server.ts:46-52`), get the new TV there, with their own data.
   - `on`: anyone with the address does, for guest checks, Lighthouse and the rendering measurements.
   - Always `noindex`, with the canonical of `/`, in no sitemap and linked from nowhere.
 - **The switch** is one pull request: `routes/_index.tsx` renders the new TV. The old TV's files stay in the
@@ -760,8 +806,12 @@ says so.
 
 ### The slices
 
-Order: 1 and 2 first, side by side. 3 needs both. 4 and 5 need 3 and can run side by side. 6 to 10 need 5 and can
-all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
+Order: 1 and 2 first, side by side. 3 needs both. 4 and 5 need 3 and can run side by side. 4b needs 4. 6 to 10
+need 5 and can all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14, then 15.
+
+**Waiting for a prototype** ([the table](#what-waits-for-a-prototype)): slices 6, 8 and 11, and in slices 2 to 5
+what a press of a streaming key does. Each of these slices says below what can be built before the result and
+what cannot.
 
 #### Slice 1: the machine
 
@@ -782,10 +832,13 @@ all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
   forms, the phone with the lip's reserve as a parameter, as `layoutPhone` has it today, `room.ts:211-217`);
   `tv/TvRoom.tsx`, `tv/PhoneRoom.tsx`, `tv/PhoneRemote.tsx`; the softened photos in `img/living-room/`;
   `routes/home-preview.tsx`; `ui/living-room/tv/tv.css`.
-- **Files, changed:** `utils/features.ts` and `server/features.server.ts` (the flag); `ui/living-room/Remote.tsx`
+- **Files, changed:** `utils/features.ts` and `server/features.server.ts` (the flag `HOME_TV`, key `homeTv`); `ui/living-room/Remote.tsx`
   (the wheel's optional direction callback, the prototype's change).
 - **Must not touch:** `room.ts` and `living-room.css`. The preview route links `tv.css` beside
   `living-room.css`.
+- **Waiting, the streaming keys:** both Remotes get their Netflix and Prime Video keys, and a press sends
+  `service-key` with the service's name. That is all: no pressed state on a key and nothing on the TV, until the
+  prototype of the service screen is decided.
 - **Proof:** the layout tests reproduce the prototype's tables: 1271 x 686 under at 1920 x 1080, 1080 x 583 under
   at 1920 x 940, beside at 1536 x 730, 1440 x 800, 1366 x 650 and 1280 x 720, and the phone rows
   (`docs/prototypes/tv-screen-design/README.md`, "The room" and "The phone"). The tables give window sizes; the
@@ -806,6 +859,8 @@ all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
   picture; `server/home-doors.server.ts` reads three episode lists where it reads one.
 - **Must not touch:** `server/living-room.server.ts`. The old page keeps its loader and its data until the
   switch.
+- **Waiting, the streaming keys:** no "Only Netflix" toast and no service in the scene's state. The toast itself
+  is built, for Want to See.
 - **Proof:** the guest's HTML of the preview address is the same for three user agents and holds one H1 per
   viewport; the home's markup ids equal `tvItems`; the drive script walks the tiles, the bar and the menu with
   the keys and with the Remote's keys; the HTML's size beside today's start page.
@@ -816,9 +871,43 @@ all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
   pointing on the phone and on any touch screen.
 - **Files, new:** `tv/pointing.ts` as a lazy chunk, `tv/TvPointer.tsx`, the pointer's rules in `tv.css`.
 - **Must not touch:** the machine. Pointing only dispatches `focus` and `choose`.
+- **Waiting, the streaming keys:** nothing in this slice depends on them. A press of any key of the Remote hides
+  the ring and leaves the Remote still, whatever the key does later.
 - **Proof:** the prototype's checks for the mouse and for a finger, ported
   (`docs/prototypes/tv-screen-design/README.md`, "Proof"); the rendering measurements of section 5 for the
   Remote following the cursor; nothing moves with reduced motion; the chunk is not in the first view.
+
+#### Slice 4b: phone landscape
+
+Decided by the owner: the TV on the left, the phone's Remote on the right, and the Remote tilts properly toward
+the spot it points at. The prototype has no landscape, so this slice designs within that decision and shows the
+result before it merges.
+
+- **When:** the window is short and wide, today's test (`ui/living-room/PhoneLivingRoom.tsx:50-52`:
+  `(orientation: landscape) and (max-height: 540px)`). The room covers the whole window, above the site's header,
+  as today (`ui/living-room/living-room.css:724-771`).
+- **The TV** stands at the left on the phone's canvas (500 wide, as tall as its height allows up to 417), as tall
+  as the window leaves, with its bezel and the wall around it as in portrait. At 844 x 390 that is a picture of
+  about 440 x 370, with type from about 17.5 px.
+- **The Remote** is the phone's Remote in the hand (`prototype-tv-design/phone-remote.tsx`), upright in the
+  column to the right of the TV, rising from the bottom edge. Every key 44 px or more.
+- **The tilt.** The Remote is beside the picture here, not under it, so neither of the prototype's two motions
+  fits as it is: the desktop's swing would carry the Remote over the picture, and its nod beside the TV is a
+  small turn (`prototype-tv-design/pointing.tsx:186-198`, `scene.tsx:297-299`). For landscape the Remote turns
+  about the grip under its keys toward the spot, by the angle from the grip to the spot, as far as it can
+  without its top corner crossing the picture's edge; it leans back further for a spot higher up and rolls
+  toward the TV's side for a spot further left. It eases as the other Remotes do and rests flat, with no
+  transform, so its keys are hit where they are drawn (`pointing.tsx:228-229`). A tap, a held press and a drag
+  point as in portrait. With reduced motion it does not move.
+- **The lip.** In this layout the lip is a tab at the bottom left today (`living-room.css:747-756`), which is
+  where the TV now stands. It moves to the bottom right, under the Remote's keys where only the grip is.
+- **Files, new:** the landscape branch of `tv/room-layout.ts` with tests, of `tv/PhoneRoom.tsx`, and a rig for
+  it in `tv/pointing.ts`. **Changed:** the lip's rule for this media query, in `tv.css` until the switch.
+- **Must not touch:** `use-below-room.ts`, which slides the room out of the window in this layout
+  (`:16-17` of its header).
+- **Proof:** screenshots at 844 x 390, 667 x 375 and 932 x 430; every key hit by a tap; the pointing checks of
+  slice 4 in this layout, with the Remote's top never over the picture; going below and back with the lip;
+  the first paint placed by CSS in this layout too (slice 12 covers it once this slice has landed).
 
 #### Slice 5: Tonight and the title screen
 
@@ -827,6 +916,11 @@ all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
 - **Files, new:** `tv/screens/Tonight.tsx`, `tv/screens/Title.tsx`, `tv/screens/Rate.tsx`,
   `routes/api.title-cards.ts` with its server function and a test, the effects in the preview route.
 - **Not yet:** the pool keeps `wishlist` and `pairs` until the switch, because the old TV reads them.
+- **Waiting, the streaming keys:** Tonight is not narrowed to a service. "Watch on <service>" on a title is a
+  different control and is built here.
+- **Waiting, the rating:** the `rate` screen after "Seen it" will take the control the quiz prototype decides.
+  Build the screen with the four levels of the first prototype behind one component and one function of the
+  machine, so the strip replaces them in one place.
 - **Proof:** the drive script, as a guest and as a member, on production data through the dev server; a guest's
   Want to See and rating land in the browser's guest progress; the watch key's address is ready before the
   press.
@@ -834,21 +928,38 @@ all run side by side. 11 needs 5. 12 needs everything before it. 13, then 14.
 #### Slices 6 to 10: the apps
 
 Each adds one file under `tv/screens/`, its data hook, and one entry in the screen switch. None touches another
-app's files. Each proves its screens against the prototype's shots and walks them in the drive script, with a
-streaming key where the app has lists.
+app's files. Each proves its screens against the prototype's shots and walks them in the drive script. None
+builds anything for the streaming keys, which wait for their prototype.
 
-- **6, mini Discover:** `Discover.tsx`. The moods as decided, the titles from `useDiscoverResults`. Proof also:
-  the four titles are the first four of `/discover?moods=<key>` for the same person.
+- **6, mini Discover. Waiting for the prototype of the choice screen** (three tabs, six options each).
+  - Build now: the titles for a mood named in the URL (`tv=discover&mood=<key>`), from `useDiscoverResults`,
+    with "Change mood" as Back and Expand to `/discover?moods=<key>`. Proof: the four titles are the first four
+    of `/discover?moods=<key>` for the same person.
+  - Wait: `Discover.tsx`'s choice screen, its tabs and items, the titles of a theme or a style, and anything a
+    streaming key does to the list.
 - **7, mini Explorer:** `Explorer.tsx`. The six islands as decided, an island, "Sail to". Proof also: the map's
   payload in bytes, and the four directions on the map.
-- **8, mini Taste and the quiz:** `Taste.tsx`, `Quiz.tsx`. The three states of section 3. Proof also: a guest
-  rates five titles and sees what their taste then is.
+- **8, mini Taste and the quiz. Waiting for the prototype of the answers** (a strip with labels and the ten
+  exact scores).
+  - Build now: `Taste.tsx` with the three states of section 3 and a side's titles; `Quiz.tsx`'s frame (the
+    title, its picture, the progress, "Haven't seen it") wired to `useTasteQuiz`.
+  - Wait: the answer control, its items in the machine, its keys on the keyboard, and its words. Proof once it
+    is in: a guest rates five titles and sees what their taste then is.
 - **9, My shows:** `Shows.tsx`, with the loader's `shows` and the signal. Proof also: on the tracking harness
   (`/prototype/my-library-real`) with its sample members.
 - **10, search:** `Search.tsx`, with a real input. Proof also: on a phone the keyboard opens, and no request
   leaves before OK.
 
 #### Slice 11: the Expand key
+
+**Waiting for the prototype that compares Expand transitions.** The slice has two halves, and the first does
+not wait:
+
+- **Build now:** the Expand key in its place on every screen that has one, leaving through `useLeaveThroughTv`
+  as it is today; what travels to each page; Back into the same TV screen with the Expand key focused; the same
+  after a reload on the page; plain navigation with reduced motion.
+- **Wait:** the frame while the key has the focus, the motif's motion, the brackets that grow, the timing, and
+  the changes to `main.css`.
 
 - **Goal:** the frame while the key has the focus, the motif, the brackets that grow, the state that travels,
   and Back into the same screen with the same focus.
@@ -887,47 +998,163 @@ streaming key where the app has lists.
 
 - **Goal:** one TV in the repository.
 - **Deletes:** every file marked "delete at cleanup" in section 1, the old loader in
-  `server/living-room.server.ts`, the flag, `routes/home-preview.tsx`, the dead
+  `server/living-room.server.ts`, the flag `HOME_TV`, `routes/home-preview.tsx`, the dead
   rules of `living-room.css`, `routes/api.living-room.services.ts`, `routes/api.living-room.ts` if confirmed,
   the picks form of the picks route.
 - **Changes:** `docs/cache-identity.md:79-81` and `:129`; `server/tonight.server.ts:16` takes `DOOR_HREF` from
   where the machine keeps the member pages' addresses.
 - **Proof:** build, tests, and the first view's scripts once more.
 
-Phone landscape is a slice of its own once [decision 5](#7-decisions-for-the-owner) is made; it belongs before
-the switch.
+#### Slice 15: the `REC_*` flags go
+
+Decided by the owner: after the cleanup, every `REC_*` flag is removed, what `on` does becomes what the site
+does, and the code, routes, assets and settings that only `off` or `preview` reached are deleted.
+
+- **Goal:** no feature flag in the webapp. One thread, one pull request per flag, each revertable by itself, as
+  the recommendation plan asked for its own cleanup
+  (`docs/implementation/recommendation-experience/README.md`, "Cleanup of replaced code").
+- **How the flags work today.** `server/features.server.ts` reads one variable per feature on every call
+  (`:13-25`, `:32-44`); unset or unknown means `off` (`:4-6`). `isEnabled` is true for `on`, and for `preview`
+  only for the members in `REC_PREVIEW_USERS` (`:46-62`). The root loader resolves all of them for the viewer
+  (`root.tsx:148`) and the browser reads them with `useFeature` and `useFeatures` (`hooks/useFeature.ts:10-19`).
+  `REC_RELATED_MAP` is read on its own and is on unless it says `off`
+  (`server/related-map.server.ts:54-67`).
+
+**What each flag guards.** Every caller, from a search of `goodwatch-webapp/app` for `isEnabled`,
+`getFeatureMode`, `getEnabledFeatures`, `useFeature`, `useFeatures` and the fields of `EnabledFeatures`.
+
+| Flag (key) | Guarded by | Goes with the flag | Stays |
+| --- | --- | --- | --- |
+| `REC_TASTE_MATCH` (`tasteMatch`; `off`, `shadow`, `on`) | The vector query for recommendations (`server/user-recommendations.server.ts:73`, `server/guest-recommendations.server.ts:208`); the rebuild of a member's vector after a write (`server/taste/member.server.ts:199`); `/api/taste/match` (`routes/api.taste.match.ts:66`, `:79`); the match on cards (`ui/MovieTvCard.tsx:71`, `ui/watch-next/WatchNextPage.tsx:58`); two development routes (`routes/dev.title-cards.tsx:73`, `routes/dev.filter-bar.tsx:62`) | Shadow mode: the comparison log (`user-recommendations.server.ts:208-210`, `server/taste/shadow.server.ts:52`) | **The recommend call.** It is also the path of a person without a taste vector (`user-recommendations.server.ts:71-72`). The recommendation plan lists it for removal; the code needs it |
+| `REC_FILTER_BAR` (`filterBar`) | Discover's browse page and the move of `/discover/movies` to `/discover?type=movie` (`routes/discover.($type).tsx:156-181`); `/search` moving to `/discover?q=` (`routes/search.tsx:29-40`); `/api/discover/results` (`routes/api.discover_.results.ts:71`, `:106`, `:162`); the full list in a search (`routes/api.combined-search.ts:101`); a member's taste in a search (`server/combined-search/taste-rows.server.ts:15`); the header's search box and the old filter chips (`ui/search/SearchJourney.tsx:178`, `:1000`); `searchHref` (`ui/navigation/destinations.ts:47`); `routes/dev.filter-bar.tsx:47` | The old Discover page: the rest of the route's loader (from `:183`) and the component under `:385`, with `ui/filter/FilterBar` and what only it imports. The search page behind `/search` (`JourneyResultsPage`, `JourneyFilters`); the route stays as the redirect, 301. The redirect of `/discover/movies` becomes permanent (`:165` says "Temporary, while the flag can roll back") | `ui/filter/FilterCountries.tsx` (settings and onboarding use it, by the recommendation plan); `ui/explore/MovieTvGrid` (`routes/$type.$category.$page.tsx:14`) |
+| `REC_WATCH_NEXT` (`watchNext`) | `/watch-next` (`routes/watch-next.tsx:47`); `/my-movies` (`routes/my-movies.tsx:50`); the Wishlist's redirect (`routes/wishlist.tsx:76`); `/api/watch-next` and its siblings (`server/watch-next-request.server.ts:71`, `:97`; `routes/api.watch-next_.watched.ts:36-38`); Tonight's pick in the navigation (`ui/navigation/useTonightsPick.ts:47`); the Watch next destination (`ui/navigation/destinations.ts:75`); the old header's links (`ui/main/Header.tsx:51`, `ui/main/UserMenu.tsx:25`) | The Wishlist page: the route's loader after its redirects and its component (`routes/wishlist.tsx:83` on), `ui/filter/WishlistFilter.tsx` | `/api/wishlist-titles`: the account transfer uses it too (`ui/onboarding/AccountTransfer.tsx:82`) |
+| `REC_TASTE_PAGE` (`tastePage`) | The Taste tabs (`routes/taste._index.tsx:65`, `routes/taste.tsx:6`, `server/taste-portrait/page.server.ts:23`); the new quiz (`routes/taste.quiz.tsx:63`); `/api/taste/portrait` (`routes/api.taste.portrait.ts:50`) | The unlock-ladder profile (`routes/taste._index.tsx:50-54`, `:68-82`, `:99-103`, `ui/taste/TasteProfile` and `ui/taste/features/`), the `api.taste-profile.*` routes and `server/taste-profile.server.ts`; the old quiz (`routes/taste.quiz.tsx:88-92`, `:113-131`, `ui/taste/TasteQuiz`), and then `/api/interest-discovery` with its server module and hook if nothing else imports them | Whatever the new quiz and the TV still import |
+| `REC_EXPLORER` (`explorer`) | The page (`routes/explorer.tsx:31`); its endpoints (`server/explorer/http.server.ts:40`, `:63`); warming the pool at start (`server/explorer/index.server.ts:88`); the destination (`ui/navigation/destinations.ts:101`) | Only the checks | Everything else |
+| `REC_NAVIGATION` (`navigation`) | The header, the dock and the dialogs against the old header and bottom navigation (`app.tsx:66`, `:72-102`); which code hydration waits for (`app.tsx:47-63`, `entry.client.tsx:33`); `/api/command-palette` (`routes/api.command-palette.ts:14-22`); every `useNavigation()` that can be null (`ui/navigation/NavigationContext.tsx:61-63`) and `useHasDock` (`ui/navigation/MobileDock.tsx:141-143`, read by `ui/filter-bar/Slab.tsx:254`, `ui/taste-quiz/TasteQuizPage.tsx:156`, `ui/watch-next/PhoneControls.tsx:440` and the room) | `ui/main/Header.tsx` with `ui/Search.tsx`, `ui/main/UserMenu.tsx` and `LazyUserMenu.tsx`; `ui/nav/BottomNav.tsx`; the branches for a page without the dock, and the room's rules for the old bottom navigation (`ui/living-room/living-room.css:304-331`, `:365-394`) | What `ui/filter-bar/Slab.tsx:18-22` imports from `BottomNav.tsx` moves out first. **The error page uses the old header**, see the checks |
+| `REC_AGE_FILTER` (`ageFilter`) | Reading the ratings with the title snapshot (`server/title-snapshot/index.server.ts:141-145`); the viewer's age ladder (`server/title-filter/index.server.ts:291-298`); a part of Discover's cache key (`server/discover-results.server.ts:116`) | Only the parameter | The filter still hides itself when a snapshot has no ratings (`.env.example:58-59`) |
+| `REC_TRACKING` (`tracking`) | The watch log's host (`app.tsx:67`, `:92`); the pages and endpoints (`routes/my-shows.tsx:39`, `my-library.tsx:48`, `my-movies.tsx:53`, `api.my-library.ts:18`, `api.tracking.show.ts:33`, `api.watch-log.ts:88`, `:93`, `api.new-episodes.ts:24`, `api.newly-available.ts:21`); a member's redirects (`routes/watch-next.tsx:51`, `routes/wishlist.tsx:72`); `server/watch-next-request.server.ts:101`; first-seen dates in the availability index (`server/availability-index.server.ts:286`); the start page's loader (`server/living-room.server.ts:83`, gone by then); the browser (`ui/navigation/useNewEpisodes.ts:30`, `ui/title-actions/useTitleActions.ts:28`, `ui/watch-next/FinishPrompt.tsx:27`, `ui/tracking/gate.tsx:37`, `ui/navigation/destinations.ts:125`, `:133`, `:141`) | The branches for a member without tracking: a movie's Seen as a plain toggle, the finish prompt without a watch, the show page without the status box and the episode list | Everything a guest gets: a guest has Watch next and no tracking, by who they are, not by a flag |
+| `REC_RELATED_MAP` | `relatedMapEnabled` (`server/related-map.server.ts:59-67`), read at `:306` and `:387` and in `routes/api.related-map.ts:15` | The setting, and `"off"` among the lookup's answers (`:295-297`) | The related titles carousel: it also serves a title whose pack was not there in time (`ui/details/DetailsContent.tsx:64-67`) |
+| `REC_PREVIEW_USERS` | `server/features.server.ts:46-52` | The list | |
+
+**Goes at the end, with the last flag:** `server/features.server.ts`, `utils/features.ts`, `hooks/useFeature.ts`,
+`features` in the root loader's data (`root.tsx:112`, `:148`), the `features` argument of `getDestinations` and
+`searchHref` and the `available` field (`ui/navigation/destinations.ts:45-59`), and `HOME_TV` if slice 14 left
+anything of it.
+
+**Other places that name a flag:**
+
+- **Settings files:** `goodwatch-webapp/.env.example:44-69`; `goodwatch-search/.env.example:36-46` and
+  `goodwatch-search/test-deploy.sh:143-148`, because the search role is a second deployment that reads the same
+  flags.
+- **Tests that set a flag:** seven test files set `REC_TASTE_MATCH = "off"` when they load, which keeps the
+  scheduled vector rebuild out of the test (`server/taste/member.server.ts:199`): `newly-available.test.ts:74`,
+  `show-tracking.test.ts:76`, `tracking.test.ts:58`, `watch-state.test.ts:76`, `my-pages.test.ts:66`,
+  `userData.test.ts:64`, `watch-log.test.ts:73`, all in `server/`. They need another way to hold it back before
+  the flag goes. The tests of the flag itself are deleted (`watch-log.test.ts:182-193`,
+  `show-tracking.test.ts:701-710`), and `ui/navigation/destinations.test.ts:6-16` no longer passes
+  `NO_FEATURES`.
+- **Development and harness routes that read a flag:** `routes/dev.filter-bar.tsx`, `routes/dev.title-cards.tsx`,
+  `routes/prototype.watch-log-real.tsx:150`, `routes/prototype.episode-tracking-real.tsx:271`.
+- **The benchmark:** the tap test's steps for the carousel (`goodwatch-benchmark/tap/tap.mjs:37`,
+  `README.md:257`) and `smoke/search-role-urls.json:17`.
+- **Documents:** `docs/serving-architecture.md:170`, `docs/implementation/related-map.md` ("How to turn it
+  off"), `docs/search-role-deploy.md`, the rollout sections of
+  `docs/implementation/recommendation-experience/README.md` and of `docs/implementation/tracking/`, and the
+  drive scripts there that start a server with flags. They get one line saying the flag is gone, not a rewrite.
+
+**Checks before any deletion:**
+
+1. **For the owner: what production is set to.** The values live in Coolify and are not in the repository. For
+   the webapp application and for the search role, each of the eight variables must read `on`
+   (`REC_TASTE_MATCH` `on`, not `shadow`), and `REC_RELATED_MAP` must be unset or `on`. A flag that is `preview`
+   or `off` anywhere means its old code is still what some visitors get; that flag waits.
+2. **For the owner: `REC_RELATED_MAP` is a switch for trouble, not a rollout flag.**
+   `docs/serving-architecture.md:170` lists it among the owner's settings: `off` and a restart bring the carousel
+   back. Removing it removes that switch. Confirm that it should go with the others.
+3. **Each flag `on` for seven days without new errors**, the rule of the recommendation plan ("Order").
+4. **The error page.** Without the root loader's data every flag reads as off (`hooks/useFeature.ts:8-9`,
+   `:18`), so the error page draws the old header and the old bottom navigation (`root.tsx:160-162`, `:239`).
+   It needs a header that works without loader data before `REC_NAVIGATION`'s old code is deleted.
+5. **The snapshot carries ratings** in production, or the age filter stays hidden whatever the code says.
+6. **Old addresses keep answering:** `/search?q=`, `/discover/movies`, `/wishlist`, `/taste` for a guest.
+
+**Order.** The checks first. Then one pull request per flag, the ones that only lose a check first and the one
+the error page depends on last:
+
+1. The error page gets its own header (no flag removed yet).
+2. `REC_EXPLORER` and `REC_AGE_FILTER`.
+3. `REC_RELATED_MAP`, if the owner confirms.
+4. `REC_TASTE_MATCH`, with the tests' new way to hold back the rebuild.
+5. `REC_FILTER_BAR`.
+6. `REC_WATCH_NEXT`.
+7. `REC_TASTE_PAGE`.
+8. `REC_TRACKING`.
+9. `REC_NAVIGATION`.
+10. The flag modules, `REC_PREVIEW_USERS`, the settings files and the documents.
+11. The owner removes the variables from Coolify, for both deployments, after the last deploy. The other way
+    round turns a feature off: unset means `off` as long as the code still reads the variable.
+
+In each pull request, a module goes only when nothing imports it any more. Remove the guard and its off branch,
+then follow the imports; the build and `tsc` name what is left without a user.
+
+- **Must not touch:** the behaviour with every flag on. No page, address or answer changes for a visitor.
+- **Proof, per pull request:** `npm test` and `npm run build`; `tsc` against the baseline of `main`; a dev
+  server started with every `REC_*` variable unset shows what `main` shows with all of them `on`, on the page
+  the flag guarded, as a guest and as a member; the old addresses above answer as before; the error page draws
+  (ask for an address that names no page); the first view's scripts of the two builds for each landing surface,
+  which should not grow; after the deploy `./bench.sh smoke` and `./bench.sh budget`, with a limit that improved
+  for good lowered in the same commit (`docs/benchmarks/viral-spike-render-path-budget.md`, "Margins").
+- **Proof, at the end:** a search of the repository for `REC_` finds only documents that record the past.
 
 ## 7. Decisions for the owner
 
-1. **How it ships.** Recommended: build at `/home-preview` behind `REC_TV`, then put it on `/` by replacement,
-   with a revert as the way back. The alternative, a flag that switches `/` at run time, makes every visitor
-   download both TVs.
-2. **Twelve moods on a screen designed for six.** Discover has eleven moods and Any mood. Recommended: keep the
-   approved tile size and type, show two rows of three, and let the next two rows page in with Down, as the
-   sixth poster of My shows does. The alternative is a 4 by 3 grid of smaller tiles, which fits the desktop and
-   is too small on a phone.
-3. **The mini Explorer's six islands.** The real map of moods has twelve. Recommended: the six with the most
-   titles for the person, in the prototype's six places, each joined to its nearest; "Sail to" offers the two
-   nearest. The six are then the same for most people and the map looks as approved.
-4. **The quiz's four answers.** Recommended: Loved it stores 9, Liked it 7, the third 3, Haven't seen it skips;
-   and the rating after Seen it: 9, 7, 5 ("It was fine"), 3. These are the scores of the existing four levels
-   (`ui/taste-quiz/quiz-flow.ts:126-131`). And the wording of the lowest: the prototype says "Not for me", which
-   today's TV uses for Not interested (`ui/living-room/tv-flow.ts:133`), a title the person has not seen.
-   Recommended: "Didn't like it".
-5. **The phone's height, and landscape.** With the lip the phone has about 48 px less than the prototype
-   measured. Recommended: keep the lip (it is the only way to the section below, and the page's links for
-   crawlers are there) and accept that the Remote lies on the table on a few more phones and that the shortest
-   get a slightly shorter TV. Landscape is not designed. Recommended: the small-window layout, the TV on the
-   left on the phone's canvas and the phone's Remote on the right.
-6. **Where the doors' signals go.** The glossary puts the New episodes signal and titles that landed "on home's
-   door". Recommended: the My shows tile carries the count, and the Tonight tile says "New on Netflix" when its
-   pick landed in the last 14 days. The glossary changes with the switch.
-7. **The exits besides Expand.** "Watch on <service>" opens the service in a new tab (today the key opens the
-   title's page). "Sign in" in the menu goes to Google and comes back to the same TV screen. Recommended: no
-   "Account" entry in the menu, since the site's header above the room has it and a real one would be a third
-   way out. And `/api/living-room` and `/api/living-room/services` are deleted unless something outside the
-   repository calls them.
+The numbers are those of the first version of this plan, so earlier messages about "decision 5" still point at
+the right one.
 
-Two changes to the approved look that the budgets force, for the owner to know rather than decide: the Expand
+### Decided on October 13, 2026
+
+- **1. How it ships.** The flag is `HOME_TV` (feature key `homeTv`), without the `REC_` prefix. The plan stays
+  as recommended: the new TV is built at `/home-preview` behind that flag and goes onto `/` by replacement.
+- **3. The mini Explorer shows six islands**, as recommended: the six with the most titles for the person, in
+  the prototype's six places, each joined to its nearest; "Sail to" offers the two nearest.
+- **5, the second half. Phone landscape:** the TV on the left, the phone's Remote on the right, tilting
+  properly toward the spot it points at ([slice 4b](#slice-4b-phone-landscape)).
+- **New. Every `REC_*` flag is removed** after the cleanup, and what `on` does becomes the default
+  ([slice 15](#slice-15-the-rec_-flags-go)). Two checks in that slice are the owner's: what production is set
+  to, and whether `REC_RELATED_MAP` goes too.
+
+### Waiting for a prototype
+
+- **2. The moods on Discover's choice screen.** Being prototyped again as three tabs, Moods, Themes and Styles,
+  with six options each. The result also has to say where Themes and Styles get their titles
+  ([What waits for a prototype](#what-waits-for-a-prototype)).
+- **4. The quiz's answers.** Being prototyped again as a strip from low to high with labels and the ten exact
+  scores. One point of the old question remains whatever the result: "Not for me" is what today's TV calls
+  Not interested (`ui/living-room/tv-flow.ts:133`), a title the person has not seen, so a rating should not be
+  labelled with it.
+- **The Expand transition** and **the Remote's Netflix and Prime Video keys**, which were not questions in the
+  first version.
+
+### Still open
+
+- **5, the first half. The phone's height.** The strip at the bottom of the room that leads to the titles
+  below it (the lip) takes 60 px, and the prototype was measured without it. Recommended: keep the lip, because
+  it is the only way to the section below and that section holds the page's links for search engines. The cost:
+  on a few more phones the Remote lies on the table instead of in the hand, and the shortest phones get a
+  slightly shorter TV.
+- **6. Where the doors' signals go.** The glossary puts the New episodes signal and titles that landed "on
+  home's door". Recommended: the My shows tile carries the count, and the Tonight tile says "New on Netflix"
+  when its pick landed in the last 14 days. The glossary changes with the switch.
+- **7a. The "Watch on Netflix" button on a title.** Today, pressing it on the TV opens that title's page on
+  GoodWatch. Proposed: pressing it opens Netflix itself (or whichever service is named on the button), at that
+  title, in a new browser tab, and the TV stays where it was.
+- **7b. No "Account" entry in the TV's menu.** The site's header above the room has the account already, and an
+  entry on the TV would be a third way to leave it. "Sign in" stays in the menu: it goes to Google and comes
+  back to the same TV screen.
+- **7c. Two addresses nobody in the repository calls**, `/api/living-room` and `/api/living-room/services`, are
+  deleted at the cleanup unless something outside the repository uses them.
+
+Two changes to the first prototype's look that the rendering budget forces, for the owner to know: the Expand
 key's brackets move twice and then rest instead of moving for as long as the key has the focus, and the tiles
-that are not focused are dimmed by an overlay instead of a brightness filter. Both look the same at rest.
+that are not focused are dimmed by an overlay instead of a brightness filter. Both look the same at rest. The
+first of the two is part of what the Expand prototype is now comparing.
