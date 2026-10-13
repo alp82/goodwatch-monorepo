@@ -76,6 +76,20 @@ Useful starting points:
 
 The route answers 404 in production and is left out of a production build (`PROTOTYPES` in `vite.config.js`).
 
+### From another device, over Tailscale
+
+Do not bind the dev server to the tailnet directly: under any host name other than `localhost` the app shell sends
+page views to the real Google Analytics, PostHog and Sentry projects. `tailnet-preview.mjs` listens on this machine's
+Tailscale address only, forwards to the local preview, and keeps those three from starting:
+
+```
+node docs/prototypes/media-language/tailnet-preview.mjs $(tailscale ip -4) 3118 3117
+```
+
+Then open `http://<tailscale address or name>:3118/prototype/media-language?variant=A&bar=small` on a device of the
+same tailnet. Checked from this machine through that address: the page works, and the only hosts a browser contacts
+are the proxy and TMDB's image host.
+
 ## What belongs to the prototype and what to the design
 
 The white bar with the fuchsia ring at the bottom, and the panel its **State** button opens, are the prototype's own.
@@ -291,3 +305,4 @@ in A, B and C in the same page. Green in all of them on a freshly loaded page.
   sample data (`fixtures.ts`, `fixture-text.ts`) and the prototype's own controls (`chrome.tsx`).
 - `goodwatch-webapp/vite.config.js`: two entries in `PROTOTYPES`, so a production build leaves the prototype out.
 - `docs/prototypes/media-language/drive.mjs` and `repro-language-list.mjs`: the walkthrough and the repro command.
+- `docs/prototypes/media-language/tailnet-preview.mjs`: the Tailscale preview with analytics blocked.
