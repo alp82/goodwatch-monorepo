@@ -1,6 +1,9 @@
 # Explorer, the way to the title page
 
-Throwaway prototype, on branch `prototype/explorer-world`. Not for `main`.
+The prototype behind the way from the Explorer's title card to the title page. Round 2's header became the real
+card on 2026-10-13 (`app/ui/explorer/ProximityCard.tsx`), without the ring around the header, which the owner
+didn't want. The prototype's route, its files, and the `Card` seam on `ExplorerMap` were removed in the same change;
+they are in the history of branch `prototype/explorer-world`. What follows is the record as written while it ran.
 
 ## The question
 

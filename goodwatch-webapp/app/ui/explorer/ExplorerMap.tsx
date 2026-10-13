@@ -30,7 +30,6 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
-import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import { Minimap } from "./Minimap"
@@ -115,14 +114,11 @@ const sideOf = (island: MapIsland) => ({
 export function ExplorerMap({
 	initialWorld,
 	fallback,
-	Card = ProximityCard,
 }: {
 	/** The world the server rendered (a member's own; a guest's comes from their browser's progress). */
 	initialWorld: ExplorerWorld | null
 	/** What shows until the page runs: the islands as a list, for no JavaScript and search engines. */
 	fallback?: ReactNode
-	/** PROTOTYPE seam (the card's way to the title page, /prototype/rec-explorer-open): remove with the prototype. */
-	Card?: typeof ProximityCard
 }) {
 	const [params, setParams] = useSearchParams()
 	const filters = useMemo(() => filtersOf(params), [params])
@@ -164,17 +160,13 @@ export function ExplorerMap({
 		[filters.type, filters.anime],
 	)
 	const [seenNow, setSeenNow] = useState<ReadonlySet<number>>(new Set())
-	/** Titles marked Not interested this visit: they leave the map at once (the next load leaves them out). */
-	const [hiddenNow, setHiddenNow] = useState<ReadonlySet<number>>(new Set())
-	const hideToast = useUndoToast()
 	/** The filters hide titles, never dim them, as soon as they're switched. */
 	const visible = useCallback(
 		(t: ExplorerTitle) =>
-			!hiddenNow.has(t.key) &&
 			(!onMyServices || !!map?.approximate || t.services.length > 0) &&
 			(!notSeenYet || !(t.seen || seenNow.has(t.key))) &&
 			passesTitleType(titleType, t),
-		[onMyServices, notSeenYet, titleType, seenNow, hiddenNow, map?.approximate],
+		[onMyServices, notSeenYet, titleType, seenNow, map?.approximate],
 	)
 
 	const setFilters = (next: Partial<Filters>) => {
@@ -1059,7 +1051,7 @@ export function ExplorerMap({
 		? { name: activeIsland.name, color: rgbCss(activeIsland.tint) }
 		: { name: "", color: "#888" }
 	const cardNode = active && activeIsland && (
-		<Card
+		<ProximityCard
 			key={active.key}
 			ref={cardEl}
 			title={active.title}
@@ -1079,25 +1071,6 @@ export function ExplorerMap({
 						else next.delete(active.key)
 						return next
 					})
-			}}
-			onHide={(undo) => {
-				const { key, title } = active
-				const setHidden = (hidden: boolean) =>
-					setHiddenNow((s) => {
-						const next = new Set(s)
-						if (hidden) next.add(key)
-						else next.delete(key)
-						return next
-					})
-				setHidden(true)
-				unpin()
-				hideToast.say(
-					`${title.title} is hidden from your recommendations`,
-					() => {
-						undo()
-						setHidden(false)
-					},
-				)
 			}}
 		/>
 	)
@@ -1336,7 +1309,6 @@ export function ExplorerMap({
 				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
-			{hideToast.node}
 		</div>
 	)
 }

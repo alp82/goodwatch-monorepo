@@ -934,8 +934,10 @@ personal part (match, Seen, Want to See, on my services) is added per request.
 - **Lit posters:** a warm pool of light follows the pointer (the viewport center on touch). Size, detail, and
   brightness depend on zoom and on distance from that focus, with crossfades and no popping. Titles below about 16 px
   draw as dots.
-- **Proximity card:** the nearest title opens as a card over the live map: match, why, services, Want to See, Seen it.
-  Two wheel notches from the overview reach a title's card.
+- **Proximity card:** the nearest title opens as a card over the live map: match, why, services, the score control,
+  Want to See, Seen it. Two wheel notches from the overview reach a title's card. The card's header is the way to the
+  title page (owner, 2026-10-13; prototype in `docs/prototypes/explorer-open/`): all of it is the link, the title
+  ends in an arrow, and "Details" sits with close (or the pin) as one control. Not interested is not on the card.
 - **Two levels:** out at the whole map a tap on a region flies to it; in among a region's islands a tap picks an
   island. From far out a region shows its islands small, painted flat; the sea draws 24 islands at most, so it gets
   the picked islands, the combination, and the islands nearest the middle of the view.
