@@ -179,3 +179,24 @@ export async function getShares10(
 		}
 	return { of: [...picked], shares }
 }
+
+export interface Parts10 {
+	of: string[]
+	/** Per picked island, in order: how many titles the others hold without it. */
+	without: number[]
+}
+
+/** What each picked island does to the combination: the count the others would hold without it. */
+export async function getParts10(
+	ctx: ViewerContext,
+	query: ExplorerQuery,
+	refs: Ref10[],
+): Promise<Parts10 | null> {
+	if (refs.length < 2 || refs.length > MAX_PICKS) return null
+	const seat = await seatFor(ctx, query, false)
+	const mix = mixer(seat)
+	const without = refs.map(
+		(_, k) => mix(refs.filter((_, j) => j !== k))?.members.length ?? 0,
+	)
+	return { of: refs.map((ref) => `${ref.grouping}:${ref.id}`), without }
+}

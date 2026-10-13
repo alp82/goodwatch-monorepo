@@ -1,6 +1,7 @@
 # Explorer, one world (round 10)
 
-Throwaway prototype, on branch `prototype/explorer-world`. Not for `main`.
+Throwaway prototype. Built on branch `prototype/explorer-world`, and on `main` since 2026-10-13 at the owner's request, as a
+development-only route like the earlier rounds (a production build leaves `prototype.rec-*` routes out).
 
 ## The question
 

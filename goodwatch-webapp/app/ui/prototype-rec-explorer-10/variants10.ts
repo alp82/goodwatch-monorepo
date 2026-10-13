@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Round 10 of the Explorer. The way of combining is settled (owner, 2026-10-12): Harbor. The
-// top bar is settled too (2026-10-13): the Viewing menu, with the filters in a strip. The variants (?variant=<key>)
-// are now of the selection bar, see MIX_FORMS in MixBar10.tsx.
+// top bar is settled too (2026-10-13): the Viewing menu, with the filters in a strip. So is the selection: in the top bar,
+// see MixBar10.tsx. No variants are left.
 import type { Mode10 } from "./engine10"
 
 export interface Variant10 extends Mode10 {

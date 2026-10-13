@@ -14,6 +14,7 @@ import type {
 	ExplorerTitle,
 	ExplorerTree,
 } from "~/domain/explorer"
+import { GROUPING_NAMES } from "~/domain/explorer"
 import {
 	isAllTitleTypes,
 	parseTitleType,
@@ -40,7 +41,6 @@ import { snapshotGuestProgress } from "~/utils/guest-progress"
 import {
 	MixBar,
 	type MixBarState,
-	type MixForm,
 	mixSentence10,
 	sharedLine10,
 	sharedNote10,
@@ -66,6 +66,10 @@ type Filters = Omit<MapQuery, "grouping">
 interface Mix10 extends ExplorerTree {
 	of: string[]
 	kind: MixKind
+}
+interface Parts10 {
+	of: string[]
+	without: number[]
 }
 interface Shares10 {
 	of: string[]
@@ -136,6 +140,11 @@ const sideOf = (island: MapIsland) => ({
 	id: island.id,
 	name: island.name,
 	color: rgbCss(island.tint),
+	group: GROUPING_NAMES[groupingOf(island.id)],
+	total: island.count,
+	posters: (island.top.length ? island.top : island.titles)
+		.slice(0, 3)
+		.map((t) => t.poster),
 })
 
 /**
@@ -145,11 +154,8 @@ const sideOf = (island: MapIsland) => ({
  */
 export function Explorer10({
 	variant,
-	mixForm,
 }: {
 	variant: Variant10
-	/** The selection bar's variant. */
-	mixForm: MixForm
 }) {
 	const [params, setParams] = useSearchParams()
 	const filters = useMemo(() => filtersOf(params), [params])
@@ -451,6 +457,22 @@ export function Explorer10({
 			return null
 		return new Map(data.shares.map((s) => [s.id, s]))
 	}, [sharesQuery.data, picks])
+	/** What each picked island does to the combination, for its row in the selection. */
+	const partsQuery = useQuery({
+		queryKey: [
+			"explorer10",
+			"parts",
+			viewer,
+			shown ? filterKey(shown) : "",
+			picks.join(","),
+		],
+		queryFn: () => ask<Parts10>("parts", shown as Filters, picks, member),
+		enabled: !!shown && !userLoading && picks.length > 1,
+	})
+	const parts =
+		partsQuery.data && partsQuery.data.of.join(",") === picks.join(",")
+			? partsQuery.data.without
+			: null
 	const sharesRef = useRef(shares)
 	sharesRef.current = shares
 
@@ -1115,7 +1137,10 @@ export function Explorer10({
 	const litIsland = picks.length === 1 ? islandOf(picks[0]) : null
 	const bar: MixBarState | null = picked.length
 		? {
-				list: picked.map(sideOf),
+				list: picked.map((island, k) => ({
+					...sideOf(island),
+					without: parts?.[k] ?? null,
+				})),
 				status: forming
 					? "finding what they share…"
 					: mix
@@ -1135,7 +1160,6 @@ export function Explorer10({
 		: null
 	const selection = bar && (
 		<MixBar
-			form={mixForm}
 			state={bar}
 			phone={width < 768}
 			onDrop={(id) => void applyPicks(picks.filter((x) => x !== id))}
@@ -1239,7 +1263,7 @@ export function Explorer10({
 				{form === "sheet" && cardNode}
 			</div>
 			<TopBar10
-				selection={bar && mixForm === "inline" ? selection : null}
+				selection={bar && !(phone && active?.pinned) ? selection : null}
 				phone={width < 768}
 				groupings={
 					maps?.map((m) => ({ id: m.grouping, islands: m.islands.length })) ?? []
@@ -1255,11 +1279,6 @@ export function Explorer10({
 				titleType={titleType}
 				onTitleType={(next) => setFilters(titleTypeParams(next))}
 			/>
-			{bar && mixForm !== "inline" && !(phone && active?.pinned) && (
-				<div className="ex-bar-wrap" style={{ top: barTop }}>
-					{selection}
-				</div>
-			)}
 			<p className="sr-only" aria-live="polite">
 				{spoken}
 			</p>

@@ -8,6 +8,14 @@ export interface MixSide {
 	id: string
 	name: string
 	color: string
+	/** Its group's name ("Mood"). */
+	group: string
+	/** How many titles the island holds. */
+	total: number
+	/** TMDB paths of its first posters. */
+	posters: string[]
+	/** How many titles the other picked islands hold without it; null until known, or alone. */
+	without?: number | null
 }
 
 export interface MixBarState {
@@ -121,18 +129,8 @@ const FOCUS =
 	"outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer"
 const SURFACE =
 	"bg-[#0e1322]/85 ring-1 ring-inset ring-white/15 backdrop-blur-xl shadow-[0_18px_40px_rgba(0,0,0,.45)]"
-const SOFT = "bg-white/[0.08] hover:bg-white/[0.16] text-white"
-
-export type MixForm = keyof typeof MIX_FORMS
-/** The selection bar's variants (?variant=<key>). */
-export const MIX_FORMS = {
-	strip: "One line, names on demand",
-	chips: "One line of names",
-	inline: "In the top bar",
-} as const
 
 interface MixBarProps {
-	form: MixForm
 	state: MixBarState
 	phone: boolean
 	onDrop: (id: string) => void
@@ -162,232 +160,200 @@ const Dots = ({ list }: { list: MixSide[] }) => (
 	</span>
 )
 
-/** How much the combination holds, short: "77 titles", or how many are picked while there's none. */
-const short = (state: MixBarState) =>
-	state.count != null
-		? titles(state.count)
-		: state.up
-			? "Finding…"
-			: `${state.list.length} of ${state.max}`
+/**
+ * One island of the combination, as a row: its first posters, its name and group, and what it does (the others hold
+ * 30 titles, with it 15 are left; the bar is how much it keeps).
+ */
+function Row({
+	s,
+	count,
+	onDrop,
+}: {
+	s: MixSide
+	/** How many titles the combination holds, once known. */
+	count: number | null
+	onDrop: (id: string) => void
+}) {
+	// What the island does: of what the others hold, how much it keeps.
+	const from = s.without ?? null
+	const share = count != null && from ? Math.min(1, count / from) : null
+	return (
+		<li className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-2 ring-1 ring-inset ring-white/[0.07]">
+			<span
+				aria-hidden
+				className="flex shrink-0 items-center rounded-lg p-1"
+				style={{
+					background: `color-mix(in srgb, ${s.color} 22%, transparent)`,
+					boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${s.color} 55%, transparent)`,
+				}}
+			>
+				{s.posters.slice(0, 3).map((poster, k) => (
+					<img
+						key={poster}
+						src={`https://image.tmdb.org/t/p/w92${poster}`}
+						alt=""
+						className="h-11 w-[30px] rounded-[4px] object-cover shadow-[0_2px_8px_rgba(0,0,0,.6)]"
+						style={{ marginLeft: k ? -10 : 0, zIndex: 3 - k }}
+					/>
+				))}
+			</span>
+			<span className="flex min-w-0 flex-1 flex-col gap-1">
+				<span className="flex items-baseline gap-2">
+					<span className="truncate text-[15px] font-bold text-white">
+						{s.name}
+					</span>
+					<span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-400">
+						{s.group}
+					</span>
+				</span>
+				{/* How much of what the others hold the island keeps. */}
+				<span
+					aria-hidden
+					className="h-1.5 overflow-hidden rounded-full bg-white/10"
+				>
+					<span
+						className="block h-full rounded-full transition-[width] duration-300"
+						style={{
+							width: `${share == null ? 100 : Math.max(2, Math.min(100, share * 100))}%`,
+							background: s.color,
+							opacity: share == null ? 0.35 : 1,
+						}}
+					/>
+				</span>
+				<span className="text-xs text-indigo-100/60 tabular-nums">
+					{s.total.toLocaleString("en")} titles
+					{share != null && count != null && from != null && (
+						<>
+							{" · narrows "}
+							<b className="font-bold text-indigo-100/90">
+								{from.toLocaleString("en")}
+							</b>
+							{" to "}
+							<b className="font-bold text-[#fff4d6]">
+								{count.toLocaleString("en")}
+							</b>
+						</>
+					)}
+				</span>
+			</span>
+			<button
+				type="button"
+				aria-label={`Let ${s.name} go`}
+				onClick={() => onDrop(s.id)}
+				className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/60 hover:bg-white/10 hover:text-white ${FOCUS}`}
+			>
+				<Cross />
+			</button>
+		</li>
+	)
+}
 
-/** One button between the two views: it names where it goes. */
-function ViewButton({
+/**
+ * The selection, in the top bar (on phones in a row of its own under it): a button with the islands' colors and the
+ * count, the two views (the combination, the whole world), and Separate. The button opens one row per island.
+ */
+export function MixBar({
 	state,
+	phone,
+	onDrop,
+	onClear,
 	onGo,
 	onAll,
 	nudge,
-	className = "",
-}: Pick<MixBarProps, "state" | "onGo" | "onAll" | "nudge"> & {
-	className?: string
-}) {
-	const there = state.at === "hub"
-	const glow = nudge && (nudge.at === "all") === there && nudge.at !== "separate"
-	return (
-		<button
-			type="button"
-			onClick={there ? onAll : onGo}
-			className={`relative flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-bold whitespace-nowrap ${SOFT} ${FOCUS} ${glow ? "ex10-glow" : ""} ${className}`}
-		>
-			<svg viewBox="0 0 14 14" aria-hidden="true" className="h-3 w-3">
-				<path
-					d={
-						there
-							? "M2 5.5V2h3.5M2 2l4 4M12 8.5V12H8.5M12 12L8 8"
-							: "M8.5 2H12v3.5M12 2L8 6M5.5 12H2V8.5M2 12l4-4"
-					}
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.7"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				/>
-			</svg>
-			{there ? "Show all" : "Combined"}
-			{glow && <Press touch={nudge.touch} />}
-		</button>
-	)
-}
-
-function ClearButton({
-	state,
-	onClear,
-	nudge,
-	icon = false,
-}: Pick<MixBarProps, "state" | "onClear" | "nudge"> & {
-	/** The cross alone. */
-	icon?: boolean
-}) {
-	const glow = nudge?.at === "separate"
-	const label = state.list.length > 1 ? "Separate" : "Let go"
-	return (
-		<button
-			type="button"
-			onClick={onClear}
-			aria-label={icon ? label : undefined}
-			title={icon ? label : undefined}
-			className={`relative flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full text-sm font-bold whitespace-nowrap ${icon ? "w-9" : "px-3"} ${SOFT} ${FOCUS} ${glow ? "ex10-glow" : ""}`}
-		>
-			<Cross />
-			{!icon && label}
-			{glow && <Press touch={nudge.touch} />}
-		</button>
-	)
-}
-
-/** A picked island as a chip that lets it go. */
-const Chip = ({ s, onDrop }: { s: MixSide; onDrop: (id: string) => void }) => (
-	<span className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] pl-2.5 pr-1 text-sm font-bold whitespace-nowrap text-white ring-1 ring-inset ring-white/15">
-		<span
-			aria-hidden
-			className="h-2.5 w-2.5 rounded-full"
-			style={{ background: s.color, boxShadow: `0 0 10px ${s.color}` }}
-		/>
-		{s.name}
-		<button
-			type="button"
-			aria-label={`Let ${s.name} go`}
-			onClick={() => onDrop(s.id)}
-			className={`grid h-6 w-6 place-items-center rounded-full text-white/70 hover:bg-white/15 hover:text-white ${FOCUS}`}
-		>
-			<Cross className="h-2.5 w-2.5" />
-		</button>
-	</span>
-)
-
-/** The names and what the combination holds, in full: what the short forms open. */
-const Details = ({ state, onDrop }: Pick<MixBarProps, "state" | "onDrop">) => (
-	<div className="flex flex-col gap-2">
-		<div className="flex flex-wrap gap-1.5">
-			{state.list.map((s) => (
-				<Chip key={s.id} s={s} onDrop={onDrop} />
-			))}
-		</div>
-		<p
-			className={`text-sm leading-snug ${state.up ? "font-bold text-[#fff4d6]" : "text-indigo-100/60"}`}
-		>
-			{state.status}
-			{!state.full && (
-				<span className="font-normal text-indigo-100/60">
-					{" "}
-					· {state.max - state.list.length} more can join
-				</span>
-			)}
-		</p>
-	</div>
-)
-
-/**
- * The selection: what's picked, what it holds, the way to the combination and back, and letting go. Three forms.
- * - strip: one short line under the top bar (colors, the count, the two buttons); the count opens the names.
- * - chips: one line of names, each lets its island go; the count is the button to the combination.
- * - inline: no bar. A small button in the top bar (colors and the count) that opens everything else.
- */
-export function MixBar(props: MixBarProps) {
-	const { form, state, phone, onDrop, nudge } = props
+}: MixBarProps) {
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
 	const [top, setTop] = useState(0)
 	useEffect(() => {
-		if (!open || form !== "inline") return
+		if (!open) return
 		const down = (event: Event) => {
 			if (!root.current?.contains(event.target as Node)) setOpen(false)
 		}
 		document.addEventListener("pointerdown", down)
 		return () => document.removeEventListener("pointerdown", down)
-	}, [open, form])
-
-	if (form === "inline") {
-		// Closed, the tutorial points at the button that opens the rest.
-		const glow = !!nudge && !open
+	}, [open])
+	const view = (at: "hub" | "all", label: string, go: () => void) => {
+		const glow = nudge?.at === (at === "hub" ? "combined" : "all")
 		return (
-			<div ref={root} className="relative shrink-0">
-				<button
-					type="button"
-					aria-expanded={open}
-					aria-label={`Your combination: ${state.list.map((s) => s.name).join(", ")}`}
-					onClick={(event) => {
-						setTop(event.currentTarget.getBoundingClientRect().bottom + 8)
-						setOpen(!open)
-					}}
-					className={`relative flex h-12 items-center gap-2 rounded-2xl px-3 text-[15px] font-bold whitespace-nowrap text-white ${SURFACE} hover:ring-white/30 ${FOCUS} ${glow ? "ex10-glow" : ""}`}
-				>
-					<Dots list={state.list} />
-					<span className={state.count != null ? "text-[#fff4d6]" : ""}>
-						{phone && state.count != null
-							? state.count.toLocaleString("en")
-							: short(state)}
-					</span>
-					{!phone && <Caret up={open} />}
-					{glow && <Press touch={nudge.touch} />}
-				</button>
-				{open && (
-					<div
-						className={`z-40 flex flex-col gap-3 rounded-2xl p-3 ${SURFACE} ${phone ? "fixed right-3 left-3" : "absolute left-0 mt-2 w-80"}`}
-						style={phone ? { top } : undefined}
-					>
-						<Details state={state} onDrop={onDrop} />
-						<div className="flex items-center justify-between gap-2">
-							<ViewButton {...props} />
-							<ClearButton {...props} />
-						</div>
-					</div>
-				)}
-			</div>
+			<button
+				type="button"
+				aria-pressed={state.at === at}
+				onClick={go}
+				className={`relative flex h-10 items-center rounded-xl ${phone ? "px-2" : "px-3"} text-sm font-bold whitespace-nowrap transition-colors ${FOCUS} ${state.at === at ? "bg-white/[0.18] text-white" : "text-indigo-100/70 hover:text-white"} ${glow ? "ex10-glow" : ""}`}
+			>
+				{label}
+				{glow && nudge && <Press touch={nudge.touch} />}
+			</button>
 		)
 	}
-
-	if (form === "chips")
-		return (
-			<div
-				className={`pointer-events-auto mx-auto flex h-12 w-fit max-w-[calc(100%-24px)] items-center gap-1.5 rounded-full px-1.5 ${SURFACE}`}
-			>
-				<div className="flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-					{state.list.map((s) => (
-						<Chip key={s.id} s={s} onDrop={onDrop} />
-					))}
-				</div>
-				{state.up ? (
-					<ViewButton
-						{...props}
-						className={state.count != null ? "!text-[#fff4d6]" : ""}
-					/>
-				) : (
-					<span className="shrink-0 px-2 text-sm whitespace-nowrap text-indigo-100/60">
-						{phone ? "+ another" : "pick another island"}
-					</span>
-				)}
-				{state.count != null && (
-					<span className="shrink-0 pr-1 text-sm font-bold whitespace-nowrap text-[#fff4d6] tabular-nums">
-						{phone ? state.count.toLocaleString("en") : titles(state.count)}
-					</span>
-				)}
-				<ClearButton {...props} icon />
-			</div>
-		)
-
+	const many = state.list.length > 1
 	return (
-		<div
-			className={`pointer-events-auto mx-auto flex w-fit max-w-[calc(100%-24px)] flex-col gap-2 p-1.5 ${open ? "rounded-3xl" : "rounded-full"} ${SURFACE}`}
-		>
-			<div className="flex h-9 items-center gap-1.5">
-				<button
-					type="button"
-					aria-expanded={open}
-					onClick={() => setOpen(!open)}
-					className={`flex h-9 min-w-0 items-center gap-2 rounded-full pr-2.5 pl-2 text-sm font-bold whitespace-nowrap text-white hover:bg-white/[0.08] ${FOCUS}`}
-				>
-					<Dots list={state.list} />
-					<span className={state.count != null ? "text-[#fff4d6]" : ""}>
-						{short(state)}
-					</span>
-					<Caret up={open} />
-				</button>
-				{state.up && <ViewButton {...props} />}
-				<ClearButton {...props} icon={phone} />
-			</div>
+		<div ref={root} className="relative flex min-w-0 items-center gap-2">
+			<button
+				type="button"
+				aria-expanded={open}
+				aria-label={`Your combination: ${state.list.map((s) => s.name).join(", ")}`}
+				onClick={(event) => {
+					setTop(event.currentTarget.getBoundingClientRect().bottom + 8)
+					setOpen(!open)
+				}}
+				className={`flex h-12 shrink-0 items-center gap-2 rounded-2xl ${phone ? "px-2.5" : "px-3"} text-[15px] font-bold whitespace-nowrap text-white ${SURFACE} hover:ring-white/30 ${FOCUS}`}
+			>
+				<Dots list={state.list} />
+				<span className={state.count != null ? "text-[#fff4d6]" : ""}>
+					{state.count != null
+						? phone
+							? state.count.toLocaleString("en")
+							: titles(state.count)
+						: state.up
+							? "…"
+							: `${state.list.length} of ${state.max}`}
+				</span>
+				{!phone && <Caret up={open} />}
+			</button>
+			<fieldset
+				aria-label="View"
+				className={`flex h-12 shrink-0 items-center gap-0.5 rounded-2xl p-1 ${SURFACE}`}
+			>
+				{view("hub", "Combined", onGo)}
+				{view("all", "Show all", onAll)}
+			</fieldset>
+			<button
+				type="button"
+				onClick={onClear}
+				className={`relative flex h-12 shrink-0 items-center gap-1.5 rounded-2xl ${phone ? "px-2.5" : "px-3"} text-sm font-bold whitespace-nowrap text-white ${SURFACE} hover:ring-white/30 ${FOCUS} ${nudge?.at === "separate" ? "ex10-glow" : ""}`}
+			>
+				<Cross />
+				{many ? "Separate" : "Let go"}
+				{nudge?.at === "separate" && <Press touch={nudge.touch} />}
+			</button>
 			{open && (
-				<div className="max-w-md px-2 pb-1.5">
-					<Details state={state} onDrop={onDrop} />
+				<div
+					className={`z-40 flex flex-col gap-2 rounded-2xl p-3 ${SURFACE} !bg-[#0e1322]/95 ${phone ? "fixed right-3 left-3" : "absolute top-full left-0 mt-2 w-96"}`}
+					style={phone ? { top } : undefined}
+				>
+					<div className="flex items-baseline justify-between gap-3 px-1">
+						<h2 className="text-base font-bold text-white">Your combination</h2>
+						<span
+							className={`text-sm font-bold tabular-nums ${state.count != null ? "text-[#fff4d6]" : "text-indigo-100/60"}`}
+						>
+							{state.count != null
+								? titles(state.count)
+								: state.up
+									? "Finding titles…"
+									: "Pick another island"}
+						</span>
+					</div>
+					<ul className="flex flex-col gap-1.5">
+						{state.list.map((s) => (
+							<Row key={s.id} s={s} count={state.count} onDrop={onDrop} />
+						))}
+					</ul>
+					{!state.full && (
+						<p className="px-1 text-xs text-indigo-100/60">
+							{state.max - state.list.length} more can join, from any group.
+						</p>
+					)}
 				</div>
 			)}
 		</div>

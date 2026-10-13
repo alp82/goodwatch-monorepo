@@ -553,16 +553,21 @@ export function TopBar10(props: TopBarProps) {
 						places={places}
 						at={at}
 						onGo={onGo}
-						compact={phone && !!selection}
 					/>
 				)}
-				{selection}
+				{!phone && selection}
 				{bar === "legend" && !phone && <ActiveChips p={props} />}
 				<span className="flex-1" />
 				{filters}
 			</div>
 			{/* On phones the row of places takes a line of its own. */}
 			{bar !== "menu" && phone && <div className="ex-row mt-2">{row}</div>}
+			{/* On phones the selection takes a line of its own; it scrolls sideways where the screen is narrow. */}
+			{phone && selection && (
+				<div className="ex-row mt-2 overflow-x-auto [scrollbar-width:none]">
+					{selection}
+				</div>
+			)}
 			{/* The strip: the filters in a row under the bar, as Discover's row shows them. */}
 			<AnimatePresence initial={false}>
 				{bar === "menu" && open && !phone && (
