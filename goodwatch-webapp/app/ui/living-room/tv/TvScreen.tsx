@@ -19,12 +19,14 @@ import type { TvCanvas } from "./room-tv"
 import {
 	AboutCode,
 	DiscoverCode,
+	ExplorerCode,
 	MenuCode,
 	RateCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
+import type { TvExplorerView } from "./tv-explorer"
 import type { TvAppTile } from "./tv-home"
 import {
 	type TvContext,
@@ -48,6 +50,8 @@ export {
 	TonightCode,
 	loadFirstScreens,
 } from "./screen-code"
+// The mini Explorer (slice 7).
+export { ExplorerData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -76,6 +80,8 @@ export type TvScreenProps = {
 	titles?: TvTitleScreens
 	/** Mini Discover: a picture per option, and the titles of the choice on screen. */
 	discover?: TvDiscoverScreens
+	/** The mini Explorer's map and island (slice 7). Null until its data component has reported. */
+	explorer?: TvExplorerView | null
 }
 
 /** What mini Discover draws from. */
@@ -95,6 +101,7 @@ export function TvScreen({
 	toast,
 	titles,
 	discover,
+	explorer,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -148,6 +155,7 @@ export function TvScreen({
 								apps={apps}
 								titles={titles}
 								discover={discover}
+								explorer={explorer}
 							/>
 						</Layer>
 					</TvViewProvider>
@@ -197,12 +205,14 @@ function ScreenOf({
 	apps,
 	titles,
 	discover,
+	explorer,
 }: {
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
 	titles?: TvTitleScreens
 	discover?: TvDiscoverScreens
+	explorer?: TvExplorerView | null
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -236,7 +246,14 @@ function ScreenOf({
 					first={first}
 				/>
 			)
-		// SEAM (slices 7 to 10): Explorer, Taste and the quiz, My shows and search each take their entry here.
+		// The mini Explorer (slice 7): the map without an island, an island's titles with one.
+		case "explorer":
+			return explorer ? (
+				<ExplorerCode.Screen items={items} view={explorer} first={first} />
+			) : (
+				first
+			)
+		// SEAM (slices 8 to 10): Taste and the quiz, My shows and search each take their entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}

@@ -72,6 +72,15 @@ export const DiscoverData = screenCode<
 	})),
 ).Screen
 
+// ---- The mini Explorer (slice 7): the map and an island are one screen's code, with the map's data.
+export const ExplorerCode = screenCode(() => import("./screens/Explorer"))
+/** The real mood map, for the Explorer's two screens. */
+export const ExplorerData = screenCode<
+	ComponentProps<typeof import("./screens/Explorer").ExplorerData>
+>(() =>
+	import("./screens/Explorer").then((code) => ({ default: code.ExplorerData })),
+).Screen
+
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
 export function loadFirstScreens() {
 	for (const code of [MenuCode, AboutCode]) code.load().catch(() => {})

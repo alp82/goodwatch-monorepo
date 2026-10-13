@@ -3,6 +3,7 @@
 // (`prototype-tv-design/cinema.tsx` on the prototype branch); the widths of keys with a word on them are rounded.
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
+import { MAP_PLACES } from "./tv-explorer.ts"
 import { type TvBox, type TvDir, nextInDirection } from "./tv-move.ts"
 
 const box = (
@@ -48,14 +49,27 @@ const moods = (scrolled = 0) => [
 	...BAR,
 ]
 
-/** The mini Explorer: six round islands of 164, placed freely on the sea. */
+/**
+ * The mini Explorer: six flat islands, placed freely on the sea where the screen draws them (`MAP_PLACES`, inside
+ * the content under the bar). tv-explorer.test.ts pins every direction from every one of them.
+ */
 const MAP = [
-	box("island:heists", 66, 108, 164, 164),
-	box("island:whodunits", 356, 164, 164, 164),
-	box("island:found-family", 656, 108, 164, 164),
-	box("island:workplace", 196, 348, 164, 164),
-	box("island:time-loops", 526, 378, 164, 164),
-	box("island:space", 956, 218, 164, 164),
+	...[
+		"heists",
+		"whodunits",
+		"found-family",
+		"workplace",
+		"time-loops",
+		"space",
+	].map((id, n) =>
+		box(
+			`island:${id}`,
+			56 + MAP_PLACES[n].left,
+			108 + MAP_PLACES[n].top,
+			MAP_PLACES[n].width,
+			MAP_PLACES[n].height,
+		),
+	),
 	EXPAND,
 	...BAR,
 ]
@@ -207,6 +221,13 @@ describe("Up and Down take the nearest row, and in it the item with the least si
 		assert.equal(nextInDirection(MAP, "island:workplace", "down"), "expand")
 		assert.equal(nextInDirection(MAP, "island:time-loops", "down"), "expand")
 		assert.equal(nextInDirection(MAP, "island:heists", "up"), "bar:back")
+		// The far right island sits between the rows: Down from it is the Expand key under it, not the bottom
+		// row's island at its left, and Up from that island is the island over it.
+		assert.equal(nextInDirection(MAP, "island:space", "down"), "expand")
+		assert.equal(
+			nextInDirection(MAP, "island:time-loops", "up"),
+			"island:found-family",
+		)
 	})
 
 	it("goes down a list's column of actions to the Expand key, and from a title straight to it", () => {
