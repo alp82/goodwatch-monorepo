@@ -226,6 +226,23 @@
 		transform: scale(1.06);
 		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 	}
+	/* Mini Discover's tabs: quiet until open. The open one is marked whether or not it has the focus. */
+	.tvc-tab {
+		color: rgba(255, 255, 255, 0.72);
+		border-radius: 999px;
+		font-weight: 700;
+	}
+	.tvc-tab-open {
+		background: rgba(255, 255, 255, 0.2);
+		color: #fff;
+		box-shadow: inset 0 -4px 0 #fff;
+	}
+	.tvc-tab.tvc-on {
+		background: #fff;
+		color: #000;
+		transform: scale(1.05);
+		box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+	}
 	.tvc-fade {
 		animation: tvc-fade 0.42s ease-out both;
 	}
