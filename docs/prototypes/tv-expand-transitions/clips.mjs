@@ -13,7 +13,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 const [t = "frame", device = "desktop", screen = "results", extra = ""] = process.argv.slice(2)
 const base = process.env.BASE ?? "http://localhost:3157"
 const out = process.env.OUT ?? dirname(fileURLToPath(import.meta.url))
-const ORDER = ["today", "grow", "frame", "morph", "camera", "live", "wipe"]
+const ORDER = ["today", "grow", "frame", "morph", "camera", "live", "wipe", "lean", "leanlite"]
 const phone = device === "phone"
 const size = phone ? { width: 390, height: 844 } : { width: 1440, height: 900 }
 const name = `${ORDER.indexOf(t) + 1}-${t}-${device}${screen === "title" ? "-title" : ""}${extra.replace(/[^a-z0-9]/g, "")}`
@@ -35,14 +35,14 @@ await page.goto(url, { waitUntil: "load", timeout: 120000 })
 await page.waitForSelector("[data-tv-screen] [data-tv-item=expand]", { timeout: 60000 })
 await page.waitForTimeout(2500)
 // Live page: the real page is loading in the TV while the key has the focus.
-if (t === "live") await page.waitForFunction(() => document.querySelector('iframe[title="The real page"]')?.contentDocument?.querySelectorAll("img").length > 6, null, { timeout: 30000 }).catch(() => {})
-if (t === "live") await page.waitForTimeout(1500)
+if (t === "live" || t === "lean") await page.waitForFunction(() => document.querySelector('iframe[title="The real page"]')?.contentDocument?.querySelectorAll("img").length > 6, null, { timeout: 30000 }).catch(() => {})
+if (t === "live" || t === "lean") await page.waitForTimeout(1500)
 const calm = () => !document.documentElement.dataset.tvx && !document.documentElement.dataset.tvTransition
 const idle = () => !document.documentElement.dataset.tvx && !document.documentElement.dataset.tvTransition && !document.querySelector('iframe[title="The real page"]')
 // When the transition's own animation begins. Before it the person waits for the page's data, and the browser
-// stands still while the next page is built. "New" and "Live page" begin in the room, at the press.
+// stands still while the next page is built. "New", "Live page" and "Lean in" begin in the room, at the press.
 const moving = () => document.getAnimations().some((a) => (a.effect?.pseudoElement ?? "").startsWith("::view-transition"))
-const inRoom = t === "grow" || t === "live"
+const inRoom = t === "grow" || t === "live" || t === "lean"
 const pressed = now()
 await page.keyboard.press("Enter")
 if (!inRoom) await page.waitForFunction(moving, null, { timeout: 30000, polling: "raf" }).catch(() => {})

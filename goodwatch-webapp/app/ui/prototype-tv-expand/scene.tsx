@@ -1,10 +1,11 @@
 // PROTOTYPE - throwaway. "How should the TV hand over to a real page, and how does the person get back?"
 // The approved Cinema TV in its room (prototype-tv-design, imported and not changed), on a mini Discover results
 // screen or a title screen. Its Expand key opens the REAL page (/discover?moods=funny, /movie/546554-knives-out)
-// through one of seven transitions; the browser's Back, Escape and a Back to TV control on the real page come back
+// through one of nine transitions; the browser's Back, Escape and a Back to TV control on the real page come back
 // into the same TV screen with the same focus.
-//   &t=today|grow|frame|morph|camera|live|wipe   the transition (the keys 1 to 7)
-//   &back=key|bar|esc    the way back that the real page shows (B, also on the real page)
+//   &t=today|grow|frame|morph|camera|live|wipe|lean|leanlite   the transition (the keys 1 to 9). Without it: lean,
+//                        the owner's pick of round two (6 and 5 combined, with 3's frame)
+//   &back=bar|key|esc    the way back that the real page shows (B, also on the real page). Without it: bar
 //   &slow=1              the page's data takes 1.5 s longer (W)
 //   &calm=1              reduced motion, whatever the system says (R)
 //   &at=home.discover.discover-funny   the TV's screens, as in the design prototype (D switches results and title)
@@ -155,8 +156,10 @@ export function TvExpandScene() {
 	const navigate = useNavigate()
 	const leaveToday = useLeaveThroughTv()
 	useReturnIntoTv()
-	const t = (TRANSITIONS.find((x) => x.key === params.get("t"))?.key ?? "today") as TransitionKey
-	const back = (BACKS.find((x) => x.key === params.get("back"))?.key ?? "key") as BackKey
+	const t = (TRANSITIONS.find((x) => x.key === params.get("t"))?.key ?? "lean") as TransitionKey
+	const back = (BACKS.find((x) => x.key === params.get("back"))?.key ?? "bar") as BackKey
+	// 6 and 8 load the real page inside the TV.
+	const inTv = t === "live" || t === "lean"
 	const slow = params.get("slow") === "1"
 	const calmAsked = params.get("calm") === "1"
 	const [panel, setPanel] = useState(false)
@@ -311,13 +314,17 @@ export function TvExpandScene() {
 			navigate(dest.href, { viewTransition: canTransition() })
 			return
 		}
-		if (now.t === "live") {
+		if (now.t === "live" || now.t === "lean") {
 			livePreload(dest.href, now.slow)
 			setRun({ ...base, arm: 1 })
-			liveGo(box, () => {
-				beginLeave(null)
-				navigate(dest.href, { viewTransition: true })
-			})
+			liveGo(
+				box,
+				() => {
+					beginLeave(null)
+					navigate(dest.href, { viewTransition: true })
+				},
+				now.t === "lean" ? scene.querySelector<HTMLElement>("[data-tvx-room]") : null,
+			)
 			return
 		}
 		const led = new Promise<void>((resolve) => {
@@ -356,13 +363,13 @@ export function TvExpandScene() {
 	// The Live page starts loading in the TV while the Expand key has the focus.
 	const hereHref = here?.href
 	useEffect(() => {
-		if (t !== "live" || !framed || !hereHref || calmAsked) return
+		if (!inTv || !framed || !hereHref || calmAsked) return
 		const timer = setTimeout(() => livePreload(hereHref, slow), 250)
 		return () => clearTimeout(timer)
-	}, [t, framed, hereHref, slow, calmAsked])
+	}, [inTv, framed, hereHref, slow, calmAsked])
 	useEffect(() => {
-		if (t !== "live") liveDrop()
-	}, [t])
+		if (!inTv) liveDrop()
+	}, [inTv])
 	useEffect(() => () => void (liveShowing() || liveDrop()), [])
 
 	// ---- The prototype's controls.
@@ -372,8 +379,8 @@ export function TvExpandScene() {
 		setParams(p, { replace: true, preventScrollReset: true })
 	}
 	const controls = {
-		transition: (key: string) => set({ t: key === "today" ? "" : key }),
-		back: () => set({ back: BACKS[(BACKS.findIndex((x) => x.key === back) + 1) % BACKS.length].key.replace(/^key$/, "") }),
+		transition: (key: string) => set({ t: key === "lean" ? "" : key }),
+		back: () => set({ back: BACKS[(BACKS.findIndex((x) => x.key === back) + 1) % BACKS.length].key.replace(/^bar$/, "") }),
 		slow: () => set({ slow: slow ? "" : "1" }),
 		calm: () => set({ calm: calmAsked ? "" : "1" }),
 		screen: () => {
@@ -439,7 +446,7 @@ export function TvExpandScene() {
 	const bracketsLen = brackets ? Math.max(14, Math.min(120, Math.min(brackets.width, brackets.height) * FRAME.arm)) : 0
 	const waiting = Boolean(run && !run.silent && run.dir > 0 && run.arm >= 1 && (!run.grows || run.grow >= 1))
 	// The Camera leans in while it waits: the zoom has begun before the page is there.
-	const creep = Boolean(run && run.dir > 0 && t === "camera" && !calmAsked)
+	const creep = Boolean(run && run.dir > 0 && (t === "camera" || t === "leanlite") && !calmAsked)
 
 	const remoteEl = useRef<HTMLDivElement>(null)
 	const pointerEl = useRef<HTMLDivElement>(null)
@@ -498,7 +505,7 @@ export function TvExpandScene() {
 		<div ref={root} data-bar="bottom" className={`living-room ${phone ? "select-none [-webkit-touch-callout:none]" : ""} fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0`}>
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own constant CSS */}
 			<style dangerouslySetInnerHTML={{ __html: `@layer components {${SCENE_CSS}${POINTER_CSS}${cinema.css}}` }} />
-			<div className="absolute inset-0" style={{ transformOrigin: tvCenter, transform: creep ? "scale(1.05)" : "none", transition: creep ? "transform 2.6s cubic-bezier(.15,.6,.3,1)" : "transform .3s ease-out" }}>
+			<div data-tvx-room className="absolute inset-0" style={{ transformOrigin: tvCenter, transform: creep ? "scale(1.05)" : "none", transition: creep ? "transform 2.6s cubic-bezier(.15,.6,.3,1)" : "transform .3s ease-out" }}>
 				{L?.photo && (
 					<div className="absolute" style={L.photo}>
 						<img src={assetUrl(ROOM.fallback)} srcSet={ROOM.webp} sizes="200vw" alt={ROOM.alt} width={ROOM.w} height={ROOM.h} className="absolute inset-0 h-full w-full select-none" style={{ filter: "blur(1.8px)" }} draggable={false} />

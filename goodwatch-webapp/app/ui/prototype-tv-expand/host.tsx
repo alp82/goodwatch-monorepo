@@ -4,7 +4,8 @@
 // docs/prototypes/tv-expand-transitions/README.md.
 import { useLocation } from "@remix-run/react"
 import { useEffect, useReducer, useRef, useState } from "react"
-import { AMBER, BACKS, type BackKey, EASE, MS, TRANSITIONS, type Trip, backToTv, depthFromTv, install, readTrip, subscribe, transitionRunning, writeTrip } from "./trip"
+import { createPortal } from "react-dom"
+import { AMBER, BACK_LIVES, BACKS, type BackKey, EASE, MS, TRANSITIONS, type Trip, backToTv, depthFromTv, install, readTrip, subscribe, transitionRunning, writeTrip } from "./trip"
 
 const CORNERS = ["tvx-c0", "tvx-c1", "tvx-c2", "tvx-c3"]
 const FLYING = ["tvx-m0", "tvx-m1", "tvx-m2", "tvx-m3", "tvx-art", "tvx-title"]
@@ -55,6 +56,18 @@ html[data-tvx^="camera"]::view-transition-new(tvx-header) { animation: none; }
 @keyframes tvx-page-out { from { transform: var(--tvx-page); clip-path: var(--tvx-page-clip); } to { transform: none; clip-path: inset(0 0 0 0); } }
 @keyframes tvx-page-in { from { transform: none; clip-path: inset(0 0 0 0); } to { transform: var(--tvx-page); clip-path: var(--tvx-page-clip); } }
 
+/* 8 Lean in and 9 Lean in, light: 5's zoom with 3's brackets. 9 goes out as a transition; 8 goes out in the room, on the live page. */
+html[data-tvx^="lean"]::view-transition-old(root), html[data-tvx^="lean"]::view-transition-new(root) { transform-origin: 0 0; }
+html[data-tvx="leanlite-out"]::view-transition-old(root) { animation: tvx-room-out ${MS.leanlite.out}ms ${EASE} both; }
+html[data-tvx="leanlite-out"]::view-transition-new(root) { animation: tvx-page-out ${MS.leanlite.out}ms ${EASE} both, tvx-fade-in 260ms linear both; }
+html[data-tvx="lean-in"]::view-transition-new(root), html[data-tvx="leanlite-in"]::view-transition-new(root) { animation: tvx-room-in ${MS.lean.in}ms ${EASE} both; }
+html[data-tvx="lean-in"]::view-transition-old(root), html[data-tvx="leanlite-in"]::view-transition-old(root) { z-index: 1; animation: tvx-page-in ${MS.lean.in}ms ${EASE} both, tvx-fade-out 200ms linear ${MS.lean.in - 200}ms both; }
+html[data-tvx^="lean"]::view-transition-group(tvx-header) { animation: none; }
+html[data-tvx^="lean"]::view-transition-old(tvx-header) { display: none; }
+html[data-tvx^="lean"]::view-transition-new(tvx-header) { animation: none; }
+${each('="leanlite-out"', "group", CORNERS)} { animation-duration: ${MS.leanlite.out}ms; animation-timing-function: ${EASE}; }
+${each('="lean-in"', "group", CORNERS)}, ${each('="leanlite-in"', "group", CORNERS)} { animation-duration: ${MS.lean.in}ms; animation-timing-function: ${EASE}; }
+
 /* 6 Live page, the way back: the page scales down into the picture, where the mini screen takes over. */
 html[data-tvx="live-in"]::view-transition-old(root) { z-index: 1; animation: tvx-page-in ${MS.live.in}ms ${EASE} both, tvx-fade-out 150ms linear ${MS.live.in - 150}ms both; }
 
@@ -63,6 +76,9 @@ html[data-tvx="wipe-out"]::view-transition-new(root) { animation: tvx-wipe-grow 
 html[data-tvx="wipe-in"]::view-transition-old(root) { z-index: 1; animation: tvx-wipe-shrink ${MS.wipe.in}ms ${EASE} both; }
 @keyframes tvx-wipe-grow { from { clip-path: circle(var(--tvx-wipe-r0) at var(--tvx-wipe-at)); } to { clip-path: circle(var(--tvx-wipe-r) at var(--tvx-wipe-at)); } }
 @keyframes tvx-wipe-shrink { from { clip-path: circle(var(--tvx-wipe-r) at var(--tvx-wipe-at)); } to { clip-path: circle(var(--tvx-wipe-r0) at var(--tvx-wipe-at)); } }
+
+/* The phone: the TV key takes a place in the dock's row, and Search gives up its word for it. */
+html[data-tvx-dock] nav[aria-label="Site"] [data-search-entry] { width: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
 
 .tvx-back { transition: opacity .3s ease, transform .3s cubic-bezier(.2,.8,.2,1); }
 .tvx-back[data-shown="false"] { opacity: 0; transform: scale(.85); pointer-events: none; }
@@ -84,9 +100,12 @@ function TvIcon({ size = 30 }: { size?: number }) {
 	)
 }
 
-/** The height of what the site pins to the window's bottom edge (the phone's dock), so the key sits above it. */
+/**
+ * What the site pins to the window's bottom edge on a phone: its height, so nothing of ours sits under it, and the
+ * dock itself (ui/navigation/MobileDock.tsx), so the TV key can take a place in it.
+ */
 function useBottomChrome(pathname: string) {
-	const [h, setH] = useState(0)
+	const [chrome, setChrome] = useState<{ h: number; dock: HTMLElement | null }>({ h: 0, dock: null })
 	useEffect(() => {
 		const read = () => {
 			let most = 0
@@ -95,7 +114,9 @@ function useBottomChrome(pathname: string) {
 				const b = el.getBoundingClientRect()
 				if (b.width > window.innerWidth * 0.8 && b.height > 0 && b.height < 220 && b.bottom >= window.innerHeight - 2) most = Math.max(most, b.height)
 			}
-			setH(most)
+			const nav = document.querySelector<HTMLElement>('nav[aria-label="Site"]')
+			const dock = nav && nav.getBoundingClientRect().height > 0 ? nav.parentElement : null
+			setChrome((was) => (was.h === most && was.dock === dock ? was : { h: most, dock }))
 		}
 		read()
 		const timer = setInterval(read, 600)
@@ -105,24 +126,39 @@ function useBottomChrome(pathname: string) {
 			window.removeEventListener("resize", read)
 		}
 	}, [pathname])
-	return h
+	return chrome
 }
 
 function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown: boolean }) {
 	const { pathname } = useLocation()
-	const dock = useBottomChrome(pathname)
+	const { h: dock, dock: dockEl } = useBottomChrome(pathname)
 	const phone = typeof window !== "undefined" && window.innerWidth < 768
 	const label = `Back to the TV: ${trip.screen}`
+	// After a step or two the TV is no longer where the person is coming from: the way back is gone, Escape too.
+	const alive = depth <= BACK_LIVES
+	// On a phone the way back is a key in the dock's row, whichever control the desktop shows.
+	const inDock = alive && Boolean(dockEl) && trip.back !== "esc"
+	useEffect(() => {
+		if (!inDock) return
+		document.documentElement.dataset.tvxDock = ""
+		return () => {
+			delete document.documentElement.dataset.tvxDock
+		}
+	}, [inDock])
 
-	// Escape always goes back to the TV, unless something of the page's own is open or being typed into.
+	// Escape goes back to the TV, unless something of the page's own is open or being typed into.
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			if (e.metaKey || e.ctrlKey || e.altKey) return
 			const target = e.target as HTMLElement
 			if (target.closest?.("input, textarea, select, [contenteditable]")) return
-			if (e.key === "Escape") {
-				// A dialog or a menu of the page's own takes Escape first. Discover keeps an empty dialog in the document.
-				const open = Array.from(document.querySelectorAll('[role="dialog"], [aria-modal="true"], [role="menu"], [role="listbox"]')).some((el) => el.getBoundingClientRect().width > 0)
+			if (e.key === "Escape" && alive) {
+				// A dialog or a menu of the page's own takes Escape first. The pages keep their closed sheets in the
+				// document (Discover one, Watch next three): hidden and without height, so only what shows counts.
+				const open = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"], [aria-modal="true"], [role="menu"]')).some((el) => {
+					const b = el.getBoundingClientRect()
+					return b.width > 0 && b.height > 0 && getComputedStyle(el).visibility !== "hidden"
+				})
 				if (e.defaultPrevented || open) return
 				e.preventDefault()
 				backToTv()
@@ -135,7 +171,7 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
-	}, [])
+	}, [alive])
 
 	// The bar: out of the way while the person reads on, back as soon as they scroll up or stand at the top.
 	const [up, setUp] = useState(true)
@@ -165,9 +201,29 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 	}, [trip.back, pathname])
 
 	const name = TRANSITIONS.find((x) => x.key === trip.t)?.name
+	const narrow = typeof window !== "undefined" && window.innerWidth < 350
 	return (
 		<div data-tvx-chrome>
-			{trip.back === "key" && (
+			{inDock &&
+				dockEl &&
+				createPortal(
+					// Between the round key and Search, which stands 12 px from the edge and is 44 px wide while this is here.
+					<button
+						type="button"
+						data-tvx-back
+						data-tvx-chrome
+						data-shown={shown}
+						onClick={backToTv}
+						aria-label={label}
+						className={`tvx-back absolute flex h-11 items-center justify-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-400/10 text-[13.5px] font-bold text-white ${narrow ? "w-11" : "pl-2.5 pr-3.5"}`}
+						style={{ right: 64, bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}
+					>
+						<TvIcon size={26} />
+						{!narrow && "TV"}
+					</button>,
+					dockEl,
+				)}
+			{alive && !inDock && trip.back === "key" && (
 				<button
 					type="button"
 					data-tvx-back
@@ -187,13 +243,14 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 					</span>
 				</button>
 			)}
-			{trip.back === "bar" && (
+			{alive && !inDock && trip.back === "bar" && (
 				<button
 					type="button"
 					data-tvx-back
 					data-shown={shown}
 					onClick={backToTv}
 					aria-label={label}
+					title={`${label} (Esc)`}
 					className="tvx-back tvx-bar fixed left-1/2 z-[999] flex h-9 items-center gap-2 rounded-b-xl border border-t-0 border-amber-400/50 bg-gray-950/95 px-3.5 text-sm text-white shadow-[0_6px_24px_rgba(0,0,0,.5)] backdrop-blur-md"
 					style={{ top: 64, transform: `translate(-50%, ${up || top ? "0" : "-110%"})`, opacity: up || top ? 1 : 0 }}
 				>
@@ -203,7 +260,7 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 					{!phone && !top && <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-white/70">Esc</kbd>}
 				</button>
 			)}
-			{trip.back === "esc" && (
+			{alive && trip.back === "esc" && (
 				<div aria-live="polite" className="tvx-back pointer-events-none fixed left-1/2 z-[1100] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-gray-950/90 px-3.5 py-2 text-sm text-white/85 shadow-lg backdrop-blur-md" data-shown={shown && hint} style={{ bottom: dock + (phone ? 60 : 16) }}>
 					<TvIcon size={22} />
 					{phone ? "The browser's Back returns to the TV" : "Esc returns to the TV"}
@@ -217,7 +274,7 @@ function BackControls({ trip, depth, shown }: { trip: Trip; depth: number; shown
 				className="fixed left-3 z-[1100] max-w-[70vw] truncate rounded-full bg-white px-3 py-1.5 text-left text-[12px] font-semibold text-black shadow-xl ring-2 ring-fuchsia-500"
 				style={{ bottom: dock + 12 }}
 			>
-				{name} · {depth === 1 ? "1 page" : `${depth} pages`} from the TV · back: {BACKS.find((b) => b.key === trip.back)?.name.toLowerCase()}
+				{name} · {depth === 1 ? "1 page" : `${depth} pages`} from the TV · {alive ? `back: ${inDock ? "in the dock" : BACKS.find((b) => b.key === trip.back)?.name.toLowerCase()}` : "the way back has gone"}
 			</button>
 		</div>
 	)

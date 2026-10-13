@@ -1,5 +1,5 @@
 // PROTOTYPE - throwaway. "How should the TV hand over to a real page, and how does the person get back?"
-// Seven transitions from the start page's TV into the real page behind its Expand key, switchable on
+// Nine transitions from the start page's TV into the real page behind its Expand key, switchable on
 // /prototype/tv-expand, and three ways back. This file is the part that outlives the room: it runs while the real
 // page is on screen, so it is plain DOM code with no React in it.
 //
@@ -14,7 +14,7 @@
 //   with a prefetch at press time and the navigation at the end of the lead-in.
 // Notes: docs/prototypes/tv-expand-transitions/README.md.
 
-export type TransitionKey = "today" | "grow" | "frame" | "morph" | "camera" | "live" | "wipe"
+export type TransitionKey = "today" | "grow" | "frame" | "morph" | "camera" | "live" | "wipe" | "lean" | "leanlite"
 export type BackKey = "key" | "bar" | "esc"
 export type Box = { left: number; top: number; width: number; height: number }
 
@@ -26,14 +26,22 @@ export const TRANSITIONS: { key: TransitionKey; name: string; bet: string }[] = 
 	{ key: "camera", name: "Camera", bet: "The room zooms into the TV until the screen is the window, with the real page already on the screen. Bets on the room staying a place you can lean back out of." },
 	{ key: "live", name: "Live page", bet: "The real page is loaded inside the TV picture at scale while the key has the focus, and then only scales up. Bets on nothing swapping at all; the price is a second copy of the app." },
 	{ key: "wipe", name: "Wipe", bet: "The page opens as a circle from the Expand key itself. Bets on the eye being on the key that was pressed, and on the cheapest possible build." },
+	// Round two, the owner's pick: 6 and 5 combined, with 3's frame.
+	{ key: "lean", name: "Lean in", bet: "6, 5 and 3 together: the real page is live in the TV, the room zooms into it until the screen is the window, and the brackets ride the picture's edge out and fold into the way back. Bets on all three threads at once; the price is 6's second copy of the app." },
+	{ key: "leanlite", name: "Lean in, light", bet: "The same move without the second copy: 5's zoom with 3's brackets, the page as a picture that fades into the TV in the first quarter second. Bets on the difference to 8 being too small to pay for." },
 ]
 export const BACKS: { key: BackKey; name: string }[] = [
-	{ key: "key", name: "Corner key" },
 	{ key: "bar", name: "Scroll-up bar" },
+	{ key: "key", name: "Corner key" },
 	{ key: "esc", name: "Escape only" },
 ]
 
 export const TV_PATH = "/prototype/tv-expand"
+/**
+ * How many pages from the TV the way back lives: on the page the Expand key opened and one step further. The
+ * owner: "after another step or two it is not relevant anymore". The browser's Back is not touched by this.
+ */
+export const BACK_LIVES = 2
 export const ARM_MS = 420
 export const GROW_MS = 850
 export const SLOW_MS = 1500
@@ -47,6 +55,8 @@ export const MS: Record<TransitionKey, { out: number; in: number }> = {
 	camera: { out: 900, in: 600 },
 	live: { out: 0, in: 450 },
 	wipe: { out: 700, in: 450 },
+	lean: { out: 900, in: 600 },
+	leanlite: { out: 900, in: 600 },
 }
 /** Cinema's frame while the Expand key has the focus (prototype-tv-design/scene.tsx). */
 export const FRAME = { stroke: 3, arm: 0.22, inset: 14, back: 0.94 }
@@ -281,15 +291,21 @@ export const bracketLength = (box: Box) => Math.max(14, Math.min(120, Math.min(b
 
 // ---- The transition's three moments.
 
+/** The room scales around the TV (5 and its two combinations), and the brackets ride the edge (3 and the same two). */
+const zooms = (trip: Trip) => trip.t === "camera" || trip.t === "lean" || trip.t === "leanlite"
+const framed = (trip: Trip) => trip.t === "frame" || trip.t === "lean" || trip.t === "leanlite"
+/** "Lean in" arrives with the page already filling the window in its frame: the swap under it shows nothing. */
+const underFrame = (trip: Trip, dir: "out" | "in") => trip.t === "lean" && dir === "out"
+
 function before(trip: Trip, dir: "out" | "in") {
 	const html = document.documentElement
 	const box = (dir === "out" && measureTv()) || trip.box
 	setVars(box, trip)
 	html.dataset.tvx = trip.calm ? "none" : `${trip.t}-${dir}`
-	if (trip.calm) return
-	if (trip.t === "camera") pinChrome()
+	if (trip.calm || underFrame(trip, dir)) return
+	if (zooms(trip)) pinChrome()
 	if (trip.t === "morph") dir === "out" ? tagTv(trip) : tagPage(trip)
-	if (trip.t === "frame") {
+	if (framed(trip)) {
 		const { w, h } = viewport()
 		// The room's own brackets step aside: these four take over from exactly where they stand.
 		html.dataset.tvxOwn = "hidden"
@@ -303,7 +319,7 @@ async function after(trip: Trip, dir: "out" | "in") {
 	if (dir === "out") {
 		rt.leaving = false
 		rt.gate = null
-		if (trip.calm) return
+		if (trip.calm || underFrame(trip, dir)) return
 		if (trip.t === "morph") {
 			// Discover draws its results after the page is there. The posters have nowhere to fly until then, so the
 			// transition waits here, with the old picture frozen on screen.
@@ -311,7 +327,7 @@ async function after(trip: Trip, dir: "out" | "in") {
 			untagAll()
 			tagPage(trip)
 		}
-		if (trip.t === "frame") placeCorners(inset({ left: 0, top: 0, width: w, height: h }, FRAME.inset), bracketLength(inset(trip.box, FRAME.inset)))
+		if (framed(trip)) placeCorners(inset({ left: 0, top: 0, width: w, height: h }, FRAME.inset), bracketLength(inset(trip.box, FRAME.inset)))
 		return
 	}
 	// Back in the room: it is laid out by now, and its TV may stand elsewhere than when the person left.
@@ -322,7 +338,7 @@ async function after(trip: Trip, dir: "out" | "in") {
 		untagAll()
 		tagTv(trip)
 	}
-	if (trip.t === "frame") placeCorners(inset(box, FRAME.inset), bracketLength(inset(box, FRAME.inset)))
+	if (framed(trip)) placeCorners(inset(box, FRAME.inset), bracketLength(inset(box, FRAME.inset)))
 }
 
 function finished(trip: Trip, dir: "out" | "in", mine: Running) {
@@ -333,8 +349,10 @@ function finished(trip: Trip, dir: "out" | "in", mine: Running) {
 	delete html.dataset.tvx
 	for (const name of VARS) html.style.removeProperty(name)
 	untagAll()
-	if (dir === "out") foldCorners()
-	else {
+	if (dir === "out") {
+		// Under "Lean in"'s frame the brackets stay until the frame is let go (liveGo).
+		if (!underFrame(trip, dir)) foldCorners()
+	} else {
 		removeCorners()
 		delete html.dataset.tvxOwn
 	}
@@ -394,7 +412,7 @@ export function install() {
 
 // ---- Live page: the real page in a frame of the window's size, shown in the TV's picture at scale.
 
-type Live = { href: string; wrap: HTMLDivElement; frame: HTMLIFrameElement; ready: Promise<void>; move?: Animation; gone: boolean }
+type Live = { href: string; wrap: HTMLDivElement; frame: HTMLIFrameElement; ready: Promise<void>; move?: Animation; with?: Animation[]; gone: boolean }
 let live: Live | null = null
 const settled = (doc: Document | null, href: string) => {
 	if (!doc?.querySelector("h1")) return false
@@ -430,6 +448,7 @@ export function liveDrop() {
 	if (!live) return
 	live.gone = true
 	live.move?.cancel()
+	for (const a of live.with ?? []) a.cancel()
 	live.wrap.remove()
 	live = null
 	emit()
@@ -441,8 +460,10 @@ const liveAt = (box: Box) => {
 /**
  * The key was pressed: the page shows in the picture, scales up to the window, and `arrive` makes the real
  * navigation under it. Resolves false when the person cancelled before the frame was let go.
+ * With `room` ("Lean in"), the room scales with the page so that the TV's picture stays exactly under it, and the
+ * four brackets ride from the picture's edge to the window's and fold into the way back at the end.
  */
-export async function liveGo(box: Box, arrive: () => void): Promise<boolean> {
+export async function liveGo(box: Box, arrive: () => void, room?: HTMLElement | null): Promise<boolean> {
 	const mine = live
 	if (!mine) return false
 	await mine.ready
@@ -451,7 +472,33 @@ export async function liveGo(box: Box, arrive: () => void): Promise<boolean> {
 	Object.assign(mine.wrap.style, from)
 	await mine.wrap.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: "forwards" }).finished
 	if (mine.gone) return false
-	mine.move = mine.wrap.animate([from, { transform: "none", clipPath: "inset(0 0 0 0)" }], { duration: 700, easing: EASE, fill: "forwards" })
+	const timing = { duration: room ? MS.lean.out : 700, easing: EASE, fill: "forwards" as const }
+	mine.move = mine.wrap.animate([from, { transform: "none", clipPath: "inset(0 0 0 0)" }], timing)
+	if (room) {
+		const html = document.documentElement
+		const k = window.innerWidth / box.width
+		// The page's corner moves in a straight line to the window's corner while it grows; a room scaled from the
+		// window's own corner, and moved by the same share, keeps the TV under it at every moment.
+		const r = room.getBoundingClientRect()
+		const origin = `${-r.left}px ${-r.top}px`
+		mine.with = [
+			room.animate(
+				[
+					{ transformOrigin: origin, transform: "translate(0px, 0px) scale(1)" },
+					{ transformOrigin: origin, transform: `translate(${-box.left * k}px, ${-box.top * k}px) scale(${k})` },
+				],
+				timing,
+			),
+		]
+		html.dataset.tvxOwn = "hidden"
+		const frame = inset(box, FRAME.inset)
+		const len = bracketLength(frame)
+		const edge = inset({ left: 0, top: 0, width: document.documentElement.clientWidth, height: window.innerHeight }, FRAME.inset)
+		placeCorners(frame, len)
+		const starts = (corners ?? []).map((el) => ({ left: el.style.left, top: el.style.top }))
+		placeCorners(edge, len)
+		;(corners ?? []).forEach((el, i) => mine.with?.push(el.animate([starts[i], { left: el.style.left, top: el.style.top }], timing)))
+	}
 	await mine.move.finished.catch(() => {})
 	if (mine.gone) return false
 	arrive()
@@ -459,6 +506,10 @@ export async function liveGo(box: Box, arrive: () => void): Promise<boolean> {
 	await waitFor(() => window.location.pathname !== TV_PATH && settled(document, mine.href), 8000)
 	await sleep(120)
 	liveDrop()
+	if (room) {
+		delete document.documentElement.dataset.tvxOwn
+		foldCorners()
+	}
 	return true
 }
 export const liveShowing = () => Boolean(live?.move)

@@ -4,11 +4,13 @@ Throwaway. Branch `prototype/tv-expand-transitions` (from `prototype/tv-screen-f
 owner's words: "Expand animation: quick prototype showing different transitions (today, new, others) and focusing
 on seamless transitions and easy navigation back".
 
-Seven transitions from the approved Cinema TV into the **real** page behind its Expand key, on one route, and three
+Nine transitions from the approved Cinema TV into the **real** page behind its Expand key, on one route, and the
 ways back from the real page into the same TV screen with the same focus.
 
-**Recommendation: 3 Frame for the way out, the corner key plus Escape for the way back.** Details under
-[Recommendation](#recommendation).
+**Where it stands (round two, 2026-10-13).** The owner picked a combination: 6 and 5 with 3's frame, and the
+scroll-up bar for the way back. That is built as **8 Lean in**, and it is what the address opens on. See
+[Round two](#round-two-the-owners-picks). My first-round recommendation (3 Frame, corner key) is kept further
+down for the reasoning.
 
 ## Open it
 
@@ -19,13 +21,13 @@ results, `/movie/546554-knives-out` from the title screen. Any other TV screen w
 
 | Key | Button | What it does |
 | --- | --- | --- |
-| `1` to `7` | `1 Today` … `7 Wipe` | The transition (`?t=today\|grow\|frame\|morph\|camera\|live\|wipe`) |
-| `B` | `Back: corner key` | The way back the real page shows: corner key, scroll-up bar, Escape only (`&back=key\|bar\|esc`). Works on the real page too |
+| `1` to `9` | `1 Today` … `9 Lean in, light` | The transition (`?t=today\|grow\|frame\|morph\|camera\|live\|wipe\|lean\|leanlite`). Without `t`: 8 Lean in |
+| `B` | `Back: scroll-up bar` | The way back the real page shows on the desktop: scroll-up bar, corner key, Escape only (`&back=bar\|key\|esc`). Works on the real page too. Without `back`: the bar. On a phone the way back is a key in the dock, whichever is chosen |
 | `W` | `Slow page` | The page's data takes 1.5 s longer (`&slow=1`) |
 | `R` | `Reduced motion` | Reduced motion, whatever the system says (`&calm=1`) |
 | `D` | `Results screen` / `Title screen` | The other of the two TV screens |
 | Arrows, `Enter`, `Escape` | the Remote | Drive the TV. `Enter` on the Expand key leaves. `Escape` while a page is on its way cancels |
-| `Escape` on the real page | the TV key or bar | Back to the TV, from any depth |
+| `Escape` on the real page | the TV key or bar | Back to the TV, for as long as the way back lives (two pages) |
 
 No key needs Shift or AltGr. On the phone the controls are behind the small `⋯` key under the TV.
 
@@ -55,7 +57,62 @@ The pages are served by this branch's dev server from production Crate and Valke
   off only on `localhost`). Page views of the real pages from this server are sent like from any dev server viewed
   that way. All captures here used `localhost`.
 
+## Round two: the owner's picks
+
+The owner, on the first round: "Let's try 6 and 5 combined with 3's frame animation. Back: scroll up bar." And on
+the questions: the way back is "not relevant anymore" after another step or two; inside the dock on the phone "is
+a good idea, try that"; Escape should go back.
+
+| | What it is | Desktop | Phone |
+| --- | --- | --- | --- |
+| **8 Lean in** | 6, 5 and 3 together. While the Expand key has the focus, the real page loads inside the TV. On the press it shows in the picture, the room zooms into the TV with it until the screen is the window, and the brackets ride the picture's edge out to the window's edge and fold into the way back. Nothing is swapped on screen | [clip](clips/8-lean-desktop.mp4) ![out](strips/8-lean-desktop-out.jpg) ![back](strips/8-lean-desktop-back.jpg) | [clip](clips/8-lean-phone.mp4) ![out](strips/8-lean-phone-out.jpg) ![back](strips/8-lean-phone-back.jpg) |
+| **9 Lean in, light** | The same move without the second copy of the app: 5's zoom with 3's brackets as one view transition. The page is a picture that fades into the TV during the first quarter second | [clip](clips/9-leanlite-desktop.mp4) ![out](strips/9-leanlite-desktop-out.jpg) ![back](strips/9-leanlite-desktop-back.jpg) | [clip](clips/9-leanlite-phone.mp4) ![out](strips/9-leanlite-phone-out.jpg) |
+
+8 on the title screen: [clip](clips/8-lean-desktop-title.mp4) ![out](strips/8-lean-desktop-title-out.jpg)
+
+**The way back is the same for both:** one view transition, the page shrinking into the TV while the room zooms
+out and the brackets come in from the window's edge to the picture's.
+
+**8 costs what 6 costs.** The page in the TV is an `iframe`: a second copy of the whole app, loaded each time the
+Expand key gets the focus, and again after every return. On the title screen it also shows the price in time: the
+title page's own data takes about 1.8 s here, and the frame has to cover the window until the real page under it
+is there (the clip's way out is 4 s long). **9 is there to see what the second copy buys.** It needs nothing but
+CSS on the two pictures the browser takes anyway, the four bracket elements and a name on the site header; it
+starts when the page's data is there (0.5 s after the press in the quiet dev build) instead of at once, and the
+page fades into the TV instead of standing in it beforehand. I could not tell them apart in the clips once the
+motion starts. My advice: build 9, and keep 8 as the picture of what it should feel like.
+
+### The way back, as decided
+
+![round two](back/round-two.jpg)
+
+- **Desktop: the scroll-up bar.** A tab under the header at the top of the page, gone while scrolling down, back
+  with the destination's name on scrolling up. With 8 and 9 the brackets fold into it on arrival.
+- **It lives for two pages:** the page the Expand key opened and one step further. Two steps further it is gone,
+  and Escape no longer goes to the TV; the browser's Back still does its normal work, and stepping back into
+  those two pages brings the way back again. The number is one constant (`BACK_LIVES` in `trip.ts`). "A step or
+  two" could also mean one page only: say so and it is a one-character change.
+- **Phone: a key in the dock.** The dock's row has no room for a fourth key as it is (at 390 px wide the gaps
+  beside the round key are 31 and 50 px). So while the way back lives, Search gives up its word and stands as its
+  icon, and the TV key takes the place between the round key and Search: `Wishlist · G · TV · Search`. When the
+  way back is gone, Search is whole again. Checked at 390 and 360 px. Under 350 px the TV key is an icon only;
+  that form was not checked.
+- **Escape goes back to the TV** on those two pages, unless a dialog or menu of the page is open or the person is
+  typing. The pages keep their closed sheets in the document (Discover one, Watch next three), so only a sheet
+  that actually shows counts as open.
+
+Checked by script, with no `t` and no `back` in the address: 1 page and 2 pages from the TV the control is there
+(on the page on the desktop, in the dock on the phone), 3 pages from it it is gone and Escape does nothing, the
+browser's Back to 2 pages brings it back, and from there Escape (desktop) and the dock key (phone) land on the
+same TV screen with the focus on the Expand key.
+
+**Seen on the way, not the prototype's doing:** on a 360 px phone a show's page reached by a tap on a Discover
+card is laid out 387 px wide (a table reaches to 424 px), which pushes the dock's right end and bottom out of
+view. Loaded directly the same page is 360 px wide. It happens without the prototype too.
+
 ## The transitions
+
+The seven of round one.
 
 Each row: what it bets on, and what it costs to build for real. Clips are the whole run, out and back; strips are
 six frames of the motion itself. Desktop 1440 x 900, phone 390 x 844, both on the results screen.
@@ -112,7 +169,9 @@ plain page change.
 
 ## The way back
 
-Half of the task. All three are built; `B` switches between them, on the room and on the real page.
+Half of the task. All three are built; `B` switches between them, on the room and on the real page. The pictures
+and the table are round one's: since then the bar is what opens, the way back lives for two pages, and the phone
+has its key in the dock ([Round two](#round-two-the-owners-picks)).
 
 ![the ways back, desktop](back/desktop.jpg)
 ![the ways back, phone](back/phone.jpg)
@@ -131,7 +190,8 @@ In every variant:
   typing.
 - **Two pages deep** (a title opened from Discover): the control is still there and still says "TV". It goes
   straight to the TV screen the person left (one history move over both pages), with the transition; the browser's
-  Back goes one page at a time, as always. After the browser's Forward the control is back.
+  Back goes one page at a time, as always. After the browser's Forward the control is back. Three pages deep it
+  is gone (round two).
 - **A reload** of the real page keeps the way back (the trip is in `sessionStorage`).
 - A page reached from the room by another way than the Expand key (the header, the dock) gets no control. This
   one is by the code only; it was not run.
@@ -188,14 +248,14 @@ reachable and works for a finger. It lands on the TV screen the person left, fro
 
 ## Questions for the owner
 
-1. Frame or Camera?
-2. How long does the corner key live? Built: for as long as the TV's entry is behind the person in this tab's
-   history, at any depth, through reloads. Should it go away after some pages, or stay?
-3. From two pages deep the key jumps straight to the TV. Right, or one page at a time like the browser's Back?
-4. On the phone the key floats above the dock (and above Discover's filter bar). Keep it there, or give it a
-   place in the dock?
-5. Escape on a real page reached from the TV goes back to the TV. Is that wanted on the real pages, where Escape
-   also closes dialogs and the search?
+Answered in round two: the transition (6 and 5 with 3's frame), the way back (scroll-up bar), how long it lives
+(a step or two), the phone (in the dock), Escape (yes). Open:
+
+1. 8 or 9? 8 loads the app a second time inside the TV; 9 is the same move without it.
+2. "A step or two": built as two pages (the one the Expand key opened and one further). Or one?
+3. In the dock, Search stands as its icon while the TV key is there. Acceptable, or should another key give way?
+4. From the second page the way back jumps straight to the TV, over the first page. Right, or one page at a time
+   like the browser's Back? (Not answered in round one.)
 
 ## Files
 
@@ -226,8 +286,8 @@ of the lead-in.
 - `npx remix vite:build` passes. The build's scripts contain none of the prototype (in it the root's
   `TvExpandHost` is `null`); the read-only switch in `cache.ts` is server code and is in the server bundle.
 - `npx biome lint` on the four new files: clean. `tsc` reports no error in them.
-- All seven transitions, out and back, desktop and phone, land on the same TV screen with the focus on the Expand
-  key (the 17 runs that made the clips each print it).
+- All nine transitions, out and back, desktop and phone, land on the same TV screen with the focus on the Expand
+  key (the 22 runs that made the clips each print it).
 - The ways back, two pages deep, Forward and Back again, a reload, the slow page and its cancel, reduced motion:
   by script, with the screenshots above.
 - Not checked: Safari, a production build's timing, a real phone (the phone is Chromium at 390 x 844 with touch).
