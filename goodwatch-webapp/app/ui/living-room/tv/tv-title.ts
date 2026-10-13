@@ -6,14 +6,15 @@
 // name and a poster), then the card `/api/title-cards` answers.
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { MediaType } from "~/types/user-data"
-import { RATING_LEVELS } from "../../taste-quiz/quiz-flow.ts"
 import { scoreLabels } from "../../../utils/ratings.ts"
 import {
 	brandName,
 	getShorterProviderLabel,
 } from "../../../utils/streaming-links.ts"
 import type { TvTonightPick } from "./tv-home.ts"
-import { RATE_SCORES } from "./tv-machine.ts"
+// The machine's own pattern. This import also keeps the module with the TV: a small module that several chunks
+// share and whose imports are all on every page is moved into every page's shell (vite.config.js, rule 3).
+import { TITLE_KEY } from "./tv-machine.ts"
 
 /** What a list on the page knew of a title, before its card is there: at least what names it. */
 export type TvKnownTitle = Pick<TitleCard, "media_type" | "tmdb_id" | "title"> &
@@ -51,7 +52,7 @@ export type TvTitleScreens = {
 export function parseTvTitleKey(
 	key: string,
 ): { mediaType: MediaType; tmdbId: number } | null {
-	const [, mediaType, tmdbId] = /^(movie|show)-([1-9]\d*)$/.exec(key) ?? []
+	const [, mediaType, tmdbId] = TITLE_KEY.exec(key) ?? []
 	return mediaType
 		? { mediaType: mediaType as MediaType, tmdbId: Number(tmdbId) }
 		: null
@@ -159,17 +160,6 @@ export function recordsWatch(press: {
 /** What the TV says once a score is stored. */
 export const ratedToast = (score: number) =>
 	`Rated ${score} · ${scoreLabels[score]}`
-
-/**
- * The answers of "How was it?" after Seen it, in the machine's order.
- * WAITING FOR A PROTOTYPE: a strip from low on the left to high on the right, with labels and the ten exact
- * scores, takes the place of these four (screens/Rate.tsx draws them; `answerItems` in tv-machine.ts names them).
- */
-export const RATE_ANSWERS: readonly { item: string; label: string }[] =
-	RATE_SCORES.map((score) => ({
-		item: `level:${score}`,
-		label: RATING_LEVELS.find((level) => level.score === score)?.name ?? "",
-	}))
 
 /** What Tonight says over a pick: where the picks come from, and which one this is. */
 export function tonightWords(

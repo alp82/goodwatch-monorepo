@@ -10,6 +10,11 @@
 //
 // PARTS=pool,walk,same,sizes,html runs some of the checks.
 //
+// On a machine with room for one dev server at a time: SIDE=guest with the reading server alone, then SIDE=member
+// with the harness's alone. Each runs the checks of its half; checks.json and the screenshots are a whole run's.
+// The guest's half keeps Discover's results for the eighteen options, which the member's half hands to the
+// harness's page, in a file (STOCK=, by default in the system's temporary folder).
+//
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
 // commands). PROTOTYPE= is the folder of the prototype's notes (docs/prototypes/tv-screen-design on
@@ -18,6 +23,7 @@
 // Nothing here signs in or writes to a server: a guest's country, services and ratings are put into the browser's
 // own storage, and requests that would leave the machine are stopped in the browser.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -27,6 +33,10 @@ const GUEST = `${ORIGIN}/home-preview`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3262"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
+const SIDE = process.env.SIDE ?? "both"
+const guestSide = SIDE !== "member"
+const memberSide = SIDE !== "guest"
+const STOCK = process.env.STOCK ?? join(tmpdir(), "tv-drive-discover-stock.json")
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
 const DESKTOP = [1920, 1080]
@@ -228,6 +238,23 @@ const json = (body) => ({ method: "POST", headers: { "Content-Type": "applicatio
 /** Discover's own results for a filter bar query and a guest, as the Discover page asks for them. */
 const results = async (query, guest = guestOf()) => (await fetch(`${ORIGIN}/api/discover/results?${query}&page=1`, json({ guest }))).json()
 
+/**
+ * The reading server's results for a visitor nobody knows anything about, by the query the harness's page asks
+ * with. The member's half alone has no reading server: it answers from what the guest's half kept.
+ */
+const keptResults = guestSide ? null : JSON.parse(readFileSync(STOCK, "utf8"))
+async function realResults(search) {
+	if (keptResults) return keptResults[search] ?? { status: 503, body: JSON.stringify({ error: `Not kept: ${search}` }) }
+	const response = await fetch(`${ORIGIN}/api/discover/results${search}`)
+	return { status: response.status, body: await response.text() }
+}
+/** Keeps the results of each of the eighteen options for the member's half. */
+async function keepResults() {
+	const kept = {}
+	for (const one of TABS) for (const key of one.keys) kept[`?${one.param}=${key}&page=1`] = await realResults(`?${one.param}=${key}&page=1`)
+	writeFileSync(STOCK, JSON.stringify(kept))
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // The pool's pictures for the tiles, asked directly.
 
@@ -281,8 +308,8 @@ async function walk(who, url, size) {
 			? (p) =>
 					p.route("**/api/discover/results*", async (route) => {
 						const { search } = new URL(route.request().url())
-						const response = await fetch(`${ORIGIN}/api/discover/results${search}`)
-						return route.fulfill({ status: response.status, contentType: "application/json", body: await response.text() })
+						const response = await realResults(search)
+						return route.fulfill({ status: response.status, contentType: "application/json", body: response.body })
 					})
 			: undefined,
 	})
@@ -1064,7 +1091,8 @@ async function shots() {
 // A dev server's first page load after a start reloads itself once Vite has optimized its dependencies, which
 // would cut a walk short: load each page once before the real run, through Discover, a list, a title and the
 // Discover page.
-for (const url of [GUEST, MEMBER]) {
+if (SIDE === "guest") await keepResults()
+for (const url of [...(guestSide ? [GUEST] : []), ...(memberSide ? [MEMBER] : [])]) {
 	where = "warming the dev server"
 	const { ctx, page } = await open(url, DESKTOP)
 	await page.keyboard.press("ArrowRight")
@@ -1077,7 +1105,7 @@ for (const url of [GUEST, MEMBER]) {
 	await page.waitForTimeout(5000)
 	await ctx.close()
 }
-{
+if (guestSide) {
 	const { ctx } = await open(`${ORIGIN}/discover?themes=crime`, DESKTOP, { room: false })
 	await ctx.close()
 }
@@ -1088,18 +1116,20 @@ if (only !== "shots") {
 	// PARTS=pool,walk,same,sizes,html runs some of the checks; checks.json is written by a whole run only.
 	const parts = process.env.PARTS?.split(",")
 	const part = (name) => !parts || parts.includes(name)
-	if (part("pool")) await pool()
+	if (guestSide && part("pool")) await pool()
 	if (part("walk")) {
-		for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
-		for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
+		if (guestSide) for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
+		if (memberSide) for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
 	}
-	if (part("same")) await sameAsDiscover()
-	if (part("sizes")) await sizes()
-	if (part("html")) await html()
-	if (!parts) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	if (guestSide) {
+		if (part("same")) await sameAsDiscover()
+		if (part("sizes")) await sizes()
+		if (part("html")) await html()
+	}
+	if (!parts && SIDE === "both") writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
 	else console.log(JSON.stringify(numbers, null, 1))
 }
-if (only !== "checks") await shots()
+if (only !== "checks" && SIDE === "both") await shots()
 await browser.close()
 console.log(`${passed} checks passed, ${failed.length} failed`)
 for (const line of failed) console.log(" -", line)

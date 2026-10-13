@@ -237,5 +237,8 @@ sizes as `scripts/precompress.mjs` writes them, raw / gzip / Brotli. "Slice 5" i
 - `shots/`: each screen by itself.
 
 The prototype's shots show the Expand key at the bottom right, which is slice 11's, and for the rating the strip
-that is still being designed; the rating here is the plain version behind the seam. On the phone the prototype's
+that is still being designed; the rating here is the plain version behind the seam. Since [slice 8](../taste/README.md)
+the rating is that strip: `drive.mjs` here follows it (the levels from low to high, the focus on Good, the exact
+scores on the desktop), and the sheets and `checks.json` of this folder are as they were taken, with the plain
+answers. On the phone the prototype's
 keys are 52 canvas px tall in a column; here they are touch targets, two to a row.

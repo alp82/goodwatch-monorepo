@@ -1,0 +1,162 @@
+{
+	"passed": 601,
+	"failed": [],
+	"numbers": {
+		"the map": {
+			"a guest nobody knows": {
+				"bytes": 50373,
+				"gzip": 11744,
+				"brotli": 10029,
+				"islands": 12,
+				"titlesPerIsland": "12 to 12"
+			},
+			"a person with a taste and two services": {
+				"bytes": 71846,
+				"gzip": 17278,
+				"brotli": 14222,
+				"islands": 12,
+				"titlesPerIsland": "15 to 22"
+			},
+			"warmMs": [
+				1278,
+				283,
+				292
+			]
+		},
+		"guest 1920x1080 islands": "Dark 1943, Sad 2025, Cozy 1908, Scary 1329, Thrilling 2228, Funny 2616",
+		"guest 390x844 islands": "Dark 1943, Sad 2025, Cozy 1908, Scary 1329, Thrilling 2228, Funny 2616",
+		"member 1920x1080 islands": "Sad 619, Thrilling 841, Romantic 502, Dark 666, Funny 791, Cozy 565",
+		"member 390x844 islands": "Sad 619, Thrilling 841, Romantic 502, Dark 666, Funny 791, Cozy 565",
+		"guest with a taste 1920x1080 islands": "Sad 619, Thrilling 841, Romantic 502, Dark 666, Funny 791, Cozy 565",
+		"guest with a taste 390x844 islands": "Sad 619, Thrilling 841, Romantic 502, Dark 666, Funny 791, Cozy 565",
+		"sizes 360x740": {
+			"canvasShownAt": 0.664,
+			"map": {
+				"smallestKey": 44.5,
+				"island": "98 x 72",
+				"islandName": 16.6,
+				"smallestType": 13.3
+			},
+			"island": {
+				"smallestKey": 44.5,
+				"poster": "69 x 104",
+				"smallestType": 13.3
+			}
+		},
+		"sizes 375x667": {
+			"canvasShownAt": 0.694,
+			"map": {
+				"smallestKey": 44.4,
+				"island": "102 x 63",
+				"islandName": 17.3,
+				"smallestType": 13.9
+			},
+			"island": {
+				"smallestKey": 44.4,
+				"poster": "55 x 83",
+				"smallestType": 13.9
+			}
+		},
+		"sizes 390x700": {
+			"canvasShownAt": 0.724,
+			"map": {
+				"smallestKey": 44.2,
+				"island": "106 x 77",
+				"islandName": 18.1,
+				"smallestType": 14.5
+			},
+			"island": {
+				"smallestKey": 44.2,
+				"poster": "73 x 110",
+				"smallestType": 14.5
+			}
+		},
+		"sizes 390x844": {
+			"canvasShownAt": 0.724,
+			"map": {
+				"smallestKey": 44.2,
+				"island": "106 x 78",
+				"islandName": 18.1,
+				"smallestType": 14.5
+			},
+			"island": {
+				"smallestKey": 44.2,
+				"poster": "75 x 113",
+				"smallestType": 14.5
+			}
+		},
+		"sizes 430x932": {
+			"canvasShownAt": 0.804,
+			"map": {
+				"smallestKey": 44.2,
+				"island": "118 x 87",
+				"islandName": 20.1,
+				"smallestType": 16.1
+			},
+			"island": {
+				"smallestKey": 44.2,
+				"poster": "84 x 125",
+				"smallestType": 16.1
+			}
+		},
+		"sizes 844x390": {
+			"canvasShownAt": 0.976,
+			"map": {
+				"smallestKey": 52.7,
+				"island": "143 x 95",
+				"islandName": 24.4,
+				"smallestType": 19.5
+			},
+			"island": {
+				"smallestKey": 52.7,
+				"poster": "85 x 127",
+				"smallestType": 19.5
+			}
+		},
+		"sizes 1920x1080": {
+			"canvasShownAt": 1.059,
+			"map": {
+				"smallestKey": 67.8,
+				"island": "254 x 140",
+				"islandName": 40.3,
+				"smallestType": 25.4
+			},
+			"island": {
+				"smallestKey": 67.8,
+				"poster": "182 x 273",
+				"smallestType": 25.4
+			}
+		},
+		"sizes 1366x650": {
+			"canvasShownAt": 0.832,
+			"map": {
+				"smallestKey": 53.2,
+				"island": "200 x 110",
+				"islandName": 31.6,
+				"smallestType": 20
+			},
+			"island": {
+				"smallestKey": 53.2,
+				"poster": "143 x 215",
+				"smallestType": 20
+			}
+		},
+		"sizes 1280x720": {
+			"canvasShownAt": 0.791,
+			"map": {
+				"smallestKey": 50.6,
+				"island": "190 x 104",
+				"islandName": 30.1,
+				"smallestType": 19
+			},
+			"island": {
+				"smallestKey": 50.6,
+				"poster": "136 x 204",
+				"smallestType": 19
+			}
+		},
+		"html /home-preview?tv=explorer": 50835,
+		"html /home-preview?tv=explorer&island=funny": 50835,
+		"html /home-preview": 59743
+	}
+}

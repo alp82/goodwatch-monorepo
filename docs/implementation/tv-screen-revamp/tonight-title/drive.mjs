@@ -11,6 +11,9 @@
 // A whole run takes a quarter of an hour on two dev servers. PARTS=walk,watch,sizes,order,html runs some of the
 // checks.
 //
+// On a machine with room for one dev server at a time: SIDE=guest with the reading server alone, then SIDE=member
+// with the harness's alone. Each runs the checks of its half; checks.json and the screenshots are a whole run's.
+//
 // The repo has no browser driver: install playwright-core outside it. GUEST is a dev server of goodwatch-webapp
 // that reads real data; MEMBER is one without any service, for the harness (see README.md here for both
 // commands). PROTOTYPE= is the folder of the prototype's notes (docs/prototypes/tv-screen-design on
@@ -28,6 +31,9 @@ const GUEST = `${ORIGIN}/home-preview`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3192"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
+const SIDE = process.env.SIDE ?? "both"
+const guestSide = SIDE !== "member"
+const memberSide = SIDE !== "guest"
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
 const DESKTOP = [1920, 1080]
@@ -35,7 +41,11 @@ const PHONE = [390, 844]
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 const TONIGHT = ["details", "another", ...BAR]
 const TITLE = ["watch", "want-to-see", "seen", ...BAR]
-const RATE = ["level:9", "level:7", "level:5", "level:3", ...BAR]
+// The rating is the rating strip since slice 8 (../taste): its four levels from low to high, and on the desktop the
+// ten exact scores under them. The focus starts on Good.
+const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
+const SCORES = Array.from({ length: 10 }, (_, at) => `score:${at + 1}`)
+const rateItems = (phone) => [...LEVELS, ...(phone ? [] : SCORES), ...BAR]
 /** The title the Watch key is followed on: it streams in the United States, and its page is cached. */
 const MATRIX = { key: "movie-603", catalog: 1_000_000_000_603, name: "The Matrix", path: "/movie/603-the-matrix" }
 const THRONES = 2_000_000_001_399
@@ -276,6 +286,7 @@ async function endpoint() {
 async function walk(who, url, size) {
 	const member = who === "member"
 	const phone = size[0] < 768
+	const RATE = rateItems(phone)
 	const at = (tv) => (member ? `?member=six${tv ? `&${tv}` : ""}` : tv ? `?${tv}` : "")
 	const home = at("")
 	// The keys along a row on the desktop stand in a column on the phone.
@@ -425,22 +436,22 @@ async function walk(who, url, size) {
 	// ---- Seen it asks how it was; the answer is stored and returns to the title.
 	s = await key(page, toSeen, "seen")
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "Seen it opens the rating")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "Seen it opens the rating, with the focus on Good")
 	is(s.history, history + 3, "the rating is one more history entry")
 	check(s.heading === `How was ${title.title}?`, `it asks how the title was: ${s.heading}`)
-	is([s.labels["level:9"], s.labels["level:7"], s.labels["level:5"], s.labels["level:3"]], ["Excellent", "Good", "Mediocre", "Bad"], "the four answers of the plain version")
+	is(LEVELS.map((id) => s.labels[id].replace(/\d.*$/, "")), ["Bad", "Mediocre", "Good", "Excellent"], "the strip's four levels, low to high")
 	is(s.expandPlace, null, "the rating has no Expand key")
-	s = await key(page, "ArrowRight", "level:7")
+	s = await key(page, "ArrowRight", "level:9")
 	await page.keyboard.press("ArrowUp")
-	s = await until(page, (x) => x.focus[0]?.startsWith("bar:"), "Up from the answers reaches the bar")
+	s = await until(page, (x) => x.focus[0]?.startsWith("bar:"), "Up from the levels reaches the bar")
 	await page.keyboard.press("ArrowDown")
-	s = await until(page, (x) => x.focus[0]?.startsWith("level:"), "Down from the bar returns to the answers")
-	// Back to the first answer: along the row on the desktop; on the phone the answers are two by two.
-	for (const press of phone ? ["ArrowLeft", "ArrowUp"] : ["ArrowLeft", "ArrowLeft", "ArrowLeft"]) {
-		if ((await read(page)).focus[0] === "level:9") break
-		await page.keyboard.press(press)
+	s = await until(page, (x) => x.focus[0]?.startsWith("level:"), "Down from the bar returns to the levels")
+	// Along the row to its left end, then to Good.
+	for (let n = 0; n < 3; n++) {
+		await page.keyboard.press("ArrowLeft")
 		await page.waitForTimeout(150)
 	}
+	s = await key(page, "ArrowRight", "level:5")
 	s = await key(page, "ArrowRight", "level:7")
 	await page.keyboard.press("Enter")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "7 · Good", "an answer stores the score and returns to the title, whose key now says it")
@@ -450,13 +461,14 @@ async function walk(who, url, size) {
 	is(writes().length, 0, "nothing was sent to the server: without a session the marks are the browser's")
 	// Rating again changes the score.
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "Seen it again opens the rating")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "Seen it again opens the rating")
+	s = await key(page, "ArrowRight", "level:9")
 	await page.keyboard.press("Enter")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "9 · Excellent", "another answer changes the score")
 	is(await marksOf(), [mark("score", 9)], "and the browser's progress holds the one score")
 	// Back from the rating without an answer changes nothing.
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "the rating once more")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "the rating once more")
 	await page.keyboard.press("Escape")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "9 · Excellent", "Back from the rating returns to the title with nothing changed")
 
@@ -504,7 +516,7 @@ async function walk(who, url, size) {
 	s = await until(page, (x) => x.search.includes("tv=title&title=") && focusIs("watch")(x) && same(x.items, TITLE), `${phone ? "a tap" : "a click"} on Details opens the title`)
 	const pointed = s.search
 	await point(page, "seen", phone)
-	s = await until(page, (x) => x.search === pointed.replace("tv=title", "tv=rate") && focusIs("level:9")(x) && same(x.items, RATE), `${phone ? "a tap" : "a click"} on Seen it opens the rating`)
+	s = await until(page, (x) => x.search === pointed.replace("tv=title", "tv=rate") && focusIs("level:7")(x) && same(x.items, RATE), `${phone ? "a tap" : "a click"} on Seen it opens the rating`)
 	await point(page, "level:5", phone)
 	s = await until(page, (x) => x.search === pointed && x.labels.seen === "5 · Mediocre", `${phone ? "a tap" : "a click"} on an answer stores it`)
 	await point(page, "bar:back", phone)
@@ -629,7 +641,7 @@ async function sizes() {
 		fits(await layout(page), "a title with its toast", { touch, toast: true })
 		await key(page, touch ? "ArrowDown" : "ArrowRight", "seen")
 		await page.keyboard.press("Enter")
-		await until(page, (x) => same(x.items, RATE) && focusIs("level:9")(x), "the rating")
+		await until(page, (x) => same(x.items, rateItems(touch)) && focusIs("level:7")(x), "the rating")
 		// The toast of the screen before is still up: it covers no answer either.
 		smallest.rate = fits(await layout(page), "the rating", { touch }).key
 		await page.keyboard.press("ArrowDown")
@@ -1049,10 +1061,9 @@ async function shots(own, pool) {
 			await shot(page, `title-wishlist-${who}-${device}`)
 			await page.keyboard.press(phone ? "ArrowDown" : "ArrowRight")
 			await page.keyboard.press("Enter")
-			await until(page, (x) => x.search.includes("tv=rate") && focusIs("level:9")(x), "the rating")
+			await until(page, (x) => x.search.includes("tv=rate") && focusIs("level:7")(x), "the rating")
 			await page.waitForTimeout(2600)
 			await shot(page, `rate-${who}-${device}`)
-			await page.keyboard.press("ArrowRight")
 			await page.keyboard.press("Enter")
 			await until(page, (x) => x.search.includes("tv=title") && x.labels.seen === "7 · Good", "rated")
 			await shot(page, `title-rated-${who}-${device}`)
@@ -1180,7 +1191,7 @@ async function shots(own, pool) {
 
 // A dev server's first page load after a start reloads itself once Vite has optimized its dependencies, which
 // would cut a walk short: load each page once before the real run, through every screen and the title page.
-for (const url of [GUEST, MEMBER]) {
+for (const url of [...(guestSide ? [GUEST] : []), ...(memberSide ? [MEMBER] : [])]) {
 	where = "warming the dev server"
 	const { ctx, page } = await open(url, DESKTOP)
 	await page.keyboard.press("Enter")
@@ -1193,33 +1204,35 @@ for (const url of [GUEST, MEMBER]) {
 	await page.waitForTimeout(4000)
 	await ctx.close()
 }
-{
+if (guestSide) {
 	const { ctx } = await open(`${ORIGIN}${MATRIX.path}`, DESKTOP, { room: false })
 	await ctx.close()
 }
 passed = 0
 failed.length = 0
 
-const { own, pool } = await endpoint()
+const { own, pool } = guestSide ? await endpoint() : {}
 if (only !== "shots") {
 	// PARTS=walk,watch,sizes,order,html runs some of the checks; checks.json is written by a whole run only.
 	const parts = process.env.PARTS?.split(",")
 	const part = (name) => !parts || parts.includes(name)
 	if (part("walk")) {
-		for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
-		for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
+		if (guestSide) for (const size of [DESKTOP, PHONE]) await walk("guest", GUEST, size)
+		if (memberSide) for (const size of [DESKTOP, PHONE]) await walk("member", MEMBER, size)
 	}
-	if (part("watch")) {
-		for (const size of [DESKTOP, PHONE]) await watch(size, own)
-		await watchEdges(own, pool)
+	if (guestSide) {
+		if (part("watch")) {
+			for (const size of [DESKTOP, PHONE]) await watch(size, own)
+			await watchEdges(own, pool)
+		}
+		if (part("sizes")) await sizes()
+		if (part("order")) await order(pool)
+		if (part("html")) await html()
 	}
-	if (part("sizes")) await sizes()
-	if (part("order")) await order(pool)
-	if (part("html")) await html()
-	if (!parts) writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
+	if (!parts && SIDE === "both") writeFileSync(join(here, "checks.json"), `${JSON.stringify({ passed, failed, numbers }, null, "\t")}\n`)
 	else console.log(JSON.stringify(numbers, null, 1))
 }
-if (only !== "checks") await shots(own, pool)
+if (only !== "checks" && SIDE === "both") await shots(own, pool)
 await browser.close()
 console.log(`${passed} checks passed, ${failed.length} failed`)
 for (const line of failed) console.log(" -", line)

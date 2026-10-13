@@ -19,13 +19,17 @@ import type { TvCanvas } from "./room-tv"
 import {
 	AboutCode,
 	DiscoverCode,
+	ExplorerCode,
 	MenuCode,
+	QuizCode,
 	RateCode,
 	ShowsCode,
+	TasteCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
+import type { TvExplorerView } from "./tv-explorer"
 import type { TvAppTile, TvHomeData } from "./tv-home"
 import {
 	type TvContext,
@@ -34,6 +38,7 @@ import {
 	tvItems,
 	writeTvParams,
 } from "./tv-machine"
+import type { TvTasteScreens } from "./tv-taste"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
@@ -44,12 +49,17 @@ import type { TvShowsReport } from "./use-tv-shows"
 export {
 	DiscoverCode,
 	DiscoverData,
+	QuizCode,
 	RateCode,
+	TasteCode,
+	TasteData,
 	TitleCode,
 	TitleData,
 	TonightCode,
 	loadFirstScreens,
 } from "./screen-code"
+// The mini Explorer (slice 7).
+export { ExplorerData } from "./screen-code"
 // My shows (slice 9).
 export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 
@@ -80,6 +90,10 @@ export type TvScreenProps = {
 	titles?: TvTitleScreens
 	/** Mini Discover: a picture per option, and the titles of the choice on screen. */
 	discover?: TvDiscoverScreens
+	/** The mini Explorer's map and island (slice 7). Null until its data component has reported. */
+	explorer?: TvExplorerView | null
+	/** The person's taste and the quiz, on Taste, a side's screen and the quiz. */
+	taste?: TvTasteScreens
 	/** My shows: the member's shows, and what is new for them. */
 	shows?: TvShowsScreens
 }
@@ -109,6 +123,8 @@ export function TvScreen({
 	toast,
 	titles,
 	discover,
+	explorer,
+	taste,
 	shows,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
@@ -163,6 +179,8 @@ export function TvScreen({
 								apps={apps}
 								titles={titles}
 								discover={discover}
+								explorer={explorer}
+								taste={taste}
 								shows={shows}
 							/>
 						</Layer>
@@ -215,6 +233,8 @@ function ScreenOf({
 	apps,
 	titles,
 	discover,
+	explorer,
+	taste,
 	shows,
 }: {
 	screen: Screen
@@ -222,6 +242,8 @@ function ScreenOf({
 	apps: readonly TvAppTile[]
 	titles?: TvTitleScreens
 	discover?: TvDiscoverScreens
+	explorer?: TvExplorerView | null
+	taste?: TvTasteScreens
 	shows?: TvShowsScreens
 }): ReactNode {
 	const first = <Bare items={items} />
@@ -256,6 +278,27 @@ function ScreenOf({
 					first={first}
 				/>
 			)
+		// The mini Explorer (slice 7): the map without an island, an island's titles with one.
+		case "explorer":
+			return explorer ? (
+				<ExplorerCode.Screen items={items} view={explorer} first={first} />
+			) : (
+				first
+			)
+		// Slice 8: Taste, a side's screen and the quiz, once their data is there.
+		case "taste":
+			if (!taste) return first
+			return (
+				<TasteCode.Screen
+					items={items}
+					taste={taste.taste}
+					side={screen.side}
+					first={first}
+				/>
+			)
+		case "quiz":
+			if (!taste) return first
+			return <QuizCode.Screen items={items} quiz={taste.quiz} first={first} />
 		// My shows (slice 9).
 		case "shows":
 			return (
@@ -266,7 +309,7 @@ function ScreenOf({
 					first={first}
 				/>
 			)
-		// SEAM (slices 7 to 10): Explorer, Taste and the quiz, My shows and search each take their entry here.
+		// SEAM (slice 10): search takes its entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}
