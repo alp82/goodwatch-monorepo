@@ -1,7 +1,7 @@
 # Explorer, one world (round 10)
 
-Throwaway prototype. Built on branch `prototype/explorer-world`, and on `main` since 2026-10-13 at the owner's request, as a
-development-only route like the earlier rounds (a production build leaves `prototype.rec-*` routes out).
+Throwaway prototype, on branch `prototype/explorer-world`. Not on `main` (a push there was started on 2026-10-13 and
+stopped by the owner; the branch holds a merge of `main` from that day).
 
 ## The question
 
@@ -89,6 +89,18 @@ buttons (in `inline` on the button that opens the panel, then on the one inside)
 
 Known: in `chips` the names scroll sideways on a phone from the second island on.
 
+Seventh round (owner, 2026-10-13): the selection is `inline`, reworked. No variants are left on the route.
+
+- **In the top bar** (on phones in a row of its own under it): a button with the islands' colors and the count, the
+  two views as a switch that is always there ("Combined", "Show all"), and Separate.
+- **Opened, one row per island:** its first three posters framed in its color, its name and group, how many titles it
+  holds, and what it does to the combination: "narrows 31 to 15" (the others hold 31 titles, with it 15 are left),
+  with a bar for how much it keeps. A cross lets the island go. The sentence is gone from here; the map's own label
+  and the count say what the combination holds.
+- The counts without each island are one more read (`op=parts`).
+
+Screenshot: `selection-rows.png` (desktop with two and five islands, then the same on a phone).
+
 ## Run it
 
 ```sh
@@ -97,8 +109,7 @@ REDIS_COMMAND_TIMEOUT_MS=60000 REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NE
   REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on npx remix vite:dev --port 3110
 ```
 
-Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bottom switches the top bar's variants
-(`?variant=`).
+Then open `http://localhost:3110/prototype/rec-explorer-10`.
 `?mix=mood:dark,decade:1980s,country:jp` holds the picked islands, so a link opens a combination.
 
 - All eight `REC_*` flags are on, so the page around the map is the current design.

@@ -78,7 +78,7 @@ interface Shares10 {
 
 /** The prototype's reads: members GET, guests POST the progress their browser holds, as the real Explorer does. */
 async function ask<T>(
-	op: "world" | "mix" | "shares",
+	op: "world" | "mix" | "shares" | "parts",
 	filters: Filters,
 	of: readonly string[] | null,
 	member: boolean,
