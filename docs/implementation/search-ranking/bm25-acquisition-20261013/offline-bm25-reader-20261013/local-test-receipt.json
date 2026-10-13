@@ -1,0 +1,30 @@
+{
+  "schema": "offline-bm25-reader-local-tests.v1",
+  "argv": [
+    "node",
+    "--test",
+    "test-reader.mjs",
+    "test-driver.mjs"
+  ],
+  "exitCode": 0,
+  "pass": 14,
+  "fail": 0,
+  "durationMs": 1709.892463,
+  "loopbackOnly": true,
+  "hostExecution": false,
+  "productionRequests": 0,
+  "modelCalls": 0,
+  "originalPlanArithmeticFailurePreservedInToolTranscript": true,
+  "transientGlobalTimerCategoryFixed": true,
+  "testHarnessEpipeHandledOnExpectedPreinputRefusal": true,
+  "sourceReaderSha256": "c42fad2c9d2cc9c7a2b707d261bdc1a54c8ef9b0ce72b2663a6c4fc165ae5774",
+  "driverSha256": "81edd90eb4f51344269a1070a5f17fc7c2bcd3b4c14b50973b6a82999a3f8cad",
+  "stdout": {
+    "sha256": "95f9931e5f77e80be2a12a42550e99b69bd747f86f232206bd061560f635d0b8",
+    "bytes": 1534
+  },
+  "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

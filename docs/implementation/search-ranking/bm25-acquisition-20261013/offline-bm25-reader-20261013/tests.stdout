@@ -1,0 +1,22 @@
+✔ actual DataURL eval driver authenticates bytes before import and rejects input before requests (185.9617ms)
+✔ real eval driver loopback complete42934 rows88 requests CLI0 EOF and reader SHA, no source file on target (1191.037585ms)
+✔ exact immutable42934 ID plan; tamper, bounds and configured endpoint refuse (22.46812ms)
+✔ short Rust f32 decimals preserved and explicitly reconstructed; empty valid (1.82436ms)
+✔ malformed numeric/boolean/underflow/nonfinite/negative and sparse IDs invalid, never zero-valid (0.680701ms)
+✔ batch exact alignment, missing/null/omitted classifications and unexpected/duplicate points (1.144485ms)
+✔ collection schema and IDF modifier refuse; only explicit public projection emitted (0.574929ms)
+✔ real loopback all86 serial fixed requests and bounded output, authentic plan terminal/EOF (1288.565267ms)
+✔ redirect/error/truncated EOF/invalid JSON never follows or completes (10.252029ms)
+✔ response and aggregate response byte caps reject full HTTP bodies (4.112329ms)
+✔ dripping body receives no fresh inactivity lease; global remaining clamps request (131.798668ms)
+✔ output cap separate from responses; real backpressure drains before next frame (61.187734ms)
+✔ partial acquisition has no terminal when collection changes or bounds expire (5.294602ms)
+✔ true-return async Writable failure is sanitized before completion, not unhandled (32.286174ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1709.892463

@@ -1,0 +1,45 @@
+{
+  "schema": "independent-root-bm25-stream-validation.v1",
+  "valid": true,
+  "frames": 42938,
+  "rows": 42934,
+  "counts": {
+    "valid": 42933,
+    "missing": 1,
+    "invalid": 0,
+    "empty": 0
+  },
+  "entries": 9136549,
+  "missing": [
+    {
+      "row": 31585,
+      "id": 1000000970689,
+      "presence": "point-missing"
+    }
+  ],
+  "unknownTermOccurrences": 1645,
+  "rowsWithUnknownTerms": 127,
+  "unknownTermIdSample": [
+    301342,
+    335645,
+    1093078,
+    1178967,
+    1205528,
+    1952382,
+    1959539,
+    2127509,
+    2127541,
+    2127544,
+    2127567,
+    2127590,
+    2127593,
+    2127622,
+    2127638,
+    2127645
+  ],
+  "binary32Checks": 9136549,
+  "physicalBytes": 329073034,
+  "physicalSha256": "d89f291b931209bfd73fce7684164a98687b2d1b1c546c69b237157b29f9d9ed",
+  "historicalSnapshotEqualityProven": false,
+  "productionLatencyMeasured": false
+}

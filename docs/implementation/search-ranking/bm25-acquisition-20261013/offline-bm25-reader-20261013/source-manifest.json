@@ -1,0 +1,49 @@
+{
+  "schema": "offline-bm25-reader-preparation-freeze.v1",
+  "preparedOnly": true,
+  "hostExecuted": false,
+  "files": {
+    "reader.mjs": {
+      "sha256": "c42fad2c9d2cc9c7a2b707d261bdc1a54c8ef9b0ce72b2663a6c4fc165ae5774",
+      "bytes": 11359
+    },
+    "test-reader.mjs": {
+      "sha256": "04ef96c7499ffc59128ed175bc338b2e38a64e342a82d15b2061e64b044f4415",
+      "bytes": 9587
+    },
+    "eval-driver.mjs": {
+      "sha256": "81edd90eb4f51344269a1070a5f17fc7c2bcd3b4c14b50973b6a82999a3f8cad",
+      "bytes": 15841
+    },
+    "build-driver.mjs": {
+      "sha256": "dd26443cff0dc36e1da72e1e527964bc108e714040b53d50929fc76941293f69",
+      "bytes": 1013
+    },
+    "test-driver.mjs": {
+      "sha256": "bd913536715ece41d315e26cf356351d4a86497e241250388c468d98f64d022b",
+      "bytes": 2820
+    },
+    "PLAN-v2.json": {
+      "sha256": "a7264d2519d7a68275c4600fc57c48eda93896c389cf6432efb6c087cefc3600",
+      "bytes": 602788
+    },
+    "README.md": {
+      "sha256": "2ac78deea326dd0a141c2bb6b797663f6f539bad983742252304a43101426078",
+      "bytes": 5962
+    },
+    "tests.stdout": {
+      "sha256": "95f9931e5f77e80be2a12a42550e99b69bd747f86f232206bd061560f635d0b8",
+      "bytes": 1534
+    },
+    "tests.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "local-test-receipt.json": {
+      "sha256": "a6d7c1c1f68e6033e82e54bcf64eb86082c44f401a6edf37d0e984882ff0d1fa",
+      "bytes": 894
+    }
+  },
+  "previousPlanSha256": "c0137fee82bb890c3edcfe33b02bff4accdd82fc9477ab49d9d6564ad9db1453",
+  "deployedSourceBindingsSha256": "3baa5ee319f37e701768a6661a0c5199b66e3eb2a0e2f467a0b0feac394d3192"
+}
