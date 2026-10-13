@@ -437,7 +437,7 @@ if (!only || only === "expand") {
 	rmSync(tmp, { recursive: true, force: true })
 }
 if (!only || only === "touch") {
-	// A finger pointing at the picture on a phone (390 x 844): a tap, and a long press that is dragged. The grey
+	// A finger pointing at the picture on a phone (390 x 844): a tap, and a press that is held and then dragged. The grey
 	// disc is the finger; this script draws it, the prototype does not.
 	const dir = join(here, "touch")
 	const tmp = join(dir, "tmp")
@@ -485,8 +485,8 @@ if (!only || only === "touch") {
 	tap.push(await snap("t3.jpg"))
 	strip(tap, join(dir, "tap-strip.jpg"))
 
-	// The long press: down under Funny, held until the ring comes out above the finger, dragged across the moods
-	// to Dark, let go there.
+	// The long press: down on Funny and held still (the ring stays under the finger), then dragged: the ring steps
+	// out above the finger, goes across the moods to Thrilling and on to Dark, and the finger lets go there.
 	await go(page, ["", "discover"])
 	;[x, y] = await mid("mood-funny")
 	const [x2, y2] = await mid("mood-dark")
@@ -495,9 +495,9 @@ if (!only || only === "touch") {
 	const LIFT = 46
 	await record(page, tmp, async () => {
 		await page.waitForTimeout(400)
-		await touch("touchStart", x, y + LIFT)
-		await page.waitForTimeout(800)
-		await drag(x, y + LIFT, x3, y3 + LIFT)
+		await touch("touchStart", x, y)
+		await page.waitForTimeout(900)
+		await drag(x, y, x3, y3 + LIFT)
 		await page.waitForTimeout(500)
 		await drag(x3, y3 + LIFT, x2, y2 + LIFT)
 		await page.waitForTimeout(600)
@@ -505,12 +505,12 @@ if (!only || only === "touch") {
 		await page.waitForTimeout(1500)
 	})
 	clip(join(dir, "hold.mp4"))
-	// The strip: held, dragged to Thrilling, on to Dark, let go.
+	// The strip: held still on Funny, dragged to Thrilling, on to Dark, let go.
 	await go(page, ["", "discover"])
-	await touch("touchStart", x, y + LIFT)
-	await page.waitForTimeout(800)
+	await touch("touchStart", x, y)
+	await page.waitForTimeout(900)
 	const hold = [await snap("h0.jpg")]
-	await drag(x, y + LIFT, x3, y3 + LIFT)
+	await drag(x, y, x3, y3 + LIFT)
 	await page.waitForTimeout(500)
 	hold.push(await snap("h1.jpg"))
 	await drag(x3, y3 + LIFT, x2, y2 + LIFT)

@@ -379,8 +379,9 @@ const phone = async (width, height, form, design = "cinema") => {
 }
 /**
  * A finger on the picture points. A tap: the ring where it landed, the Remote aimed, the item opened, both back at
- * rest. A long press, dragged: the ring above the finger and following it, the items it passes focused, the one
- * it is over opened on release, and nothing on a release over none. No scroll, no selection, no menu.
+ * rest. A press held still: the ring stays under the finger and the pressed item opens on release. A drag: the
+ * ring above the finger and following it, the items it passes focused, the one it is over opened on release,
+ * and nothing on a release over none. No scroll, no selection, no menu.
  */
 const touching = async (t, cdp, form) => {
 	const touch = (type, x, y) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] })
@@ -406,16 +407,26 @@ const touching = async (t, cdp, form) => {
 	await until(t("the tapped app opens"), "home › discover · focus mood-funny")
 	v = await settle((v) => v.shown === "false" && v.rig === "none")
 	check(t("then the ring is gone and the Remote back at rest"), `${v.shown} ${v.rig}`, "false none")
-	// A long press, dragged from one mood to another. The ring stands above the finger.
 	if (!(await phoneState()).startsWith("home › discover")) await page.evaluate(() => window.__tvDesign.push("discover"))
-	;[x, y] = await mid("mood-funny")
 	const [x2, y2] = await mid("mood-dark")
-	await touch("touchStart", x, y + 46)
+	// A press held still for a second, on a tile with another one above it: the ring stays under the finger, and
+	// letting go opens the tile that was pressed.
+	await touch("touchStart", x2, y2); await page.waitForTimeout(1000)
+	v = await look()
+	check(t("a press held still for a second keeps the ring under the finger"), `${v.shown} ${v.hold} ${Math.abs(v.x - x2) < 14 && Math.abs(v.y - y2) < 14}`, "true false true")
+	check(t("and the pressed tile has the focus"), await phoneState(), "home › discover · focus mood-dark")
+	await touch("touchEnd"); await until(t("letting go opens the tile that was pressed, not the one above it"), /^home › discover › discover-dark · focus /)
+	await settle((v) => v.shown === "false" && v.rig === "none")
+	await key("Back").tap(); await until(t("(back to the moods)"), /^home › discover · focus /)
+	// A drag, from under one mood to another. Once the finger has moved more than 10 px the ring steps out above it.
+	;[x, y] = await mid("mood-funny")
+	await touch("touchStart", x, y + 46); await page.waitForTimeout(150)
+	await touch("touchMove", x + 6, y + 46); await touch("touchMove", x + 14, y + 46)
 	v = await settle((v) => v.hold === "true" && Math.abs(v.y - y) < 8)
-	check(t("a long press brings the ring out above the finger"), `${v.shown} ${v.hold} ${Math.abs(v.x - x) < 14 && Math.abs(v.y - y) < 14}`, "true true true")
+	check(t("once the finger drags, the ring steps out above it"), `${v.shown} ${v.hold} ${Math.abs(v.x - x - 14) < 14 && Math.abs(v.y - y) < 14}`, "true true true")
 	await until(t("the item under the ring has the focus"), "home › discover · focus mood-funny")
 	const turned = v.turn
-	for (let i = 1; i <= 8; i++) { await touch("touchMove", x + ((x2 - x) * i) / 8, y + 46 + ((y2 - y) * i) / 8); await page.waitForTimeout(40) }
+	for (let i = 1; i <= 8; i++) { await touch("touchMove", x + 14 + ((x2 - x - 14) * i) / 8, y + 46 + ((y2 - y) * i) / 8); await page.waitForTimeout(40) }
 	await until(t("dragged, the focus goes where the ring goes"), "home › discover · focus mood-dark")
 	v = await settle((v) => Math.abs(v.x - x2) < 16 && Math.abs(v.y - y2) < 16 && Math.abs(v.turn - turned) > 0.4)
 	check(t("the ring follows the finger"), String(Math.abs(v.x - x2) < 16 && Math.abs(v.y - y2) < 16), "true")
@@ -427,14 +438,15 @@ const touching = async (t, cdp, form) => {
 	await touch("touchEnd"); await until(t("letting go opens the mood under the ring"), /^home › discover › discover-dark · focus /)
 	v = await settle((v) => v.shown === "false" && v.rig === "none")
 	check(t("and both return to rest"), `${v.shown} ${v.rig}`, "false none")
-	// A long press let go over nothing.
+	// A drag let go over nothing.
 	const tv = await page.locator("[data-tv-screen]").boundingBox()
 	await touch("touchStart", tv.x + tv.width * 0.5, tv.y + tv.height * 0.3 + 46); await page.waitForTimeout(700)
 	await touch("touchMove", tv.x + tv.width * 0.3, tv.y + 30 + 46); await page.waitForTimeout(400)
 	v = await look()
 	await touch("touchEnd"); await page.waitForTimeout(500)
 	check(t("let go over nothing, nothing opens"), `${v.shown} ${await phoneState()}`.replace(/focus .*$/, "focus"), "true home › discover › discover-dark · focus")
-	// The Remote's own keys are not pointed at.
+	// The Remote's own keys are not pointed at. (First the Remote is let come to rest from the drag before.)
+	await settle((v) => v.shown === "false" && v.rig === "none")
 	await key("Back").tap(); await until(t("a key of the Remote works as before"), /^home › discover · focus /)
 	v = await look()
 	check(t("and does not aim the Remote or show the ring"), `${v.shown} ${v.rig}`, "false none")

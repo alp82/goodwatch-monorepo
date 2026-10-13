@@ -125,13 +125,15 @@ actions on the right.
     motion as for the mouse. The item under the ring takes the focus and OK at once, as before. About 0.6 s later
     the ring fades and the Remote goes back to rest. A tap on nothing shows the ring and aims the Remote, and
     opens nothing.
-  - **A long press** (held half a second, or moved more than 10 px, which makes it one at once) brings the ring out
-    **46 px above the finger**, so the finger does not hide it. While the finger is down the ring follows it,
-    the Remote follows the ring, and every item the ring passes takes the focus. **Letting go is OK on the item
-    the ring is over**; over none, nothing happens and the ring fades. The ring cannot leave the picture, and a
-    finger that leaves it by more than 24 px points at nothing.
-  - **The ring is the truth**: what opens is what the ring is on, not what is under the finger. A press held
-    still for half a second therefore moves the pointer 46 px up, onto what is above the finger.
+  - **A press that is held** keeps pointing exactly under the finger, however long it is held: the ring stays
+    where it landed, the pressed item keeps the focus, and letting go is OK on it. A slow tap therefore opens the
+    tile that was pressed, also in a grid with another tile above it.
+  - **A drag.** Once the finger has moved more than 10 px, the ring steps out **46 px above the finger**, so the
+    finger does not hide it. It eases there over 0.22 s, so the target does not jump at the first pixel of
+    movement. From then on the ring decides: it follows the finger, the Remote follows the ring, every item the
+    ring passes takes the focus, and **letting go is OK on the item the ring is over**; over none, nothing
+    happens and the ring fades. The ring cannot leave the picture, and a finger that leaves it by more than 24 px
+    points at nothing.
   - **How far the phone's Remote moves.** Held in the hand it turns about the grip under its streaming keys by
     65% of the angle to the target, 11 degrees at most, leans back toward the picture by up to 11 degrees
     (further for a point higher up) and slides up to 8 px toward the target's side. Turned, its leading corner
@@ -145,9 +147,10 @@ actions on the right.
     callout and no browser panning (`touch-action: none`), and the page cannot scroll. The browser's own click
     after a touch on the picture is dropped, so nothing opens twice.
   - A clip and a strip of each at 390 x 844 (the grey disc is the finger, drawn by the script):
-    [tap](touch/tap.mp4) ![tap](touch/tap-strip.jpg) [long press](touch/hold.mp4) ![long press](touch/hold-strip.jpg)
+    [tap](touch/tap.mp4) ![tap](touch/tap-strip.jpg) [held, then dragged](touch/hold.mp4) ![held, then dragged](touch/hold-strip.jpg)
 - **Reduced motion:** the Remote stays still, for the mouse and for a finger; the pointer is drawn without lag
-  and appears and goes without a fade. A tap and a long press work the same.
+  and appears and goes without a fade, and steps out above a dragging finger at once. A tap, a held press and a
+  drag work the same.
 - **How it is built** (`pointing.tsx`): one `pointermove` listener on the window writes the cursor into a ref; one
   `requestAnimationFrame` loop eases two transforms (the Remote's `translate3d perspective rotateZ rotateX
   rotateY` about the wrist, the pointer's `translate3d`) and stops when both have arrived. No React state is set
@@ -321,7 +324,7 @@ way at the top right". What the phone shows now, from the top (the site's header
   Video. The power key stays dropped: "Turn off" is in the TV's menu, and a dark TV turns on with any key.
 - **The prototype's controls** are folded behind one small key (`⋯`) under the TV's left corner and open over the
   room, so they take no height: what is on the screen is the real proportions.
-- **A finger points.** A tap or a long press on the picture shows the ring and the Remote aims at it (see
+- **A finger points.** A tap, a held press or a drag on the picture shows the ring and the Remote aims at it (see
   [Pointing the Remote at the screen](#pointing-the-remote-at-the-screen)).
 
 ### The Remote: in the hand, and on the table where the window is too short
@@ -421,9 +424,9 @@ size in both forms. [viewports/phone-before-after.jpg](viewports/phone-before-af
 
 ## Questions for the owner
 
-1. A long press brings the ring out 46 px above the finger, and what opens is what the ring is on. A press held
-   still for half a second therefore points at what is above the finger, not under it. Right, or should a press that
-   has not moved keep pointing under the finger, and the ring only step out once the finger drags?
+1. A press that is held points under the finger, and the ring steps out above the finger only once it drags.
+   So a finger that is held still hides the ring; what shows the target then is the focused item itself. Fine,
+   or should a held finger show something more (for example a halo around the finger)?
 2. The phone's Remote turns 11 degrees at most and leans back as much. That is what fits under the TV without
    touching it. Enough to read as aiming, or should it move more and be allowed over the sideboard and the TV's
    lower edge while it does?
@@ -464,7 +467,7 @@ are imported as they are, and the flow prototype works as before.
 ## Proof
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
-- `walk.mjs`: 799 checks pass. 63 per direction: the apps, a mood, titles, Want to See, rating, the top bar
+- `walk.mjs`: 839 checks pass. 63 per direction: the apps, a mood, titles, Want to See, rating, the top bar
   (Back, Search and Menu and nothing else, reached with Up), the expand key (at the picture's bottom right,
   reached with Right along a title's actions or Down from them and with Down from the last mood, OK growing the
   picture from there, Back coming back to it; and behind `B` its two places in the bar), the menu, the map in four
@@ -481,8 +484,8 @@ are imported as they are, and the flow prototype works as before.
   streaming keys take a click, beside the TV the whole Remote is inside the window, and the smallest type is
   18 px or more (under 18 px at the two smallest, as stated above); the same for Marquee and Glow at 1920 x 940
   and Glow at 1536 x 730.
-- **510 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
-  390 x 700, with the Remote in the hand and on the table (45 each):
+- **550 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
+  390 x 700, with the Remote in the hand and on the table (49 each):
   - the layout is the phone's and the Remote has the form asked for; the TV has its body on every side of the
     picture and wall beside it, and is wider than tall; the Remote starts under the TV;
   - it has its 11 keys, each 44 px or more, inside the window and under nothing (the site's dock included), and a
@@ -492,11 +495,13 @@ are imported as they are, and the flow prototype works as before.
     picture's bottom edge;
   - **a tap**: the ring shows where the finger landed, the Remote's transform changes, the tapped app opens, then
     the ring is gone and the Remote has no transform again;
-  - **a long press, dragged**: the ring comes out above the finger, the item under it has the focus, the focus
-    goes where the ring goes, the ring and the Remote follow the finger (held, the Remote leans back; lying, it
-    turns and does not lean), the turned Remote stays under the TV, nothing scrolls and nothing is selected, a
-    held finger opens no menu, letting go opens the mood under the ring, both return to rest, and a long press let
-    go over nothing opens nothing;
+  - **a press held still for a second**, on a tile with another one above it: the ring stays under the finger,
+    the pressed tile has the focus, and letting go opens it, not the one above;
+  - **a drag**: once the finger has moved more than 10 px the ring steps out above it, the item under the ring
+    has the focus, the focus goes where the ring goes, the ring and the Remote follow the finger (held, the
+    Remote leans back; lying, it turns and does not lean), the turned Remote stays under the TV, nothing scrolls
+    and nothing is selected, a held finger opens no menu, letting go opens the mood under the ring, both return
+    to rest, and a drag let go over nothing opens nothing;
   - a key of the Remote works as before and neither aims the Remote nor shows the ring;
   - at the end a finger drags up on the TV and on the Remote, the page is told to scroll, and nothing has moved
     and the page is no taller than the window.

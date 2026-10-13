@@ -5,11 +5,11 @@
 // Both ease toward the cursor with a short lag, as a hand does. Over the Remote itself the Remote settles at rest,
 // so its keys are where they were and can be hit.
 //
-// A finger points too. A tap on the picture shows the pointer where it landed, the Remote aims there, the item
-// under it takes the focus and OK, and both go back to rest. A press that is held or dragged keeps the pointer out,
-// a little above the finger so the finger does not hide it; the Remote follows, the items it passes take the
-// focus, and letting go is OK on the one it is over (over none, nothing). The phone's Remote has its own, smaller
-// way of aiming (`rig`): it must stay in its place under the TV.
+// A finger points too. A press on the picture shows the pointer where it landed, the Remote aims there, and the
+// item under it takes the focus; letting go is OK on it, however long the press was held, and both go back to
+// rest. Once the finger drags, the pointer steps out a little above it, so the finger does not hide it; the
+// Remote follows, the items it passes take the focus, and letting go is OK on the one it is over (over none,
+// nothing). The phone's Remote has its own, smaller way of aiming (`rig`): it must stay in its place under the TV.
 //
 // Cheap on purpose: one pointermove listener writes the cursor into a ref, one requestAnimationFrame loop eases
 // two transforms and stops when both have arrived. Nothing here sets React state on a mouse move; the pointer's
@@ -80,11 +80,11 @@ type Aim = { rz: number; rx: number; ry: number; tx: number; ty: number }
 const REST: Aim = { rz: 0, rx: REMOTE_TILT_DEG, ry: 0, tx: 0, ty: 0 }
 /** The phone's Remote rests flat: its keys are exactly where they are drawn. */
 const FLAT: Aim = { rz: 0, rx: 0, ry: 0, tx: 0, ty: 0 }
-/** A press held this long is a long press. A press that moves further than `DRAG` is one at once. */
-const HOLD_MS = 500
+/** A press that moves further than this is a drag. Until then it points under the finger, however long it is held. */
 const DRAG = 10
-/** Held, the pointer stands this far above the finger. */
+/** Dragged, the pointer stands this far above the finger. It goes there in `LIFT_MS`, so the target does not jump. */
 const LIFT = 46
+const LIFT_MS = 220
 /** After a touch handled here the browser's own click on the picture is dropped for this long. */
 const CLICK_GUARD_MS = 700
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
@@ -141,8 +141,8 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		let drawn = 0
 		let idle: ReturnType<typeof setTimeout> | undefined
 		let tapTimer: ReturnType<typeof setTimeout> | undefined
-		// The finger on the picture: where it went down, where it is, and whether the press is a long one by now.
-		let touch: { id: number; x: number; y: number; fx: number; fy: number; hold: boolean; timer: ReturnType<typeof setTimeout> } | null = null
+		// The finger on the picture: where it went down, where it is, and since when it drags (0: it has not moved).
+		let touch: { id: number; x: number; y: number; fx: number; fy: number; hold: boolean; since: number } | null = null
 		let lastType = "mouse"
 		let guardUntil = 0
 		let ours = false
@@ -209,6 +209,11 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			const hand = 1 - Math.exp(-dt / 96)
 			const glide = 1 - Math.exp(-dt / 40)
 			let moving = false
+			// The pointer is still stepping out from under a finger that began to drag: it is placed again each frame.
+			if (touch?.hold && now - touch.since < LIFT_MS + 40) {
+				follow()
+				moving = true
+			}
 			// The Remote changed (a phone turned into a window, or back): start from its own rest.
 			if (rigged !== Boolean(g.rig)) {
 				rigged = Boolean(g.rig)
@@ -217,7 +222,7 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			const want = target(g)
 			for (const k of Object.keys(aim) as (keyof Aim)[]) {
 				const gap = want[k] - aim[k]
-				aim[k] = still || Math.abs(gap) < 0.02 ? want[k] : aim[k] + gap * hand
+				aim[k] = still || Math.abs(gap) < 0.05 ? want[k] : aim[k] + gap * hand
 				if (aim[k] !== want[k]) moving = true
 			}
 			// At rest the phone's Remote has no transform at all: its keys are hit where they are drawn.
@@ -286,25 +291,31 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			set(pointer.current, "out", next?.dataset.tvItem === "expand")
 			if (next?.dataset.tvItem) geo.current?.focus(next.dataset.tvItem)
 		}
-		/** A long press: the pointer comes out from under the finger and follows it. */
-		const place = () => {
+		/** How far above the finger the pointer is by now: nothing until the finger drags, then eased up to `LIFT`. */
+		const lifted = () => {
+			if (!touch?.hold) return 0
+			const t = still ? 1 : clamp((performance.now() - touch.since) / LIFT_MS, 0, 1)
+			return LIFT * (1 - (1 - t) ** 3)
+		}
+		/** The finger drags: the pointer is above it, follows it, and what it is over has the focus. */
+		const follow = () => {
 			const g = geo.current
 			if (!g || !touch) return
 			const { tv } = g
-			// Above the finger, and never off the picture. A finger that left the picture points at nothing.
+			// Never off the picture. A finger that left the picture points at nothing.
 			const on = touch.fx >= tv.left - 24 && touch.fx <= tv.left + tv.width + 24 && touch.fy >= tv.top - 24 && touch.fy <= tv.top + tv.height + LIFT + 24
-			Object.assign(cursor, { x: clamp(touch.fx, tv.left + 4, tv.left + tv.width - 4), y: clamp(touch.fy - LIFT, tv.top + 4, tv.top + tv.height - 4), here: on })
+			Object.assign(cursor, { x: clamp(touch.fx, tv.left + 4, tv.left + tv.width - 4), y: clamp(touch.fy - lifted(), tv.top + 4, tv.top + tv.height - 4), here: on })
 			show(on)
 			pointAt(on ? itemAt(cursor.x, cursor.y) : null)
-			kick()
 		}
 		const hold = () => {
 			if (!touch || touch.hold) return
-			clearTimeout(touch.timer)
 			touch.hold = true
+			touch.since = performance.now()
 			set(pointer.current, "hold", true)
 			set(pointer.current, "press", false)
-			place()
+			follow()
+			kick()
 		}
 		const onDown = (e: PointerEvent) => {
 			const g = geo.current
@@ -321,7 +332,7 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			if (touch || !g.live || !root.querySelector("[data-tv-screen]")?.contains(e.target as Node)) return
 			const r = root.getBoundingClientRect()
 			const [x, y] = [e.clientX - r.left, e.clientY - r.top]
-			touch = { id: e.pointerId, x, y, fx: x, fy: y, hold: false, timer: setTimeout(hold, HOLD_MS) }
+			touch = { id: e.pointerId, x, y, fx: x, fy: y, hold: false, since: 0 }
 			Object.assign(cursor, { x, y, here: true, tap: true })
 			at.placed = false
 			clearTimeout(tapTimer)
@@ -339,13 +350,15 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			const r = root.getBoundingClientRect()
 			touch.fx = e.clientX - r.left
 			touch.fy = e.clientY - r.top
-			// A press that moves is a long press at once.
+			// A press that moves is a drag from here on. One that stays put keeps pointing where it landed.
 			if (!touch.hold && Math.hypot(touch.fx - touch.x, touch.fy - touch.y) > DRAG) hold()
-			else if (touch.hold) place()
+			else if (touch.hold) {
+				follow()
+				kick()
+			}
 		}
 		const onUp = (e: PointerEvent) => {
 			if (!touch || e.pointerId !== touch.id) return
-			clearTimeout(touch.timer)
 			const held = touch.hold
 			touch = null
 			// Letting go is OK on the item the pointer is over. The browser's own click, if one follows, is dropped.
@@ -364,7 +377,6 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		}
 		const onCancel = (e: PointerEvent) => {
 			if (!touch || e.pointerId !== touch.id) return
-			clearTimeout(touch.timer)
 			touch = null
 			set(pointer.current, "hold", false)
 			set(pointer.current, "press", false)
@@ -402,7 +414,6 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			window.removeEventListener("pointercancel", onCancel)
 			root.removeEventListener("click", onClick, true)
 			root.removeEventListener("contextmenu", onMenu)
-			clearTimeout(touch?.timer)
 			document.documentElement.removeEventListener("mouseleave", rest)
 			window.removeEventListener("blur", rest)
 			window.removeEventListener("keydown", onKey)
