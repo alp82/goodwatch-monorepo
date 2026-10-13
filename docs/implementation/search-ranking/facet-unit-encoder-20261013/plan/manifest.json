@@ -1,0 +1,15 @@
+{
+  "schema": "offline-facet-unit-encoding-preparation.v1",
+  "preparedOnly": true,
+  "actualEncodingExecuted": false,
+  "files": {
+    "plan.json": {
+      "sha256": "5889f120be2dd2ed85e6d6b817b3b92a5458cf9b79823f027d9b8d91c070fd53",
+      "bytes": 42235
+    },
+    "PLAN.md": {
+      "sha256": "82a9305a5b8c97f844c46e7f38bd1f751e55a35ba83a937534890c0f79d1981a",
+      "bytes": 3893
+    }
+  }
+}

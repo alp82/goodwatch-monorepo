@@ -1,0 +1,13 @@
+✔ exact plan accepted; duplicate existing/wrongmodel/hash/role changes refuse before worker scope (44.192582ms)
+✔ missing/duplicate/out of order index batch cannot silently encode fewer or repeated texts (26.18594ms)
+✔ vectors must have correct typed shape, unitnorm and finite components (10.147137ms)
+✔ derived merge refuses overwrite and preserves old array bit values independently (3.246315ms)
+✔ stableFD pin rejects changed same-size contents and symlink model aliases (8.950836ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 638.331639

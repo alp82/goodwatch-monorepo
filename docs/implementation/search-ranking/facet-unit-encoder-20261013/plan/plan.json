@@ -1,0 +1,1849 @@
+{
+  "schema": "offline-public-facet-unit-embedding-plan.v1",
+  "preparedOnly": true,
+  "actualEncodingExecuted": false,
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "cohortIds": [
+    "core-01",
+    "core-02",
+    "core-03",
+    "core-04",
+    "core-05",
+    "core-06",
+    "core-07",
+    "core-08",
+    "core-09",
+    "core-10",
+    "core-11",
+    "core-12",
+    "core-13",
+    "core-14",
+    "core-15",
+    "core-16",
+    "core-17",
+    "core-18",
+    "core-19",
+    "core-20",
+    "core-21",
+    "core-22",
+    "core-23",
+    "core-24",
+    "core-25",
+    "dev6-01",
+    "dev6-02",
+    "dev6-03",
+    "dev6-04",
+    "dev6-05",
+    "h5-01",
+    "h5-02",
+    "h5-03",
+    "h5-04",
+    "h5-05",
+    "h5-06",
+    "h5-07",
+    "h5-08",
+    "h5-09",
+    "h5-10",
+    "h5-11",
+    "h5-12",
+    "h5-13",
+    "h5-14",
+    "h5-15",
+    "h5-16",
+    "h5-17",
+    "h5-18",
+    "h5-19",
+    "h5-28",
+    "h5-29",
+    "h5-30",
+    "ho2-01",
+    "ho2-02",
+    "ho2-03",
+    "ho2-04",
+    "ho2-05",
+    "ho2-09",
+    "ho2-10",
+    "ho2-11",
+    "ho2-12",
+    "ho2-13",
+    "ho2-14",
+    "ho2-17",
+    "ho2-18",
+    "ho2-20",
+    "ho2-21",
+    "ho2-22",
+    "lab-00",
+    "lab-02",
+    "lab-03",
+    "lab-04",
+    "lab-05",
+    "lab-06",
+    "lab-07",
+    "lab-08",
+    "lab-09",
+    "lab-10",
+    "lab-11",
+    "lab-13",
+    "new-01",
+    "new-02",
+    "new-03",
+    "new-04",
+    "new-05",
+    "new-06",
+    "new-09",
+    "new-10",
+    "new-11",
+    "new-12",
+    "new-13",
+    "new-14",
+    "new-15",
+    "new-16",
+    "new-17",
+    "new-18",
+    "new-19",
+    "new-20",
+    "new-23",
+    "new-24",
+    "new-25"
+  ],
+  "uniqueModelTextPairs": 132,
+  "items": [
+    {
+      "model": "english",
+      "text": "80s sci-fi",
+      "textSha256": "1f3ba17dcf1c0a208ff291764e2d3cf97e0b227a124a7762d8049071f14ecdef",
+      "roles": [
+        {
+          "queryId": "new-09",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "80s teen",
+      "textSha256": "aee1397ac5072ae17d01c769d92ef7657d4ef6c26ff9b045994f54e5b7255762",
+      "roles": [
+        {
+          "queryId": "h5-29",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "90s crime",
+      "textSha256": "8d98d0cf91e607d6d7a672a27e7634a3664cd3555aac3dd2d77eba8cd840adce",
+      "roles": [
+        {
+          "queryId": "new-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "adventure",
+      "textSha256": "47360b8c5f58c5ba04c8ce848545342c0490cfab23ce9f50e16e40b1df254ef8",
+      "roles": [
+        {
+          "queryId": "core-24",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "anime pirates",
+      "textSha256": "fbb1b0e61657fb1c3946e5b0eec523f54474925bbdc2b361373d7eee249755b5",
+      "roles": [
+        {
+          "queryId": "ho2-03",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "arctic",
+      "textSha256": "806a7e7b173c799ef93ec90b450953651fe2d3db2468a560bb1a42fa16125ae8",
+      "roles": [
+        {
+          "queryId": "ho2-11",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "artists",
+      "textSha256": "40cc7fbd055ca2c6e9405d95339a922a5c56a460529878943ccaf42808f6447f",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "away",
+      "textSha256": "378ce56a9d146d5174c89d1c0353d7f8e2244e89bb83935a5b1bdcf5e74b4e7f",
+      "roles": [
+        {
+          "queryId": "core-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "background show",
+      "textSha256": "eb10166a4af21b6baf15dc6ffda6fae4f39a5bd9de97967c5a1527457d48f23d",
+      "roles": [
+        {
+          "queryId": "h5-07",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "battle",
+      "textSha256": "16f5e2322d05ddf58fa74658db9563e0d9a1b76fba5a9e1fcfdc0c929fa913c2",
+      "roles": [
+        {
+          "queryId": "new-02",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "battle wits",
+      "textSha256": "28c702979d821d43999dd62bceca60c5bc86a0c9fc46457250a63f4ca0ceabd9",
+      "roles": [
+        {
+          "queryId": "new-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "beat-up spaceship",
+      "textSha256": "24bca822ce5e36cc333b19dc88a2b5c0f150e8d1d0e533cc57d86b576c246146",
+      "roles": [
+        {
+          "queryId": "new-19",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "big corporations",
+      "textSha256": "8ddf71ddac2664b924088449b982d1620557903d6f37a6fa11ef1f442562cf01",
+      "roles": [
+        {
+          "queryId": "new-03",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "big twist",
+      "textSha256": "b9a637a393e3ddd0c9a8afb50aa610890ce0c06be58508e5850fe6e61b01406e",
+      "roles": [
+        {
+          "queryId": "new-23",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "brain fried",
+      "textSha256": "3c5562d0fba1344dff13573c805fad724c738fcf988dc879ddc385de380892ad",
+      "roles": [
+        {
+          "queryId": "core-18",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "british",
+      "textSha256": "17684a3307c6d0527b4487b695b843d916a6f370a19cbbf2d994f37c0b0b1f2b",
+      "roles": [
+        {
+          "queryId": "ho2-14",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "british gangster",
+      "textSha256": "765d978b01c425a0051eb43ed6300f4c54fdfd74bb793f7734b92333f548788d",
+      "roles": [
+        {
+          "queryId": "ho2-14",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "car",
+      "textSha256": "2b2961a431b23c9007efe270c1d7eb79c19d4192d7cd2d924176eb0b19e7d2a1",
+      "roles": [
+        {
+          "queryId": "core-07",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "core-17",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "cars",
+      "textSha256": "1f58b1e965af65127ac83fca0a4daff741d74d4fe07f143bc44d46ebeb34ecf0",
+      "roles": [
+        {
+          "queryId": "lab-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "chases",
+      "textSha256": "7d318d30837f61085fa49706123488a25a51210447dce003bd0f8afc6f47c1ba",
+      "roles": [
+        {
+          "queryId": "core-07",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "core-17",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "child",
+      "textSha256": "ddc9e669194254cef019a29d3619a2c16592e5d52e1a81e98b01bd52319149a3",
+      "roles": [
+        {
+          "queryId": "lab-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "city",
+      "textSha256": "11a62c23412b77477a71481aa2dc7323bcc61d076c8449076c4c58a8356c1bb1",
+      "roles": [
+        {
+          "queryId": "new-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "claustrophobic",
+      "textSha256": "bfa81944145bb8babe66618ab4a77c6c72ba3cb8855b82a0a23c886445ba1aea",
+      "roles": [
+        {
+          "queryId": "ho2-11",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "claustrophobic thriller",
+      "textSha256": "6d8ad26a74d019e039b54aa65ede0125ca89d37cb49a083193c4458aeec7f3b7",
+      "roles": [
+        {
+          "queryId": "ho2-11",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "coast",
+      "textSha256": "23c075a035f3889718034dcf3b77008cf38c1714b8940712a77962a01d4ed508",
+      "roles": [
+        {
+          "queryId": "ho2-12",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "code",
+      "textSha256": "5694d08a2e53ffcae0c3103e5ad6f6076abd960eb1f8a56577040bc1028f702b",
+      "roles": [
+        {
+          "queryId": "new-25",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "comedies",
+      "textSha256": "11ffc8780d24e5ee4b2442883474d921f9d8b3bc690ee1809cda80aa22f3584d",
+      "roles": [
+        {
+          "queryId": "ho2-14",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "con",
+      "textSha256": "1143da2bc54c495c4be31d3868785d39ffdfd56df5668f0645d8f14d47647952",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "con artists",
+      "textSha256": "6b6606d0cdcab657f47cbd839755962a4ee72ad41b0a0230f9bfdde5c18e39bb",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "conspiracy",
+      "textSha256": "42109aaebde50d1056f3c7c8b48b829c1b8a5080f87f17672a51cf4b24a16e9c",
+      "roles": [
+        {
+          "queryId": "ho2-13",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "conspiracy thrillers",
+      "textSha256": "4d0d355dd259020c80b22ca8e5090ddbbbf2d75098fe5fc6bc643beed9b35b0c",
+      "roles": [
+        {
+          "queryId": "ho2-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "cooking show",
+      "textSha256": "279c1069dbb02ba730073ff148977af2dfb63df29f82c6affa83f48b11378337",
+      "roles": [
+        {
+          "queryId": "lab-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "corporations",
+      "textSha256": "2ff0c33db8a6b6610604d38cd35391765c8f1baa5cfc67b604361c43154f6173",
+      "roles": [
+        {
+          "queryId": "new-03",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "cover",
+      "textSha256": "3fa405a8301ace34d11cf44a816080b8f0e49a48fbd048b8aef1543a8c58bdb6",
+      "roles": [
+        {
+          "queryId": "h5-13",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "crash",
+      "textSha256": "cdb2e0d0f873ce5326e87cf7dec48de8da3043cfc950a7eba05a059150e873f5",
+      "roles": [
+        {
+          "queryId": "h5-11",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "crew misfits",
+      "textSha256": "d8e20c354fd97e5b6b6c269993cbc6732d90fa090fe75ad976e12ded7201bfdb",
+      "roles": [
+        {
+          "queryId": "new-19",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "crime movies",
+      "textSha256": "a617ff007d50e9e9baa1ab46c9cbd02e3ea5da511c09c2a5a9f6dca0f12ba765",
+      "roles": [
+        {
+          "queryId": "new-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "crime show",
+      "textSha256": "e57fbf80c3886baf1c40d9022bf95e5d6a1dff889a83a08cabc77f62e102eb74",
+      "roles": [
+        {
+          "queryId": "core-11",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "cyberpunk",
+      "textSha256": "1e6b41f0261eed5acd27bd7d0f6463389a420219981572546e6ca1b34188ebc2",
+      "roles": [
+        {
+          "queryId": "new-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "dark",
+      "textSha256": "e6bb5689beec52c4672bd4df92c3613d128d30cdc2b704f76953fe43d89c4ae8",
+      "roles": [
+        {
+          "queryId": "core-10",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "dark comedy",
+      "textSha256": "718316debbe90292642675f1b6aa1074d19371672d58cb0c0757ff0ef9cf6e0d",
+      "roles": [
+        {
+          "queryId": "core-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "daughter",
+      "textSha256": "4ed28f82ca96c3342a5c591668270f78c26dae22fd953772a6c14e52f46e1b22",
+      "roles": [
+        {
+          "queryId": "h5-12",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "deep",
+      "textSha256": "74611c1d6455b534323a21f8133a6f43dc3a8188e7b946f96dcc28dde932fcb2",
+      "roles": [
+        {
+          "queryId": "new-04",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "deth game",
+      "textSha256": "4d2b5085f217fe5c703158b6cb2457b31e069f1153b510a7324e085a6f5bb6b4",
+      "roles": [
+        {
+          "queryId": "ho2-21",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "driver",
+      "textSha256": "b4def8217cadae26d4da633fd2a4e58e326cbb5d570afdc3989484da07af3579",
+      "roles": [
+        {
+          "queryId": "core-17",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "dystopain deth",
+      "textSha256": "2c037741eddedf043be3b486ee453a52b242caa1e287bfe59c4a07e87ea74a1c",
+      "roles": [
+        {
+          "queryId": "ho2-21",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "elaborate",
+      "textSha256": "730375e4de9f5e78524fa66d504d5cd2aebea644024a5d09fa4f10d894ab15ef",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "elaborate scams",
+      "textSha256": "640050d4d6a77bfcad9bd515a10f4be5d2ad68d2bf5d6b2012bc86300aacc4fc",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "fantasy",
+      "textSha256": "5292f27501324087b9dcd65408163e58c921009fc8a85c1b7782823a934cf6c7",
+      "roles": [
+        {
+          "queryId": "lab-11",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "fantasy dragons",
+      "textSha256": "3e0cdca2ccc328af92c0a46ee3f327f1a072a03fbe7519a2fa83d96f08db9c3f",
+      "roles": [
+        {
+          "queryId": "lab-11",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "feeding nonsense",
+      "textSha256": "510600fc06f2d6816b7c388204304f6641b3dc32efbe4edc8e2cbcfcbc2a792d",
+      "roles": [
+        {
+          "queryId": "core-16",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "feel good",
+      "textSha256": "68bf8b63a9720c1f791e36a4244918c0d1a85e66ff2e97db87b769fbdb7b5017",
+      "roles": [
+        {
+          "queryId": "lab-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "film snipers",
+      "textSha256": "1cd581e8a7ed96630748a96b20aa201c8e035b338d89e43e20be704adea53e82",
+      "roles": [
+        {
+          "queryId": "ho2-05",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "gangster",
+      "textSha256": "9a869c1ff4397a5b1d91a20f3b70efd32d6a52ce7aebbbb8bdb63a36eff1f3d4",
+      "roles": [
+        {
+          "queryId": "ho2-14",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "gangster comedies",
+      "textSha256": "9d3e335a4683a42abb5d253be3dfce9000805880568e0278fc316b5c6c361fff",
+      "roles": [
+        {
+          "queryId": "ho2-14",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "geniuses",
+      "textSha256": "670625558a141ea2d4dc80bcd232550dac7c61befc8d4afdaa19fb2d5d29c086",
+      "roles": [
+        {
+          "queryId": "new-02",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "geniuses battle",
+      "textSha256": "c5ab6e17e3942ea6b4c5c88032494ff7934dbed0254106f42cbd7211db2311fc",
+      "roles": [
+        {
+          "queryId": "new-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "getaway",
+      "textSha256": "157080b9143d9e708722e9bfb6692a8150985c7943c352d3678ed383a5009762",
+      "roles": [
+        {
+          "queryId": "core-17",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "getaway driver",
+      "textSha256": "04408034f89118e93faee29aaa0ab84fefbb9da7dcafb5829863cb38e4a8e94f",
+      "roles": [
+        {
+          "queryId": "core-17",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "glass",
+      "textSha256": "132a1a391cce181c490a2c4350597221fad9ae207714d1f9a10f67bcb1c8288d",
+      "roles": [
+        {
+          "queryId": "new-25",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "gritty crime",
+      "textSha256": "1aac902e9c1aa99233a58d9efe78611548dfdd41d6b3521c571c57062c255b33",
+      "roles": [
+        {
+          "queryId": "core-11",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "halfway through",
+      "textSha256": "e7ea19f08e8f2b6076240af5bb9642397941d4d96a565df7fbb53f5011113e75",
+      "roles": [
+        {
+          "queryId": "core-16",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "halloween",
+      "textSha256": "9eb7ee7f551d2f0ac684981bd1f1e2fa4a37590199636753efe614d4db30e8e1",
+      "roles": [
+        {
+          "queryId": "h5-08",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "halloween night",
+      "textSha256": "1c44ae1f2506d7c7ceea2054491bb422ecef92b4c105dcef46e0fc5c9dea9d1b",
+      "roles": [
+        {
+          "queryId": "h5-08",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "harry",
+      "textSha256": "df46219531cb5d522d0845901978dccfa286a5b0437f4f9cd4e485064f6b632c",
+      "roles": [
+        {
+          "queryId": "h5-19",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "heist",
+      "textSha256": "3568edca25022faa7a63d2517c68b73a8427b4e26062e2c05fd2440e50069da1",
+      "roles": [
+        {
+          "queryId": "lab-04",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "new-01",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "hunter",
+      "textSha256": "e9a63a4eb15738ae85cd416221c8fcc4ccc0018fac91335b42eaa016c76e87f9",
+      "roles": [
+        {
+          "queryId": "new-24",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "hunter hunter",
+      "textSha256": "59351e39166342e9b0a0742ca534901b11cfe0ddf2ca257cd27b68c18fcc0e84",
+      "roles": [
+        {
+          "queryId": "new-24",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "investigates murder",
+      "textSha256": "b9d8b4edd4e6d875e734799ac3203e8d8fd14bd1c1aa0a8d2b7e7a0bcb313d0b",
+      "roles": [
+        {
+          "queryId": "ho2-17",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "italian",
+      "textSha256": "4c3280c17f9d982ccbac882ae1f48dad224dba938bee87bf18e31c76b0c3b88b",
+      "roles": [
+        {
+          "queryId": "ho2-12",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "journalists",
+      "textSha256": "9c82da9dd76db5c6947e9dd5d831c5cdb46a3179711a0dd7b4bea8c0995c35d9",
+      "roles": [
+        {
+          "queryId": "h5-13",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "journalists uncovering",
+      "textSha256": "58eca64abd8b17d2a57f65f5dec7206018670f5602ad759a83f8fa35eade799f",
+      "roles": [
+        {
+          "queryId": "h5-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "keeper",
+      "textSha256": "00aa8942525b763cbe72e4a0fbfbb027b909dd8299e9c6c85c28d3d42d2cc28b",
+      "roles": [
+        {
+          "queryId": "lab-08",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "keeper mystery",
+      "textSha256": "45c2205d8d6295f8e95eb3733c4594fa37c8413d9097718c03cad5864f009e2c",
+      "roles": [
+        {
+          "queryId": "lab-08",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "kung",
+      "textSha256": "c743b8b3b8af058e3409ba6851766e43e26ae130b340b84e4e1e7e792a21c9c9",
+      "roles": [
+        {
+          "queryId": "new-06",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "life staged",
+      "textSha256": "7919c2ccc642aa50d86713e81105a2437ff5e13c34cb9256923c4dd7a51c823e",
+      "roles": [
+        {
+          "queryId": "new-20",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "lighthouse",
+      "textSha256": "b370de14e94142d4a108a79df6d0e265a0ba3fa2e10f57c4b3a892b74c9f84aa",
+      "roles": [
+        {
+          "queryId": "lab-08",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "lighthouse keeper",
+      "textSha256": "bbcc40abb0c6b90f4656aee0c7cc257c35832e3add0bf808783c17fedfffac94",
+      "roles": [
+        {
+          "queryId": "lab-08",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "losing",
+      "textSha256": "5d7318303179149862e7825f7f1712f9e8045cdc54401c79c269dd068e20ea5d",
+      "roles": [
+        {
+          "queryId": "lab-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "mother",
+      "textSha256": "cf0622ef2a661cd2f11b0b644e40e4e00eb962918424a8c8ba53842fdf290235",
+      "roles": [
+        {
+          "queryId": "h5-12",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "motives",
+      "textSha256": "9baaaa64915dce270e2a855fbf0787213badef8f35dad520768ab6923b4d3c68",
+      "roles": [
+        {
+          "queryId": "h5-29",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "mystery",
+      "textSha256": "4f0d9e5f2d159c8bd63247f9470d09f15e1ff431cb88d5a101df49c4c01882e6",
+      "roles": [
+        {
+          "queryId": "lab-08",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "nonsense",
+      "textSha256": "999aaa8645bb72ff599e143b1e3d2a94777127f4783a69f067251f7bbebc5ab6",
+      "roles": [
+        {
+          "queryId": "lab-00",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "paranoid",
+      "textSha256": "7bc0ee8330e4bb4c7bc0fdfb995c7e1bc2ea1cc5a741eaa988a0b3018f78f8be",
+      "roles": [
+        {
+          "queryId": "ho2-13",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "paranoid conspiracy",
+      "textSha256": "8ade03e86466c3eb842c7346329ba1ec3f27fbe267ad79828c2af661b42ba538",
+      "roles": [
+        {
+          "queryId": "ho2-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "pirates",
+      "textSha256": "bf3f795d4bdeb5b070a878da64bad79a6c2a4c1f3039768d8dfd6ee85e845f55",
+      "roles": [
+        {
+          "queryId": "ho2-03",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "ho2-03",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "plane",
+      "textSha256": "fad900280ce54a04da3b698f1a7783717b466fedd3ded41fe5fc5a3686f1b180",
+      "roles": [
+        {
+          "queryId": "h5-11",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "planned",
+      "textSha256": "9b0f1b10aff55228716a1fbbc59bda8fe735ed14ccd5e2c5226a9ab72a48d47e",
+      "roles": [
+        {
+          "queryId": "h5-14",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "politics",
+      "textSha256": "1a1d1484d3cbc721070469e555f6a0cc89c03d60181e1f13694014e9249d19b6",
+      "roles": [
+        {
+          "queryId": "new-03",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "potter",
+      "textSha256": "65872ad399663af01a592f977d521f140e8dbb83a31aad1550d07492ca4901aa",
+      "roles": [
+        {
+          "queryId": "h5-19",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "prison",
+      "textSha256": "4d591b76b7170de5ed665faed637277a744a85e5ba3267bc63782a8173299e18",
+      "roles": [
+        {
+          "queryId": "ho2-02",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "ho2-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "psychological",
+      "textSha256": "163d817fe8a87f7394f70cf6febc9a697b666a64a2f14ec0b18d32cc9f6e289d",
+      "roles": [
+        {
+          "queryId": "new-23",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "psycological thriler",
+      "textSha256": "a0a839e794d473a721f7fbb88efa28c0a498138ef5d49bf225c5e8e76ae8e44d",
+      "roles": [
+        {
+          "queryId": "new-23",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "rainy sunday",
+      "textSha256": "249f3dd778d90b44fa3485f1811165cfb5f285404184bedabe8da3adeac4d196",
+      "roles": [
+        {
+          "queryId": "h5-04",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "revenge",
+      "textSha256": "16552853f9506d93252aa532361a78ddc4ae14bcd51716868ef4b7449c27ea9d",
+      "roles": [
+        {
+          "queryId": "h5-14",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "h5-14",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "revenge planned",
+      "textSha256": "996c94a698adcedb3e0ba6d4282a673fc6e82255a3bdd8280d07ea3075c88a50",
+      "roles": [
+        {
+          "queryId": "h5-14",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "rich",
+      "textSha256": "7baa68f2418ba82d2545a780c00d7a8778249bbcdaf7369114534874ea6d3bd6",
+      "roles": [
+        {
+          "queryId": "core-10",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "rich people",
+      "textSha256": "7b1f2a5a08d4e12fb14f9d1324f487d969cf049241f4a500866cba4729c73b80",
+      "roles": [
+        {
+          "queryId": "core-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "robot",
+      "textSha256": "18d63be10ad544a04a22c944dee01d6d864ec69b797a58edae92e6a44ad8fdbf",
+      "roles": [
+        {
+          "queryId": "h5-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "robot who",
+      "textSha256": "b19401bebca9910b9eb612ee010f768ef213be8fd11647b14bb2af48ef7e5b31",
+      "roles": [
+        {
+          "queryId": "h5-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "samurai",
+      "textSha256": "2df84a679ae22f29fcf4db23ec02d318e61e16e1bbe36a7aa3136a516febb611",
+      "roles": [
+        {
+          "queryId": "ho2-04",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "satire",
+      "textSha256": "cda3103e7c393841d683642008fce7f1cbd9cbf5b290edbcf1ecb8dc19849517",
+      "roles": [
+        {
+          "queryId": "new-03",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "satire politics",
+      "textSha256": "c331a4dad951089ec136c9103e8a40472a8612cf1a7eb95f03adf6ed8a098efd",
+      "roles": [
+        {
+          "queryId": "new-03",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "scams",
+      "textSha256": "7724a4c8a01b98fb9f29c06d57da29f9f558ee2d27efedc7792310d4a2c8dcdb",
+      "roles": [
+        {
+          "queryId": "h5-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "sci-fi action",
+      "textSha256": "0ee13c2554ef0cd81692b22eff9d95adbf00f0cd3dfa3a87b3e8bdb2e48651d8",
+      "roles": [
+        {
+          "queryId": "new-09",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "sci-fi adults",
+      "textSha256": "b296cefe8d77fb45070438ce7f51b3edd9dfba880d6063078b6750635da833b0",
+      "roles": [
+        {
+          "queryId": "new-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "science fiction",
+      "textSha256": "3b68ec8b0f958bd2b38f5c1e2d08e4ed9b2395517f789429d98c4cb9ca84aa20",
+      "roles": [
+        {
+          "queryId": "core-23",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "scifi",
+      "textSha256": "a2a66dd35df55316d361f1454b589fc9ec31094abd39c5755235a301210fdba2",
+      "roles": [
+        {
+          "queryId": "lab-09",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "set",
+      "textSha256": "6ee0eb490ff832101cf82a3d387c35f29e4230be786978f7acf9e811febf6723",
+      "roles": [
+        {
+          "queryId": "ho2-02",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "set prison",
+      "textSha256": "078566062502496d00768ddd4a60808d7f1d2d04d2c8ab13a62e2b08c62cb517",
+      "roles": [
+        {
+          "queryId": "ho2-02",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "slow atmospheric",
+      "textSha256": "d521a79e96cdf483cef1a528690e0008dba4b804d34bb6c7ccab3fdb2a069aff",
+      "roles": [
+        {
+          "queryId": "core-23",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "small-town cop",
+      "textSha256": "105081a8083a6c813e819194ed190477ca84d1fdf1e3f1c276ef333a247f13c7",
+      "roles": [
+        {
+          "queryId": "ho2-17",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "smart sci-fi",
+      "textSha256": "d76ffb54f1c20294263feb4e422878b38b67fd94ca6b4515f0a8cdc5a4d194c5",
+      "roles": [
+        {
+          "queryId": "new-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "snipers",
+      "textSha256": "ee70f99bd2ab951336f9dbdde86393b1ed9ed6aa8850a67dbcff371053e39bf7",
+      "roles": [
+        {
+          "queryId": "ho2-05",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "space",
+      "textSha256": "3f49dbbfe051cb20cc038923424fedf8d18307cc805e1520e4168e9360e2eb38",
+      "roles": [
+        {
+          "queryId": "core-24",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "lab-03",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "new-04",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "spirited",
+      "textSha256": "77aeabc6d684c17926b8a3eebd48f443b35f8c3065c6dd544a82a371ba363c60",
+      "roles": [
+        {
+          "queryId": "core-05",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "staged fake",
+      "textSha256": "55fa264c997313e92bfc9c40dea5acc3317e6adf95155e54ecdc3f3844464c29",
+      "roles": [
+        {
+          "queryId": "new-20",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "submarine",
+      "textSha256": "3a48c2443b07faa22ab4b5556b29b69b03f03bb5766f4757b5b57be97d04e1b0",
+      "roles": [
+        {
+          "queryId": "ho2-01",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "sunday afternoon",
+      "textSha256": "5eb7728ba85e5c76c123f9382012aa3eefb17f9c25e7176b8e9da947da656084",
+      "roles": [
+        {
+          "queryId": "h5-04",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "sunglasses night",
+      "textSha256": "2d16888b09047a318cbb30e202dde771ea81ffbc2d14d38d046150dd895c967c",
+      "roles": [
+        {
+          "queryId": "lab-10",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "teen",
+      "textSha256": "345e24682c0e3ce8770a6c394c5476aa143bf3349ca5981785a144ada1b34095",
+      "roles": [
+        {
+          "queryId": "h5-29",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "teen moives",
+      "textSha256": "0bc6959063c8a4ae0ccb1aa5b7b5359e30ba1624e676f67a9ec730ffce9a1c95",
+      "roles": [
+        {
+          "queryId": "h5-29",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "thriller",
+      "textSha256": "8191850cc246f7cfa3a7486ce1a0580907e2079b5482f8008da677cfd70101a8",
+      "roles": [
+        {
+          "queryId": "ho2-11",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "lab-04",
+          "role": "coverage-unit"
+        },
+        {
+          "queryId": "new-23",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "thriller arctic",
+      "textSha256": "23e62cd3231a9c6b21c658f2b12a7ec4855a256438e7af273e04320cd10c1cdd",
+      "roles": [
+        {
+          "queryId": "ho2-11",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "train",
+      "textSha256": "116f54c41d0405dbb10e7b04ebc31e262a5b8c85c1233fcf36eaee344d91ae58",
+      "roles": [
+        {
+          "queryId": "new-01",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "twist",
+      "textSha256": "72554af938a3921665267ee03cef95ade6290625a9f99d6c57ae49809900fbad",
+      "roles": [
+        {
+          "queryId": "new-23",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "uncovering",
+      "textSha256": "7770f9ae0575362ed32a42fab92b2e87802cf0e8d0b0ae00086839afe7d2d46e",
+      "roles": [
+        {
+          "queryId": "h5-13",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "uncovering cover",
+      "textSha256": "c20aae79835a4fc9d89a3efb647f0097b4a3e31a446bbee02228e36875a44951",
+      "roles": [
+        {
+          "queryId": "h5-13",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "warm funny",
+      "textSha256": "c15de38d84e8ba034b3b4581f2aa481b75242ecfe99b5c17cb9dc937a9e132a5",
+      "roles": [
+        {
+          "queryId": "core-18",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "western",
+      "textSha256": "d461db619066bf79fdaaeabd94633bb4e0c1f1ffbd5251f3fdb6a90f62549749",
+      "roles": [
+        {
+          "queryId": "ho2-04",
+          "role": "coverage-unit"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "while cooking",
+      "textSha256": "3242fa70d9e3740e8bfc5115eeaf2530d9c4b0d2e498c2fe5172a3c0fdf3b32c",
+      "roles": [
+        {
+          "queryId": "h5-07",
+          "role": "facet"
+        }
+      ]
+    },
+    {
+      "model": "english",
+      "text": "wits",
+      "textSha256": "a6ab9e64998c705671498ebd73b248af641d458eb1c346199dd84117b8bfaf71",
+      "roles": [
+        {
+          "queryId": "new-02",
+          "role": "coverage-unit"
+        }
+      ]
+    }
+  ],
+  "batches": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    [
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    [
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47
+    ],
+    [
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55
+    ],
+    [
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63
+    ],
+    [
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71
+    ],
+    [
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79
+    ],
+    [
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87
+    ],
+    [
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95
+    ],
+    [
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103
+    ],
+    [
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111
+    ],
+    [
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119
+    ],
+    [
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127
+    ],
+    [
+      128,
+      129,
+      130,
+      131
+    ]
+  ],
+  "bounds": {
+    "onePass": true,
+    "batchMaxTexts": 8,
+    "batches": 17,
+    "parallelRequests": 1,
+    "intraOpThreads": 2,
+    "interOpThreads": 1,
+    "newCorpusRequests": 17,
+    "originalWorkerWarmupBatches": 6,
+    "warmupTexts": 12,
+    "maximumWarmupPlusRequestedTexts": 144,
+    "downloads": 0,
+    "network": 0,
+    "JevOrLLM": 0,
+    "productionSearches": 0
+  },
+  "unchangedGates": {
+    "facets": "positive text; >=2 searched phrases after negated-word/reference skip filtering (references excluded cohort)",
+    "coverage": "nonreference; actual tokens(positive)<=5; >=2 units after stop/generic/negated-word filters, original spelling/collocation rules; at least one unit contains decoded concrete word",
+    "existingWeights": {
+      "facet": 0.1,
+      "coverage": 0.3,
+      "coverageBm25": 0.5,
+      "bm25": 0.12
+    },
+    "partDepth": 300
+  },
+  "encodingDoesNotAuthorizeStudy": true,
+  "oldCachesAndStudyImmutable": true,
+  "newOutputFolderMustBeAbsent": true,
+  "bindings": {
+    "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/signal-input-availability.mjs": {
+      "sha256": "8c34e6026ca3f1c75b787e6edc11b4c913f23caf56f7cf7ef38a7495d2d8078d",
+      "bytes": 4228
+    },
+    "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/signal-input-availability.json": {
+      "sha256": "94da10c637d493676c056fa06fb9589b1d8987989dcdf9243e71ace00dac0c64",
+      "bytes": 40793
+    },
+    "/home/alper/projects/search-100-evidence/common-union-analysis-20261013/ranking.server.ts": {
+      "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7",
+      "bytes": 11065
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/study-source-manifest.json": {
+      "sha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+      "bytes": 1572
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/input-bindings.json": {
+      "sha256": "390d5724c6717b76383860b02989df63ae7945dad915add3b96c14856423bb7a",
+      "bytes": 5200
+    },
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/query-vectors-merged.json": {
+      "sha256": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854",
+      "bytes": 5219383
+    },
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source/query-encoder.worker.js": {
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+      "bytes": 5877
+    },
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/model-preflight.json": {
+      "sha256": "7141b66f43acd2522b01e277f48a528f6c623732eb6e5ab3c2ef07d354ce3f5f",
+      "bytes": 2723
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/rank-search.server.ts": {
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890",
+      "bytes": 34479
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/query-parsing.server.mjs": {
+      "sha256": "01c0c627f427064e06c7fa3116ae1ad2b174d927931a088735d31ef7bdedece4",
+      "bytes": 31844
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/reading-retrieval.server.mjs": {
+      "sha256": "bc8099ac30be34e06654a189a3892bfc78fa72d12d9e024f833d5627b3876d4e",
+      "bytes": 25618
+    }
+  },
+  "scoreParityQualification": "index int8 text_en_v1 and scale reproduce deployed local quantized column arithmetic; Qdrant stored-float vector equality not attested; BM25 per-title sparse vectors/top300 maps absent; no exact full coverage/hybrid claim"
+}
