@@ -3,8 +3,8 @@
   "baseCommit": "b83fc113fb7790e65a914c3cb2111cf8c0bd56ae",
   "files": {
     "README.md": {
-      "bytes": 6331,
-      "sha256": "1c00233b9b30106f93d4f171a18fc68e441229334313a59a683e703f40e493fc"
+      "bytes": 6479,
+      "sha256": "cf79c6426906d860a086ba3127fc44f1845b3883f8916bfe22cb9656fd40e281"
     },
     "retained/README.md": {
       "bytes": 5120,
@@ -33,10 +33,6 @@
     "retained/actual-approved-six-20261013/intent.json": {
       "bytes": 314,
       "sha256": "924626cd486a4c307fde84e1fd20fe7344ca3e652ca55cecab2a08a16f5c7414"
-    },
-    "retained/actual-approved-six-20261013/lifecycle-progress-snapshot.ndjson": {
-      "bytes": 8939544,
-      "sha256": "b90801d381138db62d159d10390a4753378ab19e16eafae1b56d0e9d57ee4fad"
     },
     "retained/actual-approved-six-20261013/low-vote-title.json": {
       "bytes": 4616,
@@ -163,7 +159,7 @@
       "sha256": "3745efaf307f1e2851b801be5373f75298868274582274f9e63395d690a0d471"
     }
   },
-  "exactOriginalCopies": 39,
+  "exactOriginalCopies": 38,
   "approvedProductionRequestsTotal": 24,
   "approvedProductionRequestsConsumed": 24,
   "approvedProductionRequestsRemaining": 0,
@@ -175,5 +171,25 @@
   "sevenDayAcceptance": false,
   "organicOnlyCohortProven": false,
   "exactCaseLifecycleUuidLinkageProven": false,
-  "exactHistoryLifecycleUuidLinkageProven": false
+  "exactHistoryLifecycleUuidLinkageProven": false,
+  "omittedInputs": {
+    "lifecycle-progress-snapshot.ndjson": {
+      "bytes": 8939544,
+      "sha256": "b90801d381138db62d159d10390a4753378ab19e16eafae1b56d0e9d57ee4fad",
+      "localPath": "/home/alper/projects/search-100-evidence/fresh-six-production-probe-preparation-20261013/actual-approved-six-20261013/lifecycle-progress-snapshot.ndjson",
+      "published": false
+    },
+    "partial-ingress-vector1-snapshot.ndjson": {
+      "bytes": 8683691,
+      "sha256": "91153f74bb4df17ce0a5938d335357c7675c088bf017e9104b2cd574638bb59d",
+      "localPath": "/home/alper/projects/search-100-evidence/fresh-six-production-probe-preparation-20261013/actual-approved-six-20261013/partial-ingress-vector1-snapshot.ndjson",
+      "published": false
+    },
+    "partial-ingress-abio-snapshot.ndjson": {
+      "bytes": 8569066,
+      "sha256": "9ee3819f043a524b40a1b759a1c63db7f3c7a892b7c5c9608cdc9ea6eea0c1af",
+      "bindingBasis": "exact retained root receipt",
+      "published": false
+    }
+  }
 }
