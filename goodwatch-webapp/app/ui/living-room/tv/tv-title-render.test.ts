@@ -31,6 +31,17 @@ const rendered = JSON.parse(
 		| "none",
 		Tonight
 	>
+	phones: {
+		phone: string
+		scale: number
+		key: number
+		title: string
+		tonight: string
+		rate: string
+		toast: string
+	}[]
+	keySizes: { desktop: number; first: number }
+	toast: { desktop: string; phone: string; menuOpen: string }
 	title: { items: string[]; short: string } & Record<
 		| "known"
 		| "another"
@@ -54,7 +65,18 @@ const ids = (html: string) =>
 	[...html.matchAll(/data-tv-item="([^"]+)"/g)].map((match) => match[1])
 /** What an item says. */
 const label = (html: string, id: string) =>
-	new RegExp(`data-tv-item="${id}"[^>]*>([^<]*)<`).exec(html)?.[1]
+	new RegExp(`data-tv-item="${id}"[^>]*>(?:<span[^>]*>)?([^<]*)<`).exec(
+		html,
+	)?.[1]
+/** The height and, where it is set, the width each item is drawn with, in canvas pixels. */
+const sizes = (html: string) =>
+	[...html.matchAll(/data-tv-item="([^"]+)"[^>]*style="([^"]*)"/g)].map(
+		([, id, style]) => ({
+			id,
+			height: Number(/height:(\d+)px/.exec(style)?.[1]),
+			width: Number(/width:(\d+)px/.exec(style)?.[1] ?? Number.NaN),
+		}),
+	)
 const focused = (html: string) =>
 	[...html.matchAll(/data-tv-item="([^"]+)" aria-current="true"/g)].map(
 		(match) => match[1],
@@ -63,6 +85,8 @@ const count = (html: string, part: string) => html.split(part).length - 1
 /** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The side of a bar's key on a phone's canvas shown at `scale`. */
+const keySize54 = (scale: number) => Math.max(54, Math.ceil(44 / scale))
 const EDITIONS = ["desktop", "phone"] as const
 
 test("Tonight's items in the markup are the machine's, in reading order, in both editions", () => {
@@ -157,15 +181,81 @@ test("the title screen's items in the markup are the machine's, in reading order
 		assert.deepEqual(focused(rendered.title.known[edition]), ["watch"])
 })
 
-test("every key of the title screen is a real button, as tall as the prototype's; a short phone's are lower", () => {
-	const { known, short } = rendered.title
+test("every key of the title screen is a real button, 74 canvas px tall on the desktop", () => {
+	const { known } = rendered.title
 	assert.equal(count(known.desktop, "<button"), 6)
 	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 6)
 	assert.equal(count(known.desktop, "h-[74px]"), 3)
-	// The phone: three keys in a column, 52 canvas px each; on a canvas under 400 px tall they are 46.
-	assert.equal(count(known.phone, "h-[52px]"), 3)
-	assert.equal(count(short, "h-[46px]"), 3)
-	assert.equal(count(short, "h-[52px]"), 0)
+	// The desktop's keys are drawn as designed; the rule is the phone's.
+	assert.equal(rendered.keySizes.desktop, 74)
+	assert.deepEqual(sizes(known.desktop), [])
+})
+
+test("on every phone of the room's table every key is 44 px or more on the phone's screen", () => {
+	assert.deepEqual(
+		rendered.phones.map((p) => p.phone),
+		["360x740", "375x667", "390x700", "390x844", "430x932", "844x390"],
+	)
+	for (const p of rendered.phones) {
+		for (const [screen, items] of [
+			["title", rendered.title.items],
+			["tonight", rendered.tonight.guest.items],
+			["rate", rendered.rate.items],
+		] as const) {
+			const drawn = sizes(p[screen])
+			// Every item of the screen has its size from the rule, the bar's keys included.
+			assert.deepEqual(
+				drawn.map((item) => item.id),
+				items.filter((item) => item !== "expand"),
+				`${p.phone} ${screen}`,
+			)
+			for (const item of drawn) {
+				assert.ok(
+					item.height * p.scale >= 44,
+					`${p.phone} ${screen} ${item.id}: ${item.height} canvas px at ${p.scale}`,
+				)
+				// The bar's keys are round.
+				if (item.id.startsWith("bar:")) assert.equal(item.width, item.height)
+			}
+		}
+	}
+	// The narrowest phone's keys are the largest on the canvas; a canvas shown at its own size keeps the design's.
+	assert.deepEqual(
+		rendered.phones.map((p) => p.key),
+		[67, 64, 61, 61, 55, 52],
+	)
+	// Before the window is measured nobody knows the scale, and nothing is painted.
+	assert.equal(rendered.keySizes.first, 52)
+})
+
+test("on the phone the keys stand two to a row, and what they say is cut short before it spills", () => {
+	for (const p of rendered.phones) {
+		assert.match(p.title, /class="mt-3\.5 grid grid-cols-2 gap-2"/)
+		assert.equal(count(p.title, '<span class="truncate">'), 3)
+		// Three keys fill the two rows but the last cell; two keys stand in the left column.
+		assert.equal(count(p.title, "col-start-1"), 0)
+		assert.equal(count(p.tonight, "col-start-1"), 2)
+	}
+})
+
+test("the toast stands in the bar's row at the left and ends before the bar's keys", () => {
+	const { desktop, phone, menuOpen } = rendered.toast
+	assert.match(
+		desktop,
+		/<div class="pointer-events-none absolute left-0 top-0 z-30 flex items-center h-\[108px\] pl-14" style="max-width:640px"><output class="tvc-toast">Rated 10 · Masterpiece<\/output>/,
+	)
+	assert.match(phone, /h-\[78px\] pl-5" style="max-width:\d+px"><output/)
+	assert.match(desktop, /^<div class="tvc [^"]*" data-tv-toast="">/)
+	// On the phone it ends 12 canvas px and more before the first of the bar's three keys.
+	for (const p of rendered.phones) {
+		const width = Number(/max-width:(\d+)px"><output/.exec(p.toast)?.[1])
+		const bar = 500 - 20 - (3 * keySize54(p.scale) + 16)
+		assert.ok(width <= bar - 12, `${p.phone}: ${width} against ${bar}`)
+		assert.ok(width >= 220, `${p.phone}: ${width} is room for its longest line`)
+	}
+	// The menu lies over everything: no toast while it is open, and no name steps back.
+	assert.ok(!menuOpen.includes("tvc-toast"))
+	assert.ok(!menuOpen.includes('data-tv-toast=""'))
 })
 
 test("the title screen names the title, its facts and its line", () => {
@@ -236,8 +326,6 @@ test("the Expand key's corner is reserved and empty on Tonight and on the title 
 		assert.match(html, /<div data-tv-expand-place="true" class="[^"]*"><\/div>/)
 		assert.ok(!ids(html).includes("expand"))
 	}
-	// On the phone the keys stand in a column on the left, clear of the corner.
-	assert.match(rendered.title.known.phone, /w-\[292px\] flex-col/)
 })
 
 test("the rating asks how the title was, with the machine's answers in its order", () => {

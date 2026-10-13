@@ -2,11 +2,21 @@
 // GoodWatch? here, and each mini app's screens as its slice adds them. This is how such a chunk is asked for and
 // drawn (the pattern of home-doors-code.tsx).
 //
+// TvScreen.tsx alone imports this file, and the scene takes what it needs of it from there. With a second importer
+// the build would count this small module as shared and move it into the shell of every page, with the name of
+// every lazy chunk in it (vite.config.js, rule 3 of the client chunks).
+//
 // A lazy screen is drawn after the page has hydrated, never by the server: a Suspense boundary in the server's
 // markup is hydrated after the rest, and the TV's first state changes in between make React drop that markup and
 // report React error 421. Until the code is there the screen shows `first`; once it is, it renders without
 // suspending.
-import { type ComponentType, type ReactNode, Suspense, lazy } from "react"
+import {
+	type ComponentProps,
+	type ComponentType,
+	type ReactNode,
+	Suspense,
+	lazy,
+} from "react"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
@@ -41,6 +51,15 @@ export const AboutCode = screenCode(() => import("./screens/About"))
 export const TonightCode = screenCode(() => import("./screens/Tonight"))
 export const TitleCode = screenCode(() => import("./screens/Title"))
 export const RateCode = screenCode(() => import("./screens/Rate"))
+
+// A screen's data hook is in the screen's chunk too, as a component that draws nothing and reports up to the
+// scene ("How a screen loads its data", docs/implementation/tv-screen-revamp/tonight-title/README.md).
+/** The title's card, marks and effects, for the title screen and the rating. */
+export const TitleData = screenCode<
+	ComponentProps<typeof import("./screens/Title").TitleData>
+>(() =>
+	import("./screens/Title").then((code) => ({ default: code.TitleData })),
+).Screen
 
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
 export function loadFirstScreens() {

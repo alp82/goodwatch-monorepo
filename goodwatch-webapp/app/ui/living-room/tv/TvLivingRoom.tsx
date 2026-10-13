@@ -5,10 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
 import { onFirstInteraction } from "~/utils/first-interaction"
-import { useReturnIntoTv } from "../tv-transition"
+import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
-import { TvScreen } from "./TvScreen"
-import { RateCode, TonightCode, loadFirstScreens } from "./screen-code"
+import {
+	RateCode,
+	TitleData,
+	TonightCode,
+	TvScreen,
+	loadFirstScreens,
+} from "./TvScreen"
 import {
 	type TvHomeData,
 	homeApps,
@@ -20,7 +25,7 @@ import { type TvEffect, readTvState } from "./tv-machine"
 import type { TvTitleScreens } from "./tv-title"
 import { useTv } from "./use-tv"
 import { useTvPoolState } from "./use-tv-pool"
-import { useTvTitle } from "./use-tv-title"
+import type { TvTitleReport } from "./use-tv-title"
 
 /** How long the TV's toast stays. */
 const TOAST_MS = 2400
@@ -90,23 +95,34 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			tonight.find((one) => tvTitleKey(one.card) === key)?.card ?? null,
 		[tonight],
 	)
-	const one = useTvTitle({ screen, member: data.member, known, say })
+	// The title on the title screen and the rating: its card, the person's marks and its effects are held by a
+	// component of the title screen's chunk, which reports them here (`TitleData`, mounted below). Until it has,
+	// the screen shows its bar alone.
+	const [one, setOne] = useState<TvTitleReport | null>(null)
+	const onTitle = screen.name === "title" || screen.name === "rate"
+	const titleName = one?.titleName ?? null
 	const ctx = useMemo(
-		() => ({ ...tvContextOf(data, pool, wished), titleName: one.titleName }),
-		[data, pool, wished, one.titleName],
+		() => ({ ...tvContextOf(data, pool, wished), titleName }),
+		[data, pool, wished, titleName],
 	)
+	const title = one?.title ?? null
 	const titles: TvTitleScreens = useMemo(
-		() => ({ tonight, waiting: !pool && !failed, title: one.title }),
-		[tonight, pool, failed, one.title],
+		() => ({ tonight, waiting: !pool && !failed, title }),
+		[tonight, pool, failed, title],
 	)
 
 	const google = useContinueWithGoogle()
-	const titleEffect = one.onEffect
+	const leave = useLeaveThroughTv()
+	const titleEffect = one?.onEffect
 	const onEffect = useCallback(
 		(effect: TvEffect) => {
-			// The title's own effects, and leaving through the TV.
-			if (titleEffect(effect)) return
+			// The title's own effects: Watch, Want to See, Seen it, the rating.
+			if (titleEffect?.(effect)) return
 			switch (effect.type) {
+				// The Expand key: the picture grows into the page.
+				case "expand":
+					leave(effect.href)
+					return
 				// Continue with Google, back to the same TV screen.
 				case "sign-in":
 					google(`${here.current.pathname}${here.current.search}`).catch(() =>
@@ -118,7 +134,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					return
 			}
 		},
-		[google, say, titleEffect],
+		[google, say, leave, titleEffect],
 	)
 	const tv = useTv(ctx, onEffect)
 	useEffect(() => {
@@ -135,19 +151,31 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	}, [interacted, tv.screen.name, tv.focused])
 
 	return (
-		<TvRoom
-			tv={tv.room}
-			startTitles={data.startTitles}
-			renderScreen={(canvas) => (
-				<TvScreen
-					tv={tv}
-					canvas={canvas}
-					ctx={ctx}
-					apps={apps}
-					toast={toast}
-					titles={titles}
+		<>
+			<TvRoom
+				tv={tv.room}
+				startTitles={data.startTitles}
+				renderScreen={(canvas) => (
+					<TvScreen
+						tv={tv}
+						canvas={canvas}
+						ctx={ctx}
+						apps={apps}
+						toast={toast}
+						titles={titles}
+					/>
+				)}
+			/>
+			{/* A screen's data, once for both editions. It draws nothing. */}
+			{onTitle && (
+				<TitleData
+					screen={screen}
+					member={data.member}
+					known={known}
+					say={say}
+					report={setOne}
 				/>
 			)}
-		/>
+		</>
 	)
 }

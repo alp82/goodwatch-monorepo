@@ -60,17 +60,56 @@ export type TvHomeData = {
 	shows: { next: TvShowNext[]; start: TvShowStart[] } | null
 }
 
-/** What the TV reads of the pool: its suggestions, best first for the person. */
-export type TvPool = { suggestions: TitleCard[] }
+/** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */
+export type TvPool = {
+	suggestions: TitleCard[]
+	/** A member's saved services, by name, as the pool answers them. */
+	savedServices?: string[]
+	/** A guest's saved services, by id: what their browser sent with the request (use-tv-pool.ts adds it). */
+	ownServiceIds?: number[]
+}
 
 /** A title's key on the TV and in its URL: `<media_type>-<tmdb_id>`. */
 export const tvTitleKey = (title: { media_type: string; tmdb_id: number }) =>
 	`${title.media_type}-${title.tmdb_id}`
 
 /**
+ * How ready a title is to be watched tonight: 0 when it streams on one of the person's own services, 1 when it
+ * streams on another service in their country, 2 when it streams nowhere there or nobody knows yet (a card's
+ * services are null while the country's availability loads).
+ */
+export function watchRank(
+	card: Pick<TitleCard, "services">,
+	pool: Pick<TvPool, "savedServices" | "ownServiceIds">,
+): 0 | 1 | 2 {
+	if (!card.services?.length) return 2
+	const names = pool.savedServices ?? []
+	const ids = pool.ownServiceIds ?? []
+	return card.services.some(
+		(service) => ids.includes(service.id) || names.includes(service.name),
+	)
+		? 0
+		: 1
+}
+
+/**
+ * The pool's titles in the order Tonight offers them. Tonight is for watching tonight: the titles that stream on
+ * the person's own services come first, then those that stream on another service in their country, then the
+ * rest. Inside each group the pool's own order stays (best first for the person). Nothing is left out, so when
+ * too few titles stream, the picks are filled up with the best of the rest, which say "Not streaming".
+ */
+export function tonightOrder(pool: TvPool): TitleCard[] {
+	return pool.suggestions
+		.map((card, at) => ({ card, at, rank: watchRank(card, pool) }))
+		.sort((a, b) => a.rank - b.rank || a.at - b.at)
+		.map(({ card }) => card)
+}
+
+/**
  * Tonight's picks: a member's from the loader. A guest's, and those of a member with nothing to pick from, are the
- * pool's best three, once the pool is there. `wished` is a guest's own Tonight's pick, the last title on the
- * Wishlist in their browser (`useTonightsPick`): it leads.
+ * first three of the pool in Tonight's order (`tonightOrder`), once the pool is there. `wished` is a guest's own
+ * Tonight's pick, the last title on the Wishlist in their browser (`useTonightsPick`): it leads, as it does in the
+ * site's navigation.
  */
 export function tonightPicks(
 	data: TvHomeData,
@@ -78,7 +117,7 @@ export function tonightPicks(
 	wished: TitleCard | null = null,
 ): TvTonightPick[] {
 	if (data.tonight.length) return data.tonight.slice(0, TONIGHT_PICKS)
-	const best: TvTonightPick[] = (pool?.suggestions ?? [])
+	const best: TvTonightPick[] = (pool ? tonightOrder(pool) : [])
 		.filter((card) => !wished || card.key !== wished.key)
 		.map((card) => ({ card, href: null }))
 	return [
