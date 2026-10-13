@@ -56,24 +56,12 @@ import {
 	sharedLine,
 	sharedNote,
 } from "./combination-words"
-import {
-	type Drawn,
-	type MapEngine,
-	type Mode,
-	type Pad,
-	createMapEngine,
-} from "./engine"
+import { type Drawn, type MapEngine, type Pad, createMapEngine } from "./engine"
 import type { IslandInput, MapIsland } from "./island"
 import { groupingOf, layRegions, localId, worldId } from "./regions"
 
 /** The map's filters as the URL holds them (null is the default). */
 type Filters = WorldQuery
-
-/**
- * How picked islands join: from far out each grouping is its islands, small, and an island sails to the middle as
- * soon as it's picked.
- */
-const MODE: Mode = { meta: "isles", join: "dock", dockFrom: 1 }
 
 /** The title whose card is open: nearest the focus, or pinned by a tap. */
 interface Active {
@@ -742,7 +730,6 @@ export function ExplorerMap({
 		null as unknown as Parameters<typeof createMapEngine>[2]["current"],
 	)
 	hooks.current = {
-		mode: () => MODE,
 		onTapRegion: (id) => goRegion(id),
 		visible,
 		pad: () => padRef.current,
