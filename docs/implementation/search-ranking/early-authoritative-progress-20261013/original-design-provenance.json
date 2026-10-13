@@ -1,0 +1,73 @@
+{
+  "schema": "search.early-authoritative-design-review.v1",
+  "actualCliExit": 0,
+  "requestedModel": "claude-opus-5-5",
+  "requestedEffort": "medium",
+  "actualModelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 14007,
+      "cacheReadInputTokens": 3088,
+      "cacheCreationInputTokens": 120627,
+      "webSearchRequests": 0,
+      "costUSD": 1.2457816,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10604,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "durationMs": 175600,
+  "argv": [
+    "claude",
+    "--print",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "medium",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--disable-slash-commands",
+    "--no-session-persistence",
+    "--output-format",
+    "json"
+  ],
+  "sourceOnly": true,
+  "tools": [],
+  "mcpServers": {},
+  "hostsInvoked": false,
+  "privateInputsSupplied": false,
+  "sourceEdits": 0,
+  "verdict": "NOT_READY_SEVEN_BLOCKERS",
+  "files": {
+    "DESIGN.md": {
+      "bytes": 7774,
+      "sha256": "60f6a35360994ca34ac841a92dd7b4a5225ccca8ceda6006d74c4cadf293d16c"
+    },
+    "manifest.json": {
+      "bytes": 4736,
+      "sha256": "a02dc043e0905bf26a2a3e41262f33124e2014e0961038896b3c971e84375683"
+    },
+    "review-prompt.txt": {
+      "bytes": 282468,
+      "sha256": "b0ab99d255bfa31261d9a2be8b3a8c11396258bf020dc01be35df4b54be5d97a"
+    },
+    "opus-review.json": {
+      "bytes": 11396,
+      "sha256": "d102082c91b91e998e29c43833bb9369e41fce6ee649e573687bf22ffd5194a9"
+    },
+    "opus-report.txt": {
+      "bytes": 9412,
+      "sha256": "a2a8744a844d0bb0ff1c75436bde0306d1c52a5629b4472e05aefae105b7a864"
+    },
+    "opus-stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

@@ -138,7 +138,7 @@ export function DiscoverPage({
 		guest,
 		initial,
 		ranked: searching ? (search.current?.ranked ?? null) : undefined,
-		provisional: searching && search.pendingTitleLookup,
+		provisional: searching && search.partial,
 	})
 
 	// Entering a search chooses Relevance; clearing it returns to the sort used before.
@@ -390,7 +390,13 @@ export function DiscoverPage({
 									Retry
 								</button>
 							</>
-						) : search.pendingTitleLookup ? (
+						) : search.pendingRanking ? (
+							<span>
+								{search.pendingTitleLookup
+									? "Still ranking and checking title matches."
+									: "Still ranking results."}
+							</span>
+						) : search.partial ? (
 							<span>Still checking title matches.</span>
 						) : null}
 					</div>
@@ -419,7 +425,12 @@ export function DiscoverPage({
 							marks={marks}
 							flipping={Boolean(flip)}
 						>
-							{!browse.hasNextPage && !browse.isPlaceholderData && !stale && (
+							{/* A partial list without a title is not a search that found nothing: the status line above says what
+							    it still waits for, and the people it names show above the grid. */}
+							{!browse.hasNextPage &&
+								!browse.isPlaceholderData &&
+								!stale &&
+								!(search.partial && first.total === 0) && (
 								<HiddenTitles
 									counts={first}
 									state={filters.state}

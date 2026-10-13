@@ -121,6 +121,8 @@ export async function action({ request }: ActionFunctionArgs) {
 						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
 						: batch });
 					if (sent) telemetry?.delivered(kind === "batch", Boolean(batch.rows.length || batch.people?.length), batch.elapsedMs, batch.errors ?? []);
+					// False when the stream had closed: the search then counts no delivery (see BatchDelivery).
+					return sent;
 				};
 				let completed = false;
 				try {

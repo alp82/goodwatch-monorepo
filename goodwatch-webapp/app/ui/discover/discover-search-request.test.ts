@@ -95,3 +95,22 @@ test("Discover publishes provisional title keys then resolves only the full list
 	assert.deepEqual(final.ranked, [1000000000043, 2000000000002])
 	assert.equal(final.pendingTitleLookup, false)
 })
+
+// The request only: which reading Discover then shows is chosen inside useDiscoverSearch.
+test("a pendingRanking list keeps its flag and no reading of its own, and the reading streamed after it still arrives", async (t) => {
+	stubFetch(t, () => streamAnswer(
+		{ kind: "provisional", batch: { rows: [{ key: "movie:42" }], reading: [], pendingTitleLookup: false, pendingRanking: true } },
+		{ kind: "reading", reading: [{ label: "heist" }] },
+		{ kind: "batch", batch: { rows: [{ key: "movie:43" }], reading: [{ label: "heist" }], pendingTitleLookup: false, pendingRanking: false } },
+	))
+	const events: unknown[] = []
+	const final = await runDiscoverSearch("fixture", {}, true, new AbortController().signal,
+		chips => events.push(["reading", chips]), answer => events.push(["provisional", answer]))
+	assert.deepEqual(events, [
+		["provisional", { q: "fixture", ranked: [1000000000042], reading: [], people: [], creditScope: null, errors: [], pendingTitleLookup: false, pendingRanking: true }],
+		["reading", [{ label: "heist" }]],
+	])
+	assert.deepEqual(final.ranked, [1000000000043])
+	assert.deepEqual(final.reading, [{ label: "heist" }])
+	assert.equal(final.pendingRanking, undefined)
+})

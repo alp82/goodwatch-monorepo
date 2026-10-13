@@ -78,20 +78,25 @@ export function servingFallback(search: {
 
 export class RankingDeadlineError extends Error {
 	readonly timings: Readonly<Record<string, number>>
+	/** The ranking that missed the deadline: the one promise that holds the place in line, still running. */
+	readonly ranking?: Promise<RankedSearch>
 
 	constructor(
 		ms: number,
 		timings: Readonly<Record<string, number>> = Object.freeze({}),
+		ranking?: Promise<RankedSearch>,
 	) {
 		super(`Search ranking missed its ${ms} ms deadline`)
 		this.name = "RankingDeadlineError"
 		this.timings = timings
+		this.ranking = ranking
 	}
 }
 
 /**
  * rankSearch with a deadline. On a miss it rejects with RankingDeadlineError; the ranking itself can't be cancelled,
- * so it finishes in the background, still counts as in flight, and its result is dropped.
+ * so it finishes in the background and still counts as in flight. The error carries that same ranking: a caller that
+ * already showed results may wait for it, and nothing is ranked a second time.
  */
 export function rankForServing(
 	reading: ReadingFields,
@@ -107,10 +112,10 @@ export function rankForServing(
 		timer = setTimeout(() => {
 			missed = true
 			searchAdmission.hold(ranking)
-			reject(new RankingDeadlineError(deadlineMs, progress.snapshot()))
+			reject(new RankingDeadlineError(deadlineMs, progress.snapshot(), ranking))
 		}, deadlineMs)
 	})
-	// After a miss nobody waits for the ranking, so its failure is only logged here.
+	// After a miss a caller may or may not wait for the ranking, so its failure is always logged here.
 	ranking.catch(() => {
 		if (missed)
 			console.error("Search ranking failed after its deadline", {

@@ -171,6 +171,128 @@ for (const phase of ["encodeEarly", "prefetch", "round1"] as const) {
 	})
 }
 
+test("a deadline exposes the same original pending ranking, which settles once after the gate opens and frees its place once", async (t) => {
+	probe.gate = "round1"
+	probe.blocked = deferred<void>()
+	probe.entered = deferred<void>()
+	probe.calls = []
+	const sleep = (ms: number) =>
+		new Promise<void>((resolve) => setTimeout(resolve, ms))
+	// Every wait below is bounded, and the gate opens by itself, so a ranking that never settles fails instead of hanging.
+	const within = <T>(promise: Promise<T>, ms: number) => {
+		let timer: ReturnType<typeof setTimeout> | undefined
+		return Promise.race([
+			promise,
+			new Promise<undefined>((resolve) => {
+				timer = setTimeout(() => resolve(undefined), ms)
+			}),
+		]).finally(() => clearTimeout(timer))
+	}
+	const blocked = probe.blocked
+	const safety = setTimeout(() => blocked.resolve(), 1200)
+	const before = searchAdmission.inFlight()
+	// The real admission still counts; the spy only records which work was held.
+	const holds = t.mock.method(searchAdmission, "hold")
+	let caught: unknown
+	const rejection = rankForServing(
+		reading,
+		{ query: "encoder", text: "encoder", nonEnglish: false, titleLookup: [] },
+		policy,
+		40,
+	).catch((error) => {
+		caught = error
+	})
+	await probe.entered.promise
+	await rejection
+	try {
+		assert.ok(caught instanceof RankingDeadlineError, String(caught))
+		const error = caught as unknown as {
+			timings: Record<string, number>
+			ranking?: Promise<{
+				results: unknown[]
+				rankerVersion: string
+				timings: Record<string, number>
+			}>
+		}
+		const snapshot = error.timings
+		assert.equal(snapshot.round1Pending, 1)
+		assert.ok(snapshot.round1Elapsed >= 20)
+		assert.ok(Object.isFrozen(snapshot))
+		const copy = { ...snapshot }
+		assert.equal(holds.mock.callCount(), 1, "the timed-out ranking is held once")
+		assert.equal(searchAdmission.inFlight(), before + 1)
+		const original = error.ranking
+		assert.ok(
+			original instanceof Promise,
+			"RankingDeadlineError does not expose the original pending ranking",
+		)
+		assert.equal(
+			original,
+			holds.mock.calls[0].arguments[0],
+			"the exposed ranking is not the one that holds the place in line",
+		)
+		let settlements = 0
+		const outcome = original.then(
+			(value) => {
+				settlements++
+				return { value }
+			},
+			(reason: unknown) => {
+				settlements++
+				return { reason }
+			},
+		)
+		// Past the deadline the original ranking is still at the gate, and keeps its place.
+		await sleep(30)
+		assert.equal(settlements, 0, "the exposed ranking settled before round 1")
+		assert.equal(searchAdmission.inFlight(), before + 1)
+		assert.equal(probe.calls.filter((name) => name === "round1").length, 1)
+		blocked.resolve()
+		const ended = await within(outcome, 2000)
+		assert.ok(ended, "the exposed ranking did not settle after the gate opened")
+		if (!("value" in ended))
+			assert.fail(`the original ranking failed: ${String(ended.reason)}`)
+		assert.ok(Array.isArray(ended.value.results))
+		assert.equal(typeof ended.value.rankerVersion, "string")
+		assert.equal(await original, ended.value)
+		// The completed ranking times its whole round1, the wait past the deadline included, under rankSearch's own
+		// name; the snapshot froze the pending span earlier and shares no name with the completed timings.
+		assert.ok(
+			ended.value.timings.round1 >= snapshot.round1Elapsed + 25,
+			"the completed round1 is not longer than the span frozen at the deadline",
+		)
+		assert.deepEqual(
+			Object.keys(snapshot).filter((name) => name in ended.value.timings),
+			[],
+		)
+		await sleep(10)
+		assert.equal(settlements, 1)
+		assert.deepEqual(
+			snapshot,
+			copy,
+			"late completion changed the captured timeout",
+		)
+		assert.equal(holds.mock.callCount(), 1, "late completion held again")
+		assert.equal(
+			searchAdmission.inFlight(),
+			before,
+			"the place in line is freed once, when the same ranking ends",
+		)
+		// The same ranking finished: nothing was encoded or sent to round 1 a second time.
+		for (const name of ["encodeEarly", "round1"])
+			assert.equal(
+				probe.calls.filter((call) => call === name).length,
+				1,
+				`${name} ran more than once`,
+			)
+	} finally {
+		clearTimeout(safety)
+		blocked.resolve()
+		probe.gate = ""
+		await sleep(10)
+	}
+})
+
 test("preparation started during the reading keeps its original encoder span without another encoder call", async () => {
 	const { RankingProgress } = await import("./ranking-progress.server.ts")
 	const { prepareSearch } = await import("./rank-search.server.ts")

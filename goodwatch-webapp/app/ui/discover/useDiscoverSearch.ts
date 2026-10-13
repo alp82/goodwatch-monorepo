@@ -9,6 +9,7 @@ import {
 	type SearchFilters,
 	searchFiltersKey,
 } from "~/server/combined-search/search-filters"
+import { selectReading } from "~/ui/search/search-partial"
 import { type DiscoverSearchResult, runDiscoverSearch } from "./discover-search-request"
 
 export type { DiscoverSearchResult } from "./discover-search-request"
@@ -64,7 +65,10 @@ export function useDiscoverSearch({
 	// A completed answer always wins, so a kept partial list can never cover it.
 	const current =
 		completed ?? (partial && (result.isFetching || result.isError) ? partial : null)
-	const pendingTitleLookup = Boolean(partial && current === partial)
+	const shown = partial && current === partial ? partial : null
+	// What the partial list still waits for. A list sent ahead of the ranking has no reading of its own.
+	const pendingTitleLookup = Boolean(shown?.pendingTitleLookup)
+	const pendingRanking = Boolean(shown?.pendingRanking)
 	// Nothing to retry while the search is running.
 	const failed = q !== null && result.isError && !result.isFetching
 	return {
@@ -72,17 +76,29 @@ export function useDiscoverSearch({
 		current: current ?? null,
 		/** The last answer, this query's or the previous one's, so the grid stays while the next list loads. */
 		last: q !== null ? (current ?? result.data ?? null) : null,
+		/** The shown list is a partial one, which the completed answer replaces. */
+		partial: Boolean(shown),
 		pendingTitleLookup,
-		/** This query's reading: from its batch, or streamed ahead of it; null until known. */
-		reading:
-			current?.reading ?? (streamed?.key === key ? streamed.chips : null),
+		pendingRanking,
+		/**
+		 * This search's reading: from its batch, or streamed ahead of it; null until known. `current` is this key's: the
+		 * partial list was matched on its key above, and a completed answer that isn't placeholder data is the query
+		 * key's own.
+		 */
+		reading: selectReading(
+			key,
+			current ? { key, reading: current.reading, pendingRanking } : null,
+			streamed,
+		),
 		loading:
 			q !== null && enabled && (result.isFetching || result.isPlaceholderData),
 		/** What to show next to Retry once the search has failed; null while it runs. */
 		error: failed
-			? pendingTitleLookup
-				? "Title matches could not finish. Showing the results found so far."
-				: (result.error?.message ?? null)
+			? pendingRanking
+				? "The search could not finish. Showing the results found so far."
+				: shown
+					? "Title matches could not finish. Showing the results found so far."
+					: (result.error?.message ?? null)
 			: null,
 		retry: result.refetch,
 	}
