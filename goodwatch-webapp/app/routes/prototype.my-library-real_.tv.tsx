@@ -11,13 +11,29 @@
 // are painted in from a fixed table of real TMDB paths, and the titles below the room are a fixed list. The site's
 // header above the room sees a guest. The pool answers 503 here (no title snapshot), so the home keeps what the
 // loader gave it.
+// `&session=on` (slice 8) also gives the page the sample member's session, as the harness's own pages have it: the
+// browser then knows a member, their marks are read from the harness, and a score goes through the app's own
+// `updateScores` into the dev server's memory. That is a member's rating on the TV, written and read back, without
+// an account and without a database. Without it the page has no session, as before.
 // A production build leaves the route out (PROTOTYPES in vite.config.js: `prototype.my-library*`).
 import {
 	type LinksFunction,
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
+import {
+	type ShouldRevalidateFunction,
+	useLoaderData,
+	useSearchParams,
+} from "@remix-run/react"
+import {
+	type ReactNode,
+	startTransition,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 import { loadMemberHome } from "~/server/living-room/tv-loader.server"
 import {
 	HARNESS_TASTE,
@@ -37,6 +53,7 @@ import {
 	memberOf,
 	seenOf,
 } from "~/ui/prototype-my-library/setup"
+import { AuthContext } from "~/utils/auth"
 
 type Art = { poster_path: string; backdrop_path: string }
 
@@ -162,7 +179,66 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	defaultShouldRevalidate,
 }) => (isTvOnlyChange(currentUrl, nextUrl) ? false : defaultShouldRevalidate)
 
+const API = "/prototype/my-library-real/api"
+/** The member's requests the harness answers for the sample member: their marks, and a score. */
+const HARNESS_ROUTES: Record<string, string> = {
+	"/api/user-data": "user-data",
+	"/api/update-scores": "rate",
+}
+
+/** Sends the member's marks and scores to the harness's API (prototype.my-library-real_.api.ts). */
+function installFetch(setup: string) {
+	const real = window.fetch
+	window.fetch = (input, init) => {
+		const url = new URL(
+			typeof input === "string" || input instanceof URL ? input : input.url,
+			location.origin,
+		)
+		const what =
+			url.origin === location.origin ? HARNESS_ROUTES[url.pathname] : undefined
+		return what ? real(`${API}?what=${what}&${setup}`, init) : real(input, init)
+	}
+	return () => {
+		window.fetch = real
+	}
+}
+
+/** The sample member's session around the TV, once their requests go to the harness. */
+function MemberSession({
+	setup,
+	children,
+}: { setup: string; children: ReactNode }) {
+	const [ready, setReady] = useState("")
+	useEffect(() => {
+		const remove = installFetch(setup)
+		startTransition(() => setReady(setup))
+		return remove
+	}, [setup])
+	const auth = useMemo(
+		() => ({
+			supabase: undefined,
+			getSupabase: () =>
+				Promise.reject(new Error("The harness has no sign-in")),
+			// biome-ignore lint/suspicious/noExplicitAny: a member who does not exist; only the id is read.
+			user: { id: HARNESS_MEMBER } as any,
+			loading: false,
+		}),
+		[],
+	)
+	// The page is drawn on the server without a session, and hydrates so; the member is there right after.
+	const guest = useContext(AuthContext)
+	return (
+		<AuthContext.Provider value={ready === setup ? auth : guest}>
+			{children}
+		</AuthContext.Provider>
+	)
+}
+
 export default function TvHarness() {
 	const data = useLoaderData<typeof loader>() as unknown as TvHomeData
-	return <TvLivingRoom data={data} />
+	const [params] = useSearchParams()
+	const tv = <TvLivingRoom data={data} />
+	if (params.get("session") !== "on") return tv
+	const setup = `member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}&landed=${landedOf(params.get("landed"))}`
+	return <MemberSession setup={setup}>{tv}</MemberSession>
 }

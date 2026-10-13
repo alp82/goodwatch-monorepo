@@ -35,7 +35,11 @@ const PHONE = [390, 844]
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 const TONIGHT = ["details", "another", ...BAR]
 const TITLE = ["watch", "want-to-see", "seen", ...BAR]
-const RATE = ["level:9", "level:7", "level:5", "level:3", ...BAR]
+// The rating is the rating strip since slice 8 (../taste): its four levels from low to high, and on the desktop the
+// ten exact scores under them. The focus starts on Good.
+const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
+const SCORES = Array.from({ length: 10 }, (_, at) => `score:${at + 1}`)
+const rateItems = (phone) => [...LEVELS, ...(phone ? [] : SCORES), ...BAR]
 /** The title the Watch key is followed on: it streams in the United States, and its page is cached. */
 const MATRIX = { key: "movie-603", catalog: 1_000_000_000_603, name: "The Matrix", path: "/movie/603-the-matrix" }
 const THRONES = 2_000_000_001_399
@@ -276,6 +280,7 @@ async function endpoint() {
 async function walk(who, url, size) {
 	const member = who === "member"
 	const phone = size[0] < 768
+	const RATE = rateItems(phone)
 	const at = (tv) => (member ? `?member=six${tv ? `&${tv}` : ""}` : tv ? `?${tv}` : "")
 	const home = at("")
 	// The keys along a row on the desktop stand in a column on the phone.
@@ -425,22 +430,22 @@ async function walk(who, url, size) {
 	// ---- Seen it asks how it was; the answer is stored and returns to the title.
 	s = await key(page, toSeen, "seen")
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "Seen it opens the rating")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "Seen it opens the rating, with the focus on Good")
 	is(s.history, history + 3, "the rating is one more history entry")
 	check(s.heading === `How was ${title.title}?`, `it asks how the title was: ${s.heading}`)
-	is([s.labels["level:9"], s.labels["level:7"], s.labels["level:5"], s.labels["level:3"]], ["Excellent", "Good", "Mediocre", "Bad"], "the four answers of the plain version")
+	is(LEVELS.map((id) => s.labels[id].replace(/\d.*$/, "")), ["Bad", "Mediocre", "Good", "Excellent"], "the strip's four levels, low to high")
 	is(s.expandPlace, null, "the rating has no Expand key")
-	s = await key(page, "ArrowRight", "level:7")
+	s = await key(page, "ArrowRight", "level:9")
 	await page.keyboard.press("ArrowUp")
-	s = await until(page, (x) => x.focus[0]?.startsWith("bar:"), "Up from the answers reaches the bar")
+	s = await until(page, (x) => x.focus[0]?.startsWith("bar:"), "Up from the levels reaches the bar")
 	await page.keyboard.press("ArrowDown")
-	s = await until(page, (x) => x.focus[0]?.startsWith("level:"), "Down from the bar returns to the answers")
-	// Back to the first answer: along the row on the desktop; on the phone the answers are two by two.
-	for (const press of phone ? ["ArrowLeft", "ArrowUp"] : ["ArrowLeft", "ArrowLeft", "ArrowLeft"]) {
-		if ((await read(page)).focus[0] === "level:9") break
-		await page.keyboard.press(press)
+	s = await until(page, (x) => x.focus[0]?.startsWith("level:"), "Down from the bar returns to the levels")
+	// Along the row to its left end, then to Good.
+	for (let n = 0; n < 3; n++) {
+		await page.keyboard.press("ArrowLeft")
 		await page.waitForTimeout(150)
 	}
+	s = await key(page, "ArrowRight", "level:5")
 	s = await key(page, "ArrowRight", "level:7")
 	await page.keyboard.press("Enter")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "7 · Good", "an answer stores the score and returns to the title, whose key now says it")
@@ -450,13 +455,14 @@ async function walk(who, url, size) {
 	is(writes().length, 0, "nothing was sent to the server: without a session the marks are the browser's")
 	// Rating again changes the score.
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "Seen it again opens the rating")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "Seen it again opens the rating")
+	s = await key(page, "ArrowRight", "level:9")
 	await page.keyboard.press("Enter")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "9 · Excellent", "another answer changes the score")
 	is(await marksOf(), [mark("score", 9)], "and the browser's progress holds the one score")
 	// Back from the rating without an answer changes nothing.
 	await page.keyboard.press("Enter")
-	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:9", RATE), "the rating once more")
+	s = await until(page, screenIs(at(`tv=rate&title=${tvKey(title)}`), "level:7", RATE), "the rating once more")
 	await page.keyboard.press("Escape")
 	s = await until(page, (x) => screenIs(titleAt, "seen", TITLE)(x) && x.labels.seen === "9 · Excellent", "Back from the rating returns to the title with nothing changed")
 
@@ -504,7 +510,7 @@ async function walk(who, url, size) {
 	s = await until(page, (x) => x.search.includes("tv=title&title=") && focusIs("watch")(x) && same(x.items, TITLE), `${phone ? "a tap" : "a click"} on Details opens the title`)
 	const pointed = s.search
 	await point(page, "seen", phone)
-	s = await until(page, (x) => x.search === pointed.replace("tv=title", "tv=rate") && focusIs("level:9")(x) && same(x.items, RATE), `${phone ? "a tap" : "a click"} on Seen it opens the rating`)
+	s = await until(page, (x) => x.search === pointed.replace("tv=title", "tv=rate") && focusIs("level:7")(x) && same(x.items, RATE), `${phone ? "a tap" : "a click"} on Seen it opens the rating`)
 	await point(page, "level:5", phone)
 	s = await until(page, (x) => x.search === pointed && x.labels.seen === "5 · Mediocre", `${phone ? "a tap" : "a click"} on an answer stores it`)
 	await point(page, "bar:back", phone)
@@ -629,7 +635,7 @@ async function sizes() {
 		fits(await layout(page), "a title with its toast", { touch, toast: true })
 		await key(page, touch ? "ArrowDown" : "ArrowRight", "seen")
 		await page.keyboard.press("Enter")
-		await until(page, (x) => same(x.items, RATE) && focusIs("level:9")(x), "the rating")
+		await until(page, (x) => same(x.items, rateItems(touch)) && focusIs("level:7")(x), "the rating")
 		// The toast of the screen before is still up: it covers no answer either.
 		smallest.rate = fits(await layout(page), "the rating", { touch }).key
 		await page.keyboard.press("ArrowDown")
@@ -1049,10 +1055,9 @@ async function shots(own, pool) {
 			await shot(page, `title-wishlist-${who}-${device}`)
 			await page.keyboard.press(phone ? "ArrowDown" : "ArrowRight")
 			await page.keyboard.press("Enter")
-			await until(page, (x) => x.search.includes("tv=rate") && focusIs("level:9")(x), "the rating")
+			await until(page, (x) => x.search.includes("tv=rate") && focusIs("level:7")(x), "the rating")
 			await page.waitForTimeout(2600)
 			await shot(page, `rate-${who}-${device}`)
-			await page.keyboard.press("ArrowRight")
 			await page.keyboard.press("Enter")
 			await until(page, (x) => x.search.includes("tv=title") && x.labels.seen === "7 · Good", "rated")
 			await shot(page, `title-rated-${who}-${device}`)

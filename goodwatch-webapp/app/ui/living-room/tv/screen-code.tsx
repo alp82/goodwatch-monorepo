@@ -16,6 +16,7 @@ import {
 	type ReactNode,
 	Suspense,
 	lazy,
+	useRef,
 } from "react"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -34,8 +35,13 @@ export function screenCode<P extends object>(
 	const Lazy = lazy(load)
 	function Screen({ first = null, ...props }: P & { first?: ReactNode }) {
 		const hydrated = useHydrated()
+		// What this screen was first drawn with stays what it is drawn with. Its code arrives while it is on show,
+		// and drawing the loaded component in place of `Lazy` from then on would be another component to React: the
+		// screen would be mounted a second time, and a data component would ask for its data twice.
+		const drawn = useRef<ComponentType<P> | null>(null)
 		if (!hydrated) return first
-		const Loaded = (loaded ?? Lazy) as ComponentType<P>
+		drawn.current ??= (loaded ?? Lazy) as ComponentType<P>
+		const Loaded = drawn.current
 		return (
 			<Suspense fallback={first}>
 				<Loaded {...(props as P)} />
@@ -59,6 +65,16 @@ export const TitleData = screenCode<
 	ComponentProps<typeof import("./screens/Title").TitleData>
 >(() =>
 	import("./screens/Title").then((code) => ({ default: code.TitleData })),
+).Screen
+
+// Slice 8: Taste, and the taste quiz. The quiz and the rating draw with the same strip (RatingStrip.tsx).
+export const TasteCode = screenCode(() => import("./screens/Taste"))
+export const QuizCode = screenCode(() => import("./screens/Quiz"))
+/** The person's taste and the quiz behind Taste, a side's screen and the quiz. */
+export const TasteData = screenCode<
+	ComponentProps<typeof import("./screens/Taste").TasteData>
+>(() =>
+	import("./screens/Taste").then((code) => ({ default: code.TasteData })),
 ).Screen
 
 /** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */

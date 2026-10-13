@@ -3,9 +3,13 @@ import { describe, it } from "node:test"
 import type { EnabledFeatures } from "~/utils/features"
 import { searchHref } from "../../navigation/destinations.ts"
 import { DOOR_HREF as OLD_DOOR_HREF } from "../tv-flow.ts"
+import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
 import {
 	DOOR_HREF,
 	EMPTY_CONTEXT,
+	STRIP_LEVELS,
+	STRIP_SCORES,
+	STRIP_START,
 	type TvAction,
 	type TvContext,
 	type TvScreen,
@@ -52,6 +56,10 @@ const member: TvContext = {
 }
 
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The rating strip: its levels low to high, and the exact scores the desktop shows under them. */
+const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
+const SCORES = Array.from({ length: 10 }, (_, at) => `score:${at + 1}`)
+const desktop: TvContext = { ...guest, exactScores: true }
 
 const at = (query: string, depth = 0, ctx: TvContext = guest) =>
 	readTvState(new URLSearchParams(query), ctx, depth)
@@ -310,14 +318,21 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("the quiz: four answers, no Expand", () => {
-		assert.deepEqual(items("tv=quiz"), [
-			"answer:loved",
-			"answer:liked",
-			"answer:disliked",
-			"answer:skip",
+	it("the quiz: the strip's four levels from low to high, Haven't seen it, no Expand", () => {
+		assert.deepEqual(items("tv=quiz"), [...LEVELS, "skip", ...BAR])
+	})
+
+	it("the quiz on the desktop: the ten exact scores under the levels", () => {
+		assert.deepEqual(items("tv=quiz", desktop), [
+			...LEVELS,
+			...SCORES,
+			"skip",
 			...BAR,
 		])
+	})
+
+	it("the quiz without a title to ask about: the bar alone", () => {
+		assert.deepEqual(items("tv=quiz", { ...desktop, titles: [] }), BAR)
 	})
 
 	it("My shows: up to three Next episodes and up to three shows to start", () => {
@@ -343,12 +358,16 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("the rating: four levels, best first, no Expand", () => {
-		assert.deepEqual(items("tv=rate&title=movie-1"), [
-			"level:9",
-			"level:7",
-			"level:5",
-			"level:3",
+	it("the rating: the same strip without Haven't seen it, no Expand", () => {
+		assert.deepEqual(items("tv=rate&title=movie-1"), [...LEVELS, ...BAR])
+		assert.deepEqual(items("tv=rate&title=movie-1", desktop), [
+			...LEVELS,
+			...SCORES,
+			...BAR,
+		])
+		// Its title is in the address: the strip is there whatever list the page holds.
+		assert.deepEqual(items("tv=rate&title=movie-1", { ...guest, titles: [] }), [
+			...LEVELS,
 			...BAR,
 		])
 	})
@@ -600,9 +619,9 @@ describe("history: what goes back", () => {
 		assert.equal(choose("tv=about", "got-it").history, "back")
 	})
 
-	it("the quiz answer that reaches the goal, with the effect that stores it", () => {
+	it("the quiz score that reaches the goal, with the effect that stores it", () => {
 		const last = { ...guest, quizProgress: 4 }
-		const t = choose("tv=quiz", "answer:liked", last)
+		const t = choose("tv=quiz", "level:7", last)
 		assert.equal(t.history, "back")
 		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 7 }])
 	})
@@ -643,13 +662,8 @@ describe("history: a deep link has nothing to go back to", () => {
 		assert.equal(t.state, start)
 	})
 
-	it("the last quiz answer shows Taste", () => {
-		const t = choose(
-			"tv=quiz",
-			"answer:loved",
-			{ ...guest, quizProgress: 4 },
-			0,
-		)
+	it("the last quiz score shows Taste", () => {
+		const t = choose("tv=quiz", "level:9", { ...guest, quizProgress: 4 }, 0)
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=taste")
 		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 9 }])
@@ -716,14 +730,14 @@ describe("history: what changes nothing", () => {
 		)
 	})
 
-	it("an action that only has an effect: Watch, Want to See, a quiz answer before the last", () => {
+	it("an action that only has an effect: Watch, Want to See, a quiz score before the last", () => {
 		const watch = choose("tv=title&title=movie-1", "watch")
 		assert.equal(watch.history, "none")
 		assert.deepEqual(watch.effects, [{ type: "watch", title: "movie-1" }])
 		const want = choose("tv=title&title=movie-1", "want-to-see")
 		assert.equal(want.history, "none")
 		assert.deepEqual(want.effects, [{ type: "want-to-see", title: "movie-1" }])
-		const answer = choose("tv=quiz", "answer:disliked", {
+		const answer = choose("tv=quiz", "level:3", {
 			...guest,
 			quizProgress: 3,
 		})
@@ -850,10 +864,10 @@ describe("the title screen and the rating", () => {
 	it("Seen it asks how it was, and the rating returns to the title", () => {
 		const rate = choose("tv=title&title=show-3", "seen", member)
 		assert.equal(rate.state.depth, 2)
-		assert.equal(focusedItem(rate.state, member), "level:9")
+		assert.equal(focusedItem(rate.state, member), "level:7")
 		const t = run(rate.state, member, { type: "ok" })
 		assert.equal(t.history, "back")
-		assert.deepEqual(t.effects, [{ type: "rate", title: "show-3", score: 9 }])
+		assert.deepEqual(t.effects, [{ type: "rate", title: "show-3", score: 7 }])
 	})
 
 	it("Watch names the title, and the screen stays as it is with the key focused", () => {
@@ -897,38 +911,244 @@ describe("the title screen and the rating", () => {
 	})
 })
 
-describe("the taste quiz", () => {
-	it("Loved it stores 9, Liked it 7, Didn't like it 3", () => {
-		for (const [item, score] of [
-			["answer:loved", 9],
-			["answer:liked", 7],
-			["answer:disliked", 3],
-		] as const)
-			assert.deepEqual(choose("tv=quiz", item).effects, [
+describe("the rating strip", () => {
+	// The strip as the desktop lays it out: each level as wide as its scores, the ten scores under them, and in the
+	// quiz Haven't seen it under those. The bar is above, at the right.
+	const cell = 100
+	const span = [
+		["level:3", 0, 4],
+		["level:5", 4, 2],
+		["level:7", 6, 2],
+		["level:9", 8, 2],
+	] as const
+	const boxes: TvBox[] = [
+		...span.map(([id, from, width]) => ({
+			id,
+			left: from * cell,
+			top: 300,
+			width: width * cell - 8,
+			height: 92,
+		})),
+		...SCORES.map((id, at) => ({
+			id,
+			left: at * cell,
+			top: 400,
+			width: cell - 8,
+			height: 64,
+		})),
+		{ id: "skip", left: 0, top: 492, width: 280, height: 64 },
+		{ id: "bar:back", left: 560, top: 20, width: 130, height: 64 },
+		{ id: "bar:search", left: 700, top: 20, width: 150, height: 64 },
+		{ id: "bar:menu", left: 860, top: 20, width: 132, height: 64 },
+	]
+	const move = (
+		query: string,
+		from: string,
+		dir: TvAction & { type: "move" },
+	) =>
+		focusedItem(
+			run(at(query, 1, desktop), desktop, { type: "focus", item: from }, dir)
+				.state,
+			desktop,
+		)
+	const go = (dir: "up" | "down" | "left" | "right") =>
+		({ type: "move", dir, boxes }) as const
+
+	it("reads its levels and their scores from the app's rating levels", () => {
+		assert.deepEqual(
+			STRIP_LEVELS,
+			RATING_LEVELS.map((level) => level.score),
+		)
+		assert.deepEqual(STRIP_LEVELS, [3, 5, 7, 9])
+		assert.deepEqual(STRIP_SCORES, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+		assert.equal(STRIP_START, "level:7")
+		assert.equal(RATING_LEVELS[levelOf(7)].name, "Good")
+	})
+
+	it("OK on a level gives the level's score: 3, 5, 7 and 9", () => {
+		for (const score of [3, 5, 7, 9] as const) {
+			assert.deepEqual(choose("tv=quiz", `level:${score}`).effects, [
 				{ type: "quiz-rate", score },
 			])
+			assert.deepEqual(
+				choose("tv=rate&title=movie-1", `level:${score}`).effects,
+				[{ type: "rate", title: "movie-1", score }],
+			)
+		}
 	})
 
+	it("an exact score is given as it is, in the quiz and for a title", () => {
+		for (const score of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const) {
+			assert.deepEqual(choose("tv=quiz", `score:${score}`, desktop).effects, [
+				{ type: "quiz-rate", score },
+			])
+			const rated = choose("tv=rate&title=movie-1", `score:${score}`, desktop)
+			assert.equal(rated.history, "back")
+			assert.deepEqual(rated.effects, [
+				{ type: "rate", title: "movie-1", score },
+			])
+		}
+	})
+
+	it("has no exact score on the phone: choosing one does nothing", () => {
+		const start = at("tv=quiz", 1)
+		const t = run(start, guest, { type: "choose", item: "score:8" })
+		assert.equal(t.state, start)
+		assert.deepEqual(t.effects, [])
+		assert.equal(
+			run(start, guest, { type: "focus", item: "score:8" }).state,
+			start,
+		)
+	})
+
+	it("Left and Right move along the levels, and stop at the ends", () => {
+		assert.equal(move("tv=quiz", "level:7", go("right")), "level:9")
+		assert.equal(move("tv=quiz", "level:9", go("right")), "level:9")
+		assert.equal(move("tv=quiz", "level:7", go("left")), "level:5")
+		assert.equal(move("tv=quiz", "level:5", go("left")), "level:3")
+		assert.equal(move("tv=quiz", "level:3", go("left")), "level:3")
+	})
+
+	it("Down from a level lands on the lowest exact score under it", () => {
+		for (const [level, score] of [
+			["level:3", "score:1"],
+			["level:5", "score:5"],
+			["level:7", "score:7"],
+			["level:9", "score:9"],
+		])
+			for (const query of ["tv=quiz", "tv=rate&title=movie-1"])
+				assert.equal(move(query, level, go("down")), score, level)
+	})
+
+	it("Up from an exact score lands on the level over it", () => {
+		const over = [3, 3, 3, 3, 5, 5, 7, 7, 9, 9]
+		for (const query of ["tv=quiz", "tv=rate&title=movie-1"])
+			SCORES.forEach((score, at) =>
+				assert.equal(move(query, score, go("up")), `level:${over[at]}`, score),
+			)
+	})
+
+	it("these two moves need no boxes: the machine names them before the direction rule", () => {
+		const blind = { type: "move", dir: "down", boxes: [] } as const
+		assert.equal(move("tv=quiz", "level:3", blind), "score:1")
+		assert.equal(
+			move("tv=quiz", "score:10", { ...blind, dir: "up" }),
+			"level:9",
+		)
+	})
+
+	it("Left and Right move along all ten scores", () => {
+		assert.equal(move("tv=quiz", "score:4", go("right")), "score:5")
+		assert.equal(move("tv=quiz", "score:7", go("left")), "score:6")
+		assert.equal(move("tv=quiz", "score:10", go("right")), "score:10")
+		assert.equal(move("tv=quiz", "score:1", go("left")), "score:1")
+	})
+
+	it("Down from the scores reaches Haven't seen it in the quiz; a rating has nothing there", () => {
+		assert.equal(move("tv=quiz", "score:2", go("down")), "skip")
+		const rate = boxes.filter((box) => box.id !== "skip")
+		assert.equal(
+			move("tv=rate&title=movie-1", "score:2", {
+				type: "move",
+				dir: "down",
+				boxes: rate,
+			}),
+			"score:2",
+		)
+	})
+
+	it("Up from a level reaches the bar, and Down from the bar comes back to the levels", () => {
+		assert.equal(move("tv=quiz", "level:9", go("up")), "bar:menu")
+		assert.equal(move("tv=quiz", "bar:menu", go("down")), "level:9")
+	})
+
+	it("on the phone, without exact scores, Down from a level is the direction rule's: Haven't seen it", () => {
+		const phone = boxes.filter((box) => !box.id.startsWith("score:"))
+		const t = run(
+			at("tv=quiz", 1),
+			guest,
+			{ type: "focus", item: "level:5" },
+			{ type: "move", dir: "down", boxes: phone },
+		)
+		assert.equal(focusedItem(t.state, guest), "skip")
+	})
+
+	it("leaves the menu's own moves alone while the menu is open", () => {
+		const open = run(at("tv=quiz", 1, desktop), desktop, {
+			type: "toggle-menu",
+		})
+		const t = run(open.state, desktop, { type: "move", dir: "down", boxes: [] })
+		assert.equal(focusedItem(t.state, desktop), "menu:home")
+		assert.equal(t.state.focus, open.state.focus)
+	})
+
+	it("the pointer over a key gives it the focus, and a click gives its score", () => {
+		const over = run(at("tv=quiz", 1, desktop), desktop, {
+			type: "focus",
+			item: "score:6",
+		})
+		assert.equal(focusedItem(over.state, desktop), "score:6")
+		assert.deepEqual(over.effects, [])
+		const t = run(over.state, desktop, { type: "choose", item: "score:8" })
+		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 8 }])
+	})
+
+	it("the wheel steps through the levels, the scores and Haven't seen it in reading order", () => {
+		const all = tvItems({ name: "quiz" }, desktop)
+		let state = at("tv=quiz", 1, desktop)
+		const from = all.indexOf("level:7")
+		const seen = all.map(() => {
+			state = transition(state, { type: "step", by: 1 }, desktop).state
+			return focusedItem(state, desktop)
+		})
+		assert.deepEqual(seen, [...all.slice(from + 1), ...all.slice(0, from + 1)])
+	})
+})
+
+describe("the taste quiz", () => {
 	it("Haven't seen it skips and never ends the quiz", () => {
-		const t = choose("tv=quiz", "answer:skip", { ...guest, quizProgress: 4 })
+		const t = choose("tv=quiz", "skip", { ...guest, quizProgress: 4 })
 		assert.equal(t.history, "none")
 		assert.deepEqual(t.effects, [{ type: "quiz-skip" }])
+		assert.equal(focusedItem(t.state, guest), "skip")
 	})
 
-	it("keeps the focus on the answer, so the next title takes the same press", () => {
-		const t = run(
-			at("tv=quiz", 2),
-			guest,
-			{ type: "choose", item: "answer:liked" },
-			{ type: "ok" },
-		)
-		assert.equal(focusedItem(t.state, guest), "answer:liked")
-		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 7 }])
+	it("keeps the focus where it was after a score, so the next title takes the same press", () => {
+		for (const item of ["level:3", "level:9", "score:8", "score:1"]) {
+			const t = run(
+				at("tv=quiz", 2, desktop),
+				desktop,
+				{ type: "choose", item },
+				{ type: "ok" },
+				{ type: "ok" },
+			)
+			assert.equal(focusedItem(t.state, desktop), item)
+			assert.equal(t.history, "none")
+			assert.deepEqual(t.effects, [
+				{ type: "quiz-rate", score: Number(item.split(":")[1]) },
+			])
+		}
+	})
+
+	it("ends with the score that reaches the goal, whichever key gave it", () => {
+		const last = { ...desktop, quizProgress: 4 }
+		for (const item of ["level:5", "score:10"]) {
+			const t = choose("tv=quiz", item, last)
+			assert.equal(t.history, "back")
+			assert.equal(t.effects.length, 1)
+		}
 	})
 
 	it("goes on past the goal when rating more", () => {
-		const t = choose("tv=quiz", "answer:loved", { ...member, quizProgress: 7 })
+		const t = choose("tv=quiz", "level:9", { ...member, quizProgress: 7 })
 		assert.equal(t.history, "none")
+	})
+
+	it("Haven't seen it is the quiz's alone", () => {
+		const start = at("tv=rate&title=movie-1", 1)
+		const t = run(start, guest, { type: "choose", item: "skip" })
+		assert.equal(t.state, start)
+		assert.deepEqual(t.effects, [])
 	})
 })
 
@@ -1099,16 +1319,16 @@ describe("focus", () => {
 		box("bar:menu", 360, 0),
 	]
 
-	it("starts on the screen's first own item, never on the bar or the Expand key", () => {
+	it("starts on the screen's first own item, on the rating strip on Good, never on the bar or the Expand key", () => {
 		for (const [query, first] of [
 			["", "app:tonight"],
 			["tv=tonight", "details"],
 			["tv=discover", "mood:funny"],
 			["tv=discover&mood=funny", "title:movie-11"],
 			["tv=explorer", "island:i1"],
-			["tv=quiz", "answer:loved"],
+			["tv=quiz", "level:7"],
 			["tv=title&title=movie-1", "watch"],
-			["tv=rate&title=movie-1", "level:9"],
+			["tv=rate&title=movie-1", "level:7"],
 			["tv=search", "idea:cozy mystery"],
 			["tv=about", "got-it"],
 		])

@@ -328,18 +328,17 @@ test("the Expand key's corner is reserved and empty on Tonight and on the title 
 	}
 })
 
-test("the rating asks how the title was, with the machine's answers in its order", () => {
+// The strip itself, with its exact scores on the desktop, is tv-taste-render.test.ts's.
+test("the rating asks how the title was, on the strip's levels from low to high", () => {
 	const { items, desktop, phone, waiting } = rendered.rate
-	assert.deepEqual(items, ["level:9", "level:7", "level:5", "level:3", ...BAR])
+	assert.deepEqual(items, ["level:3", "level:5", "level:7", "level:9", ...BAR])
 	for (const html of [desktop, phone]) {
 		assert.deepEqual(ids(html), items)
 		assert.deepEqual(focused(html), ["level:9"])
 		assert.match(html, />Seen it</)
 		assert.match(html, />How was The Matrix\?</)
-		assert.equal(label(html, "level:9"), "Excellent")
-		assert.equal(label(html, "level:7"), "Good")
-		assert.equal(label(html, "level:5"), "Mediocre")
-		assert.equal(label(html, "level:3"), "Bad")
+		for (const name of ["Bad, 3", "Mediocre, 5", "Good, 7", "Excellent, 9"])
+			assert.equal(count(html, `aria-label="${name}"`), 1)
 		assert.ok(!html.includes("data-tv-expand-place"))
 	}
 	assert.match(waiting, />How was it\?</)
