@@ -1,0 +1,14 @@
+✔ empty early frame is not usable; people-only usable and full same stream distinct (1.56863ms)
+✔ reading and error do not count first usable; duplicate final refused (0.626851ms)
+✔ one request retains provisional/final warnings, charge and full EOF (29.052311ms)
+✔ truncated final and HTTP failure do not retry or promote completion (0.980305ms)
+✔ empty final qualifies; empty provisional does not; missing batch numbers remain null/unobserved (0.278418ms)
+✔ malformed public identities/numeric/pending data refuse without invented values (0.356389ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 114.642703

@@ -1,10 +1,10 @@
 // The map's engine: the camera, the layout of picked islands, and the painting, on the sea renderer and a poster canvas.
 // - The world has regions (one per grouping) around a middle kept free for the combination (regions.ts). Two scales:
 //   `fitS` shows the whole world, `baseS` one region.
-// - Zoomed out, a grouping shows as its islands small ("isles", painted on the poster layer) or as one land ("lands",
-//   an island of the sea); the sea holds 24 islands, so it gets the cast and the islands nearest the middle of the view.
-// - Up to five islands are picked (`setLit`); their combination rises in the middle (`raiseMix`). Picked islands stay
-//   home with a band of light to it, or sail to it ("dock"). Nothing else moves. The page uses "isles" and "dock".
+// - Zoomed out, a grouping shows as its islands small, painted on the poster layer; the sea holds 24 islands, so it
+//   gets the cast and the islands nearest the middle of the view.
+// - Up to five islands are picked (`setLit`); their combination rises in the middle (`raiseMix`). A picked island
+//   sails to the middle and sits against the combination. Nothing else moves.
 import type { BridgeKind, ExplorerTitle, ExplorerTree } from "~/domain/explorer"
 import { type Cam, nextStop, settleStop, zoomAbout } from "./camera"
 import { type Rgb, luminous, mixRgb } from "./color"
@@ -59,21 +59,10 @@ export interface Pad {
 	l: number
 }
 
-/** How a variant shows the world and joins picked islands. */
-export interface Mode {
-	/** Zoomed out, a grouping shows as its islands small, or as one land. */
-	meta: "isles" | "lands"
-	/** Picked islands stay home with a band of light to the middle, or sail there and sit against the combination. */
-	join: "home" | "dock"
-	/** From how many picked islands they sail to the middle (dock only). */
-	dockFrom: 1 | 2
-}
-
 /** What a tree of a combination says it is: on both, between the two, or on all three. */
 export type MixKind = BridgeKind | "all"
 
 export interface EngineHooks {
-	mode: () => Mode
 	/** A tap out at the world, on a grouping's region or on the middle ("hub"). */
 	onTapRegion: (id: string) => void
 	/** Whether a title passes On my services and Not seen yet; titles that don't are hidden, never dimmed. */
@@ -140,7 +129,6 @@ export function createMapEngine(
 	/** The scale that shows one region: the real engine's overview. */
 	let baseS = 1
 	let regions: Region[] = []
-	const lands = new Map<string, { tile: BackdropTile | null; tint: Rgb }>()
 	/** The islands the sea draws this frame; the rest are painted flat on the poster layer. */
 	let seaSet = new Set<MapIsland>()
 	const surfaced = new Set<string>()
@@ -298,16 +286,14 @@ export function createMapEngine(
 	 */
 	function relayout(force = false) {
 		if (!world) return
-		const mode = hooks.current.mode()
 		const mix = bridgeOf()
-		const key = `${mix?.id ?? ""}|${lit.join(",")}|${dimKey}|${mode.join}${mode.dockFrom}`
+		const key = `${mix?.id ?? ""}|${lit.join(",")}|${dimKey}`
 		if (key === layoutKey && !force) return
 		layoutKey = key
 		const { hub } = world
 		const picked = lit
 			.map((id) => islands.find((i) => i.id === id && !i.bridge))
 			.filter((i): i is MapIsland => !!i)
-		const docks = mode.join === "dock" && picked.length >= mode.dockFrom
 		// Each toward its home, kept apart where two come from the same side.
 		const angles = picked.map((i) =>
 			Math.atan2(i.shape.cy - hub.y, i.shape.cx - hub.x),
@@ -364,7 +350,7 @@ export function createMapEngine(
 			if (at < 0) {
 				island.target = { ...NEUTRAL_LOOK, mute: dim.get(island.id) ?? 0 }
 				island.role = picked.length ? "other" : "none"
-			} else if (docks) {
+			} else {
 				const big = picked.length > 3 ? 0.5 : 0.56
 				const r = clamp(island.shape.r, hub.rMix * 0.4, hub.rMix * big)
 				const d = hub.rMix + r + 46
@@ -377,9 +363,6 @@ export function createMapEngine(
 					lit: mix ? 0.45 : 1,
 				}
 				island.role = "joined"
-			} else {
-				island.target = { ...NEUTRAL_LOOK, scale: 1.06, vivid: 1, lit: 1 }
-				island.role = mix ? "joined" : "lit"
 			}
 		}
 		wake()
@@ -390,11 +373,7 @@ export function createMapEngine(
 		const S = world ? Math.min(world.w, world.h) : 1000
 		const gap = S * 0.01
 		const weight = (i: MapIsland) =>
-			i.role === "bridge"
-				? 1e6
-				: i.role === "joined" || i.role === "lit"
-					? 4
-					: 1
+			i.role === "bridge" ? 1e6 : i.role === "joined" ? 4 : 1
 		for (let a = 0; a < list.length; a++)
 			for (let b = a + 1; b < list.length; b++) {
 				const A = list[a]
@@ -1182,17 +1161,14 @@ export function createMapEngine(
 		}
 	}
 	const isCast = (island: MapIsland) =>
-		!!island.bridge || island.role === "joined" || island.role === "lit"
+		!!island.bridge || island.role === "joined"
 	/**
 	 * What the sea draws: it holds 24 islands, the world has more. The cast (the combination and the picked islands)
-	 * always; in among a region, the islands nearest the middle of the view; out at the world with "lands", each
-	 * region as one land that shrinks as its islands rise. Islands left out are painted flat on the poster layer.
+	 * always; in among a region, the islands nearest the middle of the view. Islands left out are painted flat on the
+	 * poster layer.
 	 */
 	function seaIslands(): IslandShape[] {
-		const mode = hooks.current.mode()
 		const f = openness()
-		const asLands = mode.meta === "lands" && f < 0.98
-		const room = ISLAND_LIMIT - (asLands ? regions.length : 0)
 		const cast = islands.filter(isCast)
 		const hw = W / 2 / cur.s
 		const hh = H / 2 / cur.s
@@ -1211,31 +1187,15 @@ export function createMapEngine(
 				: []
 		const next = new Set<MapIsland>()
 		const out: IslandShape[] = []
-		for (const island of [...cast, ...rest].slice(0, room)) {
+		for (const island of [...cast, ...rest].slice(0, ISLAND_LIMIT)) {
 			next.add(island)
 			if (!island.bridge && !surfaced.has(island.id)) {
 				surfaced.add(island.id)
 				void paintSurface(island)
 			}
-			out.push(seaShape(island, asLands && !isCast(island) ? f : 1))
+			out.push(seaShape(island, 1))
 		}
 		seaSet = next
-		if (asLands)
-			for (const region of regions) {
-				const land = lands.get(region.id)
-				const tint = land?.tint ?? luminous(hexRgb(region.color))
-				out.push({
-					x: region.cx,
-					y: region.cy,
-					radius: region.r * 0.9 * (1 - f) ** 0.6,
-					seed: region.seed,
-					color: tint,
-					backdrop: land?.tile ?? null,
-					emphasis: hoverRegion === region.id ? 0.7 : 0,
-					saturation: 1,
-					spotlight: 0,
-				})
-			}
 		// The atlas holds 16 surfaces: the ones past that are drawn in their color.
 		const tiles = new Set<BackdropTile>()
 		for (const shape of out)
@@ -1492,7 +1452,6 @@ export function createMapEngine(
 	 */
 	function paintMeta() {
 		if (!world) return
-		const mode = hooks.current.mode()
 		const f = openness()
 		const sc = (x: number, y: number) => toScreen(x, y)
 		// The region under the mouse, out at the world.
@@ -1517,13 +1476,7 @@ export function createMapEngine(
 			const c = sc(cX(island), cY(island))
 			const r = rOf(island) * cur.s
 			if (c.x + r < 0 || c.x - r > W || c.y + r < 0 || c.y - r > H) continue
-			const a = seaSet.has(island)
-				? mode.meta === "isles"
-					? 1 - f
-					: 0
-				: mode.meta === "lands"
-					? f
-					: 1
+			const a = seaSet.has(island) ? 1 - f : 1
 			if (a < 0.02 || r < 0.6) continue
 			const m = island.look.mute
 			const t = island.tint
@@ -1599,7 +1552,6 @@ export function createMapEngine(
 	/** The regions' names out at the world, and the words in the middle while nothing has risen there. */
 	function paintLabels() {
 		if (!world) return
-		const mode = hooks.current.mode()
 		const f = openness()
 		const far = 1 - smooth(0.25, 0.75, f)
 		const ph = phone()
@@ -1613,9 +1565,8 @@ export function createMapEngine(
 				const r = region.r * cur.s
 				const size = clamp(r * 0.2, ph ? 13 : 16, ph ? 24 : 40)
 				const sub = Math.max(ph ? 10 : 11.5, size * 0.4)
-				// Over a land, above a group of small islands.
-				const y =
-					mode.meta === "lands" ? c.y + size * 0.1 : c.y - r - sub * 1.9 - 4
+				// Above its group of small islands.
+				const y = c.y - r - sub * 1.9 - 4
 				g.globalAlpha = far
 				g.shadowBlur = size * 0.9
 				g.font = `800 ${size}px ${FONT}`
@@ -1929,29 +1880,6 @@ export function createMapEngine(
 				Object.assign(cur, h)
 				Object.assign(tgt, h)
 			}
-			// Each region's land: a collage of the first titles of its biggest islands, in the region's color.
-			lands.clear()
-			for (const region of regions) {
-				const base = hexRgb(region.color)
-				lands.set(region.id, { tile: null, tint: luminous(base) })
-				const paths = islands
-					.filter((i) => region.islands.includes(i.id))
-					.sort((a, b) => b.count - a.count)
-					.slice(0, 4)
-					.map((i) => i.top[0]?.backdrop)
-					.filter((b): b is string => !!b)
-				loadBackdropImages(paths)
-					.then((images) => paintBackdropTile(images, base))
-					.then((tile) => {
-						if (key !== worldKey || !tile) return
-						lands.set(region.id, {
-							tile,
-							tint: luminous(mixRgb(tile.average, base, 0.45)),
-						})
-						wake()
-					})
-					.catch(() => {})
-			}
 			wake()
 		},
 		/** The filters changed: islands without their tree show their first titles that pass them. */
@@ -2117,10 +2045,6 @@ export function createMapEngine(
 		setHubNote(next: { title: string; sub: string } | null) {
 			hubNote = next
 			wake()
-		},
-		/** The variant changed how picked islands join. */
-		remode() {
-			relayout(true)
 		},
 		flyToRegion(id: string, withHub = false) {
 			const region = regions.find((r) => r.id === id)

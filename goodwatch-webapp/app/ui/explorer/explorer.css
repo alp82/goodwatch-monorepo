@@ -499,6 +499,90 @@ body:has(.ex-stage) > main {
 	right: 6px;
 	top: 6px;
 }
+
+/* The header as the way to the title page: all of it is one link, and it answers the pointer. */
+.ex-door {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+}
+.ex-card-door .ex-card-hero {
+	cursor: pointer;
+	overflow: hidden;
+}
+.ex-card-door .ex-card-bd {
+	transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ex-card-door .ex-card-hero:hover .ex-card-bd {
+	transform: scale(1.06);
+}
+.ex-card-door .ex-card-hero:hover .ex-card-t {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+.ex-door-arrow {
+	display: inline-block;
+	width: 0.85em;
+	height: 0.85em;
+	margin-left: 0.15em;
+	vertical-align: -0.1em;
+	transition: transform 0.18s;
+}
+.ex-card-door .ex-card-hero:hover .ex-door-arrow {
+	transform: translateX(4px);
+}
+/* Details and close (or the pin): one control with one look, above the link. */
+.ex-card-door .ex-card-tools {
+	z-index: 2;
+	display: flex;
+	align-items: stretch;
+	height: 40px;
+	right: 8px;
+	top: 8px;
+	border-radius: 12px;
+	background: rgba(10, 14, 26, 0.72);
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	backdrop-filter: blur(8px);
+	overflow: hidden;
+}
+.ex-door-details {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 12px;
+	font-weight: 800;
+	font-size: 14px;
+	color: #fff;
+	transition: background 0.15s, color 0.15s;
+}
+.ex-card-door .ex-card-tools .ex-icon {
+	width: 40px;
+	height: auto;
+	border-radius: 0;
+	background: none;
+	backdrop-filter: none;
+	border-left: 1px solid rgba(255, 255, 255, 0.22);
+}
+.ex-card-door .ex-card-tools .ex-icon:hover {
+	background: rgba(255, 255, 255, 0.16);
+}
+.ex-card-door .ex-card-hero:hover .ex-door-details,
+.ex-door-details:hover {
+	background: #f4f6ff;
+	color: #0b0f1c;
+}
+/* Pointing at close or the pin, the header doesn't say it is a link. */
+.ex-card-door .ex-card-hero:has(.ex-icon:hover) .ex-door-details {
+	background: none;
+	color: #fff;
+}
+.ex-card-door .ex-card-hero:has(.ex-icon:hover) .ex-card-t {
+	text-decoration: none;
+}
+.ex-card-door .ex-card-hero:has(.ex-icon:hover) .ex-card-bd {
+	transform: none;
+}
 .ex-icon {
 	display: flex;
 	align-items: center;
@@ -571,21 +655,6 @@ body:has(.ex-stage) > main {
 }
 .ex-sign-up {
 	margin-top: 10px;
-}
-.ex-open {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	margin-top: 2px;
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--mute);
-	text-decoration: underline;
-	text-underline-offset: 3px;
-	text-decoration-color: rgba(255, 255, 255, 0.25);
-}
-.ex-open:hover {
-	color: #fff;
 }
 .ex-peek-hint {
 	margin-top: 8px;
