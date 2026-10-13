@@ -56,6 +56,13 @@ import App from "~/app"
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
 
+// PROTOTYPE (branch prototype/tv-expand-transitions), not for main: the transitions and the ways back to the TV of
+// /prototype/tv-expand have to stay mounted while a real page is on screen. Development only; a production build
+// drops the import.
+const TvExpandHost = import.meta.env.DEV
+	? lazy(() => import("~/ui/prototype-tv-expand/host"))
+	: null
+
 export const links: LinksFunction = () => [
 	...(assetBase()
 		? [
@@ -306,6 +313,11 @@ function Root() {
 							<HydrationBoundary state={dehydratedState}>
 								<DiscoveryContinuity />
 								<App />
+								{TvExpandHost && (
+									<Suspense fallback={null}>
+										<TvExpandHost />
+									</Suspense>
+								)}
 								{/* <CookieConsent /> */}
 								<ToastContainer />
 								<TelemetryBoot />

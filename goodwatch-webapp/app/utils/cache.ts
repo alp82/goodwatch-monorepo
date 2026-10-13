@@ -33,7 +33,37 @@ const clusterNodes: ClusterNode[] = [
 // Only a stalled event loop or Redis reaches this limit. Routine event loop stalls are
 // 100 to 330 ms about once a minute; this is three times the largest routine stall.
 // Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
-export const REDIS_COMMAND_TIMEOUT_MS = 1000
+export const REDIS_COMMAND_TIMEOUT_MS =
+	Number(process.env.REDIS_COMMAND_TIMEOUT_MS) || 1000
+
+// PROTOTYPE (branch prototype/tv-expand-transitions), not for main. The prototype's dev server shows real pages
+// from the production cluster and must only read it: with REDIS_READ_ONLY=on every command that is not a plain
+// read is answered with null here and never sent. This branch is older than what production runs, so a value
+// it stored could have an outdated shape.
+const REDIS_READ_ONLY = process.env.REDIS_READ_ONLY === "on"
+const REDIS_READS = new Set([
+	"cluster",
+	"exists",
+	"get",
+	"getrange",
+	"hget",
+	"hgetall",
+	"hmget",
+	"llen",
+	"lrange",
+	"mget",
+	"pttl",
+	"scard",
+	"sismember",
+	"smembers",
+	"strlen",
+	"ttl",
+	"type",
+	"zcard",
+	"zrange",
+	"zscore",
+])
+const droppedWrites = new Map<string, number>()
 
 // The guard bounds commands across the cluster queue and redirection loop. A node's
 // first failure opens its breaker; later commands bypass it while detached probes
@@ -108,6 +138,16 @@ type DispatchArgs = Parameters<Cluster["sendCommand"]>
 
 export class GuardedCluster extends Redis.Cluster {
 	sendCommand(...[command, stream, node]: DispatchArgs): unknown {
+		if (REDIS_READ_ONLY && !REDIS_READS.has(command.name)) {
+			const seen = droppedWrites.get(command.name) ?? 0
+			droppedWrites.set(command.name, seen + 1)
+			if (seen === 0)
+				console.info(
+					`Redis read-only: not sending ${command.name} (and none after it)`,
+				)
+			command.resolve(null)
+			return command.promise
+		}
 		const slot = node ? node.slot : command.getSlot()
 		const owner =
 			command.name === "cluster" || slot == null
