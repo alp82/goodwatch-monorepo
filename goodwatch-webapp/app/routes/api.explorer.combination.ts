@@ -3,14 +3,14 @@ import {
 	explorerQueryOf,
 	explorerResponse,
 } from "~/server/explorer/http.server"
-import { getIslandPairs } from "~/server/explorer/index.server"
+import { getCombination, refsOf } from "~/server/explorer/world.server"
 
-// What every pair of islands shares: GET /api/explorer/pairs?grouping=mood (members), or POST with the guest progress
-// (guests). Takes the map's filters. Returns ExplorerPairs.
+// The combination of two to five islands: GET /api/explorer/combination?of=mood:funny,theme:crime,decade:1990s
+// (members), or POST with the guest progress (guests). Takes the map's filters. Returns ExplorerCombination.
 
 const answer = ({ request }: { request: Request }) =>
 	explorerResponse(request, (ctx, params) =>
-		getIslandPairs(ctx, explorerQueryOf(params)),
+		getCombination(ctx, explorerQueryOf(params), refsOf(params.get("of"))),
 	)
 
 export const loader = (args: LoaderFunctionArgs) => answer(args)

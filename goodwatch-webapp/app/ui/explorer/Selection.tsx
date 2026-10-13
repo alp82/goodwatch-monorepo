@@ -1,25 +1,11 @@
-// PROTOTYPE - throwaway. Round 10 of the Explorer: the selection (the picked islands, what their combination holds,
-// the way to it and back, and letting go), in three forms; and the words for what a combination holds.
+// The selection: the picked islands, what their combination holds, the way to it and back, and letting go; and the
+// words for what a combination holds.
 import { useEffect, useRef, useState } from "react"
-import { Press } from "~/ui/explorer/Tutorial"
-import type { MixKind } from "./engine10"
+import { Press } from "./Tutorial"
+import { type PickedIsland, titles } from "./combination-words"
 
-export interface MixSide {
-	id: string
-	name: string
-	color: string
-	/** Its group's name ("Mood"). */
-	group: string
-	/** How many titles the island holds. */
-	total: number
-	/** TMDB paths of its first posters. */
-	posters: string[]
-	/** How many titles the other picked islands hold without it; null until known, or alone. */
-	without?: number | null
-}
-
-export interface MixBarState {
-	list: MixSide[]
+export interface SelectionState {
+	list: PickedIsland[]
 	/** What the combination holds, or what to do next. */
 	status: string
 	/** How many titles the combination holds, once known. */
@@ -33,70 +19,6 @@ export interface MixBarState {
 	/** Where the view is: on the middle ("hub"), out at the whole world ("all"), or elsewhere (""). */
 	at: "hub" | "all" | ""
 }
-
-const titles = (count: number) =>
-	`${count.toLocaleString("en")} ${count === 1 ? "title" : "titles"}`
-
-/** Two islands of one group, today's bridge: "130 titles in both" or "130 titles between them". */
-export const sharedLine10 = (count: number, kind: MixKind) =>
-	kind === "both"
-		? `${titles(count)} in both`
-		: `${titles(count)} between them`
-
-/** Groupings where a title sits on one island only: two of their islands in a combination mean either. */
-const ONE_ISLAND = new Set(["decade", "country", "taste"])
-const ORDER = ["mood", "style", "taste", "theme", "occasion", "decade", "country"]
-const lower = (name: string) => name.charAt(0).toLowerCase() + name.slice(1)
-const OCCASIONS: Record<string, string> = {
-	Party: "for a party",
-	Family: "for the family",
-	Binge: "for a binge",
-	Background: "for the background",
-	"Easy watch": "an easy watch",
-	"Drop-in": "for dropping in",
-}
-/** An island as it reads after "titles that are": Funny, about crime, for a party, from the 1990s. */
-const phrase = (grouping: string, name: string) =>
-	grouping === "theme"
-		? `about ${lower(name)}`
-		: grouping === "occasion"
-			? (OCCASIONS[name] ?? `for ${lower(name)}`)
-			: grouping === "decade" || (grouping === "country" && /^United /.test(name))
-				? `the ${name}`
-				: name
-
-/**
- * A combination of islands from different groups, as a sentence: "15 titles that are Funny, Talky, about crime, from
- * the 1990s, from the United States". Two decades or two countries read "from the 1980s or the 1990s", as the
- * combination holds either.
- */
-export function mixSentence10(count: number, sides: readonly MixSide[]) {
-	const groups = new Map<string, string[]>()
-	for (const s of sides) {
-		const grouping = s.id.slice(0, s.id.indexOf(":"))
-		const list = groups.get(grouping) ?? []
-		list.push(phrase(grouping, s.name))
-		groups.set(grouping, list)
-	}
-	const parts = [...groups]
-		.sort((x, y) => ORDER.indexOf(x[0]) - ORDER.indexOf(y[0]))
-		.map(([grouping, list]) => {
-			const joined = list.join(ONE_ISLAND.has(grouping) ? " or " : " and ")
-			return grouping === "decade" || grouping === "country"
-				? `from ${joined}`
-				: joined
-		})
-	return `${titles(count)} that are ${parts.join(", ")}`
-}
-
-/**
- * What an island would leave of the combination, under its name: every island added narrows it. A second island of
- * the first one's group makes today's bridge instead, and keeps its words.
- */
-export const sharedNote10 = (count: number, kind: MixKind, bridge: boolean) =>
-	bridge
-		? `${count.toLocaleString("en")} ${kind === "both" ? "in both" : "between"}`
-		: `${count.toLocaleString("en")} left`
 
 const Cross = ({ className = "h-3 w-3" }: { className?: string }) => (
 	<svg viewBox="0 0 12 12" aria-hidden="true" className={className}>
@@ -130,8 +52,8 @@ const FOCUS =
 const SURFACE =
 	"bg-[#0e1322]/85 ring-1 ring-inset ring-white/15 backdrop-blur-xl shadow-[0_18px_40px_rgba(0,0,0,.45)]"
 
-interface MixBarProps {
-	state: MixBarState
+interface SelectionProps {
+	state: SelectionState
 	phone: boolean
 	onDrop: (id: string) => void
 	onClear: () => void
@@ -144,7 +66,7 @@ interface MixBarProps {
 }
 
 /** The picked islands' colors, overlapping. */
-const Dots = ({ list }: { list: MixSide[] }) => (
+const Dots = ({ list }: { list: PickedIsland[] }) => (
 	<span aria-hidden className="flex shrink-0 items-center">
 		{list.map((s, k) => (
 			<span
@@ -169,7 +91,7 @@ function Row({
 	count,
 	onDrop,
 }: {
-	s: MixSide
+	s: PickedIsland
 	/** How many titles the combination holds, once known. */
 	count: number | null
 	onDrop: (id: string) => void
@@ -252,7 +174,7 @@ function Row({
  * The selection, in the top bar (on phones in a row of its own under it): a button with the islands' colors and the
  * count, the two views (the combination, the whole world), and Separate. The button opens one row per island.
  */
-export function MixBar({
+export function Selection({
 	state,
 	phone,
 	onDrop,
@@ -260,7 +182,7 @@ export function MixBar({
 	onGo,
 	onAll,
 	nudge,
-}: MixBarProps) {
+}: SelectionProps) {
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
 	const [top, setTop] = useState(0)
@@ -279,7 +201,7 @@ export function MixBar({
 				type="button"
 				aria-pressed={state.at === at}
 				onClick={go}
-				className={`relative flex h-10 items-center rounded-xl ${phone ? "px-2" : "px-3"} text-sm font-bold whitespace-nowrap transition-colors ${FOCUS} ${state.at === at ? "bg-white/[0.18] text-white" : "text-indigo-100/70 hover:text-white"} ${glow ? "ex10-glow" : ""}`}
+				className={`relative flex h-10 items-center rounded-xl ${phone ? "px-2" : "px-3"} text-sm font-bold whitespace-nowrap transition-colors ${FOCUS} ${state.at === at ? "bg-white/[0.18] text-white" : "text-indigo-100/70 hover:text-white"} ${glow ? "ex-glow" : ""}`}
 			>
 				{label}
 				{glow && nudge && <Press touch={nudge.touch} />}
@@ -325,7 +247,7 @@ export function MixBar({
 			<button
 				type="button"
 				onClick={onClear}
-				className={`relative flex h-12 shrink-0 items-center gap-1.5 rounded-2xl ${phone ? "px-2.5" : "px-3"} text-sm font-bold whitespace-nowrap text-white ${SURFACE} hover:ring-white/30 ${FOCUS} ${nudge?.at === "separate" ? "ex10-glow" : ""}`}
+				className={`relative flex h-12 shrink-0 items-center gap-1.5 rounded-2xl ${phone ? "px-2.5" : "px-3"} text-sm font-bold whitespace-nowrap text-white ${SURFACE} hover:ring-white/30 ${FOCUS} ${nudge?.at === "separate" ? "ex-glow" : ""}`}
 			>
 				<Cross />
 				{many ? "Separate" : "Let go"}

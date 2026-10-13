@@ -33,7 +33,7 @@ const clusterNodes: ClusterNode[] = [
 // Only a stalled event loop or Redis reaches this limit. Routine event loop stalls are
 // 100 to 330 ms about once a minute; this is three times the largest routine stall.
 // Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
-// PROTOTYPE (Explorer round 10) - throwaway: the limit can be raised for a dev server far from the cluster (65 ms away
+// The limit can be raised (REDIS_COMMAND_TIMEOUT_MS) for a dev server far from the cluster (65 ms away
 // over the VPN, the snapshot's 4 MB chunks take longer than a second, so it never loads and Explorer answers 503).
 export const REDIS_COMMAND_TIMEOUT_MS =
 	Number(process.env.REDIS_COMMAND_TIMEOUT_MS) || 1000

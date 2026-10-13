@@ -93,7 +93,8 @@ body:has(.ex-stage) > main {
 	left: 0;
 	right: 0;
 	top: 0;
-	z-index: 30;
+	/* Its menus open over everything on the map. */
+	z-index: 40;
 	padding: 16px 24px 34px;
 	pointer-events: none;
 	background: linear-gradient(
@@ -122,164 +123,7 @@ body:has(.ex-stage) > main {
 	text-shadow: 0 2px 24px rgba(120, 160, 255, 0.35);
 	margin-right: 4px;
 }
-.ex-seg {
-	display: flex;
-	gap: 2px;
-	padding: 4px;
-	border-radius: 15px;
-	background: var(--glass);
-	border: 1px solid var(--line);
-	backdrop-filter: blur(18px) saturate(1.5);
-	-webkit-backdrop-filter: blur(18px) saturate(1.5);
-	flex: none;
-}
-.ex-seg-b {
-	flex: none;
-	height: 40px;
-	padding: 0 15px;
-	border-radius: 11px;
-	font-weight: 600;
-	font-size: 15px;
-	color: var(--mute);
-	white-space: nowrap;
-	transition: background 0.2s, color 0.2s;
-}
-.ex-seg-b:hover {
-	color: #fff;
-	background: rgba(255, 255, 255, 0.06);
-}
-.ex-seg-on,
-.ex-seg-on:hover {
-	color: #0b0f1c;
-	background: #f4f6ff;
-	box-shadow: 0 4px 18px rgba(160, 190, 255, 0.3);
-}
-.ex-pick {
-	position: relative;
-	display: none;
-	flex: none;
-}
-.ex-pick select {
-	appearance: none;
-	-webkit-appearance: none;
-	height: 44px;
-	padding: 0 38px 0 16px;
-	border-radius: 13px;
-	font: 700 15px Gabarito, system-ui, sans-serif;
-	color: #0b0f1c;
-	background: #f4f6ff;
-	border: 0;
-	box-shadow: 0 4px 18px rgba(160, 190, 255, 0.25);
-}
-.ex-caret {
-	position: absolute;
-	right: 15px;
-	top: 50%;
-	width: 12px;
-	height: 8px;
-	margin-top: -4px;
-	color: #0b0f1c;
-	pointer-events: none;
-}
-.ex-filters {
-	display: flex;
-	gap: 8px;
-	margin-left: auto;
-	flex: none;
-}
-/* On my services and Not seen yet look like the filter bar's controls (ui/filter-bar/controls.tsx), on the map's glass
-   and at the bar's height: emerald lights On my services, the blue knob is Not seen yet, and the focus ring is amber. */
-.ex-tog {
-	flex: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 9px;
-	height: 44px;
-	padding: 0 13px;
-	border-radius: 16px;
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--mute);
-	background: var(--glass);
-	border: 1px solid var(--line);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-	transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
-	white-space: nowrap;
-}
-.ex-tog:hover {
-	color: #fff;
-	border-color: var(--line-2);
-}
-.ex-tog:active:not(:disabled) {
-	transform: scale(0.94);
-}
-.ex-tog:disabled {
-	opacity: 0.45;
-}
-.ex-stage .ex-tog:focus-visible {
-	outline-color: #fbbf24;
-}
-.ex-tog[aria-checked="true"] {
-	color: #fff;
-}
-.ex-tog-services[aria-checked="true"],
-.ex-tog-services[aria-checked="true"]:hover {
-	border-color: rgba(52, 211, 153, 0.35);
-	background: linear-gradient(to bottom, #059669, #065f46);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px -8px
-		rgba(16, 185, 129, 0.6);
-}
-/* The type filter (ui/type-filter) styles itself; the bar only places it. */
-.ex-type {
-	flex: 0 1 auto;
-	margin-left: auto;
-}
-.ex-type + .ex-filters {
-	margin-left: 0;
-}
-.ex-logos {
-	display: flex;
-}
-.ex-logos img {
-	width: 22px;
-	height: 22px;
-	border-radius: 28%;
-	box-shadow: 0 0 0 2px rgba(10, 14, 26, 0.9);
-	transition: opacity 0.3s, filter 0.3s;
-}
-.ex-logos img + img {
-	margin-left: -7px;
-}
-/* Grayed while On my services is off. */
-.ex-tog[aria-checked="false"] .ex-logos img {
-	opacity: 0.5;
-	filter: grayscale(1);
-}
-.ex-narrow {
-	display: none;
-}
-/* Below this the labels are short, so the type's button has room for what it says. */
-@media (max-width: 1459px) {
-	.ex-seg-b {
-		padding: 0 12px;
-		font-size: 14.5px;
-	}
-	.ex-wide {
-		display: none;
-	}
-	.ex-narrow {
-		display: inline;
-	}
-}
-@media (max-width: 1279px) {
-	.ex-seg {
-		display: none;
-	}
-	.ex-pick {
-		display: block;
-	}
-}
+
 @media (max-width: 979px) {
 	/* Room for the type and the filters on one row. */
 	.ex-brand {
@@ -297,46 +141,14 @@ body:has(.ex-stage) > main {
 		gap: 8px;
 		flex-wrap: wrap;
 	}
-	.ex-pick {
-		flex: 1;
-	}
-	.ex-pick select {
-		width: 100%;
-		padding: 0 34px 0 14px;
-	}
-	.ex-caret {
-		right: 13px;
-	}
-	.ex-filters {
-		margin-left: 0;
-		width: 100%;
-	}
-	.ex-filters .ex-tog {
-		flex: 1;
-		justify-content: center;
-		padding: 0 10px;
-		gap: 7px;
-	}
-	/* Two logos, so the knob of Not seen yet fits on the same row. */
-	.ex-logos img:nth-child(n + 3) {
-		display: none;
-	}
-	/* The type sits on the first row, by the grouping; the filters keep the second. */
-	.ex-type {
-		margin-left: 0;
-		/* What it says is cut short before the step you're on is. */
-		max-width: min(12.5rem, 30.5vw);
-	}
-	/* Tighter, so more of what it says fits by the grouping and the step. */
-	.ex-type > button {
-		padding-inline: 10px;
-	}
-}
-@media (min-width: 390px) and (max-width: 767px) {
-	/* Room for "Anime only" in full. */
-	.ex-type {
-		max-width: min(12.5rem, 33.5vw);
-	}
+	
+	
+	
+	
+	
+	
+	
+	
 }
 
 /* ---- zoom rail */
@@ -894,7 +706,13 @@ body:has(.ex-stage) > main {
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 	gap: 24px;
 }
-.ex-list h2 {
+.ex-list-group {
+	margin: 28px 0 12px;
+	font-size: 26px;
+	font-weight: 800;
+	color: #fff;
+}
+.ex-list h3 {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -920,214 +738,6 @@ body:has(.ex-stage) > main {
 	color: var(--mute);
 }
 
-/* ---- the history: one icon button that opens every step */
-.ex-hist {
-	position: relative;
-	flex: none;
-}
-.ex-hist-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 44px;
-	height: 44px;
-	border-radius: 13px;
-	color: var(--mute);
-	background: var(--glass);
-	border: 1px solid var(--line);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-}
-.ex-hist-btn:hover,
-.ex-hist-btn[aria-expanded="true"] {
-	color: #fff;
-	border-color: var(--line-2);
-}
-.ex-hist-menu {
-	position: absolute;
-	left: 0;
-	top: calc(100% + 6px);
-	z-index: 60;
-	width: 300px;
-	max-width: calc(100vw - 24px);
-	max-height: 340px;
-	overflow-y: auto;
-	padding: 6px;
-	border-radius: 14px;
-	background: var(--glass-2);
-	border: 1px solid var(--line);
-	backdrop-filter: blur(22px);
-	-webkit-backdrop-filter: blur(22px);
-	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-	touch-action: pan-y;
-}
-.ex-hist-item {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	width: 100%;
-	min-height: 44px;
-	padding: 6px 10px;
-	border-radius: 9px;
-	text-align: left;
-	font-size: 14.5px;
-	font-weight: 500;
-	color: var(--text);
-}
-.ex-hist-item:hover {
-	background: rgba(255, 255, 255, 0.07);
-}
-.ex-hist-cur {
-	background: rgba(255, 255, 255, 0.06);
-}
-.ex-hist-kind {
-	width: 44px;
-	flex: none;
-	font-size: 11px;
-	color: var(--mute);
-	text-align: center;
-}
-.ex-hist-t {
-	flex: 1;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.ex-hist-here {
-	font-size: 11px;
-	color: var(--gold);
-	flex: none;
-}
-@media (max-width: 767px) {
-	.ex-row .ex-pick {
-		flex: none;
-	}
-	.ex-row .ex-pick select {
-		width: auto;
-	}
-	/* The steps open across the screen, under the controls. */
-	.ex-hist {
-		position: static;
-	}
-	.ex-hist-menu {
-		left: 12px;
-		right: 12px;
-		top: calc(100% - 26px);
-		width: auto;
-		max-width: none;
-	}
-}
-
-/* ---- the combine bar */
-.ex-bar-wrap {
-	position: absolute;
-	left: 0;
-	right: 0;
-	z-index: 31;
-	pointer-events: none;
-}
-.ex-bar {
-	pointer-events: auto;
-	position: relative;
-	left: 50%;
-	transform: translateX(-50%);
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	width: max-content;
-	max-width: calc(100% - 24px);
-	min-height: 50px;
-	padding: 5px 5px 5px 16px;
-	border-radius: 16px;
-	background: var(--glass-2);
-	border: 1px solid var(--line-2);
-	backdrop-filter: blur(22px) saturate(1.5);
-	-webkit-backdrop-filter: blur(22px) saturate(1.5);
-	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
-	font-size: 15px;
-	animation: ex-drop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.ex-bar-body {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	min-width: 0;
-	white-space: nowrap;
-	overflow: hidden;
-	padding-right: 6px;
-}
-.ex-bar b {
-	font-weight: 700;
-	color: #fff;
-}
-.ex-bar-nm {
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	flex: 0 1 auto;
-}
-.ex-bar-count {
-	color: #fff4d6;
-	font-weight: 700;
-	flex: none;
-}
-.ex-bar-sm {
-	display: none;
-}
-.ex-bar-mute {
-	color: var(--mute);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	min-width: 0;
-}
-.ex-bar-dot {
-	width: 10px;
-	height: 10px;
-	border-radius: 99px;
-	flex: none;
-	display: inline-block;
-}
-.ex-bar-pair {
-	display: inline-flex;
-	flex: none;
-}
-.ex-bar-pair .ex-bar-dot + .ex-bar-dot {
-	margin-left: -3px;
-	outline: 2px solid rgba(14, 19, 34, 0.9);
-}
-.ex-bar-go {
-	display: inline-flex;
-	align-items: center;
-	min-width: 0;
-	min-height: 40px;
-	flex: 0 1 auto;
-}
-.ex-bar-go:hover b {
-	text-decoration: underline;
-	text-underline-offset: 3px;
-}
-.ex-bar-x {
-	flex: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 7px;
-	height: 40px;
-	padding: 0 14px 0 12px;
-	border-radius: 12px;
-	font-size: 15px;
-	font-weight: 700;
-	color: #fff;
-	background: rgba(255, 255, 255, 0.1);
-}
-.ex-bar-x svg {
-	width: 12px;
-	height: 12px;
-}
-.ex-bar-x:hover {
-	background: rgba(255, 255, 255, 0.18);
-}
 @keyframes ex-drop {
 	from {
 		opacity: 0;
@@ -1136,29 +746,6 @@ body:has(.ex-stage) > main {
 	to {
 		opacity: 1;
 		transform: translate(-50%, 0);
-	}
-}
-@media (max-width: 767px) {
-	.ex-bar-lg {
-		display: none;
-	}
-	.ex-bar-sm {
-		display: inline;
-	}
-	.ex-bar {
-		font-size: 14px;
-		padding-left: 12px;
-		min-height: 48px;
-		width: calc(100% - 24px);
-	}
-	.ex-bar-body {
-		flex: 1;
-		flex-wrap: wrap;
-		row-gap: 0;
-	}
-	.ex-bar-x {
-		padding: 0 12px;
-		font-size: 14px;
 	}
 }
 
@@ -1270,7 +857,6 @@ body:has(.ex-stage) > main {
 	.ex-cap-b,
 	.ex-where,
 	.ex-toast,
-	.ex-bar,
 	.ex-goin,
 	.ex-ghost {
 		animation: none;
@@ -1409,12 +995,12 @@ body:has(.ex-stage) > main {
 	100% { transform: translate(90px, -90px); opacity: 0; }
 }
 
-/* Separate, lit up in the combine bar, with a pointer pressing it. */
-.ex-bar-x.ex-tut-glow {
-	position: relative;
-	background: rgba(251, 191, 36, 0.28);
+/* A button the tutorial points at, lit up, with a pointer pressing it. */
+.ex-glow {
+	background: rgba(251, 191, 36, 0.28) !important;
 	animation: ex-tut-glow 1.3s ease-in-out infinite;
 }
+
 @keyframes ex-tut-glow {
 	0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.9), 0 0 18px rgba(251, 191, 36, 0.5); }
 	60% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0), 0 0 30px rgba(251, 191, 36, 0.8); }

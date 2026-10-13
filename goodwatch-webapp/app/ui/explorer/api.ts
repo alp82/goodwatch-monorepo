@@ -1,11 +1,13 @@
 // The Explorer's reads from `/api/explorer/*`: members send GET and are read from their session; guests send POST
 // with the guest progress their browser holds, so taste, Seen, and their services apply to them too.
 import type {
-	ExplorerBridge,
 	ExplorerCard,
 	ExplorerIslandTree,
 	ExplorerMap,
-	ExplorerPairs,
+	ExplorerCombination,
+	ExplorerParts,
+	ExplorerShares,
+	ExplorerWorld,
 	Grouping,
 } from "~/domain/explorer"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
@@ -71,19 +73,52 @@ export const fetchIsland = (q: MapQuery, id: string, member: boolean) =>
 export const fetchCard = (key: TitleKey, member: boolean) =>
 	request<ExplorerCard>("card", { key: String(key) }, member)
 
-export const fetchPairs = (q: MapQuery, member: boolean) =>
-	request<ExplorerPairs>("pairs", mapParams(q), member)
+/** The map's filters as the URL holds them (null is the default): the world has every grouping. */
+export type WorldQuery = Omit<MapQuery, "grouping">
 
-export const fetchBridge = (
-	q: MapQuery,
-	a: string,
-	b: string,
+const worldParams = (q: WorldQuery) => ({
+	services: q.services,
+	unseen: q.unseen,
+	type: q.type,
+	anime: q.anime,
+})
+
+export const fetchWorld = (q: WorldQuery, member: boolean) =>
+	request<ExplorerWorld>("world", worldParams(q), member)
+
+/** `of` holds the picked islands' ids in the world ("mood:funny"), in the order picked. */
+export const fetchCombination = (
+	q: WorldQuery,
+	of: readonly string[],
 	member: boolean,
-) => request<ExplorerBridge>("bridge", { ...mapParams(q), a, b }, member)
+) =>
+	request<ExplorerCombination>(
+		"combination",
+		{ ...worldParams(q), of: of.join(",") },
+		member,
+	)
 
-/** A pair of islands in one order, whichever way round they were picked. */
-export const pairKey = (a: string, b: string) =>
-	a < b ? `${a},${b}` : `${b},${a}`
+export const fetchShares = (
+	q: WorldQuery,
+	of: readonly string[],
+	member: boolean,
+) =>
+	request<ExplorerShares>(
+		"shares",
+		{ ...worldParams(q), of: of.join(",") },
+		member,
+	)
+
+export const fetchParts = (
+	q: WorldQuery,
+	of: readonly string[],
+	member: boolean,
+) =>
+	request<ExplorerParts>(
+		"parts",
+		{ ...worldParams(q), of: of.join(",") },
+		member,
+	)
 
 /** Query keys: per viewer (a member's id, or "guest"), so signing in or out never shows another person's map. */
 export const explorerKeys = {
@@ -112,27 +147,31 @@ export const explorerKeys = {
 		] as const,
 	card: (viewer: string, key: TitleKey) =>
 		["explorer", "card", viewer, key] as const,
-	pairs: (viewer: string, q: MapQuery) =>
+	world: (viewer: string, q: WorldQuery) =>
 		[
 			"explorer",
-			"pairs",
+			"world",
 			viewer,
-			q.grouping,
 			q.services,
 			q.unseen,
 			q.type,
 			q.anime,
 		] as const,
-	bridge: (viewer: string, q: MapQuery, a: string, b: string) =>
+	/** A read about picked islands: "combination", "shares", or "parts". */
+	picked: (
+		kind: "combination" | "shares" | "parts",
+		viewer: string,
+		q: WorldQuery,
+		of: readonly string[],
+	) =>
 		[
 			"explorer",
-			"bridge",
+			kind,
 			viewer,
-			q.grouping,
 			q.services,
 			q.unseen,
 			q.type,
 			q.anime,
-			pairKey(a, b),
+			of.join(","),
 		] as const,
 }

@@ -1,11 +1,11 @@
-// PROTOTYPE - throwaway. Round 10 of the Explorer: the world. Every grouping's islands are laid out as today's map
-// lays them out (layWorld), each grouping in a region of its own; the regions sit on an ellipse around the middle,
-// which is kept free for the combination and the islands it joins.
+// The Explorer's one map: every grouping's islands are laid out as a map of their own (layWorld), each grouping in a
+// region; the regions sit on an ellipse around the middle, which is kept free for the combination and the islands it
+// joins.
 import type { ExplorerMap, Grouping } from "~/domain/explorer"
 import { GROUPING_NAMES } from "~/domain/explorer"
-import { type World, type WorldIsland, layWorld } from "~/ui/explorer/world"
+import { type World, type WorldIsland, layWorld } from "./world"
 
-export interface Region10 {
+export interface Region {
 	id: Grouping
 	name: string
 	/** "#rrggbb", for the region's land and label. */
@@ -19,8 +19,8 @@ export interface Region10 {
 	titles: number
 }
 
-export interface World10 extends World {
-	regions: Region10[]
+export interface RegionWorld extends World {
+	regions: Region[]
 	/** The middle: where a combination rises (radius rMix), with room around it for the islands it joins (radius r). */
 	hub: { x: number; y: number; r: number; rMix: number }
 }
@@ -37,14 +37,15 @@ export const REGION_COLORS: Record<Grouping, string> = {
 
 /** An island's id in the world: its grouping and its id there. */
 export const worldId = (grouping: Grouping, id: string) => `${grouping}:${id}`
-export const groupingOf = (id: string) => id.slice(0, id.indexOf(":")) as Grouping
+export const groupingOf = (id: string) =>
+	id.slice(0, id.indexOf(":")) as Grouping
 export const localId = (id: string) => id.slice(id.indexOf(":") + 1)
 
 const R_MIX = 300
 const R_HUB = 690
 const GAP = 90
 
-export function layWorld10(maps: ExplorerMap[], aspect: number): World10 {
+export function layRegions(maps: ExplorerMap[], aspect: number): RegionWorld {
 	const mass = maps.map((map) =>
 		map.islands.reduce((sum, island) => sum + island.count ** 0.85, 0),
 	)
@@ -96,7 +97,7 @@ export function layWorld10(maps: ExplorerMap[], aspect: number): World10 {
 	const x1 = Math.max(R_HUB, ...best.map((p, a) => p.x + local[a].r)) + m
 	const y1 = Math.max(R_HUB, ...best.map((p, a) => p.y + local[a].r)) + m
 	const islands: WorldIsland[] = []
-	const regions: Region10[] = maps.map((map, a) => {
+	const regions: Region[] = maps.map((map, a) => {
 		const { laid, k, r } = local[a]
 		const cx = best[a].x - x0
 		const cy = best[a].y - y0

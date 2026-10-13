@@ -1,8 +1,10 @@
 # Explorer, one world (round 10)
 
-Throwaway prototype. Built on branch `prototype/explorer-world`, and on `main` since 2026-10-13 at the owner's request, as a
-development-only route like the earlier rounds (a production build leaves `prototype.rec-*` routes out). The real
-Explorer is unchanged.
+The prototype behind the Explorer's one map. Its last round became the real Explorer on 2026-10-13 (`/explorer`,
+`app/ui/explorer/`, `app/server/explorer/world.server.ts`), and the prototype's route and files were removed in the
+same change; the rounds are in the history of branch `prototype/explorer-world`. What follows is the record of the
+rounds, as written while they ran: paths under `prototype-rec-explorer-10` and `/prototype/rec-explorer-10` no longer
+exist.
 
 ## The question
 

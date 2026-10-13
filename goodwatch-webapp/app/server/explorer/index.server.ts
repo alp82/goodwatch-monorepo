@@ -6,13 +6,11 @@
 import {
 	DEFAULT_BRANCHING,
 	DEFAULT_GROUPING,
-	type ExplorerBridge,
 	type ExplorerCard,
 	type ExplorerFilters,
 	type ExplorerIsland,
 	type ExplorerIslandTree,
 	type ExplorerMap,
-	type ExplorerPairs,
 	type ExplorerService,
 	type ExplorerTitle,
 	GROUPINGS,
@@ -50,9 +48,7 @@ import {
 } from "./pool.server"
 import {
 	type TreeShape,
-	bridgeMembers,
 	buildTree,
-	pairCounts,
 	visibleMembers,
 } from "./trees.server"
 import { phraseOf, sentence } from "./words.server"
@@ -413,55 +409,6 @@ export async function getIsland(
 	return { grouping, id: query.id, ...treeOf(seat, shape, members.length) }
 }
 
-/** The bridge between two islands: the titles they share, laid out as a tree. */
-export async function getBridge(
-	ctx: ViewerContext,
-	query: ExplorerQuery & { a: string; b: string; branching?: number[] },
-): Promise<ExplorerBridge | null> {
-	const { seat, grouping, layout } = await prepare(ctx, query)
-	const a = islandIndex(layout, query.a)
-	const b = islandIndex(layout, query.b)
-	if (a < 0 || b < 0 || a === b) return null
-	const [first, second] = a < b ? [a, b] : [b, a]
-	const { kind, members } = bridgeMembers(
-		seat.pool,
-		layout,
-		first,
-		second,
-		seat.visible,
-	)
-	const shape = buildTree(
-		seat.pool,
-		members,
-		query.branching ?? DEFAULT_BRANCHING,
-	)
-	return {
-		grouping,
-		a: layout.islands[first].id,
-		b: layout.islands[second].id,
-		kind,
-		...treeOf(seat, shape, members.length),
-	}
-}
-
-/** For every pair of islands, what their bridge would hold, so the map can label and preview bridges. */
-export async function getIslandPairs(
-	ctx: ViewerContext,
-	query: ExplorerQuery,
-): Promise<ExplorerPairs> {
-	const { seat, grouping, layout } = await prepare(ctx, query)
-	return {
-		grouping,
-		pairs: pairCounts(layout, seat.visible).map((p) => ({
-			a: layout.islands[p.a].id,
-			b: layout.islands[p.b].id,
-			kind: p.kind,
-			count: p.count,
-			strength: Math.round(p.strength * 1000) / 1000,
-		})),
-	}
-}
-
 // ---------------------------------------------------------------- the near card
 
 /** The card of the title nearest the person's focus: match, why, services, and their state for the actions. */
@@ -507,5 +454,5 @@ export async function getNearCard(
 	}
 }
 
-// PROTOTYPE (Explorer round 10, the world map) - throwaway. The prototype's server reads the seat and the layouts.
-export const prototypeParts = { seatFor, layoutFor, treeOf, offered }
+// The world and its combinations (world.server.ts) read the seat and the layouts.
+export { layoutFor, offered, seatFor, treeOf }

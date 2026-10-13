@@ -1,8 +1,7 @@
-// PROTOTYPE - throwaway. Round 10 of the Explorer: the islands' names, forked from ~/ui/explorer/paint.ts for a
-// per-island fade (names of islands too small to read stay out) and the line under a combination of three.
-import { imageAt } from "~/ui/explorer/images"
-import type { MapIsland } from "~/ui/explorer/island"
-import { FONT, clamp, smooth } from "~/ui/explorer/paint"
+// The names on the map: each island's name and line, the combination's, and the notes on what an island would leave.
+import { imageAt } from "./images"
+import type { MapIsland } from "./island"
+import { FONT, clamp, risen, smooth } from "./paint"
 
 export interface NamesFrame {
 	W: number
@@ -41,18 +40,11 @@ const subLineOf = (island: MapIsland, phone: boolean) => {
 	return `${n}${taste}`
 }
 
-/** How far a bridge has risen, for its name and posters: 0 until it's well up, and fading as it sinks. */
-export const risen = (island: MapIsland, from: number) =>
-	island.bridge
-		? smooth(from, 1, island.bridge.grow) *
-			(island.bridge.to ? 1 : island.bridge.grow)
-		: 1
-
 /**
  * The islands' names: big on the islands out at the map, then small and pinned inside the view as you zoom into one,
  * fading once its titles take over. Names that would overlap make way for the ones nearer the middle.
  */
-export function paintNames10(
+export function paintNames(
 	g: CanvasRenderingContext2D,
 	islands: MapIsland[],
 	f: NamesFrame,
@@ -77,7 +69,11 @@ export function paintNames10(
 		a *= (1 - 0.6 * mm) * risen(island, 0.55) * f.fade(island)
 		if (a <= 0.01) continue
 		// Small islands sitting against the combination leave the room to its name; the bar names them.
-		if (island.role === "joined" && island.sr < 40 && islands.some((o) => o.bridge))
+		if (
+			island.role === "joined" &&
+			island.sr < 40 &&
+			islands.some((o) => o.bridge)
+		)
 			continue
 		const z = smooth(f.fit * 1.25, f.fit * 2.2, f.scale)
 		const sr = island.sr
