@@ -2,7 +2,7 @@
 // to URL parameters. Pure and shared by the server (the title filter) and the browser (the filter bar).
 //
 // URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
-// genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
+// themes=war,future, styles=animated,slow, genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters. The age and content filter: age=12 (the age of a ladder step),
 // hide=disturbing,drugs and ok=violence (the person's choices per kind of content, kept as given).
 import {
@@ -15,6 +15,15 @@ import {
 	showAllContent,
 } from "~/domain/age-content"
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
+import {
+	MAX_STYLES,
+	MAX_THEMES,
+	STYLE_KEYS,
+	type StyleKey,
+	THEME_KEYS,
+	type ThemeKey,
+	parseKeys,
+} from "~/domain/themes-styles"
 import {
 	type AnimeChoice,
 	type TitleFormat,
@@ -30,6 +39,8 @@ export const FILTER_NAMES = [
 	"type",
 	"anime",
 	"moods",
+	"themes",
+	"styles",
 	"genres",
 	"minScore",
 	"minMatch",
@@ -98,6 +109,10 @@ export interface FilterState {
 	notSeenYet: boolean
 	/** Up to MAX_MOODS; a title fits if it belongs to at least one. */
 	moods: MoodKey[]
+	/** Up to MAX_THEMES; a title fits if it has at least one. */
+	themes: ThemeKey[]
+	/** Up to MAX_STYLES; a title fits if it has at least one. */
+	styles: StyleKey[]
 	/** A title fits if it has at least one. */
 	genres: string[]
 	minScore: MinScore
@@ -134,6 +149,8 @@ export const defaultFilterState = (defaults: FilterDefaults): FilterState => ({
 	onMyServices: defaults.onMyServices,
 	notSeenYet: defaults.notSeenYet,
 	moods: [],
+	themes: [],
+	styles: [],
 	genres: [],
 	minScore: 0,
 	minMatch: 0,
@@ -185,6 +202,8 @@ export function filterStateFromParams(
 			),
 		),
 	].slice(0, MAX_MOODS)
+	state.themes = parseKeys(THEME_KEYS, params.get("themes"), MAX_THEMES)
+	state.styles = parseKeys(STYLE_KEYS, params.get("styles"), MAX_STYLES)
 	state.genres = [...new Set(list(params.get("genres")))]
 	state.minScore = oneOf(MIN_SCORES, params.get("score")) ?? 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
@@ -240,6 +259,8 @@ export function filterStateToParams(
 	set("type", titleType.type)
 	set("anime", titleType.anime)
 	set("moods", state.moods.length ? state.moods.join(",") : null)
+	set("themes", state.themes.length ? state.themes.join(",") : null)
+	set("styles", state.styles.length ? state.styles.join(",") : null)
 	set("genres", state.genres.length ? state.genres.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
 	set("match", state.minMatch ? String(state.minMatch) : null)
@@ -299,6 +320,10 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, anime: "any" }
 		case "moods":
 			return { ...state, moods: [] }
+		case "themes":
+			return { ...state, themes: [] }
+		case "styles":
+			return { ...state, styles: [] }
 		case "genres":
 			return { ...state, genres: [] }
 		case "minScore":
@@ -329,6 +354,8 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	anime: "any",
 	services: undefined,
 	moods: [],
+	themes: [],
+	styles: [],
 	genres: [],
 	minScore: 0,
 	minMatch: 0,
@@ -347,6 +374,8 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.anime !== "any" ? 1 : 0) +
 		(!state.onMyServices && state.services?.length ? 1 : 0) +
 		state.moods.length +
+		state.themes.length +
+		state.styles.length +
 		state.genres.length +
 		(state.minScore ? 1 : 0) +
 		(state.minMatch ? 1 : 0) +

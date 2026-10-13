@@ -72,6 +72,8 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 	assert.deepStrictEqual(prepared.stats, inline.stats)
 	assert.deepStrictEqual(prepared.referenceRows, inline.referenceRows)
 	assert.deepStrictEqual(prepared.columns.moods, inline.columns.moods)
+	assert.deepStrictEqual(prepared.columns.themes, inline.columns.themes)
+	assert.deepStrictEqual(prepared.columns.styles, inline.columns.styles)
 	const taste = new Float32Array(74).fill(1 / Math.sqrt(74))
 	prepared.forEach((key) => {
 		assert.deepStrictEqual(prepared.facts(key), inline.facts(key))
@@ -91,6 +93,71 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 		inline.columns.ratings?.estimates,
 	)
 	assert.equal(result.ratingsRefusal, null)
+})
+
+test("the snapshot derives each title's themes and styles beside its moods, by the rules' own thresholds", async () => {
+	const { themeMaskOf, themesInMask, styleMaskOf, stylesInMask } = await import(
+		"../../domain/themes-styles.ts"
+	)
+	const scored = (scores: Record<string, number>) =>
+		VALID_FINGERPRINT_KEYS.map((key) => scores[key] ?? 0)
+	const titles = [
+		{
+			genres: ["Animation"],
+			fingerprint: scored({ warfare: 7, slow_burn: 8 }),
+		},
+		{ genres: ["Drama"], fingerprint: scored({ warfare: 6, slow_burn: 7 }) },
+		{ genres: ["News"], fingerprint: scored({ crime: 9, mystery: 8 }) },
+		// No title analysis: fewer than ten scores.
+		{
+			genres: ["Animation"],
+			fingerprint: VALID_FINGERPRINT_KEYS.map((_, k) => (k < 5 ? 10 : 255)),
+		},
+	]
+	const { manifest, chunks } = encodeSnapshot({
+		version: "themes-styles",
+		builtAt: new Date("2026-01-01"),
+		keyOrder: VALID_FINGERPRINT_KEYS,
+		rows: titles.map((title, i) => ({
+			pointId: 1e12 + i + 1,
+			releaseDay: 19000,
+			votes: 20000,
+			popularity: 2,
+			score: 80,
+			origin: "US",
+			hasPoster: true,
+			hasBackdrop: false,
+			adult: false,
+			anime: false,
+			...title,
+		})),
+	})
+	const prepared = prepareSnapshot({ manifest, chunks, ratings: null })
+	const { columns } = buildSnapshot(
+		manifest,
+		prepared.columns,
+		null,
+		prepared.derived,
+	)
+	assert.deepEqual(
+		Array.from(columns.themes, (mask) => themesInMask(mask)),
+		[["war"], [], ["crime", "mystery"], []],
+	)
+	assert.deepEqual(
+		Array.from(columns.styles, (mask) => stylesInMask(mask)),
+		[["animated", "slow"], [], ["documentary"], []],
+	)
+	// The same masks the rules give a title's fingerprint and genres directly.
+	titles.forEach((title, row) => {
+		assert.equal(
+			columns.themes[row],
+			themeMaskOf(title.fingerprint, title.genres),
+		)
+		assert.equal(
+			columns.styles[row],
+			styleMaskOf(title.fingerprint, title.genres),
+		)
+	})
 })
 
 test("snapshot checksum refusal is fatal but ratings refusal still produces a snapshot", () => {

@@ -17,6 +17,7 @@ import {
 	rankForYou,
 } from "~/domain/for-you"
 import { MOOD_KEYS } from "~/domain/moods"
+import { STYLE_KEYS, THEME_KEYS, maskOfKeys } from "~/domain/themes-styles"
 import {
 	type CountryServices,
 	countryServices,
@@ -77,7 +78,8 @@ export interface FilterResult {
 	recoveries: { filter: FilterName; titles: number }[]
 	/**
 	 * What each option would leave, the other filters unchanged. Keys: services `all`, `mine`, and service ids;
-	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods by key; genres by name;
+	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods, themes and styles by
+	 * key; genres by name;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
 	 *
@@ -214,6 +216,8 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			(mask, mood) => mask | (1 << MOOD_KEYS.indexOf(mood)),
 			0,
 		),
+		themes: maskOfKeys(THEME_KEYS, state.themes),
+		styles: maskOfKeys(STYLE_KEYS, state.styles),
 		genres: genreBits,
 		genresChosen: state.genres.length > 0,
 		minScore: state.minScore,

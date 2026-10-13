@@ -10,6 +10,11 @@ const { ladderFor, ratingsFilter, runPasses } = await import(
 const { loadRatings } = await import("../title-snapshot/ratings.server.ts")
 const { byMatch, compareRows, sortToUse } = await import("./order.server.ts")
 const { hiddenContentBits } = await import("~/domain/age-content")
+const { FILTER_NAMES } = await import("~/domain/filter-state")
+const { MOOD_KEYS, maskOfMoods, moodMaskOf } = await import("~/domain/moods")
+const { STYLE_KEYS, THEME_KEYS, maskOfKeys, styleMaskOf, themeMaskOf } =
+	await import("~/domain/themes-styles")
+const { VALID_FINGERPRINT_KEYS } = await import("../utils/fingerprint.ts")
 const {
 	SnapshotRefused,
 	checkRatingsManifest,
@@ -34,6 +39,8 @@ const columns = {
 	scores: Uint8Array.from(SCORES),
 	flags: new Uint8Array(SCORES.length),
 	moods: new Uint16Array(SCORES.length),
+	themes: new Uint16Array(SCORES.length),
+	styles: new Uint16Array(SCORES.length),
 	ratings: null,
 }
 const noTitles = {
@@ -61,6 +68,8 @@ function passes(
 		type: "all",
 		anime: "any",
 		moods: 0,
+		themes: 0,
+		styles: 0,
 		genres: 0,
 		genresChosen: false,
 		minScore: filters.minScore ?? 0,
@@ -592,4 +601,299 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 	} finally {
 		console.error = consoleError
 	}
+})
+
+// ---------------------------------------------------------------- themes and styles
+
+type Picks = { moods?: string[]; themes?: string[]; styles?: string[] }
+type Scores = Record<string, number>
+
+/** Columns for titles given by their scores and genres, with the masks the title snapshot derives from them. */
+function ruleColumns(titles: { scores: Scores; genres?: string[] }[]) {
+	const fingerprints = titles.map((title) =>
+		Uint8Array.from(VALID_FINGERPRINT_KEYS, (key) => title.scores[key] ?? 0),
+	)
+	const mask = (
+		of: (fp: Uint8Array, genres: readonly string[]) => number,
+	): Uint16Array =>
+		Uint16Array.from(titles, (title, row) =>
+			of(fingerprints[row], title.genres ?? []),
+		)
+	return {
+		...columns,
+		pointIds: Float64Array.from(titles, (_, row) => MOVIE + row + 1),
+		genres: new Uint32Array(titles.length),
+		releaseDays: new Int32Array(titles.length).fill(19000),
+		votes: new Uint32Array(titles.length),
+		popularity: new Float32Array(titles.length),
+		scores: new Uint8Array(titles.length).fill(70),
+		flags: new Uint8Array(titles.length),
+		moods: mask(moodMaskOf),
+		themes: mask(themeMaskOf),
+		styles: mask(styleMaskOf),
+	}
+}
+
+/** Every group off over `rows` of the columns (-1 is a title the snapshot doesn't hold). */
+function passInput(
+	c: ReturnType<typeof ruleColumns>,
+	rows: number[],
+): PassInput {
+	return {
+		columns: c,
+		rows: Int32Array.from(rows),
+		keys: Float64Array.from(rows, (row, i) =>
+			row < 0 ? MOVIE + 900 + i : c.pointIds[row],
+		),
+		services: { kind: "column", kept: null, onMyServices: false },
+		notSeen: null,
+		seenOrSkipped: { keys: new Set(), rows: new Uint8Array(c.pointIds.length) },
+		type: "all",
+		anime: "any",
+		moods: 0,
+		themes: 0,
+		styles: 0,
+		genres: 0,
+		genresChosen: false,
+		minScore: 0,
+		minMatch: 0,
+		matches: null,
+		released: null,
+		releasedOptions: { any: null },
+		similarTo: [],
+		people: [],
+		legacy: null,
+		ratings: null,
+	}
+}
+
+/** The passes with only the moods, themes and styles chosen. */
+function pick(c: ReturnType<typeof ruleColumns>, rows: number[], picks: Picks) {
+	const out = runPasses({
+		...passInput(c, rows),
+		moods: maskOfMoods((picks.moods ?? []) as never),
+		themes: maskOfKeys(THEME_KEYS, (picks.themes ?? []) as never),
+		styles: maskOfKeys(STYLE_KEYS, (picks.styles ?? []) as never),
+	})
+	return { ...out, rows: Array.from(out.passing, (i) => rows[i]) }
+}
+
+// Rows 0 to 5; what each has by the rules:
+// 0 crime 9, mystery 8, slow burn 8     themes crime, mystery   style slow       mood Crime & mystery
+// 1 crime 8, fast pace 9                theme crime             style fast
+// 2 warfare 8, slow burn 9, pathos 9    theme war               style slow       mood Heavy
+// 3 warfare 7, mystery 8, Animation     themes mystery, war     style animated   mood Crime & mystery
+// 4 futuristic 8, fast pace 8           theme future            style fast       mood Other worlds
+// 5 nothing above its threshold
+const told = ruleColumns([
+	{ scores: { crime: 9, mystery: 8, slow_burn: 8 } },
+	{ scores: { crime: 8, fast_pace: 9 } },
+	{ scores: { warfare: 8, slow_burn: 9, pathos: 9 } },
+	{ scores: { warfare: 7, mystery: 8 }, genres: ["Animation"] },
+	{ scores: { futuristic: 8, fast_pace: 8 } },
+	{ scores: { crime: 7, slow_burn: 7 } },
+])
+const everyRow = [0, 1, 2, 3, 4, 5]
+
+test("a theme or style filter keeps the titles with one of the chosen, and the groups narrow each other", () => {
+	assert.deepEqual(pick(told, everyRow, {}).rows, everyRow)
+	assert.deepEqual(pick(told, everyRow, { themes: ["crime"] }).rows, [0, 1])
+	// Any of the chosen fits.
+	assert.deepEqual(
+		pick(told, everyRow, { themes: ["crime", "war"] }).rows,
+		[0, 1, 2, 3],
+	)
+	assert.deepEqual(pick(told, everyRow, { styles: ["slow"] }).rows, [0, 2])
+	assert.deepEqual(
+		pick(told, everyRow, { styles: ["animated", "fast"] }).rows,
+		[1, 3, 4],
+	)
+	// A theme with a style: a title needs both.
+	assert.deepEqual(
+		pick(told, everyRow, { themes: ["crime", "war"], styles: ["slow"] }).rows,
+		[0, 2],
+	)
+	// And with a mood.
+	assert.deepEqual(
+		pick(told, everyRow, {
+			moods: ["crime"],
+			themes: ["crime", "war"],
+			styles: ["slow"],
+		}).rows,
+		[0],
+	)
+	// A theme no title has leaves nothing.
+	assert.deepEqual(pick(told, everyRow, { themes: ["sports"] }).rows, [])
+})
+
+test("a title the snapshot doesn't hold has no theme and no style", () => {
+	const rows = [0, -1, 2]
+	assert.deepEqual(pick(told, rows, {}).rows, rows)
+	assert.deepEqual(pick(told, rows, { themes: ["crime", "war"] }).rows, [0, 2])
+	assert.deepEqual(pick(told, rows, { styles: ["slow"] }).rows, [0, 2])
+	assert.deepEqual(pick(told, rows, { themes: ["war"] }).recoveries, [
+		{ filter: "themes", titles: 2 },
+	])
+})
+
+test("the theme and style options count what each would leave, with a mood, a theme and a style chosen together", () => {
+	// Mood Crime & mystery keeps rows 0 and 3; theme War keeps 2 and 3; style Animated keeps 3.
+	const out = pick(told, everyRow, {
+		moods: ["crime"],
+		themes: ["war"],
+		styles: ["animated"],
+	})
+	assert.deepEqual(out.rows, [3])
+	assert.deepEqual(Object.keys(out.optionCounts.themes), [...THEME_KEYS])
+	assert.deepEqual(Object.keys(out.optionCounts.styles), [...STYLE_KEYS])
+	// Themes are counted over the titles the mood and the style let through: row 3 alone, a mystery at war.
+	assert.deepEqual(out.optionCounts.themes, {
+		...Object.fromEntries(THEME_KEYS.map((key) => [key, 1])),
+		// Taking the only chosen theme off turns the group off.
+		war: 1,
+	})
+	// Styles are counted over the titles the mood and the theme let through: row 3 again.
+	assert.equal(out.optionCounts.styles.animated, 1)
+	assert.equal(out.optionCounts.styles.slow, 1)
+	// Moods over the titles of War that are Animated: row 3; a second mood can only add to it.
+	assert.equal(out.optionCounts.moods.crime, 1)
+	assert.equal(out.optionCounts.moods.heavy, 1)
+
+	// Without the mood: War keeps rows 2 and 3, Slow burn rows 0 and 2.
+	const two = pick(told, everyRow, { themes: ["war"], styles: ["slow"] })
+	assert.deepEqual(two.rows, [2])
+	// Over the slow burns (rows 0 and 2): War alone leaves row 2, adding Crime or Mystery lets row 0 in, another
+	// theme adds nothing, and War off leaves both.
+	assert.deepEqual(two.optionCounts.themes, {
+		...Object.fromEntries(THEME_KEYS.map((key) => [key, 1])),
+		crime: 2,
+		mystery: 2,
+		war: 2,
+	})
+	// Over the war titles (rows 2 and 3): Slow burn off leaves both, Animated added lets row 3 in.
+	assert.deepEqual(two.optionCounts.styles, {
+		...Object.fromEntries(STYLE_KEYS.map((key) => [key, 1])),
+		animated: 2,
+		slow: 2,
+	})
+})
+
+test("a recovery counts the titles only the themes, or only the styles, hide", () => {
+	// War hides rows 0, 1, 4 and 5; Slow burn hides rows 1, 3, 4 and 5. Only row 0 is hidden by the themes alone
+	// and only row 3 by the styles alone.
+	const out = pick(told, everyRow, { themes: ["war"], styles: ["slow"] })
+	assert.deepEqual(out.recoveries, [
+		{ filter: "themes", titles: 1 },
+		{ filter: "styles", titles: 1 },
+	])
+	// With the mood Heavy on top (row 2 alone), nothing is hidden by one group only except what Heavy hides: none.
+	const three = pick(told, everyRow, {
+		moods: ["heavy"],
+		themes: ["war"],
+		styles: ["slow"],
+	})
+	assert.deepEqual(three.rows, [2])
+	assert.deepEqual(three.recoveries, [])
+	assert.deepEqual(pick(told, everyRow, { styles: ["fast"] }).recoveries, [
+		{ filter: "styles", titles: 4 },
+	])
+})
+
+test("the passes agree with a title-by-title count for any moods, themes and styles", () => {
+	// 400 made-up titles with any combination of moods, themes and styles, and a few the snapshot doesn't hold.
+	let seed = 20261013
+	const random = () => {
+		seed = (seed + 0x6d2b79f5) | 0
+		let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+	}
+	const N = 400
+	const bits = (size: number) => {
+		let mask = 0
+		for (let b = 0; b < size; b++) if (random() < 0.18) mask |= 1 << b
+		return mask
+	}
+	const c = {
+		...ruleColumns(Array.from({ length: N }, () => ({ scores: {} }))),
+		moods: Uint16Array.from({ length: N }, () => bits(MOOD_KEYS.length)),
+		themes: Uint16Array.from({ length: N }, () => bits(THEME_KEYS.length)),
+		styles: Uint16Array.from({ length: N }, () => bits(STYLE_KEYS.length)),
+	}
+	const rows = Array.from({ length: N + 6 }, (_, i) => (i < N ? i : -1))
+	const groups = [
+		{ name: "moods", keys: MOOD_KEYS as readonly string[], column: c.moods },
+		{ name: "themes", keys: THEME_KEYS as readonly string[], column: c.themes },
+		{ name: "styles", keys: STYLE_KEYS as readonly string[], column: c.styles },
+	] as const
+	type Chosen = Record<"moods" | "themes" | "styles", string[]>
+	const maskOf = (keys: readonly string[], chosen: string[]) =>
+		chosen.reduce((mask, key) => mask | (1 << keys.indexOf(key)), 0)
+	// What a group hides: nothing while nothing is chosen; else every title without one of the chosen.
+	const hides = (g: (typeof groups)[number], chosen: Chosen, row: number) => {
+		const wanted = maskOf(g.keys, chosen[g.name])
+		return wanted !== 0 && (row < 0 || (g.column[row] & wanted) === 0)
+	}
+	const left = (chosen: Chosen) =>
+		rows.filter((row) => groups.every((g) => !hides(g, chosen, row))).length
+	const some = (keys: readonly string[], n: number) =>
+		[...keys].sort(() => random() - 0.5).slice(0, n)
+
+	for (let round = 0; round < 40; round++) {
+		const chosen: Chosen = {
+			moods: some(MOOD_KEYS, Math.floor(random() * 4)),
+			themes: some(THEME_KEYS, Math.floor(random() * 4)),
+			styles: some(STYLE_KEYS, Math.floor(random() * 4)),
+		}
+		const out = pick(c, rows, chosen)
+		assert.equal(out.passing.length, left(chosen), JSON.stringify(chosen))
+		for (const g of groups) {
+			for (const key of g.keys) {
+				const toggled = chosen[g.name].includes(key)
+					? chosen[g.name].filter((k) => k !== key)
+					: [...chosen[g.name], key]
+				assert.equal(
+					out.optionCounts[g.name][key],
+					left({ ...chosen, [g.name]: toggled }),
+					`${g.name} ${key} of ${JSON.stringify(chosen)}`,
+				)
+			}
+			const alone = rows.filter((row) =>
+				groups.every((other) => hides(other, chosen, row) === (other === g)),
+			).length
+			assert.equal(
+				out.recoveries.find((r) => r.filter === g.name)?.titles ?? 0,
+				alone,
+				`${g.name} alone of ${JSON.stringify(chosen)}`,
+			)
+		}
+	}
+})
+
+test("a fail mask has room for every filter group, the last one included", () => {
+	assert.ok(FILTER_NAMES.length <= 32)
+	assert.ok(FILTER_NAMES.includes("themes") && FILTER_NAMES.includes("styles"))
+	// Sixteen groups: the last one's bit is the sixteenth, and a title only it hides is its recovery.
+	assert.equal(FILTER_NAMES.length, 16)
+	assert.equal(FILTER_NAMES.at(-1), "content")
+	const ratings: RatingsFilter = {
+		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
+		ages: null,
+		estimates: new Uint8Array(everyRow.length),
+		limit: -1,
+		hidden: 1,
+		steps: [],
+		hiddenWhenOff: 1,
+	}
+	const out = runPasses({
+		...passInput(told, everyRow),
+		themes: maskOfKeys(THEME_KEYS, ["war"]),
+		ratings,
+	})
+	// War keeps rows 2 and 3; the hidden kind of content hides row 3.
+	assert.deepEqual(Array.from(out.passing), [2])
+	assert.deepEqual(out.recoveries, [
+		{ filter: "themes", titles: 4 },
+		{ filter: "content", titles: 1 },
+	])
 })

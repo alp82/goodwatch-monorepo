@@ -152,6 +152,14 @@ _Avoid_: My streaming, Available
 A named kind of evening, such as Funny or Crime & mystery, that a title belongs to by a fixed rule over its fingerprint and genres. A title can belong to several moods or to none. A person picks up to three.
 _Avoid_: Vibe, Mood blend
 
+**Theme**:
+What a title is about, such as War, Growing up or True stories, that a title has by a fixed rule over its fingerprint. A title can have several themes or none. The Explorer groups titles by theme, and on Discover a person filters by up to three.
+_Avoid_: Topic, Subject
+
+**Style**:
+How a title looks, sounds and is told, such as Animated, Slow burn or Talky, that a title has by a fixed rule over its fingerprint; Animated and Documentary go by genre. A title can have several styles or none. The Explorer groups titles by style, and on Discover a person filters by up to three.
+_Avoid_: Format, Form
+
 **Taste**:
 What a person's ratings and Want to See say about the fingerprints they enjoy. A guest has a taste too, built from their guest progress.
 _Avoid_: Taste profile
