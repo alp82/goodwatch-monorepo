@@ -115,11 +115,14 @@ const sideOf = (island: MapIsland) => ({
 export function ExplorerMap({
 	initialWorld,
 	fallback,
+	Card = ProximityCard,
 }: {
 	/** The world the server rendered (a member's own; a guest's comes from their browser's progress). */
 	initialWorld: ExplorerWorld | null
 	/** What shows until the page runs: the islands as a list, for no JavaScript and search engines. */
 	fallback?: ReactNode
+	/** PROTOTYPE seam (the card's way to the title page, /prototype/rec-explorer-open): remove with the prototype. */
+	Card?: typeof ProximityCard
 }) {
 	const [params, setParams] = useSearchParams()
 	const filters = useMemo(() => filtersOf(params), [params])
@@ -1056,7 +1059,7 @@ export function ExplorerMap({
 		? { name: activeIsland.name, color: rgbCss(activeIsland.tint) }
 		: { name: "", color: "#888" }
 	const cardNode = active && activeIsland && (
-		<ProximityCard
+		<Card
 			key={active.key}
 			ref={cardEl}
 			title={active.title}
