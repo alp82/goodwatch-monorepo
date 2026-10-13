@@ -288,7 +288,11 @@ export function MixBar({
 	}
 	const many = state.list.length > 1
 	return (
-		<div ref={root} className="relative flex min-w-0 items-center gap-2">
+		<div
+			ref={root}
+			// On phones the row spans the screen: the count left, the two views in the middle, Separate right.
+			className={`relative flex min-w-0 items-center gap-2 ${phone ? "w-full justify-between" : ""}`}
+		>
 			<button
 				type="button"
 				aria-expanded={open}

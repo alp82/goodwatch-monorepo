@@ -1,7 +1,8 @@
 # Explorer, one world (round 10)
 
-Throwaway prototype, on branch `prototype/explorer-world`. Not on `main` (a push there was started on 2026-10-13 and
-stopped by the owner; the branch holds a merge of `main` from that day).
+Throwaway prototype. Built on branch `prototype/explorer-world`, and on `main` since 2026-10-13 at the owner's request, as a
+development-only route like the earlier rounds (a production build leaves `prototype.rec-*` routes out). The real
+Explorer is unchanged.
 
 ## The question
 
@@ -98,6 +99,8 @@ Seventh round (owner, 2026-10-13): the selection is `inline`, reworked. No varia
   with a bar for how much it keeps. A cross lets the island go. The sentence is gone from here; the map's own label
   and the count say what the combination holds.
 - The counts without each island are one more read (`op=parts`).
+
+On phones the row spans the screen: the count left, the two views in the middle, Separate right.
 
 Screenshot: `selection-rows.png` (desktop with two and five islands, then the same on a phone).
 
