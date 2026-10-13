@@ -29,6 +29,21 @@ Each uses the expand motif and the one word "Details".
 
 Screenshots: `desktop.png`, `phone.png` (in the order of the table).
 
+## Verdict and round 2 (owner, 2026-10-13)
+
+`hero` is the one: the card's picture is the door. Three things to fix, done in round 2 (`tile` and `bar` are gone
+from the route; `?variant=hero|current`):
+
+- **It wasn't obvious that the whole header is clickable.** The header now wears a ring in the island's color, the
+  title ends in an arrow, and the header answers the pointer: the ring turns white, the picture grows, the title
+  is underlined, and "Details" lights up. Pressed, the ring thickens.
+- **"Details" and close fought for the same space with different looks.** They are now one control, top right, with
+  one look: "Details" with the expand motif, a divider, then close (or the pin, while the card isn't kept open).
+  Pointing at close or the pin takes the header's link look away.
+- **Not interested is gone from the card**, and with it the row under Want to See and Seen it.
+
+`hero-round-2.png`: at rest, pointing at the header, pointing at close, then a phone's peek and its open card.
+
 ## Seen while building
 
 - **On a phone the card is a sheet of half the screen.** `tile` pushes Want to See and Seen it under its edge, and

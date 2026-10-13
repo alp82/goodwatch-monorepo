@@ -1,12 +1,13 @@
 // PROTOTYPE - throwaway. The Explorer's title card (~/ui/explorer/ProximityCard.tsx), forked for one question: what
 // should the way to the title page look like? Today it is a small underlined link under the actions, easy to miss.
-// Variants (?variant=<key>), each with the expand motif and the one word "Details":
-// - bar: one wide button at the foot of the card.
-// - hero: the card's picture is the door, with a "Details" pill on it.
-// - tile: a door in the middle of the card, with the poster and what's behind it.
+// The owner chose the card's picture as the door (2026-10-13). Variants (?variant=<key>):
+// - hero: the whole header is the link: it wears a ring in the island's color, the title ends in an arrow, and it
+//   answers the pointer. "Details" and close (or pin) are one control, top right, with one look. Not interested is
+//   gone from the card.
 // - current: today's link, to compare.
 import {
 	ArrowsPointingOutIcon,
+	ChevronRightIcon,
 	MapPinIcon,
 	NoSymbolIcon,
 	XMarkIcon,
@@ -58,10 +59,23 @@ interface ProximityCardProps {
  */
 export const OpenCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 	function OpenCard(
-		{ title, where, card, pinned, form, peek, onPin, onClose, onAction, onHide },
+		{
+			title,
+			where,
+			card,
+			pinned,
+			form,
+			peek,
+			onPin,
+			onClose,
+			onAction,
+			onHide,
+		},
 		ref,
 	) {
 		const variant = useVariant()
+		/** The header is the way to the title page (a peek opens the card first). */
+		const door = variant === "hero" && !peek
 		const kind = title.mediaType === "show" ? "Series" : "Film"
 		const meta = [
 			title.year ? String(title.year) : "",
@@ -77,7 +91,7 @@ export const OpenCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 		return (
 			<div
 				ref={ref}
-				className={`ex-card ex-card-${form} ${peek ? "ex-card-peek" : ""} ${pinned ? "ex-card-pinned" : ""}`}
+				className={`ex-card ex-card-${form} ${peek ? "ex-card-peek" : ""} ${pinned ? "ex-card-pinned" : ""} ${door ? "proto-has-door" : ""}`}
 				style={{ "--isl": where.color } as React.CSSProperties}
 				aria-live="polite"
 				aria-label={title.title}
@@ -101,22 +115,28 @@ export const OpenCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 							<span className="ex-dot" style={{ background: where.color }} />
 							{where.name}
 						</span>
-						<h2 className="ex-card-t">{title.title}</h2>
+						<h2 className="ex-card-t">
+							{title.title}
+							{door && (
+								<ChevronRightIcon className="proto-door-arrow" aria-hidden />
+							)}
+						</h2>
 						<p className="ex-card-meta">{meta}</p>
 					</div>
-					{variant === "hero" && !peek && (
+					{door && (
 						<Link
 							to={titlePath(title)}
-							className="proto-door-hero"
+							className="proto-door"
 							aria-label={`Details of ${title.title}`}
-						>
-							<span className="proto-door-pill">
+						/>
+					)}
+					<div className={door ? "ex-card-tools proto-tools" : "ex-card-tools"}>
+						{door && (
+							<Link to={titlePath(title)} className="proto-tool-details">
 								<ArrowsPointingOutIcon className="h-4 w-4" aria-hidden />
 								Details
-							</span>
-						</Link>
-					)}
-					<div className="ex-card-tools">
+							</Link>
+						)}
 						{pinned ? (
 							<button
 								type="button"
@@ -250,17 +270,6 @@ function Actions({
 	const seen = a.seen || title.seen
 	return (
 		<>
-			{/* tile: a door in the middle of the card, with the poster and what's behind it. */}
-			{variant === "tile" && (
-				<Link to={titlePath(title)} className="proto-door-tile">
-					<img src={`${TMDB}/w92${title.poster}`} alt="" />
-					<span className="proto-door-words">
-						<b>Details</b>
-						<span>Cast, trailer, where to watch</span>
-					</span>
-					<ArrowsPointingOutIcon className="h-5 w-5 shrink-0" aria-hidden />
-				</Link>
-			)}
 			<div className="mt-3">
 				<TitleScore
 					media={media}
@@ -288,72 +297,66 @@ function Actions({
 							// A rated movie stays Seen through its score: the press says so and sends nothing. With the
 							// movie watch log the press goes to the log, which answers with its own toast.
 							if (!a.toggleSeen(event)) return
-							onAction(
-								a.seen ? "Unmarked as seen" : "Marked as seen",
-								!a.seen,
-							)
+							onAction(a.seen ? "Unmarked as seen" : "Marked as seen", !a.seen)
 						}}
 					/>
 				</UserAction>
 			</div>
-			{/* bar: one wide button closes the card. */}
-			{variant === "bar" && (
-				<Link to={titlePath(title)} className="proto-door-bar">
-					<ArrowsPointingOutIcon className="h-4 w-4" aria-hidden />
-					Details
-				</Link>
-			)}
-			<div
-				className={`flex items-center gap-3 ${variant === "current" ? "justify-between" : "justify-end"}`}
-			>
-				{variant === "current" && (
+			{/* Today's two links. With the header as the door there is neither: Not interested left the card. */}
+			{variant === "current" && (
+				<div className="flex items-center justify-between gap-3">
 					<Link to={titlePath(title)} className="ex-open">
 						Open the title page
 					</Link>
-				)}
-				{/* For a title the person hasn't seen: not offered once it's seen or scored. */}
-				{!seen && a.score == null && title.rating == null && !a.hidden && (
-					<button
-						type="button"
-						className="ex-open cursor-pointer gap-1.5"
-						disabled={a.hidePending}
-						onClick={() => onHide(a.hide())}
-					>
-						<NoSymbolIcon className="h-4 w-4" aria-hidden />
-						Not interested
-					</button>
-				)}
-			</div>
+					{/* For a title the person hasn't seen: not offered once it's seen or scored. */}
+					{!seen && a.score == null && title.rating == null && !a.hidden && (
+						<button
+							type="button"
+							className="ex-open cursor-pointer gap-1.5"
+							disabled={a.hidePending}
+							onClick={() => onHide(a.hide())}
+						>
+							<NoSymbolIcon className="h-4 w-4" aria-hidden />
+							Not interested
+						</button>
+					)}
+				</div>
+			)}
 		</>
 	)
 }
 
 export const OPEN_VARIANTS = {
-	tile: "A door in the middle",
-	hero: "The picture is the door",
-	bar: "One wide button",
+	hero: "The header is the door",
 	current: "Today's link",
 } as const
 type Variant = keyof typeof OPEN_VARIANTS
 function useVariant(): Variant {
 	const want = useSearchParams()[0].get("variant") ?? ""
-	return want in OPEN_VARIANTS ? (want as Variant) : "tile"
+	return want in OPEN_VARIANTS ? (want as Variant) : "hero"
 }
 
 export const OPEN_CSS = `
-.proto-door-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;min-height:46px;border-radius:13px;font-weight:800;font-size:15px;color:#0b0f1c;background:#f4f6ff;box-shadow:0 6px 22px rgba(160,190,255,.3);transition:transform .15s,box-shadow .15s}
-.proto-door-bar:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(160,190,255,.45)}
-.proto-door-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:flex-end;padding:12px;border-radius:inherit}
-.proto-door-hero:hover .proto-door-pill{background:#f4f6ff;color:#0b0f1c}
-.proto-door-pill{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;font-weight:800;font-size:14px;color:#fff;background:rgba(10,14,26,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);transition:background .15s,color .15s}
-.ex-card-hero:has(.proto-door-hero){cursor:pointer}
-.ex-card-hero:has(.proto-door-hero) .ex-card-bd{transition:transform .35s}
-.ex-card-hero:has(.proto-door-hero:hover) .ex-card-bd{transform:scale(1.05)}
-.ex-card-hero:has(.proto-door-hero) .ex-card-tools{z-index:2}
-.proto-door-tile{display:flex;align-items:center;gap:12px;margin-top:12px;padding:8px 14px 8px 8px;border-radius:14px;color:#fff;background:linear-gradient(to right,color-mix(in srgb,var(--isl) 26%,rgba(255,255,255,.06)),rgba(255,255,255,.06));border:1px solid color-mix(in srgb,var(--isl) 55%,rgba(255,255,255,.18));transition:transform .15s,border-color .15s,background .15s}
-.proto-door-tile:hover{transform:translateY(-1px);border-color:#fff}
-.proto-door-tile img{width:38px;height:57px;border-radius:6px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,.6)}
-.proto-door-words{display:flex;flex:1;min-width:0;flex-direction:column;line-height:1.25}
-.proto-door-words b{font-size:16px;font-weight:800}
-.proto-door-words span{font-size:12.5px;color:var(--mute)}
+/* The header as one link: a ring in the island's color says it is one thing, and it answers the pointer. */
+.proto-door{position:absolute;inset:0;z-index:1}
+.proto-has-door .ex-card-hero{cursor:pointer;overflow:hidden}
+.proto-has-door .ex-card-hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--isl) 75%,transparent);border-radius:inherit;transition:box-shadow .18s}
+.proto-has-door .ex-card-hero:hover::after{box-shadow:inset 0 0 0 2px #fff,inset 0 -60px 60px -40px color-mix(in srgb,var(--isl) 60%,transparent)}
+.proto-has-door .ex-card-hero:active::after{box-shadow:inset 0 0 0 3px #fff}
+.proto-has-door .ex-card-bd{transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.proto-has-door .ex-card-hero:hover .ex-card-bd{transform:scale(1.06)}
+.proto-has-door .ex-card-hero:hover .ex-card-t{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.proto-door-arrow{display:inline-block;width:.85em;height:.85em;margin-left:.15em;vertical-align:-.1em;transition:transform .18s}
+.proto-has-door .ex-card-hero:hover .proto-door-arrow{transform:translateX(4px)}
+/* Details and close (or pin): one control with one look, above the link. */
+.proto-tools{z-index:2;display:flex;align-items:stretch;height:40px;right:8px;top:8px;border-radius:12px;background:rgba(10,14,26,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);overflow:hidden}
+.proto-tool-details{display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-weight:800;font-size:14px;color:#fff;transition:background .15s,color .15s}
+.proto-tools .ex-icon{width:40px;height:auto;border-radius:0;background:none;backdrop-filter:none;border-left:1px solid rgba(255,255,255,.22)}
+.proto-tools .ex-icon:hover{background:rgba(255,255,255,.16)}
+.proto-has-door .ex-card-hero:hover .proto-tool-details,.proto-tool-details:hover{background:#f4f6ff;color:#0b0f1c}
+.proto-tools:has(.ex-icon:hover) .proto-tool-details{background:none;color:#fff}
+/* Pointing at close or pin, the header doesn't say it is a link. */
+.proto-has-door .ex-card-hero:has(.ex-icon:hover) .ex-card-t{text-decoration:none}
+.proto-has-door .ex-card-hero:has(.ex-icon:hover)::after{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--isl) 75%,transparent)}
+.proto-has-door .ex-card-hero:has(.ex-icon:hover) .ex-card-bd{transform:none}
 `
