@@ -1,0 +1,16 @@
+node:fs:779
+  return binding.open(
+                 ^
+
+Error: ENOENT: no such file or directory, open '/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/catalog-drift.json'
+    at Object.openSync (node:fs:779:18)
+    at Object.readFileSync (node:fs:625:35)
+    at read (file:///home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/run.mjs:2:182)
+    at file:///home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/run.mjs:14:1294 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/alper/projects/search-100-evidence/offline-facet-incomplete-coverage-study-design-20261013/catalog-drift.json'
+}
+
+Node.js v26.8.1
