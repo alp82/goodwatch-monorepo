@@ -28,7 +28,7 @@ export function crateAuthTransport(urls: string[], timeoutMs = 15_000, credentia
 	if (credentials) headers.authorization = `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString("base64")}`
 	let next = 0
 	return async (stmt, args = []) => {
-		const read = /^(SELECT|REFRESH TABLE)\b/.test(stmt)
+		const read = /^(SELECT|SHOW CREATE TABLE|REFRESH TABLE)\b/.test(stmt)
 		let error: unknown
 		for (let attempt = 0; attempt < urls.length; attempt++) {
 			try {
@@ -36,7 +36,11 @@ export function crateAuthTransport(urls: string[], timeoutMs = 15_000, credentia
 					method: "POST", headers, body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(timeoutMs),
 				})
 				const result = await response.json()
-				if (!response.ok || result.error) throw new CrateAuthRequestError(result.error?.message ?? "CrateDB auth statement refused", result.error?.code, response.status, response.status >= 400 && response.status < 500)
+				if (!response.ok || result.error) {
+					// Cancellation and unknown server codes are not proof of non-application.
+					const refused = response.status === 401 || response.status === 403 || response.status >= 400 && response.status < 500 && [4000, 4041, 4043, 4091].includes(result.error?.code)
+					throw new CrateAuthRequestError(result.error?.message ?? "CrateDB auth statement refused", result.error?.code, response.status, refused)
+				}
 				return result
 			} catch (failure) {
 				const code = (failure as { cause?: { code?: string } }).cause?.code
@@ -66,7 +70,6 @@ const normalizeEmail = (value: unknown) => String(value).trim().toLowerCase()
 type Row = Record<string, any>
 const models = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
 const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
-const lookup = (row: Row) => Object.fromEntries(indexedFields.map(field => [field, row[field] ?? null]))
 type Receipt = { operation: string; baseSeq: number }
 type Stored = { row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[]; emailClaim?: string }
 export class IndeterminateAuthWriteError extends Error {
@@ -75,23 +78,26 @@ export class IndeterminateAuthWriteError extends Error {
 export class AuthMutationConflictError extends Error {
 	constructor() { super("Auth mutation conflicted; the requested update or revocation did not complete"); this.name = "AuthMutationConflictError" }
 }
-const decode = (text: unknown): Row => JSON.parse(String(text), (key, value) =>
-	typeof value === "string" && /At$/.test(key) && /^\d{4}-\d\d-\d\dT/.test(value) ? new Date(value) : value)
 
 export async function migrateAuthTables(sql: AuthSql, additionalModels: string[] = []) {
 	if (additionalModels.length && !localTransports.has(sql)) throw new Error("Additional tables require the disposable local transport")
-	for (const model of new Set([...models, ...additionalModels])) await sql(`CREATE TABLE IF NOT EXISTS ${table(model)} (
-		id TEXT PRIMARY KEY, payload TEXT INDEX OFF NOT NULL,
+	for (const model of new Set([...models, ...additionalModels])) {
+		await sql(`CREATE TABLE IF NOT EXISTS ${table(model)} (
+		id TEXT PRIMARY KEY, payload TEXT INDEX OFF STORAGE WITH (columnstore = false) NOT NULL,
 		lookup OBJECT(STRICT) AS (${indexedFields.map(field => `"${field}" ${["lastRequest", "count"].includes(field) ? "DOUBLE PRECISION" : "TEXT"}`).join(",")}),
 		created_at TIMESTAMP WITH TIME ZONE, expires_at TIMESTAMP WITH TIME ZONE,
-		deleted BOOLEAN NOT NULL DEFAULT false, receipts TEXT INDEX OFF NOT NULL
+		deleted BOOLEAN NOT NULL DEFAULT false, receipts TEXT INDEX OFF STORAGE WITH (columnstore = false) NOT NULL
 	) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas='2', "write.wait_for_active_shards"=1,
 		"translog.durability"='REQUEST', refresh_interval=-1)`)
+		const ddl = String((await sql(`SHOW CREATE TABLE ${table(model)}`)).rows[0]?.[0])
+		for (const field of ["payload", "receipts"]) if (!new RegExp(`"${field}" TEXT NOT NULL INDEX OFF STORAGE WITH \\(\\s*columnstore = false`).test(ddl)) throw new Error("Incompatible prerelease auth schema: rebuild disposable tables or perform an offline migration before use")
+	}
 	await sql(`CREATE TABLE IF NOT EXISTS doc.auth_user_email (
 		email_norm TEXT PRIMARY KEY, user_id TEXT NOT NULL, operation_id TEXT NOT NULL,
 		created_at TIMESTAMP WITH TIME ZONE NOT NULL, user_seq LONG NOT NULL
 	) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas='2', "write.wait_for_active_shards"=1,
 		"translog.durability"='REQUEST', refresh_interval=-1)`)
+	if (!String((await sql("SHOW CREATE TABLE doc.auth_user_email")).rows[0]?.[0]).includes('"user_seq" BIGINT NOT NULL')) throw new Error("Incompatible prerelease email claim schema: offline migration required")
 }
 
 export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string }) {
@@ -102,6 +108,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 	const codec = authPayloadCodec(payloadSecret)
 	const privateKey = (purpose: string, value: unknown) => createHmac("sha256", payloadSecret).update(JSON.stringify([purpose, value])).digest("hex")
 	const emailKey = (email: unknown) => privateKey("email-claim", normalizeEmail(email))
+	const indexValue = (model: string, field: string, value: unknown) => model === "verification" && field === "identifier" && value != null ? privateKey("verification-identifier", value) : value
+	const lookup = (model: string, row: Row) => Object.fromEntries(indexedFields.map(field => [field, indexValue(model, field, row[field] ?? null)]))
 	return createAdapterFactory({
 		config: { adapterId: "goodwatch-cratedb", adapterName: "Strict CrateDB", supportsDates: true,
 			supportsBooleans: true, supportsJSON: true, supportsArrays: true, transaction: false },
@@ -111,7 +119,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				rateLimit: context.options.rateLimit?.storage === "database", preserveSessions: context.options.session?.preserveSessionInDatabase === true }
 			if (context.options.secondaryStorage && context.options.session?.storeSessionInDatabase !== true) throw new Error("CrateDB session mirror is required")
 			const decodeRow = (model: string, payload: unknown): Row => {
-				const { __emailClaim, ...row } = codec.decode(payload)
+				const row = payload as Row
 				for (const [field, attributes] of Object.entries(context.schema[model]?.fields ?? {})) if (attributes.type === "date" && row[field] != null) row[field] = new Date(row[field])
 				return row
 			}
@@ -149,8 +157,10 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				if (!models.includes(model) && !(testOnlyConformance && context.schema[model])) throw new Error("Unsupported auth model")
 				const result = await sql(`SELECT payload,_seq_no,_primary_term,deleted,receipts FROM ${table(model)} WHERE id = ?`, [id])
 				if (!result.rows.length) return null
-				const [payload, seq, term, deleted, receipts] = result.rows[0]
-				return { row: decodeRow(model, payload), seq: Number(seq), term: Number(term), deleted: Boolean(deleted), receipts: codec.decode(receipts), emailClaim: codec.decode(payload).__emailClaim }
+				const [payload, seq, term, , receipts] = result.rows[0]
+				const envelope = codec.decode(payload, `${table(model)}:${id}:payload`)
+				if (typeof envelope.deleted !== "boolean" || envelope.row?.id !== id) throw new Error("Invalid authenticated auth row")
+				return { row: decodeRow(model, envelope.row), seq: Number(seq), term: Number(term), deleted: envelope.deleted, receipts: codec.decode(receipts, `${table(model)}:${id}:receipts`), emailClaim: envelope.emailClaim }
 			}
 			const key = (model: string, row: Row): string => {
 				switch (model) {
@@ -180,7 +190,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				else if (model === "oauthClientResource" && eq.clientId !== undefined && eq.resourceId !== undefined) ids = [digest(eq.clientId, eq.resourceId)]
 				else if (model === "oauthConsent" && eq.clientId !== undefined && eq.userId !== undefined && eq.referenceId !== undefined) ids = [digest(eq.clientId, eq.userId, eq.referenceId)]
 				else if (model === "rateLimit" && eq.key !== undefined) ids = [String(eq.key)]
-				const batch = where.find(p => p.operator === "in" && ["id", "token", "clientId", "identifier"].includes(p.field))
+				const batch = where.find(p => p.operator === "in" && (p.field === "id" || p.field === "token" && ["session", "oauthAccessToken", "oauthRefreshToken"].includes(model) || p.field === "clientId" && model === "oauthClient" || p.field === "identifier" && model === "oauthResource"))
 				if (!ids && batch && !testOnlyConformance) ids = (batch.value as string[]).map(value => batch.field === "token" ? digest(value) : String(value))
 				if (!ids) {
 					await sql(`REFRESH TABLE ${table(model)}`)
@@ -192,10 +202,10 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						if (p.operator === "in") {
 							const values = p.value as unknown[]
 							filters.push(values.length ? `${column} IN (${values.map(() => "?").join(",")})` : "false")
-							args.push(...values)
+							args.push(...values.map(value => indexValue(model, p.field, value)))
 						} else {
 							const operator = { eq: "=", lt: "<", lte: "<=", gt: ">", gte: ">=" }[p.operator as "eq"]
-							if (operator) { filters.push(`${column} ${operator} ?`); args.push(p.value) }
+							if (operator) { filters.push(`${column} ${operator} ?`); args.push(indexValue(model, p.field, p.value)) }
 						}
 					}
 					ids = []
@@ -225,15 +235,15 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				}
 				const operation = randomUUID()
 				const result = deleting ? original.row : replacing ? { ...update, id: original.row.id } : { ...original.row, ...update }
-				if (key(model, result) !== key(model, original.row)) throw new Error("Auth lookup keys are immutable")
+				if (!deleting && key(model, result) !== original.row.id) throw new Error("Auth lookup keys are immutable")
 				// Receipts prove ownership; this invocation already knows its result.
 				// Never retain historical credentials or an unbounded operation log.
-				const receipts = [...original.receipts, { operation, baseSeq: original.seq }].slice(-256)
-				const id = key(model, original.row)
+				const receipts = [...(replacing ? [] : original.receipts), { operation, baseSeq: original.seq }].slice(-256)
+				const id = String(original.row.id)
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${table(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ ...result, __emailClaim: emailClaim }), deleting, codec.encode(receipts), lookup(result), result.createdAt ?? null, result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ row: deleting ? { id } : result, deleted: deleting, emailClaim: deleting ? undefined : emailClaim }, `${table(model)}:${id}:payload`), deleting, codec.encode(receipts, `${table(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
@@ -246,7 +256,10 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
 					return result
 				}
-				if (response?.rowcount === 0 && current && current.seq !== original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) return null
+				if (response?.rowcount === 0 && current && current.seq !== original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) {
+					if (model === "user" && emailClaim !== original.emailClaim && current.emailClaim !== emailClaim) await releaseEmail(update.email, original.row.id, emailClaim)
+					return null
+				}
 				throw new IndeterminateAuthWriteError()
 			}
 			const assign = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false): Promise<Row | null> => {
@@ -255,7 +268,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					if (result) return result
 					// Only a proven competing version reaches here. Re-evaluate every
 					// predicate; never resurrect a deleted row or replay a logical delta.
-					const current = await stored(model, key(model, row.row))
+					const current = await stored(model, String(row.row.id))
 					if (!current || current.deleted || !matches(current.row, where)) return null
 					row = current
 				}
@@ -274,7 +287,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${table(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
-							[row.id, codec.encode({ ...row, __emailClaim: emailClaim }), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1 }]), lookup(row)])
+							[row.id, codec.encode({ row, deleted: false, emailClaim }, `${table(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1 }], `${table(model)}:${row.id}:receipts`), lookup(model, row)])
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {
@@ -282,7 +295,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 							if (model === "user") await releaseEmail(row.email, row.id, emailClaim)
 							throw error
 						}
-						const existing = await stored(model, row.id)
+						let existing: Stored | null
+						try { existing = await stored(model, row.id) } catch { throw new IndeterminateAuthWriteError() }
 						const receipt = existing?.receipts.find(r => r.operation === operation)
 						if (receipt) return row as typeof data
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && ["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model)) {

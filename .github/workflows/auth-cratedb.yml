@@ -38,7 +38,7 @@ jobs:
           npm ci --ignore-scripts --prefix scripts/auth-cratedb/conformance
       - name: Configure disposable runner for CrateDB
         run: sudo sysctl -w vm.max_map_count=262144
-      - name: Conformance, strictness, races and primary failover on three local nodes
+      - name: Better Auth endpoints, OAuth logout, conformance and failover on three CrateDB nodes
         working-directory: goodwatch-webapp
         run: npm run test:auth
       - name: Keep test and container evidence
