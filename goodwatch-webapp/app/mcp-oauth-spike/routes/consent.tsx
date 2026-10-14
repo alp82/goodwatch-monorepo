@@ -71,8 +71,9 @@ export default function Consent() {
 		<main>
 			<h1>Allow {data.clientName || data.clientId}?</h1>
 			<p>
-				This client will read fictional GoodWatch titles and the demo member's
-				show progress.
+				This client can read fictional GoodWatch titles and the demo member's
+				progress. The mcp:write scope also allows changes to the in-memory watch
+				log, ratings, Wishlist, show status and services.
 			</p>
 			<dl>
 				<dt>Client</dt>

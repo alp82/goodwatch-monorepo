@@ -1,81 +1,38 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
-import { createMcpHandler, McpServer } from "@modelcontextprotocol/server"
+import { createMcpHandler } from "@modelcontextprotocol/server"
 import { requireMcpAuth } from "@better-auth/mcp"
-import * as z from "zod"
+import { createInsufficientScopeError } from "better-auth/oauth2"
 import { auth, audit, ready, resource } from "../auth.server"
-import { titles, shows } from "../fixtures.server"
+import { createToolServer, writeTools } from "../tools.server"
 
-const annotations = {
-	readOnlyHint: true,
-	destructiveHint: false,
-	idempotentHint: true,
-	openWorldHint: false,
-}
 const protectedHandler = requireMcpAuth(
 	auth,
 	async (request, claims) => {
+		const body = await request
+			.clone()
+			.json()
+			.catch(() => null)
+		if (
+			(Array.isArray(body) ? body : [body]).some(
+				(message) =>
+					message?.method === "tools/call" &&
+					writeTools.has(message.params?.name),
+			) &&
+			!(
+				typeof claims.scope === "string" &&
+				claims.scope.split(" ").includes("mcp:write")
+			)
+		) {
+			throw createInsufficientScopeError(["mcp:write"])
+		}
+		const memberId = claims.sub
+		if (typeof memberId !== "string")
+			return new Response("Missing member subject", { status: 403 })
 		const handler = createMcpHandler(
-			() => {
-				const server = new McpServer({
-					name: "goodwatch-oauth-spike",
-					version: "0.0.1",
-				})
-				const output = (tool: string, data: Record<string, unknown>) => {
-					audit("tool-call", { tool, member: claims.sub })
-					return {
-						content: [{ type: "text" as const, text: JSON.stringify(data) }],
-						structuredContent: data,
-					}
-				}
-				server.registerTool(
-					"get_title",
-					{
-						title: "Get a title",
-						description: "Read one fictional movie or show by its fixture ID.",
-						inputSchema: z.object({ title_id: z.string() }),
-						annotations,
-					},
-					async ({ title_id }) =>
-						output("get_title", {
-							title: titles.find((title) => title.id === title_id) ?? null,
-							fixture: true,
-						}),
-				)
-				server.registerTool(
-					"get_my_shows",
-					{
-						title: "Get my shows",
-						description:
-							"Read the signed-in demo member's fictional show progress.",
-						inputSchema: z.object({}),
-						annotations,
-					},
-					async () =>
-						output("get_my_shows", {
-							memberId: claims.sub,
-							shows,
-							fixture: true,
-						}),
-				)
-				server.registerTool(
-					"search_titles",
-					{
-						title: "Search titles",
-						description:
-							"Search the small fictional catalog by name. An empty query lists all fixtures.",
-						inputSchema: z.object({ query: z.string() }),
-						annotations,
-					},
-					async ({ query }) =>
-						output("search_titles", {
-							titles: titles.filter((title) =>
-								title.name.toLowerCase().includes(query.toLowerCase()),
-							),
-							fixture: true,
-						}),
-				)
-				return server
-			},
+			() =>
+				createToolServer(memberId, new URL(resource).origin, (tool, status) =>
+					audit("tool-call", { tool, member: claims.sub, status }),
+				),
 			{
 				legacy:
 					process.env.MCP_SPIKE_LEGACY === "reject" ? "reject" : "stateless",
@@ -90,7 +47,7 @@ const protectedHandler = requireMcpAuth(
 	{
 		resource,
 		requiredScopes: ["mcp:read"],
-		challengeScopes: ["mcp:read", "offline_access"],
+		challengeScopes: ["mcp:read", "mcp:write", "offline_access"],
 	},
 )
 

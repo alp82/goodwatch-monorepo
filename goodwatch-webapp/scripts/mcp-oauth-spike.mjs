@@ -80,6 +80,7 @@ child = spawn(
 			MCP_SPIKE_PASSWORD: password,
 			MCP_SPIKE_SECRET: randomBytes(32).toString("base64url"),
 			MCP_SPIKE_LEGACY: process.env.MCP_SPIKE_LEGACY || "stateless",
+			MCP_SPIKE_REC_TASTE: process.env.MCP_SPIKE_REC_TASTE || "0",
 		},
 	},
 )

@@ -4,6 +4,7 @@ import { createServer } from "node:http"
 import { randomBytes, createHash } from "node:crypto"
 import { spawn } from "node:child_process"
 import { once } from "node:events"
+import { verifyToolSet, readRpcResponse } from "./probe-tool-set.mjs"
 
 const origin = "http://127.0.0.1:3335"
 const resource = `${origin}/mcp`
@@ -112,7 +113,7 @@ try {
 	assert.equal(retry.status, 200)
 	assert.equal((await retry.json()).refresh_token, rotated.refresh_token)
 	const rpc = { jsonrpc: "2.0", id: 1, method: "tools/list" }
-	async function mcp(token) {
+	async function mcp(token, message = rpc) {
 		return fetch(resource, {
 			method: "POST",
 			headers: {
@@ -120,7 +121,7 @@ try {
 				Accept: "application/json, text/event-stream",
 				Authorization: `Bearer ${token}`,
 			},
-			body: JSON.stringify(rpc),
+			body: JSON.stringify(message),
 		})
 	}
 	assert.equal((await mcp(rotated.access_token)).status, 200)
@@ -133,6 +134,33 @@ try {
 	const forbidden = await mcp(scopeLimited.access_token)
 	assert.equal(forbidden.status, 403)
 	assert.match(forbidden.headers.get("WWW-Authenticate"), /insufficient_scope/)
+	const readOnlyWrite = await mcp(rotated.access_token, {
+		jsonrpc: "2.0",
+		id: 2,
+		method: "tools/call",
+		params: {
+			name: "rate_title",
+			arguments: { title_id: "movie:603", score: 1 },
+		},
+	})
+	assert.equal(readOnlyWrite.status, 403)
+	assert.match(readOnlyWrite.headers.get("WWW-Authenticate"), /mcp:write/)
+	if (process.argv.includes("--tools")) {
+		const full = await grant("mcp:read mcp:write offline_access")
+		let rpcId = 10
+		await verifyToolSet(async (method, params) => {
+			const response = await mcp(full.access_token, {
+				jsonrpc: "2.0",
+				id: ++rpcId,
+				method,
+				params,
+			})
+			assert.equal(response.status, 200)
+			const data = await readRpcResponse(response)
+			if (data.error) return { error: data.error }
+			return data.result
+		}, process.env.MCP_SPIKE_REC_TASTE === "1")
+	}
 	// Replay revokes the grant, so check this after the refresh/tool assertions.
 	assert.equal(
 		(await post(metadata.token_endpoint, tokens.replayFields)).status,
@@ -149,6 +177,7 @@ try {
 			refreshRetrySameToken: true,
 			tamperedJwt: "401",
 			missingScope: "403",
+			readOnlyWrite: "403",
 		}),
 	)
 } finally {

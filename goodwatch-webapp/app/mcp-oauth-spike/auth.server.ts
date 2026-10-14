@@ -4,6 +4,7 @@ import { jwt } from "better-auth/plugins"
 import { mcp } from "@better-auth/mcp"
 import { cimd } from "@better-auth/cimd"
 import { fetchClientMetadataResource } from "@better-auth/cimd/node"
+import { setTasteFlag } from "./fixtures.server"
 
 if (process.env.MCP_SPIKE !== "1")
 	throw new Error(
@@ -54,7 +55,14 @@ export const auth = betterAuth({
 			loginPage: "/login",
 			consentPage: "/consent",
 			resource,
-			scopes: ["openid", "profile", "email", "offline_access", "mcp:read"],
+			scopes: [
+				"openid",
+				"profile",
+				"email",
+				"offline_access",
+				"mcp:read",
+				"mcp:write",
+			],
 			allowDynamicClientRegistration: true,
 			allowUnauthenticatedClientRegistration: true,
 			accessTokenExpiresIn: 60,
@@ -72,13 +80,18 @@ export const auth = betterAuth({
 })
 
 // Direct server API bootstraps the single demo account; HTTP signup stays disabled.
-export const ready = auth.api.signUpEmail({
-	body: {
-		email,
-		password: process.env.MCP_SPIKE_PASSWORD!,
-		name: "Spike member",
-	},
-})
+export const ready = auth.api
+	.signUpEmail({
+		body: {
+			email,
+			password: process.env.MCP_SPIKE_PASSWORD!,
+			name: "Spike member",
+		},
+	})
+	.then((result) => {
+		setTasteFlag(result.user.id, process.env.MCP_SPIKE_REC_TASTE === "1")
+		return result
+	})
 
 export function postAuth(
 	request: Request,
