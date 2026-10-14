@@ -18,7 +18,15 @@
 // Pointing (TvPointer.tsx, pointing.ts): the room hands it the measured scene, the element that turns (`remoteEl`)
 // and the ring. It moves both by `transform` and sets no state here.
 // The keyboard is the TV's (use-tv.ts), which leaves the keys alone while the room is `inert`.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import type { ReactNode } from "react"
 import { useHasDock } from "~/ui/navigation"
 import { assetUrl } from "~/utils/asset-url"
@@ -26,7 +34,7 @@ import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
 import { HAND_IMAGE, PHONE_LIP, ROOM } from "../room"
-import type { TvAction } from "../tv-flow"
+import type { TvAction, TvScreen as OldScreen } from "../tv-flow"
 import { TV_SCREEN_ATTR } from "../tv-transition"
 import { bracketArm } from "../tv-way-back"
 import { ROOM_ID, useBelowRoom } from "../use-below-room"
@@ -50,7 +58,7 @@ import {
 	layoutPhoneRoom,
 	layoutRoom,
 } from "./room-layout"
-import type { RoomKey, RoomTv, TvCanvas } from "./room-tv"
+import type { RoomDirection, RoomKey, RoomTv, TvCanvas } from "./room-tv"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -87,6 +95,14 @@ const FIRST_CANVASES: TvCanvas[] = [
 	{ edition: "desktop", ...TV_CANVAS, scale: 1, first: true },
 	{ edition: "phone", ...PHONE_TV_CANVAS, scale: 1, first: true },
 ]
+
+/**
+ * What does not change when the TV's focus moves is not drawn again when it does: the Remotes and the section
+ * below the room. A focus move draws the screen anew; on a phone with a slow CPU the room around it doubled that.
+ */
+const StillRemote = memo(Remote)
+const StillPhoneRemote = memo(PhoneRemote)
+const StillBelowRoom = memo(BelowRoom)
 
 /** The desktop Remote speaks the old TV's actions (ui/living-room/tv-flow.ts) until the old TV is gone. */
 function keyOf(action: TvAction): RoomKey | null {
@@ -196,6 +212,29 @@ export function TvRoom({
 	const held = P ?? S
 
 	const on = tv.power !== "off"
+	// The desktop Remote's handlers and the screen it reads, the same from one focus move to the next.
+	const { press } = tv
+	const onService = useCallback(
+		(service: number) => press({ type: "service", service }),
+		[press],
+	)
+	const onRemote = useCallback(
+		(action: TvAction) => {
+			const key = keyOf(action)
+			if (key) press(key)
+		},
+		[press],
+	)
+	const onOk = useCallback(() => press({ type: "ok" }), [press])
+	const onDirection = useCallback(
+		(dir: RoomDirection) => press({ type: "move", dir }),
+		[press],
+	)
+	// The old TV's screen type: the Remote reads it only to light its Search key.
+	const remoteScreen: OldScreen = useMemo(
+		() => (tv.searching ? { name: "search", query: null } : { name: "home" }),
+		[tv.searching],
+	)
 
 	// ---- Pointing moves this element, the desktop Remote in its hand or the phone's Remote with its, and the ring.
 	const remoteEl = useRef<HTMLDivElement>(null)
@@ -367,24 +406,16 @@ export function TvRoom({
 							className={`absolute left-0 top-0 origin-top-left ${first ? "tvr-f-rscale" : ""}`}
 							style={D ? { transform: `scale(${D.remote.scale})` } : undefined}
 						>
-							<Remote
-								// The old TV's screen type: the Remote reads it only to light its Search key.
-								screen={
-									tv.searching
-										? { name: "search", query: null }
-										: { name: "home" }
-								}
+							<StillRemote
+								screen={remoteScreen}
 								power={tv.power}
 								menuOpen={tv.menuOpen}
 								services={services}
 								openService={tv.openService}
-								onService={(service) => tv.press({ type: "service", service })}
-								dispatch={(action) => {
-									const key = keyOf(action)
-									if (key) tv.press(key)
-								}}
-								onOk={() => tv.press({ type: "ok" })}
-								onDirection={(dir) => tv.press({ type: "move", dir })}
+								onService={onService}
+								dispatch={onRemote}
+								onOk={onOk}
+								onDirection={onDirection}
 							/>
 						</div>
 					</div>
@@ -416,7 +447,7 @@ export function TvRoom({
 										className={first ? "tvr-f-phand" : ""}
 									/>
 								)}
-								<PhoneRemote
+								<StillPhoneRemote
 									tv={tv}
 									services={services}
 									form={form}
@@ -433,7 +464,7 @@ export function TvRoom({
 					<TvPointer key="pointer" pointer={pointerEl} small={Boolean(held)} />
 				)}
 			</div>
-			<BelowRoom
+			<StillBelowRoom
 				titles={startTitles}
 				docked={docked}
 				onDown={travel.onDown}

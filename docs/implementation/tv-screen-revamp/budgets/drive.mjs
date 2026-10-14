@@ -574,10 +574,193 @@ async function access() {
 	}
 }
 
+
+// ---------------------------------------------------------------------------------------------------------
+// The rendering budget (#190): long tasks, long frames and the time an interaction takes, while pointing, moving
+// the focus and changing screens. On a production build (BUILD=1). NOREPLAY=1 turns the error reporting's session
+// recorder off in its chunk as served, to tell its share.
+
+/** Counts frames and their script time, the tasks over 50 ms, the long frames with their scripts, and interactions. */
+const METER = () => {
+	const meter = { frames: 0, longest: 0, total: 0, tasks: [], loafs: [], events: [] }
+	window.__meter = meter
+	const raf = window.requestAnimationFrame.bind(window)
+	window.requestAnimationFrame = (callback) =>
+		raf((time) => {
+			const start = performance.now()
+			callback(time)
+			const took = performance.now() - start
+			meter.frames += 1
+			meter.total += took
+			meter.longest = Math.max(meter.longest, took)
+		})
+	new PerformanceObserver((list) => {
+		for (const e of list.getEntries()) meter.tasks.push(Math.round(e.duration))
+	}).observe({ entryTypes: ["longtask"] })
+	try {
+		new PerformanceObserver((list) => {
+			for (const e of list.getEntries())
+				if (e.duration >= 50)
+					meter.loafs.push({
+						ms: Math.round(e.duration),
+						blocking: Math.round(e.blockingDuration),
+						scripts: e.scripts.filter((x) => x.duration >= 10).map((x) => `${Math.round(x.duration)} ms ${x.invokerType} ${x.invoker.slice(-40)} in ${x.sourceURL.split("/").at(-1).replace(/-[\w-]{8}\.js$/, ".js").slice(0, 40)}`),
+					})
+		}).observe({ type: "long-animation-frame" })
+	} catch {}
+	try {
+		new PerformanceObserver((list) => {
+			for (const e of list.getEntries()) if (e.interactionId) meter.events.push({ type: e.name, ms: Math.round(e.duration) })
+		}).observe({ type: "event", durationThreshold: 16 })
+	} catch {}
+}
+
+async function budget() {
+	const ROUNDS = Number(process.env.ROUNDS ?? 5)
+	const variant = process.env.NOREPLAY ? "recorder off" : process.env.BLOCKED ? "Remote and ring kept out of the recording" : "as served"
+	const PROFILES = [
+		["desktop, GPU", [1920, 1080], [], 1],
+		["desktop, software rendering", [1920, 1080], ["--disable-gpu"], 1],
+		["phone, CPU slowed 4 times", [390, 844], [], 4],
+	]
+	// PROFILE=0,2 measures those profiles only; POINTING=1 the pointing sweeps only.
+	const chosen = process.env.PROFILE ? process.env.PROFILE.split(",").map(Number) : PROFILES.map((_, i) => i)
+	for (const [name, size, args, cpu] of PROFILES.filter((_, i) => chosen.includes(i))) {
+		where = `budget ${name}, ${variant}`
+		console.log(where)
+		const own = await launch(args)
+		const { ctx, page } = await context(size, { on: own })
+		const cdp = await ctx.newCDPSession(page)
+		await page.addInitScript(METER)
+		const chunks = []
+		page.on("request", (r) => r.resourceType() === "script" && chunks.push(r.url().split("/").at(-1)))
+		// BLOCKED=1: the recorder on, with the moving Remote and the ring kept out of the recording (Sentry's `block`).
+		if (process.env.BLOCKED)
+			await page.route(/\/assets\/sentry-browser-/, async (route) => {
+				const response = await route.fetch()
+				const body = (await response.text()).replace('block:[".search-private"]', 'block:[".search-private","[data-remote]","[data-remote-rig]","[data-tv-pointer]"]')
+				await route.fulfill({ status: 200, contentType: "text/javascript", body })
+			})
+		if (process.env.NOREPLAY)
+			await page.route(/\/assets\/sentry-browser-/, async (route) => {
+				const response = await route.fetch()
+				const body = (await response.text()).replace(/replaysSessionSampleRate:[^,]*,replaysOnErrorSampleRate:[^,}]*/, "replaysSessionSampleRate:0,replaysOnErrorSampleRate:0")
+				await route.fulfill({ status: 200, contentType: "text/javascript", body })
+			})
+		await goto(page, PAGE, "#room:not([data-room=unmeasured]) [data-tv-item]")
+		if (cpu > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu })
+		const meter = () => page.evaluate(() => JSON.parse(JSON.stringify(window.__meter)))
+		const reset = () => page.evaluate(() => Object.assign(window.__meter, { frames: 0, longest: 0, total: 0, tasks: [], loafs: [], events: [] }))
+		const tv = await page.evaluate(() => {
+			const b = document.querySelector("#room [data-tv-screen]").getBoundingClientRect()
+			return { left: b.left, top: b.top, right: b.right, bottom: b.bottom, width: b.width, height: b.height }
+		})
+		const phone = isPhone(size)
+		// The first interaction: pointing's code and the screens' come, and the site's telemetry after a pause.
+		if (phone) await page.locator('#room [aria-label="Next"]').first().tap()
+		else await page.mouse.move(tv.left + 100, tv.top + 100, { steps: 4 })
+		const until = Date.now() + 20000
+		while (!chunks.some((c) => c.startsWith("sentry-browser")) && Date.now() < until) await page.waitForTimeout(250)
+		await page.waitForTimeout(6000)
+		const sentry = chunks.some((c) => c.startsWith("sentry-browser"))
+		check(sentry, "the error reporting (Sentry) has loaded before the measurement")
+		const result = { sentryLoaded: sentry, cpuSlowdown: cpu, rounds: [] }
+		const summary = (m, ms) => ({ ms, frames: m.frames, meanFrameMs: +(m.total / Math.max(1, m.frames)).toFixed(3), longestFrameMs: +m.longest.toFixed(2), tasksOver50ms: m.tasks, longFrames: m.loafs, slowestInteractionMs: Math.max(0, ...m.events.map((e) => e.ms)) })
+		const key = async (k) => {
+			if (phone) await page.locator(k === "OK" ? "#room [data-phone-remote] .remote-ok" : `#room [data-phone-remote] [aria-label="${k}"]`).first().tap()
+			else await page.keyboard.press({ Next: "ArrowRight", Previous: "ArrowLeft", Up: "ArrowUp", Down: "ArrowDown", OK: "Enter", Back: "Escape" }[k] ?? k)
+		}
+		const live = () => page.evaluate(() => document.querySelector("#room [aria-live]")?.textContent)
+		const settled = async (fits, ms = 15000) => {
+			const end = Date.now() + ms
+			while (!(await fits()) && Date.now() < end) await page.waitForTimeout(50)
+		}
+		for (let round = 0; round < ROUNDS; round += 1) {
+			const row = {}
+			// Pointing: the Remote and the ring follow the cursor around the window and across the picture; on the
+			// phone a finger drags across the picture, the ring above it.
+			await reset()
+			let from = Date.now()
+			if (phone) {
+				const y = tv.top + tv.height * 0.45
+				const touch = (type, x, yy) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y: yy }] })
+				await touch("touchStart", tv.left + 20, y)
+				for (let n = 0; n <= 60; n += 1) {
+					const t = n / 60
+					await touch("touchMove", tv.left + 20 + (tv.width - 40) * (t < 0.5 ? t * 2 : 2 - t * 2), y - 30 * Math.sin(t * Math.PI))
+					await page.waitForTimeout(16)
+				}
+				// Let go over nothing: back off the picture's edge first.
+				await touch("touchMove", tv.left + 4, tv.bottom + 120)
+				await touch("touchEnd")
+			} else {
+				const [w, h] = size
+				const free = tv.top + tv.height * 0.42
+				for (const [x, y] of [[20, 90], [w - 40, 90], [w - 40, h - 20], [20, h - 20], [20, 90], [tv.left + 30, free], [tv.right - 30, free - 60], [tv.left + 30, free - 120], [tv.left + 400, free]]) await page.mouse.move(x, y, { steps: 40 })
+			}
+			await page.waitForTimeout(400)
+			row.pointing = summary(await meter(), Date.now() - from)
+			if (process.env.POINTING) {
+				row.focusMoves = row.screenChanges = summary({ frames: 0, total: 0, longest: 0, tasks: [], loafs: [], events: [] }, 0)
+				result.rounds.push(row)
+				console.log(`  round ${round + 1}: pointing ${JSON.stringify(row.pointing.tasksOver50ms)} ${JSON.stringify(row.pointing.longFrames.filter((l) => l.ms >= 50).map((l) => l.scripts.join(";")))}`)
+				continue
+			}
+			// Ten focus moves with the Remote's keys (the keyboard on the desktop, the phone Remote's wheel by a finger).
+			await reset()
+			from = Date.now()
+			for (const k of ["Next", "Next", "Next", "Previous", "Next", "Next", "Previous", "Previous", "Previous", "Previous"]) {
+				await key(k)
+				await page.waitForTimeout(phone ? 250 : 150)
+			}
+			await page.waitForTimeout(500)
+			row.focusMoves = summary(await meter(), Date.now() - from)
+			// Screen changes: open each app from home and go back, by OK and Back.
+			await reset()
+			from = Date.now()
+			for (const app of ["Tonight", "Discover", "Explorer"]) {
+				await settled(async () => (await live()) === "Home")
+				await page.evaluate((id) => document.querySelector(`#room [data-tv-item="app:${id.toLowerCase()}"]`)?.focus(), app)
+				await key("OK")
+				await settled(async () => (await live()) === app)
+				await page.waitForTimeout(500)
+				await key("Back")
+				await settled(async () => (await live()) === "Home")
+				await page.waitForTimeout(500)
+			}
+			row.screenChanges = summary(await meter(), Date.now() - from)
+			result.rounds.push(row)
+			console.log(`  round ${round + 1}: pointing ${JSON.stringify(row.pointing.tasksOver50ms)}, focus ${JSON.stringify(row.focusMoves.tasksOver50ms)}, screens ${JSON.stringify(row.screenChanges.tasksOver50ms)}; slowest interaction ${row.focusMoves.slowestInteractionMs}/${row.screenChanges.slowestInteractionMs} ms`)
+		}
+		// At rest: nothing asks for a frame, and the main thread is quiet.
+		await page.mouse.move(size[0] - 5, 5)
+		await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave")))
+		await page.waitForTimeout(2500)
+		await cdp.send("Performance.enable")
+		const busy = async () => (await cdp.send("Performance.getMetrics")).metrics.find((m) => m.name === "TaskDuration").value
+		await reset()
+		const t0 = await busy()
+		await page.waitForTimeout(5000)
+		const idle = ((await busy()) - t0) / 5
+		const still = await meter()
+		result.atRest = { framesIn5s: still.frames, mainThreadShare: +idle.toFixed(4) }
+		is(still.frames, 0, "at rest nothing asks for a frame")
+		check(idle <= 0.05 * cpu, `at rest the page's main thread is busy ${(idle * 100).toFixed(2)}% of a core`)
+		const all = result.rounds.flatMap((r) => [r.pointing, r.focusMoves, r.screenChanges])
+		result.longest = Math.max(...all.map((r) => r.longestFrameMs))
+		result.tasks = all.flatMap((r) => r.tasksOver50ms)
+		check(result.longest <= 10 * cpu, `no frame callback over ${10 * cpu} ms: ${result.longest} ms at the most`)
+		numbers[`budget ${name}, ${variant}`] = result
+		await ctx.close()
+		await own.close()
+	}
+}
+
 const is = (got, want, what) => check(JSON.stringify(got) === JSON.stringify(want), `${what}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)
 
 if (!only || only === "paint") await paint()
 if (!only || only === "access") await access()
+if (!only || only === "budget") await budget()
 
 await browser.close()
 const file = join(here, "checks.json")
