@@ -1,9 +1,12 @@
 // The "Talked about now" row's data (#557), asked for by the start page once the visitor goes below the room
 // (ui/talked-about-now/start-row). The same for every visitor: with the feature on, any cache may keep it for a few
-// minutes; in preview it answers only the members in REC_PREVIEW_USERS, and nothing keeps it.
+// minutes; in preview it answers only the members in TALKED_ABOUT_NOW_PREVIEW_USERS, and nothing keeps it.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import type { TalkedRow } from "~/domain/talked-about-now"
-import { getFeatureMode, isEnabledForRequest } from "~/server/features.server"
+import {
+	talkedAboutNowEnabled,
+	talkedAboutNowMode,
+} from "~/server/talked-about-now/flags.server"
 
 export type TalkedAnswer = { row: TalkedRow | null }
 
@@ -13,13 +16,26 @@ const PUBLIC = "public, max-age=300, s-maxage=300, stale-while-revalidate=300"
 const PRIVATE = "private, no-store"
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const open = getFeatureMode("talkedAboutNow") === "on"
-	if (!(await isEnabledForRequest("talkedAboutNow", request)))
+	const mode = talkedAboutNowMode("row")
+	const open = mode === "on"
+	// Only a preview asks who sent the request: off and on are the same for everyone.
+	const enabled =
+		mode === "preview"
+			? talkedAboutNowEnabled(
+					"row",
+					await (await import("~/utils/auth")).getUserIdFromRequest({
+						request,
+					}),
+				)
+			: open
+	if (!enabled)
 		throw new Response("Not found", {
 			status: 404,
 			headers: { "Cache-Control": PRIVATE },
 		})
-	const { getTalkedAboutNow } = await import("~/server/talked-about-now/start-row.server")
+	const { getTalkedAboutNow } = await import(
+		"~/server/talked-about-now/start-row.server"
+	)
 	const row = await getTalkedAboutNow()
 	return json<TalkedAnswer>(
 		{ row },

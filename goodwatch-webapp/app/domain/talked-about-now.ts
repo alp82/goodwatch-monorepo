@@ -24,6 +24,8 @@ export type TalkedItem = {
 	sourceId: string | null
 	/** A YouTube video's id. */
 	video?: string
+	/** Whether the text reads as English (`isEnglish`): the start page is in English, so these come first. */
+	english: boolean
 }
 
 export type TalkedReasonKind =
@@ -287,12 +289,43 @@ export function itemOf(row: SocialRow): TalkedItem | null {
 		text: text.length > 400 ? `${text.slice(0, 399).trimEnd()}…` : text,
 		sourceId: row.source_id || null,
 		...(video ? { video } : {}),
+		english: isEnglish(text, row.url),
 	}
 }
 
-// The start page is in English: an article from a German publication comes after every other piece.
-const isGerman = (item: TalkedItem) =>
-	item.source === "rss" && hostOf(item.url).endsWith(".de")
+// Short words that are common in English and rare in the other languages the sources carry, and the other way round.
+// Words both use (a, an, in, do, die as an English verb...) are in neither list where they would mislead.
+const ENGLISH_WORDS = new Set(
+	"the and of to is are was were on for with this that it its it's at from by be been has have had just but not you your i i'm my we our they their he she his her what who how why about after will can all new first more than so if out up into over now".split(
+		" ",
+	),
+)
+const OTHER_WORDS = new Set(
+	"der die das und ist nicht mit auf für ein eine einen zu im dem von wie wann auch sich el la los las que y en para por una con del más le les une est et pour dans pas sur qui il di che per è uma não em os dos".split(
+		" ",
+	),
+)
+const NON_LATIN =
+	/[\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/
+const ACCENTS = /[ñãõçáíóúâêôàèìòùäöüß]/i
+
+/**
+ * Whether a piece reads as English, by its words: a guess, good enough to put English first. A headline without any
+ * of the short words ("Bob Odenkirk Mourns ‘Breaking Bad’ Co-Star") counts as English unless it has accents; an
+ * article from a German publication (a `.de` address) never does.
+ */
+export function isEnglish(text: string, url = ""): boolean {
+	if (/\.de$/.test(hostOf(url))) return false
+	if (NON_LATIN.test(text)) return false
+	const words = text.toLowerCase().match(/[\p{L}']+/gu) ?? []
+	let english = 0
+	let other = ACCENTS.test(text) ? 1 : 0
+	for (const word of words) {
+		if (ENGLISH_WORDS.has(word)) english++
+		else if (OTHER_WORDS.has(word)) other++
+	}
+	return english > other || (english === 0 && other === 0)
+}
 
 /**
  * A title's best few pieces, from its visible rows newest first: the newest video (one: the official channels post
@@ -304,9 +337,10 @@ export function pickItems(
 	limit = ITEMS_PER_TITLE,
 ): TalkedItem[] {
 	const items = rows.flatMap((row) => itemOf(row) ?? [])
+	// The start page is in English: a piece in another language comes after every English one.
 	const ordered = [
-		...items.filter((item) => !isGerman(item)),
-		...items.filter(isGerman),
+		...items.filter((item) => item.english),
+		...items.filter((item) => !item.english),
 	]
 	const picked: TalkedItem[] = []
 	const take = (item: TalkedItem | undefined) => {
@@ -327,13 +361,16 @@ export function pickItems(
 	)
 }
 
-/** The board row's one line: a voice first, else a headline, else the video. */
+/** The board row's one line: an English post, else an English headline, else a post or a headline in any language, else the video. */
 export function previewOf(items: TalkedItem[]): TalkedItem | null {
+	const voice = (item: TalkedItem) =>
+		item.source === "bluesky" || item.source === "mastodon"
+	const headline = (item: TalkedItem) => item.source === "rss"
 	return (
-		items.find(
-			(item) => item.source === "bluesky" || item.source === "mastodon",
-		) ??
-		items.find((item) => item.source === "rss") ??
+		items.find((item) => voice(item) && item.english) ??
+		items.find((item) => headline(item) && item.english) ??
+		items.find(voice) ??
+		items.find(headline) ??
 		items[0] ??
 		null
 	)

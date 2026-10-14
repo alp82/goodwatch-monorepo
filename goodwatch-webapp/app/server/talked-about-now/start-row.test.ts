@@ -5,7 +5,9 @@ import "../title-filter/test-alias.ts"
 import type { SocialRow } from "~/domain/talked-about-now"
 import type { TitleDisplay } from "../title-cards.server.ts"
 
-const { readTalkedAboutNow, socialQuery } = await import("./start-row.server.ts")
+const { readTalkedAboutNow, socialQuery } = await import(
+	"./start-row.server.ts"
+)
 const { titleKey } = await import("~/utils/title-key")
 
 const entry = (kind: "movie" | "tv", tmdbId: number, score: number) => ({
@@ -203,4 +205,31 @@ test("the social read asks for exactly the board's titles, with social identitie
 	)
 	assert.deepEqual(lanes.params, ["movie", 1, "vector_context", "fuzzy"])
 	assert.ok(lanes.sql.includes("l.lane NOT IN (?, ?)"))
+})
+
+test("the row is the flag module's `row` surface, with the title section's preview list", async () => {
+	const { talkedAboutNowEnabled, talkedAboutNowMode } = await import(
+		"./flags.server.ts"
+	)
+	assert.equal(talkedAboutNowMode("row", {}), "off")
+	assert.equal(
+		talkedAboutNowMode("row", { TALKED_ABOUT_NOW_ROW: " On " }),
+		"on",
+	)
+	// Each surface reads its own variable.
+	assert.equal(
+		talkedAboutNowMode("row", { TALKED_ABOUT_NOW_TITLE: "on" }),
+		"off",
+	)
+	const preview = {
+		TALKED_ABOUT_NOW_ROW: "preview",
+		TALKED_ABOUT_NOW_PREVIEW_USERS: "u-1, u-2",
+	}
+	assert.equal(talkedAboutNowEnabled("row", "u-2", preview), true)
+	assert.equal(talkedAboutNowEnabled("row", "u-9", preview), false)
+	assert.equal(talkedAboutNowEnabled("row", null, preview), false)
+	assert.equal(
+		talkedAboutNowEnabled("row", null, { TALKED_ABOUT_NOW_ROW: "on" }),
+		true,
+	)
 })

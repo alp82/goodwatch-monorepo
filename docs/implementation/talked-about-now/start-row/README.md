@@ -13,11 +13,11 @@ visitor.
 
 ## Behind a flag
 
-`REC_TALKED_ABOUT_NOW=off|preview|on` (`app/server/features.server.ts`), default off. Preview shows it only to the
-members in `REC_PREVIEW_USERS` (Supabase user ids, separated by commas). Read on every request, so a container restart
-applies a change. With it off, the start page is byte for byte what it was, and `/api/talked-about-now` answers 404.
-
-The flag module comes back in a smaller form: `a02f37bb` removed the old one when the last `REC_*` flag went.
+`TALKED_ABOUT_NOW_ROW=off|preview|on`, default off: the `row` surface of the map's flag module
+(`app/server/talked-about-now/flags.server.ts`, from #558, whose title section is `TALKED_ABOUT_NOW_TITLE`). Preview
+shows it only to the members in `TALKED_ABOUT_NOW_PREVIEW_USERS` (Supabase user ids, separated by commas), the same
+list for both surfaces. Read on every request, so a container restart applies a change. With it off, the start page is
+byte for byte what it was, and `/api/talked-about-now` answers 404.
 
 ## The start page stays as it was
 
@@ -68,9 +68,14 @@ went into the shell chunk that every page loads (rule 3 in `vite.config.js`).
    the titles show without what is said.
 
 A title's pieces (`pickItems`): the newest video (only one: the official channels post the same trailer more than
-once), a post, a headline, then the newest of the rest; at most three. An article from a German publication comes
-after every other piece, because the start page is in English. The board's preview line is a post first, else a
-headline, else the video.
+once), a post, a headline, then the newest of the rest; at most three. The start page is in English, so a piece in
+another language comes after every English one. The board's preview line is an English post first, else an English
+headline, else a post or a headline in any language, else the video.
+
+Whether a piece reads as English is a guess on the server (`isEnglish`): short words common in English against short
+words common in German, Spanish, French, Italian and Portuguese, accents, and non-Latin scripts. An article from a
+`.de` address is never English. A headline with none of those words ("Bob Odenkirk Mourns ‘Breaking Bad’ Co-Star")
+counts as English. Social discovery stores no language, so there is nothing better to read yet.
 
 The UI names the source and the window ("Wikipedia reading on 13 Oct against each title's 28-day usual"), as #540
 asked: the signal measures reading, not conversation.
@@ -95,7 +100,7 @@ A dev server on production Crate (read-only) with no Valkey and no `.env` in the
 
 ```sh
 set -a; . <main checkout>/goodwatch-webapp/.env; set +a
-REDIS_HOST= REDIS_HOST2= REDIS_HOST3= REDIS_PORT= REDIS_PASS= REC_TALKED_ABOUT_NOW=on \
+REDIS_HOST= REDIS_HOST2= REDIS_HOST3= REDIS_PORT= REDIS_PASS= TALKED_ABOUT_NOW_ROW=on \
   npx remix vite:dev --port 3161 --strictPort
 ```
 
@@ -113,7 +118,8 @@ Tests: `node --test app/domain/talked-about-now.test.ts app/server/talked-about-
 
 ## After merge
 
-- Set `REC_TALKED_ABOUT_NOW=preview` and the owner's id in `REC_PREVIEW_USERS` in Coolify, and restart. Then `on`.
+- Set `TALKED_ABOUT_NOW_ROW=preview` and the owner's id in `TALKED_ABOUT_NOW_PREVIEW_USERS` in Coolify, and restart.
+  Then `on`.
 - A "wrong title?" report (#558's endpoint) should call `forgetTalkedAboutNow()`, so the next request reads again.
   Without that call, a reported link can stay in the row for up to the 10 minutes the process keeps its answer. The
   route asks for 5 minutes plus 5 stale in shared caches, but `applyCachePolicy` turns a guest's data request into

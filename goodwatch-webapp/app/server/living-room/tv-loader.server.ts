@@ -12,7 +12,7 @@
 // saved services (`loadTvServices`), filled up with Netflix and Prime Video.
 import { json } from "@remix-run/node"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
-import { isEnabled } from "~/server/features.server"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { getTonightParts } from "~/server/home-doors.server"
 import type { Taste } from "~/server/taste/index.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
@@ -84,7 +84,7 @@ export async function loadTvHome(request: Request) {
 	})
 	// "Talked about now" below the room (#557): only whether it is there. The row asks for its data itself once the
 	// visitor goes below, so with it on a guest's HTML stays the same for every guest, and grows by one field.
-	const talked = isEnabled("talkedAboutNow", user ? { userId: user.id } : null)
+	const talked = talkedAboutNowEnabled("row", user?.id)
 		? { talked: true as const }
 		: {}
 	if (!user) return { data: { ...guestHome(await start), ...talked }, headers }

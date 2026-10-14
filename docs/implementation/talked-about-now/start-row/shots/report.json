@@ -6,8 +6,8 @@
     "locked": "locked"
   },
   "desktop": {
-    "lead": 876,
-    "board": 876,
+    "lead": 804,
+    "board": 804,
     "page": 1425,
     "viewport": {
       "width": 1440,
@@ -24,7 +24,6 @@
       "fonts.gstatic.com",
       "i.ytimg.com",
       "image.tmdb.org",
-      "jnn-pa.googleapis.com",
       "rr8---sn-u0g3jxaa-n5fl.googlevideo.com",
       "www.google.com",
       "www.googletagmanager.com",
@@ -38,8 +37,8 @@
     "board": 809
   },
   "phone": {
-    "lead": 815,
-    "board": 1519,
+    "lead": 750,
+    "board": 1417,
     "page": 390,
     "viewport": {
       "width": 390,
@@ -52,6 +51,6 @@
   },
   "phone-second": {
     "lead": 552,
-    "board": 1257
+    "board": 1220
   }
 }

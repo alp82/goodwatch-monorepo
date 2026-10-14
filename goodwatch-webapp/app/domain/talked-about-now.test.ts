@@ -6,6 +6,7 @@ import type { SocialRow } from "./talked-about-now.ts"
 const {
 	compact,
 	dayBefore,
+	isEnglish,
 	itemOf,
 	liftLabel,
 	moveOf,
@@ -226,19 +227,63 @@ test("without a video or a voice, the newest pieces fill the three", () => {
 	assert.deepEqual(pickItems([]), [])
 })
 
-test("a German publication's article comes after every other piece", () => {
+test("a piece in another language comes after every English one", () => {
 	const items = pickItems([
-		row("rss", "de", 1, {
+		row("rss", "german", 1, {
 			url: "https://www.filmstarts.de/nachrichten/1.html",
 		}),
-		row("rss", "en", 5),
+		row("rss", "english", 5),
 		row("mastodon", "m1", 9, { url: "https://mastodon.social/@a/1" }),
 	])
 	assert.deepEqual(
 		items.map((item) => item.id),
-		["m1", "en", "de"],
+		["m1", "english", "german"],
 	)
 	assert.equal(items[2].publisher, "Filmstarts")
+	// A Portuguese post gives its place to an English one, however much older.
+	assert.deepEqual(
+		pickItems([
+			row("bluesky", "pt", 1, {
+				text: "Netflix demitirá cerca de 1.000 funcionários em maior corte desde 2022",
+			}),
+			row("bluesky", "en", 20, {
+				text: "I'm watching the first episode and it is so good",
+			}),
+		]).map((item) => item.id),
+		["en", "pt"],
+	)
+})
+
+test("whether a piece reads as English", () => {
+	for (const text of [
+		"Greta Gerwig debuts first look at an epic, full-hearted ‘Narnia’ for Netflix — and the big screen",
+		"Bob Odenkirk Mourns ‘Breaking Bad’ Co-Star RJ Mitte Following Death",
+		"VisionQuest Doesn’t Address the MCU’s AI Problem",
+		"NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+		"Die Hard is the best Christmas movie and I will not take questions",
+	])
+		assert.equal(isEnglish(text), true, text)
+	for (const text of [
+		"Wann kommt VisionQuest Folge 3 zu Disney+? Die verwirrende Veröffentlichung der Marvel-Serie",
+		"Netflix demitirá cerca de 1.000 funcionários em maior corte desde 2022",
+		"Dragon Ball Super: Beerus | Trailer oficial | Netflix con subtítulos",
+		"Le film est sorti en salle, et il est très bon",
+		"《纳尼亚传奇》预告片",
+		"Нарния: первый трейлер",
+	])
+		assert.equal(isEnglish(text), false, text)
+	// An article of a German publication, whatever its words.
+	assert.equal(
+		isEnglish(
+			"Street Fighter (2026)",
+			"https://www.filmstarts.de/kritiken/1.html",
+		),
+		false,
+	)
+	assert.equal(
+		isEnglish("Street Fighter (2026)", "https://variety.com/2026/1/"),
+		true,
+	)
 })
 
 test("a row without what a card needs is no piece", () => {
@@ -260,7 +305,7 @@ test("a row without what a card needs is no piece", () => {
 	)
 })
 
-test("the preview line is a voice first, else a headline, else the video", () => {
+test("the preview line is a voice first, else a headline, else the video, English before any other language", () => {
 	const video = itemOf(row("youtube", "v", 1))
 	const headline = itemOf(row("rss", "h", 1))
 	const post = itemOf(row("bluesky", "b", 1))
@@ -269,6 +314,23 @@ test("the preview line is a voice first, else a headline, else the video", () =>
 	assert.equal(previewOf([video, headline]), headline)
 	assert.equal(previewOf([video]), video)
 	assert.equal(previewOf([]), null)
+	const spanish = itemOf(
+		row("bluesky", "es", 1, {
+			text: "Hechizo: bienvenidos a la nueva serie, que buena",
+		}),
+	)
+	const german = itemOf(
+		row("rss", "de", 1, {
+			url: "https://www.moviepilot.de/news/1",
+			text: "Neu auf Disney+: Die Fortsetzung",
+		}),
+	)
+	assert.ok(spanish && german)
+	assert.equal(spanish.english, false)
+	// An English headline goes before a post in another language; without English, any language.
+	assert.equal(previewOf([video, spanish, headline]), headline)
+	assert.equal(previewOf([video, spanish, german]), spanish)
+	assert.equal(previewOf([video, german]), german)
 })
 
 test("the row's words", () => {
