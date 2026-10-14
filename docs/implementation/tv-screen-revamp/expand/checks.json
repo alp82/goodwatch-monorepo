@@ -1,7 +1,7 @@
 {
-	"taken": "2026-10-14T05:07:36.374Z",
+	"taken": "2026-10-14T07:18:23.317Z",
 	"guest": {
-		"passed": 2705,
+		"passed": 2703,
 		"failed": []
 	},
 	"member": {
@@ -152,6 +152,10 @@
 		"search results 390x844: keys to the Expand key": "ArrowDown",
 		"search results 390x844: the TV button": "131 x 50 at 12, 783",
 		"Discover, a mood's titles 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"Taste's sides 1920x1080: the sides on the TV": [
+			"side-1",
+			"side-2"
+		],
 		"the motion 1920x1080: the way out, s": 0.9,
 		"the motion 1920x1080: the way in, s": 0.6,
 		"two pages deep 1920x1080: the third page": "/show/67482-rupauls-drag-race-all-stars",
@@ -159,6 +163,10 @@
 			"running": [],
 			"frames": 0
 		},
+		"Taste's sides 390x844: the sides on the TV": [
+			"side-1",
+			"side-2"
+		],
 		"the motion 390x844: the way out, s": 0.9,
 		"the motion 390x844: the way in, s": 0.6,
 		"two pages deep 390x844: the third page": "/show/67482-rupauls-drag-race-all-stars",
@@ -223,139 +231,133 @@
 			}
 		},
 		"the pulse 1920x1080, run 1": {
-			"the transition's mark cleared at, ms": 3418,
+			"the transition's mark cleared at, ms": 3894,
+			"the pulse started after the mark cleared, ms": 56,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 19,
+			"from its start event to its end event, ms": 3898,
+			"the pulse ran, as sampled from outside, ms": 3962,
+			"the first sample that saw the pulse came after its start, ms": 0,
+			"the longest gap between two samples, ms": 183
+		},
+		"the pulse 1920x1080, run 2": {
+			"the transition's mark cleared at, ms": 4077,
+			"the pulse started after the mark cleared, ms": 33,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3983,
+			"the first sample that saw the pulse came after its start, ms": 7,
+			"the longest gap between two samples, ms": 235
+		},
+		"the pulse 1920x1080, run 3": {
+			"the transition's mark cleared at, ms": 3919,
+			"the pulse started after the mark cleared, ms": 50,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 19,
+			"from its start event to its end event, ms": 3898,
+			"the pulse ran, as sampled from outside, ms": 3936,
+			"the first sample that saw the pulse came after its start, ms": 3,
+			"the longest gap between two samples, ms": 251
+		},
+		"the pulse 390x844, run 1": {
+			"the transition's mark cleared at, ms": 3359,
+			"the pulse started after the mark cleared, ms": 13,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3946,
+			"the first sample that saw the pulse came after its start, ms": 49,
+			"the longest gap between two samples, ms": 164
+		},
+		"the pulse 390x844, run 2": {
+			"the transition's mark cleared at, ms": 3606,
 			"the pulse started after the mark cleared, ms": 29,
 			"the pulse runs, by its own clock, ms": 3900,
 			"its start event came after its start, ms": 18,
 			"from its start event to its end event, ms": 3899,
-			"the pulse ran, as sampled from outside, ms": 3961,
-			"the first sample that saw the pulse came after its start, ms": 48,
-			"the longest gap between two samples, ms": 190
-		},
-		"the pulse 1920x1080, run 2": {
-			"the transition's mark cleared at, ms": 3321,
-			"the pulse started after the mark cleared, ms": 25,
-			"the pulse runs, by its own clock, ms": 3900,
-			"its start event came after its start, ms": 18,
-			"from its start event to its end event, ms": 3899,
-			"the pulse ran, as sampled from outside, ms": 3950,
-			"the first sample that saw the pulse came after its start, ms": 16,
-			"the longest gap between two samples, ms": 179
-		},
-		"the pulse 1920x1080, run 3": {
-			"the transition's mark cleared at, ms": 4790,
-			"the pulse started after the mark cleared, ms": 21,
-			"the pulse runs, by its own clock, ms": 3900,
-			"its start event came after its start, ms": 18,
-			"from its start event to its end event, ms": 3899,
-			"the pulse ran, as sampled from outside, ms": 3935,
-			"the first sample that saw the pulse came after its start, ms": 77,
-			"the longest gap between two samples, ms": 150
-		},
-		"the pulse 390x844, run 1": {
-			"the transition's mark cleared at, ms": 3106,
-			"the pulse started after the mark cleared, ms": 23,
-			"the pulse runs, by its own clock, ms": 3900,
-			"its start event came after its start, ms": 20,
-			"from its start event to its end event, ms": 3897,
-			"the pulse ran, as sampled from outside, ms": 3856,
-			"the first sample that saw the pulse came after its start, ms": 76,
-			"the longest gap between two samples, ms": 180
-		},
-		"the pulse 390x844, run 2": {
-			"the transition's mark cleared at, ms": 3253,
-			"the pulse started after the mark cleared, ms": 7,
-			"the pulse runs, by its own clock, ms": 3900,
-			"its start event came after its start, ms": 18,
-			"from its start event to its end event, ms": 3899,
-			"the pulse ran, as sampled from outside, ms": 3964,
-			"the first sample that saw the pulse came after its start, ms": 14,
-			"the longest gap between two samples, ms": 174
+			"the pulse ran, as sampled from outside, ms": 3906,
+			"the first sample that saw the pulse came after its start, ms": 60,
+			"the longest gap between two samples, ms": 173
 		},
 		"the pulse 390x844, run 3": {
-			"the transition's mark cleared at, ms": 3235,
-			"the pulse started after the mark cleared, ms": 12,
+			"the transition's mark cleared at, ms": 3513,
+			"the pulse started after the mark cleared, ms": 44,
 			"the pulse runs, by its own clock, ms": 3900,
-			"its start event came after its start, ms": 19,
+			"its start event came after its start, ms": 18,
 			"from its start event to its end event, ms": 3899,
-			"the pulse ran, as sampled from outside, ms": 3971,
-			"the first sample that saw the pulse came after its start, ms": 12,
-			"the longest gap between two samples, ms": 190
+			"the pulse ran, as sampled from outside, ms": 3958,
+			"the first sample that saw the pulse came after its start, ms": 26,
+			"the longest gap between two samples, ms": 245
 		},
 		"a typed #streaming address 1920x1080, run 1": {
 			"before the header is measured: the block's top, px": [
 				442,
-				239,
+				337,
+				225,
+				192
+			],
+			"the header's bottom edge, px": [
+				157
+			],
+			"the header was measured after, ms": 1786,
+			"measured as": "93px",
+			"after it: the block's top, px": [
+				173
+			],
+			"settled after, ms": 2182
+		},
+		"a typed #streaming address 1920x1080, run 2": {
+			"before the header is measured: the block's top, px": [
+				442,
+				225,
 				198,
 				192
 			],
 			"the header's bottom edge, px": [
 				157
 			],
-			"the header was measured after, ms": 3193,
+			"the header was measured after, ms": 1773,
 			"measured as": "93px",
 			"after it: the block's top, px": [
 				173
 			],
-			"settled after, ms": 3416
-		},
-		"a typed #streaming address 1920x1080, run 2": {
-			"before the header is measured: the block's top, px": [
-				442,
-				259,
-				208,
-				192
-			],
-			"the header's bottom edge, px": [
-				157
-			],
-			"the header was measured after, ms": 1345,
-			"measured as": "93px",
-			"after it: the block's top, px": [
-				173
-			],
-			"settled after, ms": 1694
+			"settled after, ms": 2111
 		},
 		"a typed #streaming address 390x844, run 1": {
 			"before the header is measured: the block's top, px": [
 				528,
 				436,
 				218,
-				193,
 				192
 			],
 			"the header's bottom edge, px": [
 				207
 			],
-			"the header was measured after, ms": 1576,
+			"the header was measured after, ms": 1590,
 			"measured as": "142.78125px",
 			"after it: the block's top, px": [
 				223
 			],
-			"settled after, ms": 1811
+			"settled after, ms": 2039
 		},
 		"a typed #streaming address 390x844, run 2": {
 			"before the header is measured: the block's top, px": [
 				528,
 				363,
-				218,
-				194,
+				210,
 				192
 			],
 			"the header's bottom edge, px": [
 				207
 			],
-			"the header was measured after, ms": 992,
+			"the header was measured after, ms": 1446,
 			"measured as": "142.78125px",
 			"after it: the block's top, px": [
 				223
 			],
-			"settled after, ms": 1271
+			"settled after, ms": 1872
 		},
-		"clip discover desktop: from the press to the page standing, s": 2.16,
-		"clip discover phone: from the press to the page standing, s": 1.55,
-		"clip title desktop: from the press to the page standing, s": 2.21,
-		"clip title phone: from the press to the page standing, s": 1.66,
 		"the key on My shows 1920x1080: ArrowUp from the key lands on": "title:show-303",
 		"the key on My shows 1366x650: ArrowUp from the key lands on": "title:show-303",
 		"the key on My shows 360x740: ArrowUp from the key lands on": "title:show-302",
@@ -370,9 +372,13 @@
 		"My shows 390x844: keys to the Expand key": "ArrowDown",
 		"My shows 390x844: the TV button": "131 x 50 at 12, 783",
 		"a member's Tonight 390x844: the TV button": "131 x 50 at 12, 783",
+		"clip discover desktop: from the press to the page standing, s": 2.16,
 		"clip discover desktop: from Escape to the TV standing, s": 0.91,
+		"clip discover phone: from the press to the page standing, s": 1.55,
 		"clip discover phone: from Escape to the TV standing, s": 0.84,
+		"clip title desktop: from the press to the page standing, s": 2.21,
 		"clip title desktop: from Escape to the TV standing, s": 1,
+		"clip title phone: from the press to the page standing, s": 1.66,
 		"clip title phone: from Escape to the TV standing, s": 0.95,
 		"slice 5's Watch key part, rerun with the corrected checks (../tonight-title/drive.mjs, SIDE=guest PARTS=watch)": "93 passed, 0 failed; the pulse 3,900 ms at both sizes; a typed address 173 and 223 px"
 	}

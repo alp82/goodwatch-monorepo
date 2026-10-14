@@ -969,9 +969,9 @@ describe("the Expand key's destinations", () => {
 		)
 	})
 
-	it("Taste, and a side: Taste", () => {
+	it("Taste: Taste; a side: Taste on that side", () => {
 		assert.equal(dest("tv=taste"), "/taste")
-		assert.equal(dest("tv=taste&side=dark-crime", member), "/taste")
+		assert.equal(dest("tv=taste&side=dark-crime", member), "/taste?side=dark-crime")
 	})
 
 	it("My shows: My shows", () => {
