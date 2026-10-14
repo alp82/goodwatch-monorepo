@@ -88,8 +88,8 @@ storage, and every request to another host is stopped in the browser.
     screen's subject and is not repeated.
   - Any service has a screen: a link may name one that is neither of the person's two. Its titles name it (a
     card says where it streams); no key is lit for it.
-- **The Expand key's destination** is `/discover?services=<id>` (`destinationHref`). The key itself is slice
-  11's; its corner is kept free, and the script reaches it with `focus=expand`.
+- **The Expand key's destination** is `/discover?services=<id>` (`destinationHref`). The key is slice 11's and
+  stands in its corner since that slice was merged; the script reaches it with `focus=expand`.
 - **Loading** follows [How a screen loads its data](../tonight-title/README.md#how-a-screen-loads-its-data): the
   screen and its data hook are one lazy chunk, the scene mounts `ServiceData` once while the address names a
   service, and it reports up. The chunk is asked for at the first interaction, with the menu's, because a key of
@@ -106,15 +106,21 @@ read in the guest's loader. Both went with the owner's follow-up.
 - **The guest's loader reads nothing for the keys.** Under the country rule it read the services' catalog
   (`getStreamingProviders`, the data cache's entry of 976 services with every country's order) once per country,
   day and server process, and looked it up in memory after. That first read was 219 to 419 ms on this dev
-  server (145 to 1,985 ms in a run the day before), and a country already read answered in 15 ms. Now: LOADER_NOW.
+  server (145 to 1,985 ms in a run the day before), and a country already read answered in 15 ms. Now: a country this process was never asked for answers in 5 to 7 ms and again in 6
+  to 10, and the guest's loader in 6.4 ms (median of 15), on the same dev server. So the default keys save a
+  guest's loader that first read, about 0.2 to 0.4 s per country, day and process here and up to 2 s on a slow
+  read, and a lookup after it.
   In production the cluster is local, so the read was mostly the entry's size there.
 - **A member's loader** names their saved services with `getServiceCards`, from a list kept in memory for a day,
   and reads nothing more.
-- **What the services add to the HTML:** HTML_NOW A drawn mark's shape is not in the HTML (see below).
+- **What the services add to the HTML:** a guest's HTML of `/home-preview` is 62,391 bytes in the United States, France and
+  Brazil alike; the two tiles in both editions and the loader's data for them are 2,664 bytes of it, about 300
+  compressed with gzip. A link to a service's screen is 52,441 bytes, the bar and the Expand key alone. A drawn mark's shape is not in the HTML (see below).
 
 ## What the checks say
 
-1,089 checks pass, none fail: 826 in the guest's half on real data, 263 in the member's half on the harness.
+874 checks pass, none fail: 600 in the guest's half on real data, 274 in the member's half on the harness, on
+the branch with the default keys and with slice 11 (the Expand key) merged.
 
 - **The two services in every country, asked of the loader.** For a guest in the United States, Germany, the
   United Kingdom, France, Brazil, Japan, India, a country nobody has data for, and a language without a region,
@@ -295,7 +301,7 @@ from a copy of it.
 - [phone-beside-prototype.jpg](phone-beside-prototype.jpg): the same at 390 x 844.
 - `shots/`: each screen by itself.
 
-The prototype's shots show the Expand key at the bottom right, which is slice 11's, sample titles, and "Good
+The prototype's shots show sample titles and "Good
 evening." where the start page's H1 stands.
 
 ## After the merge of search
@@ -312,3 +318,23 @@ the menu, What is GoodWatch?, search and a service's screen. Taken again after i
   197 as a member, none failed.
 - Search's own drive script (`../search/drive.mjs`, the refused search and the walks, both sizes): 156 checks as a
   guest and 143 as a member, none failed.
+
+## The default keys
+
+The owner's follow-up on October 14, 2026: the country rule goes, and Netflix and Prime Video are the static
+default keys. A member with saved services still gets their first two saved, one per brand; everyone else, and a
+member's free slot, gets Netflix and then Prime Video, skipping one that is there already. The tile's picture
+and the list of On <service> still come from Discover for that service.
+
+- **Gone:** the per-country catalog read in the guest's loader, its keep in memory (`keepCountryServices`), the
+  country's order (`countryCatalog`), their tests, and the note at the switch for a page whose services could
+  not be read. `tvServices` now takes the saved services alone.
+- **Merged:** the integration branch at `493fe1e3` (this slice, fast-forwarded) and at `fdaaac52` (slice 11, the
+  Expand key, which draws its key on this slice's screen too).
+- **Taken again after both:** `npm test` on the TV and the living room 715 tests, all pass; `tsc` at 212; lint
+  clean; the build passes, the first view of `/home-preview` 12 files, 678,955 / 226,020 / 196,195 (the keys'
+  change is the server's alone). The drive script as a whole, both halves: 874 checks, none failed; the shots and
+  the sheets are this run's.
+- **The loader time saved:** see [A guest's HTML and the loader](#a-guests-html-and-the-loader): the first read of
+  a country's catalog, 0.2 to 0.4 s per country, day and server process on this dev server (up to 2 s), is gone;
+  a guest's loader answers in 5 to 7 ms for any country.

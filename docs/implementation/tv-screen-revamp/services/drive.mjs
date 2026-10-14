@@ -938,7 +938,8 @@ async function html() {
 		const texts = await Promise.all(Object.keys(AGENTS).map((agent) => htmlOf(query, "en-US", agent)))
 		check(texts.every((text) => text === texts[0]), `${query}: the same HTML for a browser, Googlebot and an iPhone`)
 		// Both editions are in the HTML: the bar alone, twice.
-		is(idsIn(texts[0]), [...BAR, ...BAR], `${query}: the server draws the bar alone, once per edition`)
+		// The Expand key is slice 11's, drawn since in its corner by the server too.
+		is(idsIn(texts[0]), ["expand", ...BAR, "expand", ...BAR], `${query}: the server draws the Expand key and the bar alone, once per edition`)
 		check(!/Titles are on their way|data-tv-service-mark|data-tv-edge/.test(texts[0]), `${query}: and nothing of the service's screen`)
 		numbers[`a guest's HTML of ${query}, bytes`] = texts[0].length
 	}

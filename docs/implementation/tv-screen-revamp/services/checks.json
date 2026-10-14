@@ -1,84 +1,52 @@
 {
-	"passed": 1089,
+	"passed": 874,
 	"failed": [],
 	"numbers": {
-		"the two services by country": {
-			"US": [
-				"Netflix (8)",
-				"Prime (9)"
-			],
-			"DE": [
-				"Netflix (8)",
-				"Prime (9)"
-			],
-			"GB": [
-				"Netflix (8)",
-				"Prime (9)"
-			],
-			"FR": [
-				"Netflix (8)",
-				"France TV (236)"
-			],
-			"BR": [
-				"Netflix (8)",
-				"Disney+ (337)"
-			],
-			"JP": [
-				"Netflix (8)",
-				"Prime (9)"
-			],
-			"IN": [
-				"Netflix (8)",
-				"JioHotstar (2336)"
-			]
-		},
-		"a guest's HTML of /home-preview in US, bytes": 62451,
-		"of which the two services (tiles in both editions and the loader's data) in US, bytes": 2724,
-		"a guest's HTML of /home-preview in FR, bytes": 62733,
-		"of which the two services (tiles in both editions and the loader's data) in FR, bytes": 3006,
-		"a guest's HTML of /home-preview in BR, bytes": 62723,
-		"of which the two services (tiles in both editions and the loader's data) in BR, bytes": 2996,
-		"the loader's answer for a country already read, ms (median of 15)": 15,
-		"the loader's answer for a country's first read in this process, and right after, ms": [
+		"a guest's HTML of /home-preview in US, bytes": 62391,
+		"a guest's HTML of /home-preview in FR, bytes": 62391,
+		"a guest's HTML of /home-preview in BR, bytes": 62391,
+		"of which the two services (tiles in both editions and the loader's data), bytes": 2664,
+		"the loader's answer as a guest, ms (median of 15)": 6.4,
+		"the loader's answer for a country never asked for in this process, and right after, ms": [
 			{
 				"country": "NL",
-				"first": 264,
-				"again": 37
+				"first": 5,
+				"again": 6
 			},
 			{
 				"country": "SE",
-				"first": 399,
-				"again": 47
+				"first": 5,
+				"again": 6
 			},
 			{
 				"country": "IT",
-				"first": 219,
-				"again": 47
+				"first": 7,
+				"again": 7
 			},
 			{
 				"country": "ES",
-				"first": 367,
-				"again": 87
+				"first": 5,
+				"again": 6
 			},
 			{
 				"country": "MX",
-				"first": 419,
-				"again": 68
+				"first": 6,
+				"again": 6
 			},
 			{
 				"country": "AU",
-				"first": 286,
-				"again": 89
+				"first": 7,
+				"again": 7
 			},
 			{
 				"country": "CA",
-				"first": 326,
-				"again": 91
+				"first": 6,
+				"again": 7
 			},
 			{
 				"country": "PL",
-				"first": 411,
-				"again": 119
+				"first": 7,
+				"again": 10
 			}
 		],
 		"guest 1920x1080: the keys": [
@@ -101,7 +69,7 @@
 			"first": "Reacher",
 			"facts": "2022 · Show · 81 score"
 		},
-		"a link to a service that is none of the person's two": "On Hulu, 2373 titles",
+		"a link to a service that is none of the person's two": "On Hulu, 2374 titles",
 		"On Netflix for a guest nobody knows: on the TV": [
 			"Law & Order",
 			"NCIS",
@@ -110,7 +78,7 @@
 		],
 		"On Netflix for a guest nobody knows: Discover has": 6002,
 		"On Netflix for a guest nobody knows: what the Discover page shows as chosen": [
-			"Netflix"
+			"1 service"
 		],
 		"On Prime for a guest with another service saved: on the TV": [
 			"Reacher",
@@ -130,17 +98,7 @@
 		],
 		"On Netflix for a guest with a service saved and three ratings: Discover has": 6000,
 		"On Netflix for a guest with a service saved and three ratings: what the Discover page shows as chosen": [
-			"Netflix"
-		],
-		"a guest in FR: On France TV": "75 titles",
-		"a guest in FR: the keys": [
-			"On Netflix, drawn",
-			"On France TV, logo"
-		],
-		"a guest in BR: On Disney+": "2064 titles",
-		"a guest in BR: the keys": [
-			"On Netflix, drawn",
-			"On Disney+, logo"
+			"1 service"
 		],
 		"sizes 360x740 US: Netflix's tile": "114 x 73",
 		"sizes 360x740 US: Prime's tile": "114 x 73",
@@ -219,52 +177,8 @@
 			"Netflix": 67.8,
 			"Prime": 67.8
 		},
-		"sizes 360x740 FR: Netflix's tile": "114 x 73",
-		"sizes 360x740 FR: France TV's tile": "114 x 73",
-		"sizes 360x740 FR: a poster on Netflix": "69 x 104",
-		"sizes 360x740 FR: a poster on France TV": "69 x 104",
-		"sizes 360x740 FR: the smallest key": {
-			"remote": "hand 45.6",
-			"home Netflix": 44.5,
-			"home France TV": 44.5,
-			"Netflix": 44.5,
-			"France TV": 44.5
-		},
-		"sizes 375x667 FR: Netflix's tile": "119 x 76",
-		"sizes 375x667 FR: France TV's tile": "119 x 76",
-		"sizes 375x667 FR: a poster on Netflix": "55 x 83",
-		"sizes 375x667 FR: a poster on France TV": "55 x 83",
-		"sizes 375x667 FR: the smallest key": {
-			"remote": "table 44.0",
-			"home Netflix": 44.4,
-			"home France TV": 44.4,
-			"Netflix": 44.4,
-			"France TV": 44.4
-		},
-		"sizes 844x390 FR: Netflix's tile": "168 x 107",
-		"sizes 844x390 FR: France TV's tile": "168 x 107",
-		"sizes 844x390 FR: a poster on Netflix": "85 x 127",
-		"sizes 844x390 FR: a poster on France TV": "85 x 127",
-		"sizes 844x390 FR: the smallest key": {
-			"remote": "hand 45.4",
-			"home Netflix": 52.7,
-			"home France TV": 52.7,
-			"Netflix": 52.7,
-			"France TV": 52.7
-		},
-		"sizes 1920x1080 FR: Netflix's tile": "212 x 136",
-		"sizes 1920x1080 FR: France TV's tile": "212 x 136",
-		"sizes 1920x1080 FR: a poster on Netflix": "182 x 273",
-		"sizes 1920x1080 FR: a poster on France TV": "182 x 273",
-		"sizes 1920x1080 FR: the smallest key": {
-			"remote": "desktop 31.3",
-			"home Netflix": 67.8,
-			"home France TV": 67.8,
-			"Netflix": 67.8,
-			"France TV": 67.8
-		},
-		"a guest's HTML of ?tv=service&service=8, bytes": 50966,
-		"a guest's HTML of ?tv=service&service=337, bytes": 50990,
+		"a guest's HTML of ?tv=service&service=8, bytes": 52441,
+		"a guest's HTML of ?tv=service&service=337, bytes": 52465,
 		"member 1920x1080: the keys": [
 			"On Netflix, drawn, 76 x 31 px",
 			"On Prime, drawn, 76 x 31 px"
@@ -291,7 +205,7 @@
 		],
 		"member with Disney+ and Hulu 390x844: On Hulu": {
 			"titles": 12,
-			"total": 2373,
+			"total": 2374,
 			"first": "Law & Order: Special Victims Unit",
 			"facts": "1999 · Show · 43 min episodes · 74 score"
 		}
