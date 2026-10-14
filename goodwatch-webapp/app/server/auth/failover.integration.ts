@@ -11,7 +11,7 @@ const composeFile = fileURLToPath(new URL("../../../scripts/auth-cratedb/compose
 const socket = `/run/user/${process.getuid!()}/docker.sock`
 const dockerEnv = { ...process.env, DOCKER_HOST: `unix://${existsSync(socket) ? socket : "/var/run/docker.sock"}`, DOCKER_CONTEXT: "" }
 const compose = (...args: string[]) => execFileSync("docker", ["compose", "-f", composeFile, "-p", "goodwatch-auth-548", ...args], { env: dockerEnv, stdio: "pipe" })
-const endpoint = (node: string) => `http://127.0.0.1:${15547 + Number(node.slice(-1))}`
+const endpoint = (node: string) => `http://127.0.0.1:${15747 + Number(node.slice(-1))}`
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 async function until(label: string, check: () => Promise<boolean>, timeout = 90_000) {
 	const deadline = Date.now() + timeout

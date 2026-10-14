@@ -37,7 +37,7 @@ export function crateAuthTransport(urls: string[], timeoutMs = 15_000): AuthSql 
 }
 
 export function localCrateTransport(urls: string[], timeoutMs = 15_000): AuthSql {
-	for (const url of urls) if (!/^http:\/\/127\.0\.0\.1:155(48|49|50)$/.test(url)) throw new Error("Local auth test endpoint required")
+	for (const url of urls) if (!/^http:\/\/127\.0\.0\.1:15(5|7)(48|49|50)$/.test(url)) throw new Error("Local auth test endpoint required")
 	const sql = crateAuthTransport(urls, timeoutMs)
 	localTransports.add(sql)
 	return sql
@@ -53,7 +53,7 @@ type Row = Record<string, any>
 const models = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
 const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
 const lookup = (row: Row) => Object.fromEntries(indexedFields.map(field => [field, row[field] ?? null]))
-type Receipt = { operation: string; result: Row }
+type Receipt = { operation: string; baseSeq: number }
 type Stored = { row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[] }
 export class IndeterminateAuthWriteError extends Error {
 	constructor() { super("Auth write outcome is indeterminate; do not retry the logical operation"); this.name = "IndeterminateAuthWriteError" }
@@ -67,10 +67,10 @@ const decode = (text: unknown): Row => JSON.parse(String(text), (key, value) =>
 export async function migrateAuthTables(sql: AuthSql, additionalModels: string[] = []) {
 	if (additionalModels.length && !localTransports.has(sql)) throw new Error("Additional tables require the disposable local transport")
 	for (const model of new Set([...models, ...additionalModels])) await sql(`CREATE TABLE IF NOT EXISTS ${table(model)} (
-		id TEXT PRIMARY KEY, payload TEXT NOT NULL,
+		id TEXT PRIMARY KEY, payload TEXT INDEX OFF NOT NULL,
 		lookup OBJECT(STRICT) AS (${indexedFields.map(field => `"${field}" ${["lastRequest", "count"].includes(field) ? "DOUBLE PRECISION" : "TEXT"}`).join(",")}),
 		created_at TIMESTAMP WITH TIME ZONE, expires_at TIMESTAMP WITH TIME ZONE,
-		deleted BOOLEAN NOT NULL DEFAULT false, receipts TEXT NOT NULL
+		deleted BOOLEAN NOT NULL DEFAULT false, receipts TEXT INDEX OFF NOT NULL
 	) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas='2', "write.wait_for_active_shards"=1,
 		"translog.durability"='REQUEST', refresh_interval=-1)`)
 	await sql(`CREATE TABLE IF NOT EXISTS doc.auth_user_email (
@@ -182,8 +182,9 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const operation = randomUUID()
 				const result = deleting ? original.row : replacing ? { ...update, id: original.row.id } : { ...original.row, ...update }
 				if (key(model, result) !== key(model, original.row)) throw new Error("Auth lookup keys are immutable")
-				if (original.receipts.length >= 4096) throw new Error("Auth receipt capacity reached")
-				const receipts = [...original.receipts, { operation, result }]
+				// Receipts prove ownership; this invocation already knows its result.
+				// Never retain historical credentials or an unbounded operation log.
+				const receipts = [...original.receipts, { operation, baseSeq: original.seq }].slice(-256)
 				const id = key(model, original.row)
 				let response: SqlResult | undefined
 				try {
@@ -194,8 +195,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let current: Stored | null
 				try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
 				const receipt = current?.receipts.find(r => r.operation === operation)
-				if (receipt) return decode(JSON.stringify(receipt.result))
-				if (response?.rowcount === 0 && current && current.seq !== original.seq) return null
+				if (receipt) return result
+				if (response?.rowcount === 0 && current && current.seq !== original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) return null
 				throw new IndeterminateAuthWriteError()
 			}
 			const requireCompleted = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false) => {
@@ -216,13 +217,13 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${table(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
-							[row.id, codec.encode(row), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, result: row }]), lookup(row)])
+							[row.id, codec.encode(row), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1 }]), lookup(row)])
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {
 						const existing = await stored(model, row.id)
 						const receipt = existing?.receipts.find(r => r.operation === operation)
-						if (receipt) return decode(JSON.stringify(receipt.result)) as typeof data
+						if (receipt) return result as typeof data
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && ["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model)) {
 							const recreated = await mutate(model, existing, row, false, true)
 							if (recreated) return recreated as typeof data

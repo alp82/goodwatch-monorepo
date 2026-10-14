@@ -25,7 +25,7 @@ trap 'exit 143' TERM
 "${compose[@]}" up -d
 node --input-type=module <<'JS'
 import { localCrateTransport, migrateAuthTables } from './app/server/auth/crate-adapter.server.ts'
-const sql = localCrateTransport(['http://127.0.0.1:15548'], 5000)
+const sql = localCrateTransport(['http://127.0.0.1:15748'], 5000)
 const deadline = Date.now() + 180000
 let ready = false
 while (Date.now() < deadline) {

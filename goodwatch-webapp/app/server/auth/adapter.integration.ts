@@ -4,11 +4,11 @@ import { randomUUID } from "node:crypto"
 import { authTestOptions } from "./fixtures.integration.ts"
 import { crateAuthAdapter, crateAuthTransport, localCrateTransport, migrateAuthTables, IndeterminateAuthWriteError } from "./crate-adapter.server.ts"
 
-const endpoints = ["http://127.0.0.1:15548", "http://127.0.0.1:15549", "http://127.0.0.1:15550"]
+const endpoints = ["http://127.0.0.1:15748", "http://127.0.0.1:15749", "http://127.0.0.1:15750"]
 
 test("a new member is immediately readable by id and normalized email without refresh", async () => {
 	const { crateAuthAdapter, migrateAuthTables, localCrateTransport } = await import("./crate-adapter.server.ts")
-	const sql = localCrateTransport(["http://127.0.0.1:15548"])
+	const sql = localCrateTransport(["http://127.0.0.1:15748"])
 	assert.equal((await sql("SELECT count(*) FROM sys.nodes")).rows[0][0], 3)
 	await migrateAuthTables(sql)
 	const adapter = crateAuthAdapter({ sql })({})
@@ -296,7 +296,7 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 
 test("an unlisted OR query throws before reading any auth record", async () => {
 	const { crateAuthAdapter, localCrateTransport } = await import("./crate-adapter.server.ts")
-	const adapter = crateAuthAdapter({ sql: localCrateTransport(["http://127.0.0.1:15548"]) })({})
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(["http://127.0.0.1:15748"]) })({})
 	await assert.rejects(adapter.findOne<Record<string, any>>({ model: "user", where: [
 		{ field: "id", value: "missing", connector: "OR" },
 	] }), /Unsupported auth shape/)
@@ -304,7 +304,7 @@ test("an unlisted OR query throws before reading any auth record", async () => {
 
 test("refresh rotation including empty increments races revocation with exactly one winner", async () => {
 	const { crateAuthAdapter, migrateAuthTables, localCrateTransport } = await import("./crate-adapter.server.ts")
-	const sql = localCrateTransport(["http://127.0.0.1:15548", "http://127.0.0.1:15549", "http://127.0.0.1:15550"])
+	const sql = localCrateTransport(["http://127.0.0.1:15748", "http://127.0.0.1:15749", "http://127.0.0.1:15750"])
 	await migrateAuthTables(sql)
 	const adapter = crateAuthAdapter({ sql })(authTestOptions)
 	const token = await adapter.create({ model: "oauthRefreshToken", data: {
@@ -321,7 +321,7 @@ test("refresh rotation including empty increments races revocation with exactly 
 
 test("24 code redemptions across three coordinators have one winner and the token stays invisible", async () => {
 	const { crateAuthAdapter, migrateAuthTables, localCrateTransport } = await import("./crate-adapter.server.ts")
-	const sql = localCrateTransport(["http://127.0.0.1:15548", "http://127.0.0.1:15549", "http://127.0.0.1:15550"])
+	const sql = localCrateTransport(["http://127.0.0.1:15748", "http://127.0.0.1:15749", "http://127.0.0.1:15750"])
 	await migrateAuthTables(sql)
 	const adapter = crateAuthAdapter({ sql })({})
 	const token = await adapter.create({ model: "verification", data: {

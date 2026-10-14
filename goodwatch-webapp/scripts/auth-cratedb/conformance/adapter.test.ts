@@ -2,7 +2,7 @@ import { testAdapter, normalTestSuite, authFlowTestSuite, caseInsensitiveTestSui
 import { crateAuthAdapter, localCrateTransport, migrateAuthTables } from "../../../app/server/auth/crate-adapter.server.ts"
 import { getAuthTables } from "better-auth/db"
 
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
+const sql = localCrateTransport(["http://127.0.0.1:15748"])
 const suite = await testAdapter({
 	adapter: () => crateAuthAdapter({ sql, testOnlyConformance: true }),
 	runMigrations: options => migrateAuthTables(sql, Object.keys(getAuthTables(options))),

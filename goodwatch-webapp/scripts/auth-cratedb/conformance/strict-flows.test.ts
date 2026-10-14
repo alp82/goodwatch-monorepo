@@ -1,7 +1,7 @@
 import { testAdapter, authFlowTestSuite } from "@better-auth/test-utils/adapter"
 import { crateAuthAdapter, localCrateTransport, migrateAuthTables } from "../../../app/server/auth/crate-adapter.server.ts"
 
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
+const sql = localCrateTransport(["http://127.0.0.1:15748"])
 const suite = await testAdapter({
 	adapter: () => options => {
 		const strict = crateAuthAdapter({ sql })(options)
