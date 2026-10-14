@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-14T19:41:10.567083+00:00",
+  "source": "Original read-only observer terminal output; its journal was overwritten when the post-restart observer was started",
+  "greenStartedNoOwnJob": true,
+  "queries": {
+    "nodes": [
+      [
+        "crate-01",
+        "5.10.9"
+      ],
+      [
+        "crate-02",
+        "5.10.9"
+      ],
+      [
+        "crate-03",
+        "5.10.9"
+      ]
+    ],
+    "health": [
+      [
+        "GREEN",
+        0,
+        0,
+        90
+      ]
+    ],
+    "shards": [
+      [
+        "STARTED",
+        "STARTED",
+        920
+      ]
+    ],
+    "ownJob": []
+  },
+  "limitation": "This event did not establish direct SQL endpoint readiness or daemon exit. Docker events show the original process had not exited before the manual old-image restart."
+}

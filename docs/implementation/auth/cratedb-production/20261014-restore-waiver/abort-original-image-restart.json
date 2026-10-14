@@ -1,0 +1,34 @@
+{
+  "sshReturncode": 0,
+  "result": {
+    "restartStartedAt": "2026-10-14T19:42:09.970925+00:00",
+    "finishedAt": "2026-10-14T19:42:16.365175+00:00",
+    "elapsedSeconds": 6.394,
+    "command": [
+      "docker",
+      "restart",
+      "--timeout=-1",
+      "crate-02"
+    ],
+    "returncode": 0,
+    "stdout": "crate-02\n",
+    "stderr": "",
+    "containerId": "5c692bdd13af7b94313d923fb0bc0b5829e05834b68e2e7da5c8fa6e423180cd",
+    "oldImageRetained": true,
+    "image": "crate:5.10.9",
+    "mountsRetained": true,
+    "restartPolicy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "state": {
+      "Status": "running",
+      "Running": true,
+      "OOMKilled": false,
+      "ExitCode": 0,
+      "StartedAt": "2026-10-14T19:42:15.891984336Z",
+      "FinishedAt": "2026-10-14T19:42:15.253398423Z"
+    }
+  },
+  "stderr": ""
+}

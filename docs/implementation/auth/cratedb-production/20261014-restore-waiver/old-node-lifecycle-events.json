@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-14T19:46:03.389024+00:00",
+  "returncode": 0,
+  "result": {
+    "returncode": 0,
+    "events": [
+      {
+        "action": "kill",
+        "time": 1792006930,
+        "timeNano": 1792006930034465497,
+        "image": "crate:5.10.9",
+        "exitCode": null,
+        "signal": "15"
+      },
+      {
+        "action": "stop",
+        "time": 1792006935,
+        "timeNano": 1792006935857238630,
+        "image": "crate:5.10.9",
+        "exitCode": null,
+        "signal": null
+      },
+      {
+        "action": "die",
+        "time": 1792006935,
+        "timeNano": 1792006935867161193,
+        "image": "crate:5.10.9",
+        "exitCode": "143",
+        "signal": null
+      },
+      {
+        "action": "start",
+        "time": 1792006936,
+        "timeNano": 1792006936316769826,
+        "image": "crate:5.10.9",
+        "exitCode": null,
+        "signal": null
+      },
+      {
+        "action": "restart",
+        "time": 1792006936,
+        "timeNano": 1792006936316839430,
+        "image": "crate:5.10.9",
+        "exitCode": null,
+        "signal": null
+      }
+    ],
+    "stderr": ""
+  },
+  "stderr": ""
+}
