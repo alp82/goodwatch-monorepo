@@ -5,6 +5,96 @@ Three variants of the controls on one route, on a copy of the title page and of 
 
 It does not pick a winner and does not change the accepted scope. Nothing here is production code.
 
+## Round two (D to G), the default
+
+After trying A to C the owner asked for fewer words, no layout shifts, controls in the title bar, and changes shown
+on the current title in place instead of copies. Round two answers that. `?variant=D|E|F|G`; the bar's **Round 1**
+key leads to A to C, whose arrows then stay within A to C.
+
+Previews on this machine, each a frozen copy nobody edits (`localhost`, or the tailnet address `100.71.215.115`):
+
+| Snapshot | Local | Tailnet |
+|---|---|---|
+| Round two after its review (current) | `http://localhost:3137/prototype/media-language?variant=D` | `http://100.71.215.115:3138/prototype/media-language?variant=D` |
+| Round two before its review | `:3127` | `:3128` |
+| Round one only (A to C) | `:3117` | `:3118` |
+
+All four share:
+
+- The country and the language sit as a compact pair in the existing sticky title bar, beside Share. The
+  where-to-watch box only names the country.
+- Everything that opens (panels, lists, the question in F, the Save bar in E) is an overlay with a set size: absolutely
+  placed or fixed to the window. Nothing is inserted into the page.
+- A change shows on the current title, in place. There are no outcome cards, title previews, comparisons, and no
+  "More like this" row.
+- **A language the visitor picks is theirs.** It survives every later country pick in all four. A country's
+  suggestion that was taken (D's button, F's tick) belongs to that country and goes when the country changes again.
+  A language never changes the country.
+- Copy is short. Where a field falls back, the page keeps its one quiet line in About.
+- The mock state lives in the prototype's panel (the bar's corner key; `bar=small` starts with it small).
+
+| | D Paired popover | E Two direct lists | F Pick, then confirm | G Title bar edit mode |
+|---|---|---|---|---|
+| In the title bar | the pair, one button | country and language, two buttons | the pair, one button | the pair with Edit; then the two controls in the line under the title |
+| Where you pick | a small panel anchored to the pair, a list replaces its rows | a small list under each button | a compact dialog, one list at a time, opening on the one used last | lists under the two controls |
+| What the page shows meanwhile | the draft, live | the pick, at once | the pick, at once | the picks, live, title included |
+| How it is kept | Save in the panel | Save in a small bar fixed to the window's lower right | Keep in a question anchored under the pair | Done |
+| How it is dropped | Cancel or Escape | Undo in the fixed bar | Undo or Escape in the question | Reset (stays in the mode), × or Escape (leaves) |
+| A new country's language | one small "+ Japanese titles" button | never offered: the two are independent | an unticked "Japanese titles too" in the question | lifted to the top of the titles list, marked suggested |
+| Unsaved is shown by | an amber dot on the pair | an amber dot on the changed button, and the bar | the open question and the dot | amber rings and "Not saved" (phones too) |
+
+**D's panel and the page.** Using the page while D's panel is open keeps both the panel and the draft: a scroll, a
+swipe, a tap, a tab such as Rent. Only Cancel or Escape discard. Pressing the pair while a draft is open folds the
+panel away to see the whole page (the dot stays) and opens it again with the draft. This is a change from the first
+round-two snapshot, where any press on the page discarded the draft.
+
+The decisions each one explores:
+
+- **D:** whether a change should stay a draft until an explicit Save, with the page itself as the only preview.
+- **E:** whether country and language can be two fully independent, immediate controls, with saving as a separate,
+  optional step, and with no coupling at all.
+- **F:** whether the decision is easier after seeing the page change than inside the dialog, and whether the offer of
+  a country's language belongs at that moment.
+- **G:** whether an explicit mode (Edit, then Done or Reset) is clearer than overlays, and whether suggesting the
+  language by its place in the list is enough.
+
+Undecided, and only placeholders here:
+
+- How long an unsaved value lasts. In E and F it follows across titles until Save or Undo. D keeps it while the
+  panel is open or folded; G drops it when the mode closes.
+- Whether a press on the page should ever drop a draft. In none of D to G does it now.
+- Whether a suggestion taken for one country should outlive a change of country. Here it does not.
+- Round two has no settings page (round one's are kept). Saving, the guest and member wording, failures and Undo
+  work as in round one.
+- `recipient-look` arrives without the sender's country in round two. It behaves as `recipient-ja`, and the state
+  panel says so. The recipient's language applies as settled.
+- The title and its facts line stay one line each and clip on a narrow screen. G keeps one row height for the facts
+  line in and out of its mode, so its bar is a few pixels taller than the others', in both states.
+
+Checked by `drive-round2.mjs` (91 checks, desktop and phone, real clicks, keys and touch). It measures the title bar,
+the actions card, the overview card, the poster, the where-to-watch box and About before and after each control
+opens, each draft or message appears and each Undo. Opening or closing a control, and showing or clearing a message,
+moved nothing in any variant. Only content changed size.
+
+Measured for Spirited Away, Germany to Japan (desktop, D and E alike):
+
+- Where to watch grows from 112 to 222 px: Japan has no streams, so it lists where the title is.
+- The actions card beside it stays at y 442, 582 by 60 px. In the first round-two snapshot it stretched and its
+  buttons moved down by 55 px. The page grid now aligns its cards to the top.
+- About moves down by the same 110 px and no more.
+
+Reserving that height in advance would leave a 110 px empty block in the common case, so the box keeps its natural
+height. Also checked:
+
+- A long German title and a short English one give the same title bar. E's bar on a phone is as high as D's, Money
+  Heist included.
+- Each of D to G keeps a hand-picked French across a later Japan and Spain.
+- D keeps its panel and draft through a swipe and a tap on a phone.
+- G's title stays visible while editing, and its "Not saved" and "Didn't save" show on a phone, the second as an
+  alert.
+- Escape closes an open list before its panel, dialog or mode, and the focus returns to the control that opened it.
+- On a phone nothing is wider than the screen and every overlay lies inside it.
+
 ## The questions
 
 Settled before this prototype, and built into all three variants:
@@ -45,6 +135,10 @@ For a review, serve a copy that nobody edits: copy `goodwatch-webapp` without `n
 
 | Variant | Address |
 |---|---|
+| D, paired popover | http://localhost:3117/prototype/media-language?variant=D (when you run the command above) |
+| E, two direct lists | http://localhost:3117/prototype/media-language?variant=E (when you run the command above) |
+| F, pick, then confirm | http://localhost:3117/prototype/media-language?variant=F (when you run the command above) |
+| G, title bar edit mode | http://localhost:3117/prototype/media-language?variant=G (when you run the command above) |
 | A, staged panel | http://localhost:3117/prototype/media-language?variant=A |
 | B, look, then keep | http://localhost:3117/prototype/media-language?variant=B |
 | C, compare outcomes | http://localhost:3117/prototype/media-language?variant=C |
@@ -63,7 +157,7 @@ Useful starting points:
 
 | Parameter | Values | Meaning |
 |---|---|---|
-| `variant` | `A`, `B`, `C` | The variant. |
+| `variant` | `D` to `G` (round two, default `D`), `A` to `C` (round one) | The variant. |
 | `visitor` | `guest-de`, `guest-en-de`, `member-de`, `member-explicit`, `guest-sv`, `recipient-ja`, `recipient-look` | Who is visiting. Default `guest-de`. |
 | `title` | `spirited-away`, `money-heist`, `portrait` | The sample title. |
 | `page` | `title`, `settings` | The page. Settings is for members, as in the app. |
@@ -272,6 +366,13 @@ in A, B and C in the same page. Green in all of them on a freshly loaded page.
 | File | Shows |
 |---|---|
 | `title-page-desktop.jpg` | The host page alone, without the prototype's controls. |
+| `d-open-*.jpg`, `d-draft-desktop.jpg`, `d-failed-desktop.jpg` | D: the panel, the page showing a Japanese draft, a failed save. |
+| `e-open-*.jpg`, `e-unsaved-desktop.jpg`, `e-failed-desktop.jpg` | E: a list, a country applied with the fixed Save bar, a failed save. |
+| `f-dialog-desktop.jpg`, `f-open-phone.jpg`, `f-confirm-desktop.jpg` | F: the compact dialog, the question under the pair with the offer ticked. |
+| `g-edit-desktop.jpg`, `g-suggested-desktop.jpg`, `g-open-phone.jpg` | G: the edit controls under the title, Japanese suggested at the top of the list. |
+| `d-lang-then-country-desktop.jpg`, `g-lang-then-country-desktop.jpg` | D and G: French picked by hand, then Japan and Spain; the titles stay French. |
+| `d-folded-phone.jpg` | D: the panel folded away on a phone, the draft kept (dot on the pair). |
+| `g-failed-phone.jpg` | G on a phone: "Didn't save" in words beside the controls. |
 | `a-panel-untouched-desktop.jpg` | A: the panel as it opens. |
 | `a-panel-country-*.jpg` | A: Japan drafted, the companion unticked, "Save country". |
 | `a-panel-both-*.jpg` | A: the companion ticked, the preview in Japanese, "Save country and language". |
@@ -306,3 +407,5 @@ in A, B and C in the same page. Green in all of them on a freshly loaded page.
 - `goodwatch-webapp/vite.config.js`: two entries in `PROTOTYPES`, so a production build leaves the prototype out.
 - `docs/prototypes/media-language/drive.mjs` and `repro-language-list.mjs`: the walkthrough and the repro command.
 - `docs/prototypes/media-language/tailnet-preview.mjs`: the Tailscale preview with analytics blocked.
+- Round two: `goodwatch-webapp/app/ui/prototype-media-language/variant-d.tsx` to `variant-g.tsx`, `round2.tsx` (the
+  pair, the overlay rules), and `drive-round2.mjs` here.

@@ -3,14 +3,24 @@
 // so none of it can be taken for the design under test. Hidden with ?chrome=off, and absent from a production build.
 import { useEffect, useState } from "react"
 import { PERSONAS, TITLES, countryName } from "./fixtures"
-import { type VariantKey, langLabel, negotiate, useStore } from "./model"
+import {
+	ROUNDS,
+	type VariantKey,
+	langLabel,
+	negotiate,
+	roundOf,
+	useStore,
+} from "./model"
 
 export const VARIANTS: Record<VariantKey, string> = {
 	A: "Staged panel",
 	B: "Look, then keep",
 	C: "Compare outcomes",
+	D: "Paired popover",
+	E: "Two direct lists",
+	F: "Pick, then confirm",
+	G: "Title bar edit mode",
 }
-const KEYS = Object.keys(VARIANTS) as VariantKey[]
 
 // Arrow keys switch the variant only when nothing on the page has a use for them: not in a field, a list, a group of
 // radios or tabs, and never while a dialog is open.
@@ -62,6 +72,7 @@ function Panel() {
 	const s = useStore()
 	const browser = negotiate(s.persona.browser)
 	const guest = s.persona.viewer === "guest"
+	const round = roundOf(s.variant)
 	const field = (name: string, f: { lang: string; fallback: boolean }) =>
 		`${name} ${f.lang}${f.fallback ? " (fallback)" : ""}`
 	return (
@@ -85,6 +96,13 @@ function Panel() {
 					</select>
 				</label>
 				<p className="text-neutral-500">{s.persona.note}</p>
+				{round === 2 && s.persona.incomingLook && (
+					<p data-proto-limit className="font-semibold text-fuchsia-700">
+						Round two does not simulate the link's country: this visitor arrives
+						as a plain guest in Japan. The recipient's language (Japanese) still
+						applies.
+					</p>
+				)}
 				<Seg
 					label="Title"
 					value={s.titleId}
@@ -101,8 +119,13 @@ function Panel() {
 						{ key: "title", label: "Title page" },
 						{
 							key: "settings",
-							label: guest ? "Settings (members)" : "Settings",
-							disabled: guest,
+							label:
+								round === 2
+									? "Settings (round 1 only)"
+									: guest
+										? "Settings (members)"
+										: "Settings",
+							disabled: guest || round === 2,
 						},
 					]}
 					onChange={s.setSurface}
@@ -221,6 +244,9 @@ export function PrototypeChrome({
 	const [open, setOpen] = useState(startOpen)
 	// Small: the bar shrinks to a corner key, so nothing of the page under test stays covered (a phone's lower third).
 	const [small, setSmall] = useState(startSmall)
+	// The arrows stay inside a round: round two has four variants, round one (A to C) is one press away.
+	const round = roundOf(s.variant)
+	const KEYS = ROUNDS[round]
 	const go = (step: number) =>
 		s.setVariant(
 			KEYS[(KEYS.indexOf(s.variant) + step + KEYS.length) % KEYS.length],
@@ -246,8 +272,15 @@ export function PrototypeChrome({
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	})
+	// A handle for the walkthrough scripts, so they can make the next save fail without pressing on the page.
+	useEffect(() => {
+		;(
+			window as unknown as { __mediaLanguagePrototype?: unknown }
+		).__mediaLanguagePrototype = { failNext: s.setFailNext }
+	})
 	if (process.env.NODE_ENV === "production") return null
 	const tried = s.look.country || s.look.lang
+	const line = `${s.persona.incomingLook || s.persona.key.startsWith("recipient") ? "SIMULATED shared link · " : ""}${s.persona.viewer} · saved ${s.saved.country ?? "no country"}/${s.saved.lang ?? "browser"} · shows ${countryName(s.effective.country)}/${langLabel(s.effective.lang)}${tried ? " · NOT SAVED" : ""}${s.failNext ? " · next save fails" : ""}`
 	if (small)
 		return (
 			<div
@@ -264,6 +297,10 @@ export function PrototypeChrome({
 					{s.variant}
 					{tried ? " · not saved" : ""} ▸
 				</button>
+				{/* The same line, out of sight, for the walkthrough scripts. */}
+				<span hidden data-proto-summary>
+					{line}
+				</span>
 			</div>
 		)
 	return (
@@ -303,6 +340,19 @@ export function PrototypeChrome({
 					</span>
 					<button
 						type="button"
+						data-round
+						onClick={() => s.setVariant(round === 2 ? "A" : "D")}
+						title={
+							round === 2
+								? "The first round: A to C"
+								: "The second round: D to G"
+						}
+						className="cursor-pointer rounded-full px-2 py-1 text-xs font-normal text-neutral-500 underline hover:bg-neutral-200"
+					>
+						{round === 2 ? "Round 1" : "Round 2"}
+					</button>
+					<button
+						type="button"
 						onClick={() => go(1)}
 						className="cursor-pointer rounded-full px-3 py-1 hover:bg-neutral-200"
 						aria-label="Next variant"
@@ -323,14 +373,7 @@ export function PrototypeChrome({
 					data-proto-summary
 					className="truncate px-3 pb-1.5 pt-1 text-center text-neutral-600"
 				>
-					{s.persona.incomingLook || s.persona.key.startsWith("recipient")
-						? "SIMULATED shared link · "
-						: ""}
-					{s.persona.viewer} · saved {s.saved.country ?? "no country"}/
-					{s.saved.lang ?? "browser"} · shows {countryName(s.effective.country)}
-					/{langLabel(s.effective.lang)}
-					{tried ? " · NOT SAVED" : ""}
-					{s.failNext ? " · next save fails" : ""}
+					{line}
 				</p>
 			</div>
 		</div>

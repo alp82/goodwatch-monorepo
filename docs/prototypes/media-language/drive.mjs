@@ -487,7 +487,7 @@ for (const fail of [false, true]) {
 	// The prototype's bar can be shrunk, so nothing under it stays out of reach on a phone.
 	const page = await open("variant=B&visitor=member-de", true)
 	await page.click("[data-proto-shrink]")
-	check((await page.locator("[data-proto-summary]").count()) === 0 && (await page.locator("[data-proto-grow]").isVisible()), "The prototype's bar shrinks to a corner key")
+	check(!(await page.locator("[data-proto-summary]").isVisible()) && (await page.locator("[data-proto-grow]").isVisible()), "The prototype's bar shrinks to a corner key")
 	await page.click("[data-proto-grow]")
 	check(await page.locator("[data-proto-summary]").isVisible(), "The corner key brings the bar back")
 	await page.context().close()

@@ -208,6 +208,7 @@ export function PickList<K extends string>({
 	search = false,
 	autoFocus = false,
 	className = "max-h-64",
+	onEscape,
 }: {
 	label: string
 	items: PickItem<K>[]
@@ -216,6 +217,8 @@ export function PickList<K extends string>({
 	search?: boolean
 	autoFocus?: boolean
 	className?: string
+	/** Escape closes this list only: the popover or dialog around it stays open. */
+	onEscape?: () => void
 }) {
 	const id = useId()
 	const [query, setQuery] = useState("")
@@ -238,16 +241,30 @@ export function PickList<K extends string>({
 		if (autoFocus)
 			(inputRef.current ?? listRef.current)?.focus({ preventScroll: true })
 	}, [autoFocus])
+	// Scrolls the list only. scrollIntoView would also scroll the page under an overlay.
 	useEffect(() => {
-		listRef.current
-			?.querySelector(`[data-at="${at}"]`)
-			?.scrollIntoView({ block: "nearest" })
+		const list = listRef.current
+		const row = list?.querySelector<HTMLElement>(`[data-at="${at}"]`)
+		if (!list || !row) return
+		if (row.offsetTop < list.scrollTop) list.scrollTop = row.offsetTop
+		else if (
+			row.offsetTop + row.offsetHeight >
+			list.scrollTop + list.clientHeight
+		)
+			list.scrollTop = row.offsetTop + row.offsetHeight - list.clientHeight
 	}, [at])
 
 	const onKey = (e: KeyboardEvent) => {
 		const move = (to: number) => {
 			e.preventDefault()
 			setActive(Math.max(0, Math.min(shown.length - 1, to)))
+		}
+		if (e.key === "Escape" && onEscape) {
+			e.preventDefault()
+			e.stopPropagation()
+			e.nativeEvent.stopImmediatePropagation()
+			onEscape()
+			return
 		}
 		if (e.key === "ArrowDown") move(at + 1)
 		else if (e.key === "ArrowUp") move(at - 1)

@@ -25,7 +25,13 @@ import {
 	titleOf,
 } from "./fixtures"
 
-export type VariantKey = "A" | "B" | "C"
+export type VariantKey = "A" | "B" | "C" | "D" | "E" | "F" | "G"
+/** Round one (A to C) is kept for reference; round two (D to G) puts the controls in the title bar. */
+export const ROUNDS: Record<1 | 2, VariantKey[]> = {
+	1: ["A", "B", "C"],
+	2: ["D", "E", "F", "G"],
+}
+export const roundOf = (v: VariantKey): 1 | 2 => (ROUNDS[1].includes(v) ? 1 : 2)
 export type Surface = "title" | "settings"
 /** How long a look lasts in variant B: until the visitor leaves the title, or until they reset it. */
 export type LookScope = "title" | "visit"
@@ -237,7 +243,7 @@ const personaOf = (key: string) =>
 // A link that carries a country arrives as a look. Variant A has no temporary country, so the link's country is
 // dropped there.
 const arrivalLook = (persona: Persona, variant: VariantKey): Look =>
-	persona.incomingLook && variant !== "A"
+	persona.incomingLook && variant !== "A" && roundOf(variant) === 1
 		? { country: persona.incomingLook }
 		: {}
 

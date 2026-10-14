@@ -1,6 +1,11 @@
 // PROTOTYPE - throwaway. Country and display language: how the two are changed, previewed, tried and saved.
-//   /prototype/media-language?variant=A|B|C
-// Three variants of the controls on one route, on a copy of the title page and of the settings page:
+//   /prototype/media-language?variant=D|E|F|G (round two, the default) or A|B|C (round one, kept for reference)
+// Round two puts a compact pair of controls in the title bar and changes the current title in place:
+//   D  a small panel anchored to the pair, the page shows the draft, Save or Cancel
+//   E  two independent lists in the title bar, a pick applies at once, a fixed bar offers Save and Undo
+//   F  pick in a compact dialog, then Keep or Undo under the pair, on the page
+//   G  an edit mode of the title bar itself, with Reset and Done
+// Round one, on a copy of the title page and of the settings page:
 //   A  one staged panel for both, with a before and after preview and an optional companion language
 //   B  a temporary look at a country in place, saved by an inline action, and a small language control
 //   C  a board that compares the outcomes (one, the other, both) and then asks for how long
@@ -28,6 +33,10 @@ import {
 import { VariantA } from "~/ui/prototype-media-language/variant-a"
 import { VariantB } from "~/ui/prototype-media-language/variant-b"
 import { VariantC } from "~/ui/prototype-media-language/variant-c"
+import { VariantD } from "~/ui/prototype-media-language/variant-d"
+import { VariantE } from "~/ui/prototype-media-language/variant-e"
+import { VariantF } from "~/ui/prototype-media-language/variant-f"
+import { VariantG } from "~/ui/prototype-media-language/variant-g"
 
 export async function loader() {
 	if (process.env.NODE_ENV === "production")
@@ -42,11 +51,13 @@ export const meta = () => [
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 function initialOf(params: URLSearchParams): Initial {
-	const variant = (params.get("variant") ?? "A").toUpperCase()
+	const variant = (params.get("variant") ?? "D").toUpperCase()
 	const persona =
 		PERSONAS.find((p) => p.key === params.get("visitor")) ?? PERSONAS[0]
 	return {
-		variant: (["A", "B", "C"].includes(variant) ? variant : "A") as VariantKey,
+		variant: (["A", "B", "C", "D", "E", "F", "G"].includes(variant)
+			? variant
+			: "D") as VariantKey,
 		persona: persona.key,
 		surface:
 			params.get("page") === "settings" && persona.viewer === "member"
@@ -99,6 +110,10 @@ function Page() {
 			{s.variant === "A" && <VariantA />}
 			{s.variant === "B" && <VariantB />}
 			{s.variant === "C" && <VariantC />}
+			{s.variant === "D" && <VariantD />}
+			{s.variant === "E" && <VariantE />}
+			{s.variant === "F" && <VariantF />}
+			{s.variant === "G" && <VariantG />}
 		</div>
 	)
 }

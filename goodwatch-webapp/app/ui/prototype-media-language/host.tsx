@@ -17,12 +17,21 @@ import {
 } from "@heroicons/react/24/solid"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { type Country, type OfferKind, TITLES, countryName } from "./fixtures"
-import { langLabel, useStore } from "./model"
+import { langLabel, roundOf, useStore } from "./model"
 import { Btn, Flag, Logos, Poster, tmdb } from "./parts"
 
 export interface TitleSlots {
 	/** The country control in the where-to-watch box's title row. */
-	countryControl: ReactNode
+	countryControl?: ReactNode
+	/** Round two: the country and language controls, in the title bar beside Share. Its own overlays lie over the
+	 * page, so the bar keeps its height. */
+	headerControl?: ReactNode
+	/** Round two: shown in place of the line of facts under the title (the title stays), in the same cell. */
+	factsReplacement?: ReactNode
+	/** Round two: a fixed height for the line of facts, so the bar is as high with or without the replacement. */
+	factsRowClass?: string
+	/** Round two: leaves out Share, to give an edit mode the room. */
+	hideShare?: boolean
 	/** A line inside the where-to-watch box, over the services. */
 	watchNotice?: ReactNode
 	/** A bar under the title bar, across the page. */
@@ -30,7 +39,7 @@ export interface TitleSlots {
 	/** Beside the About heading. */
 	aboutControl?: ReactNode
 	/** The control at the end of the page's region line. */
-	regionControl: ReactNode
+	regionControl?: ReactNode
 	/** A country row of "Where it is" was pressed. */
 	onOtherCountry: (country: Country) => void
 }
@@ -84,7 +93,16 @@ function WhereToWatch({ slots }: { slots: TitleSlots }) {
 						</button>
 					))}
 				</div>
-				{slots.countryControl}
+				{slots.countryControl ?? (
+					// Round two: the country is set in the title bar; here it is only named.
+					<span
+						data-country-label
+						className="inline-flex h-7 shrink-0 items-center gap-1.5 px-1.5 text-xs text-gray-400"
+					>
+						<Flag code={effective.country} className="h-2.5" />
+						{effective.country}
+					</span>
+				)}
 			</div>
 			{slots.watchNotice}
 			{services.length > 0 ? (
@@ -181,8 +199,11 @@ export function TitlePage({ slots }: { slots: TitleSlots }) {
 	return (
 		<div data-title-page>
 			<div className="sticky top-16 z-30 border-b border-white/15 bg-black/80 backdrop-blur-sm">
-				<div className="m-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3">
-					<div className="flex min-w-0 flex-col gap-2">
+				<div
+					data-title-bar
+					className="relative m-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3"
+				>
+					<div className="flex min-w-0 flex-1 flex-col gap-2">
 						<h1
 							lang={shown.title.lang}
 							data-page-title
@@ -190,26 +211,45 @@ export function TitlePage({ slots }: { slots: TitleSlots }) {
 						>
 							{shown.title.value}
 						</h1>
-						<div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-400 md:text-sm lg:text-base">
-							<span className="font-semibold">{title.year}</span>
-							<span>&middot;</span>
-							<span>{title.mediaType === "movie" ? "Movie" : "Show"}</span>
-							<span>&middot;</span>
-							<span>{title.facts}</span>
-							<span className="hidden sm:inline">&middot;</span>
-							<span className="hidden sm:inline">
-								{title.genres.join(", ")}
-							</span>
+						{/* The facts and a replacement share one cell. The facts never wrap: a narrow bar clips them
+							    instead of growing a line. */}
+						<div
+							className={`grid min-w-0 items-center ${slots.factsRowClass ?? ""}`}
+						>
+							<div
+								data-facts
+								className={`col-start-1 row-start-1 flex min-w-0 items-center gap-x-2 overflow-hidden whitespace-nowrap text-xs text-gray-400 md:text-sm lg:text-base ${slots.factsReplacement ? "invisible" : ""}`}
+							>
+								<span className="font-semibold">{title.year}</span>
+								<span>&middot;</span>
+								<span>{title.mediaType === "movie" ? "Movie" : "Show"}</span>
+								<span>&middot;</span>
+								<span>{title.facts}</span>
+								<span className="hidden sm:inline">&middot;</span>
+								<span className="hidden sm:inline">
+									{title.genres.join(", ")}
+								</span>
+							</div>
+							{slots.factsReplacement && (
+								<div className="col-start-1 row-start-1 flex min-w-0 items-center">
+									{slots.factsReplacement}
+								</div>
+							)}
 						</div>
 					</div>
-					<button
-						type="button"
-						onClick={off("Sharing")}
-						aria-label="Share"
-						className="shrink-0 cursor-pointer rounded-full p-2 text-gray-300 hover:bg-white/10"
-					>
-						<ShareIcon className="h-5 w-5" />
-					</button>
+					<div className="flex shrink-0 items-center gap-1">
+						{slots.headerControl}
+						{!slots.hideShare && (
+							<button
+								type="button"
+								onClick={off("Sharing")}
+								aria-label="Share"
+								className="shrink-0 cursor-pointer rounded-full p-2 text-gray-300 hover:bg-white/10"
+							>
+								<ShareIcon className="h-5 w-5" />
+							</button>
+						)}
+					</div>
 				</div>
 			</div>
 			{slots.pageNotice}
@@ -263,8 +303,13 @@ export function TitlePage({ slots }: { slots: TitleSlots }) {
 							</div>
 						</div>
 					</div>
-					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
-						<div className="flex min-w-0 items-center gap-2 rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10 [&>*]:flex-1">
+					{/* items-start: when the where-to-watch box grows (another country), the actions beside it keep their
+					    place and size instead of stretching and re-centring. */}
+					<div className="grid grid-cols-[minmax(0,1fr)] items-start gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
+						<div
+							data-actions
+							className="flex min-w-0 items-center gap-2 rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10 [&>*]:flex-1"
+						>
 							<Btn onClick={off("Want to see")}>
 								<BookmarkIcon className="h-4 w-4" />
 								Want to see
@@ -358,62 +403,67 @@ export function TitlePage({ slots }: { slots: TitleSlots }) {
 					</div>
 				</section>
 
-				<section className="mt-8">
-					<h2 className="text-2xl text-white">More like this</h2>
-					<div className="mt-4 flex gap-4">
-						{others.map((t) => {
-							const o = s.resolve(t, effective.lang)
-							return (
-								<button
-									key={t.id}
-									type="button"
-									onClick={() => {
-										s.openTitle(t.id)
-										// A real navigation to another title starts at its top.
-										window.scrollTo({ top: 0, behavior: "instant" })
-									}}
-									className="group w-28 cursor-pointer text-left sm:w-36"
-								>
-									<Poster
-										field={o.poster}
-										title={o.title.value}
-										className="w-full group-hover:ring-white/40"
-									/>
-									<span
-										lang={o.title.lang}
-										className="mt-2 block truncate text-sm font-medium text-gray-200 group-hover:text-white"
+				{/* Round two keeps to the current title: no other titles on the page. */}
+				{roundOf(s.variant) === 1 && (
+					<section className="mt-8">
+						<h2 className="text-2xl text-white">More like this</h2>
+						<div className="mt-4 flex gap-4">
+							{others.map((t) => {
+								const o = s.resolve(t, effective.lang)
+								return (
+									<button
+										key={t.id}
+										type="button"
+										onClick={() => {
+											s.openTitle(t.id)
+											// A real navigation to another title starts at its top.
+											window.scrollTo({ top: 0, behavior: "instant" })
+										}}
+										className="group w-28 cursor-pointer text-left sm:w-36"
 									>
-										{o.title.value}
-									</span>
-								</button>
-							)
-						})}
-					</div>
-				</section>
+										<Poster
+											field={o.poster}
+											title={o.title.value}
+											className="w-full group-hover:ring-white/40"
+										/>
+										<span
+											lang={o.title.lang}
+											className="mt-2 block truncate text-sm font-medium text-gray-200 group-hover:text-white"
+										>
+											{o.title.value}
+										</span>
+									</button>
+								)
+							})}
+						</div>
+					</section>
+				)}
 
-				<div
-					data-region-line
-					className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 py-4 text-sm text-gray-400"
-				>
-					<span className="inline-flex items-center gap-1.5">
-						<Flag code={effective.country} />
-						Watching from{" "}
-						<span className="font-semibold text-gray-200">
-							{countryName(effective.country)}
+				{slots.regionControl !== undefined && (
+					<div
+						data-region-line
+						className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 py-4 text-sm text-gray-400"
+					>
+						<span className="inline-flex items-center gap-1.5">
+							<Flag code={effective.country} />
+							Watching from{" "}
+							<span className="font-semibold text-gray-200">
+								{countryName(effective.country)}
+							</span>
+							{effective.countrySource === "guess" && " (our guess)"}
+							{effective.countrySource === "look" && " (not saved)"}
 						</span>
-						{effective.countrySource === "guess" && " (our guess)"}
-						{effective.countrySource === "look" && " (not saved)"}
-					</span>
-					<span>
-						Titles in{" "}
-						<span className="font-semibold text-gray-200">
-							{langLabel(effective.lang)}
+						<span>
+							Titles in{" "}
+							<span className="font-semibold text-gray-200">
+								{langLabel(effective.lang)}
+							</span>
+							{effective.langSource === "browser" && " (browser default)"}
+							{effective.langSource === "look" && " (this visit only)"}
 						</span>
-						{effective.langSource === "browser" && " (browser default)"}
-						{effective.langSource === "look" && " (this visit only)"}
-					</span>
-					<span className="ml-auto">{slots.regionControl}</span>
-				</div>
+						<span className="ml-auto">{slots.regionControl}</span>
+					</div>
+				)}
 			</div>
 		</div>
 	)
