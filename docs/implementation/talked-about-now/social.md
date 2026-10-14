@@ -149,7 +149,7 @@ an unrelated title link to the same multi-title post. Review workflow queries
 `f/social/deletion_sync` checks a bounded oldest-checked set, optionally restricted by `source` for diagnostics. Bluesky collection
 checks post, embedded author and batched author-profile labels before storing;
 `!no-unauthenticated` is excluded. Sync repeats profile/post checks and removes
-missing posts and opt-outs. YouTube checks `videos.list` with an API key, or
+missing posts and opt-outs. An author opt-out purges every stored post by that author, including posts outside the current check batch; a post-only label removes that post. YouTube checks `videos.list` with an API key, or
 oEmbed without one. RSS and Mastodon existence checks stream only response
 headers from public permalinks, reject private addresses and validate redirects.
 Definitive 404/410 or an explicit absent post removes the card; 403/429/timeouts

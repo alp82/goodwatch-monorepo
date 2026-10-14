@@ -37,11 +37,13 @@ def source_state(post, settings, *, get=http_get):
             item = next((p for p in body['posts'] if p['uri'] == post['source_id']), None)
             if item is None:
                 return 'deleted'
-            if bluesky.opted_out(item) or bluesky.opted_out(item.get('author', {})):
+            if bluesky.opted_out(item.get('author', {})):
+                return 'author_opt_out'
+            if bluesky.opted_out(item):
                 return 'opt_out'
             allowed = bluesky.allowed_authors([post['author_id']], get=get)
             # A missing profile is unavailable to unauthenticated readers; remove the cached card.
-            return 'alive' if post['author_id'] in allowed else 'opt_out'
+            return 'alive' if post['author_id'] in allowed else 'author_opt_out'
         if post['source'] == 'youtube':
             if settings.get('YOUTUBE_API_KEY'):
                 body = get('https://www.googleapis.com/youtube/v3/videos', params={
@@ -76,11 +78,19 @@ def run(settings, *, limit=2000, source='all'):
     store.initialize()
     rows = store.db.select('SELECT * FROM doc.social_post WHERE deleted_at IS NULL AND (source=? OR ?=\'all\') ORDER BY checked_at ASC NULLS FIRST,post_id LIMIT ?', [source, source, limit])
     counts = {'checked': 0, 'removed': 0, 'unknown': 0}
+    removed_ids = set()
     for row in rows:
+        if row['post_id'] in removed_ids:
+            continue
         state = source_state(row, settings)
         counts['checked'] += 1
-        if state in ('deleted', 'opt_out'):
+        if state == 'author_opt_out':
+            removed = store.remove_author('bluesky', row['author_id'])
+            removed_ids.update(removed)
+            counts['removed'] += len(removed)
+        elif state in ('deleted', 'opt_out'):
             store.remove(row['post_id'], state)
+            removed_ids.add(row['post_id'])
             counts['removed'] += 1
         else:
             store.db.execute('UPDATE doc.social_post SET checked_at=? WHERE post_id=?', [now().isoformat(), row['post_id']])

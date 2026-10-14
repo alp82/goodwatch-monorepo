@@ -246,3 +246,11 @@ class SettingsTests(unittest.TestCase):
             return variables[path.rsplit('/', 1)[1]]
         with patch.dict('os.environ', {'WM_JOB_ID': 'fixture'}, clear=True), patch.dict(sys.modules, {'wmill': SimpleNamespace(get_variable=variable)}):
             self.assertEqual(load()['QDRANT_URL'], 'http://qdrant.example:6333')
+
+class AuthorOptOutTests(unittest.TestCase):
+    def test_author_label_is_distinct_from_a_single_post_label(self):
+        from f.social.maintenance import source_state
+        p = {'source': 'bluesky', 'source_id': 'at://did:plc:abc/app.bsky.feed.post/1', 'author_id': 'did:plc:abc'}
+        result = source_state(p, {}, get=lambda *a, **k: Response({'posts': [
+            {'uri': p['source_id'], 'author': {'labels': [{'val': '!no-unauthenticated'}]}}]}))
+        self.assertEqual(result, 'author_opt_out')

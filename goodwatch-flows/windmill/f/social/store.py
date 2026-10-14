@@ -142,6 +142,14 @@ class Store:
         self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [post_id])
         self.refresh('social_post', 'social_title_link')
 
+    def remove_author(self, source, author_id):
+        if source != 'bluesky' or not author_id:
+            raise ValueError('Expected a Bluesky author identity')
+        rows = self.db.select('SELECT post_id FROM doc.social_post WHERE source=? AND author_id=? AND deleted_at IS NULL', [source, author_id])
+        for row in rows:
+            self.remove(row['post_id'], 'author_opt_out')
+        return [row['post_id'] for row in rows]
+
     def run_record(self, run_id, **record):
         row = {'run_id': run_id, **record, 'matcher_version': VERSION}
         cols = list(row)

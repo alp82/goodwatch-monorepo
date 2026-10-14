@@ -19,12 +19,13 @@ class CrateLifecycleTests(unittest.TestCase):
         self.store.initialize()
         self.posts = []
         self.title_id = 2000000000
+        self.author_id = 'social-test-' + uuid4().hex
         self.link = {'key': f'movie:{self.title_id}', 'lane': 'foreground_exact', 'confidence': .99,
                      'confidence_basis': 'llm_self_report_not_calibrated', 'reason': 'Integration fixture'}
 
     def item(self, text='Integration fixture', source='rss'):
         identity = 'https://example.com/social-test-' + uuid4().hex
-        item = post(source, identity, identity, 'test-author', 'Test fixture', now(), text, '', 'test:556')
+        item = post(source, identity, identity, self.author_id, 'Test fixture', now(), text, '', 'test:556')
         self.posts.append(item)
         self.store.save_posts([item])
         self.store.publish(item, [self.link])
@@ -75,3 +76,10 @@ class CrateLifecycleTests(unittest.TestCase):
         self.store.publish(item, [])
         self.store.refresh()
         self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+
+    def test_author_opt_out_purges_all_of_their_stored_posts(self):
+        first = self.item(source='bluesky')
+        second = self.item(source='bluesky')
+        removed = self.store.remove_author('bluesky', self.author_id)
+        self.assertEqual(set(removed), {first['post_id'], second['post_id']})
+        self.assertFalse(any(p['post_id'] in removed for p in self.store.read_title('movie', self.title_id)))
