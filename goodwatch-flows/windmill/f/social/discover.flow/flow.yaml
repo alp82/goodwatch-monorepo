@@ -36,7 +36,9 @@
           "value": 7200
         }
       }
-    ]
+    ],
+    "concurrent_limit": 1,
+    "concurrency_time_window_s": 0
   },
   "schema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",

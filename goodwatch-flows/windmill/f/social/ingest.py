@@ -1,3 +1,10 @@
+# extra_requirements:
+# wmill==1.817.0
+# requests==2.34.2
+# rapidfuzz==3.14.6
+# numpy==2.5.3
+# onnxruntime==1.30.0
+# tokenizers==0.23.2
 """Bounded discovery/backfill; sources fail independently, all accepted matches publish."""
 import json
 from collections import Counter

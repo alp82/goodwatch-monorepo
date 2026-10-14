@@ -1,3 +1,6 @@
+# extra_requirements:
+# wmill==1.817.0
+# requests==2.34.2
 """Bounded daily deletion/opt-out sync and retention. Unknown responses preserve content."""
 import ipaddress
 import socket

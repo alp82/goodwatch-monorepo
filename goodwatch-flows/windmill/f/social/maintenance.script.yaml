@@ -1,30 +1,26 @@
-{
-  "summary": "Social maintenance",
-  "description": "Bounded daily deletion/opt-out sync and retention. Unknown responses preserve content.",
-  "lock": "!inline f/social/maintenance.script.lock",
-  "kind": "script",
-  "schema": {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "properties": {
-      "limit": {
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 10000,
-        "default": 2000
-      },
-      "source": {
-        "type": "string",
-        "enum": [
-          "all",
-          "youtube",
-          "rss",
-          "bluesky",
-          "mastodon"
-        ],
-        "default": "all"
-      }
-    },
-    "required": []
-  }
-}
+summary: Social maintenance
+description: Bounded daily deletion/opt-out sync and retention. Unknown responses
+  preserve content.
+lock: '!inline f/social/maintenance.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    limit:
+      type: integer
+      default: 2000
+      maximum: 10000
+      minimum: 1
+    source:
+      type: string
+      default: all
+      enum:
+      - all
+      - youtube
+      - rss
+      - bluesky
+      - mastodon
+  required: []
+concurrent_limit: 1
+concurrency_time_window_s: 0
