@@ -62,3 +62,42 @@ production; committing.
 ## Hand back
 
 At most 25 lines: the choices, the sample size and its assumptions, anything you could not decide.
+
+## Revision after the two reviews (orchestrator, October 14, 2026)
+
+Read `REVIEW-astra.md` and `REVIEW-fable.md` in this folder. Revise `PROTOCOL.md` (4a, 4c, A3) and `RESULTS.md`:
+
+1. **Harm statistic, chosen by simulation, frozen before any data.** The reviewers pull in opposite directions:
+   Astra shows the percentile bootstrap can certify safety too readily under rare concentrated harm (false safety
+   about 5% at a true harm equal to the margin); Fable shows that counting every unknown G1-only card as harmful
+   blocks almost surely. Adopt Fable's label handling for the decision (Can't tell counts 0 for both scorers;
+   No answer and Seen-unrated imputed at the scorer's observed per-slot harm rate on the member's answered cards in
+   that ten, population rate if none; sessions with no answer in the G1 ∪ B2 union excluded and reported as
+   non-response; worst-case bound and complete-answer table reported). Then choose the upper-bound method (for
+   example a studentized bootstrap, a t interval, or a bootstrap with a small-sample correction) by a small
+   simulation you write and commit under `items/012-t3-protocol/` (synthetic data only): scenarios at n = 20, 30, 60
+   with harm 0, +0.5 and +1 per ten, including Astra's concentrated case (0 for 90%, +10 for 10%) and realistic
+   label missingness. Pick the method whose false-safety rate at a true +1 is at most 2.5% (state if none reaches it
+   and what it achieves), and report its block rate at 0 and +0.5. Same check for the primary's false-win rate.
+2. **New-to-me hits are a guard again** (PLAN.md 2.3): G1 fails if new-to-me hits in the first 10 are worse than
+   B2's with an interval excluding zero. D1's conclusion is worded as expressed interest in unseen titles, not
+   enjoyment after watching.
+3. **Withdrawals:** members who withdraw after exposure are counted in a pre-registered sensitivity analysis with
+   the worst-case paired outcome; deleted answers are not retained. Confirmation must survive it, else inconclusive.
+4. **Stopping:** the earlier of the 60th first exposure or a calendar date fixed at the owner checkpoint (propose 8
+   weeks after the first invitation); minimum 20 exposed members, else inconclusive; one analysis, no interim. The
+   smallest detectable effect is printed in the verdict.
+5. **Planning honesty:** joint power (primary and harm and guards) under the realistic case (extra harm +0.25,
+   G1's popular top, Seen-it rate as T2a suggests) at n = 20, 30 and 60; say plainly when the test is more likely
+   inconclusive than passing. Remove the 75% uptake assumption; give feasibility as a range from CENSUS.md.
+6. **Integrity:** hash mismatches block; ineligibility found after exposure is reported per card and blocks only above
+   5% of exposed G1/B2 top-ten cards.
+7. **Pool:** drop B3's slots (G1's top ten falls back to B3's order) unless you can show they add information.
+   Judged object: the suggestion as the product would show it, availability included; say so.
+8. **Builder spec:** add the exposure definition (per-card first display time, navigation, submission, the answer
+   instructions that separate "don't know it" from "not for me"); state what storage must make recoverable instead
+   of a schema.
+9. **A3(c):** "each mix is a separate guard, and both must pass"; in T3, own-mix titles are the member's rated titles
+   with a fingerprint, independent of the eligible set; a member with none is excluded before exposure.
+
+Forbidden as above. Hand back at most 25 lines, including the simulation's chosen method and its error rates.
