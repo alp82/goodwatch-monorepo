@@ -22,3 +22,7 @@ Posted on #556: [YouTube sample](https://github.com/alp82/goodwatch-monorepo/iss
 Full counts, run audits, inference cost caveats and maintenance results: [production evidence JSON](evidence/social-production-2026-10-14.json). Failed/superseded initial trials remain in the run journal; final successful runs processed every stored row. Per-run counts include retry/upsert activity and must not be added as distinct row counts.
 
 After merge: verify existing Windmill secrets; optionally add YOUTUBE_API_KEY for uploads pagination; enable discover hourly and deletion_sync every six hours with one concurrent discovery run. Finish three actual production days and the Mastodon sample before closing #556. The title-page ticket owns the webapp wrong-title endpoint/cache invalidation. See [operations/API contract](social.md).
+
+## Content-quality follow-up
+
+This initial matching snapshot predates the publication gate. The [subsequent production sweep](social-quality-2026-10-14.md) removed 182 Bluesky links and documents current counts, policy and thirty rejected examples. Use that report for publication eligibility.
