@@ -30,12 +30,7 @@ import {
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type {
-	TvAppTile,
-	TvHomeData,
-	TvService,
-	TvServiceTile,
-} from "./tv-home"
+import type { TvAppTile, TvHomeData, TvService, TvServiceTile } from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
