@@ -1,0 +1,57 @@
+{
+  "label": "crate02-remaining-relocation",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], size, seq_no_stats, recovery FROM sys.shards WHERE routing_state != 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "size",
+        "seq_no_stats",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "show",
+          10,
+          true,
+          "crate-02",
+          925101371,
+          {
+            "max_seq_no": 14571559,
+            "global_checkpoint": 14233687,
+            "local_checkpoint": 14571559
+          },
+          {
+            "files": {
+              "recovered": 461,
+              "used": 461,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 218307,
+            "size": {
+              "recovered": 43428456,
+              "used": 43428456,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 13.895988
+    },
+    "elapsedSeconds": 0.019,
+    "at": "2026-10-14T21:04:01.248462+00:00"
+  }
+}

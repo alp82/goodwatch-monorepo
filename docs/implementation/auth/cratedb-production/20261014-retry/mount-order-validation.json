@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-14T21:07:10.675970+00:00",
+  "before": [
+    {
+      "Type": "volume",
+      "Name": "goodwatch-crate_crate_data",
+      "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+      "Destination": "/data",
+      "Driver": "local",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/backup-cratedb/snapshots",
+      "Destination": "/snapshots",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "after": [
+    {
+      "Type": "volume",
+      "Name": "goodwatch-crate_crate_data",
+      "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+      "Destination": "/data",
+      "Driver": "local",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/mnt/backup-cratedb/snapshots",
+      "Destination": "/snapshots",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "canonicalExactMatch": true
+}

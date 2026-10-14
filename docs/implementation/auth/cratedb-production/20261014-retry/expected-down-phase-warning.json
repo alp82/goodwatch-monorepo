@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T21:05:18.952996+00:00",
+  "meaning": "Expected node check 1 warning only while planned target is absent: configured gateway expected data nodes 3, actual survivors 2. This is not the runbook post-rejoin check gate. Every node check must pass again with 3 nodes; every other failed check stops the operation.",
+  "operatorCorrection": "Read-only watcher initially applied post-rejoin checks during the planned down phase; inspected exact id/description/severity before proceeding. No production setting or acceptance gate changed.",
+  "decommissionSucceeded": true,
+  "targetExitedNormally": true,
+  "targetExitCode": 0,
+  "missingPrimaryShards": 0,
+  "survivors": [
+    "crate-01",
+    "crate-03"
+  ]
+}

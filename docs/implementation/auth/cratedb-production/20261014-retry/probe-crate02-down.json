@@ -1,0 +1,68 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "at": "2026-10-14T21:05:21.991215+00:00",
+    "label": "crate02-down",
+    "key": "maintenance_auth_547_20261014204756",
+    "write": {
+      "host": 11,
+      "elapsedMs": 16.23,
+      "body": {
+        "cols": [],
+        "rows": [
+          []
+        ],
+        "rowcount": 1,
+        "duration": 11.629919
+      }
+    },
+    "reads": [
+      {
+        "host": 11,
+        "elapsedMs": 3.932,
+        "body": {
+          "cols": [
+            "monitor_key",
+            "kind",
+            "pipeline",
+            "payload"
+          ],
+          "rows": [
+            [
+              "maintenance_auth_547_20261014204756",
+              "maintenance_probe",
+              "auth-prereqs",
+              "crate02-down"
+            ]
+          ],
+          "rowcount": 1,
+          "duration": 1.739717
+        }
+      },
+      {
+        "host": 13,
+        "elapsedMs": 9.661,
+        "body": {
+          "cols": [
+            "monitor_key",
+            "kind",
+            "pipeline",
+            "payload"
+          ],
+          "rows": [
+            [
+              "maintenance_auth_547_20261014204756",
+              "maintenance_probe",
+              "auth-prereqs",
+              "crate02-down"
+            ]
+          ],
+          "rowcount": 1,
+          "duration": 1.393043
+        }
+      }
+    ],
+    "passed": true
+  }
+}

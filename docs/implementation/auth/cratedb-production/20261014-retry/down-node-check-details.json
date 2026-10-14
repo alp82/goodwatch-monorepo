@@ -1,0 +1,40 @@
+{
+  "label": "down-node-check-details",
+  "host": 11,
+  "stmt": "SELECT node_id, id, description, severity, passed FROM sys.node_checks WHERE passed = false",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "node_id",
+        "id",
+        "description",
+        "severity",
+        "passed"
+      ],
+      "rows": [
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          1,
+          "It has been detected that the 'gateway.expected_data_nodes' setting (or the deprecated 'gateway.recovery_after_nodes' setting) is not configured or it does not match the actual number of (data) nodes in the cluster. https://cr8.is/d-node-check-1",
+          2,
+          false
+        ],
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          1,
+          "It has been detected that the 'gateway.expected_data_nodes' setting (or the deprecated 'gateway.recovery_after_nodes' setting) is not configured or it does not match the actual number of (data) nodes in the cluster. https://cr8.is/d-node-check-1",
+          2,
+          false
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 6.115889
+    },
+    "elapsedSeconds": 0.011,
+    "at": "2026-10-14T21:04:39.983850+00:00"
+  }
+}

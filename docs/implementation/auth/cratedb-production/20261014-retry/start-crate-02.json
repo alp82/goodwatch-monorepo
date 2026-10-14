@@ -1,0 +1,6 @@
+{
+  "sshReturncode": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 44, in <module>\nAssertionError\n",
+  "result": null,
+  "failureOutput": ""
+}
