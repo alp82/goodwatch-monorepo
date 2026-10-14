@@ -1,6 +1,6 @@
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
-import { useLocation } from "@remix-run/react"
+import { useLocation, useRevalidator } from "@remix-run/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
@@ -10,9 +10,13 @@ import { TvRoom } from "./TvRoom"
 import {
 	DiscoverCode,
 	DiscoverData,
+	EpisodeCode,
+	EpisodeData,
 	ExplorerData,
 	QuizCode,
 	RateCode,
+	ShowsCode,
+	ShowsData,
 	TasteCode,
 	TasteData,
 	TitleCode,
@@ -20,6 +24,7 @@ import {
 	TonightCode,
 	type TvDiscoverScreens,
 	TvScreen,
+	type TvShowsScreens,
 	loadFirstScreens,
 } from "./TvScreen"
 import { useReport } from "./kit"
@@ -27,6 +32,7 @@ import type { TvCanvas } from "./room-tv"
 import {
 	type TvHomeData,
 	homeApps,
+	knownShow,
 	tonightPicks,
 	tvContextOf,
 	tvTitleKey,
@@ -35,8 +41,10 @@ import { type TvEffect, readTvState } from "./tv-machine"
 import type { TvKnownTitle, TvTitleScreens } from "./tv-title"
 import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
+import type { TvEpisodeReport } from "./use-tv-episode"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
+import type { TvShowsReport } from "./use-tv-shows"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
 
@@ -133,9 +141,18 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	// The edition the room draws the TV in (`Edition`, drawn with the screen).
 	const [edition, setEdition] = useState<TvCanvas["edition"] | null>(null)
 
+	// My shows (slice 9): what is new for a member's shows, for home's tile and the My shows screen. A component of
+	// the My shows screen's chunk holds it and reports it here (`ShowsData`, mounted below).
+	const [fresh, setFresh] = useState<TvShowsReport | null>(null)
+	const freshWords = fresh?.words ?? null
+	const shows: TvShowsScreens = useMemo(
+		() => ({ list: data.shows, signal: fresh }),
+		[data.shows, fresh],
+	)
+
 	const apps = useMemo(
-		() => homeApps(data, pool, tasted, wished),
-		[data, pool, tasted, wished],
+		() => homeApps(data, pool, tasted, wished, freshWords),
+		[data, pool, tasted, wished, freshWords],
 	)
 
 	// ---- The mini Explorer (slice 7). Its map is held by a component of the Explorer's chunk, which reports it
@@ -172,8 +189,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			onMap?.(key) ??
 			// Slice 8: a side's titles and the quiz's picks.
 			tasteKnown.current?.(key) ??
-			null,
-		[tonight, listed, onMap],
+			// My shows (slice 9): the loader's shows name a show's title screen at once.
+			knownShow(data, key),
+		[tonight, listed, onMap, data],
 	)
 	// The title on the title screen and the rating: its card, the person's marks and its effects are held by a
 	// component of the title screen's chunk, which reports them here (`TitleData`, mounted below). Until it has,
@@ -181,7 +199,35 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const [one, setOne] = useState<TvTitleReport | null>(null)
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
-	// The titles of the list on screen. SEAM (slices 9 and 10): My shows' and the search's follow.
+	// My shows (slice 9): on a show the member is midway through, Seen it marks the Next episode. Which one that
+	// is, and the mark, are held by a component of a chunk of its own, which reports here (`EpisodeData`, mounted
+	// below for a member on a show's title screen).
+	const [episode, setEpisode] = useState<TvEpisodeReport | null>(null)
+	const onShow =
+		data.member && screen.name === "title" && screen.title.startsWith("show-")
+	const nextEpisode =
+		(onShow && episode?.title === screen.title && episode.next) || null
+	// Once an episode is marked, the loader's My shows and Tonight are read again. A step on the TV that falls
+	// into that read takes its place, and the router drops the read: it is then asked for again, twice at most,
+	// until the loader's data is new.
+	const revalidator = useRevalidator()
+	const owed = useRef(0)
+	const { revalidate } = revalidator
+	const refresh = useCallback(() => {
+		owed.current = 2
+		revalidate()
+	}, [revalidate])
+	// New data from the loader is the read that was owed.
+	useEffect(() => {
+		owed.current = 0
+	}, [data])
+	// Runs when a read ends and when the address changes.
+	useEffect(() => {
+		if (owed.current < 1 || revalidator.state !== "idle") return
+		owed.current -= 1
+		revalidate()
+	}, [revalidator.state, location.key, revalidate])
+	// The titles of the list on screen. SEAM (slice 10): the search's follow.
 	const listTitles = choosing ? list?.titles : undefined
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
@@ -194,6 +240,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
 			...tasteCtx,
 			exactScores: edition === "desktop",
+			// My shows (slice 9): Seen it marks the Next episode of the show on screen.
+			nextEpisode: Boolean(nextEpisode),
 		}),
 		[
 			data,
@@ -204,9 +252,18 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			explorerContext,
 			tasteCtx,
 			edition,
+			nextEpisode,
 		],
 	)
-	const title = one?.title ?? null
+	// The title screen's Seen it key names the episode it marks.
+	const shownTitle = one?.title ?? null
+	const title = useMemo(
+		() =>
+			shownTitle && nextEpisode
+				? { ...shownTitle, episode: nextEpisode }
+				: shownTitle,
+		[shownTitle, nextEpisode],
+	)
 	const titles: TvTitleScreens = useMemo(
 		() => ({ tonight, waiting: !pool && !failed, title }),
 		[tonight, pool, failed, title],
@@ -216,12 +273,15 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const leave = useLeaveThroughTv()
 	const titleEffect = one?.onEffect
 	const tasteEffect = mine?.onEffect
+	const episodeEffect = episode?.onEffect
 	const onEffect = useCallback(
 		(effect: TvEffect) => {
 			// The title's own effects: Watch, Want to See, Seen it, the rating.
 			if (titleEffect?.(effect)) return
 			// Slice 8. The quiz's: a score and "Haven't seen it" go to `useTasteQuiz`.
 			if (tasteEffect?.(effect)) return
+			// My shows (slice 9): Seen it on a show the member is midway through.
+			if (episodeEffect?.(effect)) return
 			switch (effect.type) {
 				// The Expand key: the picture grows into the page.
 				case "expand":
@@ -237,7 +297,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					return
 			}
 		},
-		[google, say, leave, titleEffect, tasteEffect],
+		[google, say, leave, titleEffect, tasteEffect, episodeEffect],
 	)
 	const tv = useTv(ctx, onEffect)
 	useEffect(() => {
@@ -259,6 +319,14 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (tv.screen.name === "home" && tv.focused === "app:taste")
 			TasteCode.load().catch(() => {})
 		if (tv.screen.name === "taste") QuizCode.load().catch(() => {})
+		// My shows (slice 9): its code while its tile has the focus; on it the title screen's, which a show opens,
+		// and the code that marks a show's Next episode.
+		if (tv.screen.name === "home" && tv.focused === "app:shows")
+			ShowsCode.load().catch(() => {})
+		if (tv.screen.name === "shows") {
+			TitleCode.load().catch(() => {})
+			EpisodeCode.load().catch(() => {})
+		}
 	}, [interacted, tv.screen.name, tv.focused])
 
 	// The mini Explorer (slice 7): its code and its map are asked for while its tile has the focus, or by a link
@@ -289,6 +357,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							discover={discover}
 							explorer={explorer?.view}
 							taste={onTaste ? mine?.screens : undefined}
+							shows={shows}
 						/>
 					</>
 				)}
@@ -316,6 +385,16 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			)}
 			{onTaste && (
 				<TasteData screen={screen} member={data.member} report={setMine} />
+			)}
+			{/* My shows (slice 9): what is new for a member's shows, and the Next episode of the show on screen. */}
+			{data.member && <ShowsData report={setFresh} />}
+			{onShow && (
+				<EpisodeData
+					title={screen.title}
+					say={say}
+					refresh={refresh}
+					report={setEpisode}
+				/>
 			)}
 		</>
 	)

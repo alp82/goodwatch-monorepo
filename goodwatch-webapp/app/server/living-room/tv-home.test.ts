@@ -41,6 +41,7 @@ const row = (id: number, episode: number | null = 4): MyShowsRow =>
 	({
 		id,
 		kind: "next",
+		left: 6,
 		title: `Show ${id}`,
 		poster_path: `/poster-${id}.jpg`,
 		backdrop_path: `/backdrop-${id}.jpg`,
@@ -210,6 +211,8 @@ test("My shows on the TV: three shows to continue and three to start", () => {
 		poster_path: "/poster-10.jpg",
 		backdrop_path: "/backdrop-10.jpg",
 		episode: { code: "S2 E4", name: "Episode 4", runtime: 48 },
+		left: 6,
+		caughtUp: false,
 	})
 	assert.equal(shows?.next[1].episode, null)
 	assert.deepEqual(
@@ -223,7 +226,21 @@ test("My shows on the TV: three shows to continue and three to start", () => {
 		backdrop_path: "/backdrop-20.jpg",
 		match: 77,
 		service: "Netflix",
+		seasons: 1,
 	})
+})
+
+test("My shows on the TV: a Seen show with new episodes says how many are new", () => {
+	const back = { ...row(40, 1), kind: "seenNew", left: 2 } as MyShowsRow
+	const p = parts({ continue: [row(10), back] })
+	const next = memberHome(p, cardsFor(p)).shows?.next
+	assert.deepEqual(
+		next?.map((show) => [show.id, show.left, show.caughtUp]),
+		[
+			[10, 6, false],
+			[40, 2, true],
+		],
+	)
 })
 
 test("without a show to continue, My shows lists the shows to pick up", () => {

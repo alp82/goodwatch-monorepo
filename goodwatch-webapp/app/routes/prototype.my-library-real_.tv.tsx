@@ -11,10 +11,14 @@
 // are painted in from a fixed table of real TMDB paths, and the titles below the room are a fixed list. The site's
 // header above the room sees a guest. The pool answers 503 here (no title snapshot), so the home keeps what the
 // loader gave it.
-// `&session=on` (slice 8) also gives the page the sample member's session, as the harness's own pages have it: the
-// browser then knows a member, their marks are read from the harness, and a score goes through the app's own
-// `updateScores` into the dev server's memory. That is a member's rating on the TV, written and read back, without
-// an account and without a database. Without it the page has no session, as before.
+// `&session=on` (slice 8; slice 9's scripts say `session=member`, which is the same) also gives the page the
+// sample member's session, as the harness's own pages have it: the browser then knows a member, and the requests
+// for the member's own data go to the harness's API, which answers from the dev server's memory with the app's
+// own server functions. Their marks, Tonight's pick and what is new for their shows are read there; a score goes
+// through `updateScores`; a show's tracking is read and its actions applied as /api/tracking/show does (slice 9:
+// Seen it on a show midway through marks its Next episode). That is a member's rating and a member's watch on the
+// TV, written and read back, without an account and without a database. Without it the page has no session, as
+// before.
 // A production build leaves the route out (PROTOTYPES in vite.config.js: `prototype.my-library*`).
 import {
 	type LinksFunction,
@@ -172,21 +176,31 @@ export const links: LinksFunction = () => [
 	{ rel: "stylesheet", href: livingRoomCss },
 	{ rel: "stylesheet", href: tvCss },
 ]
-// The loader runs again for another sample member, not for a TV screen.
+// The loader runs again for another sample member and when the page asks again for its own address (routes/
+// home-preview.tsx does the same), not for a TV screen.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
 	currentUrl,
 	nextUrl,
 	defaultShouldRevalidate,
-}) => (isTvOnlyChange(currentUrl, nextUrl) ? false : defaultShouldRevalidate)
+}) =>
+	currentUrl.href !== nextUrl.href && isTvOnlyChange(currentUrl, nextUrl)
+		? false
+		: defaultShouldRevalidate
 
 const API = "/prototype/my-library-real/api"
-/** The member's requests the harness answers for the sample member: their marks, and a score. */
+/**
+ * The member's requests the harness answers for the sample member: their marks and a score (slice 8); Tonight's
+ * pick, what is new for their shows, and a show's tracking with its actions (slice 9).
+ */
 const HARNESS_ROUTES: Record<string, string> = {
 	"/api/user-data": "user-data",
 	"/api/update-scores": "rate",
+	"/api/tonight": "tonight",
+	"/api/new-episodes": "new-episodes",
+	"/api/tracking/show": "tracking-show",
 }
 
-/** Sends the member's marks and scores to the harness's API (prototype.my-library-real_.api.ts). */
+/** Sends the member's requests to the harness's API (prototype.my-library-real_.api.ts), with what they ask for. */
 function installFetch(setup: string) {
 	const real = window.fetch
 	window.fetch = (input, init) => {
@@ -196,7 +210,13 @@ function installFetch(setup: string) {
 		)
 		const what =
 			url.origin === location.origin ? HARNESS_ROUTES[url.pathname] : undefined
-		return what ? real(`${API}?what=${what}&${setup}`, init) : real(input, init)
+		if (!what) return real(input, init)
+		// A request's own query goes along: a show's tracking is asked for by the show's id.
+		const search = url.search.replace(/^\?/, "")
+		return real(
+			`${API}?what=${what}&${setup}${search ? `&${search}` : ""}`,
+			init,
+		)
 	}
 	return () => {
 		window.fetch = real
@@ -238,7 +258,8 @@ export default function TvHarness() {
 	const data = useLoaderData<typeof loader>() as unknown as TvHomeData
 	const [params] = useSearchParams()
 	const tv = <TvLivingRoom data={data} />
-	if (params.get("session") !== "on") return tv
+	const session = params.get("session")
+	if (session !== "on" && session !== "member") return tv
 	const setup = `member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}&landed=${landedOf(params.get("landed"))}`
 	return <MemberSession setup={setup}>{tv}</MemberSession>
 }

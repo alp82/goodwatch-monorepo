@@ -1,7 +1,10 @@
 // What is GoodWatch? One sentence, one line and two answers: back to where the person was, or into the taste quiz.
 // It has no page to grow into, so no Expand key. A chunk the TV asks for at the first interaction
 // (screen-code.tsx).
-import { CornerBar, Item, Shade, usePhone } from "../kit"
+//
+// On the phone the two answers are touch targets, 44 px or more on the phone's screen (`keySize` in kit.tsx), and
+// the words start under the bar's keys, which are touch targets too.
+import { CornerBar, Item, Shade, useKeySize, usePhone } from "../kit"
 
 const ANSWERS = [
 	{ id: "got-it", label: "Got it" },
@@ -10,11 +13,12 @@ const ANSWERS = [
 
 export default function About({ items }: { items: readonly string[] }) {
 	const P = usePhone()
+	const height = useKeySize(52)
 	return (
 		<>
 			<Shade dim={0.82} />
 			<div
-				className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[70px]" : "px-14 pt-16"}`}
+				className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[84px]" : "px-14 pt-16"}`}
 			>
 				<div
 					className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}
@@ -40,7 +44,8 @@ export default function About({ items }: { items: readonly string[] }) {
 						<Item
 							key={a.id}
 							id={a.id}
-							className={`tvc-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[52px] text-[22px]" : "h-[116px] rounded-[26px] text-[32px]"}`}
+							className={`tvc-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "text-[22px]" : "h-[116px] rounded-[26px] text-[32px]"}`}
+							style={P ? { height } : undefined}
 						>
 							{a.label}
 						</Item>

@@ -1097,3 +1097,97 @@ test("catalog failure refuses a displayed-season action with reload and leaves h
 	assert.equal(answer.reload, true)
 	assert.equal(db.log(user).length, 0)
 })
+
+// ---------------------------------------------------------------------------------------------------------
+// The new TV's Seen it key (docs/implementation/tv-screen-revamp/my-shows)
+// ---------------------------------------------------------------------------------------------------------
+
+test("the new TV's Seen it key marks the Next episode of a show the member is midway through, one press an episode", async () => {
+	const { ShowSession } = await import("../domain/tracking/show-session.ts")
+	const { viewOf } = await import("../domain/tracking/show-page.ts")
+	const { episodeLabel } = await import("../domain/tracking/machine.ts")
+	const { episodeToMark } = await import("../ui/living-room/tv/tv-shows.ts")
+	await tick(1, 1, "watch-000001")
+	const page = await getShowTrackingPage(user, SHOW, noGrid)
+	const today = iso(midnight(0))
+	// The show's session as the page's store builds it (ui/tracking/store.ts), sending to the server's own
+	// function in place of POST /api/tracking/show.
+	const sent: Row[] = []
+	const session = new ShowSession({
+		showId: SHOW,
+		episodes: page.episodes,
+		copy: { state: page.state, log: page.log },
+		send: ({ action, actionId, restore }) => {
+			sent.push({ event: action, actionId })
+			return act({ event: action, actionId, restore })
+		},
+	})
+	// What the key reads and does (ui/living-room/tv/use-tv-episode.ts).
+	const next = () =>
+		episodeToMark(
+			viewOf(session.shown, page.episodes, {
+				today,
+				running: page.running,
+				score: null,
+			}).derived,
+		)
+	const press = async () => {
+		const episode = next()
+		assert.ok(episode)
+		const acted = session.act(
+			{ type: "watch", season: episode.season, number: episode.number },
+			{ actionId: newId(), today, now: Date.now() },
+		)
+		assert.equal(acted.refused, null)
+		// The key names the episode after it at once, before the server has answered.
+		const label = next() && episodeLabel(next() as never)
+		const answer = await acted.done
+		assert.equal(answer?.status, "applied")
+		return label
+	}
+	assert.equal(episodeLabel(next() as never), "S1 E2")
+	assert.equal(await press(), "S1 E3")
+	assert.equal(stateOf(), "watching")
+	assert.equal(await press(), "S2 E1")
+	// The last aired episode: the show is Seen, and the key has no episode left to mark.
+	assert.equal(await press(), null)
+	assert.equal(stateOf(), "seen")
+	assert.equal(next(), null)
+	assert.deepEqual(
+		sent.map((one) => one.event),
+		[
+			{ type: "watch", season: 1, number: 2 },
+			{ type: "watch", season: 1, number: 3 },
+			{ type: "watch", season: 2, number: 1 },
+		],
+	)
+	assert.equal(new Set(sent.map((one) => one.actionId)).size, 3)
+	// One watch an episode, in the member's log, and what the page reads afterwards agrees.
+	assert.deepEqual(
+		db
+			.log(user)
+			.map((row) => `${row.season_number}.${row.episode_number}`)
+			.sort(),
+		["1.1", "1.2", "1.3", "2.1"],
+	)
+	const after = await getShowTrackingPage(user, SHOW, noGrid)
+	assert.equal(after.state?.state, "seen")
+	assert.equal(after.log.length, 4)
+})
+
+test("the new TV's Seen it key leaves a show on hold alone", async () => {
+	const { viewOf } = await import("../domain/tracking/show-page.ts")
+	const { episodeToMark } = await import("../ui/living-room/tv/tv-shows.ts")
+	await tick(1, 1)
+	await act({ event: { type: "hold", today: iso(midnight(0)) } })
+	const page = await getShowTrackingPage(user, SHOW, noGrid)
+	assert.equal(page.state?.state, "on_hold")
+	const { derived } = viewOf(
+		{ state: page.state, log: page.log },
+		page.episodes,
+		{ today: iso(midnight(0)), running: page.running, score: null },
+	)
+	// The show's page names its Next episode; the TV's key rates the show instead of marking it.
+	assert.equal(derived.next?.number, 2)
+	assert.equal(episodeToMark(derived), null)
+})
