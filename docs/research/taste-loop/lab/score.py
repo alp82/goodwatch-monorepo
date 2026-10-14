@@ -511,6 +511,10 @@ def t2a_member_values(table, p):
         if band != 'mid':
             for first in T2A_FIRST:
                 out[f'first{first}_{band}'] = mean_where(m, (p['above'] < first).astype(float), T2A_BAND_MIN)
+    first50 = p['above'] < 50
+    out['disliked_precision50'] = mean_where(first50, (y <= LOW).astype(float), T2A_BAND_MIN)
+    out['hidden_low_share'] = mean_where(np.ones(len(y), bool), (y <= LOW).astype(float))
+    out['disliked_precision50_vs_own'] = out['disliked_precision50'] - out['hidden_low_share']
     out['separation'] = out['pct_high'] - out['pct_low']
     out['separation_matched'] = out['pct_matched_high'] - out['pct_matched_low']
     out['separation_popular'] = out['pct_popular_high'] - out['pct_popular_low']
@@ -580,6 +584,11 @@ def t2a_measures(table, candidate, refs, owner, draws, seed):
     names = [name for name in T2A_BETTER if name in cv]
     for name in names + (['brier_ref'] if 'brier_ref' in cv else []):
         o[name] = mean(cv[name], others)
+    qualified = others & np.isfinite(cv['disliked_precision50'])
+    o['precision50'] = {'n_members': int(qualified.sum()),
+                        'disliked_share': mean(cv['disliked_precision50'], qualified),
+                        'own_hidden_share': mean(cv['hidden_low_share'], qualified),
+                        'vs_own': mean(cv['disliked_precision50_vs_own'], qualified)}
     o['vs'] = {ref: {name: _t2a_pair(cv[name][others], r[name][others], draws, seed, T2A_BETTER[name])
                      for name in names if name in r} for ref, r in rv.items()}
     out['others'] = o
@@ -596,6 +605,12 @@ def t2a_measures(table, candidate, refs, owner, draws, seed):
              'own_shows': {'value': stats._r(table['own_shows'][owner])},
              'own_animation': {'value': stats._r(table['own_animation'][owner])},
              'pct_lists': {'value': stats._r(cv['pct_lists'][owner])}}
+
+        qualifies = bool(np.isfinite(cv['disliked_precision50'][owner]))
+        w['precision50'] = {'n_members': int(qualifies),
+                            'disliked_share': {'value': stats._r(cv['disliked_precision50'][owner])},
+                            'own_hidden_share': {'value': stats._r(cv['hidden_low_share'][owner]) if qualifies else None},
+                            'vs_own': {'value': stats._r(cv['disliked_precision50_vs_own'][owner])}}
 
         def figures(pct_of, into):
             for kind, name in kinds:
@@ -859,3 +874,15 @@ def t2a_retained_check(table, predictors, reference, owner, small_members, draws
     return {'counts': counts, 'comparison_counts': comparison_counts, 'vs_b2': comparisons, 'main_small_members': folds,
             'raw': {path: t2a_measures(table, p, {reference: base}, owner, draws, seed)
                     for path, p in predictors.items()}}
+
+
+def t2a_guard1(paired):
+    """A1 upper-bound rule; missing intervals cannot pass."""
+    upper = (paired or {}).get('hi')
+    return 'pass' if upper is not None and upper < 0.03 else 'inconclusive'
+
+
+def t2a_guard2(paired):
+    """A1: a negative separation interval fails; missing intervals are inconclusive."""
+    upper = (paired or {}).get('hi')
+    return 'inconclusive' if upper is None else 'fail' if upper < 0 else 'pass'

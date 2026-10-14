@@ -1,0 +1,30 @@
+run 20261014T122652-df4894a6-87b3  ladder/b3_taste_standardized.py  T2a tier A ladder  status ok  4511.8 s
+  others: 61 members, 4788 hidden titles; 26 members with 5+ titles in both bands
+    percentile of titles rated 8+ 0.891, 6 to 7 0.833, 5 or less 0.765; separation +0.131 (+0.079 to +0.187); among equally well-rated +0.139 (+0.083 to +0.198)
+    against ladder/b2_taste_today.py: separation -0.004 (-0.041 to +0.029), smallest detectable 0.051168, 17 of 26 members improved; among equally well-rated +0.007 (-0.024 to +0.036)
+    against ladder/b1_public.py: separation +0.045 (-0.010 to +0.099), smallest detectable 0.080815, 14 of 26 members improved; among equally well-rated +0.096 (+0.043 to +0.150)
+    against ladder/bp_votes.py: separation +0.110 (+0.062 to +0.161), smallest detectable 0.073349, 22 of 26 members improved; among equally well-rated +0.125 (+0.070 to +0.181)
+    against ladder/b4_consensus.py: separation -0.009 (-0.075 to +0.061), smallest detectable 0.100326, 12 of 26 members improved; among equally well-rated +0.031 (-0.037 to +0.103)
+    against ladder/b5_pooled.py: separation -0.136 (-0.177 to -0.095), smallest detectable 0.060556, 3 of 26 members improved; among equally well-rated -0.080 (-0.124 to -0.035)
+    guard 1 against ladder/b2_taste_today.py: disliked titles among equally popular candidates +0.000 (-0.034 to +0.039); 26 paired members; upper bound 0.039 < +0.03: inconclusive
+    guard 2 against ladder/b2_taste_today.py: separation among equally popular candidates +0.040 (+0.003 to +0.076); 26 paired members; pass
+    guard 1 against ladder/b1_public.py: disliked titles among equally popular candidates -0.063 (-0.139 to +0.014); 26 paired members; upper bound 0.014 < +0.03: pass
+    guard 2 against ladder/b1_public.py: separation among equally popular candidates +0.075 (-0.003 to +0.151); 26 paired members; pass
+    guard 1 against ladder/bp_votes.py: disliked titles among equally popular candidates -0.171 (-0.234 to -0.106); 26 paired members; upper bound -0.106 < +0.03: pass
+    guard 2 against ladder/bp_votes.py: separation among equally popular candidates +0.127 (+0.058 to +0.196); 26 paired members; pass
+    guard 1 against ladder/b4_consensus.py: disliked titles among equally popular candidates +0.046 (-0.033 to +0.125); 26 paired members; upper bound 0.125 < +0.03: inconclusive
+    guard 2 against ladder/b4_consensus.py: separation among equally popular candidates +0.016 (-0.065 to +0.100); 26 paired members; pass
+    guard 1 against ladder/b5_pooled.py: disliked titles among equally popular candidates +0.136 (+0.089 to +0.190); 26 paired members; upper bound 0.190 < +0.03: inconclusive
+    guard 2 against ladder/b5_pooled.py: separation among equally popular candidates -0.086 (-0.133 to -0.043); 26 paired members; fail
+    A1 guards: other members only, 5+ matched titles per band; vote factor 1.5 inclusive, zero/missing votes and empty neighbourhoods excluded; paired coverage only. A2 requires separation >= +0.03 with its interval above zero against B2, both A1 guards passed, and no paired shows/animation/franchise worsening with an interval excluding zero.
+    descriptive: disliked first-50 share 0.025; first-200 share 0.069; median vote count 120513.083
+    descriptive per-member precision (5+ hidden hits in first 50): 25 members; disliked share +0.076 (+0.027 to +0.137); own hidden disliked share +0.182 (+0.109 to +0.267); difference -0.106 (-0.156 to -0.059)
+  owner: 992 hidden titles; percentile of titles rated 8+ 0.839, 6 to 7 0.702, 5 or less 0.465; separation 0.374; among equally well-rated 0.273
+    descriptive: disliked first-50 share 0.000; first-200 share 0.021; median vote count 36794.030
+    descriptive owner precision: qualifies 1; disliked share 0.000; own hidden disliked share 0.095; difference -0.095
+    against ladder/b2_taste_today.py: separation +0.154 (no interval: the largest of 60 clusters holds 34% of the rows); franchises drawn again: +0.154 (+0.103 to +0.207)
+    against ladder/b1_public.py: separation -0.006 (no interval: the largest of 60 clusters holds 34% of the rows); franchises drawn again: -0.006 (-0.062 to +0.047)
+    against ladder/bp_votes.py: separation +0.356 (no interval: the largest of 60 clusters holds 34% of the rows); franchises drawn again: +0.356 (+0.290 to +0.421)
+    against ladder/b4_consensus.py: separation +0.021 (no interval: the largest of 60 clusters holds 34% of the rows); franchises drawn again: +0.021 (-0.035 to +0.076)
+    against ladder/b5_pooled.py: separation -0.077 (no interval: the largest of 60 clusters holds 34% of the rows); franchises drawn again: -0.077 (-0.123 to -0.032)
+result and log: /home/alper/goodwatch-research/taste/results/20261014T122652-df4894a6-87b3

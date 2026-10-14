@@ -674,10 +674,13 @@ def test_t2a_table_is_built_from_the_ladder_lines(world):
     assert f'**{o["n_primary"]} members count for the separation.**' in text
     assert '| B3 | Taste on standardized fingerprints | not run' in text and '| B0 |' not in text
     row = [x for x in text.splitlines() if x.startswith('| B2 | reference |')]
-    assert len(row) == 2 and 'not run' not in ''.join(row)             # B2 is the reference; it has B1 and BP beside it
+    assert len(row) == 3 and 'not run' not in ''.join(row)             # B2 is the reference; it has B1 and BP beside it
     assert '## The owner alone' in text and 'n/a: 4 sittings, fewer than 10' in text
     assert f'{w["separation"]["value"]:.3f}' in text and '### Guards: the first 50 candidates' in text
     assert '### Error of the predicted rating on the hidden titles' in text
+    assert 'Guard 1 against B2' in text and 'Upper bound (< +0.03)' in text
+    assert 'Guard 2 against B2' in text and 'Qualifying members' in text
+    assert 'Median vote count (descriptive)' in text
     assert '### Among equally popular titles' in text and '### Among titles equally well-rated and equally popular' in text
     t1 = subprocess.run([sys.executable, os.path.join(lab, 'table.py'), 'T1'], capture_output=True, text=True,
                         env=world['env'])

@@ -55,12 +55,19 @@ Read this first. Rewritten at the end of every session.
   first-50 bar by 0.005. Owner's first 20 under F1 and F3 equal B3's.
 - [x] **008 D2 forward comparison, registered:** tier A win (−0.088), tier B not replicated. Gate looks used: 1 of 8.
 - [x] Issues filed: #525 exposure log; #526 one-tap reason on low ratings
+- [x] **Amendment A1/A2** (`PROTOCOL.md` 13), after Fable's and Astra's reviews: the disliked first-50 share becomes
+  descriptive, guard 1 is the popularity-matched disliked percentile, the T2a gate rule and G1's registration rule are
+  frozen. Verdicts of items 003–007 were reached under the protocol before A1; none changes to a win.
+- [ ] **009 G1, the member's own mix at the front** (Sol 6.1): results committed unread; judged under A2 only after
+  item 010 is accepted
+- [x] **010 Gate for T2a** (`items/010-t2a-gate/`, Sol 6.1), accepted October 14, 2026: 105 tests pass, T2a table
+  figures unchanged; Fable's review (accept with fixes) applied by the orchestrator. Real gate not opened.
 
 ## Next action
 
-Phase 0 exit is met. Owner checkpoint done. Phase 1 is running in session 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
-tilt; register the leads and use gate looks only on registered comparisons; a gate review by two models other than
-the orchestrator's.
+Phase 1. Accept item 010, then read item 009 and apply A2 exactly: register G1 and take one gate look, or keep B2
+for D1 with the popularity tilt as the open question. Then fill every cell of `DECISIONS.md` and hold the phase 1
+gate review by two models other than the orchestrator's, then the owner checkpoint.
 
 ## What the owner owes
 

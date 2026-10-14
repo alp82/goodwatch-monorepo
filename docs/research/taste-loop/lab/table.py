@@ -16,6 +16,8 @@ import argparse
 import os
 import sys
 
+import score
+
 from common import LOOP, OTHERS, read_ledger
 
 RUNGS = [('B0', 'ladder/b0_median.py', 'Median of the member\'s ratings so far'),
@@ -495,7 +497,7 @@ def build_t2a(ledger):
 
     out += ['', '### Share of hidden titles in the first 50 and the first 200', '',
             'For titles rated 8 or more a larger share is better; for titles rated 5 or less a smaller one.', '',
-            '| Rung | Rated 8 or more: first 50 | First 200 | Rated 5 or less: first 50 | First 200 | First 50 (8 or '
+            '| Rung | Rated 8 or more: first 50 | First 200 | Rated 5 or less: first 50 (descriptive) | First 200 (descriptive) | First 50 (8 or '
             'more) against B2 | First 200 (8 or more) against B2 |', '|---|---:|---:|---:|---:|---:|---:|']
     for label, text, line in rows:
         if not line:
@@ -546,6 +548,46 @@ def build_t2a(ledger):
                 f'`{supplemental["harness_sha256"][:12]}`; same pack, views, options and predictor hashes as '
                 'the main rows (apart from the supplemental flag). Its raw figures are checked against them.']
 
+    out += ['', '### A1 guards: members other than the owner', '',
+            'Guard 1: disliked titles among equally popular candidates (vote count within a factor of 1.5, '
+            'inclusive; zero or missing votes and empty neighbourhoods excluded). At least five matched disliked '
+            'hidden titles per member; paired coverage includes only members present for both rungs. '
+            'Pass requires the paired 95% upper bound below +0.03; otherwise inconclusive. '
+            'Guard 2: separation among equally popular candidates, at least five matched titles in each band; '
+            'fails if its paired interval is below zero. Both guards compare with B2. A2 registers G1 only with '
+            'separation against B2 at least +0.03 and its interval above zero, both A1 guards passed, and none '
+            'of shows, animation or franchise worse than B2 with an interval excluding zero.', '',
+            '| Rung | Guard 1 against B2 | Paired members | Upper bound (< +0.03) | Guard 1 | '
+            'Guard 2 against B2 | Paired members | Guard 2 |',
+            '|---|---:|---:|---:|---|---:|---:|---|']
+    for label, _, line in rows:
+        if not line:
+            continue
+        v = against(line, label, 'B2') or {}
+        g1, g2 = v.get('pct_popular_low', {}), v.get('separation_popular', {})
+        reference = label == 'B2'
+        out.append(f'| {label} | {diff(line, label, "B2", "pct_popular_low")} | {g1.get("n", "")} | '
+                   f'{"reference" if reference else f(g1.get("hi"), sign=True)} | {"reference" if reference else score.t2a_guard1(g1)} | '
+                   f'{diff(line, label, "B2", "separation_popular")} | {g2.get("n", "")} | '
+                   f'{"reference" if reference else score.t2a_guard2(g2)} |')
+    out += ['', '### Descriptive: disliked titles among hidden titles reaching the first 50', '',
+            'Each member needs at least five hidden titles in the first 50, any band. The disliked share '
+            'is averaged per member and compared with that same member\'s disliked share among all hidden titles. '
+            'Only qualifying members enter both shares and their difference; this is reported, not judged.', '',
+            '| Rung | Qualifying members | Disliked share | Own hidden disliked share | Difference to own share |',
+            '|---|---:|---:|---:|---:|']
+    for label, _, line in rows:
+        if not line:
+            continue
+        precision = line['measures']['others'].get('precision50')
+        if precision is None:
+            precision = retained.get('raw', {}).get(line['predictor']['path'], {}).get('others', {}).get('precision50')
+        if precision is None:
+            out.append(f'| {label} | requires a tier A ladder report | | | |')
+        else:
+            out.append(f'| {label} | {precision["n_members"]} | {ci(precision["disliked_share"])} | '
+                       f'{ci(precision["own_hidden_share"])} | {ci(precision["vs_own"], sign=True)} |')
+
     out += ['', '### Guards: the first 50 candidates', '',
             f'The {m0["top"]} unrated candidates a rung ranks highest in a view, averaged over a member\'s views, '
             f'then over the {o["n_members"]} members. The members\' own rated titles are '
@@ -553,7 +595,7 @@ def build_t2a(ledger):
             f'"Animation"). "Against own mix" is the share in the first 50 minus the member\'s own share. A '
             f'franchise is a movie series of the pack; every other title is its own.', '',
             '| Rung | Shows | Shows against own mix | Animation | Animation against own mix | Most titles from one '
-            'franchise | Median vote count |', '|---|---:|---:|---:|---:|---:|---:|']
+            'franchise | Median vote count (descriptive) |', '|---|---:|---:|---:|---:|---:|---:|']
     for label, text, line in rows:
         if not line:
             continue
@@ -562,7 +604,7 @@ def build_t2a(ledger):
                    f'{f(m["top_animation"]["value"])} | {ci(m["top_animation_vs_own"], sign=True)} | '
                    f'{f(m["top_franchise_max"]["value"], 1)} | {m["top_votes_median"]["value"]:,.0f} |')
     out += ['', '| Rung | Shows against B2 | Animation against B2 | Most titles from one franchise against B2 | Median '
-            'vote count against B2 |', '|---|---:|---:|---:|---:|']
+            'vote count against B2 (descriptive) |', '|---|---:|---:|---:|---:|']
     for label, text, line in rows:
         if not line or label == 'B2':
             continue
@@ -599,7 +641,7 @@ def build_t2a(ledger):
                 f'every other title alone ({w0["franchises"]} units), with sittings ignored.', '',
                 '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Interval over '
                 'sittings | Franchises drawn again | First 50 (8 or more) | First 200 (8 or more) | First 50 (5 or '
-                'less) | First 200 (5 or less) |', '|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|']
+                'less, descriptive) | First 200 (5 or less, descriptive) |', '|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|']
         for label, text, line in rows:
             w = (line or {}).get('measures', {}).get('owner')
             if not w:
@@ -647,7 +689,7 @@ def build_t2a(ledger):
         out += ['', f'Guards, the first {m0["top"]} candidates. The owner\'s own rated titles are '
                 f'{w0["own_shows"]["value"]:.0%} shows and {w0["own_animation"]["value"]:.0%} animation.', '',
                 '| Rung | Shows | Shows against own mix | Animation | Animation against own mix | Most titles from '
-                'one franchise | Median vote count |', '|---|---:|---:|---:|---:|---:|---:|']
+                'one franchise | Median vote count (descriptive) |', '|---|---:|---:|---:|---:|---:|---:|']
         for label, text, line in rows:
             w = (line or {}).get('measures', {}).get('owner')
             if not w:
@@ -655,6 +697,22 @@ def build_t2a(ledger):
             out.append(f'| {label} | {val(w["top_shows"])} | {val(w["top_shows_vs_own"], sign=True)} | '
                        f'{val(w["top_animation"])} | {val(w["top_animation_vs_own"], sign=True)} | '
                        f'{val(w["top_franchise_max"], 1)} | {w["top_votes_median"]["value"]:,.0f} |')
+
+    if w0:
+        out += ['', 'Descriptive precision for the owner, with the same five-hit minimum:', '',
+                '| Rung | Qualifies | Disliked share | Own hidden disliked share | Difference to own share |',
+                '|---|---:|---:|---:|---:|']
+        for label, _, line in rows:
+            if not line:
+                continue
+            precision = line['measures'].get('owner', {}).get('precision50')
+            if precision is None:
+                precision = retained.get('raw', {}).get(line['predictor']['path'], {}).get('owner', {}).get('precision50')
+            if precision is None:
+                out.append(f'| {label} | requires a tier A ladder report | | | |')
+            else:
+                out.append(f'| {label} | {precision["n_members"]} | {val(precision["disliked_share"])} | '
+                           f'{val(precision["own_hidden_share"])} | {val(precision["vs_own"], sign=True)} |')
 
     out += ['', '## Runs', '', '| Rung | Run | References | Seconds | Peak memory, MB | Predictor sha256 |',
             '|---|---|---|---:|---:|---|']

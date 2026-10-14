@@ -1,0 +1,20 @@
+{
+  "baseline_ledger_commit": "6666df60",
+  "item_009_read": false,
+  "new_runs_for_initial_label_check": 0,
+  "existing_display_rows_unchanged": 102,
+  "existing_raw_fields_unchanged": 814,
+  "supplemental_run": "20261014T122652-df4894a6-87b3",
+  "mode": "ladder",
+  "tier": "A",
+  "new_figure": "A1 per-member first-50 disliked precision (all bands, five-hit minimum)",
+  "precision_qualifying_members": {
+    "B1": 5,
+    "BP": 48,
+    "B2": 1,
+    "B3": 25,
+    "B4": 0,
+    "B5": 0
+  },
+  "harness_sha256": "c1deebe2c2055c596128dc4602ec6f15a99ea5348301c6f89a438ee5ac11ad5b"
+}

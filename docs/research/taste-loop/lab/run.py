@@ -31,7 +31,7 @@ T1 and rung B2 (today's taste) in T2a.
 T2a (the hidden-title test) runs through the same steps. Its views have about 60,000 targets each, so an answer is
 turned into the few numbers the measures need (score.t2a_view) the moment it is read, and the ranks are dropped:
 neither the runner nor the stored answers of a reference ever hold more than one view's ranks. T2a has no
-calibrator, no planted effect, no `--others before` (it has no moment in time) and no gate.
+calibrator, no planted effect, no `--others before` (it has no moment in time) and a tier B gate.
 
 T2b (ranking later Want to See adds) runs the same way, one view per member. Its `--others` is `before` unless
 named, `--split` chooses how targets are cut (`sitting`, the default, or `order`), and it has no gate either. Its
@@ -691,8 +691,6 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
     if (plant is not None or shuffle_seed is not None) and mode not in ('control', 'verify'):
         raise Refused('shuffled labels and planted effects are controls')
     if task == 'T2a':
-        if tier != 'A':
-            raise Refused('the gate knows task T1 only')
         if others == 'before':
             raise Refused('T2a has no moment in time: --others is all or no-owner')
         if plant is not None:
@@ -767,6 +765,14 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             'seed': SEED, 'draws': DRAWS, 'threads': int(THREADS)}
     if control:
         line['control'] = control
+    if mode == 'gate' and gate.get('registered'):
+        old = gate['registered']
+        if (line['predictor'] != old['predictor']
+                or [(r['path'], r['sha256']) for r in line['refs']] !=
+                [(r['path'], r['sha256']) for r in old['refs'] if r['path'] == old['primary_ref']]
+                or line['options'] != old['options'] or harness != old['harness_sha256']):
+            shutil.rmtree(run_dir, ignore_errors=True)
+            raise Refused('the registered files, options or harness changed before replay')
     resume_file = None
     try:
         frozen = freeze_files(run_dir, line, predictor, refs)
@@ -785,7 +791,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
         reduce = None
         if task == 'T2a':
             index, keys, digest = views.build_t2a(pack, run_dir, members=rows, others_mode=others,
-                                                  shuffle_seed=shuffle_seed, fold_check=fold_check)
+                                                  shuffle_seed=shuffle_seed, fold_check=fold_check,
+                                                  own=gate['own'] if gate else None)
             facts = views.title_facts(pack)
 
             def reduce(vid, answer):                    # the view's own target list, read back from its file
@@ -916,11 +923,38 @@ def _summary_t2a(m, num):
         out.append(f'    against {ref}: separation {_ci(v)}, smallest detectable {v.get("sde")}, '
                    f'{v.get("improved")} of {v["n"]} members improved; among equally well-rated '
                    f'{_ci(d["separation_matched"])}')
+    for ref, d in o['vs'].items():
+        g1, g2 = d['pct_popular_low'], d['separation_popular']
+        out.append(f'    guard 1 against {ref}: disliked titles among equally popular candidates {_ci(g1)}; '
+                   f'{g1["n"]} paired members; upper bound {num(g1.get("hi"))} < +0.03: '
+                   f'{score.t2a_guard1(g1)}')
+        out.append(f'    guard 2 against {ref}: separation among equally popular candidates {_ci(g2)}; '
+                   f'{g2["n"]} paired members; {score.t2a_guard2(g2)}')
+    out.append('    A1 guards: other members only, 5+ matched titles per band; vote factor 1.5 inclusive, '
+               'zero/missing votes and empty neighbourhoods excluded; paired coverage only. '
+               'A2 requires separation >= +0.03 with its interval above zero against B2, both A1 guards passed, '
+               'and no paired shows/animation/franchise worsening with an interval excluding zero.')
+    out.append(f'    descriptive: disliked first-50 share {val(o, "first50_low")}; '
+               f'first-200 share {val(o, "first200_low")}; median vote count {val(o, "top_votes_median")}')
+    precision = o.get('precision50')
+    if precision:
+        out.append(f'    descriptive per-member precision (5+ hidden hits in first 50): '
+                   f'{precision["n_members"]} members; disliked share {_ci(precision["disliked_share"], "value")}; '
+                   f'own hidden disliked share {_ci(precision["own_hidden_share"], "value")}; '
+                   f'difference {_ci(precision["vs_own"], "value")}')
     if 'owner' in m:
         w = m['owner']
         out.append(f'  owner: {w["n_hidden"]} hidden titles; percentile of titles rated 8+ {val(w, "pct_high")}, '
                    f'6 to 7 {val(w, "pct_mid")}, 5 or less {val(w, "pct_low")}; separation '
                    f'{val(w, "separation")}; among equally well-rated {val(w, "separation_matched")}')
+        out.append(f'    descriptive: disliked first-50 share {val(w, "first50_low")}; '
+                   f'first-200 share {val(w, "first200_low")}; median vote count {val(w, "top_votes_median")}')
+        precision = w.get('precision50')
+        if precision:
+            out.append(f'    descriptive owner precision: qualifies {precision["n_members"]}; '
+                       f'disliked share {val(precision, "disliked_share")}; '
+                       f'own hidden disliked share {val(precision, "own_hidden_share")}; '
+                       f'difference {val(precision, "vs_own")}')
         for ref, d in w['vs'].items():
             out.append(f'    against {ref}: separation {_ci(d["separation"], "value")}; franchises drawn again: '
                        f'{_ci(d["separation_franchise"], "value")}')

@@ -488,7 +488,8 @@ def t2a_eligible(c):
     return np.flatnonzero((counts >= T2A_MIN_RATINGS) & (high >= T2A_MIN_HIGH))
 
 
-def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, write=True, fold_check=False):
+def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, write=True, fold_check=False,
+              own=None):
     """Build the T2a views of the given members (rows in pack.members; default: every eligible member).
 
     fold_check (item 004): only the eligible members other than the owner with fewer than T2A_CHECK_RATINGS
@@ -502,7 +503,7 @@ def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, 
     Not interested titles stand: the measures leave them out).
     """
     assert others_mode in ('all', 'no-owner')
-    c = _tables(pack, None, shuffle_seed)
+    c = _tables(pack, own, shuffle_seed)
     eligible = t2a_eligible(c)
     if fold_check:
         counts = np.bincount(c.own['member'], minlength=len(c.tier))

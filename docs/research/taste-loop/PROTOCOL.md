@@ -303,8 +303,9 @@ of the view are not part of that comparison (they are titles the member has watc
   for the separation: the mean over one group of titles minus the mean over another, whole sittings drawn again);
   on this pack the largest sitting holds 34% of the titles rated 8 or more or 5 or less, so there is none.
   Beside it stands the second figure, with whole franchises drawn again.
-- **Win rule** (PLAN.md 2.5): interval of the paired separation excludes zero, effect of 0.03 or more, no guard
-  worse with an interval that excludes zero. The table gives the numbers; it draws no verdict.
+- **Win rule** (PLAN.md 2.5, amended by A1 in section 13): interval of the paired separation excludes zero,
+  effect of 0.03 or more; guard 1 passes only with its upper bound below +0.03; guard 2 and the unchanged
+  guards must not be worse with an interval excluding zero. The table reports guard results; it draws no overall verdict.
 
 ### Running it
 
@@ -322,8 +323,7 @@ of the view are not part of that comparison (they are titles the member has watc
   and learn the consensus from the titles members rated. In T1 a view names a few thousand titles, most of them
   rated by someone; in T2a it names the whole universe, so the consensus is extended to tens of thousands of
   titles nobody rated. Their first 50 candidates have a median vote count of 3,600 (B4) and 6,800 (B5).
-- **Not built for T2a:** the gate (`gate.py` refuses a task other than T1 and uses no look). A registered T2a run
-  would be accepted by `run.py` with `task: T2a` in `PREREG.md`; no test covers it.
+- **T2a gate (item 010):** registered comparisons replay on tier B under section 11 and amendment A1.
 - **Time** on two processes, this pack: B1 105 s, BP 65 s, B2 133 s, B3 169 s, B4 379 s, B5 522 s (item 003). In
   item 004, on a machine with its swap full: B1 68 s, BP 52 s, B2 151 s, B3 228 s, B4 467 s, B5 382 s; two earlier
   B4 and B5 attempts were stopped by the 10-minute limit of the session that ran them.
@@ -616,13 +616,28 @@ a rank-only candidate, seconds per predictor, peak memory.
   another pack, a file that changed, a member list, a shuffled or planted run.
   - The look is appended to `looks.jsonl` before anything is computed. A gate run that fails, or is made to fail,
     has used the look. One look per item, 8 per pack.
-  - It prints `replicated`, `not replicated` or `not finished`, and the looks used. `replicated` only when the tier
+  - For T1 it prints `replicated`, `not replicated` or `not finished`, and the looks used. `replicated` only when the tier
     A effect is an improvement (below zero), tier B has the same sign, and at least half the size.
   - Of tier B it writes one summary line (the two effects, the number of members, the verdict) to
     `~/goodwatch-research/taste/gate/results/<pack>/summary.jsonl`, and the run's log. No result per member, per
     measure or per stratum is written anywhere; the ledger gets the verdict only.
   - Tested on a made-up pack and gate file, including a replay with `others: before` and a candidate that fails on
     tier B on purpose. Nobody has run it on the real gate.
+  - **T2a (item 010):** gate ratings supply the predicted tier B members' history and hidden folds,
+    using the same eligibility, universe, fold and matching rules as tier A. Other members' ratings and side
+    rows are the tier A population, as in the T1 gate: all tier A rows for `all`, excluding the owner's rows for
+    `no-owner`. No tier B member's rating enters another member's view. Frozen, hash-checked copies of the
+    registered predictor and primary reference execute with the registered options and harness hash.
+    A1 requires positive paired separation against the primary reference (the tier A effect must be positive too,
+    so A1's "same sign" means an improvement on both tiers), at least half its tier A effect,
+    and a paired `pct_popular_low` point estimate below +0.03. Each check needs at least 10 paired tier B members;
+    otherwise `not replicated`. Guard 2 is not an additional tier B criterion. T2a prints only `replicated` or
+    `not replicated` and the look count; a failed replay uses its look, reports `not replicated` and exits with
+    code 2, so the orchestrator knows to read the private log. A run made with `--fold-check` is refused.
+    The private summary adds guard 1's point estimate and paired member count. Neither enters the open ledger.
+    Unexpected replay diagnostics and errors also stay under the private results folder.
+    Made-up gate tests cover planted and shuffled effects, guard harm, insufficient coverage, file and
+    registration refusals, output confinement, frozen execution and population/fold hiding. No real gate was opened.
 - **Controls** (each writes its runs and a verdict line into the ledger):
   - `shuffled.py`: every member's ratings permuted among their titles. Pass: no rung is a win over B0 by the
     plan's rule (interval below zero and 0.05 points or more), for others and for the owner (the owner has no
@@ -677,7 +692,7 @@ a rank-only candidate, seconds per predictor, peak memory.
 ## 12. Not built
 
 T2b, T3, T5; tier C and `sealed.py`; a `p_low` for any rung but B0; intervals for the owner's pair accuracy and
-AUC; the gate for T2a; a calibrated score for rank-only rungs in T2a.
+AUC; a calibrated score for rank-only rungs in T2a.
 
 `lab/top.py` (**item 003**) is not a run: it calls a pinned rung of `lab/ladder/` in its own process, without the
 sandbox, on a view of the member in which nothing is hidden (every unrated universe title is a target), and prints
