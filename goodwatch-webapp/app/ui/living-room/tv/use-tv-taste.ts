@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The person's taste on the TV's Taste, a side's screen and the taste quiz: what the screens show, and the quiz's
 // two effects.
 //
@@ -40,10 +42,10 @@ import type { TvKnownTitle } from "./tv-title"
 
 const PORTRAIT_URL = "/api/taste/portrait?tab=sides"
 
-async function fetchSides(member: boolean): Promise<SidesView> {
+async function fetchSides(member: boolean, language: string): Promise<SidesView> {
 	const guest = member ? null : snapshotGuestProgress()
 	const response = await fetch(
-		PORTRAIT_URL,
+		mediaLanguageUrl(PORTRAIT_URL, language),
 		guest
 			? {
 					method: "POST",
@@ -81,6 +83,7 @@ export function useTasteRead({
 	screen: TvScreen
 	member: boolean
 }): TvTasteRead {
+	const { locale } = useLocale()
 	const { data: marks } = useUserData()
 	// How many titles the person has scored: a guest's in their browser, a member's on their account. Unknown
 	// while a member's marks are on their way.
@@ -92,13 +95,13 @@ export function useTasteRead({
 		// A guest's taste lives in their browser, so the key is their progress, the Taste page's own key: the page
 		// behind the Expand key finds the answer there. A member's is read again when they have scored.
 		queryKey: member
-			? ["tv-taste-portrait", "member", scores]
-			: ["taste-portrait", "sides", interactions],
+			? ["tv-taste-portrait", "member", scores, locale.language]
+			: ["taste-portrait", "sides", interactions, locale.language],
 		// Only while Taste is on show: in the quiz every score would ask again.
 		enabled: asks && scores !== null && screen.name === "taste",
 		// The last answer stays while a new score recomputes it.
-		placeholderData: (previous) => previous,
-		queryFn: () => fetchSides(member),
+		placeholderData: (previous, query) => query?.queryKey.at(-1) === locale.language ? previous : undefined,
+		queryFn: () => fetchSides(member, locale.language),
 	})
 	const view = portrait.data ?? null
 	const reading = asks && !view && !portrait.isError

@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "~/utils/media-presentation"
 // Search on the TV. Its first screen is one line to type into and a few ideas; OK on what is typed, or on an idea,
 // runs the full search and shows the first titles it found in the list every app shows its titles in. A title
 // leads to its title screen. A chunk the TV asks for at the first interaction (screen-code.tsx).
@@ -160,6 +161,7 @@ function Results({
 }) {
 	const titles: TvListTitle[] = (list?.cards ?? []).map((card) => ({
 		key: tvTitleKey(card),
+		...copyMediaPresentation(card),
 		title: card.title,
 		poster: card.poster_path,
 		backdrop: card.backdrop_path,

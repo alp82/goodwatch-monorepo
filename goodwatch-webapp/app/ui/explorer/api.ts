@@ -1,3 +1,4 @@
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The Explorer's reads from `/api/explorer/*`: members send GET and are read from their session; guests send POST
 // with the guest progress their browser holds, so taste, Seen, and their services apply to them too.
 import type {
@@ -37,11 +38,12 @@ async function request<T>(
 	endpoint: string,
 	params: Record<string, string | null>,
 	member: boolean,
+	language?: string,
 ): Promise<T> {
 	const query = new URLSearchParams()
 	for (const [key, value] of Object.entries(params))
 		if (value != null) query.set(key, value)
-	const url = `/api/explorer/${endpoint}?${query}`
+	const url = language ? mediaLanguageUrl(`/api/explorer/${endpoint}?${query}`, language) : `/api/explorer/${endpoint}?${query}`
 	let response: Response
 	if (member) response = await fetch(url)
 	else {
@@ -64,14 +66,14 @@ const mapParams = (q: MapQuery) => ({
 	anime: q.anime,
 })
 
-export const fetchMap = (q: MapQuery, member: boolean) =>
-	request<ExplorerMap>("map", mapParams(q), member)
+export const fetchMap = (q: MapQuery, member: boolean, language?: string) =>
+	request<ExplorerMap>("map", mapParams(q), member, language)
 
-export const fetchIsland = (q: MapQuery, id: string, member: boolean) =>
-	request<ExplorerIslandTree>("island", { ...mapParams(q), id }, member)
+export const fetchIsland = (q: MapQuery, id: string, member: boolean, language?: string) =>
+	request<ExplorerIslandTree>("island", { ...mapParams(q), id }, member, language)
 
-export const fetchCard = (key: TitleKey, member: boolean) =>
-	request<ExplorerCard>("card", { key: String(key) }, member)
+export const fetchCard = (key: TitleKey, member: boolean, language?: string) =>
+	request<ExplorerCard>("card", { key: String(key) }, member, language)
 
 /** The map's filters as the URL holds them (null is the default): the world has every grouping. */
 export type WorldQuery = Omit<MapQuery, "grouping">
@@ -83,41 +85,47 @@ const worldParams = (q: WorldQuery) => ({
 	anime: q.anime,
 })
 
-export const fetchWorld = (q: WorldQuery, member: boolean) =>
-	request<ExplorerWorld>("world", worldParams(q), member)
+export const fetchWorld = (q: WorldQuery, member: boolean, language?: string) =>
+	request<ExplorerWorld>("world", worldParams(q), member, language)
 
 /** `of` holds the picked islands' ids in the world ("mood:funny"), in the order picked. */
 export const fetchCombination = (
 	q: WorldQuery,
 	of: readonly string[],
 	member: boolean,
+	language?: string,
 ) =>
 	request<ExplorerCombination>(
 		"combination",
 		{ ...worldParams(q), of: of.join(",") },
 		member,
+		language,
 	)
 
 export const fetchShares = (
 	q: WorldQuery,
 	of: readonly string[],
 	member: boolean,
+	language?: string,
 ) =>
 	request<ExplorerShares>(
 		"shares",
 		{ ...worldParams(q), of: of.join(",") },
 		member,
+		language,
 	)
 
 export const fetchParts = (
 	q: WorldQuery,
 	of: readonly string[],
 	member: boolean,
+	language?: string,
 ) =>
 	request<ExplorerParts>(
 		"parts",
 		{ ...worldParams(q), of: of.join(",") },
 		member,
+		language,
 	)
 
 /** Query keys: per viewer (a member's id, or "guest"), so signing in or out never shows another person's map. */

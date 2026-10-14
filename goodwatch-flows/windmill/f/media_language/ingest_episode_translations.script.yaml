@@ -1,0 +1,21 @@
+summary: Additive TMDB season and episode translations
+description: Bounded companion ingestion; dry-run by default. Never changes canonical membership.
+lock: '!inline f/media_language/ingest_episode_translations.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    tmdb_ids:
+      type: array
+      items:
+        type: integer
+      description: Explicit show IDs in priority order; at most 100
+    dry_run:
+      type: boolean
+      default: true
+    max_requests:
+      type: integer
+      default: 250
+  required:
+    - tmdb_ids

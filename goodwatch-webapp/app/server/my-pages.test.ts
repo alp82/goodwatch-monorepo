@@ -293,6 +293,7 @@ test("a Continue row carries its Next episode from the cached episode list, and 
 		["next", 3, 6, 3],
 	)
 	assert.deepEqual(slow.next, {
+		id: 101104,
 		season: 1,
 		number: 4,
 		name: "Episode 1.4",
@@ -502,9 +503,9 @@ test("a waiting show says which episode airs next and when, and the group comes 
 	assert.deepEqual(
 		page.waiting.map((row) => [row.title, row.upcoming]),
 		[
-			["The Diplomat", { season: 2, number: 1, name: "Episode 2.1", airDate: "2026-10-09" }],
-			["Severance", { season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-13" }],
-			["Fallout", { season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-28" }],
+			["The Diplomat", { id: 202201, season: 2, number: 1, name: "Episode 2.1", airDate: "2026-10-09" }],
+			["Severance", { id: 201104, season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-13" }],
+			["Fallout", { id: 204104, season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-28" }],
 			// Without a date, in the order they had: the show watched last first.
 			["Silo", null],
 			["Shrinking", null],

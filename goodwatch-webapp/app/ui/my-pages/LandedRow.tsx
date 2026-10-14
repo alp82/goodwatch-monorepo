@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // The titles that landed on the member's services in the last 14 days (#489), on My movies and My shows: one row
 // that names the latest with its service and its day, and opens to all of them with the day each landed. It stays
 // for the 14 days, whether the member has been here since or not. And the mark the same titles carry in a list:
@@ -136,7 +137,7 @@ export function LandedRow({
 							className="border-t border-white/5 first:border-t-0"
 						>
 							<Link
-								to={`/${title.mediaType}/${title.tmdbId}-${titleToDashed(title.title)}`}
+								to={`/${title.mediaType}/${title.tmdbId}-${titleToDashed(canonicalMediaTitle(title))}`}
 								prefetch="intent"
 								className="group flex items-center gap-3 px-3 py-2 hover:bg-white/[0.05] md:px-5"
 							>

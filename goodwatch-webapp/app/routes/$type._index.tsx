@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -33,7 +34,7 @@ interface LoaderData {
 	type: NavType
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	params,
 }: LoaderFunctionArgs) => {
 	const type = params.type || ""
@@ -118,3 +119,5 @@ export default function Movies() {
 		</div>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -89,7 +90,7 @@ function singlePersonLookup(params: URLSearchParams): number | null {
 	return personId
 }
 
-export const loader = async ({
+const canonicalLoader = async ({
 	request,
 	params: routeParams,
 }: LoaderFunctionArgs) => {
@@ -170,7 +171,7 @@ async function browseLoader(
 	const data: BrowseLoaderData = {
 		browse: {
 			initial: pages
-				? { key: browseKey(filterQuery(state, sort, defaults), forYou), pages }
+				? { key: browseKey(filterQuery(state, sort, defaults), forYou, undefined, ctx.language), pages }
 				: null,
 			member: ctx.viewer.kind === "member",
 			hasServices: ctx.services.length > 0,
@@ -226,3 +227,5 @@ export default function DiscoverRoute() {
 	const data = useLoaderData<BrowseLoaderData>()
 	return <DiscoverPage {...data.browse} />
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

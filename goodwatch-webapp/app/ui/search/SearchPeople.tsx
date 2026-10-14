@@ -1,3 +1,4 @@
+import { canonicalMediaTitle, mediaFieldLanguage } from "~/utils/media-presentation"
 // The people a search names, above the title grid. From sm up, a horizontal accordion: every person keeps a fixed
 // place as a narrow photo strip, and the open one shows the full photo with a drawer (backdrop, name, known-for
 // posters). On phones, one banner with the people as text links below it.
@@ -94,7 +95,7 @@ function KnownFor({ person }: { person: SearchPerson }) {
 				t.poster ? (
 					<li key={`${t.type}:${t.id}`} className="w-16 lg:w-20 xl:w-24">
 						<Link
-							to={`/${t.type}/${t.id}-${titleToDashed(t.title)}`}
+							to={`/${t.type}/${t.id}-${titleToDashed(canonicalMediaTitle(t))}`}
 							prefetch="intent"
 							title={t.title}
 							className={`block cursor-pointer rounded-md transition duration-200 ease-out hover:-translate-y-1 focus-visible:outline focus-visible:outline-cyan-300 ${noMotion}`}
@@ -102,6 +103,7 @@ function KnownFor({ person }: { person: SearchPerson }) {
 							<img
 								src={image(t.poster, "w300_and_h450_bestv2")}
 								alt={t.title}
+								lang={mediaFieldLanguage(t)}
 								className="aspect-[2/3] w-full rounded-md border-2 border-gray-800 object-cover shadow-lg transition-colors duration-200 hover:border-gray-500"
 							/>
 						</Link>

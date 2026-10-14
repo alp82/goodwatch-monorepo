@@ -1,3 +1,4 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 import {
 	type CoreScores,
 	DISTINCT_FINGERPRINT_KEYS,
@@ -17,7 +18,7 @@ import { query } from "~/utils/crate"
 
 type MediaType = "movie" | "show"
 
-export interface PersonCredit {
+export interface PersonCredit extends PresentedMedia {
 	key: string
 	tmdb_id: number
 	media_type: MediaType

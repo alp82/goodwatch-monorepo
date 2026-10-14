@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { assetUrl } from "~/utils/asset-url"
 import {
 	type LoaderFunctionArgs,
@@ -23,7 +24,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 // The server renders every grouping's islands as a list of headings and links, for browsers without JavaScript and
 // for search engines; the map replaces it once the page runs.
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	let world: ExplorerWorld | null = null
 	try {
@@ -84,3 +85,5 @@ export default function ExplorerPage() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

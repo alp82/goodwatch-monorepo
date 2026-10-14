@@ -5,12 +5,15 @@
 // Every query is keyed by show_id. imdb_episode, imdb_season, rotten_tomatoes_season and
 // metacritic_season are CLUSTERED BY (show_id), so each read touches one shard.
 import { getEpisodePresentation } from "~/server/episode-presentation.server"
+import { identifyGridEpisodes, type CanonicalGridEpisode } from "~/domain/tracking/episode-grid-identity"
 import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 export { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
 export interface GridEpisode {
+	tmdbId?: number
+	nameLanguage?: string
 	/** IMDb episode number. 0 is a numbered special such as a Christmas episode. */
 	number: number
 	name: string
@@ -21,6 +24,8 @@ export interface GridEpisode {
 }
 
 export interface GridSpecial {
+	tmdbId?: number
+	nameLanguage?: string
 	name: string
 	score: number
 	votes: number
@@ -87,6 +92,8 @@ export const PROVIDER_ORDER: (keyof SeasonScores)[] = [
 ]
 
 interface EpisodeRow {
+	nameLanguage?: string
+	tmdbId?: number
 	imdb_episode_id: string
 	season_number: number | null
 	episode_number: number | null
@@ -144,7 +151,7 @@ export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	const presentation = await getEpisodePresentation(Number(showId))
 	if (presentation) return presentationGrid(Number(showId), presentation)
 	return await cached<{ showId: string }, EpisodeGrid>({
-		name: "episode-grid",
+		name: "episode-grid-media-v2",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
@@ -156,7 +163,7 @@ const _getEpisodeGrid = async ({
 	showId,
 }: { showId: string }): Promise<EpisodeGrid> => {
 	const id = Number(showId)
-	const [episodes, imdbSeasons, tmdbSeasons, rottenSeasons, metacriticSeasons] =
+	const [episodes, imdbSeasons, tmdbSeasons, rottenSeasons, metacriticSeasons, canonicalEpisodes] =
 		await Promise.all([
 			query<EpisodeRow>(
 				`SELECT imdb_episode_id, season_number, episode_number, name,
@@ -192,9 +199,14 @@ const _getEpisodeGrid = async ({
 			FROM metacritic_season WHERE show_id = ?`,
 				[id],
 			),
+			// Bounded to this show, not one query per grid cell. Identity failures keep the rated grid usable.
+			query<CanonicalGridEpisode>(
+				"SELECT tmdb_id, imdb_id, season_number, episode_number, name FROM episode WHERE show_id = ? AND removed_at IS NULL",
+				[id],
+			).catch(() => []),
 		])
 	return buildEpisodeGrid(id, {
-		episodes,
+		episodes: identifyGridEpisodes(episodes, canonicalEpisodes),
 		imdbSeasons,
 		tmdbSeasons,
 		rottenSeasons,
@@ -228,6 +240,7 @@ export const buildEpisodeGrid = (
 		const votes = row.votes ?? 0
 		if (row.season_number === null) {
 			specials.push({
+				...(row.tmdbId ? { tmdbId: row.tmdbId, nameLanguage: row.nameLanguage ?? "en" } : {}),
 				name,
 				score: row.score,
 				votes,
@@ -244,6 +257,7 @@ export const buildEpisodeGrid = (
 		const existing = season.get(row.episode_number)
 		if (existing && existing.votes >= votes) continue
 		season.set(row.episode_number, {
+			...(row.tmdbId ? { tmdbId: row.tmdbId, nameLanguage: row.nameLanguage ?? "en" } : {}),
 			number: row.episode_number,
 			name,
 			score: row.score,

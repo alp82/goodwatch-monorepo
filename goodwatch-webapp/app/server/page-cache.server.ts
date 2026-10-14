@@ -1,3 +1,4 @@
+import { isbot } from "isbot"
 // Keeps complete anonymous HTML pages in this Node process and answers repeated requests for them before Express and
 // Remix: no loader, no React, no compression. A viral spike asks for one or a few URLs over and over, and a render
 // costs 14 to 60 ms of the one main thread. The rules, the numbers, and what a cache in front must still do:
@@ -160,9 +161,9 @@ export function pageCacheKey(
 	)
 		return { bypass: "gate", path }
 	const identity = cacheIdentityOf({ ...input, method })
-	if (!identity.cacheable) return { bypass: "member", path }
+	if (!identity.cacheable) return { bypass: identity.audience === "member" ? "member" : "preferences", path }
 	return {
-		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
+		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${isbot(input.userAgent) ? "canonical" : "localized"}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
 		path,
 	}
 }

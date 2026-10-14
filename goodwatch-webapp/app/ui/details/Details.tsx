@@ -13,6 +13,8 @@ import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
+import { MediaPreferenceProvider, useMediaPreference } from "~/ui/media-preference/MediaPreference"
+import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -24,12 +26,26 @@ export default function Details(props: DetailsProps) {
 	const { details } = props.media
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
-			<DetailsPage {...props} />
+			{/* One per title: a preview and its question never carry over to the next title. */}
+			<MediaPreferenceProvider key={`${props.media.mediaType}-${details.tmdb_id}`} country={props.country}>
+				<DetailsPage {...props} />
+			</MediaPreferenceProvider>
 		</BelowFoldProvider>
 	)
 }
 
-function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
+function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }: DetailsProps) {
+	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
+	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
+	// language swaps the title, poster, description and tagline when its text is in.
+	const preference = useMediaPreference()
+	const preview = useTitlePreview({
+		media: loadedMedia,
+		loadedCountry,
+		want: preference.shown,
+	})
+	const media = preview.media
+	const country = preview.offers ? loadedCountry : preference.shown.country
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -74,6 +90,7 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 				country={country}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
+				textPreview={preview.text}
 			/>
 
 			<DetailsSideNav
@@ -84,6 +101,8 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			<DetailsHero
 				media={media}
 				country={country}
+				shownCountry={preference.shown.country}
+				preview={preview.offers}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 			/>

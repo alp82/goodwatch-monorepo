@@ -1,3 +1,4 @@
+import { localizeTitlePayload } from "../media-payload.server.ts"
 // The `/api/explorer/*` endpoints share this: members send GET and are read from the session; guests send POST with
 // the guest progress their browser holds ({ guest: { interactions, country, services } }), and a signed-in member's
 // POST ignores it.
@@ -61,7 +62,7 @@ export async function explorerResponse(
 		const result = await answer(ctx, new URL(request.url).searchParams)
 		if (result === null) return fail(404, "Not found")
 		const totalMs = performance.now() - startedAt
-		return json(result, {
+		return json(await localizeTitlePayload(result, ctx.language ?? "en"), {
 			headers: {
 				...headers,
 				"Server-Timing": `viewer;dur=${viewerMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,

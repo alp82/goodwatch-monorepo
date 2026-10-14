@@ -58,7 +58,7 @@ export const EPISODE_LIST_WITHOUT_OVERVIEW_QUERY = episodeListQuery("")
  * statement for all of them; the last parameter is midnight UTC of today. Public data.
  */
 export const upcomingEpisodesQuery = (shows: number) => `
-SELECT show_id, season_number, episode_number, name, air_date
+SELECT show_id, tmdb_id, season_number, episode_number, name, air_date
 FROM episode
 WHERE show_id IN (${Array.from({ length: shows }, () => "?").join(", ")})
   AND season_number > 0 AND removed_at IS NULL AND air_date > ?

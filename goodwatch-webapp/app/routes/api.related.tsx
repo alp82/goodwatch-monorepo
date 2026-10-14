@@ -1,3 +1,4 @@
+import { localizeApiTitlePayload, mediaApiCacheControl } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -58,11 +59,12 @@ export const loader: LoaderFunction = async ({
 
 	relatedRequests.inc([mediaType === null ? "panel" : "legacy"])
 	try {
-		const panel = await getRelatedPanel({
+		const canonicalPanel = await getRelatedPanel({
 			tmdbId: Number.parseInt(tmdbId),
 			sourceMediaType,
 			fingerprintKey: fingerprintKey || undefined,
 		})
+		const panel = await localizeApiTitlePayload(canonicalPanel, request)
 		const result =
 			mediaType === "movie"
 				? panel.movies
@@ -70,7 +72,7 @@ export const loader: LoaderFunction = async ({
 					? panel.shows
 					: panel
 		return json(result, {
-			headers: { "Cache-Control": PUBLIC_DATA_CACHE_CONTROL },
+			headers: { "Cache-Control": mediaApiCacheControl(request, PUBLIC_DATA_CACHE_CONTROL) },
 		})
 	} catch (error) {
 		console.error("Related titles lookup failed", {
