@@ -144,8 +144,8 @@ const START_TITLES: StartTitle[] = [
 ]
 
 /**
- * The harness has no catalog of services: these are real ones, with the catalog's names and logos, in the order
- * the United States' catalog lists them.
+ * The harness has no catalog of services: these are real ones, with the catalog's names and logos, to name the
+ * sample member's saved services.
  */
 const SERVICES = [
 	{ id: 8, name: "Netflix", logo_path: "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" },
@@ -199,7 +199,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			next: home.shows.next.map((show) => paint(show, show.id)),
 			start: home.shows.start.map((show) => paint(show, show.id)),
 		},
-		services: tvServices(savedServices(params.get("services")), SERVICES),
+		services: tvServices(savedServices(params.get("services"))),
 		// The member's country and saved services, as the TV's own loader gives them to its search (slice 10).
 		scope: { country: viewer.country, services: viewer.services },
 	})

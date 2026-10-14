@@ -389,84 +389,61 @@ const withoutServices = (text) =>
 	text
 		.replace(/<button type="button" data-tv-item="service:\d+".*?<\/button>/g, "")
 		.replace(/(\\?"services\\?":)\[(\{[^\]]*\})?\]/g, "$1[]")
-/** And without the country the page said before this slice: the root's `locale`. */
-const withoutCountry = (text) => withoutServices(text).replace(/(\\?"country\\?":\\?")[A-Z]{2}(\\?")/g, "$1--$2")
+/** Without the country the page names in the root's `locale`, which is the only part of it that differs by country. */
+const withoutCountry = (text) => text.replace(/(\\?"country\\?":\\?")[A-Z]{2}(\\?")/g, "$1--$2")
+/** The default keys, as the loader gives them: the Remote has a drawn mark for both. */
+const DEFAULT_KEYS = [
+	[8, "Netflix", null],
+	[9, "Prime", null],
+]
 
 async function countries() {
-	where = "the two services by country"
+	where = "the two services in every country"
 	console.log(where)
-	// A guest's two services are the first two of their country's catalog, one per brand, in the catalog's order
-	// (the order `/api/living-room/services` lists the country's services in).
-	const firstTwo = {}
-	for (const country of ["US", "DE", "GB", "FR", "BR", "JP", "IN"]) {
-		const catalog = (await (await fetch(`${ORIGIN}/api/living-room/services?country=${country}`)).json()).services ?? []
-		const brands = []
-		for (const service of catalog) if (!brands.some((b) => b.name === brandOf(service.name))) brands.push({ id: service.id, name: brandOf(service.name), logo_path: service.logo_path })
-		const { data } = await loaderOf(`en-${country}`)
-		is(data.services, brands.slice(0, 2), `${country}: the loader's two services are the first two of the country's catalog`)
-		is(data.member, false, `${country}: a guest`)
-		firstTwo[country] = data.services.map((service) => `${service.name} (${service.id})`)
+	// A guest's two services are Netflix and Prime Video, in every country: nothing is read for them.
+	for (const language of ["en-US", "en-DE", "en-GB", "en-FR", "pt-BR", "en-JP", "en-IN", "en-ZZ", "en"]) {
+		const { data } = await loaderOf(language)
+		is(data.services.map((service) => [service.id, service.name, service.logo_path]), DEFAULT_KEYS, `${language}: a guest's two services are Netflix and Prime Video`)
+		is(data.member, false, `${language}: a guest`)
 	}
-	numbers["the two services by country"] = firstTwo
-	// A country nobody has data for: the pair every Remote had before.
-	const nowhere = await loaderOf("en-ZZ")
-	is(nowhere.data.services.map((service) => [service.id, service.name, service.logo_path]), [[8, "Netflix", null], [9, "Prime", null]], "a country without a catalog gets Netflix and Prime Video")
-	// Without a region the country is the United States, as everywhere on the site.
-	is((await loaderOf("en")).data.services, (await loaderOf("en-US")).data.services, "a language without a region is the United States")
 
-	// The HTML: the same for every guest of a country, whatever asks for it.
-	where = "a guest's HTML by country"
+	// The HTML: the same for every guest, whatever asks for it and wherever they are.
+	where = "a guest's HTML in every country"
 	console.log(where)
 	const pages = {}
 	for (const country of ["US", "FR", "BR"]) {
 		const texts = await Promise.all(Object.keys(AGENTS).map((agent) => htmlOf("", `en-${country}`, agent)))
 		check(texts.every((text) => text === texts[0]), `${country}: the same HTML for a browser, Googlebot and an iPhone`)
 		pages[country] = texts[0]
-		const tiles = idsIn(texts[0]).filter((id) => id.startsWith("service:"))
-		const { data } = await loaderOf(`en-${country}`)
-		const want = data.services.map((service) => `service:${service.id}`)
-		is(tiles, [...want, ...want], `${country}: the two services' tiles are in the HTML, once per edition`)
+		is(idsIn(texts[0]).filter((id) => id.startsWith("service:")), ["service:8", "service:9", "service:8", "service:9"], `${country}: the two services' tiles are in the HTML, once per edition`)
 		is((texts[0].match(/<h1/g) ?? []).length, 2, `${country}: one H1 per edition`)
 		numbers[`a guest's HTML of /home-preview in ${country}, bytes`] = texts[0].length
-		numbers[`of which the two services (tiles in both editions and the loader's data) in ${country}, bytes`] = texts[0].length - withoutServices(texts[0]).length
 	}
-	check(pages.US !== pages.FR && pages.US !== pages.BR, "the HTML differs between countries whose first two services differ")
+	numbers["of which the two services (tiles in both editions and the loader's data), bytes"] = pages.US.length - withoutServices(pages.US).length
 	for (const country of ["FR", "BR"]) {
 		const [a, b] = [withoutCountry(pages.US), withoutCountry(pages[country])]
 		let at = 0
 		while (at < a.length && a[at] === b[at]) at++
-		check(a === b, `US and ${country} differ in the services and in nothing else (the country the page named before aside)${a === b ? "" : `: ${JSON.stringify(a.slice(at - 60, at + 120))} against ${JSON.stringify(b.slice(at - 60, at + 120))}`}`)
-	}
-	// Two countries with the same first two services: the page differs in the country it named before, no more.
-	const [us, gb] = [pages.US, await htmlOf("", "en-GB")]
-	const same2 = same((await loaderOf("en-GB")).data.services, (await loaderOf("en-US")).data.services)
-	if (same2) check(withoutCountry(us) === withoutCountry(gb) && withoutServices(us) !== us, "US and GB have the same two services: their HTML is the same but for the country")
-	// The country of the services is the country of a stored page's key: the cache identity the app states on a
-	// page that may be stored (the preview address is never stored, so the start page itself is asked).
-	for (const [language, country] of [["en-FR", "FR"], ["pt-BR", "BR"], ["en", "US"]]) {
-		const identity = (await fetch(`${ORIGIN}/`, { headers: { "Accept-Language": language } })).headers.get("gw-cache-identity")
-		const named = (await (await fetch(`${ORIGIN}/api/living-room/services`, { headers: { "Accept-Language": language } })).json()).country
-		is([identity?.split(";")[1], named], [country, country], `${language}: the country of the services is the country of the page's cache identity (${identity})`)
+		check(a === b, `US and ${country}: the same HTML but for the country the root's locale names${a === b ? "" : `: ${JSON.stringify(a.slice(at - 60, at + 120))} against ${JSON.stringify(b.slice(at - 60, at + 120))}`}`)
 	}
 
-	// What the services cost a guest's loader: a country's first read against every later one, which is a lookup
-	// in memory. The loader's answer alone, without the page's render.
+	// What the services cost a guest's loader: nothing is read for them, so a country this server process has
+	// never been asked for answers as fast as one it has. The loader's answer alone, without the page's render.
 	where = "what the services cost the loader"
 	console.log(where)
 	const median = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)]
 	await loaderOf("en-US")
 	const warm = []
 	for (let n = 0; n < 15; n++) warm.push((await loaderOf("en-US")).ms)
-	// Countries this run has not asked for yet: each is a first read in this server process.
 	const fresh = []
 	for (const country of ["NL", "SE", "IT", "ES", "MX", "AU", "CA", "PL"]) {
 		const first = (await loaderOf(`en-${country}`)).ms
 		const again = (await loaderOf(`en-${country}`)).ms
 		fresh.push({ country, first: Math.round(first), again: Math.round(again) })
 	}
-	numbers["the loader's answer for a country already read, ms (median of 15)"] = Math.round(median(warm) * 10) / 10
-	numbers["the loader's answer for a country's first read in this process, and right after, ms"] = fresh
-	check(median(fresh.map((one) => one.again)) < median(fresh.map((one) => one.first)) || median(fresh.map((one) => one.first)) < 30, "a country's second answer needs no read of the catalog")
+	numbers["the loader's answer as a guest, ms (median of 15)"] = Math.round(median(warm) * 10) / 10
+	numbers["the loader's answer for a country never asked for in this process, and right after, ms"] = fresh
+	check(median(fresh.map((one) => one.first)) <= median(fresh.map((one) => one.again)) + 50, "a country's first answer is as fast as its second: nothing is read for the services")
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -799,23 +776,10 @@ async function abroad() {
 	for (const country of ["FR", "BR"]) {
 		where = `a guest in ${country}`
 		console.log(where)
-		const { data } = await loaderOf(`en-${country}`)
 		const { ctx, page, logs } = await open(GUEST, DESKTOP, { storage: { country }, locale: `en-${country}` })
-		let s = await read(page)
-		is(s.keys.map((key) => [key.id, key.label]), data.services.map((service) => [service.id, `On ${service.name}`]), "the Remote's keys are the country's first two services")
-		is(s.items.slice(4, 6), data.services.map((service) => `service:${service.id}`), "and so are home's tiles")
-		const logo = s.keys.find((key) => !DRAWN[key.id])
-		if (logo) {
-			s = await until(page, (x) => x.keys.find((key) => key.id === logo.id)?.mark?.loaded, `${logo.label}: the catalog's logo is on the key`, 60000)
-			await page.locator(`#room [data-service-key="${logo.id}"]`).click()
-			s = await until(page, (x) => x.search === `?${serviceTv(logo.id)}` && (titlesOf(x).length > 0 || /Nothing to watch/.test(x.text)), `${logo.label} opens`, 90000)
-			is(pressed(s), [logo.id], "its key is on")
-			is([s.name, s.head?.kind, s.edge], [logo.label, "logo", QUIET], "the screen leads with the catalog's logo and has a quiet line")
-			const answer = await results(`services=${logo.id}`, guestOf({ country }))
-			is(titlesOf(s), (answer.cards ?? []).slice(0, 12).map(tvKey), `its titles are Discover's for that service in ${country}`)
-			numbers[`${where}: ${logo.label}`] = `${answer.total} titles`
-		}
-		numbers[`${where}: the keys`] = s.keys.map((key) => `${key.label}, ${key.mark?.kind}`)
+		const s = await read(page)
+		is(s.keys.map((key) => [key.id, key.label, key.mark?.kind]), [[8, "On Netflix", "drawn"], [9, "On Prime", "drawn"]], "the Remote's keys are Netflix and Prime Video, as everywhere")
+		is(s.items.slice(4, 6), ["service:8", "service:9"], "and so are home's tiles")
 		is(noise(logs), [], "nothing in the console")
 		await ctx.close()
 	}
@@ -830,7 +794,8 @@ async function members() {
 		["two saved services the Remote has no mark for", "&services=337,15", [[337, "On Disney+", "logo"], [15, "On Hulu", "logo"]]],
 		["the order they saved them in", "&services=9,337,8", [[9, "On Prime", "drawn"], [337, "On Disney+", "logo"]]],
 		["one saved service", "&services=15", [[15, "On Hulu", "logo"], [8, "On Netflix", "drawn"]]],
-		["one saved service, the catalog's first", "&services=8", [[8, "On Netflix", "drawn"], [9, "On Prime", "drawn"]]],
+		["one saved service that is a default key", "&services=8", [[8, "On Netflix", "drawn"], [9, "On Prime", "drawn"]]],
+		["Prime Video saved alone", "&services=9", [[9, "On Prime", "drawn"], [8, "On Netflix", "drawn"]]],
 		["no saved service", "&services=none", [[8, "On Netflix", "drawn"], [9, "On Prime", "drawn"]]],
 	]
 	for (const [what, query, want] of setups) {
@@ -876,11 +841,8 @@ const PHONES = [
 const LONG = "The Lord of the Rings: The Fellowship of the Ring"
 
 async function sizes() {
-	// France's second service has no drawn mark: its key and its tile show the catalog's logo.
-	for (const [country, sizesOf] of [
-		["US", [...PHONES, DESKTOP]],
-		["FR", [[360, 740], [375, 667], [844, 390], DESKTOP]],
-	])
+	// A key with a catalog's logo is a member's: the member's walk measures it on the phone.
+	for (const [country, sizesOf] of [["US", [...PHONES, DESKTOP]]])
 		for (const size of sizesOf) {
 			const touch = size !== DESKTOP
 			where = `sizes ${size.join("x")} ${country}`
@@ -976,7 +938,8 @@ async function html() {
 		const texts = await Promise.all(Object.keys(AGENTS).map((agent) => htmlOf(query, "en-US", agent)))
 		check(texts.every((text) => text === texts[0]), `${query}: the same HTML for a browser, Googlebot and an iPhone`)
 		// Both editions are in the HTML: the bar alone, twice.
-		is(idsIn(texts[0]), [...BAR, ...BAR], `${query}: the server draws the bar alone, once per edition`)
+		// The Expand key is slice 11's, drawn since in its corner by the server too.
+		is(idsIn(texts[0]), ["expand", ...BAR, "expand", ...BAR], `${query}: the server draws the Expand key and the bar alone, once per edition`)
 		check(!/Titles are on their way|data-tv-service-mark|data-tv-edge/.test(texts[0]), `${query}: and nothing of the service's screen`)
 		numbers[`a guest's HTML of ${query}, bytes`] = texts[0].length
 	}
@@ -1048,22 +1011,6 @@ async function shots() {
 			await until(page, (x) => /Nothing to watch/.test(x.text), "a service without titles", 60000)
 			await shot(page, `on-first-none-guest-${device}`)
 			await ctx.close()
-			// France: the second service has no drawn mark.
-			const fr = (await loaderOf("en-FR")).data.services
-			const logo = fr.find((service) => !DRAWN[service.id])
-			if (logo) {
-				;({ ctx, page } = await open(`${GUEST}?focus=service%3A${logo.id}`, size, { storage: { country: "FR" }, locale: "en-FR" }))
-				await page.mouse.move(5, 5)
-				await page.keyboard.press("ArrowLeft")
-				await page.keyboard.press("ArrowRight")
-				await until(page, (x) => focusIs(`service:${logo.id}`)(x) && x.keys.find((one) => one.id === logo.id)?.mark?.loaded, "France: home on the logo's tile", 90000)
-				await page.waitForTimeout(2500)
-				await shot(page, `home-logo-fr-${device}`)
-				await (phone ? page.locator(`#room [data-service-key="${logo.id}"]`).tap() : page.locator(`#room [data-service-key="${logo.id}"]`).click())
-				await pictured(page)
-				await shot(page, `on-logo-fr-${device}`)
-				await ctx.close()
-			}
 		}
 	if (memberSide)
 		for (const [size, device] of sized) {
@@ -1121,17 +1068,9 @@ async function sheets() {
 				],
 				476,
 			),
+			row("A service without titles", [["on-first-none-guest-desktop", "nothing to watch"]], 636),
 			row(
-				"A guest in France: the second service has no drawn mark, so the key, the tile and the screen show the catalog's logo. A service without titles",
-				[
-					["home-logo-fr-desktop", "France: Netflix and France TV"],
-					["on-logo-fr-desktop", "On France TV: the logo, a quiet line"],
-					["on-first-none-guest-desktop", "nothing to watch"],
-				],
-				636,
-			),
-			row(
-				"A member (the harness): their own two saved services; two the Remote has no mark for; one saved service, filled up with the catalog's first",
+				"A member (the harness): their own two saved services; two the Remote has no mark for, with the catalog's logos; one saved service, filled up with Netflix",
 				[
 					["home-member-desktop", "Netflix and Prime Video saved"],
 					["on-member-desktop", "a member's On Prime"],
@@ -1163,11 +1102,10 @@ async function sheets() {
 			],
 			270,
 		)}${row(
-			"A guest in France (the catalog's logo); a member with Netflix and Prime Video, with Disney+ and Hulu, with Hulu alone",
+			"A member with Netflix and Prime Video, with Disney+ and Hulu (the catalog's logos), with Hulu alone",
 			[
-				["home-logo-fr-phone", "France: home"],
-				["on-logo-fr-phone", "On France TV"],
 				["home-member-phone", "a member's home"],
+				["home-member-logos-phone", "Disney+ and Hulu saved"],
 				["on-member-logos-phone", "a member's On Hulu"],
 				["home-member-one-phone", "Hulu, then Netflix"],
 			],
