@@ -29,9 +29,12 @@ export default function PreferencePair({
 	const follows = intended(state).language === BROWSER
 	const spoken = [
 		`Country ${country}, ${changed.country ? "not saved" : "saved"}.`,
-		follows
-			? `Titles follow your browser, ${language} now${changed.language ? ", not saved" : ""}.`
-			: `Titles in ${language}, ${changed.language ? "not saved" : "saved"}.`,
+		// The shared page does not say whether the language is chosen or the browser's: only the private read does.
+		!p.known && !changed.language
+			? `Titles in ${language}.`
+			: follows
+				? `Titles follow your browser, ${language} now${changed.language ? ", not saved" : ""}.`
+				: `Titles in ${language}, ${changed.language ? "not saved" : "saved"}.`,
 		saving ? "Saving." : "Change.",
 	].join(" ")
 
@@ -57,8 +60,14 @@ export default function PreferencePair({
 				aria-expanded={p.dialog.open}
 				aria-disabled={saving || undefined}
 				aria-label={spoken}
-				onPointerEnter={preloadPreferenceDialog}
-				onFocus={preloadPreferenceDialog}
+				onPointerEnter={() => {
+					preloadPreferenceDialog()
+					p.warm()
+				}}
+				onFocus={() => {
+					preloadPreferenceDialog()
+					p.warm()
+				}}
 				onClick={() => {
 					if (!saving) p.openDialog()
 				}}
@@ -102,7 +111,8 @@ function Question() {
 	const { state, changed, saving, browserLanguage } = p
 	const failed = state.status === "failed"
 	const next = intended(state)
-	const what = describePair(next, browserLanguage, changed)
+	const described = describePair(next, browserLanguage, changed)
+	const what = described.charAt(0).toUpperCase() + described.slice(1)
 	const offers = state.offers
 	const status = saving
 		? `Saving ${p.destination}…`

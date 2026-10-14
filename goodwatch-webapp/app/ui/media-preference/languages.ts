@@ -1,27 +1,9 @@
-// The titles languages the header pair offers, their names, and which languages a country offers alongside it.
-//
-// PLACEHOLDER until the backend's resolver lands: the list mirrors MEDIA_LANGUAGES of `app/utils/media-language.ts`
-// on branch feat/media-language, and should be replaced by an import of it (with its `negotiateMediaLanguage` in
-// place of `browserLanguageOf`). The country suggestions are not product policy either (see the handover's open
-// decisions): they only feed the unticked offer under the pair.
+// Which languages a country offers alongside it in the header pair's question, and the names of languages. The
+// offered languages and the browser negotiation are `MEDIA_LANGUAGES` and `negotiateMediaLanguage` of
+// `~/utils/media-language`. The country suggestions are not a country-language policy (see
+// docs/implementation/media-language-decisions.md): they only feed the unticked offer, from the offered set.
 import { languageName } from "~/utils/display-names"
-
-export const TITLE_LANGUAGES = [
-	"en",
-	"de",
-	"fr",
-	"es",
-	"it",
-	"pt-BR",
-	"pt-PT",
-	"ja",
-	"ko",
-	"zh-Hans",
-	"zh-Hant",
-	"pl",
-	"ru",
-	"ar",
-] as const
+import { MEDIA_LANGUAGES } from "~/utils/media-language"
 
 const SUGGESTED: Record<string, string[]> = {
 	US: ["en"],
@@ -57,27 +39,9 @@ const SUGGESTED: Record<string, string[]> = {
 
 /** The languages a country offers alongside it, without the one the page already shows. */
 export function countryOffers(country: string, shown: string): string[] {
-	return (SUGGESTED[country] ?? []).filter((l) => l !== shown)
-}
-
-/** The first offered language of the browser's list, matching a region-less tag to its language, else English. */
-export function browserLanguageOf(tags: readonly string[]): string {
-	for (const raw of tags) {
-		const tag = raw.trim()
-		const exact = TITLE_LANGUAGES.find(
-			(l) => l.toLowerCase() === tag.toLowerCase(),
-		)
-		if (exact) return exact
-		const [base, ...rest] = tag.toLowerCase().split("-")
-		if (base === "zh")
-			return rest.some((p) => ["hant", "tw", "hk", "mo"].includes(p))
-				? "zh-Hant"
-				: "zh-Hans"
-		if (base === "pt") return rest.includes("pt") ? "pt-PT" : "pt-BR"
-		const match = TITLE_LANGUAGES.find((l) => l === base)
-		if (match) return match
-	}
-	return "en"
+	return (SUGGESTED[country] ?? []).filter(
+		(l) => l !== shown && (MEDIA_LANGUAGES as readonly string[]).includes(l),
+	)
 }
 
 /** "German": the interface stays English. */

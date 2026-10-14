@@ -246,7 +246,11 @@ test("browser default is a choice of its own: picking it over a saved language i
 test("a saved pair read later replaces the first guess and keeps the preview", () => {
 	const state = run([
 		{ type: "pickCountry", country: "JP" },
-		{ type: "syncSaved", pair: { country: "JP", language: "fr" } },
+		{
+			type: "syncSaved",
+			pair: { country: "JP", language: "fr" },
+			recorded: true,
+		},
 	])
 	assert.equal(
 		isPending(state),
@@ -261,7 +265,11 @@ test("a conflict adopts the pair saved elsewhere and keeps showing the visitor's
 		{ type: "pickCountry", country: "JP", offers: ["ja"] },
 		{ type: "tickCompanion", language: "ja" },
 		{ type: "keep" },
-		{ type: "saveFailed", seq: 1, current: { country: "FR", language: "fr" } },
+		{
+			type: "saveFailed",
+			seq: 1,
+			conflict: { current: { country: "FR", language: "fr" } },
+		},
 	])
 	assert.equal(state.status, "failed")
 	assert.equal(state.conflict, true)
@@ -282,7 +290,11 @@ test("a conflict with the same pair saved elsewhere leaves nothing to save", () 
 	const state = run([
 		{ type: "pickLanguage", language: "ja" },
 		{ type: "keep" },
-		{ type: "saveFailed", seq: 1, current: { country: "DE", language: "ja" } },
+		{
+			type: "saveFailed",
+			seq: 1,
+			conflict: { current: { country: "DE", language: "ja" } },
+		},
 	])
 	assert.equal(state.status, "idle")
 	assert.equal(isPending(state), false)
@@ -299,9 +311,59 @@ test("a conflict on the toast's Undo shows the pair from before over the adopted
 			pair: { country: "JP", language: BROWSER },
 		},
 		{ type: "undoSaved" },
-		{ type: "saveFailed", seq: 2, current: { country: "US", language: "en" } },
+		{
+			type: "saveFailed",
+			seq: 2,
+			conflict: { current: { country: "US", language: "en" } },
+		},
 	])
 	assert.equal(state.status, "failed")
 	assert.deepEqual(state.saved, { country: "US", language: "en" })
-	assert.deepEqual(intended(state), saved)
+	assert.deepEqual(intended(state), { country: "DE", language: "en" }, "the Undo changed only the country")
+})
+
+test("without a pair on record, picking the guessed values is a change Keep confirms", () => {
+	const guess = initialState(saved, false)
+	const country = reduce(guess, {
+		type: "pickCountry",
+		country: "DE",
+		offers: ["de"],
+	})
+	assert.deepEqual(changes(country), { country: true, language: false })
+	assert.deepEqual(country.offers, [], "the same country offers nothing")
+	const kept = run(
+		[{ type: "keep" }, { type: "saveSucceeded", seq: 1, pair: saved }],
+		country,
+	)
+	assert.equal(kept.recorded, true)
+	assert.equal(
+		isPending(reduce(kept, { type: "pickCountry", country: "DE" })),
+		false,
+		"once on record, the same value is no change",
+	)
+	const language = reduce(guess, { type: "pickLanguage", language: BROWSER })
+	assert.deepEqual(changes(language), { country: false, language: true })
+	assert.equal(isPending(reduce(guess, { type: "discard" })), false)
+})
+
+test("a conflict with nothing on record any more keeps the pick as a change to confirm", () => {
+	const state = run([
+		{ type: "pickLanguage", language: "ja" },
+		{ type: "keep" },
+		{ type: "saveFailed", seq: 1, conflict: { current: null } },
+	])
+	assert.equal(state.recorded, false)
+	assert.equal(state.status, "failed")
+	assert.deepEqual(intended(state), { country: "DE", language: "ja" })
+})
+
+test("after a conflict, a value this save did not change follows the pair adopted from elsewhere", () => {
+	const state = run([
+		{ type: "pickLanguage", language: "it" },
+		{ type: "keep" },
+		{ type: "saveFailed", seq: 1, conflict: { current: { country: "ES", language: BROWSER } } },
+	])
+	assert.deepEqual(intended(state), { country: "ES", language: "it" })
+	assert.deepEqual(changes(state), { country: false, language: true })
+	assert.deepEqual(reduce(state, { type: "keep" }).request?.pair, { country: "ES", language: "it" })
 })

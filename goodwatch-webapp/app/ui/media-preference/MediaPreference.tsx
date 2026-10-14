@@ -10,12 +10,17 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { useRevalidator } from "@remix-run/react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { useUser } from "~/utils/auth"
-import useLocale from "~/utils/locale"
-import { useRouteLoaderData } from "@remix-run/react"
 import { regionName } from "~/utils/display-names"
-import { browserLanguageOf, countryOffers, englishName } from "./languages"
+import useLocale from "~/utils/locale"
+import {
+	type GetMediaPreferencesResponse,
+	negotiateMediaLanguage,
+} from "~/utils/media-language"
+import { countryOffers, englishName } from "./languages"
 import {
 	BROWSER,
 	type PreferenceEvent,
@@ -32,10 +37,10 @@ import {
 	PreferenceConflict,
 	type PreferenceSaver,
 	endpointSaver,
-	serverPreference,
+	readMediaPreferences,
 } from "./save-adapter"
 
-// One saver for the app, so saves from one page after another stay in order.
+// One saver per page load: one client id, and saves from one title page after another stay in order.
 const defaultSaver = endpointSaver()
 
 export type DialogTab = "country" | "titles"
@@ -51,6 +56,10 @@ export interface MediaPreference {
 	changed: { country: boolean; language: boolean }
 	/** "on this device" or "to your account". */
 	destination: string
+	/** Reads what is saved, ahead of a pick: call when a visitor reaches for the pair or a country. */
+	warm: () => void
+	/** The private read arrived: whether the language is explicit or follows the browser is known. */
+	known: boolean
 	pickCountry: (country: string) => void
 	pickLanguage: (language: string) => void
 	tickCompanion: (language: string | null) => void
@@ -111,16 +120,13 @@ export function MediaPreferenceProvider({
 }) {
 	const { locale } = useLocale()
 	const { user } = useUser()
-	const server = serverPreference(useRouteLoaderData("root"))
-	// The language the browser asks for, as the server negotiated it when the titles follow the browser. With an
-	// explicit language the server did not need it: the browser's own list decides, once the page runs.
-	const negotiated =
-		server.context?.languageSetting === BROWSER ? server.context.language : null
-	const [browserLanguage, setBrowserLanguage] = useState(
-		() => negotiated ?? browserLanguageOf([locale.language]),
-	)
+	const queryClient = useQueryClient()
+	const { revalidate } = useRevalidator()
+	// Until the private read below, the page's pair counts as saved, its language as the browser's: what the server
+	// rendered, so hydration changes nothing.
+	const [browserLanguage, setBrowserLanguage] = useState(locale.language)
 	const [state, setState] = useState(() =>
-		initialState({ country, language: server.record?.language ?? BROWSER }),
+		initialState({ country, language: BROWSER }),
 	)
 	const stateRef = useRef(state)
 	const dispatch = useCallback((event: PreferenceEvent) => {
@@ -130,12 +136,45 @@ export function MediaPreferenceProvider({
 		return next
 	}, [])
 
-	useEffect(() => {
-		if (!negotiated)
+	// What is saved, its revision and provenance are private: never in the shared root data. Read when a visitor
+	// reaches for the pair or a country, and again for another member.
+	const [wanted, setWanted] = useState(false)
+	const prefsKey = ["media-preferences", user?.id ?? null]
+	const prefsQuery = {
+		queryKey: prefsKey,
+		queryFn: ({ signal }: { signal?: AbortSignal }) =>
+			readMediaPreferences(signal),
+		staleTime: Number.POSITIVE_INFINITY,
+	}
+	const prefs = useQuery({ ...prefsQuery, enabled: wanted })
+	// The revision of the saved record, which a save says it replaces.
+	const version = useRef<string | null>(null)
+	const adopt = useCallback(
+		(data: GetMediaPreferencesResponse) => {
+			const context = data.effectiveContext
+			version.current = data.mediaPreferences?.version ?? null
+			// "Browser default" follows the browser: the server's negotiation while it follows it, else the same rule
+			// on the browser's own list.
 			setBrowserLanguage(
-				browserLanguageOf(navigator.languages ?? [navigator.language]),
+				context.languageSetting === BROWSER
+					? context.language
+					: negotiateMediaLanguage(navigator.languages ?? [navigator.language])
+							.language,
 			)
-	}, [negotiated])
+			dispatch({
+				type: "syncSaved",
+				pair: {
+					country: stateRef.current.saved.country,
+					language: context.languageSetting,
+				},
+				recorded: data.mediaPreferences !== null,
+			})
+		},
+		[dispatch],
+	)
+	useEffect(() => {
+		if (prefs.data) adopt(prefs.data)
+	}, [prefs.data, adopt])
 
 	const [dialog, setDialog] = useState<{ open: boolean; tab: DialogTab }>({
 		open: false,
@@ -144,13 +183,14 @@ export function MediaPreferenceProvider({
 	const pairButton = useRef<HTMLButtonElement>(null)
 	// What opened the dialog (the pair, or where-to-watch's country button): the focus returns there when it closes.
 	const opener = useRef<HTMLElement | null>(null)
-	const destination = user ? "to your account" : "on this device"
+	const destination =
+		(prefs.data?.destination ?? (user ? "account" : "device")) === "account"
+			? "to your account"
+			: "on this device"
 	const toast = useUndoToast()
 	const [announcement, setAnnouncement] = useState("")
 
 	// One save per number, also under StrictMode's doubled effects.
-	// The version of the saved record, which a save says it replaces.
-	const version = useRef(server.record?.version ?? null)
 	const started = useRef(0)
 	const request = state.status === "saving" ? state.request : null
 	useEffect(() => {
@@ -164,44 +204,78 @@ export function MediaPreferenceProvider({
 			language: pair.language !== was.language,
 		})
 		setAnnouncement(kind === "undo" ? "Restoring…" : "Saving…")
-		saver.save(pair, { expectedVersion: version.current }).then(
-			(saved) => {
-				const before = stateRef.current
-				const after = dispatch({ type: "saveSucceeded", seq, pair: saved.pair })
-				if (after === before) return
-				version.current = saved.version
-				const where =
-					saved.destination === "account"
-						? "to your account"
-						: saved.destination === "device"
-							? "on this device"
-							: destination
-				const text = `${kind === "undo" ? "Restored" : "Saved"} ${where}: ${words}`
-				setAnnouncement(text)
-				// After an Undo, a short note without another Undo.
-				toast.say(
-					text,
-					kind === "keep" ? () => dispatch({ type: "undoSaved" }) : undefined,
-				)
-			},
-			(error) => {
-				const current =
-					error instanceof PreferenceConflict ? error.current : undefined
-				const before = stateRef.current
-				const after = dispatch({
-					type: "saveFailed",
-					seq,
-					current: current && {
-						country: current.country,
-						language: current.language,
-					},
-				})
-				if (after === before) return
-				if (current) version.current = current.version
-				setAnnouncement("")
-			},
-		)
-	}, [request, saver, dispatch, browserLanguage, destination, toast.say])
+		// The save replaces the revision on record, so it waits for the private read if a pick came first.
+		queryClient
+			.fetchQuery(prefsQuery)
+			.then((data) => {
+				if (version.current === null)
+					version.current = data.mediaPreferences?.version ?? null
+			})
+			.catch(() => {})
+			.then(() => saver.save(pair, { expectedVersion: version.current }))
+			.then(
+				(saved) => {
+					const before = stateRef.current
+					const after = dispatch({
+						type: "saveSucceeded",
+						seq,
+						pair: saved.pair,
+					})
+					if (after === before) return
+					version.current = saved.version
+					queryClient.setQueryData<GetMediaPreferencesResponse>(prefsKey, {
+						effectiveContext: saved.effectiveContext,
+						mediaPreferences: {
+							...saved.pair,
+							schemaVersion: 1,
+							version: saved.version,
+						},
+						destination: saved.destination,
+					})
+					// The cookie or account row changed: the root and the page read the saved pair again.
+					revalidate()
+					const where =
+						saved.destination === "account"
+							? "to your account"
+							: saved.destination === "device"
+								? "on this device"
+								: destination
+					const text = `${kind === "undo" ? "Restored" : "Saved"} ${where}: ${words}`
+					setAnnouncement(text)
+					// After an Undo, a short note without another Undo.
+					toast.say(
+						text,
+						kind === "keep" ? () => dispatch({ type: "undoSaved" }) : undefined,
+					)
+				},
+				(error) => {
+					const conflict = error instanceof PreferenceConflict ? error : null
+					const before = stateRef.current
+					const after = dispatch({
+						type: "saveFailed",
+						seq,
+						conflict: conflict
+							? { current: conflict.current?.pair ?? null }
+							: undefined,
+					})
+					if (after === before) return
+					// Retry replaces what is on record now.
+					if (conflict) version.current = conflict.current?.version ?? null
+					setAnnouncement("")
+				},
+			)
+	}, [
+		request,
+		saver,
+		dispatch,
+		browserLanguage,
+		destination,
+		toast.say,
+		queryClient,
+		revalidate,
+		prefsKey,
+		prefsQuery,
+	])
 
 	const pending = isPending(state)
 	const wasPending = useRef(pending)
@@ -232,19 +306,27 @@ export function MediaPreferenceProvider({
 		saving: state.status === "saving",
 		changed: changes(state),
 		destination,
-		pickCountry: (code) =>
+		warm: () => setWanted(true),
+		known: prefs.data !== undefined,
+		pickCountry: (code) => {
+			setWanted(true)
 			dispatch({
 				type: "pickCountry",
 				country: code,
 				offers: countryOffers(code, shown.language),
-			}),
-		pickLanguage: (language) => dispatch({ type: "pickLanguage", language }),
+			})
+		},
+		pickLanguage: (language) => {
+			setWanted(true)
+			dispatch({ type: "pickLanguage", language })
+		},
 		tickCompanion: (language) => dispatch({ type: "tickCompanion", language }),
 		discard: () => dispatch({ type: "discard" }),
 		keep: () => dispatch({ type: "keep" }),
 		dialog,
 		openDialog: (tab) => {
 			if (stateRef.current.status === "saving") return
+			setWanted(true)
 			opener.current =
 				document.activeElement instanceof HTMLElement &&
 				document.activeElement !== document.body

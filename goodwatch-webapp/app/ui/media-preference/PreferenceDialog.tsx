@@ -16,7 +16,8 @@ import {
 	countriesWithOffers,
 } from "~/ui/details/hero/countryOffers"
 import { regionName } from "~/utils/display-names"
-import { TITLE_LANGUAGES, englishName, ownName } from "./languages"
+import { MEDIA_LANGUAGES } from "~/utils/media-language"
+import { englishName, ownName } from "./languages"
 import { type DialogTab, useMediaPreference } from "./MediaPreference"
 import { BROWSER, intended } from "./machine"
 
@@ -105,7 +106,7 @@ export default function PreferenceDialog({
 function TitlesList() {
 	const p = useMediaPreference()
 	const choice = intended(p.state).language
-	const options = [BROWSER, ...TITLE_LANGUAGES]
+	const options = [BROWSER, ...MEDIA_LANGUAGES]
 	// Up and down move through the list, as in a list box.
 	const move = (e: KeyboardEvent<HTMLUListElement>) => {
 		if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return

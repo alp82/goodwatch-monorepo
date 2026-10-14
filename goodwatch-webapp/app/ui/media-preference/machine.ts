@@ -18,6 +18,11 @@ export type SaveStatus = "idle" | "saving" | "failed" | "saved"
 
 export interface PreferenceState {
 	saved: PreferencePair
+	/**
+	 * A pair is on record (cookie or account). Without one, `saved` is only the guess the page was built with, and
+	 * picking the same value is still a change: Keep confirms it as an explicit choice.
+	 */
+	recorded: boolean
 	/** Values picked and not kept. A missing value is the saved one. */
 	preview: { country?: string; language?: LanguageChoice }
 	/** The languages the previewed country offers alongside it. None is ticked until the visitor ticks one. */
@@ -46,16 +51,24 @@ export type PreferenceEvent =
 	| { type: "undoSaved" }
 	| { type: "saveSucceeded"; seq: number; pair: PreferencePair }
 	/**
-	 * `current`: the pair saved meanwhile elsewhere (a version conflict). It becomes the saved one; the page keeps
-	 * showing the visitor's pick, which Retry saves over it.
+	 * `conflict.current`: the pair saved meanwhile elsewhere (a version conflict), or null when none is on record any
+	 * more. It becomes the saved one; the page keeps showing the visitor's pick, which Retry saves over it.
 	 */
-	| { type: "saveFailed"; seq: number; current?: PreferencePair }
-	/** The saved pair became known or changed elsewhere (read from the device after the first paint). */
-	| { type: "syncSaved"; pair: PreferencePair }
+	| {
+			type: "saveFailed"
+			seq: number
+			conflict?: { current: PreferencePair | null }
+	  }
+	/** The saved pair became known (the private read after the first paint) or changed elsewhere. */
+	| { type: "syncSaved"; pair: PreferencePair; recorded: boolean }
 
-export function initialState(saved: PreferencePair): PreferenceState {
+export function initialState(
+	saved: PreferencePair,
+	recorded = true,
+): PreferenceState {
 	return {
 		saved,
+		recorded,
 		preview: {},
 		offers: [],
 		companion: null,
@@ -78,9 +91,15 @@ export function intended(state: PreferenceState): PreferencePair {
 /** Which values differ from what is saved. */
 export function changes(state: PreferenceState) {
 	const next = intended(state)
+	const confirm = !state.recorded
 	return {
-		country: next.country !== state.saved.country,
-		language: next.language !== state.saved.language,
+		country:
+			next.country !== state.saved.country ||
+			(confirm && state.preview.country !== undefined),
+		language:
+			next.language !== state.saved.language ||
+			(confirm &&
+				(state.preview.language !== undefined || state.companion !== null)),
 	}
 }
 
@@ -167,7 +186,7 @@ export function reduce(
 			}
 		}
 		case "syncSaved":
-			return settle({ ...state, saved: event.pair })
+			return settle({ ...state, saved: event.pair, recorded: event.recorded })
 		case "saveSucceeded":
 		case "saveFailed":
 			// Nothing is under way: an answer now belongs to a save that is over.
@@ -183,6 +202,7 @@ function succeeded(
 	return {
 		...state,
 		saved: event.pair,
+		recorded: true,
 		preview: {},
 		offers: [],
 		companion: null,
@@ -193,35 +213,40 @@ function succeeded(
 
 function failed(
 	state: PreferenceState,
-	event: { seq: number; current?: PreferencePair },
+	event: { seq: number; conflict?: { current: PreferencePair | null } },
 ): PreferenceState {
 	if (state.request?.seq !== event.seq) return state
 	// A failed Keep keeps the page as it is; the toast's Undo that did not save shows the pair from before instead.
-	// Either way the page now shows the save's pair, unsaved, and the question offers Retry.
-	const wanted =
-		state.request.kind === "keep" ? intended(state) : state.request.pair
-	const kept = event.current
+	// Either way the page shows the save's pair, unsaved, and the question offers Retry. After a conflict only the
+	// values this save changed stay picked: the others follow the pair adopted from elsewhere.
+	const wanted = state.request.pair
+	const preview = {
+		...(wanted.country !== state.saved.country && { country: wanted.country }),
+		...(wanted.language !== state.saved.language && {
+			language: wanted.language,
+		}),
+	}
+	const kept = event.conflict
 		? settle({
 				...state,
-				saved: event.current,
-				preview: { country: wanted.country, language: wanted.language },
+				saved: event.conflict.current ?? state.saved,
+				recorded: event.conflict.current !== null,
+				// With nothing on record any more, the whole pair is what Retry confirms.
+				preview: event.conflict.current
+					? preview
+					: { country: wanted.country, language: wanted.language },
 				offers: [],
 				companion: null,
 			})
 		: state.request.kind === "keep"
 			? state
-			: {
-					...state,
-					preview: { country: wanted.country, language: wanted.language },
-					offers: [],
-					companion: null,
-				}
+			: { ...state, preview, offers: [], companion: null }
 	// Saved elsewhere as the same pair: nothing is left to save.
 	if (!isPending(kept)) return { ...kept, status: "idle", undoTo: null }
 	return {
 		...kept,
 		status: "failed",
-		conflict: Boolean(event.current),
+		conflict: Boolean(event.conflict),
 		undoTo: state.request.kind === "keep" ? state.undoTo : null,
 	}
 }
@@ -230,7 +255,7 @@ function failed(
 function settle(state: PreferenceState): PreferenceState {
 	const { country, ...rest } = state.preview
 	const preview: PreferenceState["preview"] =
-		country === undefined || country === state.saved.country
+		country === undefined || (state.recorded && country === state.saved.country)
 			? rest
 			: { ...rest, country }
 	const offers = preview.country === undefined ? [] : state.offers

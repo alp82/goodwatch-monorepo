@@ -1,8 +1,9 @@
 // Drives the header pair (variant F) on a real title page of a dev server and saves screenshots beside this file.
 //   PLAYWRIGHT=<folder with node_modules/playwright-core> node docs/implementation/media-language-screens/drive.mjs http://localhost:3141
 // Saves go to POST /api/user-settings/set. The browser answers it here with the backend's contract
-// ({ pair, version, sequence, effectiveContext, destination }), and can hold an answer ("Saving…") or fail it (503),
-// so the drive runs on a branch without the backend and writes nothing. Analytics and the Sentry tunnel are answered
+// ({ pair, version, sequence, effectiveContext, destination }; 409 { error, sequence, current }), and can hold an
+// answer ("Saving…") or fail it (503), so it can show every state; the private read of what is saved is the real
+// server's. drive-real.mjs drives the real endpoint end to end. Analytics and the Sentry tunnel are answered
 // in the browser too, so the drive leaves no trace.
 import { createRequire } from "node:module"
 import path from "node:path"
@@ -32,7 +33,7 @@ async function page(browser, viewport) {
 		if (p.saves.conflict) {
 			const current = p.saves.conflict
 			p.saves.conflict = null
-			return r.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "conflict", current }) })
+			return r.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "conflict", sequence: body.sequence, current }) })
 		}
 		if (p.saves.hold) p.saves.held.push({ r, body })
 		else answer(r, body)
@@ -149,7 +150,12 @@ async function visual(browser, name, viewport) {
 	await p.locator("[data-toast] button", { hasText: "Undo" }).click()
 	await p.waitForTimeout(600)
 	check(/Germany|Deutschland/.test((await pair.getAttribute("aria-label")) ?? ""), `${name}: the toast's Undo restores the whole pair`)
-	check(JSON.stringify(p.saves.sent.at(-1)) === JSON.stringify({ pair: { country: "DE", language: "browser" }, sequence: 3, expectedVersion: "v2" }), `${name}: Undo saves the pair from before through the same call, over the kept version`)
+	const undo = p.saves.sent.at(-1)
+	check(
+		JSON.stringify([undo.pair, undo.sequence, undo.expectedVersion]) === JSON.stringify([{ country: "DE", language: "browser" }, 3, "v2"]) &&
+			p.saves.sent.every((b) => b.clientId === undo.clientId),
+		`${name}: Undo saves the pair from before through the same call and client, over the kept version`,
+	)
 	const restored = p.locator("[data-toast]", { hasText: "Restored" })
 	await restored.waitFor({ timeout: 30_000 }).catch(() => {})
 	check(
@@ -212,7 +218,7 @@ async function keyboard(browser) {
 	await p.locator('[data-language="browser"]').click()
 	await p.waitForSelector("[data-preference-question]")
 	const what = await p.locator("[data-preference-question]").innerText()
-	check(/titles follow your browser \(currently German\)/.test(what), "keys: Browser default says it follows the browser")
+	check(/titles follow your browser \(currently German\)/i.test(what), "keys: Browser default says it follows the browser")
 	await shot(p, "desktop-8-browser-default")
 	await p.keyboard.press("Tab")
 	check(await focusIs(p, "[data-undo]"), "keys: Tab from the pair goes into the question")
@@ -224,7 +230,7 @@ async function keyboard(browser) {
 	check(await focusIs(p, "[data-pair-chip]"), "keys: after Keep the focus returns to the pair")
 
 	// Saved elsewhere meanwhile: the page adopts that record as saved, keeps the pick, and Retry saves over its version.
-	p.saves.conflict = { country: "FR", language: "fr", version: "v99" }
+	p.saves.conflict = { pair: { country: "FR", language: "fr" }, version: "v99", sequence: 7 }
 	await pair.focus()
 	await p.keyboard.press("Enter")
 	await p.getByRole("tab", { name: /^Titles/ }).click()
@@ -233,7 +239,10 @@ async function keyboard(browser) {
 	await p.locator("[data-preference-question] [role=alert]:visible").waitFor({ timeout: 30_000 })
 	check(/Saved elsewhere meanwhile/.test(await p.locator("[data-preference-question] [role=alert]:visible").innerText()), "keys: a conflict says it was saved elsewhere")
 	check(/Italian/.test((await pair.getAttribute("aria-label")) ?? ""), "keys: the page keeps the pick after a conflict")
-	check(/Germany, titles in Italian/.test(await p.locator("[data-preference-question]").innerText()), "keys: against the adopted France and French, both values of the pick are changes")
+	check(
+		/titles in Italian/i.test(await p.locator("[data-preference-question]").innerText()) && /Country France/.test((await pair.getAttribute("aria-label")) ?? ""),
+		"keys: the picked language stays; the unchanged country follows the adopted France",
+	)
 	await shot(p, "desktop-10-conflict")
 	await p.locator("[data-preference-question] [data-keep]:visible").click()
 	await p.waitForSelector("[data-preference-question]", { state: "detached", timeout: 30_000 })
