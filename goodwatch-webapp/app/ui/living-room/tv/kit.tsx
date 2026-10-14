@@ -66,6 +66,17 @@ export function keySize(canvas: TvCanvas, drawn: number): number {
 /** `keySize` for the canvas a screen is drawn on. */
 export const useKeySize = (drawn: number) => keySize(useTvView().canvas, drawn)
 
+/**
+ * `keySize` as a length for a style, for the keys the server draws: the top bar's and the Expand key. Before the
+ * window is measured the phone's scale is tv.css's (`--tv-key`, the first paint), so the keys have the height they
+ * keep after hydration.
+ */
+export function keyLength(canvas: TvCanvas, drawn: number): number | string {
+	if (canvas.edition === "phone" && canvas.first)
+		return `max(${drawn}px, var(--tv-key, ${drawn}px))`
+	return keySize(canvas, drawn)
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // A screen's data. See "How a screen loads its data" in docs/implementation/tv-screen-revamp/tonight-title.
 
@@ -111,6 +122,7 @@ export function Item({
 	id,
 	label,
 	pressed,
+	role,
 	className = "",
 	style,
 	children,
@@ -120,6 +132,8 @@ export function Item({
 	label?: string
 	/** For an item that is on or off, such as a tab: whether it is on. */
 	pressed?: boolean
+	/** What the item is to a screen reader where a button is not enough: an item of the menu. */
+	role?: "menuitem"
 	className?: string
 	style?: CSSProperties
 	children: ReactNode
@@ -142,6 +156,7 @@ export function Item({
 			aria-current={on || undefined}
 			aria-label={label}
 			aria-pressed={pressed}
+			role={role}
 			// The mouse: the item under the cursor takes the focus, and the ring shows it (pointing.ts). A finger
 			// points through pointing.ts, which gives the focus itself and lets go with this button's click.
 			// A move, not an enter: an item that comes to lie under a resting cursor (a new screen, a row that pages)
@@ -162,9 +177,14 @@ export function Item({
 // ---------------------------------------------------------------------------------------------------------
 // Pictures.
 
-/** The backdrop file for a picture this many canvas pixels wide: `w780` under 900 px on the window, `w1280` above. */
+/**
+ * The backdrop file for a picture this many canvas pixels wide. On the desktop the whole picture is `w1280`, and a
+ * smaller one `w780` under 900 px on the window, `w1280` above; on the phone `w780`. The whole picture does not
+ * depend on the window's size: the first paint draws it before anything is measured, and hydration keeps its file.
+ */
 export function backdropSize(canvas: TvCanvas, width = canvas.w): string {
-	return canvas.edition === "desktop" && width * canvas.scale >= 900
+	return canvas.edition === "desktop" &&
+		(width >= canvas.w || width * canvas.scale >= 900)
 		? "w1280"
 		: "w780"
 }
@@ -308,9 +328,10 @@ export function Bar({
 	items,
 	className = "",
 }: { items: readonly string[]; className?: string }) {
-	const P = usePhone()
+	const { canvas } = useTvView()
+	const P = canvas.edition === "phone"
 	// On the phone a key is a round touch target.
-	const side = useKeySize(54)
+	const side = keyLength(canvas, 54)
 	return (
 		<div
 			className={`flex shrink-0 items-center ${P ? "gap-2" : "gap-2.5"} ${className}`}
@@ -365,7 +386,7 @@ function Expand() {
 			id="expand"
 			label={expands ? `Expand: ${expands}` : "Expand"}
 			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? "gap-2.5 px-3.5 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`}
-			style={P ? { height: keySize(canvas, 54) } : undefined}
+			style={P ? { height: keyLength(canvas, 54) } : undefined}
 		>
 			<span
 				className="relative block shrink-0"

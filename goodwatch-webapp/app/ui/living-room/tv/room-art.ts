@@ -15,3 +15,17 @@ export const PHONE_ROOM_ART = {
 	avif: roomPhoneSoftAvif,
 	webp: roomPhoneSoftWebp,
 } as const
+
+/**
+ * Before the window is measured both room photos are in the HTML (TvRoom.tsx), and a `<source>` that matches
+ * where the other room is drawn keeps a photo from being asked for there: the desktop's while a phone is upright,
+ * the phone's everywhere else. The queries are the layouts' (PHONE_BELOW and LANDSCAPE in TvRoom.tsx), in
+ * window pixels: before the first paint no script has measured anything.
+ */
+export const UPRIGHT_PHONE =
+	"(max-width: 767.98px) and (orientation: portrait), (max-width: 767.98px) and (min-height: 540.02px)"
+export const NOT_UPRIGHT_PHONE =
+	"(min-width: 768px), (orientation: landscape) and (max-height: 540px)"
+/** A picture of nothing, for the photo the window does not draw. */
+export const NO_PICTURE =
+	"data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="

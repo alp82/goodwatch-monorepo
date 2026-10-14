@@ -143,6 +143,13 @@ test("a member's tiles show their own Tonight and My shows", () => {
 test("What is GoodWatch? and the menu draw the machine's items", () => {
 	for (const edition of ["desktop", "phone"] as const) {
 		assert.deepEqual(ids(rendered.about[edition]), rendered.items.about)
+		// A screen reader meets a menu of menu items, each named by its word.
+		const menu = rendered.menu.guest[edition]
+		assert.match(menu, /role="menu" aria-label="Menu"/)
+		assert.equal(
+			count(menu, 'role="menuitem"'),
+			rendered.items.menuGuest.length,
+		)
 		assert.deepEqual(
 			ids(rendered.menu.guest[edition]),
 			rendered.items.menuGuest,
@@ -251,29 +258,43 @@ test("while the TV boots it shows the wordmark and no item; the toast stands in 
 test("before the window is measured the room holds both editions of the screen, one H1 each", () => {
 	const html = rendered.room.guest
 	const room = html.slice(0, html.indexOf('<section id="browse"'))
-	assert.equal(count(room, 'class="tvr-first tvr-first-'), 2)
+	// tv.css places each edition's canvas for the first paint and shows the one the window's layout draws.
 	assert.match(
 		room,
-		/<div data-tv-canvas="desktop" class="tvr-first tvr-first-desktop" style="width:1200px;height:648px">/,
+		/<div data-tv-canvas="desktop" class="absolute left-0 top-0 origin-top-left tvr-f-cv tvr-f-cv-desktop">/,
 	)
 	assert.match(
 		room,
-		/<div data-tv-canvas="phone" class="tvr-first tvr-first-phone" style="width:500px;height:417px">/,
+		/<div data-tv-canvas="phone" class="absolute left-0 top-0 origin-top-left tvr-f-cv tvr-f-cv-phone">/,
 	)
 	assert.equal(count(room, "<h1"), 2)
 	assert.equal(count(html, "<h1"), 2)
 	// Each edition's pictures are lazy, so the edition CSS hides does not request them.
-	assert.equal(count(room, "<img"), 12)
-	assert.equal(count(room, 'loading="lazy"'), 12)
+	const screens = [
+		...room.matchAll(
+			/<div data-tv-canvas="(desktop|phone)"[\s\S]*?(?=<div data-tv-canvas=|<div data-remote)/g,
+		),
+	].map((m) => m[0])
+	assert.equal(screens.length, 2)
+	for (const screen of screens) {
+		assert.equal(count(screen, "<img"), 6)
+		assert.equal(count(screen, 'loading="lazy"'), 6)
+	}
 	assert.deepEqual(ids(room), [
 		...rendered.items.homeGuest,
 		...rendered.items.homeGuest,
 	])
+	// The phone's top bar keys are as tall as they will be once the window is measured (tv.css, `--tv-key`).
+	assert.match(
+		screens[1],
+		/style="width:max\(54px, var\(--tv-key, 54px\)\);height:max\(54px, var\(--tv-key, 54px\)\)"/,
+	)
+	assert.doesNotMatch(screens[0], /--tv-key/)
 })
 
 test("a guest's HTML is the same on every render, and the TV that is off draws no screen", () => {
 	assert.equal(rendered.room.guest, rendered.room.again)
 	assert.notEqual(rendered.room.member, rendered.room.guest)
 	assert.equal(count(rendered.room.off, "data-tv-item"), 0)
-	assert.equal(count(rendered.room.off, 'class="tvr-first tvr-first-'), 2)
+	assert.equal(count(rendered.room.off, "tvr-f-cv tvr-f-cv-"), 2)
 })
