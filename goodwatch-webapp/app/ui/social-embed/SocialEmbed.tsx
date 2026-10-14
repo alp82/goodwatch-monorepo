@@ -136,10 +136,7 @@ export function SocialEmbed({
 	if (variant === "row")
 		return (
 			<div className={`flex min-w-0 flex-col gap-2 ${className}`} data-social-item={item.id} data-state={loaded ? "loaded" : "facade"}>
-				<div className="flex items-center justify-between gap-2">
-					<SourceChip item={item} />
-					<span className="text-xs text-gray-500">{ago(item.publishedAt, now)}</span>
-				</div>
+				<RowTop item={item} now={now} actions={actions} />
 				{loaded ? (
 					<div className={target.kind === "youtube" && target.vertical ? "mx-auto w-full max-w-[16rem]" : ""}>
 						<SocialPlayer target={target} title={playerTitle} />
@@ -153,7 +150,6 @@ export function SocialEmbed({
 						</div>
 					</>
 				)}
-				{actions && <div className="flex justify-end">{actions}</div>}
 			</div>
 		)
 
@@ -222,6 +218,19 @@ export function SocialEmbed({
 	)
 }
 
+/** A feed row's first line: the source, the age and the row's own controls. */
+function RowTop({ item, now, actions }: { item: SocialEmbedItem; now: number; actions?: ReactNode }) {
+	return (
+		<div className="flex items-center justify-between gap-2">
+			<SourceChip item={item} />
+			<span className="flex items-center gap-3 text-xs text-gray-500">
+				{ago(item.publishedAt, now)}
+				{actions}
+			</span>
+		</div>
+	)
+}
+
 function LinkItem({
 	item,
 	href,
@@ -244,7 +253,7 @@ function LinkItem({
 			{href && (
 				<span aria-hidden="true" className="text-amber-200/70">
 					{" "}
-					↗
+					↗︎
 				</span>
 			)}
 		</>
@@ -252,10 +261,7 @@ function LinkItem({
 	if (variant === "row")
 		return (
 			<div className={`flex min-w-0 flex-col gap-2 ${className}`} data-social-item={item.id}>
-				<div className="flex items-center justify-between gap-2">
-					<SourceChip item={item} />
-					<span className="text-xs text-gray-500">{ago(item.publishedAt, now)}</span>
-				</div>
+				<RowTop item={item} now={now} actions={actions} />
 				{href ? (
 					<a href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] font-semibold leading-snug break-words text-gray-100 hover:underline">
 						{headline}
@@ -263,10 +269,7 @@ function LinkItem({
 				) : (
 					<p className="text-[15px] font-semibold leading-snug break-words text-gray-100">{item.text}</p>
 				)}
-				<div className="flex items-center justify-between gap-3">
-					<span className="min-w-0 truncate text-xs text-gray-400">{item.author || host}</span>
-					{actions}
-				</div>
+				<span className="min-w-0 truncate text-xs text-gray-400">{item.author || host}</span>
 			</div>
 		)
 	return (

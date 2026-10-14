@@ -13,11 +13,14 @@ import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
+import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGrid | null
+	/** Whether the viewer gets the "Talked about now" section. */
+	talkedAboutNow?: boolean
 }
 
 export default function Details(props: DetailsProps) {
@@ -29,7 +32,7 @@ export default function Details(props: DetailsProps) {
 	)
 }
 
-function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
+function DetailsPage({ media, country, episodeGrid, talkedAboutNow }: DetailsProps) {
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -91,6 +94,8 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			<div className="isolate">
 				<DetailsFingerprint media={media} sectionProps={sectionProps.fingerprint} />
 			</div>
+
+			{talkedAboutNow && <TalkedAboutNowSlot media={media} />}
 
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
