@@ -1,0 +1,31 @@
+{
+  "label": "safety-and-post-abort-snapshots",
+  "host": 11,
+  "stmt": "SELECT name, state, started, finished FROM sys.snapshots WHERE repository = 'goodwatch-db-backup-v2' AND (name = 'pre_auth_547_20261014184629' OR name LIKE 'hourly_20261014_20%') ORDER BY name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "state",
+        "started",
+        "finished"
+      ],
+      "rows": [
+        [
+          "pre_auth_547_20261014184629",
+          "SUCCESS",
+          1792004223718,
+          1792004249348
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 19492.12
+    },
+    "elapsedSeconds": 19.501,
+    "at": "2026-10-14T20:05:05.488241+00:00"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "label": "post-abort-scheduled-backup",
+  "host": 11,
+  "stmt": "SELECT name, state, started, finished FROM sys.snapshots WHERE repository = 'goodwatch-db-backup-v2' AND name LIKE 'hourly_20261014_20%' ORDER BY name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "state",
+        "started",
+        "finished"
+      ],
+      "rows": [
+        [
+          "hourly_20261014_200501",
+          "IN_PROGRESS",
+          1792008301316,
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 18503.492
+    },
+    "elapsedSeconds": 18.508,
+    "at": "2026-10-14T20:06:56.923789+00:00"
+  }
+}
