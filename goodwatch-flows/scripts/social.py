@@ -35,7 +35,7 @@ def main():
         db = Crate(settings)
         if args.command == 'counts':
             result = {'posts': db.select('SELECT source,count(*) AS posts,count(deleted_at) AS deleted FROM doc.social_post GROUP BY source'),
-                      'links': db.select('SELECT p.source,count(*) AS links,count(DISTINCT l.media_tmdb_id) AS titles FROM doc.social_title_link l JOIN doc.social_post p ON l.post_id=p.post_id GROUP BY p.source'),
+                      'links': db.select('SELECT p.source,count(*) AS links,count(DISTINCT concat(l.media_type,CAST(l.media_tmdb_id AS TEXT))) AS titles FROM doc.social_title_link l JOIN doc.social_post p ON l.post_id=p.post_id GROUP BY p.source'),
                       'runs': db.select('SELECT source,status,count(*) AS runs,sum(processed) AS processed,sum(published) AS published FROM doc.social_ingest_run GROUP BY source,status')}
         else:
             kind, identifier = args.title.split(':')
