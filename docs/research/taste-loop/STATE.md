@@ -82,19 +82,19 @@ Read this first. Rewritten at the end of every session.
 ## Next action
 
 Phase 2, D1 route chosen by the owner (October 14, 2026):
-1. [x] Exposure log (#525) and G1 behind `REC_G1_ORDER` built on branch `feat/g1-order` (worktree
-   `.claude/worktrees/g1-order`; item 013): offline job with exact pack parity, webapp ordering with exact fixture
-   parity, shadow logging, preview-only rebuilds; reviewed by Fable (plan) and Astra (code, approved for preview).
-   Not pushed, not deployed.
-2. [ ] Owner: PR and production activation (`docs/implementation/g1-order-stage2.md` in that branch): the table
-   DDL, Windmill scripts and worker, preview member variable, webapp env (`REC_PREVIEW_USERS`, `REC_G1_ORDER=shadow`,
-   then `preview`), Windmill token.
-3. [ ] A day of shadow logs read by the orchestrator, then preview; the owner judges their own lists.
+1. [x] Exposure log (#525) and G1 behind `REC_G1_ORDER` merged to main (#574, #575, October 14, 2026); table
+   `user_list_exposure` created in production; Windmill job deployed, variable `f/sync/g1_preview_members` = the
+   owner only; the owner's G1 payload published (60,025 candidates, 283 other members, parity exact under the
+   worker's NumPy 2.5.3). Rating-triggered rebuilds are off (Windmill is not reachable over HTTPS); snapshot and
+   nightly rebuilds run.
+2. [ ] Owner: in Coolify set `REC_PREVIEW_USERS` (owner id) and `REC_G1_ORDER=shadow`, redeploy.
+3. [ ] After a day: the orchestrator reads `user_list_exposure` (today's against G1's first 100) and the overlap
+   logs, then the owner switches to `REC_G1_ORDER=preview` and judges their own Best match and Watch next.
 4. In parallel, without members: T5 for D3; D2 waits for tier C.
 
 ## What the owner owes
 
-Now: the PR and production activation of `feat/g1-order`; then the owner tries G1 on their own lists. Nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+Now: two settings in Coolify (step 2 above); then a day of shadow, then the owner tries G1 on their own lists. Nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed
