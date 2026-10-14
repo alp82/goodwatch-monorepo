@@ -45,7 +45,13 @@ They do not inherit Better Auth's 100-row enumeration default.
 Writes go through #564's strict adapter and encrypted payload/receipt storage. The
 import is insert-only: an existing row must match all mapped fields or the run
 rejects; an old source never resets a changed password or transfers an identity.
-Exact reruns do no writes. A partial run can resume missing accounts/users. Email
+Exact reruns do no writes. If a user's email changes in either the source copy or
+Better Auth target, the rerun rejects during preflight before any target write;
+it does not try another user insert with the existing UUID or silently reset the
+member's current address. Both email-claim ownership and Google-subject ownership
+remain intact. Reconcile the changed snapshot/copy explicitly before retrying;
+this importer is not an incremental account synchronization service.
+A partial run can resume missing accounts/users. Email
 claim recovery and release belong to the adapter's lifecycle implementation;
 the importer never deletes or transfers a claim to make a row fit.
 Claim keys use the adapter's HMAC format. An unknown user-insert outcome can still
@@ -248,3 +254,22 @@ cutover plan. This importer has no production-mode flag.
   password authentication for its dedicated copy role.
 - [CrateDB privileges](https://cratedb.com/docs/crate/reference/en/5.10/admin/privileges.html):
   grant metadata reads on the two system tables used by the CLI's identity guard.
+
+
+## Follow-up on the adapter's supplied-id collision fix
+
+Rebased on #564's fix: a rejected user insert with an existing UUID releases its
+new email reservation after checking receipt ownership. The importer already
+creates every user/account through `adapter.create({ ..., forceAllowId: true })`;
+it never constructs or writes encrypted payloads, receipts or email claims itself.
+Its direct SQL is read-only auditing plus index refreshes. New real Postgres/
+CrateDB regressions cover reruns after source and target email changes: rejection
+before any write, unchanged counts, working case-folded Better Auth email lookup,
+preserved Google subject/UUID ownership, and successful creation of another member
+with the unused address. Existing signed Google-token/password sign-in tests
+continue to verify the original import's adapter create path.
+
+Follow-up verification on Node **24.22.0** passed **28/28 integration and CLI
+cases**, focused importer/auth types, and authenticated dry/import/exact-rerun
+reports against the pinned disposable Postgres 16.10 and CrateDB 5.10.12. This is
+still fake-data verification; it does not complete #551's real-copy rehearsal.

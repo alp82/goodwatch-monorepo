@@ -768,3 +768,78 @@ test("an imported user missing its email lookup claim rejects instead of reporti
 		},
 	)
 })
+
+for (const changedSide of ["source", "target"] as const)
+	test(`a rerun after the ${changedSide} email changes rejects before writes without stranding either address`, async () => {
+		await importSupabaseAuth({ source, sql, encryptionSecret, apply: true })
+		const auth = betterAuth({
+			baseURL: "http://127.0.0.1:15680",
+			secret: "disposable-better-auth-test-secret-for-551",
+			database: crateAuthAdapter({ sql, encryptionSecret }),
+			logger: { disabled: true },
+		})
+		const ctx = await auth.$context
+		const originalEmail = "google@example.test"
+		const changedEmail = "changed-google@example.test"
+		if (changedSide === "source")
+			await source.query(
+				"UPDATE auth.users SET email=$1,updated_at='2026-10-14T12:00:00Z' WHERE id=$2",
+				[changedEmail, ids.google],
+			)
+		else
+			await ctx.internalAdapter.updateUser(ids.google, { email: changedEmail })
+		let attemptedWrites = 0
+		const preflightOnlySql: typeof sql = async (stmt, args) => {
+			if (/^(INSERT|UPDATE|DELETE)\b/.test(stmt)) {
+				attemptedWrites++
+				throw new Error("Changed-email preflight must not write")
+			}
+			return sql(stmt, args)
+		}
+		await assert.rejects(
+			importSupabaseAuth({
+				source,
+				sql: preflightOnlySql,
+				encryptionSecret,
+				apply: true,
+			}),
+			(error: unknown) => {
+				assert.ok(error instanceof SupabaseImportError)
+				assert.equal(error.report.status, "rejected")
+				assert.ok(
+					error.report.issues.some(
+						(issue) =>
+							issue.code === "target_row_mismatch" &&
+							issue.userId === ids.google,
+					),
+				)
+				assert.deepEqual(error.report.created, { users: 0, accounts: 0 })
+				assert.deepEqual(error.report.after, error.report.before)
+				return true
+			},
+		)
+		assert.equal(attemptedWrites, 0)
+		const activeEmail = changedSide === "source" ? originalEmail : changedEmail
+		const unusedEmail = changedSide === "source" ? changedEmail : originalEmail
+		assert.equal(
+			(await ctx.internalAdapter.findUserByEmail(activeEmail.toUpperCase()))
+				?.user.id,
+			ids.google,
+		)
+		assert.equal(await ctx.internalAdapter.findUserByEmail(unusedEmail), null)
+		const owner = await ctx.internalAdapter.findAccountOwnerByKey({
+			providerId: "google",
+			accountId: "105510000000000000003",
+		})
+		assert.ok(owner?.kind === "owned")
+		assert.equal(owner.user.id, ids.google)
+		const newMember = await ctx.internalAdapter.createUser(
+			{ email: unusedEmail, name: "New address owner", emailVerified: true },
+			{ method: "email-password" },
+		)
+		assert.notEqual(newMember.id, ids.google)
+		assert.equal(
+			(await ctx.internalAdapter.findUserByEmail(unusedEmail))?.user.id,
+			newMember.id,
+		)
+	})
