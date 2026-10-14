@@ -9,6 +9,7 @@ process.env.CRATE_USER = "crate"
 process.env.CRATE_PASS = ""
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = "redis://127.0.0.1:16767"
+process.env.TITLE_CARDS_REDIS_URL = ""
 process.env.TITLE_SNAPSHOT_REDIS_URL = "redis://127.0.0.1:16767"
 const { createRateLimiter } = await import("../../app/server/rate-limit.server")
 const resource = "http://localhost:3336/mcp"
