@@ -415,24 +415,6 @@ SCHEMAS = {
         "replicas": "0-1",
         "timestamps": False,
     },
-    "prose_translation": {
-        "columns": {
-            "source_id": "TEXT",
-            "source_revision": "TEXT",
-            "language": "TEXT",
-            "text": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
-            "status": "TEXT",
-            "model": "TEXT",
-            "attempts": "INTEGER",
-            "prompt_tokens": "LONG",
-            "completion_tokens": "LONG",
-            "cost_usd": "DOUBLE",
-            "validation_revision": "TEXT",
-        },
-        "primary_key": ["source_id", "source_revision", "language"],
-        "shards": 3,
-        "replicas": "0-1",
-    },
     "imdb_episode": {
         "columns": {
             "show_id": "INTEGER",

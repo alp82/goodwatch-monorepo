@@ -1,3 +1,4 @@
+import { hasExpectedMediaScript } from "./media-script.ts"
 import {
 	translationCandidates,
 	type OverlayQuery,
@@ -76,8 +77,8 @@ export async function overlayEpisodeText<T extends StableEpisodeText>(
 			),
 			selected,
 		)
-		const name = candidates.find((t) => t.name?.trim()),
-			overview = candidates.find((t) => t.overview?.trim())
+		const name = candidates.find((t) => t.name?.trim() && hasExpectedMediaScript(t.name, selected)),
+			overview = candidates.find((t) => t.overview?.trim() && hasExpectedMediaScript(t.overview, selected))
 		const provenance = (
 			t: EpisodeTextTranslation | undefined,
 		): FieldPresentation =>
@@ -118,7 +119,7 @@ export function createEpisodeTextReader(
 		)
 	}
 }
-/** Grid names receive TMDB overlays only when the selected, reviewed presentation proved a stable TMDB id. */
+/** Grid names receive TMDB overlays only after canonical identity/alignment proved a stable TMDB id. */
 export async function overlayAlignedGrid(
 	grid: import("../server/episode-grid.server").EpisodeGrid,
 	language: string,
@@ -142,7 +143,7 @@ export async function overlayAlignedGrid(
 				return {
 					...e,
 					name: text.name,
-					nameLanguage: e.tmdbId ? text.textPresentation.name.language : "und",
+					nameLanguage: text.textPresentation.name.source === "localized" ? text.textPresentation.name.language : e.nameLanguage ?? (e.tmdbId ? "en" : "und"),
 				}
 			}),
 		})),
@@ -151,7 +152,7 @@ export async function overlayAlignedGrid(
 			return {
 				...e,
 				name: text.name,
-				nameLanguage: e.tmdbId ? text.textPresentation.name.language : "und",
+				nameLanguage: text.textPresentation.name.source === "localized" ? text.textPresentation.name.language : e.nameLanguage ?? (e.tmdbId ? "en" : "und"),
 			}
 		}),
 	}

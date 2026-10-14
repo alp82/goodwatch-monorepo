@@ -1,4 +1,4 @@
-import { localizeTitlePayload, payloadLanguage } from "~/server/media-payload.server"
+import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 import {
@@ -34,7 +34,7 @@ export const loader: LoaderFunction = async ({
 		movieIds,
 	})
 
-	return json<LoaderData>(await localizeTitlePayload(moviesInCollection, payloadLanguage(request)))
+	return json<LoaderData>(await localizeApiTitlePayload(moviesInCollection, request))
 }
 
 export const useMovieCollection = ({

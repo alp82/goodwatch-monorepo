@@ -1,5 +1,6 @@
 # Implement selected-language media content with variant F
 
+> Scope amended by the owner on 2026-10-14 (Q1–Q3): page prose/FAQ/fingerprint/taste/essence translation is outside this release; canonical English readers remain, and prose resources/jobs/schema were removed. Media fields and season/episode text remain localized. Season/episode migration and bounded ingestion are approved only after main, coordinated by the owner. See [current decisions](media-language-decisions.md), [surface matrix](media-language-surface-matrix.md) and [rollout](media-language-rollout.md). Original phase wording below records the earlier plan.
 Handover date: 2026-10-14. The user selected F: “F is great! create a handover for a new session to build it”. This session produced documentation only; implementation starts in a fresh session.
 
 ## Start here

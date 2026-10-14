@@ -91,9 +91,9 @@ function QuestionCard({ media, country, faq, wide = false }: { media: Media; cou
 				<Icon className="h-5 w-5" />
 			</span>
 			<div className="min-w-0 grow">
-				<h3 lang={faq.language ?? "en"} className="text-lg font-semibold leading-snug">{faq.q}</h3>
+				<h3 className="text-lg font-semibold leading-snug">{faq.q}</h3>
 				<AnswerVisual media={media} country={country} id={faq.id} />
-				<p lang={faq.language ?? "en"} className="mt-3 text-gray-300 leading-relaxed">{faq.a}</p>
+				<p className="mt-3 text-gray-300 leading-relaxed">{faq.a}</p>
 			</div>
 		</article>
 	)

@@ -1,5 +1,5 @@
 import { isbot } from "isbot"
-import { liveMediaLanguage, payloadLanguage } from "./media-payload.server.ts"
+import { apiDisplayLanguage, liveMediaLanguage } from "./media-payload.server.ts"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserData } from "~/server/userData.server"
@@ -78,7 +78,8 @@ export async function getViewerContext(
 			: knownUserId
 	const guessedCountry = getLocaleFromRequest(request).locale.country
 	const ctx = !userId ? guestContext(guest, guessedCountry) : await getMemberViewerContext(userId, guessedCountry)
-	const language = new URL(request.url).searchParams.has("displayLanguage") ? payloadLanguage(request) : await liveMediaLanguage(request, userId)
+	const api = new URL(request.url).pathname.startsWith("/api/")
+	const language = api ? apiDisplayLanguage(request) : await liveMediaLanguage(request, userId)
 	return { ...ctx, language: isbot(request.headers.get("user-agent")) ? undefined : language }
 }
 

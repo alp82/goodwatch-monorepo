@@ -11,13 +11,17 @@ import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
 import { cached, declareResettableCache, resetCache } from "~/utils/cache";
 import { execute, query, upsert } from "~/utils/crate";
 
+export const USER_SETTINGS_CACHE_NAME = "user-settings-media-v1";
+export const LEGACY_USER_SETTINGS_CACHE_NAME = "user-settings";
 const SETTINGS_CACHE = {
-	name: "user-settings",
+	name: USER_SETTINGS_CACHE_NAME,
 	// Writes refresh Crate and reset; five minutes bounds changes a reset cannot reach.
 	ttlMinutes: 5,
 	staleMinutes: 0,
 } as const;
 declareResettableCache(SETTINGS_CACHE);
+// New writes still invalidate older roles' ordinary settings; old roles never fill the new projection.
+declareResettableCache({ ...SETTINGS_CACHE, name: LEGACY_USER_SETTINGS_CACHE_NAME });
 
 interface UserSettingRow {
 	key: string;
@@ -178,17 +182,18 @@ export const resetUserSettingsCache = async (
 		return 0;
 	}
 
-	const key = { name: SETTINGS_CACHE.name, params: { userId: params.user_id } };
+	const keys = [USER_SETTINGS_CACHE_NAME, LEGACY_USER_SETTINGS_CACHE_NAME].map(name => ({ name, params: { userId: params.user_id } }));
 	try {
 		await execute("REFRESH TABLE user_setting");
 	} catch (error) {
 		console.error("Refreshing member settings before cache reset failed:", error);
 		// Drop any old settings cached before Crate's periodic refresh catches up.
 		setTimeout(() => {
-			void resetCache(key);
+			void Promise.all(keys.map(key => resetCache(key)));
 		}, 2000).unref();
 	}
-	return await resetCache(key);
+	const [current] = await Promise.all(keys.map(key => resetCache(key)));
+	return current;
 };
 
 // loader prefetch

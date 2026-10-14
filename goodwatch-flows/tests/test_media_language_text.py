@@ -1,12 +1,9 @@
 """No network/Crate/model calls. Native unittest production seam contracts."""
-import json
-from decimal import Decimal
 from pathlib import Path
 import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
 from f.media_language.episode_translations import Bounds, ingest_titles, publish_rows, translation_rows
-from f.media_language.prose_jobs import Budget, revision, run_jobs, validate
 
 
 def payload(identifier, **fields):
@@ -91,96 +88,9 @@ class TranslationIngestionTest(unittest.TestCase):
             self.assertEqual(SCHEMAS[table]['primary_key'], ['show_id', 'tmdb_id', 'language_code', 'country_code'])
             self.assertEqual(SCHEMAS[table]['clustered_by'], 'show_id')
             self.assertIn(f'CREATE TABLE IF NOT EXISTS doc.{table}', sql)
-        self.assertEqual(SCHEMAS['prose_translation']['primary_key'], ['source_id', 'source_revision', 'language'])
+        self.assertNotIn('prose_translation', SCHEMAS)
+        self.assertNotIn('prose_translation', sql)
         self.assertNotIn('DELETE', sql)
-
-
-class ProseJobTest(unittest.TestCase):
-    def test_revision_is_sha256_utf8_contract(self):
-        self.assertEqual(revision('Hello'), '185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969')
-
-    def test_validation_preserves_numbers_placeholders_and_language(self):
-        self.assertEqual(validate('Score {title}: 8/100.', 'Wertung {title}: 8/100.', 'de', lambda _: 'de'), 'Wertung {title}: 8/100.')
-        for text, detect in [('Wertung: 8/100.', 'de'), ('Wertung {title}: 9/100.', 'de'), ('Rating {title}: 8/100.', 'en')]:
-            with self.assertRaises(ValueError): validate('Score {title}: 8/100.', text, 'de', lambda _: detect)
-        with self.assertRaises(ValueError): validate('Some long sentence here.', 'x', 'de', lambda _: 'de')
-        with self.assertRaises(ValueError): validate('A Chinese sentence.', '這是一段繁體中文的文字。', 'zh-Hant', lambda _: 'zh-Hans')
-
-    def test_default_is_dry_and_zero_cost(self):
-        result = run_jobs([{'source_id': 'movie:603:essence_text', 'text': 'An atmospheric journey.'}], ['de'],
-                          read=lambda *key: None, publish=lambda record: self.fail('write'),
-                          request=lambda payload: self.fail('paid call'))
-        self.assertEqual(result[0]['status'], 'dry-run')
-        self.assertEqual(result[0]['cost_usd'], 0)
-
-    def test_zero_budget_fails_before_request(self):
-        with self.assertRaises(ValueError):
-            run_jobs([{'source_id': 'x', 'text': 'Hello'}], ['de'], read=lambda *key: None,
-                     publish=lambda _: None, request=lambda _: self.fail('paid'), detect=lambda _: 'de', budget=Budget(), dry_run=False)
-
-    def test_retry_charges_validation_failures_and_publishes_exact_revision(self):
-        calls, published, ledger = [], [], []
-        def request(payload):
-            calls.append(payload)
-            text = 'English text' if len(calls) == 1 else 'Eine schöne Reise.'
-            return {'choices': [{'message': {'content': json.dumps({'text': text})}}],
-                    'usage': {'cost': 0.001, 'prompt_tokens': 20, 'completion_tokens': 10}}
-        source = 'A beautiful journey.'
-        budget = Budget(Decimal('0.1'), persist=ledger.append)
-        result = run_jobs([{'source_id': 'x', 'text': source}], ['de'], read=lambda *key: None,
-                          publish=published.append, request=request, detect=lambda text: 'en' if text == 'English text' else 'de',
-                          budget=budget, dry_run=False, sleep=lambda _: None)
-        self.assertEqual(result[0]['attempts'], 2)
-        self.assertEqual(result[0]['cost_usd'], 0.002)
-        self.assertEqual(budget.used, Decimal('0.002'))
-        self.assertEqual(published[-1]['source_revision'], revision(source))
-        self.assertEqual([r['status'] for r in published], ['failed', 'valid'])
-        self.assertEqual(calls[0]['model'], 'qwen/qwen3.8-flash')
-        self.assertFalse(calls[0]['provider']['allow_fallbacks'])
-        self.assertEqual(len(ledger), 4)
-
-    def test_timeout_reservation_survives_and_blocks_retry(self):
-        calls = []
-        def request(payload): calls.append(payload); raise TimeoutError()
-        budget = Budget(Decimal('0.003'))
-        with self.assertRaises(ValueError):
-            run_jobs([{'source_id': 'x', 'text': 'A beautiful journey.'}], ['de'], read=lambda *key: None,
-                     publish=lambda _: None, request=request, detect=lambda _: 'de', budget=budget, dry_run=False, sleep=lambda _: None)
-        self.assertEqual(len(calls), 1)
-        self.assertGreater(budget.used, 0)
-
-    def test_durable_ledger_and_provider_cost_errors_stop_before_another_call(self):
-        from f.media_language.prose_jobs import SpendContractError
-        budget = Budget(Decimal('1'))
-        reserved = Decimal('0.01')
-        budget.reserve(reserved)
-        with self.assertRaises(SpendContractError): budget.settle(reserved, 1)
-        with self.assertRaises(SpendContractError): budget.settle(reserved, 'not-a-cost')
-        with self.assertRaises(ValueError): Budget(Decimal('1'), Decimal('-1')).reserve(reserved)
-
-    def test_fixed_templates_cannot_enter_paid_translation(self):
-        with self.assertRaises(ValueError):
-            run_jobs([{'source_id': 'template:hash', 'text': 'Template text', 'kind': 'template'}], ['de'],
-                     read=lambda *key: None, publish=lambda _: None, request=lambda _: self.fail('paid'),
-                     detect=lambda _: 'de', budget=Budget(Decimal('1')), dry_run=False)
-
-    def test_failed_attempt_costs_are_retained_across_resume(self):
-        def request(_):
-            return {'choices': [{'message': {'content': '{"text":"Eine schöne Reise."}'}}],
-                    'usage': {'cost': 0.001, 'prompt_tokens': 20, 'completion_tokens': 10}}
-        result = run_jobs([{'source_id': 'x', 'text': 'A beautiful journey.'}], ['de'],
-                          read=lambda *key: {'status': 'failed', 'attempts': 2, 'cost_usd': 0.005, 'prompt_tokens': 40},
-                          publish=lambda _: None, request=request, detect=lambda _: 'de',
-                          budget=Budget(Decimal('1')), dry_run=False)
-        self.assertEqual(result[0]['attempts'], 3)
-        self.assertEqual(result[0]['cost_usd'], 0.006)
-        self.assertEqual(result[0]['prompt_tokens'], 60)
-
-    def test_same_revision_skips_but_new_revision_does_not(self):
-        read = lambda source, rev, lang: {'status': 'valid', 'validation_revision': 'prose-v1'} if rev == revision('Old source') else None
-        results = run_jobs([{'source_id': 'x', 'text': 'Old source'}, {'source_id': 'x', 'text': 'New source'}], ['de'],
-                           read=read, publish=lambda _: self.fail('write'))
-        self.assertEqual([r['status'] for r in results], ['existing', 'dry-run'])
 
 
 if __name__ == '__main__': unittest.main()

@@ -1,4 +1,3 @@
-import { overlayProsePayload } from "./prose-overlay.server.ts"
 import { overlayTitles } from "./media-overlay.server.ts"
 import { presentationLanguage } from "../utils/media-presentation.ts"
 import { isbot } from "isbot"
@@ -8,6 +7,23 @@ import { getUserIdFromRequest } from "../utils/auth.ts"
 /** Explicit URL dimension for public API payloads. Absent values retain the canonical English API contract. */
 export const payloadLanguage = (request: Request) =>
 	presentationLanguage(new URL(request.url).searchParams.get("displayLanguage"))
+/** Presence of this query dimension opts a client into the additive media presentation contract. */
+export const apiDisplayLanguage = (request: Request) =>
+	!isbot(request.headers.get("user-agent")) &&
+	new URL(request.url).searchParams.has("displayLanguage")
+		? payloadLanguage(request)
+		: undefined
+/** A canonical bot response cannot populate a human's localized public URL. */
+export const mediaApiCacheControl = (request: Request, livePolicy: string) =>
+	isbot(request.headers.get("user-agent")) ? "private, no-store" : livePolicy
+export async function localizeApiTitlePayload<T>(
+	payload: T,
+	request: Request,
+	hint?: Kind,
+) {
+	const language = apiDisplayLanguage(request)
+	return language ? localizeTitlePayload(payload, language, hint) : payload
+}
 export async function liveMediaLanguage(
 	request: Request,
 	userId?: string | null,
@@ -30,7 +46,7 @@ export function localizeTitlePayload<T>(
 	hint?: Kind,
 	overlay: typeof overlayTitles = overlayTitles,
 ) {
-	return localizeCore(payload, language, hint, overlay).then(value => overlayProsePayload(value, language))
+	return localizeCore(payload, language, hint, overlay)
 }
 
 /** Route boundary for JSON catalog responses. Base data caches stay canonical; explicit URLs partition public payloads. */
@@ -57,10 +73,11 @@ export function presentCatalogLoader<A extends { request: Request }, R>(
 				},
 			}) as R
 		}
-		const language =
-			options.live &&
-			(!new URL(args.request.url).pathname.startsWith("/api/") ||
-				!new URL(args.request.url).searchParams.has("displayLanguage"))
+		const api = new URL(args.request.url).pathname.startsWith("/api/")
+		if (api && !apiDisplayLanguage(args.request)) return result
+		const language = api
+			? payloadLanguage(args.request)
+			: options.live
 				? await liveMediaLanguage(args.request)
 				: payloadLanguage(args.request)
 		if (result instanceof Response) {

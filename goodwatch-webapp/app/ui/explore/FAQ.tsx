@@ -1,4 +1,3 @@
-import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 import React from "react"
 import type { PageFAQ } from "~/ui/explore/config"
 
@@ -16,10 +15,10 @@ export default function FAQ({ faq }: FAQProps) {
 			<div className="space-y-12">
 				{faq.map((item) => (
 					<div key={item.q} className="group">
-						<h3 lang={proseFieldLanguage(item, "q")} className="text-xl font-semibold text-gray-100 mb-4 tracking-tight">
+						<h3 className="text-xl font-semibold text-gray-100 mb-4 tracking-tight">
 							{item.q}
 						</h3>
-						<p lang={proseFieldLanguage(item, "a")} className="text-lg leading-relaxed text-gray-300 font-medium">
+						<p className="text-lg leading-relaxed text-gray-300 font-medium">
 							{item.a}
 						</p>
 					</div>

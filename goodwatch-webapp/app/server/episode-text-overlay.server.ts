@@ -20,6 +20,7 @@ const availableTables = async () =>
 			name: "episode-text-source-tables-v1",
 			params: {},
 			ttlMinutes: 5,
+			staleMinutes: 0,
 			target: async () => ({
 				tables: (
 					await query<{ table_name: string }>(

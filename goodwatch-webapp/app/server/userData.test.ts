@@ -68,7 +68,7 @@ const { setCrateClientForTest, execute, upsert } = await import(
 const { setRedisClusterForTest, resetPendingResetsForTest, cacheEntryKey } =
 	await import("../utils/cache.ts")
 const { getUserData, resetUserDataCache } = await import("./userData.server.ts")
-const { getUserSettings, setUserSettings, resetUserSettingsCache } =
+const { getUserSettings, setUserSettings, resetUserSettingsCache, USER_SETTINGS_CACHE_NAME, LEGACY_USER_SETTINGS_CACHE_NAME } =
 	await import("./user-settings.server.ts")
 const { updateScores } = await import("./scores.server.ts")
 const { updateWishList } = await import("./wishList.server.ts")
@@ -373,7 +373,7 @@ test("undoFinishTitle refreshes deletion and restores original wishlist date", a
 test("settings refresh before reset and return new settings immediately", async () => {
 	await getUserSettings({ userId: user })
 	await setUserSettings({ user_id: user, settings: { country_default: "DE" } })
-	ordered("user_setting", cacheEntryKey("user-settings", { userId: user }))
+	ordered("user_setting", cacheEntryKey(USER_SETTINGS_CACHE_NAME, { userId: user }))
 	assert.deepEqual(await getUserSettings({ userId: user }), {
 		country_default: "DE",
 	})
@@ -421,7 +421,7 @@ test("guest import finally refreshes both caches", async () => {
 	await resetGuestImportCaches(user)
 	ordered("user_score")
 	ordered("user_wishlist")
-	ordered("user_setting", cacheEntryKey("user-settings", { userId: user }))
+	ordered("user_setting", cacheEntryKey(USER_SETTINGS_CACHE_NAME, { userId: user }))
 	const data = await getUserData({ user_id: user })
 	assert.equal(data.scores["movie-123"].score, 9)
 	assert.ok(data.wishlist["movie-123"])
@@ -471,7 +471,7 @@ for (const settings of [false, true])
 				? getUserSettings({ userId: user })
 				: getUserData({ user_id: user })
 		const cacheKey = settings
-			? cacheEntryKey("user-settings", { userId: user })
+			? cacheEntryKey(USER_SETTINGS_CACHE_NAME, { userId: user })
 			: key()
 		await read()
 		db.failRefresh = true
@@ -538,4 +538,19 @@ test("the watch state from rows as the driver hands them over: Dates, and null f
 		assert.deepStrictEqual(entry("show-1"), { watchedAt: null, precision: "unknown", lastActivityAt: new Date(moment + 86_400_000) })
 		assert.deepStrictEqual(entry("show-2"), { watchedAt: null, precision: "unknown", lastActivityAt: null })
 	}
+})
+
+
+test("pair-aware settings are isolated from an older role's legacy cache; writes reset both", async () => {
+	const pair = {country:"DE",language:"fr",schemaVersion:1,version:"saved-version"}
+	await upsert({table:"user_setting",data:[{user_id:user,key:"media_preferences_v1",value:JSON.stringify(pair)}],conflictColumns:["user_id","key"]})
+	await execute("REFRESH TABLE user_setting")
+	const { serializeCacheEntry } = await import("../utils/cache.ts")
+	const legacy = cacheEntryKey(LEGACY_USER_SETTINGS_CACHE_NAME,{userId:user})
+	await redis.setex(legacy,300,serializeCacheEntry({country_default:"US"}))
+	assert.equal((await getUserSettings({userId:user})).country_default,"DE")
+	assert.ok(redis.values.has(legacy))
+	await resetUserSettingsCache({user_id:user})
+	assert.equal(redis.values.has(legacy),false)
+	assert.equal(redis.values.has(cacheEntryKey(USER_SETTINGS_CACHE_NAME,{userId:user})),false)
 })

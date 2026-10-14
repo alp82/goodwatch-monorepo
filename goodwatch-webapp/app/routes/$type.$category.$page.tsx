@@ -1,4 +1,3 @@
-import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
@@ -165,9 +164,9 @@ export default function MoviesCategoryPage() {
 							</span>
 						</h2>
 						<div className="text-3xl font-bold text-gray-100">
-							<span lang={proseFieldLanguage(pageData, "subtitle")}>{pageData.subtitle}</span>
+							{pageData.subtitle}
 						</div>
-						<div className="text-lg text-gray-300"><span lang={proseFieldLanguage(pageData, "description")}>{pageData.description}</span></div>
+						<div className="text-lg text-gray-300">{pageData.description}</div>
 						<div className="mt-8 flex items-center justify-between gap-8 flex-wrap">
 							<div className="flex gap-2 flex-wrap">
 								<MyStreamingCheckbox

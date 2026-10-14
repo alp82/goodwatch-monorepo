@@ -19,7 +19,6 @@ export interface MediaPresentation {
 	tagline: FieldPresentation
 }
 export interface PresentedMedia {
-	prosePresentation?: import("./prose-overlay-core").ProsePresentation
 	canonical_title?: string
 	presentation?: MediaPresentation
 }
@@ -50,9 +49,6 @@ export function mediaFieldLanguage(
 }
 
 export interface LocalizedTitlePayload {
-	essence_text?: string | null
-	essence_tags?: string[] | null
-	prosePresentation?: import("./prose-overlay-core").ProsePresentation
 	media_type: "movie" | "show"
 	tmdb_id: number
 	canonical_title: string

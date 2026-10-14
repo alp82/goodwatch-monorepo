@@ -1,4 +1,3 @@
-import { presentTitleTemplates } from "~/server/media-templates.server"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
 import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
@@ -116,7 +115,7 @@ export const loader: LoaderFunction = async ({
 	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
 
 	const data = {
-		media: canonicalContent ? media : presentTitleTemplates(media, country, language),
+		media,
 		params: {
 			country,
 		},

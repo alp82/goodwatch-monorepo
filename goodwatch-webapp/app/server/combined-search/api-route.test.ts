@@ -18,7 +18,7 @@ console.info = (line: string) => {
 after(() => { console.info = info })
 ;(globalThis as any).__routeSearchTest = state
 const stubs: Record<string, string> = {
-	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeTitlePayload=async(batch,language)=>({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:language}))});`,
+	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeApiTitlePayload=async(batch,request)=>new URL(request.url).searchParams.has("displayLanguage")?({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:new URL(request.url).searchParams.get("displayLanguage")}))}):batch;`,
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
 	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
 	"/combined-search/search.server.ts": `export const combinedSearch=(...args)=>globalThis.__routeSearchTest.run(...args);`,
@@ -141,4 +141,15 @@ test("accepted failures before any delivery remain visible in anonymous completi
 	assert.equal(events[1].firstResultsMs, null)
 	assert.ok(!JSON.stringify(events).includes("sentinel"))
 	assert.equal(state.release, 1)
+})
+
+
+test("legacy search request against a new role retains the canonical NDJSON row contract", async () => {
+	reset()
+	state.run=async(_q,_policy,_viewer,_signal,_reading,options)=>{const batch={rows:[{key:"movie:42",title:"Canonical English"}]};await options.onComplete(batch);return batch}
+	const response=await action({request:new Request("http://localhost:3003/api/combined-search",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":"fr"},body:JSON.stringify({q:"fixture"})})} as any)
+	const packet=JSON.parse((await response.text()).trim())
+	assert.equal(packet.kind,"batch")
+	assert.equal(packet.batch.rows[0].title,"Canonical English")
+	assert.equal(packet.batch.rows[0].displayLanguage,undefined)
 })

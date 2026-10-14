@@ -1,3 +1,4 @@
+import { hasExpectedMediaScript } from "./media-script.ts"
 import {
 	presentationLanguage,
 	type MediaPresentation,
@@ -145,12 +146,12 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 		selected,
 	)
 	const pick = (name: "title" | "overview" | "tagline") =>
-		candidates.find((candidate) => nonblank(candidate[name]))
+		candidates.find((candidate) => nonblank(candidate[name]) && hasExpectedMediaScript(candidate[name]!, selected))
 	const title = pick("title"),
 		overview = pick("overview"),
 		tagline = pick("tagline")
 	const original =
-		!title && languageMatches(base.original_language_code, selected)
+		!title && languageMatches(base.original_language_code, selected) && hasExpectedMediaScript(base.original_title ?? "", selected)
 			? nonblank(base.original_title)
 			: null
 	const posterRows = sources.posters.filter(
@@ -181,7 +182,7 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 		: original
 			? (base.original_language_code ?? "und")
 			: !nonblank(base.title) && canonicalTitle === base.original_title
-				? (base.original_language_code ?? "und")
+				? (hasExpectedMediaScript(canonicalTitle, base.original_language_code ?? "und") ? (base.original_language_code ?? "und") : "und")
 				: canonicalLanguage
 	const presentation: MediaPresentation = {
 		language: selected,

@@ -1,4 +1,3 @@
-import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 // You vs everyone: where the person's ratings part ways with the GoodWatch score ("everyone"). Each title shows both
 // scores on one line, so the gap is the story.
 import { Link } from "@remix-run/react"
@@ -84,7 +83,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 					You and everyone else
 				</p>
 				<h1 className="mt-2 max-w-4xl text-4xl font-bold leading-tight md:text-6xl">
-					<span lang={proseFieldLanguage(view, "headline")}>{view.headline}</span>
+					{view.headline}
 				</h1>
 				<p className="mt-4 max-w-3xl text-lg text-gray-300 md:text-xl">
 					{hot && (

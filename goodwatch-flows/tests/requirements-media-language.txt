@@ -1,5 +1,4 @@
-# Text jobs use the same HTTP/Crate/Windmill adapters as ingestion and DNA generation.
+# Season/episode translation ingestion uses the existing HTTP/Crate/Windmill adapters.
 requests==2.34.2
 crate==2.3.0
 wmill==1.811.1
-langdetect==1.0.9

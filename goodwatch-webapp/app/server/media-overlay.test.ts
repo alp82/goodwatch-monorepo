@@ -79,6 +79,39 @@ const sources: Sources = {
 	],
 }
 
+test("mislabeled Latin text in non-Latin translations falls back per field with actual language", () => {
+	const arabic: Sources = { ...sources, translations: [{
+		media_tmdb_id: 42, media_type: "movie", language_code: "ar", country_code: "SA",
+		title: "Sword Art Online", overview: "بداية رحلة جديدة", tagline: "An English tagline",
+	}] }
+	const result = overlayMediaRow(row, "ar", arabic)
+	assert.equal(result.title, "Canonical")
+	assert.equal(result.presentation.title.language, "en")
+	assert.equal(result.presentation.title.source, "canonical")
+	assert.equal(result.synopsis, "بداية رحلة جديدة")
+	assert.equal(result.presentation.overview.language, "ar-SA")
+	assert.equal(result.tagline, "English tagline")
+	assert.equal(result.presentation.tagline.language, "en")
+	const badOriginal = { ...row, original_title: "Sword Art Online", original_language_code: "ar" }
+	const fallback = overlayMediaRow(badOriginal, "ar", { ...arabic, canonical: [badOriginal], translations: [] })
+	assert.equal(fallback.title, "Canonical")
+	assert.equal(fallback.presentation.title.source, "canonical")
+	const titleless = { ...badOriginal, title: "" }
+	assert.equal(overlayMediaRow(titleless, "ar", { ...arabic, canonical: [titleless], translations: [] }).presentation.title.language, "und")
+})
+test("season/episode candidates reject mislabeled fields without hiding canonical membership", async () => {
+	for (const kind of ["season", "episode"] as const) {
+		const translated = await overlayEpisodeText(kind, 1396, [{ id: 62085, name: "Pilot", overview: "Canonical overview" }], "ar", async () => [{
+			show_id: 1396, tmdb_id: 62085, language_code: "ar", country_code: "SA", name: "Pilot", overview: "البداية",
+		}])
+		assert.equal(translated.length, 1)
+		assert.equal(translated[0].name, "Pilot")
+		assert.equal(translated[0].textPresentation.name.language, "en")
+		assert.equal(translated[0].overview, "البداية")
+		assert.equal(translated[0].textPresentation.overview.language, "ar-SA")
+	}
+})
+
 test("per-field nonblank fallback and actual source provenance, without mutation", () => {
 	const before = structuredClone({ row, sources })
 	Object.freeze(row)

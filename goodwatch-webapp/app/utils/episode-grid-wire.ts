@@ -89,8 +89,8 @@ const unpackScores = ([
 
 export const packEpisodeGrid = (grid: EpisodeGrid): EpisodeGridWire => ({
 	...grid,
-	...(grid.seasons.some(s => s.episodes.some(e => e.tmdbId)) || grid.specials.some(e => e.tmdbId) ? { episodeIds: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.tmdbId).map(e => [`${s.number}:${e.number}`, e.tmdbId!])), ...grid.specials.filter(e => e.tmdbId).map((e, i) => [`special:${i}`, e.tmdbId!])]) } : {}),
-	...(grid.seasons.some(s => s.episodes.some(e => e.nameLanguage)) || grid.specials.some(e => e.nameLanguage) ? { episodeLanguages: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.nameLanguage).map(e => [`${s.number}:${e.number}`, e.nameLanguage!])), ...grid.specials.filter(e => e.nameLanguage).map((e, i) => [`special:${i}`, e.nameLanguage!])]) } : {}),
+	...(grid.seasons.some(s => s.episodes.some(e => e.tmdbId)) || grid.specials.some(e => e.tmdbId) ? { episodeIds: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.tmdbId).map(e => [`${s.number}:${e.number}`, e.tmdbId!])), ...grid.specials.flatMap((e, i) => e.tmdbId ? [[`special:${i}`, e.tmdbId]] : [])]) } : {}),
+	...(grid.seasons.some(s => s.episodes.some(e => e.nameLanguage)) || grid.specials.some(e => e.nameLanguage) ? { episodeLanguages: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.nameLanguage).map(e => [`${s.number}:${e.number}`, e.nameLanguage!])), ...grid.specials.flatMap((e, i) => e.nameLanguage ? [[`special:${i}`, e.nameLanguage]] : [])]) } : {}),
 	seasons: grid.seasons.map((season): WireSeason => {
 		const base: [number, number, WireEpisode[], WireScores] = [
 			season.number,

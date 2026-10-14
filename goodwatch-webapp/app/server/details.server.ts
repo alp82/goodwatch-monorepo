@@ -1,4 +1,3 @@
-import { overlayProsePayload } from "./prose-overlay.server.ts"
 import { overlayTitles } from "./media-overlay.server.ts"
 import { overlayEpisodeText } from "./episode-text-overlay.server.ts"
 import { CREW_ROLES } from "~/ui/details/crew-roles"
@@ -325,13 +324,13 @@ export async function getDetailsForMovie(params: import("./types/details-types")
 	const media = await canonicalDetails.getDetailsForMovie({ ...params, language: "en" }, { bypassCache: !!options?.bypassCache })
 	if (options?.canonical) return media
 	const [details] = await overlayTitles([{ ...media.details, media_type: "movie" as const }], params.language)
-	return overlayProsePayload({ ...media, details }, params.language)
+	return { ...media, details }
 }
 export async function getDetailsForShow(params: import("./types/details-types").DetailsShowParams, options?: { bypassCache?: boolean; canonical?: boolean }) {
 	const media = await canonicalDetails.getDetailsForShow({ ...params, language: "en" }, { bypassCache: !!options?.bypassCache })
 	if (options?.canonical) return media
 	const [details] = await overlayTitles([{ ...media.details, media_type: "show" as const }], params.language)
-	return overlayProsePayload({ ...media, details }, params.language)
+	return { ...media, details }
 }
 
 /** The page calls this after its canonical/reviewed grid has selected season membership. */

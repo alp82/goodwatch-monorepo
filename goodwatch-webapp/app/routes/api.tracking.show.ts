@@ -1,4 +1,4 @@
-import { liveMediaLanguage, payloadLanguage } from "~/server/media-payload.server"
+import { apiDisplayLanguage } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -41,7 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (typeof userId !== "string") return userId
 	const id = new URL(request.url).searchParams.get("id") ?? ""
 	if (!/^[1-9]\d{0,9}$/.test(id)) return fail("Send ?id=<show id>", 400)
-	return json<ShowTrackingPage>(await getShowTrackingPage(userId, Number(id), undefined, new URL(request.url).searchParams.has("displayLanguage") ? payloadLanguage(request) : await liveMediaLanguage(request, userId)), {
+	return json<ShowTrackingPage>(await getShowTrackingPage(userId, Number(id), undefined, apiDisplayLanguage(request)), {
 		headers,
 	})
 }
