@@ -80,13 +80,24 @@ type NodeCrate = typeof crate & {
 }
 
 const HOST_COOLDOWN_MS = 5_000
+const UNAVAILABLE_STATUSES = [502, 503, 504]
 
 const isConnectionError = (error: unknown): boolean =>
 	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN"]
 		.includes((error as NodeJS.ErrnoException).code ?? "")
 
 const isAvailabilityError = (error: unknown): boolean =>
-	isConnectionError(error) || error instanceof CrateTimeoutError
+	isConnectionError(error) || error instanceof CrateTimeoutError ||
+	(error instanceof Error && UNAVAILABLE_STATUSES.includes((error as Error & { statusCode?: number }).statusCode ?? 0))
+
+// Conservative recognition only: never infer replay safety for a write from its
+// ON CONFLICT text. Helpers below own the keys and values that make replay safe.
+const isRead = (sql: string): boolean => {
+	const tokens = sql.replace(/--[^\r\n]*|\/\*[\s\S]*?\*\/|'(?:''|[^'])*'|"(?:""|[^"])*"/g, " ").trim()
+	return /^(SELECT|WITH)\b/i.test(tokens) &&
+		! /\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|COPY|REFRESH|SET|RESET|GRANT|REVOKE|KILL)\b/i.test(tokens) &&
+		! /;\s*\S/.test(tokens)
+}
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -150,7 +161,7 @@ class CrateClient {
 		try {
 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
 			const deadline = performance.now() + timeoutMs
-			const read = /^\s*SELECT\b/i.test(query)
+			const read = isRead(query)
 			const tried = new Set<number>()
 			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
 			while (result === undefined) {
@@ -162,12 +173,14 @@ class CrateClient {
 			// caller budget waiting for the first dead socket.
 			const remaining = deadline - performance.now()
 			if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
-			const attemptTimeoutMs = read
+			const attemptTimeoutMs = read && this.hosts.length > 1
 				? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
 				: timeoutMs
 			try {
 			result = await withBackendTimeout("CrateDB", attemptTimeoutMs, async (signal) => {
 				let request: ClientRequest | undefined
+				let responseError: Error | undefined
+				let statusCode: number | undefined
 				const previousCapture = captureRequest
 				let pending: ReturnType<typeof crate.execute>
 				// node-crate creates the request synchronously, before another statement can run.
@@ -177,10 +190,20 @@ class CrateClient {
 				} finally {
 					captureRequest = previousCapture
 				}
+				// node-crate wraps response stream errors in a new Error and loses their
+				// connection code. Retain the original so interrupted bodies can fail over.
+				request?.once("response", (response) => {
+					statusCode = response.statusCode
+					response.once("error", (error) => { responseError = error })
+				})
 				const destroy = () => { request?.destroy(signal.reason) }
 				signal.addEventListener("abort", destroy, { once: true })
 				try {
-					return withNullTimestamps(await pending)
+					const result = await pending
+					if (UNAVAILABLE_STATUSES.includes(statusCode ?? 0)) throw new CrateError(`CrateDB HTTP ${statusCode}`)
+					return withNullTimestamps(result)
+				} catch (error) {
+					throw responseError ?? Object.assign(toCrateError(error), { statusCode })
 				} finally {
 					signal.removeEventListener("abort", destroy)
 				}

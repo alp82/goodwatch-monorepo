@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import { test, type TestContext } from "node:test"
-import { insertRows, query, setCrateClientForTest, upsert } from "./crate.ts"
+import { CrateError, execute, getCrateClient, insertRows, query, setCrateClientForTest, upsert } from "./crate.ts"
 
 type Statement = { stmt: string; args: unknown[] }
 type Handler = (statement: Statement, req: IncomingMessage, res: ServerResponse) => void
@@ -105,4 +105,119 @@ test("keyed inserts replay the identical batch on another host after a connectio
 	assert.deepEqual(await insertRows("saved", ["id", "n"], [["fixed", 1]], { conflict: ["id"] }), { rowcount: 1, statements: 1 })
 	assert.deepEqual(received[1], received[0])
 	assert.match(received[1][0].stmt, /ON CONFLICT \("id"\) DO NOTHING$/)
+})
+
+test("reads fail over if a coordinator closes halfway through its response", async (t) => {
+	await cluster(t, [
+		(_, req, res) => {
+			res.writeHead(200, { "Content-Type": "application/json" })
+			res.write('{"cols":')
+			setImmediate(() => req.socket.destroy())
+		},
+		(_, __, res) => answer(res),
+		(_, __, res) => answer(res),
+	])
+	assert.deepEqual(await query("SELECT n"), [{ n: 1 }])
+})
+
+test("a draining coordinator's HTTP 503 is retried and cooled down", async (t) => {
+	const received = await cluster(t, [
+		(_, __, res) => {
+			res.writeHead(503, { "Content-Type": "application/json" })
+			res.end(JSON.stringify({ error: { message: "SQL disabled during drain", code: 5030 } }))
+		},
+		(_, __, res) => answer(res),
+		(_, __, res) => answer(res),
+	])
+	for (let i = 0; i < 6; i++) assert.deepEqual(await query("SELECT n"), [{ n: 1 }])
+	assert.equal(received[0].length, 1)
+})
+
+test("commented SELECTs and read-only CTEs survive a lost coordinator", async (t) => {
+	await cluster(t, [
+		(_, req) => req.socket.destroy(),
+		(_, req) => req.socket.destroy(),
+		(_, __, res) => answer(res),
+	])
+	assert.deepEqual(await query("-- caller\n /* lookup */ WITH item AS (SELECT 'UPDATE; --' AS label) SELECT * FROM item"), [{ n: 1 }])
+})
+
+test("a recovered coordinator returns to rotation after its cooldown", async (t) => {
+	let failed = true
+	const received = await cluster(t, [
+		(_, req, res) => failed ? req.socket.destroy() : answer(res),
+		(_, __, res) => answer(res),
+		(_, __, res) => answer(res),
+	])
+	t.mock.timers.enable({ apis: ["Date"] })
+	await query("SELECT n")
+	failed = false
+	for (let i = 0; i < 4; i++) await query("SELECT n")
+	assert.equal(received[0].length, 1)
+	t.mock.timers.tick(5_001)
+	for (let i = 0; i < 3; i++) await query("SELECT n")
+	assert.equal(received[0].length, 2)
+})
+
+test("generic writes including increments, CAS and apparent upserts are never replayed", async (t) => {
+	const received = await cluster(t, Array.from({ length: 3 }, () => (_, req) => req.socket.destroy()))
+	const statements = [
+		"UPDATE saved SET n = n + 1 WHERE id = ?",
+		"UPDATE saved SET n = 1 WHERE id = ? AND _seq_no = 0 AND _primary_term = 1",
+		"INSERT INTO saved (id) VALUES (?) ON CONFLICT (id) DO UPDATE SET n = n + 1",
+		"WITH value AS (SELECT 1) DELETE FROM saved WHERE id = ?",
+		"SELECT 1; DELETE FROM saved WHERE id = ?",
+	]
+	for (const sql of statements) {
+		const before = received.flat().length
+		await assert.rejects(execute(sql, ["fixed"]), { code: "ECONNRESET" })
+		assert.equal(received.flat().length, before + 1)
+	}
+})
+
+test("SQL and authorization failures reach the caller unchanged and do not evict a healthy host", async (t) => {
+	const received = await cluster(t, Array.from({ length: 3 }, () => ({ stmt }, _, res) => {
+		if (stmt.includes("bad")) {
+			res.writeHead(400, { "Content-Type": "application/json" })
+			res.end(JSON.stringify({ error: { message: "SQLParseException[bad]", code: 4000 } }))
+		} else answer(res)
+	}))
+	await assert.rejects(query("SELECT bad"), (error) => error instanceof CrateError && error.code === 4000)
+	assert.equal(received.flat().length, 1)
+	for (let i = 0; i < 3; i++) await query("SELECT n")
+	assert.equal(received[0].length, 2)
+})
+
+test("all coordinators failing is bounded to one request per host", async (t) => {
+	const received = await cluster(t, Array.from({ length: 3 }, () => (_, req) => req.socket.destroy()))
+	await assert.rejects(query("SELECT n"), { code: "ECONNRESET" })
+	assert.deepEqual(received.map((node) => node.length), [1, 1, 1])
+})
+
+test("caller cancellation closes the active request without retrying or evicting its host", async (t) => {
+	let arrived!: () => void
+	const arrival = new Promise<void>((resolve) => { arrived = resolve })
+	let closure!: Promise<void>
+	const received = await cluster(t, [
+		({ stmt }, req, res) => {
+			if (stmt.includes("cancel")) {
+				closure = new Promise((resolve) => req.socket.once("close", resolve))
+				arrived()
+			} else answer(res)
+		},
+		(_, __, res) => answer(res),
+		(_, __, res) => answer(res),
+	])
+	const controller = new AbortController()
+	const cancelled = query("SELECT cancel", undefined, { signal: controller.signal, timeoutMs: 5_000 })
+	await arrival
+	controller.abort(new Error("caller cancelled"))
+	await assert.rejects(cancelled, /caller cancelled/)
+	await closure
+	assert.equal(received.flat().length, 1)
+	for (let i = 0; i < 3; i++) await query("SELECT n")
+	assert.equal(received[0].length, 2)
+	const before = received.flat().length
+	await assert.rejects(getCrateClient().execute("SELECT n", [], { signal: controller.signal }), /caller cancelled/)
+	assert.equal(received.flat().length, before)
 })
