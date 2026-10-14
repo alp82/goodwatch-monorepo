@@ -126,26 +126,30 @@ nothing.**
 
   | | ms |
   | --- | --- |
-  | A country already read (median of 15) | COLD_WARM |
-  | A country's first read in the process, eight countries | COLD_FIRST |
-  | The same country right after | COLD_AGAIN |
+  | A country already read (median of 15) | 15 |
+  | A country's first read in the process, eight countries | 219 to 419 (Netherlands 264, Sweden 399, Italy 219, Spain 367, Mexico 419, Australia 286, Canada 326, Poland 411); in a run the day before 145 to 1,985 |
+  | The same country right after | 37 to 119 |
 
   The first read is what one pool request spends on the same entry. In production the cluster is local.
 - A member's loader reads nothing more for a member with two saved services' names than before: the viewer
   context it already read has the ids, and `getServiceCards` names them from a list kept in memory for a day.
   The country's services are read as for a guest, to fill up.
 
-**What the services add to the HTML.** HTML_NUMBERS
+**What the services add to the HTML.** A guest's HTML of `/home-preview` on the dev server is 62,451 bytes in the United
+  States, 62,733 in France and 62,723 in Brazil. The two services are 2,724, 3,006 and 2,996 bytes of it (their
+  tiles in both editions and the loader's data): 302 bytes compressed with gzip in the United States and 382 in
+  France, where the second tile has a logo and a name. A drawn mark's shape is not in the HTML (see below). A
+  link to a service's screen is 50,966 bytes, the bar alone.
 
 ## What the checks say
 
-CHECKS_TOTAL
+1,089 checks pass, none fail: 826 in the guest's half on real data, 263 in the member's half on the harness.
 
 - **The two services by country, asked of the loader.** In the United States, Germany, the United Kingdom,
   France, Brazil, Japan and India they are the first two brands of the country's catalog as
-  `/api/living-room/services` lists it: COUNTRIES. A country without a catalog gets Netflix and Prime Video. A
+  `/api/living-room/services` lists it: Netflix and Prime in the United States, Germany, the United Kingdom and Japan; Netflix and France TV in France; Netflix and Disney+ in Brazil; Netflix and JioHotstar in India. A country without a catalog gets Netflix and Prime Video. A
   language without a region is the United States.
-- **The walk, four times:** a guest at 1920 x 1080 and 390 x 844 on real data, a member at both sizes on the
+- **The walk, five times:** a guest at 1920 x 1080 and 390 x 844 on real data, a member at both sizes on the
   harness, and a member with Disney+ and Hulu on the phone. After every step the script reads the TV's and the
   Remote's state from the page.
   - **Arrival:** the Remote has two keys; home's items are the apps, then a tile per service in the keys' order,
@@ -176,7 +180,7 @@ CHECKS_TOTAL
     Remote's Home key shows home.
   - **Nothing in the console**, and no request left the machine but the site's own telemetry, which was stopped.
 - **Links.** A link to a service shows its titles with its key on; the key there shows home in its place, so
-  Back does not return. A link to a service that is none of the person's two (LINKED) shows the first twelve of
+  Back does not return. A link to a service that is none of the person's two (Hulu in the United States, 2,373 titles) shows the first twelve of
   Discover's answer for it under the catalog's logo and a quiet line, named as its titles name it, with no key
   on; either key takes its place. A link without a service's id shows home.
 - **The same titles as the Discover page, for the same person.** For a guest nobody knows (Netflix), a guest
@@ -192,7 +196,7 @@ CHECKS_TOTAL
 - **A guest in France and in Brazil, in a browser.** The keys and the tiles are that country's two: Netflix and
   France TV, Netflix and Disney+. The second has no drawn mark: its key, its tile and its screen show the
   catalog's logo, the screen has a quiet line, and its titles are Discover's for that service in that country
-  (ABROAD).
+  (France TV 75 titles, Disney+ 2,064).
 - **A member, on the harness.** With Netflix and Prime Video saved; with Disney+ and Hulu (two logos); with
   three saved (the first two, in their order); with Hulu alone (Hulu, then Netflix); with Netflix alone
   (Netflix, then Prime Video); with none (Netflix and Prime Video). In each the keys and the tiles after My
@@ -214,11 +218,21 @@ CHECKS_TOTAL
 
 `checks.json` has the measured numbers.
 
-SIZES_TABLE
+| Window | The Remote's streaming keys, the smaller side | A service's tile | A poster | The smallest key on the TV |
+| --- | --- | --- | --- | --- |
+| 360 x 740 | 45.6 (in the hand) | 114 x 73 | 69 x 104 | 44.5 |
+| 375 x 667 | 44.0 (on the table) | 119 x 76 | 55 x 83 | 44.4 |
+| 390 x 700 | 44.0 (on the table) | 125 x 80 | 73 x 110 | 44.2 |
+| 390 x 844 | 49.4 (in the hand) | 125 x 80 | 75 x 113 | 44.2 |
+| 430 x 932 | 54.5 (in the hand) | 138 x 88 | 84 x 125 | 44.2 |
+| 844 x 390 | 45.4 (landscape) | 168 x 107 | 85 x 127 | 52.7 |
+| 1920 x 1080 | 76 x 31 (the desktop Remote, as before) | 212 x 136 | 182 x 273 | 67.8 |
+
+Sizes in px of the window; the same in France, where the second key has a logo.
 
 ## The tests
 
-`npm test`: TESTS_TOTAL. New or longer for this slice, in `ui/living-room/tv/` and `server/living-room/`:
+`npm test`: 2,322 tests, 2,320 pass, 1 skipped, 1 fails: the timing check "a long-lived request doesn't close the listener early" of `server/lifecycle.test.ts`, which this slice does not touch and which passes when its file is run by itself (11 of 11). New or longer for this slice, in `ui/living-room/tv/` and `server/living-room/`:
 
 - `tv-machine.test.ts`: the `service` screen in the address (and what is no service's id), home's two tiles,
   the screen's items, the Expand key's address, and the Remote's keys: a key opens, the same key leaves (and
@@ -240,7 +254,24 @@ SIZES_TABLE
 
 ## Numbers
 
-BUILD_NUMBERS
+**The first view's scripts**, `npm run build` with `SENTRY_RELEASE=compare`, counted by
+`../tonight-title/first-view.mjs`: raw / gzip / Brotli. "Before" is the integration branch at `6766cd48`, built
+from a copy of it.
+
+| Page | Before | Slice 6b | Of which |
+| --- | --- | --- | --- |
+| `/home-preview` | 12 files, 671,513 / 223,673 / 194,050 | 12 files, 675,963 / 225,069 / 195,244 (+4,450 / +1,396 / +1,194) | Its own chunk 56,613 to 59,785: the machine's screen, the tiles, the scene's wiring, the two fixes in `kit.tsx`. The Remote's chunk 23,603 to 24,886: `ServiceMark` and the new keys |
+| `/` (the old TV) | 17 files, 865,878 / 282,605 / 245,902 | 17 files, 867,161 / 283,074 / 246,347 (+1,283 / +469 / +445) | The Remote's chunk alone: the old page carries the new keys' code, unused, until the switch |
+| The Discover page | 32 files, 1,096,393 raw | The same bytes | |
+| A movie's page | 20 files, 859,733 raw | The same bytes | |
+
+- **`shell`, on every page, is unchanged**: 170,770 bytes. No file was added to any first view.
+- **Loaded on first use:** the service screen with its data hook and its words, 3,276 / 1,659 / 1,508, asked for
+  at the first interaction. It brings chunks that exist already: the title list (3,926 to 3,954 with the mark
+  and the line), the title's words, the results hook's.
+- **Stylesheets:** `tv.css` 4,172 to 6,964 bytes (1,117 to 1,852 Brotli): the two drawn marks' rules, with the
+  Netflix mark inlined by the build as a data URL. The Prime Video mark is a file, the one the Remote asks for
+  already.
 
 ## Where it differs from the prototype and the plan
 
@@ -282,6 +313,23 @@ BUILD_NUMBERS
   again. `my-shows/drive.mjs` (slice 9) leaves the service tiles out of its one check of home's items.
   `room/drive.mjs` (slice 2) still presses "Only Netflix": it has needed slice 2's empty TV since slice 3 and
   was left alone.
+
+## Open questions
+
+- **A guest's own choices.** A guest who chose a country in their settings, or saved services in their browser,
+  still gets the keys of the country their browser's language names: the server's HTML cannot know the browser's
+  storage. Their list is asked for with their own country, so a guest whose saved country differs sees, under
+  their language's country's keys, what streams on that service in their own country. If they should get their
+  own keys, the keys can be filled in after the first paint from the browser's storage; the server's HTML and the
+  page cache stay as they are.
+- **The country's second service is not always a subscription a person would name.** The catalog's own order
+  gives France TV in France and JioHotstar in India, after Netflix. The owner's rule is the catalog's first two;
+  a list of the larger services first would be a separate rule.
+- **"Prime" or "Prime Video".** The keys and the screen say the app's short name, as the title screen's Watch key
+  does. The drawn mark reads "prime video" either way.
+- **At the switch:** a guest's page whose services could not be read shows the fixed pair, which may not be the
+  country's first two. It should then take the incomplete-page policy, so it is not stored for the country
+  (a SEAM in `tv-loader.server.ts`).
 
 ## Pictures
 

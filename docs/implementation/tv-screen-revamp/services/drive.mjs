@@ -154,7 +154,8 @@ const read = (page) =>
 		const at = items.find((el) => el.getAttribute("aria-current"))
 		const box = at?.getBoundingClientRect()
 		return {
-			search: location.search,
+			// As written, without the browser's escapes: the harness's `services=337,15` is `337%2C15` in the address.
+			search: decodeURIComponent(location.search),
 			path: location.pathname,
 			room: true,
 			layers: layers.length,
@@ -483,6 +484,8 @@ async function walk(who, url, size, { locale = "en-US" } = {}) {
 	const asked = (part) => requests.filter((r) => r.url.includes(part))
 	const code = () => SERVICE_CODE.flatMap(asked)
 	const lists = () => asked("/api/discover/results")
+	/** The requests for one service's titles. */
+	const listsOf = (id) => lists().filter((r) => new URL(r.url).searchParams.get("services") === String(id))
 	const key = (id) => page.locator(`#room [aria-label="Remote control"] [data-service-key="${id}"]`)
 	const pressKey = (id) => (phone ? key(id).tap() : key(id).click())
 
@@ -608,7 +611,7 @@ async function walk(who, url, size, { locale = "en-US" } = {}) {
 	s = await until(page, (x) => x.search === at(serviceTv(a.id)) && titlesOf(x).length > 0, `${press} on the Remote's first key opens ${a.label}`, 90000)
 	is(s.history, depth + 1, "one history entry")
 	is(pressed(s), [a.id], "the key shows that it is on")
-	is(asked(`services=${a.id}&`).length, 1, "its titles are asked for once")
+	is(listsOf(a.id).length, 1, "its titles are asked for once")
 	answer = await answerOf(a.id)
 	is(titlesOf(s), (answer?.cards ?? []).slice(0, 12).map(tvKey), "they are the first twelve of Discover's answer for that service")
 	is(s.head?.id, a.id, "under the first service's mark")
@@ -618,7 +621,7 @@ async function walk(who, url, size, { locale = "en-US" } = {}) {
 	is(s.history, depth + 1, "in place: no history entry more")
 	is(pressed(s), [b.id], "the other key is on now, and the first is not")
 	is(titlesOf(s), all, "with that service's titles")
-	is(asked(`services=${b.id}&`).length, 1, "which are still known: nothing is asked for again")
+	is(listsOf(b.id).length, 1, "which are still known: nothing is asked for again")
 	is(s.focus, [`title:${all[0]}`], `the focus starts over on the first title (it was left on ${leftOn.slice(6)})`)
 	await pressKey(b.id)
 	s = await until(page, (x) => x.search === at("") && x.items.includes("app:tonight"), "the same key again leaves the screen")
@@ -645,7 +648,7 @@ async function walk(who, url, size, { locale = "en-US" } = {}) {
 	await page.keyboard.press("Escape")
 	s = await until(page, (x) => x.search === at(serviceTv(a.id)) && focusIs(`title:${third}`)(x), "Back returns to the list with the focus on that title", 30000)
 	is(titlesOf(s), first, "the same titles")
-	is(asked(`services=${a.id}&`).length, 1, "from memory: not asked for again")
+	is(listsOf(a.id).length, 1, "from memory: not asked for again")
 	is(pressed(s), [a.id], "and the key is on again")
 
 	// ---- A reload gives the screen back, with its focus and its key.
