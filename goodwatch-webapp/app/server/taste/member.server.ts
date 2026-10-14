@@ -14,6 +14,7 @@
 // TASTE_REDIS_URL points the store at a single Redis (for development and scripts); without it, it uses the webapp's
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
+import { markG1Changed, stopG1Rebuilds } from "../g1/rebuild.server.ts"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -25,11 +26,11 @@ import { type TasteSignals, quantileTable, tasteVector } from "./formula.server"
 import { poolCosines, tastePool } from "./pool.server"
 import { type StoredTaste, decodeTaste, encodeTaste } from "./stored.server"
 import { NO_TASTE, type Taste, makeTaste } from "./taste.server"
+import { TASTE_KEY_VERSION } from "./version.server"
 
 // Bump when the formula, the calibration, or the value layout changes: every member's taste then rebuilds on first read.
 // - v2: the quantile table also holds the top 1 percent in fine steps (QUANTILE_LEVELS). The v1 keys are never read
 //   again and expire on their own.
-const TASTE_KEY_VERSION = "v2"
 const tasteKey = (userId: string) => `taste:${TASTE_KEY_VERSION}:${userId}`
 const touchedKey = (userId: string) => `taste:touched:${userId}`
 // Both keys expire after half a year without a write; a reader then rebuilds.
@@ -192,6 +193,7 @@ export async function markTasteChanged(
 	userId: string | null | undefined,
 ): Promise<void> {
 	if (!userId) return
+	markG1Changed(userId)
 	try {
 		const redis = await tasteRedis()
 		await redis?.set(touchedKey(userId), String(Date.now()), "EX", TTL_SECONDS)
@@ -218,6 +220,7 @@ export async function markTasteChanged(
 
 /** Closes the development Redis connection (for scripts). */
 export function stopTasteStore(): void {
+	stopG1Rebuilds()
 	for (const timer of scheduled.values()) clearTimeout(timer)
 	scheduled.clear()
 	singleRedis?.disconnect()

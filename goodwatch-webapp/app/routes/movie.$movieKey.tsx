@@ -19,6 +19,7 @@ import { relatedMapLookup, relatedSectionData } from "~/server/related-map.serve
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
@@ -40,6 +41,8 @@ export type LoaderData = {
 		country: string
 	}
 	countryIsFallback: boolean
+	/** Whether the viewer gets the "Talked about now" section (TALKED_ABOUT_NOW_TITLE). */
+	talkedAboutNow: boolean
 }
 
 export const loader: LoaderFunction = async ({
@@ -114,6 +117,7 @@ export const loader: LoaderFunction = async ({
 			country,
 		},
 		countryIsFallback,
+		talkedAboutNow: talkedAboutNowEnabled("title", userId),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
@@ -131,7 +135,7 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback } = useLoaderData<LoaderData>()
+	const { media, params, countryIsFallback, talkedAboutNow } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -165,5 +169,5 @@ export default function DetailsMovie() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} />
+	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} />
 }

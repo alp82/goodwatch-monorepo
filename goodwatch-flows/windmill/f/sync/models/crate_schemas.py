@@ -718,6 +718,46 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # One immutable row per member list page, including later Watch next card batches (#525).
+    # The three title arrays align; positions are one-based within this page, after missing titles are removed.
+    "user_list_exposure": {
+        "columns": {
+            "user_id": "TEXT",
+            "list_id": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "surface": "TEXT NOT NULL CHECK (surface IN ('discover','watch-next'))",
+            "ordering": "TEXT NOT NULL",
+            "ordering_flags": "OBJECT(DYNAMIC)",
+            "sort": "TEXT NOT NULL",
+            "sort_requested": "TEXT",
+            "for_you": "BOOLEAN NOT NULL",
+            "for_you_applied": "BOOLEAN NOT NULL",
+            "filters": "OBJECT(IGNORED)",
+            "country": "TEXT NOT NULL",
+            "services": "ARRAY(INTEGER)",
+            "taste_key_version": "TEXT NOT NULL",
+            "page": "INTEGER",
+            "batch": "TEXT NOT NULL CHECK (batch IN ('page','cards'))",
+            "title_keys": "ARRAY(BIGINT)",
+            "positions": "ARRAY(INTEGER)",
+            "taste_matches": "ARRAY(INTEGER)",
+            "g1_flag_mode": "TEXT",
+            "g1_fallback_reason": "TEXT",
+            "g1_payload_build_time": "TIMESTAMP WITH TIME ZONE",
+            "g1_model_hash": "TEXT",
+            "g1_snapshot_version": "TEXT",
+            "g1_groups": "ARRAY(INTEGER)",
+            "g1_mix_placed": "ARRAY(BOOLEAN)",
+            "watch_next_tiers": "ARRAY(TEXT)",
+            "today_first_100": "ARRAY(BIGINT)",
+            "g1_first_100": "ARRAY(BIGINT)",
+        },
+        "primary_key": ["user_id", "list_id"],
+        "clustered_by": "user_id",
+        "shards": 6,
+        "timestamps": False,
+    },
     "user_score": {
         "columns": {
             "user_id": "TEXT",
@@ -1116,3 +1156,7 @@ BLOB_TABLES = {
 
 def main():
     pass
+
+# Social discovery owns these tables; its local initializer touches only these four.
+from f.social.schema import SOCIAL_SCHEMAS
+SCHEMAS.update(SOCIAL_SCHEMAS)

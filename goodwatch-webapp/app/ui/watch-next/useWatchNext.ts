@@ -144,7 +144,10 @@ export function useWatchNext(
 		(next: Partial<PageChoice>) =>
 			setParams(
 				(current) =>
-					choiceToParams({ ...pageChoiceOf(current, movies), ...next }, current),
+					choiceToParams(
+						{ ...pageChoiceOf(current, movies), ...next },
+						current,
+					),
 				{ replace: true, preventScrollReset: true },
 			),
 		[setParams, movies],
@@ -195,7 +198,8 @@ export function useTierCards(
 		chunks.push(keys.slice(i, i + CARDS_PER_REQUEST))
 	const results = useQueries({
 		queries: chunks.map((chunk) => {
-			const query = `${state.query}${state.query ? "&" : ""}keys=${chunk.join(",")}`
+			const plan = state.data?.planId
+			const query = `${state.query}${state.query ? "&" : ""}keys=${chunk.join(",")}${plan ? `&plan=${encodeURIComponent(plan)}` : ""}`
 			return {
 				queryKey: [
 					...watchNextQueryKey,
@@ -206,7 +210,7 @@ export function useTierCards(
 					state.interactions,
 				],
 				queryFn: () =>
-					request<{ titles: WatchNextTitle[] }>(
+					request<{ titles: WatchNextTitle[]; refreshRequired: boolean }>(
 						"/api/watch-next/cards",
 						query,
 						state.interactions,
@@ -216,6 +220,10 @@ export function useTierCards(
 			}
 		}),
 	})
+	const refreshRequired = results.some((result) => result.data?.refreshRequired)
+	useEffect(() => {
+		if (refreshRequired) void state.refetch()
+	}, [refreshRequired, state.refetch])
 	const found = new Map<TitleKey, WatchNextTitle>()
 	for (const result of results)
 		for (const title of result.data?.titles ?? []) found.set(title.key, title)

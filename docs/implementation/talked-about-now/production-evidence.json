@@ -1,0 +1,5553 @@
+{
+  "counts": {
+    "buzz_title": 616,
+    "buzz_pageview": 30097,
+    "buzz_trending": 190,
+    "buzz_score": 15842,
+    "buzz_snapshot": 33
+  },
+  "snapshot_read": {
+    "samples": 30,
+    "roundtrip_ms_min": 68.25910099723842,
+    "roundtrip_ms_median": 73.27984149742406,
+    "roundtrip_ms_p95": 133.0851639941102,
+    "roundtrip_ms_max": 134.60672400833573,
+    "crate_ms_median": 2.8535079999999997,
+    "payload_bytes": 25109
+  },
+  "snapshots": [
+    {
+      "snapshot_key": "2026-10-13",
+      "day": "2026-10-13",
+      "generated_at": "2026-10-14T16:15:33.291241+00:00",
+      "payload": {
+        "schema_version": 1,
+        "formula_version": "wikipedia-lift-28d-v1",
+        "day": "2026-10-13",
+        "source": "Wikipedia en.wikipedia.org / all-access / user",
+        "baseline_days": 28,
+        "curve_days": 14,
+        "candidate_pool_collected_at": "2026-10-14T16:15:33.291241+00:00",
+        "history_mode": "daily",
+        "diagnostics": {
+          "score_day": "2026-10-13",
+          "window_start": "2026-08-15",
+          "candidates": 616,
+          "candidate_kinds": {
+            "movie": 302,
+            "tv": 314
+          },
+          "mapped": 509,
+          "observations_in_window": 30097,
+          "complete_60_day_titles": 485,
+          "scorable_latest": 504,
+          "scorable": 504,
+          "eligible": 73
+        },
+        "top20": [
+          {
+            "title_key": "movie:1147572",
+            "day": "2026-10-13",
+            "score": 9.743463743463744,
+            "views": 55235,
+            "mean28": 5668.928571428572,
+            "sd28": 5264.095186996062,
+            "z": 9.415876740035953,
+            "eligible": true,
+            "rank": 1,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 2587
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2293
+              },
+              {
+                "day": "2026-10-02",
+                "views": 2215
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2310
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2906
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2599
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2065
+              },
+              {
+                "day": "2026-10-07",
+                "views": 2292
+              },
+              {
+                "day": "2026-10-08",
+                "views": 2200
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1982
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2204
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2208
+              },
+              {
+                "day": "2026-10-12",
+                "views": 8623
+              },
+              {
+                "day": "2026-10-13",
+                "views": 55235
+              }
+            ],
+            "card": {
+              "tmdb_id": 1147572,
+              "title": "Narnia: The Magician's Nephew",
+              "original_title": "Narnia: The Magician's Nephew",
+              "poster_path": "/1M5pR1essXyu5JFHmpB5lsC0b74.jpg",
+              "release_date": "2027-02-10",
+              "popularity": 19.1579,
+              "title_key": "movie:1147572",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Narnia:_The_Magician%27s_Nephew",
+              "qid": "Q134235227",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-13",
+                "source_url": "https://www.youtube.com/watch?v=gDJ-ini7fF0"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:1396",
+            "day": "2026-10-13",
+            "score": 7.825784824271046,
+            "views": 66283,
+            "mean28": 8469.82142857143,
+            "sd28": 4549.19529032782,
+            "z": 12.708440698148726,
+            "eligible": true,
+            "rank": 2,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 7928
+              },
+              {
+                "day": "2026-10-01",
+                "views": 7327
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7162
+              },
+              {
+                "day": "2026-10-03",
+                "views": 7423
+              },
+              {
+                "day": "2026-10-04",
+                "views": 7628
+              },
+              {
+                "day": "2026-10-05",
+                "views": 7141
+              },
+              {
+                "day": "2026-10-06",
+                "views": 7260
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6689
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6667
+              },
+              {
+                "day": "2026-10-09",
+                "views": 6275
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6544
+              },
+              {
+                "day": "2026-10-11",
+                "views": 6864
+              },
+              {
+                "day": "2026-10-12",
+                "views": 31734
+              },
+              {
+                "day": "2026-10-13",
+                "views": 66283
+              }
+            ],
+            "card": {
+              "tmdb_id": 1396,
+              "title": "Breaking Bad",
+              "original_title": "Breaking Bad",
+              "poster_path": "/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg",
+              "release_date": "2008-01-20",
+              "popularity": 217.7491,
+              "title_key": "tv:1396",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Breaking_Bad",
+              "qid": "Q1079",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:126116",
+            "day": "2026-10-13",
+            "score": 5.93619935854845,
+            "views": 25846,
+            "mean28": 4353.964285714285,
+            "sd28": 8252.730437697328,
+            "z": 2.6042333354441185,
+            "eligible": true,
+            "rank": 3,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 871
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2897
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3399
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2768
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2874
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2937
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6115
+              },
+              {
+                "day": "2026-10-07",
+                "views": 5664
+              },
+              {
+                "day": "2026-10-08",
+                "views": 5851
+              },
+              {
+                "day": "2026-10-09",
+                "views": 8119
+              },
+              {
+                "day": "2026-10-10",
+                "views": 7977
+              },
+              {
+                "day": "2026-10-11",
+                "views": 26076
+              },
+              {
+                "day": "2026-10-12",
+                "views": 38405
+              },
+              {
+                "day": "2026-10-13",
+                "views": 25846
+              }
+            ],
+            "card": {
+              "tmdb_id": 126116,
+              "title": "Time",
+              "original_title": "Time",
+              "poster_path": "/mhi7oohUBIufTjF9u41uMXYHsw2.jpg",
+              "release_date": "2021-06-06",
+              "popularity": 42.4512,
+              "title_key": "tv:126116",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Time_(2021_TV_series)",
+              "qid": "Q107324744",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_season",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/126116",
+                "season_number": 3
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1538497",
+            "day": "2026-10-13",
+            "score": 5.864808134410409,
+            "views": 23051,
+            "mean28": 3930.3928571428573,
+            "sd28": 2884.192054969464,
+            "z": 6.629450043006785,
+            "eligible": true,
+            "rank": 4,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 6047
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4776
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3829
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3743
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3618
+              },
+              {
+                "day": "2026-10-05",
+                "views": 3887
+              },
+              {
+                "day": "2026-10-06",
+                "views": 3954
+              },
+              {
+                "day": "2026-10-07",
+                "views": 3569
+              },
+              {
+                "day": "2026-10-08",
+                "views": 3284
+              },
+              {
+                "day": "2026-10-09",
+                "views": 3425
+              },
+              {
+                "day": "2026-10-10",
+                "views": 3548
+              },
+              {
+                "day": "2026-10-11",
+                "views": 3694
+              },
+              {
+                "day": "2026-10-12",
+                "views": 18466
+              },
+              {
+                "day": "2026-10-13",
+                "views": 23051
+              }
+            ],
+            "card": {
+              "tmdb_id": 1538497,
+              "title": "Hexed",
+              "original_title": "Hexed",
+              "poster_path": "/yykeYKbDBM9eUMJUucaaDo2mi1p.jpg",
+              "release_date": "2026-11-25",
+              "popularity": 18.2735,
+              "title_key": "movie:1538497",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Hexed_(2026_film)",
+              "qid": "Q136027913",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-12",
+                "source_url": "https://www.youtube.com/watch?v=KXO21xZdUaM"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:312359",
+            "day": "2026-10-13",
+            "score": 5.653023705853895,
+            "views": 14606,
+            "mean28": 2583.75,
+            "sd28": 5198.355472269228,
+            "z": 2.312702558363511,
+            "eligible": true,
+            "rank": 5,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 686
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2025
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1821
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2183
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2361
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2439
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1709
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1585
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1547
+              },
+              {
+                "day": "2026-10-09",
+                "views": 2324
+              },
+              {
+                "day": "2026-10-10",
+                "views": 4209
+              },
+              {
+                "day": "2026-10-11",
+                "views": 21054
+              },
+              {
+                "day": "2026-10-12",
+                "views": 20996
+              },
+              {
+                "day": "2026-10-13",
+                "views": 14606
+              }
+            ],
+            "card": {
+              "tmdb_id": 312359,
+              "title": "Dragon Ball Super: Beerus",
+              "original_title": "ドラゴンボール超 ビルス",
+              "poster_path": "/3eaeeLaStTyYpG6KrRHbUcdEL2Z.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 74.0063,
+              "title_key": "tv:312359",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Dragon_Ball_Super:_Beerus",
+              "qid": "Q137883816",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/312359",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:293607",
+            "day": "2026-10-13",
+            "score": 4.7570797155884765,
+            "views": 9725,
+            "mean28": 2044.3214285714287,
+            "sd28": 4065.5384290536776,
+            "z": 1.8892155874213143,
+            "eligible": true,
+            "rank": 6,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 1138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 942
+              },
+              {
+                "day": "2026-10-02",
+                "views": 961
+              },
+              {
+                "day": "2026-10-03",
+                "views": 1040
+              },
+              {
+                "day": "2026-10-04",
+                "views": 1095
+              },
+              {
+                "day": "2026-10-05",
+                "views": 799
+              },
+              {
+                "day": "2026-10-06",
+                "views": 773
+              },
+              {
+                "day": "2026-10-07",
+                "views": 876
+              },
+              {
+                "day": "2026-10-08",
+                "views": 976
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1255
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6521
+              },
+              {
+                "day": "2026-10-11",
+                "views": 17614
+              },
+              {
+                "day": "2026-10-12",
+                "views": 14531
+              },
+              {
+                "day": "2026-10-13",
+                "views": 9725
+              }
+            ],
+            "card": {
+              "tmdb_id": 293607,
+              "title": "100 Days of Deception",
+              "original_title": "100일의 거짓말",
+              "poster_path": "/7QBDoXKSyRCLU5UAOHQNOdn0vfZ.jpg",
+              "release_date": "2026-10-10",
+              "popularity": 64.4991,
+              "title_key": "tv:293607",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/100_Days_of_Deception",
+              "qid": "Q138003793",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-10",
+                "source_url": "https://www.themoviedb.org/tv/293607",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:289423",
+            "day": "2026-10-13",
+            "score": 4.682379803176346,
+            "views": 11572,
+            "mean28": 2471.3928571428573,
+            "sd28": 4999.7578679892495,
+            "z": 1.820209574772294,
+            "eligible": true,
+            "rank": 7,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 566
+              },
+              {
+                "day": "2026-10-01",
+                "views": 659
+              },
+              {
+                "day": "2026-10-02",
+                "views": 604
+              },
+              {
+                "day": "2026-10-03",
+                "views": 399
+              },
+              {
+                "day": "2026-10-04",
+                "views": 475
+              },
+              {
+                "day": "2026-10-05",
+                "views": 510
+              },
+              {
+                "day": "2026-10-06",
+                "views": 399
+              },
+              {
+                "day": "2026-10-07",
+                "views": 773
+              },
+              {
+                "day": "2026-10-08",
+                "views": 867
+              },
+              {
+                "day": "2026-10-09",
+                "views": 9969
+              },
+              {
+                "day": "2026-10-10",
+                "views": 17260
+              },
+              {
+                "day": "2026-10-11",
+                "views": 16493
+              },
+              {
+                "day": "2026-10-12",
+                "views": 13966
+              },
+              {
+                "day": "2026-10-13",
+                "views": 11572
+              }
+            ],
+            "card": {
+              "tmdb_id": 289423,
+              "title": "Take Charge of My Heart",
+              "original_title": "나를 충전해줘",
+              "poster_path": "/qlszHCaXI1mq2rTC86vWAAbtgOc.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 161.3597,
+              "title_key": "tv:289423",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Take_Charge_of_My_Heart",
+              "qid": "Q137839960",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/289423",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:213375",
+            "day": "2026-10-13",
+            "score": 4.203757816391931,
+            "views": 40384,
+            "mean28": 9606.642857142857,
+            "sd28": 5789.47810511378,
+            "z": 5.316084901620382,
+            "eligible": true,
+            "rank": 8,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 7918
+              },
+              {
+                "day": "2026-10-01",
+                "views": 19159
+              },
+              {
+                "day": "2026-10-02",
+                "views": 22274
+              },
+              {
+                "day": "2026-10-03",
+                "views": 13731
+              },
+              {
+                "day": "2026-10-04",
+                "views": 13685
+              },
+              {
+                "day": "2026-10-05",
+                "views": 11513
+              },
+              {
+                "day": "2026-10-06",
+                "views": 10520
+              },
+              {
+                "day": "2026-10-07",
+                "views": 11403
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12169
+              },
+              {
+                "day": "2026-10-09",
+                "views": 14668
+              },
+              {
+                "day": "2026-10-10",
+                "views": 14498
+              },
+              {
+                "day": "2026-10-11",
+                "views": 15496
+              },
+              {
+                "day": "2026-10-12",
+                "views": 22822
+              },
+              {
+                "day": "2026-10-13",
+                "views": 40384
+              }
+            ],
+            "card": {
+              "tmdb_id": 213375,
+              "title": "VisionQuest",
+              "original_title": "VisionQuest",
+              "poster_path": "/xK27l5uwaVyZSlENWnmLlWwDQNS.jpg",
+              "release_date": "2026-10-14",
+              "popularity": 75.3342,
+              "title_key": "tv:213375",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/VisionQuest",
+              "qid": "Q126092795",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-01",
+                "source_url": "https://www.youtube.com/watch?v=sXKnmgmbkoE"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-09-30",
+                "source_url": "https://www.youtube.com/watch?v=pM9HZ8Ovjdw"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:285322",
+            "day": "2026-10-13",
+            "score": 3.9179199879681157,
+            "views": 104201,
+            "mean28": 26596,
+            "sd28": 52232.24040078804,
+            "z": 1.4857681654955233,
+            "eligible": true,
+            "rank": 9,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 2353
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3532
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3603
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3418
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3567
+              },
+              {
+                "day": "2026-10-05",
+                "views": 4382
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5211
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6871
+              },
+              {
+                "day": "2026-10-08",
+                "views": 91539
+              },
+              {
+                "day": "2026-10-09",
+                "views": 148760
+              },
+              {
+                "day": "2026-10-10",
+                "views": 147649
+              },
+              {
+                "day": "2026-10-11",
+                "views": 157798
+              },
+              {
+                "day": "2026-10-12",
+                "views": 137034
+              },
+              {
+                "day": "2026-10-13",
+                "views": 104201
+              }
+            ],
+            "card": {
+              "tmdb_id": 285322,
+              "title": "Below",
+              "original_title": "Below",
+              "poster_path": "/vgLqqhMUbljp585qPp1EFCyJtcz.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 165.1799,
+              "title_key": "tv:285322",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Below_(miniseries)",
+              "qid": "Q140570538",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/tv/285322",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:333101",
+            "day": "2026-10-13",
+            "score": 3.850435175765796,
+            "views": 6083,
+            "mean28": 1579.8214285714287,
+            "sd28": 2244.8947963509722,
+            "z": 2.005964189835707,
+            "eligible": true,
+            "rank": 10,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 988
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1014
+              },
+              {
+                "day": "2026-10-02",
+                "views": 766
+              },
+              {
+                "day": "2026-10-03",
+                "views": 715
+              },
+              {
+                "day": "2026-10-04",
+                "views": 958
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1296
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1323
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1223
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1498
+              },
+              {
+                "day": "2026-10-09",
+                "views": 3505
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2655
+              },
+              {
+                "day": "2026-10-11",
+                "views": 8837
+              },
+              {
+                "day": "2026-10-12",
+                "views": 9414
+              },
+              {
+                "day": "2026-10-13",
+                "views": 6083
+              }
+            ],
+            "card": {
+              "tmdb_id": 333101,
+              "title": "Treasure Island",
+              "original_title": "Treasure Island",
+              "poster_path": "/6K9mXJ1H4DKmThmbJdjsqET4PIl.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 53.594,
+              "title_key": "tv:333101",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Treasure_Island_(2026_TV_series)",
+              "qid": "Q141424423",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/333101",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1236045",
+            "day": "2026-10-13",
+            "score": 3.641781796390586,
+            "views": 63810,
+            "mean28": 17521.64285714286,
+            "sd28": 33501.88492481141,
+            "z": 1.381664262973338,
+            "eligible": true,
+            "rank": 11,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 2377
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3742
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7045
+              },
+              {
+                "day": "2026-10-03",
+                "views": 6492
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5696
+              },
+              {
+                "day": "2026-10-05",
+                "views": 6520
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5744
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8626
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12323
+              },
+              {
+                "day": "2026-10-09",
+                "views": 69270
+              },
+              {
+                "day": "2026-10-10",
+                "views": 113215
+              },
+              {
+                "day": "2026-10-11",
+                "views": 117242
+              },
+              {
+                "day": "2026-10-12",
+                "views": 89895
+              },
+              {
+                "day": "2026-10-13",
+                "views": 63810
+              }
+            ],
+            "card": {
+              "tmdb_id": 1236045,
+              "title": "Animals",
+              "original_title": "Animals",
+              "poster_path": "/cr73Ci6CM2kSfSbj6qwaTpcEq1e.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 269.1292,
+              "title_key": "movie:1236045",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Animals_(2026_film)",
+              "qid": "Q124359083",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/movie/1236045",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-05",
+                "source_url": "https://www.youtube.com/watch?v=ZkN2M4ODdys"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1476746",
+            "day": "2026-10-13",
+            "score": 3.5294117647058822,
+            "views": 1545,
+            "mean28": 437.75,
+            "sd28": 582.0810341843676,
+            "z": 1.902226554334514,
+            "eligible": true,
+            "rank": 12,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 127
+              },
+              {
+                "day": "2026-10-02",
+                "views": 150
+              },
+              {
+                "day": "2026-10-03",
+                "views": 307
+              },
+              {
+                "day": "2026-10-04",
+                "views": 420
+              },
+              {
+                "day": "2026-10-05",
+                "views": 360
+              },
+              {
+                "day": "2026-10-06",
+                "views": 381
+              },
+              {
+                "day": "2026-10-07",
+                "views": 469
+              },
+              {
+                "day": "2026-10-08",
+                "views": 506
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1240
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2136
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2120
+              },
+              {
+                "day": "2026-10-12",
+                "views": 1685
+              },
+              {
+                "day": "2026-10-13",
+                "views": 1545
+              }
+            ],
+            "card": {
+              "tmdb_id": 1476746,
+              "title": "The Florist",
+              "original_title": "The Florist",
+              "poster_path": "/w2bdIz33mMXq382aIL6VLGaGEnp.jpg",
+              "release_date": "2026-09-24",
+              "popularity": 54.467,
+              "title_key": "movie:1476746",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/The_Florist",
+              "qid": "Q134888419",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:213562",
+            "day": "2026-10-13",
+            "score": 3.4754268703662095,
+            "views": 17679,
+            "mean28": 5086.857142857143,
+            "sd28": 2541.8038127379104,
+            "z": 4.954018399861946,
+            "eligible": true,
+            "rank": 13,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 3308
+              },
+              {
+                "day": "2026-10-01",
+                "views": 5191
+              },
+              {
+                "day": "2026-10-02",
+                "views": 5210
+              },
+              {
+                "day": "2026-10-03",
+                "views": 5299
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5549
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5136
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5215
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6095
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6861
+              },
+              {
+                "day": "2026-10-09",
+                "views": 7411
+              },
+              {
+                "day": "2026-10-10",
+                "views": 7038
+              },
+              {
+                "day": "2026-10-11",
+                "views": 8511
+              },
+              {
+                "day": "2026-10-12",
+                "views": 11280
+              },
+              {
+                "day": "2026-10-13",
+                "views": 17679
+              }
+            ],
+            "card": {
+              "tmdb_id": 213562,
+              "title": "Crystal Lake",
+              "original_title": "Crystal Lake",
+              "poster_path": "/3ENhExiD2fcjk5FX0AcAXcvLu9N.jpg",
+              "release_date": "2026-10-15",
+              "popularity": 17.4194,
+              "title_key": "tv:213562",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Crystal_Lake_(TV_series)",
+              "qid": "Q135166893",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:288673",
+            "day": "2026-10-13",
+            "score": 3.4253738048726916,
+            "views": 147042,
+            "mean28": 42927.28571428572,
+            "sd28": 70561.54282957393,
+            "z": 1.4755164089478707,
+            "eligible": true,
+            "rank": 14,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 6312
+              },
+              {
+                "day": "2026-10-01",
+                "views": 12642
+              },
+              {
+                "day": "2026-10-02",
+                "views": 16006
+              },
+              {
+                "day": "2026-10-03",
+                "views": 11857
+              },
+              {
+                "day": "2026-10-04",
+                "views": 11833
+              },
+              {
+                "day": "2026-10-05",
+                "views": 14977
+              },
+              {
+                "day": "2026-10-06",
+                "views": 16918
+              },
+              {
+                "day": "2026-10-07",
+                "views": 100004
+              },
+              {
+                "day": "2026-10-08",
+                "views": 170343
+              },
+              {
+                "day": "2026-10-09",
+                "views": 192804
+              },
+              {
+                "day": "2026-10-10",
+                "views": 193876
+              },
+              {
+                "day": "2026-10-11",
+                "views": 199079
+              },
+              {
+                "day": "2026-10-12",
+                "views": 189885
+              },
+              {
+                "day": "2026-10-13",
+                "views": 147042
+              }
+            ],
+            "card": {
+              "tmdb_id": 288673,
+              "title": "Carrie",
+              "original_title": "Carrie",
+              "poster_path": "/eXjk4W4robXs7l1YXwaXMv4f2qb.jpg",
+              "release_date": "2026-10-07",
+              "popularity": 326.3646,
+              "title_key": "tv:288673",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Carrie_(miniseries)",
+              "qid": "Q133852728",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-07",
+                "source_url": "https://www.themoviedb.org/tv/288673",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1153576",
+            "day": "2026-10-13",
+            "score": 3.1359363867103807,
+            "views": 44170,
+            "mean28": 14085.107142857143,
+            "sd28": 7569.312194358432,
+            "z": 3.9745873977249557,
+            "eligible": true,
+            "rank": 15,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 10428
+              },
+              {
+                "day": "2026-10-01",
+                "views": 11304
+              },
+              {
+                "day": "2026-10-02",
+                "views": 12175
+              },
+              {
+                "day": "2026-10-03",
+                "views": 12993
+              },
+              {
+                "day": "2026-10-04",
+                "views": 17892
+              },
+              {
+                "day": "2026-10-05",
+                "views": 15066
+              },
+              {
+                "day": "2026-10-06",
+                "views": 17714
+              },
+              {
+                "day": "2026-10-07",
+                "views": 19773
+              },
+              {
+                "day": "2026-10-08",
+                "views": 23870
+              },
+              {
+                "day": "2026-10-09",
+                "views": 28611
+              },
+              {
+                "day": "2026-10-10",
+                "views": 28406
+              },
+              {
+                "day": "2026-10-11",
+                "views": 30928
+              },
+              {
+                "day": "2026-10-12",
+                "views": 29806
+              },
+              {
+                "day": "2026-10-13",
+                "views": 44170
+              }
+            ],
+            "card": {
+              "tmdb_id": 1153576,
+              "title": "Street Fighter",
+              "original_title": "Street Fighter",
+              "poster_path": "/dJPT2Uf12X6aFg8i5N67NTpIZ9t.jpg",
+              "release_date": "2026-10-13",
+              "popularity": 56.1672,
+              "title_key": "movie:1153576",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Street_Fighter_(2026_film)",
+              "qid": "Q130345436",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-13",
+                "source_url": "https://www.themoviedb.org/movie/1153576",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:284833",
+            "day": "2026-10-13",
+            "score": 2.874995743135096,
+            "views": 36181,
+            "mean28": 12584.714285714286,
+            "sd28": 20664.84744310828,
+            "z": 1.1418562744897045,
+            "eligible": true,
+            "rank": 16,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 4266
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4707
+              },
+              {
+                "day": "2026-10-02",
+                "views": 4887
+              },
+              {
+                "day": "2026-10-03",
+                "views": 4941
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5047
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5494
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6684
+              },
+              {
+                "day": "2026-10-07",
+                "views": 9024
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12973
+              },
+              {
+                "day": "2026-10-09",
+                "views": 71973
+              },
+              {
+                "day": "2026-10-10",
+                "views": 77304
+              },
+              {
+                "day": "2026-10-11",
+                "views": 53480
+              },
+              {
+                "day": "2026-10-12",
+                "views": 42083
+              },
+              {
+                "day": "2026-10-13",
+                "views": 36181
+              }
+            ],
+            "card": {
+              "tmdb_id": 284833,
+              "title": "Avatar: Seven Havens",
+              "original_title": "Avatar: Seven Havens",
+              "poster_path": "/vYNar1VtdNyQXXUt16uPbIT6wzr.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 150.9785,
+              "title_key": "tv:284833",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Avatar:_Seven_Havens",
+              "qid": "Q132592986",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/284833",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:273247",
+            "day": "2026-10-13",
+            "score": 2.8106390743404246,
+            "views": 4676,
+            "mean28": 1663.6785714285713,
+            "sd28": 724.528765749131,
+            "z": 4.1576284765682425,
+            "eligible": true,
+            "rank": 17,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 2121
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2644
+              },
+              {
+                "day": "2026-10-02",
+                "views": 2137
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2596
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2427
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2244
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2153
+              },
+              {
+                "day": "2026-10-07",
+                "views": 2249
+              },
+              {
+                "day": "2026-10-08",
+                "views": 2616
+              },
+              {
+                "day": "2026-10-09",
+                "views": 2510
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2379
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2317
+              },
+              {
+                "day": "2026-10-12",
+                "views": 2980
+              },
+              {
+                "day": "2026-10-13",
+                "views": 4676
+              }
+            ],
+            "card": {
+              "tmdb_id": 273247,
+              "title": "The Lowdown",
+              "original_title": "The Lowdown",
+              "poster_path": "/aPd3Zn6c3iAMwhr79TPTtb6ovzF.jpg",
+              "release_date": "2025-09-23",
+              "popularity": 16.1484,
+              "title_key": "tv:273247",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/The_Lowdown_(American_TV_series)",
+              "qid": "Q130601776",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:891621",
+            "day": "2026-10-13",
+            "score": 2.395407094691712,
+            "views": 10416,
+            "mean28": 4348.321428571428,
+            "sd28": 1225.3392548763043,
+            "z": 4.951835622079285,
+            "eligible": true,
+            "rank": 18,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 3482
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3369
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3606
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3396
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3429
+              },
+              {
+                "day": "2026-10-05",
+                "views": 3507
+              },
+              {
+                "day": "2026-10-06",
+                "views": 3205
+              },
+              {
+                "day": "2026-10-07",
+                "views": 3351
+              },
+              {
+                "day": "2026-10-08",
+                "views": 3416
+              },
+              {
+                "day": "2026-10-09",
+                "views": 6788
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6413
+              },
+              {
+                "day": "2026-10-11",
+                "views": 6274
+              },
+              {
+                "day": "2026-10-12",
+                "views": 6680
+              },
+              {
+                "day": "2026-10-13",
+                "views": 10416
+              }
+            ],
+            "card": {
+              "tmdb_id": 891621,
+              "title": "Wild Horse Nine",
+              "original_title": "Wild Horse Nine",
+              "poster_path": "/dNJFRtVg3xLQ7dbNIQ55cmmIniD.jpg",
+              "release_date": "2026-11-04",
+              "popularity": 12.3502,
+              "title_key": "movie:891621",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Wild_Horse_Nine",
+              "qid": "Q133341572",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1195803",
+            "day": "2026-10-13",
+            "score": 2.3574455793662255,
+            "views": 16906,
+            "mean28": 7171.321428571428,
+            "sd28": 5987.69688047065,
+            "z": 1.6257801231019227,
+            "eligible": true,
+            "rank": 19,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 5705
+              },
+              {
+                "day": "2026-10-01",
+                "views": 5612
+              },
+              {
+                "day": "2026-10-02",
+                "views": 4872
+              },
+              {
+                "day": "2026-10-03",
+                "views": 4790
+              },
+              {
+                "day": "2026-10-04",
+                "views": 4677
+              },
+              {
+                "day": "2026-10-05",
+                "views": 4945
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5433
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6126
+              },
+              {
+                "day": "2026-10-08",
+                "views": 10305
+              },
+              {
+                "day": "2026-10-09",
+                "views": 28611
+              },
+              {
+                "day": "2026-10-10",
+                "views": 19753
+              },
+              {
+                "day": "2026-10-11",
+                "views": 16915
+              },
+              {
+                "day": "2026-10-12",
+                "views": 17824
+              },
+              {
+                "day": "2026-10-13",
+                "views": 16906
+              }
+            ],
+            "card": {
+              "tmdb_id": 1195803,
+              "title": "Wicker",
+              "original_title": "Wicker",
+              "poster_path": "/eOYkNDalgt1v6UGjw3AoFR5qo9D.jpg",
+              "release_date": "2026-10-21",
+              "popularity": 12.9284,
+              "title_key": "movie:1195803",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Wicker_(film)",
+              "qid": "Q136428321",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1400940",
+            "day": "2026-10-13",
+            "score": 2.24349894018508,
+            "views": 32547,
+            "mean28": 14507.25,
+            "sd28": 6927.87142441416,
+            "z": 2.603938337600642,
+            "eligible": true,
+            "rank": 20,
+            "curve": [
+              {
+                "day": "2026-09-30",
+                "views": 10258
+              },
+              {
+                "day": "2026-10-01",
+                "views": 11611
+              },
+              {
+                "day": "2026-10-02",
+                "views": 14133
+              },
+              {
+                "day": "2026-10-03",
+                "views": 14623
+              },
+              {
+                "day": "2026-10-04",
+                "views": 15214
+              },
+              {
+                "day": "2026-10-05",
+                "views": 17149
+              },
+              {
+                "day": "2026-10-06",
+                "views": 16544
+              },
+              {
+                "day": "2026-10-07",
+                "views": 21606
+              },
+              {
+                "day": "2026-10-08",
+                "views": 24403
+              },
+              {
+                "day": "2026-10-09",
+                "views": 26611
+              },
+              {
+                "day": "2026-10-10",
+                "views": 27883
+              },
+              {
+                "day": "2026-10-11",
+                "views": 24655
+              },
+              {
+                "day": "2026-10-12",
+                "views": 27740
+              },
+              {
+                "day": "2026-10-13",
+                "views": 32547
+              }
+            ],
+            "card": {
+              "tmdb_id": 1400940,
+              "title": "Clayface",
+              "original_title": "Clayface",
+              "poster_path": "/5jCpQnWPikggmQZoDp1eAi6BI6w.jpg",
+              "release_date": "2026-10-21",
+              "popularity": 27.9157,
+              "title_key": "movie:1400940",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Clayface_(film)",
+              "qid": "Q131460936",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          }
+        ]
+      }
+    },
+    {
+      "snapshot_key": "2026-10-12",
+      "day": "2026-10-12",
+      "generated_at": "2026-10-14T16:15:33.291241+00:00",
+      "payload": {
+        "schema_version": 1,
+        "formula_version": "wikipedia-lift-28d-v1",
+        "day": "2026-10-12",
+        "source": "Wikipedia en.wikipedia.org / all-access / user",
+        "baseline_days": 28,
+        "curve_days": 14,
+        "candidate_pool_collected_at": "2026-10-14T16:15:33.291241+00:00",
+        "history_mode": "current-candidate-pool backfill",
+        "diagnostics": {
+          "score_day": "2026-10-13",
+          "window_start": "2026-08-15",
+          "candidates": 616,
+          "candidate_kinds": {
+            "movie": 302,
+            "tv": 314
+          },
+          "mapped": 509,
+          "observations_in_window": 30097,
+          "complete_60_day_titles": 485,
+          "scorable_latest": 504,
+          "scorable": 504,
+          "eligible": 87
+        },
+        "top20": [
+          {
+            "title_key": "tv:126116",
+            "day": "2026-10-12",
+            "score": 12.818452735725355,
+            "views": 38405,
+            "mean28": 2996.0714285714284,
+            "sd28": 5041.5091627165675,
+            "z": 7.023477976255194,
+            "eligible": true,
+            "rank": 1,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 772
+              },
+              {
+                "day": "2026-09-30",
+                "views": 871
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2897
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3399
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2768
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2874
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2937
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6115
+              },
+              {
+                "day": "2026-10-07",
+                "views": 5664
+              },
+              {
+                "day": "2026-10-08",
+                "views": 5851
+              },
+              {
+                "day": "2026-10-09",
+                "views": 8119
+              },
+              {
+                "day": "2026-10-10",
+                "views": 7977
+              },
+              {
+                "day": "2026-10-11",
+                "views": 26076
+              },
+              {
+                "day": "2026-10-12",
+                "views": 38405
+              }
+            ],
+            "card": {
+              "tmdb_id": 126116,
+              "title": "Time",
+              "original_title": "Time",
+              "poster_path": "/mhi7oohUBIufTjF9u41uMXYHsw2.jpg",
+              "release_date": "2021-06-06",
+              "popularity": 42.4512,
+              "title_key": "tv:126116",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Time_(2021_TV_series)",
+              "qid": "Q107324744",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_season",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/126116",
+                "season_number": 3
+              }
+            ]
+          },
+          {
+            "title_key": "tv:312359",
+            "day": "2026-10-12",
+            "score": 11.365645239246012,
+            "views": 20996,
+            "mean28": 1847.3214285714287,
+            "sd28": 3814.068141701301,
+            "z": 5.020539188082551,
+            "eligible": true,
+            "rank": 2,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 1020
+              },
+              {
+                "day": "2026-09-30",
+                "views": 686
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2025
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1821
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2183
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2361
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2439
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1709
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1585
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1547
+              },
+              {
+                "day": "2026-10-09",
+                "views": 2324
+              },
+              {
+                "day": "2026-10-10",
+                "views": 4209
+              },
+              {
+                "day": "2026-10-11",
+                "views": 21054
+              },
+              {
+                "day": "2026-10-12",
+                "views": 20996
+              }
+            ],
+            "card": {
+              "tmdb_id": 312359,
+              "title": "Dragon Ball Super: Beerus",
+              "original_title": "ドラゴンボール超 ビルス",
+              "poster_path": "/3eaeeLaStTyYpG6KrRHbUcdEL2Z.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 74.0063,
+              "title_key": "tv:312359",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Dragon_Ball_Super:_Beerus",
+              "qid": "Q137883816",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/312359",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:293607",
+            "day": "2026-10-12",
+            "score": 9.433745275800504,
+            "views": 14531,
+            "mean28": 1540.3214285714287,
+            "sd28": 3286.4057445957956,
+            "z": 3.952852928397717,
+            "eligible": true,
+            "rank": 3,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 1379
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 942
+              },
+              {
+                "day": "2026-10-02",
+                "views": 961
+              },
+              {
+                "day": "2026-10-03",
+                "views": 1040
+              },
+              {
+                "day": "2026-10-04",
+                "views": 1095
+              },
+              {
+                "day": "2026-10-05",
+                "views": 799
+              },
+              {
+                "day": "2026-10-06",
+                "views": 773
+              },
+              {
+                "day": "2026-10-07",
+                "views": 876
+              },
+              {
+                "day": "2026-10-08",
+                "views": 976
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1255
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6521
+              },
+              {
+                "day": "2026-10-11",
+                "views": 17614
+              },
+              {
+                "day": "2026-10-12",
+                "views": 14531
+              }
+            ],
+            "card": {
+              "tmdb_id": 293607,
+              "title": "100 Days of Deception",
+              "original_title": "100일의 거짓말",
+              "poster_path": "/7QBDoXKSyRCLU5UAOHQNOdn0vfZ.jpg",
+              "release_date": "2026-10-10",
+              "popularity": 64.4991,
+              "title_key": "tv:293607",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/100_Days_of_Deception",
+              "qid": "Q138003793",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-10",
+                "source_url": "https://www.themoviedb.org/tv/293607",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-09-29",
+                "source_url": "https://www.youtube.com/watch?v=P0ElxnFyfXY"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:333101",
+            "day": "2026-10-12",
+            "score": 7.5245354114926775,
+            "views": 9414,
+            "mean28": 1251.107142857143,
+            "sd28": 1675.282968407037,
+            "z": 4.872545719786456,
+            "eligible": true,
+            "rank": 4,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 896
+              },
+              {
+                "day": "2026-09-30",
+                "views": 988
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1014
+              },
+              {
+                "day": "2026-10-02",
+                "views": 766
+              },
+              {
+                "day": "2026-10-03",
+                "views": 715
+              },
+              {
+                "day": "2026-10-04",
+                "views": 958
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1296
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1323
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1223
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1498
+              },
+              {
+                "day": "2026-10-09",
+                "views": 3505
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2655
+              },
+              {
+                "day": "2026-10-11",
+                "views": 8837
+              },
+              {
+                "day": "2026-10-12",
+                "views": 9414
+              }
+            ],
+            "card": {
+              "tmdb_id": 333101,
+              "title": "Treasure Island",
+              "original_title": "Treasure Island",
+              "poster_path": "/6K9mXJ1H4DKmThmbJdjsqET4PIl.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 53.594,
+              "title_key": "tv:333101",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Treasure_Island_(2026_TV_series)",
+              "qid": "Q141424423",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/333101",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:289423",
+            "day": "2026-10-12",
+            "score": 7.0610498185298205,
+            "views": 13966,
+            "mean28": 1977.892857142857,
+            "sd28": 4497.559586989416,
+            "z": 2.665469330864777,
+            "eligible": true,
+            "rank": 5,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 703
+              },
+              {
+                "day": "2026-09-30",
+                "views": 566
+              },
+              {
+                "day": "2026-10-01",
+                "views": 659
+              },
+              {
+                "day": "2026-10-02",
+                "views": 604
+              },
+              {
+                "day": "2026-10-03",
+                "views": 399
+              },
+              {
+                "day": "2026-10-04",
+                "views": 475
+              },
+              {
+                "day": "2026-10-05",
+                "views": 510
+              },
+              {
+                "day": "2026-10-06",
+                "views": 399
+              },
+              {
+                "day": "2026-10-07",
+                "views": 773
+              },
+              {
+                "day": "2026-10-08",
+                "views": 867
+              },
+              {
+                "day": "2026-10-09",
+                "views": 9969
+              },
+              {
+                "day": "2026-10-10",
+                "views": 17260
+              },
+              {
+                "day": "2026-10-11",
+                "views": 16493
+              },
+              {
+                "day": "2026-10-12",
+                "views": 13966
+              }
+            ],
+            "card": {
+              "tmdb_id": 289423,
+              "title": "Take Charge of My Heart",
+              "original_title": "나를 충전해줘",
+              "poster_path": "/qlszHCaXI1mq2rTC86vWAAbtgOc.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 161.3597,
+              "title_key": "tv:289423",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Take_Charge_of_My_Heart",
+              "qid": "Q137839960",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/289423",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:285322",
+            "day": "2026-10-12",
+            "score": 6.270810214504596,
+            "views": 137034,
+            "mean28": 21852.678571428572,
+            "sd28": 47833.00872981631,
+            "z": 2.4079882174916185,
+            "eligible": true,
+            "rank": 6,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 2539
+              },
+              {
+                "day": "2026-09-30",
+                "views": 2353
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3532
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3603
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3418
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3567
+              },
+              {
+                "day": "2026-10-05",
+                "views": 4382
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5211
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6871
+              },
+              {
+                "day": "2026-10-08",
+                "views": 91539
+              },
+              {
+                "day": "2026-10-09",
+                "views": 148760
+              },
+              {
+                "day": "2026-10-10",
+                "views": 147649
+              },
+              {
+                "day": "2026-10-11",
+                "views": 157798
+              },
+              {
+                "day": "2026-10-12",
+                "views": 137034
+              }
+            ],
+            "card": {
+              "tmdb_id": 285322,
+              "title": "Below",
+              "original_title": "Below",
+              "poster_path": "/vgLqqhMUbljp585qPp1EFCyJtcz.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 165.1799,
+              "title_key": "tv:285322",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Below_(miniseries)",
+              "qid": "Q140570538",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/tv/285322",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1236045",
+            "day": "2026-10-12",
+            "score": 6.256565259863736,
+            "views": 89895,
+            "mean28": 14368.107142857143,
+            "sd28": 30568.310764977425,
+            "z": 2.4707578196854487,
+            "eligible": true,
+            "rank": 7,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 2380
+              },
+              {
+                "day": "2026-09-30",
+                "views": 2377
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3742
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7045
+              },
+              {
+                "day": "2026-10-03",
+                "views": 6492
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5696
+              },
+              {
+                "day": "2026-10-05",
+                "views": 6520
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5744
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8626
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12323
+              },
+              {
+                "day": "2026-10-09",
+                "views": 69270
+              },
+              {
+                "day": "2026-10-10",
+                "views": 113215
+              },
+              {
+                "day": "2026-10-11",
+                "views": 117242
+              },
+              {
+                "day": "2026-10-12",
+                "views": 89895
+              }
+            ],
+            "card": {
+              "tmdb_id": 1236045,
+              "title": "Animals",
+              "original_title": "Animals",
+              "poster_path": "/cr73Ci6CM2kSfSbj6qwaTpcEq1e.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 269.1292,
+              "title_key": "movie:1236045",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Animals_(2026_film)",
+              "qid": "Q124359083",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/movie/1236045",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-05",
+                "source_url": "https://www.youtube.com/watch?v=ZkN2M4ODdys"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1538497",
+            "day": "2026-10-12",
+            "score": 5.4791768221605235,
+            "views": 18466,
+            "mean28": 3370.214285714286,
+            "sd28": 711.4024055716014,
+            "z": 21.219756351760534,
+            "eligible": true,
+            "rank": 8,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 3069
+              },
+              {
+                "day": "2026-09-30",
+                "views": 6047
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4776
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3829
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3743
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3618
+              },
+              {
+                "day": "2026-10-05",
+                "views": 3887
+              },
+              {
+                "day": "2026-10-06",
+                "views": 3954
+              },
+              {
+                "day": "2026-10-07",
+                "views": 3569
+              },
+              {
+                "day": "2026-10-08",
+                "views": 3284
+              },
+              {
+                "day": "2026-10-09",
+                "views": 3425
+              },
+              {
+                "day": "2026-10-10",
+                "views": 3548
+              },
+              {
+                "day": "2026-10-11",
+                "views": 3694
+              },
+              {
+                "day": "2026-10-12",
+                "views": 18466
+              }
+            ],
+            "card": {
+              "tmdb_id": 1538497,
+              "title": "Hexed",
+              "original_title": "Hexed",
+              "poster_path": "/yykeYKbDBM9eUMJUucaaDo2mi1p.jpg",
+              "release_date": "2026-11-25",
+              "popularity": 18.2735,
+              "title_key": "movie:1538497",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Hexed_(2026_film)",
+              "qid": "Q136027913",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-12",
+                "source_url": "https://www.youtube.com/watch?v=KXO21xZdUaM"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:303630",
+            "day": "2026-10-12",
+            "score": 5.35731957677528,
+            "views": 14539,
+            "mean28": 2713.8571428571427,
+            "sd28": 4488.65079724318,
+            "z": 2.634453734829533,
+            "eligible": true,
+            "rank": 9,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 393
+              },
+              {
+                "day": "2026-09-30",
+                "views": 377
+              },
+              {
+                "day": "2026-10-01",
+                "views": 605
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1270
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2455
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5015
+              },
+              {
+                "day": "2026-10-05",
+                "views": 3075
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2461
+              },
+              {
+                "day": "2026-10-07",
+                "views": 3248
+              },
+              {
+                "day": "2026-10-08",
+                "views": 7537
+              },
+              {
+                "day": "2026-10-09",
+                "views": 18447
+              },
+              {
+                "day": "2026-10-10",
+                "views": 12732
+              },
+              {
+                "day": "2026-10-11",
+                "views": 12194
+              },
+              {
+                "day": "2026-10-12",
+                "views": 14539
+              }
+            ],
+            "card": {
+              "tmdb_id": 303630,
+              "title": "Cupertino",
+              "original_title": "Cupertino",
+              "poster_path": "/70AhJpOqU2oKyQF2paJA764CSje.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 37.8205,
+              "title_key": "tv:303630",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Cupertino_(TV_series)",
+              "qid": "Q141503831",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/tv/303630",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:288673",
+            "day": "2026-10-12",
+            "score": 5.227201448772388,
+            "views": 189885,
+            "mean28": 36326.32142857143,
+            "sd28": 64925.10897952984,
+            "z": 2.365166281351086,
+            "eligible": true,
+            "rank": 10,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 5793
+              },
+              {
+                "day": "2026-09-30",
+                "views": 6312
+              },
+              {
+                "day": "2026-10-01",
+                "views": 12642
+              },
+              {
+                "day": "2026-10-02",
+                "views": 16006
+              },
+              {
+                "day": "2026-10-03",
+                "views": 11857
+              },
+              {
+                "day": "2026-10-04",
+                "views": 11833
+              },
+              {
+                "day": "2026-10-05",
+                "views": 14977
+              },
+              {
+                "day": "2026-10-06",
+                "views": 16918
+              },
+              {
+                "day": "2026-10-07",
+                "views": 100004
+              },
+              {
+                "day": "2026-10-08",
+                "views": 170343
+              },
+              {
+                "day": "2026-10-09",
+                "views": 192804
+              },
+              {
+                "day": "2026-10-10",
+                "views": 193876
+              },
+              {
+                "day": "2026-10-11",
+                "views": 199079
+              },
+              {
+                "day": "2026-10-12",
+                "views": 189885
+              }
+            ],
+            "card": {
+              "tmdb_id": 288673,
+              "title": "Carrie",
+              "original_title": "Carrie",
+              "poster_path": "/eXjk4W4robXs7l1YXwaXMv4f2qb.jpg",
+              "release_date": "2026-10-07",
+              "popularity": 326.3646,
+              "title_key": "tv:288673",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Carrie_(miniseries)",
+              "qid": "Q133852728",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-07",
+                "source_url": "https://www.themoviedb.org/tv/288673",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1476746",
+            "day": "2026-10-12",
+            "score": 4.400298451781384,
+            "views": 1685,
+            "mean28": 382.92857142857144,
+            "sd28": 532.1764562738988,
+            "z": 2.446691155200753,
+            "eligible": true,
+            "rank": 11,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 127
+              },
+              {
+                "day": "2026-09-30",
+                "views": 138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 127
+              },
+              {
+                "day": "2026-10-02",
+                "views": 150
+              },
+              {
+                "day": "2026-10-03",
+                "views": 307
+              },
+              {
+                "day": "2026-10-04",
+                "views": 420
+              },
+              {
+                "day": "2026-10-05",
+                "views": 360
+              },
+              {
+                "day": "2026-10-06",
+                "views": 381
+              },
+              {
+                "day": "2026-10-07",
+                "views": 469
+              },
+              {
+                "day": "2026-10-08",
+                "views": 506
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1240
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2136
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2120
+              },
+              {
+                "day": "2026-10-12",
+                "views": 1685
+              }
+            ],
+            "card": {
+              "tmdb_id": 1476746,
+              "title": "The Florist",
+              "original_title": "The Florist",
+              "poster_path": "/w2bdIz33mMXq382aIL6VLGaGEnp.jpg",
+              "release_date": "2026-09-24",
+              "popularity": 54.467,
+              "title_key": "movie:1476746",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/The_Florist",
+              "qid": "Q134888419",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:1396",
+            "day": "2026-10-12",
+            "score": 4.174212066689529,
+            "views": 31734,
+            "mean28": 7602.392857142857,
+            "sd28": 806.7367839143125,
+            "z": 29.9126153957798,
+            "eligible": true,
+            "rank": 12,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 8264
+              },
+              {
+                "day": "2026-09-30",
+                "views": 7928
+              },
+              {
+                "day": "2026-10-01",
+                "views": 7327
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7162
+              },
+              {
+                "day": "2026-10-03",
+                "views": 7423
+              },
+              {
+                "day": "2026-10-04",
+                "views": 7628
+              },
+              {
+                "day": "2026-10-05",
+                "views": 7141
+              },
+              {
+                "day": "2026-10-06",
+                "views": 7260
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6689
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6667
+              },
+              {
+                "day": "2026-10-09",
+                "views": 6275
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6544
+              },
+              {
+                "day": "2026-10-11",
+                "views": 6864
+              },
+              {
+                "day": "2026-10-12",
+                "views": 31734
+              }
+            ],
+            "card": {
+              "tmdb_id": 1396,
+              "title": "Breaking Bad",
+              "original_title": "Breaking Bad",
+              "poster_path": "/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg",
+              "release_date": "2008-01-20",
+              "popularity": 217.7491,
+              "title_key": "tv:1396",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Breaking_Bad",
+              "qid": "Q1079",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:284833",
+            "day": "2026-10-12",
+            "score": 3.7350314917950165,
+            "views": 42083,
+            "mean28": 11267.107142857143,
+            "sd28": 19904.170609877012,
+            "z": 1.548212857553137,
+            "eligible": true,
+            "rank": 13,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 4259
+              },
+              {
+                "day": "2026-09-30",
+                "views": 4266
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4707
+              },
+              {
+                "day": "2026-10-02",
+                "views": 4887
+              },
+              {
+                "day": "2026-10-03",
+                "views": 4941
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5047
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5494
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6684
+              },
+              {
+                "day": "2026-10-07",
+                "views": 9024
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12973
+              },
+              {
+                "day": "2026-10-09",
+                "views": 71973
+              },
+              {
+                "day": "2026-10-10",
+                "views": 77304
+              },
+              {
+                "day": "2026-10-11",
+                "views": 53480
+              },
+              {
+                "day": "2026-10-12",
+                "views": 42083
+              }
+            ],
+            "card": {
+              "tmdb_id": 284833,
+              "title": "Avatar: Seven Havens",
+              "original_title": "Avatar: Seven Havens",
+              "poster_path": "/vYNar1VtdNyQXXUt16uPbIT6wzr.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 150.9785,
+              "title_key": "tv:284833",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Avatar:_Seven_Havens",
+              "qid": "Q132592986",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/284833",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1275779",
+            "day": "2026-10-12",
+            "score": 3.2207526388537873,
+            "views": 36866,
+            "mean28": 11446.392857142857,
+            "sd28": 7755.058848166171,
+            "z": 3.2778097033871108,
+            "eligible": true,
+            "rank": 14,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 7587
+              },
+              {
+                "day": "2026-09-30",
+                "views": 8144
+              },
+              {
+                "day": "2026-10-01",
+                "views": 9484
+              },
+              {
+                "day": "2026-10-02",
+                "views": 10243
+              },
+              {
+                "day": "2026-10-03",
+                "views": 12954
+              },
+              {
+                "day": "2026-10-04",
+                "views": 13084
+              },
+              {
+                "day": "2026-10-05",
+                "views": 11171
+              },
+              {
+                "day": "2026-10-06",
+                "views": 9106
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8657
+              },
+              {
+                "day": "2026-10-08",
+                "views": 8607
+              },
+              {
+                "day": "2026-10-09",
+                "views": 20534
+              },
+              {
+                "day": "2026-10-10",
+                "views": 36515
+              },
+              {
+                "day": "2026-10-11",
+                "views": 38510
+              },
+              {
+                "day": "2026-10-12",
+                "views": 36866
+              }
+            ],
+            "card": {
+              "tmdb_id": 1275779,
+              "title": "Disclosure Day",
+              "original_title": "Disclosure Day",
+              "poster_path": "/AnJ8IQJI23hNpYXVNaythu061Ru.jpg",
+              "release_date": "2026-06-10",
+              "popularity": 88.5811,
+              "title_key": "movie:1275779",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Disclosure_Day",
+              "qid": "Q126683577",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:10193",
+            "day": "2026-10-12",
+            "score": 3.1151301523442183,
+            "views": 12057,
+            "mean28": 3870.464285714286,
+            "sd28": 10031.743825342428,
+            "z": 0.8160630750562723,
+            "eligible": true,
+            "rank": 15,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 2005
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1776
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1567
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1836
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2381
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2154
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1629
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1448
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1385
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1294
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1428
+              },
+              {
+                "day": "2026-10-10",
+                "views": 1776
+              },
+              {
+                "day": "2026-10-11",
+                "views": 55860
+              },
+              {
+                "day": "2026-10-12",
+                "views": 12057
+              }
+            ],
+            "card": {
+              "tmdb_id": 10193,
+              "title": "Toy Story 3",
+              "original_title": "Toy Story 3",
+              "poster_path": "/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
+              "release_date": "2010-06-16",
+              "popularity": 39.5138,
+              "title_key": "movie:10193",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Toy_Story_3",
+              "qid": "Q187278",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:791523",
+            "day": "2026-10-12",
+            "score": 3.0975275227680044,
+            "views": 24197,
+            "mean28": 7811.714285714285,
+            "sd28": 2667.950656230664,
+            "z": 6.141525022593628,
+            "eligible": true,
+            "rank": 16,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 7569
+              },
+              {
+                "day": "2026-09-30",
+                "views": 6440
+              },
+              {
+                "day": "2026-10-01",
+                "views": 7412
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7780
+              },
+              {
+                "day": "2026-10-03",
+                "views": 7571
+              },
+              {
+                "day": "2026-10-04",
+                "views": 8838
+              },
+              {
+                "day": "2026-10-05",
+                "views": 7779
+              },
+              {
+                "day": "2026-10-06",
+                "views": 7424
+              },
+              {
+                "day": "2026-10-07",
+                "views": 7676
+              },
+              {
+                "day": "2026-10-08",
+                "views": 7607
+              },
+              {
+                "day": "2026-10-09",
+                "views": 8085
+              },
+              {
+                "day": "2026-10-10",
+                "views": 8350
+              },
+              {
+                "day": "2026-10-11",
+                "views": 20756
+              },
+              {
+                "day": "2026-10-12",
+                "views": 24197
+              }
+            ],
+            "card": {
+              "tmdb_id": 791523,
+              "title": "Wildwood",
+              "original_title": "Wildwood",
+              "poster_path": "/snFM00mpNAfUzUtkdEW0uDEvXA0.jpg",
+              "release_date": "2026-10-21",
+              "popularity": 15.3343,
+              "title_key": "movie:791523",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Wildwood_(film)",
+              "qid": "Q123058740",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1148365",
+            "day": "2026-10-12",
+            "score": 3.0494499305373033,
+            "views": 20304,
+            "mean28": 6658.25,
+            "sd28": 9315.193923389741,
+            "z": 1.46489167184556,
+            "eligible": true,
+            "rank": 17,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 5467
+              },
+              {
+                "day": "2026-09-30",
+                "views": 4302
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4216
+              },
+              {
+                "day": "2026-10-02",
+                "views": 5319
+              },
+              {
+                "day": "2026-10-03",
+                "views": 5299
+              },
+              {
+                "day": "2026-10-04",
+                "views": 4438
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5527
+              },
+              {
+                "day": "2026-10-06",
+                "views": 8756
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8786
+              },
+              {
+                "day": "2026-10-08",
+                "views": 10900
+              },
+              {
+                "day": "2026-10-09",
+                "views": 32005
+              },
+              {
+                "day": "2026-10-10",
+                "views": 35571
+              },
+              {
+                "day": "2026-10-11",
+                "views": 29732
+              },
+              {
+                "day": "2026-10-12",
+                "views": 20304
+              }
+            ],
+            "card": {
+              "tmdb_id": 1148365,
+              "title": "Matchbox the Movie",
+              "original_title": "Matchbox the Movie",
+              "poster_path": "/lFKA4GMz36dImEy3DQPdPF7G4V9.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 381.2533,
+              "title_key": "movie:1148365",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Matchbox:_The_Movie",
+              "qid": "Q131872896",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/movie/1148365",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1036081",
+            "day": "2026-10-12",
+            "score": 3.0433383517405446,
+            "views": 18915,
+            "mean28": 6215.214285714285,
+            "sd28": 9473.555115452182,
+            "z": 1.340551203800068,
+            "eligible": true,
+            "rank": 18,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 2156
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1796
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1884
+              },
+              {
+                "day": "2026-10-02",
+                "views": 2322
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2220
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2600
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2410
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2502
+              },
+              {
+                "day": "2026-10-07",
+                "views": 2946
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6900
+              },
+              {
+                "day": "2026-10-09",
+                "views": 31858
+              },
+              {
+                "day": "2026-10-10",
+                "views": 37490
+              },
+              {
+                "day": "2026-10-11",
+                "views": 30513
+              },
+              {
+                "day": "2026-10-12",
+                "views": 18915
+              }
+            ],
+            "card": {
+              "tmdb_id": 1036081,
+              "title": "Khalifa: The Ruler",
+              "original_title": "ഖലീഫ: The Ruler",
+              "poster_path": "/cAl7uuRojdxysptYBj9Mg0czGmI.jpg",
+              "release_date": "2026-08-20",
+              "popularity": 42.3961,
+              "title_key": "movie:1036081",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Khalifa:_The_Ruler",
+              "qid": "Q141051788",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1195803",
+            "day": "2026-10-12",
+            "score": 2.6655130238793374,
+            "views": 17824,
+            "mean28": 6686.892857142857,
+            "sd28": 5645.149095457885,
+            "z": 1.97286324143646,
+            "eligible": true,
+            "rank": 19,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 7608
+              },
+              {
+                "day": "2026-09-30",
+                "views": 5705
+              },
+              {
+                "day": "2026-10-01",
+                "views": 5612
+              },
+              {
+                "day": "2026-10-02",
+                "views": 4872
+              },
+              {
+                "day": "2026-10-03",
+                "views": 4790
+              },
+              {
+                "day": "2026-10-04",
+                "views": 4677
+              },
+              {
+                "day": "2026-10-05",
+                "views": 4945
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5433
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6126
+              },
+              {
+                "day": "2026-10-08",
+                "views": 10305
+              },
+              {
+                "day": "2026-10-09",
+                "views": 28611
+              },
+              {
+                "day": "2026-10-10",
+                "views": 19753
+              },
+              {
+                "day": "2026-10-11",
+                "views": 16915
+              },
+              {
+                "day": "2026-10-12",
+                "views": 17824
+              }
+            ],
+            "card": {
+              "tmdb_id": 1195803,
+              "title": "Wicker",
+              "original_title": "Wicker",
+              "poster_path": "/eOYkNDalgt1v6UGjw3AoFR5qo9D.jpg",
+              "release_date": "2026-10-21",
+              "popularity": 12.9284,
+              "title_key": "movie:1195803",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Wicker_(film)",
+              "qid": "Q136428321",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:213375",
+            "day": "2026-10-12",
+            "score": 2.5566571444575144,
+            "views": 22822,
+            "mean28": 8926.5,
+            "sd28": 5294.472727693072,
+            "z": 2.6245295262961155,
+            "eligible": true,
+            "rank": 20,
+            "curve": [
+              {
+                "day": "2026-09-29",
+                "views": 9136
+              },
+              {
+                "day": "2026-09-30",
+                "views": 7918
+              },
+              {
+                "day": "2026-10-01",
+                "views": 19159
+              },
+              {
+                "day": "2026-10-02",
+                "views": 22274
+              },
+              {
+                "day": "2026-10-03",
+                "views": 13731
+              },
+              {
+                "day": "2026-10-04",
+                "views": 13685
+              },
+              {
+                "day": "2026-10-05",
+                "views": 11513
+              },
+              {
+                "day": "2026-10-06",
+                "views": 10520
+              },
+              {
+                "day": "2026-10-07",
+                "views": 11403
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12169
+              },
+              {
+                "day": "2026-10-09",
+                "views": 14668
+              },
+              {
+                "day": "2026-10-10",
+                "views": 14498
+              },
+              {
+                "day": "2026-10-11",
+                "views": 15496
+              },
+              {
+                "day": "2026-10-12",
+                "views": 22822
+              }
+            ],
+            "card": {
+              "tmdb_id": 213375,
+              "title": "VisionQuest",
+              "original_title": "VisionQuest",
+              "poster_path": "/xK27l5uwaVyZSlENWnmLlWwDQNS.jpg",
+              "release_date": "2026-10-14",
+              "popularity": 75.3342,
+              "title_key": "tv:213375",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/VisionQuest",
+              "qid": "Q126092795",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-01",
+                "source_url": "https://www.youtube.com/watch?v=sXKnmgmbkoE"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-09-30",
+                "source_url": "https://www.youtube.com/watch?v=pM9HZ8Ovjdw"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "snapshot_key": "2026-10-11",
+      "day": "2026-10-11",
+      "generated_at": "2026-10-14T16:15:33.291241+00:00",
+      "payload": {
+        "schema_version": 1,
+        "formula_version": "wikipedia-lift-28d-v1",
+        "day": "2026-10-11",
+        "source": "Wikipedia en.wikipedia.org / all-access / user",
+        "baseline_days": 28,
+        "curve_days": 14,
+        "candidate_pool_collected_at": "2026-10-14T16:15:33.291241+00:00",
+        "history_mode": "current-candidate-pool backfill",
+        "diagnostics": {
+          "score_day": "2026-10-13",
+          "window_start": "2026-08-15",
+          "candidates": 616,
+          "candidate_kinds": {
+            "movie": 302,
+            "tv": 314
+          },
+          "mapped": 509,
+          "observations_in_window": 30097,
+          "complete_60_day_titles": 485,
+          "scorable_latest": 504,
+          "scorable": 504,
+          "eligible": 111
+        },
+        "top20": [
+          {
+            "title_key": "movie:10193",
+            "day": "2026-10-11",
+            "score": 28.794874627195405,
+            "views": 55860,
+            "mean28": 1939.9285714285713,
+            "sd28": 727.1266311689471,
+            "z": 74.15499462849841,
+            "eligible": true,
+            "rank": 1,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 2645
+              },
+              {
+                "day": "2026-09-29",
+                "views": 2005
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1776
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1567
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1836
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2381
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2154
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1629
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1448
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1385
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1294
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1428
+              },
+              {
+                "day": "2026-10-10",
+                "views": 1776
+              },
+              {
+                "day": "2026-10-11",
+                "views": 55860
+              }
+            ],
+            "card": {
+              "tmdb_id": 10193,
+              "title": "Toy Story 3",
+              "original_title": "Toy Story 3",
+              "poster_path": "/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
+              "release_date": "2010-06-16",
+              "popularity": 39.5138,
+              "title_key": "movie:10193",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Toy_Story_3",
+              "qid": "Q187278",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:293607",
+            "day": "2026-10-11",
+            "score": 19.070878929662424,
+            "views": 17614,
+            "mean28": 923.6071428571429,
+            "sd28": 1115.2641371725647,
+            "z": 14.96541698135888,
+            "eligible": true,
+            "rank": 2,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 677
+              },
+              {
+                "day": "2026-09-29",
+                "views": 1379
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 942
+              },
+              {
+                "day": "2026-10-02",
+                "views": 961
+              },
+              {
+                "day": "2026-10-03",
+                "views": 1040
+              },
+              {
+                "day": "2026-10-04",
+                "views": 1095
+              },
+              {
+                "day": "2026-10-05",
+                "views": 799
+              },
+              {
+                "day": "2026-10-06",
+                "views": 773
+              },
+              {
+                "day": "2026-10-07",
+                "views": 876
+              },
+              {
+                "day": "2026-10-08",
+                "views": 976
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1255
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6521
+              },
+              {
+                "day": "2026-10-11",
+                "views": 17614
+              }
+            ],
+            "card": {
+              "tmdb_id": 293607,
+              "title": "100 Days of Deception",
+              "original_title": "100일의 거짓말",
+              "poster_path": "/7QBDoXKSyRCLU5UAOHQNOdn0vfZ.jpg",
+              "release_date": "2026-10-10",
+              "popularity": 64.4991,
+              "title_key": "tv:293607",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/100_Days_of_Deception",
+              "qid": "Q138003793",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-10",
+                "source_url": "https://www.themoviedb.org/tv/293607",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-09-29",
+                "source_url": "https://www.youtube.com/watch?v=P0ElxnFyfXY"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:312359",
+            "day": "2026-10-11",
+            "score": 19.001805054151625,
+            "views": 21054,
+            "mean28": 1108,
+            "sd28": 951.5221639937919,
+            "z": 20.962202200610154,
+            "eligible": true,
+            "rank": 3,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 886
+              },
+              {
+                "day": "2026-09-29",
+                "views": 1020
+              },
+              {
+                "day": "2026-09-30",
+                "views": 686
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2025
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1821
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2183
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2361
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2439
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1709
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1585
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1547
+              },
+              {
+                "day": "2026-10-09",
+                "views": 2324
+              },
+              {
+                "day": "2026-10-10",
+                "views": 4209
+              },
+              {
+                "day": "2026-10-11",
+                "views": 21054
+              }
+            ],
+            "card": {
+              "tmdb_id": 312359,
+              "title": "Dragon Ball Super: Beerus",
+              "original_title": "ドラゴンボール超 ビルス",
+              "poster_path": "/3eaeeLaStTyYpG6KrRHbUcdEL2Z.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 74.0063,
+              "title_key": "tv:312359",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Dragon_Ball_Super:_Beerus",
+              "qid": "Q137883816",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/312359",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:126116",
+            "day": "2026-10-11",
+            "score": 12.525999759817461,
+            "views": 26076,
+            "mean28": 2081.75,
+            "sd28": 2404.8757411469605,
+            "z": 9.97733462459744,
+            "eligible": true,
+            "rank": 4,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 509
+              },
+              {
+                "day": "2026-09-29",
+                "views": 772
+              },
+              {
+                "day": "2026-09-30",
+                "views": 871
+              },
+              {
+                "day": "2026-10-01",
+                "views": 2897
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3399
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2768
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2874
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2937
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6115
+              },
+              {
+                "day": "2026-10-07",
+                "views": 5664
+              },
+              {
+                "day": "2026-10-08",
+                "views": 5851
+              },
+              {
+                "day": "2026-10-09",
+                "views": 8119
+              },
+              {
+                "day": "2026-10-10",
+                "views": 7977
+              },
+              {
+                "day": "2026-10-11",
+                "views": 26076
+              }
+            ],
+            "card": {
+              "tmdb_id": 126116,
+              "title": "Time",
+              "original_title": "Time",
+              "poster_path": "/mhi7oohUBIufTjF9u41uMXYHsw2.jpg",
+              "release_date": "2021-06-06",
+              "popularity": 42.4512,
+              "title_key": "tv:126116",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Time_(2021_TV_series)",
+              "qid": "Q107324744",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_season",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/126116",
+                "season_number": 3
+              }
+            ]
+          },
+          {
+            "title_key": "tv:289423",
+            "day": "2026-10-11",
+            "score": 11.824149938549775,
+            "views": 16493,
+            "mean28": 1394.857142857143,
+            "sd28": 3532.7776477105467,
+            "z": 4.2737314268638915,
+            "eligible": true,
+            "rank": 5,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 1086
+              },
+              {
+                "day": "2026-09-29",
+                "views": 703
+              },
+              {
+                "day": "2026-09-30",
+                "views": 566
+              },
+              {
+                "day": "2026-10-01",
+                "views": 659
+              },
+              {
+                "day": "2026-10-02",
+                "views": 604
+              },
+              {
+                "day": "2026-10-03",
+                "views": 399
+              },
+              {
+                "day": "2026-10-04",
+                "views": 475
+              },
+              {
+                "day": "2026-10-05",
+                "views": 510
+              },
+              {
+                "day": "2026-10-06",
+                "views": 399
+              },
+              {
+                "day": "2026-10-07",
+                "views": 773
+              },
+              {
+                "day": "2026-10-08",
+                "views": 867
+              },
+              {
+                "day": "2026-10-09",
+                "views": 9969
+              },
+              {
+                "day": "2026-10-10",
+                "views": 17260
+              },
+              {
+                "day": "2026-10-11",
+                "views": 16493
+              }
+            ],
+            "card": {
+              "tmdb_id": 289423,
+              "title": "Take Charge of My Heart",
+              "original_title": "나를 충전해줘",
+              "poster_path": "/qlszHCaXI1mq2rTC86vWAAbtgOc.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 161.3597,
+              "title_key": "tv:289423",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Take_Charge_of_My_Heart",
+              "qid": "Q137839960",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/289423",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-09-28",
+                "source_url": "https://www.youtube.com/watch?v=z_D5uXaDsVU"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1236045",
+            "day": "2026-10-11",
+            "score": 11.445901090625087,
+            "views": 117242,
+            "mean28": 10243.142857142857,
+            "sd28": 23348.089317229067,
+            "z": 4.582767167328778,
+            "eligible": true,
+            "rank": 6,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 2415
+              },
+              {
+                "day": "2026-09-29",
+                "views": 2380
+              },
+              {
+                "day": "2026-09-30",
+                "views": 2377
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3742
+              },
+              {
+                "day": "2026-10-02",
+                "views": 7045
+              },
+              {
+                "day": "2026-10-03",
+                "views": 6492
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5696
+              },
+              {
+                "day": "2026-10-05",
+                "views": 6520
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5744
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8626
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12323
+              },
+              {
+                "day": "2026-10-09",
+                "views": 69270
+              },
+              {
+                "day": "2026-10-10",
+                "views": 113215
+              },
+              {
+                "day": "2026-10-11",
+                "views": 117242
+              }
+            ],
+            "card": {
+              "tmdb_id": 1236045,
+              "title": "Animals",
+              "original_title": "Animals",
+              "poster_path": "/cr73Ci6CM2kSfSbj6qwaTpcEq1e.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 269.1292,
+              "title_key": "movie:1236045",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Animals_(2026_film)",
+              "qid": "Q124359083",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/movie/1236045",
+                "evidence": "TMDB release/first-air date; context only"
+              },
+              {
+                "kind": "trailer",
+                "event_day": "2026-10-05",
+                "source_url": "https://www.youtube.com/watch?v=ZkN2M4ODdys"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:285322",
+            "day": "2026-10-11",
+            "score": 9.606661955753655,
+            "views": 157798,
+            "mean28": 16425.89285714286,
+            "sd28": 40095.567756779805,
+            "z": 3.525878670690537,
+            "eligible": true,
+            "rank": 7,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 2074
+              },
+              {
+                "day": "2026-09-29",
+                "views": 2539
+              },
+              {
+                "day": "2026-09-30",
+                "views": 2353
+              },
+              {
+                "day": "2026-10-01",
+                "views": 3532
+              },
+              {
+                "day": "2026-10-02",
+                "views": 3603
+              },
+              {
+                "day": "2026-10-03",
+                "views": 3418
+              },
+              {
+                "day": "2026-10-04",
+                "views": 3567
+              },
+              {
+                "day": "2026-10-05",
+                "views": 4382
+              },
+              {
+                "day": "2026-10-06",
+                "views": 5211
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6871
+              },
+              {
+                "day": "2026-10-08",
+                "views": 91539
+              },
+              {
+                "day": "2026-10-09",
+                "views": 148760
+              },
+              {
+                "day": "2026-10-10",
+                "views": 147649
+              },
+              {
+                "day": "2026-10-11",
+                "views": 157798
+              }
+            ],
+            "card": {
+              "tmdb_id": 285322,
+              "title": "Below",
+              "original_title": "Below",
+              "poster_path": "/vgLqqhMUbljp585qPp1EFCyJtcz.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 165.1799,
+              "title_key": "tv:285322",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Below_(miniseries)",
+              "qid": "Q140570538",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/tv/285322",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:333101",
+            "day": "2026-10-11",
+            "score": 9.353443713616088,
+            "views": 8837,
+            "mean28": 944.7857142857143,
+            "sd28": 832.2355589075752,
+            "z": 9.483149573750385,
+            "eligible": true,
+            "rank": 8,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 1063
+              },
+              {
+                "day": "2026-09-29",
+                "views": 896
+              },
+              {
+                "day": "2026-09-30",
+                "views": 988
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1014
+              },
+              {
+                "day": "2026-10-02",
+                "views": 766
+              },
+              {
+                "day": "2026-10-03",
+                "views": 715
+              },
+              {
+                "day": "2026-10-04",
+                "views": 958
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1296
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1323
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1223
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1498
+              },
+              {
+                "day": "2026-10-09",
+                "views": 3505
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2655
+              },
+              {
+                "day": "2026-10-11",
+                "views": 8837
+              }
+            ],
+            "card": {
+              "tmdb_id": 333101,
+              "title": "Treasure Island",
+              "original_title": "Treasure Island",
+              "poster_path": "/6K9mXJ1H4DKmThmbJdjsqET4PIl.jpg",
+              "release_date": "2026-10-11",
+              "popularity": 53.594,
+              "title_key": "tv:333101",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Treasure_Island_(2026_TV_series)",
+              "qid": "Q141424423",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-11",
+                "source_url": "https://www.themoviedb.org/tv/333101",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1476746",
+            "day": "2026-10-11",
+            "score": 6.797206000229016,
+            "views": 2120,
+            "mean28": 311.89285714285717,
+            "sd28": 415.5328196841904,
+            "z": 4.351298037616679,
+            "eligible": true,
+            "rank": 9,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 151
+              },
+              {
+                "day": "2026-09-29",
+                "views": 127
+              },
+              {
+                "day": "2026-09-30",
+                "views": 138
+              },
+              {
+                "day": "2026-10-01",
+                "views": 127
+              },
+              {
+                "day": "2026-10-02",
+                "views": 150
+              },
+              {
+                "day": "2026-10-03",
+                "views": 307
+              },
+              {
+                "day": "2026-10-04",
+                "views": 420
+              },
+              {
+                "day": "2026-10-05",
+                "views": 360
+              },
+              {
+                "day": "2026-10-06",
+                "views": 381
+              },
+              {
+                "day": "2026-10-07",
+                "views": 469
+              },
+              {
+                "day": "2026-10-08",
+                "views": 506
+              },
+              {
+                "day": "2026-10-09",
+                "views": 1240
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2136
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2120
+              }
+            ],
+            "card": {
+              "tmdb_id": 1476746,
+              "title": "The Florist",
+              "original_title": "The Florist",
+              "poster_path": "/w2bdIz33mMXq382aIL6VLGaGEnp.jpg",
+              "release_date": "2026-09-24",
+              "popularity": 54.467,
+              "title_key": "movie:1476746",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/The_Florist",
+              "qid": "Q134888419",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:288673",
+            "day": "2026-10-11",
+            "score": 6.7695031757405,
+            "views": 199079,
+            "mean28": 29408.214285714286,
+            "sd28": 57057.99167160494,
+            "z": 2.97365506116688,
+            "eligible": true,
+            "rank": 10,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 4983
+              },
+              {
+                "day": "2026-09-29",
+                "views": 5793
+              },
+              {
+                "day": "2026-09-30",
+                "views": 6312
+              },
+              {
+                "day": "2026-10-01",
+                "views": 12642
+              },
+              {
+                "day": "2026-10-02",
+                "views": 16006
+              },
+              {
+                "day": "2026-10-03",
+                "views": 11857
+              },
+              {
+                "day": "2026-10-04",
+                "views": 11833
+              },
+              {
+                "day": "2026-10-05",
+                "views": 14977
+              },
+              {
+                "day": "2026-10-06",
+                "views": 16918
+              },
+              {
+                "day": "2026-10-07",
+                "views": 100004
+              },
+              {
+                "day": "2026-10-08",
+                "views": 170343
+              },
+              {
+                "day": "2026-10-09",
+                "views": 192804
+              },
+              {
+                "day": "2026-10-10",
+                "views": 193876
+              },
+              {
+                "day": "2026-10-11",
+                "views": 199079
+              }
+            ],
+            "card": {
+              "tmdb_id": 288673,
+              "title": "Carrie",
+              "original_title": "Carrie",
+              "poster_path": "/eXjk4W4robXs7l1YXwaXMv4f2qb.jpg",
+              "release_date": "2026-10-07",
+              "popularity": 326.3646,
+              "title_key": "tv:288673",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Carrie_(miniseries)",
+              "qid": "Q133852728",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-07",
+                "source_url": "https://www.themoviedb.org/tv/288673",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1036081",
+            "day": "2026-10-11",
+            "score": 5.78324116129993,
+            "views": 30513,
+            "mean28": 5276.107142857143,
+            "sd28": 8241.583487496657,
+            "z": 3.062141261497849,
+            "eligible": true,
+            "rank": 11,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 2537
+              },
+              {
+                "day": "2026-09-29",
+                "views": 2156
+              },
+              {
+                "day": "2026-09-30",
+                "views": 1796
+              },
+              {
+                "day": "2026-10-01",
+                "views": 1884
+              },
+              {
+                "day": "2026-10-02",
+                "views": 2322
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2220
+              },
+              {
+                "day": "2026-10-04",
+                "views": 2600
+              },
+              {
+                "day": "2026-10-05",
+                "views": 2410
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2502
+              },
+              {
+                "day": "2026-10-07",
+                "views": 2946
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6900
+              },
+              {
+                "day": "2026-10-09",
+                "views": 31858
+              },
+              {
+                "day": "2026-10-10",
+                "views": 37490
+              },
+              {
+                "day": "2026-10-11",
+                "views": 30513
+              }
+            ],
+            "card": {
+              "tmdb_id": 1036081,
+              "title": "Khalifa: The Ruler",
+              "original_title": "ഖലീഫ: The Ruler",
+              "poster_path": "/cAl7uuRojdxysptYBj9Mg0czGmI.jpg",
+              "release_date": "2026-08-20",
+              "popularity": 42.3961,
+              "title_key": "movie:1036081",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Khalifa:_The_Ruler",
+              "qid": "Q141051788",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "tv:284833",
+            "day": "2026-10-11",
+            "score": 5.575957073650267,
+            "views": 53480,
+            "mean28": 9591.17857142857,
+            "sd28": 18180.217512162522,
+            "z": 2.4140977080835206,
+            "eligible": true,
+            "rank": 12,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 3518
+              },
+              {
+                "day": "2026-09-29",
+                "views": 4259
+              },
+              {
+                "day": "2026-09-30",
+                "views": 4266
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4707
+              },
+              {
+                "day": "2026-10-02",
+                "views": 4887
+              },
+              {
+                "day": "2026-10-03",
+                "views": 4941
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5047
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5494
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6684
+              },
+              {
+                "day": "2026-10-07",
+                "views": 9024
+              },
+              {
+                "day": "2026-10-08",
+                "views": 12973
+              },
+              {
+                "day": "2026-10-09",
+                "views": 71973
+              },
+              {
+                "day": "2026-10-10",
+                "views": 77304
+              },
+              {
+                "day": "2026-10-11",
+                "views": 53480
+              }
+            ],
+            "card": {
+              "tmdb_id": 284833,
+              "title": "Avatar: Seven Havens",
+              "original_title": "Avatar: Seven Havens",
+              "poster_path": "/vYNar1VtdNyQXXUt16uPbIT6wzr.jpg",
+              "release_date": "2026-10-09",
+              "popularity": 150.9785,
+              "title_key": "tv:284833",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Avatar:_Seven_Havens",
+              "qid": "Q132592986",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-09",
+                "source_url": "https://www.themoviedb.org/tv/284833",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "tv:303630",
+            "day": "2026-10-11",
+            "score": 5.290238611713666,
+            "views": 12194,
+            "mean28": 2305,
+            "sd28": 4112.100453886936,
+            "z": 2.4048537021152994,
+            "eligible": true,
+            "rank": 13,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 513
+              },
+              {
+                "day": "2026-09-29",
+                "views": 393
+              },
+              {
+                "day": "2026-09-30",
+                "views": 377
+              },
+              {
+                "day": "2026-10-01",
+                "views": 605
+              },
+              {
+                "day": "2026-10-02",
+                "views": 1270
+              },
+              {
+                "day": "2026-10-03",
+                "views": 2455
+              },
+              {
+                "day": "2026-10-04",
+                "views": 5015
+              },
+              {
+                "day": "2026-10-05",
+                "views": 3075
+              },
+              {
+                "day": "2026-10-06",
+                "views": 2461
+              },
+              {
+                "day": "2026-10-07",
+                "views": 3248
+              },
+              {
+                "day": "2026-10-08",
+                "views": 7537
+              },
+              {
+                "day": "2026-10-09",
+                "views": 18447
+              },
+              {
+                "day": "2026-10-10",
+                "views": 12732
+              },
+              {
+                "day": "2026-10-11",
+                "views": 12194
+              }
+            ],
+            "card": {
+              "tmdb_id": 303630,
+              "title": "Cupertino",
+              "original_title": "Cupertino",
+              "poster_path": "/70AhJpOqU2oKyQF2paJA764CSje.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 37.8205,
+              "title_key": "tv:303630",
+              "kind": "tv",
+              "article": "https://en.wikipedia.org/wiki/Cupertino_(TV_series)",
+              "qid": "Q141503831",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/tv/303630",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1148365",
+            "day": "2026-10-11",
+            "score": 5.260671473437431,
+            "views": 29732,
+            "mean28": 5651.75,
+            "sd28": 8226.634781631985,
+            "z": 2.927108184474795,
+            "eligible": true,
+            "rank": 14,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 3072
+              },
+              {
+                "day": "2026-09-29",
+                "views": 5467
+              },
+              {
+                "day": "2026-09-30",
+                "views": 4302
+              },
+              {
+                "day": "2026-10-01",
+                "views": 4216
+              },
+              {
+                "day": "2026-10-02",
+                "views": 5319
+              },
+              {
+                "day": "2026-10-03",
+                "views": 5299
+              },
+              {
+                "day": "2026-10-04",
+                "views": 4438
+              },
+              {
+                "day": "2026-10-05",
+                "views": 5527
+              },
+              {
+                "day": "2026-10-06",
+                "views": 8756
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8786
+              },
+              {
+                "day": "2026-10-08",
+                "views": 10900
+              },
+              {
+                "day": "2026-10-09",
+                "views": 32005
+              },
+              {
+                "day": "2026-10-10",
+                "views": 35571
+              },
+              {
+                "day": "2026-10-11",
+                "views": 29732
+              }
+            ],
+            "card": {
+              "tmdb_id": 1148365,
+              "title": "Matchbox the Movie",
+              "original_title": "Matchbox the Movie",
+              "poster_path": "/lFKA4GMz36dImEy3DQPdPF7G4V9.jpg",
+              "release_date": "2026-10-08",
+              "popularity": 381.2533,
+              "title_key": "movie:1148365",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Matchbox:_The_Movie",
+              "qid": "Q131872896",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-08",
+                "source_url": "https://www.themoviedb.org/movie/1148365",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1275779",
+            "day": "2026-10-11",
+            "score": 3.686049294089495,
+            "views": 38510,
+            "mean28": 10447.5,
+            "sd28": 5745.772131999071,
+            "z": 4.884025915980153,
+            "eligible": true,
+            "rank": 15,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 9164
+              },
+              {
+                "day": "2026-09-29",
+                "views": 7587
+              },
+              {
+                "day": "2026-09-30",
+                "views": 8144
+              },
+              {
+                "day": "2026-10-01",
+                "views": 9484
+              },
+              {
+                "day": "2026-10-02",
+                "views": 10243
+              },
+              {
+                "day": "2026-10-03",
+                "views": 12954
+              },
+              {
+                "day": "2026-10-04",
+                "views": 13084
+              },
+              {
+                "day": "2026-10-05",
+                "views": 11171
+              },
+              {
+                "day": "2026-10-06",
+                "views": 9106
+              },
+              {
+                "day": "2026-10-07",
+                "views": 8657
+              },
+              {
+                "day": "2026-10-08",
+                "views": 8607
+              },
+              {
+                "day": "2026-10-09",
+                "views": 20534
+              },
+              {
+                "day": "2026-10-10",
+                "views": 36515
+              },
+              {
+                "day": "2026-10-11",
+                "views": 38510
+              }
+            ],
+            "card": {
+              "tmdb_id": 1275779,
+              "title": "Disclosure Day",
+              "original_title": "Disclosure Day",
+              "poster_path": "/AnJ8IQJI23hNpYXVNaythu061Ru.jpg",
+              "release_date": "2026-06-10",
+              "popularity": 88.5811,
+              "title_key": "movie:1275779",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Disclosure_Day",
+              "qid": "Q126683577",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1400837",
+            "day": "2026-10-11",
+            "score": 3.6465990854146013,
+            "views": 101815,
+            "mean28": 27920.535714285714,
+            "sd28": 36023.18963576711,
+            "z": 2.051302647901704,
+            "eligible": true,
+            "rank": 16,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 15260
+              },
+              {
+                "day": "2026-09-29",
+                "views": 13479
+              },
+              {
+                "day": "2026-09-30",
+                "views": 16095
+              },
+              {
+                "day": "2026-10-01",
+                "views": 17911
+              },
+              {
+                "day": "2026-10-02",
+                "views": 19461
+              },
+              {
+                "day": "2026-10-03",
+                "views": 17693
+              },
+              {
+                "day": "2026-10-04",
+                "views": 22452
+              },
+              {
+                "day": "2026-10-05",
+                "views": 25554
+              },
+              {
+                "day": "2026-10-06",
+                "views": 27522
+              },
+              {
+                "day": "2026-10-07",
+                "views": 35094
+              },
+              {
+                "day": "2026-10-08",
+                "views": 74408
+              },
+              {
+                "day": "2026-10-09",
+                "views": 171173
+              },
+              {
+                "day": "2026-10-10",
+                "views": 124110
+              },
+              {
+                "day": "2026-10-11",
+                "views": 101815
+              }
+            ],
+            "card": {
+              "tmdb_id": 1400837,
+              "title": "Other Mommy",
+              "original_title": "Other Mommy",
+              "poster_path": "/fGRNCssTRrhYZxNzykGGCoMsAVq.jpg",
+              "release_date": "2026-10-07",
+              "popularity": 147.3936,
+              "title_key": "movie:1400837",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Other_Mommy",
+              "qid": "Q134588273",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-07",
+                "source_url": "https://www.themoviedb.org/movie/1400837",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:57800",
+            "day": "2026-10-11",
+            "score": 3.2429504540385534,
+            "views": 2908,
+            "mean28": 896.7142857142857,
+            "sd28": 505.8762452519431,
+            "z": 3.9758453439220642,
+            "eligible": true,
+            "rank": 17,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 527
+              },
+              {
+                "day": "2026-09-29",
+                "views": 539
+              },
+              {
+                "day": "2026-09-30",
+                "views": 527
+              },
+              {
+                "day": "2026-10-01",
+                "views": 577
+              },
+              {
+                "day": "2026-10-02",
+                "views": 533
+              },
+              {
+                "day": "2026-10-03",
+                "views": 656
+              },
+              {
+                "day": "2026-10-04",
+                "views": 1363
+              },
+              {
+                "day": "2026-10-05",
+                "views": 1420
+              },
+              {
+                "day": "2026-10-06",
+                "views": 1607
+              },
+              {
+                "day": "2026-10-07",
+                "views": 1492
+              },
+              {
+                "day": "2026-10-08",
+                "views": 1808
+              },
+              {
+                "day": "2026-10-09",
+                "views": 2052
+              },
+              {
+                "day": "2026-10-10",
+                "views": 2290
+              },
+              {
+                "day": "2026-10-11",
+                "views": 2908
+              }
+            ],
+            "card": {
+              "tmdb_id": 57800,
+              "title": "Ice Age: Continental Drift",
+              "original_title": "Ice Age: Continental Drift",
+              "poster_path": "/dfp1BZF7FxbBUyzHvMOI9t8NWDD.jpg",
+              "release_date": "2012-06-27",
+              "popularity": 42.3905,
+              "title_key": "movie:57800",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Ice_Age:_Continental_Drift",
+              "qid": "Q35951",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1458857",
+            "day": "2026-10-11",
+            "score": 3.2082334492889455,
+            "views": 6357,
+            "mean28": 1981.4642857142858,
+            "sd28": 3313.72664061544,
+            "z": 1.3204274790370367,
+            "eligible": true,
+            "rank": 18,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 31
+              },
+              {
+                "day": "2026-09-29",
+                "views": 28
+              },
+              {
+                "day": "2026-09-30",
+                "views": 50
+              },
+              {
+                "day": "2026-10-01",
+                "views": 60
+              },
+              {
+                "day": "2026-10-02",
+                "views": 397
+              },
+              {
+                "day": "2026-10-03",
+                "views": 1429
+              },
+              {
+                "day": "2026-10-04",
+                "views": 8526
+              },
+              {
+                "day": "2026-10-05",
+                "views": 9505
+              },
+              {
+                "day": "2026-10-06",
+                "views": 8454
+              },
+              {
+                "day": "2026-10-07",
+                "views": 7737
+              },
+              {
+                "day": "2026-10-08",
+                "views": 6614
+              },
+              {
+                "day": "2026-10-09",
+                "views": 5834
+              },
+              {
+                "day": "2026-10-10",
+                "views": 6560
+              },
+              {
+                "day": "2026-10-11",
+                "views": 6357
+              }
+            ],
+            "card": {
+              "tmdb_id": 1458857,
+              "title": "Doing Life",
+              "original_title": "Doing Life",
+              "poster_path": "/5nZVjsCk5tWyyhLGt5U2TxsR85w.jpg",
+              "release_date": "2026-10-02",
+              "popularity": 41.0213,
+              "title_key": "movie:1458857",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/Doing_Life",
+              "qid": "Q141410306",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-02",
+                "source_url": "https://www.themoviedb.org/movie/1458857",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          },
+          {
+            "title_key": "movie:1368166",
+            "day": "2026-10-11",
+            "score": 3.1030847250085674,
+            "views": 28781,
+            "mean28": 9274.964285714286,
+            "sd28": 3056.8934567412302,
+            "z": 6.380999531164531,
+            "eligible": true,
+            "rank": 19,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 7573
+              },
+              {
+                "day": "2026-09-29",
+                "views": 6460
+              },
+              {
+                "day": "2026-09-30",
+                "views": 6803
+              },
+              {
+                "day": "2026-10-01",
+                "views": 11532
+              },
+              {
+                "day": "2026-10-02",
+                "views": 8644
+              },
+              {
+                "day": "2026-10-03",
+                "views": 8925
+              },
+              {
+                "day": "2026-10-04",
+                "views": 8811
+              },
+              {
+                "day": "2026-10-05",
+                "views": 7730
+              },
+              {
+                "day": "2026-10-06",
+                "views": 6554
+              },
+              {
+                "day": "2026-10-07",
+                "views": 6103
+              },
+              {
+                "day": "2026-10-08",
+                "views": 5830
+              },
+              {
+                "day": "2026-10-09",
+                "views": 12485
+              },
+              {
+                "day": "2026-10-10",
+                "views": 22228
+              },
+              {
+                "day": "2026-10-11",
+                "views": 28781
+              }
+            ],
+            "card": {
+              "tmdb_id": 1368166,
+              "title": "The Housemaid",
+              "original_title": "The Housemaid",
+              "poster_path": "/cWsBscZzwu5brg9YjNkGewRUvJX.jpg",
+              "release_date": "2025-12-18",
+              "popularity": 47.5311,
+              "title_key": "movie:1368166",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/The_Housemaid_(2025_film)",
+              "qid": "Q131630491",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": []
+          },
+          {
+            "title_key": "movie:1281331",
+            "day": "2026-10-11",
+            "score": 3.0542836206511006,
+            "views": 63415,
+            "mean28": 20762.64285714286,
+            "sd28": 18206.661689405035,
+            "z": 2.3426786233787023,
+            "eligible": true,
+            "rank": 20,
+            "curve": [
+              {
+                "day": "2026-09-28",
+                "views": 14616
+              },
+              {
+                "day": "2026-09-29",
+                "views": 13318
+              },
+              {
+                "day": "2026-09-30",
+                "views": 15652
+              },
+              {
+                "day": "2026-10-01",
+                "views": 16457
+              },
+              {
+                "day": "2026-10-02",
+                "views": 15230
+              },
+              {
+                "day": "2026-10-03",
+                "views": 17463
+              },
+              {
+                "day": "2026-10-04",
+                "views": 27504
+              },
+              {
+                "day": "2026-10-05",
+                "views": 34958
+              },
+              {
+                "day": "2026-10-06",
+                "views": 29937
+              },
+              {
+                "day": "2026-10-07",
+                "views": 46222
+              },
+              {
+                "day": "2026-10-08",
+                "views": 50596
+              },
+              {
+                "day": "2026-10-09",
+                "views": 77332
+              },
+              {
+                "day": "2026-10-10",
+                "views": 68599
+              },
+              {
+                "day": "2026-10-11",
+                "views": 63415
+              }
+            ],
+            "card": {
+              "tmdb_id": 1281331,
+              "title": "The Social Reckoning",
+              "original_title": "The Social Reckoning",
+              "poster_path": "/hDe0OryfBINwmZDRtQjnh6UKUJf.jpg",
+              "release_date": "2026-10-07",
+              "popularity": 63.9555,
+              "title_key": "movie:1281331",
+              "kind": "movie",
+              "article": "https://en.wikipedia.org/wiki/The_Social_Reckoning",
+              "qid": "Q136387857",
+              "mapping_status": "matched",
+              "mapping_checked_at": "2026-10-14T16:15:33.291241+00:00",
+              "last_candidate_at": "2026-10-14T16:15:33.291241+00:00"
+            },
+            "reasons": [
+              {
+                "kind": "new_release",
+                "event_day": "2026-10-07",
+                "source_url": "https://www.themoviedb.org/movie/1281331",
+                "evidence": "TMDB release/first-air date; context only"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "pageview_range": {
+    "first_day": "2026-08-15",
+    "last_day": "2026-10-13",
+    "titles": 509
+  },
+  "candidate_kinds": [
+    {
+      "kind": "movie",
+      "n": 302
+    },
+    {
+      "kind": "tv",
+      "n": 314
+    }
+  ],
+  "independent_audit": {
+    "scores_checked": 15842,
+    "ranked_days": 32,
+    "snapshots_checked": 3,
+    "passed": true
+  },
+  "elapsed_seconds": 4.57
+}

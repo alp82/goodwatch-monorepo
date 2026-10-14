@@ -9,6 +9,8 @@ const state = {
 	queries: [] as string[],
 	cache: new Map<string, unknown>(),
 	live: 0,
+	talkedRow: { day: "2026-10-14", titles: [{ mediaType: "movie", tmdbId: 603, title: "Movie 603", poster: "/en.jpg", rank: 1, items: [{ text: "Literal post" }] }] },
+	titleTranslations: [] as { media_type: string; media_tmdb_id: number; language_code: string; country_code: string; title: string }[],
 	episodeRows: [] as {
 		show_id: number
 		tmdb_id: number
@@ -57,12 +59,17 @@ registerHooks({
 	 if(sql.includes('information_schema'))return [{table_name:'season_translation'},{table_name:'episode_translation'}];
 	 if(sql.includes('UNION ALL'))return [...args[0].map(id=>({media_type:'movie',tmdb_id:id,title:'Movie '+id,poster_path:'/en.jpg'})),...args[1].map(id=>({media_type:'show',tmdb_id:id,title:'Show '+id,poster_path:'/en.jpg'}))];
 	 if(sql.includes('FROM show WHERE tmdb_id = ?'))return [{...s.canonical.details,media_type:'show'}];
+	 if(sql.includes('FROM translation'))return s.titleTranslations;
 	 if(sql.includes('FROM episode_translation'))return s.episodeRows;
 	 if(sql.includes('FROM media_image'))return [{media_type:'show',media_tmdb_id:1396,language_code:'en',url_path:'/english-localized.jpg',tmdb_vote_average:9,tmdb_vote_count:10,width:500,height:750}];
 	 return [];
 	}`
 		if (url.endsWith("/utils/auth.ts"))
 			source = `export const getUserIdFromRequest=async()=>null`
+		if (url.endsWith("/talked-about-now/flags.server.ts"))
+			source = `export const talkedAboutNowMode=()=>"on";export const talkedAboutNowEnabled=()=>true`
+		if (url.endsWith("/talked-about-now/start-row.server.ts"))
+			source = `export const getTalkedAboutNow=async()=>globalThis.__mediaRolloutTest.talkedRow`
 		if (url.endsWith("/media-context.server.ts"))
 			source = `export const resolveMediaContext=async()=>{globalThis.__mediaRolloutTest.live++;return {effectiveContext:{country:'FR',language:'fr'}}}`
 		if (url.endsWith("/title-details-cache.ts"))
@@ -90,6 +97,7 @@ const { canonicalMediaTitle, mediaFieldLanguage } = await import(
 	"../utils/media-presentation.ts"
 )
 const { loader: previewLoader } = await import("../routes/api.media-title.ts")
+const { loader: talkedLoader } = await import("../routes/api.talked-about-now.ts")
 const rows = (count: number, start = 1) =>
 	Array.from({ length: count }, (_, i) => ({
 		key: `movie:${start + i}`,
@@ -119,6 +127,27 @@ beforeEach(() => {
 	state.cache.clear()
 	state.live = 0
 	state.episodeRows = []
+	state.titleTranslations = []
+})
+
+test("new start-row reader overlays after canonical ranking, with canonical links and literal social text", async () => {
+	state.titleTranslations = [{media_type:"movie",media_tmdb_id:603,language_code:"fr",country_code:"FR",title:"La Matrice"}]
+	const canonical = structuredClone(state.talkedRow)
+	const request = (suffix: string) => ({request:new Request(`https://goodwatch.test/api/talked-about-now${suffix}`),params:{},context:{}})
+	const legacy = await talkedLoader(request(""))
+	assert.equal((await legacy.json()).row?.titles[0].title, "Movie 603")
+	assert.equal(state.queries.length, 0)
+	const response = await talkedLoader(request("?displayLanguage=fr"))
+	const answer = await response.json()
+	assert.ok(answer.row)
+	const title = answer.row.titles[0]
+	assert.equal(title.title, "La Matrice")
+	assert.equal(canonicalMediaTitle(title), "Movie 603")
+	assert.match(mediaFieldLanguage(title), /^fr/)
+	assert.equal(title.rank, 1)
+	assert.equal(title.items[0].text, "Literal post")
+	assert.equal(state.queries.length, 3)
+	assert.deepEqual(state.talkedRow, canonical)
 })
 
 test("new API + legacy request is canonical despite a French cookie/browser; explicit URL opts in", async () => {

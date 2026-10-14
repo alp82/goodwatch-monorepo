@@ -1,0 +1,156 @@
+{
+  "score_day": "2026-10-13",
+  "window_start": "2026-08-15",
+  "candidates": 616,
+  "candidate_kinds": {
+    "movie": 302,
+    "tv": 314
+  },
+  "mapped": 509,
+  "observations_in_window": 30097,
+  "complete_60_day_titles": 485,
+  "scorable_latest": 504,
+  "top20": [
+    {
+      "rank": 1,
+      "title_key": "movie:1147572",
+      "title": "Narnia: The Magician's Nephew",
+      "score": 9.743,
+      "views": 55235
+    },
+    {
+      "rank": 2,
+      "title_key": "tv:1396",
+      "title": "Breaking Bad",
+      "score": 7.826,
+      "views": 66283
+    },
+    {
+      "rank": 3,
+      "title_key": "tv:126116",
+      "title": "Time",
+      "score": 5.936,
+      "views": 25846
+    },
+    {
+      "rank": 4,
+      "title_key": "movie:1538497",
+      "title": "Hexed",
+      "score": 5.865,
+      "views": 23051
+    },
+    {
+      "rank": 5,
+      "title_key": "tv:312359",
+      "title": "Dragon Ball Super: Beerus",
+      "score": 5.653,
+      "views": 14606
+    },
+    {
+      "rank": 6,
+      "title_key": "tv:293607",
+      "title": "100 Days of Deception",
+      "score": 4.757,
+      "views": 9725
+    },
+    {
+      "rank": 7,
+      "title_key": "tv:289423",
+      "title": "Take Charge of My Heart",
+      "score": 4.682,
+      "views": 11572
+    },
+    {
+      "rank": 8,
+      "title_key": "tv:213375",
+      "title": "VisionQuest",
+      "score": 4.204,
+      "views": 40384
+    },
+    {
+      "rank": 9,
+      "title_key": "tv:285322",
+      "title": "Below",
+      "score": 3.918,
+      "views": 104201
+    },
+    {
+      "rank": 10,
+      "title_key": "tv:333101",
+      "title": "Treasure Island",
+      "score": 3.85,
+      "views": 6083
+    },
+    {
+      "rank": 11,
+      "title_key": "movie:1236045",
+      "title": "Animals",
+      "score": 3.642,
+      "views": 63810
+    },
+    {
+      "rank": 12,
+      "title_key": "movie:1476746",
+      "title": "The Florist",
+      "score": 3.529,
+      "views": 1545
+    },
+    {
+      "rank": 13,
+      "title_key": "tv:213562",
+      "title": "Crystal Lake",
+      "score": 3.475,
+      "views": 17679
+    },
+    {
+      "rank": 14,
+      "title_key": "tv:288673",
+      "title": "Carrie",
+      "score": 3.425,
+      "views": 147042
+    },
+    {
+      "rank": 15,
+      "title_key": "movie:1153576",
+      "title": "Street Fighter",
+      "score": 3.136,
+      "views": 44170
+    },
+    {
+      "rank": 16,
+      "title_key": "tv:284833",
+      "title": "Avatar: Seven Havens",
+      "score": 2.875,
+      "views": 36181
+    },
+    {
+      "rank": 17,
+      "title_key": "tv:273247",
+      "title": "The Lowdown",
+      "score": 2.811,
+      "views": 4676
+    },
+    {
+      "rank": 18,
+      "title_key": "movie:891621",
+      "title": "Wild Horse Nine",
+      "score": 2.395,
+      "views": 10416
+    },
+    {
+      "rank": 19,
+      "title_key": "movie:1195803",
+      "title": "Wicker",
+      "score": 2.357,
+      "views": 16906
+    },
+    {
+      "rank": 20,
+      "title_key": "movie:1400940",
+      "title": "Clayface",
+      "score": 2.243,
+      "views": 32547
+    }
+  ],
+  "elapsed_seconds": 28.59
+}

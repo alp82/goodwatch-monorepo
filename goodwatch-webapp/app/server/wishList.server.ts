@@ -4,6 +4,7 @@ import { resetOnboardingMediaCache } from "~/server/onboarding-media.server";
 import { markTasteChanged } from "~/server/taste/index.server";
 import { resetUserDataCache } from "~/server/userData.server";
 import { execute, upsert } from "~/utils/crate";
+import { markG1Changed } from "./g1/rebuild.server.ts"
 
 interface UpdateWishListParams {
 	user_id?: string;
@@ -65,10 +66,11 @@ export const updateWishList = async ({
 		result = await execute(sql, params);
 	}
 
+	if (result.rowcount) markG1Changed(user_id)
 	if (action === "add") await clearNotInterested(user_id, tmdb_id, media_type)
 
 	await resetUserDataCache({ user_id });
-	await markTasteChanged(user_id);
+	if (result.rowcount) await markTasteChanged(user_id);
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" });
 
 	return {

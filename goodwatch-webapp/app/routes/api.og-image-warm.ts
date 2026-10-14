@@ -5,21 +5,14 @@
 // their first request now, so any other path is answered and ignored: pages that were loaded before October 4, 2026
 // still send it.
 import type { ActionFunctionArgs } from "@remix-run/node"
+import { hasSiteOrigin } from "~/server/site-origin.server"
 import { warmShareCard } from "~/server/share-card/images.server"
 
 const MAX_PATH_LENGTH = 512
 
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return new Response(null, { status: 405 })
-	// remix-serve sees HTTP behind TLS termination. Use the public origin without
-	// trusting forwarded headers supplied by the caller.
-	const expectedOrigin =
-		process.env.APP_ORIGIN ||
-		(process.env.NODE_ENV === "production"
-			? "https://goodwatch.app"
-			: "http://localhost:3003")
-	if (request.headers.get("origin") !== expectedOrigin)
-		return new Response(null, { status: 403 })
+	if (!hasSiteOrigin(request)) return new Response(null, { status: 403 })
 
 	const path = (await request.text()).trim()
 	if (!path.startsWith("/") || path.length > MAX_PATH_LENGTH)

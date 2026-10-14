@@ -40,6 +40,8 @@ registerHooks({
 				'export class SnapshotNotLoaded extends Error {}; export const discoverFilterDefaults=()=>({onMyServices:false,notSeenYet:false});export const forYouFromParams=()=>true;export const getDiscoverResults=async()=>({cards:[{title:"The Matrix",media_type:"movie",tmdb_id:603}],page:1,pageSize:40,total:1})'
 		else if (url.endsWith("/ui/discover/DiscoverPage.tsx"))
 			source = "export const DiscoverPage=()=>null"
+		else if (url.endsWith("/ui/ErrorPage.tsx"))
+			source = "export const ErrorPage=()=>null;export const errorPageProps=()=>({status:500})"
 		else if (url.endsWith("/routes/api.user-settings.set.tsx"))
 			source = "export const useSetUserSettings=()=>({})"
 		else if (url.endsWith("/server/media-payload.server.ts"))

@@ -1,0 +1,202 @@
+{
+ "note": "Real public posts about Resident Evil (2026, movie 1423191) from the #542 prototype (social.ts), shaped as doc.social_post and doc.social_title_link rows of #556. For a dev server: SOCIAL_FIXTURE=<this file>. Times shift so that the newest post is 2 hours old.",
+ "shiftToHoursAgo": 2,
+ "posts": [
+  {
+   "post_id": "c852d08985ec59ff7a5e2571ee2292c02df975f5d8d7d0e7c9cb58181ed0ecd5",
+   "source": "youtube",
+   "source_id": "mNd1gb19A-c",
+   "url": "https://www.youtube.com/watch?v=mNd1gb19A-c",
+   "author": "Sony Pictures Entertainment",
+   "published_at": "2026-10-13T16:00:00Z",
+   "text": "RESIDENT EVIL – Official Trailer (4K)",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "source": "youtube",
+   "source_id": "nSSig89WVBI",
+   "url": "https://www.youtube.com/watch?v=nSSig89WVBI",
+   "author": "IMAX",
+   "published_at": "2026-10-12T15:00:00Z",
+   "text": "Resident Evil | 1.90 Scene Breakdown | Filmed For IMAX®",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "source": "youtube",
+   "source_id": "d8N873GDkIk",
+   "url": "https://www.youtube.com/shorts/d8N873GDkIk",
+   "author": "Sony Pictures Releasing UK",
+   "published_at": "2026-10-13T20:00:00Z",
+   "text": "Uhhh… Resident Evil is out now! #ResidentEvil #Shorts",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "source": "bluesky",
+   "source_id": "at://did:plc:sanfemo6qfnbaxdoi2q2vnvl/app.bsky.feed.post/3mxmequr2h32i",
+   "url": "https://bsky.app/profile/deadline.com/post/3mxmequr2h32i",
+   "author": "Deadline",
+   "published_at": "2026-10-11T16:00:20Z",
+   "text": "China propelled 'Resident Evil' to the top of the global weekend box office with $62M+, but also is Zach Cregger's highest grossing movie ever at $320M; 'Other Mommy' solid $45M+ WW opening.",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "source": "bluesky",
+   "source_id": "at://did:plc:ft4gwdn3b552cg4eidqfz7gm/app.bsky.feed.post/3mxptfix3aw25",
+   "url": "https://bsky.app/profile/polygon.com/post/3mxptfix3aw25",
+   "author": "Polygon",
+   "published_at": "2026-10-13T01:00:24Z",
+   "text": "Zach Cregger's new horror movie has now made over $320 million worldwide",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "source": "mastodon",
+   "source_id": "https://mastodon.social/users/codorco/statuses/117434744718433658",
+   "url": "https://mastodon.social/@codorco/117434744718433658",
+   "author": "codorco",
+   "published_at": "2026-10-13T09:00:00Z",
+   "text": "A nova adaptação live-action de Resident Evil superou a marca de US$ 320,2 milhões em bilheteria global. Com o resultado, o longa ultrapassou Weapons e se consagrou como a maior arrecadação da carreira do diretor Zach Cregger.",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "source": "rss",
+   "source_id": "https://deadline.com/2026/10/box-office-global-resident-evil-other-mommy-social-reckoning-bombs-1237154279/",
+   "url": "https://deadline.com/2026/10/box-office-global-resident-evil-other-mommy-social-reckoning-bombs-1237154279/",
+   "author": "Deadline",
+   "published_at": "2026-10-11T17:00:00Z",
+   "text": "Box Office Global: 'Resident Evil' No. 1, Zach Cregger Record; 'Other Mommy' $45M+ WW No 2",
+   "content_hash": "h"
+  },
+  {
+   "post_id": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "source": "rss",
+   "source_id": "https://www.polygon.com/resident-evil-box-office-record-zach-cregger/",
+   "url": "https://www.polygon.com/resident-evil-box-office-record-zach-cregger/",
+   "author": "Polygon",
+   "published_at": "2026-10-13T12:00:00Z",
+   "text": "Resident Evil Continues to Set New Box Office Records",
+   "content_hash": "h"
+  }
+ ],
+ "links": [
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "c852d08985ec59ff7a5e2571ee2292c02df975f5d8d7d0e7c9cb58181ed0ecd5",
+   "lane": "official_video_id",
+   "duplicate_group": "resident evil|trailer|1|",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "lane": "official_video_id",
+   "duplicate_group": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "lane": "official_video_id",
+   "duplicate_group": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "lane": "foreground_exact",
+   "duplicate_group": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "lane": "foreground_exact",
+   "duplicate_group": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "lane": "foreground_exact",
+   "duplicate_group": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "lane": "foreground_exact",
+   "duplicate_group": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "content_hash": "h"
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "lane": "foreground_exact",
+   "duplicate_group": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "content_hash": "h"
+  }
+ ],
+ "quality": [
+  {
+   "post_id": "c852d08985ec59ff7a5e2571ee2292c02df975f5d8d7d0e7c9cb58181ed0ecd5",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  }
+ ]
+}

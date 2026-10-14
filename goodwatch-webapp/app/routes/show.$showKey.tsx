@@ -25,6 +25,7 @@ import {
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
@@ -51,6 +52,8 @@ type LoaderData = {
 		country: string
 	}
 	countryIsFallback: boolean
+	/** Whether the viewer gets the "Talked about now" section (TALKED_ABOUT_NOW_TITLE). */
+	talkedAboutNow: boolean
 }
 
 export const loader: LoaderFunction = async ({
@@ -154,6 +157,7 @@ export const loader: LoaderFunction = async ({
 			country,
 		},
 		countryIsFallback,
+		talkedAboutNow: talkedAboutNowEnabled("title", userId),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
@@ -172,6 +176,7 @@ export default function DetailsTV() {
 		episodeGrid: episodeGridWire,
 		params,
 		countryIsFallback,
+		talkedAboutNow,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
 	const episodeGrid = useMemo(
@@ -215,5 +220,7 @@ export default function DetailsTV() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} episodeGrid={episodeGrid} />
+	return (
+		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} />
+	)
 }

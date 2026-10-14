@@ -12,10 +12,7 @@ import {
 	parseWatchNextOptions,
 	watchNextViewer,
 } from "~/server/watch-next-request.server"
-import {
-	type WatchNextTitle,
-	getWatchNextTitles,
-} from "~/server/watch-next.server"
+import { getWatchNextCardsPage } from "~/server/watch-next.server"
 
 // Cards for Watch next's later tiers as they scroll into view: up to 60 Wishlist titles by key, with the same
 // options as /api/watch-next so each card says whether it fits.
@@ -30,8 +27,13 @@ async function respond(request: Request) {
 	const options = parseWatchNextOptions(url, viewer.member)
 	if (!keys || keys.length > MAX_KEYS || !options)
 		return invalid(`Pass up to ${MAX_KEYS} title keys as keys=1,2,3`)
-	return json<{ titles: WatchNextTitle[] }>(
-		{ titles: await getWatchNextTitles(viewer.ctx, keys, options) },
+	return json(
+		await getWatchNextCardsPage(
+			viewer.ctx,
+			keys,
+			options,
+			url.searchParams.get("plan"),
+		),
 		{ headers },
 	)
 }

@@ -214,6 +214,9 @@ const LATE_CHUNKS = [
 		"newly-available",
 		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedRow)\.tsx?$/,
 	],
+	// The click-to-load facades of "Talked about now" (#558), shared by the title page's section and the start page's
+	// row, and the YouTube frame the trailer dialog loads on its click. None is on a first view.
+	["social-embed", /\/app\/ui\/social-embed\/[^/]+\.tsx?$/],
 ]
 
 function clientChunks() {

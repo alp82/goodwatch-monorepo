@@ -763,6 +763,94 @@ of the home changed, and no limit:
 The local numbers, both sides on the same machine, are in
 [the slice's notes](../implementation/tv-screen-revamp/switch/README.md). Production is measured after the merge.
 
+## Limits lowered after the new TV, the flags and the old search journey
+
+Decided by the owner on October 14, 2026: the lines that improved for good are lowered, as the rule above asks.
+Three changes did it, all on production by 13:03 UTC: the new TV on the start page (slice 13), the removal of the
+`REC_*` flags (slice 15: the old header, the old Discover page and their code left the first views), and the
+removal of the old search journey (about 4 KB of script on every page).
+
+Measured on production on October 14, 2026 with `./bench.sh budget` (three reports per surface, median), in three
+runs: `affbd99d` at 12:43 UTC and two on `1c3129f0` at 13:03 and 13:12 UTC. The generator's CPU benchmark was
+1,177 to 1,280. The margins are those of [Margins](#margins), applied to the worst median of the three runs, and no
+limit is below any run:
+
+- **Bytes:** 5% on scripts, 25% on images. **Counts:** two on host requests and images, none on scripts.
+- **LCP:** 13%, rounded up to 50 ms. **TBT:** twice the worst median, rounded up to 50 ms, at least 100 ms.
+- **Score:** 7 points under the worst median.
+- **A line is lowered only when the new limit is at least 5% under the old one.** No limit is raised here.
+
+| Surface | Line | Before | Now | Worst median of the three runs |
+| --- | --- | --- | --- | --- |
+| Home | Site and static host requests | 37 | 24 | 22 |
+| Home | Scripts | 16 | 11 | 11 |
+| Home | Script bytes | 262,144 | 202,752 | 192,965 |
+| Home | Images before scrolling | 32 | 28 | 26 |
+| Home | Font requests | 2 | 1 | 1 |
+| Home | LCP (ms) | 6,050 | 5,200 | 4,559 |
+| Home | Performance score, minimum | 63 | 70 | 77 |
+| Movie | Scripts | 22 | 20 | 20 |
+| Movie | Image bytes before scrolling | 102,400 | 94,208 | 75,137 |
+| Movie | TBT (ms) | 200 | 150 | 57 |
+| Movie | Performance score, minimum | 61 | 63 | 70 |
+| Show | Scripts | 22 | 20 | 20 |
+| Show | Image bytes before scrolling | 169,984 | 153,088 | 122,141 |
+| Show | TBT (ms) | 200 | 150 | 65 |
+| Show | Performance score, minimum | 58 | 62 | 69 |
+| Person | Scripts | 14 | 13 | 13 |
+| Person | TBT (ms) | 250 | 200 | 98 |
+| Person | Performance score, minimum | 72 | 73 | 80 |
+| Discover | Site and static host requests | 41 | 30 | 28 |
+| Discover | Scripts | 31 | 20 | 20 |
+| Discover | Script bytes | 348,160 | 265,216 | 252,573 |
+| Discover | LCP (ms) | 7,200 | 5,650 | 4,995 |
+| Discover | Performance score, minimum | 56 | 65 | 72 |
+| Share list | Site and static host requests | 27 | 24 | 22 |
+| Share list | Images before scrolling | 33 | 30 | 28 |
+| Share list | Performance score, minimum | 71 | 72 | 79 |
+
+**What stays, and why:**
+
+- **HTML:** the server's HTML moves with the start titles (the start page read 18.4 to 19.6 KB in four runs), so the
+  few percent of headroom stay.
+- **Home and Discover image and total bytes:** single reports read 372 KB and 776 KB of images against medians of
+  241 KB and 367 KB, because the posters change with the catalog. The median absorbs one such report, not two.
+- **Discover's CLS of 0.04:** 4 of 12 reports across four runs shifted by 0.028 (and in the run that checked these limits two of three did, so the median was 0.028) and the other 8 by 0. With the limit at 0.01 that run would have failed.
+- **Script bytes, total bytes and LCP of the title pages, and the share list's LCP:** the new limit would be less
+  than 5% under the old one.
+
+Run `20261014T132428Z-lighthouse-after-tightened-limits` on `1c3129f0` (13:24 UTC, three reports per surface) passes every line against these limits, 90 of 90.
+The lowered lines in it:
+
+| Surface | Line | Limit now | Measured median | Result |
+| --- | --- | --- | --- | --- |
+| Home | host_requests | 24 | 22 | pass |
+| Home | script_count | 11 | 11 | pass |
+| Home | script_bytes | 202,752 | 189,155 | pass |
+| Home | image_count | 28 | 26 | pass |
+| Home | font_requests | 1 | 1 | pass |
+| Home | lcp_ms | 5,200 | 4,415.746 | pass |
+| Home | score | 70 | 78 | pass |
+| Movie | script_count | 20 | 20 | pass |
+| Movie | image_bytes | 94,208 | 75,127 | pass |
+| Movie | tbt_ms | 150 | 43.5 | pass |
+| Movie | score | 63 | 72 | pass |
+| Show | script_count | 20 | 20 | pass |
+| Show | image_bytes | 153,088 | 122,126 | pass |
+| Show | tbt_ms | 150 | 47.5 | pass |
+| Show | score | 62 | 71 | pass |
+| Person | script_count | 13 | 13 | pass |
+| Person | tbt_ms | 200 | 66 | pass |
+| Person | score | 73 | 81 | pass |
+| Discover | host_requests | 30 | 28 | pass |
+| Discover | script_count | 20 | 20 | pass |
+| Discover | script_bytes | 265,216 | 248,907 | pass |
+| Discover | lcp_ms | 5,650 | 4,872.658 | pass |
+| Discover | score | 65 | 71 | pass |
+| Share list | host_requests | 24 | 22 | pass |
+| Share list | image_count | 30 | 28 | pass |
+| Share list | score | 72 | 80 | pass |
+
 ## Not verified
 
 - The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.

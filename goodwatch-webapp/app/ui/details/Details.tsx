@@ -13,13 +13,19 @@ import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
-import { MediaPreferenceProvider, useMediaPreference } from "~/ui/media-preference/MediaPreference"
+import {
+	MediaPreferenceProvider,
+	useMediaPreference,
+} from "~/ui/media-preference/MediaPreference"
 import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
+import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGrid | null
+	/** Whether the viewer gets the "Talked about now" section. */
+	talkedAboutNow?: boolean
 }
 
 export default function Details(props: DetailsProps) {
@@ -27,14 +33,22 @@ export default function Details(props: DetailsProps) {
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
 			{/* One per title: a preview and its question never carry over to the next title. */}
-			<MediaPreferenceProvider key={`${props.media.mediaType}-${details.tmdb_id}`} country={props.country}>
+			<MediaPreferenceProvider
+				key={`${props.media.mediaType}-${details.tmdb_id}`}
+				country={props.country}
+			>
 				<DetailsPage {...props} />
 			</MediaPreferenceProvider>
 		</BelowFoldProvider>
 	)
 }
 
-function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }: DetailsProps) {
+function DetailsPage({
+	media: loadedMedia,
+	country: loadedCountry,
+	episodeGrid,
+	talkedAboutNow,
+}: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
 	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
 	// language swaps the title, poster, description and tagline when its text is in.
@@ -108,8 +122,13 @@ function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }
 			/>
 
 			<div className="isolate">
-				<DetailsFingerprint media={media} sectionProps={sectionProps.fingerprint} />
+				<DetailsFingerprint
+					media={media}
+					sectionProps={sectionProps.fingerprint}
+				/>
 			</div>
+
+			{talkedAboutNow && <TalkedAboutNowSlot media={media} />}
 
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
