@@ -152,6 +152,9 @@ export function memberHome(
 					name: row.next.name,
 					runtime: row.next.runtime,
 				},
+				// My shows (slice 9).
+				left: row.left,
+				caughtUp: row.kind === "seenNew",
 			})),
 			start: shows.start.slice(0, SHOWS_PER_GROUP).map((show) => ({
 				id: show.id,
@@ -160,6 +163,8 @@ export function memberHome(
 				backdrop_path: show.backdrop_path,
 				match: show.match,
 				service: show.service,
+				// My shows (slice 9).
+				seasons: show.seasons,
 			})),
 		},
 	}

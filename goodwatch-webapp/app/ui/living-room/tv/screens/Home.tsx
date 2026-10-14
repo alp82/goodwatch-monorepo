@@ -135,6 +135,8 @@ type Tile = {
 	line: string
 	art: TvAppArt
 	service?: TvService
+	/** My shows' tile: the New episodes signal. */
+	signal?: TvAppTile["signal"]
 }
 
 export function Home({
@@ -244,6 +246,18 @@ export function Home({
 							>
 								{a.name}
 							</span>
+						)}
+						{/* My shows (slice 9): the New episodes signal, in its sky blue; it stays bright on a tile that sits back. */}
+						{a.signal && (
+							<>
+								<span
+									aria-hidden
+									className="absolute right-2.5 top-2.5 z-[1] flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-sky-300 px-2 text-[22px] font-bold leading-none text-black"
+								>
+									{a.signal.badge}
+								</span>
+								<span className="sr-only">{a.signal.label}</span>
+							</>
 						)}
 					</Item>
 				))}

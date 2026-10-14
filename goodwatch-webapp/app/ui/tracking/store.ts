@@ -24,7 +24,12 @@ import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { UserData } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
-import { OPEN_EPISODES_EVENT } from "./gate"
+
+// The name of gate.tsx's OPEN_EPISODES_EVENT, written out and not imported: the new TV on the start page marks a
+// show's Next episode through this store (ui/living-room/tv/use-tv-episode.ts), so this module is also loaded
+// where the show page is not. Importing the gate from here made the gate a file of its own, one more script in
+// the first view of every title page (measured in a build). tv-shows.test.ts holds the two names together.
+const OPEN_EPISODES_EVENT = "gw:open-episodes"
 
 // ---------------------------------------------------------------------------------------------------------
 // The device's clock and ids

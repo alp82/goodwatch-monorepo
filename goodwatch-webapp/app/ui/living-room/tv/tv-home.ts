@@ -39,6 +39,11 @@ export type TvShowNext = {
 	backdrop_path: string | null
 	/** Null when the show's episode list was not read. */
 	episode: { code: string; name: string | null; runtime: number | null } | null
+	// My shows (slice 9).
+	/** Aired episodes not watched yet: what is left of a Watching show, what is new on a Seen one. */
+	left?: number
+	/** A Seen show with new episodes: `left` counts what is new since the member saw it. */
+	caughtUp?: boolean
 }
 
 /** A Want to See show the member has not started. */
@@ -49,6 +54,8 @@ export type TvShowStart = {
 	backdrop_path: string | null
 	match: number | null
 	service: string | null
+	// My shows (slice 9).
+	seasons?: number | null
 }
 
 /**
@@ -99,6 +106,25 @@ export type TvPool = {
 /** A title's key on the TV and in its URL: `<media_type>-<tmdb_id>`. */
 export const tvTitleKey = (title: { media_type: string; tmdb_id: number }) =>
 	`${title.media_type}-${title.tmdb_id}`
+
+/**
+ * My shows (slice 9): what My shows knows of a show, by its key on the TV, so a show's title screen names it at
+ * once (`TvKnownTitle` in tv-title.ts). Null for a title that is not one of the member's shows on the TV.
+ */
+export function knownShow(data: Pick<TvHomeData, "shows">, key: string) {
+	const show = [...(data.shows?.next ?? []), ...(data.shows?.start ?? [])].find(
+		(one) => `show-${one.id}` === key,
+	)
+	return show
+		? {
+				media_type: "show" as const,
+				tmdb_id: show.id,
+				title: show.title,
+				poster_path: show.poster_path,
+				backdrop_path: show.backdrop_path,
+			}
+		: null
+}
 
 /**
  * How ready a title is to be watched tonight: 0 when it streams on one of the person's own services, 1 when it
@@ -190,7 +216,12 @@ export type TvAppTile = {
 	/** What the home says about the app while its tile has the focus. */
 	line: string
 	art: TvAppArt
+	/** My shows (slice 9): the New episodes signal on the tile, the number and what a screen reader hears for it. */
+	signal?: { badge: string; label: string }
 }
+
+/** The New episodes signal as home's My shows tile says it (`SignalWords` of domain/new-episodes-signal.ts). */
+export type TvTileSignal = { badge: string; tile: string; door: string }
 
 const APP_NAME: Record<TvApp, string> = {
 	tonight: "Tonight",
@@ -209,6 +240,8 @@ export function homeApps(
 	pool: TvPool | null,
 	taste = false,
 	wished: TitleCard | null = null,
+	/** My shows (slice 9): what is new for the member's shows, or null. */
+	fresh: TvTileSignal | null = null,
 ): TvAppTile[] {
 	const picks = tonightPicks(data, pool, wished)
 	const own = data.tonight.length > 0
@@ -252,8 +285,10 @@ export function homeApps(
 			art: { kind: "print" },
 		},
 		shows: {
-			line: "Your next episodes.",
+			// The New episodes signal: one new show is named, several are counted.
+			line: fresh ? `${fresh.tile}.` : "Your next episodes.",
 			art: { kind: "backdrop", path: showPicture },
+			...(fresh && { signal: { badge: fresh.badge, label: fresh.door } }),
 		},
 	}
 	return TV_APPS.filter((app) => app !== "shows" || data.member).map((app) => ({

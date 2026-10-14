@@ -24,13 +24,19 @@ import {
 	QuizCode,
 	RateCode,
 	ServiceCode,
+	ShowsCode,
 	TasteCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type { TvAppTile, TvService, TvServiceTile } from "./tv-home"
+import type {
+	TvAppTile,
+	TvHomeData,
+	TvService,
+	TvServiceTile,
+} from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
@@ -43,6 +49,7 @@ import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvServiceReport } from "./use-tv-service"
+import type { TvShowsReport } from "./use-tv-shows"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
@@ -62,6 +69,8 @@ export {
 export { ExplorerData } from "./screen-code"
 // "On <service>" (slice 6b).
 export { ServiceData } from "./screen-code"
+// My shows (slice 9).
+export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -97,6 +106,16 @@ export type TvScreenProps = {
 	taste?: TvTasteScreens
 	/** The person's two streaming services: home's tiles after the apps, and the titles of the one on screen. */
 	services?: TvServiceScreens
+	/** My shows: the member's shows, and what is new for them. */
+	shows?: TvShowsScreens
+}
+
+/** What My shows draws from. */
+export type TvShowsScreens = {
+	/** The member's shows on the TV, from the loader; null for a guest. */
+	list: TvHomeData["shows"]
+	/** The New episodes signal; null until its data component has reported. */
+	signal: TvShowsReport | null
 }
 
 /** What home's service tiles and "On <service>" draw from. */
@@ -128,6 +147,7 @@ export function TvScreen({
 	explorer,
 	taste,
 	services,
+	shows,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -190,12 +210,15 @@ export function TvScreen({
 								explorer={explorer}
 								taste={taste}
 								services={services}
+								shows={shows}
 							/>
 						</Layer>
 					</TvViewProvider>
 					{state.menuOpen && (
 						<TvViewProvider value={over}>
-							<Layer className="tvc-menu">
+							{/* Over everything of the screen under it: its focused tile and its bar's keys are raised, and a
+							    key of the menu may lie under none of them. */}
+							<Layer className="tvc-menu z-20">
 								{/* A press beside the menu closes it, as Back does. */}
 								{/* biome-ignore lint/a11y/useKeyWithClickEvents: the keys close it with Back (use-tv.ts) */}
 								<div
@@ -246,6 +269,7 @@ function ScreenOf({
 	explorer,
 	taste,
 	services,
+	shows,
 }: {
 	screen: Screen
 	items: readonly string[]
@@ -255,6 +279,7 @@ function ScreenOf({
 	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
 	services?: TvServiceScreens
+	shows?: TvShowsScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -320,7 +345,17 @@ function ScreenOf({
 					first={first}
 				/>
 			)
-		// SEAM (slices 9 and 10): My shows and search each take their entry here.
+		// My shows (slice 9).
+		case "shows":
+			return (
+				<ShowsCode.Screen
+					items={items}
+					shows={shows?.list ?? null}
+					signal={shows?.signal ?? null}
+					first={first}
+				/>
+			)
+		// SEAM (slice 10): search takes its entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}
