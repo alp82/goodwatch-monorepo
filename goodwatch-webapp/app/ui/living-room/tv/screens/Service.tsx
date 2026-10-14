@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "~/utils/media-presentation"
 // "On <service>": titles to watch on one streaming service. A streaming key of the Remote opens it, from any
 // screen, and so does the service's tile on home. The service's own mark leads the top bar, with a line of its
 // colour along the top edge; under it the list every app shows its titles in (../TitleList.tsx), in a row that
@@ -60,6 +61,7 @@ export default function Service({
 	const drawn = Boolean(service && hasDrawnMark(service))
 	const titles: TvListTitle[] = cards.map((card) => ({
 		key: tvTitleKey(card),
+		...copyMediaPresentation(card),
 		title: card.title,
 		poster: card.poster_path,
 		backdrop: card.backdrop_path,

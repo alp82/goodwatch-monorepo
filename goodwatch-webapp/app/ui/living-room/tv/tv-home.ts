@@ -1,3 +1,5 @@
+import type { PresentedMedia } from "../../../utils/media-presentation.ts"
+import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // What the new TV's home shows, and how the page's data becomes the machine's `TvContext`. Pure, shared by the
 // server (server/living-room/tv-loader.server.ts shapes `TvHomeData`) and the browser.
 //
@@ -28,17 +30,17 @@ export type TvTonightPick = {
 	/** A guest's own Tonight's pick: the last title they added to the Wishlist in their browser. */
 	wished?: boolean
 	/** When the pick is a Next episode: "S2 E3" and its name. */
-	episode?: { code: string; name: string | null }
+	episode?: { code: string; name: string | null; language?: string }
 }
 
 /** A show with a Next episode, as My shows lists it on the TV. */
-export type TvShowNext = {
+export type TvShowNext = PresentedMedia & {
 	id: number
 	title: string
 	poster_path: string | null
 	backdrop_path: string | null
 	/** Null when the show's episode list was not read. */
-	episode: { code: string; name: string | null; runtime: number | null } | null
+	episode: { code: string; name: string | null; language?: string; runtime: number | null } | null
 	// My shows (slice 9).
 	/** Aired episodes not watched yet: what is left of a Watching show, what is new on a Seen one. */
 	left?: number
@@ -47,7 +49,7 @@ export type TvShowNext = {
 }
 
 /** A Want to See show the member has not started. */
-export type TvShowStart = {
+export type TvShowStart = PresentedMedia & {
 	id: number
 	title: string
 	poster_path: string | null
@@ -127,6 +129,7 @@ export function knownShow(data: Pick<TvHomeData, "shows">, key: string) {
 		? {
 				media_type: "show" as const,
 				tmdb_id: show.id,
+				...copyMediaPresentation(show),
 				title: show.title,
 				poster_path: show.poster_path,
 				backdrop_path: show.backdrop_path,

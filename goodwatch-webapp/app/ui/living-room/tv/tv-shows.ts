@@ -1,3 +1,5 @@
+import type { PresentedMedia } from "../../../utils/media-presentation.ts"
+import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // What the new TV says about a member's shows: the rows of My shows with their words, the New episodes signal on
 // them, and the Seen it key of a show the member is midway through. Pure, so the words and the rules stay in one
 // place and have tests.
@@ -34,7 +36,7 @@ export type TvShowsSignal = {
 export const NO_SIGNAL: TvShowsSignal = { words: null, aired: [], landed: [] }
 
 /** A show of My shows as the screen draws it. */
-export type TvShowRow = {
+export type TvShowRow = PresentedMedia & {
 	/** `show-95396`, as in the URL. */
 	key: string
 	/** Its item on the screen: `title:show-95396`. */
@@ -46,6 +48,7 @@ export type TvShowRow = {
 	/** What stands on its poster: "S2 E4 · 50 min", "Continue", "Start". */
 	label: string
 	/** The line under its name while it has the focus. */
+	factMedia?: { text: string; lang: string; at?: number }
 	facts: string
 	/** The New episodes signal counts it: its Next episode is new, or it is newly on one of the member's services. */
 	fresh: boolean
@@ -69,6 +72,7 @@ function nextRow(show: TvShowNext, signal: TvShowsSignal): TvShowRow {
 		key: `show-${show.id}`,
 		item: `title:show-${show.id}`,
 		kind: "next",
+		...copyMediaPresentation(show),
 		title: show.title,
 		poster_path: show.poster_path,
 		backdrop_path: show.backdrop_path,
@@ -82,6 +86,15 @@ function nextRow(show: TvShowNext, signal: TvShowsSignal): TvShowRow {
 					left,
 				])
 			: line(["Continue", left]),
+		...(episode?.name
+			? {
+					factMedia: {
+						text: episode.name,
+						lang: episode.language ?? "en",
+						at: `${aired ? "New" : "Next"}: ${episode.code} · `.length,
+					},
+				}
+			: {}),
 		fresh: aired || signal.landed.includes(show.id),
 	}
 }
@@ -94,6 +107,7 @@ function startRow(show: TvShowStart, signal: TvShowsSignal): TvShowRow {
 		key: `show-${show.id}`,
 		item: `title:show-${show.id}`,
 		kind: "start",
+		...copyMediaPresentation(show),
 		title: show.title,
 		poster_path: show.poster_path,
 		backdrop_path: show.backdrop_path,

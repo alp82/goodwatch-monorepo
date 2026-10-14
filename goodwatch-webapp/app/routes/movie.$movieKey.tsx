@@ -1,3 +1,6 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { normalizeCountry } from "~/utils/media-language"
+import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import { json, redirect } from "@remix-run/node"
 import type {
 	LoaderFunction,
@@ -7,7 +10,7 @@ import type {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { resolveCountry } from "~/server/country.server"
+import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
@@ -16,7 +19,6 @@ import { relatedMapLookup, relatedSectionData } from "~/server/related-map.serve
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
-import { getUserSettings } from "~/server/user-settings.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -57,23 +59,21 @@ export const loader: LoaderFunction = async ({
 	}
 
 	const userId = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ userId })
-
 	const url = new URL(request.url)
-	const { country, countryIsFallback } = resolveCountry({
-		request,
-		countryDefault: userSettings?.country_default,
-	})
-	const language = url.searchParams.get("language") || "en"
+	const { effectiveContext } = await resolveMediaContext(request, userId)
+	const { country } = effectiveContext
+	const countryIsFallback = !normalizeCountry(url.searchParams.get("country"))
+	const canonicalContent = isCrawler(request)
+	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = getDetailsForMovie({
 		movieId,
 		country,
 		language,
-	})
+	}, { canonical: canonicalContent })
 	const parts = Promise.all([
 		details,
-		relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs }),
+		relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language }),
 		// The header's genre links and the collection's movies, which the page requested after load before.
 		details.then(
 			(media) =>
@@ -81,6 +81,7 @@ export const loader: LoaderFunction = async ({
 					genres: media.details.genres,
 					movieSeries: media.movie_series,
 					budgetMs,
+					language: canonicalContent ? undefined : language,
 				}),
 			// A failed details read fails the page above.
 			() => null,
@@ -97,7 +98,7 @@ export const loader: LoaderFunction = async ({
 		search: url.search,
 		mediaType: "movie",
 		tmdbId: titleDetails.tmdb_id,
-		title: titleDetails.title,
+		title: canonicalMediaTitle(titleDetails),
 	})
 	if (canonical) return redirect(canonical, 301)
 
@@ -152,9 +153,8 @@ export default function DetailsMovie() {
 		params,
 	})
 
-	// The server guessed the country (Accept-Language or US). A country the
-	// visitor picked earlier on this device wins, so switch to it; otherwise
-	// keep the server's choice and leave the URL alone.
+	// Check old device storage only when the URL has no country. Saved-cookie/account provenance
+	// is fetched privately so this HTML can be shared with every visitor with the same effective pair.
 	useEffect(() => {
 		if (!countryIsFallback) return
 		let stored: string | null = null
@@ -162,7 +162,11 @@ export default function DetailsMovie() {
 			stored = localStorage.getItem("country")
 		} catch {}
 		if (!stored || !/^[A-Z]{2}$/.test(stored) || stored === country) return
-		updateParams({ ...currentParams, country: stored }, true)
+		const controller = new AbortController()
+		void mayAdoptLegacyCountry(stored, country, controller.signal).then(allowed => {
+			if (allowed && !controller.signal.aborted) updateParams({ ...currentParams, country: stored! }, true)
+		}).catch(() => {})
+		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
 	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} />

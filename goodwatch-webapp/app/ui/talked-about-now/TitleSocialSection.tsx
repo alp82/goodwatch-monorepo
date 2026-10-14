@@ -246,4 +246,3 @@ function MoreButton({ open, hidden, onClick }: { open: boolean; hidden: number; 
 		</button>
 	)
 }
-

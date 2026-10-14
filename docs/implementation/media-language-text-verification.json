@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-14",
+  "worktree": "/home/alper/projects/goodwatch-media-language",
+  "branch": "feat/media-language",
+  "head": "4718b47c",
+  "paid_calls": 0,
+  "production_writes": 0,
+  "commits_created": 0,
+  "deployed": false,
+  "checks": {
+    "node_full": {
+      "command": "node --test --test-concurrency=1 'app/**/*.test.ts'",
+      "tests": 1879,
+      "passed": 1878,
+      "failed": 0,
+      "skipped": 1,
+      "output": "/tmp/gw-text-node-suite-verified.txt"
+    },
+    "node_new_focused": {
+      "tests": 14,
+      "passed": 14,
+      "output": "/tmp/gw-text-unit-node-final.txt"
+    },
+    "python_full": {
+      "command": "/tmp/gw-media-text-tests/bin/python -m unittest discover -s tests",
+      "tests": 1230,
+      "failed": 0,
+      "skipped": 51,
+      "output": "/tmp/gw-text-python-suite-verified.txt"
+    },
+    "python_new_focused": {
+      "tests": 17,
+      "passed": 17,
+      "output": "/tmp/gw-text-unit-python-final.txt"
+    },
+    "typecheck": {
+      "command": "./node_modules/.bin/tsc --noEmit --pretty false",
+      "exit_code": 2,
+      "baseline_diagnostics": 212,
+      "current_diagnostics": 212,
+      "new_diagnostics": 0,
+      "removed_diagnostics": 0,
+      "comparison": "diagnostic path/code/headline; ignore moved line/column",
+      "baseline": "/tmp/gw-overlay-tsc-head.txt (phase 3a verified baseline)",
+      "output": "/tmp/gw-text-tsc-verified.txt"
+    },
+    "tmdb_mock_dry_run": {
+      "dry_run": true,
+      "requests": 8,
+      "seasons": 2,
+      "episodes": 2,
+      "rows": 4,
+      "failures": [],
+      "truncated": false
+    },
+    "prose_dry_run": {
+      "sources": 10,
+      "locales": [
+        "de",
+        "ja"
+      ],
+      "jobs": 20,
+      "cost_usd": 0,
+      "output": "/tmp/gw-text-prose-dry-run.json"
+    },
+    "cost_estimate_de": {
+      "tokenizer_proxy": "cl100k_base",
+      "titles": 1,
+      "sources": 10,
+      "locale": "de",
+      "prompt_tokens": 754,
+      "source_tokens_with_envelopes": 194,
+      "estimated_completion_tokens": 291,
+      "output_token_factor": "1.5",
+      "usd_per_1000_titles_per_locale": "0.24987000",
+      "reservation_usd_per_1000_titles_one_attempt": "25.7516875000",
+      "input_usd_per_million": "0.15",
+      "output_usd_per_million": "0.47"
+    },
+    "cost_estimate_ja": {
+      "tokenizer_proxy": "cl100k_base",
+      "titles": 1,
+      "sources": 10,
+      "locale": "ja",
+      "prompt_tokens": 754,
+      "source_tokens_with_envelopes": 194,
+      "estimated_completion_tokens": 388,
+      "output_token_factor": "2",
+      "usd_per_1000_titles_per_locale": "0.29546000",
+      "reservation_usd_per_1000_titles_one_attempt": "25.7516875000",
+      "input_usd_per_million": "0.15",
+      "output_usd_per_million": "0.47"
+    },
+    "local_detector_examples": [
+      "de",
+      "ja",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "git_diff_check": "passed"
+  },
+  "initial_failures": {
+    "node_default_full": "one pre-existing deadline timing assertion failed under concurrent test-file execution; bounded full run passes",
+    "python_setup": "missing local test dependencies then html5lib; isolated temporary environment installed, final full suite passes",
+    "typecheck_first_after_new_test": "one fixture typed never; fixed; final diagnostic set equals baseline"
+  },
+  "not_run": [
+    "production build",
+    "dev server",
+    "live TMDB API (no locally configured credential)",
+    "production migration/backfill",
+    "paid translation",
+    "browser RTL/layout/Lighthouse budget"
+  ],
+  "owner_checkpoints": [
+    "review draft locale copy and compact FAQ/fingerprint wording",
+    "apply additive schema and enable bounded companion ingestion",
+    "supply/review variable category/portrait and inline template resources",
+    "approve model translation quality/sample/budget before any paid execution"
+  ],
+  "changed_files": [
+    "docs/cache-identity.md",
+    "docs/implementation/media-language-surface-matrix.md",
+    "docs/implementation/media-language-text-production.md",
+    "docs/implementation/media-language-text-schema.sql",
+    "docs/implementation/media-language-text-verification.json",
+    "goodwatch-flows/scripts/backfill_episode_translations.py",
+    "goodwatch-flows/scripts/estimate_media_prose_cost.py",
+    "goodwatch-flows/scripts/export_media_prose.py",
+    "goodwatch-flows/scripts/import_media_template_translations.py",
+    "goodwatch-flows/scripts/translate_media_prose.py",
+    "goodwatch-flows/tests/fixtures/media-language-tmdb.json",
+    "goodwatch-flows/tests/requirements-media-language.txt",
+    "goodwatch-flows/tests/test_media_language_text.py",
+    "goodwatch-flows/windmill/f/media_language/episode_translations.py",
+    "goodwatch-flows/windmill/f/media_language/episode_translations.script.yaml",
+    "goodwatch-flows/windmill/f/media_language/ingest_episode_translations.py",
+    "goodwatch-flows/windmill/f/media_language/ingest_episode_translations.script.lock",
+    "goodwatch-flows/windmill/f/media_language/ingest_episode_translations.script.yaml",
+    "goodwatch-flows/windmill/f/media_language/prose_jobs.py",
+    "goodwatch-flows/windmill/f/media_language/prose_jobs.script.yaml",
+    "goodwatch-flows/windmill/f/sync/models/crate_schemas.py",
+    "goodwatch-webapp/app/locales/media/templates.json",
+    "goodwatch-webapp/app/routes/$type.$category.$page.tsx",
+    "goodwatch-webapp/app/routes/api.media-title.ts",
+    "goodwatch-webapp/app/routes/movie.$movieKey.tsx",
+    "goodwatch-webapp/app/routes/show.$showKey.tsx",
+    "goodwatch-webapp/app/server/details.server.ts",
+    "goodwatch-webapp/app/server/media-payload.server.ts",
+    "goodwatch-webapp/app/server/media-templates.server.ts",
+    "goodwatch-webapp/app/server/media-templates.test.ts",
+    "goodwatch-webapp/app/server/prose-overlay.server.ts",
+    "goodwatch-webapp/app/ui/details/About.tsx",
+    "goodwatch-webapp/app/ui/details/DetailsFingerprint.tsx",
+    "goodwatch-webapp/app/ui/details/DetailsQuestions.tsx",
+    "goodwatch-webapp/app/ui/details/titleQuestions.ts",
+    "goodwatch-webapp/app/ui/explore/FAQ.tsx",
+    "goodwatch-webapp/app/ui/fingerprint/Badges.tsx",
+    "goodwatch-webapp/app/ui/fingerprint/fingerprintText.ts",
+    "goodwatch-webapp/app/ui/scoring/ClickScorer.tsx",
+    "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx",
+    "goodwatch-webapp/app/ui/taste/tabs/SidesOfYou.tsx",
+    "goodwatch-webapp/app/ui/taste/tabs/YouVsEveryone.tsx",
+    "goodwatch-webapp/app/utils/media-presentation.ts",
+    "goodwatch-webapp/app/utils/media-template-types.ts",
+    "goodwatch-webapp/app/utils/prose-overlay-core.test.ts",
+    "goodwatch-webapp/app/utils/prose-overlay-core.ts"
+  ]
+}

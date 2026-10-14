@@ -99,7 +99,7 @@ function TicketsCard({ title, items, name, theme, date, editing }: CardProps) {
 												overflow: "hidden",
 											}}
 										>
-											{item.title}
+											<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 										</div>
 										<div style={flex({ justifyContent: "space-between", alignItems: "flex-end" })}>
 											<div style={flex({ gap: 10, fontFamily: "Space Mono", fontWeight: 700, fontSize: 18 })}>

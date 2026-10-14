@@ -50,6 +50,7 @@ export default function Tonight({
 			// A card's services are the viewer's own first.
 			where={whereLine(shown.card, [])}
 			line={words.line}
+			lineLanguage={shown.episode?.language}
 			keys={KEYS.filter((key) => items.includes(key.id))}
 		/>
 	)

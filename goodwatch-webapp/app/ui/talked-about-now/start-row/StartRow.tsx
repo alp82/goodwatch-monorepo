@@ -6,6 +6,11 @@
 //
 // Loaded on its own (StartRowSlot.tsx), with its own stylesheet: nothing of it is in the start page's first
 // view. The same for every visitor; the data is the row's request (/api/talked-about-now).
+import {
+	canonicalMediaTitle,
+	mediaFieldLanguage,
+} from "~/utils/media-presentation"
+import MediaText from "~/ui/media-text/MediaText"
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
@@ -31,7 +36,7 @@ const hrefOf = (title: TalkedTitle) =>
 	startTitleHref({
 		media_type: title.mediaType,
 		tmdb_id: title.tmdbId,
-		title: title.title,
+		title: canonicalMediaTitle(title),
 	})
 
 const WIDE = "(min-width: 1024px)"
@@ -154,7 +159,12 @@ function Featured({ title, day }: { title: TalkedTitle; day: string }) {
 				#{title.rank} talked about <Move move={title.move} />
 			</p>
 			<Link to={hrefOf(title)} discover="none" className="tn-name">
-				{title.title}
+				<MediaText
+					value={{
+						text: title.title,
+						lang: mediaFieldLanguage(title, "title"),
+					}}
+				/>
 			</Link>
 			<p className="tn-kind">
 				{title.mediaType === "movie" ? "Movie" : "TV show"}
@@ -269,7 +279,14 @@ function Board({ row }: { row: TalkedRow }) {
 								)}
 								<span className="tn-row-text">
 									<b className="tn-row-title">
-										<span>{title.title}</span>
+										<span>
+											<MediaText
+												value={{
+													text: title.title,
+													lang: mediaFieldLanguage(title, "title"),
+												}}
+											/>
+										</span>
 										<Move move={title.move} />
 									</b>
 									<span className="tn-row-why">

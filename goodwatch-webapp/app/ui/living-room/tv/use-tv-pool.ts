@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The pool: the titles the TV draws its own picks from (the best six and three per mood for the person), read
 // with `POST /api/living-room/picks?view=pool`. Members GET; guests POST their browser's progress. Both answers
 // are private and never stored by a cache.
@@ -23,13 +25,14 @@ export function useTvPoolState(
 	member: boolean,
 	enabled: boolean,
 ): { pool: TvPool | null; failed: boolean } {
+	const { locale } = useLocale()
 	const pool = useQuery<TvPool>({
-		queryKey: ["living-room-pool", member ? "member" : "guest"],
+		queryKey: ["living-room-pool", member ? "member" : "guest", locale.language],
 		enabled,
 		queryFn: async () => {
 			const guest = member ? null : snapshotGuestProgress()
 			const response = await fetch(
-				POOL_URL,
+				mediaLanguageUrl(POOL_URL, locale.language),
 				guest
 					? {
 							method: "POST",

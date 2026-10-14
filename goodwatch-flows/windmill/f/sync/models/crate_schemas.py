@@ -383,6 +383,37 @@ SCHEMAS = {
         "clustered_by": "show_id",
         "shards": 6,
     },
+    # Additive TMDB text translations, isolated from canonical episode membership.
+    "season_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
+    "episode_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
     # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
     # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
     "imdb_episode": {

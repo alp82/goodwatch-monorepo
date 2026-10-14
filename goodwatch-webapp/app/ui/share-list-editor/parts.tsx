@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Small shared pieces of the share list editor.
 import type { ReactNode } from "react"
 import { LIST_PROMPTS, type CardTitle } from "~/ui/share-card/model"
@@ -24,7 +25,7 @@ export const Thumb = ({
 		<div
 			className={`flex aspect-[2/3] items-center justify-center bg-neutral-800 p-1 text-center text-[10px] leading-tight text-neutral-400 ${className}`}
 		>
-			{item.title}
+			<span lang={mediaFieldLanguage(item)}>{item.title}</span>
 		</div>
 	)
 
@@ -84,7 +85,7 @@ export function PromptLinks({ ed }: { ed: Editor }) {
 						onClick={() => ed.list.set({ title: p.title, promptId: p.id })}
 						className={`underline decoration-1 underline-offset-4 transition ${active ? "text-white decoration-white" : "text-neutral-400 decoration-white/20 hover:text-white hover:decoration-white"}`}
 					>
-						{p.title}
+						<span lang={mediaFieldLanguage(p)}>{p.title}</span>
 					</button>
 				)
 			})}

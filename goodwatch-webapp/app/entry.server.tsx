@@ -4,6 +4,7 @@
 // - The HTML goes out in one chunk per React pass instead of about 2 KB at a time (see html-stream.server.ts).
 // - The abort timer is cleared when the response is done. The default entry leaves it running, so every request keeps
 //   its render and loader data alive for 5 seconds.
+import { protectMediaResponse } from "~/server/media-read-health.server"
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
 import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
@@ -102,6 +103,7 @@ function renderDocument(
 		const send = () => {
 			shellRendered = true
 			responseHeaders.set("Content-Type", "text/html")
+			protectMediaResponse(responseHeaders)
 			const routePolicy = responseHeaders.get("Cache-Control")
 			const decision = applyCachePolicy(request, status, responseHeaders)
 			const offer = pageCacheWants(
@@ -159,6 +161,7 @@ export function handleDataRequest(
 	response: Response,
 	{ request }: { request: Request },
 ) {
+	protectMediaResponse(response.headers)
 	applyCachePolicy(request, response.status, response.headers)
 	return response
 }

@@ -1,3 +1,7 @@
+import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { normalizeCountry } from "~/utils/media-language"
+import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -8,7 +12,7 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { resolveCountry } from "~/server/country.server"
+import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
@@ -21,7 +25,6 @@ import {
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
-import { getUserSettings } from "~/server/user-settings.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -60,36 +63,52 @@ export const loader: LoaderFunction = async ({
 	const showId = (params.showKey || "").split("-")[0]
 
 	const userId = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ userId })
-
 	const url = new URL(request.url)
-	const { country, countryIsFallback } = resolveCountry({
-		request,
-		countryDefault: userSettings?.country_default,
-	})
-	const language = url.searchParams.get("language") || "en"
+	const { effectiveContext } = await resolveMediaContext(request, userId)
+	const { country } = effectiveContext
+	const countryIsFallback = !normalizeCountry(url.searchParams.get("country"))
+	const canonicalContent = isCrawler(request)
+	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
-	const details = getDetailsForShow({
-		showId,
-		country,
-		language,
-	})
+	const details = getDetailsForShow(
+		{
+			showId,
+			country,
+			language,
+		},
+		{ canonical: canonicalContent },
+	)
 	let episodeGridFailed = false
 	const parts = Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
-			.then((grid) => grid && packEpisodeGrid(grid))
+			.then(
+				async (grid) =>
+					grid &&
+					packEpisodeGrid(
+						canonicalContent ? grid : await overlayAlignedGrid(grid, language),
+					),
+			)
 			.catch((error) => {
 				episodeGridFailed = true
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
-		relatedMapLookup({ type: "show", id: Number(showId), budgetMs }),
+		relatedMapLookup({
+			type: "show",
+			id: Number(showId),
+			budgetMs,
+			language: canonicalContent ? undefined : language,
+		}),
 		// The header's genre links, which the page requested after load before.
 		details.then(
 			(media) =>
-				prefetchTitleExtrasState({ genres: media.details.genres, budgetMs }),
+				prefetchTitleExtrasState({
+					genres: media.details.genres,
+					budgetMs,
+					language: canonicalContent ? undefined : language,
+				}),
 			// A failed details read fails the page above.
 			() => null,
 		),
@@ -105,12 +124,12 @@ export const loader: LoaderFunction = async ({
 		search: url.search,
 		mediaType: "show",
 		tmdbId: titleDetails.tmdb_id,
-		title: titleDetails.title,
+		title: canonicalMediaTitle(titleDetails),
 	})
 	if (canonical) return redirect(canonical, 301)
 
 	const [catalogMedia, episodeGrid, relatedSection, extrasState] = await parts
-	const media = episodeGrid?.presentationVersion
+	const alignedMedia = episodeGrid?.presentationVersion
 		? {
 				...catalogMedia,
 				seasons: episodeGrid.seasons
@@ -122,6 +141,7 @@ export const loader: LoaderFunction = async ({
 				},
 			}
 		: catalogMedia
+	const media = alignedMedia
 	// The related map's section.
 	const related = relatedSectionData(
 		relatedSection,
@@ -181,9 +201,8 @@ export default function DetailsTV() {
 		params,
 	})
 
-	// The server guessed the country (Accept-Language or US). A country the
-	// visitor picked earlier on this device wins, so switch to it; otherwise
-	// keep the server's choice and leave the URL alone.
+	// Check old device storage only when the URL has no country. Saved-cookie/account provenance
+	// is fetched privately so this HTML can be shared with every visitor with the same effective pair.
 	useEffect(() => {
 		if (!countryIsFallback) return
 		let stored: string | null = null
@@ -191,7 +210,14 @@ export default function DetailsTV() {
 			stored = localStorage.getItem("country")
 		} catch {}
 		if (!stored || !/^[A-Z]{2}$/.test(stored) || stored === country) return
-		updateParams({ ...currentParams, country: stored }, true)
+		const controller = new AbortController()
+		void mayAdoptLegacyCountry(stored, country, controller.signal)
+			.then((allowed) => {
+				if (allowed && !controller.signal.aborted)
+					updateParams({ ...currentParams, country: stored! }, true)
+			})
+			.catch(() => {})
+		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
 	return (

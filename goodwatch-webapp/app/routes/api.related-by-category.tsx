@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -13,7 +15,7 @@ import type { MediaType } from "~/server/utils/query-db"
 
 export type GetRelatedByCategoryResult = RelatedByCategory
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
@@ -83,7 +85,9 @@ export const useRelatedByCategory = ({
 	streaming_ids,
 	language = "en",
 }: UseRelatedByCategoryParams) => {
+	const { locale } = useLocale()
 	const url = new URL("/api/related-by-category", "https://goodwatch.app")
+	url.searchParams.set("displayLanguage", locale.language)
 	url.searchParams.append("mediaType", mediaType)
 	url.searchParams.append("id", id.toString())
 	url.searchParams.append("countries", countries)
@@ -99,8 +103,11 @@ export const useRelatedByCategory = ({
 			countries,
 			streaming_ids ?? '',
 			language,
+			locale.language,
 		]),
 		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
 		placeholderData: (previousData) => previousData,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

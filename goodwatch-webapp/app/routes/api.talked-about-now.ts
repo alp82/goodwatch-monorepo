@@ -3,6 +3,7 @@
 // minutes; in preview it answers only the members in TALKED_ABOUT_NOW_PREVIEW_USERS, and nothing keeps it.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import type { TalkedRow } from "~/domain/talked-about-now"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	talkedAboutNowEnabled,
 	talkedAboutNowMode,
@@ -15,7 +16,7 @@ export type TalkedAnswer = { row: TalkedRow | null }
 const PUBLIC = "public, max-age=300, s-maxage=300, stale-while-revalidate=300"
 const PRIVATE = "private, no-store"
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const mode = talkedAboutNowMode("row")
 	const open = mode === "on"
 	// Only a preview asks who sent the request: off and on are the same for everyone.
@@ -43,3 +44,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		{ headers: { "Cache-Control": open && row ? PUBLIC : PRIVATE } },
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader)

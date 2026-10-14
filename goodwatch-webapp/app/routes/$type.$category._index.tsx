@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ArrowRightCircleIcon } from "@heroicons/react/24/solid"
 import {
 	type LoaderFunction,
@@ -72,7 +73,7 @@ interface LoaderData {
 	pageResults: PageResult[]
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
@@ -158,3 +159,5 @@ export default function MoviesCategory_index() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

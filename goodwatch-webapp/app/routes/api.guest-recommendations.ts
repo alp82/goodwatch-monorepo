@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -11,7 +14,7 @@ import {
 
 const MAX_SCORED_ITEMS = 20
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
 	const mediaType = url.searchParams.get("mediaType")
 	const scoredItemsParam = url.searchParams.get("scoredItems")
@@ -101,10 +104,11 @@ export const useGuestMovieRecommendations = ({
 	if (excludeIds.length > 0) {
 		params.set("excludeIds", JSON.stringify(excludeIds))
 	}
-	const url = `/api/guest-recommendations?${params}`
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl(`/api/guest-recommendations?${params}`, locale.language)
 
 	return useQuery<GetGuestRecommendations>({
-		queryKey: [...queryKeyGuestMovieRecommendations, preparedItems, excludeIds, limit],
+		queryKey: [...queryKeyGuestMovieRecommendations, preparedItems, excludeIds, limit, locale.language],
 		queryFn: async () => await (await fetch(url)).json(),
 		enabled: enabled && scoredItems.length > 0,
 		placeholderData: (previousData) => previousData,
@@ -131,12 +135,15 @@ export const useGuestShowRecommendations = ({
 	if (excludeIds.length > 0) {
 		params.set("excludeIds", JSON.stringify(excludeIds))
 	}
-	const url = `/api/guest-recommendations?${params}`
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl(`/api/guest-recommendations?${params}`, locale.language)
 
 	return useQuery<GetGuestRecommendations>({
-		queryKey: [...queryKeyGuestShowRecommendations, preparedItems, excludeIds, limit],
+		queryKey: [...queryKeyGuestShowRecommendations, preparedItems, excludeIds, limit, locale.language],
 		queryFn: async () => await (await fetch(url)).json(),
 		enabled: enabled && scoredItems.length > 0,
 		placeholderData: (previousData) => previousData,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The mini Explorer's data: the real mood map, read once for the whole app, and what its two screens show of it.
 //
 // One request, `/api/explorer/map?grouping=mood` (members GET, guests POST what the Explorer's page posts of
@@ -40,8 +42,8 @@ export type TvExplorerReport = {
 
 const NOTHING: TvExplorerReport["context"] = {}
 
-async function fetchMap(member: boolean): Promise<ExplorerMap> {
-	const url = `/api/explorer/map?grouping=${TV_MAP_GROUPING}`
+async function fetchMap(member: boolean, language: string): Promise<ExplorerMap> {
+	const url = mediaLanguageUrl(`/api/explorer/map?grouping=${TV_MAP_GROUPING}`, language)
 	let response: Response
 	if (member) response = await fetch(url)
 	else {
@@ -64,11 +66,12 @@ export function useTvExplorer({
 	member: boolean
 }): TvExplorerReport {
 	// The query is a viewer's own, as on the Explorer's page: signing in or out never shows another person's map.
+	const { locale } = useLocale()
 	const { user } = useUser()
 	const viewer = user?.id ?? (member ? "member" : "guest")
 	const { data: map, isError } = useQuery({
-		queryKey: ["tv-explorer-map", viewer, TV_MAP_GROUPING],
-		queryFn: () => fetchMap(member),
+		queryKey: ["tv-explorer-map", viewer, TV_MAP_GROUPING, locale.language],
+		queryFn: () => fetchMap(member, locale.language),
 	})
 
 	const on = screen.name === "explorer"

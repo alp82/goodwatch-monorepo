@@ -1,3 +1,5 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The section below the living room (#352): the start titles and the ways to browse GoodWatch, as plain
 // links in the server HTML. It is ordinary page content right after the room. Its top edge, the lip, lies over the
 // room's bottom edge and is the way down; `use-below-room.ts` owns how the page moves between the two.
@@ -9,12 +11,13 @@ import { Link } from "@remix-run/react"
 import type { MouseEvent } from "react"
 import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
 import { titleToDashed } from "~/utils/helpers"
+import MediaText from "~/ui/media-text/MediaText"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
 
 export const startTitleHref = (
 	title: Pick<StartTitle, "media_type" | "tmdb_id" | "title">,
-) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(title.title)}`
+) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
 
 /** "Movie · 2026": what the title is, quietly, under its name. */
 export const startTitleLine = (
@@ -138,7 +141,7 @@ export function BelowRoom({
 									/>
 								)}
 								<Link to={startTitleHref(title)} discover="none">
-									{title.title}
+									<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title) }} />
 								</Link>
 								<span>{startTitleLine(title)}</span>
 							</li>

@@ -1,3 +1,4 @@
+import { overlayTitles } from "./media-overlay.server.ts"
 // The related map of a title page, on the server: its setting, the packs the browser draws from, and the section's
 // first picture.
 //
@@ -282,6 +283,7 @@ export async function relatedMapLookup(params: {
 	id: number
 	/** How long the document waits for the lookup. */
 	budgetMs: number
+	language?: string
 }): Promise<RelatedMapLookup> {
 	let timer: ReturnType<typeof setTimeout> | undefined
 	const pending = (
@@ -289,7 +291,7 @@ export async function relatedMapLookup(params: {
 			? nearestOf(params.type, params.id)
 			: Promise.reject(new Error("not a title id"))
 	)
-		.then((kept) => asPack(kept) ?? ("none" as const))
+		.then(async (kept) => { const pack = asPack(kept); return pack ? (params.language ? localizeRelatedMapPack(pack, params.language) : pack) : "none" as const })
 		.catch((error: unknown) => {
 			console.error("Related map lookup failed", {
 				...params,
@@ -321,6 +323,7 @@ export async function relatedMapLookup(params: {
 
 /** What the title route's loader hands to the section. */
 export interface RelatedMapData {
+	language?: string
 	/** The address of the map's script, a path among the build's files. Without it the section loads a lazy chunk. */
 	script: string | null
 	/**
@@ -346,8 +349,8 @@ export function relatedMapData(
 		pack: lookup,
 		links: packLinks(lookup),
 	})
-	if (document) keepForDocument(lookup.c[0], html)
-	return { script: relatedMapScript(), ...(!document && { html }) }
+	if (document) keepForDocument(`${lookup.c[0]}:${lookup.language ?? "canonical"}`, html)
+	return { script: relatedMapScript(), language: lookup.language, ...(!document && { html }) }
 }
 
 // --- The title page's loader --------------------------------------------------------------------------------------
@@ -366,4 +369,13 @@ export function relatedSectionData(
 		relatedMap: relatedMapData(lookup, title, isDocumentRequest(request)),
 		complete: lookup !== "late",
 	}
+}
+
+/** Copy the compact pack after canonical Qdrant matching. The fingerprint/levels/order stay language neutral. */
+export async function localizeRelatedMapPack<T extends RawPage & { c?: RawTitle }>(pack: T, language: string): Promise<T & { language: string }> {
+	const tuples = [...(pack.c ? [pack.c] : []), ...pack.n]
+	const rows = tuples.map(t => ({ media_type: t[0][0] === "m" ? "movie" as const : "show" as const, tmdb_id: Number(t[0].slice(1)), title: t[1], poster_path: `/${t[3]}` }))
+	const localized = await overlayTitles(rows, language)
+	const mapped = localized.map((r, i): RawTitle => [tuples[i][0], r.title, tuples[i][2], (r.poster_path ?? "").replace(/^\/+/, ""), tuples[i][4], tuples[i][5], { canonicalTitle: r.canonical_title, language: r.presentation.title.language }])
+	return { ...pack, language: localized[0]?.presentation.language ?? "en", ...(pack.c ? { c: mapped[0] } : {}), n: mapped.slice(pack.c ? 1 : 0) }
 }

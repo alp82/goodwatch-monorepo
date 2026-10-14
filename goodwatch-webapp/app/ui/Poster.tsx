@@ -6,6 +6,7 @@ import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 export interface PosterProps {
+	lang?: string
 	path?: string
 	title?: string
 	loading?: boolean
@@ -43,6 +44,7 @@ const CLASS_NAME =
 export function Poster({
 	path,
 	title,
+	lang,
 	loading = false,
 	mediaType,
 	tmdbId,
@@ -53,13 +55,14 @@ export function Poster({
 		loading ? undefined : mediaType,
 		tmdbId,
 	)
-	const alt = title && `Poster for ${title}`
+	const alt = title
 	// Every poster is 2:3. The ratio reserves the height before the image arrives.
 	const className = `${CLASS_NAME} ${loading ? "animate-pulse brightness-50" : ""}`
 
 	if (!path) {
 		return (
 			<img
+				lang={lang}
 				ref={impressionRef}
 				className={className}
 				src={assetUrl(placeholder)}
@@ -70,6 +73,7 @@ export function Poster({
 	}
 	return (
 		<TmdbImage
+			lang={lang}
 			imgRef={impressionRef}
 			kind="poster"
 			path={path}

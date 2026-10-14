@@ -43,6 +43,9 @@ export type TalkedReason = {
 }
 
 export type TalkedTitle = {
+	/** Optional live presentation; ranking and source-language social prose remain canonical. */
+	canonical_title?: string
+	presentation?: import("../utils/media-presentation").MediaPresentation
 	mediaType: "movie" | "show"
 	tmdbId: number
 	title: string

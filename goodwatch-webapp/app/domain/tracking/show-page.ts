@@ -1,3 +1,4 @@
+import type { EpisodeTextPresentation } from "~/server/episode-text-overlay.server"
 // What the show page holds for episode tracking, and how the browser works on it
 // (docs/implementation/tracking/data-model.md, "The browser").
 //
@@ -41,6 +42,7 @@ import {
 
 /** One episode of the episode list, in TMDB's numbering. Season 0 holds the specials. */
 export interface PageEpisode extends ListedEpisode {
+	textPresentation?: EpisodeTextPresentation
 	name: string | null
 	runtime: number | null
 	/** TMDB's path of the still. */
