@@ -85,6 +85,9 @@ const isConnectionError = (error: unknown): boolean =>
 	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN"]
 		.includes((error as NodeJS.ErrnoException).code ?? "")
 
+const isAvailabilityError = (error: unknown): boolean =>
+	isConnectionError(error) || error instanceof CrateTimeoutError
+
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
 const LOG_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false })
@@ -183,7 +186,7 @@ class CrateClient {
 				}
 			}, { error: () => new CrateTimeoutError(attemptTimeoutMs), signal: options.signal })
 			} catch (error) {
-				if (options.signal?.aborted || !(isConnectionError(error) || error instanceof CrateTimeoutError)) throw error
+				if (options.signal?.aborted || !isAvailabilityError(error)) throw error
 				host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
 				if (!read || tried.size === this.hosts.length) throw error
 			}
@@ -436,7 +439,7 @@ export const upsert = async ({
 			try {
 				return await client.execute(sql, row)
 			} catch (error) {
-				if (!(error instanceof CrateTimeoutError)) throw error
+				if (!isAvailabilityError(error)) throw error
 			}
 			// The write timed out but may still have landed. Primary key lookups are real-time in CrateDB.
 			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
@@ -519,7 +522,7 @@ export const insertRows = async (
 		try {
 			result = await client.execute(sql, params)
 		} catch (error) {
-			if (!(error instanceof CrateTimeoutError)) throw error
+			if (!isAvailabilityError(error)) throw error
 			result = await client.execute(sql, params)
 		}
 		rowcount += result.rowcount || 0
