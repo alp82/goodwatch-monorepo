@@ -1,0 +1,4292 @@
+{
+  "seed": 20261014,
+  "replicates": 20000,
+  "batch": 100,
+  "source_sha256": "441dca879d646906279e11e413c927f0d4bb88156a8ddf170561c9f9aa6be561",
+  "numpy": "2.5.2",
+  "scipy": "1.18.1",
+  "methods_variance_floors": {
+    "t": 0.0,
+    "t_floor9": 9.0,
+    "t_floor16": 16.0,
+    "hoeffding": null
+  },
+  "qualifying_methods": [
+    "t_floor9",
+    "t_floor16",
+    "hoeffding"
+  ],
+  "chosen": "t_floor9",
+  "calibration": [
+    {
+      "n": 20,
+      "family": "diffuse_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": 4.5e-05,
+      "empirical_mean_primary": 8.75e-05,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.47395,
+            "count": 9479,
+            "trials": 20000,
+            "mc_upper975": 0.4808984737724827
+          },
+          "primary_pass": {
+            "rate": 0.0137,
+            "count": 274,
+            "trials": 20000,
+            "mc_upper975": 0.015408628335212959
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.1938,
+            "count": 3876,
+            "trials": 20000,
+            "mc_upper975": 0.19934746580843224
+          },
+          "primary_pass": {
+            "rate": 0.00105,
+            "count": 21,
+            "trials": 20000,
+            "mc_upper975": 0.0016045910822638997
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.03885,
+            "count": 777,
+            "trials": 20000,
+            "mc_upper975": 0.041620966190169015
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "diffuse_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.49726,
+      "empirical_mean_primary": 0.5029275,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.15405,
+            "count": 3081,
+            "trials": 20000,
+            "mc_upper975": 0.15912830115447382
+          },
+          "primary_pass": {
+            "rate": 0.1346,
+            "count": 2692,
+            "trials": 20000,
+            "mc_upper975": 0.13940816296109157
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.03335,
+            "count": 667,
+            "trials": 20000,
+            "mc_upper975": 0.03593218685443278
+          },
+          "primary_pass": {
+            "rate": 0.0296,
+            "count": 592,
+            "trials": 20000,
+            "mc_upper975": 0.03204331110236837
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00335,
+            "count": 67,
+            "trials": 20000,
+            "mc_upper975": 0.004252456815557635
+          },
+          "primary_pass": {
+            "rate": 0.002,
+            "count": 40,
+            "trials": 20000,
+            "mc_upper975": 0.002722447006071609
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "diffuse_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.002325,
+      "empirical_mean_primary": 1.0000625,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0239,
+            "count": 478,
+            "trials": 20000,
+            "mc_upper975": 0.026112299051909583
+          },
+          "primary_pass": {
+            "rate": 0.4464,
+            "count": 8928,
+            "trials": 20000,
+            "mc_upper975": 0.45332196312292383
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0029,
+            "count": 58,
+            "trials": 20000,
+            "mc_upper975": 0.0037473305557593406
+          },
+          "primary_pass": {
+            "rate": 0.1958,
+            "count": 3916,
+            "trials": 20000,
+            "mc_upper975": 0.2013685306384209
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00015,
+            "count": 3,
+            "trials": 20000,
+            "mc_upper975": 0.00043830045339363695
+          },
+          "primary_pass": {
+            "rate": 0.03895,
+            "count": 779,
+            "trials": 20000,
+            "mc_upper975": 0.04172425449247478
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "diffuse_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.008788289906109241,
+      "empirical_mean_primary": -0.0006975,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.442,
+            "count": 8840,
+            "trials": 20000,
+            "mc_upper975": 0.4489157555977918
+          },
+          "primary_pass": {
+            "rate": 0.01135,
+            "count": 227,
+            "trials": 20000,
+            "mc_upper975": 0.01291630162932901
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.2108,
+            "count": 4216,
+            "trials": 20000,
+            "mc_upper975": 0.21651961828867977
+          },
+          "primary_pass": {
+            "rate": 0.0006,
+            "count": 12,
+            "trials": 20000,
+            "mc_upper975": 0.0010478444435904025
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.04475,
+            "count": 895,
+            "trials": 20000,
+            "mc_upper975": 0.04770732870043588
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "diffuse_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5194058819372553,
+      "empirical_mean_primary": 0.458945,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.1335,
+            "count": 2670,
+            "trials": 20000,
+            "mc_upper975": 0.1382919526676212
+          },
+          "primary_pass": {
+            "rate": 0.1137,
+            "count": 2274,
+            "trials": 20000,
+            "mc_upper975": 0.11818076514005614
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.03805,
+            "count": 761,
+            "trials": 20000,
+            "mc_upper975": 0.04079448567386899
+          },
+          "primary_pass": {
+            "rate": 0.0175,
+            "count": 350,
+            "trials": 20000,
+            "mc_upper975": 0.01941403491046149
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00425,
+            "count": 85,
+            "trials": 20000,
+            "mc_upper975": 0.005252547748690908
+          },
+          "primary_pass": {
+            "rate": 0.00135,
+            "count": 27,
+            "trials": 20000,
+            "mc_upper975": 0.0019635758742433205
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "diffuse_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0298428454551196,
+      "empirical_mean_primary": 0.91681,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.02275,
+            "count": 455,
+            "trials": 20000,
+            "mc_upper975": 0.024912177942197678
+          },
+          "primary_pass": {
+            "rate": 0.39995,
+            "count": 7999,
+            "trials": 20000,
+            "mc_upper975": 0.4067785159674159
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0043,
+            "count": 86,
+            "trials": 20000,
+            "mc_upper975": 0.005307780109737882
+          },
+          "primary_pass": {
+            "rate": 0.1404,
+            "count": 2808,
+            "trials": 20000,
+            "mc_upper975": 0.14529191730973223
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0001,
+            "count": 2,
+            "trials": 20000,
+            "mc_upper975": 0.0003611872030449162
+          },
+          "primary_pass": {
+            "rate": 0.02045,
+            "count": 409,
+            "trials": 20000,
+            "mc_upper975": 0.02250768803520951
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.005675,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0075,
+            "count": 150,
+            "trials": 20000,
+            "mc_upper975": 0.00879512596290582
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0075,
+            "count": 150,
+            "trials": 20000,
+            "mc_upper975": 0.00879512596290582
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0075,
+            "count": 150,
+            "trials": 20000,
+            "mc_upper975": 0.00879512596290582
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.49905,
+      "empirical_mean_primary": 0.5038,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.3606,
+            "count": 7212,
+            "trials": 20000,
+            "mc_upper975": 0.36729964215334776
+          },
+          "primary_pass": {
+            "rate": 0.0575,
+            "count": 1150,
+            "trials": 20000,
+            "mc_upper975": 0.06081618883461573
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0575,
+            "count": 1150,
+            "trials": 20000,
+            "mc_upper975": 0.06081618883461573
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0575,
+            "count": 1150,
+            "trials": 20000,
+            "mc_upper975": 0.06081618883461573
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.00175,
+      "empirical_mean_primary": 0.99445,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.1181,
+            "count": 2362,
+            "trials": 20000,
+            "mc_upper975": 0.12265327927352548
+          },
+          "primary_pass": {
+            "rate": 0.14685,
+            "count": 2937,
+            "trials": 20000,
+            "mc_upper975": 0.15183179939496655
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.14685,
+            "count": 2937,
+            "trials": 20000,
+            "mc_upper975": 0.15183179939496655
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.14685,
+            "count": 2937,
+            "trials": 20000,
+            "mc_upper975": 0.15183179939496655
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": -0.001215,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.00675,
+            "count": 135,
+            "trials": 20000,
+            "mc_upper975": 0.00798448459314986
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.00675,
+            "count": 135,
+            "trials": 20000,
+            "mc_upper975": 0.00798448459314986
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.00115,
+            "count": 23,
+            "trials": 20000,
+            "mc_upper975": 0.001725068018471942
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.49685,
+      "empirical_mean_primary": 0.42221125,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.36085,
+            "count": 7217,
+            "trials": 20000,
+            "mc_upper975": 0.3675506105334806
+          },
+          "primary_pass": {
+            "rate": 0.055,
+            "count": 1100,
+            "trials": 20000,
+            "mc_upper975": 0.05824984984636947
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.055,
+            "count": 1100,
+            "trials": 20000,
+            "mc_upper975": 0.05824984984636947
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0198,
+            "count": 396,
+            "trials": 20000,
+            "mc_upper975": 0.02182703286541417
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "concentrated_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.994775,
+      "empirical_mean_primary": 0.85169,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.12535,
+            "count": 2507,
+            "trials": 20000,
+            "mc_upper975": 0.13001845417216157
+          },
+          "primary_pass": {
+            "rate": 0.15405,
+            "count": 3081,
+            "trials": 20000,
+            "mc_upper975": 0.15912830115447382
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.15405,
+            "count": 3081,
+            "trials": 20000,
+            "mc_upper975": 0.15912830115447382
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0832,
+            "count": 1664,
+            "trials": 20000,
+            "mc_upper975": 0.08711353012912805
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "skewed_primary",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.0030425,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.15245,
+            "count": 3049,
+            "trials": 20000,
+            "mc_upper975": 0.15750719407092345
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "skewed_primary",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.50285,
+      "empirical_mean_primary": 0.4947425,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.35645,
+            "count": 7129,
+            "trials": 20000,
+            "mc_upper975": 0.36313328068986195
+          },
+          "primary_pass": {
+            "rate": 0.388,
+            "count": 7760,
+            "trials": 20000,
+            "mc_upper975": 0.39479431979865653
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "skewed_primary",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9938,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.1236,
+            "count": 2472,
+            "trials": 20000,
+            "mc_upper975": 0.1282411270774798
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "constant",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "constant",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5,
+      "empirical_mean_primary": 0.5,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 20,
+      "family": "constant",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.00063,
+      "empirical_mean_primary": 0.004528333333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.65545,
+            "count": 13109,
+            "trials": 20000,
+            "mc_upper975": 0.6620381235797568
+          },
+          "primary_pass": {
+            "rate": 0.0051,
+            "count": 102,
+            "trials": 20000,
+            "mc_upper975": 0.006187671696214232
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.3861,
+            "count": 7722,
+            "trials": 20000,
+            "mc_upper975": 0.39288849064116566
+          },
+          "primary_pass": {
+            "rate": 0.00155,
+            "count": 31,
+            "trials": 20000,
+            "mc_upper975": 0.0021993860227846533
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.11825,
+            "count": 2365,
+            "trials": 20000,
+            "mc_upper975": 0.12280571562881028
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.499305,
+      "empirical_mean_primary": 0.5041766666666667,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.2156,
+            "count": 4312,
+            "trials": 20000,
+            "mc_upper975": 0.22136549530821134
+          },
+          "primary_pass": {
+            "rate": 0.112,
+            "count": 2240,
+            "trials": 20000,
+            "mc_upper975": 0.11645219268760534
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.06945,
+            "count": 1389,
+            "trials": 20000,
+            "mc_upper975": 0.07306121261426408
+          },
+          "primary_pass": {
+            "rate": 0.0614,
+            "count": 1228,
+            "trials": 20000,
+            "mc_upper975": 0.06481628966162617
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00945,
+            "count": 189,
+            "trials": 20000,
+            "mc_upper975": 0.010889626824791561
+          },
+          "primary_pass": {
+            "rate": 0.00755,
+            "count": 151,
+            "trials": 20000,
+            "mc_upper975": 0.00884905643224618
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0,
+      "empirical_mean_primary": 1.00048,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0247,
+            "count": 494,
+            "trials": 20000,
+            "mc_upper975": 0.02694640358721147
+          },
+          "primary_pass": {
+            "rate": 0.51205,
+            "count": 10241,
+            "trials": 20000,
+            "mc_upper975": 0.5190003317214882
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.00425,
+            "count": 85,
+            "trials": 20000,
+            "mc_upper975": 0.005252547748690908
+          },
+          "primary_pass": {
+            "rate": 0.38695,
+            "count": 7739,
+            "trials": 20000,
+            "mc_upper975": 0.39374111180079446
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0003,
+            "count": 6,
+            "trials": 20000,
+            "mc_upper975": 0.000652858465585465
+          },
+          "primary_pass": {
+            "rate": 0.1186,
+            "count": 2372,
+            "trials": 20000,
+            "mc_upper975": 0.1231613914646537
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.010075060745271305,
+      "empirical_mean_primary": -0.00065,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.61285,
+            "count": 12257,
+            "trials": 20000,
+            "mc_upper975": 0.6196089052874445
+          },
+          "primary_pass": {
+            "rate": 0.00325,
+            "count": 65,
+            "trials": 20000,
+            "mc_upper975": 0.004140542575091908
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.381,
+            "count": 7620,
+            "trials": 20000,
+            "mc_upper975": 0.38777230726764633
+          },
+          "primary_pass": {
+            "rate": 0.00115,
+            "count": 23,
+            "trials": 20000,
+            "mc_upper975": 0.001725068018471942
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.11435,
+            "count": 2287,
+            "trials": 20000,
+            "mc_upper975": 0.1188416068903299
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5169299969557186,
+      "empirical_mean_primary": 0.458835,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.1921,
+            "count": 3842,
+            "trials": 20000,
+            "mc_upper975": 0.19762938442014538
+          },
+          "primary_pass": {
+            "rate": 0.0818,
+            "count": 1636,
+            "trials": 20000,
+            "mc_upper975": 0.08568430070391007
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.069,
+            "count": 1380,
+            "trials": 20000,
+            "mc_upper975": 0.07260069858214087
+          },
+          "primary_pass": {
+            "rate": 0.04025,
+            "count": 805,
+            "trials": 20000,
+            "mc_upper975": 0.04306657405475461
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00995,
+            "count": 199,
+            "trials": 20000,
+            "mc_upper975": 0.01142414531946723
+          },
+          "primary_pass": {
+            "rate": 0.0033,
+            "count": 66,
+            "trials": 20000,
+            "mc_upper975": 0.0041965222424832195
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "diffuse_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.032041043201474,
+      "empirical_mean_primary": 0.9102616666666666,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.01985,
+            "count": 397,
+            "trials": 20000,
+            "mc_upper975": 0.021879409793127122
+          },
+          "primary_pass": {
+            "rate": 0.4277,
+            "count": 8554,
+            "trials": 20000,
+            "mc_upper975": 0.4345917900955423
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.00435,
+            "count": 87,
+            "trials": 20000,
+            "mc_upper975": 0.005362981981736929
+          },
+          "primary_pass": {
+            "rate": 0.30085,
+            "count": 6017,
+            "trials": 20000,
+            "mc_upper975": 0.30725975620404855
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0005,
+            "count": 10,
+            "trials": 20000,
+            "mc_upper975": 0.0009193249298326013
+          },
+          "primary_pass": {
+            "rate": 0.06555,
+            "count": 1311,
+            "trials": 20000,
+            "mc_upper975": 0.06906863096412146
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.0020833333333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.015,
+            "count": 300,
+            "trials": 20000,
+            "mc_upper975": 0.016781916785023176
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.015,
+            "count": 300,
+            "trials": 20000,
+            "mc_upper975": 0.016781916785023176
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.00395,
+            "count": 79,
+            "trials": 20000,
+            "mc_upper975": 0.004920482366336808
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.49938333333333335,
+      "empirical_mean_primary": 0.4978666666666667,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.21275,
+            "count": 4255,
+            "trials": 20000,
+            "mc_upper975": 0.21848839603234851
+          },
+          "primary_pass": {
+            "rate": 0.0913,
+            "count": 1826,
+            "trials": 20000,
+            "mc_upper975": 0.09537653801519543
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0913,
+            "count": 1826,
+            "trials": 20000,
+            "mc_upper975": 0.09537653801519543
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.05165,
+            "count": 1033,
+            "trials": 20000,
+            "mc_upper975": 0.05480807028617711
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9980333333333333,
+      "empirical_mean_primary": 0.9982166666666666,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.04385,
+            "count": 877,
+            "trials": 20000,
+            "mc_upper975": 0.04677985092568034
+          },
+          "primary_pass": {
+            "rate": 0.216,
+            "count": 4320,
+            "trials": 20000,
+            "mc_upper975": 0.2217692662082231
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.216,
+            "count": 4320,
+            "trials": 20000,
+            "mc_upper975": 0.2217692662082231
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.17375,
+            "count": 3475,
+            "trials": 20000,
+            "mc_upper975": 0.1790734238992396
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": -0.0013233333333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0161,
+            "count": 322,
+            "trials": 20000,
+            "mc_upper975": 0.0179413721210416
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0114,
+            "count": 228,
+            "trials": 20000,
+            "mc_upper975": 0.01296948115633825
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0013,
+            "count": 26,
+            "trials": 20000,
+            "mc_upper975": 0.0019042251302998263
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5034,
+      "empirical_mean_primary": 0.4264966666666667,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.2132,
+            "count": 4264,
+            "trials": 20000,
+            "mc_upper975": 0.21894270199975593
+          },
+          "primary_pass": {
+            "rate": 0.0969,
+            "count": 1938,
+            "trials": 20000,
+            "mc_upper975": 0.1010835985079891
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0799,
+            "count": 1598,
+            "trials": 20000,
+            "mc_upper975": 0.08374410338510284
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.03265,
+            "count": 653,
+            "trials": 20000,
+            "mc_upper975": 0.035206945419911186
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "concentrated_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9934666666666667,
+      "empirical_mean_primary": 0.8484975,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0427,
+            "count": 854,
+            "trials": 20000,
+            "mc_upper975": 0.045594264016533215
+          },
+          "primary_pass": {
+            "rate": 0.22475,
+            "count": 4495,
+            "trials": 20000,
+            "mc_upper975": 0.23059979208915116
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.2074,
+            "count": 4148,
+            "trials": 20000,
+            "mc_upper975": 0.21308641216023988
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.1438,
+            "count": 2876,
+            "trials": 20000,
+            "mc_upper975": 0.14873971314016932
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "skewed_primary",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.006938333333333334,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.05835,
+            "count": 1167,
+            "trials": 20000,
+            "mc_upper975": 0.061688348078802455
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "skewed_primary",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5047166666666667,
+      "empirical_mean_primary": 0.5002883333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.2166,
+            "count": 4332,
+            "trials": 20000,
+            "mc_upper975": 0.22237490765208526
+          },
+          "primary_pass": {
+            "rate": 0.25095,
+            "count": 5019,
+            "trials": 20000,
+            "mc_upper975": 0.25701965621985856
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "skewed_primary",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0024666666666666,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.04335,
+            "count": 867,
+            "trials": 20000,
+            "mc_upper975": 0.04626444504205117
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "constant",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "constant",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5,
+      "empirical_mean_primary": 0.5,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 30,
+      "family": "constant",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": -0.0022325,
+      "empirical_mean_primary": 0.0008416666666666667,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.925,
+            "count": 18500,
+            "trials": 20000,
+            "mc_upper975": 0.9286133780866234
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.78085,
+            "count": 15617,
+            "trials": 20000,
+            "mc_upper975": 0.7865669353543201
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.4701,
+            "count": 9402,
+            "trials": 20000,
+            "mc_upper975": 0.4770460438899804
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.4984266666666667,
+      "empirical_mean_primary": 0.49966083333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.39195,
+            "count": 7839,
+            "trials": 20000,
+            "mc_upper975": 0.3987560927402368
+          },
+          "primary_pass": {
+            "rate": 0.0384,
+            "count": 768,
+            "trials": 20000,
+            "mc_upper975": 0.04115610924459612
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.17275,
+            "count": 3455,
+            "trials": 20000,
+            "mc_upper975": 0.17806160662972736
+          },
+          "primary_pass": {
+            "rate": 0.0384,
+            "count": 768,
+            "trials": 20000,
+            "mc_upper975": 0.04115610924459612
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.03695,
+            "count": 739,
+            "trials": 20000,
+            "mc_upper975": 0.03965755670270852
+          },
+          "primary_pass": {
+            "rate": 0.0294,
+            "count": 588,
+            "trials": 20000,
+            "mc_upper975": 0.03183563895731989
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9997416666666666,
+      "empirical_mean_primary": 0.99856,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.02535,
+            "count": 507,
+            "trials": 20000,
+            "mc_upper975": 0.027623676515940034
+          },
+          "primary_pass": {
+            "rate": 0.50925,
+            "count": 10185,
+            "trials": 20000,
+            "mc_upper975": 0.5162015654730681
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.00465,
+            "count": 93,
+            "trials": 20000,
+            "mc_upper975": 0.005693580920534221
+          },
+          "primary_pass": {
+            "rate": 0.50925,
+            "count": 10185,
+            "trials": 20000,
+            "mc_upper975": 0.5162015654730681
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00055,
+            "count": 11,
+            "trials": 20000,
+            "mc_upper975": 0.0009838883291846084
+          },
+          "primary_pass": {
+            "rate": 0.4613,
+            "count": 9226,
+            "trials": 20000,
+            "mc_upper975": 0.4682389379675307
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.008289671112744482,
+      "empirical_mean_primary": 0.0051525,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.90035,
+            "count": 18007,
+            "trials": 20000,
+            "mc_upper975": 0.9044678277205632
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.7668,
+            "count": 15336,
+            "trials": 20000,
+            "mc_upper975": 0.7726464426547524
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.44295,
+            "count": 8859,
+            "trials": 20000,
+            "mc_upper975": 0.4498671421506324
+          },
+          "primary_pass": {
+            "rate": 5e-05,
+            "count": 1,
+            "trials": 20000,
+            "mc_upper975": 0.0002785503321745113
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5228302135253552,
+      "empirical_mean_primary": 0.4551125,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.33645,
+            "count": 6729,
+            "trials": 20000,
+            "mc_upper975": 0.34304673612913406
+          },
+          "primary_pass": {
+            "rate": 0.02295,
+            "count": 459,
+            "trials": 20000,
+            "mc_upper975": 0.02512099090587812
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.1658,
+            "count": 3316,
+            "trials": 20000,
+            "mc_upper975": 0.17102768070320165
+          },
+          "primary_pass": {
+            "rate": 0.02295,
+            "count": 459,
+            "trials": 20000,
+            "mc_upper975": 0.02512099090587812
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0327,
+            "count": 654,
+            "trials": 20000,
+            "mc_upper975": 0.03525875828164053
+          },
+          "primary_pass": {
+            "rate": 0.0165,
+            "count": 330,
+            "trials": 20000,
+            "mc_upper975": 0.018362461202082247
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "diffuse_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0366928217003453,
+      "empirical_mean_primary": 0.9154825,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.01895,
+            "count": 379,
+            "trials": 20000,
+            "mc_upper975": 0.020936126537880163
+          },
+          "primary_pass": {
+            "rate": 0.388,
+            "count": 7760,
+            "trials": 20000,
+            "mc_upper975": 0.39479431979865653
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.00505,
+            "count": 101,
+            "trials": 20000,
+            "mc_upper975": 0.006132872307555832
+          },
+          "primary_pass": {
+            "rate": 0.388,
+            "count": 7760,
+            "trials": 20000,
+            "mc_upper975": 0.39479431979865653
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.00035,
+            "count": 7,
+            "trials": 20000,
+            "mc_upper975": 0.0007209999554352942
+          },
+          "primary_pass": {
+            "rate": 0.3417,
+            "count": 6834,
+            "trials": 20000,
+            "mc_upper975": 0.34832070324368375
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_complete",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": -0.0034333333333333334,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0097,
+            "count": 194,
+            "trials": 20000,
+            "mc_upper975": 0.011157000379620991
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0097,
+            "count": 194,
+            "trials": 20000,
+            "mc_upper975": 0.011157000379620991
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0036,
+            "count": 72,
+            "trials": 20000,
+            "mc_upper975": 0.004531486725854576
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_complete",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.497,
+      "empirical_mean_primary": 0.4926333333333333,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.4205,
+            "count": 8410,
+            "trials": 20000,
+            "mc_upper975": 0.42737751367261534
+          },
+          "primary_pass": {
+            "rate": 0.13035,
+            "count": 2607,
+            "trials": 20000,
+            "mc_upper975": 0.13509493919016893
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.19435,
+            "count": 3887,
+            "trials": 20000,
+            "mc_upper975": 0.19990328088900544
+          },
+          "primary_pass": {
+            "rate": 0.13035,
+            "count": 2607,
+            "trials": 20000,
+            "mc_upper975": 0.13509493919016893
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.1006,
+            "count": 2012,
+            "trials": 20000,
+            "mc_upper975": 0.10485201187526837
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_complete",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9982416666666667,
+      "empirical_mean_primary": 0.9991083333333334,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0547,
+            "count": 1094,
+            "trials": 20000,
+            "mc_upper975": 0.05794176874229122
+          },
+          "primary_pass": {
+            "rate": 0.3939,
+            "count": 7878,
+            "trials": 20000,
+            "mc_upper975": 0.40071173326208276
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.014,
+            "count": 280,
+            "trials": 20000,
+            "mc_upper975": 0.015725852639069005
+          },
+          "primary_pass": {
+            "rate": 0.3939,
+            "count": 7878,
+            "trials": 20000,
+            "mc_upper975": 0.40071173326208276
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.3742,
+            "count": 7484,
+            "trials": 20000,
+            "mc_upper975": 0.38094950454655685
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_missing",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": -0.0006225,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0024,
+            "count": 48,
+            "trials": 20000,
+            "mc_upper975": 0.003180807153483293
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0024,
+            "count": 48,
+            "trials": 20000,
+            "mc_upper975": 0.003180807153483293
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0018,
+            "count": 36,
+            "trials": 20000,
+            "mc_upper975": 0.002491096387546693
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_missing",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5008166666666667,
+      "empirical_mean_primary": 0.42445541666666664,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.4201,
+            "count": 8402,
+            "trials": 20000,
+            "mc_upper975": 0.42697667685808877
+          },
+          "primary_pass": {
+            "rate": 0.0857,
+            "count": 1714,
+            "trials": 20000,
+            "mc_upper975": 0.0896649290254518
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.19025,
+            "count": 3805,
+            "trials": 20000,
+            "mc_upper975": 0.19575952153110834
+          },
+          "primary_pass": {
+            "rate": 0.0857,
+            "count": 1714,
+            "trials": 20000,
+            "mc_upper975": 0.0896649290254518
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.07345,
+            "count": 1469,
+            "trials": 20000,
+            "mc_upper975": 0.0771528382298953
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "concentrated_missing",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0018916666666666,
+      "empirical_mean_primary": 0.8494779166666667,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.05025,
+            "count": 1005,
+            "trials": 20000,
+            "mc_upper975": 0.053368671217270576
+          },
+          "primary_pass": {
+            "rate": 0.34865,
+            "count": 6973,
+            "trials": 20000,
+            "mc_upper975": 0.3553010561080905
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.01295,
+            "count": 259,
+            "trials": 20000,
+            "mc_upper975": 0.01461468830139215
+          },
+          "primary_pass": {
+            "rate": 0.34865,
+            "count": 6973,
+            "trials": 20000,
+            "mc_upper975": 0.3553010561080905
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.32915,
+            "count": 6583,
+            "trials": 20000,
+            "mc_upper975": 0.33571190375080157
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "skewed_primary",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": -0.0013666666666666666,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0027,
+            "count": 54,
+            "trials": 20000,
+            "mc_upper975": 0.003521464249332435
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0027,
+            "count": 54,
+            "trials": 20000,
+            "mc_upper975": 0.003521464249332435
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "skewed_primary",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.498025,
+      "empirical_mean_primary": 0.500105,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.4186,
+            "count": 8372,
+            "trials": 20000,
+            "mc_upper975": 0.4254734977340051
+          },
+          "primary_pass": {
+            "rate": 0.0596,
+            "count": 1192,
+            "trials": 20000,
+            "mc_upper975": 0.06297058359299959
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.1934,
+            "count": 3868,
+            "trials": 20000,
+            "mc_upper975": 0.1989432260061786
+          },
+          "primary_pass": {
+            "rate": 0.0596,
+            "count": 1192,
+            "trials": 20000,
+            "mc_upper975": 0.06297058359299959
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "skewed_primary",
+      "effect": 1.0,
+      "empirical_mean_harm": 0.9969666666666667,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.05435,
+            "count": 1087,
+            "trials": 20000,
+            "mc_upper975": 0.05758230729203715
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.01485,
+            "count": 297,
+            "trials": 20000,
+            "mc_upper975": 0.016623634465341947
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "constant",
+      "effect": 0.0,
+      "empirical_mean_harm": 0.0,
+      "empirical_mean_primary": 0.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "constant",
+      "effect": 0.5,
+      "empirical_mean_harm": 0.5,
+      "empirical_mean_primary": 0.5,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    },
+    {
+      "n": 60,
+      "family": "constant",
+      "effect": 1.0,
+      "empirical_mean_harm": 1.0,
+      "empirical_mean_primary": 1.0,
+      "methods": {
+        "t": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor9": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 1.0,
+            "count": 20000,
+            "trials": 20000,
+            "mc_upper975": 1.0
+          }
+        },
+        "t_floor16": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        },
+        "hoeffding": {
+          "safety": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          },
+          "primary_pass": {
+            "rate": 0.0,
+            "count": 0,
+            "trials": 20000,
+            "mc_upper975": 0.0001844269639618992
+          }
+        }
+      }
+    }
+  ],
+  "joint": [
+    {
+      "exposed_n": 20,
+      "overlap": 0,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.1201,
+        "count": 2402,
+        "trials": 20000,
+        "mc_upper975": 0.124685574903181
+      },
+      "safety": {
+        "rate": 0.0896,
+        "count": 1792,
+        "trials": 20000,
+        "mc_upper975": 0.09364315502029859
+      },
+      "guards": {
+        "rate": 0.5664,
+        "count": 11328,
+        "trials": 20000,
+        "mc_upper975": 0.5732830733862426
+      },
+      "joint": {
+        "rate": 0.02925,
+        "count": 585,
+        "trials": 20000,
+        "mc_upper975": 0.03167986603559293
+      },
+      "fail": {
+        "rate": 0.10275,
+        "count": 2055,
+        "trials": 20000,
+        "mc_upper975": 0.10704095979675297
+      },
+      "inconclusive": {
+        "rate": 0.868,
+        "count": 17360,
+        "trials": 20000,
+        "mc_upper975": 0.8726624219515724
+      }
+    },
+    {
+      "exposed_n": 20,
+      "overlap": 0,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.30015,
+        "count": 6003,
+        "trials": 20000,
+        "mc_upper975": 0.3065556372650235
+      },
+      "safety": {
+        "rate": 0.08745,
+        "count": 1749,
+        "trials": 20000,
+        "mc_upper975": 0.09145031880118054
+      },
+      "guards": {
+        "rate": 0.5683,
+        "count": 11366,
+        "trials": 20000,
+        "mc_upper975": 0.5751792179745134
+      },
+      "joint": {
+        "rate": 0.05915,
+        "count": 1183,
+        "trials": 20000,
+        "mc_upper975": 0.06250902639556614
+      },
+      "fail": {
+        "rate": 0.09525,
+        "count": 1905,
+        "trials": 20000,
+        "mc_upper975": 0.09940250489155825
+      },
+      "inconclusive": {
+        "rate": 0.8456,
+        "count": 16912,
+        "trials": 20000,
+        "mc_upper975": 0.8505822121757365
+      }
+    },
+    {
+      "exposed_n": 20,
+      "overlap": 2,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.09665,
+        "count": 1933,
+        "trials": 20000,
+        "mc_upper975": 0.10082891096765234
+      },
+      "safety": {
+        "rate": 0.06475,
+        "count": 1295,
+        "trials": 20000,
+        "mc_upper975": 0.06824921967341885
+      },
+      "guards": {
+        "rate": 0.53535,
+        "count": 10707,
+        "trials": 20000,
+        "mc_upper975": 0.5422816182460566
+      },
+      "joint": {
+        "rate": 0.019,
+        "count": 380,
+        "trials": 20000,
+        "mc_upper975": 0.02098855942510509
+      },
+      "fail": {
+        "rate": 0.1315,
+        "count": 2630,
+        "trials": 20000,
+        "mc_upper975": 0.13626220574793083
+      },
+      "inconclusive": {
+        "rate": 0.8495,
+        "count": 16990,
+        "trials": 20000,
+        "mc_upper975": 0.8544293873301663
+      }
+    },
+    {
+      "exposed_n": 20,
+      "overlap": 2,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.30595,
+        "count": 6119,
+        "trials": 20000,
+        "mc_upper975": 0.3123892367117428
+      },
+      "safety": {
+        "rate": 0.06555,
+        "count": 1311,
+        "trials": 20000,
+        "mc_upper975": 0.06906863096412146
+      },
+      "guards": {
+        "rate": 0.53735,
+        "count": 10747,
+        "trials": 20000,
+        "mc_upper975": 0.5442793072411943
+      },
+      "joint": {
+        "rate": 0.0425,
+        "count": 850,
+        "trials": 20000,
+        "mc_upper975": 0.04538801906386518
+      },
+      "fail": {
+        "rate": 0.1297,
+        "count": 2594,
+        "trials": 20000,
+        "mc_upper975": 0.13443512683666017
+      },
+      "inconclusive": {
+        "rate": 0.8278,
+        "count": 16556,
+        "trials": 20000,
+        "mc_upper975": 0.8330096112800075
+      }
+    },
+    {
+      "exposed_n": 20,
+      "overlap": 5,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.0454,
+        "count": 908,
+        "trials": 20000,
+        "mc_upper975": 0.04837697601007969
+      },
+      "safety": {
+        "rate": 0.01455,
+        "count": 291,
+        "trials": 20000,
+        "mc_upper975": 0.01630693753427421
+      },
+      "guards": {
+        "rate": 0.41175,
+        "count": 8235,
+        "trials": 20000,
+        "mc_upper975": 0.41860815305249605
+      },
+      "joint": {
+        "rate": 0.00225,
+        "count": 45,
+        "trials": 20000,
+        "mc_upper975": 0.0030095316224474293
+      },
+      "fail": {
+        "rate": 0.25795,
+        "count": 5159,
+        "trials": 20000,
+        "mc_upper975": 0.26407332383513277
+      },
+      "inconclusive": {
+        "rate": 0.7398,
+        "count": 14796,
+        "trials": 20000,
+        "mc_upper975": 0.745870362725364
+      }
+    },
+    {
+      "exposed_n": 20,
+      "overlap": 5,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.3006,
+        "count": 6012,
+        "trials": 20000,
+        "mc_upper975": 0.3070082871760795
+      },
+      "safety": {
+        "rate": 0.0105,
+        "count": 210,
+        "trials": 20000,
+        "mc_upper975": 0.012011100331984893
+      },
+      "guards": {
+        "rate": 0.37355,
+        "count": 7471,
+        "trials": 20000,
+        "mc_upper975": 0.3802972510981577
+      },
+      "joint": {
+        "rate": 0.00575,
+        "count": 115,
+        "trials": 20000,
+        "mc_upper975": 0.00689802457697434
+      },
+      "fail": {
+        "rate": 0.295,
+        "count": 5900,
+        "trials": 20000,
+        "mc_upper975": 0.30137478932010037
+      },
+      "inconclusive": {
+        "rate": 0.69925,
+        "count": 13985,
+        "trials": 20000,
+        "mc_upper975": 0.7056012035389312
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 0,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.3089,
+        "count": 6178,
+        "trials": 20000,
+        "mc_upper975": 0.31535586797145193
+      },
+      "safety": {
+        "rate": 0.2062,
+        "count": 4124,
+        "trials": 20000,
+        "mc_upper975": 0.21187454947023177
+      },
+      "guards": {
+        "rate": 0.8056,
+        "count": 16112,
+        "trials": 20000,
+        "mc_upper975": 0.8110648313093277
+      },
+      "joint": {
+        "rate": 0.0994,
+        "count": 1988,
+        "trials": 20000,
+        "mc_upper975": 0.10363001882467418
+      },
+      "fail": {
+        "rate": 0.19755,
+        "count": 3951,
+        "trials": 20000,
+        "mc_upper975": 0.2031367803842145
+      },
+      "inconclusive": {
+        "rate": 0.70305,
+        "count": 14061,
+        "trials": 20000,
+        "mc_upper975": 0.709377510847759
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 0,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.68365,
+        "count": 13673,
+        "trials": 20000,
+        "mc_upper975": 0.6900930906213654
+      },
+      "safety": {
+        "rate": 0.2101,
+        "count": 4202,
+        "trials": 20000,
+        "mc_upper975": 0.21581283031792314
+      },
+      "guards": {
+        "rate": 0.8033,
+        "count": 16066,
+        "trials": 20000,
+        "mc_upper975": 0.8087896319393553
+      },
+      "joint": {
+        "rate": 0.1642,
+        "count": 3284,
+        "trials": 20000,
+        "mc_upper975": 0.16940790486270513
+      },
+      "fail": {
+        "rate": 0.19685,
+        "count": 3937,
+        "trials": 20000,
+        "mc_upper975": 0.20242950074801108
+      },
+      "inconclusive": {
+        "rate": 0.63895,
+        "count": 12779,
+        "trials": 20000,
+        "mc_upper975": 0.6456109702889903
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 2,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.2876,
+        "count": 5752,
+        "trials": 20000,
+        "mc_upper975": 0.29392876425288905
+      },
+      "safety": {
+        "rate": 0.1771,
+        "count": 3542,
+        "trials": 20000,
+        "mc_upper975": 0.18246255025410682
+      },
+      "guards": {
+        "rate": 0.72775,
+        "count": 14555,
+        "trials": 20000,
+        "mc_upper975": 0.7339104479346902
+      },
+      "joint": {
+        "rate": 0.075,
+        "count": 1500,
+        "trials": 20000,
+        "mc_upper975": 0.07873749102465678
+      },
+      "fail": {
+        "rate": 0.27275,
+        "count": 5455,
+        "trials": 20000,
+        "mc_upper975": 0.2789801821216035
+      },
+      "inconclusive": {
+        "rate": 0.65225,
+        "count": 13045,
+        "trials": 20000,
+        "mc_upper975": 0.6588529294334895
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 2,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.72155,
+        "count": 14431,
+        "trials": 20000,
+        "mc_upper975": 0.7277545606486702
+      },
+      "safety": {
+        "rate": 0.16885,
+        "count": 3377,
+        "trials": 20000,
+        "mc_upper975": 0.1741149025704785
+      },
+      "guards": {
+        "rate": 0.72295,
+        "count": 14459,
+        "trials": 20000,
+        "mc_upper975": 0.7291447300740239
+      },
+      "joint": {
+        "rate": 0.1226,
+        "count": 2452,
+        "trials": 20000,
+        "mc_upper975": 0.12722537837863607
+      },
+      "fail": {
+        "rate": 0.27705,
+        "count": 5541,
+        "trials": 20000,
+        "mc_upper975": 0.28330959841824105
+      },
+      "inconclusive": {
+        "rate": 0.60035,
+        "count": 12007,
+        "trials": 20000,
+        "mc_upper975": 0.6071485253023168
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 5,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.21865,
+        "count": 4373,
+        "trials": 20000,
+        "mc_upper975": 0.22444404830704384
+      },
+      "safety": {
+        "rate": 0.07085,
+        "count": 1417,
+        "trials": 20000,
+        "mc_upper975": 0.07449365178127061
+      },
+      "guards": {
+        "rate": 0.4529,
+        "count": 9058,
+        "trials": 20000,
+        "mc_upper975": 0.459830134807378
+      },
+      "joint": {
+        "rate": 0.02165,
+        "count": 433,
+        "trials": 20000,
+        "mc_upper975": 0.023762946516757373
+      },
+      "fail": {
+        "rate": 0.5471,
+        "count": 10942,
+        "trials": 20000,
+        "mc_upper975": 0.5540164381699078
+      },
+      "inconclusive": {
+        "rate": 0.43125,
+        "count": 8625,
+        "trials": 20000,
+        "mc_upper975": 0.43814828270639716
+      }
+    },
+    {
+      "exposed_n": 30,
+      "overlap": 5,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.7965,
+        "count": 15930,
+        "trials": 20000,
+        "mc_upper975": 0.8020612632287512
+      },
+      "safety": {
+        "rate": 0.0559,
+        "count": 1118,
+        "trials": 20000,
+        "mc_upper975": 0.059173936239799
+      },
+      "guards": {
+        "rate": 0.3928,
+        "count": 7856,
+        "trials": 20000,
+        "mc_upper975": 0.3996085653313509
+      },
+      "joint": {
+        "rate": 0.0258,
+        "count": 516,
+        "trials": 20000,
+        "mc_upper975": 0.028092336625746728
+      },
+      "fail": {
+        "rate": 0.6072,
+        "count": 12144,
+        "trials": 20000,
+        "mc_upper975": 0.6139773888066705
+      },
+      "inconclusive": {
+        "rate": 0.367,
+        "count": 7340,
+        "trials": 20000,
+        "mc_upper975": 0.37372381934339455
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 0,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.4151,
+        "count": 8302,
+        "trials": 20000,
+        "mc_upper975": 0.4219658271400233
+      },
+      "safety": {
+        "rate": 0.43975,
+        "count": 8795,
+        "trials": 20000,
+        "mc_upper975": 0.4466623698064603
+      },
+      "guards": {
+        "rate": 0.64675,
+        "count": 12935,
+        "trials": 20000,
+        "mc_upper975": 0.6533776108485309
+      },
+      "joint": {
+        "rate": 0.2064,
+        "count": 4128,
+        "trials": 20000,
+        "mc_upper975": 0.21207653180258673
+      },
+      "fail": {
+        "rate": 0.35445,
+        "count": 7089,
+        "trials": 20000,
+        "mc_upper975": 0.3611252019949609
+      },
+      "inconclusive": {
+        "rate": 0.43915,
+        "count": 8783,
+        "trials": 20000,
+        "mc_upper975": 0.4460614427172911
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 0,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.8726,
+        "count": 17452,
+        "trials": 20000,
+        "mc_upper975": 0.877191488607243
+      },
+      "safety": {
+        "rate": 0.44055,
+        "count": 8811,
+        "trials": 20000,
+        "mc_upper975": 0.44746359006197933
+      },
+      "guards": {
+        "rate": 0.64375,
+        "count": 12875,
+        "trials": 20000,
+        "mc_upper975": 0.6503906682747126
+      },
+      "joint": {
+        "rate": 0.3025,
+        "count": 6050,
+        "trials": 20000,
+        "mc_upper975": 0.308919395576078
+      },
+      "fail": {
+        "rate": 0.3563,
+        "count": 7126,
+        "trials": 20000,
+        "mc_upper975": 0.3629826791684381
+      },
+      "inconclusive": {
+        "rate": 0.3412,
+        "count": 6824,
+        "trials": 20000,
+        "mc_upper975": 0.3478184593779995
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 2,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.3912,
+        "count": 7824,
+        "trials": 20000,
+        "mc_upper975": 0.3980038931781894
+      },
+      "safety": {
+        "rate": 0.43495,
+        "count": 8699,
+        "trials": 20000,
+        "mc_upper975": 0.44185466715347266
+      },
+      "guards": {
+        "rate": 0.5083,
+        "count": 10166,
+        "trials": 20000,
+        "mc_upper975": 0.515251934671541
+      },
+      "joint": {
+        "rate": 0.16425,
+        "count": 3285,
+        "trials": 20000,
+        "mc_upper975": 0.16945852548688295
+      },
+      "fail": {
+        "rate": 0.49195,
+        "count": 9839,
+        "trials": 20000,
+        "mc_upper975": 0.49890436855456044
+      },
+      "inconclusive": {
+        "rate": 0.3438,
+        "count": 6876,
+        "trials": 20000,
+        "mc_upper975": 0.35043003893455654
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 2,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.9134,
+        "count": 18268,
+        "trials": 20000,
+        "mc_upper975": 0.9172625321670232
+      },
+      "safety": {
+        "rate": 0.4399,
+        "count": 8798,
+        "trials": 20000,
+        "mc_upper975": 0.4468125999850807
+      },
+      "guards": {
+        "rate": 0.4997,
+        "count": 9994,
+        "trials": 20000,
+        "mc_upper975": 0.5066541385299583
+      },
+      "joint": {
+        "rate": 0.24315,
+        "count": 4863,
+        "trials": 20000,
+        "mc_upper975": 0.24915739883784757
+      },
+      "fail": {
+        "rate": 0.5003,
+        "count": 10006,
+        "trials": 20000,
+        "mc_upper975": 0.5072540512920786
+      },
+      "inconclusive": {
+        "rate": 0.25655,
+        "count": 5131,
+        "trials": 20000,
+        "mc_upper975": 0.26266275420993335
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 5,
+      "latent_hit_gain": 1.0,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.3472,
+        "count": 6944,
+        "trials": 20000,
+        "mc_upper975": 0.3538448518635549
+      },
+      "safety": {
+        "rate": 0.392,
+        "count": 7840,
+        "trials": 20000,
+        "mc_upper975": 0.39880623878202404
+      },
+      "guards": {
+        "rate": 0.1509,
+        "count": 3018,
+        "trials": 20000,
+        "mc_upper975": 0.15593656456394275
+      },
+      "joint": {
+        "rate": 0.0505,
+        "count": 1010,
+        "trials": 20000,
+        "mc_upper975": 0.05362575374873552
+      },
+      "fail": {
+        "rate": 0.8491,
+        "count": 16982,
+        "trials": 20000,
+        "mc_upper975": 0.8540348577029367
+      },
+      "inconclusive": {
+        "rate": 0.1004,
+        "count": 2008,
+        "trials": 20000,
+        "mc_upper975": 0.1046483591686022
+      }
+    },
+    {
+      "exposed_n": 60,
+      "overlap": 5,
+      "latent_hit_gain": 1.5,
+      "latent_harm_gain": 0.25,
+      "primary": {
+        "rate": 0.97,
+        "count": 19400,
+        "trials": 20000,
+        "mc_upper975": 0.9723206502662067
+      },
+      "safety": {
+        "rate": 0.37855,
+        "count": 7571,
+        "trials": 20000,
+        "mc_upper975": 0.3853142535253318
+      },
+      "guards": {
+        "rate": 0.10565,
+        "count": 2113,
+        "trials": 20000,
+        "mc_upper975": 0.10999259118886381
+      },
+      "joint": {
+        "rate": 0.04735,
+        "count": 947,
+        "trials": 20000,
+        "mc_upper975": 0.05038495861471019
+      },
+      "fail": {
+        "rate": 0.89435,
+        "count": 17887,
+        "trials": 20000,
+        "mc_upper975": 0.8985775763962259
+      },
+      "inconclusive": {
+        "rate": 0.0583,
+        "count": 1166,
+        "trials": 20000,
+        "mc_upper975": 0.06163705000763025
+      }
+    }
+  ],
+  "astra_n60_probability_at_most_two": 0.053045081815992726,
+  "peak_rss_mib": 100.703125
+}

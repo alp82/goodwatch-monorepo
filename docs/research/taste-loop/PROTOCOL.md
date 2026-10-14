@@ -293,6 +293,7 @@ of the view are not part of that comparison (they are titles the member has watc
   weight. A larger mean distance is worse; the guard fails if the paired 95% interval lies strictly above zero.
   This is the calculation in `items/009-composition/distance.py`: the absolute value is taken before averaging
   views, and `own_share` is the member's share among all rated universe titles, including the hidden ratings.
+  Each mix is a separate guard, and both must pass.
   Keep reporting the signed share-minus-own figures alongside it. Neither a larger share nor a smaller signed
   difference is inherently better. This fixes the statistic prospectively; it does not rewrite earlier verdicts.
 - **Score.** **Decided here:** T2a has no calibrator and no calibration views. A predictor that gives `score` (or
@@ -416,284 +417,414 @@ A run takes seconds: 4 views (`sitting`) or 10 (`order`). **Decided here:** the 
 budget; the only mode `table.py` reads), not `explore` as the brief says: explore lines are candidates' lines and
 no table would read them.
 
-## 4c. Task T3: blind judged pools (A3, October 14, 2026)
+## 4c. Task T3: blind judged pools (A3, October 14, 2026, revised after both reviews)
 
-This is the specification for the first D1 confirmation window, not an implemented task. G1 is the challenger,
-B2 the incumbent. Section 13, A3 records the departures from PLAN.md and the review requirement. These rules,
-the page specification and the analysis must be accepted by two model families before any page exists. No
-judgments or invitations are authorized by this document: the owner checkpoint precedes any page or invitation
-reaching another member. The owner does not take part. No further D1 variant or tier B look joins this window.
+This freezes the first D1 confirmation window before any page or judgments exist. G1 is the challenger,
+B2 the incumbent. `items/012-t3-protocol/REVIEW-astra.md` and `REVIEW-fable.md` both accepted with changes;
+this revision resolves their findings under the orchestrator's revision brief. It records neither final
+orchestrator acceptance nor authorization to build, invite or expose members. The owner checkpoint precedes
+anything reaching another member. The owner does not participate; no further D1 variant or tier B look joins
+this window. A conclusion concerns **expressed interest in unseen titles**, not enjoyment after watching,
+proof of personalization or an automatic rollout.
 
 ### Frozen scorers and inputs
 
-SHA-256 of the source bytes, checked against the working files on October 14, 2026:
+SHA-256 of source bytes, checked against working files on October 14, 2026:
 
 | Scorer | Source, relative to `lab/` | SHA-256 |
 |---|---|---|
 | G1 | `candidates/009/g1_mix.py` | `e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1` |
 | B2 | `ladder/b2_taste_today.py` | `0a3aacc3ade1854fd6d9d7c9104bab91769ca35531ef004dcef1507ebd1e258c` |
-| B3 | `ladder/b3_taste_standardized.py` | `df4894a692d6c43cfb5b9a65d420108a267977e4a7b956eec6e6277ad275dde0` |
 | B5 | `ladder/b5_pooled.py` | `d288d6bc9ddf52ec1083fc7df507fccd1bcd728fba1931ed8e5787443902cf1d` |
 
-G1 and B2 are frozen now, without retuning or rebuilding their logic. B3 and B5 are diagnostic sources only.
-**GW** orders by `goodwatch_overall_score_normalized_percent` alone, descending, with no member offset, slope
-or calibration. B1's personal-score presentation is not part of this test. **BR** is a seeded random permutation
-of the entire eligible universe, independent of the scorers. The future implementation must record the GW/BR
-source hashes and the page, exporter and analyst hashes before opening the window; the formulas here are fixed.
+G1/B2 are frozen without retuning. B5 is diagnostic. GW orders by
+`goodwatch_overall_score_normalized_percent` alone, descending, without a member offset or calibration.
+BR is a seeded permutation of the entire eligible universe. Record the future GW/BR implementation and page,
+exporter and analyst source hashes before opening the window. B3 contributes no separate slots: G1's top
+already carries its ordering when the first-ten mix constraints cannot select a different head; no additional
+information from four B3 cards has been demonstrated. This is a pool choice, not a claim that the two full
+rankings are always identical.
 
-At session creation, freeze a dated read-only snapshot of that member's ratings and side lists, watch facts,
-country/services, title facts and availability. All rating history is visible, with current scores; no folds.
-The population supplied to G1/B5 is the original tier A population at T0, `others: all`, excluding this member
-if present. No gate file is read; an invited member's own current history is obtained through the normal
-read-only pull, even if their old split was tier B. No T3 answer enters any member's or population's inputs.
-All scorers receive the same eligible targets in ascending title-key order (`movie:<id>`, `show:<id>`, bytewise),
-and the same title snapshot. Stable input order breaks rank ties, including those inside G1. Standardization
-and G1's eligibility/refill logic remain those of the hashed files. Freeze the full outputs, not just the cards.
+At session creation freeze a dated read-only snapshot of the member's ratings, side lists, watch facts,
+country/services, title facts and availability. All current rating history is visible; no folds. G1/B5's
+population is the original tier A population at T0, `others: all`, excluding this member if present. No gate
+file is read. An invited member's own current history comes through the normal read-only pull irrespective
+of their old tier. No T3 answer enters any scorer input. All scorers receive the same eligible targets in
+ascending bytewise title-key order (`movie:<id>`, `show:<id>`) and the same snapshot; stable input order breaks
+ties, including inside G1. Preserve the hashed scorers' standardization/refill logic. Freeze full outputs.
 
-### Eligibility and pool construction
+### Eligibility and pool
 
-Invitation eligibility is consent, a member other than the owner, at least 20 recorded ratings and at least
-5 ratings of 8 or more (the T2a counts, over all rated titles), and a usable B2 Taste: at least 5 liked ratings
-(6 or more) with usable fingerprints and a nonzero Taste vector. This tests established members with Taste;
-it makes no cold-start or owner claim. Tier A/B membership is not an invitation criterion. Order the eligible
-invitation list by the seeded hash rule below, rather than choosing members by a scorer's outputs. Invite only
-after the owner checkpoint, with the same invitation text and one reminder after seven days; enroll the first
-60 eligible consenting members to reach first exposure. A decline before exposure is not an enrolled session.
+Invite consenting non-owner members with at least 20 ratings, at least 5 ratings of 8 or more (both over all
+rated titles), and usable B2 Taste: at least 5 liked ratings (6+) with usable fingerprints and a nonzero Taste
+vector. Tier A/B is not an invitation criterion. For the T3 own-mix denominator use the member's **rated
+`in_pool && has_fingerprint` titles**, independent of the eligible suggestion set `E`. A member with none
+is excluded **before exposure**. This tests established members with Taste; no cold-start or owner claim.
+Order invitations with the seeded hash below, use identical invitation text and one reminder after seven days.
+Invitations wait for the owner checkpoint; enrollment is subject to the stopping rule below.
 
-For a member, the eligible title universe `E` is the reference pool (poster, finite GoodWatch score, at least
-1,000 votes), with a usable fingerprint, and a known release date not later than the snapshot's UTC date
-(movie release date; show first air date). Exclude every rated title, Want to See, Skip, Not interested, movie
-with a recorded watch, and show with a watched episode or a status other than Not started. Thus recorded Seen,
-Watching, On hold and Dropped titles cannot be offered. Unrecorded viewing is detected by the Seen it answer.
-Use watch facts for eligibility only; they do not enter the scorer's view.
+`E` requires poster, finite GoodWatch score, at least 1,000 votes, usable fingerprint and a known release date
+not later than the snapshot's UTC date (movie release/show first air). Exclude rated titles, Want to See,
+Skip, Not interested, movies with a recorded watch and shows with a watched episode or status other than
+Not started. Unrecorded viewing is detected by Seen it; it is an answer, not retrospective ineligibility.
+Use watch facts for filtering only, never as scorer inputs. Require at least 40 eligible titles before exposure;
+do not relax filters to fill the pool.
 
-Where the country and saved services are known, keep a title with a current subscription/free offer on at
-least one of those services in that country; exclude a current check finding no matching offer. With country
-but no saved services, require any current subscription/free offer in that country when known. With no country,
-or unknown availability (including a check 30 or more days old), keep the title and flag availability unknown;
-do not claim it is watchable. Freeze offer type, service, country, check time and this classification. Do not
-silently broaden services or relax other filters to fill a pool. Require at least 40 eligible titles before
-enrollment; otherwise record a pre-exposure eligibility failure and invite the next member.
+Where country and services are known, retain a current subscription/free offer on a saved service there and
+exclude a current check finding no matching offer. With country but no saved services require any current
+subscription/free offer there when known. With no country, or unknown availability (including checks at least
+30 days old), retain and flag unknown; do not claim watchability. Freeze offer type, service, country, check
+time and classification. The judged object is **the suggestion as the product would show it, availability
+included**. Every source gets the same facts and card presentation.
 
-| Source | Titles contributed before deduplication | Role |
+| Source | Contribution before deduplication | Role |
 |---|---:|---|
-| G1 | first 10 | Challenger's entire evaluated top ten |
-| B2 | first 10 | Reference's entire evaluated top ten |
-| B3 | first 4 | Standardized-taste diagnostic |
+| G1 | first 10 | Entire evaluated challenger top ten |
+| B2 | first 10 | Entire evaluated reference top ten |
 | B5 | first 4 | Pooled-predictor diagnostic |
 | GW | first 4 | Public-quality diagnostic |
 | BR | first 8 | Uniform random diagnostic |
 
-Take BR's first eight from all of `E`, including titles chosen by another source: do not condition random slots
-on being outside the scorer tops. Union the contributions by title key. If fewer than 24 distinct titles remain,
-append unseen keys in BR's permutation until there are 24. These extra filler titles are not among the eight
-registered BR slots. There are 24 to 40 distinct cards; never trim the union, replace a shared top-ten title,
-or refill a source's contribution after deduplication. G1/B2 top tens can overlap completely. B3/B5/GW have
-only four judged ranks each: no top-ten comparison or winner claim is made for them.
+Take BR's eight from all `E`, allowing overlap with source selections. Union by title key, preserving source
+memberships; never trim or refill a source after deduplication. If the union has fewer than 24 titles, append
+unused BR permutation keys to reach 24; fillers are separate from the registered eight random slots. There
+are **24–36 cards**, within the requested near-24–40 range. G1/B2 can overlap completely. B5/GW have only four
+judged ranks; no top-ten winner claim for diagnostics.
 
-Use seed `20261014`. A permutation sorts keys by ascending SHA-256 of UTF-8
-`20261014|T3|<purpose>|<keyed member hash>|<key>`, breaking a digest tie by the key. Purpose is `random` for BR,
-`display` for the final pool shuffle and `invite` for invitation order (use the member hash as key for invites).
-Record the resulting permutations. Show one identical card format per title: poster, title, year, movie/show,
-synopsis and the frozen availability classification. Hide source, source rank, public/predicted scores, vote
-counts and Taste match. Do not mark diagnostic/filler slots. Resume the same shuffled pool without reranking.
+Seed `20261014`: sort keys by SHA-256 of UTF-8
+`20261014|T3|<purpose>|<keyed member hash>|<key>`, digest ties by key. Purpose is `random` for BR, `display`
+for the pool, `invite` for invitation order (member hash as key). Record permutations. Show poster, title,
+year, movie/show, synopsis and frozen availability. Hide source, rank, predicted/public scores, votes and
+Taste match. Fillers and diagnostic slots have no visible marking. Resume the same frozen shuffled order.
 
-### Commitment before exposure
+### Commitments, exposure and response instructions
 
-Before the first card can be served, the orchestrator's future T3 helper must verify the source hashes and
-store immutable private files containing the inputs, each of the six full rankings over `E`, their top sets,
-source memberships, BR/filler distinction, display order and frozen card facts. The ledger must already hold
-each full ranking's SHA-256, input/title/availability digests, pool/display digest, protocol digest, seeds,
-source/implementation hashes and timestamp. No ledger mutation is made in item 012.
+Before any card is served, the future helper verifies source hashes and stores protected immutable inputs,
+**all five full rankings over `E`**, top sets, memberships, BR/filler distinction, display order and card facts.
+The ledger must already contain every full-ranking SHA-256, input/title/availability and pool/display digests,
+protocol and source/implementation hashes, seeds and timestamp. This item writes no ledger entry.
+Canonical ranking bytes are compact UTF-8 JSON plus one newline: ordered `[title_key, rank_string]` pairs;
+finite ranks use Python `float.hex()`, BR descending ordinal ranks. Other manifests use sorted object keys,
+compact JSON, no NaN and one terminal newline. SHA-256 hashes the bytes. Private mappings to keyed members
+stay outside the repository; the ledger receives digests and counts only, never identifiers, titles or answers.
 
-Canonical ranking bytes are UTF-8 compact JSON followed by one newline: an ordered array of
-`[title_key, rank_string]` pairs, in final ranking order. Finite numeric ranks use Python `float.hex()`;
-BR uses descending ordinal ranks over its permutation. Other manifests use sorted object keys, compact JSON,
-no NaN and one terminal newline. Hash all bytes with SHA-256. Keep the private mapping from these artifact
-digests to keyed member hashes outside the repository. Ledger entries contain cryptographic commitments and
-counts only, never member identifiers, title lists or answer rows. The page must verify the commitments before
-exposure and log first exposure. A mismatch refuses the session. Later changes to history, the catalog or
-availability never replace this member's frozen list. An integrity failure in an exposed session blocks an
-established verdict; do not drop it or repair and re-expose it as a new observation.
+Verify commitments before serving; a mismatch refuses exposure. An exposed-session hash mismatch found later
+**blocks confirmation regardless of its frequency**. Do not repair/re-expose, drop the affected session or
+replace frozen facts with current history/catalog/availability.
 
-### Answers, missingness and partial sessions
+Show **one card at a time**, with Previous, Next, an answered/unanswered progress count, and Submit. Next may
+skip a card; Previous/revisits may revise or clear its answer. Returning resumes the last displayed card.
+Submission explicitly confirms that unanswered cards stay unanswered and ends revision. Persist partial
+progress; absent submission close 14 days after the member's first exposure. Use the last valid answer before
+closure. Closure is not completion: report both.
 
-Each card accepts exactly one of PLAN.md's five answers. A member can revise answers until final submission;
-otherwise a session closes 14 days after first exposure. Analyse the last stored answer before that closure.
-Persist partial progress and allow resumption. Seen it requests a whole-number rating from 1 to 10; the member
-can leave it unrated, which is recorded explicitly. One title's answer is reused for every source choosing it.
+Exposure means the card's frozen title, synopsis, availability and answer controls are actually rendered in
+the foreground viewport. Record a nullable UTC **first-display time per card**, once, acknowledged by the server;
+prefetch, assignment creation and opening instructions do not count. The session's first exposure is the earliest
+such timestamp. A never-reached card keeps a null timestamp; a viewed unanswered card has a timestamp and no
+answer. Submission does not mark remaining cards as displayed. If exposure recording fails, halt navigation
+and preserve the last acknowledged state; do not fabricate timestamps. Record navigation and submission/closure
+events so an auditor can distinguish rendered, revisited, skipped and never reached cards.
 
-| Answer at closure | Primary hit `h` | Known harm `a` | Novel hit / other figure |
-|---|---:|---:|---|
-| Seen it, rated 1–5 | 0 | 1 | Seen low |
-| Seen it, rated 6–7 | 0 | 0 | Seen middle |
-| Seen it, rated 8–10 | 0 | 0 | Seen high |
-| Seen it, rating missing | 0 | unknown | Seen unrated |
-| Want to See, knew it | 1 | 0 | Familiar unseen hit |
-| Want to See, new to me | 1 | 0 | Novel unseen hit |
-| Not for me | 0 | 1 | Rejection |
-| Can't tell | 0 | unknown | Explicit uncertainty |
-| No answer | 0 | unknown | Missing |
+Freeze this instruction text: "Judge this suggestion with the information and availability shown. If you have
+watched it, choose Seen it and rate it from 1 to 10 if you can. If you haven't watched it and want to watch it,
+choose Want to See, knew it when you already knew of the title, or Want to See, new to me when this is your first
+introduction. Choose Not for me only when the suggestion does not appeal to you. Not knowing the title is not
+by itself a rejection: choose Can't tell if you cannot decide from this card. You may skip, return and change
+answers before submitting. These answers do not change your ordinary ratings or Wishlist."
 
-The primary is the number of expressed unseen Want to See hits per ten displayed suggestions. Missing and
-Can't tell supply no hit; they are not inferred rejections. Retain all enrolled, exposed sessions with retained
-consent, including partial sessions and sessions with no answers. Never shorten the ten-slot denominator,
-replace Seen titles, or restrict the primary to completers. Report unanswered and Can't tell separately by
-source and member, along with session completion. Withdrawal/deletion requests follow normal privacy rules;
-report aggregate withdrawal counts and do not replace an exposed member in the stopping count.
+### Answers, imputation and withdrawals
 
-For harm, uncertainty cannot certify safety. Let `T_G`, `T_B` be the frozen top-ten sets and `c(t)` be +1 for
-`T_G \ T_B`, −1 for `T_B \ T_G`, and 0 for their intersection. Known labels contribute `c(t) * a(t)`.
-For each unknown label, the lower possible paired difference contributes `min(c(t), 0)` and the upper possible
-paired difference contributes `max(c(t), 0)`. Sum per member to obtain `d_a_lower` and `d_a_upper`.
-Shared unknown titles cancel exactly, as shared known titles do. Bootstrap both bounds; the upper endpoint for
-`mean(d_a_upper)` is the safety criterion. Also report observed harm counts, unknown-slot counts and the
-partially identified difference range; never call unknown labels harmless. A complete-answer sensitivity
-table is descriptive and cannot override the all-session decision.
+One shared title has one answer, used by every source selecting it. Seen it accepts an optional integer 1–10;
+Seen without a rating is explicitly recorded. No rating is inferred from current member history.
 
-### Primary, harm and guards
+| Answer at closure | Primary hit | Decision harm | Novel hit |
+|---|---:|---:|---:|
+| Seen it, rated 1–5 | 0 | 1 | 0 |
+| Seen it, rated 6–7 | 0 | 0 | 0 |
+| Seen it, rated 8–10 | 0 | 0 | 0 |
+| Seen it, unrated | 0 | impute | 0 |
+| Want to See, knew it | 1 | 0 | 0 |
+| Want to See, new to me | 1 | 0 | 1 |
+| Not for me | 0 | 1 | 0 |
+| Can't tell | 0 | **0 for both scorers** | 0 |
+| No answer (displayed or never reached) | 0 | impute | 0 |
 
-For each retained member `m`, `H_s(m) = sum(h(t) for t in T_s(m))`, a count from 0 to 10. Primary:
-`mean_m(H_G1(m) - H_B2(m))`, equally weighted, paired over the same members. A shared hit counts once in each
-scorer's ten, and cancels in their difference; it is not split or credited only to the source that added it first.
-Success requires a point estimate **at least +1 hit per ten** and the lower endpoint of its two-sided 95%
-interval **strictly above zero**, as PLAN.md 2.5 specifies. It does not require the lower endpoint above +1.
-Novelty is reported beside the primary, not silently substituted for it.
+Exclude a retained session with **no answer in the G1 ∪ B2 union** from every decision comparison, and report it
+as non-response. Seen-unrated and Can't tell are answers for this inclusion rule. All other retained partial
+sessions enter with ten-slot denominators: no replacing Seen titles, reducing denominators or analysing only
+completers. Missing/Can't tell are zero expressed hits, never inferred rejections. Diagnostic-only answers do
+not qualify a member for the G1/B2 decision.
 
-Harm is the per-member count in the same frozen first ten of Not for me plus Seen it rated 5 or less.
-**G1 is blocked if the upper endpoint of the two-sided 95% interval of G1 minus B2 reaches +1 per ten.**
-Require the conservative endpoint from `d_a_upper` to be strictly below +1; equality blocks. A wide interval
-or missing-label bound that cannot show this is inconclusive and blocks. This is the owner's October 14
-margin, not Sol's earlier proposed one-per-twenty margin. A3 supersedes A1's first-20 wording for T3 only.
+For scorer `s` and respondent `m`, let `k_sm` be the number of classifiable answered slots in its frozen ten
+(all answers except Seen-unrated), and `a_sm` their observed harm sum. Impute every No answer and Seen-unrated
+slot with `a_sm/k_sm`. If `k_sm=0`, use that scorer's **pooled observed harm sum divided by pooled classifiable
+answered-slot count across included respondents**, not a mean of member rates. If that population denominator
+is also zero, harm is unestimable and confirmation inconclusive. Impute each scorer separately; do not use
+BR, another scorer or later ordinary ratings. A shared known harm/hit cancels exactly. A shared unknown slot
+can receive different scorer rates and need not cancel in the imputed difference; disclose that assumption.
+Imputation is a plug-in assumption, not evidence that unknown labels are harmless or a universal guarantee
+under selective missingness. The decision interval below uses the resulting member differences.
 
-Fable's additional veto, G1's harm rate above BR's point estimate, is **not adopted**. Eight random judgments
-per member provide a noisy absolute benchmark; a point comparison would block on sampling noise without an
-uncertainty rule or an owner-approved second margin. The paired B2 tolerance is the binding safety question.
-Report G1/B2/BR harm rates and paired differences to BR, with intervals and unknown-label bounds, descriptively.
-For BR, use only its eight registered slots and divide counts by 8; for G1/B2 divide by 10. Express comparisons
-in equivalent counts per ten, so the unequal slot counts are never compared as raw counts.
-For these descriptive contrasts, apply the same unknown-label bounds with title coefficients
-`10 * (I(title in scorer top ten)/10 - I(title in BR first eight)/8)`; overlap retains the resulting coefficient
-rather than cancelling unequal weights. Report known harm rates as observed counts over the fixed denominator,
-alongside each scorer's possible-rate range from its unknown slots.
+Also report **worst-case unknown-harm bounds**. For `c(t)=I(t in G1 ten)-I(t in B2 ten)`, known harm contributes
+`c(t)*a(t)`; every No answer/Seen-unrated contributes `min(c(t),0)` to the lower and `max(c(t),0)` to the upper
+member bound. Can't tell contributes zero. Shared unknowns cancel in these bounds. Publish mean bounds and
+bootstrap intervals, unknown counts and a complete-classifiable-answer table on members with no imputed G1/B2
+slots (Can't tell remains a classifiable zero). These are descriptive; their failure does not alone veto the
+imputed decision or establish harm. Report viewed missing separately from never reached.
 
-Additional binding guards are the first-ten franchise maximum and the shows/animation distance from the
-member's frozen own mix. Use section 4a's definitions (production method Animation; movie series, other titles
-singletons; own shares among rated reference-universe titles). T3 has one view per member and uses first ten
-in place of first fifty. Each paired G1-minus-B2 guard fails only if its 95% interval lies strictly above zero;
-uncertainty crossing zero is not a proven guard worsening. These guards use the entire ranking top ten,
-regardless of answers. Known ineligible titles in an exposed top ten or incorrect known-availability filtering
-are integrity failures and block confirmation.
+A post-exposure withdrawal remains in the stopping count. Delete its answers, revisions and identifying
+research records under normal privacy rules; do not retain them to recover an effect. Retain only lawful
+anonymous aggregate exposure/withdrawal counts. Before data, register a **binding withdrawal sensitivity**:
+append one anonymous worst-case paired outcome per withdrawn exposed member to the respondent panel:
+primary −10, harm +10, novel hits −10, shows/animation distance +1 each, franchise maximum +9. These are
+conservative bounds irrespective of overlap; no deleted answer or individual assignment is used. Recompute
+all decision intervals/guards on the augmented panel, with respondent imputation rates fixed and anonymous
+withdrawal rows appended after the sorted respondents. **Confirmation must pass both analyses**, else
+inconclusive when the main analysis would pass. Sensitivity alone does not demonstrate failure. If lawful
+aggregate counts cannot support this analysis, confirmation is inconclusive. Report its n, estimates, intervals
+and the number of withdrawals; pre-exposure withdrawals do not enter it. Non-response without withdrawal is
+excluded as above and reported separately, never silently merged with deletion.
 
-Report, for G1 and B2 on the same members, familiar and new-to-me hits separately, Seen it rated 8 or more,
-Seen low/middle/unrated, rejection, Can't tell and missing counts; shows/animation shares, signed gaps and
-absolute distances; franchise maximum and repeats (`10 - number of distinct franchise keys`); known available
-and unknown-availability slots and novel hits. New-to-me and known-available hits together are the measured
-worthwhile suggestions; other hits establish interest discovery only. For B3/B5/GW and BR report the same
-answer rates on four/eight slots, clearly labelled diagnostic. Publish availability coverage and completion
-counts, and primary/harm figures by 20–59 versus 60+ ratings and known versus unknown member country/services,
-descriptively; no stratum can change the overall decision.
+### Primary, harm, guards and integrity
 
-For all judged comparisons, use the paired member bootstrap: sort members by their private keyed hash,
-NumPy `default_rng(20261014)`, draw `n` member indices with replacement 10,000 times, and use those same draws
-for every measure and bound. The interval endpoints are quantiles 0.025 and 0.975 with linear interpolation.
-Do not resample individual titles, seeds or repeated visits as independent observations. Report estimate,
-interval, paired member count, median member difference, improved/tied/worse counts and SDE `2.80 * sd(d)/sqrt(n)`
-(sample SD, `ddof=1`). Report bound-specific SDEs for harm, explicitly labelled as bounds. Diagnostics are not
-additional candidate-selection tests. There is one primary comparison and all binding criteria must pass.
+For each included respondent `m`, `H_s(m)` is the sum of unseen Want to See hits in the frozen first ten.
+The primary is the equal-member paired mean `H_G1-H_B2`. Shared hits count once in each ten and cancel.
+Require **estimate ≥+1 per ten and two-sided 95% lower endpoint >0**; the lower endpoint need not exceed +1.
+The selected interval is frozen below. Missing hits remain zero.
 
-### Sample-size plan and stopping
+Harm counts Not for me plus Seen it rated ≤5, with the registered imputation above, paired G1 minus B2.
+**G1 is blocked if its two-sided 95% upper endpoint reaches +1 per ten**. Require it strictly below +1;
+equality or uncertainty blocks as inconclusive unless harm is demonstrated by the failure rule below.
+This is the owner's October 14 margin and supersedes A1's first-20 wording for T3 only.
 
-There is no direct estimate of unseen-title hit or harm probabilities yet. Item 009's T2a first-50 high
-shares are G1 0.102482 and B2 0.018942; low shares are 0.030302 and 0.001125. They are proportions of hidden
-watched titles retrieved, not the fraction of a top list that members will like/dislike. They establish the
-direction to investigate, and justify planning for more top-list exposure under G1, but cannot be inserted as
-T3 Bernoulli probabilities. No gate numbers are used.
+**New-to-me is a binding guard again:** G1 fails if novel hits in its first ten are worse than B2 with a paired
+95% interval wholly below zero. Familiar Want to See gains cannot override demonstrated novelty loss.
+Shows distance, animation distance and franchise maximum are separate guards, each failing when its G1-minus-B2
+95% interval lies wholly above zero. **Each mix is a separate guard, and both must pass.** Guard passage means
+no demonstrated worsening; an interval crossing zero passes this rule and does not prove equivalence.
+For mixes take the first-ten show/Animation share's absolute difference from the member's frozen own share,
+using rated `in_pool && has_fingerprint` titles independently of `E`, one view per member. Report signed gaps
+alongside. Animation is production method Animation; movie series define franchises and other titles are
+singletons. Franchise maximum is the largest number from one franchise in a ten.
 
-Planning approximation: independent members; ten Bernoulli slots per scorer; ignore the variance reduction
-from shared titles/positive cross-scorer correlation; multiply the slot-independent paired variance by 2 for
-within-member clustering/heterogeneity. Assume primary hit probabilities G1 0.30 and B2 0.20, hence an actual
-gain of one; assume harm probabilities 0.25 each, hence no extra harm. These are stated assumptions, including
-unseen rejections, not measured rates. Assume classifiable top-ten labels for the power calculation; partial
-sessions and conservative missing-label bounds can make the actual test less decisive.
+Post-exposure ineligibility is reported per card, without deleting the card, changing its answer or refilling
+the ten. The denominator is **distinct (session, title) G1/B2 union cards actually first-displayed** across the
+window; a shared card counts once. The numerator is those cards shown in violation of the frozen snapshot's
+eligibility/known-availability filter. More than **5%** blocks confirmation; exactly 5% does not. Later catalog
+or availability changes and previously unrecorded viewing are not violations of frozen eligibility. Never-reached
+assigned cards are audited separately. Hash mismatches always block; the 5% tolerance applies only to eligibility.
+Report aggregate counts, denominator and reason categories without exposing other members' card rows.
 
-| Criterion | Planned paired variance | Approximate members needed |
-|---|---:|---:|
-| Detect a +1 primary gain against zero, 80% power, two-sided 5% | `2 * 10 * (.30*.70 + .20*.80) = 7.4` | `ceil((2.80)^2 * 7.4 / 1^2) = 59` |
-| Show upper 95% harm endpoint below +1 at true extra harm 0, 80% power | `2 * 10 * (.25*.75 + .25*.75) = 7.5` | `ceil((2.80)^2 * 7.5 / (1-0)^2) = 59` |
-| Pass both primary conditions if hits are .35/.20 (true gain +1.5) | `2 * 10 * (.35*.65 + .20*.80) = 7.75` | `max(ceil(2.80^2 * 7.75 / 1.5^2), ceil(.84^2 * 7.75 / .5^2)) = max(28, 22) = 28` |
+Fable's random-point harm veto is not adopted: eight random slots provide a noisy absolute diagnostic and
+no registered second uncertainty margin. Report G1/B2/BR observed and imputed harm rates, unknown ranges and
+paired contrasts with uncertainty. BR uses its original eight, never fillers; express rates per ten (BR count
+×10/8). Apply BR's own answered-slot imputation/fallback. For unknown bounds versus BR use coefficients
+`I(t in scorer ten) - 10/8 * I(t in BR eight)` so unequal-denominator overlap keeps its coefficient.
 
-Use **60 exposed members**, above PLAN.md's minimum of 20. At 60, primary/harm SDEs are approximately
-0.98/0.99 counts per ten and expected 95% half-widths 0.69/0.69. At 20 they are 1.70/1.71 and 1.19/1.20:
-twenty is not adequately planned for either margin. The primary calculation is detection power only: at a
-true gain exactly +1, the additional point-estimate floor is met only about half the time, whatever the sample
-size. The +1.5 sensitivity row uses .35/.20 hit probabilities: under a normal approximation with fixed planned
-variance, passage is `estimate >= max(1, 1.96 * sqrt(variance/n))`. It needs 28 members for approximately 80%
-primary passage; at 60 approximately 92% meet both primary conditions. Harm is sensitive to the assumed gap
-from its margin: at true extra harm +0.25,
-the same calculation needs 105 members; at +0.50, 236. Sixty gives no guarantee of passing, and these are
-normal approximations, not simulated or jointly measured power.
+Report familiar/novel hits, Seen high (8+), Seen low/middle/unrated, rejections, Can't tell and No answer;
+franchise repeats (`10 - distinct franchise count`), mix shares/distances, known/unknown availability slots
+and novel hits. Novel hits with known service availability measure worthwhile suggestions; other hits express
+interest discovery. B5/GW/BR rates are labelled four/four/eight-slot diagnostics. Report completion, first-display
+coverage, non-response, withdrawals, ineligibility and imputation counts/rates by scorer, and primary/harm by
+20–59 vs 60+ ratings and known vs unknown country/services descriptively; no stratum changes the verdict.
 
-The census has 97 members with at least 20 ratings, including the owner: **96 is an upper bound**, before
-the high-rating, usable-Taste, consent and title-eligibility requirements. Sixty therefore needs at least
-62.5% of that upper bound. At an assumed 75% invitation-to-exposure rate, about 80 eligible invitations are
-needed; the true eligible count and response rate are unknown. Do not promise that this pack can supply 60.
+### Frozen interval method and synthetic validation
 
-Stop enrollment at the **60th first exposure**, counting each member once, including later partial sessions or
-withdrawals. Pre-exposure refusals/declines do not count. Close the window when all those sessions have either
-submitted or reached their fixed 14-day limit. Do not replace partial sessions, add members after seeing a
-result, stop on significance or analyse early at 20. If recruitment cannot reach 60, D1 stays blocked on the
-named panel size; no early confirmation analysis is licensed. Changing the count requires a new reviewed
-registration before any judgments are opened, not a response to interim results.
+For **both binding primary and harm intervals**, use the simulation-selected **variance-floor t interval**
+(`t_floor9`). For equal-member differences `d_m` in [-10,10], n included respondents, sample mean `dbar` and
+sample variance `s²` with `ddof=1`, define
+`w = t.ppf(.975, n-1) * sqrt(max(s², 9)/n)` and endpoints
+`[max(-10, dbar-w), min(10, dbar+w)]`. The fixed variance floor is **9 squared titles per ten** (minimum SD 3),
+not nine extra harmful titles. Use the same formula on the withdrawal-augmented panel. This supersedes the
+percentile bootstrap for these two binding endpoints; bootstrap remains descriptive and binding for guards.
+No method selection, floor adjustment or retuning follows any member answer.
 
-Before closure, the orchestrator may see consent, enrollment, exposure and session-closure counts and technical
-health only, not answer distributions, per-scorer completion, effect estimates or intervals. Answers are tier C;
-only the future `sealed.py` (or its accepted T3 equivalent) opens them at this registered checkpoint. One analysis
-publishes every registered outcome, including an inconclusive/failed result. After publication the window becomes
-development data. At most two confirmation attempts per D1, each on a fresh registered window (PLAN.md 2.3).
+`items/012-t3-protocol/simulation.py` and its aggregate `simulation.json` are synthetic only, seed `20261014`,
+20,000 independent studies per cell, n=20/30/60, harm effects 0/+0.5/+1 and primary effects 0/+0.5/+1.
+Candidates are ordinary t, t with variance floor 9, t with floor 16, and the bounded Hoeffding interval
+`dbar ± 20*sqrt(log(1/.025)/(2*n))`, clipped to [-10,10]. Select the first in that fixed order for which
+**every tested true +1 harm boundary and true-zero primary null** has an exact one-sided 97.5% Monte Carlo
+upper limit ≤2.5%. Primary false-win means estimate ≥+1 and lower endpoint >0 at true mean zero; it does not
+promise ≤2.5% passage at a positive gain below the point-estimate floor. All such passage rates are saved.
 
-### Decision and storage
+Scenarios include diffuse clustered card labels with and without missingness, Astra's 0-for-90%/+10-for-10%
+harm at +1 (probability effect/10 for the other harm means), concentrated symmetric ±10 primary-null tails,
+a skewed primary null (+1 with probability 10/11, −10 otherwise), and constant samples. Diffuse cases use
+Dirichlet concentration 9 (within-exclusive-head variance multiplier `1+(k-1)/10`, 1.9 for k=10), two shared
+cards labelled once, and B2 hit/harm .20/.25; G1 hit `.20+effect/10`, harm `.25+effect/10`. The popular G1
+head assumes 25% Seen versus B2 5%, 20% of Seen low, and novel-slot rates .08/.12. These are assumptions,
+not rates inferred from T2a. Missingness: 10% partial sessions have 40% absent cards, others 5% (8.5% mean);
+10% of Seen answers lack ratings; Can't tell is an explicit zero. Apply the registered scorer/member
+imputation and pooled fallback within each synthetic study. Concentrated missing cases additionally thin
+15% of slots; constant member harm is recovered when any classifiable slot remains. Complete-label means
+are exactly the specified population effects; missing-case latent means are the specified effects, while
+imputed harm/observed hits can differ (empirical decision means are in JSON). This distinguishes label bias
+from interval coverage; selective missingness is not validated by these cases.
 
-A verdict needs at least 20 retained exposed members and at least 20 with one or more recorded answers (any
-of the five categories) within the G1/B2 top-ten union. All retained exposed members still enter the all-session
-primary and conservative harm analysis; this is a minimum respondent count, not a complete-case analysis.
-The conservative bounds handle unclassified harm. Below either minimum, or with an integrity failure, the
-verdict is inconclusive and blocks confirmation.
+| Method | Worst false safety at true +1 | MC upper limit | Worst primary false win at zero | MC upper limit |
+|---|---:|---:|---:|---:|
+| Ordinary t | 12.535% | 13.002% | 15.245% | 15.751% |
+| **t, variance floor 9 (chosen)** | 1.485% | 1.662% | 1.500% | 1.678% |
+| t, variance floor 16 | 0.055% | 0.098% | 0.750% | 0.880% |
+| Hoeffding | 0 observed | 0.018% | 0 observed | 0.018% |
 
-- **Pass:** primary estimate at least +1 and lower interval endpoint above zero; conservative harm upper
-  endpoint below +1; no binding guard fails; coverage/integrity requirements met. D1 can record G1 as
-  established for this eligible population and frozen pool context. A separate normal-development handoff
-  and owner checkpoint govern any change to Best match/For you; a pass is not an automatic rollout.
-- **Fail:** adequate, intact data rule out the primary floor (primary upper endpoint below +1), or the harm
-  lower-bound analysis has lower interval endpoint at least +1, or a binding composition/franchise guard fails.
-  Keep B2 for D1; close this G1 confirmation attempt without changing its code. It may not be tuned and
-  rejudged on this window. A fresh, reviewed attempt is subject to the two-attempt limit.
-- **Inconclusive:** neither pass nor a demonstrated failure, including a primary interval crossing zero or
-  the +1 floor without passage, or a harm upper endpoint reaching +1 without demonstrated harm. Keep B2;
-  G1 remains an unestablished challenger. Record the observed interval/SDE and the missing information;
-  any second attempt needs fresh members/judgments, a new size calculation and a frozen stopping rule.
+For the chosen method, **block rate = 1 − probability(harm upper endpoint <1)**:
 
-Build through normal development, behind a default-off research flag, as PLAN.md 2.7 requires. Store assignments
-and answers in a new `user_taste_judgment` table: unique `(window_id, session_id, user_id, title_key)`, immutable
-assignment/manifest digest and display position, first-exposure time, nullable answer enum and Seen rating,
-answer/update time, an append-only answer-version array (version, answer, Seen rating, recorded-at time), and
-session closure time/reason. Create a row for every assigned card, so unanswered and never reached cards remain
-identifiable. Keep revisions for audit; select the last valid version before closure.
-Source memberships/full rankings live in the protected manifest, never in the browser's answer payload.
-Validate authenticated ownership, one session per member per window, answer/rating combinations and closure
-server-side. The page writes only research records; it does not add Want to See, ratings, Skip, Not interested
-or watch state to ordinary member tables. PLAN.md's "nothing written to production" means no research helper
-production write and no changes to ordinary member actions; this isolated research table is the normal-app
-instrumentation exception specified in 2.7.
+| Scenario | n | Block at harm 0 | Block at +0.5 | False safety at +1 |
+|---|---:|---:|---:|---:|
+| Diffuse, realistic missing labels | 20 | 78.920% | 96.195% | 0.430% |
+| Same | 30 | 61.900% | 93.100% | 0.435% |
+| Same | 60 | 23.320% | 83.420% | 0.505% |
+| Concentrated, complete labels | 20 | 100.000% | 100.000% | 0 observed |
+| Same | 30 | 100.000% | 100.000% | 0 observed |
+| Same | 60 | 0.000% | 80.565% | 1.400% |
 
-The research pull remains select-only. It exports assignments, exposure/closure, answer versions/timestamps,
-ratings and immutable manifests to a dated sealed pack under `~/goodwatch-research/taste/packs/<date>/`, mode
-700, outside the repository and `/tmp`. Apply the existing keyed member-id hashing at pull time, retain the key
-in the data folder, and flag/exclude the owner. Pull no emails, handles, accounts, search history, free text or
-extra identifying fields; recruiting uses the normal product channel, not exported contact data. The repository
-gets hashes and aggregate counts/results only, never another member's rankings or answers. Existing privacy
-rules and withdrawal/deletion handling remain in force. The analyst consumes the frozen assignments and sealed
-answers, never reconstructs exposure from the current catalog or current Wishlist.
+The n=60 concentrated chosen bound certifies safety only with at most one +10 observation, rather than two;
+its exact probability at the margin is `binom.cdf(1,60,.1) ≈1.38%`. Astra's at-most-two probability is 5.3045%.
+For a constant zero sample the floor blocks safety at n=20/30 and allows it at 60; a constant +1 sample always
+blocks. This is a deliberate loss of power to avoid zero-variance false certificates. The chosen method meets
+the brief's empirical error target across these scenarios, **not a distribution-free coverage theorem**.
+Hoeffding offers bounded-mean protection for independent fully observed member outcomes but costs a half-width
+3.51 even at n=60 and cannot validate the imputation assumption. Monte Carlo limits are per cell, not simultaneous
+coverage over all possible distributions. The source records versions, hash, counts and resource use; it ran
+with one numerical thread, a 768 MiB address-space cap and 100.7 MiB peak RSS after a free-memory check.
+
+For guards and descriptive measures use paired member bootstrap, 10,000 draws, seed `20261014`: sort included
+respondents by private keyed hash, NumPy `default_rng`, draw n indices with replacement and reuse those draws
+for every measure in that analysis. Quantiles .025/.975 use linear interpolation. Withdrawal sensitivity resets
+the same seed with its augmented n. Bootstrap intervals for primary/harm are descriptive alongside their
+binding selected intervals; they cannot override them. Do not resample titles, visits or seeds independently.
+Use fixed imputed member outcomes in descriptive bootstrap; report fallback usage and the imputation assumption.
+
+Every verdict prints estimates, binding/descriptive intervals, n exposed/responding/withdrawn, median member
+difference and improved/tied/worse counts. Print the **smallest detectable effect (SDE)** for primary and harm:
+`(t_.975,n−1 + .84) * sqrt(max(sample_variance, selected_variance_floor)/n)` under the selected t method,
+with `ddof=1`; guards' descriptive SDE is `2.80*sd(d)/sqrt(n)`. These are normal/t planning approximations for
+80% detection against zero, not assurances of floor passage or joint success. Report sensitivity SDE separately.
+There is one primary comparison; every binding condition must pass.
+
+### Planning and stopping
+
+T2a first-50 high retrieval shares are G1 .102482 vs B2 .018942; low .030302 vs .001125. They concern retrieved
+hidden watched titles, not Seen-it probabilities on an eligible top list. They support anticipating greater
+unrecorded viewing at G1's popular top, without identifying its rate. No gate data are used.
+
+Planning uses independent members, ten slots per head, B2 unseen-hit/harm probabilities .20/.25,
+G1 hits .30 (gain +1) or .35 (+1.5) and harm .275 (**extra harm +0.25 per ten**). Popularity/Seen, novelty,
+clustering and missingness are as above; missing primary labels are zero, so observed hit gains average
+0.915 times the latent gain. Central overlap is two cards; sensitivity uses zero and five, labels shared once
+and exclusive-card category probabilities adjusted to preserve marginal rates. Assume 2% independent
+G1/B2-union non-response, no withdrawals, no hash/eligibility blocks and adequate pool size. Assume favourable
+T2a-like mix/franchise differences: bounded normal proxies with means/SDs −.157/.16 (shows), −.075/.14
+(animation), −.47/.9 (franchise maximum), sharing one member latent normal. These transport first-50 findings
+to first ten only for planning; the novelty guard still sees G1 .08 vs B2 .12 novel hits per slot.
+
+The same synthetic script (seed `20261015`, 20,000 studies/cell) yields this **joint-passage approximation**,
+including the 20-respondent minimum, primary, harm, novelty and both mix/franchise guards. Guards use t intervals
+as a computational planning proxy for their registered 10,000-draw member bootstrap, so these are not exact
+bootstrap-verdict powers. No further attempt or interim is simulated. Withdrawals/integrity failures can
+reduce passage further; the main comparison alone is not the full-verdict power.
+
+| Exposed n | Latent extra hits | Primary passes | Harm passes | All guards pass | Joint pass | Fail | Inconclusive |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 20 | +1 | 9.665% | 6.475% | 53.535% | 1.900% | 13.150% | 84.950% |
+| 30 | +1 | 28.760% | 17.710% | 72.775% | 7.500% | 27.275% | 65.225% |
+| 60 | +1 | 39.120% | 43.495% | 50.830% | 16.425% | 49.195% | 34.380% |
+| 20 | +1.5 | 30.595% | 6.555% | 53.735% | 4.250% | 12.970% | 82.780% |
+| 30 | +1.5 | 72.155% | 16.885% | 72.295% | 12.260% | 27.705% | 60.035% |
+| 60 | +1.5 | 91.340% | 43.990% | 49.970% | 24.315% | 50.030% | 25.655% |
+
+**In the central realistic case the test is more likely inconclusive than passing at every listed n, even
+with +1.5 latent hits.** At 60 a novelty failure is also common: a popularity-led gain does not guarantee
+new discovery. Across overlap 0/2/5 the joint-pass range is 0.225–2.925% / 2.165–9.940% / 5.050–20.640%
+for +1 hits at n=20/30/60; with +1.5, 0.575–5.915% / 2.580–16.420% / 4.735–30.250%. These are scenario
+sensitivities, not confidence intervals or predictions of the actual panel. More than 50% may demonstrate
+failure under the high-overlap novelty-loss case; do not call every blocked result inconclusive.
+
+For an optimistic classifiable-label baseline, clustering 1.9 and no overlap give hit variance
+`1.9*10*(.30*.70+.20*.80)=7.03` and harm variance
+`1.9*10*(.275*.725+.25*.75)=7.3506`; both are raised to the chosen **variance floor 9**. With planning variance
+9, solve `(t_.975,n−1 + .84)*3/sqrt(n) ≤ gap` for nominal 80% one-statistic detection: **73 respondents** for
++1 primary against zero or safety at extra harm 0, **128** for safety at +.25 (gap .75), **284** at +.5 (gap .5).
+At a +1.5 primary mean, 34 suffice for the interval component under this approximation (the point floor alone
+needs about 26); this is not 80% joint confirmation. Missingness, a larger actual variance, novelty loss and
+withdrawals can require more. At true +1, the point-estimate floor itself is met only about half the time in a
+symmetric complete-label model, whatever the nominal zero-detection power. The minimum possible selected-method
+SDE at n=20/30/60 is **1.968 / 1.580 / 1.100** hits per ten; print the actual variance-based SDE in every verdict.
+Twenty is a minimum coverage rule, not a powered panel; even 60 is below the +.25 harm planning requirement.
+
+CENSUS.md at T0 supplies **at most 96 non-owner members with ≥20 ratings**, before the remaining exclusions,
+and at most 30 non-owner repeat raters, with unknown overlap. The newer supplied aggregate
+`items/012-t3-protocol/FEASIBILITY.md` (October 14) supersedes the rating-count ceiling with **97 non-owner
+members with ≥20 ratings**: only **7 active in 30 days, 17 in 90 days and 29 in 180 days**. Activity means a
+rating, Want to See add or Skip write; visits without writes are unlogged because the exposure log (#525)
+does not exist yet. Neither census establishes the full T3 eligibility/reachability count.
+
+At illustrative **20–40% exposure uptake**, T0's 96 ceiling gives about **19–38 exposures**, the newer 97
+about **19–39**; even if all 30 historical repeat raters qualify, about **6–12**. Applying the same hypothetical
+range to the 7/17/29 active-member counts gives about **1–3 / 3–7 / 6–12**, not forecasts of future visits.
+Actual exposures can be zero. Product-only invitations reach a handful of writing members per month on this
+evidence; do not budget an eight-week panel of 20 from them. Reaching inactive members through an approved
+normal product channel such as email is needed for a credible recruitment plan, without exporting contact data
+to research or authorizing outreach here. Even with all 97 reached, 20 exposures needs **20.6%** conversion
+before additional eligibility exclusions/non-response; 30 needs **30.9%**, 60 **61.9%**. Below about 20% leaves
+the test under the minimum. No 75% assumption remains. The owner checkpoint records actual aggregate eligible
+and reachable counts, the channel and invitation/deadline times; retain the 60-or-date rule even when 60 is
+implausible. This item uses only supplied aggregates, makes no new pull and changes no margin after answers.
+
+**Stop at the earlier of the 60th first exposure or a fixed UTC calendar deadline.** At the owner checkpoint
+record an exact planned first-invitation time and deadline; propose **56 days (eight weeks) after that first
+invitation**. Freeze both before sending it; no moving deadline when recruitment is slow. Count each member's
+first card exposure once, including later partial sessions, non-response and withdrawals. Pre-exposure refusals
+and assignments never displayed do not count. At the stop, prohibit first exposures for any pending assignment
+and any new enrollment; previously exposed sessions retain their original 14-day closure or earlier submission.
+Analyse once after all exposed sessions close, at most 14 days after the enrollment stop. **Fewer than 20 exposed
+members is inconclusive**; also require at least 20 retained respondents with an answer in the G1/B2 union.
+No replacing nonresponders/withdrawals, no interim analysis, significance stopping or expanding the panel.
+
+Before closure, the orchestrator can see only aggregate consent/invitation/exposure/session-closure counts and
+technical health, never labels, per-scorer completion, distributions, estimates or intervals. Answers stay sealed
+as tier C until the accepted future T3 analyst opens them at this one checkpoint. Publish every registered result,
+including failure/inconclusive. Then this window is development data. At most two D1 confirmation attempts,
+each on fresh registered judgments; neither new variants nor reused judgments count as independent confirmation.
+
+### Decision and recoverable storage
+
+Below either coverage minimum, unestimable harm, any hash mismatch or above-threshold ineligibility gives
+inconclusive and blocks confirmation. With adequate intact data:
+
+- **Pass:** primary estimate ≥+1 and lower endpoint >0; imputed harm upper endpoint <+1; no novelty,
+  mix or franchise guard fails; withdrawal sensitivity also passes all criteria. D1 may establish G1's
+  expressed-interest gain for this eligible panel and frozen suggestion context. Normal development and the
+  owner checkpoint separately govern any product change; enjoyment after watching remains unmeasured.
+- **Fail:** primary upper endpoint <+1, harm lower endpoint ≥+1, or a binding guard demonstrates worsening.
+  Use the main imputed analysis, not a worst-case unknown or withdrawal bound, for demonstrated harm/failure.
+  Keep B2; close this attempt without tuning and rejudging G1 on this window.
+- **Inconclusive:** neither pass nor demonstrated fail, including wide harm uncertainty, insufficient primary
+  evidence or a would-be main pass that does not survive withdrawals. Keep B2; G1 stays an unestablished
+  challenger. Record the observed intervals and SDE. A fresh reviewed attempt needs new judgments and planning.
+
+Normal development adds a page behind a default-off research flag and new isolated research-table storage as
+PLAN.md 2.7 requires. Specify **recoverability, not a schema**: window/session identity and authenticated
+participating member; consent/withdrawal state; protocol/source/manifest commitments and immutable input/card snapshots; every assigned
+title and display position/source membership (private manifest); session first exposure and nullable per-card
+first display; navigation events; answer/rating revisions and their recorded times, including clear/unrated;
+submission/closure time and reason; never-reached vs viewed-unanswered vs explicit uncertainty; the final valid
+answer at closure; lawful anonymous aggregate withdrawal counts and deletion audit without deleted answers.
+The design may use rows, child records or another audited representation. Assignments alone cannot prove exposure.
+Rankings/memberships never enter the browser answer payload. Validate ownership, one session per member/window,
+allowed answers/ratings and closure server-side. The page writes only isolated research records, never ordinary
+Wishlist, ratings, Skip, Not interested or watch state. This is the normal-app instrumentation exception in
+2.7; research helpers remain select-only and make no production writes.
+
+The pull exports immutable assignments/manifests, exposure/navigation/closure facts, retained answer versions
+and ratings into dated private sealed packs under `~/goodwatch-research/taste/packs/<date>/`, mode 700, outside
+the repository and `/tmp`. Apply keyed member hashes at pull time, keep the key in the data folder, flag/exclude
+the owner, and propagate withdrawals/deletions to exports. Pull no emails, handles, accounts, search history,
+free text or extra identifiers; normal product channels handle recruitment. Repository outputs remain hashes
+and aggregate counts/results. Privacy is unchanged. The analyst consumes frozen facts and sealed retained
+answers, never reconstructs exposure from current catalog or Wishlist.
 
 ## 5. The contract
 
@@ -1039,37 +1170,50 @@ worse than B2 with an interval excluding zero; guard 1 passes (upper bound below
 G1 is not registered and D1 stays "keep B2", with the popularity tilt as the open question. No other candidate is
 registered from item 009, and G1 is not changed after its results are read.
 
-### A3. T3 pool, top-ten harm and prospective mix guard (October 14, 2026)
+### A3. T3 pool, top-ten harm and prospective mix guard (October 14, 2026, revised after both reviews)
 
-Drafted in item 012 after the owner's phase 1 checkpoint, before any T3 page or judgments exist. The owner
-specified the harm margin and top ten on October 14; the remaining design choices below are this amendment's
-proposal. **Review pending:** two model families must review and the orchestrator must resolve findings before
-building. This draft records no completed review, ranking commitment, run, recruitment or production action.
-The complete page-builder and analyst specification is section 4c; item 012's `RESULTS.md` summarises its plan.
+Drafted in item 012 after the owner's phase 1 checkpoint, before any T3 page or judgments exist. The owner fixed
+the first-ten harm margin on October 14. Astra and Fable both returned accept-with-changes reviews; the
+orchestrator's final BRIEF.md section directs this revision. Findings are addressed here and in section 4c;
+final orchestrator acceptance is not asserted. No ranking commitment, recruitment or product action has occurred
+in this item. `items/012-t3-protocol/RESULTS.md` summarises the decisions; its synthetic-only `simulation.py`
+and aggregate `simulation.json` make interval selection and planning reproducible. No harness run or gate read.
 
-- **A3(a), pool and confirmation.** Replace PLAN.md's four scorers at 12 each plus 8 random with G1/B2 at
-  10 each, B3/B5/public score alone at 4 each, plus 8 uniform random slots, deduplicated and shuffled, with
-  random filler to a minimum of 24 and an absolute maximum of 40 cards. All evaluated G1/B2 top-ten titles
-  are judged; all original scorer families remain represented. This changes pool size and the comparison from
-  unspecified challengers to the one replicated challenger, while keeping B2 as D1's reference. It avoids
-  PLAN.md's possible 56 cards (68 with G1 added) and rejects the reviewers' larger/top-20 variants for this window.
-  Eligibility, blinding, full-ranking ledger commitments, missing-answer rules, member bootstrap, fixed
-  60-exposure stop and new-table storage are frozen in section 4c. The T3 floor stays one extra expressed unseen
-  Want to See hit per ten, estimate at least +1 with its 95% interval excluding zero. Minimum 20 is retained
-  as an analysis-coverage requirement, not asserted to provide sufficient power. Invitations wait for the owner.
-- **A3(b), harm.** For T3, supersede A1's first-20 confirmation wording with the owner's first ten: Not for me
-  plus Seen it rated 5 or less, paired G1 minus B2. Require the upper endpoint of the 95% member interval
-  strictly below +1 extra harmful title per ten; uncertainty is blocking. Unknown-label bounds must also
-  pass. Do not adopt Fable's additional random-point-estimate veto; report random harm descriptively with
-  compatible denominators and uncertainty. A1's other T2a/gate rules and its non-T3 confirmation requirement
-  remain in force. Passing T2a and its gate still does not establish top-list safety.
-- **A3(c), mix guard.** Section 4a now fixes "worse than the reference" as larger per-member mean absolute
-  distance from the member's own shows/animation share, per-view absolute differences averaged within member,
-  paired between scorers, as `items/009-composition/distance.py` computes it. An interval wholly above zero
-  fails; the signed figures stay reported. This applies prospectively to every future candidate, not only G1,
-  and discloses rather than erases item 009's post-result specification choice. Section 4c uses this same
-  distance form on the T3 first ten, with one frozen view per member.
+- **A3(a), pool, estimand and stopping.** Replace PLAN.md's four scorers at 12 each plus eight random with
+  G1/B2 first ten each, B5/public score alone first four each, and eight uniform random slots. Deduplicate,
+  fill randomly to 24 if necessary, shuffle and blind; maximum 36 cards. Drop separate B3 slots because added
+  information beyond G1's inherited ordering has not been demonstrated. Judge the suggestion as the product
+  would show it, availability included, with identical cards for every source. Commit every source's full
+  eligible-universe ranking and inputs before the member sees a card. The primary stays expressed unseen
+  Want to See hits: paired G1−B2 estimate ≥+1 per ten and 95% lower endpoint >0. Restore new-to-me as a
+  binding guard, failing on an interval wholly below zero. A pass supports expressed interest, not enjoyment
+  after watching. Stop at the earlier of the 60th first card exposure or a UTC date fixed at the owner
+  checkpoint, proposed 56 days after the first invitation. Minimum 20 exposed and 20 retained respondents;
+  one analysis after submission/14-day closure, no peeking or replacements. Print the SDE in every verdict.
+- **A3(b), harm, missing labels and withdrawals.** Supersede A1's first-20 confirmation wording for T3 only
+  with the owner's first ten: Not for me plus Seen it rated ≤5, paired G1−B2. Can't tell is zero for both;
+  No answer/Seen-unrated use the scorer's member-specific observed classifiable answered-slot harm rate,
+  its pooled population rate if none. No G1/B2-union answer means excluded, reported non-response.
+  Require the upper endpoint from the simulation-selected interval in 4c strictly below +1; equality or
+  insufficient evidence blocks. Worst-case unknown bounds and the complete-answer table remain descriptive.
+  Post-exposure withdrawals delete answers and enter an anonymous worst-case sensitivity that confirmation
+  must also survive; otherwise inconclusive. A wide interval or sensitivity failure is not demonstrated harm.
+  Decline the extra random-point veto; report random harm with compatible rates and uncertainty. Hash
+  mismatches always block; after-exposure eligibility errors block only above 5% of actually exposed distinct
+  G1/B2-union cards, and are reported per card privately/aggregated publicly. A1's other T2a/gate rules and
+  non-T3 confirmation requirement remain in force. Passing T2a and its gate does not establish top-list safety.
+- **A3(c), mix guard, every future candidate.** Section 4a fixes worsening as larger per-member mean absolute
+  distance from the member's own shows/animation share: take each view's absolute difference before averaging
+  views, pair candidate−reference with equal member weights, as `items/009-composition/distance.py` computes.
+  An interval wholly above zero fails. **Each mix is a separate guard, and both must pass**; signed gaps stay
+  reported. This prospectively freezes the form and discloses rather than erases item 009's post-result choice.
+  T3 uses one view and first ten; its own mix is among rated `in_pool && has_fingerprint` titles, independent
+  of eligible suggestions. Exclude an empty denominator before exposure, not after seeing a result.
 
-G1 and B2 are frozen to the full hashes in section 4c now. A pass can establish G1 for D1's eligible panel;
-a fail or inconclusive result keeps B2. Neither permits editing G1 and reusing these judgments as confirmation.
-This amendment does not build T3 or change the ledger, DECISIONS.md or any prior result.
+Section 4c also freezes navigation, actual per-card first-display exposure, response instructions, submission,
+partial sessions, storage recoverability and privacy. Normal development supplies a flagged page and isolated
+research storage; implementation schema is not prescribed. Invitations wait for the owner's checkpoint. G1/B2
+stay frozen to section 4c's full hashes. Pass can establish G1 for this panel; fail/inconclusive keeps B2, without
+retuning and reusing these judgments. This amendment does not build T3 or edit the ledger, DECISIONS.md or any
+prior result. The simulation and documentation are left reviewable and uncommitted, as the drafting prohibition
+on committing requires; the simulation source and aggregate output are ready for the orchestrator to commit after acceptance.
