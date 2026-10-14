@@ -17,6 +17,7 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { type Section, useScrollSections } from "~/utils/scroll"
 import { SectionContext, useMounted } from "./embeds"
 import { FeaturedLayout, GroupedLayout, LabLayout, RailLayout } from "./layouts"
+import { MatchesPage } from "./matches"
 import { ITEMS, SOURCE_ORDER, type SourceKey, VENDORS, visibleItems } from "./social"
 
 export const VARIANTS = {
@@ -24,6 +25,7 @@ export const VARIANTS = {
 	grouped: "Grouped by platform",
 	featured: "Featured video + feed",
 	lab: "Every source side by side",
+	matches: "Real matched posts",
 } as const
 type VariantKey = keyof typeof VARIANTS
 
@@ -48,11 +50,17 @@ export function TitleSectionPage({ media, country }: { media: MovieResult; count
 	const [params] = useSearchParams()
 	// The section keeps its own state, so a click on a facade re-renders the section and not the whole title page.
 	const section = useMemo(() => <SectionHost />, [])
+	// The matches variant switches between 50 titles, so it has its own title header instead of this title's page.
+	const matches = params.get("variant") === "matches"
 	return (
 		<>
-			<BelowFoldProvider titleKey={`movie-${media.details.tmdb_id}`}>
-				<PageWithSection media={media} country={country} section={section} />
-			</BelowFoldProvider>
+			{matches ? (
+				<MatchesPage />
+			) : (
+				<BelowFoldProvider titleKey={`movie-${media.details.tmdb_id}`}>
+					<PageWithSection media={media} country={country} section={section} />
+				</BelowFoldProvider>
+			)}
 			{params.get("switcher") !== "0" && <PrototypeSwitcher variants={VARIANTS} position="bottom-20 md:bottom-6 left-1/2 -translate-x-1/2" />}
 			<style>{".tsqd-open-btn-container{display:none!important}"}</style>
 		</>
@@ -69,7 +77,7 @@ function SectionHost() {
 	// A new layout starts with every item behind its facade again.
 	useEffect(() => setLoaded(new Set()), [variant])
 	const hydrated = useMounted()
-	const Layout = { rail: RailLayout, grouped: GroupedLayout, featured: FeaturedLayout, lab: LabLayout }[variant] ?? RailLayout
+	const Layout = ({ rail: RailLayout, grouped: GroupedLayout, featured: FeaturedLayout, lab: LabLayout } as Record<string, typeof RailLayout>)[variant] ?? RailLayout
 	return (
 		<SectionContext.Provider value={{ loaded, load }}>
 			<div id="talked-about-now" data-hydrated={hydrated || undefined} className="isolate flex flex-col items-center">

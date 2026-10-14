@@ -23,6 +23,7 @@ Then open <http://localhost:3142/prototype/title-section>. The route needs no `.
 | `variant=grouped` | A grid grouped by platform, "Load all" per platform |
 | `variant=featured` | One featured video, a feed of posts and headlines beside it |
 | `variant=lab` | Every source side by side with its measured cost |
+| `variant=matches` | Real matched posts from the matching prototype: `&title=tv:1396` picks the title, `&lanes=` is `auto`, `pilot` or `all` |
 | `sources=youtube,bluesky,news` | Only these sources (the panel's toggles write this) |
 | `only=<source>` | One source (what the measurement uses) |
 | `panel=0`, `switcher=0` | Hide the prototype's floating panel and variant bar |

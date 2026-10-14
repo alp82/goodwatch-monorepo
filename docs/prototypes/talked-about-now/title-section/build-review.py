@@ -195,6 +195,17 @@ ul {{ padding-left:20px }} li {{ margin:4px 0 }}
 <h2>Layouts</h2>
 {"".join(variant_html)}
 
+<h2>Real matched posts <code>?variant=matches</code></h2>
+<p class="muted">Added after the first review: the featured layout filled with the matching prototype's real links (50 titles, 668 links, 12 to 14 Oct; branch <code>prototype/talked-about-now-matching</code>). A title picker sorted by matched posts (red dot: buzz title, "chk": wrong-link check title, ✓/✗: hand labels), a lane toggle (automatic only = official video ID / + Bluesky foreground exact / everything matched), and on every item a debug badge with lane, confidence and hand label. Bluesky posts whose author set <code>!no-unauthenticated</code> (85 of 582) and one deleted post are left out and counted.</p>
+<div class="pair">
+<figure><figcaption>Breaking Bad, everything matched, two Bluesky posts loaded</figcaption>{img("matches-breaking-bad.png", 1200)}</figure>
+<figure><figcaption>Narnia: The Magician's Nephew, an official trailer leads (four near-identical uploads from Netflix channels)</figcaption>{img("matches-narnia.png", 1200)}</figure>
+</div>
+<div class="pair">
+<figure><figcaption>WandaVision: a wrong link (a VisionQuest review) becomes the lead story</figcaption>{img("matches-wandavision-wrong.png", 1200)}</figure>
+<figure><figcaption>Phone</figcaption>{img("matches-phone.png", 390)}</figure>
+</div>
+
 <h2>Where the section sits</h2>
 <p class="muted">Between the fingerprint and About, so a title that is hot shows its buzz high up. The page around it is the real title page.</p>
 <div class="pair">
