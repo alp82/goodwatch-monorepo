@@ -1,3 +1,5 @@
+import { normalizeCountry } from "~/utils/media-language"
+import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -8,7 +10,7 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { resolveCountry } from "~/server/country.server"
+import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
@@ -21,7 +23,6 @@ import {
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
-import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
 import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -58,13 +59,10 @@ export const loader: LoaderFunction = async ({
 	const showId = (params.showKey || "").split("-")[0]
 
 	const userId = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ userId })
-
 	const url = new URL(request.url)
-	const { country, countryIsFallback } = resolveCountry({
-		request,
-		countryDefault: userSettings?.country_default,
-	})
+	const { effectiveContext } = await resolveMediaContext(request, userId)
+	const { country } = effectiveContext
+	const countryIsFallback = !normalizeCountry(url.searchParams.get("country"))
 	const language = url.searchParams.get("language") || "en"
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = getDetailsForShow({
@@ -181,9 +179,8 @@ export default function DetailsTV() {
 		params,
 	})
 
-	// The server guessed the country (Accept-Language or US). A country the
-	// visitor picked earlier on this device wins, so switch to it; otherwise
-	// keep the server's choice and leave the URL alone.
+	// Check old device storage only when the URL has no country. Saved-cookie/account provenance
+	// is fetched privately so this HTML can be shared with every visitor with the same effective pair.
 	useEffect(() => {
 		if (!countryIsFallback) return
 		let stored: string | null = null
@@ -191,7 +188,11 @@ export default function DetailsTV() {
 			stored = localStorage.getItem("country")
 		} catch {}
 		if (!stored || !/^[A-Z]{2}$/.test(stored) || stored === country) return
-		updateParams({ ...currentParams, country: stored }, true)
+		const controller = new AbortController()
+		void mayAdoptLegacyCountry(stored, country, controller.signal).then(allowed => {
+			if (allowed && !controller.signal.aborted) updateParams({ ...currentParams, country: stored! }, true)
+		}).catch(() => {})
+		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
 	return <Details media={media} country={country} episodeGrid={episodeGrid} />

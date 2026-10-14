@@ -160,7 +160,7 @@ export function pageCacheKey(
 	)
 		return { bypass: "gate", path }
 	const identity = cacheIdentityOf({ ...input, method })
-	if (!identity.cacheable) return { bypass: "member", path }
+	if (!identity.cacheable) return { bypass: identity.audience === "member" ? "member" : "preferences", path }
 	return {
 		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
 		path,

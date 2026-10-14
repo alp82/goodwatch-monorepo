@@ -5,7 +5,8 @@ import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
-import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { resolveMediaContext } from "~/server/media-context.server"
+import type { EffectiveMediaContext } from "~/utils/media-language"
 import { getEnabledFeatures } from "~/server/features.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { startBrowserGate } from "~/server/browser-gate.server"
@@ -111,10 +112,7 @@ type LoaderData = {
 	user: User | null
 	features: EnabledFeatures
 	dehydratedState: DehydratedState
-	locale: {
-		language: string
-		country: string
-	}
+	locale: Pick<EffectiveMediaContext, "country" | "language">
 	env: {
 		SUPABASE_URL: string
 		SUPABASE_ANON_KEY: string
@@ -133,8 +131,9 @@ export const loader: LoaderFunction = async ({
 	startProcessStats()
 	startMetrics()
 	startBrowserGate()
-	const { locale } = getLocaleFromRequest(request)
 	const { user, headers } = await getAuthFromRequest({ request })
+	const { effectiveContext, setCookie } = await resolveMediaContext(request, user?.id)
+	if (setCookie) headers.append("Set-Cookie", setCookie)
 	const queryClient = new QueryClient()
 	if (user) {
 		await queryClient.prefetchQuery({
@@ -147,7 +146,7 @@ export const loader: LoaderFunction = async ({
 			user,
 			features: getEnabledFeatures({ userId: user?.id }),
 			dehydratedState: dehydrate(queryClient),
-			locale,
+			locale: { country: effectiveContext.country, language: effectiveContext.language },
 			env: {
 				SUPABASE_URL: process.env.SUPABASE_URL!,
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,

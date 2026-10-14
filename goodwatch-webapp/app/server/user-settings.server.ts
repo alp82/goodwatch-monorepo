@@ -1,3 +1,5 @@
+import { parseLocalizationRecord } from "../utils/media-language.ts";
+import { MEDIA_PREFERENCES_KEY, readMediaPreferences, writeMediaPreferences } from "./media-preferences-store.server.ts";
 import {
 	getQueryKeyUserSettings,
 	type GetUserSettingsResult,
@@ -18,7 +20,7 @@ const SETTINGS_CACHE = {
 declareResettableCache(SETTINGS_CACHE);
 
 interface UserSettingRow {
-	key: keyof UserSettingsMap;
+	key: string;
 	value: string;
 }
 
@@ -57,11 +59,14 @@ async function _getUserSettings({
 
 	const settings: GetUserSettingsResult = {};
 	for (const row of result) {
-		const convertedSettingValue = _convertSettingValue(row.key, row.value);
+		const convertedSettingValue = _convertSettingValue(row.key as keyof UserSettingsMap, row.value);
 		if (convertedSettingValue !== null) {
 			(settings as any)[row.key] = convertedSettingValue;
 		}
 	}
+	// The atomic pair owns country; keep the historical settings API shape for all existing readers.
+	const pair = parseLocalizationRecord(result.find(row => row.key === MEDIA_PREFERENCES_KEY)?.value);
+	if (pair) settings.country_default = pair.country;
 	return settings;
 }
 
@@ -107,19 +112,34 @@ export async function setUserSettings({
 		}
 	}
 
-	// Prepare data for upsert
-	const data = Object.entries(settings).map(([key, value]) => ({
+	// Old country-only setters preserve the language once an atomic pair exists.
+	let remaining = settings;
+	if (settings.country_default !== undefined) {
+		const { record } = await readMediaPreferences(user_id);
+		if (record) {
+			if (!options.ignoreUpdate) {
+				const country = settings.country_default.trim().toUpperCase();
+				if (!/^[A-Z]{2}$/.test(country)) return null;
+				await writeMediaPreferences(user_id, { country, language: record.language }, { expectedVersion: record.version });
+			}
+			remaining = { ...settings };
+			delete remaining.country_default;
+		}
+	}
+
+	// Other settings retain their existing write semantics.
+	const data = Object.entries(remaining).map(([key, value]) => ({
 		user_id,
 		key,
 		value: String(value),
 	}));
 
-	const result = await upsert({
+	const result = data.length ? await upsert({
 		table: "user_setting",
 		data,
 		conflictColumns: ["user_id", "key"],
 		ignoreUpdate: options.ignoreUpdate,
-	});
+	}) : { rowcount: 1 };
 
 	await resetUserSettingsCache({ user_id });
 	return result;

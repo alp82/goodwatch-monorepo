@@ -9,13 +9,13 @@ yet. It must follow this page too.
 
 ## The identity
 
-A cache key is the full URL plus the identity. The identity has three parts.
+A cache key is the full URL plus the identity. The identity has three parts. Only the effective pair is in shared root loader data; saved revisions, writer sequences and preference provenance are served by private `/api/media-preferences` responses.
 
 | Part | Values | Where it comes from |
 | --- | --- | --- |
 | Audience | `anon` or `member` | The auth cookie. A request is a member when its `Cookie` header has a cookie named `sb-<ref>-auth-token` or `sb-<ref>-auth-token.<n>`. `<ref>` is the first label of the `SUPABASE_URL` hostname. The value doesn't matter: a forged or expired cookie still makes a member. |
-| Country | Two uppercase letters | The `GW-Cache-Identity` request header. Without it: the region of the most preferred `Accept-Language` entry that has one (`de-DE` gives `DE`). Without that: `US`. |
-| Language | Two or three lowercase letters | The `GW-Cache-Identity` request header. Without it: the language of the most preferred `Accept-Language` entry. Without that: `en`. |
+| Country | Two uppercase letters | A valid `gw_loc` cookie first; otherwise the `GW-Cache-Identity` request header. Without either: the region of the most preferred `Accept-Language` entry that has one (`de-DE` gives `DE`). Without that: `US`. |
+| Language | A bounded supported tag, including pt-BR/pt-PT/zh-Hans/zh-Hant | An explicit `gw_loc` language first; browser mode negotiates q-ordered Accept-Language. Without a saved pair: a valid identity header, then browser negotiation, then English. Country never determines language. |
 
 - A member is never served from a shared cache and never stored in one.
 - `US` is the only country fallback. Google crawls from the US without `Accept-Language`. The earlier `DE` fallback
@@ -26,10 +26,10 @@ A cache key is the full URL plus the identity. The identity has three parts.
 ## How a cache learns the key
 
 The key travels in one header, in both directions: `GW-Cache-Identity: anon;<COUNTRY>;<language>`, for example
-`anon;US;en`. The value must match `^anon;[A-Z]{2};[a-z]{2,3}$`.
+`anon;US;en`. The country must be two uppercase letters and the language must be in the supported set from `app/utils/media-language.ts`. Regional/script tags are supported. Revisions, writer IDs, sequences and explicit/browser state do not appear in the key, since shared HTML exposes none of that state.
 
 - **A front cache sends it.** It computes the value, overwrites whatever the client sent, and adds it to the request.
-  The app then takes country and language from the header, ignores `Accept-Language`, and answers with
+  The app checks the header against any saved cookie pair. A matching cookie-aware header (or a valid header with no saved cookie) allows the shared policy. A conflicting header is ignored and the app computes its own cookie-aware identity and answers private. Eligible requests answer with
   `Vary: GW-Cache-Identity` and a shared `Cache-Control`.
 - **The app states it.** Every anonymous cacheable response carries the key the app used in `GW-Cache-Identity`.
 - **No header, no shared caching.** Plain `Vary` can't say "depends on whether one cookie exists". So a request
@@ -56,7 +56,7 @@ the final status.
 A route can shorten the shared policy. Public share lists and profile pages without an identity header use the
 anonymous keyed policy above. Hidden lists and all member views stay `private, no-store`.
 
-Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `Cookie`, except the gate's 403 and
+Compression adds `Accept-Encoding` to `Vary`. Without a front cache, HTML remains private,max-age=0 while the in-process cache keys on normalized cookie preferences. It needs no broad Cookie variant. No response of the app varies on `Cookie`, except the gate's 403 and
 410, which are `private, no-store`.
 
 ### Errors, redirects, and the gate
@@ -87,6 +87,7 @@ Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `
 | --- | --- |
 | Auth cookie `sb-<ref>-auth-token[.n]` | Makes the request a member. Never cacheable. |
 | `gw_browser` | Not part of the key. An unfiltered page doesn't read it. The gate requires it for filtered person URLs and for `/sign-in` and `/sign-up` with `redirectTo`. A cache forwards `Cookie` on a miss, never stores the 403, and may serve a stored filtered 200 page to anyone. |
+| `gw_loc` | One validated country/language preference envelope. It is resolved before lookup; saved-cookie guests remain cacheable under the same effective pair as other guests. The cookie revision, writer metadata and provenance are never in shared HTML or its key. |
 | Analytics cookies (`_ga*`, `ph_*`) | Irrelevant. The server doesn't read them. |
 | `gw_recording_sample`, `gw_stale_chunk_reload` | Browser storage keys, not cookies. Irrelevant. |
 | Feature flags (`REC_*`) | Environment variables. Preview users are members, so anonymous HTML doesn't depend on a visitor. A flag change needs a restart, and a purge of any page cache. |
@@ -167,9 +168,7 @@ The cache is described in [page-cache.md](page-cache.md). It keeps these rules:
 ## What a front cache must do
 
 1. Pass every request that has the auth cookie to the app, and never store its response.
-2. For every other request, compute `anon;<COUNTRY>;<language>` and set it as `GW-Cache-Identity`. Overwrite a value
-   that came from the client. How many country and language pairs get their own value is the cache's choice: the app
-   renders for whatever valid value it receives.
+2. For every other request, **before lookup**, parse/validate `gw_loc` with the same rule as `app/utils/media-language.ts`. Saved country wins. Explicit saved language wins; `language: "browser"` negotiates the request's Accept-Language. Without a valid cookie, derive country and language from the browser inputs with the app's defaults. Compute `anon;<COUNTRY>;<language>` and overwrite client-supplied `GW-Cache-Identity`. Do not key on the raw Cookie header, cookie revision, writer sequence or browser/explicit provenance. The app's `cacheIdentityOf` implements this derivation. If a front cache cannot implement it, it must not cache affected requests; an origin mismatch guard cannot protect an already-served edge hit.
 3. Key on the URL and that header. `Vary: GW-Cache-Identity` on the response says the same.
 4. Honor `private` and `no-store`. Never store a response without `s-maxage`, a response with `Set-Cookie`, or the
    gate's 403. Don't override that by URL or status.
@@ -197,3 +196,9 @@ The cache is described in [page-cache.md](page-cache.md). It keeps these rules:
   and owner views, missing pages, and redirects.
 - The metric queries are in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md): member responses and error
   responses with `cache_control="shared"` must stay empty.
+
+## Deployment of the media-language preference identity
+
+Repository search checked `goodwatch-proxy/Caddyfile`, Traefik's balance/instance/search configurations and app/server sources. **No production edge worker or proxy in this repository computes or injects GW-Cache-Identity.** Benchmark clients and the header-check script set it only for tests. [Serving architecture](serving-architecture.md) documents that there is no HTML cache in front; the site DNS record is DNS-only and Cloudflare proxies static files only. This is repo/configuration evidence; no live account configuration was queried.
+
+This change needs the ordinary coordinated webapp rollout to the page instances; their restart empties the in-process cache. It requires no proxy/edge configuration deployment today. Deploy the cookie-aware readers on both page instances before exposing the new preference UI. A future HTML edge cache must deploy the cookie-aware pre-lookup algorithm above together with the origin contract, overwrite client headers, forward cookies unchanged on misses and purge old HTML identities. The uncached preferences endpoint always remains private,no-store, regardless of identity headers.

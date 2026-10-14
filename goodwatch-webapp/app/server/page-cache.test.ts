@@ -1461,3 +1461,30 @@ test("a render offered after an asset switch finds no flight and is not stored",
 	await until(() => f.cache.stats().flights === 0)
 	assert.equal(f.cache.stats().entries, 0)
 })
+
+
+test("root country/language is shareable regardless of default/browser provenance", () => {
+	const defaults = pageCacheKey({ url: "/page" })
+	assert.deepEqual(defaults, pageCacheKey({ url: "/page", acceptLanguage: "en" }))
+	assert.deepEqual(defaults, pageCacheKey({ url: "/page", acceptLanguage: "en-US" }))
+})
+
+
+test("saved guests share an HTML key across revisions, writer sequences and explicit/browser mode", async () => {
+	const { serializeLocalizationCookie } = await import("../utils/media-language.ts")
+	const key = (version: string, language: "de" | "browser", sequence: number) => pageCacheKey({ url: "/page", acceptLanguage: "de-DE", cookie: serializeLocalizationCookie({ country: "DE", language, schemaVersion: 1, version, writer: { clientId: "different-visitor", sequence } }) })
+	assert.deepEqual(key("first-device", "de", 1), key("second-device", "de", 200))
+	assert.deepEqual(key("first-device", "de", 1), key("third-device", "browser", 30))
+	assert.deepEqual(key("first-device", "de", 1), pageCacheKey({ url: "/page", acceptLanguage: "de-DE" }))
+})
+
+test("a saved guest's warmed HTML is a cache hit for another revision of the same pair", async t => {
+	const { serializeLocalizationCookie } = await import("../utils/media-language.ts")
+	const f = await fixture(t)
+	const cookie = (version: string) => serializeLocalizationCookie({ country: "DE", language: "de", schemaVersion: 1, version })
+	await f.warm("/page", { cookie: cookie("visitor-one") })
+	const calls = f.app.calls
+	const response = await f.get("/page", { cookie: cookie("visitor-two") })
+	assert.equal(response.headers["gw-page-cache"], "hit")
+	assert.equal(f.app.calls, calls)
+})
