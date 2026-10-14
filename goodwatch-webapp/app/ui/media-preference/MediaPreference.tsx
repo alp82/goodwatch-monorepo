@@ -139,6 +139,7 @@ export function MediaPreferenceProvider({
 	// What is saved, its revision and provenance are private: never in the shared root data. Read when a visitor
 	// reaches for the pair or a country, and again for another member.
 	const [wanted, setWanted] = useState(false)
+	const warm = useCallback(() => setWanted(true), [])
 	const prefsKey = ["media-preferences", user?.id ?? null]
 	const prefsQuery = {
 		queryKey: prefsKey,
@@ -306,7 +307,7 @@ export function MediaPreferenceProvider({
 		saving: state.status === "saving",
 		changed: changes(state),
 		destination,
-		warm: () => setWanted(true),
+		warm,
 		known: prefs.data !== undefined,
 		pickCountry: (code) => {
 			setWanted(true)

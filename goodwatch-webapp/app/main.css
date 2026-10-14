@@ -295,3 +295,16 @@ html[data-tv-transition="out"] .tv-back {
 		contain-intrinsic-height: auto var(--reserve-md, 0px);
 	}
 }
+
+/* Media text in a script whose marks reach far above and below the line, such as Arabic (ui/media-text): room
+   inside the element's own clipping box (truncate, line-clamp), taken back outside it so nothing around it moves. */
+[data-media-script="tall"] {
+	padding-block: 0.15em;
+	margin-block: -0.15em;
+}
+
+/* Korean breaks lines between words, not between syllables; a word longer than its box still breaks. */
+:where([lang|="ko"]) {
+	word-break: keep-all;
+	overflow-wrap: anywhere;
+}

@@ -7,8 +7,7 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react"
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/solid"
-import type { KeyboardEvent } from "react"
+import { XMarkIcon } from "@heroicons/react/24/solid"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import CountryList from "~/ui/details/hero/CountryList"
 import {
@@ -16,10 +15,10 @@ import {
 	countriesWithOffers,
 } from "~/ui/details/hero/countryOffers"
 import { regionName } from "~/utils/display-names"
-import { MEDIA_LANGUAGES } from "~/utils/media-language"
-import { englishName, ownName } from "./languages"
+import { englishName } from "./languages"
+import { TitlesList } from "./TitlesList"
 import { type DialogTab, useMediaPreference } from "./MediaPreference"
-import { BROWSER, intended } from "./machine"
+import { intended } from "./machine"
 
 export default function PreferenceDialog({
 	media,
@@ -94,82 +93,18 @@ export default function PreferenceDialog({
 								}}
 							/>
 						) : (
-							<TitlesList />
+							<TitlesList
+								value={intended(p.state).language}
+								browserLanguage={p.browserLanguage}
+								onPick={(l) => {
+									p.closeDialog()
+									p.pickLanguage(l)
+								}}
+							/>
 						)}
 					</div>
 				</DialogPanel>
 			</div>
 		</Dialog>
-	)
-}
-
-function TitlesList() {
-	const p = useMediaPreference()
-	const choice = intended(p.state).language
-	const options = [BROWSER, ...MEDIA_LANGUAGES]
-	// Up and down move through the list, as in a list box.
-	const move = (e: KeyboardEvent<HTMLUListElement>) => {
-		if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return
-		const buttons = [
-			...e.currentTarget.querySelectorAll<HTMLButtonElement>("button"),
-		]
-		const at = buttons.indexOf(document.activeElement as HTMLButtonElement)
-		const next =
-			buttons[
-				Math.min(
-					buttons.length - 1,
-					Math.max(0, at + (e.key === "ArrowDown" ? 1 : -1)),
-				)
-			]
-		if (next) {
-			e.preventDefault()
-			next.focus()
-		}
-	}
-	return (
-		<ul
-			aria-label="Titles in"
-			onKeyDown={move}
-			className="h-full overflow-y-auto overscroll-contain pr-1"
-		>
-			{options.map((l) => {
-				const selected = l === choice
-				return (
-					<li key={l}>
-						<button
-							type="button"
-							data-language={l}
-							aria-current={selected || undefined}
-							onClick={() => {
-								p.closeDialog()
-								p.pickLanguage(l)
-							}}
-							className={`flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-white hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-white ${selected ? "bg-white/[0.1] ring-1 ring-white/20" : ""}`}
-						>
-							{l === BROWSER ? (
-								<span className="min-w-0 flex-1">
-									<span className="block">Browser default</span>
-									<span className="block text-xs text-gray-400">
-										Follows your browser: {englishName(p.browserLanguage)} right
-										now
-									</span>
-								</span>
-							) : (
-								<span className="min-w-0 flex-1 truncate">
-									{englishName(l)}{" "}
-									<span className="text-gray-500">{ownName(l)}</span>
-								</span>
-							)}
-							{selected && (
-								<CheckIcon
-									className="h-4 w-4 shrink-0 text-gray-300"
-									aria-label="Current"
-								/>
-							)}
-						</button>
-					</li>
-				)
-			})}
-		</ul>
 	)
 }
