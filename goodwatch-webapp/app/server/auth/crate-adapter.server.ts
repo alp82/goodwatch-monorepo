@@ -101,7 +101,7 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 	if (!String((await sql("SHOW CREATE TABLE doc.auth_user_email")).rows[0]?.[0]).includes('"user_seq" BIGINT NOT NULL')) throw new Error("Incompatible prerelease email claim schema: offline migration required")
 }
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds }) {
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds, enforceGrantRevocation = false }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds; enforceGrantRevocation?: boolean }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
@@ -232,6 +232,14 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 			}
 			const mutate = async (model: string, original: Stored, update: Row, deleting = false, replacing = false, admission?: AuthAdmission): Promise<Row | null> => {
 				let emailClaim = original.emailClaim
+				// A refresh-family sweep is not atomic with child issuance. Close the
+				// authoritative grant first; a late child then fails both refresh and
+				// JWT checks. Normal rotation carries rotatedAt and keeps its grant.
+				if (enforceGrantRevocation && model === "oauthRefreshToken" && update.revoked instanceof Date && !("rotatedAt" in update) && original.row.grantVersion) {
+					const grantId = digest(original.row.clientId, original.row.userId, original.row.referenceId ?? null)
+					const grant = await stored("oauthConsent", grantId)
+					if (grant && !grant.deleted && grant.row.grantVersion === original.row.grantVersion) await assign("oauthConsent", grant, [{ field: "id", operator: "eq", value: grantId, connector: "AND", mode: "sensitive" }, { field: "grantVersion", operator: "eq", value: original.row.grantVersion, connector: "AND", mode: "sensitive" }], {}, true)
+				}
 				if (model === "user" && update.email !== undefined && update.email !== original.row.email) {
 					update = { ...update, email: testOnlyConformance ? update.email : normalizeEmail(update.email) }
 					try { emailClaim = await reserveEmail(update.email, original.row.id, digest(original.row.id, update.email, original.seq, original.term), original.seq) }

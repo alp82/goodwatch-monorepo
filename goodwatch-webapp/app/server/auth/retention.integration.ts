@@ -1,10 +1,11 @@
+import { maintenanceDatabase } from "./maintenance-fixtures.integration.ts"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { test } from "node:test"
-import { crateAuthAdapter, localCrateTransport } from "./crate-adapter.server.ts"
+import { crateAuthAdapter } from "./crate-adapter.server.ts"
 import { collectAuthGarbage } from "./maintenance.server.ts"
 
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
+const sql = maintenanceDatabase()
 const encryptionSecret = "disposable-local-auth-integration-key-548"
 const adapter = crateAuthAdapter({ sql })({})
 

@@ -1,9 +1,10 @@
+import { maintenanceDatabase } from "./maintenance-fixtures.integration.ts"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
-import { test, before, after } from "node:test"
-import { crateAuthAdapter, localCrateTransport, migrateAuthTables } from "./crate-adapter.server.ts"
+import { test } from "node:test"
+import { crateAuthAdapter } from "./crate-adapter.server.ts"
 
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
+const sql = maintenanceDatabase()
 
 async function clean() {
  await sql("REFRESH TABLE doc.auth_capacity, doc.auth_session, doc.auth_oauth_consent, doc.auth_jwks")
@@ -12,8 +13,7 @@ async function clean() {
  await sql("DELETE FROM doc.auth_oauth_consent")
  await sql("DELETE FROM doc.auth_jwks")
 }
-before(async () => { await migrateAuthTables(sql); await clean() })
-after(clean)
+
 
 test("concurrent session creation cannot exceed the configured population admission limit", async () => {
 	const userId = randomUUID()

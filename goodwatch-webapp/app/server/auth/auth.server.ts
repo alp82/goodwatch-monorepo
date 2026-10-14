@@ -44,6 +44,7 @@ export function createGoodwatchAuth(options: {
 			encryptionSecret: options.encryptionSecret,
 			encryptionKeys: options.encryptionKeys,
 			populationBounds: true,
+			enforceGrantRevocation: true,
 		}),
 		plugins: options.mcp
 			? [

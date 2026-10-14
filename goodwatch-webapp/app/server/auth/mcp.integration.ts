@@ -520,3 +520,26 @@ test("the same OAuth client has independent grants and Last used for two compute
 		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
 	}
 })
+
+test("revoking a refresh token disconnects that grant immediately for MCP JWTs as well", async () => {
+	const issued = await grant()
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")
+	process.env.BETTER_AUTH_ENABLED = "true"
+	process.env.MCP_RESOURCE_URL = resource
+	setAuthForTest(memberAuth)
+	try {
+		await mcpAuthorization.verifyAccessToken(issued.token.access_token)
+		const revoked = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/revoke`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({ client_id: issued.client.client_id, token: issued.token.refresh_token, token_type_hint: "refresh_token" }),
+		}))
+		assert.equal(revoked.status, 200)
+		await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))
+	} finally {
+		setAuthForTest(null)
+		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
+	}
+})
