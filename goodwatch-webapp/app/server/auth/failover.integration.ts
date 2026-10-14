@@ -48,7 +48,7 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 		}
 		return transport(statement, args)
 	}
-	const adapter = crateAuthAdapter({ sql })(options)
+	const adapter = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })(options)
 	const model = kind === "consume" ? "verification" : "rateLimit"
 	const value = kind === "consume"
 		? await adapter.create({ model, data: { identifier: randomUUID(), value: "one-use-code", expiresAt: new Date(Date.now() + 600_000) } })
@@ -100,7 +100,7 @@ test("an unacknowledged write with no readable receipt throws rather than guessi
 		if (statement.startsWith("UPDATE doc.auth_verification ")) { failing = true; throw new Error("Lost response") }
 		return result
 	}
-	const adapter = crateAuthAdapter({ sql })({})
+	const adapter = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })({})
 	const value = await adapter.create({ model: "verification", data: { identifier: randomUUID(), value: "one-use", expiresAt: new Date(Date.now() + 60_000) } })
 	await assert.rejects(adapter.consumeOne<Record<string, any>>({ model: "verification", where: [{ field: "id", value: value.id }] }), IndeterminateAuthWriteError)
 	failing = false

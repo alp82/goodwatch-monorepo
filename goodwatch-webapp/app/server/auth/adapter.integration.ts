@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { randomUUID } from "node:crypto"
 import { authTestOptions } from "./fixtures.integration.ts"
-import { crateAuthAdapter, localCrateTransport, migrateAuthTables } from "./crate-adapter.server.ts"
+import { crateAuthAdapter, crateAuthTransport, localCrateTransport, migrateAuthTables, IndeterminateAuthWriteError } from "./crate-adapter.server.ts"
 
 const endpoints = ["http://127.0.0.1:15548", "http://127.0.0.1:15549", "http://127.0.0.1:15550"]
 
@@ -17,6 +17,191 @@ test("a new member is immediately readable by id and normalized email without re
 	}, forceAllowId: true })
 	assert.equal((await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "id", value: member.id }] }))?.name, "Member")
 	assert.equal((await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "email", value: member.email.toLowerCase() }] }))?.id, member.id)
+})
+
+test("every allowlisted model can be created and read through its prescribed lookup key", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })({ ...authTestOptions, rateLimit: { storage: "database" } })
+	const id = randomUUID(), now = new Date(), expiresAt = new Date(Date.now() + 60_000)
+	const fixtures: Array<{ model: string; data: Record<string, any>; where: Array<{ field: string; value: any }>; many?: boolean }> = [
+		{ model: "user", data: { id, name: "Member", email: `${id}@example.test`, emailVerified: true }, where: [{ field: "id", value: id }] },
+		{ model: "account", data: { providerId: "credential", accountId: id, userId: id }, where: [{ field: "providerId", value: "credential" }, { field: "accountId", value: id }], many: true },
+		{ model: "session", data: { userId: id, token: id, expiresAt }, where: [{ field: "token", value: id }] },
+		{ model: "verification", data: { id, identifier: id, value: "verification", expiresAt }, where: [{ field: "id", value: id }] },
+		{ model: "jwks", data: { id, publicKey: "public", privateKey: "encrypted-private", createdAt: now }, where: [{ field: "id", value: id }] },
+		{ model: "oauthClient", data: { clientId: id, name: "Connector" }, where: [{ field: "clientId", value: id }] },
+		{ model: "oauthResource", data: { identifier: id, name: "MCP" }, where: [{ field: "identifier", value: id }] },
+		{ model: "oauthClientResource", data: { clientId: id, resourceId: id, createdAt: now }, where: [{ field: "clientId", value: id }, { field: "resourceId", value: id }] },
+		{ model: "oauthConsent", data: { clientId: id, userId: id, scopes: ["read"] }, where: [{ field: "clientId", value: id }, { field: "userId", value: id }] },
+		{ model: "oauthAccessToken", data: { token: id, clientId: id, userId: id, expiresAt }, where: [{ field: "token", value: id }] },
+		{ model: "oauthRefreshToken", data: { token: id, clientId: id, userId: id, expiresAt }, where: [{ field: "token", value: id }] },
+		{ model: "oauthClientAssertion", data: { id, expiresAt }, where: [{ field: "id", value: id }] },
+		{ model: "rateLimit", data: { key: id, count: 1, lastRequest: Date.now() }, where: [{ field: "key", value: id }], many: true },
+	]
+	for (const { model, data, where, many } of fixtures) {
+		const created = await adapter.create({ model, data, forceAllowId: true })
+		const found = many ? (await adapter.findMany<Record<string, any>>({ model, where, limit: 2 }))[0] : await adapter.findOne<Record<string, any>>({ model, where })
+		assert.equal(found?.id, created.id, model)
+	}
+})
+
+test("a zero-row insert acknowledgement cannot claim an identity owned by a different caller", async () => {
+	const transport = localCrateTransport(endpoints)
+	const healthy = crateAuthAdapter({ sql: transport })({})
+	const data = { providerId: "google", accountId: randomUUID(), userId: "original-owner" }
+	const account = await healthy.create({ model: "account", data })
+	const sql = (statement: string, args?: unknown[]) => transport(
+		statement.startsWith("INSERT INTO doc.auth_account ") ? `${statement} ON CONFLICT DO NOTHING` : statement, args,
+	)
+	const contender = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })({})
+	await assert.rejects(contender.create({ model: "account", data: { ...data, userId: "another-owner" } }), /indeterminate|duplicate key/)
+	assert.equal((await healthy.findMany<Record<string, any>>({ model: "account", where: [{ field: "providerId", value: "google" }, { field: "accountId", value: account.accountId }], limit: 2 }))[0].userId, "original-owner")
+})
+
+test("consumption recovery survives identifier cleanup and invalidates older verification rows", async () => {
+	const transport = localCrateTransport(endpoints)
+	const healthy = crateAuthAdapter({ sql: transport })({})
+	const identifier = randomUUID()
+	for (const [value, createdAt] of [["obsolete", new Date(Date.now() - 10000)], ["redeem", new Date()]] as const) await healthy.create({
+		model: "verification", data: { identifier, value, createdAt, expiresAt: new Date(Date.now() + 60_000) },
+	})
+	const latest = (await healthy.findMany<Record<string, any>>({ model: "verification", where: [{ field: "identifier", value: identifier }], sortBy: { field: "createdAt", direction: "desc" }, limit: 1 }))[0]
+	const sql = async (statement: string, args?: unknown[]) => {
+		const result = await transport(statement, args)
+		if (statement.startsWith("UPDATE doc.auth_verification ")) {
+			await healthy.deleteMany({ model: "verification", where: [{ field: "identifier", value: identifier }] })
+			return { ...result, rowcount: 0 }
+		}
+		return result
+	}
+	const consumer = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })({})
+	assert.equal((await consumer.consumeOne<Record<string, any>>({ model: "verification", where: [{ field: "id", value: latest.id }] }))?.value, "redeem")
+	assert.deepEqual(await healthy.findMany({ model: "verification", where: [{ field: "identifier", value: identifier }] }), [])
+})
+
+test("increment recovery returns its own outcome even after a later writer changes the row", async () => {
+	const transport = localCrateTransport(endpoints)
+	const options = { ...authTestOptions, rateLimit: { storage: "database" as const } }
+	const healthy = crateAuthAdapter({ sql: transport })(options)
+	const row = await healthy.create({ model: "rateLimit", data: { key: randomUUID(), count: 0, lastRequest: Date.now() } })
+	const where = [{ field: "key", value: row.key }, { field: "lastRequest", operator: "gt" as const, value: 0 }, { field: "count", operator: "lt" as const, value: 100 }]
+	const sql = async (statement: string, args?: unknown[]) => {
+		const result = await transport(statement, args)
+		if (statement.startsWith("UPDATE doc.auth_rate_limit ")) {
+			assert.equal((await healthy.incrementOne<Record<string, any>>({ model: "rateLimit", where, increment: { count: 1 }, set: { lastRequest: Date.now() } }))?.count, 2)
+			return { ...result, rowcount: 0 }
+		}
+		return result
+	}
+	const original = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })(options)
+	assert.equal((await original.incrementOne<Record<string, any>>({ model: "rateLimit", where, increment: { count: 1 }, set: { lastRequest: Date.now() } }))?.count, 1)
+	assert.equal((await healthy.findMany<Record<string, any>>({ model: "rateLimit", where: [{ field: "key", value: row.key }] }))[0].count, 2)
+})
+
+test("a create without its natural lookup key is refused instead of claiming an undefined key", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })(authTestOptions)
+	await assert.rejects(adapter.create({ model: "session", data: { userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } }), /Unsupported auth shape/)
+	await assert.rejects(adapter.create({ model: "oauthClient", data: { name: "Missing client id" } }), /Unsupported auth shape/)
+})
+
+test("a consent lookup without referenceId refuses ambiguous reference scopes", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })(authTestOptions)
+	const base = { clientId: randomUUID(), userId: randomUUID(), scopes: ["read"] }
+	await adapter.create({ model: "oauthConsent", data: { ...base, referenceId: "one" } })
+	await adapter.create({ model: "oauthConsent", data: { ...base, referenceId: "two" } })
+	const where = [{ field: "clientId", value: base.clientId }, { field: "userId", value: base.userId }]
+	await assert.rejects(adapter.findOne({ model: "oauthConsent", where }), /Ambiguous auth lookup/)
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "oauthConsent", where: [...where, { field: "referenceId", value: "two" }] }))?.referenceId, "two")
+})
+
+test("an unlinked Google account and withdrawn consent can be created again without retaining the old owner's fields", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })(authTestOptions)
+	const account = await adapter.create({ model: "account", data: { providerId: "google", accountId: randomUUID(), userId: "previous-owner", accessToken: "old-google-token" } })
+	await adapter.delete({ model: "account", where: [{ field: "id", value: account.id }] })
+	const linked = await adapter.create({ model: "account", data: { providerId: "google", accountId: account.accountId, userId: "current-owner" } })
+	assert.equal(linked.id, account.id)
+	assert.equal(linked.userId, "current-owner")
+	assert.equal((linked as Record<string, any>).accessToken, undefined)
+	const data = { clientId: randomUUID(), userId: randomUUID(), scopes: ["read"] }
+	const consent = await adapter.create({ model: "oauthConsent", data })
+	await adapter.delete({ model: "oauthConsent", where: [{ field: "id", value: consent.id }] })
+	assert.equal((await adapter.create({ model: "oauthConsent", data })).id, consent.id)
+})
+
+test("a concurrent session refresh cannot be reported as a completed bulk revocation", async () => {
+	const transport = localCrateTransport(endpoints)
+	const healthy = crateAuthAdapter({ sql: transport })({})
+	const session = await healthy.create({ model: "session", data: { token: randomUUID(), userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
+	let racing = true
+	const sql = async (statement: string, args?: unknown[]) => {
+		if (racing && statement.startsWith("UPDATE doc.auth_session ")) {
+			racing = false
+			await healthy.update({ model: "session", where: [{ field: "token", value: session.token }], update: { expiresAt: new Date(Date.now() + 120_000) } })
+		}
+		return transport(statement, args)
+	}
+	const revoker = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })({})
+	await assert.rejects(revoker.deleteMany({ model: "session", where: [{ field: "userId", value: session.userId }] }), /mutation conflicted/)
+	assert.equal(await healthy.deleteMany({ model: "session", where: [{ field: "userId", value: session.userId }] }), 1)
+})
+
+test("a failed coordinator can be skipped for reads, while a write is never replayed on another node", async () => {
+	const secret = "disposable-local-auth-integration-key-548"
+	const healthy = crateAuthAdapter({ sql: localCrateTransport(endpoints) })({})
+	const session = await healthy.create({ model: "session", data: { token: randomUUID(), userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
+	const reader = crateAuthAdapter({ sql: crateAuthTransport(["http://127.0.0.1:1", endpoints[0]]), encryptionSecret: secret })({})
+	assert.equal((await reader.findOne<Record<string, any>>({ model: "session", where: [{ field: "token", value: session.token }] }))?.id, session.id)
+	const writer = crateAuthAdapter({ sql: crateAuthTransport(["http://127.0.0.1:1", endpoints[0]]), encryptionSecret: secret })({})
+	const token = randomUUID()
+	await assert.rejects(writer.create({ model: "session", data: { token, userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } }), IndeterminateAuthWriteError)
+	assert.equal(await healthy.findOne({ model: "session", where: [{ field: "token", value: token }] }), null)
+})
+
+test("auth rows can be recovered with their payload secret and cannot be read with another secret", async () => {
+	const sql = localCrateTransport(endpoints)
+	const correct = crateAuthAdapter({ sql, encryptionSecret: "correct-payload-secret-for-integration-548" })({})
+	const wrong = crateAuthAdapter({ sql, encryptionSecret: "different-payload-secret-for-integration-548" })({})
+	const session = await correct.create({ model: "session", data: { token: randomUUID(), userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
+	const where = [{ field: "token", value: session.token }]
+	assert.equal((await correct.findOne<Record<string, any>>({ model: "session", where }))?.token, session.token)
+	await assert.rejects(wrong.findOne({ model: "session", where }), /decrypt|authenticate/i)
+	await correct.delete({ model: "session", where })
+})
+
+test("the default 100-row limit cannot silently truncate a session sweep, and explicit pagination is preserved", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })({})
+	const userId = randomUUID()
+	await Promise.all(Array.from({ length: 101 }, () => adapter.create({ model: "session", data: {
+		userId, token: randomUUID(), expiresAt: new Date(Date.now() + 60_000),
+	} })))
+	const where = [{ field: "userId", value: userId }]
+	await assert.rejects(adapter.findMany({ model: "session", where }), /default limit 100/)
+	const first = await adapter.findMany<Record<string, any>>({ model: "session", where, limit: 50 })
+	const second = await adapter.findMany<Record<string, any>>({ model: "session", where, limit: 51, offset: 50 })
+	assert.equal(new Set([...first, ...second].map(row => row.id)).size, 101)
+	assert.equal(await adapter.deleteMany({ model: "session", where }), 101)
+	assert.deepEqual(await adapter.findMany({ model: "session", where }), [])
+})
+
+test("unlisted ownership changes, rotation values and sort options are refused", async () => {
+	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })(authTestOptions)
+	const session = await adapter.create({ model: "session", data: { userId: randomUUID(), token: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
+	await assert.rejects(adapter.update({ model: "session", where: [{ field: "token", value: session.token }], update: { userId: "another-member" } }), /Unsupported auth shape/)
+	const refresh = await adapter.create({ model: "oauthRefreshToken", data: { token: randomUUID(), clientId: "client", userId: "member", revoked: null } })
+	await assert.rejects(adapter.incrementOne({ model: "oauthRefreshToken", where: [{ field: "id", value: refresh.id }, { field: "revoked", value: null }], increment: {}, set: { revoked: null } }), /Unsupported auth shape/)
+	await assert.rejects(adapter.findMany({ model: "oauthRefreshToken", where: [{ field: "clientId", value: "client" }, { field: "userId", value: "member" }], sortBy: { field: "revoked", direction: "asc" } }), /Unsupported auth shape/)
+})
+
+test("enumeration bounds apply to the member's records and fail closed when that member exceeds them", async () => {
+	const sql = localCrateTransport(endpoints)
+	const member = randomUUID()
+	const adapter = crateAuthAdapter({ sql })({})
+	for (const userId of [member, member, member, randomUUID(), randomUUID()]) await adapter.create({
+		model: "session", data: { token: randomUUID(), userId, expiresAt: new Date(Date.now() + 60_000) },
+	})
+	const bounded = crateAuthAdapter({ sql, maxEnumeration: 2 })({})
+	await assert.rejects(bounded.findMany({ model: "session", where: [{ field: "userId", value: member }] }), /enumeration exceeds safe bound/)
+	const one = await adapter.create({ model: "session", data: { token: randomUUID(), userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
+	assert.equal((await bounded.findMany({ model: "session", where: [{ field: "userId", value: one.userId }] })).length, 1)
 })
 
 test("email changes reserve the new address before mutation and preserve uniqueness", async () => {
@@ -75,7 +260,7 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 	const inventory: Record<string, Record<string, string[]>> = {
 		user: { findOne: ["id", "email"], update: ["id", "email"], delete: ["id"] },
 		account: { findMany: ["providerId+accountId", "userId", "id"], findOne: ["userId+providerId+accountId"], updateMany: ["userId+providerId+accountId"], update: ["id"], delete: ["id"], deleteMany: ["userId"] },
-		session: { findOne: ["token", "id"], update: ["token"], findMany: ["userId", "userId+expiresAt:gt", "token:in+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
+		session: { findOne: ["token", "id"], update: ["token"], findMany: ["userId", "userId+expiresAt:gt", "token+expiresAt:gt", "token:in+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
 		verification: { findOne: ["id"], findMany: ["identifier"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier", "expiresAt:lt"] },
 		jwks: { findMany: [""], findOne: ["id"] },
 		oauthClient: { findOne: ["clientId"], findMany: ["referenceId", "userId", "clientId:in"], update: ["clientId", "clientId+clientDiscoveryId"], delete: ["clientId"] },
@@ -93,7 +278,12 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 			const value = operator === "in" ? [] : field === "providerId" ? "credential" : field === "revoked" ? null : field === "expiresAt" ? new Date(0) : ["count", "lastRequest"].includes(field) ? -1 : "absent-shape-fixture"
 			return { field, operator, value }
 		}) : []
-		const params = { model, where, update: { updatedAt: new Date() }, increment: {}, set: { revoked: new Date(), count: 1, lastRequest: 1 } }
+		const update = model === "oauthRefreshToken" ? action === "update" ? { rotationReplayResponse: "encrypted-response" } : { revoked: new Date() }
+			: model === "oauthAccessToken" ? { revoked: new Date() } : model === "account" ? { password: "password-hash" }
+			: model === "session" ? { expiresAt: new Date() } : model === "verification" ? { value: "updated" }
+			: model === "oauthConsent" ? { scopes: ["read"] } : { name: "updated" }
+		const rateIncrement = model === "rateLimit" && shape.includes("count:lt")
+		const params = { model, where, update, increment: rateIncrement ? { count: 1 } : {}, set: model === "rateLimit" ? rateIncrement ? { lastRequest: 1 } : { count: 1, lastRequest: 1 } : { revoked: new Date() } }
 		await (adapter as any)[action](params)
 		if (action === "delete" || action === "deleteMany") await adapter.findMany<Record<string, any>>({ model, where: where as any, limit: action === "delete" ? 1 : 100 })
 	}

@@ -36,6 +36,14 @@ while (Date.now() < deadline) {
 }
 if (!ready) throw new Error('Pinned three-node local cluster did not become ready')
 await migrateAuthTables(sql)
+const copiesDeadline = Date.now() + 90000
+let copiesReady = false
+while (Date.now() < copiesDeadline) {
+  const copies = await sql("SELECT table_name,count(*) FROM sys.shards WHERE table_name LIKE 'auth_%' AND state='STARTED' GROUP BY table_name")
+  if (copies.rows.length === 14 && copies.rows.every(row => row[1] === 3)) { copiesReady = true; break }
+  await new Promise(resolve => setTimeout(resolve, 500))
+}
+if (!copiesReady) throw new Error('Auth tables did not acquire three started shard copies')
 JS
 npm run typecheck:auth | tee scripts/auth-cratedb/results/typecheck.log
 npm run test:auth:integration | tee scripts/auth-cratedb/results/integration.log

@@ -38,3 +38,38 @@ export function assertAuthShape(model: string, action: string, where: CleanedWhe
 		if (values.providerId !== "credential" || values.accountId !== values.userId) fail()
 	}
 }
+
+export function assertAuthMutation(model: string, action: string, input: Record<string, any>) {
+	const fail = () => { throw new Error(`Unsupported auth shape: ${model}.${action} values/options`) }
+	if (action === "create") {
+		const required: Record<string, string[]> = {
+			user: ["id", "email"], account: ["providerId", "accountId", "userId"], session: ["token", "userId"],
+			verification: ["id", "identifier", "value"], jwks: ["id", "publicKey", "privateKey"],
+			oauthClient: ["clientId"], oauthResource: ["identifier"], oauthClientResource: ["clientId", "resourceId"],
+			oauthConsent: ["clientId", "userId"], oauthAccessToken: ["token", "clientId"], oauthRefreshToken: ["token", "clientId"],
+			oauthClientAssertion: ["id"], rateLimit: ["key"],
+		}
+		if ((required[model] ?? []).some(field => typeof input.data[field] !== "string" || !input.data[field].trim())) fail()
+		if (model === "rateLimit" && (!Number.isSafeInteger(input.data.count) || !Number.isSafeInteger(input.data.lastRequest))) fail()
+	}
+	if (input.sortBy && !(model === "verification" && action === "findMany" && input.sortBy.field === "createdAt" && input.sortBy.direction === "desc")) fail()
+	if (input.limit !== undefined && (!Number.isSafeInteger(input.limit) || input.limit < 1)) fail()
+	if (input.offset !== undefined && (!Number.isSafeInteger(input.offset) || input.offset < 0)) fail()
+	if (["update", "updateMany", "incrementOne"].includes(action)) {
+		const data = action === "incrementOne" ? input.set ?? {} : input.update ?? {}
+		if (!Object.keys(data).length && !Object.keys(input.increment ?? {}).length) fail()
+		if (model === "account" && ["id", "providerId", "accountId", "userId"].some(field => field in data)) fail()
+		if (model === "session" && ["id", "token", "userId"].some(field => field in data)) fail()
+		const allowed = model === "oauthRefreshToken"
+			? action === "update" ? ["rotationReplayResponse"] : action === "updateMany" ? ["revoked"] : ["revoked", "rotatedAt", "rotationReplayExpiresAt"]
+			: model === "oauthAccessToken" ? ["revoked"] : undefined
+		if (allowed && Object.keys(data).some(field => !allowed.includes(field))) fail()
+		if (["oauthRefreshToken", "oauthAccessToken"].includes(model) && action !== "update" && (!(data.revoked instanceof Date) || !Number.isFinite(data.revoked.getTime()))) fail()
+		if (model === "oauthRefreshToken" && action === "incrementOne" && Object.keys(input.increment ?? {}).length) fail()
+		if (model === "rateLimit" && action === "incrementOne") {
+			if (Object.keys(data).some(field => !["count", "lastRequest"].includes(field)) || !Number.isFinite(data.lastRequest)) fail()
+			const reset = input.where.some((p: CleanedWhere) => p.field === "lastRequest" && p.operator === "lte")
+			if (reset ? Object.keys(input.increment).length !== 0 || data.count !== 1 : input.increment.count !== 1 || Object.keys(input.increment).length !== 1 || "count" in data) fail()
+		}
+	}
+}

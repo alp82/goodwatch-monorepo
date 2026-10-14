@@ -19,7 +19,12 @@ consumption, 24-way rotation/revocation, strict OR rejection, email claims,
 consent upsert and the inventoried shape checks passed against local CrateDB.
 The first complete upstream conformance run had 199 passes and 39 failures;
 projection, additional models, dates and email changes have since been addressed.
-The complete rerun, fault harness and focused typecheck remain to be completed.
+Subsequent full runs passed 238 upstream conformance tests and both forced
+primary-failover tests (applied SQL writes returned zero; receipts recovered the
+winning result). Eight upstream strict core-flow tests also passed. Focused
+checks now cover encrypted documents/receipts, lost insert acknowledgements,
+retained outcomes after later writes, concurrent bulk revocation, safe association
+recreation and ambiguous consent rejection. A final coherent full rerun is pending.
 
 Current deliberate limitations: email claims remain reserved after address
 changes/deletion; tombstones and receipts await coordinated physical cleanup;
