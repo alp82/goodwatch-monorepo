@@ -156,7 +156,7 @@ export default function SignIn() {
 				</Notice>
 			)}
 			<ServiceNotice failure={failure === "google" ? null : failure} />
-			<form onSubmit={submit} className="space-y-5">
+			<form method="post" onSubmit={submit} className="space-y-5">
 				<EmailField
 					value={email}
 					onChange={setEmail}

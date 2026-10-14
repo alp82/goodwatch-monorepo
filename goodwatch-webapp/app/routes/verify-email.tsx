@@ -132,7 +132,7 @@ function Resend({ kind }: { kind: "expired" | "resend" }) {
 				<Heading icon={<EnvelopeIcon className="h-7 w-7 text-amber-400" />} title="Confirm your email" sub="Enter the email you signed up with and we'll send a new link." />
 			)}
 			<ServiceNotice failure={failure} />
-			<form onSubmit={submit} className="space-y-5">
+			<form method="post" onSubmit={submit} className="space-y-5">
 				<EmailField value={email} onChange={setEmail} autoFocus />
 				<PrimaryButton busy={busy}>Send a new link</PrimaryButton>
 			</form>

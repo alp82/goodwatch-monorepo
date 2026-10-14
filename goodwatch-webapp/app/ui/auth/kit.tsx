@@ -8,6 +8,8 @@ import { Spinner } from "~/ui/wait/Spinner"
 import { type AuthFailure, PASSWORD_MIN } from "~/utils/auth-client"
 
 // The form on the left, the picture from lg up. On a phone the form starts at the top, under the header.
+// Forms on these pages post (`method="post"`): one sent before the page's scripts run must never put a password in the
+// address.
 export function AuthSplit({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
 	return (
 		<div className="flex min-h-[calc(100vh-4rem)] bg-gray-900">

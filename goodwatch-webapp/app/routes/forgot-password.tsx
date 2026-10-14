@@ -112,7 +112,7 @@ export default function ForgotPassword() {
 		<AuthSplit>
 			<Heading icon={<KeyIcon className="h-7 w-7 text-amber-400" />} title="Forgot your password?" sub="Enter your email and we'll send you a link to set a new one." />
 			<ServiceNotice failure={failure} />
-			<form onSubmit={submit} className="space-y-5">
+			<form method="post" onSubmit={submit} className="space-y-5">
 				<EmailField value={email} onChange={setEmail} autoFocus />
 				<PrimaryButton busy={busy}>Send link</PrimaryButton>
 			</form>

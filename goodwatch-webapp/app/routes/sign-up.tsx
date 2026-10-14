@@ -116,7 +116,7 @@ export default function SignUpRoute() {
 			{failure === "password" && <Notice tone="error">Choose a password with at least {PASSWORD_MIN} characters.</Notice>}
 			{failure === "invalid" && <Notice tone="error">That didn't work. Check the email address and try again.</Notice>}
 			<ServiceNotice failure={failure} />
-			<form onSubmit={submit} className="space-y-5">
+			<form method="post" onSubmit={submit} className="space-y-5">
 				<EmailField value={email} onChange={setEmail} error={failure === "invalid"} />
 				<PasswordField value={password} onChange={setPassword} isNew error={failure === "password"} hint={<PasswordRule password={password} />} />
 				<PrimaryButton busy={busy} disabled={password.length < PASSWORD_MIN}>

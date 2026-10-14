@@ -124,7 +124,7 @@ function NewPassword({ token, onDone, onExpired }: { token: string; onDone: () =
 			<Heading icon={<KeyIcon className="h-7 w-7 text-amber-400" />} title="Set a new password" sub="Choose the password you'll sign in with from now on." />
 			{failure === "password" && <Notice tone="error">Choose a password with at least {PASSWORD_MIN} characters.</Notice>}
 			<ServiceNotice failure={failure} />
-			<form onSubmit={submit} className="space-y-5">
+			<form method="post" onSubmit={submit} className="space-y-5">
 				<PasswordField label="New password" value={password} onChange={setPassword} isNew autoFocus hint={<PasswordRule password={password} />} />
 				<p className="text-sm text-gray-400">
 					Saving signs you out on all other devices. Connected apps like Claude keep working.
@@ -173,7 +173,7 @@ function Expired() {
 			) : (
 				<>
 					<ServiceNotice failure={failure} />
-					<form onSubmit={submit} className="space-y-5">
+					<form method="post" onSubmit={submit} className="space-y-5">
 						<EmailField value={email} onChange={setEmail} />
 						<PrimaryButton busy={busy}>Send a new link</PrimaryButton>
 					</form>
