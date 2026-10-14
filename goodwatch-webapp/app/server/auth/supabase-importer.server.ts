@@ -87,28 +87,38 @@ export async function importSupabaseAuth({
 			"REFRESH TABLE doc.auth_user, doc.auth_account, doc.auth_user_email",
 		)
 		const result = empty()
-		result.users = Number(
-			(await sql("SELECT count(*) FROM doc.auth_user WHERE deleted=false"))
-				.rows[0][0],
-		)
 		result.emailClaims = Number(
 			(await sql("SELECT count(*) FROM doc.auth_user_email")).rows[0][0],
 		)
-		let cursor = ""
-		while (true) {
-			const rows = (
-				await sql(
-					"SELECT id,payload FROM doc.auth_account WHERE deleted=false AND id>? ORDER BY id LIMIT 500",
-					[cursor],
-				)
-			).rows
-			if (!rows.length) break
-			for (const [id, payload] of rows) {
-				const account = codec.decode(payload)
-				result.accounts++
-				if (account.providerId === "credential") result.credential++
-				if (account.providerId === "google") result.google++
-				cursor = String(id)
+		for (const model of ["user", "account"]) {
+			let cursor = ""
+			while (true) {
+				const rows = (
+					await sql(
+						`SELECT id,payload FROM doc.auth_${model} WHERE id>? ORDER BY id LIMIT 500`,
+						[cursor],
+					)
+				).rows
+				if (!rows.length) break
+				for (const [id, payload] of rows) {
+					const envelope = codec.decode(
+						payload,
+						`doc.auth_${model}:${id}:payload`,
+					)
+					if (
+						typeof envelope?.deleted !== "boolean" ||
+						envelope.row?.id !== String(id)
+					)
+						throw new Error("Invalid authenticated auth audit row")
+					cursor = String(id)
+					if (envelope.deleted) continue
+					if (model === "user") result.users++
+					else {
+						result.accounts++
+						if (envelope.row.providerId === "credential") result.credential++
+						if (envelope.row.providerId === "google") result.google++
+					}
+				}
 			}
 		}
 		return result

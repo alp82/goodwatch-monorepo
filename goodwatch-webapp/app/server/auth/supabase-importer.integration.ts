@@ -159,6 +159,59 @@ test("imports fake members with their UUIDs, verification state, Google subject 
 	)
 })
 
+test("count audits honor authenticated tombstones when their plaintext deletion hints are changed", async () => {
+	const removed = await adapter.create({
+		model: "user",
+		forceAllowId: true,
+		data: {
+			id: "55100000-0000-4000-8000-000000000099",
+			email: "deleted@example.test",
+			name: "Fake removed",
+			emailVerified: true,
+		},
+	})
+	await adapter.delete({
+		model: "user",
+		where: [{ field: "id", value: removed.id }],
+	})
+	const unlinked = await adapter.create({
+		model: "account",
+		data: {
+			providerId: "google",
+			accountId: "deleted-sub-551",
+			userId: ids.password,
+		},
+	})
+	await adapter.delete({
+		model: "account",
+		where: [{ field: "id", value: unlinked.id }],
+	})
+	await sql("UPDATE doc.auth_user SET deleted=false WHERE id=?", [removed.id])
+	await sql("UPDATE doc.auth_account SET deleted=false WHERE id=?", [
+		unlinked.id,
+	])
+	const report = await importSupabaseAuth({
+		source,
+		sql,
+		encryptionSecret,
+		apply: true,
+	})
+	assert.deepEqual(report.before, {
+		users: 0,
+		accounts: 0,
+		credential: 0,
+		google: 0,
+		emailClaims: 0,
+	})
+	assert.deepEqual(report.after, {
+		users: 6,
+		accounts: 7,
+		credential: 5,
+		google: 2,
+		emailClaims: 6,
+	})
+})
+
 test("a known non-applied user insert releases its claim through the adapter and reruns without duplicates", async () => {
 	const refused = async (statement: string, args?: unknown[]) => {
 		if (statement.startsWith("INSERT INTO doc.auth_user "))

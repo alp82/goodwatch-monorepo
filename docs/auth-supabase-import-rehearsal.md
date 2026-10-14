@@ -35,8 +35,10 @@ run. Keep #551 open until that evidence exists. Map: #529.
 The source is a bounded, repeatable-read, read-only Postgres snapshot. The importer
 preflights **every row and target conflict before writes**, with limits of 100,000
 users and 300,000 identities. Exceeding the bound is a rejection, not a partial
-import. Target counts refresh indexes and scan encrypted accounts in keyset pages
-of 500, so they do not inherit Better Auth's 100-row enumeration default.
+import. Target counts refresh indexes and scan encrypted users/accounts in keyset
+pages of 500. They authenticate each v2 envelope with its table/key/purpose and
+check its signed deletion state, rather than trusting the plaintext index hint.
+They do not inherit Better Auth's 100-row enumeration default.
 
 Writes go through #564's strict adapter and encrypted payload/receipt storage. The
 import is insert-only: an existing row must match all mapped fields or the run
@@ -100,6 +102,9 @@ or an explicitly designed delta procedure, not repeated stale imports.
    restored real copies: those deliberately reset fake data.
 2. **Prepare target storage.** With all auth/member writers stopped, explicitly
    call `migrateAuthTables` from #564 on the isolated target. If Better Auth data
+   uses an incompatible prerelease schema or v1 payloads, stop: the adapter
+   requires an approved offline conversion or a fresh copy without those
+   experimental auth tables. Do not bypass its schema/envelope checks. If data
    already exists, retain its original encryption key; never replace it to make
    a mismatch disappear. Back up the local target and the payload key before
    writes. Check all source/member UUIDs that the sample will use, and record the

@@ -21,6 +21,7 @@ services:
       - -Ccluster.name=goodwatch-local-importer-551
       - -Cnode.name=importer-551
       - -Cnetwork.host=0.0.0.0
+      # auth-importer-551: fake admin setup and password-authenticated copy role.
       - -Cauth.host_based.enabled=true
       - -Cauth.host_based.config.0.user=crate
       - -Cauth.host_based.config.0.method=trust
