@@ -9,6 +9,7 @@ import {
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
+import { recordListExposure } from "~/server/list-exposure.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
 import {
 	type FilterResult,
@@ -38,6 +39,8 @@ export const GUEST_FOR_YOU_RATINGS = 5
 export type ForYouStatus = "ready" | "needsTaste" | "signUp"
 
 export interface DiscoverResults extends Omit<FilterResult, "keys" | "moved"> {
+	/** Exposure record for this member's page; null for guests or a dropped write. */
+	listId: string | null
 	page: number
 	pageSize: number
 	/** The sort as requested; `sortUsed` is the one the titles are in (Best match falls back without taste). */
@@ -125,20 +128,35 @@ export async function getDiscoverResults(
 	const keys = result.keys.slice(from, from + DISCOVER_PAGE_SIZE)
 	const onPage = new Set(keys)
 	const { keys: _all, moved, ...counts } = result
+	const cards = await getTitleCards(
+		keys,
+		ctx,
+		taste,
+		state.ageLimit === undefined ? null : result.ladder,
+	)
+	const listId = recordListExposure(ctx, {
+		surface: "discover",
+		ordering: "taste-v2",
+		flags: {},
+		sort: result.sortUsed,
+		sortRequested: sort,
+		forYou: input.forYou,
+		forYouApplied: applied,
+		filters: { ...state, searching },
+		page,
+		batch: "page",
+		titles: cards,
+	})
 	return {
 		...counts,
+		listId,
 		page,
 		pageSize: DISCOVER_PAGE_SIZE,
 		sort,
 		state,
 		keys,
 		// The rating badge shows only while an age limit is on.
-		cards: await getTitleCards(
-			keys,
-			ctx,
-			taste,
-			state.ageLimit === undefined ? null : result.ladder,
-		),
+		cards,
 		matches: taste.match(keys),
 		moved: (moved ?? []).filter((m) => onPage.has(m.key)),
 		forYou: { on: input.forYou, applied, status, ratings: taste.ratings },

@@ -25,11 +25,11 @@ import { type TasteSignals, quantileTable, tasteVector } from "./formula.server"
 import { poolCosines, tastePool } from "./pool.server"
 import { type StoredTaste, decodeTaste, encodeTaste } from "./stored.server"
 import { NO_TASTE, type Taste, makeTaste } from "./taste.server"
+import { TASTE_KEY_VERSION } from "./version.server"
 
 // Bump when the formula, the calibration, or the value layout changes: every member's taste then rebuilds on first read.
 // - v2: the quantile table also holds the top 1 percent in fine steps (QUANTILE_LEVELS). The v1 keys are never read
 //   again and expire on their own.
-const TASTE_KEY_VERSION = "v2"
 const tasteKey = (userId: string) => `taste:${TASTE_KEY_VERSION}:${userId}`
 const touchedKey = (userId: string) => `taste:touched:${userId}`
 // Both keys expire after half a year without a write; a reader then rebuilds.

@@ -12,6 +12,7 @@ import {
 } from "~/domain/watch-next"
 import { type Misfit, minutesOver, misfitOf } from "~/domain/my-movies"
 import { isOnServices } from "~/server/availability-index.server"
+import { recordListExposure } from "~/server/list-exposure.server"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import {
@@ -68,6 +69,8 @@ export interface WatchNextTier {
 }
 
 export interface WatchNext {
+	/** Exposure record for the cards in this member's initial view; null for guests or a dropped write. */
+	listId: string | null
 	sort: WatchNextSort
 	defaultSort: WatchNextSort
 	moods: MoodKey[]
@@ -656,8 +659,26 @@ export async function getWatchNext(
 		.map((key) => cardOf.get(key))
 		.filter((card): card is TitleCard => !!card)
 	const start = plan.total === 0 ? (suggested[0] ?? null) : null
+	const tiers = plan.tiers.map((t, i) => ({
+		...t,
+		titles: i < 2 ? titles(shown[i]) : null,
+	}))
+	const worthAdding = suggested.filter((card) => card !== start)
+	const listId = watchNextExposure(
+		ctx,
+		options,
+		plan,
+		[
+			...headTitles,
+			...tiers.flatMap((t) => t.titles ?? []),
+			...(start ? [start] : []),
+			...worthAdding,
+		],
+		"page",
+	)
 
 	return {
+		listId,
 		sort: plan.sort,
 		defaultSort: plan.defaultSort,
 		moods: plan.moods,
@@ -671,10 +692,7 @@ export async function getWatchNext(
 		hero: headTitles[0] ?? null,
 		heroNote: plan.heroNote,
 		thenColumn: headTitles.slice(1),
-		tiers: plan.tiers.map((t, i) => ({
-			...t,
-			titles: i < 2 ? titles(shown[i]) : null,
-		})),
+		tiers,
 		moodCounts: plan.moodCounts,
 		moodPictures: Object.fromEntries(
 			MOOD_KEYS.map((mood) => {
@@ -688,7 +706,7 @@ export async function getWatchNext(
 			}),
 		) as WatchNext["moodPictures"],
 		start,
-		worthAdding: suggested.filter((card) => card !== start),
+		worthAdding,
 		...(plan.movies ? { time: plan.time } : {}),
 	}
 }
@@ -700,9 +718,58 @@ export async function getWatchNextTitles(
 	options: WatchNextOptions,
 	givenTaste?: Taste,
 ): Promise<WatchNextTitle[]> {
+	return (await readWatchNextTitles(ctx, keys, options, givenTaste)).titles
+}
+
+/** One later batch for /api/watch-next/cards, with its own exposure id. */
+export async function getWatchNextCardsPage(
+	ctx: ViewerContext,
+	keys: TitleKey[],
+	options: WatchNextOptions,
+): Promise<{ titles: WatchNextTitle[]; listId: string | null }> {
+	const { plan, titles } = await readWatchNextTitles(ctx, keys, options)
+	return { titles, listId: watchNextExposure(ctx, options, plan, titles, "cards") }
+}
+
+async function readWatchNextTitles(
+	ctx: ViewerContext,
+	keys: TitleKey[],
+	options: WatchNextOptions,
+	givenTaste?: Taste,
+) {
 	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
 	const plan = await planFor(ctx, taste, options)
 	const wanted = keys.filter((key) => plan.entries.has(key)).slice(0, MAX_KEYS)
 	const cards = await getTitleCards(wanted, ctx, taste)
-	return cards.map((card) => wishlistTitle(plan, card))
+	return { plan, titles: cards.map((card) => wishlistTitle(plan, card)) }
+}
+
+function watchNextExposure(
+	ctx: ViewerContext,
+	options: WatchNextOptions,
+	plan: Plan,
+	titles: TitleCard[],
+	batch: "page" | "cards",
+) {
+	return recordListExposure(ctx, {
+		surface: "watch-next",
+		ordering: "taste-v2",
+		flags: {},
+		sort: plan.sort,
+		sortRequested: options.sort ?? null,
+		// Watch next has no For you switch: its Best match sort already orders by taste.
+		forYou: false,
+		forYouApplied: false,
+		filters: {
+			type: options.kind ?? "all",
+			onMyServices: plan.onMyServices,
+			moods: plan.moods,
+			minMatch: 0,
+			notTonight: options.notTonight ?? [],
+			time: plan.time,
+		},
+		page: null,
+		batch,
+		titles,
+	})
 }

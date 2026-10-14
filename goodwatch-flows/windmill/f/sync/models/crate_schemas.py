@@ -687,6 +687,36 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # One immutable row per member list page, including later Watch next card batches (#525).
+    # The three title arrays align; positions are one-based within this page, after missing titles are removed.
+    "user_list_exposure": {
+        "columns": {
+            "user_id": "TEXT",
+            "list_id": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "surface": "TEXT NOT NULL CHECK (surface IN ('discover','watch-next'))",
+            "ordering": "TEXT NOT NULL",
+            "ordering_flags": "OBJECT(DYNAMIC)",
+            "sort": "TEXT NOT NULL",
+            "sort_requested": "TEXT",
+            "for_you": "BOOLEAN NOT NULL",
+            "for_you_applied": "BOOLEAN NOT NULL",
+            "filters": "OBJECT(IGNORED)",
+            "country": "TEXT NOT NULL",
+            "services": "ARRAY(INTEGER)",
+            "taste_key_version": "TEXT NOT NULL",
+            "page": "INTEGER",
+            "batch": "TEXT NOT NULL CHECK (batch IN ('page','cards'))",
+            "title_keys": "ARRAY(BIGINT)",
+            "positions": "ARRAY(INTEGER)",
+            "taste_matches": "ARRAY(INTEGER)",
+        },
+        "primary_key": ["user_id", "list_id"],
+        "clustered_by": "user_id",
+        "shards": 6,
+        "timestamps": False,
+    },
     "user_score": {
         "columns": {
             "user_id": "TEXT",
