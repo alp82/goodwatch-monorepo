@@ -26,13 +26,15 @@ run. Keep #551 open until that evidence exists. Map: #529.
   Existing Supabase identity links are preserved by their `user_id` only. Provider
   access/refresh/ID tokens and Supabase sessions are not imported.
 - Names/images use display metadata, with email-local-part/null fallbacks. Dates
-  are validated and preserved; absent identity dates fall back to user dates.
+  are validated and converted to Better Auth Date values; absent identity dates
+  fall back to user dates.
 - Unsupported providers, non-bcrypt hashes, missing identities/emails, orphan or
   duplicate identities, invalid dates, deleted/banned/anonymous/SSO/admin users
   reject before any auth writes. A non-null historical ban also requires review.
   Nothing is silently dropped or granted administrative permissions.
 
-The source is a bounded, repeatable-read, read-only Postgres snapshot. The importer
+The CLI uses a dedicated Postgres client for each run; library callers must do the
+same. The source is a bounded, repeatable-read, read-only snapshot. The importer
 preflights **every row and target conflict before writes**, with limits of 100,000
 users and 300,000 identities. Exceeding the bound is a rejection, not a partial
 import. Target counts refresh indexes and scan encrypted users/accounts in keyset
@@ -81,6 +83,27 @@ firewall changes are made. CI uses a separate secret-free disposable runner.
 Evidence is in ignored `goodwatch-webapp/scripts/auth-importer/results/`: focused
 types, integration/CLI tests, container logs, and timed dry/import/rerun JSON.
 Only fake-data summaries belong in the repository or a public issue.
+
+## Recorded fake rehearsal — October 14, 2026
+
+- Node **24.22.0**, Postgres **16.10**, CrateDB **5.10.12**, adapter hardening from
+  #564 at `e7033d40`: **26 tests passed**, zero failures/skips. Focused types,
+  Biome and shell syntax passed. The hardened mapping case also passed on Node
+  **26.8.1**.
+- Empty target became **6 users, 7 accounts, 6 email claims**: 5 credential and
+  2 Google accounts; 5 verified and 1 unverified user. Exact rerun created **0**
+  users/accounts and left counts unchanged.
+- Authenticated CLI timings: dry-run **652 ms**, import **606 ms**, rerun
+  **377 ms**. The 507-user/508-account pagination and rerun test took **109.6 s**
+  in total on the shared laptop. These fake fixtures do not estimate production
+  duration; measure the authorized real copy separately.
+- Password and locally signed Google ID-token sign-ins preserved UUIDs. An
+  existing fake Wishlist row remained reachable through the signed-in UUID.
+  Unconfirmed sign-in/implicit linking, wrong database credentials, malformed
+  source rows and ownership conflicts were refused. Tombstone count audits used
+  authenticated state even after plaintext deletion hints were changed.
+- The final harness authenticated its CLI as the fake copy role and removed its
+  own containers, volumes and network. No real Supabase or production was accessed.
 
 ## Later rehearsal using restored copies
 
