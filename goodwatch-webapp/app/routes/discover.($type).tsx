@@ -8,7 +8,6 @@ import {
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
-	useNavigate,
 	useRouteError,
 } from "@remix-run/react"
 import { searchText } from "~/domain/discover-search"
@@ -29,6 +28,8 @@ import {
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { getPersonName } from "~/server/person.server"
 import { getViewerContext } from "~/server/viewer.server"
+import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
+import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoverPage } from "~/ui/discover/DiscoverPage"
 import { type InitialBrowse, browseKey } from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -201,25 +202,15 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	return false
 }
 
+// The site's header and footer stay: the page's own failure takes only the page's place.
 export function ErrorBoundary() {
 	const error = useRouteError()
-	const navigate = useNavigate()
-
-	return (
-		<div className="max-w-7xl mt-8 mx-auto px-4 flex flex-col gap-5 items-center">
-			<h1 className="text-3xl font-bold">Oh no!</h1>
-			<p className="py-1 px-3 text-2xl text-gray-300 bg-red-900">
-				{error.message}
-			</p>
-			<button
-				type="button"
-				className="w-40 px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
-				onClick={() => navigate("/discover")}
-			>
-				Go Back
-			</button>
-		</div>
-	)
+	const { status, detail } = errorPageProps(error)
+	if (status !== 404) {
+		console.error(error)
+		reportBoundaryError(error)
+	}
+	return <ErrorPage status={status} detail={detail} />
 }
 
 export default function DiscoverRoute() {

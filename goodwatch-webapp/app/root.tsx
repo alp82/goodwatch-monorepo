@@ -25,7 +25,6 @@ import {
 	Meta,
 	Scripts,
 	ScrollRestoration,
-	isRouteErrorResponse,
 	useLoaderData,
 	useLocation,
 	useRouteError,
@@ -44,7 +43,7 @@ import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
-import { ErrorPage } from "~/ui/ErrorPage"
+import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import {
 	HubDialog,
 	MobileDock,
@@ -192,18 +191,13 @@ export function ErrorBoundary() {
 	// The data went through JSON, which is how it reaches the browser: its type here is the loader's own.
 	const rootData = useRouteLoaderData("root") as LoaderData | undefined
 	const root = useBoundaryRoot(rootData)
-	// An address that names no page is an answer, not a failure of the app.
-	const status = isRouteErrorResponse(error) ? error.status : 500
+	const { status, detail } = errorPageProps(error)
 	const notFound = status === 404
+	// An address that names no page is an answer, not a failure of the app.
 	if (!notFound) {
 		console.error(error)
 		reportBoundaryError(error)
 	}
-	const detail = import.meta.env.DEV && !notFound
-		? [(error as Error)?.message, (error as { data?: unknown })?.data]
-				.filter((part) => typeof part === "string" && part)
-				.join("\n")
-		: undefined
 
 	const [queryClient] = React.useState(
 		() =>
@@ -221,7 +215,9 @@ export function ErrorBoundary() {
 	const page = (
 		<NavigationProvider>
 			<SiteHeader />
-			<ErrorPage status={status} detail={detail || undefined} />
+			<main className="relative mt-16 flex grow flex-col justify-center">
+				<ErrorPage status={status} detail={detail} />
+			</main>
 			<Footer />
 			<MobileDock />
 			<HubDialog />
