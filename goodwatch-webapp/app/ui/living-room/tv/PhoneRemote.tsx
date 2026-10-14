@@ -59,10 +59,13 @@ export type PhoneRemoteProps = {
 	/** The person's own two services, in the keys' order. */
 	services: readonly RemoteService[]
 	form: PhoneRemoteForm
-	/** Its box in the scene, at its scale `u` (`layoutPhoneRoom`). */
-	at: { left: number; top: number; u: number; width: number }
+	/**
+	 * Its box in the scene, at its scale `u` (`layoutPhoneRoom`). None before the window is measured: tv.css
+	 * places it then (`tvr-f-*`, the first paint).
+	 */
+	at?: { left: number; top: number; u: number; width: number }
 	/** The scene's height: held, the body runs on under the scene's bottom edge, into the hand. */
-	bottom: number
+	bottom?: number
 }
 
 export function PhoneRemote({
@@ -172,10 +175,11 @@ export function PhoneRemote({
 		body = (
 			// The body runs on under the scene's edge, into the hand: only its top is rounded in view.
 			<div
-				className="remote-body relative"
+				className={`remote-body relative ${at ? "" : "tvr-f-grip"}`}
 				style={{
 					width: R.w,
-					height: (bottom - at.top) / at.u + 60,
+					...(at &&
+						bottom !== undefined && { height: (bottom - at.top) / at.u + 60 }),
 					borderRadius: 34,
 					padding: 10,
 				}}
@@ -234,8 +238,8 @@ export function PhoneRemote({
 			data-remote
 			data-phone-remote={form}
 			aria-label="Remote control"
-			className="absolute select-none"
-			style={{ left: at.left, top: at.top, width: at.width }}
+			className={`absolute select-none ${at ? "" : "tvr-f-premote"}`}
+			style={at && { left: at.left, top: at.top, width: at.width }}
 			// As on the desktop Remote: a press by a finger or the pointer must not leave the key focused, or the
 			// next Enter of a keyboard repeats it instead of reaching the TV's focused item, and a streaming key
 			// pressed again would close the screen it just opened. Keyboard presses (detail 0) keep their focus.
@@ -246,8 +250,8 @@ export function PhoneRemote({
 			}}
 		>
 			<div
-				className="origin-top-left"
-				style={{ width: R.w, transform: `scale(${at.u})` }}
+				className={`origin-top-left ${at ? "" : "tvr-f-pscale"}`}
+				style={{ width: R.w, ...(at && { transform: `scale(${at.u})` }) }}
 			>
 				{body}
 			</div>
