@@ -6,9 +6,9 @@
 // own picks. A member's Tonight and My shows come with the loader; a member asks for the pool only for the
 // Discover tile's posters and the service tiles' pictures.
 //
-// The person's two streaming services come with the loader too (`TvService`): a member's first two saved ones, a
-// guest's the first two of their country's catalog. The Remote's two keys and home's two tiles after the apps
-// stand for them.
+// The person's two streaming services come with the loader too (`TvService`): a member's first two saved ones,
+// filled up with Netflix and Prime Video, which are a guest's. The Remote's two keys and home's two tiles after
+// the apps stand for them.
 import type { TitleCard } from "~/server/title-cards.server"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import type { StartTitle } from "../living-room-data"
@@ -83,8 +83,8 @@ export type TvHomeData = {
 	/** A member's My shows on the TV. Null for a guest. */
 	shows: { next: TvShowNext[]; start: TvShowStart[] } | null
 	/**
-	 * The person's two streaming services: a member's first two saved ones, a guest's the first two of their
-	 * country's catalog, so a guest's HTML is the same for every guest of a country.
+	 * The person's two streaming services: a member's first two saved ones, filled up with Netflix and Prime
+	 * Video, which are a guest's, so a guest's HTML is the same for every guest.
 	 */
 	services: TvService[]
 	/**
