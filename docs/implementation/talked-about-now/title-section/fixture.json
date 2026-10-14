@@ -148,5 +148,55 @@
    "duplicate_group": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
    "content_hash": "h"
   }
+ ],
+ "quality": [
+  {
+   "post_id": "c852d08985ec59ff7a5e2571ee2292c02df975f5d8d7d0e7c9cb58181ed0ecd5",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  },
+  {
+   "post_id": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "content_hash": "h",
+   "version": "content-quality-1",
+   "status": "pass"
+  }
  ]
 }

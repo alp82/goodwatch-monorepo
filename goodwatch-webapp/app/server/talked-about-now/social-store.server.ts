@@ -1,7 +1,8 @@
 // Reads the posts linked to a title and writes "wrong title?" reports, over the tables of the social discovery build
-// (#556, docs/implementation/talked-about-now/social.md on its branch): doc.social_post, doc.social_title_link and
-// doc.social_link_report. The read is that ticket's reference query (`Store.read_title`); the report is its
-// reference write (`Store.report`). Report rows are the only thing the webapp writes.
+// (#556, docs/implementation/talked-about-now/social.md): doc.social_post, doc.social_title_link,
+// doc.social_content_quality and doc.social_link_report. The read is that ticket's reference query (`Store.read_title`),
+// including its content-quality gate; the report is its reference write (`Store.report`). Report rows are the only thing
+// the webapp writes.
 //
 // Until discovery has run, the tables are missing or empty: the read then returns no rows and the section stays
 // hidden. Locally, SOCIAL_FIXTURE names a JSON file of the same rows (see fixtureSocialStore), so the page can be
@@ -48,6 +49,21 @@ export interface SocialStore {
 }
 
 export const POST_ID = /^[a-f0-9]{64}$/
+
+/**
+ * The content-quality verdicts a read accepts (social.md, "Content quality before publication"): a link is shown only
+ * when its post has a `pass` of this version for its current content hash. `quality.py`'s VERSION; a new version is
+ * re-screened before its rows can appear, so this changes with it.
+ */
+export const CONTENT_QUALITY_VERSION = "content-quality-1"
+
+/**
+ * The read rule every read of links copies: an inner join to the post's passing verdict for its current content. A
+ * post without one (not screened yet, rejected, screened by an older version, or changed since) isn't shown.
+ */
+export const contentQualityJoin = (schema: string) =>
+	`JOIN ${schema}.social_content_quality q ON q.post_id = p.post_id AND q.content_hash = p.content_hash
+    AND q.version = '${CONTENT_QUALITY_VERSION}' AND q.status = 'pass'`
 export const MAX_REASON = 500
 
 /** The report's id and idempotency key: SHA256 of `media_type:tmdb_id:post_id`, as #556's store computes it. */
@@ -70,6 +86,7 @@ export function readTitleSql(schema: string, disabledLanes: readonly string[]): 
   SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, l.lane,
     ROW_NUMBER() OVER (PARTITION BY COALESCE(l.duplicate_group, l.post_id) ORDER BY p.published_at DESC, p.post_id DESC) AS duplicate_rank
   FROM ${schema}.social_title_link l JOIN ${schema}.social_post p ON p.post_id = l.post_id
+  ${contentQualityJoin(schema)}
   LEFT JOIN ${schema}.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
     AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
   WHERE l.media_type = ? AND l.media_tmdb_id = ? AND l.hidden_at IS NULL AND p.deleted_at IS NULL
@@ -177,6 +194,14 @@ export interface FixtureReport {
 	created_at: string
 }
 
+/** A row of doc.social_content_quality. */
+export interface FixtureQuality {
+	post_id: string
+	content_hash?: string | null
+	version: string
+	status: "pass" | "reject"
+}
+
 export interface SocialFixture {
 	/** What the fixture is and where it came from. */
 	note?: string
@@ -184,13 +209,15 @@ export interface SocialFixture {
 	shiftToHoursAgo?: number
 	posts: FixturePost[]
 	links: FixtureLink[]
+	/** The posts' content-quality verdicts. A post without a passing one is never shown, as in the Crate read. */
+	quality?: FixtureQuality[]
 	reports?: FixtureReport[]
 }
 
 /**
  * The fixture as a store. Reports are kept in memory for the life of the process; nothing is written anywhere.
- * The filters are the read query's: deleted, hidden, out of the 30 days, changed content, reported, disabled lane,
- * and one post per duplicate group.
+ * The filters are the read query's: no passing content-quality verdict for the post's content, deleted, hidden, out of
+ * the 30 days, changed content, reported, disabled lane, and one post per duplicate group.
  */
 export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () => new Date()): SocialStore {
 	let shift = 0
@@ -200,6 +227,14 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 	}
 	const posts = new Map(fixture.posts.map((post) => [post.post_id, { ...post, published_at: new Date(Date.parse(post.published_at) + shift).toISOString() }]))
 	const reports = new Map((fixture.reports ?? []).map((report) => [report.report_id, { ...report }]))
+	const passed = (post: FixturePost) =>
+		(fixture.quality ?? []).some(
+			(verdict) =>
+				verdict.post_id === post.post_id &&
+				verdict.status === "pass" &&
+				verdict.version === CONTENT_QUALITY_VERSION &&
+				(verdict.content_hash ?? null) === (post.content_hash ?? null),
+		)
 	const linked = (title: SocialTitle) =>
 		fixture.links.filter((link) => link.media_type === title.mediaType && link.media_tmdb_id === title.tmdbId)
 	return {
@@ -217,6 +252,7 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 					return post ? [{ link, post }] : []
 				})
 				.filter(({ link, post }) => {
+					if (!passed(post)) return false
 					if (post.deleted_at || link.hidden_at) return false
 					if (Date.parse(post.published_at) < since) return false
 					if ((link.content_hash ?? null) !== (post.content_hash ?? null)) return false
