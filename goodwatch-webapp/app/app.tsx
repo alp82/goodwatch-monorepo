@@ -1,4 +1,5 @@
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
+import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
 import { Outlet, useLocation } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
@@ -64,6 +65,7 @@ export default function App() {
 				</Suspense>
 			)}
 			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
+				<SignInAgainBanner />
 				<GuestProgressNotice />
 				<Outlet />
 			</main>

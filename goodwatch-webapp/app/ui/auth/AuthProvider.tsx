@@ -26,11 +26,14 @@ import {
 export function AuthProvider({
 	supabaseUrl,
 	supabaseAnonKey,
+	betterAuth = false,
 	initialUser,
 	children,
 }: {
 	supabaseUrl: string
 	supabaseAnonKey: string
+	/** With Better Auth the member is the root loader's alone: no client, and a sign-in reruns the loader. */
+	betterAuth?: boolean
 	initialUser: User | null
 	children: ReactNode
 }) {
@@ -60,6 +63,7 @@ export function AuthProvider({
 	const subscription = useRef<{ unsubscribe: () => void }>()
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
+		if (betterAuth) throw new Error("Supabase sign-in is off")
 		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((_event, session) =>
@@ -68,9 +72,10 @@ export function AuthProvider({
 			startTransition(() => setSupabase(client))
 		}
 		return client
-	}, [supabaseUrl, supabaseAnonKey])
+	}, [supabaseUrl, supabaseAnonKey, betterAuth])
 
 	useEffect(() => {
+		if (betterAuth) return
 		mounted.current = true
 		const load = () => {
 			getSupabase().catch(() => {})
@@ -89,7 +94,7 @@ export function AuthProvider({
 			subscription.current = undefined
 		}
 		// Decided once, when the page opens: a later sign-in comes through getSupabase.
-	}, [getSupabase])
+	}, [getSupabase, betterAuth])
 
 	useEffect(() => {
 		if (previousUserId.current === user?.id) return
@@ -106,14 +111,28 @@ export function AuthProvider({
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}
-		// The root loader holds the member and their data, and a navigation alone doesn't rerun it.
+		// The root loader holds the member and their data, and a navigation alone doesn't rerun it. With Better Auth
+		// the change came from that loader already.
+		if (betterAuth) return
 		requestRootRevalidation()
 		revalidate()
-	}, [user?.id, queryClient, revalidate])
+	}, [user?.id, queryClient, revalidate, betterAuth])
+
+	const refreshUser = useCallback(() => {
+		requestRootRevalidation()
+		revalidate()
+	}, [revalidate])
 
 	const value = useMemo(
-		() => ({ supabase, getSupabase, user, loading: false }),
-		[supabase, getSupabase, user],
+		() => ({
+			supabase,
+			getSupabase,
+			user,
+			loading: false,
+			betterAuth,
+			refreshUser,
+		}),
+		[supabase, getSupabase, user, betterAuth, refreshUser],
 	)
 	return (
 		<AuthContext.Provider value={value}>

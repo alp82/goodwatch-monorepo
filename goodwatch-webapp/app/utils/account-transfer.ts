@@ -49,7 +49,7 @@ export function safeReturnTo(value?: string | null) {
 		!value.startsWith("//") &&
 		!value.includes("\\") &&
 		!/[\u0000-\u0020]/.test(value) &&
-		!/^\/(sign-in|sign-up|forgot-password)(\/|\?|$)/.test(value)
+		!/^\/(sign-in|sign-up|forgot-password|reset-password|verify-email)(\/|\?|$)/.test(value)
 	)
 		return value;
 	return "/taste/quiz";
@@ -183,15 +183,17 @@ export function attachTransfer(user: User) {
 			};
 	}
 	if (!transfer) return;
-	const createdDuringOAuth =
-		attempt?.mode === "oauth" &&
+	// An account made by this sign-in: with Google, or with an email Better Auth confirmed (its sign-up answers without
+	// the account, so noteCreatedAccount never sees it).
+	const createdHere =
+		(attempt?.mode === "oauth" || attempt?.mode === "sign-up") &&
 		Date.parse(user.created_at) >= attempt.startedAt;
 	saveTransfer({
 		...transfer,
 		accountId: user.id,
 		automatic:
 			read<string[]>("goodwatch_created_accounts", []).includes(user.id) ||
-			createdDuringOAuth,
+			createdHere,
 	});
 }
 export function completeTransfer(

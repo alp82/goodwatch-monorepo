@@ -76,6 +76,8 @@ export default function WatchLogHarness() {
 			// biome-ignore lint/suspicious/noExplicitAny: a member who does not exist; only the id is read.
 			user: guest ? null : ({ id: HARNESS_MEMBER } as any),
 			loading: false,
+			betterAuth: false,
+			refreshUser: () => {},
 		}),
 		[guest],
 	)

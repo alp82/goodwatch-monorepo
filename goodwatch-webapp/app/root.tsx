@@ -14,7 +14,7 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserData } from "~/server/userData.server"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
-import { createAuthCookieMatcher } from "~/utils/auth-cookie"
+import { createAuthCookieMatcher, hasSupabaseCookie } from "~/utils/auth-cookie"
 import type {
 	LinksFunction,
 	LoaderFunction,
@@ -120,7 +120,10 @@ type LoaderData = {
 	env: {
 		SUPABASE_URL: string
 		SUPABASE_ANON_KEY: string
+		BETTER_AUTH_ENABLED: boolean
 	}
+	/** This browser still holds a Supabase sign-in from before the move to Better Auth: ask once to sign in again. */
+	signInAgain: boolean
 }
 
 // A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
@@ -137,6 +140,7 @@ export const loader: LoaderFunction = async ({
 	startBrowserGate()
 	const { locale } = getLocaleFromRequest(request)
 	const { user, headers } = await getAuthFromRequest({ request })
+	const betterAuth = process.env.BETTER_AUTH_ENABLED === "true"
 	const queryClient = new QueryClient()
 	if (user) {
 		await queryClient.prefetchQuery({
@@ -152,7 +156,10 @@ export const loader: LoaderFunction = async ({
 			env: {
 				SUPABASE_URL: process.env.SUPABASE_URL!,
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+				BETTER_AUTH_ENABLED: betterAuth,
 			},
+			signInAgain:
+				betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
 		},
 		{ headers },
 	)
@@ -245,6 +252,7 @@ export function ErrorBoundary() {
 							<AuthProvider
 								supabaseUrl={root.env.SUPABASE_URL}
 								supabaseAnonKey={root.env.SUPABASE_ANON_KEY}
+								betterAuth={root.env.BETTER_AUTH_ENABLED}
 								initialUser={root.user}
 							>
 								<HydrationBoundary state={root.dehydratedState}>
@@ -272,6 +280,8 @@ const NO_CLIENT = {
 	supabase: undefined,
 	getSupabase: () => Promise.reject(new Error("No auth client")),
 	user: null,
+	betterAuth: false,
+	refreshUser: () => {},
 }
 
 function Root() {
@@ -337,6 +347,7 @@ function Root() {
 						<AuthProvider
 							supabaseUrl={env.SUPABASE_URL}
 							supabaseAnonKey={env.SUPABASE_ANON_KEY}
+							betterAuth={env.BETTER_AUTH_ENABLED}
 							initialUser={user}
 						>
 							<HydrationBoundary state={dehydratedState}>
