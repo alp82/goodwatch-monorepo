@@ -4,6 +4,8 @@ The Cinema home on `/home-preview`, driven by the TV's machine with the keyboard
 tiles, the top bar, the menu, What is GoodWatch?, power and the boot screen, for a guest and a member, from the
 address's own loader. Proof for [the plan](../README.md), slice 3. Taken on October 13, 2026.
 
+> **Retired:** `drive.mjs` and `checks.json` were retired (the script was out of date since search); the later slices' drive scripts cover home.
+
 ## Run it
 
 Two dev servers of `goodwatch-webapp`, both with every `REC_*` flag on.
