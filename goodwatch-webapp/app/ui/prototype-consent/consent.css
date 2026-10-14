@@ -1,0 +1,38 @@
+/* PROTOTYPE - throwaway (#545). Variant B's theme: the two libraries' own CSS variables, set to GoodWatch's dark
+   neutrals and amber. Only the prototype route links this sheet. */
+:root {
+	--im-bg: #262626;
+	--im-btn-bg: #fbbf24;
+	--im-btn-color: #000;
+	--im-btn-hover-bg: #fcd34d;
+	--im-btn-s-bg: rgba(255, 255, 255, 0.85);
+	--im-btn-s-hover-bg: #fff;
+	--im-link-color: #fcd34d;
+	--im-overlay-bg: linear-gradient(0deg, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.35));
+}
+div[data-service].im-box {
+	min-width: 0;
+	width: 100%;
+	font-size: 14px;
+	border-radius: 0.75rem;
+}
+#cc-main {
+	--cc-font-family: inherit;
+	--cc-btn-primary-bg: #fbbf24;
+	--cc-btn-primary-color: #000;
+	--cc-btn-primary-border-color: #fbbf24;
+	--cc-btn-primary-hover-bg: #fcd34d;
+	--cc-btn-primary-hover-color: #000;
+	--cc-btn-primary-hover-border-color: #fcd34d;
+	--cc-toggle-on-bg: #f59e0b;
+}
+.cc--darkmode #cc-main {
+	--cc-bg: #171717;
+	--cc-separator-border-color: #2d2d2d;
+	--cc-btn-secondary-bg: #262626;
+	--cc-btn-secondary-border-color: #363636;
+	--cc-btn-secondary-hover-bg: #363636;
+	--cc-cookie-category-block-bg: #1f1f1f;
+	--cc-cookie-category-block-border: #2d2d2d;
+	--cc-footer-bg: #0f0f0f;
+}
