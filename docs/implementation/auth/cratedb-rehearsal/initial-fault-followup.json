@@ -1,0 +1,544 @@
+{
+  "startedAt": "2026-10-14T14:00:57.324562+00:00",
+  "oldImage": "crate:5.10.9@sha256:0ab5077b2cc4180a855250c8f0af425386197f7586af39a7b5d7a08c16558184",
+  "targetImage": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+  "stages": [
+    {
+      "label": "baseline",
+      "at": "2026-10-14T14:01:44.853515+00:00",
+      "nodes": [
+        [
+          "node1",
+          "5.10.9"
+        ],
+        [
+          "node2",
+          "5.10.9"
+        ],
+        [
+          "node3",
+          "5.10.9"
+        ]
+      ],
+      "health": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "partition_ident",
+          "severity",
+          "table_name",
+          "table_schema",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "catalog_probe",
+            "doc",
+            0
+          ],
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "auth_upgrade_probe",
+            "doc",
+            0
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 4.213236
+      },
+      "shards": {
+        "status": 200,
+        "cols": [
+          "table_name",
+          "id",
+          "primary",
+          "state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            true,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "catalog_probe",
+            0,
+            true,
+            "STARTED",
+            "node2"
+          ]
+        ],
+        "rowcount": 6,
+        "duration": 41.742744
+      },
+      "containers": "[{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node2-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"},{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node1-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"},{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node3-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"}]\n\n"
+    },
+    {
+      "label": "upgrade-node1",
+      "at": "2026-10-14T14:03:17.814404+00:00",
+      "nodes": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.9"
+        ],
+        [
+          "node3",
+          "5.10.9"
+        ]
+      ],
+      "health": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "partition_ident",
+          "severity",
+          "table_name",
+          "table_schema",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "catalog_probe",
+            "doc",
+            0
+          ],
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "auth_upgrade_probe",
+            "doc",
+            0
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 29.534922
+      },
+      "shards": {
+        "status": 200,
+        "cols": [
+          "table_name",
+          "id",
+          "primary",
+          "state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            true,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "catalog_probe",
+            0,
+            true,
+            "STARTED",
+            "node2"
+          ]
+        ],
+        "rowcount": 6,
+        "duration": 63.80082
+      },
+      "containers": "[{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node2-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node1-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node3-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"}]\n\n"
+    },
+    {
+      "label": "upgrade-node2",
+      "at": "2026-10-14T14:04:12.703209+00:00",
+      "nodes": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.9"
+        ]
+      ],
+      "health": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "partition_ident",
+          "severity",
+          "table_name",
+          "table_schema",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "catalog_probe",
+            "doc",
+            0
+          ],
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "auth_upgrade_probe",
+            "doc",
+            0
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 75.00683
+      },
+      "shards": {
+        "status": 200,
+        "cols": [
+          "table_name",
+          "id",
+          "primary",
+          "state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            true,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "catalog_probe",
+            0,
+            true,
+            "STARTED",
+            "node1"
+          ]
+        ],
+        "rowcount": 6,
+        "duration": 66.05374
+      },
+      "containers": "[{\"ID\":\"sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad\",\"ContainerName\":\"goodwatch-upgrade-547-node3-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":500312603,\"Created\":\"2025-06-16T12:31:59Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node2-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node1-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"}]\n\n"
+    },
+    {
+      "label": "upgrade-node3",
+      "at": "2026-10-14T14:04:47.201612+00:00",
+      "nodes": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "health": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "partition_ident",
+          "severity",
+          "table_name",
+          "table_schema",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "catalog_probe",
+            "doc",
+            0
+          ],
+          [
+            "GREEN",
+            0,
+            null,
+            1,
+            "auth_upgrade_probe",
+            "doc",
+            0
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 5.751897
+      },
+      "shards": {
+        "status": 200,
+        "cols": [
+          "table_name",
+          "id",
+          "primary",
+          "state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            true,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "catalog_probe",
+            0,
+            true,
+            "STARTED",
+            "node1"
+          ]
+        ],
+        "rowcount": 6,
+        "duration": 70.57275
+      },
+      "containers": "[{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node1-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node3-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node2-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"}]\n\n"
+    }
+  ],
+  "writes": [
+    {
+      "id": "upgrade-down-0",
+      "coordinator": 1,
+      "nodeDown": 0,
+      "acknowledged": true,
+      "healthWhileDown": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "YELLOW",
+            0,
+            1
+          ],
+          [
+            "YELLOW",
+            0,
+            1
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 2.935215
+      }
+    },
+    {
+      "id": "upgrade-down-1",
+      "coordinator": 2,
+      "nodeDown": 1,
+      "acknowledged": true,
+      "healthWhileDown": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "YELLOW",
+            0,
+            1
+          ],
+          [
+            "YELLOW",
+            0,
+            1
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 4.595972
+      }
+    },
+    {
+      "id": "upgrade-down-2",
+      "coordinator": 0,
+      "nodeDown": 2,
+      "acknowledged": true,
+      "healthWhileDown": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "YELLOW",
+            0,
+            1
+          ],
+          [
+            "YELLOW",
+            0,
+            1
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 3.777916
+      }
+    }
+  ],
+  "authWithoutHba": {
+    "status": 200,
+    "cols": [
+      "CURRENT_USER"
+    ],
+    "rows": [
+      [
+        "crate"
+      ]
+    ],
+    "rowcount": 1,
+    "duration": 118.85451
+  },
+  "failure": "Timeout: decommissioned node exited",
+  "finishedAt": "2026-10-14T14:15:10.425488+00:00"
+}

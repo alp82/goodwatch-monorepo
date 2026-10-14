@@ -1,0 +1,80 @@
+name: goodwatch-upgrade-547
+
+x-crate: &crate
+  image: ${CRATE_IMAGE:?Set pinned local image}
+  environment:
+    CRATE_HEAP_SIZE: 384m
+  restart: always
+  mem_limit: 1g
+  cpus: 1
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
+
+services:
+  node1:
+    <<: *crate
+    hostname: node1
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-upgrade-547
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=3
+      - -Cgateway.recover_after_time=0s
+      - -Cauth.host_based.enabled=${LOCAL_HBA_ENABLED:-false}
+      - -Cauth.host_based.config.0.user=crate
+      - -Cauth.host_based.config.0.address=0.0.0.0/0
+      - -Cauth.host_based.config.0.method=trust
+      - -Cauth.host_based.config.1.method=password
+      - -Cnode.name=node1
+    ports: ["127.0.0.1:16430:4200"]
+    volumes: ["node1-data:/data"]
+  node2:
+    <<: *crate
+    hostname: node2
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-upgrade-547
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=3
+      - -Cgateway.recover_after_time=0s
+      - -Cauth.host_based.enabled=${LOCAL_HBA_ENABLED:-false}
+      - -Cauth.host_based.config.0.user=crate
+      - -Cauth.host_based.config.0.address=0.0.0.0/0
+      - -Cauth.host_based.config.0.method=trust
+      - -Cauth.host_based.config.1.method=password
+      - -Cnode.name=node2
+    ports: ["127.0.0.1:16431:4200"]
+    volumes: ["node2-data:/data"]
+  node3:
+    <<: *crate
+    hostname: node3
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-upgrade-547
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=3
+      - -Cgateway.recover_after_time=0s
+      - -Cauth.host_based.enabled=${LOCAL_HBA_ENABLED:-false}
+      - -Cauth.host_based.config.0.user=crate
+      - -Cauth.host_based.config.0.address=0.0.0.0/0
+      - -Cauth.host_based.config.0.method=trust
+      - -Cauth.host_based.config.1.method=password
+      - -Cnode.name=node3
+    ports: ["127.0.0.1:16432:4200"]
+    volumes: ["node3-data:/data"]
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
