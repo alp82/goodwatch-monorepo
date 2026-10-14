@@ -1,5 +1,7 @@
 # A page for shows and a page for films
 
+> **Removed:** this prototype (`/prototype/watching-2`) was removed after the TV revamp merge (`be36991b`). Its code and history are in git.
+
 Round 2 of the prototype for [#371](https://github.com/alp82/goodwatch-monorepo/issues/371), part of the map
 [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Throwaway code on the branch `prototype/watching-2`.
 Round 1 is untouched at `/prototype/watching` ([notes](../watching/README.md)).

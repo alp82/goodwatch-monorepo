@@ -4,7 +4,7 @@ What [#442](https://github.com/alp82/goodwatch-monorepo/issues/442) built, from 
 [#437](https://github.com/alp82/goodwatch-monorepo/issues/437). In the app only: no email, no push, no release
 calendar. Everything is behind `REC_TRACKING`. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md) (Waiting for
 episodes, My shows visit, New episodes signal). Reads: [data-model.md](../data-model.md), section 10. The prototype
-stays at `/prototype/new-episodes` ([notes](../../../prototypes/new-episodes/README.md)). Paths without a prefix are
+was at `/prototype/new-episodes` and is removed; its [notes](../../../prototypes/new-episodes/README.md) stay. Paths without a prefix are
 under `goodwatch-webapp/app/`.
 
 The signal has a second source since [#456](https://github.com/alp82/goodwatch-monorepo/issues/456): titles that

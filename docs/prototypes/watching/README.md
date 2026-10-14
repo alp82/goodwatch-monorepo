@@ -1,5 +1,7 @@
 # Watching on home and beside the Wishlist
 
+> **Removed:** this prototype (`/prototype/watching`) was removed after the TV revamp merge (`be36991b`). Its code and history are in git.
+
 Prototype for [#371](https://github.com/alp82/goodwatch-monorepo/issues/371), part of the map
 [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Throwaway code on the branch `prototype/watching`.
 

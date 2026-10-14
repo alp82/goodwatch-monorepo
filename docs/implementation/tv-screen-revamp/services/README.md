@@ -281,8 +281,8 @@ from a copy of it.
   - *The phone's Remote keeps no key focused after a press* (`tv/PhoneRemote.tsx`), as the desktop Remote does.
     With a keyboard on a touch device, Enter after a tap on a streaming key pressed that key again and closed
     the screen it had just opened.
-- **Two earlier drive scripts follow home's new row.** `home/drive.mjs` (slice 3) reads the two service tiles
-  from the page and walks them, and its streaming key step opens and closes a service's screen; it was not run
+- **Two earlier drive scripts follow home's new row.** `home/drive.mjs` (slice 3, since retired and deleted) read the two service tiles
+  from the page and walked them, and its streaming key step opened and closed a service's screen; it was not run
   again. `my-shows/drive.mjs` (slice 9) leaves the service tiles out of its one check of home's items.
   `room/drive.mjs` (slice 2) still presses "Only Netflix": it has needed slice 2's empty TV since slice 3 and
   was left alone.

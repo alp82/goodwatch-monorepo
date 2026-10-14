@@ -31,7 +31,8 @@ function PrototypeSection({ prototype }: { prototype: HubPrototype }) {
 					<h2 className="text-xl font-bold text-white">{prototype.title}</h2>
 					<p className="mt-1 text-sm text-gray-400">{prototype.about}</p>
 					<p className="mt-1 text-xs text-gray-500">
-						Notes: <code>{prototype.readme}</code> ·{" "}
+						Notes: <code>{prototype.readme}</code>
+						{!prototype.link && " (the prototype was removed; its history is in git)"} ·{" "}
 						<a href={`${ISSUES}/${prototype.issue}`} className="underline underline-offset-2 hover:text-gray-300">
 							issue #{prototype.issue}
 						</a>
@@ -45,10 +46,12 @@ function PrototypeSection({ prototype }: { prototype: HubPrototype }) {
 					)}
 				</div>
 				<div className="flex flex-wrap items-center gap-2">
-					<Link to={prototype.link} className={`${BUTTON} bg-white text-black hover:bg-neutral-200`}>
-						Open the prototype
-						<ArrowTopRightOnSquareIcon className="h-4 w-4" />
-					</Link>
+					{prototype.link && (
+						<Link to={prototype.link} className={`${BUTTON} bg-white text-black hover:bg-neutral-200`}>
+							Open the prototype
+							<ArrowTopRightOnSquareIcon className="h-4 w-4" />
+						</Link>
+					)}
 					<button type="button" disabled={open === 0} onClick={() => answerActions.acceptSuggested(prototype.questions)} className={`${BUTTON} bg-amber-400 text-black hover:bg-amber-300`} data-testid={`accept-${prototype.key}`}>
 						Accept all suggested{open > 0 && open < prototype.questions.length ? ` (${open} left)` : ""}
 					</button>
@@ -76,10 +79,12 @@ function PrototypeSection({ prototype }: { prototype: HubPrototype }) {
 									<p className="min-w-0 flex-1 basis-64 text-sm text-gray-100">
 										<b className="text-white">{question.short}.</b> {question.text}
 									</p>
-									<Link to={question.link} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200" data-testid={`link-${question.id}`}>
-										See it
-										<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
-									</Link>
+									{question.link && (
+										<Link to={question.link} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200" data-testid={`link-${question.id}`}>
+											See it
+											<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+										</Link>
+									)}
 								</div>
 								<div className="mt-2">
 									<AnswerControl question={question} />

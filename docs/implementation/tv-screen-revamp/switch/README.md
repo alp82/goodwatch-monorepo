@@ -45,7 +45,7 @@ the old actions.
   (`server/living-room/data.server.ts`), which only the deleted parts used.
 - From `living-room-data.ts`: everything but `StartTitle`.
 - From `room.ts`: the old layouts and turn functions. It keeps the photos and the Remote's numbers. The old layouts
-  live on in `ui/prototype-watching/old-room.ts` (below).
+  lived on in `ui/prototype-watching/old-room.ts` (below), which was removed with the old prototypes.
 
 **Changed with it**:
 
@@ -56,9 +56,10 @@ the old actions.
 - **The member harness** (`/prototype/my-library-real`) loses its old `page=home`, the old room with the doors.
   Its Home link opens `/prototype/my-library-real/tv`, the new TV's member harness, which is unchanged except for
   its stylesheet.
-- **Four old prototypes** (`/prototype/watching`, `watching-2`, `watching-3`, `new-episodes`) frame their variants
-  in the old room. They get the old geometry from `ui/prototype-watching/old-room.ts` (a prototype file, out of
-  every build) and pass the Remote its new props. They lose the old room's glass, so it looks slightly different.
+- **Four old prototypes** (`/prototype/watching`, `watching-2`, `watching-3`, `new-episodes`) framed their variants
+  in the old room. They got the old geometry from `ui/prototype-watching/old-room.ts` (a prototype file, out of
+  every build) and passed the Remote its new props. They were removed after the TV revamp merge (`be36991b`);
+  their history is in git.
 - `CONTEXT.md`: TV screen names its new examples. The New episodes signal, Newly available and Recently landed now
   name the TV's My shows tile and Tonight, where they named home's doors. Decision 6's "New on <service>" on Tonight
   is not built, so the glossary does not claim it.
@@ -250,7 +251,7 @@ these show no regression but are not a comparison. Its `seo` mode is above.
 
 ### Slice 3's home drive on `/`: stale since later slices
 
-`node ../home/drive.mjs checks` (the screenshots left alone) on a dev server without services stopped at the same
+`node ../home/drive.mjs checks` (the script is retired and deleted; the screenshots left alone) on a dev server without services stopped at the same
 step with 35 failures. The integration branch's own copy, run against its `/home-preview` on the same kind of
 server, failed the same 35 checks and one more, and stopped at the same step. So the failures are not this slice's.
 The script still expects slice 3's TV:
@@ -287,10 +288,10 @@ copied from (`TvScreens.tsx`, `HomeDoors.tsx`).
    of the site shows there, not even the pool's. A revert of this file is all it takes to bring it back.
 2. **Decision 6** is still open: the TV's My shows tile carries the New episodes signal, but Tonight does not say
    "New on <service>" for a title that landed. A landed title leads Tonight's movies and the shows to start.
-3. **The home drive of slice 3** fails since slice 10. Repair it, or retire it in favour of the later drives?
-4. **Old prototypes:** `/prototype/watching` and `/prototype/watching-2` (rounds 1 and 2 of #371, decided long
-   ago) and `/prototype/new-episodes` keep running on a copy of the old room's geometry. They could be deleted
-   instead; `watching-3` imports modules of the first two.
+3. **The home drive of slice 3** failed since slice 10. Retired and deleted, with its `checks.json`; the later
+   drives cover home.
+4. **Old prototypes:** `/prototype/watching`, `watching-2`, `watching-3` and `new-episodes` ran on a copy of the
+   old room's geometry. Removed, with `ui/prototype-watching/old-room.ts` and their fixtures; history is in git.
 5. **For slice 15 (the `REC_*` flags):** the old loader's `isEnabled("tracking")` went with it. The new loader reads
    a member's Tonight and My shows without asking `REC_TRACKING`. The TV itself reads one flag:
    `tv/screens/ShowEpisode.tsx` (`useFeature("tracking")`) marks a show's next episode on its title screen only with

@@ -1,5 +1,7 @@
 # New episodes for the shows a member tracks
 
+> **Removed:** this prototype (`/prototype/new-episodes`) was removed after the TV revamp merge (`be36991b`). Its code and history are in git.
+
 A prototype for the map [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Throwaway code. The feature
 is "new episodes for shows you watch", in the app only: no email, no push, no release calendar.
 
