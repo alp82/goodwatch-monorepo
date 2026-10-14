@@ -1,0 +1,80 @@
+{
+  "hosts": [
+    {
+      "host": "10.0.0.11",
+      "image": "crate:5.10.9",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "runtime.name": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.memoryLimit": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptExpectedImage": true
+      },
+      "authUserAbsent": true,
+      "privateBindingsRetained": true,
+      "firewallTimerActive": true,
+      "backupReadable": true
+    },
+    {
+      "host": "10.0.0.12",
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "runtime.name": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.memoryLimit": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptExpectedImage": true
+      },
+      "authUserAbsent": true,
+      "privateBindingsRetained": true,
+      "firewallTimerActive": true,
+      "backupReadable": true
+    },
+    {
+      "host": "10.0.0.13",
+      "image": "crate:5.10.9",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "runtime.name": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.memoryLimit": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptExpectedImage": true
+      },
+      "authUserAbsent": true,
+      "privateBindingsRetained": true,
+      "firewallTimerActive": true,
+      "backupReadable": true
+    }
+  ],
+  "expectedVersions": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.16",
+    "crate-03": "5.10.9"
+  },
+  "newExternalTables": [
+    [
+      "doc",
+      "episode_translation"
+    ],
+    [
+      "doc",
+      "season_translation"
+    ]
+  ],
+  "removedBaselineTables": [],
+  "changedBaselineSettings": [],
+  "baselineRows": 121,
+  "currentRows": 123
+}

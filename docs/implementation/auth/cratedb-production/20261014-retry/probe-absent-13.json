@@ -1,0 +1,23 @@
+{
+  "label": "probe-absent-13",
+  "host": 13,
+  "stmt": "SELECT monitor_key FROM doc.workflow_monitoring WHERE monitor_key = ?",
+  "args": [
+    "maintenance_auth_547_20261014204756"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "monitor_key"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 3.462239
+    },
+    "elapsedSeconds": 0.011,
+    "at": "2026-10-14T22:44:24.167353+00:00"
+  }
+}

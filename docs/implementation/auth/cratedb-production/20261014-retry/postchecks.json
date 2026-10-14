@@ -1,0 +1,3829 @@
+{
+  "ownerDecisionAt": "2026-10-14T20:47:56Z",
+  "recordedAt": "2026-10-14T22:44:00.810949+00:00",
+  "hostPrechecks": [
+    {
+      "host": "10.0.0.11",
+      "returncode": 0,
+      "result": {
+        "at": "2026-10-14T22:43:41.512042+00:00",
+        "container": {
+          "name": "/crate-01",
+          "image": "crate:5.10.9",
+          "imageId": "sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-01",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.11",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "restartPolicy": {
+            "Name": "always",
+            "MaximumRetryCount": 0
+          },
+          "ports": {
+            "4200/tcp": [
+              {
+                "HostIp": "10.0.0.11",
+                "HostPort": "4200"
+              }
+            ],
+            "4300/tcp": [
+              {
+                "HostIp": "10.0.0.11",
+                "HostPort": "4300"
+              }
+            ],
+            "5432/tcp": [
+              {
+                "HostIp": "10.0.0.11",
+                "HostPort": "5432"
+              }
+            ]
+          },
+          "mounts": [
+            {
+              "Type": "volume",
+              "Name": "goodwatch-crate_crate_data",
+              "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+              "Destination": "/data",
+              "Driver": "local",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": ""
+            },
+            {
+              "Type": "bind",
+              "Source": "/mnt/backup-cratedb/snapshots",
+              "Destination": "/snapshots",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": "rprivate"
+            }
+          ],
+          "memoryLimit": 27917287424,
+          "state": {
+            "Running": true,
+            "Restarting": false,
+            "OOMKilled": false,
+            "StartedAt": "2026-09-27T10:40:07.329664004Z",
+            "ExitCode": 0
+          }
+        },
+        "oldImageDigests": [
+          "crate@sha256:0ab5077b2cc4180a855250c8f0af425386197f7586af39a7b5d7a08c16558184"
+        ],
+        "composeFileSha256": "d4cef6e24a0edffe484e64c8587fe710425a928bc13ea2312b5f1b269b7c9bf0",
+        "crateGitStatus": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "composeRenderStatus": 0,
+        "effectiveService": {
+          "image": "crate:5.10.9",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-01",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.11",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "container_name": "crate-01",
+          "ports": [
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.11",
+              "target": 4200,
+              "published": "4200",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.11",
+              "target": 5432,
+              "published": "5432",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.11",
+              "target": 4300,
+              "published": "4300",
+              "protocol": "tcp"
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "crate_data",
+              "target": "/data",
+              "volume": {}
+            },
+            {
+              "type": "bind",
+              "source": "/mnt/backup-cratedb/snapshots",
+              "target": "/snapshots",
+              "bind": {
+                "create_host_path": true
+              }
+            }
+          ],
+          "restart": "always",
+          "mem_limit": "27917287424",
+          "memswap_limit": "27917287424",
+          "environment": {
+            "CRATE_HEAP_SIZE": "16g"
+          }
+        },
+        "disk": {
+          "returncode": 0,
+          "stdout": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   64G  225G  23% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+          "stderr": ""
+        },
+        "backupMount": {
+          "returncode": 0,
+          "stdout": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
+          "stderr": ""
+        },
+        "backupReadable": true,
+        "memory": {
+          "returncode": 0,
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856395776 22516793344  4154384384     1413120  6185218048  9751265280\nSwap:     2147479552     4456448  2143023104\n",
+          "stderr": ""
+        },
+        "firewallTimer": {
+          "returncode": 0,
+          "stdout": "active\n",
+          "stderr": ""
+        },
+        "queries": {
+          "nodes": {
+            "status": 200,
+            "elapsedSeconds": 0.014,
+            "result": {
+              "cols": [
+                "id",
+                "name",
+                "version['number']",
+                "rest_url"
+              ],
+              "rows": [
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  "crate-01",
+                  "5.10.9",
+                  "10.0.0.11:4200"
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  "crate-02",
+                  "5.10.16",
+                  "10.0.0.12:4200"
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  "crate-03",
+                  "5.10.9",
+                  "10.0.0.13:4200"
+                ]
+              ],
+              "rowcount": 3,
+              "duration": 3.964404
+            }
+          },
+          "health": {
+            "status": 200,
+            "elapsedSeconds": 0.004,
+            "result": {
+              "cols": [
+                "table_schema",
+                "table_name",
+                "partition_ident",
+                "health",
+                "missing_shards",
+                "underreplicated_shards"
+              ],
+              "rows": [
+                [
+                  "doc",
+                  "search_history",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "country",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_inputs",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_snapshot",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "language",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_content_quality",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_title_link",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_spending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_terms",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_setting",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "crawl_priority",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_index_builds",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "rotten_tomatoes_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_pageview",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_handle",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_control",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_favorite",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "job",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_shadow",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_service",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "timezone",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_profile",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "blob",
+                  "search_index_files",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "production_company",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "network",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_not_interested",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_skipped",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_log",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_ingest_run",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "genre",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list_exposure",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie_series",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "metacritic_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_post",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_trending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import_item",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_interpretations",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_link_report",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "age_certification",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "workflow_monitoring",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_wishlist",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ]
+              ],
+              "rowcount": 93,
+              "duration": 1.910915
+            }
+          },
+          "shardStates": {
+            "status": 200,
+            "elapsedSeconds": 0.059,
+            "result": {
+              "cols": [
+                "state",
+                "count(*)"
+              ],
+              "rows": [
+                [
+                  "STARTED",
+                  956
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 57.554382
+            }
+          },
+          "nodeChecks": {
+            "status": 200,
+            "elapsedSeconds": 0.007,
+            "result": {
+              "cols": [
+                "node_id",
+                "id",
+                "severity",
+                "passed"
+              ],
+              "rows": [
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  2,
+                  2,
+                  true
+                ]
+              ],
+              "rowcount": 21,
+              "duration": 4.598768
+            }
+          },
+          "settings": {
+            "status": 200,
+            "elapsedSeconds": 0.003,
+            "result": {
+              "cols": [
+                "settings['cluster']['routing']['allocation']['enable']",
+                "settings['cluster']['graceful_stop']",
+                "master_node"
+              ],
+              "rows": [
+                [
+                  "all",
+                  {
+                    "min_availability": "PRIMARIES",
+                    "timeout": "2h",
+                    "force": false
+                  },
+                  "xlclgwGeSHe18p5J4WvfFA"
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 1.115771
+            }
+          },
+          "authUser": {
+            "status": 200,
+            "elapsedSeconds": 0.003,
+            "result": {
+              "cols": [
+                "name"
+              ],
+              "rows": [],
+              "rowcount": 0,
+              "duration": 1.326883
+            }
+          },
+          "repositories": {
+            "status": 200,
+            "elapsedSeconds": 0.004,
+            "result": {
+              "cols": [
+                "name",
+                "settings"
+              ],
+              "rows": [
+                [
+                  "goodwatch-db-backup",
+                  {
+                    "compress": "true",
+                    "location": "/snapshots"
+                  }
+                ],
+                [
+                  "goodwatch-db-backup-v2",
+                  {
+                    "compress": "true",
+                    "location": "/snapshots/v2"
+                  }
+                ]
+              ],
+              "rowcount": 2,
+              "duration": 1.51643
+            }
+          },
+          "latestSnapshot": {
+            "status": 200,
+            "elapsedSeconds": 18.504,
+            "result": {
+              "cols": [
+                "name",
+                "state",
+                "finished"
+              ],
+              "rows": [
+                [
+                  "hourly_20261014_220501",
+                  "SUCCESS",
+                  1792015581457
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 18501.623
+            }
+          },
+          "shardColumns": {
+            "status": 200,
+            "elapsedSeconds": 0.013,
+            "result": {
+              "cols": [
+                "column_name"
+              ],
+              "rows": [
+                [
+                  "blob_path"
+                ],
+                [
+                  "closed"
+                ],
+                [
+                  "flush_stats"
+                ],
+                [
+                  "flush_stats['count']"
+                ],
+                [
+                  "flush_stats['periodic_count']"
+                ],
+                [
+                  "flush_stats['total_time_ns']"
+                ],
+                [
+                  "id"
+                ],
+                [
+                  "min_lucene_version"
+                ],
+                [
+                  "node"
+                ],
+                [
+                  "node['id']"
+                ],
+                [
+                  "node['name']"
+                ],
+                [
+                  "num_docs"
+                ],
+                [
+                  "orphan_partition"
+                ],
+                [
+                  "partition_ident"
+                ],
+                [
+                  "partition_uuid"
+                ],
+                [
+                  "path"
+                ],
+                [
+                  "primary"
+                ],
+                [
+                  "recovery"
+                ],
+                [
+                  "recovery['files']"
+                ],
+                [
+                  "recovery['files']['percent']"
+                ],
+                [
+                  "recovery['files']['recovered']"
+                ],
+                [
+                  "recovery['files']['reused']"
+                ],
+                [
+                  "recovery['files']['used']"
+                ],
+                [
+                  "recovery['size']"
+                ],
+                [
+                  "recovery['size']['percent']"
+                ],
+                [
+                  "recovery['size']['recovered']"
+                ],
+                [
+                  "recovery['size']['reused']"
+                ],
+                [
+                  "recovery['size']['used']"
+                ],
+                [
+                  "recovery['stage']"
+                ],
+                [
+                  "recovery['total_time']"
+                ],
+                [
+                  "recovery['type']"
+                ],
+                [
+                  "relocating_node"
+                ],
+                [
+                  "retention_leases"
+                ],
+                [
+                  "retention_leases['leases']"
+                ],
+                [
+                  "retention_leases['leases']['id']"
+                ],
+                [
+                  "retention_leases['leases']['retaining_seq_no']"
+                ],
+                [
+                  "retention_leases['leases']['source']"
+                ],
+                [
+                  "retention_leases['leases']['timestamp']"
+                ],
+                [
+                  "retention_leases['primary_term']"
+                ],
+                [
+                  "retention_leases['version']"
+                ],
+                [
+                  "routing_state"
+                ],
+                [
+                  "schema_name"
+                ],
+                [
+                  "seq_no_stats"
+                ],
+                [
+                  "seq_no_stats['global_checkpoint']"
+                ],
+                [
+                  "seq_no_stats['local_checkpoint']"
+                ],
+                [
+                  "seq_no_stats['max_seq_no']"
+                ],
+                [
+                  "size"
+                ],
+                [
+                  "state"
+                ],
+                [
+                  "table_name"
+                ],
+                [
+                  "translog_stats"
+                ],
+                [
+                  "translog_stats['number_of_operations']"
+                ],
+                [
+                  "translog_stats['size']"
+                ],
+                [
+                  "translog_stats['uncommitted_operations']"
+                ],
+                [
+                  "translog_stats['uncommitted_size']"
+                ]
+              ],
+              "rowcount": 54,
+              "duration": 10.881333
+            }
+          },
+          "monitoringColumns": {
+            "status": 200,
+            "elapsedSeconds": 0.014,
+            "result": {
+              "cols": [
+                "column_name",
+                "data_type"
+              ],
+              "rows": [
+                [
+                  "monitor_key",
+                  "text"
+                ],
+                [
+                  "kind",
+                  "text"
+                ],
+                [
+                  "pipeline",
+                  "text"
+                ],
+                [
+                  "payload",
+                  "text"
+                ],
+                [
+                  "updated_at",
+                  "timestamp with time zone"
+                ],
+                [
+                  "lease_token",
+                  "text"
+                ],
+                [
+                  "lease_expires_at",
+                  "timestamp with time zone"
+                ]
+              ],
+              "rowcount": 7,
+              "duration": 10.920103
+            }
+          }
+        },
+        "backupLogTail": {
+          "returncode": 0,
+          "stdout": "2026-10-14T19:05:17Z Checking for expired snapshots...\n2026-10-14T19:05:36Z Deleting expired snapshot: hourly_20261014_160501\n2026-10-14T19:05:51Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T19:05:51Z Verifying the snapshots of this run...\n2026-10-14T19:06:09Z Verified: hourly_20261014_190501\n2026-10-14T19:06:09Z Backup run finished.\n2026-10-14T20:05:01Z Creating snapshot: hourly_20261014_200501...\n2026-10-14T20:06:51Z Snapshot created successfully.\n2026-10-14T20:06:51Z Checking for expired snapshots...\n2026-10-14T20:07:06Z Deleting expired snapshot: hourly_20261014_170502\n2026-10-14T20:07:23Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T20:07:23Z Verifying the snapshots of this run...\n2026-10-14T20:07:42Z Verified: hourly_20261014_200501\n2026-10-14T20:07:42Z Backup run finished.\n2026-10-14T21:05:01Z Creating snapshot: hourly_20261014_210501...\n2026-10-14T21:05:40Z Snapshot created successfully.\n2026-10-14T21:05:40Z Checking for expired snapshots...\n2026-10-14T21:05:58Z Deleting expired snapshot: hourly_20261014_180501\n2026-10-14T21:06:15Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T21:06:15Z Verifying the snapshots of this run...\n2026-10-14T21:06:34Z Verified: hourly_20261014_210501\n2026-10-14T21:06:34Z Backup run finished.\n2026-10-14T22:05:01Z Creating snapshot: hourly_20261014_220501...\n2026-10-14T22:06:23Z Snapshot created successfully.\n2026-10-14T22:06:23Z Checking for expired snapshots...\n2026-10-14T22:06:42Z Deleting expired snapshot: hourly_20261014_190501\n2026-10-14T22:06:55Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T22:06:55Z Verifying the snapshots of this run...\n2026-10-14T22:07:14Z Verified: hourly_20261014_220501\n2026-10-14T22:07:14Z Backup run finished.\n",
+          "stderr": ""
+        }
+      },
+      "stderr": "",
+      "failureOutput": null
+    },
+    {
+      "host": "10.0.0.12",
+      "returncode": 0,
+      "result": {
+        "at": "2026-10-14T22:43:42.349367+00:00",
+        "container": {
+          "name": "/crate-02",
+          "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+          "imageId": "sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-02",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.12",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "restartPolicy": {
+            "Name": "always",
+            "MaximumRetryCount": 0
+          },
+          "ports": {
+            "4200/tcp": [
+              {
+                "HostIp": "10.0.0.12",
+                "HostPort": "4200"
+              }
+            ],
+            "4300/tcp": [
+              {
+                "HostIp": "10.0.0.12",
+                "HostPort": "4300"
+              }
+            ],
+            "5432/tcp": [
+              {
+                "HostIp": "10.0.0.12",
+                "HostPort": "5432"
+              }
+            ]
+          },
+          "mounts": [
+            {
+              "Type": "bind",
+              "Source": "/mnt/backup-cratedb/snapshots",
+              "Destination": "/snapshots",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": "rprivate"
+            },
+            {
+              "Type": "volume",
+              "Name": "goodwatch-crate_crate_data",
+              "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+              "Destination": "/data",
+              "Driver": "local",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": ""
+            }
+          ],
+          "memoryLimit": 27917287424,
+          "state": {
+            "Running": true,
+            "Restarting": false,
+            "OOMKilled": false,
+            "StartedAt": "2026-10-14T21:06:05.742555871Z",
+            "ExitCode": 0
+          }
+        },
+        "oldImageDigests": [
+          "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+        ],
+        "composeFileSha256": "d4cef6e24a0edffe484e64c8587fe710425a928bc13ea2312b5f1b269b7c9bf0",
+        "crateGitStatus": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "composeRenderStatus": 0,
+        "effectiveService": {
+          "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-02",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.12",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "container_name": "crate-02",
+          "ports": [
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.12",
+              "target": 4200,
+              "published": "4200",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.12",
+              "target": 5432,
+              "published": "5432",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.12",
+              "target": 4300,
+              "published": "4300",
+              "protocol": "tcp"
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "crate_data",
+              "target": "/data",
+              "volume": {}
+            },
+            {
+              "type": "bind",
+              "source": "/mnt/backup-cratedb/snapshots",
+              "target": "/snapshots",
+              "bind": {
+                "create_host_path": true
+              }
+            }
+          ],
+          "restart": "always",
+          "mem_limit": "27917287424",
+          "memswap_limit": "27917287424",
+          "environment": {
+            "CRATE_HEAP_SIZE": "16g"
+          }
+        },
+        "disk": {
+          "returncode": 0,
+          "stdout": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   85G  204G  30% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+          "stderr": ""
+        },
+        "backupMount": {
+          "returncode": 0,
+          "stdout": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
+          "stderr": ""
+        },
+        "backupReadable": true,
+        "memory": {
+          "returncode": 0,
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856408064 17080471552  6968381440     1454080  8807555072 15187550208\nSwap:     2147479552    22282240  2125197312\n",
+          "stderr": ""
+        },
+        "firewallTimer": {
+          "returncode": 0,
+          "stdout": "active\n",
+          "stderr": ""
+        },
+        "queries": {
+          "nodes": {
+            "status": 200,
+            "elapsedSeconds": 0.012,
+            "result": {
+              "cols": [
+                "id",
+                "name",
+                "version['number']",
+                "rest_url"
+              ],
+              "rows": [
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  "crate-01",
+                  "5.10.9",
+                  "10.0.0.11:4200"
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  "crate-02",
+                  "5.10.16",
+                  "10.0.0.12:4200"
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  "crate-03",
+                  "5.10.9",
+                  "10.0.0.13:4200"
+                ]
+              ],
+              "rowcount": 3,
+              "duration": 4.246824
+            }
+          },
+          "health": {
+            "status": 200,
+            "elapsedSeconds": 0.012,
+            "result": {
+              "cols": [
+                "table_schema",
+                "table_name",
+                "partition_ident",
+                "health",
+                "missing_shards",
+                "underreplicated_shards"
+              ],
+              "rows": [
+                [
+                  "doc",
+                  "search_history",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "country",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_inputs",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_snapshot",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "language",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_content_quality",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_spending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_title_link",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_terms",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_setting",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "crawl_priority",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_index_builds",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "rotten_tomatoes_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_pageview",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_handle",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_control",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_favorite",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "job",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_shadow",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_service",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "timezone",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_profile",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "blob",
+                  "search_index_files",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "network",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "production_company",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_not_interested",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_skipped",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_log",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_ingest_run",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "genre",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list_exposure",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie_series",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "metacritic_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_post",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_trending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import_item",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_interpretations",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_link_report",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "age_certification",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "workflow_monitoring",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_wishlist",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ]
+              ],
+              "rowcount": 93,
+              "duration": 8.895652
+            }
+          },
+          "shardStates": {
+            "status": 200,
+            "elapsedSeconds": 0.062,
+            "result": {
+              "cols": [
+                "state",
+                "count(*)"
+              ],
+              "rows": [
+                [
+                  "STARTED",
+                  956
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 59.92788
+            }
+          },
+          "nodeChecks": {
+            "status": 200,
+            "elapsedSeconds": 0.008,
+            "result": {
+              "cols": [
+                "node_id",
+                "id",
+                "severity",
+                "passed"
+              ],
+              "rows": [
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  2,
+                  2,
+                  true
+                ]
+              ],
+              "rowcount": 21,
+              "duration": 5.463906
+            }
+          },
+          "settings": {
+            "status": 200,
+            "elapsedSeconds": 0.005,
+            "result": {
+              "cols": [
+                "settings['cluster']['routing']['allocation']['enable']",
+                "settings['cluster']['graceful_stop']",
+                "master_node"
+              ],
+              "rows": [
+                [
+                  "all",
+                  {
+                    "min_availability": "PRIMARIES",
+                    "force": false,
+                    "timeout": "2h"
+                  },
+                  "xlclgwGeSHe18p5J4WvfFA"
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 2.144166
+            }
+          },
+          "authUser": {
+            "status": 200,
+            "elapsedSeconds": 0.006,
+            "result": {
+              "cols": [
+                "name"
+              ],
+              "rows": [],
+              "rowcount": 0,
+              "duration": 3.491577
+            }
+          }
+        }
+      },
+      "stderr": "",
+      "failureOutput": null
+    },
+    {
+      "host": "10.0.0.13",
+      "returncode": 0,
+      "result": {
+        "at": "2026-10-14T22:43:41.463107+00:00",
+        "container": {
+          "name": "/crate-03",
+          "image": "crate:5.10.9",
+          "imageId": "sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-03",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.13",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "restartPolicy": {
+            "Name": "always",
+            "MaximumRetryCount": 0
+          },
+          "ports": {
+            "4200/tcp": [
+              {
+                "HostIp": "10.0.0.13",
+                "HostPort": "4200"
+              }
+            ],
+            "4300/tcp": [
+              {
+                "HostIp": "10.0.0.13",
+                "HostPort": "4300"
+              }
+            ],
+            "5432/tcp": [
+              {
+                "HostIp": "10.0.0.13",
+                "HostPort": "5432"
+              }
+            ]
+          },
+          "mounts": [
+            {
+              "Type": "volume",
+              "Name": "goodwatch-crate_crate_data",
+              "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+              "Destination": "/data",
+              "Driver": "local",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": ""
+            },
+            {
+              "Type": "bind",
+              "Source": "/mnt/backup-cratedb/snapshots",
+              "Destination": "/snapshots",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": "rprivate"
+            }
+          ],
+          "memoryLimit": 27917287424,
+          "state": {
+            "Running": true,
+            "Restarting": false,
+            "OOMKilled": false,
+            "StartedAt": "2026-10-14T22:28:25.317290799Z",
+            "ExitCode": 0
+          }
+        },
+        "oldImageDigests": [
+          "crate@sha256:0ab5077b2cc4180a855250c8f0af425386197f7586af39a7b5d7a08c16558184"
+        ],
+        "composeFileSha256": "d4cef6e24a0edffe484e64c8587fe710425a928bc13ea2312b5f1b269b7c9bf0",
+        "crateGitStatus": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "composeRenderStatus": 0,
+        "effectiveService": {
+          "image": "crate:5.10.9",
+          "command": [
+            "crate",
+            "-Ccluster.name=crate-cluster",
+            "-Cnode.name=crate-03",
+            "-Cnetwork.host=0.0.0.0",
+            "-Cnetwork.publish_host=10.0.0.13",
+            "-Ctransport.publish_port=4300",
+            "-Cdiscovery.seed_hosts=10.0.0.11,10.0.0.12,10.0.0.13",
+            "-Ccluster.initial_master_nodes=crate-01,crate-02,crate-03",
+            "-Cgateway.expected_data_nodes=3",
+            "-Cgateway.recover_after_data_nodes=3",
+            "-Cpath.data=/data",
+            "-Cpath.repo=/snapshots",
+            "#",
+            "host-based",
+            "auth",
+            "map",
+            "-Cauth.host_based.config.0.user=crate",
+            "-Cauth.host_based.config.0.address=127.0.0.1",
+            "-Cauth.host_based.config.0.method=trust",
+            "-Cauth.host_based.config.1.method=password"
+          ],
+          "container_name": "crate-03",
+          "ports": [
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.13",
+              "target": 4200,
+              "published": "4200",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.13",
+              "target": 5432,
+              "published": "5432",
+              "protocol": "tcp"
+            },
+            {
+              "mode": "ingress",
+              "host_ip": "10.0.0.13",
+              "target": 4300,
+              "published": "4300",
+              "protocol": "tcp"
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "crate_data",
+              "target": "/data",
+              "volume": {}
+            },
+            {
+              "type": "bind",
+              "source": "/mnt/backup-cratedb/snapshots",
+              "target": "/snapshots",
+              "bind": {
+                "create_host_path": true
+              }
+            }
+          ],
+          "restart": "always",
+          "mem_limit": "27917287424",
+          "memswap_limit": "27917287424",
+          "environment": {
+            "CRATE_HEAP_SIZE": "16g"
+          }
+        },
+        "disk": {
+          "returncode": 0,
+          "stdout": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   43G  246G  15% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+          "stderr": ""
+        },
+        "backupMount": {
+          "returncode": 0,
+          "stdout": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
+          "stderr": ""
+        },
+        "backupReadable": true,
+        "memory": {
+          "returncode": 0,
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856383488 13223235584  8594735104     5607424 11038412800 19036409856\nSwap:     2147479552     4194304  2143285248\n",
+          "stderr": ""
+        },
+        "firewallTimer": {
+          "returncode": 0,
+          "stdout": "active\n",
+          "stderr": ""
+        },
+        "queries": {
+          "nodes": {
+            "status": 200,
+            "elapsedSeconds": 0.01,
+            "result": {
+              "cols": [
+                "id",
+                "name",
+                "version['number']",
+                "rest_url"
+              ],
+              "rows": [
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  "crate-01",
+                  "5.10.9",
+                  "10.0.0.11:4200"
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  "crate-02",
+                  "5.10.16",
+                  "10.0.0.12:4200"
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  "crate-03",
+                  "5.10.9",
+                  "10.0.0.13:4200"
+                ]
+              ],
+              "rowcount": 3,
+              "duration": 3.790707
+            }
+          },
+          "health": {
+            "status": 200,
+            "elapsedSeconds": 0.007,
+            "result": {
+              "cols": [
+                "table_schema",
+                "table_name",
+                "partition_ident",
+                "health",
+                "missing_shards",
+                "underreplicated_shards"
+              ],
+              "rows": [
+                [
+                  "doc",
+                  "search_history",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "country",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_inputs",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_snapshot",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "language",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_content_quality",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_title_link",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_spending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_terms",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_setting",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_embedding_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "crawl_priority",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_index_builds",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "rotten_tomatoes_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_pageview",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_handle",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_control",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_favorite",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "job",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_video",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_state",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_shadow",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "season_translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_service",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "timezone",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_profile",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "show",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "production_company",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "blob",
+                  "search_index_files",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "network",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_not_interested",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "person_appeared_in",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_skipped",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_watch_log",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_score",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_ingest_run",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_availability",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "movie",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "genre",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "alternative_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_list_exposure",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "media_image",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "movie_series",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "metacritic_season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_post",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_title",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "buzz_trending",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_import_item",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "search_interpretations",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_link_report",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "translation",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "season",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "age_certification",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "workflow_monitoring",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "user_wishlist",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "trope",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "imdb_episode",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ]
+              ],
+              "rowcount": 93,
+              "duration": 4.760421
+            }
+          },
+          "shardStates": {
+            "status": 200,
+            "elapsedSeconds": 0.066,
+            "result": {
+              "cols": [
+                "state",
+                "count(*)"
+              ],
+              "rows": [
+                [
+                  "STARTED",
+                  956
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 63.914043
+            }
+          },
+          "nodeChecks": {
+            "status": 200,
+            "elapsedSeconds": 0.009,
+            "result": {
+              "cols": [
+                "node_id",
+                "id",
+                "severity",
+                "passed"
+              ],
+              "rows": [
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "ch8EXZwrQVmCls79_T_vUg",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  2,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "r0IgCe17SPOgudkQIGsRQA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  8,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  1,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  5,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  3,
+                  2,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  7,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  6,
+                  3,
+                  true
+                ],
+                [
+                  "xlclgwGeSHe18p5J4WvfFA",
+                  2,
+                  2,
+                  true
+                ]
+              ],
+              "rowcount": 21,
+              "duration": 5.785565
+            }
+          },
+          "settings": {
+            "status": 200,
+            "elapsedSeconds": 0.005,
+            "result": {
+              "cols": [
+                "settings['cluster']['routing']['allocation']['enable']",
+                "settings['cluster']['graceful_stop']",
+                "master_node"
+              ],
+              "rows": [
+                [
+                  "all",
+                  {
+                    "min_availability": "PRIMARIES",
+                    "force": false,
+                    "timeout": "2h"
+                  },
+                  "xlclgwGeSHe18p5J4WvfFA"
+                ]
+              ],
+              "rowcount": 1,
+              "duration": 2.147662
+            }
+          },
+          "authUser": {
+            "status": 200,
+            "elapsedSeconds": 0.004,
+            "result": {
+              "cols": [
+                "name"
+              ],
+              "rows": [],
+              "rowcount": 0,
+              "duration": 1.851607
+            }
+          }
+        }
+      },
+      "stderr": "",
+      "failureOutput": null
+    }
+  ],
+  "localComposeSha256": "d4cef6e24a0edffe484e64c8587fe710425a928bc13ea2312b5f1b269b7c9bf0"
+}

@@ -1,0 +1,86 @@
+{
+  "label": "abort-replica-progress",
+  "host": 11,
+  "stmt": "SELECT schema_name, table_name, id, node['name'], state, recovery, seq_no_stats FROM sys.shards WHERE state = 'RECOVERING'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "id",
+        "node['name']",
+        "state",
+        "recovery",
+        "seq_no_stats"
+      ],
+      "rows": [
+        [
+          "doc",
+          "show",
+          6,
+          "crate-03",
+          "RECOVERING",
+          {
+            "files": {
+              "recovered": 470,
+              "used": 471,
+              "percent": 99.78769,
+              "reused": 0
+            },
+            "stage": "INDEX",
+            "type": "PEER",
+            "total_time": 23675,
+            "size": {
+              "recovered": 184235530,
+              "used": 618773652,
+              "percent": 29.774303,
+              "reused": 0
+            }
+          },
+          {
+            "max_seq_no": 0,
+            "global_checkpoint": 0,
+            "local_checkpoint": 0
+          }
+        ],
+        [
+          "doc",
+          "workflow_monitoring",
+          0,
+          "crate-03",
+          "RECOVERING",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "TRANSLOG",
+            "type": "PEER",
+            "total_time": 283976,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          },
+          {
+            "max_seq_no": 5471498,
+            "global_checkpoint": 3551952,
+            "local_checkpoint": 4242727
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 16.506449
+    },
+    "elapsedSeconds": 0.022,
+    "at": "2026-10-14T22:33:32.975003+00:00"
+  }
+}

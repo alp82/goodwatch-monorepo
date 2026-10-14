@@ -1,0 +1,106 @@
+{
+  "unit": "Captured SQL FAILED log lines; not unique HTTP/member requests",
+  "crate01": {
+    "attempted": false,
+    "failedQueryLogLines": null
+  },
+  "crate02": {
+    "since": "2026-10-14T20:59:00Z",
+    "until": "2026-10-14T21:13:32.202855+00:00",
+    "clients": {
+      "gk4owk8-20261014T205004": {
+        "failedQueryLogLines": 198,
+        "firstFailureAt": "2026-10-14T21:00:35.451522658Z",
+        "lastFailureAt": "2026-10-14T21:06:18.305489383Z",
+        "image": "ghcr.io/alp82/goodwatch-webapp:8d57682058d1e8527f23d8fce3030e248a617b4f",
+        "logReadFailures": 0
+      },
+      "goodwatch-search-b": {
+        "failedQueryLogLines": 0,
+        "firstFailureAt": null,
+        "lastFailureAt": null,
+        "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+        "logReadFailures": 0
+      },
+      "goodwatch-search-a": {
+        "failedQueryLogLines": 0,
+        "firstFailureAt": null,
+        "lastFailureAt": null,
+        "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+        "logReadFailures": 0
+      }
+    },
+    "totalFailedQueryLogLines": 198
+  },
+  "crate03": {
+    "since": "2026-10-14T21:13:45Z",
+    "until": "2026-10-14T22:43:43.376001+00:00",
+    "clients": [
+      {
+        "container": "gk4owk8-20261014T205004",
+        "image": "ghcr.io/alp82/goodwatch-webapp:8d57682058d1e8527f23d8fce3030e248a617b4f",
+        "failedQueryLogLines": 179,
+        "firstFailureAt": "2026-10-14T21:15:00.094376097Z",
+        "lastFailureAt": "2026-10-14T21:18:01.143398666Z"
+      },
+      {
+        "container": "goodwatch-search-b",
+        "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+        "failedQueryLogLines": 0,
+        "firstFailureAt": null,
+        "lastFailureAt": null
+      },
+      {
+        "container": "goodwatch-search-a",
+        "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+        "failedQueryLogLines": 0,
+        "firstFailureAt": null,
+        "lastFailureAt": null
+      },
+      {
+        "container": "gk4owk8-20261014T211643",
+        "image": "ghcr.io/alp82/goodwatch-webapp:cc866faf601843b7b4671263a68cdfafd8cd341f",
+        "failedQueryLogLines": 169,
+        "firstFailureAt": "2026-10-14T21:18:26.478689155Z",
+        "lastFailureAt": "2026-10-14T21:21:04.415883637Z"
+      },
+      {
+        "container": "gk4owk8-20261014T212032",
+        "image": "ghcr.io/alp82/goodwatch-webapp:449c374417ddaa2c9ddfc46b16fb78e60d7a442f",
+        "failedQueryLogLines": 139,
+        "firstFailureAt": "2026-10-14T21:21:16.018331713Z",
+        "lastFailureAt": "2026-10-14T21:23:02.126751511Z"
+      },
+      {
+        "container": "gk4owk8-20261014T212213",
+        "image": "ghcr.io/alp82/goodwatch-webapp:449c374417ddaa2c9ddfc46b16fb78e60d7a442f",
+        "failedQueryLogLines": 470,
+        "firstFailureAt": "2026-10-14T21:22:55.865646071Z",
+        "lastFailureAt": "2026-10-14T21:31:52.027648264Z"
+      },
+      {
+        "container": "gk4owk8-20261014T213055",
+        "image": "ghcr.io/alp82/goodwatch-webapp:edadea2f476b27f25f21db2c6b1af4dd6fec1ea5",
+        "failedQueryLogLines": 373,
+        "firstFailureAt": "2026-10-14T21:31:43.066755507Z",
+        "lastFailureAt": "2026-10-14T21:40:30.977442049Z"
+      },
+      {
+        "container": "gk4owk8-20261014T213940",
+        "image": "ghcr.io/alp82/goodwatch-webapp:9086f883f5001e6f0e9d40c5621c925b75c6ce23",
+        "failedQueryLogLines": 2528,
+        "firstFailureAt": "2026-10-14T21:40:25.451693715Z",
+        "lastFailureAt": "2026-10-14T22:23:40.606263416Z"
+      },
+      {
+        "container": "gk4owk8-20261014T222248",
+        "image": "ghcr.io/alp82/goodwatch-webapp:eacb4873faedb0865ac784381eae4707a5ccbc35",
+        "failedQueryLogLines": 349,
+        "firstFailureAt": "2026-10-14T22:23:34.557489058Z",
+        "lastFailureAt": "2026-10-14T22:28:40.097371255Z"
+      }
+    ],
+    "totalFailedQueryLogLines": 4207
+  },
+  "limitation": "External app removals before continuous followers attached can leave unsampled tails; counts are captured minima. Continuous followers and sampler hashes were unioned to avoid overlap double counting. No SQL text/parameters retained."
+}

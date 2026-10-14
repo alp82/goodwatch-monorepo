@@ -1,0 +1,55 @@
+{
+  "label": "abort-last-replica-progress",
+  "host": 11,
+  "stmt": "SELECT schema_name, table_name, id, node['name'], recovery, seq_no_stats FROM sys.shards WHERE state = 'RECOVERING'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "id",
+        "node['name']",
+        "recovery",
+        "seq_no_stats"
+      ],
+      "rows": [
+        [
+          "doc",
+          "workflow_monitoring",
+          0,
+          "crate-03",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "TRANSLOG",
+            "type": "PEER",
+            "total_time": 580219,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          },
+          {
+            "max_seq_no": 5472030,
+            "global_checkpoint": 3551952,
+            "local_checkpoint": 5195770
+          }
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 12.242779
+    },
+    "elapsedSeconds": 0.018,
+    "at": "2026-10-14T22:38:29.217999+00:00"
+  }
+}

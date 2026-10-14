@@ -1,0 +1,25 @@
+{
+  "label": "probe-cleanup",
+  "host": 11,
+  "stmt": "DELETE FROM doc.workflow_monitoring WHERE monitor_key = ? AND kind = ? AND pipeline = ?",
+  "args": [
+    "maintenance_auth_547_20261014204756",
+    "maintenance_probe",
+    "auth-prereqs"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 12.182766
+    },
+    "elapsedSeconds": 0.017,
+    "at": "2026-10-14T22:44:07.833120+00:00"
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-14T22:32:41.174233+00:00",
-  "state": "ABORTING_UNEXPECTED_EXTERNAL_TABLES_BEFORE_CRATE03_TARGET_STARTUP",
+  "at": "2026-10-14T22:45:31.731107+00:00",
+  "state": "CLEAN_STOP_HEALTH_VERIFIED_POST_BACKUP_PENDING",
   "firstGenuineFailedGateAt": "2026-10-14T22:24:55.948868+00:00",
   "firstFailure": [
     "Unexpected new health identities: [('doc', 'episode_translation', None), ('doc', 'season_translation', None)]"
@@ -17,7 +17,7 @@
   },
   "crate03TargetStarted": false,
   "crate01Attempted": false,
-  "pending": "Replica recovery; require all current health rows GREEN and all current copies STARTED, final config/client checks and owned probe cleanup before declaring clean stop",
+  "pending": "New scheduled backup after abort/owned probe cleanup; final report and push",
   "noForcedStopOrJobCancellation": true,
   "compensation": {
     "crate03OriginalEnvRestored": true,
@@ -27,5 +27,6 @@
     "signal": "SIGTERM, unlimited grace; no SIGKILL observed",
     "crate03Image": "crate:5.10.9",
     "originalContainerAndMountsRetained": true
-  }
+  },
+  "firstGreenStartedAfterRecoveryAt": "2026-10-14T22:42:56.465257Z"
 }

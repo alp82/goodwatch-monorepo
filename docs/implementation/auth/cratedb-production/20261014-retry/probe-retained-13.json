@@ -1,0 +1,33 @@
+{
+  "label": "probe-retained-13",
+  "host": 13,
+  "stmt": "SELECT monitor_key, kind, pipeline, payload FROM doc.workflow_monitoring WHERE monitor_key = ?",
+  "args": [
+    "maintenance_auth_547_20261014204756"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "monitor_key",
+        "kind",
+        "pipeline",
+        "payload"
+      ],
+      "rows": [
+        [
+          "maintenance_auth_547_20261014204756",
+          "maintenance_probe",
+          "auth-prereqs",
+          "crate02-up"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.207236
+    },
+    "elapsedSeconds": 0.01,
+    "at": "2026-10-14T22:43:45.022449+00:00"
+  }
+}
