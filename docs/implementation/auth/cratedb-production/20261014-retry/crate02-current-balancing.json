@@ -1,0 +1,25 @@
+{
+  "label": "crate02-current-balancing",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], routing_state FROM sys.shards WHERE routing_state != 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "routing_state"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 11.33459
+    },
+    "elapsedSeconds": 0.016,
+    "at": "2026-10-14T21:13:04.790057+00:00"
+  }
+}

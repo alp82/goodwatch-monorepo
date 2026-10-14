@@ -1,0 +1,26 @@
+{
+  "gk4owk8-20261014T205004": {
+    "cursor": "2026-10-14T21:14:26.488934630Z",
+    "failed": {},
+    "image": "ghcr.io/alp82/goodwatch-webapp:8d57682058d1e8527f23d8fce3030e248a617b4f",
+    "logReturncodes": [
+      0
+    ]
+  },
+  "goodwatch-search-b": {
+    "cursor": "2026-10-14T21:13:47.979848936Z",
+    "failed": {},
+    "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+    "logReturncodes": [
+      0
+    ]
+  },
+  "goodwatch-search-a": {
+    "cursor": "2026-10-14T21:14:16.023611743Z",
+    "failed": {},
+    "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+    "logReturncodes": [
+      0
+    ]
+  }
+}

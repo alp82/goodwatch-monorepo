@@ -1,0 +1,8 @@
+{
+  "node": "crate-03",
+  "startedAt": "2026-10-14T21:14:21.458431+00:00",
+  "target": "5.10.16",
+  "coordinator": "crate-01",
+  "decommissionHttpSeconds": 7500,
+  "clusterGracefulStopMilliseconds": 7200000
+}

@@ -4,5 +4,35 @@
   "target": "5.10.16",
   "coordinator": "crate-01",
   "decommissionHttpSeconds": 7500,
-  "clusterGracefulStopMilliseconds": 7200000
+  "clusterGracefulStopMilliseconds": 7200000,
+  "finishedAt": "2026-10-14T21:13:32.202855+00:00",
+  "healthGateAt": "2026-10-14T21:13:28.672078+00:00",
+  "outcome": "PASS",
+  "targetVersion": "5.10.16",
+  "decommissionSeconds": 224.911,
+  "actualTargetStartedAt": "2026-10-14T21:06:05.742555871Z",
+  "normalOldExitAt": "2026-10-14T21:04:11.291881082Z",
+  "failedQueryLogCounts": {
+    "gk4owk8-20261014T205004": {
+      "failedQueryLogLines": 198,
+      "firstFailureAt": "2026-10-14T21:00:35.451522658Z",
+      "lastFailureAt": "2026-10-14T21:06:18.305489383Z",
+      "image": "ghcr.io/alp82/goodwatch-webapp:8d57682058d1e8527f23d8fce3030e248a617b4f",
+      "logReadFailures": 0
+    },
+    "goodwatch-search-b": {
+      "failedQueryLogLines": 0,
+      "firstFailureAt": null,
+      "lastFailureAt": null,
+      "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+      "logReadFailures": 0
+    },
+    "goodwatch-search-a": {
+      "failedQueryLogLines": 0,
+      "firstFailureAt": null,
+      "lastFailureAt": null,
+      "image": "ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8",
+      "logReadFailures": 0
+    }
+  }
 }

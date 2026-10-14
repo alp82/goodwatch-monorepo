@@ -1,0 +1,26 @@
+{
+  "label": "crate02-recovery-progress",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], state, recovery FROM sys.shards WHERE state IN ('RECOVERING', 'POST_RECOVERY')",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "recovery"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 25.941624
+    },
+    "elapsedSeconds": 0.031,
+    "at": "2026-10-14T21:09:59.895028+00:00"
+  }
+}
