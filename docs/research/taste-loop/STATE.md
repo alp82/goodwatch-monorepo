@@ -2,7 +2,7 @@
 
 Read this first. Rewritten at the end of every session.
 
-- **Phase:** 1 exit, waiting for the owner checkpoint. Session 1 started October 13, 2026.
+- **Phase:** 2, obtain new information. Phase 1 exit confirmed by the owner October 14, 2026. Session 1 started October 13, 2026.
 - **Orchestrator:** Claude Opus 5.5.
 - **Branch and worktree:** `research/taste-loop`, in `.claude/worktrees/taste-loop` of the main checkout.
 - **Data:** `~/goodwatch-research/taste/` (mode 700). First loop's files in `packs/old/`. Pack: `packs/2026-10-13/`.
@@ -16,6 +16,11 @@ Read this first. Rewritten at the end of every session.
   `codex exec`; Opus and Fable only for the most critical tasks and reviews: phase-gate reviews, red teams, accepting a
   claimed win (October 14, 2026). Item 004 was already with an Opus builder.
 - Reviewers and agents of any model family may read whatever they need (October 13, 2026).
+- Phase 1 checkpoint (October 14, 2026): start T3 (judged pools) for D1 with G1 as the challenger: freeze the harm
+  rule and pool design first, then build the page and recruit toward 20 members. Harm margin: G1 is blocked if the
+  upper bound of its extra harm over today's taste reaches 1 per 10 in the first 10 ("Not for me" plus "seen it,
+  rated 5 or less"). Invitations to other members still wait for the owner checkpoint "before anything reaches
+  another member".
 - No re-rating and no labelling by the owner. The owner's ratings are tested one hidden title at a time (T2a).
 
 ## Items
@@ -70,7 +75,7 @@ Read this first. Rewritten at the end of every session.
 
 ## Next action
 
-Owner checkpoint for phase 2 (PLAN.md phase 1 exit). Proposed phase 2 order, from both gate reviews:
+Phase 2, in this order (owner confirmed the direction October 14, 2026):
 1. Amendment A3, reviewed by two families before any page exists: the top-list harm criterion for judged pools
    (T3), the T3 pool composition, and the distance form of the shows/animation guard.
 2. Hash G1's and B2's rankings into the ledger, build the T3 page, recruit toward 20 members; issues #525 and #526.
@@ -80,9 +85,7 @@ Owner checkpoint for phase 2 (PLAN.md phase 1 exit). Proposed phase 2 order, fro
 
 ## What the owner owes
 
-The phase 1 checkpoint: confirm phase 2's direction, whether recruitment for T3 starts, and the harm margin.
-
-Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+Nothing now. Next checkpoint: before the T3 page or any invitation reaches another member. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed
