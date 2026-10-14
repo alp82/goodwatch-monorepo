@@ -23,7 +23,17 @@ interface NavigationState {
 	setStrips: (update: (count: number) => number) => void
 }
 
-const NavigationContext = createContext<NavigationState | null>(null)
+// Outside the provider (a component rendered on its own, as in a test) nothing opens and nothing docks.
+const NavigationContext = createContext<NavigationState>({
+	hubOpen: false,
+	setHubOpen: () => {},
+	searchOpen: false,
+	setSearchOpen: () => {},
+	stripTarget: null,
+	setStripTarget: () => {},
+	strips: 0,
+	setStrips: () => {},
+})
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
 	const [hubOpen, setHubOpen] = useState(false)
@@ -58,7 +68,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 	)
 }
 
-/** The navigation's shared state; null while REC_NAVIGATION is off for the viewer (the old header serves). */
-export function useNavigation(): NavigationState | null {
+/** The navigation's shared state. */
+export function useNavigation(): NavigationState {
 	return useContext(NavigationContext)
 }

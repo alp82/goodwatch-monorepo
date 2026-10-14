@@ -14,12 +14,7 @@ import {
 	useNavigationType,
 } from "@remix-run/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-	MagnifyingGlassIcon,
-	ArrowPathIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid";
-import { type Row } from "./search-model";
+import type { Row } from "./search-model";
 import { foundSoFar, selectReading, showsNoResults } from "./search-partial";
 import {
 	SEARCH_PAGE_UNAVAILABLE,
@@ -43,9 +38,8 @@ const QUERY_DEBOUNCE_MS = 500;
 // Wait this long after the last filter change before refetching. Filter changes narrow the
 // shown batch at once; only the request waits, so dragging the year slider sends one request.
 const FILTER_DEBOUNCE_MS = 100;
-// A query shorter than this is not searched. Longer than this can't be typed.
+// A query shorter than this is not searched.
 const MIN_QUERY_LENGTH = 2;
-const MAX_QUERY_LENGTH = 512;
 // Result batches kept in sessionStorage. Descriptive batches reach about 220 KB, and each
 // filter set adds one, so six stays well under the quota.
 const CACHED_BATCHES = 6;
@@ -608,137 +602,6 @@ export function SearchJourneyProvider({ children }: { children: ReactNode }) {
 	return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
-const chipStyle: Record<ReadingChip["kind"], string> = {
-	attribute: "bg-cyan-400/10 text-cyan-200",
-	want: "bg-cyan-400/10 text-cyan-200",
-	excluded: "bg-rose-400/10 text-rose-200",
-	avoid: "bg-rose-400/10 text-rose-200",
-	phrase: "bg-amber-400/10 text-amber-200",
-};
-// What the search understood, shown inside the open search box as soon as the
-// interpretation arrives. The row keeps one chip line of height even when empty,
-// so the box doesn't jump when chips come and go.
-function ReadingChips() {
-	const j = useSearchJourney()!;
-	const row = "flex flex-wrap items-center gap-1 pt-2 min-h-8 text-xs";
-	if (!j.chips.length) {
-		return (
-			<p className={`${row} text-gray-500`}>
-				Describe a mood, a story, or a title, then press Enter.
-			</p>
-		);
-	}
-	return (
-		<ul aria-label="How the search read your request" className={row}>
-			<li className="text-gray-500 mr-1">Looking for</li>
-			{j.chips.map((chip) => (
-				<li
-					key={`${chip.kind}:${chip.text}`}
-					className={`rounded px-2 py-0.5 ${chipStyle[chip.kind]}`}
-				>
-					{chip.text}
-				</li>
-			))}
-		</ul>
-	);
-}
-export function JourneyHeader() {
-	const j = useSearchJourney()!;
-	const container = useRef<HTMLDivElement>(null);
-	useEffect(() => {
-		const outside = (e: PointerEvent) => {
-			if (!container.current?.contains(e.target as Node)) j.setOpen(false);
-		};
-		document.addEventListener("pointerdown", outside);
-		return () => document.removeEventListener("pointerdown", outside);
-	}, []);
-	const dismiss = () => {
-		j.setOpen(false);
-		j.input.current?.blur();
-	};
-	return (
-		<div ref={container} className="search-private ph-no-capture sentry-mask">
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					if (j.focusedRow) {
-						j.openRow(j.focusedRow);
-						return;
-					}
-					j.commit(j.draft);
-				}}
-			>
-				{/* Open, the box grows downward and shows the reading chips under the input. */}
-				<div
-					className={`rounded-md border-2 border-slate-700 bg-gray-800 px-3 py-2 text-gray-200 ${j.open ? "absolute top-2 left-0 w-full z-10 min-h-12 bg-slate-800" : "h-9 min-w-24 max-w-52"}`}
-				>
-					<div className={`flex items-center gap-2 ${j.open ? "min-h-8" : "h-full"}`}>
-					{j.loading ? (
-						<ArrowPathIcon className="w-5 shrink-0 animate-spin" />
-					) : (
-						<MagnifyingGlassIcon className="w-5 shrink-0" />
-					)}
-					<input
-						ref={j.input}
-						type="search"
-						aria-label="Search titles, people, or descriptions"
-						autoComplete="off"
-						maxLength={MAX_QUERY_LENGTH}
-						data-ph-no-capture
-						placeholder={j.open ? "A title, a person, or a story…" : "Search…"}
-						className="w-full min-w-0 bg-transparent border-0 outline-none text-sm sm:text-base"
-						value={j.draft}
-						onFocus={() => j.setOpen(true)}
-						onChange={(e) => {
-							j.changeQuery(e.target.value);
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Escape") {
-								e.preventDefault();
-								dismiss();
-							}
-							if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-								e.preventDefault();
-								const keys = j.pageRows
-									.filter((r) => r.type === "movie" || r.type === "show")
-									.map((r) => r.key);
-								j.setFocusedKey((key) => {
-									if (!keys.length) return null;
-									const current = key === null ? -1 : keys.indexOf(key);
-									const next =
-										current < 0
-											? e.key === "ArrowDown"
-												? 0
-												: keys.length - 1
-											: (current +
-													(e.key === "ArrowDown" ? 1 : -1) +
-													keys.length) %
-												keys.length;
-									return keys[next];
-								});
-							}
-						}}
-					/>
-					{j.open && (
-						<>
-							<button
-								className="hidden sm:block text-sm text-cyan-300 px-2"
-								type="submit"
-							>
-								Search
-							</button>
-							<button aria-label="Close search" type="button" onClick={dismiss}>
-								<XMarkIcon className="w-6" />
-							</button>
-						</>
-					)}
-					</div>
-					{j.open && <ReadingChips />}
-				</div>
-			</form>
-		</div>
-	);
-}
 function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 	const j = useSearchJourney()!;
 	if (!j.filtersActive || j.loading || j.batch?.q !== j.q) return null;

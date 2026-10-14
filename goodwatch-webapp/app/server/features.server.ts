@@ -13,7 +13,6 @@ const FEATURE_VARIABLES: Record<
 	Feature,
 	{ name: string; modes: readonly FeatureMode[] }
 > = {
-	navigation: { name: "REC_NAVIGATION", modes: ["off", "preview", "on"] },
 }
 
 // Compatible with both a member ({ userId }) and a guest (no userId).
@@ -22,7 +21,9 @@ export type FeatureViewer = { userId?: string | null } | null | undefined
 const warnedValues = new Set<string>()
 
 export function getFeatureMode(feature: Feature): FeatureMode {
-	const { name, modes } = FEATURE_VARIABLES[feature]
+	// With no flag left the list is empty and `feature` can't be named; the module goes in the next commit.
+	const { name, modes }: { name: string; modes: readonly FeatureMode[] } =
+		FEATURE_VARIABLES[feature]
 	const raw = (process.env[name] ?? "").trim().toLowerCase()
 	const mode = modes.find((candidate) => candidate === raw)
 	if (mode) return mode

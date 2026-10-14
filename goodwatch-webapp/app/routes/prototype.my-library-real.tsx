@@ -226,9 +226,8 @@ function Chrome({ page }: { page: PageKey }) {
 
 /** Opens the member's hub once, for a screenshot of it. */
 function OpenHub() {
-	const navigation = useNavigation()
-	const open = navigation?.setHubOpen
-	useEffect(() => open?.(true), [open])
+	const { setHubOpen } = useNavigation()
+	useEffect(() => setHubOpen(true), [setHubOpen])
 	return null
 }
 

@@ -1,7 +1,7 @@
 // Watch next's controls on phones (below the large breakpoint): the slab's three buttons at the bottom, moods,
-// services, and sort, each opening its own drawer (owner addendum on #176). With the site's dock (REC_NAVIGATION)
-// the buttons dock above it; otherwise the slab frame carries them over the site navigation. Every drawer is a
-// labeled modal sheet with a focus trap, closing with Escape, the backdrop, a drag down, or its Show button.
+// services, and sort, each opening its own drawer (owner addendum on #176). The buttons dock above the site's dock.
+// Every drawer is a labeled modal sheet with a focus trap, closing with Escape, the backdrop, a drag down, or its
+// Show button.
 import {
 	ArrowsUpDownIcon,
 	GlobeAltIcon,
@@ -14,10 +14,10 @@ import { useRef, useState } from "react"
 import { MAX_MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import type { WatchNextSort } from "~/domain/watch-next"
 import type { WatchNext } from "~/server/watch-next.server"
-import { SlabShell, SnapSheet } from "~/ui/filter-bar"
+import { SnapSheet } from "~/ui/filter-bar"
 import { ServiceStack, radioKeys } from "~/ui/filter-bar/controls"
 import { Knob, SPRING, TAP } from "~/ui/filter-bar/motion"
-import { DockStrip, useHasDock } from "~/ui/navigation"
+import { DockStrip } from "~/ui/navigation"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import {
 	type MoodControl,
@@ -437,7 +437,6 @@ export function PhoneControls({
 }: PhoneControlsProps) {
 	const [open, setOpen] = useState<Drawer | null>(null)
 	const checkedSort = useRef<HTMLButtonElement>(null)
-	const hasDock = useHasDock()
 	const close = () => setOpen(null)
 	const segments =
 		data && moods ? (
@@ -460,18 +459,14 @@ export function PhoneControls({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			{hasDock ? (
-				<DockStrip>
-					<div
-						className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10"
-						data-watch-next-strip
-					>
-						{segments}
-					</div>
-				</DockStrip>
-			) : (
-				<SlabShell strip={segments} />
-			)}
+			<DockStrip>
+				<div
+					className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10"
+					data-watch-next-strip
+				>
+					{segments}
+				</div>
+			</DockStrip>
 			{data && moods && (
 				<>
 					<SnapSheet {...sheet("moods")} header={<MoodsHead control={moods} />}>

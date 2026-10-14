@@ -68,7 +68,7 @@ export function Omnibox() {
 	return (
 		<button
 			type="button"
-			onClick={() => navigation?.setSearchOpen(true)}
+			onClick={() => navigation.setSearchOpen(true)}
 			{...preloadOnIntent}
 			aria-haspopup="dialog"
 			aria-keyshortcuts="Meta+K Control+K /"
@@ -95,13 +95,13 @@ export function Omnibox() {
 export function HeaderSearchBar() {
 	const navigation = useNavigation()
 	const q = useCurrentQuery()
-	const open = Boolean(navigation?.searchOpen)
+	const open = navigation.searchOpen
 	return (
 		<button
 			type="button"
 			onClick={() => {
 				holdKeyboardForSearch()
-				navigation?.setSearchOpen(true)
+				navigation.setSearchOpen(true)
 			}}
 			{...preloadOnIntent}
 			aria-haspopup="dialog"
@@ -128,10 +128,8 @@ export function HeaderSearchBar() {
 
 /** The keyboard shortcuts that open the search dialog: ⌘K / Ctrl K, and "/" outside text fields. */
 export function useSearchShortcuts() {
-	const navigation = useNavigation()
-	const setSearchOpen = navigation?.setSearchOpen
+	const { setSearchOpen } = useNavigation()
 	useEffect(() => {
-		if (!setSearchOpen) return
 		const onKey = (event: KeyboardEvent) => {
 			const typing = (event.target as HTMLElement | null)?.closest?.(
 				"input, textarea, select, [contenteditable]",

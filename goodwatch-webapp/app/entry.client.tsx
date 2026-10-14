@@ -21,7 +21,7 @@ setBrowserCookie()
 installLoaderRetry()
 
 // The root loader's data as the server embedded it: which shell parts the page shows.
-type RootData = { user?: unknown; features?: { navigation?: boolean } }
+type RootData = { user?: unknown }
 const rootData = (
 	window as unknown as {
 		__remixContext?: { state?: { loaderData?: { root?: RootData } } }
@@ -30,10 +30,7 @@ const rootData = (
 
 // Without the root's data the page is the error page, and nothing is known about its shell.
 const shellCode = rootData
-	? loadShellCode({
-			navigation: Boolean(rootData.features?.navigation),
-			member: Boolean(rootData.user),
-		})
+	? loadShellCode({ member: Boolean(rootData.user) })
 	: Promise.resolve()
 
 shellCode.then(() => {

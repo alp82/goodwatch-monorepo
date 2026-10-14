@@ -29,7 +29,7 @@ export const preloadSearchPanel = () => {
 /** The hub sheet (phones) and Browse panel (desktop): one dialog, opened from the hub key or the Browse button. */
 export function HubDialog() {
 	const navigation = useNavigation()
-	const opened = useOpenedOnce(Boolean(navigation?.hubOpen))
+	const opened = useOpenedOnce(navigation.hubOpen)
 	useEffect(
 		() =>
 			whenInteractive(() => {
@@ -50,7 +50,7 @@ export function HubDialog() {
 export function SearchDialog() {
 	const navigation = useNavigation()
 	useSearchShortcuts()
-	const opened = useOpenedOnce(Boolean(navigation?.searchOpen))
+	const opened = useOpenedOnce(navigation.searchOpen)
 	if (!opened) return null
 	return (
 		<Suspense fallback={null}>

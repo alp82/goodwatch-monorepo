@@ -33,7 +33,7 @@ const rendered = JSON.parse(
 	)
 		.split("__BELOW_ROOM_RENDER__")
 		.at(-1) ?? "",
-) as { full: string; again: string; empty: string; docked: string }
+) as { full: string; again: string; empty: string }
 
 /** Every `<a>` of the HTML: its attributes and its text. */
 const links = (html: string) =>
@@ -147,17 +147,6 @@ test("the lip and the way back are links that work without a script", () => {
 	assert.equal(
 		rendered.full.match(/<a href="#room" class="lrb-back">/g)?.length,
 		2,
-	)
-})
-
-test("over the navigation's dock only the section's class differs", () => {
-	assert.match(
-		rendered.docked,
-		/<section id="browse"[^>]* class="lrb lrb-docked">/,
-	)
-	assert.equal(
-		rendered.docked.replace('class="lrb lrb-docked"', 'class="lrb"'),
-		rendered.full,
 	)
 })
 

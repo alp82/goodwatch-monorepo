@@ -56,8 +56,6 @@ export interface FilterBarProps {
 	insightLead?: ReactNode
 	/** Phones: replaces the slab's hidden line. */
 	slabLine?: ReactNode
-	/** Phones: replaces the slab's dock row (the site navigation by default). */
-	nav?: ReactNode
 }
 
 export function FilterBar(props: FilterBarProps) {
@@ -231,7 +229,6 @@ export function FilterBar(props: FilterBarProps) {
 					searching={filters.searching}
 					groups={groups}
 					line={props.slabLine}
-					nav={props.nav}
 				/>
 			</div>
 		</MotionConfig>

@@ -229,7 +229,7 @@ function HubContent() {
 	// opened it and take the keyboard down. Closing search comes back here; following a result closes both.
 	const openSearch = () => {
 		holdKeyboardForSearch()
-		navigation?.setSearchOpen(true)
+		navigation.setSearchOpen(true)
 	}
 	const watchSubtitle = user
 		? pick
@@ -239,7 +239,7 @@ function HubContent() {
 	// A link to the page the person is already on changes no location, so close on any link click.
 	const closeOnLink = (event: React.MouseEvent) => {
 		if ((event.target as HTMLElement).closest("a"))
-			navigation?.setHubOpen(false)
+			navigation.setHubOpen(false)
 	}
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: only observes clicks on the links inside
@@ -333,12 +333,10 @@ function HubContent() {
 
 /** The hub sheet (phones) and Browse panel (desktop): one dialog, opened from the hub key or the Browse button. */
 export function HubDialog() {
-	const navigation = useNavigation()
+	const { hubOpen, setHubOpen } = useNavigation()
 	// This module loads with the hub's first opening (see LazyDialogs.tsx).
-	const open = useOpenAfterMount(Boolean(navigation?.hubOpen))
-	const setHubOpen = navigation?.setHubOpen
-	const panel = useDragToClose(() => setHubOpen?.(false))
-	if (!setHubOpen) return null
+	const open = useOpenAfterMount(hubOpen)
+	const panel = useDragToClose(() => setHubOpen(false))
 	return (
 		<Dialog
 			open={open}

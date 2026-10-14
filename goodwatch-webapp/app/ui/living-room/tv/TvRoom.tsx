@@ -27,7 +27,6 @@ import {
 	useState,
 } from "react"
 import type { ReactNode } from "react"
-import { useHasDock } from "~/ui/navigation"
 import { assetUrl } from "~/utils/asset-url"
 import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
@@ -112,7 +111,6 @@ export function TvRoom({
 	// The room is the first screen of the page; use-below-room.ts owns how the page moves between it and the
 	// section below. Its contract: a block with the room's id that takes no input while it is away.
 	const travel = useBelowRoom()
-	const docked = useHasDock()
 
 	// ---- Layout: measured once per resize.
 	const root = useRef<HTMLDivElement>(null)
@@ -249,7 +247,7 @@ export function TvRoom({
 				data-tv-power={on ? "on" : "off"}
 				// Scrolled out of the window, the room takes no input: the keys and the pointer are the page's.
 				{...(travel.away && { inert: "" })}
-				className={`living-room lr-page tvr overflow-clip bg-[#07080b] text-white ${docked ? "lr-docked" : ""} ${held ? "select-none [-webkit-touch-callout:none]" : ""}`}
+				className={`living-room lr-page tvr overflow-clip bg-[#07080b] text-white ${held ? "select-none [-webkit-touch-callout:none]" : ""}`}
 			>
 				{/* The room photo: the desktop's, and a phone's in landscape, where the framed TV stands in front of it. */}
 				{(first || D || S) && (
@@ -419,7 +417,6 @@ export function TvRoom({
 			</div>
 			<StillBelowRoom
 				titles={startTitles}
-				docked={docked}
 				onDown={travel.onDown}
 				onBack={travel.onBack}
 			/>
