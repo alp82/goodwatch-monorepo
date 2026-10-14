@@ -1,13 +1,12 @@
-// Home's three doors for a member with REC_TRACKING (#385): Continue, Start a show, A movie. And what Tonight's pick
-// is built from, since the pick is the first thing behind one of the doors. No query of its own for the member: the
-// shows come from the member data and the catalog by key (my-shows.server.ts), the movies from Watch next's plan
-// over the Wishlist's movies (docs/implementation/tracking/data-model.md, "Reads": Home doors and Tonight's pick).
+// What a member's Tonight and My shows on the start page's TV are built from (server/living-room/tv-home.server.ts
+// shapes them), and Tonight's pick, which is the first of them. The file keeps the name of the three doors the old
+// TV had (#385). No query of its own for the member: the shows come from the member data and the catalog by key
+// (my-shows.server.ts), the movies from Watch next's plan over the Wishlist's movies
+// (docs/implementation/tracking/data-model.md, "Reads": Home doors and Tonight's pick).
 //
-// A title that landed on the member's services in the last 14 days leads its own door (#489): a movie that fits
-// tonight leads A movie, a show not started leads Start a show, the latest landing first. The order of the doors
-// is untouched, so Continue stays Tonight's pick for a member in the middle of a show. From memory: what landed is
-// read from the availability index.
-import { episodeCode, placedWords } from "~/domain/my-shows"
+// A title that landed on the member's services in the last 14 days leads (#489): a movie that fits tonight leads the
+// movies, a show not started leads the shows to start, the latest landing first. A show the member is in the middle
+// of stays first, so it stays Tonight's pick. From memory: what landed is read from the availability index.
 import { landedFirst } from "~/domain/newly-available"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { getLandings, newOnOf } from "~/server/newly-available.server"
@@ -18,9 +17,8 @@ import {
 	planWatchNext,
 	sortFactsOutsideSnapshot,
 } from "~/server/watch-next.server"
-import type { HomeDoors } from "~/ui/living-room/living-room-data"
 
-/** How many movies a door's fan of posters shows. */
+/** How many movies Tonight reads. */
 const FAN = 3
 
 export interface TonightParts {
@@ -52,8 +50,9 @@ export async function getTonightParts(
 				services: ctx.services,
 				taste,
 			},
-			// Only the first Continue row's Next episode is shown, and no waiting show.
-			{ episodeLists: 1, now, upcoming: false },
+			// The first three Continue rows' Next episodes are shown (the new TV's My shows; home's Continue door shows
+			// the first), and no waiting show.
+			{ episodeLists: 3, now, upcoming: false },
 		),
 		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
 		// A door led by what landed is an addition: without it the doors are in their own order.
@@ -115,55 +114,4 @@ export async function getTonightParts(
 			start: serviceOf(ledBy.start),
 		},
 	}
-}
-
-/** The doors as home draws them. A door without anything behind it is null; A movie is always there. */
-export function homeDoorsOf(
-	parts: TonightParts,
-	services: readonly number[],
-	now: number,
-): HomeDoors {
-	const { shows, movies } = parts
-	const first = shows.continue[0] ?? shows.pickUp[0] ?? null
-	const started = shows.continue.length + shows.pickUp.length
-	const movie = movies[0] ?? null
-	const own = new Set(services)
-	return {
-		continue: first && {
-			title: first.title,
-			backdrop_path: first.backdrop_path,
-			episode: first.next ? episodeCode(first.next) : null,
-			episodeName: first.next?.name ?? null,
-			fact:
-				first.kind === "seenNew"
-					? `${first.left} new since you saw it`
-					: placedWords(first, now),
-			more: started - 1,
-		},
-		start: shows.start.length
-			? {
-					count: shows.start.length,
-					title: shows.start[0].title,
-					posters: shows.start.slice(0, FAN).map((show) => show.poster_path),
-					...(parts.newOn.start ? { newOn: parts.newOn.start } : {}),
-				}
-			: null,
-		movie: {
-			count: parts.movieCount,
-			title: movie?.title ?? null,
-			runtime: movie?.runtime ?? null,
-			service:
-				movie?.services?.find((service) => own.has(service.id))?.name ?? null,
-			posters: movies.map((card) => card.poster_path),
-			...(parts.newOn.movie ? { newOn: parts.newOn.movie } : {}),
-		},
-	}
-}
-
-export async function getHomeDoors(
-	ctx: ViewerContext,
-	taste: Taste,
-	now = Date.now(),
-): Promise<HomeDoors> {
-	return homeDoorsOf(await getTonightParts(ctx, taste, now), ctx.services, now)
 }

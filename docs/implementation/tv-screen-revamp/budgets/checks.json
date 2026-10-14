@@ -1,0 +1,5688 @@
+{
+	"access": {
+		"passed": 81,
+		"failed": [],
+		"numbers": {
+			"tab order guest desktop": [
+				"app:tonight",
+				"app:discover",
+				"app:explorer",
+				"app:taste",
+				"service:8",
+				"service:9",
+				"bar:search",
+				"bar:menu",
+				"key button  Turn off"
+			],
+			"tab order guest phone": [
+				"app:tonight",
+				"app:discover",
+				"app:explorer",
+				"app:taste",
+				"service:8",
+				"service:9",
+				"bar:search",
+				"bar:menu",
+				"key button  Up"
+			],
+			"tab order member desktop": [
+				"app:tonight",
+				"app:discover",
+				"app:explorer",
+				"app:taste",
+				"app:shows",
+				"service:8",
+				"service:9",
+				"bar:search",
+				"bar:menu",
+				"key button  Turn off"
+			],
+			"axe desktop home": {
+				"name": "home",
+				"violations": [],
+				"incomplete": [
+					{
+						"id": "color-contrast",
+						"impact": "serious",
+						"nodes": 14,
+						"sample": [
+							".tracking-\\[0\\.22em\\]: Element's background color could not be determined due to a background gradient ",
+							"h1: Element's background color could not be determined due to a background gradient ",
+							".leading-\\[0\\.95\\]: Element's background color could not be determined due to a background gradient "
+						]
+					}
+				]
+			},
+			"axe desktop menu": {
+				"name": "menu",
+				"violations": [],
+				"incomplete": [
+					{
+						"id": "color-contrast",
+						"impact": "serious",
+						"nodes": 9,
+						"sample": [
+							".tracking-\\[0\\.2em\\]: Element's background color could not be determined due to a background gradient ",
+							"button[data-tv-item=\"menu:search\"]: Element's background color could not be determined due to a background gradient ",
+							"button[data-tv-item=\"menu:sign-in\"]: Element's background color could not be determined due to a background gradient "
+						]
+					}
+				]
+			},
+			"axe phone home": {
+				"name": "home",
+				"violations": [],
+				"incomplete": [
+					{
+						"id": "color-contrast",
+						"impact": "serious",
+						"nodes": 12,
+						"sample": [
+							".tracking-\\[0\\.22em\\]: Element's background color could not be determined due to a background gradient ",
+							"h1: Element's background color could not be determined because it is overlapped by another element ",
+							".leading-\\[0\\.95\\]: Element's background color could not be determined because it is overlapped by another element "
+						]
+					}
+				]
+			},
+			"axe phone menu": {
+				"name": "menu",
+				"violations": [],
+				"incomplete": [
+					{
+						"id": "color-contrast",
+						"impact": "serious",
+						"nodes": 10,
+						"sample": [
+							".tracking-\\[0\\.2em\\]: Element's background color could not be determined due to a background gradient ",
+							"button[data-tv-item=\"menu:search\"]: Element's background color could not be determined because element contains an image node ",
+							"button[data-tv-item=\"menu:sign-in\"]: Element's background color could not be determined because element contains an image node "
+						]
+					}
+				]
+			},
+			"remote words 1920x1080": [
+				{
+					"text": "Back",
+					"px": "13px",
+					"ratio": 5.73
+				},
+				{
+					"text": "Search",
+					"px": "13px",
+					"ratio": 5.73
+				},
+				{
+					"text": "Home",
+					"px": "13px",
+					"ratio": 5.73
+				}
+			],
+			"remote words 390x844": [
+				{
+					"text": "Search",
+					"px": "8px",
+					"ratio": 5.73
+				},
+				{
+					"text": "Menu",
+					"px": "8px",
+					"ratio": 5.73
+				},
+				{
+					"text": "Back",
+					"px": "8px",
+					"ratio": 5.73
+				},
+				{
+					"text": "Home",
+					"px": "8px",
+					"ratio": 5.73
+				}
+			],
+			"tv words guest desktop": [
+				{
+					"text": "GoodWatch",
+					"px": 23.3,
+					"large": true,
+					"focused": null,
+					"ratio": 12.48
+				},
+				{
+					"text": "Let's find something good for tonight.",
+					"px": 29.7,
+					"large": true,
+					"focused": null,
+					"ratio": 10.69
+				},
+				{
+					"text": "Tonight",
+					"px": 114.4,
+					"large": true,
+					"focused": null,
+					"ratio": 18.9
+				},
+				{
+					"text": "One pick at a time, best rated right now",
+					"px": 33.9,
+					"large": true,
+					"focused": null,
+					"ratio": 13.8
+				},
+				{
+					"text": "Tonight",
+					"px": 27.5,
+					"large": true,
+					"focused": true,
+					"ratio": 19.67
+				},
+				{
+					"text": "Discover",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 20.27
+				},
+				{
+					"text": "Explorer",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 20.73
+				},
+				{
+					"text": "Taste",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 20.73
+				},
+				{
+					"text": "Search",
+					"px": 25.4,
+					"large": true,
+					"focused": false,
+					"ratio": 14.77
+				},
+				{
+					"text": "Menu",
+					"px": 25.4,
+					"large": true,
+					"focused": false,
+					"ratio": 14.59
+				},
+				{
+					"text": "Home",
+					"px": 17,
+					"large": false,
+					"focused": null,
+					"ratio": 17.75
+				}
+			],
+			"tv words guest phone": [
+				{
+					"text": "GoodWatch",
+					"px": 14.5,
+					"large": false,
+					"focused": null,
+					"ratio": 12.31
+				},
+				{
+					"text": "Let's find something good for tonight.",
+					"px": 14.5,
+					"large": false,
+					"focused": null,
+					"ratio": 10.55
+				},
+				{
+					"text": "Tonight",
+					"px": 40.5,
+					"large": true,
+					"focused": null,
+					"ratio": 18.56
+				},
+				{
+					"text": "One pick at a time, best rated right now",
+					"px": 15.2,
+					"large": false,
+					"focused": null,
+					"ratio": 13.62
+				},
+				{
+					"text": "Tonight",
+					"px": 16.7,
+					"large": false,
+					"focused": true,
+					"ratio": 19.55
+				},
+				{
+					"text": "Discover",
+					"px": 16.7,
+					"large": false,
+					"focused": false,
+					"ratio": 20.26
+				},
+				{
+					"text": "Explorer",
+					"px": 16.7,
+					"large": false,
+					"focused": false,
+					"ratio": 20.73
+				},
+				{
+					"text": "Home",
+					"px": 11.6,
+					"large": false,
+					"focused": null,
+					"ratio": 19.57
+				}
+			],
+			"tv words member desktop": [
+				{
+					"text": "GoodWatch",
+					"px": 23.3,
+					"large": true,
+					"focused": null,
+					"ratio": 8.96
+				},
+				{
+					"text": "Let's find something good for tonight.",
+					"px": 29.7,
+					"large": true,
+					"focused": null,
+					"ratio": 5.99
+				},
+				{
+					"text": "Tonight",
+					"px": 114.4,
+					"large": true,
+					"focused": null,
+					"ratio": 9.43
+				},
+				{
+					"text": "One pick at a time, your next episode fi",
+					"px": 33.9,
+					"large": true,
+					"focused": null,
+					"ratio": 12.29
+				},
+				{
+					"text": "Tonight",
+					"px": 27.5,
+					"large": true,
+					"focused": true,
+					"ratio": 11.68
+				},
+				{
+					"text": "Discover",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 15.16
+				},
+				{
+					"text": "Explorer",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 20.51
+				},
+				{
+					"text": "Taste",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 20.55
+				},
+				{
+					"text": "My shows",
+					"px": 27.5,
+					"large": true,
+					"focused": false,
+					"ratio": 16.19
+				},
+				{
+					"text": "Search",
+					"px": 25.4,
+					"large": true,
+					"focused": false,
+					"ratio": 5.43
+				},
+				{
+					"text": "Menu",
+					"px": 25.4,
+					"large": true,
+					"focused": false,
+					"ratio": 4.29
+				},
+				{
+					"text": "Home",
+					"px": 17,
+					"large": false,
+					"focused": null,
+					"ratio": 17.75
+				}
+			]
+		}
+	},
+	"seo": {
+		"passed": 18,
+		"failed": [],
+		"numbers": {
+			"seo": {
+				"roomCharacters": 45753,
+				"documentCharacters": 84509,
+				"titleLinks": 16
+			}
+		}
+	},
+	"paint, production build without services": {
+		"passed": 248,
+		"failed": [],
+		"numbers": {
+			"paint": [
+				{
+					"layout": "under",
+					"size": "1920x1080",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "1920x940",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "2560x1300",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "1123x918",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1536x730",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1440x800",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1366x650",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.02% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1280x720",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.02% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1122x918",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1123x917",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.01% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1024x768",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.02% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "820x1180",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "768x1024",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "390x844",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "360x740",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "430x932",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "412x823",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "767x1100",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "390x757",
+					"boxes": 31,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "390x756",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "767x1024",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "375x667",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "390x700",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "320x568",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-phone-soft-CohubVNv.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "844x390",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "932x430",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "896x414",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "800x282",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape table",
+					"size": "800x281",
+					"boxes": 29,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape table",
+					"size": "667x375",
+					"boxes": 29,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "740x450",
+					"boxes": 30,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.00% of pixels differ",
+					"pictures": [
+						"hand--zEoEhaM.avif",
+						"room-soft-1920-D5VHz44z.avif"
+					]
+				}
+			]
+		}
+	},
+	"paint, dev server on real data": {
+		"passed": 248,
+		"failed": [],
+		"numbers": {
+			"paint": [
+				{
+					"layout": "under",
+					"size": "1920x1080",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.10% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "1920x940",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.11% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "2560x1300",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.06% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "under",
+					"size": "1123x918",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.19% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1536x730",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.18% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1440x800",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.17% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1366x650",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.83% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1280x720",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.22% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1122x918",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.19% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1123x917",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.19% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "1024x768",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.25% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "820x1180",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.19% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "beside",
+					"size": "768x1024",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.24% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "390x844",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.56% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "360x740",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.69% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "430x932",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.46% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "412x823",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.54% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "767x1100",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.22% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "hand",
+					"size": "390x757",
+					"boxes": 37,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.62% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "390x756",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.62% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "767x1024",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.23% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "375x667",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.73% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "390x700",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.67% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "table",
+					"size": "320x568",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "1.01% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-phone-soft.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "844x390",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.56% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "932x430",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.46% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "896x414",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.50% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "800x282",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.82% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape table",
+					"size": "800x281",
+					"boxes": 35,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.82% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape table",
+					"size": "667x375",
+					"boxes": 35,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.73% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				},
+				{
+					"layout": "landscape hand",
+					"size": "740x450",
+					"boxes": 36,
+					"worstPx": 0,
+					"cls": 0,
+					"pixelsDiffering": "0.55% of pixels differ",
+					"pictures": [
+						"hand.avif",
+						"room-soft-1920.avif"
+					]
+				}
+			]
+		}
+	},
+	"budget, phone after the focus-move memo": {
+		"passed": 4,
+		"failed": [],
+		"numbers": {
+			"budget phone, CPU slowed 4 times, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 4,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 3562,
+							"frames": 201,
+							"meanFrameMs": 0.8,
+							"longestFrameMs": 4.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"37 ms event-listener #document.ontouchmove in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"33 ms event-listener #document.ontouchmove in sentry-browser.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 80
+						},
+						"focusMoves": {
+							"ms": 4948,
+							"frames": 15,
+							"meanFrameMs": 0.52,
+							"longestFrameMs": 3,
+							"tasksOver50ms": [
+								81,
+								71,
+								57,
+								77,
+								66,
+								52,
+								54,
+								52,
+								55
+							],
+							"longFrames": [
+								{
+									"ms": 97,
+									"blocking": 33,
+									"scripts": [
+										"11 ms event-listener #document.onclick in sentry-browser.js",
+										"49 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 72,
+									"blocking": 10,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 63,
+									"blocking": 8,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 77,
+									"blocking": 15,
+									"scripts": [
+										"36 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 82,
+									"blocking": 17,
+									"scripts": [
+										"36 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 4,
+									"scripts": [
+										"29 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 66,
+									"blocking": 5,
+									"scripts": [
+										"35 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 60,
+									"blocking": 3,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 64,
+									"blocking": 1,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 66,
+									"blocking": 8,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 152
+						},
+						"screenChanges": {
+							"ms": 5167,
+							"frames": 12,
+							"meanFrameMs": 0.292,
+							"longestFrameMs": 1,
+							"tasksOver50ms": [
+								93,
+								62,
+								73,
+								89
+							],
+							"longFrames": [
+								{
+									"ms": 103,
+									"blocking": 42,
+									"scripts": [
+										"57 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 68,
+									"blocking": 16,
+									"scripts": [
+										"63 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 76,
+									"blocking": 24,
+									"scripts": [
+										"42 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 124,
+									"blocking": 43,
+									"scripts": [
+										"89 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener DOMWindow.onpopstate in remix.js",
+										"15 ms event-listener DOMWindow.onpopstate in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": [
+										"25 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 80,
+									"blocking": 8,
+									"scripts": [
+										"47 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 107,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 60,
+									"blocking": 5,
+									"scripts": [
+										"43 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 216
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3600,
+							"frames": 192,
+							"meanFrameMs": 1.085,
+							"longestFrameMs": 10.9,
+							"tasksOver50ms": [
+								62,
+								55
+							],
+							"longFrames": [
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"16 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 88
+						},
+						"focusMoves": {
+							"ms": 4659,
+							"frames": 14,
+							"meanFrameMs": 0.271,
+							"longestFrameMs": 0.9,
+							"tasksOver50ms": [
+								54,
+								50,
+								61,
+								62
+							],
+							"longFrames": [
+								{
+									"ms": 78,
+									"blocking": 6,
+									"scripts": [
+										"30 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 1,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": [
+										"35 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 87,
+									"blocking": 4,
+									"scripts": [
+										"38 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 72,
+									"blocking": 15,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 160
+						},
+						"screenChanges": {
+							"ms": 5440,
+							"frames": 12,
+							"meanFrameMs": 0.183,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [
+								57,
+								56,
+								61,
+								107,
+								104
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 13,
+									"scripts": [
+										"32 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 61,
+									"blocking": 10,
+									"scripts": [
+										"57 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 16,
+									"scripts": [
+										"38 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 109,
+									"blocking": 59,
+									"scripts": [
+										"107 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 114,
+									"blocking": 61,
+									"scripts": [
+										"47 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 69,
+									"blocking": 0,
+									"scripts": [
+										"38 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 224
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3582,
+							"frames": 208,
+							"meanFrameMs": 0.897,
+							"longestFrameMs": 8.7,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 64
+						},
+						"focusMoves": {
+							"ms": 4939,
+							"frames": 15,
+							"meanFrameMs": 0.447,
+							"longestFrameMs": 3.1,
+							"tasksOver50ms": [
+								95,
+								52,
+								50,
+								92,
+								73,
+								61,
+								69
+							],
+							"longFrames": [
+								{
+									"ms": 100,
+									"blocking": 46,
+									"scripts": [
+										"17 ms event-listener #document.onclick in sentry-browser.js",
+										"46 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 3,
+									"scripts": [
+										"23 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": [
+										"27 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 60,
+									"blocking": 2,
+									"scripts": [
+										"27 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 103,
+									"blocking": 36,
+									"scripts": [
+										"52 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 80,
+									"blocking": 25,
+									"scripts": [
+										"50 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 12,
+									"scripts": [
+										"42 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 70,
+									"blocking": 19,
+									"scripts": [
+										"35 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 216
+						},
+						"screenChanges": {
+							"ms": 5067,
+							"frames": 12,
+							"meanFrameMs": 0.142,
+							"longestFrameMs": 0.5,
+							"tasksOver50ms": [
+								55,
+								61,
+								72
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 1,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 74,
+									"blocking": 15,
+									"scripts": [
+										"62 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"20 ms event-listener DOMWindow.onpopstate in remix.js",
+										"11 ms event-listener DOMWindow.onpopstate in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 78,
+									"blocking": 15,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 184
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3496,
+							"frames": 199,
+							"meanFrameMs": 0.843,
+							"longestFrameMs": 10.6,
+							"tasksOver50ms": [
+								73
+							],
+							"longFrames": [
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": [
+										"20 ms event-listener DOMWindow.onpointermove in pointing.js"
+									]
+								},
+								{
+									"ms": 82,
+									"blocking": 22,
+									"scripts": [
+										"17 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 72
+						},
+						"focusMoves": {
+							"ms": 4626,
+							"frames": 16,
+							"meanFrameMs": 0.35,
+							"longestFrameMs": 1.6,
+							"tasksOver50ms": [
+								50,
+								78,
+								50
+							],
+							"longFrames": [
+								{
+									"ms": 78,
+									"blocking": 2,
+									"scripts": [
+										"22 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 64,
+									"blocking": 0,
+									"scripts": [
+										"30 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": [
+										"23 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 84,
+									"blocking": 19,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 1,
+									"scripts": [
+										"23 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"23 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 160
+						},
+						"screenChanges": {
+							"ms": 5051,
+							"frames": 12,
+							"meanFrameMs": 0.158,
+							"longestFrameMs": 0.9,
+							"tasksOver50ms": [
+								68,
+								69
+							],
+							"longFrames": [
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": [
+										"27 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 81,
+									"blocking": 22,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"23 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 70,
+									"blocking": 4,
+									"scripts": [
+										"30 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": [
+										"33 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 66,
+									"blocking": 6,
+									"scripts": [
+										"27 ms event-listener DOMWindow.onpopstate in remix.js",
+										"19 ms event-listener DOMWindow.onpopstate in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 62,
+									"blocking": 0,
+									"scripts": [
+										"21 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 184
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3734,
+							"frames": 204,
+							"meanFrameMs": 0.908,
+							"longestFrameMs": 24.2,
+							"tasksOver50ms": [
+								157,
+								59
+							],
+							"longFrames": [
+								{
+									"ms": 160,
+									"blocking": 104,
+									"scripts": [
+										"151 ms user-callback FrameRequestCallback in "
+									]
+								},
+								{
+									"ms": 73,
+									"blocking": 0,
+									"scripts": [
+										"27 ms user-callback FrameRequestCallback in "
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 80
+						},
+						"focusMoves": {
+							"ms": 4464,
+							"frames": 15,
+							"meanFrameMs": 0.413,
+							"longestFrameMs": 3.3,
+							"tasksOver50ms": [
+								62,
+								66,
+								65
+							],
+							"longFrames": [
+								{
+									"ms": 74,
+									"blocking": 13,
+									"scripts": [
+										"39 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 83,
+									"blocking": 17,
+									"scripts": [
+										"44 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 81,
+									"blocking": 15,
+									"scripts": [
+										"36 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"22 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": [
+										"30 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 136
+						},
+						"screenChanges": {
+							"ms": 6175,
+							"frames": 12,
+							"meanFrameMs": 0.217,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [
+								58,
+								882,
+								59,
+								175,
+								103,
+								79,
+								65
+							],
+							"longFrames": [
+								{
+									"ms": 74,
+									"blocking": 16,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 82,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 900,
+									"blocking": 839,
+									"scripts": [
+										"882 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": [
+										"43 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 70,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 64,
+									"blocking": 13,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 180,
+									"blocking": 128,
+									"scripts": [
+										"175 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 122,
+									"blocking": 25,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 536
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0362
+				},
+				"longest": 24.2,
+				"tasks": [
+					81,
+					71,
+					57,
+					77,
+					66,
+					52,
+					54,
+					52,
+					55,
+					93,
+					62,
+					73,
+					89,
+					62,
+					55,
+					54,
+					50,
+					61,
+					62,
+					57,
+					56,
+					61,
+					107,
+					104,
+					95,
+					52,
+					50,
+					92,
+					73,
+					61,
+					69,
+					55,
+					61,
+					72,
+					73,
+					50,
+					78,
+					50,
+					68,
+					69,
+					157,
+					59,
+					62,
+					66,
+					65,
+					58,
+					882,
+					59,
+					175,
+					103,
+					79,
+					65
+				]
+			}
+		}
+	},
+	"budget, production build as served, before the focus-move memo": {
+		"passed": 12,
+		"failed": [],
+		"numbers": {
+			"budget desktop, GPU, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6879,
+							"frames": 391,
+							"meanFrameMs": 0.185,
+							"longestFrameMs": 3.1,
+							"tasksOver50ms": [
+								51
+							],
+							"longFrames": [
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": [
+										"41 ms event-listener #document.onmousemove in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2382,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 717,
+									"blocking": 0,
+									"scripts": [
+										"16 ms event-listener DOMWindow.onkeydown in home-preview.js",
+										"11 ms event-listener MessagePort.onmessage in react.js",
+										"10 ms event-listener MessagePort.onmessage in react.js",
+										"21 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 880
+						},
+						"screenChanges": {
+							"ms": 3548,
+							"frames": 6,
+							"meanFrameMs": 0.083,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"14 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 96
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6448,
+							"frames": 383,
+							"meanFrameMs": 0.163,
+							"longestFrameMs": 2.2,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2213,
+							"frames": 1,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 79,
+									"blocking": 0,
+									"scripts": [
+										"25 ms event-listener #document.onscroll in sentry-browser.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 96
+						},
+						"screenChanges": {
+							"ms": 3321,
+							"frames": 6,
+							"meanFrameMs": 0.067,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 72
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6409,
+							"frames": 384,
+							"meanFrameMs": 0.146,
+							"longestFrameMs": 1.3,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2152,
+							"frames": 2,
+							"meanFrameMs": 0.05,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 72
+						},
+						"screenChanges": {
+							"ms": 3364,
+							"frames": 6,
+							"meanFrameMs": 0.133,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 96
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6414,
+							"frames": 384,
+							"meanFrameMs": 0.164,
+							"longestFrameMs": 2.3,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2203,
+							"frames": 1,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 96
+						},
+						"screenChanges": {
+							"ms": 3380,
+							"frames": 6,
+							"meanFrameMs": 0.067,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 80
+						}
+					},
+					{
+						"pointing": {
+							"ms": 7519,
+							"frames": 413,
+							"meanFrameMs": 0.187,
+							"longestFrameMs": 5.3,
+							"tasksOver50ms": [
+								58
+							],
+							"longFrames": [
+								{
+									"ms": 69,
+									"blocking": 7,
+									"scripts": [
+										"55 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2223,
+							"frames": 1,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"12 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 104
+						},
+						"screenChanges": {
+							"ms": 3461,
+							"frames": 6,
+							"meanFrameMs": 0.467,
+							"longestFrameMs": 2.2,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 120
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0145
+				},
+				"longest": 5.3,
+				"tasks": [
+					51,
+					58
+				]
+			},
+			"budget desktop, software rendering, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6700,
+							"frames": 386,
+							"meanFrameMs": 0.211,
+							"longestFrameMs": 5.4,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 77,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2352,
+							"frames": 2,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 70,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": [
+										"22 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 70,
+									"blocking": 0,
+									"scripts": [
+										"13 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 152
+						},
+						"screenChanges": {
+							"ms": 3475,
+							"frames": 6,
+							"meanFrameMs": 0.083,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 128
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6947,
+							"frames": 384,
+							"meanFrameMs": 0.195,
+							"longestFrameMs": 4.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2359,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 83,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": [
+										"29 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 68,
+									"blocking": 0,
+									"scripts": [
+										"13 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 64,
+									"blocking": 0,
+									"scripts": [
+										"13 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 184
+						},
+						"screenChanges": {
+							"ms": 3581,
+							"frames": 6,
+							"meanFrameMs": 0.083,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 73,
+									"blocking": 0,
+									"scripts": [
+										"13 ms event-listener MessagePort.onmessage in react.js",
+										"42 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 64,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 168
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6901,
+							"frames": 384,
+							"meanFrameMs": 0.148,
+							"longestFrameMs": 2.6,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 109,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2152,
+							"frames": 2,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 69,
+									"blocking": 0,
+									"scripts": [
+										"15 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 192
+						},
+						"screenChanges": {
+							"ms": 3421,
+							"frames": 6,
+							"meanFrameMs": 0.083,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 88
+						}
+					},
+					{
+						"pointing": {
+							"ms": 7054,
+							"frames": 385,
+							"meanFrameMs": 0.205,
+							"longestFrameMs": 4.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2184,
+							"frames": 2,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": [
+										"16 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 62,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": [
+										"12 ms event-listener DOMWindow.onkeydown in home-preview.js"
+									]
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 168
+						},
+						"screenChanges": {
+							"ms": 3572,
+							"frames": 6,
+							"meanFrameMs": 0.15,
+							"longestFrameMs": 0.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 74,
+									"blocking": 0,
+									"scripts": [
+										"17 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"16 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 168
+						}
+					},
+					{
+						"pointing": {
+							"ms": 7736,
+							"frames": 390,
+							"meanFrameMs": 0.201,
+							"longestFrameMs": 6.6,
+							"tasksOver50ms": [
+								84,
+								62
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 153,
+									"blocking": 33,
+									"scripts": [
+										"81 ms user-callback FrameRequestCallback in "
+									]
+								},
+								{
+									"ms": 89,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 154,
+									"blocking": 0,
+									"scripts": [
+										"13 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2189,
+							"frames": 2,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": [
+										"11 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 73,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 86,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 152
+						},
+						"screenChanges": {
+							"ms": 3450,
+							"frames": 6,
+							"meanFrameMs": 0.05,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 104
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0141
+				},
+				"longest": 6.6,
+				"tasks": [
+					84,
+					62
+				]
+			},
+			"budget phone, CPU slowed 4 times, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 4,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 3597,
+							"frames": 206,
+							"meanFrameMs": 0.873,
+							"longestFrameMs": 6.8,
+							"tasksOver50ms": [
+								56,
+								53
+							],
+							"longFrames": [
+								{
+									"ms": 57,
+									"blocking": 3,
+									"scripts": [
+										"43 ms event-listener #document.ontouchmove in sentry-browser.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 80
+						},
+						"focusMoves": {
+							"ms": 5036,
+							"frames": 15,
+							"meanFrameMs": 0.293,
+							"longestFrameMs": 0.9,
+							"tasksOver50ms": [
+								75,
+								58,
+								91,
+								64,
+								56,
+								55,
+								70,
+								61
+							],
+							"longFrames": [
+								{
+									"ms": 88,
+									"blocking": 27,
+									"scripts": [
+										"59 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 74,
+									"blocking": 8,
+									"scripts": [
+										"50 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 81,
+									"blocking": 20,
+									"scripts": [
+										"50 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 81,
+									"blocking": 14,
+									"scripts": [
+										"55 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 88,
+									"blocking": 10,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 72,
+									"blocking": 7,
+									"scripts": [
+										"25 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 68,
+									"blocking": 1,
+									"scripts": [
+										"36 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 74,
+									"blocking": 7,
+									"scripts": [
+										"38 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 12,
+									"scripts": [
+										"32 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 176
+						},
+						"screenChanges": {
+							"ms": 5572,
+							"frames": 12,
+							"meanFrameMs": 0.375,
+							"longestFrameMs": 3.2,
+							"tasksOver50ms": [
+								123,
+								65,
+								117,
+								335,
+								54,
+								67,
+								58
+							],
+							"longFrames": [
+								{
+									"ms": 137,
+									"blocking": 78,
+									"scripts": [
+										"98 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 16,
+									"scripts": [
+										"65 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 119,
+									"blocking": 0,
+									"scripts": [
+										"27 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 118,
+									"blocking": 57,
+									"scripts": [
+										"73 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"16 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 345,
+									"blocking": 288,
+									"scripts": [
+										"334 ms user-callback TimerHandler:setTimeout in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 61,
+									"blocking": 8,
+									"scripts": [
+										"55 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 80,
+									"blocking": 0,
+									"scripts": [
+										"45 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 75,
+									"blocking": 23,
+									"scripts": [
+										"42 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 61,
+									"blocking": 10,
+									"scripts": [
+										"58 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 224
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3577,
+							"frames": 210,
+							"meanFrameMs": 0.711,
+							"longestFrameMs": 4.7,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 72
+						},
+						"focusMoves": {
+							"ms": 4525,
+							"frames": 15,
+							"meanFrameMs": 0.393,
+							"longestFrameMs": 3.3,
+							"tasksOver50ms": [
+								62,
+								59,
+								52
+							],
+							"longFrames": [
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"29 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 13,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 10,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": [
+										"29 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 3,
+									"scripts": [
+										"44 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": [
+										"25 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 144
+						},
+						"screenChanges": {
+							"ms": 4955,
+							"frames": 12,
+							"meanFrameMs": 0.342,
+							"longestFrameMs": 3.1,
+							"tasksOver50ms": [
+								57,
+								66
+							],
+							"longFrames": [
+								{
+									"ms": 74,
+									"blocking": 24,
+									"scripts": [
+										"32 ms event-listener #document.onclick in react.js",
+										"14 ms event-listener #document.onscroll in sentry-browser.js"
+									]
+								},
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": [
+										"42 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": [
+										"20 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": [
+										"41 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 1,
+									"scripts": [
+										"37 ms event-listener DOMWindow.onpopstate in remix.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 2,
+									"scripts": [
+										"47 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 93,
+									"blocking": 13,
+									"scripts": [
+										"19 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"39 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"23 ms event-listener DOMWindow.onpopstate in sentry-browser.js",
+										"18 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 232
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3490,
+							"frames": 208,
+							"meanFrameMs": 0.702,
+							"longestFrameMs": 5.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 128
+						},
+						"focusMoves": {
+							"ms": 4617,
+							"frames": 13,
+							"meanFrameMs": 0.085,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [
+								95,
+								71,
+								50,
+								54,
+								62,
+								55
+							],
+							"longFrames": [
+								{
+									"ms": 87,
+									"blocking": 26,
+									"scripts": [
+										"43 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 117,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 88,
+									"blocking": 23,
+									"scripts": [
+										"40 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 64,
+									"blocking": 1,
+									"scripts": [
+										"32 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 4,
+									"scripts": [
+										"38 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 13,
+									"scripts": [
+										"50 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 70,
+									"blocking": 6,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 184
+						},
+						"screenChanges": {
+							"ms": 4891,
+							"frames": 12,
+							"meanFrameMs": 0.042,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [
+								67,
+								83,
+								118,
+								61
+							],
+							"longFrames": [
+								{
+									"ms": 72,
+									"blocking": 8,
+									"scripts": [
+										"35 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 85,
+									"blocking": 35,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": [
+										"44 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 121,
+									"blocking": 71,
+									"scripts": [
+										"56 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"21 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 16,
+									"scripts": [
+										"62 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 248
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3509,
+							"frames": 200,
+							"meanFrameMs": 0.785,
+							"longestFrameMs": 14.7,
+							"tasksOver50ms": [
+								63
+							],
+							"longFrames": [
+								{
+									"ms": 69,
+									"blocking": 0,
+									"scripts": [
+										"17 ms event-listener DOMWindow.onpointerdown in pointing.js",
+										"18 ms user-callback FrameRequestCallback in "
+									]
+								},
+								{
+									"ms": 72,
+									"blocking": 7,
+									"scripts": [
+										"35 ms event-listener #document.onpointermove in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 104
+						},
+						"focusMoves": {
+							"ms": 4669,
+							"frames": 15,
+							"meanFrameMs": 0.2,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [
+								57,
+								67,
+								64,
+								64,
+								53
+							],
+							"longFrames": [
+								{
+									"ms": 66,
+									"blocking": 9,
+									"scripts": [
+										"36 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 7,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": [
+										"20 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 15,
+									"scripts": [
+										"32 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"26 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 79,
+									"blocking": 15,
+									"scripts": [
+										"44 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 77,
+									"blocking": 4,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 160
+						},
+						"screenChanges": {
+							"ms": 4888,
+							"frames": 12,
+							"meanFrameMs": 0.083,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [
+								50,
+								87,
+								52,
+								132
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 6,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 92,
+									"blocking": 40,
+									"scripts": [
+										"57 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": [
+										"36 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": [
+										"22 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 138,
+									"blocking": 87,
+									"scripts": [
+										"133 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": [
+										"46 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 200
+						}
+					},
+					{
+						"pointing": {
+							"ms": 3529,
+							"frames": 200,
+							"meanFrameMs": 0.874,
+							"longestFrameMs": 23.3,
+							"tasksOver50ms": [
+								130
+							],
+							"longFrames": [
+								{
+									"ms": 138,
+									"blocking": 76,
+									"scripts": [
+										"124 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 56
+						},
+						"focusMoves": {
+							"ms": 4528,
+							"frames": 16,
+							"meanFrameMs": 0.206,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [
+								56,
+								62,
+								60,
+								70,
+								50,
+								50
+							],
+							"longFrames": [
+								{
+									"ms": 65,
+									"blocking": 7,
+									"scripts": [
+										"39 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"21 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 57,
+									"blocking": 2,
+									"scripts": [
+										"28 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 6,
+									"scripts": [
+										"31 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 66,
+									"blocking": 4,
+									"scripts": [
+										"28 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 73,
+									"blocking": 10,
+									"scripts": [
+										"43 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 2,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 67,
+									"blocking": 1,
+									"scripts": [
+										"40 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"26 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 144
+						},
+						"screenChanges": {
+							"ms": 4803,
+							"frames": 12,
+							"meanFrameMs": 0.225,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [
+								59,
+								75,
+								53
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 4,
+									"scripts": [
+										"27 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 90,
+									"blocking": 27,
+									"scripts": [
+										"41 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 57,
+									"blocking": 2,
+									"scripts": [
+										"46 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 53,
+									"blocking": 2,
+									"scripts": [
+										"48 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 8,
+									"scripts": [
+										"27 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": [
+										"43 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 240
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0452
+				},
+				"longest": 23.3,
+				"tasks": [
+					56,
+					53,
+					75,
+					58,
+					91,
+					64,
+					56,
+					55,
+					70,
+					61,
+					123,
+					65,
+					117,
+					335,
+					54,
+					67,
+					58,
+					62,
+					59,
+					52,
+					57,
+					66,
+					95,
+					71,
+					50,
+					54,
+					62,
+					55,
+					67,
+					83,
+					118,
+					61,
+					63,
+					57,
+					67,
+					64,
+					64,
+					53,
+					50,
+					87,
+					52,
+					132,
+					130,
+					56,
+					62,
+					60,
+					70,
+					50,
+					50,
+					59,
+					75,
+					53
+				]
+			}
+		}
+	},
+	"budget, pointing only, 15 sweeps, desktop GPU, as served": {
+		"passed": 3,
+		"failed": [
+			"budget desktop, GPU, as served: no frame callback over 10 ms: 12 ms at the most"
+		],
+		"numbers": {
+			"budget desktop, GPU, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6498,
+							"frames": 385,
+							"meanFrameMs": 0.141,
+							"longestFrameMs": 1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 61,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6783,
+							"frames": 391,
+							"meanFrameMs": 0.128,
+							"longestFrameMs": 1.4,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 84,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 80,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 69,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6386,
+							"frames": 383,
+							"meanFrameMs": 0.126,
+							"longestFrameMs": 1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6416,
+							"frames": 384,
+							"meanFrameMs": 0.127,
+							"longestFrameMs": 2.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6714,
+							"frames": 386,
+							"meanFrameMs": 0.117,
+							"longestFrameMs": 1.8,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 91,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 97,
+									"blocking": 0,
+									"scripts": [
+										"20 ms user-callback FrameRequestCallback in "
+									]
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6399,
+							"frames": 384,
+							"meanFrameMs": 0.105,
+							"longestFrameMs": 0.3,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6547,
+							"frames": 386,
+							"meanFrameMs": 0.137,
+							"longestFrameMs": 3.5,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6478,
+							"frames": 384,
+							"meanFrameMs": 0.103,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6667,
+							"frames": 385,
+							"meanFrameMs": 0.103,
+							"longestFrameMs": 1.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 71,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 66,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 60,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6416,
+							"frames": 384,
+							"meanFrameMs": 0.096,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6426,
+							"frames": 385,
+							"meanFrameMs": 0.103,
+							"longestFrameMs": 1.7,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6416,
+							"frames": 384,
+							"meanFrameMs": 0.109,
+							"longestFrameMs": 1.3,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6466,
+							"frames": 385,
+							"meanFrameMs": 0.159,
+							"longestFrameMs": 12,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6633,
+							"frames": 384,
+							"meanFrameMs": 0.121,
+							"longestFrameMs": 7.4,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6443,
+							"frames": 384,
+							"meanFrameMs": 0.11,
+							"longestFrameMs": 1.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0094
+				},
+				"longest": 12,
+				"tasks": []
+			}
+		}
+	},
+	"budget, pointing only, 15 sweeps, desktop GPU, Remote and ring kept out of the recording": {
+		"passed": 4,
+		"failed": [],
+		"numbers": {
+			"budget desktop, GPU, Remote and ring kept out of the recording": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6391,
+							"frames": 384,
+							"meanFrameMs": 0.14,
+							"longestFrameMs": 3.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6428,
+							"frames": 383,
+							"meanFrameMs": 0.099,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6432,
+							"frames": 384,
+							"meanFrameMs": 0.102,
+							"longestFrameMs": 1.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6499,
+							"frames": 384,
+							"meanFrameMs": 0.095,
+							"longestFrameMs": 1.1,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 62,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6412,
+							"frames": 384,
+							"meanFrameMs": 0.112,
+							"longestFrameMs": 0.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6478,
+							"frames": 383,
+							"meanFrameMs": 0.149,
+							"longestFrameMs": 5.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6385,
+							"frames": 384,
+							"meanFrameMs": 0.107,
+							"longestFrameMs": 0.4,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6399,
+							"frames": 381,
+							"meanFrameMs": 0.1,
+							"longestFrameMs": 0.7,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 53,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6477,
+							"frames": 384,
+							"meanFrameMs": 0.105,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6467,
+							"frames": 384,
+							"meanFrameMs": 0.101,
+							"longestFrameMs": 0.3,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6462,
+							"frames": 384,
+							"meanFrameMs": 0.103,
+							"longestFrameMs": 1.5,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6448,
+							"frames": 379,
+							"meanFrameMs": 0.129,
+							"longestFrameMs": 3.4,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6764,
+							"frames": 386,
+							"meanFrameMs": 0.125,
+							"longestFrameMs": 1.8,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 103,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 66,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 63,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 72,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6398,
+							"frames": 384,
+							"meanFrameMs": 0.109,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6417,
+							"frames": 384,
+							"meanFrameMs": 0.101,
+							"longestFrameMs": 0.9,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0085
+				},
+				"longest": 5.3,
+				"tasks": []
+			}
+		}
+	},
+	"budget, pointing only, 15 sweeps, desktop GPU, recorder off": {
+		"passed": 3,
+		"failed": [
+			"budget desktop, GPU, recorder off: no frame callback over 10 ms: 21.5 ms at the most"
+		],
+		"numbers": {
+			"budget desktop, GPU, recorder off": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6483,
+							"frames": 385,
+							"meanFrameMs": 0.117,
+							"longestFrameMs": 0.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6466,
+							"frames": 384,
+							"meanFrameMs": 0.115,
+							"longestFrameMs": 1.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6395,
+							"frames": 384,
+							"meanFrameMs": 0.095,
+							"longestFrameMs": 0.9,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 8271,
+							"frames": 394,
+							"meanFrameMs": 0.155,
+							"longestFrameMs": 3.1,
+							"tasksOver50ms": [
+								260,
+								136,
+								879
+							],
+							"longFrames": [
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 71,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 126,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 65,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 297,
+									"blocking": 209,
+									"scripts": []
+								},
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 893,
+									"blocking": 829,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6490,
+							"frames": 385,
+							"meanFrameMs": 0.139,
+							"longestFrameMs": 1.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6412,
+							"frames": 383,
+							"meanFrameMs": 0.139,
+							"longestFrameMs": 2.5,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6499,
+							"frames": 385,
+							"meanFrameMs": 0.146,
+							"longestFrameMs": 4,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6688,
+							"frames": 385,
+							"meanFrameMs": 0.142,
+							"longestFrameMs": 2.3,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 50,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 52,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6589,
+							"frames": 390,
+							"meanFrameMs": 0.175,
+							"longestFrameMs": 4.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6568,
+							"frames": 385,
+							"meanFrameMs": 0.159,
+							"longestFrameMs": 2.6,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6921,
+							"frames": 386,
+							"meanFrameMs": 0.209,
+							"longestFrameMs": 21.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 90,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 67,
+									"blocking": 0,
+									"scripts": [
+										"22 ms user-callback FrameRequestCallback in "
+									]
+								},
+								{
+									"ms": 59,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6485,
+							"frames": 385,
+							"meanFrameMs": 0.117,
+							"longestFrameMs": 1.5,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6597,
+							"frames": 385,
+							"meanFrameMs": 0.14,
+							"longestFrameMs": 3.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 54,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6640,
+							"frames": 387,
+							"meanFrameMs": 0.192,
+							"longestFrameMs": 11.5,
+							"tasksOver50ms": [
+								50
+							],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					},
+					{
+						"pointing": {
+							"ms": 6461,
+							"frames": 384,
+							"meanFrameMs": 0.122,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"screenChanges": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 0,
+							"frames": 0,
+							"meanFrameMs": 0,
+							"longestFrameMs": 0,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 0
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0093
+				},
+				"longest": 21.5,
+				"tasks": [
+					260,
+					136,
+					879,
+					50
+				]
+			}
+		}
+	},
+	"lighthouse, production build without services": {
+		"pass": false,
+		"surfaces": {
+			"home": {
+				"pass": false,
+				"lines": [
+					{
+						"key": "html_bytes",
+						"value": 17268,
+						"pass": true,
+						"max": 20480
+					},
+					{
+						"key": "host_requests",
+						"value": 27,
+						"pass": true,
+						"max": 37
+					},
+					{
+						"key": "origin_requests",
+						"value": 27,
+						"info": true
+					},
+					{
+						"key": "static_requests",
+						"value": 0,
+						"info": true
+					},
+					{
+						"key": "script_count",
+						"value": 13,
+						"pass": true,
+						"max": 16
+					},
+					{
+						"key": "script_bytes",
+						"value": 206217,
+						"pass": true,
+						"max": 262144
+					},
+					{
+						"key": "image_count",
+						"value": 7,
+						"pass": true,
+						"max": 32
+					},
+					{
+						"key": "image_bytes",
+						"value": 93623,
+						"pass": true,
+						"max": 378880
+					},
+					{
+						"key": "font_requests",
+						"value": 1,
+						"pass": true,
+						"max": 2
+					},
+					{
+						"key": "blocking_requests",
+						"value": 3,
+						"pass": false,
+						"max": 2
+					},
+					{
+						"key": "third_party_origins",
+						"value": 0,
+						"pass": true,
+						"max": 1
+					},
+					{
+						"key": "total_bytes",
+						"value": 396058,
+						"pass": true,
+						"max": 768000
+					},
+					{
+						"key": "lcp_ms",
+						"value": 3382.283999999999,
+						"pass": true,
+						"max": 6050,
+						"target": 2500,
+						"gap": 882.2839999999992
+					},
+					{
+						"key": "tbt_ms",
+						"value": 46.5,
+						"pass": true,
+						"max": 150,
+						"target": 200,
+						"gap": 0
+					},
+					{
+						"key": "cls",
+						"value": 0,
+						"pass": true,
+						"max": 0.01,
+						"target": 0.1,
+						"gap": 0
+					},
+					{
+						"key": "score",
+						"value": 87,
+						"pass": true,
+						"min": 63,
+						"target": 90,
+						"gap": 3
+					},
+					{
+						"key": "lcp_element",
+						"pass": false,
+						"expected": {
+							"tag": "img",
+							"contains": "/assets/room-phone-"
+						},
+						"value": "0 of 3 runs",
+						"found": "<img> from http://localhost:3196"
+					}
+				],
+				"runs": 3,
+				"measured": {
+					"html_bytes": 17268,
+					"host_requests": 27,
+					"origin_requests": 27,
+					"static_requests": 0,
+					"script_count": 13,
+					"script_bytes": 206217,
+					"image_count": 7,
+					"image_bytes": 93623,
+					"font_requests": 1,
+					"blocking_requests": 3,
+					"third_party_origins": 0,
+					"total_bytes": 396058,
+					"lcp_ms": 3382.283999999999,
+					"tbt_ms": 46.5,
+					"cls": 0,
+					"score": 87,
+					"observed_fcp_ms": 658,
+					"benchmark_index": 1207,
+					"cpu_slowdown": 2.7
+				},
+				"slowdowns": [
+					2.7
+				]
+			},
+			"old": {
+				"pass": false,
+				"lines": [
+					{
+						"key": "html_bytes",
+						"value": 17554,
+						"pass": true,
+						"max": 20480
+					},
+					{
+						"key": "host_requests",
+						"value": 43,
+						"pass": false,
+						"max": 37
+					},
+					{
+						"key": "origin_requests",
+						"value": 43,
+						"info": true
+					},
+					{
+						"key": "static_requests",
+						"value": 0,
+						"info": true
+					},
+					{
+						"key": "script_count",
+						"value": 26,
+						"pass": false,
+						"max": 16
+					},
+					{
+						"key": "script_bytes",
+						"value": 637186,
+						"pass": false,
+						"max": 262144
+					},
+					{
+						"key": "image_count",
+						"value": 7,
+						"pass": true,
+						"max": 32
+					},
+					{
+						"key": "image_bytes",
+						"value": 148702,
+						"pass": true,
+						"max": 378880
+					},
+					{
+						"key": "font_requests",
+						"value": 1,
+						"pass": true,
+						"max": 2
+					},
+					{
+						"key": "blocking_requests",
+						"value": 2,
+						"pass": true,
+						"max": 2
+					},
+					{
+						"key": "third_party_origins",
+						"value": 1,
+						"pass": true,
+						"max": 1
+					},
+					{
+						"key": "total_bytes",
+						"value": 879573,
+						"pass": false,
+						"max": 768000
+					},
+					{
+						"key": "lcp_ms",
+						"value": 4068.387950000001,
+						"pass": true,
+						"max": 6050,
+						"target": 2500,
+						"gap": 1568.3879500000012
+					},
+					{
+						"key": "tbt_ms",
+						"value": 461.5,
+						"pass": false,
+						"max": 150,
+						"target": 200,
+						"gap": 261.5
+					},
+					{
+						"key": "cls",
+						"value": 0,
+						"pass": true,
+						"max": 0.01,
+						"target": 0.1,
+						"gap": 0
+					},
+					{
+						"key": "score",
+						"value": 70,
+						"pass": true,
+						"min": 63,
+						"target": 90,
+						"gap": 20
+					},
+					{
+						"key": "lcp_element",
+						"pass": true,
+						"expected": {
+							"tag": "img",
+							"contains": "/assets/room-phone-"
+						},
+						"value": "3 of 3 runs"
+					}
+				],
+				"runs": 3,
+				"measured": {
+					"html_bytes": 17554,
+					"host_requests": 43,
+					"origin_requests": 43,
+					"static_requests": 0,
+					"script_count": 26,
+					"script_bytes": 637186,
+					"image_count": 7,
+					"image_bytes": 148702,
+					"font_requests": 1,
+					"blocking_requests": 2,
+					"third_party_origins": 1,
+					"total_bytes": 879573,
+					"lcp_ms": 4068.387950000001,
+					"tbt_ms": 461.5,
+					"cls": 0,
+					"score": 70,
+					"observed_fcp_ms": 606,
+					"benchmark_index": 1245,
+					"cpu_slowdown": 2.7
+				},
+				"slowdowns": [
+					2.7
+				]
+			}
+		}
+	},
+	"budget, slice 13 on /, production build without services, 1 round": {
+		"passed": 8,
+		"failed": [],
+		"numbers": {
+			"budget desktop, GPU, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6448,
+							"frames": 384,
+							"meanFrameMs": 0.112,
+							"longestFrameMs": 0.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2136,
+							"frames": 2,
+							"meanFrameMs": 0.15,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 104
+						},
+						"screenChanges": {
+							"ms": 3396,
+							"frames": 12,
+							"meanFrameMs": 0.033,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 80
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0064
+				},
+				"longest": 0.5,
+				"tasks": []
+			},
+			"budget phone, CPU slowed 4 times, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 4,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 3537,
+							"frames": 206,
+							"meanFrameMs": 0.66,
+							"longestFrameMs": 4,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 62,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 72
+						},
+						"focusMoves": {
+							"ms": 4779,
+							"frames": 16,
+							"meanFrameMs": 0.3,
+							"longestFrameMs": 1.2,
+							"tasksOver50ms": [
+								72,
+								66,
+								54,
+								53
+							],
+							"longFrames": [
+								{
+									"ms": 80,
+									"blocking": 23,
+									"scripts": [
+										"11 ms event-listener #document.onclick in sentry-browser.js",
+										"44 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 75,
+									"blocking": 18,
+									"scripts": [
+										"48 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 6,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 62,
+									"blocking": 4,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 136
+						},
+						"screenChanges": {
+							"ms": 4712,
+							"frames": 18,
+							"meanFrameMs": 0.078,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [
+								65,
+								67
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 7,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 71,
+									"blocking": 20,
+									"scripts": [
+										"66 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 123,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 91,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"45 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"21 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 18,
+									"scripts": [
+										"67 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 104
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0022
+				},
+				"longest": 4,
+				"tasks": [
+					72,
+					66,
+					54,
+					53,
+					65,
+					67
+				]
+			}
+		}
+	},
+	"seo, slice 13 on /, dev server reading production": {
+		"passed": 18,
+		"failed": [],
+		"numbers": {
+			"seo": {
+				"roomCharacters": 45905,
+				"documentCharacters": 87381,
+				"titleLinks": 16
+			}
+		}
+	}
+}

@@ -13,7 +13,7 @@ import {
 	sortFactsOutsideSnapshot,
 	worthwhileSuggestions,
 } from "~/server/watch-next.server"
-import { DOOR_HREF } from "~/ui/living-room/tv-flow"
+import { DOOR_HREF } from "~/ui/living-room/tv/tv-machine"
 import { titleKey } from "~/utils/title-key"
 
 export type TonightReason =

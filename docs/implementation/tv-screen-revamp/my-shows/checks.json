@@ -1,0 +1,119 @@
+{
+	"passed": 521,
+	"failed": [],
+	"numbers": {
+		"the walk, 1920x1080: tracking reads, watches sent": [
+			2,
+			3
+		],
+		"the walk, 390x844: tracking reads, watches sent": [
+			2,
+			3
+		],
+		"sizes 360x740: the room": "phone",
+		"sizes 360x740: a poster, px": "69 x 104",
+		"sizes 360x740: the Seen it key, px": "150 x 44",
+		"sizes 360x740: a menu key, px, and the word Menu": [
+			"232 x 44",
+			true
+		],
+		"sizes 360x740: an answer of What is GoodWatch?, px": "149 x 44",
+		"sizes 360x740: the smallest key, px": {
+			"shows": 44.5,
+			"title": 44.5,
+			"menuMember": 44.5,
+			"menu": 44.5,
+			"about": 44.5
+		},
+		"sizes 375x667: the room": "phone",
+		"sizes 375x667: a poster, px": "55 x 83",
+		"sizes 375x667: the Seen it key, px": "157 x 44",
+		"sizes 375x667: a menu key, px, and the word Menu": [
+			"243 x 44",
+			false
+		],
+		"sizes 375x667: an answer of What is GoodWatch?, px": "156 x 44",
+		"sizes 375x667: the smallest key, px": {
+			"shows": 44.4,
+			"title": 44.4,
+			"menuMember": 44.4,
+			"menu": 44.4,
+			"about": 44.4
+		},
+		"sizes 390x700: the room": "phone",
+		"sizes 390x700: a poster, px": "73 x 110",
+		"sizes 390x700: the Seen it key, px": "164 x 44",
+		"sizes 390x700: a menu key, px, and the word Menu": [
+			"253 x 44",
+			true
+		],
+		"sizes 390x700: an answer of What is GoodWatch?, px": "163 x 44",
+		"sizes 390x700: the smallest key, px": {
+			"shows": 44.2,
+			"title": 44.2,
+			"menuMember": 44.2,
+			"menu": 44.2,
+			"about": 44.2
+		},
+		"sizes 390x844: the room": "phone",
+		"sizes 390x844: a poster, px": "75 x 113",
+		"sizes 390x844: the Seen it key, px": "164 x 44",
+		"sizes 390x844: a menu key, px, and the word Menu": [
+			"253 x 44",
+			true
+		],
+		"sizes 390x844: an answer of What is GoodWatch?, px": "163 x 44",
+		"sizes 390x844: the smallest key, px": {
+			"shows": 44.2,
+			"title": 44.2,
+			"menuMember": 44.2,
+			"menu": 44.2,
+			"about": 44.2
+		},
+		"sizes 430x932: the room": "phone",
+		"sizes 430x932: a poster, px": "84 x 125",
+		"sizes 430x932: the Seen it key, px": "182 x 44",
+		"sizes 430x932: a menu key, px, and the word Menu": [
+			"281 x 44",
+			true
+		],
+		"sizes 430x932: an answer of What is GoodWatch?, px": "181 x 44",
+		"sizes 430x932: the smallest key, px": {
+			"shows": 44.2,
+			"title": 44.2,
+			"menuMember": 44.2,
+			"menu": 44.2,
+			"about": 44.2
+		},
+		"sizes 844x390: the room": "landscape",
+		"sizes 844x390: a poster, px": "85 x 127",
+		"sizes 844x390: the Seen it key, px": "220 x 51",
+		"sizes 844x390: a menu key, px, and the word Menu": [
+			"341 x 47",
+			true
+		],
+		"sizes 844x390: an answer of What is GoodWatch?, px": "219 x 51",
+		"sizes 844x390: the smallest key, px": {
+			"shows": 52.7,
+			"title": 50.7,
+			"menuMember": 46.8,
+			"menu": 46.8,
+			"about": 50.7
+		},
+		"sizes 1920x1080: the room": "desktop, below",
+		"sizes 1920x1080: a poster, px": "182 x 273",
+		"sizes 1920x1080: the Seen it key, px": "217 x 78",
+		"sizes 1920x1080: a menu key, px, and the word Menu": [
+			"381 x 81",
+			true
+		],
+		"sizes 1920x1080: an answer of What is GoodWatch?, px": "566 x 123",
+		"sizes 1920x1080: the smallest key, px": {
+			"shows": 67.8,
+			"title": 67.8,
+			"menuMember": 80.5,
+			"menu": 80.5,
+			"about": 67.8
+		}
+	}
+}

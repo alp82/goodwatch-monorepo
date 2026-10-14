@@ -15,7 +15,7 @@
 // TV's box as custom properties. Only `transform`, `clip-path` and `opacity` animate, on the transition's
 // snapshots and on the four brackets, once, so the rendering budget from #190 holds. Nothing here depends on the
 // living room's path.
-import { useNavigate, useNavigationType } from "@remix-run/react"
+import { useLocation, useNavigate, useNavigationType } from "@remix-run/react"
 import { useCallback, useEffect } from "react"
 import { warmTvWayBack } from "./TvWayBackHost"
 import { TRIP_KEY, TV_BACK_ATTR, TV_BRACKET_ATTR, TV_PROPERTIES, type TvBox, type TvTrip, parseTrip, tvProperties } from "./tv-way-back"
@@ -159,11 +159,24 @@ function mark(direction: Direction, box: TvBox) {
 
 const transitionRuns = () => document.getAnimations().some((a) => ((a.effect as KeyframeEffect | null)?.pseudoElement ?? "").startsWith("::view-transition"))
 
-/** Navigates out of the living room: the room zooms into the TV when motion is allowed. */
+/**
+ * Navigates out of the living room: the room zooms into the TV when motion is allowed. `state` goes into the
+ * new history entry's state: what the page should know about this arrival and a shared link must not carry.
+ */
 export function useLeaveThroughTv() {
 	const navigate = useNavigate()
+	// The room is still there and its address changed while a page was on its way: a key of the TV took the
+	// page's place (Back, Home, another screen), so the way out is off, as after Escape.
+	const { key } = useLocation()
+	useEffect(() => {
+		if (!cancelListener) return
+		finish(null)
+		writeTrip(null)
+	}, [key])
 	return useCallback(
-		(href: string) => {
+		(href: string, state?: unknown) => {
+			// A second press while the page is on its way changes nothing: the first is being answered.
+			if (cancelListener) return
 			const box = canAnimate() ? tvBox() : null
 			writeTrip({
 				idx: historyIdx(),
@@ -177,7 +190,7 @@ export function useLeaveThroughTv() {
 			})
 			warmTvWayBack()
 			if (!box) {
-				navigate(href)
+				navigate(href, { state })
 				return
 			}
 			mark("out", box)
@@ -189,10 +202,12 @@ export function useLeaveThroughTv() {
 				e.stopImmediatePropagation()
 				finish(null)
 				writeTrip(null)
-				navigate(window.location.pathname + window.location.search + window.location.hash, { replace: true, preventScrollReset: true })
+				// The entry keeps what it held (the TV counts its own history there): only the page on its way goes.
+				const state = (window.history.state as { usr?: unknown } | null)?.usr
+				navigate(window.location.pathname + window.location.search + window.location.hash, { replace: true, preventScrollReset: true, state })
 			}
 			window.addEventListener("keydown", cancelListener, true)
-			navigate(href, { viewTransition: true })
+			navigate(href, { viewTransition: true, state })
 		},
 		[navigate],
 	)

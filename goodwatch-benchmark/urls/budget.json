@@ -12,7 +12,7 @@
   "surfaces": {
     "home": {
       "path": "/",
-      "lcp_element": { "tag": "img", "contains": "/assets/room-phone-" },
+      "lcp_element": { "tag": "img", "contains": ["/assets/room-phone-", "/assets/hand-"] },
       "budget": {
         "html_bytes": { "max": 20480 },
         "host_requests": { "max": 37 },

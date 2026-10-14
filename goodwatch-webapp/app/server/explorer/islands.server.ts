@@ -1,4 +1,5 @@
-// The islands of every Explorer grouping and the rule that puts a title on each: the one place to read or change them.
+// The islands of every Explorer grouping and the rule that puts a title on each: the one place to read or change them,
+// except the Theme and Style rules, which are in domain/themes-styles.ts because Discover filters by them too.
 // The machinery that turns these into layouts is in groupings.server.ts.
 //
 // How to read a rule:
@@ -14,6 +15,10 @@
 // An island's titles are ordered by how well they fit it together with how good and well known they are (FIT_WEIGHT).
 // Each layout build logs "Explorer <grouping> islands: ..." with every island's size, any threshold that moved, and
 // the share of the pool that sits on an island.
+import {
+	STYLES as STYLE_RULES,
+	THEMES as THEME_RULES,
+} from "~/domain/themes-styles"
 import type { CoreScores } from "~/server/utils/fingerprint"
 import type { OccasionFlag } from "./pool.server"
 
@@ -146,184 +151,11 @@ export const MOODS: RuleIsland[] = [
 	},
 ]
 
-// Theme: what a title is about.
-export const THEMES: RuleIsland[] = [
-	{
-		id: "crime",
-		name: "Crime",
-		color: "#c2413a",
-		level: (s) => s("crime"),
-		from: 8,
-	},
-	{
-		id: "mystery",
-		name: "Mystery",
-		color: "#5b7fa8",
-		level: (s) => s("mystery"),
-		from: 8,
-	},
-	{
-		id: "war",
-		name: "War",
-		color: "#9a9460",
-		level: (s) => s("warfare"),
-		from: 7,
-	},
-	{
-		id: "politics",
-		name: "Politics",
-		color: "#8e62d6",
-		level: (s) => s("political"),
-		from: 7,
-	},
-	{
-		id: "true",
-		name: "True stories",
-		color: "#b98a5a",
-		level: (s) => s("biographical"),
-		from: 6,
-	},
-	{
-		id: "history",
-		name: "History",
-		color: "#9c7a52",
-		level: (s) => (s("warfare") <= 5 ? s("historical") : 0),
-		from: 8,
-	},
-	{
-		id: "growing",
-		name: "Growing up",
-		color: "#7cc4e8",
-		level: (s) => s("coming_of_age"),
-		from: 8,
-	},
-	{
-		id: "family",
-		name: "Family",
-		color: "#8ccf4d",
-		level: (s) => s("family_dynamics"),
-		from: 8,
-	},
-	{
-		id: "mind",
-		name: "The mind",
-		color: "#9b7bea",
-		level: (s) => s("psychological"),
-		from: 8,
-	},
-	{
-		id: "showbiz",
-		name: "Showbiz",
-		color: "#e2cf55",
-		level: (s) => s("showbiz"),
-		from: 6,
-	},
-	{
-		id: "sports",
-		name: "Sports",
-		color: "#e8793d",
-		level: (s) => s("sports"),
-		from: 6,
-	},
-	{
-		id: "money",
-		name: "Money",
-		color: "#7fae3a",
-		level: (s) => s("class_and_capitalism"),
-		from: 7,
-	},
-	{
-		id: "future",
-		name: "Future",
-		color: "#3fc1b0",
-		level: (s) => Math.max(s("futuristic"), s("technology_and_humanity")),
-		from: 7,
-	},
-	{
-		id: "fantasy",
-		name: "Fantasy",
-		color: "#d4508a",
-		level: (s) => s("fantasy"),
-		from: 7,
-	},
-]
-
-// Style: how a title looks, sounds, and is told, kept to the essentials. Animated and Documentary are forms the
-// fingerprint doesn't score, so they go by TMDB genre: a title has the form or it doesn't.
-const DOCUMENTARY_GENRES = ["Documentary", "Reality", "Talk", "News"]
-export const STYLES: RuleIsland[] = [
-	{
-		id: "animated",
-		name: "Animated",
-		color: "#e38fb8",
-		level: (_s, genres) => (genres.includes("Animation") ? 10 : 0),
-		from: 10,
-	},
-	{
-		id: "documentary",
-		name: "Documentary",
-		color: "#9aa3ad",
-		level: (_s, genres) =>
-			genres.some((g) => DOCUMENTARY_GENRES.includes(g)) ? 10 : 0,
-		from: 10,
-	},
-	{
-		id: "spectacle",
-		name: "Spectacle",
-		color: "#e8793d",
-		level: (s) => s("spectacle"),
-		from: 8,
-	},
-	{
-		id: "stylized",
-		name: "Stylized",
-		color: "#d4508a",
-		level: (s) => s("visual_stylization"),
-		from: 8,
-	},
-	{
-		id: "music",
-		name: "Music",
-		color: "#e2cf55",
-		level: (s) => Math.max(s("music_centrality"), s("sound_centrality") - 1),
-		from: 7,
-	},
-	{
-		id: "slow",
-		name: "Slow burn",
-		color: "#5b7fa8",
-		level: (s) => s("slow_burn"),
-		from: 8,
-	},
-	{
-		id: "fast",
-		name: "Fast-paced",
-		color: "#c2413a",
-		level: (s) => s("fast_pace"),
-		from: 8,
-	},
-	{
-		id: "talky",
-		name: "Talky",
-		color: "#b98a5a",
-		level: (s) => s("dialogue_centrality"),
-		from: 8,
-	},
-	{
-		id: "nonlinear",
-		name: "Nonlinear",
-		color: "#8e62d6",
-		level: (s) => s("non_linear_narrative"),
-		from: 7,
-	},
-	{
-		id: "graphic",
-		name: "Graphic",
-		color: "#7fae3a",
-		level: (s) => Math.max(s("grotesque"), s("violence") - 1),
-		from: 8,
-	},
-]
+// Theme: what a title is about. Style: how a title looks, sounds, and is told. Their rules are in
+// domain/themes-styles.ts, which Discover's Theme and Style filters share: a rule changed there changes both. Here
+// each rule's `from` is where an island's threshold starts (see MOST and FEWEST); Discover keeps it fixed.
+export const THEMES: RuleIsland[] = [...THEME_RULES]
+export const STYLES: RuleIsland[] = [...STYLE_RULES]
 
 // Occasion: who and what a title suits, from the title analysis's suitability and viewing-context flags. A title sits
 // on an island when any of the island's flags is set.

@@ -335,3 +335,71 @@ test("without the viewer's ladder the age limit and content don't count as appli
 	const plain = parse("score=70")
 	assert.equal(stateAsApplied(plain, null), plain)
 })
+
+test("themes and styles read from and write to `themes` and `styles`, three of each at most", () => {
+	assert.ok(FILTER_NAMES.includes("themes"))
+	assert.ok(FILTER_NAMES.includes("styles"))
+	assert.deepEqual(defaultFilterState(defaults).themes, [])
+	assert.deepEqual(defaultFilterState(defaults).styles, [])
+	assert.deepEqual(parse("").themes, [])
+	assert.deepEqual(parse("").styles, [])
+
+	const state = parse("themes=war,future&styles=animated,slow")
+	assert.deepEqual(state.themes, ["war", "future"])
+	assert.deepEqual(state.styles, ["animated", "slow"])
+	const params = filterStateToParams(state, defaults)
+	assert.equal(params.toString(), "themes=war%2Cfuture&styles=animated%2Cslow")
+	assert.deepEqual(filterStateFromParams(params, defaults), state)
+	assert.match(
+		filterQuery(state, "popular", defaults),
+		/themes=war%2Cfuture&styles=animated%2Cslow/,
+	)
+
+	// Three at most, in the order given; a key named twice counts once.
+	assert.deepEqual(parse("themes=war,future,crime,mind").themes, [
+		"war",
+		"future",
+		"crime",
+	])
+	assert.deepEqual(parse("styles=slow,slow,fast,talky,graphic").styles, [
+		"slow",
+		"fast",
+		"talky",
+	])
+	// An unknown key is dropped, and so is a key of the other group or of the moods.
+	assert.deepEqual(parse("themes=war,nope,slow,funny").themes, ["war"])
+	assert.deepEqual(parse("styles=war,slow,feelgood").styles, ["slow"])
+	assert.deepEqual(parse("themes=nope").themes, [])
+	assert.equal(
+		filterStateToParams(parse("themes=nope&styles=,"), defaults).toString(),
+		"",
+	)
+	// A mood and a theme can share a key: each parameter reads its own.
+	const shared = parse("moods=crime,history&themes=crime,history")
+	assert.deepEqual(shared.moods, ["crime", "history"])
+	assert.deepEqual(shared.themes, ["crime", "history"])
+	// Writing over existing parameters removes the ones that no longer apply.
+	assert.equal(
+		filterStateToParams(
+			parse(""),
+			defaults,
+			new URLSearchParams("themes=war&styles=slow&q=heat"),
+		).toString(),
+		"q=heat",
+	)
+})
+
+test("themes and styles are filters of the Filters sheet", () => {
+	const state = parse("themes=war,future&styles=slow&moods=funny&score=70")
+	// Every chosen theme and style counts, as every mood does.
+	assert.equal(secondaryFilterCount(state), 5)
+	assert.deepEqual(dropFilter(state, "themes").themes, [])
+	assert.deepEqual(dropFilter(state, "themes").styles, ["slow"])
+	assert.deepEqual(dropFilter(state, "styles").styles, [])
+	assert.deepEqual(dropFilter(state, "styles").themes, ["war", "future"])
+	assert.deepEqual(dropFilter(state, "moods").themes, ["war", "future"])
+	const cleared = clearSecondaryFilters(state)
+	assert.deepEqual(cleared.themes, [])
+	assert.deepEqual(cleared.styles, [])
+	assert.equal(secondaryFilterCount(cleared), 0)
+})

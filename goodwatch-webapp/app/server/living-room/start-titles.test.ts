@@ -10,7 +10,9 @@ import type {
 const { MOOD_KEYS } = await import("~/domain/moods")
 const { START_TITLES, poolCandidates, selectPoolKeys, startTitleKeys } =
 	await import("./pool-keys.server.ts")
-const { loadStartTitles } = await import("./start-titles.server.ts")
+const { loadStartTitles, loadStartTitlesAndPicture } = await import(
+	"./start-titles.server.ts"
+)
 
 const TODAY = 20_000
 
@@ -139,4 +141,56 @@ test("a title without display fields is left out, the others keep their order", 
 		titles.map((title) => title.tmdb_id),
 		keys.filter((key) => key !== keys[1]),
 	)
+})
+
+test("the first start title lends its backdrop: the new TV's first picture", async () => {
+	const snapshot = fakeSnapshot("start-5")
+	const keys = startTitleKeys(poolCandidates(snapshot, TODAY))
+	const withBackdrops = async (wanted: number[]) =>
+		new Map(
+			wanted.map((key) => [
+				key,
+				{ ...display(key), backdrop_path: `/backdrop-${key}.jpg` },
+			]),
+		)
+	const start = await loadStartTitlesAndPicture(snapshot, withBackdrops, TODAY)
+	assert.equal(start.picture, `/backdrop-${keys[0]}.jpg`)
+	// The titles are the list `loadStartTitles` gives, without a field more: the HTML has a byte budget.
+	assert.deepEqual(
+		start.titles,
+		await loadStartTitles(snapshot, withBackdrops, TODAY),
+	)
+	assert.deepEqual(Object.keys(start.titles[0]), [
+		"media_type",
+		"tmdb_id",
+		"title",
+		"release_year",
+		"poster_path",
+	])
+
+	// When the first title has no display fields, the picture is the next one's: the first title on the page.
+	const second = await loadStartTitlesAndPicture(
+		snapshot,
+		async (wanted) =>
+			new Map(
+				[...(await withBackdrops(wanted))].filter(([key]) => key !== keys[0]),
+			),
+		TODAY,
+	)
+	assert.equal(second.picture, `/backdrop-${keys[1]}.jpg`)
+	assert.equal(second.titles[0].tmdb_id, keys[1])
+})
+
+test("there is no picture without titles, and none when the first title has no backdrop", async () => {
+	assert.deepEqual(await loadStartTitlesAndPicture(null, displaysOf, TODAY), {
+		titles: [],
+		picture: null,
+	})
+	const start = await loadStartTitlesAndPicture(
+		fakeSnapshot("start-6"),
+		displaysOf,
+		TODAY,
+	)
+	assert.equal(start.titles.length, START_TITLES)
+	assert.equal(start.picture, null)
 })

@@ -62,6 +62,8 @@ export function discoverFilterKey(input: {
 		services: state.services,
 		notSeenYet: state.notSeenYet,
 		moods: state.moods,
+		themes: state.themes,
+		styles: state.styles,
 		genres: state.genres,
 		minScore: state.minScore,
 		minMatch: state.minMatch,

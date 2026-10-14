@@ -1,6 +1,6 @@
 // DEVELOPMENT HARNESS (issue #385), not a prototype of a design: what /prototype/my-library-real reads. The REAL
-// server reads of My shows, My movies, My library, home's doors and Tonight's pick run here against an in-memory
-// Crate that holds a member who does not exist. It is how the pages are driven in a headless browser without a
+// server reads of My shows, My movies, My library, the TV's Tonight and My shows, and Tonight's pick run here
+// against an in-memory Crate that holds a member who does not exist. It is how the pages are driven in a headless browser without a
 // signed-in session or a database.
 //
 // The stand-in takes the place of the Crate client of the dev server it runs in, and refuses to do so when that
@@ -15,7 +15,6 @@ import {
 	forgetAvailabilityForTest,
 	servicesFor,
 } from "~/server/availability-index.server"
-import { getHomeDoors } from "~/server/home-doors.server"
 import { getLibraryPage } from "~/server/my-library.server"
 import { getMyShows } from "~/server/my-shows.server"
 import {
@@ -30,6 +29,11 @@ import {
 	recordMyMoviesVisit,
 } from "~/server/newly-available.server"
 import { updateScores } from "~/server/scores.server"
+import {
+	type ShowAction,
+	applyShowTrackingAction,
+	getShowTrackingPage,
+} from "~/server/show-tracking.server"
 import type { Taste } from "~/server/taste/index.server"
 import { getTonightsPick } from "~/server/tonight.server"
 import { FakeTrackingCrate } from "~/server/tracking-fake-crate"
@@ -1017,9 +1021,6 @@ export const harness = {
 			HARNESS_TASTE,
 		)
 	},
-	async doors(now: number) {
-		return getHomeDoors(await viewer(), HARNESS_TASTE, now)
-	},
 	async tonight() {
 		return getTonightsPick(await viewer(), true, HARNESS_TASTE)
 	},
@@ -1031,4 +1032,12 @@ export const harness = {
 			score: score as never,
 		}),
 	today: (now: number) => utcDay(now),
+	/**
+	 * A show's tracking as its page and the new TV's title screen read it, and one action on it, as
+	 * /api/tracking/show answers a member. The episodes have no IMDb ratings here.
+	 */
+	tracking: (showId: number) =>
+		getShowTrackingPage(HARNESS_MEMBER, showId, async () => null),
+	track: (action: ShowAction) =>
+		applyShowTrackingAction(HARNESS_MEMBER, action),
 }

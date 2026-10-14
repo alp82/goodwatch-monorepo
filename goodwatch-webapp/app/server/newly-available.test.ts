@@ -91,7 +91,7 @@ const {
 	getNewOn,
 	getRecentlyLanded,
 } = await import("./newly-available.server.ts")
-const { getTonightParts, homeDoorsOf } = await import("./home-doors.server.ts")
+const { getTonightParts } = await import("./home-doors.server.ts")
 const { getLibraryPage } = await import("./my-library.server.ts")
 const { recordMyShowsVisit } = await import("./new-episodes.server.ts")
 const { getMemberViewerContext } = await import("./viewer.server.ts")
@@ -903,10 +903,17 @@ const lands = (type: "movie" | "show", id: number, service: number, at: number) 
 		offer(type, id, service, at),
 	]
 }
+/** What leads home's Tonight and My shows: the first movie, the first show to start, and what landed of them. */
+const leadsOf = (parts: Awaited<ReturnType<typeof getTonightParts>>) => ({
+	movie: parts.movies[0]?.title ?? null,
+	start: parts.shows.start[0]?.title ?? null,
+	continue: (parts.shows.continue[0] ?? parts.shows.pickUp[0])?.title ?? null,
+	newOn: parts.newOn,
+})
 const doorsOn = async (now: number) => {
 	const ctx = await loaded()
 	const parts = await getTonightParts(ctx, taste as never, now)
-	return { parts, doors: homeDoorsOf(parts, ctx.services, now) }
+	return { parts, doors: leadsOf(parts) }
 }
 
 test("without a landing the doors are in their own order: best match first", async () => {
@@ -917,10 +924,8 @@ test("without a landing the doors are in their own order: best match first", asy
 		["Heat", "Tár", "Dune"],
 	)
 	assert.deepEqual(parts.newOn, { movie: null, start: null })
-	assert.equal(doors.movie.title, "Heat")
-	assert.equal(doors.start?.title, "Pluribus")
-	assert.ok(!("newOn" in doors.movie))
-	assert.ok(doors.start && !("newOn" in doors.start))
+	assert.equal(doors.movie, "Heat")
+	assert.equal(doors.start, "Pluribus")
 })
 
 test("a landed movie leads A movie and a landed show to start leads Start a show, for 14 days", async () => {
@@ -937,23 +942,22 @@ test("a landed movie leads A movie and a landed show to start leads Start a show
 		parts.shows.start.map((show) => show.title),
 		["Severance", "Pluribus"],
 	)
-	assert.equal(doors.movie.title, "Dune")
-	assert.equal(doors.movie.newOn, "Prime")
-	assert.equal(doors.start?.title, "Severance")
-	assert.equal(doors.start?.newOn, "Netflix")
+	assert.equal(doors.movie, "Dune")
+	assert.equal(doors.start, "Severance")
+	assert.deepEqual(doors.newOn, { movie: "Prime", start: "Netflix" })
 	// A visit of the pages does not end it.
 	await recordMyMoviesVisit(user, day(8))
 	await recordMyShowsVisit(user, day(8))
-	assert.equal((await doorsOn(day(9))).doors.movie.title, "Dune")
+	assert.equal((await doorsOn(day(9))).doors.movie, "Dune")
 	// Day 16 is the last of Dune's 14 days; the show landed a day later.
 	const last = await doorsOn(day(16))
-	assert.equal(last.doors.movie.newOn, "Prime")
+	assert.equal(last.doors.newOn.movie, "Prime")
 	const after = await doorsOn(day(17))
-	assert.equal(after.doors.movie.title, "Heat")
-	assert.ok(!("newOn" in after.doors.movie))
-	assert.equal(after.doors.start?.title, "Severance")
+	assert.equal(after.doors.movie, "Heat")
+	assert.equal(after.doors.newOn.movie, null)
+	assert.equal(after.doors.start, "Severance")
 	const over = await doorsOn(day(18))
-	assert.equal(over.doors.start?.title, "Pluribus")
+	assert.equal(over.doors.start, "Pluribus")
 })
 
 test("of several landed movies the latest leads, and the others follow it", async () => {
@@ -965,7 +969,7 @@ test("of several landed movies the latest leads, and the others follow it", asyn
 		parts.movies.map((movie) => movie.title),
 		["Tár", "Dune", "Heat"],
 	)
-	assert.equal(doors.movie.newOn, "Prime")
+	assert.equal(doors.newOn.movie, "Prime")
 })
 
 test("a show the member is in the middle of that landed keeps its place, and Tonight's pick keeps its order", async () => {
@@ -988,10 +992,10 @@ test("a show the member is in the middle of that landed keeps its place, and Ton
 		THE_BEAR,
 	])
 	const parts = await getTonightParts(ctx, taste as never, day(9))
-	const doors = homeDoorsOf(parts, ctx.services, day(9))
+	const doors = leadsOf(parts)
 	// Continue is the show, as before, and the shows to start are in their own order.
-	assert.equal(doors.continue?.title, "The Bear")
-	assert.equal(doors.start?.title, "Pluribus")
+	assert.equal(doors.continue, "The Bear")
+	assert.equal(doors.start, "Pluribus")
 	assert.deepEqual(parts.newOn, { movie: "Prime", start: null })
 	// Tonight's pick goes by the doors' order: the show the member is in, not the movie that landed.
 	const pick = tonightsPickOf(parts.shows, parts.movies[0]?.tmdb_id ?? null)

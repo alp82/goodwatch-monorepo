@@ -11,6 +11,7 @@ import type {
 	StreamingType,
 } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { UNDER_HEADERS } from "~/ui/details/header-height"
 import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
 	type CountryCount,
@@ -21,6 +22,7 @@ import {
 	topCountries,
 } from "~/ui/details/hero/countryOffers"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
+import { useStreamingGlow } from "~/ui/details/hero/useStreamingGlow"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { regionName } from "~/utils/display-names"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -156,6 +158,8 @@ export default function WhereToWatch({
 	const ref = useRef<HTMLDivElement>(null)
 	useClickOutside([ref], () => setCountryOpen(false))
 	useReplayedTap("offer", (el) => Boolean(ref.current?.contains(el)))
+	// Arriving from the TV's Watch key, the block is highlighted once.
+	const arrival = useStreamingGlow(ref)
 	const navigate = useNavigate()
 	const owned = useOwnedProviderIds()
 	const linksByTab = Object.fromEntries(
@@ -204,8 +208,12 @@ export default function WhereToWatch({
 			id="streaming"
 			ref={ref}
 			data-where-to-watch
-			className={`@container relative min-w-0 ${className}`}
+			{...arrival.block}
+			className={`@container relative min-w-0 ${className}${arrival.className}`}
+			// An address with `#streaming` lands the block clear of the site bar and the sticky title header.
+			style={{ scrollMarginTop: UNDER_HEADERS }}
 		>
+			{arrival.rules}
 			<div className="flex min-w-0 items-center justify-end gap-1.5">
 				<h2
 					aria-label="Where to watch"

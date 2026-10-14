@@ -69,7 +69,8 @@ const { setRedisClusterForTest, resetPendingResetsForTest } = await import(
 	"../utils/cache.ts"
 )
 const { getMyShows } = await import("./my-shows.server.ts")
-const { homeDoorsOf } = await import("./home-doors.server.ts")
+const { memberHome } = await import("./living-room/tv-home.server.ts")
+const { placedWords } = await import("../domain/my-shows.ts")
 const { getLibraryPage, forgetTitlesForTest } = await import(
 	"./my-library.server.ts"
 )
@@ -409,47 +410,45 @@ test("a show an import made Watching is one to pick up: the import's time is no 
 	)
 })
 
-test("home's Continue door is the show the member moved to Watching last, and says since when", async () => {
-	seedMoved()
-	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
-	const doors = homeDoorsOf(
+/** The first show of a member's My shows on the TV's home, from what its loader reads. */
+const firstToContinue = (shows: Awaited<ReturnType<typeof getMyShows>>) => {
+	const home = memberHome(
 		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true, newOn: { movie: null, start: null } },
 		[],
-		NOW,
 	)
-	assert.deepEqual(doors.continue, {
+	const first = home.shows?.next[0]
+	return first && { title: first.title, backdrop_path: first.backdrop_path, episode: first.episode && { code: first.episode.code, name: first.episode.name } }
+}
+
+test("home's My shows leads with the show the member moved to Watching last", async () => {
+	seedMoved()
+	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
+	assert.deepEqual(firstToContinue(shows), {
 		title: "Star Trek: Picard",
 		backdrop_path: "/b109.jpg",
-		episode: "S1 E19",
-		episodeName: "Episode 1.19",
-		fact: "Watching since today",
-		// Three more in Continue, two to pick up.
-		more: 5,
+		episode: { code: "S1 E19", name: "Episode 1.19" },
 	})
+	assert.equal(placedWords(shows.continue[0], NOW), "Watching since today")
+	// Three more in Continue, two to pick up.
+	assert.equal(shows.continue.length + shows.pickUp.length - 1, 5)
 })
 
-test("without a show in Continue, home's door is the first show to pick up, with its Next episode", async () => {
+test("without a show in Continue, home's My shows leads with the first show to pick up, with its Next episode", async () => {
 	db.seed("show", [show(102, "Shōgun", 10)])
 	db.seed("episode", [...season(102, 10)])
 	db.seed("user_watch_state", [stateRow("show", 102, "watching")])
 	db.seed("user_watch_log", [...[1, 2, 3, 4].map((n) => watch(102, 1, n, daysAgo(120)))])
 	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
-	const doors = homeDoorsOf(
-		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true, newOn: { movie: null, start: null } },
-		[],
-		NOW,
-	)
-	assert.deepEqual(doors.continue, {
+	assert.deepEqual(firstToContinue(shows), {
 		title: "Shōgun",
 		backdrop_path: "/b102.jpg",
-		episode: "S1 E5",
-		episodeName: "Episode 1.5",
-		fact: "Watched 4 months ago",
-		more: 0,
+		episode: { code: "S1 E5", name: "Episode 1.5" },
 	})
+	assert.equal(placedWords(shows.pickUp[0], NOW), "Watched 4 months ago")
+	assert.equal(shows.continue.length + shows.pickUp.length - 1, 0)
 })
 
-test("home's Continue door reads one episode list", async () => {
+test("home's My shows reads one episode list", async () => {
 	seedShows()
 	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
 	assert.deepEqual(selects("episode").map((s) => s.params[0]), [101])

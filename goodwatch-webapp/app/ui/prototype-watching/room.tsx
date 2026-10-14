@@ -3,20 +3,9 @@
 // the framing only; its keys do nothing here.
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { usePhoneOrientation } from "~/ui/living-room/PhoneLivingRoom"
 import { Remote, type RemoteProps } from "~/ui/living-room/Remote"
-import {
-	HAND_IMAGE,
-	PHONE_ROOM,
-	PHONE_TV_CANVAS,
-	REMOTE_H,
-	REMOTE_TILT_DEG,
-	REMOTE_W,
-	ROOM,
-	TV_CANVAS,
-	layoutPhone,
-	layoutRoom,
-} from "~/ui/living-room/room"
+import { HAND_IMAGE, PHONE_ROOM, REMOTE_H, REMOTE_TILT_DEG, REMOTE_W, ROOM } from "~/ui/living-room/room"
+import { PHONE_TV_CANVAS, TV_CANVAS, layoutPhone, layoutRoom, usePhoneOrientation } from "./old-room"
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -40,13 +29,12 @@ export function Room({ desktop, phone, lcd }: { desktop: ReactNode; phone: React
 	const portrait = orientation === "portrait"
 	const canvas = orientation ? PHONE_TV_CANVAS : TV_CANVAS
 	const remote: RemoteProps = {
-		screen: { name: "home" },
 		power: "on",
 		menuOpen: false,
-		serviceName: (key) => key,
-		activeService: null,
-		dispatch: () => {},
-		onOk: () => {},
+		searching: false,
+		services: [],
+		openService: null,
+		press: () => {},
 	}
 	return (
 		<div ref={root} className="living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0">
