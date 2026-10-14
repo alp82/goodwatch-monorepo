@@ -673,6 +673,7 @@ def test_t2a_table_is_built_from_the_ladder_lines(world):
     assert '## The owner alone' in text and 'n/a: 4 sittings, fewer than 10' in text
     assert f'{w["separation"]["value"]:.3f}' in text and '### Guards: the first 50 candidates' in text
     assert '### Error of the predicted rating on the hidden titles' in text
+    assert '### Among equally popular titles' in text and '### Among titles equally well-rated and equally popular' in text
     t1 = subprocess.run([sys.executable, os.path.join(lab, 'table.py'), 'T1'], capture_output=True, text=True,
                         env=world['env'])
     assert t1.returncode == 0 and 'hidden' not in t1.stdout           # the T1 table reads no T2a line
@@ -684,27 +685,74 @@ def test_t2a_controls(world):
                                '--item', '001'], capture_output=True, text=True, env=world['env'])
         assert done.returncode == 0, done.stdout + done.stderr
     verdicts = [x for x in ledger(world) if x.get('task') == 'T2a' and 'verdict' in x]
-    assert [(x['control'], x['verdict']) for x in verdicts[-2:]] == [('leak', 'pass'), ('shuffled', 'pass')]
+    assert verdicts[-2]['control'] == 'leak' and verdicts[-2]['verdict'] == 'pass'
+    # the shuffled rule of item 004: three shuffles; pass only inside plus or minus 0.015, else inconclusive
+    shuffled = verdicts[-1]
+    assert shuffled['control'] == 'shuffled' and shuffled['verdict'] in ('pass', 'inconclusive')
+    assert len(shuffled['runs']) == 18 and shuffled['detail']['_rule']['tolerance'] == 0.015
+    assert shuffled['detail']['_rule']['widest'] is not None and 'widest figure' in done.stdout
+    seeds = {x['options']['shuffle_seed'] for x in ledger(world) if x.get('run_id') in shuffled['runs']}
+    assert seeds == {20261013, 20261014, 20261015}
     leak = [x for x in ledger(world) if x.get('control') == 'leak' and x.get('task') == 'T2a' and 'predictor' in x][-1]
     assert leak['status'] == 'attempts' and leak['sandbox']['attempts'] > 100
     log = open(os.path.join(world['data'], 'results', leak['run_id'], 'log.txt')).read()
     assert 'leak canary: 0 of' in log and '/gate/' not in log
     assert not [x for x in log.splitlines() if 'target ratings found' in x and not x.startswith('leak canary: 0 of')]
-    # the six shuffled runs can be started one at a time and judged together: --only writes no verdict, --reuse
-    # takes the runs the ledger holds for exactly this control and code
-    shuffled = (lambda *args: subprocess.run(
+    # the side-list shortcut: with the listed titles counted (the rule before item 004) it would have gained
+    before = verdicts[-2]['detail']['side_list_shortcut_before_item_004']
+    assert before['others'] > 0.5 and before['owner'] > 0.5
+    # the runs can be started a few at a time and judged together: --only writes no verdict, --reuse takes the runs
+    # the ledger holds for exactly this control and code
+    run = (lambda *args: subprocess.run(
         [sys.executable, os.path.join(world['lab'], 'controls', 'shuffled.py'), '--task', 'T2a', '--item', '001',
          *args], capture_output=True, text=True, env=world['env']))
     n = len(ledger(world))
-    done = shuffled('--only', 'b1_public.py')
-    assert done.returncode == 0 and 'PASS' not in done.stdout, done.stdout + done.stderr
-    assert len(ledger(world)) == n + 1 and 'verdict' not in ledger(world)[-1]
-    done = shuffled('--reuse')
-    assert done.returncode == 0 and 'shuffled (T2a): PASS' in done.stdout, done.stdout + done.stderr
+    done = run('--only', 'b1_public.py')
+    assert done.returncode == 0 and 'no verdict' in done.stdout, done.stdout + done.stderr
+    assert len(ledger(world)) == n + 3 and 'verdict' not in ledger(world)[-1]
+    done = run('--reuse')
+    assert done.returncode == 0 and 'shuffled (T2a): ' in done.stdout, done.stdout + done.stderr
     last = ledger(world)[-1]
-    assert len(ledger(world)) == n + 2 and last['verdict'] == 'pass' and len(last['runs']) == 6
-    assert ledger(world)[-2]['run_id'] in last['runs'] and set(last['runs'][1:]) & set(verdicts[-1]['runs'])
-    refused(shuffled('--only', 'b9.py'), '--only names a rung file')
+    assert len(ledger(world)) == n + 4 and len(last['runs']) == 18
+    assert ledger(world)[-2]['run_id'] in last['runs'] and set(last['runs']) & set(shuffled['runs'])
+    refused(run('--only', 'b9.py'), '--only names a rung file')
+
+
+def test_a_stopped_t2a_run_resumes_where_it_stopped(world):
+    """A run stopped by its time limit leaves the answers of the batches it finished; the next run of the same file
+    on the same views takes them and runs the rest, and gives the same numbers."""
+    assert t2a(world, BP).returncode == 0
+    full = ledger(world)[-1]
+    cache = os.path.join(world['data'], 'work', 'cache')
+    stored = [os.path.join(d, f) for d, _, files in os.walk(cache) for f in files if f == f'{sha(BP)}.json']
+    newest = max(stored, key=os.path.getmtime)
+    got = json.load(open(newest))
+    half = dict(list(got['main'].items())[:len(got['main']) // 2])
+    json.dump({'sha256': got['sha256'], 'views': got['views'], 'main': half, 'sandbox': got['sandbox'],
+               'peak_mb': got['peak_mb']}, open(newest + '.part', 'w'))
+    assert t2a(world, BP).returncode == 0
+    again = ledger(world)[-1]
+    assert again['resumed'] == {BP: len(half)} and 'resumed' not in full
+    assert again['measures'] == full['measures'] and not os.path.exists(newest + '.part')
+    json.dump({'sha256': '0' * 64, 'views': got['views'], 'main': half}, open(newest + '.part', 'w'))
+    assert t2a(world, BP).returncode == 0                               # another file's answers are not taken
+    assert 'resumed' not in ledger(world)[-1] and ledger(world)[-1]['measures'] == full['measures']
+
+
+def test_t2a_fold_check(world, pack):
+    done = t2a(world, B2, B1, extra=['--fold-check'])
+    assert done.returncode == 0, done.stdout + done.stderr
+    line = ledger(world)[-1]
+    assert line['options']['fold_check'] is True and 'owner' not in line['measures']
+    import views
+    index, keys, _ = views.build_t2a(pack, '', write=False, fold_check=True)
+    counts = np.bincount(pack.ratings['member'], minlength=len(pack.members['tier']))
+    assert index and all(len(keys[v['vid']]['title']) <= 5 for v in index)
+    assert all(v['member'] != pack.owner and counts[v['member']] < 60 for v in index)
+    done = subprocess.run([sys.executable, os.path.join(world['lab'], 'table.py'), 'T2a'], capture_output=True,
+                          text=True, env=world['env'])
+    assert done.returncode == 0 and '### Fold check: at most 5 hidden titles in a view' in done.stdout, done.stderr
+    refused(world['run'](B1, '--fold-check'), '--fold-check is an option of task T2a')
 
 
 def test_t2a_leak_canary_finds_the_hidden_ratings_when_nothing_confines_it(world, pack, tmp_path):
@@ -747,6 +795,103 @@ print(json.dumps(out))
     os.remove(keys_path)
     check('the other folds alone', str(tmp_path / 'data'))
     check('the pack', os.path.dirname(world['pack_dir']))
+
+
+# ------------------------------------------------------------------ T2b, ranking later Want to See adds
+
+def t2b(world, rung, *refs, mode='ladder', item='001', extra=()):
+    lab = world['lab']
+    args = [x for r in refs for x in ('--ref', os.path.join(lab, r))]
+    return world['sh'](os.path.join(lab, rung), '--task', 'T2b', '--tier', 'A', '--mode', mode, '--item', item,
+                       *args, *extra)
+
+
+def test_t2b_runs_the_ladder_on_later_want_to_see_adds(world, pack):
+    n = len(ledger(world))
+    refused(world['run'](B1, '--split', 'order'), '--split is an option of task T2b')
+    refused(t2b(world, B1, mode='control', extra=['--control', 'planted', '--plant', '0.1']), 'control of task T1')
+    assert len(ledger(world)) == n
+    for rung, refs in ((B2, (B1, BP)), (B1, (B2, BP)), (B5, (B2, B1, BP))):
+        done = t2b(world, rung, *refs)
+        assert done.returncode == 0, done.stdout + done.stderr
+    b2, b1, b5 = ledger(world)[-3:]
+    assert 'among equally popular' in done.stdout
+    for line in (b2, b1, b5):
+        assert line['task'] == 'T2b' and line['options']['others'] == 'before' and line['options']['split'] == 'sitting'
+        assert line['status'] == 'ok' and line['views']['digest'] == b2['views']['digest'] and line['calibrated'] == []
+    m = b5['measures']
+    o, w = m['others'], m['owner']
+    assert m['primary'] == 'pct' and o['n_members'] >= 3 and o['n_targets'] >= 9 and w['n_targets'] >= 3
+    assert o['touched_listed'] == 0 and o['touched_first50'] == 0 and w['touched_listed'] == 0
+    for name in ('pct', 'first50', 'first200', 'pct_matched', 'pct_popular', 'top_shows_vs_own', 'top_votes_median'):
+        assert o[name]['value'] is not None, name
+    d = o['vs'][B2]['pct']
+    assert d['n'] == o['n_members'] and 'mae' not in o and set(o['vs']) == {B2, B1, BP}
+    assert w['pct']['lo'] is None and w['vs'][B2]['pct']['value'] == pytest.approx(
+        w['pct']['value'] - b2['measures']['owner']['pct']['value'], abs=1e-5)
+    # the entry-order split and the others as of the pull are other views of the same members
+    for extra in (['--split', 'order'], ['--others', 'all']):
+        done = t2b(world, B2, B1, BP, extra=extra)
+        assert done.returncode == 0, done.stdout + done.stderr
+        assert ledger(world)[-1]['views']['digest'] != b2['views']['digest']
+    assert ledger(world)[-2]['options']['split'] == 'order' and ledger(world)[-1]['options']['others'] == 'all'
+    result = json.load(open(os.path.join(world['data'], 'results', b5['run_id'], 'result.json')))
+    assert len(result['per_member']) == o['n_members'] + 1 and f'pct:{B2}' in result['per_member'][0]
+    work = os.path.join(world['data'], 'work')
+    assert os.listdir(os.path.join(work, 'runs')) == [] and os.listdir(os.path.join(work, 'keys')) == []
+    done = world['sh']('--verify', b5['run_id'])
+    assert done.returncode == 0 and 'verified' in done.stdout, done.stdout + done.stderr
+    # the table builds
+    table = (lambda task: subprocess.run([sys.executable, os.path.join(world['lab'], 'table.py'), task],
+                                         capture_output=True, text=True, env=world['env']))
+    done = table('T2b')
+    assert done.returncode == 0, done.stderr
+    assert '## Split by sitting, other members before the cutoff (the primary T2b)' in done.stdout
+    assert f'{o["pct"]["value"]:.3f} ({o["pct"]["lo"]:.3f} to {o["pct"]["hi"]:.3f})' in done.stdout
+    assert '| B3 | Taste on standardized fingerprints | not run |' in done.stdout and 'Not run.' in done.stdout
+
+
+def test_t2b_controls(world):
+    for name in ('leak', 'shuffled'):
+        done = subprocess.run([sys.executable, os.path.join(world['lab'], 'controls', f'{name}.py'), '--task', 'T2b',
+                               '--item', '001'], capture_output=True, text=True, env=world['env'])
+        assert done.returncode == 0, done.stdout + done.stderr
+    verdicts = [x for x in ledger(world) if x.get('task') == 'T2b' and 'verdict' in x]
+    assert (verdicts[-2]['control'], verdicts[-2]['verdict'], verdicts[-2]['split']) == ('leak', 'pass', 'sitting')
+    assert verdicts[-1]['control'] == 'shuffled' and verdicts[-1]['verdict'] in ('pass', 'inconclusive')
+    shuffled = [x for x in ledger(world) if x.get('control') == 'shuffled' and x.get('task') == 'T2b'
+                and 'predictor' in x][-1]
+    assert shuffled['options']['shuffle_seed'] is not None and shuffled['options']['others'] == 'before'
+    assert len(verdicts[-1]['runs']) == 18
+
+
+def test_t2b_leak_canary_finds_the_later_adds_when_nothing_confines_it(world, pack, tmp_path):
+    import views
+    out = str(tmp_path / 'data' / 'work' / 'runs' / 'r1')
+    index, keys, _ = views.build_t2b(pack, out)
+    views.export_titles(pack, os.path.join(out, 'titles.npz'))
+    keys_path = str(tmp_path / 'data' / 'work' / 'keys' / 'r1.bin')
+    views.write_keys(keys_path, index, keys)
+    code = f"""
+import sys, json, importlib.util
+sys.path.insert(0, {REAL_LAB!r})
+import views
+spec = importlib.util.spec_from_file_location('canary', {os.path.join(REAL_LAB, 'controls/predictors/leak_canary.py')!r})
+canary = importlib.util.module_from_spec(spec); spec.loader.exec_module(canary)
+titles = views.load_titles({os.path.join(out, 'titles.npz')!r})
+print(json.dumps({{vid: canary.predict(views.load_view({os.path.join(out, 'views')!r} + '/' + vid, titles))['rank'].tolist()
+                  for vid in {[v['vid'] for v in index]!r}}}))
+"""
+    for name, root in (('the answer file', str(tmp_path / 'data')), ('the pack', os.path.dirname(world['pack_dir']))):
+        env = {'PATH': '/usr/bin:/bin', 'HOME': str(tmp_path), 'TMPDIR': str(tmp_path), 'TASTE_CANARY_ROOT': root,
+               'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'}
+        done = subprocess.run([sys.executable, '-B', '-c', code], capture_output=True, text=True, env=env,
+                              cwd=str(tmp_path), timeout=300)
+        assert done.returncode == 0, done.stderr[-2000:]
+        got = json.loads(done.stdout.strip().splitlines()[-1])
+        for v in index:
+            rank = np.array(got[v['vid']])
+            assert (rank[keys[v['vid']]['pos']] == 1).all(), name           # every later add is found
 
 
 def test_top_prints_the_first_unrated_candidates_and_writes_nothing(world, pack):

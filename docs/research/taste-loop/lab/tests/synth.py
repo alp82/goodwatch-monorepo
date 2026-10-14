@@ -113,11 +113,23 @@ def build(root, n_members=60, n_titles=400, seed=1):
         rows['created_at'] += t.tolist()
         rows['score'] += s.tolist()
         rest = np.setdiff1d(np.arange(n_titles), chosen)
+        visits = u == 0 or (n >= 25 and u % 4 == 1)               # members who come back: T2b has something to cut
+        # their adds and skips are written during their visits, a second after one of their ratings (the one as far
+        # along their ratings as the drawn time is along their span)
+        when = (lambda x: np.sort(t[((x - t[0]) * (n - 1)) // max(t[-1] - t[0], 1)] + 1000) if visits else x)
+        picked = []
         for table, k in ((wish, 6), (skip, 10)):
             pick = rng.choice(rest, k, replace=False)
+            picked += pick.tolist()
             table['member'] += [u] * k
             table['title_key'] += key[pick].tolist()
-            table['created_at'] += np.sort(rng.integers(t[0], t[-1] + 1, k)).tolist()
+            table['created_at'] += when(np.sort(rng.integers(t[0], t[-1] + 1, k))).tolist()
+        if visits:                                                # and add more titles to Want to See
+            more = np.random.default_rng(seed + 3000 + u)         # its own generator: the rest stays as it was
+            pick = more.choice(np.setdiff1d(rest, picked), 8, replace=False)
+            wish['member'] += [u] * 8
+            wish['title_key'] += key[pick].tolist()
+            wish['created_at'] += when(more.integers(t[0], t[-1] + 1, 8)).tolist()
     R = {'member': np.array(rows['member'], np.int32), 'title_key': np.array(rows['title_key'], np.int64),
          'created_at': np.array(rows['created_at'], np.int64), 'score': np.array(rows['score'], np.int8)}
     R['updated_at'] = R['created_at'].copy()

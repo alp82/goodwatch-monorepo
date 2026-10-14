@@ -265,6 +265,8 @@ def t2a_table(member, y, view=None, **kw):
 def t2a_answers(pct, views=1, **kw):
     n = len(pct)
     base = {'pct': np.array(pct, float), 'above': np.zeros(n), 'pct_matched': np.array(pct, float), 'pred': None,
+            'pct_popular': np.array(pct, float), 'pct_both': np.array(pct, float), 'n_both': np.full(n, 100.),
+            'pct_lists': np.array(pct, float),
             'p_low': None, 'candidates': np.full(views, 1000.), 'top_shows': np.full(views, 0.5),
             'top_animation': np.full(views, 0.1), 'top_franchise_max': np.full(views, 2.),
             'top_votes_median': np.full(views, 5000.)}
@@ -327,3 +329,50 @@ def test_cluster_separation_resamples_whole_clusters():
     few = stats.cluster_separation(values, high, ~high, np.arange(200) % 5, 1000, 1)
     assert few['value'] == pytest.approx(0.5) and few['lo'] is None and few['why'] == '5 clusters, fewer than 10'
     assert stats.cluster_separation(values, high, np.zeros(200, bool), np.arange(200), 100, 1)['value'] is None
+
+
+def test_equally_popular_and_both_by_hand_and_the_t2b_view():
+    f = {'g': np.full(6, 50.), 'show': np.zeros(6, bool), 'animation': np.zeros(6, bool),
+         'franchise': -1 - np.arange(6), 'votes': np.array([1000., 1400., 1500., 2100., 3000., 1000.])}
+    answer = {'rank': np.array([.1, .5, .9, .5, .2, .6]), 'score': None, 'p_low': None}
+    r = score.t2a_view(answer, {'pos': np.array([1])}, np.arange(6), f)
+    # 1400 votes: 1000, 1500 and 2100 lie within a factor of 1.5 (2100 exactly, the edge counts); 3000 does not
+    assert r['n_popular'] == [4] and r['pct_popular'] == [pytest.approx(1.5 / 4)]
+    assert r['n_both'] == [4] and r['pct_both'] == [None]               # fewer than 50 such candidates
+    assert r['n_matched'] == [5] and r['pct_matched'] == r['pct']       # every candidate has the same score
+    key = {'pos': np.array([1]), 'later_pos': np.array([5]), 'touched': np.array([7])}
+    b = score.t2b_view(answer, key, np.arange(6), f)
+    # the later skip (rank .6) among the other non-targets (.1, .9, .5, .2): three below it
+    assert b['later_pct'] == [pytest.approx(0.75)] and (b['auc_good'], b['auc_pairs']) == (0.0, 1)
+    assert b['touched_first50'] == 0 and b['touched_listed'] == 0 and b['pct'] == r['pct']
+    assert score.t2b_view(answer, {**key, 'touched': np.array([3])}, np.arange(6), f)['touched_listed'] == 1
+
+
+def test_titles_on_the_member_s_lists_are_left_out_of_the_comparison():
+    # six targets: position 1 hidden; position 3 (rank .9) is on the member's Want to See list, so it is not hidden
+    answer = {'rank': np.array([.1, .5, .2, .9, .3, .6]), 'score': None, 'p_low': None}
+    f = {'g': np.full(6, 50.), 'show': np.zeros(6, bool), 'animation': np.zeros(6, bool),
+         'franchise': -1 - np.arange(6), 'votes': np.full(6, 1000.)}
+    r = score.t2a_view(answer, {'pos': np.array([1]), 'listed_pos': np.array([3])}, np.arange(6), f)
+    assert r['pct'] == [pytest.approx(3 / 4)] and r['candidates'] == 4     # .1, .2, .3 below; .6 above
+    assert r['pct_lists'] == [pytest.approx(3 / 5)]                     # the rule before item 004
+    assert r['above'] == [1.0] and r['top']['top_votes_median'] == 1000.0
+    # the canary's shortcut: listed titles at the bottom, everything else in the middle
+    shortcut = {'rank': np.array([.5, .5, .5, 0., .5, .5]), 'score': None, 'p_low': None}
+    r = score.t2a_view(shortcut, {'pos': np.array([1]), 'listed_pos': np.array([3])}, np.arange(6), f)
+    assert r['pct'] == [0.5] and r['pct_lists'] == [pytest.approx((1 + 0.5 * 4) / 5)]
+
+
+def test_the_owner_keeps_the_band_minimum():
+    # the owner (member 0) has ten titles rated 9 and four rated 3: no low band, so no separation
+    y = np.r_[np.full(10, 9), np.full(4, 3), np.tile(np.r_[np.full(6, 9), np.full(6, 3)], 2)]
+    member = np.r_[np.zeros(14, int), np.ones(12, int), np.full(12, 2)]
+    pct = np.where(y >= 8, 0.8, 0.3)
+    t = t2a_table(member, y, franchise=np.arange(len(y)))
+    m = score.t2a_measures(t, t2a_answers(pct, 3), {'ref': t2a_answers(np.full(len(y), 0.5), 3)}, owner=0,
+                           draws=200, seed=1)
+    w = m['owner']
+    assert w['n_low'] == 4 and w['pct_low']['value'] is None and 'fewer than 5' in w['pct_low']['why']
+    assert w['separation']['value'] is None and 'fewer than 5' in w['separation']['why']
+    assert w['separation_matched_franchise']['value'] is None and w['vs']['ref']['separation']['value'] is None
+    assert w['pct_high']['value'] == pytest.approx(0.8) and m['others']['separation']['value'] == pytest.approx(0.5)

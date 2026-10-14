@@ -345,6 +345,10 @@ def floor_measures(table, candidate, floor_err, b0_pred, owner, draws, seed):
 T2A_BAND_MIN = 5                     # titles of a band a member needs for the band, and for the separation, to count
 T2A_FIRST = (50, 200)                # "lands in the first 50", "in the first 200"
 T2A_SCORE_WINDOW = 3.0               # equally well-rated: a GoodWatch score (0..100) within 3 points
+T2A_VOTES_FACTOR = 1.5               # equally popular: a vote count within a factor of 1.5, either way (item 004)
+T2A_BOTH_SCORE, T2A_BOTH_FACTOR = 3.0, 2.0   # both at once: score within 3 points and votes within a factor of 2
+T2A_BOTH_MIN = 50                    # a title counts for "both" only with 50 or more such candidates
+_EPS = 1e-9                          # the bands include their edges
 T2A_TOP = 50                         # the guards read the first 50 candidates of every view
 T2A_BANDS = (('high', 8, 10), ('mid', 6, 7), ('low', 1, LOW))
 T2A_GUARDS = ('top_shows', 'top_animation', 'top_franchise_max', 'top_votes_median')
@@ -352,6 +356,9 @@ T2A_GUARDS = ('top_shows', 'top_animation', 'top_franchise_max', 'top_votes_medi
 T2A_BETTER = {'separation': 'higher', 'separation_matched': 'higher',
               'pct_high': 'higher', 'pct_mid': None, 'pct_low': 'lower',
               'pct_matched_high': 'higher', 'pct_matched_mid': None, 'pct_matched_low': 'lower',
+              'separation_popular': 'higher', 'separation_both': 'higher',
+              'pct_popular_high': 'higher', 'pct_popular_mid': None, 'pct_popular_low': 'lower',
+              'pct_both_high': 'higher', 'pct_both_mid': None, 'pct_both_low': 'lower',
               'first50_high': 'higher', 'first200_high': 'higher', 'first50_low': 'lower', 'first200_low': 'lower',
               'top_shows': None, 'top_animation': None, 'top_shows_vs_own': None, 'top_animation_vs_own': None,
               'top_franchise_max': None, 'top_votes_median': None,
@@ -363,36 +370,70 @@ def t2a_view(answer, key, targets, facts):
     is kept and stored). answer: check_answer's arrays. key: the view's answers (views.build_t2a). targets: the
     view's target list (title rows). facts: views.title_facts.
 
-    pct          per hidden title, its percentile among the view's unrated candidates
+    pct          per hidden title, its percentile among the view's unrated candidates, the titles on the member's
+                 Want to See, Skip and Not interested lists left out (key `listed_pos`, item 004)
+    pct_lists    the same with those titles in (the rule before item 004), kept to show what the change removes
     above        how many candidates rank above it (a tie counts a half)
     pct_matched  the same percentile among the candidates whose GoodWatch score lies within T2A_SCORE_WINDOW points
                  of the hidden title's (None without such a candidate, or without a score); n_matched: how many
+    pct_popular  the same among the candidates whose vote count lies within a factor of T2A_VOTES_FACTOR of the
+                 hidden title's (item 004); n_popular
+    pct_both     the same among the candidates within T2A_BOTH_SCORE points and a factor of T2A_BOTH_FACTOR at once,
+                 None with fewer than T2A_BOTH_MIN of them; n_both
     top          the first T2A_TOP candidates (ties in the order of the view's shuffled list): share of shows and of
                  animation, the largest number of titles from one franchise, the median vote count
     score, p_low the rounded score and the chance of a low rating for the hidden titles, where the predictor gives
                  them (the values it gives for candidates are not read)
     """
     rank, pos = answer['rank'], key['pos']
+    listed = key.get('listed_pos', np.zeros(0, np.int64))
     is_candidate = np.ones(len(rank), bool)
     is_candidate[pos] = False
+    old = np.sort(rank[is_candidate])                  # the comparison set before item 004, side lists included
+    is_candidate[listed] = False                       # a title on the member's lists is certainly not hidden
     rc, rh = rank[is_candidate], rank[pos]
     n = len(rc)
     ordered = np.sort(rc)
     below, upto = np.searchsorted(ordered, rh, 'left'), np.searchsorted(ordered, rh, 'right')
+    pct_lists = (np.searchsorted(old, rh, 'left') + np.searchsorted(old, rh, 'right')) / (2.0 * max(len(old), 1))
     rows = targets[is_candidate]
     g = facts['g'][rows]
     by_g = np.argsort(g, kind='stable')
     gs, rs, gh = g[by_g], rc[by_g], facts['g'][targets[pos]]
-    matched, n_matched = [], []
+    votes = facts['votes'][rows]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        lv = np.log(np.where(votes > 0, votes, np.nan))
+        vh = facts['votes'][targets[pos]]
+        lvh = np.log(np.where(vh > 0, vh, np.nan))
+    by_v = np.argsort(lv, kind='stable')
+    lvs, rvs, lv_g = lv[by_v], rc[by_v], lv[by_g]
+    near_v, near_both = np.log(T2A_VOTES_FACTOR) + _EPS, np.log(T2A_BOTH_FACTOR) + _EPS
+
+    def share_below(part, r):
+        return float(((part < r).sum() + 0.5 * (part == r).sum()) / len(part)) if len(part) else None
+
+    matched, n_matched, popular, n_popular, both, n_both = [], [], [], [], [], []
     for j in range(len(pos)):
         part = rs[np.searchsorted(gs, gh[j] - T2A_SCORE_WINDOW, 'left'):
                   np.searchsorted(gs, gh[j] + T2A_SCORE_WINDOW, 'right')] if np.isfinite(gh[j]) else rs[:0]
         n_matched.append(int(len(part)))
-        matched.append(float(((part < rh[j]).sum() + 0.5 * (part == rh[j]).sum()) / len(part)) if len(part) else None)
+        matched.append(share_below(part, rh[j]))
+        part = rvs[np.searchsorted(lvs, lvh[j] - near_v, 'left'):
+                   np.searchsorted(lvs, lvh[j] + near_v, 'right')] if np.isfinite(lvh[j]) else rvs[:0]
+        n_popular.append(int(len(part)))
+        popular.append(share_below(part, rh[j]))
+        if np.isfinite(gh[j]) and np.isfinite(lvh[j]):
+            a, b = np.searchsorted(gs, gh[j] - T2A_BOTH_SCORE, 'left'), np.searchsorted(gs, gh[j] + T2A_BOTH_SCORE, 'right')
+            part = rs[a:b][np.abs(lv_g[a:b] - lvh[j]) <= near_both]
+        else:
+            part = rs[:0]
+        n_both.append(int(len(part)))
+        both.append(share_below(part, rh[j]) if len(part) >= T2A_BOTH_MIN else None)
     first = rows[np.argsort(-rc, kind='stable')[:T2A_TOP]]
     _, per_franchise = np.unique(facts['franchise'][first], return_counts=True)
     return {'pct': ((below + upto) / (2.0 * n)).tolist(), 'above': (n - (below + upto) / 2.0).tolist(),
-            'pct_matched': matched, 'n_matched': n_matched, 'candidates': int(n),
+            'pct_matched': matched, 'n_matched': n_matched, 'pct_popular': popular, 'n_popular': n_popular,
+            'pct_both': both, 'n_both': n_both, 'candidates': int(n), 'pct_lists': pct_lists.tolist(),
             'top': {'top_shows': float(facts['show'][first].mean()),
                     'top_animation': float(facts['animation'][first].mean()),
                     'top_franchise_max': int(per_franchise.max()),
@@ -437,6 +478,8 @@ def t2a_collect(answers, index):
     per = [answers['main'][v['vid']] for v in index]
     cat = (lambda name: np.concatenate([np.array(a[name], float) for a in per]) if per else np.zeros(0))
     out = {'pct': cat('pct'), 'above': cat('above'), 'pct_matched': cat('pct_matched'),
+           'pct_popular': cat('pct_popular'), 'pct_both': cat('pct_both'), 'n_both': cat('n_both'),
+           'pct_lists': cat('pct_lists'),
            'pred': None if not per or per[0]['score'] is None else cat('score').astype(np.int64),
            'p_low': None if not per or per[0]['p_low'] is None else cat('p_low'),
            'candidates': np.array([a['candidates'] for a in per], float)}
@@ -463,14 +506,19 @@ def t2a_member_values(table, p):
         out[f'n_{band}'] = np.bincount(member[m], minlength=n).astype(float)
         out[f'pct_{band}'] = mean_where(m, p['pct'], T2A_BAND_MIN)
         out[f'pct_matched_{band}'] = mean_where(m, p['pct_matched'], T2A_BAND_MIN)
+        out[f'pct_popular_{band}'] = mean_where(m, p['pct_popular'], T2A_BAND_MIN)
+        out[f'pct_both_{band}'] = mean_where(m, p['pct_both'], T2A_BAND_MIN)
         if band != 'mid':
             for first in T2A_FIRST:
                 out[f'first{first}_{band}'] = mean_where(m, (p['above'] < first).astype(float), T2A_BAND_MIN)
     out['separation'] = out['pct_high'] - out['pct_low']
     out['separation_matched'] = out['pct_matched_high'] - out['pct_matched_low']
+    out['separation_popular'] = out['pct_popular_high'] - out['pct_popular_low']
+    out['separation_both'] = out['pct_both_high'] - out['pct_both_low']
     out['pct_min'], out['pct_max'] = np.full(n, np.inf), np.full(n, -np.inf)
     np.minimum.at(out['pct_min'], member, p['pct'])
     np.maximum.at(out['pct_max'], member, p['pct'])
+    out['pct_lists'] = mean_where(np.ones(len(y), bool), p['pct_lists'])
     views = np.bincount(table['view_member'], minlength=n).astype(float)
     with np.errstate(invalid='ignore', divide='ignore'):
         for name in T2A_GUARDS + ('candidates',):       # a member's views count once each
@@ -522,11 +570,13 @@ def t2a_measures(table, candidate, refs, owner, draws, seed):
 
     o = {'n_members': int(others.sum()), 'n_primary': int((others & np.isfinite(cv['separation'])).sum()),
          'n_hidden': int(cv['hidden'][others].sum()), 'n_outside': int(table['n_outside'][others].sum()),
-         'views': int(others[table['view_member']].sum()), 'candidates': mean(cv['candidates'], others)}
+         'views': int(others[table['view_member']].sum()), 'candidates': mean(cv['candidates'], others),
+         'both_under_min': int((others[member] & (candidate['n_both'] < T2A_BOTH_MIN)).sum())}
     for band, _, _ in T2A_BANDS:
         o[f'n_{band}'] = int(cv[f'n_{band}'][others].sum())
         o[f'members_{band}'] = int((others & (cv[f'n_{band}'] >= T2A_BAND_MIN)).sum())
     o['own_shows'], o['own_animation'] = mean(table['own_shows'], others), mean(table['own_animation'], others)
+    o['pct_lists'] = mean(cv['pct_lists'], others)
     names = [name for name in T2A_BETTER if name in cv]
     for name in names + (['brier_ref'] if 'brier_ref' in cv else []):
         o[name] = mean(cv[name], others)
@@ -538,21 +588,27 @@ def t2a_measures(table, candidate, refs, owner, draws, seed):
         at = member == owner
         sit, fr, yo = table['sitting'][at], table['franchise'][at], y[at]
         high, low = yo >= T2A_BANDS[0][1], yo <= LOW
-        kinds = (('', 'pct'), ('_matched', 'pct_matched'))
+        kinds = (('', 'pct'), ('_matched', 'pct_matched'), ('_popular', 'pct_popular'), ('_both', 'pct_both'))
         w = {'n_hidden': int(at.sum()), 'n_outside': int(table['n_outside'][owner]),
+             'both_under_min': int((candidate['n_both'][at] < T2A_BOTH_MIN).sum()),
              'views': int((table['view_member'] == owner).sum()), 'sittings': int(len(np.unique(sit))),
              'franchises': int(len(np.unique(fr))), 'candidates': {'value': stats._r(cv['candidates'][owner])},
              'own_shows': {'value': stats._r(table['own_shows'][owner])},
-             'own_animation': {'value': stats._r(table['own_animation'][owner])}}
+             'own_animation': {'value': stats._r(table['own_animation'][owner])},
+             'pct_lists': {'value': stats._r(cv['pct_lists'][owner])}}
 
         def figures(pct_of, into):
             for kind, name in kinds:
                 v = pct_of(name)
-                into[f'separation{kind}'] = stats.cluster_separation(v, high, low, sit, draws, seed)
-                into[f'separation{kind}_franchise'] = stats.cluster_separation(v, high, low, fr, draws, seed)
+                # the band minimum of members other than the owner holds here too (item 004)
+                into[f'separation{kind}'] = stats.cluster_separation(v, high, low, sit, draws, seed, T2A_BAND_MIN)
+                into[f'separation{kind}_franchise'] = stats.cluster_separation(v, high, low, fr, draws, seed,
+                                                                               T2A_BAND_MIN)
                 for band, lo, hi in T2A_BANDS:
                     m = (yo >= lo) & (yo <= hi) & np.isfinite(v)
-                    into[f'pct{kind}_{band}'] = stats.cluster_mean(v[m], sit[m], draws, seed)
+                    into[f'pct{kind}_{band}'] = stats.cluster_mean(v[m], sit[m], draws, seed) \
+                        if m.sum() >= T2A_BAND_MIN else {'value': None, 'lo': None, 'hi': None, 'n': int(m.sum()),
+                                                         'why': f'fewer than {T2A_BAND_MIN} titles in the band'}
 
         figures(lambda name: candidate[name][at], w)
         for band, lo, hi in T2A_BANDS:
@@ -568,6 +624,186 @@ def t2a_measures(table, candidate, refs, owner, draws, seed):
             for name in plain:
                 if name in rv[ref]:
                     d[name] = {'value': stats._r(cv[name][owner] - rv[ref][name][owner])}
+            w['vs'][ref] = d
+        out['owner'] = w
+    return out
+
+
+# ------------------------------------------------------------------ T2b: ranking later Want to See adds (PLAN.md 2.2)
+#
+# One view per member: the targets (later Want to See adds) stand in one list with every title the member had not
+# touched before the cutoff. Each target is placed, alone, among the list's other titles that are not targets, as a
+# hidden title is in T2a, with the same "equally well-rated", "equally popular" and "both" figures and the same
+# guards. A title the member skipped or marked Not interested after the cutoff is placed among the same titles
+# (itself left out).
+
+T2B_LATER_MIN = 3                    # later skips a member needs for their percentile and the stand-in AUC
+T2B_BETTER = {'pct': 'higher', 'first50': 'higher', 'first200': 'higher', 'pct_matched': 'higher',
+              'pct_popular': 'higher', 'pct_both': 'higher', 'later_pct': 'lower', 'auc': 'higher',
+              'top_shows': None, 'top_animation': None, 'top_shows_vs_own': None, 'top_animation_vs_own': None,
+              'top_franchise_max': None, 'top_votes_median': None}
+
+
+def t2b_view(answer, key, targets, facts):
+    """One T2b view's checked answer -> what the measures need: t2a_view's figures for the targets, and later_pct
+    (percentile of each later skip among the non-target titles, itself left out), auc_good and auc_pairs (target
+    ranked above a later skip, a tie a half: the Want to See against Skip stand-in), touched_first50 and
+    touched_listed (titles the member had touched before the cutoff among the first 50 of the whole list, and in the
+    list at all: both must be 0)."""
+    out = t2a_view({**answer, 'score': None, 'p_low': None}, key, targets, facts)
+    rank, pos, later = answer['rank'], key['pos'], key['later_pos']
+    is_candidate = np.ones(len(rank), bool)
+    is_candidate[pos] = False
+    ordered = np.sort(rank[is_candidate])
+    rl, rh = rank[later], rank[pos]
+    below, upto = np.searchsorted(ordered, rl, 'left'), np.searchsorted(ordered, rl, 'right')
+    n = len(ordered) - 1
+    out['later_pct'] = ((below + (upto - below - 1) / 2.0) / n).tolist() if n > 0 else []
+    d = rh[:, None] - rl[None, :]
+    out['auc_good'], out['auc_pairs'] = float((d > 0).sum() + 0.5 * (d == 0).sum()), int(d.size)
+    first = targets[np.argsort(-rank, kind='stable')[:T2A_TOP]]
+    out['touched_first50'] = int(np.isin(first, key['touched']).sum())
+    out['touched_listed'] = int(np.isin(targets, key['touched']).sum())
+    return out
+
+
+def t2b_table(index, keys, facts, n_members):
+    """One row per target (member, view, sitting, franchise, title), one entry per view, one per member (n_outside,
+    n_touched: targets dropped; own_shows and own_animation: the member's rated and added universe titles before
+    the cutoff)."""
+    cols = {c: [] for c in ('member', 'view', 'sitting', 'franchise', 'title')}
+    view_member, later_member = [], []
+    per = {name: np.zeros(n_members) for name in ('n_outside', 'n_touched', 'n_adds', 'own_shows', 'own_animation')}
+    for k, v in enumerate(index):
+        key, u = keys[v['vid']], v['member']
+        n = len(key['title'])
+        view_member.append(u)
+        later_member += [u] * len(key['later_pos'])
+        cols['member'].append(np.full(n, u, np.int64))
+        cols['view'].append(np.full(n, k, np.int64))
+        for c in ('sitting', 'franchise', 'title'):
+            cols[c].append(key[c])
+        for name in ('n_outside', 'n_touched', 'n_adds'):
+            per[name][u] = int(key[name])
+        own = key['own']
+        per['own_shows'][u] = facts['show'][own].mean() if len(own) else np.nan
+        per['own_animation'][u] = facts['animation'][own].mean() if len(own) else np.nan
+    table = {c: (np.concatenate(v) if v else np.zeros(0, np.int64)) for c, v in cols.items()}
+    table['view_member'] = np.array(view_member, np.int64)
+    table['later_member'] = np.array(later_member, np.int64)
+    return {**table, **per}
+
+
+def t2b_collect(answers, index):
+    """A predictor's reduced T2b answers lined up with t2b_table."""
+    per = [answers['main'][v['vid']] for v in index]
+    cat = (lambda name: np.concatenate([np.array(a[name], float) for a in per]) if per else np.zeros(0))
+    out = {name: cat(name) for name in ('pct', 'above', 'pct_matched', 'pct_popular', 'pct_both', 'n_both',
+                                        'later_pct')}
+    for name in T2A_GUARDS + ('candidates', 'auc_good', 'auc_pairs', 'touched_first50', 'touched_listed'):
+        out[name] = np.array([a['top'][name] if name in a['top'] else a[name] for a in per], float)
+    return out
+
+
+def t2b_member_values(table, p):
+    """One row of values per member (NaN where not defined)."""
+    member = table['member']
+    n = len(table['n_outside'])
+
+    def mean_of(who, values, least=1):
+        ok = np.isfinite(values)
+        k = np.bincount(who[ok], minlength=n).astype(float)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            return np.where(k >= least, np.bincount(who[ok], values[ok], minlength=n) / k, np.nan)
+
+    out = {'targets': np.bincount(member, minlength=n).astype(float)}
+    out['pct'] = mean_of(member, p['pct'])
+    for first in T2A_FIRST:
+        out[f'first{first}'] = mean_of(member, (p['above'] < first).astype(float))
+    for name in ('pct_matched', 'pct_popular', 'pct_both'):
+        out[name] = mean_of(member, p[name])
+    out['both_under_min'] = np.bincount(member, (p['n_both'] < T2A_BOTH_MIN).astype(float), minlength=n)
+    out['pct_min'], out['pct_max'] = np.full(n, np.inf), np.full(n, -np.inf)
+    np.minimum.at(out['pct_min'], member, p['pct'])
+    np.maximum.at(out['pct_max'], member, p['pct'])
+    out['later_pct'] = mean_of(table['later_member'], p['later_pct'], T2B_LATER_MIN)
+    vm = table['view_member']
+    for name in T2A_GUARDS + ('candidates', 'touched_first50', 'touched_listed'):
+        out[name] = mean_of(vm, p[name])
+    later = np.bincount(table['later_member'], minlength=n)
+    good, pairs = np.bincount(vm, p['auc_good'], minlength=n), np.bincount(vm, p['auc_pairs'], minlength=n)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        out['auc'] = np.where((later >= T2B_LATER_MIN) & (pairs > 0), good / pairs, np.nan)
+    out['top_shows_vs_own'] = out['top_shows'] - table['own_shows']
+    out['top_animation_vs_own'] = out['top_animation'] - table['own_animation']
+    return out
+
+
+def t2b_measures(table, candidate, refs, owner, draws, seed):
+    """As t2a_measures, for T2b: members other than the owner with intervals and paired differences; the owner in
+    plain figures, an interval over add sittings only where stats allows one, and franchises drawn again."""
+    member = table['member']
+    cv = t2b_member_values(table, candidate)
+    rv = {name: t2b_member_values(table, p) for name, p in refs.items()}
+    n = len(cv['targets'])
+    is_owner = np.zeros(n, bool)
+    if owner is not None and owner < n:
+        is_owner[owner] = True
+    others = (cv['targets'] > 0) & ~is_owner
+    out = {'primary': 'pct', 'first': list(T2A_FIRST), 'score_window': T2A_SCORE_WINDOW,
+           'votes_factor': T2A_VOTES_FACTOR, 'both': [T2A_BOTH_SCORE, T2A_BOTH_FACTOR, T2A_BOTH_MIN],
+           'top': T2A_TOP, 'later_min': T2B_LATER_MIN}
+
+    def mean(values, who):
+        v = values[who & np.isfinite(values)]
+        m = stats.mean_interval(v, draws, seed)
+        m['se'] = stats._r(v.std(ddof=1) / np.sqrt(len(v))) if len(v) > 1 else None
+        return m
+
+    o = {'n_members': int(others.sum()), 'n_targets': int(cv['targets'][others].sum()),
+         'n_outside': int(table['n_outside'][others].sum()), 'n_touched': int(table['n_touched'][others].sum()),
+         'n_adds': int(table['n_adds'][others].sum()), 'n_later': int(others[table['later_member']].sum()),
+         'members_later': int((others & np.isfinite(cv['later_pct'])).sum()),
+         'both_under_min': int(cv['both_under_min'][others].sum()),
+         'touched_first50': int(np.nansum(cv['touched_first50'][others])),
+         'touched_listed': int(np.nansum(cv['touched_listed'][others])),
+         'candidates': mean(cv['candidates'], others),
+         'own_shows': mean(table['own_shows'], others), 'own_animation': mean(table['own_animation'], others)}
+    for name in T2B_BETTER:
+        o[name] = mean(cv[name], others)
+    o['vs'] = {ref: {name: _t2a_pair(cv[name][others], r[name][others], draws, seed, T2B_BETTER[name])
+                     for name in T2B_BETTER} for ref, r in rv.items()}
+    out['others'] = o
+
+    if is_owner.any() and cv['targets'][owner] > 0:
+        at = member == owner
+        sit, fr = table['sitting'][at], table['franchise'][at]
+        w = {'n_targets': int(at.sum()), 'n_outside': int(table['n_outside'][owner]),
+             'n_touched': int(table['n_touched'][owner]), 'n_adds': int(table['n_adds'][owner]),
+             'n_later': int((table['later_member'] == owner).sum()), 'sittings': int(len(np.unique(sit))),
+             'franchises': int(len(np.unique(fr))), 'both_under_min': int(cv['both_under_min'][owner]),
+             'touched_first50': int(cv['touched_first50'][owner]), 'touched_listed': int(cv['touched_listed'][owner]),
+             'candidates': {'value': stats._r(cv['candidates'][owner])},
+             'own_shows': {'value': stats._r(table['own_shows'][owner])},
+             'own_animation': {'value': stats._r(table['own_animation'][owner])}}
+
+        def figures(values_of, into):
+            for name in ('pct', 'pct_matched', 'pct_popular', 'pct_both'):
+                v = values_of(name)
+                ok = np.isfinite(v)
+                into[name] = stats.cluster_mean(v[ok], sit[ok], draws, seed)
+                into[f'{name}_franchise'] = stats.cluster_mean(v[ok], fr[ok], draws, seed)
+
+        figures(lambda name: candidate[name][at], w)
+        plain = [name for name in T2B_BETTER if not name.startswith('pct')]
+        for name in plain:
+            w[name] = {'value': stats._r(cv[name][owner])}
+        w['vs'] = {}
+        for ref, r in refs.items():
+            d = {}
+            figures(lambda name: candidate[name][at] - r[name][at], d)
+            for name in plain:
+                d[name] = {'value': stats._r(cv[name][owner] - rv[ref][name][owner])}
             w['vs'][ref] = d
         out['owner'] = w
     return out

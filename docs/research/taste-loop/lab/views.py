@@ -11,9 +11,9 @@ answer file, the pack or the gate.
 
 What `predict(view)` receives (built from those files by sandbox.py):
 
-    view['task']                      'T1' or 'T2a'
+    view['task']                      'T1', 'T2a' or 'T2b'
     view['targets']['title']          title rows to predict: no rating, no time, no order (T1: sorted by title key;
-                                      T2a: one shuffled list)
+                                      T2a and T2b: one shuffled list)
     view['me']['ratings']             title, score, created_at, sitting, position, in_bulk, provenance, edited
     view['me']['want_to_see']         title, created_at, in_bulk
     view['me']['skip']                title, created_at
@@ -41,7 +41,13 @@ and Not interested row, with the hidden titles removed from each of those lists.
 and every universe title the member has not rated, in one shuffled list: nothing in the view says which is which.
 There is no moment in time in T2a: the history is as of the pull.
 
-    python3 views.py T1|T2a <member hash prefix | owner> <out folder>     # writes the views of one member, to look at
+T2b (PLAN.md 2.2), ranking later Want to See adds: one view per member. Some of the member's Want to See adds are
+targets (split `sitting`: the adds in the last 40% of the member's add sittings; split `order`: the last 40% of the
+member's adds in entry order). The view holds what the member wrote before the first target, and as targets every
+candidate-universe title the member had not rated, added, skipped or marked Not interested by then, in one
+shuffled list. A sitting of 10 or more adds is a transfer: its adds are never targets.
+
+    python3 views.py T1|T2a|T2b <member hash prefix | owner> <out folder>     # writes the views of one member
 """
 import hashlib
 import json
@@ -70,6 +76,12 @@ T2A_MIN_FOLDS = 5                    # and at most a fifth of the member's rated
 T2A_MIN_RATINGS = 20                 # T2a: members with 20 or more ratings,
 T2A_MIN_HIGH = 5                     # at least 5 of them rated
 T2A_HIGH = 8                         # 8 or more
+T2A_CHECK_FOLD = 5                   # T2a fold check (item 004): at most 5 hidden titles in a view,
+T2A_CHECK_RATINGS = 60               # for members other than the owner with fewer than 60 ratings
+T2B_TRANSFER = 10                    # T2b: a sitting of this many Want to See adds or more is a transfer
+T2B_SHARE = 0.4                      # T2b: the last 40% of the sittings (or of the adds) give the targets
+T2B_MIN_TARGETS = 3                  # T2b: a member needs this many targets in the pool
+SPLITS = ('sitting', 'order')
 
 
 # ------------------------------------------------------------------ titles
@@ -414,12 +426,12 @@ def t2a_universe(titles):
     return titles['in_pool'] & titles['has_fingerprint']
 
 
-def t2a_folds(title_keys, member_hash, seed=SEED):
+def t2a_folds(title_keys, member_hash, seed=SEED, size=T2A_FOLD, least=T2A_MIN_FOLDS):
     """(fold number per title, number of folds) for a member's rated universe titles: a fixed pseudo-random order
-    of the titles, dealt round. Folds of T2A_FOLD titles, and never fewer than T2A_MIN_FOLDS folds, so a view hides
-    at most 20 titles and at most a fifth of them."""
+    of the titles, dealt round. Folds of at most `size` titles, and never fewer than `least` folds: a view hides at
+    most 20 titles, and with 5 folds a fifth of them rounded up (21 titles give folds of 5, 4, 4, 4, 4: 23.8%)."""
     n = len(title_keys)
-    k = max(T2A_MIN_FOLDS, -(-n // T2A_FOLD))
+    k = max(least, -(-n // size))
     order = np.argsort([hashlib.sha256(f'{seed}|T2a|{member_hash}|{int(key)}'.encode()).digest()
                         for key in title_keys], kind='stable')
     fold = np.empty(n, np.int64)
@@ -458,7 +470,14 @@ def _t2a_arrays(c, pack, u, mine, mine_title, hidden, unrated, vid):
     arrays['task'] = np.array('T2a')
     arrays['schema'] = np.array(SCHEMA)
     arrays['provenance_names'] = np.array(pack.provenance_names)
-    return arrays, history, place[len(unrated):]
+    # the unrated titles still on the member's Want to See, Skip or Not interested list are certainly not hidden:
+    # they stay in the list (the contract ranks every unrated title) and the measures leave them out (item 004)
+    listed = set()
+    for name, (table, trow, _) in c.side.items():
+        listed |= set(trow[table['member'] == u].tolist())
+    listed_rows = np.array(sorted(listed & set(unrated.tolist())), np.int64)
+    listed_pos = np.sort(place[np.searchsorted(unrated, listed_rows)]) if len(listed_rows) else np.zeros(0, np.int64)
+    return arrays, history, place[len(unrated):], listed_pos
 
 
 def t2a_eligible(c):
@@ -469,18 +488,25 @@ def t2a_eligible(c):
     return np.flatnonzero((counts >= T2A_MIN_RATINGS) & (high >= T2A_MIN_HIGH))
 
 
-def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, write=True):
+def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, write=True, fold_check=False):
     """Build the T2a views of the given members (rows in pack.members; default: every eligible member).
+
+    fold_check (item 004): only the eligible members other than the owner with fewer than T2A_CHECK_RATINGS
+    ratings, and folds of at most T2A_CHECK_FOLD titles.
 
     Returns (index, keys, digest) as build_t1 does. One view per fold: kind 'main', block and fold the fold number.
     keys[vid] holds what the measures need and no view holds: title (the hidden title rows), pos (where each stands
     in the view's target list), score (the hidden ratings), sitting, franchise, history_score (the visible ratings),
-    n_targets (the length of the target list) and n_outside (the member's rated titles outside the universe, which
-    are history in every view and never a target).
+    n_targets (the length of the target list), n_outside (the member's rated titles outside the universe, which
+    are history in every view and never a target) and listed_pos (where the member's unrated Want to See, Skip and
+    Not interested titles stand: the measures leave them out).
     """
     assert others_mode in ('all', 'no-owner')
     c = _tables(pack, None, shuffle_seed)
     eligible = t2a_eligible(c)
+    if fold_check:
+        counts = np.bincount(c.own['member'], minlength=len(c.tier))
+        eligible = eligible[(eligible != c.owner) & (counts[eligible] < T2A_CHECK_RATINGS)]
     if members is not None:
         eligible = np.array([m for m in eligible if m in set(int(x) for x in members)], dtype=np.int64)
     if write:
@@ -492,7 +518,8 @@ def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, 
         if len(rated) == 0:
             continue
         mh = pack.members['hash'][u]
-        fold, k = t2a_folds(mine['title_key'][rated], mh)
+        fold, k = t2a_folds(mine['title_key'][rated], mh, size=T2A_CHECK_FOLD, least=1) if fold_check else \
+            t2a_folds(mine['title_key'][rated], mh)
         arrays = _others_arrays(c, u, others_mode)
         o_file, o_digest = os.path.join(folder, 'others', f'{_vid(mh, "T2a", others_mode)}.bin'), sha256_arrays(arrays)
         if write:
@@ -501,8 +528,8 @@ def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, 
             hidden = rated[fold == f]
             if len(hidden) == 0:
                 continue
-            vid = _vid(mh, 'T2a', f, 'main')
-            arrays, history, pos = _t2a_arrays(c, pack, u, mine, mine_title, hidden, unrated, vid)
+            vid = _vid(mh, 'T2a', f, 'main', 'check') if fold_check else _vid(mh, 'T2a', f, 'main')
+            arrays, history, pos, listed_pos = _t2a_arrays(c, pack, u, mine, mine_title, hidden, unrated, vid)
             digests[vid] = sha256_arrays(arrays) + o_digest
             if write:
                 d = os.path.join(folder, 'views', vid)
@@ -517,7 +544,7 @@ def build_t2a(pack, folder, members=None, others_mode='all', shuffle_seed=None, 
                          'franchise': c.franchise[mine_title[hidden]],
                          'history_score': mine['score'][history].astype(np.int64),
                          'n_targets': np.array(len(arrays['targets.title']), np.int64),
-                         'n_outside': np.array(int((~in_universe).sum()), np.int64)}
+                         'n_outside': np.array(int((~in_universe).sum()), np.int64), 'listed_pos': listed_pos}
     h = hashlib.sha256()
     for vid in sorted(digests):
         h.update(f'{vid}:{digests[vid]}\n'.encode())
@@ -529,9 +556,131 @@ def t2a_full_view(pack, u, titles, others_mode='all'):
     title the member has not rated. For top.py; no file is written."""
     c = _tables(pack)
     mine, mine_title, _, unrated = _t2a_member(c, u)
-    arrays, _, _ = _t2a_arrays(c, pack, u, mine, mine_title, np.zeros(0, np.int64), unrated,
+    arrays, _, _, _ = _t2a_arrays(c, pack, u, mine, mine_title, np.zeros(0, np.int64), unrated,
                                _vid(pack.members['hash'][u], 'T2a', 'full'))
     return view_of(arrays, _others_arrays(c, u, others_mode), titles)
+
+
+# ------------------------------------------------------------------ T2b: ranking later Want to See adds
+
+def t2b_targets(sitting, in_bulk, split):
+    """Which of a member's Want to See adds (in entry order) are targets. A sitting of T2B_TRANSFER or more adds is
+    a transfer and a bulk write is not a choice: neither is ever a target. `sitting`: the adds of the last 40% of the
+    member's add sittings (rounded to the nearest, at least one; transfers count as sittings), for a member with two
+    or more add sittings. `order`: the last 40% of the member's other adds in entry order (rounded to the nearest)."""
+    sits, counts = np.unique(sitting, return_counts=True)
+    may = ~np.isin(sitting, sits[counts >= T2B_TRANSFER]) & ~in_bulk
+    target = np.zeros(len(sitting), bool)
+    if split == 'sitting':
+        order = list(dict.fromkeys(sitting.tolist()))
+        if len(order) >= 2:
+            k = max(1, int(np.floor(T2B_SHARE * len(order) + 0.5)))
+            target = np.isin(sitting, order[-k:]) & may
+    else:
+        idx = np.flatnonzero(may)
+        k = int(np.floor(T2B_SHARE * len(idx) + 0.5))
+        if k:
+            target[idx[len(idx) - k:]] = True
+    return target
+
+
+def build_t2b(pack, folder, members=None, others_mode='before', split='sitting', shuffle_seed=None, write=True):
+    """Build the T2b views (one per kept member). Returns (index, keys, digest) as build_t1 does.
+
+    keys[vid]: title (the target title rows, in list order), pos (their places in the target list), sitting (their
+    add sitting), franchise, later_pos (places of the titles the member skipped or marked Not interested at or after
+    the cutoff, targets left out), touched (title rows the member had rated, added, skipped or marked Not interested
+    before the cutoff; none of them is in the list), own (the member's rated and added titles before the cutoff that
+    lie in the universe), history_score, n_targets (the length of the list), n_outside (targets dropped: outside the
+    universe), n_touched (targets dropped: touched before the cutoff), n_adds.
+
+    shuffle_seed (control): the views are the real ones, but `pos` names as many random non-target titles of the
+    list as there are targets.
+    """
+    assert others_mode in ('all', 'no-owner', 'before') and split in SPLITS
+    c = _tables(pack)
+    T, w = c.T, pack.wishlist
+    universe = t2a_universe(T)
+    w_row = pack.title_index(w['title_key'])
+    candidates = np.flatnonzero((c.tier == 0) & (np.bincount(w['member'], minlength=len(c.tier)) > 0))
+    if members is not None:
+        candidates = np.array([m for m in candidates if m in set(int(x) for x in members)], dtype=np.int64)
+    if write:
+        os.makedirs(os.path.join(folder, 'others'), exist_ok=True)
+    index, keys, digests = [], {}, {}
+    for u in candidates.tolist():
+        at = np.flatnonzero(w['member'] == u)
+        at = at[np.lexsort((w['position'][at], w['created_at'][at]))]
+        target = t2b_targets(w['sitting'][at], w['in_bulk'][at].astype(bool), split)
+        if target.sum() < T2B_MIN_TARGETS:
+            continue
+        cutoff = int(w['created_at'][at][target].min())
+        mine, mine_title, _, _ = _t2a_member(c, u)
+        touched = set(mine_title[mine['created_at'] < cutoff].tolist())
+        for name, (table, trow, _) in c.side.items():
+            touched |= set(trow[(table['member'] == u) & (table['created_at'] < cutoff)].tolist())
+        rows = w_row[at][target]
+        inside = (rows >= 0) & universe[np.maximum(rows, 0)]
+        fresh = np.array([r >= 0 and r not in touched for r in rows.tolist()], bool)
+        chosen = np.unique(rows[inside & fresh])
+        if len(chosen) < T2B_MIN_TARGETS:
+            continue
+        mh = pack.members['hash'][u]
+        vid = _vid(mh, 'T2b', split, 'main')
+        history = np.flatnonzero((mine['created_at'] < cutoff) & (mine['updated_at'] < cutoff))
+        arrays = _flat('me.ratings', _rows(mine, history, RATING_COLS, mine_title))
+        for name, (table, trow, cols) in c.side.items():
+            arrays.update(_flat(f'me.{name}', _rows(table, (table['member'] == u) & (table['created_at'] < cutoff),
+                                                     cols, trow)))
+        listed = universe.copy()
+        listed[list(touched)] = False
+        listed = np.flatnonzero(listed).astype(np.int32)
+        order = np.random.default_rng([SEED, int(vid, 16)]).permutation(len(listed))
+        arrays['targets.title'] = listed[order]
+        place = np.empty(len(listed), np.int64)
+        place[order] = np.arange(len(listed))
+        arrays['task'] = np.array('T2b')
+        arrays['schema'] = np.array(SCHEMA)
+        arrays['provenance_names'] = np.array(pack.provenance_names)
+        pos = np.sort(place[np.searchsorted(listed, chosen)])
+        if shuffle_seed is not None:                  # control: as many random non-target titles of the list
+            others_pos = np.setdiff1d(np.arange(len(listed)), pos)
+            pos = np.sort(np.random.default_rng([shuffle_seed, int(vid, 16)]).choice(others_pos, len(pos), False))
+        later = set()
+        for name in ('skip', 'not_interested'):
+            table, trow, _ = c.side[name]
+            later |= set(trow[(table['member'] == u) & (table['created_at'] >= cutoff)].tolist())
+        later_rows = np.array(sorted((later - set(chosen.tolist())) & set(listed.tolist())), np.int64)
+        later_pos = np.sort(place[np.searchsorted(listed, later_rows)]) if len(later_rows) else np.zeros(0, np.int64)
+        others = _others_arrays(c, u, others_mode, cutoff if others_mode == 'before' else None)
+        o_file = os.path.join(folder, 'others', f'{vid}.bin')
+        o_digest = sha256_arrays(others)
+        digests[vid] = sha256_arrays(arrays) + o_digest
+        if write:
+            _save(o_file, others)
+            d = os.path.join(folder, 'views', vid)
+            os.makedirs(d)
+            _save(os.path.join(d, 'view.bin'), arrays)
+            os.link(o_file, os.path.join(d, 'others.bin'))
+        title = arrays['targets.title'][pos]
+        sit_of = dict(zip(w_row[at][target].tolist(), w['sitting'][at][target].tolist()))
+        own = np.array(sorted(t for t in set(mine_title[mine['created_at'] < cutoff].tolist())
+                              | set(w_row[at][w['created_at'][at] < cutoff].tolist()) if t >= 0 and universe[t]),
+                       np.int64)
+        index.append({'vid': vid, 'kind': 'main', 'member': u, 'block': 0, 'parent': None, 'fold': None})
+        keys[vid] = {'title': title.astype(np.int64), 'pos': pos,
+                     'sitting': np.array([sit_of.get(t, -1) for t in title.tolist()], np.int64),
+                     'franchise': c.franchise[title], 'later_pos': later_pos,
+                     'touched': np.array(sorted(touched), np.int64), 'own': own,
+                     'history_score': mine['score'][history].astype(np.int64),
+                     'n_targets': np.array(len(listed), np.int64),
+                     'n_outside': np.array(int((~inside).sum()), np.int64),
+                     'n_touched': np.array(int((inside & ~fresh).sum()), np.int64),
+                     'n_adds': np.array(len(at), np.int64)}
+    h = hashlib.sha256()
+    for vid in sorted(digests):
+        h.update(f'{vid}:{digests[vid]}\n'.encode())
+    return index, keys, h.hexdigest()
 
 
 def n_targets(key):
@@ -596,7 +745,7 @@ def load_titles(path):
 
 if __name__ == '__main__':
     from pack import Pack
-    if len(sys.argv) != 4 or sys.argv[1] not in ('T1', 'T2a'):
+    if len(sys.argv) != 4 or sys.argv[1] not in ('T1', 'T2a', 'T2b'):
         sys.exit(__doc__)
     p = Pack()
     who = sys.argv[2]
@@ -604,7 +753,7 @@ if __name__ == '__main__':
     out = os.path.abspath(sys.argv[3])
     if os.path.exists(out):
         shutil.rmtree(out)
-    index, keys, digest = (build_t1 if sys.argv[1] == 'T1' else build_t2a)(p, out, members=rows)
+    index, keys, digest = {'T1': build_t1, 'T2a': build_t2a, 'T2b': build_t2b}[sys.argv[1]](p, out, members=rows)
     export_titles(p, os.path.join(out, 'titles.npz'))
     write_keys(out.rstrip('/') + '-keys.bin', index, keys)
     print(f'{len(index)} views in {out}/views, titles in {out}/titles.npz, answers in {out.rstrip("/")}-keys.bin')

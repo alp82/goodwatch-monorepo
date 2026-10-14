@@ -210,8 +210,9 @@ view per rating, so a view hides a fold of titles.
 - **Candidate universe:** titles with `in_pool` and `has_fingerprint`: 60,759 of the 72,101.
 - **Folds.** A member's rated titles that lie in the universe are dealt into folds by a seeded shuffle; a view hides
   one fold. **Decided here**, and a change to the letter of the brief ("folds of 20"): a fold holds at most 20
-  titles and there are never fewer than 5 folds, so a view hides at most 20 titles and at most a fifth of the
-  member's rated titles. The number of folds is the larger of 5 and the count divided by 20, rounded up. With
+  titles and there are never fewer than 5 folds, so a view hides at most 20 titles and, with 5 folds, a fifth of
+  the member's rated titles rounded up: 21 titles give folds of 5, 4, 4, 4 and 4, so one view hides 23.8% (wording
+  corrected in item 004). The number of folds is the larger of 5 and the count divided by 20, rounded up. With
   folds of 20 alone, a member with 20 rated titles would have one view that hides every rating, and the 44 of the
   61 other members with 80 or fewer rated universe titles would have a quarter to all of their ratings hidden at
   once; the test is meant to stand in for hiding one rating. For the owner the rule gives the brief's 50 views.
@@ -224,9 +225,19 @@ view per rating, so a view hides a fold of titles.
   hidden.
 - **Targets:** the hidden titles and every universe title the member has not rated, about 60,700 in a view, in one
   list shuffled with a seed made from the view. The view holds the list and nothing else about a target.
-  **Decided here**, following the brief: a title the member has not rated is a candidate also when it is on the
-  member's Want to See, Skip or Not interested list. So a target that stands on one of the member's lists is known
-  not to be hidden; nothing marks a hidden title.
+  **Changed in item 004, replacing decision 4 of item 003** (Sol 6.1's review: blocking). A title the member has
+  not rated but keeps on their Want to See, Skip or Not interested list is certainly not hidden (hidden titles are
+  removed from those lists). It stays in the target list, since the contract ranks every unrated title, but every
+  measure leaves it out: it is not in the comparison set a hidden title is placed in, and not among the first 50
+  the guards read (`listed_pos` in the answers). A scorer that pushes listed titles down therefore gains nothing.
+  The leak canary tries exactly that (section 11). Under item 003's rule its hidden titles would have stood at a
+  mean percentile of 0.501 (others) and 0.503 (owner) instead of 0.5. Effect of the change on the item 003
+  figures, members other than the owner: every separation and band percentile moved by 0.001 or less (the largest
+  separation change: B1, from 0.0858 to 0.0856; owner separations by 0.0003 or less); the first-50 guards moved
+  more, because listed titles are popular: the median vote count of B3's first 50 fell from 142,136 to 120,513, of
+  BP's from 1.62 million to 1.47 million; BP's share of titles rated 8 or more in the first 50 rose from 0.388 to
+  0.444 and of titles rated 5 or less from 0.264 to 0.314. The same principle holds in T2b, where every title the
+  member had touched before the cutoff is out of the list altogether.
 - **Other members:** `all` (the default, as in T1: the pooled rungs see other members' ratings of the hidden title,
   as the product would) or `no-owner`. `before` is refused.
 - On this pack: 434 views (50 of the owner), 5,780 hidden titles (992 of the owner), 26.3 million ranks per rung.
@@ -242,14 +253,24 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Bands** by the member's real rating: 8 or more, 6 to 7, 5 or less. Per member, the mean percentile of a band
   and the share of the band in the first 50 and 200. **Decided here:** a band counts for a member only with 5 or
   more titles in it, for the band's own figures as well as for the separation (the brief asks it of the
-  separation).
+  separation). **Changed in item 004** (Sol 6.1's review): the owner's figures keep the same minimum, for band
+  figures, separations, paired differences and the matched figures (`stats.cluster_separation` takes the minimum);
+  before, the owner's separation needed one title in each band. On this pack the owner has 94 or more titles in
+  every band, so no owner figure changed.
 - **Primary: separation.** Mean percentile of the titles rated 8 or more minus that of the titles rated 5 or less,
   per member, for members with both bands. 26 of the 61 other members count; all 61 have the high band, 49 the
   middle band. The paired difference to a reference is the rung's separation minus the reference's, per member.
 - **Among equally well-rated titles:** the same percentile, counted only against candidates whose GoodWatch score
   lies within 3 points of the hidden title's. **Decided here:** the score is `goodwatch_overall_score` on its 0 to
   100 scale and "within 3" includes 3; a hidden title typically has several thousand such candidates. The same
-  band means and the same separation are reported on it.
+  band means and the same separation are reported on it. It reduces one confound, a title's public quality; it
+  does not remove popularity (vote count alone, BP, keeps a matched separation of 0.014).
+- **Among equally popular titles** (item 004): the same, counted only against candidates whose vote count
+  (`goodwatch_overall_score_voting_count`) lies within a factor of 1.5 of the hidden title's, either way, the edge
+  included (on a log scale). **Both at once:** within 3 GoodWatch points and within a factor of 2 in votes; a
+  hidden title counts only with 50 or more such candidates. 1,506 of the 4,788 hidden titles of other members
+  (31%) and 234 of the owner's 992 (24%) have fewer and are left out of "both"; most titles have 50 or more, so the
+  figure is reported. The bands were fixed in the brief and before any rung ran; none was changed.
 - **Guards**, read on the first 50 candidates of every view (hidden titles left out, ties in the order of the
   view's list), averaged over a member's views: the share of shows and of animation, each also minus the member's
   own share among their rated universe titles; the largest number of titles from one franchise; the median vote
@@ -262,6 +283,11 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Others:** the mean over members with a 95% interval from drawing members again (10,000 draws, the same seed),
   and for every reference the paired difference, its interval, the members improved and the smallest detectable
   effect, with the functions T1 uses.
+- **Fold check** (item 004, `--fold-check`, Sol 6.1's review): T2a hides folds, not one title, and a fold can
+  take a sparse member's taste below B2's five liked titles. For the members other than the owner with fewer than
+  60 ratings (40 members, 10 of them with both bands) the check builds folds of at most 5 titles and reruns B1,
+  B2, B3 and B5; `table.py T2a` shows it beside the main figure and never mixes it into the main rows. T2a is a
+  fold test; differences between rungs are read as such, not as leave-one-out results.
 - **Owner:** plain figures. An interval over sittings follows the rule of section 8 (`stats.cluster_separation`
   for the separation: the mean over one group of titles minus the mean over another, whole sittings drawn again);
   on this pack the largest sitting holds 34% of the titles rated 8 or more or 5 or less, so there is none.
@@ -282,7 +308,84 @@ of the view are not part of that comparison (they are titles the member has watc
   titles nobody rated. Their first 50 candidates have a median vote count of 3,600 (B4) and 6,800 (B5).
 - **Not built for T2a:** the gate (`gate.py` refuses a task other than T1 and uses no look). A registered T2a run
   would be accepted by `run.py` with `task: T2a` in `PREREG.md`; no test covers it.
-- **Time** on two processes, this pack: B1 105 s, BP 65 s, B2 133 s, B3 169 s, B4 379 s, B5 522 s.
+- **Time** on two processes, this pack: B1 105 s, BP 65 s, B2 133 s, B3 169 s, B4 379 s, B5 522 s (item 003). In
+  item 004, on a machine with its swap full: B1 68 s, BP 52 s, B2 151 s, B3 228 s, B4 467 s, B5 382 s; two earlier
+  B4 and B5 attempts were stopped by the 10-minute limit of the session that ran them.
+- **Resuming** (item 004): a T2a or T2b run stopped by its time limit leaves the answers of the batches it finished
+  (`<stored answers>.part`), and the next run of the same file on exactly the same views and answers (the cache
+  key: views digest, title digest, harness hash and a digest of the answers) starts where it stopped; the ledger
+  line says how many views it took over (`resumed`). Only explore, ladder and control runs store answers, so
+  registered, gate and verify runs never resume. The cache key includes the answers since item 004, because a
+  reduced answer depends on them (the T2b shuffled control has the real views and other targets).
+
+## 4b. Task T2b: ranking later Want to See adds
+
+**Item 004.** Written down before any rung ran: how many members each split rule keeps on the pack of October 13,
+2026 (tier A; a member needs 3 or more targets in the candidate pool, not touched before the cutoff).
+
+| Split rule | Members kept | Of them others | Targets | Owner's targets |
+|---|---:|---:|---:|---:|
+| `sitting` (primary): adds in the last 40% of the member's add sittings | 4 | 3 | 124 | 80 |
+| `order`: the last 40% of the member's non-transfer adds in entry order | 10 | 9 | 155 | 87 |
+
+Why so few: a sitting of 10 or more adds is a transfer (history only), and 992 of the 1,573 tier A adds lie in
+such sittings; only 161 of them are bulk writes (5 or more within 2 seconds). 11 tier A members have adds in two or
+more sittings. For information only, not built and not run: if only bulk writes were transfers, the `sitting` rule
+would keep 4 members and the `order` rule 28.
+
+### Views (`views.build_t2b`, one per member)
+
+- **Members:** tier A members with Want to See adds. **Targets** (`views.t2b_targets`): with the adds in entry
+  order (write time, then position), a sitting of 10 or more adds is a transfer and its adds are never targets.
+  **Decided here:** a bulk write (5 or more adds within 2 seconds) is never a target either, as in T1 (on this pack
+  every bulk add lies in a transfer, so this removes nothing). Split `sitting` (the primary T2b): the adds in the
+  last 40% of the member's add sittings; **decided here:** transfers count as sittings, 40% is rounded to the
+  nearest whole sitting and is at least one, and a member needs two or more add sittings (with one there is no
+  later visit). Split `order` (`--split order`, reported apart: learning from the adds made earlier in the same
+  visit): the last 40% of the member's other adds, rounded to the nearest.
+- **Cutoff:** the write time of the first target. **History:** the member's ratings written before the cutoff and
+  not edited since (as in T1), and their Want to See, Skip and Not interested rows written before it.
+- **The list:** every title of the candidate universe (in the pool, with a fingerprint) that the member had not
+  rated, added, skipped or marked Not interested before the cutoff, shuffled with a seed made from the view.
+  Targets are dropped and counted when they lie outside the universe or were touched before the cutoff
+  (**decided here**: a later add of a title the member had already rated is not a choice of an unwatched title);
+  a member needs 3 targets after that. Titles the member added after the cutoff that are not targets, and titles
+  rated after it, stay in the list as ordinary titles.
+- **Other members:** `before` by default (their rows written before the cutoff, ratings not edited since); `all`
+  is reported apart; `no-owner` works. Watch tables stay out of views.
+
+### Measures
+
+- **Percentile** of each target among the list's titles that are not targets (a tie a half; 1.0 the top), and the
+  member's mean: the primary measure, paired against B2 (**decided here:** the other targets are left out of a
+  target's comparison, as the other hidden titles are in T2a). In the first 50 and 200, equally well-rated,
+  equally popular and both, as in T2a.
+- **Guards:** the first 50 titles that are not targets (as in T2a): shows and animation against the member's own
+  mix (**decided here:** their rated and added universe titles before the cutoff), the largest franchise count,
+  the median vote count. **Touched titles:** how many titles touched before the cutoff stand in a first 50 and in
+  the list at all; both must be 0, and are 0 in every run. **Later skips:** the mean percentile of the titles the
+  member skipped or marked Not interested at or after the cutoff (targets left out; itself left out of its
+  comparison), for members with 3 or more (**decided here**). **Want to See against Skip**, a stand-in: the chance
+  a target ranks above such a title, a tie a half, members with 3 or more such titles.
+- **Owner:** plain figures; an interval over the targets' add sittings where section 8 allows one, and the
+  figure with whole franchises drawn again beside it. On this pack the owner's 80 targets lie in 55 sittings, so
+  that interval exists.
+- No calibrator, no score, no gate, no planted effect.
+
+### Controls
+
+- `shuffled.py --task T2b --split sitting|order`: the real views, each member's targets swapped for as many random
+  titles of the list that are not targets (`build_t2b(shuffle_seed=...)`). Rule as for T2a (section 11).
+- `leak.py --task T2b`: the canary also looks for the member's later Want to See adds (in the pack's wishlist and
+  in the answer file's `pos` column). Pass: every target of every member at percentile 0.5 exactly, no touched title
+  in any list, attempts reported. A test shows it finds every target on a made-up pack when nothing confines it.
+
+### Running
+
+`lab/run.sh <rung> --task T2b --tier A --mode ladder --item 004 [--split sitting|order] [--others before|all]`.
+A run takes seconds: 4 views (`sitting`) or 10 (`order`). **Decided here:** the ladder ran in mode `ladder` (no
+budget; the only mode `table.py` reads), not `explore` as the brief says: explore lines are candidates' lines and
+no table would read them.
 
 ## 5. The contract
 
@@ -520,17 +623,23 @@ a rank-only candidate, seconds per predictor, peak memory.
   - `contract.py`: a predictor that returns a bare array. Pass: the run fails and has no measures.
   - `clash.py`: two files named `best.py`, one answering 1, one answering 10, each run against B0. Pass: each gets
     its own result (for every member the two errors add up to 9).
-  - **Item 003, `shuffled.py --task T2a`:** the same shuffle through the hidden-title test, B2 first. Pass: for
-    every rung the separation and the separation among equally well-rated titles are level with zero, for others
-    and for the owner. **Decided here:** "level with zero" is that a two-sided test against zero does not reject
-    at 0.001: Student's t over the per-member separations for others; for the owner the figure over the spread of
-    the separation with whole franchises drawn again, on the normal curve. The level is 0.001 because 24 figures
-    are checked at once; with true zeros the control fails about once in forty times. A 3-standard-error rule
-    written first failed on the made-up pack, where a handful of members give an unreliable standard error.
+  - **`shuffled.py --task T2a` and `--task T2b`. Changed in item 004** (Sol 6.1's review: item 003's rule, a test
+    at 0.001, could pass a bias as large as the win floor). Every rung runs on three independent shuffles (seeds
+    20261013, 20261014, 20261015). Figures: T2a, the separation and the separation among equally well-rated
+    titles; T2b, the mean percentile minus 0.5 and the paired difference to B2; each for others (a member's figure
+    is the mean of the three shuffles; interval drawn over members) and for the owner (the mean of the three
+    franchise figures, their standard errors combined, a normal interval; not judged where the owner's data give
+    no standard error). **Pass** only when every judged figure's 95% interval lies within plus or minus 0.015,
+    half the T2a and T2b win floor, fixed before any result; otherwise **inconclusive**. The widest figure is
+    reported, and figures whose interval lies wholly outside the band are named (no third verdict: with few
+    members that happens by chance, as the made-up pack of the tests shows). `--seed` with `--only` runs one
+    shuffle per call.
   - **Item 003, `leak.py --task T2a`:** the canary on T2a views, behind the same boundary. Pass: for every member
     its error on the hidden titles equals B0's and every hidden title stands at percentile 0.5 exactly, and the
     attempts are reported. For that the canary changed (its pin too): a title whose rating it finds now also gets
-    rank 1, all others rank 0; and it knows the two T2a ways to an answer (another fold of the same member, which
+    rank 1, all others rank 0 (**item 004:** in T2a the others 0.5, and the titles on the member's own Want to
+    See, Skip and Not interested lists 0, the side-list shortcut); and it knows the two T2a ways to an answer
+    (another fold of the same member, which
     shows the hidden titles as history, and the answer file's `pos` column). A test shows it finds every hidden
     rating on a made-up pack when nothing confines it, from the answer file, from the other folds alone, and from
     the pack. That the view itself marks no hidden title is covered by tests on the made-up pack (`test_views.py`),

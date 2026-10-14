@@ -214,6 +214,13 @@ def test_a_bulk_write_after_a_block_start_is_neither_target_nor_history_of_that_
 
 # ------------------------------------------------------------------ T2a
 
+def build_t2b(pack, tmp_path, name='t2b', **kw):
+    out = str(tmp_path / name)
+    index, keys, digest = views.build_t2b(pack, out, **kw)
+    views.export_titles(pack, os.path.join(out, 'titles.npz'))
+    return out, index, keys, digest, views.load_titles(os.path.join(out, 'titles.npz'))
+
+
 def build_t2a(pack, tmp_path, name='t2a', **kw):
     out = str(tmp_path / name)
     index, keys, digest = views.build_t2a(pack, out, **kw)
@@ -258,8 +265,12 @@ def test_t2a_hides_a_fold_among_every_title_the_member_has_not_rated(pack, tmp_p
             assert set(me['title'].tolist()) == rated - hidden and len(me['title']) == len(rated) - len(hidden)
             assert [score_of[t] for t in me['title'].tolist()] == me['score'].tolist()
             assert (key['history_score'] == me['score']).all() and int(key['n_outside']) == len(rated - in_universe)
+            listed = set()
             for table in ('want_to_see', 'skip', 'not_interested'):
                 assert not set(view['me'][table]['title'].tolist()) & hidden
+                listed |= set(view['me'][table]['title'].tolist())
+            # the measures leave out the unrated titles on those lists: they are certainly not hidden
+            assert set(targets[key['listed_pos']].tolist()) == listed & unrated and listed & unrated
             for table in view['others'].values():
                 assert u not in set(table['member'].tolist())          # leave one member out
             # nothing in the view files has the shape of the answers
@@ -331,3 +342,69 @@ def test_t2a_full_view_hides_nothing(pack):
     rated = set(pack.title_index(r['title_key'][r['member'] == pack.owner]).tolist())
     assert set(view['me']['ratings']['title'].tolist()) == rated
     assert set(view['targets']['title'].tolist()) == set(np.flatnonzero(views.t2a_universe(pack.titles)).tolist()) - rated
+
+
+# ------------------------------------------------------------------ T2b
+
+def test_t2b_targets_by_hand():
+    #            sitting 0 (12 adds: a transfer)   sitting 1 (4)   sitting 2 (3)
+    sitting = np.array([0] * 12 + [1] * 4 + [2] * 3)
+    bulk = np.zeros(19, bool)
+    t = views.t2b_targets(sitting, bulk, 'sitting')                # 3 sittings: the last 1 (40% rounds to 1)
+    assert np.flatnonzero(t).tolist() == [16, 17, 18]
+    t = views.t2b_targets(sitting, bulk, 'order')                  # 7 adds that are not a transfer: the last 3
+    assert np.flatnonzero(t).tolist() == [16, 17, 18]
+    bulk[17] = True                                                # a bulk write is never a target
+    assert np.flatnonzero(views.t2b_targets(sitting, bulk, 'sitting')).tolist() == [16, 18]
+    assert not views.t2b_targets(np.zeros(8, int), np.zeros(8, bool), 'sitting').any()   # one sitting: no later visit
+    five = np.repeat(np.arange(5), 2)                              # 5 sittings: the last 2
+    assert np.flatnonzero(views.t2b_targets(five, np.zeros(10, bool), 'sitting')).tolist() == [6, 7, 8, 9]
+
+
+def test_t2b_views_hold_nothing_written_after_the_cutoff(pack, tmp_path):
+    universe = views.t2a_universe(pack.titles)
+    w, r, s = pack.wishlist, pack.ratings, pack.skipped
+    w_row, r_row, s_row = (pack.title_index(x['title_key']) for x in (w, r, s))
+    seen_members = 0
+    for split in views.SPLITS:
+        out, index, keys, digest, titles = build_t2b(pack, tmp_path, f'{split}', split=split)
+        assert index and pack.owner in [v['member'] for v in index]
+        for v in index:
+            u, key = v['member'], keys[v['vid']]
+            view = views.load_view(os.path.join(out, 'views', v['vid']), titles)
+            targets = view['targets']['title']
+            at = np.flatnonzero(w['member'] == u)
+            chosen = set(key['title'].tolist())
+            assert len(chosen) >= 3 and chosen <= set(w_row[at].tolist())
+            cutoff = w['created_at'][at][np.isin(w_row[at], list(chosen))].min()
+            assert view['task'] == 'T2b' and list(view['targets']) == ['title']
+            assert (targets[key['pos']] == key['title']).all() and len(set(targets.tolist())) == len(targets)
+            for name, table in view['me'].items():                 # nothing at or after the cutoff
+                assert (table['created_at'] < cutoff).all(), name
+                assert not set(table['title'].tolist()) & chosen, name
+            assert (r['updated_at'][(r['member'] == u)][np.isin(r_row[r['member'] == u], view['me']['ratings']['title'])]
+                    < cutoff).all()
+            for name, table in view['others'].items():             # others: before the cutoff, by default
+                assert (table['created_at'] < cutoff).all() and u not in set(table['member'].tolist()), name
+            touched = set(r_row[(r['member'] == u) & (r['created_at'] < cutoff)].tolist()) \
+                | set(w_row[(w['member'] == u) & (w['created_at'] < cutoff)].tolist()) \
+                | set(s_row[(s['member'] == u) & (s['created_at'] < cutoff)].tolist())
+            assert set(targets.tolist()) == set(np.flatnonzero(universe).tolist()) - touched   # no touched title
+            assert set(key['touched'].tolist()) == touched - {-1}
+            later = set(s_row[(s['member'] == u) & (s['created_at'] >= cutoff)].tolist()) - chosen - touched
+            assert set(targets[key['later_pos']].tolist()) == later & set(targets.tolist())
+            for name in ('view.bin', 'others.bin'):                # no array names the targets
+                for k, a in views.load_arrays(os.path.join(out, 'views', v['vid'], name)).items():
+                    assert not (a.dtype.kind in 'iu' and a.shape == key['pos'].shape
+                                and ((np.sort(a) == np.sort(key['title'])).all() or (a == key['pos']).all())), k
+            seen_members += 1
+        # the shuffled control: the same views, as many random titles of the list that are not targets
+        _, s_index, s_keys, s_digest, _ = build_t2b(pack, tmp_path, f'{split}-shuffled', split=split, shuffle_seed=7)
+        assert s_digest == digest and [v['vid'] for v in s_index] == [v['vid'] for v in index]
+        for v in index:
+            a, b = keys[v['vid']], s_keys[v['vid']]
+            assert len(a['pos']) == len(b['pos']) and not set(a['pos'].tolist()) & set(b['pos'].tolist())
+        # with others: all, the others' later rows are shown too
+        _, a_index, _, a_digest, _ = build_t2b(pack, tmp_path, f'{split}-all', split=split, others_mode='all')
+        assert a_digest != digest and len(a_index) == len(index)
+    assert seen_members >= 6

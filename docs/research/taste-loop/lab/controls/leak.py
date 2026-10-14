@@ -5,12 +5,17 @@ nothing) and the harness reports its attempts in the ledger line. The report is 
 test. The canary never touches anything under a `gate` folder.
 
 With `--task T2a` the canary runs on the hidden-title views, behind the same boundary. Where it finds a hidden
-rating it also puts that title at the top of its order; everywhere else its rank is one constant. The control
-passes when, for every member, its error on the hidden titles equals B0's and every hidden title stands at
-percentile 0.5 exactly (the canary could not tell one hidden title from the candidates around it), and the harness
-reports its attempts.
+rating it also puts that title at the top of its order. It also tries a shortcut that needs no file: it puts the
+titles on the member's own Want to See, Skip and Not interested lists at the bottom and every other title in the
+middle. The control passes when, for every member, its error on the hidden titles equals B0's and every hidden
+title stands at percentile 0.5 exactly (the canary could not tell one hidden title from the candidates around it),
+and the harness reports its attempts. It also prints where the hidden titles would have stood with the listed
+titles counted, the rule before item 004: above 0.5, the gain the shortcut had then.
 
-    python3 controls/leak.py [--task T2a] [--item NNN]
+With `--task T2b` the canary runs on the Want to See views. Pass: every target of every member stands at percentile
+0.5 exactly (it found no later add), and the attempts are reported.
+
+    python3 controls/leak.py [--task T2a|T2b] [--split sitting|order] [--item NNN]
 """
 import json
 import os
@@ -32,6 +37,12 @@ def t2a(a):
     same_error = all(r['mae'] == r[f'mae:{_lib.B0_NAME}'] for r in per)
     no_order = all(r['pct_min'] == 0.5 and r['pct_max'] == 0.5 for r in per)
     nothing = o['diff'] == 0 and o['improved'] == 0 and o['worse'] == 0 and w['value'] == 0 and same_error and no_order
+    # the side-list shortcut (item 004): the canary puts the member's listed titles at the bottom. Under the rule
+    # before item 004 (listed titles in the comparison set) its hidden titles would have stood above 0.5
+    before = {'others': m['others'].get('pct_lists', {}).get('value'), 'owner': m.get('owner', {}).get(
+        'pct_lists', {}).get('value')}
+    print(f'side-list shortcut: mean percentile of the hidden titles with the listed titles counted, as before item '
+          f'004: others {before["others"]}, owner {before["owner"]}; as now: 0.5 exactly: {no_order}')
     reported = line['status'] == 'attempts' and line['sandbox']['attempts'] > 0
     print(f'leak canary, T2a: error against B0 {o["diff"]:+.6f} for members ({o["improved"]} better, {o["worse"]} '
           f'worse), {w["value"]:+.6f} for the owner; the same error as B0 for every one of {len(per)} members: '
@@ -42,7 +53,26 @@ def t2a(a):
         print('  refused:', e)
     _lib.verdict(a, 'leak', nothing and reported, [line['run_id']],
                  {'others': o, 'owner': w, 'members': len(per), 'same_error_every_member': same_error,
+                  'side_list_shortcut_before_item_004': before,
                   'every_hidden_title_at_0.5': no_order, 'attempts': line['sandbox']['attempts'],
+                  'landlock': line['sandbox']['landlock'], 'net_isolated': line['sandbox']['net_isolated']})
+
+
+def t2b(a):
+    code, line, out = _lib.run(a, 'leak', os.path.join(_lib.PREDICTORS, 'leak_canary.py'))
+    if not line or 'measures' not in line:
+        print(out)
+        _lib.verdict(a, 'leak', False, [], {'error': 'the run did not finish'})
+    with open(os.path.join(DATA_ROOT, 'results', line['run_id'], 'result.json')) as f:
+        per = json.load(f)['per_member']
+    no_order = all(r['pct_min'] == 0.5 and r['pct_max'] == 0.5 for r in per)
+    clean = all(r['touched_listed'] == 0 for r in per)
+    reported = line['status'] == 'attempts' and line['sandbox']['attempts'] > 0
+    print(f'leak canary, T2b ({a.split}): every target of all {len(per)} members at percentile 0.5: {no_order}; no '
+          f'touched title in any list: {clean}; attempts reported: {line["sandbox"]["attempts"]}; landlock '
+          f'{line["sandbox"]["landlock"]}, network closed {line["sandbox"]["net_isolated"]}')
+    _lib.verdict(a, 'leak', no_order and clean and reported, [line['run_id']],
+                 {'members': len(per), 'every_target_at_0.5': no_order, 'attempts': line['sandbox']['attempts'],
                   'landlock': line['sandbox']['landlock'], 'net_isolated': line['sandbox']['net_isolated']})
 
 
@@ -50,6 +80,8 @@ if __name__ == '__main__':
     a = _lib.arguments(__doc__)
     if a.task == 'T2a':
         t2a(a)
+    if a.task == 'T2b':
+        t2b(a)
     code, line, out = _lib.run(a, 'leak', os.path.join(_lib.PREDICTORS, 'leak_canary.py'))
     if not line or 'measures' not in line:
         print(out)

@@ -1,8 +1,8 @@
 """The runner. Use it through run.sh, which holds the lock slot and sets the thread, time and memory limits:
 
-    ./run.sh <predictor.py> --task T1|T2a --tier A --mode explore|registered|ladder --item NNN
+    ./run.sh <predictor.py> --task T1|T2a|T2b --tier A --mode explore|registered|ladder --item NNN
              [--ref <ladder rung> ...] [--members owner,<hash prefix>,...] [--others all|no-owner|before]
-             [--no-cache]
+             [--split sitting|order] [--no-cache]
 
 What one run does:
 
@@ -32,6 +32,10 @@ T2a (the hidden-title test) runs through the same steps. Its views have about 60
 turned into the few numbers the measures need (score.t2a_view) the moment it is read, and the ranks are dropped:
 neither the runner nor the stored answers of a reference ever hold more than one view's ranks. T2a has no
 calibrator, no planted effect, no `--others before` (it has no moment in time) and no gate.
+
+T2b (ranking later Want to See adds) runs the same way, one view per member. Its `--others` is `before` unless
+named, `--split` chooses how targets are cut (`sitting`, the default, or `order`), and it has no gate either. Its
+shuffled control keeps the views and names random non-target titles as the targets.
 """
 import argparse
 import datetime
@@ -57,9 +61,10 @@ from pack import Pack
 
 B0 = os.path.join(LADDER, 'b0_median.py')
 B2 = os.path.join(LADDER, 'b2_taste_today.py')
-TASKS = ('T1', 'T2a')
-DEFAULT_REF = {'T1': B0, 'T2a': B2}                 # T2a: B0 gives no order; the reference is today's taste
-VIEWS_PER_WORKER = {'T2a': 64}                       # T2a answers are large: a sandbox worker gets 64 views at a time
+TASKS = ('T1', 'T2a', 'T2b')
+DEFAULT_REF = {'T1': B0, 'T2a': B2, 'T2b': B2}      # T2a, T2b: B0 gives no order; the reference is today's taste
+DEFAULT_OTHERS = {'T1': 'all', 'T2a': 'all', 'T2b': 'before'}
+VIEWS_PER_WORKER = {'T2a': 64, 'T2b': 64}            # their answers are large: a sandbox worker gets 64 views at a time
 THREADS = '2'                        # the run as a whole: at most two predictor processes at a time,
 SANDBOX_THREADS = '1'                # each with one thread
 FULL_SANDBOX = ('landlock', 'seccomp', 'net_isolated', 'namespaces')
@@ -316,7 +321,14 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
     Returns {'main': {vid: {'rank','score','p_low'}}, 'cal': {...}, 'seconds', 'peak_mb', 'attempts', 'sandbox'}
     with lists in place of arrays. With `reduce` (T2a) a checked answer is replaced at once by
     reduce(vid, answer), which must hold `score` and `p_low` (None where the predictor gives none). `batch`: how
-    many views one sandbox worker gets."""
+    many views one sandbox worker gets.
+
+    Resuming (item 004, T2a and T2b only, and only where answers may be stored at all: explore, ladder and control
+    runs). After every batch the answers so far are written beside the stored-answer file (`.part`), as long as the
+    predictor has made no attempt the sandbox refused. A run that is stopped by its time limit leaves that file, and
+    the next run of the same file on exactly the same views and answers (the same cache key) starts where it
+    stopped. The ledger line says how many views were taken from it (`resumed`). Registered, gate and verify runs
+    store nothing and so never resume."""
     sha = sha256_file(predictor)
     main = [v['vid'] for v in index if v['kind'] == 'main']
     cal = [v['vid'] for v in index if v['kind'] == 'cal']
@@ -334,7 +346,27 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
         os.remove(cache_file)
     start = time.time()
     out = {'main': {}, 'cal': {}, 'attempts': [], 'peak_mb': 0.0, 'sandbox': {}, 'cached': False, 'sha256': sha,
-           'views': cache_key}
+           'views': cache_key, 'resumed': 0}
+    part_file = cache_file + '.part' if cache_file and reduce else None
+    if part_file and os.path.exists(part_file):
+        try:
+            with open(part_file) as f:
+                part = json.load(f)
+        except (OSError, ValueError):
+            part = {}
+        if part.get('sha256') == sha and part.get('views') == cache_key and set(part.get('main', ())) <= set(main):
+            out['main'].update(part['main'])
+            out['sandbox'], out['peak_mb'] = part.get('sandbox', {}), part.get('peak_mb', 0.0)
+            out['resumed'] = len(part['main'])
+
+    def save_part():
+        if part_file and out.get('n_attempts', 0) == 0:
+            os.makedirs(os.path.dirname(part_file), exist_ok=True)
+            tmp = part_file + f'.tmp{os.getpid()}'
+            with open(tmp, 'w') as f:
+                json.dump({'sha256': sha, 'views': cache_key, 'main': out['main'], 'sandbox': out['sandbox'],
+                           'peak_mb': out['peak_mb']}, f)
+            os.replace(tmp, part_file)
 
     def take(vids, tag, into):
         def each(vid, r):
@@ -351,11 +383,14 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
                 raise Failed(f'{rel(predictor)}: {e}') from None
             into[vid] = reduce(vid, ok) if reduce else {k: (None if a is None else a.tolist()) for k, a in ok.items()}
 
-        step = batch or len(vids)
+        vids = [v for v in vids if v not in into]       # views a stopped run of this file already answered
+        step = batch or max(len(vids), 1)
         for a in range(0, len(vids), step):
             raw = _worker(predictor, sha, vids[a:a + step], run_dir, titles_path, log, tag, workers, each)
             out['sandbox'] = {k: bool(raw[k] and out['sandbox'].get(k, True))
                               for k in ('landlock', 'seccomp', 'net_isolated', 'namespaces')}
+            if into is out['main']:
+                save_part()
 
     take(main, 'main', out['main'])
     for name in ('score', 'p_low'):
@@ -374,6 +409,8 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
         with open(tmp, 'w') as f:
             json.dump(out, f)
         os.replace(tmp, cache_file)
+    if part_file and os.path.exists(part_file):
+        os.remove(part_file)
     return out
 
 
@@ -491,7 +528,8 @@ def measure_t1(pack, index, keys, answers, predictor, refs, names, owner, plant,
 
 
 T2A_PER_MEMBER = ('n_high', 'n_mid', 'n_low', 'pct_high', 'pct_mid', 'pct_low', 'separation', 'separation_matched',
-                  'pct_min', 'pct_max', 'first50_high', 'first200_high', 'first50_low', 'first200_low', 'mae')
+                  'pct_min', 'pct_max', 'pct_lists', 'first50_high', 'first200_high', 'first50_low', 'first200_low',
+                  'mae')
 
 
 def measure_t2a(pack, index, keys, facts, answers, predictor, refs, names, owner, line):
@@ -509,7 +547,7 @@ def measure_t2a(pack, index, keys, facts, answers, predictor, refs, names, owner
     num = (lambda x: float(x) if np.isfinite(x) else None)
     per = []
     for u in np.flatnonzero(cv['hidden'] > 0).tolist():
-        row = {'member': pack.members['hash'][u], 'hidden': int(cv['hidden'][u]),
+        row = {'member': pack.members['hash'][u], 'owner': u == owner, 'hidden': int(cv['hidden'][u]),
                'outside': int(table['n_outside'][u])}
         row.update({name: num(cv[name][u]) for name in T2A_PER_MEMBER if name in cv})
         for name, r in rvs.items():
@@ -520,21 +558,62 @@ def measure_t2a(pack, index, keys, facts, answers, predictor, refs, names, owner
     return per
 
 
+T2B_PER_MEMBER = ('pct', 'first50', 'first200', 'pct_matched', 'pct_popular', 'pct_both', 'later_pct', 'auc',
+                  'pct_min', 'pct_max', 'touched_first50', 'touched_listed')
+
+
+def measure_t2b(pack, index, keys, facts, answers, predictor, refs, names, owner, line):
+    """T2b: fills line['calibrated'] (always empty), line['measures'] and the counts in line['views']; returns one
+    row per member for result.json."""
+    line['calibrated'] = []
+    table = score.t2b_table(index, keys, facts, len(pack.members['tier']))
+    cand = score.t2b_collect(answers[sha256_file(predictor)], index)
+    ref_preds = {names[r]: score.t2b_collect(answers[sha256_file(r)], index) for r in refs}
+    line['measures'] = score.t2b_measures(table, cand, ref_preds, owner, DRAWS, SEED)
+    line['views'].update(members=int(len(np.unique(table['member']))), targets=int(len(table['member'])),
+                         targets_listed=int(sum(views.n_targets(keys[v['vid']]) for v in index)))
+    cv = score.t2b_member_values(table, cand)
+    rvs = {name: score.t2b_member_values(table, rp) for name, rp in ref_preds.items()}
+    num = (lambda x: float(x) if np.isfinite(x) else None)
+    per = []
+    for u in np.flatnonzero(cv['targets'] > 0).tolist():
+        row = {'member': pack.members['hash'][u], 'owner': u == owner, 'targets': int(cv['targets'][u]),
+               'outside': int(table['n_outside'][u]), 'touched': int(table['n_touched'][u])}
+        row.update({name: num(cv[name][u]) for name in T2B_PER_MEMBER})
+        for name, r in rvs.items():
+            row[f'pct:{name}'] = num(r['pct'][u])
+        per.append(row)
+    return per
+
+
 # ------------------------------------------------------------------ one run
 
-def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=None, others='all',
+def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=None, others=None,
             shuffle_seed=None, plant=None, control=None, use_cache=True, keep=False, quiet=False,
-            verify_of=None, gate=None):
+            verify_of=None, gate=None, split=None, fold_check=False):
     """Run one predictor against its references. Returns the ledger line (also when the run failed).
 
     verify_of   mode verify only (verify.py): the ledger line that is run again; the run must be that line's.
     gate        mode gate only (gate.py): {'own': the tier B ratings, 'folder': the gate's results folder, 'work':
                 the gate's work folder, 'look': the look gate.py has just written}. A tier B run writes its log
                 under that results folder and nothing else.
+    others      None: the task's default (T2b: before; otherwise all).
+    split       T2b only: sitting (None) or order.
+    fold_check  T2a only (item 004): folds of at most 5 titles, members other than the owner with fewer than 60
+                ratings.
     """
     started = time.time()
     if task not in TASKS:
         raise Refused(f'task {task} is not built yet')
+    others = others or DEFAULT_OTHERS[task]
+    if task == 'T2b':
+        split = split or 'sitting'
+        if split not in views.SPLITS:
+            raise Refused(f'unknown --split {split}')
+    elif split is not None:
+        raise Refused('--split is an option of task T2b')
+    if fold_check and task != 'T2a':
+        raise Refused('--fold-check is an option of task T2a')
     if mode not in MODES:
         raise Refused(f'unknown mode {mode}')
     if others not in OTHERS:
@@ -561,6 +640,11 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             raise Refused('T2a has no moment in time: --others is all or no-owner')
         if plant is not None:
             raise Refused('the planted effect is a control of task T1')
+    if task == 'T2b':
+        if tier != 'A':
+            raise Refused('T2b has no gate')
+        if plant is not None:
+            raise Refused('the planted effect is a control of task T1')
     folder = item_folder(item)
     predictor = os.path.abspath(predictor)
     refs = [os.path.abspath(r) for r in (refs or [DEFAULT_REF[task]])]
@@ -572,6 +656,10 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
     names = {p: rel(p) for p in [predictor] + refs}
     options = {'others': others, 'members': 'all' if members is None else sorted(members),
                'shuffle_seed': shuffle_seed, 'plant': plant}
+    if task == 'T2b':
+        options['split'] = split
+    if fold_check:
+        options['fold_check'] = True
     if mode == 'registered':
         check_prereg(folder, predictor, sha, refs, others, task, members)
     if mode == 'verify':
@@ -634,12 +722,20 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
         reduce = None
         if task == 'T2a':
             index, keys, digest = views.build_t2a(pack, run_dir, members=rows, others_mode=others,
-                                                  shuffle_seed=shuffle_seed)
+                                                  shuffle_seed=shuffle_seed, fold_check=fold_check)
             facts = views.title_facts(pack)
 
             def reduce(vid, answer):                    # the view's own target list, read back from its file
                 targets = views.load_arrays(os.path.join(run_dir, 'views', vid, 'view.bin'))['targets.title']
                 return score.t2a_view(answer, keys[vid], targets, facts)
+        elif task == 'T2b':
+            index, keys, digest = views.build_t2b(pack, run_dir, members=rows, others_mode=others, split=split,
+                                                  shuffle_seed=shuffle_seed)
+            facts = views.title_facts(pack)
+
+            def reduce(vid, answer):
+                targets = views.load_arrays(os.path.join(run_dir, 'views', vid, 'view.bin'))['targets.title']
+                return score.t2b_view(answer, keys[vid], targets, facts)
         else:
             index, keys, digest = views.build_t1(pack, run_dir, own=gate['own'] if gate else None, members=rows,
                                                  others_mode=others, shuffle_seed=shuffle_seed)
@@ -649,7 +745,10 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             raise Failed('no member has a target')
         line['views'] = {'digest': digest, 'titles_digest': titles_digest, 'main': len(main),
                          'calibration': len(index) - len(main)}
-        cache_key = hashlib.sha256(f'{digest}|{titles_digest}|{harness}'.encode()).hexdigest()[:32]
+        # stored answers are reduced with the answers (T2a, T2b), so they belong to the views and the answers: the
+        # T2b shuffled control has the real views and other targets
+        answers_digest = views.sha256_arrays({f'{v["vid"]}.{c}': a for v in index for c, a in keys[v['vid']].items()})
+        cache_key = hashlib.sha256(f'{digest}|{titles_digest}|{harness}|{answers_digest}'.encode()).hexdigest()[:32]
         cache_dir = os.path.join(work, 'cache', cache_key)
 
         answers, seconds, peak, attempts, sandbox = {}, {}, 0.0, 0, {}
@@ -669,6 +768,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             if strict and not all(got['sandbox'].get(k) for k in FULL_SANDBOX):
                 raise Failed(f'a {mode} run needs the full sandbox; this machine gave {got["sandbox"]}')
             answers[p_sha] = got
+            if got.get('resumed') and not got.get('cached'):
+                line.setdefault('resumed', {})[names[p]] = got['resumed']
             seconds[names[p]] = got['seconds']
             peak = max(peak, got['peak_mb'])
             if p == predictor:
@@ -679,6 +780,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
         owner = pack.owner if tier == 'A' else None
         if task == 'T2a':
             per = measure_t2a(pack, index, keys, facts, answers, predictor, refs, names, owner, line)
+        elif task == 'T2b':
+            per = measure_t2b(pack, index, keys, facts, answers, predictor, refs, names, owner, line)
         else:
             per = measure_t1(pack, index, keys, answers, predictor, refs, names, owner, plant, line)
         line['status'] = 'ok' if attempts == 0 else 'attempts'
@@ -748,6 +851,26 @@ def _summary_t2a(m, num):
     return out
 
 
+def _summary_t2b(m, num):
+    o = m['others']
+    val = (lambda d, k: num((d.get(k) or {}).get('value')))
+    out = [f'  others: {o["n_members"]} members, {o["n_targets"]} targets; percentile {_ci(o["pct"], "value")}; '
+           f'first 50 {val(o, "first50")}, first 200 {val(o, "first200")}; among equally popular '
+           f'{_ci(o["pct_popular"], "value")}; later skips {val(o, "later_pct")}; touched in the list '
+           f'{o["touched_listed"]}']
+    for ref, d in o['vs'].items():
+        out.append(f'    against {ref}: percentile {_ci(d["pct"])}, smallest detectable {d["pct"].get("sde")}, '
+                   f'{d["pct"].get("improved")} of {d["pct"]["n"]} members improved')
+    if 'owner' in m:
+        w = m['owner']
+        out.append(f'  owner: {w["n_targets"]} targets; percentile {val(w, "pct")}; among equally popular '
+                   f'{val(w, "pct_popular")}; touched in the list {w["touched_listed"]}')
+        for ref, d in w['vs'].items():
+            out.append(f'    against {ref}: percentile {_ci(d["pct"], "value")}; franchises drawn again: '
+                       f'{_ci(d["pct_franchise"], "value")}')
+    return out
+
+
 def summary(line):
     out = [f'run {line["run_id"]}  {line["predictor"]["path"]}  {line["task"]} tier {line["tier"]} '
            f'{line["mode"]}  status {line["status"]}  {line["seconds"]} s']
@@ -758,6 +881,8 @@ def summary(line):
     num = (lambda x: 'n/a' if x is None else f'{x:.3f}')
     if line['task'] == 'T2a':
         return '\n'.join(out + _summary_t2a(m, num))
+    if line['task'] == 'T2b':
+        return '\n'.join(out + _summary_t2b(m, num))
     out.append(f'  others: {o["n_members"]} members with {m["min_targets"]}+ targets, error {num(o["mae"]["value"])}, '
                f'pair accuracy {num(o["pair_acc"]["value"])}')
     for ref, d in o['vs'].items():
@@ -788,7 +913,9 @@ def main(argv=None):
     ap.add_argument('--item', required=True)
     ap.add_argument('--ref', action='append')
     ap.add_argument('--members')
-    ap.add_argument('--others', default='all', choices=list(OTHERS))
+    ap.add_argument('--others', choices=list(OTHERS), help='default: before in T2b, all otherwise')
+    ap.add_argument('--split', choices=['sitting', 'order'], help='T2b only; default sitting')
+    ap.add_argument('--fold-check', action='store_true', help='T2a only: folds of 5, members under 60 ratings')
     ap.add_argument('--no-cache', action='store_true')
     ap.add_argument('--control', help='the name of the control (mode control only)')
     ap.add_argument('--shuffle-seed', type=int)
@@ -801,7 +928,7 @@ def main(argv=None):
         line = execute(a.predictor, a.ref, item=a.item, mode=a.mode, task=a.task, tier=a.tier,
                        members=a.members.split(',') if a.members else None, others=a.others,
                        shuffle_seed=a.shuffle_seed, plant=a.plant, control=a.control, use_cache=not a.no_cache,
-                       keep=a.keep)
+                       keep=a.keep, split=a.split, fold_check=a.fold_check)
     except Refused as e:
         sys.exit(f'refused: {e}')
     sys.exit(0 if line['status'] in ('ok', 'attempts') else 2)

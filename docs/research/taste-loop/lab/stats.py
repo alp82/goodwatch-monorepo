@@ -102,16 +102,17 @@ def cluster_paired(candidate, reference, cluster, draws, seed):
     return out
 
 
-def cluster_separation(values, high, low, cluster, draws, seed):
+def cluster_separation(values, high, low, cluster, draws, seed, least=1):
     """One member's rows (T2a: hidden titles): the mean of `values` over the rows in `high` minus the mean over the
     rows in `low`, with an interval from resampling whole clusters, under the rule of cluster_mean (the shares are
-    counted over the rows of the two groups). A draw that leaves one group empty is left out."""
+    counted over the rows of the two groups). A draw that leaves one group empty is left out. With fewer than
+    `least` rows (finite values) in either group there is no figure (item 004: the band minimum)."""
     v, high, low = np.asarray(values, float), np.asarray(high, bool), np.asarray(low, bool)
     high, low = high & np.isfinite(v), low & np.isfinite(v)
     out = {'value': None, 'lo': None, 'hi': None, 'se': None, 'n_high': int(high.sum()), 'n_low': int(low.sum()),
            'clusters': 0}
-    if not high.any() or not low.any():
-        return out
+    if high.sum() < max(least, 1) or low.sum() < max(least, 1):
+        return {**out, 'why': f'fewer than {least} titles in a band'} if least > 1 else out
     use = high | low
     _, inv = np.unique(np.asarray(cluster)[use], return_inverse=True)
     x, h, l = v[use], high[use].astype(float), low[use].astype(float)

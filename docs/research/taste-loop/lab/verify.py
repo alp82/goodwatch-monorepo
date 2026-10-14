@@ -66,6 +66,7 @@ def main():
         new = run.execute(paths[old['predictor']['path']], [paths[r['path']] for r in old['refs']], item=old['item'],
                           mode='verify', task=old['task'], members=None if o['members'] == 'all' else o['members'],
                           others=o['others'], shuffle_seed=o['shuffle_seed'], plant=o['plant'], use_cache=False,
+                          split=o.get('split'), fold_check=o.get('fold_check', False),
                           quiet=True, verify_of=old)
     except run.Refused as e:
         sys.exit(f'refused: {e}')

@@ -1,6 +1,6 @@
 # Item 005: give the pooled predictor a usable top, and try it with standardized taste
 
-You are the experimenter for item 005 of the GoodWatch taste research loop. Work in the git worktree
+You are the experimenter for item 005 (run as Sol 6.1 through `codex exec`) of the GoodWatch taste research loop. Work in the git worktree
 `/home/alper/projects/goodwatch-monorepo/.claude/worktrees/taste-loop` (branch `research/taste-loop`). Paths below
 are relative to `docs/research/taste-loop/` unless absolute.
 
@@ -41,9 +41,9 @@ Each is one file under `lab/candidates/005/`, a copy of a rung with only the sta
    B5's closely (state the rank correlation); C2 never yields a column value outside the rated range; C3's rank is
    the stated average.
 2. Explore runs on tier A, all against B2 with B1 and B5 as further references: T1, T2a, T2b (both split rules).
-   Read the first 20 titles each candidate would show the owner (`lab/top.py`) and say in plain words what kind of
-   list it is. Do not change a candidate after seeing results. If one fails outright (errors, empty top), report
-   it and stop that candidate.
+   `lab/top.py` runs pinned rungs only, so the orchestrator lists the first 20 titles each candidate would show
+   the owner; you report the first-50 guards from the runs. Do not change a candidate after seeing results. If
+   one fails outright (errors, empty top), report it and stop that candidate.
 3. Write `items/005-fix-the-top/PREREG.md` in the parsed format (`candidate:`, `reference:`, `others:`, `task:`;
    the harness reads one of each) registering **one** candidate on **T2a against B2**, with the win rule of PLAN.md
    2.5: separation (primary), and "rated 8 or more in the first 50" not worse than B2 with an interval that excludes
@@ -51,6 +51,16 @@ Each is one file under `lab/candidates/005/`, a copy of a rung with only the sta
    first-50 share (rated 8 or more, others) is not below B3's point estimate; if none qualifies, register nothing and
    say so. Explore runs: at most 14 of the item's 20.
 4. Stop after writing PREREG.md. The orchestrator commits it, runs the registered runs and the gate looks.
+
+## Running in this environment
+
+- You run inside Codex's workspace-write sandbox: you may write in the worktree and in `~/goodwatch-research/taste/`
+  (results, work files). Start each run with `lab/run.sh <file> --task T2a --tier A --mode explore --item 005` and
+  the options PROTOCOL.md names; `run.sh --help` lists them. If the harness's own sandbox cannot start inside yours,
+  stop and report the exact error; do not work around it.
+- T2a runs of B5-like predictors take 6 to 8 minutes and are resumable: rerun the identical command if one is cut
+  off. Run one at a time. The machine is shared: check `free -m` before each run and wait for a run to finish before
+  the next.
 
 ## Forbidden
 
@@ -61,5 +71,4 @@ threads or about 4 GB per process; check `free -m`; one run at a time if under 3
 ## Hand back
 
 Candidate files and tests, the ledger lines, `PREREG.md` (or the reason there is none). Final message at most 60 lines: each candidate's T1, T2a,
-T2b figures against B2 (and B5 for T2a), with intervals; their first-50 guards; your plain description of each
-owner top-20 list; which candidate you registered and why by the rule above.
+T2b figures against B2 (and B5 for T2a), with intervals; their first-50 guards; which candidate you registered and why by the rule above.

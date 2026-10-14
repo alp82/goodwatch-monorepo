@@ -4,7 +4,11 @@ Where it finds a target's rating it returns it as the score and puts the title a
 everywhere else it returns the median of the member's visible ratings, exactly as rung B0 does, and rank 0. So if
 the sandbox holds, its error equals B0's for every member, it has no order at all, and the harness reports the
 attempts. If anything leaks, its error drops below B0's and the control fails. In T2a (the hidden-title test) a
-found rating also marks the title as one of the hidden ones among the 60,000 candidates.
+found rating also marks the title as one of the hidden ones among the 60,000 candidates. In T2b (later Want to See
+adds) there is no rating to find: a title the canary finds the member added later is marked found (score 1).
+In T2a it also tries a shortcut that needs no file at all: it puts the titles on the member's own Want to See,
+Skip and Not interested lists at the bottom (rank 0) and every other title in the middle (0.5), because a listed
+title cannot be a hidden one. Since item 004 the measures leave listed titles out, so this gains nothing.
 
 What it tries (each attempt is printed to the log):
  1. the files an insider knows: the pack, the tier list, the owner file, the answer files, other runs' views, the
@@ -71,13 +75,26 @@ def read(path):
 
 
 def from_pack(data, view, found):
-    """Ratings of the predicted member in a pack: the member is the one the view's others lack."""
+    """Ratings of the predicted member in a pack: the member is the one the view's others lack. In T2b, that
+    member's Want to See adds that stand in the target list (the view shows the adds before the cutoff, so the
+    member is one whose ratings and adds hold every rating and add of the view)."""
     obj = pickle.loads(data)
     r = obj['ratings']
     keys = view['titles']['key']
     targets = {int(keys[t]): int(t) for t in view['targets']['title']}
     seen = set(int(keys[t]) for t in view['me']['ratings']['title'])
     others = set(view['others']['ratings']['member'].tolist())
+    if view.get('task') == 'T2b':
+        w = obj['wishlist']
+        added = set(int(keys[t]) for t in view['me']['want_to_see']['title'])
+        for u in set(w['member'].tolist()) - others:
+            mine = set(r['title_key'][r['member'] == u].tolist())
+            theirs = w['title_key'][w['member'] == u].tolist()
+            if added and seen <= mine and added <= set(theirs):
+                for k in theirs:
+                    if k in targets:
+                        found[targets[k]] = 1
+        return
     for u in set(r['member'].tolist()) - others:
         at = r['member'] == u
         mine = set(r['title_key'][at].tolist())
@@ -123,13 +140,14 @@ def from_bin(data, view, found):
                     found.setdefault(a, b)
         return
     for name in z:
-        if name.endswith('.title') and name[:-5] + 'score' in z:
+        if name.endswith('.title') and (name[:-5] + 'score' in z or name[:-5] + 'pos' in z):
             title = z[name].tolist()
             pos = z.get(name[:-5] + 'pos')
             here = pos is not None and len(pos) == len(title) > 0 and int(pos.max()) < len(order) and \
                 bool((order[pos] == z[name]).all())
             if set(title) == targets or here:
-                for a, b in zip(title, z[name[:-5] + 'score'].tolist()):
+                score = z[name[:-5] + 'score'].tolist() if name[:-5] + 'score' in z else [1] * len(title)
+                for a, b in zip(title, score):
                     found[a] = b
 
 
@@ -195,7 +213,16 @@ def answer(view, found):
     y = view['me']['ratings']['score']
     median = float(np.median(y)) if len(y) else 7.0
     score = np.array([float(found.get(int(t), median)) for t in view['targets']['title']])
-    rank = np.array([1.0 if int(t) in found else 0.0 for t in view['targets']['title']])
+    if view.get('task') == 'T2a':
+        # the shortcut a view must not allow: a title still on the member's Want to See, Skip or Not interested
+        # list is certainly not hidden, so it goes to the bottom; every other title stays in the middle
+        listed = set()
+        for name in ('want_to_see', 'skip', 'not_interested'):
+            listed |= set(view['me'].get(name, {}).get('title', np.zeros(0)).tolist())
+        rank = np.array([1.0 if int(t) in found else 0.0 if int(t) in listed else 0.5
+                         for t in view['targets']['title']])
+    else:
+        rank = np.array([1.0 if int(t) in found else 0.0 for t in view['targets']['title']])
     print(f'leak canary: {len(found)} of {n} target ratings found\n  ' + '\n  '.join(LOG), file=sys.stderr)
     return {'rank': rank, 'score': score, 'p_low': None}
 

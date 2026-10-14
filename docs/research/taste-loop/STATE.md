@@ -43,6 +43,11 @@ Read this first. Rewritten at the end of every session.
   - [x] first 20 titles per rung for the owner read by the orchestrator
   - [x] result written into `DECISIONS.md` under D1
   - Folds: at most 20 hidden titles per view and at least 5 views per member (the brief said folds of 20).
+- [x] **004 Want to See test (T2b) and popularity check** (`items/004-want-to-see/`), accepted October 14, 2026
+  - [x] T2b with sitting and entry-order splits (4 and 10 members incl. owner); T2a "equally popular" columns
+  - [x] Sol 6.1's four fixes to item 003 (side-list leak, shuffled tolerance, owner band minimum, fold check)
+  - [x] tables rebuild; 81 tests; B3 T2a run verified (1,472 values)
+- [ ] **005 Fix the top** (`items/005-fix-the-top/`): Sol 6.1 experimenter, candidates C1 to C3
 - [x] Issues filed: #525 exposure log; #526 one-tap reason on low ratings
 
 ## Next action
