@@ -98,3 +98,16 @@ test("Better Auth receives a deterministic CrateDB refusal rather than an indete
  refuse = true
  await expect(ctx.internalAdapter.updateAccount(account.id, { accessToken: "fresh" })).rejects.toMatchObject({ code: 4000 })
 })
+
+test("Better Auth deletion and email changes release addresses for a new member", async () => {
+ const auth = makeAuth({ user: { deleteUser: { enabled: true } } })
+ const ctx = await auth.$context
+ const email = `${randomUUID()}@test.invalid`
+ const user = await ctx.internalAdapter.createUser({ email, name: "Member", emailVerified: true })
+ const nextEmail = `${randomUUID()}@test.invalid`
+ await ctx.internalAdapter.updateUser(user.id, { email: nextEmail })
+ expect((await ctx.internalAdapter.createUser({ email: email.toUpperCase(), name: "New owner", emailVerified: true })).id).not.toBe(user.id)
+ const session = await ctx.internalAdapter.createSession(user.id)
+ expect((await auth.api.deleteUser({ headers: cookieHeaders(session.token), body: {} })).success).toBe(true)
+ expect((await ctx.internalAdapter.createUser({ email: nextEmail, name: "Returning member", emailVerified: true })).id).not.toBe(user.id)
+})
