@@ -82,14 +82,19 @@ Read this first. Rewritten at the end of every session.
 ## Next action
 
 Phase 2, D1 route chosen by the owner (October 14, 2026):
-1. Map how today's taste orders Best match and For you in the webapp; plan G1's port and the flag.
-2. Exposure log (#525), then G1 behind a flag, on for the owner only.
-3. Owner checkpoint: the owner looks at their own lists under G1. Only then everyone.
+1. [x] Exposure log (#525) and G1 behind `REC_G1_ORDER` built on branch `feat/g1-order` (worktree
+   `.claude/worktrees/g1-order`; item 013): offline job with exact pack parity, webapp ordering with exact fixture
+   parity, shadow logging, preview-only rebuilds; reviewed by Fable (plan) and Astra (code, approved for preview).
+   Not pushed, not deployed.
+2. [ ] Owner: PR and production activation (`docs/implementation/g1-order-stage2.md` in that branch): the table
+   DDL, Windmill scripts and worker, preview member variable, webapp env (`REC_PREVIEW_USERS`, `REC_G1_ORDER=shadow`,
+   then `preview`), Windmill token.
+3. [ ] A day of shadow logs read by the orchestrator, then preview; the owner judges their own lists.
 4. In parallel, without members: T5 for D3; D2 waits for tier C.
 
 ## What the owner owes
 
-Next checkpoint: the owner tries G1 on their own lists; nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+Now: the PR and production activation of `feat/g1-order`; then the owner tries G1 on their own lists. Nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed
