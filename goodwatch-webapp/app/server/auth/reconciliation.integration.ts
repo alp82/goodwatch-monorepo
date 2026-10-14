@@ -51,3 +51,16 @@ test("refresh reconciliation preserves offline grants and only collects failed m
 	await database.delete({ model: "oauthConsent", where: [{ field: "id", value: consent.id }] })
 	assert.equal((await reconcileAuthRows({ sql, encryptionSecret, model: "oauthRefreshToken" })).removed, 2)
 })
+
+test("reconciliation collects a late session bound to an obsolete password credential", async () => {
+	const { authCredentialVersion } = await import("./payload-codec.server.ts")
+	const database = crateAuthAdapter({ sql })({ session: { additionalFields: { credentialVersion: { type: "string", required: false } } } })
+	const user = await database.create({ model: "user", data: { email: `${randomUUID()}@example.test`, name: "Member", emailVerified: true } })
+	const account = await database.create({ model: "account", data: { providerId: "credential", accountId: user.id, userId: user.id, password: "old password hash" } })
+	const session = await database.create({ model: "session", data: { userId: user.id, token: randomUUID(), expiresAt: new Date(Date.now() + 86400000), credentialVersion: authCredentialVersion(encryptionSecret, "old password hash") } })
+	await storage.set(session.token, JSON.stringify({ session, user }))
+	await database.update({ model: "account", where: [{ field: "id", value: account.id }], update: { password: "new password hash" } })
+	assert.equal((await reconcileAuthRows({ sql, encryptionSecret, storage, model: "session" })).removed, 1)
+	assert.equal(await storage.get(session.token), null)
+	assert.equal(await database.findOne({ model: "session", where: [{ field: "token", value: session.token }] }), null)
+})

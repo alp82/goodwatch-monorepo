@@ -1,7 +1,7 @@
 import { createHmac, createHash, randomUUID } from "node:crypto"
 import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authModels, authModelTable } from "./crate-adapter.server.ts"
 import { readCapacity, launchPopulationBounds, type AuthAdmission } from "./population.server.ts"
-import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
+import { authPayloadCodec, authCredentialVersion, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type AuthMaintenanceOptions = { sql: AuthSql; encryptionSecret: string; encryptionKeys?: AuthEncryptionKeys; cursor?: string; batchSize?: number; now?: Date }
 type Options = AuthMaintenanceOptions
@@ -257,6 +257,12 @@ export async function reconcileAuthRows(options: Options & { model: string; stor
   const row = current.envelope.row
   const user = typeof row.userId === "string" ? await read("user", row.userId) : null
   let orphan = (model === "account" || model === "session") && (!user || user.envelope.deleted || model === "session" && !user.envelope.row.emailVerified)
+  if (model === "session" && typeof row.credentialVersion === "string" && !orphan) {
+   const credentialId = createHash("sha256").update(JSON.stringify(["credential", row.userId])).digest("hex")
+   const credential = await read("account", credentialId)
+   const password = credential && !credential.envelope.deleted && typeof credential.envelope.row.password === "string" ? credential.envelope.row.password : null
+   orphan ||= row.credentialVersion !== authCredentialVersion(options.encryptionSecret, password)
+  }
   if (model === "oauthClient" && typeof row.userId === "string") orphan = !user || user.envelope.deleted
   if (["oauthConsent", "oauthRefreshToken", "oauthAccessToken", "oauthClientResource"].includes(model)) {
    const client = typeof row.clientId === "string" ? await read("oauthClient", row.clientId) : null

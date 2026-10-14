@@ -3,7 +3,7 @@ import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
 import { admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
-import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
+import { authPayloadCodec, authCredentialVersion, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
 export type AuthSql = (statement: string, args?: unknown[]) => Promise<SqlResult>
@@ -101,11 +101,13 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 	if (!String((await sql("SHOW CREATE TABLE doc.auth_user_email")).rows[0]?.[0]).includes('"user_seq" BIGINT NOT NULL')) throw new Error("Incompatible prerelease email claim schema: offline migration required")
 }
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds, enforceGrantRevocation = false }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds; enforceGrantRevocation?: boolean }) {
+export const localAuthEncryptionSecret = "disposable-local-auth-integration-key-548"
+
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds, enforceGrantRevocation = false, validateSessionCredentials = false }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds; enforceGrantRevocation?: boolean; validateSessionCredentials?: boolean }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
-	const payloadSecret = encryptionSecret ?? "disposable-local-auth-integration-key-548"
+	const payloadSecret = encryptionSecret ?? localAuthEncryptionSecret
 	const codec = authPayloadCodec(payloadSecret, encryptionKeys)
 	const bounds = populationBounds === true ? launchPopulationBounds : populationBounds
 	if (bounds) validatePopulationBounds(bounds, maxEnumeration)
@@ -336,7 +338,13 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				async findOne({ model, where }) {
 					const rows = await candidates(model, where)
 					if (!testOnlyConformance && rows.length > 1) throw new Error("Ambiguous auth lookup; supply the complete logical key")
-					return rows[0]?.row as any ?? null
+					const row = rows[0]?.row
+					if (row && model === "session" && validateSessionCredentials) {
+						const credential = await stored("account", digest("credential", row.userId))
+						const password = credential && !credential.deleted && typeof credential.row.password === "string" ? credential.row.password : null
+						if (row.credentialVersion !== authCredentialVersion(payloadSecret, password)) return null
+					}
+					return row as any ?? null
 				},
 				async findMany({ model, where = [], limit, offset = 0, sortBy }) {
 					const rows = (await candidates(model, where)).map(v => v.row)

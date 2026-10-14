@@ -14,8 +14,8 @@ import { mcp } from "@goodwatch/auth-stack/mcp"
 import { jwt } from "@goodwatch/auth-stack/plugins"
 import { compare } from "bcryptjs"
 import { decodeJwt, jwtVerify } from "jose"
-import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
-import type { AuthEncryptionKeys } from "./payload-codec.server.ts"
+import { type AuthSql, crateAuthAdapter, localAuthEncryptionSecret } from "./crate-adapter.server.ts"
+import { authCredentialVersion, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
@@ -33,6 +33,10 @@ export function createGoodwatchAuth(options: {
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
+ const credentialVersion = (password: string | null) => authCredentialVersion(options.encryptionSecret ?? localAuthEncryptionSecret, password)
+ const verifyCurrentPassword = async (hash: string, password: string) => {
+  try { return hash.startsWith("$2") ? await compare(password, hash.replace(/^\$2y\$/, "$2b$")) : await verifyPassword({ hash, password }) } catch { return false }
+ }
 	const tokenHash = (token: string) =>
 		createHash("sha256").update(token).digest("base64url")
 	const core = betterAuth({
@@ -45,6 +49,7 @@ export function createGoodwatchAuth(options: {
 			encryptionKeys: options.encryptionKeys,
 			populationBounds: true,
 			enforceGrantRevocation: true,
+			validateSessionCredentials: true,
 		}),
 		plugins: options.mcp
 			? [
@@ -191,6 +196,7 @@ export function createGoodwatchAuth(options: {
 			storeSessionInDatabase: true,
 			preserveSessionInDatabase: false,
 			cookieCache: { enabled: false },
+			additionalFields: { credentialVersion: { type: "string", required: false, input: false, returned: false } },
 		},
 		rateLimit: options.rateLimit,
 		emailAndPassword: {
@@ -490,6 +496,10 @@ export function createGoodwatchAuth(options: {
 							})
 						}
 					}
+					const current = await ctx.context.internalAdapter.findCredentialAccount(userId)
+					if (!current?.password || !await verifyCurrentPassword(current.password, ctx.body.password)) throw new APIError("UNAUTHORIZED", { message: "Sign-in credential changed" })
+					const stamped = await ctx.context.adapter.update({ model: "session", where: [{ field: "token", value: ctx.context.newSession.session.token }], update: { credentialVersion: credentialVersion(current.password) } })
+					if (!stamped) throw new APIError("UNAUTHORIZED", { message: "Sign-in session changed" })
 				}
 			}),
 		},
@@ -517,7 +527,12 @@ export function createGoodwatchAuth(options: {
 							throw new APIError("FORBIDDEN", {
 								message: "Confirm your email before signing in.",
 							})
-						return { data: session }
+						const credential = await context.context.internalAdapter.findCredentialAccount(session.userId)
+						const password = typeof credential?.password === "string" ? credential.password : null
+						// Core verified the password before reaching this hook. Verify the
+						// current credential too, then bind the session to that exact version.
+						if (context.path === "/sign-in/email" && (!password || typeof context.body?.password !== "string" || !await verifyCurrentPassword(password, context.body.password))) throw new APIError("UNAUTHORIZED", { message: "Sign-in credential changed" })
+						return { data: { ...session, credentialVersion: credentialVersion(password) } }
 					},
 				},
 			},
@@ -529,6 +544,15 @@ export function createGoodwatchAuth(options: {
 		handler: async (request: Request) => {
 			const response = await core.handler(request)
 			const path = new URL(request.url).pathname
+			if (path === "/api/auth/sign-in/email" && response.ok) {
+				const pair = await response.clone().json()
+				const context = await core.$context
+				const current = typeof pair.token === "string" ? await context.adapter.findOne({ model: "session", where: [{ field: "token", value: pair.token }] }) : null
+				if (!current) {
+					if (typeof pair.token === "string") await context.internalAdapter.deleteSession(pair.token)
+					return Response.json({ message: "Unable to sign in. Check your details and confirmation email." }, { status: 401 })
+				}
+			}
 			if (options.mcp && path === "/api/auth/oauth2/token" && response.ok) {
 				try {
 					const pair = await response.clone().json()

@@ -1,4 +1,8 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto"
+
+export function authCredentialVersion(secret: string, password: string | null) {
+ return createHmac("sha256", secret).update(JSON.stringify(["session-credential", password])).digest("hex")
+}
 
 export type AuthEncryptionKeys = { active: string; keys: Record<string, string>; allowLegacy?: boolean }
 

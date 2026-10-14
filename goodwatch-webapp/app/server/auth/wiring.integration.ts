@@ -939,3 +939,35 @@ test("a full background mail queue does not reveal membership through password-r
 		await queue.drain()
 	}
 })
+
+test("a scrypt sign-in paused before session insertion cannot survive a concurrent password change", async () => {
+	const member = await confirmed()
+	const context = await auth.$context
+	const user = await context.internalAdapter.findUserByEmail(member.address)
+	assert.ok(user)
+	const account = await context.internalAdapter.findCredentialAccount(user.user.id)
+	assert.ok(account)
+	const { hashPassword } = await import("@goodwatch/auth-stack/crypto")
+	const newPasswordHash = await hashPassword("a different secure password")
+	let changed = false
+	const delayed = createGoodwatchAuth({
+		sql: async (statement, args) => {
+			if (!changed && statement.startsWith("INSERT INTO doc.auth_session (")) {
+				changed = true
+				await context.adapter.update({ model: "account", where: [{ field: "id", value: account.id }], update: { password: newPasswordHash } })
+			}
+			return sql(statement, args)
+		},
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		storage, mail, baseURL,
+		secret: "disposable-local-wiring-secret-at-least-32",
+		google: { clientId: "local-google-client", clientSecret: "local-google-secret" },
+	})
+	const response = await delayed.handler(new Request(`${baseURL}/api/auth/sign-in/email`, {
+		method: "POST", headers: { "content-type": "application/json", origin: baseURL },
+		body: JSON.stringify({ email: member.address, password }),
+	}))
+	assert.ok(changed)
+	assert.equal(response.status, 401)
+	assert.equal(cookie(response), "")
+})
