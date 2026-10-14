@@ -285,7 +285,7 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Guards**, read on the first 50 candidates of every view (hidden titles left out, ties in the order of the
   view's list), averaged over a member's views: the share of shows and of animation, each also minus the member's
   own share among their rated universe titles; the largest number of titles from one franchise; the median vote
-  count. **Decided here:** animation is production method "Animation"; a franchise is a movie series of the pack
+  count (descriptive since amendment A1, section 13). **Decided here:** animation is production method "Animation"; a franchise is a movie series of the pack
   (`movie_series_id`), every other title its own.
 - **Score.** **Decided here:** T2a has no calibrator and no calibration views. A predictor that gives `score` (or
   `p_low`) is scored on the hidden titles as in T1 (error of the rounded score, by band; Brier); what it gives for
@@ -691,25 +691,48 @@ each of these leaves a trace in git or in the ledger.
 
 ## 13. Amendments
 
-### A1. The disliked-share guard (October 14, 2026)
+### A1. The disliked-share guard (October 14, 2026, revised the same day after the second review)
 
 Made after tier A results of items 003 to 007 had been read, and committed before the results of item 009 were
-read. Proposed by Fable's review (`items/009-composition/REVIEW-guard-fable.md`); a second review by another model
-family is in `items/009-composition/REVIEW-guard-astra.md`.
+read. Proposed by Fable (`items/009-composition/REVIEW-guard-fable.md`); revised after Astra's second review
+(`items/009-composition/REVIEW-guard-astra.md`, "accept with changes"), still before item 009's results were read.
+Tier A results remain exploratory; the safeguard is the tier B gate rule below.
 
-- **What changes.** In T2a, "share of hidden titles rated 5 or less in the first 50 / 200" is no longer a guard. It
-  stays in every table as a descriptive figure. Reason: against today's taste (B2), whose first 50 hold almost no
-  titles members watched (loved 0.019, disliked 0.001), any scorer that surfaces watched titles is worse with an
-  interval excluding zero; about a fifth of what members watch they dislike. The guard measured popularity, which the
-  vote-count figure and the matched measures already cover.
-- **The replacement guard.** For each member with 5 or more hidden titles rated 5 or less, the mean percentile of
-  those titles among candidates within a factor of 1.5 in vote count (`pct_popular_low`, section 4a), paired
-  against the primary reference, 95% interval from 10,000 draws over members. A candidate fails if it is higher with
-  an interval excluding zero.
-- **Reported, not judged:** the share of disliked titles among hidden titles in the first 50, per member with 5 or
-  more hidden titles there, against the member's own share of titles rated 5 or less.
-- **Median vote count of the first 50** is descriptive, not a guard.
-- **Unchanged:** the primary measure, the 0.03 floor, the shows, animation and franchise guards, the references.
-- **Applies to every rung and candidate, past and future.** Retroactively: B3, C3, F1 and F3 pass the new guard;
-  none becomes a win, because each still fails the animation guard (and F1 item 007's franchise limit).
-- **No T2a registration before the gate supports T2a** (`gate.py` was T1-only when this was written).
+- **Why.** The share of hidden titles rated 5 or less in the first 50 is a demanding comparison against today's
+  taste (B2), whose first 50 hold almost no titles members watched (loved 0.019, disliked 0.001): a scorer that
+  surfaces watched titles at all raises it, since about a fifth of what members watch they dislike. It is not
+  impossible to pass (a scorer could lift loved titles and leave disliked ones down), but on its own it measures how
+  many watched titles reach the top, much of which is popularity.
+- **What changes.** That share (first 50 and first 200) is no longer a pass-fail guard for T2a. It stays in every
+  table, and it becomes a **top-list harm criterion for confirmation**: before anything changes what members see,
+  the confirmation step (T3 judged pools or a sealed tier C check) must include a frozen top-list harm measure
+  (disliked or "would not watch" titles in the first 20), fixed before that step's data exists.
+- **New guard 1, disliked titles among equally popular candidates.** For each member other than the owner with 5 or
+  more hidden titles rated 5 or less that each have at least one matched candidate (vote count within a factor of
+  1.5, inclusive; titles with zero or missing votes have no neighbourhood and are left out), the mean percentile of
+  those titles among their matched candidates (`pct_popular_low`). Paired against B2 for D1, members present for
+  both rungs only, 95% interval from 10,000 draws over members. **Pass only if the interval's upper bound is below
+  +0.03** (the T2a floor, used as the largest acceptable worsening); if the interval reaches +0.03 the guard is
+  inconclusive, which counts as not passed.
+- **New guard 2, popularity.** Separation among equally popular candidates against B2 must not be worse with an
+  interval excluding zero. Median vote count of the first 50 is descriptive.
+- **Reported, not judged:** per member with 5 or more hidden titles in the first 50 (any band), the share rated 5
+  or less among them, against the member's own share of titles rated 5 or less among their hidden titles; with the
+  number of members that qualify for each rung.
+- **Unchanged:** the primary measure, the 0.03 floor, the shows, animation and franchise guards (each paired against
+  B2, failing if worse with an interval excluding zero), the references, and every earlier item's own registration
+  rule. Item 007 stays closed: F1 and F2 failed its franchise limit and F3 its first-50 bar, independent of A1.
+- **Applies to every rung and candidate, past and future.** Verdicts written before A1 are marked "protocol before
+  A1" in `DECISIONS.md`.
+- **Gate rule for T2a (frozen now):** a registered T2a candidate is `replicated` only if on tier B (members other
+  than the owner) the separation against the primary reference has the same sign as on tier A and at least half its
+  size, **and** guard 1's point estimate on tier B is below +0.03. Fewer than 10 tier B members with both bands, or
+  fewer than 10 for guard 1, is `not replicated` (insufficient data). The gate prints only the verdict.
+
+### A2. Decision rule for item 009's G1, frozen before its results are read
+
+G1 is registered on T2a against B2 (`others: all`) if and only if, on tier A, for members other than the owner:
+separation against B2 is at least +0.03 with an interval excluding zero; none of shows, animation and franchise is
+worse than B2 with an interval excluding zero; guard 1 passes (upper bound below +0.03); guard 2 passes. Otherwise
+G1 is not registered and D1 stays "keep B2", with the popularity tilt as the open question. No other candidate is
+registered from item 009, and G1 is not changed after its results are read.

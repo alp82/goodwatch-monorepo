@@ -1,0 +1,19 @@
+# Second review of amendment A1 by Astra (gpt-6-astra, high effort, read-only), October 14, 2026
+
+Written without access to item 009 results.
+
+**Verdict: accept with changes.**
+
+1. **High — The old guard is not defective by construction.** A scorer could raise loved titles while leaving disliked titles down. The overall dislike rate does not make increased disliked retrieval—or statistical significance—inevitable. B2’s near-zero baseline shows a sparse, demanding comparison, not an impossible one. Replace the categorical claim with that narrower limitation. Evidence: [PROTOCOL.md:700](../../PROTOCOL.md:700), [ladder-T2a.md:55](../../items/004-want-to-see/ladder-T2a.md:55).
+
+2. **High — The replacement protects a different outcome.** Average rank within popularity neighborhoods can improve while more disliked titles reach the top. F1 demonstrates this: disliked first-50 recall worsens by **0.0245**, while matched disliked percentile improves by **0.0691**. Demoting median votes also removes the claimed separate popularity safeguard. Explicitly acknowledge this tradeoff; require a frozen top-list harm criterion in prospective confirmation before deployment. Evidence: [007/RESULTS.md:103](../../items/007-b5-floor/RESULTS.md:103), [007/RESULTS.md:121](../../items/007-b5-floor/RESULTS.md:121), [PROTOCOL.md:711](../../PROTOCOL.md:711).
+
+3. **High — An uncertain deterioration still passes.** “Fails if higher with an interval excluding zero” allows substantial harm when uncertainty is large. This inherits PLAN’s rule, but does not establish safety. Before unblinding, set a justified maximum acceptable deterioration and require the upper confidence bound below it; insufficient evidence should be inconclusive. Evidence: [PROTOCOL.md:705](../../PROTOCOL.md:705), [PLAN.md:224](../../PLAN.md:224).
+
+4. **High — Selection independence is unproven.** The metric and matching width predate item 007, which helps. But its favorable F1/F3 results were known when it was chosen. Their remaining failures do not remove that bias: repairing composition was already the next step. Universal application, retained old figures and withholding item 009 are useful safeguards, but tier A remains exploratory. Freeze the rule and candidate-selection procedure before any further result access. Evidence: [REVIEW-guard-fable.md:11](../../items/009-composition/REVIEW-guard-fable.md:11), [DECISIONS.md:86](../../DECISIONS.md:86).
+
+5. **High — “Gate supports T2a” is insufficient.** The stated replication rule checks only the primary effect’s sign and half-size. It does not confirm the newly selected guard on untouched members. Freeze and review the complete T2a gate rule, including guard checks, insufficient-data handling and separation’s upward improvement direction, before opening item 009 results. Evidence: [PROTOCOL.md:619](../../PROTOCOL.md:619), [PROTOCOL.md:715](../../PROTOCOL.md:715), [PLAN.md:227](../../PLAN.md:227).
+
+6. **Medium — Finish the guard’s definition.** The core calculation is clear, but specify five **valid matched** disliked titles, empty neighborhoods, zero/missing votes, paired coverage, and exclusion of the separately reported owner. Name B2 explicitly for D1. Also define the new descriptive ratio’s denominator and report its eligible-member count: the five-hit filter selects different members for different scorers. Evidence: [PROTOCOL.md:273](../../PROTOCOL.md:273), [PROTOCOL.md:705](../../PROTOCOL.md:705).
+
+7. **Medium — Preserve item eligibility and reconcile the documents.** A1 must not reopen item 007: F1/F2 failed franchise limits and F3 failed loved-title recall, independently of this guard. Mark historical verdicts with their protocol version and reconcile section 4a’s remaining classification of median votes as a guard. Evidence: [NO-PREREG.md:3](../../items/007-b5-floor/NO-PREREG.md:3), [PROTOCOL.md:285](../../PROTOCOL.md:285).
