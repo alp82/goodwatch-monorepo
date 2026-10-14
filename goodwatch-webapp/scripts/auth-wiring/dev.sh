@@ -55,6 +55,7 @@ exec env "${blank[@]}" \
  AUTH_LOCAL_SERVICES=true \
  AUTH_LOCAL_VALKEY_NAT="$AUTH_LOCAL_VALKEY_NAT" \
  BETTER_AUTH_URL="http://localhost:$port" \
+ MCP_RESOURCE_URL="http://localhost:$port/mcp" \
  BETTER_AUTH_SECRET=disposable-local-dev-secret-at-least-32-chars \
  AUTH_CRATEDB_ENCRYPTION_SECRET=disposable-local-dev-encryption-secret-32 \
  AUTH_GOOGLE_CLIENT_ID=local-google-client \

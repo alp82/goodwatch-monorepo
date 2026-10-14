@@ -3,6 +3,7 @@ import {
 	AtSymbolIcon,
 	EyeSlashIcon,
 	FlagIcon,
+	LinkIcon,
 	TvIcon,
 	UserIcon,
 } from "@heroicons/react/24/solid";
@@ -17,7 +18,7 @@ import {
 import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import { Spinner } from "~/ui/wait/Spinner";
-import { useUser } from "~/utils/auth";
+import { useSupabase, useUser } from "~/utils/auth";
 import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -68,6 +69,13 @@ const navigation = [
 	},
 ];
 
+// Apps connect through the new sign-in only (#570).
+const connectedApps = {
+	name: "Connected apps",
+	to: "/settings/connected-apps",
+	icon: LinkIcon,
+};
+
 export default function Settings() {
 	const matches = useMatches();
 	const route =
@@ -77,6 +85,8 @@ export default function Settings() {
 	};
 
 	const { user, loading } = useUser();
+	const { betterAuth } = useSupabase();
+	const items = betterAuth ? [...navigation, connectedApps] : navigation;
 	const navigate = useNavigate();
 	const { pathname, search } = useLocation();
 	const signedOut = !loading && !user;
@@ -110,7 +120,7 @@ export default function Settings() {
 				<div className="flex gap-4 lg:gap-8 flex-wrap">
 					<nav aria-label="Sidebar">
 						<ul className="-mx-2 space-y-1 w-36 lg:w-48">
-							{navigation.map((item) => {
+							{items.map((item) => {
 								const isCurrent = checkIsCurrent(item.to);
 								return (
 									<li key={item.name}>

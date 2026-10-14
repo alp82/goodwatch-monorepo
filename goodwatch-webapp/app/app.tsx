@@ -1,6 +1,6 @@
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
-import { Outlet, useLocation } from "@remix-run/react"
+import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
 import Footer from "~/ui/Footer"
@@ -49,11 +49,19 @@ export function loadShellCode({
 	])
 }
 
+/** A route's `handle` that leaves out the site's header, footer and dock: a page that belongs to another app's flow. */
+export const STANDALONE = { chrome: "none" } as const
+
 export default function App() {
 	const location = useLocation()
 	const { user } = useUser()
+	const standalone = useMatches().some(
+		(match) => (match.handle as { chrome?: string } | undefined)?.chrome === STANDALONE.chrome,
+	)
 
 	useInvalidateOnVisibility()
+
+	if (standalone) return <Outlet />
 
 	return (
 		<NavigationProvider>
