@@ -187,7 +187,7 @@ fixture rows in the new tables and remove them afterwards.
 
 The main-branch workflow syncs checked-in scripts/flows to Windmill. No live
 schedule or secret is created by this branch. Provision/verify `u/Alp/CRATE_HOSTS`,
-`CRATE_USER`, `CRATE_PASS`, `OPENROUTER_API_KEY`, and `QDRANT_URL` / `QDRANT_API_KEY`.
+`CRATE_USER`, `CRATE_PASS`, `OPENROUTER_API_KEY`, and existing `QDRANT_HOST` / `QDRANT_PORT` / `QDRANT_API_KEY` (or a `QDRANT_URL` override).
 `YOUTUBE_API_KEY` is optional but needed for paginated uploads playlists; without
 it, official channel feeds work with a rolling approximately fifteen-upload
 inventory. Variable names match existing flows; no new Crate resource is needed.

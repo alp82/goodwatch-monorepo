@@ -234,3 +234,15 @@ class ContextTests(unittest.TestCase):
             self.assertEqual(len(people), len(set(people)))
             return [{'id': item['post_id'], 'links': []}]
         Matcher(sql, llm=llm).match([item])
+
+class SettingsTests(unittest.TestCase):
+    def test_windmill_reuses_existing_qdrant_host_and_port_variables(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from f.social.settings import load
+        variables = {'CRATE_HOSTS': 'http://crate.example:4200', 'CRATE_USER': 'fixture',
+                     'CRATE_PASS': 'fixture-password', 'QDRANT_HOST': 'qdrant.example', 'QDRANT_PORT': '6333'}
+        def variable(path):
+            return variables[path.rsplit('/', 1)[1]]
+        with patch.dict('os.environ', {'WM_JOB_ID': 'fixture'}, clear=True), patch.dict(sys.modules, {'wmill': SimpleNamespace(get_variable=variable)}):
+            self.assertEqual(load()['QDRANT_URL'], 'http://qdrant.example:6333')
