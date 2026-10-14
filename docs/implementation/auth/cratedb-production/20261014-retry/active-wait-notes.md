@@ -1,0 +1,7 @@
+# Crate-03 actual-exit gate, in progress
+
+The SQL decommission acknowledged success at 2026-10-14T21:29:13.435795Z after 878.374 seconds. Target crate-03 holds zero primaries and no cluster relocations remain; one replica is unassigned while allocation is primaries. The original 5.10.9 daemon is still running and reports delaying graceful shutdown for active work. No long-running SQL job appeared in the sampled sys.jobs view (only the observer query); this does not prove there are no internal active contexts. No graceful timeout/abort was logged in the captured sample.
+
+Do not start 5.10.16 on this host until the original process actually exits. No forced stop, signal, production job cancellation or app-routing change has been made. The source waits separately for active requests/contexts after SQL acknowledgement, up to the same configured two-hour bound. Continue the documented non-forcing wait; stop and compensate on any failed gate.
+
+Before another node, reserve both documented two-hour waits plus 30 minutes of recovery/postcheck/clean-stop margin before 02:30 UTC. Thus no further decommission begins after 22:00 UTC. If the current node only finishes later, recover it to GREEN/STARTED, leave all nodes healthy and report the exact mixed versions without starting the final node. This enforces the owner's hard cutoff; it is not permission to force the current process or skip a gate.

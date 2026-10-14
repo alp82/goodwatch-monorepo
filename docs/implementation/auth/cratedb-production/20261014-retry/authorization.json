@@ -16,5 +16,11 @@
     "administrativeHttpSeconds": 7500,
     "sshOuterSeconds": 7530,
     "reason": "Runbook observed about 34 minutes of relocation; CrateDB documented default/configured 2h relocation bound and non-forcing abort. Retain explicit 2h server setting with 5-minute HTTP margin. Tagged source has separate subsequent active-context wait with the same server bound; monitor real exit independently."
+  },
+  "nextNodeWindowGate": {
+    "cutoff": "2026-10-15T02:30:00Z",
+    "reserveSeconds": 16200,
+    "reason": "Two separately bounded 2-hour server waits (relocation and active contexts), plus 30 minutes for recovery/postchecks/clean-stop margin. The active-context wait is now actually observed on crate-03. Finish current node safely; start no later node unless this reserve remains.",
+    "latestFurtherDecommissionStart": "2026-10-14T22:00:00Z"
   }
 }
