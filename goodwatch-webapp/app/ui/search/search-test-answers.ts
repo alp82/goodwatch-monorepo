@@ -18,6 +18,22 @@ export const busyAnswer = () =>
 		},
 	)
 
+/** The search route's answer to a visitor over the limit, as searchLimitedResponse in server/search-runtime/rate-limit.server.ts builds it. */
+export const limitedAnswer = () =>
+	new Response(
+		JSON.stringify({
+			error: "Too many searches right now. Try again in a moment.",
+		}),
+		{
+			status: 429,
+			headers: {
+				"Content-Type": "application/json; charset=utf-8",
+				"Cache-Control": "private, no-store",
+				"Retry-After": "30",
+			},
+		},
+	)
+
 /** What the proxy answers by itself when no search role is healthy: no JSON body. */
 export const gatewayAnswers: Record<string, () => Response> = {
 	"a 502 with an HTML body": () =>

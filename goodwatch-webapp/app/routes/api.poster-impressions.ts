@@ -2,6 +2,7 @@ import { canonicalTitleId } from "~/utils/title-identity"
 import { createHash } from "node:crypto"
 import type { ActionFunctionArgs } from "@remix-run/node"
 import { z } from "zod"
+import { rateLimiter } from "~/server/rate-limit.server"
 import { hasSiteOrigin } from "~/server/site-origin.server"
 import { increasePriority } from "~/server/utils/priority"
 import { getRedisCluster } from "~/utils/cache"
@@ -14,12 +15,6 @@ const payloadSchema = z.object({
 		tmdb_id: z.number().int().positive().max(2_147_483_647),
 	}).strict()).min(1).max(50),
 }).strict()
-
-const rateLimitScript = `
-local count = redis.call('INCR', KEYS[1])
-if count == 1 then redis.call('EXPIRE', KEYS[1], 60) end
-return count
-`
 
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return new Response(null, { status: 405 })
@@ -53,8 +48,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		// The ingress must overwrite X-Forwarded-For; raw addresses are never stored.
 		const address = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
 		const clientKey = createHash("sha256").update(address).digest("hex")
-		const count = Number(await redis.eval(rateLimitScript, 1, `poster-rate:${clientKey}`))
-		if (count > 60) return new Response(null, { status: 429, headers: { "Retry-After": "60" } })
+		const verdict = await rateLimiter.take("poster-rate", clientKey, [{ limit: 60, seconds: 60 }])
+		if (!verdict.allowed) return new Response(null, { status: 429, headers: { "Retry-After": String(verdict.retryAfterSeconds) } })
 		const unique = [...new Map(parsed.data.items.map(item => ({ ...item, tmdb_id: canonicalTitleId(item.media_type, item.tmdb_id) })).map(item => [`${item.media_type}:${item.tmdb_id}`, item])).values()]
 		const accepted = []
 		for (const mediaType of ["movie", "show"] as const) {

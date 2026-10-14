@@ -1,5 +1,6 @@
 // Tells a request sent by the site's own pages from one sent by another site's page or by a bare script, for the
-// endpoints that spend money or write rows when they run (search, poster impressions, og image warming).
+// endpoints that spend money or write rows when they run (search, poster impressions, og image warming), and for
+// the Sentry tunnel, which spends the error tracking quota.
 //
 // The public origin is configured, never derived from the request: Coolify terminates TLS, so remix-serve sees HTTP,
 // and forwarded headers are supplied by the caller. Production defaults to https://goodwatch.app. Anywhere else the
@@ -7,7 +8,8 @@
 // a reader whatever port it runs on.
 //
 // These headers stop browsers on other sites, which can't forge them. A script can send any header it likes, so this
-// is no limit on scripts: it only keeps a request without the headers a browser sends from running by default.
+// is no limit on scripts: it only keeps a request without the headers a browser sends from running by default. The
+// limit on scripts for search is search-runtime/rate-limit.server.ts.
 
 /** The site's public origin, or null when none is configured outside production. */
 export function siteOrigin(): string | null {

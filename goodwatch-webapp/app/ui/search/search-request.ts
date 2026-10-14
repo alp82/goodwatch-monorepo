@@ -4,13 +4,13 @@
 //
 // The search roles answer through the proxy. When no role is healthy, or for about a second after one stops, the proxy
 // answers 502, 503, or 504 itself, without the busy answer's JSON body. That, and a request that never got an answer,
-// read as the busy answer.
+// read as the busy answer. A 429 is the per-visitor search limit, whatever its body: the page says so calmly.
 //
 // The pages call this through search-client.ts, which loads this module with the first search.
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { SearchBatch } from "~/server/combined-search/search.server"
 
-import { SEARCH_BUSY_MESSAGE } from "./search-client"
+import { SEARCH_BUSY_MESSAGE, SEARCH_LIMITED_MESSAGE } from "./search-client"
 
 export type SearchAnswer =
 	/** The ranked stream: newline-delimited JSON, the reading first and the batch last. */
@@ -19,6 +19,8 @@ export type SearchAnswer =
 	| { kind: "busy"; message: string }
 	/** A 502, 503, or 504 without that message: the proxy answered, not a search role. */
 	| { kind: "gateway" }
+	/** 429: this visitor started too many searches (server/search-runtime/rate-limit.server.ts). */
+	| { kind: "limited" }
 	/** Any other refusal, with the server's message when it sent one. */
 	| { kind: "other"; message: string | null }
 
@@ -29,6 +31,10 @@ export async function classifySearchResponse(
 	response: Response,
 ): Promise<SearchAnswer> {
 	if (response.ok) return { kind: "stream" }
+	if (response.status === 429) {
+		await response.body?.cancel().catch(() => {})
+		return { kind: "limited" }
+	}
 	// The proxy's own answers have an empty, plain text, or HTML body.
 	const body: unknown = await response.json().catch(() => null)
 	const error = (body as { error?: unknown } | null)?.error
@@ -73,6 +79,7 @@ export async function requestSearch({
 	}
 	const answer = await classifySearchResponse(response)
 	if (answer.kind === "gateway") throw new Error(SEARCH_BUSY_MESSAGE)
+	if (answer.kind === "limited") throw new Error(SEARCH_LIMITED_MESSAGE)
 	if (answer.kind !== "stream") throw new Error(answer.message ?? unavailable)
 	const reader = response.body?.getReader()
 	if (!reader) throw new Error(unavailable)
