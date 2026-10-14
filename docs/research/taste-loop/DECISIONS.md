@@ -13,10 +13,10 @@ drawing members again (others) or franchises again (owner). Sources: `items/002-
 | Rung | T1 error vs B2, others | T2a separation vs B2, others | T2a, among equally well-rated, vs B2 | T2a, rated 8+ in the first 50, vs B2 | T2a separation vs B2, owner | T2b later Want to See adds, percentile vs B2 | Verdict |
 |---|---:|---:|---:|---:|---:|---|---|
 | B1 GoodWatch score | +0.014 | −0.049 (−0.113 to +0.015) | −0.089 (−0.146 to −0.032) | −0.005 (−0.015 to +0.005) | +0.160 (+0.093 to +0.231) | owner +0.165 (+0.109 to +0.223); others: 3 members (sitting), +0.135 for 9 (order) | exploratory: no clear difference on the main measure; worse once well-rated titles are compared with each other |
-| B3 standardized | +0.004; pair accuracy +0.031 (+0.013 to +0.051) | −0.003 (−0.041 to +0.030), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.070 (+0.053 to +0.088)** | +0.154 (+0.103 to +0.207) | owner +0.196 (+0.148 to +0.243); others: 3 members (sitting), +0.105 for 9 (order) | exploratory: no clear difference on the main measure; better at the top for loved titles, but **fails the guards**: titles rated 5 or less in the first 50 +0.024 (+0.008 to +0.043) and first 200 +0.064 (+0.036 to +0.098); franchise repeats +0.51 (+0.36 to +0.67); popular titles (median votes 142,136 against 7,181); animation +0.213 over the members' own mix |
+| B3 standardized | +0.004; pair accuracy +0.031 (+0.013 to +0.051) | −0.003 (−0.041 to +0.030), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.070 (+0.053 to +0.088)** | +0.154 (+0.103 to +0.207) | owner +0.196 (+0.148 to +0.243); others: 3 members (sitting), +0.105 for 9 (order) | exploratory: no clear difference on the main measure; better at the top for loved titles, but **fails the guards**: titles rated 5 or less in the first 50 +0.024 (+0.008 to +0.043) and first 200 +0.064 (+0.036 to +0.098); franchise repeats +0.51 (+0.36 to +0.67); popular titles (median votes 120,513 against 7,049, after the side-list fix); animation +0.213 over the members' own mix |
 | B4 consensus | −0.081 | +0.005 (−0.077 to +0.080), detectable 0.115 | −0.023 (−0.099 to +0.050) | −0.019 (−0.028 to −0.011) | +0.132 (+0.074 to +0.193) | owner +0.053 (−0.011 to +0.116); others: −0.005 for 9 (order) | exploratory: no clear difference; worse at the top |
 | B5 pooled | −0.107 | **+0.133 (+0.100 to +0.166)**, detectable 0.049, 24 of 26 members improved | **+0.088 (+0.053 to +0.123)** | −0.017 (−0.027 to −0.009) | +0.231 (+0.179 to +0.285) | owner +0.051 (−0.005 to +0.107); others: +0.014 for 9 (order) | exploratory: best separation, but **fails the guards**: worse at the top, franchise repeats +0.82 (+0.55 to +1.08), fewer shows (8% in the first 50 against the members' 39%); see below |
-| BP vote count | −0.010 | −0.114 (−0.168 to −0.061) | −0.118 (−0.172 to −0.064) | +0.369, but titles rated 5 or less too (0.264 in the first 50) | −0.202 (−0.266 to −0.133) | owner +0.274 (+0.211 to +0.337); others: +0.284 for 9 (order) | loses; its first-50 hits are "people watch popular titles", not taste |
+| BP vote count | −0.010 | −0.114 (−0.168 to −0.061) | −0.118 (−0.172 to −0.064) | +0.369, but titles rated 5 or less too (0.314 in the first 50 after the side-list fix) | −0.202 (−0.266 to −0.133) | owner +0.274 (+0.211 to +0.337); others: +0.284 for 9 (order) | loses; its first-50 hits are "people watch popular titles", not taste |
 
 T1 column: difference in error against B2 (below zero is better), from each rung's paired difference against B0
 minus B2's (−0.008). Intervals against B2 for B3, B4 and B5 are in the T1 table.
@@ -46,21 +46,29 @@ B5's pooled gain is not a copied account.
 
 - T2a "among equally popular" (vote counts within a factor of 1.5), separation against B2, others: B3 +0.040
   (+0.003 to +0.076), B5 +0.126 (+0.089 to +0.166), B1 −0.035, BP −0.087. With score and popularity both matched: B3
-  +0.023 (−0.022 to +0.061), B5 +0.097 (+0.049 to +0.149). B5's separation is not popularity. B3's lead for loved
-  titles survives the popularity match (+0.035, +0.022 to +0.047), but its separation does not once both are matched.
+  +0.023 (−0.022 to +0.061), B5 +0.097 (+0.049 to +0.149). B5's separation gain survives these adjustments; they
+  reduce popularity's part without removing it (vote count alone keeps 0.035, 0.019 to 0.051, popularity-matched).
+  B3's mean percentile of loved titles stays ahead under the popularity match (+0.035, +0.022 to +0.047); its
+  separation with both matched is inconclusive. "Both" keeps only titles with 50 or more matched candidates
+  (3,282 of 4,788 others' titles; 20 of 26 members for the separation), so it describes those titles only.
 - T2b cannot judge other members: the plan's rule (adds in a later visit) keeps 3 others; the entry-order variant
   keeps 9. For them vote count ranks later adds best (+0.284 over today's taste), as PLAN.md warned: members add
-  what they were shown, and lists lean popular. For the owner (80 later adds), B3 places later Want to See adds
-  highest of the taste scorers (0.798 against 0.602 for today's taste, 0.767 for GoodWatch score alone), and keeps
-  most of that among equally popular titles (0.719 against 0.609); it also ranks titles the owner later skipped
-  higher (0.732 against 0.597).
+  what they were shown, and lists lean popular. Among the 3 others under the plan's sitting rule,
+  B1 has the highest estimate; the +0.284 for vote count is the entry-order variant. For the owner (80 later adds),
+  B3 has the highest point estimate of the taste scorers (0.798 against 0.602 for today's taste and 0.767 for
+  GoodWatch score alone; against B1 +0.031, −0.017 to +0.075). Among equally popular titles its gain over today's
+  taste falls from 0.196 to 0.110. It also ranks titles the owner later skipped higher (0.732 against 0.597).
 - The shuffled controls are now judged against a tolerance of ±0.015 and come out **inconclusive**, not failed, for
-  T2a and both T2b splits: no figure lies outside the band, but the intervals are wider than it. Differences
-  smaller than about 0.02 on these tests are not readable.
+  T2a and both T2b splits: no interval lies wholly outside the band, but the intervals are wider than it, and some
+  point estimates lie outside it (−0.021 for T2a; +0.067 and −0.074 for T2b with 3 and 9 members). Small differences
+  must be read against each comparison's interval and smallest detectable effect.
 - Checks: 81 tests pass; the three tables rebuild from the ledger (T1 identical to item 002's numbers); the ledger
   only grew; the orchestrator re-ran B3's T2a run, which reproduced all 1,472 values.
-- Fold check: with at most 5 hidden titles per view for members with under 60 ratings, B3 against B2 moves from
-  −0.001 to +0.019 and B5 from +0.112 to +0.093; the main folds do not change the reading.
+- Fold check (same 10 members with under 60 ratings and both bands): with at most 5 hidden titles per view, B3
+  against B2 moves from −0.001 to +0.019 and B5 from +0.112 to +0.093; a sensitivity check, not leave-one-out.
+- Review (Astra, `items/004-want-to-see/REVIEW-astra.md`): sound after fixes; no leak found in T2b views or the
+  side-list fix. Wording above corrected to it. Harness fixes queued after item 005: run a frozen, hash-checked copy
+  of the predictor; show retained counts for "both"; put the same-member fold comparison in the table.
 
 **Where D1 stands:** no rung replaces today's taste yet; keeping it is what the evidence supports. Two leads for phase 1: B5's ordering with a fixed top
 (its standardization done as in T1, or the list-composition re-ranker of phase 2 with a relevance floor), and B3,
