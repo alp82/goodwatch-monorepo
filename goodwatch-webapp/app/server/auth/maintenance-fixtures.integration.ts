@@ -1,9 +1,15 @@
-import { before, after } from "node:test"
-import { authModels, authModelTable, localCrateTransport, migrateAuthTables } from "./crate-adapter.server.ts"
+import { after, before } from "node:test"
+import {
+	authModelTable,
+	authModels,
+	localCrateTransport,
+	migrateAuthTables,
+} from "./crate-adapter.server.ts"
+import { authTestCrateOrigins } from "./store-fixtures.integration.ts"
 
-/** Each serial maintenance suite owns a fresh set of rows in project #565's loopback cluster. */
+/** Each serial maintenance suite owns a fresh set of rows in runner's owned loopback cluster. */
 export function maintenanceDatabase() {
-	const sql = localCrateTransport(["http://127.0.0.1:15548"])
+	const sql = localCrateTransport(authTestCrateOrigins)
 	async function reset() {
 		for (const model of [...authModels, "capacity", "user_email"]) {
 			const name = authModelTable(model)
@@ -11,7 +17,10 @@ export function maintenanceDatabase() {
 			await sql(`DELETE FROM ${name}`)
 		}
 	}
-	before(async () => { await migrateAuthTables(sql); await reset() })
+	before(async () => {
+		await migrateAuthTables(sql)
+		await reset()
+	})
 	after(reset)
 	return sql
 }

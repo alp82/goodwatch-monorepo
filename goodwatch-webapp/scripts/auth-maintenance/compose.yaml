@@ -1,0 +1,17 @@
+services:
+  node1:
+    ports: !override ['127.0.0.1:15648:4200']
+  node2:
+    ports: !override ['127.0.0.1:15649:4200']
+  node3:
+    ports: !override ['127.0.0.1:15650:4200']
+  valkey1:
+    ports: !override ['127.0.0.1:15701:6379']
+  valkey2:
+    ports: !override ['127.0.0.1:15702:6379']
+  valkey3:
+    ports: !override ['127.0.0.1:15703:6379']
+  smtp:
+    ports: !override ['127.0.0.1:15625:1025', '127.0.0.1:15680:8025']
+  data-cache:
+    ports: !override ['127.0.0.1:15704:6379']

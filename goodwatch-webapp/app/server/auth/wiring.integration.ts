@@ -1,3 +1,4 @@
+import { authTestCrateOrigins, authTestValkeyPort, authTestSmtpPort, authTestMailpitURL } from "./store-fixtures.integration.ts"
 import assert from "node:assert/strict"
 import { before, after, test } from "node:test"
 import { randomUUID } from "node:crypto"
@@ -11,14 +12,14 @@ import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 const baseURL = "http://localhost:3000"
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
-const redis = new Redis.Cluster([{ host: "127.0.0.1", port: 15601 }], {
+const sql = localCrateTransport(authTestCrateOrigins)
+const redis = new Redis.Cluster([{ host: "127.0.0.1", port: authTestValkeyPort }], {
 	natMap: JSON.parse(process.env.AUTH_TEST_VALKEY_NAT ?? "{}"),
 	redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
 })
 const storage = new ValkeyAuthStorage(() => redis)
 const mail = new AuthMailQueue(
-	smtpTransport({ host: "127.0.0.1", port: 15525, localCatcher: true }),
+	smtpTransport({ host: "127.0.0.1", port: authTestSmtpPort, localCatcher: true }),
 	{ retryDelayMs: 10 },
 )
 const auth = createGoodwatchAuth({
@@ -61,7 +62,7 @@ async function call(
 async function messages(address: string) {
 	await mail.drain()
 	const data = await (
-		await fetch("http://127.0.0.1:15580/api/v1/messages")
+		await fetch(`${authTestMailpitURL}/api/v1/messages`)
 	).json()
 	const found = data.messages.filter((m: any) =>
 		m.To.some((t: any) => t.Address === address),
@@ -70,7 +71,7 @@ async function messages(address: string) {
 		found
 			.reverse()
 			.map(async (m: any) =>
-				(await fetch(`http://127.0.0.1:15580/api/v1/message/${m.ID}`)).json(),
+				(await fetch(`${authTestMailpitURL}/api/v1/message/${m.ID}`)).json(),
 			),
 	)
 }
@@ -502,7 +503,7 @@ test("SMTP work runs in the background, retries temporary failures, and alerts w
 	const { renderMetrics } = await import("../metrics/registry.server.ts")
 	const transport = smtpTransport({
 		host: "127.0.0.1",
-		port: 15525,
+		port: authTestSmtpPort,
 		localCatcher: true,
 	})
 	let attempts = 0
@@ -945,7 +946,9 @@ test("a scrypt sign-in paused before session insertion cannot survive a concurre
 	const context = await auth.$context
 	const user = await context.internalAdapter.findUserByEmail(member.address)
 	assert.ok(user)
-	const account = await context.internalAdapter.findCredentialAccount(user.user.id)
+	const account = await context.internalAdapter.findCredentialAccount(
+		user.user.id,
+	)
 	assert.ok(account)
 	const { hashPassword } = await import("@goodwatch/auth-stack/crypto")
 	const newPasswordHash = await hashPassword("a different secure password")
@@ -954,19 +957,31 @@ test("a scrypt sign-in paused before session insertion cannot survive a concurre
 		sql: async (statement, args) => {
 			if (!changed && statement.startsWith("INSERT INTO doc.auth_session (")) {
 				changed = true
-				await context.adapter.update({ model: "account", where: [{ field: "id", value: account.id }], update: { password: newPasswordHash } })
+				await context.adapter.update({
+					model: "account",
+					where: [{ field: "id", value: account.id }],
+					update: { password: newPasswordHash },
+				})
 			}
 			return sql(statement, args)
 		},
 		encryptionSecret: "disposable-local-auth-integration-key-548",
-		storage, mail, baseURL,
+		storage,
+		mail,
+		baseURL,
 		secret: "disposable-local-wiring-secret-at-least-32",
-		google: { clientId: "local-google-client", clientSecret: "local-google-secret" },
+		google: {
+			clientId: "local-google-client",
+			clientSecret: "local-google-secret",
+		},
 	})
-	const response = await delayed.handler(new Request(`${baseURL}/api/auth/sign-in/email`, {
-		method: "POST", headers: { "content-type": "application/json", origin: baseURL },
-		body: JSON.stringify({ email: member.address, password }),
-	}))
+	const response = await delayed.handler(
+		new Request(`${baseURL}/api/auth/sign-in/email`, {
+			method: "POST",
+			headers: { "content-type": "application/json", origin: baseURL },
+			body: JSON.stringify({ email: member.address, password }),
+		}),
+	)
 	assert.ok(changed)
 	assert.equal(response.status, 401)
 	assert.equal(cookie(response), "")

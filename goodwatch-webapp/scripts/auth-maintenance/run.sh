@@ -9,7 +9,8 @@ else
 fi
 unset DOCKER_CONTEXT
 export NODE_ENV=test
-compose=(docker compose -f scripts/auth-cratedb/compose.yaml -f scripts/auth-mcp/compose.yaml -p goodwatch-auth-565)
+export AUTH_TEST_SUITE=maintenance
+compose=(docker compose -f scripts/auth-cratedb/compose.yaml -f scripts/auth-mcp/compose.yaml -f scripts/auth-maintenance/compose.yaml -p goodwatch-auth-565)
 if [[ -n "$("${compose[@]}" ps -aq)" ]]; then
  echo 'Refusing to reuse existing goodwatch-auth-565 containers.' >&2
  exit 1
@@ -31,14 +32,14 @@ const map = {}
 for (let i = 1; i <= 3; i++) {
  const container = JSON.parse(execFileSync('docker', ['inspect', `goodwatch-auth-565-valkey${i}-1`]))[0]
  const ip = Object.values(container.NetworkSettings.Networks)[0].IPAddress
- map[`${ip}:6379`] = { host: '127.0.0.1', port: 15600+i }
+ map[`${ip}:6379`] = { host: '127.0.0.1', port: 15700+i }
 }
 process.stdout.write(JSON.stringify(map))
 JS
 )
 node --input-type=module <<'JS'
 import { localCrateTransport, migrateAuthTables } from './app/server/auth/crate-adapter.server.ts'
-const sql = localCrateTransport(['http://127.0.0.1:15548'], 3000)
+const sql = localCrateTransport(['http://127.0.0.1:15648'], 3000)
 const deadline = Date.now() + 180000
 let ready = false
 while (Date.now() < deadline) {
@@ -49,7 +50,7 @@ while (Date.now() < deadline) {
  await new Promise(resolve => setTimeout(resolve, 500))
 }
 if (!ready) throw new Error('Pinned local CrateDB cluster did not become ready')
-await migrateAuthTables(localCrateTransport(['http://127.0.0.1:15548'], 15000))
+await migrateAuthTables(localCrateTransport(['http://127.0.0.1:15648'], 15000))
 JS
 if [[ "${1:-test}" == dev ]]; then
  bash --noprofile --norc

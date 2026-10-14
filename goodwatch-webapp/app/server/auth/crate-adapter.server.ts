@@ -56,7 +56,7 @@ export function crateAuthTransport(urls: string[], timeoutMs = 15_000, credentia
 }
 
 export function localCrateTransport(urls: string[], timeoutMs = 15_000): AuthSql {
-	for (const url of urls) if (!/^http:\/\/127\.0\.0\.1:15(5|7)(48|49|50)$/.test(url)) throw new Error("Local auth test endpoint required")
+	for (const url of urls) if (!/^http:\/\/127\.0\.0\.1:15(5|6|7)(48|49|50)$/.test(url)) throw new Error("Local auth test endpoint required")
 	const sql = crateAuthTransport(urls, timeoutMs)
 	localTransports.add(sql)
 	return sql

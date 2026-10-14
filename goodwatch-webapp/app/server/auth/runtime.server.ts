@@ -39,12 +39,19 @@ export async function getBetterAuth(): Promise<AuthService> {
 		)
 		onShutdown("auth mail", () => mail.drain())
 		const sql = crateAuthTransport(
-			required("AUTH_CRATEDB_ORIGINS").split(",").map(url => url.trim()),
+			required("AUTH_CRATEDB_ORIGINS")
+				.split(",")
+				.map((url) => url.trim()),
 			15000,
-			{ username: required("AUTH_CRATEDB_USERNAME"), password: required("AUTH_CRATEDB_PASSWORD") },
+			{
+				username: required("AUTH_CRATEDB_USERNAME"),
+				password: required("AUTH_CRATEDB_PASSWORD"),
+			},
 		)
 		const encryptionSecret = required("AUTH_CRATEDB_ENCRYPTION_SECRET")
-		const encryptionKeys = parseAuthEncryptionKeys(required("AUTH_CRATEDB_ENCRYPTION_KEYS"))
+		const encryptionKeys = parseAuthEncryptionKeys(
+			required("AUTH_CRATEDB_ENCRYPTION_KEYS"),
+		)
 		const storage = new ValkeyAuthStorage(() => clusterProvider())
 		const auth = createGoodwatchAuth({
 			sql,
@@ -61,7 +68,12 @@ export async function getBetterAuth(): Promise<AuthService> {
 				clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),
 			},
 		})
-		const maintenance = startAuthMaintenance({ sql, encryptionSecret, encryptionKeys, storage })
+		const maintenance = startAuthMaintenance({
+			sql,
+			encryptionSecret,
+			encryptionKeys,
+			storage,
+		})
 		onShutdown("auth maintenance", () => maintenance.stop())
 		return auth
 	})().catch((error) => {

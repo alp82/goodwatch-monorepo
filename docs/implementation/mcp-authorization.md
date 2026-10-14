@@ -18,7 +18,9 @@ the Docker dependency stages copy its source before installation.
 canonical external `/mcp` URL, with the origin used by this webapp.
 `BETTER_AUTH_URL` is the site's origin; the issuer is that origin plus `/api/auth`.
 Both the Better Auth secret and the independent CrateDB payload-encryption secret
-must remain stable across processes and deployments. No migration runs at app
+must remain stable across processes and deployments. #565 adds a required
+versioned payload-key ring (`AUTH_CRATEDB_ENCRYPTION_KEYS`) whose independent
+keys can rotate without changing that permanent lookup root. No migration runs at app
 startup; the existing explicit adapter migration already creates the OAuth/JWKS
 tables. The new fields are inside the encrypted payload schema.
 
@@ -27,6 +29,8 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
 
 - `jwt()` stores signing keys through the CrateDB adapter. Better Auth encrypts
   private keys, and the adapter encrypts/authenticates their row envelopes.
+  #565 rotates signing keys after 30 days and retains verification keys for a
+  further 24 hours before collecting their private material.
 - `mcp()` enables authorization code + PKCE and refresh grants, DCR and
   unauthenticated registration. Privileged client/resource management is denied;
   ordinary members cannot create a client that skips consent. Client credentials
@@ -92,9 +96,12 @@ Disconnect an individual computer through the member-owned
 Ordinary website sign-out and password changes leave offline app permissions
 connected, as decided in #534. Already admitted requests can finish while a
 revocation is occurring; subsequent authorization checks reject that grant.
-The upstream token revocation endpoint is not the Connected apps disconnection
-contract, and self-contained JWT revocation there is not claimed as an immediate
-per-token denylist.
+#565 also closes the exact matching grant version before terminal refresh
+revocation/family-sweep writes. Explicit refresh revocation therefore rejects
+that grant's existing MCP JWTs immediately and fences children missed by a sweep.
+Normal rotation retains the grant. An opaque access-token-only revocation is
+not a general JWT denylist; Connected apps disconnection remains the supported
+per-computer permission contract.
 
 `oauthConsent.lastUsedAt` is a durable date returned by the provider's member
 `get-consents`/`get-consent` APIs. Successful authorized read requests conditionally
@@ -103,12 +110,13 @@ resurrecting deletion. This bounds writes and receipt growth. Strict adapter
 allowlist additions permit only conditional usage touches and initial refresh
 version binding.
 
-#565 still owns launch maintenance, encryption-key lifecycle, receipt/tombstone
-collection, safe population bounds and reconciliation of non-atomic mint/sweep
-leftovers. A response/binding failure can leave unusable rows; it fails closed
-and can require reauthorization. The grant fences do not replace that maintenance
-work. The runtime deliberately consults CrateDB during authorization, so database
-availability and latency are part of this endpoint's operation.
+#565 implements launch maintenance and the policies in
+[auth-maintenance.md](auth-maintenance.md), on `auth/maintenance-jobs` / draft
+#587. Its worker reconciles non-atomic leftovers, collects receipts/expired rows,
+fences orphan email claims and capacity reservations, and rotates payload keys.
+A response/binding failure can still leave an unusable row and require
+reauthorization. The runtime consults CrateDB during authorization, so database
+availability and latency remain part of this endpoint's operation.
 
 ## Local reproduction
 
@@ -178,10 +186,14 @@ also runs the Docker protocol/auth cases and endpoint regressions; actual Claude
 account tests remain a local command.
 
 Hosted Claude.ai/ChatGPT linking, assertion/private-key client authentication,
-DPoP, signing-key rotation, production ingress/grants and deployment were not
+DPoP, production ingress/grants and deployment were not
 verified here. The existing launch/maintenance and final UI tickets remain.
 
 Primary API references: [Better Auth MCP](https://better-auth.com/docs/plugins/mcp),
 [CIMD](https://better-auth.com/docs/plugins/cimd), and the pinned installed 1.7.7
 OAuth-provider/JWT source. The spike's pinned client notes remain the reference
 for the client-specific refresh commands.
+
+#565 extends local protocol coverage with immediate refresh-revocation rejection
+and real durable signing-key rollover/grace collection under a controlled clock.
+Its full maintenance/auth runner and final evidence are recorded on #565/#587.

@@ -1,3 +1,4 @@
+import { authTestCrateOrigins, authTestValkeyPort } from "./store-fixtures.integration.ts"
 import assert from "node:assert/strict"
 import { after, test } from "node:test"
 import Redis from "ioredis"
@@ -11,8 +12,8 @@ import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 const origin = "http://127.0.0.1:3356"
 const resource = `${origin}/mcp`
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
-const redis = new Redis.Cluster([{ host: "127.0.0.1", port: 15601 }], {
+const sql = localCrateTransport(authTestCrateOrigins)
+const redis = new Redis.Cluster([{ host: "127.0.0.1", port: authTestValkeyPort }], {
 	natMap: JSON.parse(process.env.AUTH_TEST_VALKEY_NAT ?? "{}"),
 	redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
 })
@@ -530,13 +531,21 @@ test("revoking a refresh token disconnects that grant immediately for MCP JWTs a
 	setAuthForTest(memberAuth)
 	try {
 		await mcpAuthorization.verifyAccessToken(issued.token.access_token)
-		const revoked = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/revoke`, {
-			method: "POST",
-			headers: { "content-type": "application/x-www-form-urlencoded" },
-			body: new URLSearchParams({ client_id: issued.client.client_id, token: issued.token.refresh_token, token_type_hint: "refresh_token" }),
-		}))
+		const revoked = await memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/revoke`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					client_id: issued.client.client_id,
+					token: issued.token.refresh_token,
+					token_type_hint: "refresh_token",
+				}),
+			}),
+		)
 		assert.equal(revoked.status, 200)
-		await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))
+		await assert.rejects(
+			mcpAuthorization.verifyAccessToken(issued.token.access_token),
+		)
 	} finally {
 		setAuthForTest(null)
 		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
@@ -552,22 +561,39 @@ test("durable signing keys rotate after thirty days and retire only after their 
 	const oldKid = decodeProtectedHeader(issued.token.access_token).kid
 	t.mock.timers.tick(30 * 86400000 + 1000)
 	const refresh = async (token: string) => {
-		const response = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/token`, {
-			method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
-			body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: token, client_id: issued.client.client_id, resource }),
-		}))
+		const response = await memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/token`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "refresh_token",
+					refresh_token: token,
+					client_id: issued.client.client_id,
+					resource,
+				}),
+			}),
+		)
 		assert.equal(response.status, 200)
 		return response.json()
 	}
 	const rotated = await refresh(issued.token.refresh_token)
 	const newKid = decodeProtectedHeader(rotated.access_token).kid
 	assert.notEqual(newKid, oldKid)
-	assert.ok((await memberAuth.api.getJwks()).keys.some(key => key.kid === oldKid))
+	assert.ok(
+		(await memberAuth.api.getJwks()).keys.some((key) => key.kid === oldKid),
+	)
 	t.mock.timers.tick(86400000 + 1000)
-	const collected = await collectAuthGarbage({ sql, encryptionSecret: "disposable-local-auth-integration-key-548", model: "jwks" })
+	const collected = await collectAuthGarbage({
+		sql,
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		model: "jwks",
+	})
 	assert.ok(collected.expired >= 1)
 	const keys = (await memberAuth.api.getJwks()).keys
-	assert.equal(keys.some(key => key.kid === oldKid), false)
-	assert.ok(keys.some(key => key.kid === newKid))
+	assert.equal(
+		keys.some((key) => key.kid === oldKid),
+		false,
+	)
+	assert.ok(keys.some((key) => key.kid === newKid))
 	await refresh(rotated.refresh_token)
 })

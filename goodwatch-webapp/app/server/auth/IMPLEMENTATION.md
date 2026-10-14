@@ -7,7 +7,10 @@ production and Supabase are unchanged.
 ## Interface and transport
 
 `crateAuthAdapter({ sql, encryptionSecret, maxEnumeration? })` keeps its existing
-factory interface. A non-test transport requires a secret of at least 32
+factory interface. #565 adds optional versioned `encryptionKeys`, CAS-backed
+`populationBounds`, runtime grant-revocation fencing and session credential checks;
+see [maintenance and safety](../../../../docs/implementation/auth-maintenance.md).
+A non-test transport requires a secret of at least 32
 characters. Changing the secret requires migrating ciphertext and keyed indexes.
 
 `crateAuthTransport(origins, timeoutMs?, { username, password }?)` adds an optional,
@@ -28,7 +31,7 @@ applied write without its own readable receipt raises `IndeterminateAuthWriteErr
 ## Storage and receipt recovery
 
 `migrateAuthTables(sql)` explicitly creates thirteen model tables and the email
-claim table under `doc.auth_`. Tables have one unpartitioned shard, two replicas,
+claim table plus the #565 admission-capacity table (15 tables total) under `doc.auth_`. Tables have one unpartitioned shard, two replicas,
 REQUEST translog durability and `write.wait_for_active_shards=1`. Conditional reads
 use primary-key Get and writes use only key/`_seq_no`/`_primary_term` CAS; business
 predicates are rechecked on the decrypted row.
@@ -39,7 +42,8 @@ creation-time settings ([CrateDB storage documentation](https://cratedb.com/docs
 Migration checks reject incompatible earlier indexed/column-stored tables and old
 email-claim schemas instead of silently reusing them.
 
-The payload envelope is **v2**: AES-256-GCM binds `(table, physical id, purpose)` as
+Legacy payload envelopes are **v2**; configured rotating keys write **v3** with
+an authenticated key ID. Both use AES-256-GCM binds `(table, physical id, purpose)` as
 associated data, and authenticates the deleted flag inside the ciphertext. The
 plaintext deleted column is an enumeration hint; each nominated row is reread by
 PK and its authenticated deleted state checked. Ciphertext swaps fail integrity
@@ -48,8 +52,9 @@ restored using Better Auth's model schema. Adapter results expose no envelope,
 receipt, claim-generation or CAS metadata.
 
 Receipts are a bounded ring of **256 operation IDs and base versions**, committed
-in the same CAS as the payload. They contain no row snapshots, personal data or
-provider tokens. The pending invocation already knows the result it submitted;
+in the same CAS as the payload. They contain operation timestamps but no row snapshots, personal data or
+provider tokens. #565 collects aged receipts without claiming certainty once
+an invocation's own receipt is gone. The pending invocation already knows the result it submitted;
 its receipt proves ownership of that result even after later writers. If its
 receipt might have been evicted, recovery fails indeterminate. It never mistakes
 an evicted winner for a losing operation. Association recreation starts a new
@@ -73,7 +78,8 @@ existing different insert. Own-receipt recovery happens before collision cleanup
 claims already adopted by the current row or with uncertain ownership remain protected. A process crash or an ambiguous multi-row
 failure can still leave an orphan claim: user and claim writes are not one
 transaction, and uncertain ownership requires reconciliation rather than unsafe
-address reuse.
+address reuse. #565 supplies fenced claim recovery, including a permanent
+missing-user barrier against delayed inserts.
 
 ## Enumeration and contention
 
@@ -91,7 +97,9 @@ bounded population: its delete-hook pre-read swallows exceptions and deleteMany
 ignores limits, so a truncation exception would silently skip hooks. Other explicit
 limits and offsets remain supported; an explicit limit equal to the configured
 factory default also returns the complete population. Populations over the safety
-bound refuse mutation rather than silently truncate.
+bound refuse mutation rather than silently truncate. The #565 runtime enables
+CAS admission at 64 buckets × 128 identities (8,192 per model), and its maintenance
+streams independently bounded pages. Imports must use that admission configuration.
 
 Plain assignments, bulk assignments and deletions retry up to 64 **proven** CAS
 version conflicts with a fresh read and all predicates rechecked. Deleted rows
@@ -184,14 +192,16 @@ pre-existing type diagnostics are reported separately.
   >100-session case, but an independent transient hook-read failure or revocation
   write failure can still be swallowed. An adapter alone cannot make those
   upstream phases atomic or require the endpoint to fail after a swallowed error.
-  Monitor and reconcile failures; do not claim logout is an atomic transaction.
+  The #565 worker reconciles leftovers; do not claim logout is an atomic transaction.
 - **Issuance versus revocation:** parent rotation, child issuance, replay-response
   storage and family sweeps are separate writes. A child minted during a sweep
-  can escape its captured set. Session/cache/JWT enforcement must remain
-  authoritative; the adapter cannot repair that provider protocol.
-- **Cache/JWT revocation:** #531's missing active-session index and standalone MCP
-  JWT verification findings remain. A database mirror alone does not invalidate
-  orphaned cached sessions or make a self-contained JWT consult revocation.
+  can escape its captured set. The #565 runtime closes the matching grant version before terminal refresh
+  revocation writes, so late children fail current-grant authorization. Ordinary
+  rotation retains its grant. Standalone adapter callers must explicitly enable
+  this behavior; no multi-row atomicity is claimed.
+- **Cache/JWT revocation:** #573/#581 recheck database state for cached browser sessions and verify current
+  MCP grants. #565 also binds browser sessions to credential versions and
+  reconciles their stale rows.
   Offline-access refresh tokens intentionally survive session logout upstream;
   launch policy must account for that distinction.
 - **Scope of verification:** tests use real local CrateDB and real Better Auth/
@@ -205,3 +215,12 @@ pre-existing type diagnostics are reported separately.
 - [#530 proof and failover correction](https://github.com/alp82/goodwatch-monorepo/blob/research/cratedb-cas-proof/docs/research/auth-on-cratedb-verification.md).
 - [#531 exact-version inventory](https://github.com/alp82/goodwatch-monorepo/blob/research/better-auth-adapter-inventory/docs/research/better-auth-adapter-inventory.md).
 - [Adversarial review](https://github.com/alp82/goodwatch-monorepo/pull/564#issuecomment-6176587280).
+
+## Maintenance follow-up — #565
+
+Draft #587 supplies claim recovery, receipt/tombstone retention, admission-capacity
+reconciliation, orphan cleanup, payload/signing-key rotation and the scheduled
+runner. The complete policies, launch configuration, import requirements and
+local Docker command are in [auth-maintenance.md](../../../../docs/implementation/auth-maintenance.md).
+The original adapter-only evidence above remains historical; #565 additionally
+verifies live local Valkey and the combined auth/MCP HTTP flows.

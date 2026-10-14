@@ -1,6 +1,6 @@
+import { captureMessage } from "@sentry/remix"
 import nodemailer from "nodemailer"
 import type { SendMailOptions } from "nodemailer"
-import { captureMessage } from "@sentry/remix"
 import { counter } from "../metrics/registry.server.ts"
 
 const deliveries = counter(
@@ -18,7 +18,10 @@ export function smtpTransport(options: {
 }) {
 	const host = options.host ?? "smtp.purelymail.com"
 	const port = options.port ?? 465
-	if (options.localCatcher && (host !== "127.0.0.1" || port !== 15525))
+	if (
+		options.localCatcher &&
+		(host !== "127.0.0.1" || ![15525, 15625].includes(port))
+	)
 		throw new Error("Local SMTP catcher required")
 	if (
 		!options.localCatcher &&
