@@ -61,12 +61,9 @@ number compared. Watch next's comparison is after fit/time/Not tonight grouping 
    deploying the webapp.
 2. Validate the locked worker's NumPy 2.5.3 with stage 1's pack parity command before enabling preview.
    Local stage 1/2 tests use existing NumPy 2.5.2. Keep the declared live/all-member input differences.
-3. Deploy `g1_order`, `g1_trigger`, and the updated `title_snapshot` scripts and their metadata/locks.
-   Provision a dedicated **g1-order worker tag with exactly one worker process** (at least 1 GiB
-   for a pack-sized pool). The G1 script also declares concurrency limit 1 and zero time window.
-   [Windmill concurrency limits](https://www.windmill.dev/docs/script_editor/concurrency_limit)
-   require a supported edition; the single worker serializes builds regardless. Do not allow
-   another worker to consume this tag. All preview ids are built sequentially in that job.
+3. Deploy `g1_order`, `g1_trigger`, and the updated `title_snapshot` scripts (merging to main syncs them). The G1
+   script runs on the default Python workers: no worker group serves a dedicated tag, and with one or a few preview
+   members a rare duplicate build only rewrites the same key.
 4. Set Windmill variable `f/sync/g1_preview_members` to a JSON array containing only the owner's id:
    `["<owner-member-id>"]`. Missing/empty config means disabled. The trigger only passes these ids.
    Every successful snapshot publication enqueues G1; the existing nightly title snapshot schedule
