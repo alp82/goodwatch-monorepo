@@ -41,7 +41,6 @@ screens. The guest's half keeps its count in a file (`STOCK=`); the member's hal
 A search is stood in for in the browser, as in slice 10's script: the reading server refuses one, and a real one
 would be written to the search history. Every request to another host and to `/api/update-*` is stopped.
 
-<!-- RESULTS -->
 
 ## What was built
 
@@ -130,7 +129,7 @@ Both were measured here in the page itself, three and two times at each size (`P
 **The Watch key's pulse, seen for 3,282 ms where the check wants 3,500 to 4,500: the check was wrong.**
 
 - The pulse never starts before the transition ends: by its own start time on the document's timeline it started
-  22 to 145 ms after the motion's mark was cleared, in all six runs (once 1,090 ms, on a busy moment).
+  7 to 145 ms after the motion's mark was cleared, in every run (twelve, over two runs of the part).
 - By its own clock it runs 3 x 1,300 ms, 3,900 ms, every time, and ends by itself after three pulses.
 - What the check timed was the first sample that saw the pulse, taken from outside every 100 ms, to the first
   that saw it gone. Right as the motion ends the page has work to do (the title page lays out its sections), and
@@ -138,14 +137,15 @@ Both were measured here in the page itself, three and two times at each size (`P
   animation's own start and end events, which wait for the same thread, gave 3,533 and 5,131 ms once each. The
   lean-in did not delay the pulse; it ends at the moment the page is busiest, so the first sample came late.
 - `../tonight-title/drive.mjs` now times the pulse by its animation (`getComputedTiming`, three iterations of
-  1,300 ms, ended), and keeps the sampled time as a number only.
+  1,300 ms, ended), and keeps the sampled time as a number only. Its Watch key part, run again: 93 checks pass,
+  none fail; 3,900 ms at both sizes.
 
 **A typed `#streaming` address at 390 x 844 with the block at 192 px: the check was wrong; the page does what it
 was built to do, with one small cost.**
 
 - Until the page runs, the browser has scrolled by the server's guess of the title page's header height, 112 px
   (`ui/details/header-height.ts`): the block stands at 112 + 80 = 192 px at both sizes. Once the page has measured
-  the header (93 px on the desktop, 142.8 px on the phone; 1.8 to 3.0 s after the address was typed on this
+  the header (93 px on the desktop, 142.8 px on the phone; 1.0 to 3.2 s after the address was typed on this
   machine) it lands on the block again: 173 and 223 px, settled within 0.3 s, in all four runs.
 - The check sampled for three seconds from the load, which on a busy dev server ends before the page runs. It now
   waits for the measured header first.
@@ -153,3 +153,124 @@ was built to do, with one small cost.**
   header (it ends at 207 px). Only a typed or shared address with `#streaming` shows it; the TV's Watch key opens
   the page inside the app, where the header is measured before the scroll. A guess per breakpoint in the title
   page's CSS would remove it; the title page is not this slice's to change.
+
+## Numbers
+
+**The first view's scripts and stylesheets**, `npm run build` with `SENTRY_RELEASE=compare`, counted by
+`../tonight-title/first-view.mjs`: raw / gzip / Brotli. "Before" is the integration branch at `493fe1e3` (with
+slice 6b), built in a throwaway worktree; "after" is this branch with it merged.
+
+| Page | Before | After | Of which |
+| --- | --- | --- | --- |
+| `/home-preview` | 12 files, 677,040 / 225,363 / 195,538 | 12 files, 678,955 / 226,021 / 196,102 (+1,915 / +658 / +564) | Its own chunk 60,848 to 62,617 (+510 Brotli): the key, the frame, the key's name. `Remote`, which both TVs share and which holds the motion's code, +137 (+62 Brotli): the motion's three fixes |
+| `/` (the old TV) | 17 files, 867,170 / 283,085 / 246,309 | 17 files, 867,316 / 283,127 / 246,351 (+146 / +42 / +42) | `Remote`, the same +137 |
+| The Discover page | 32 files, 1,096,402 / 364,687 / 318,162 | 32 files, 1,096,411 / 364,671 / 318,124 | `shell` +9 raw, -12 Brotli |
+| A movie's page | 20 files, 859,742 / 285,061 / 245,517 | 20 files, 859,751 / 285,053 / 245,523 | `shell` |
+| A show's page | 20 files, 860,294 | 20 files, 860,303 | `shell` |
+| The Explorer page | 18 files, 885,581 / 300,843 / 262,279 | 18 files, 885,757 / 300,890 / 262,324 (+176 / +47 / +45) | Its chunk: the island parameter |
+| Taste, My shows | 23 and 11 files | the same, +9 raw | `shell` |
+
+- **`shell`, on every page:** 170,779 to 170,788 raw, 55,500 to 55,488 Brotli: the build's names, nothing of this
+  slice's code.
+- **No first view has a file more.** The TV button's chunk (`TvWayBack`, 5,172) is unchanged.
+- **Stylesheets:** `tv.css` (the new TV's own, blocking on `/home-preview`) 6,964 to 8,893 raw, 1,852 to 2,209
+  Brotli (+357): the key, its motif, the frame. `tailwind.css` +54 raw, +28 Brotli (four utility classes).
+  `main.css`'s rules for the motion are unchanged.
+- **The server's HTML:** the guest home's is unchanged (home has no key). A link straight to a screen with a page
+  gains the key beside the bar, in both editions.
+
+## What the checks say
+
+The guest's half: **2,705 checks pass, none fail**. The member's half on the harness: **202 pass, none fail**.
+Both on this branch after the merge of the integration branch at `493fe1e3` (slice 6b). `checks.json` has the
+numbers. A wait that ends in time counts as a check that passed.
+
+- **The key on every screen with a page, at seven sizes** (1920 x 1080, 1366 x 650, 360 x 740, 375 x 667,
+  390 x 844, 430 x 932, 844 x 390), twelve guest screens and My shows: it says "Expand" and nothing longer, a
+  screen reader hears where it leads, it is inside the picture at its bottom right and over no other key, focused
+  and at rest. Focused it is amber with four brackets around a small picture; the picture stands at 0.94 in its
+  frame, four brackets 14 px inside the TV's edge. At rest it is the dark pill with amber type, and its centre is
+  where it was while focused (within 0.6 px). Left or Up leaves it, Right or Down comes back. Its smallest side at
+  rest: 44.5, 44.4, 44.2 and 44.2 px on the four phones, 52.7 in landscape.
+- **No key** on home, What is GoodWatch?, the search's question, the rating and the quiz, and `focus=expand`
+  there leaves the focus where it starts.
+- **Out and back from every screen, on the desktop and the phone,** reaching the key with the direction keys
+  (one to three presses: Down, then Right along the last row), the pointer at the key's right end, a finger, or
+  the Remote's OK, and returning by the browser's Back, Escape or the TV button in turn; on Discover's titles all
+  three ways at both sizes. Each time: the page at the machine's address with what travelled (above), one history
+  step on, the trip remembered, the TV button there (207 x 58 under the header; 131 x 50 in the phone's dock),
+  then the same TV screen on the TV's own entry, the same items, the focus on the key, the frame and its brackets,
+  and still the key's focus a moment later. Nothing in the console but the Discover page's own warning (below).
+- **The motion.** The press marks the way out once and puts up four brackets exactly where the frame's stood (the
+  frame's hide); while the page is held back they breathe; the zoom runs 0.9 s to its end, the page is swapped in
+  before it, the mark goes when it ends, the brackets fold into the TV button. Back: marked once (by the TV
+  button's code, then by the room), 0.6 s, and the frame's brackets stand where the motion's landed. Forward and
+  Back again give the key its focus.
+- **Calling a page off.** With the page held back five seconds: its data is asked for at the press; a second
+  press asks for nothing more; Escape takes the mark and the brackets away, the TV keeps its screen, the focus
+  on the key and the frame, no trip is remembered; the late answer changes nothing and the history has no entry
+  more. The Home key while a page is on its way shows home and calls the page off. Afterwards the key opens the
+  page, and the TV's Back still steps back to the choice the titles came from.
+- **Reduced motion:** the key focused frames the picture at once; nothing runs; the key's brackets rest open; out
+  and back three ways are plain navigation, with no mark and no brackets, and the trip is still remembered (without
+  a box), so the TV button leads back.
+- **Two and three pages deep:** a title opened from the Discover page is two pages from the TV and has the TV
+  button; the button and Escape return to the TV screen in one history move, as one transition; the browser's Back
+  goes one page at a time. Three pages on the button is gone and Escape goes nowhere; one step back it is there.
+- **A reload of the page** keeps the TV button and the trip; Back then returns to the TV screen with the focus on
+  the key. A reload of the TV's screen keeps it too.
+- **The pointer on return:** the cursor left resting on the page over where a tile of the TV lies does not take
+  the focus when the TV is back; once it moves, the tile under it does, and the frame goes.
+- **Every layout of the room:** the desktop with the Remote under the TV (1920 x 1080) and beside it
+  (1366 x 650), the phone with the Remote in the hand (390 x 844) and on the table (375 x 667), and landscape
+  (844 x 390). The motion starts from the picture's own box in each, runs both ways, and returns to the same room.
+- **Nothing animates at rest:** on the screen with the key, unfocused and focused (four seconds after the focus,
+  when the key's brackets have played 3 x 0.9 s and stopped), and back on the TV after a trip, no animation or
+  transition runs and no frame is asked for in three seconds. On the page after arrival nothing of the motion or
+  of the TV button runs.
+- **The Explorer page's parameter** (above), at both sizes.
+
+## Where the plan was wrong
+
+- **"Waiting for the owner's pick between Frame and Camera."** Decided since: neither; the owner chose "lean in"
+  (camera and frame together) and it shipped on `main` (`8cf806a1`) before this slice. The plan's motion section
+  (the frame's clip, `--tv-inset`, 0.85 s out) describes code that is gone. The way out is 0.9 s, the way in 0.6 s.
+- **"The corner key on the real pages … 44 px high, bottom right."** Shipped instead as the TV button: a tab under
+  the header on the desktop, the dock's left part on a phone, for the page the TV opened and one step further.
+- **`ui/explorer/history.ts`** does not exist, and the Explorer page read no island (slice 7 said so). The page now
+  reads `island=` (above).
+- **The prototype's key scaled with the picture**, so the key moved out from under the pointer as it took the
+  focus. Kept still here (above). The plan did not mention it.
+- **The plan's list of files** (`tv-transition.ts`, `main.css`, `tv/kit.tsx`, `tv/use-tv.ts`): `main.css` needed
+  nothing; `TvRoom.tsx`, `TvScreen.tsx`, `room-tv.ts`, `tv-machine.ts` and `tv.css` did, and the Explorer page.
+- **"Must not touch the pages it opens."** The Explorer page was touched, as the brief asked.
+
+## Left open
+
+- **Safari and Firefox** were not run for this slice; Chromium only. The motion itself was run in Firefox for
+  `8cf806a1`.
+- **The member's pages behind the key** (`/my-shows`, `/my-movies`) were opened from the harness, whose server has
+  no services and no session for the real pages: they show what a guest sees there. The addresses are the
+  machine's, with tests.
+- **A side does not travel to Taste.** The Taste page has no address for one side.
+- **The 15 px under the title page's header** on a phone, until the page runs, for a typed `#streaming` address
+  (above).
+- **A development-only warning on the Discover page on a phone**, "Detected a large number of updates inside
+  startTransition", comes from the page's poster cards (`ui/title-actions/pointer.ts`), not from the TV; it shows
+  on arrival from the TV because the page is opened there on a touch device.
+
+## Pictures
+
+- [desktop-beside-prototype.jpg](desktop-beside-prototype.jpg): 1920 x 1080, beside the prototype's Cinema shots:
+  the key focused on Discover's titles (the prototype's `05-expand-focused`), at rest, on the Explorer's map, on a
+  title, and on "On Netflix".
+- [phone-beside-prototype.jpg](phone-beside-prototype.jpg): the same at 390 x 844, with Taste's sides.
+- The motion, six frames each: out of Discover's titles into the Discover page
+  ([desktop](strip-discover-desktop-out.jpg), [phone](strip-discover-phone-out.jpg)) and back
+  ([desktop](strip-discover-desktop-back.jpg), [phone](strip-discover-phone-back.jpg)); out of a title into its
+  page and back ([desktop out](strip-title-desktop-out.jpg), [back](strip-title-desktop-back.jpg),
+  [phone out](strip-title-phone-out.jpg), [back](strip-title-phone-back.jpg)).
+- `clips/`: the four runs as clips, out with Enter and back with Escape. Recorded on a busy machine with a dev
+  build: from the press to the page standing 1.55 to 2.21 s, from Escape to the TV standing 0.84 to 1.0 s.
+- `shots/`: each screen with its key at rest, three of them focused, the key focused at 1366 x 650, 375 x 667 and
+  844 x 390, and the Explorer page opened inside an island.

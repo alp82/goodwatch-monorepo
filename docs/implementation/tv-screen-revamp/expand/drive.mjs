@@ -1274,12 +1274,12 @@ async function pictures() {
 		for (const [name, screen] of wanted) {
 			const { ctx, page } = await openScreen(GUEST, screen, size)
 			await page.waitForTimeout(2500)
-			await page.screenshot({ path: join(shots, `${name}-${tag}.png`) })
+			await page.screenshot({ path: join(shots, `${name}-${tag}.jpg`), quality: 80 })
 			if (name === "discover-results" || name === "title" || name === "explorer-map") {
 				await reach(page)
 				await until(page, (x) => focusIs("expand")(x) && x.framed, "the key has the focus", 8000)
 				await page.waitForTimeout(3200)
-				await page.screenshot({ path: join(shots, `${name}-focused-${tag}.png`) })
+				await page.screenshot({ path: join(shots, `${name}-focused-${tag}.jpg`), quality: 80 })
 			}
 			await ctx.close()
 		}
@@ -1292,7 +1292,7 @@ async function pictures() {
 		const { ctx, page } = await open(`${ORIGIN}/explorer?grouping=mood&island=${island}`, size, { room: false })
 		await explorerAt(page, "inside the island", (v) => v.inside, 90000)
 		await page.waitForTimeout(2500)
-		await page.screenshot({ path: join(shots, `explorer-page-island-${tag}.png`) })
+		await page.screenshot({ path: join(shots, `explorer-page-island-${tag}.jpg`), quality: 80 })
 		await ctx.close()
 	}
 	for (const size of [BESIDE, SHORT, LANDSCAPE]) {
@@ -1300,7 +1300,7 @@ async function pictures() {
 		await reach(page)
 		await until(page, (x) => focusIs("expand")(x) && x.framed, "the key has the focus", 8000)
 		await page.waitForTimeout(3200)
-		await page.screenshot({ path: join(shots, `discover-results-focused-${size.join("x")}.png`) })
+		await page.screenshot({ path: join(shots, `discover-results-focused-${size.join("x")}.jpg`), quality: 80 })
 		await ctx.close()
 	}
 }
@@ -1327,37 +1327,34 @@ async function clips() {
 		rmSync(dir, { recursive: true, force: true })
 		opened = await openScreen(GUEST, screen, size, { video: dir, touch: false })
 		const { ctx, page, search } = opened
-		const t0 = Date.now()
-		const at = () => (Date.now() - t0) / 1000
+		// The clip starts with the page, so the page's own clock (performance.now) is the clip's, in seconds.
+		const at = async () => (await page.evaluate(() => performance.now())) / 1000
 		await page.waitForTimeout(1200)
 		await reach(page)
 		await until(page, (x) => focusIs("expand")(x) && x.framed, "the key has the focus", 8000)
 		await page.waitForTimeout(3000)
 		await record(page)
-		const pressed = at()
+		const pressed = await at()
 		await page.keyboard.press("Enter")
 		await arrive(page, screen.to, "the page")
 		await page.waitForTimeout(1800)
-		const out = (await recorded(page)).filter((e) => e.what === "mark")
-		const landed = at()
+		const out = await recorded(page)
 		await record(page)
+		const left = await at()
 		await page.keyboard.press("Escape")
 		await until(page, backOn(search), "back", 60000)
-		const home = at()
 		await page.waitForTimeout(1500)
+		const back = await recorded(page)
+		const end = await at()
 		const video = page.video()
-		// Where the page's clock stood when the script's did: the record's times are the page's.
-		const offset = await page.evaluate(() => performance.now())
-		const now = at()
 		await ctx.close()
 		const raw = await video.path()
+		// The marks' times: the way out ends when its mark is cleared, the way in likewise.
+		const zoomEnd = (out.filter((e) => e.what === "mark" && e.mark === null).at(-1)?.t ?? (left - 1.8) * 1000) / 1000
+		const inEnd = (back.filter((e) => e.what === "mark" && e.mark === null).at(-1)?.t ?? (end - 1.5) * 1000) / 1000
 		const start = Math.max(0, pressed - 0.6)
 		const mp4 = join(clipsDir, `${name}-${tag}.mp4`)
-		execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", String(start), "-i", raw, "-t", String(home - start + 1), "-vf", `scale=${size[0] > 1000 ? 960 : size[0]}:-2`, "-c:v", "libx264", "-crf", "30", "-preset", "slow", "-an", "-movflags", "+faststart", mp4])
-		// Strips: six frames of each motion. The way out runs from the mark's start (the press) to 0.2 s past its end.
-		const pageAt = (t) => now - (offset - t) / 1000
-		const cleared = out.find((e) => e.mark === null)?.t
-		const zoomEnd = cleared ? pageAt(cleared) : landed - 1.8
+		execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", String(start), "-i", raw, "-t", String(end - start), "-vf", `scale=${size[0] > 1000 ? 960 : size[0]}:-2`, "-c:v", "libx264", "-crf", "30", "-preset", "slow", "-an", "-movflags", "+faststart", mp4])
 		const frames = (from, to, file) => {
 			const times = Array.from({ length: 6 }, (_, n) => from + ((to - from) * n) / 5)
 			const parts = times.map((t, n) => {
@@ -1367,9 +1364,11 @@ async function clips() {
 			})
 			execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...parts.flatMap((png) => ["-i", png]), "-filter_complex", `hstack=inputs=${parts.length}`, "-q:v", "4", join(here, `${file}.jpg`)])
 		}
-		frames(zoomEnd - 1.0, zoomEnd + 0.15, `strip-${name}-${tag}-out`)
-		frames(home - 0.85, home + 0.1, `strip-${name}-${tag}-back`)
+		// The way out runs 0.9 s and the way in 0.6 s, each to the moment its mark is cleared.
+		frames(zoomEnd - 0.95, zoomEnd + 0.1, `strip-${name}-${tag}-out`)
+		frames(inEnd - 0.65, inEnd + 0.1, `strip-${name}-${tag}-back`)
 		numbers[`clip ${name} ${tag}: from the press to the page standing, s`] = +(zoomEnd - pressed).toFixed(2)
+		numbers[`clip ${name} ${tag}: from Escape to the TV standing, s`] = +(inEnd - left).toFixed(2)
 		rmSync(dir, { recursive: true, force: true })
 	}
 }
