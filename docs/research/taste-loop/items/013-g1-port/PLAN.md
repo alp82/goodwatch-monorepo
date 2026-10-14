@@ -48,3 +48,20 @@ list holds. So:
 Parity test (job against harness, owner, tier A view); the webapp's ordering against a fixture; a timing check of the
 job for one member; the shadow log for the owner for a day; then preview for the owner. The owner's verdict is the
 checkpoint; turning it on for everyone needs a second owner decision.
+
+## Changes after Fable's review (`REVIEW-fable.md`), adopted
+
+- **Payload:** per-title components keyed by point id (B3 rank, B5 top-half bit, movie series id, show and animation
+  bits), plus the member's own shares; F3 is composed at request time over the filtered list, then the mix refill.
+- **Watch next:** F3 order, and the refill runs within the fitting group after Watch next's own grouping.
+- **Job triggers:** chained after each title snapshot publish, nightly, and after the member's ratings change
+  (debounced). Every fallback to today's order is logged with its reason.
+- **Others:** the job reads ratings, Want to See, Skip and Not interested of all members; the parity run uses the
+  harness's tier A others. Production using all members is a declared difference.
+- **Scope:** Discover's catalogue Best match and Watch next only. For you under other sorts, ranked search and
+  Explorer stay on today's order. The trial judges Best match.
+- **Owner told in advance:** the taste match on cards stays today's and will sometimes disagree with the order.
+- **Exposure log:** the G1 build adds to #525's record: ordering, flag mode, fallback reason, payload build time,
+  model hash, G1 group and mix placement per title, Watch next tier, and under G1 today's first 100 for the same
+  list (under shadow, G1's).
+- **Cache:** per member, keyed by the payload's build time, 10 minutes.
