@@ -1,4 +1,5 @@
 import type { ClientRequest, IncomingMessage } from "node:http"
+import { setTimeout as delay } from "node:timers/promises"
 import { BackendTimeoutError, withBackendTimeout } from "./backend-timeout.ts"
 import crate from "node-crate"
 import pc from "picocolors"
@@ -90,6 +91,15 @@ const isAvailabilityError = (error: unknown): boolean =>
 	isConnectionError(error) || error instanceof CrateTimeoutError ||
 	(error instanceof Error && UNAVAILABLE_STATUSES.includes((error as Error & { statusCode?: number }).statusCode ?? 0))
 
+// A healthy coordinator can briefly retain shard routes to a node that just
+// disappeared. These SQL failures do not make that coordinator unhealthy.
+const isNodeLossError = (error: unknown): boolean => error instanceof CrateError && (
+	/^(NodeNotConnectedException|NoSuchNodeException)\[/.test(error.message) ||
+	/^JobKilledException\[Job killed\. Participating node .+ disconnected\]$/.test(error.message)
+)
+
+const isRecoverableError = (error: unknown): boolean => isAvailabilityError(error) || isNodeLossError(error)
+
 // Conservative recognition only: never infer replay safety for a write from its
 // ON CONFLICT text. Helpers below own the keys and values that make replay safe.
 const isRead = (sql: string): boolean => {
@@ -163,6 +173,8 @@ class CrateClient {
 			const deadline = performance.now() + timeoutMs
 			const read = isRead(query)
 			const tried = new Set<number>()
+			let nodeLoss = false
+			let round = 0
 			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
 			while (result === undefined) {
 			const index = this.takeHost(tried)
@@ -209,9 +221,19 @@ class CrateClient {
 				}
 			}, { error: () => new CrateTimeoutError(attemptTimeoutMs), signal: options.signal })
 			} catch (error) {
-				if (options.signal?.aborted || !isAvailabilityError(error)) throw error
-				host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
-				if (!read || tried.size === this.hosts.length) throw error
+				if (options.signal?.aborted || !isRecoverableError(error)) throw error
+				if (isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+				if (!read) throw error
+				nodeLoss ||= isNodeLossError(error)
+				if (tried.size === this.hosts.length) {
+					if (!nodeLoss || ++round >= 10) throw error
+					const waitMs = Math.min(100 * round, 500)
+					if (performance.now() + waitMs >= deadline) throw new CrateTimeoutError(timeoutMs)
+					try { await delay(waitMs, undefined, { signal: options.signal }) }
+					catch (error) { options.signal?.throwIfAborted(); throw error }
+					tried.clear()
+					nodeLoss = false
+				}
 			}
 			}
 			const duration = performance.now() - startTime
@@ -462,7 +484,7 @@ export const upsert = async ({
 			try {
 				return await client.execute(sql, row)
 			} catch (error) {
-				if (!isAvailabilityError(error)) throw error
+				if (!isRecoverableError(error)) throw error
 			}
 			// The write timed out but may still have landed. Primary key lookups are real-time in CrateDB.
 			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
@@ -545,7 +567,7 @@ export const insertRows = async (
 		try {
 			result = await client.execute(sql, params)
 		} catch (error) {
-			if (!isAvailabilityError(error)) throw error
+			if (!isRecoverableError(error)) throw error
 			result = await client.execute(sql, params)
 		}
 		rowcount += result.rowcount || 0

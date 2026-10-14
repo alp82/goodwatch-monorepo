@@ -221,3 +221,21 @@ test("caller cancellation closes the active request without retrying or evicting
 	await assert.rejects(getCrateClient().execute("SELECT n", [], { signal: controller.signal }), /caller cancelled/)
 	assert.equal(received.flat().length, before)
 })
+
+test("reads wait for shard routing to recover when surviving coordinators still reference a lost node", async (t) => {
+	const recoveredAt = performance.now() + 200
+	const messages = [
+		"NodeNotConnectedException[[node2] Node not connected]",
+		"NoSuchNodeException[No such node [node2]]",
+		"JobKilledException[Job killed. Participating node node2 disconnected]",
+	]
+	const received = await cluster(t, messages.map((message) => (_, __, res) => {
+		if (performance.now() >= recoveredAt) return answer(res)
+		res.writeHead(500, { "Content-Type": "application/json" })
+		res.end(JSON.stringify({ error: { message, code: 5000 } }))
+	}))
+	assert.deepEqual(await query("SELECT n", [], { timeoutMs: 1_000 }), [{ n: 1 }])
+	const before = received.map((host) => host.length)
+	for (let i = 0; i < 3; i++) await query("SELECT n")
+	assert.deepEqual(received.map((host, i) => host.length - before[i]), [1, 1, 1])
+})
