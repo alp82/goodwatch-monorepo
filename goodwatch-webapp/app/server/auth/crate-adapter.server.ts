@@ -8,31 +8,41 @@ export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
 export type AuthSql = (statement: string, args?: unknown[]) => Promise<SqlResult>
 const localTransports = new WeakSet<AuthSql>()
 
-// Auth has a dedicated transport: the existing general CrateClient logs SQL
-// parameters on failure. No credential-bearing SQL or parameters are logged here.
-// Only reads/refreshes may try another coordinator; writes are sent once.
-export function crateAuthTransport(urls: string[], timeoutMs = 15_000): AuthSql {
+// This transport never logs credential-bearing SQL or parameters.
+export class CrateAuthRequestError extends Error {
+	constructor(message: string, readonly code?: number, readonly status?: number, readonly definitelyNotApplied = false) {
+		super(message); this.name = "CrateAuthRequestError"
+	}
+}
+export function crateAuthTransport(urls: string[], timeoutMs = 15_000, credentials?: { username: string; password: string }): AuthSql {
 	if (!urls.length || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new Error("Invalid auth CrateDB transport configuration")
 	for (const address of urls) {
 		const url = new URL(address)
 		if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== "/") throw new Error("Auth CrateDB endpoint must be an HTTP origin")
 	}
+	const headers: Record<string, string> = { "content-type": "application/json" }
+	if (credentials) headers.authorization = `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString("base64")}`
 	let next = 0
 	return async (stmt, args = []) => {
-		const attempts = /^(SELECT|REFRESH TABLE)\b/.test(stmt) ? urls.length : 1
+		const read = /^(SELECT|REFRESH TABLE)\b/.test(stmt)
 		let error: unknown
-		for (let attempt = 0; attempt < attempts; attempt++) {
+		for (let attempt = 0; attempt < urls.length; attempt++) {
 			try {
 				const response = await fetch(`${urls[next++ % urls.length].replace(/\/$/, "")}/_sql`, {
-					method: "POST", headers: { "content-type": "application/json" },
-					body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(timeoutMs),
+					method: "POST", headers, body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(timeoutMs),
 				})
 				const result = await response.json()
-				if (!response.ok || result.error) throw Object.assign(new Error("CrateDB auth statement refused"), { code: result.error?.code })
+				if (!response.ok || result.error) throw new CrateAuthRequestError(result.error?.message ?? "CrateDB auth statement refused", result.error?.code, response.status, response.status >= 400 && response.status < 500)
 				return result
-			} catch (failure) { error = failure }
+			} catch (failure) {
+				const code = (failure as { cause?: { code?: string } }).cause?.code
+				const notSent = ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT"].includes(code ?? "")
+				error = notSent ? new CrateAuthRequestError("Could not connect to CrateDB auth coordinator", undefined, undefined, true) : failure
+				// Retry writes only when connection establishment failed before sending.
+				if (!read && !notSent) throw error
+			}
 		}
-		throw Object.assign(new Error("CrateDB auth request failed"), { code: (error as { code?: number }).code })
+		throw error
 	}
 }
 
@@ -163,9 +173,16 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 							if (operator) { filters.push(`${column} ${operator} ?`); args.push(p.value) }
 						}
 					}
-					const result = await sql(`SELECT id,payload FROM ${table(model)} WHERE deleted = false ${filters.length ? `AND ${filters.join(" AND ")}` : ""} ORDER BY id LIMIT ${maxEnumeration + 1}`, args)
-					if (result.rows.length > maxEnumeration) throw new Error("Auth enumeration exceeds safe bound")
-					ids = result.rows.filter(r => matches(decodeRow(model, r[1]), where)).map(r => String(r[0]))
+					ids = []
+					let after: string | undefined
+					for (;;) {
+						const pageSize = Math.min(100, maxEnumeration + 1 - ids.length)
+						const page = await sql(`SELECT id FROM ${table(model)} WHERE deleted = false ${filters.length ? `AND ${filters.join(" AND ")}` : ""} ${after === undefined ? "" : "AND id > ?"} ORDER BY id LIMIT ${pageSize}`, after === undefined ? args : [...args, after])
+						ids.push(...page.rows.map(r => String(r[0])))
+						if (ids.length > maxEnumeration) throw new Error("Auth enumeration exceeds safe bound")
+						if (page.rows.length < pageSize) break
+						after = ids.at(-1)
+					}
 				}
 				const result: Stored[] = []
 				for (const id of new Set(ids)) {
@@ -190,7 +207,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				try {
 					response = await sql(`UPDATE ${table(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
 						[codec.encode(result), deleting, codec.encode(receipts), lookup(result), result.createdAt ?? null, result.expiresAt ?? null, id, original.seq, original.term])
-				} catch { /* Only an atomic receipt can resolve an unknown write outcome. */ }
+				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) return result
 				let current: Stored | null
 				try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
@@ -199,13 +216,19 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				if (response?.rowcount === 0 && current && current.seq !== original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) return null
 				throw new IndeterminateAuthWriteError()
 			}
-			const requireCompleted = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false) => {
-				const result = await mutate(model, row, update, deleting)
-				if (result) return true
-				const current = await stored(model, key(model, row.row))
-				if (current && !current.deleted && matches(current.row, where)) throw new AuthMutationConflictError()
-				return false
+			const assign = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false): Promise<Row | null> => {
+				for (let attempt = 0; attempt < 64; attempt++) {
+					const result = await mutate(model, row, update, deleting)
+					if (result) return result
+					// Only a proven competing version reaches here. Re-evaluate every
+					// predicate; never resurrect a deleted row or replay a logical delta.
+					const current = await stored(model, key(model, row.row))
+					if (!current || current.deleted || !matches(current.row, where)) return null
+					row = current
+				}
+				throw new AuthMutationConflictError()
 			}
+			const requireCompleted = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false) => Boolean(await assign(model, row, where, update, deleting))
 			const adapter: CustomAdapter = {
 				async create({ model, data }) {
 					const row: Row = { ...data, id: data.id ?? randomUUID() }
@@ -221,9 +244,10 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {
+						if (error instanceof CrateAuthRequestError && error.definitelyNotApplied && error.code !== 4091) throw error
 						const existing = await stored(model, row.id)
 						const receipt = existing?.receipts.find(r => r.operation === operation)
-						if (receipt) return result as typeof data
+						if (receipt) return row as typeof data
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && ["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model)) {
 							const recreated = await mutate(model, existing, row, false, true)
 							if (recreated) return recreated as typeof data
@@ -247,7 +271,9 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				async findMany({ model, where = [], limit, offset = 0, sortBy }) {
 					const rows = (await candidates(model, where)).map(v => v.row)
 					if (sortBy) rows.sort((a,b) => (a[sortBy.field] > b[sortBy.field] ? 1 : a[sortBy.field] < b[sortBy.field] ? -1 : 0) * (sortBy.direction === "desc" ? -1 : 1))
-					if (limit === defaultLimit && rows.length > offset + limit) throw new Error(`Auth enumeration truncated by Better Auth's default limit ${defaultLimit}`)
+					// Upstream hook pre-reads swallow errors and deleteMany ignores limits.
+					// Return the complete bounded population for the factory default.
+					if (!testOnlyConformance && limit === defaultLimit) return rows.slice(offset) as any
 					return rows.slice(offset, offset + limit) as any
 				},
 				async consumeOne({ model, where }) {
@@ -267,7 +293,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				async update({ model, where, update }) {
 					if (!where.length) return null
 					const row = (await candidates(model, where))[0]
-					return row ? await mutate(model, row, update as Row) as any : null
+					return row ? await assign(model, row, where, update as Row) as any : null
 				},
 				async updateMany({ model, where, update }) {
 					let count = 0

@@ -58,7 +58,7 @@ export function assertAuthMutation(model: string, action: string, input: Record<
 	if (["update", "updateMany", "incrementOne"].includes(action)) {
 		const data = action === "incrementOne" ? input.set ?? {} : input.update ?? {}
 		if (!Object.keys(data).length && !Object.keys(input.increment ?? {}).length) fail()
-		if (model === "account" && ["id", "providerId", "accountId", "userId"].some(field => field in data)) fail()
+		if (model === "account" && ["id", "accountId", "userId"].some(field => field in data)) fail()
 		if (model === "session" && ["id", "token", "userId"].some(field => field in data)) fail()
 		const allowed = model === "oauthRefreshToken"
 			? action === "update" ? ["rotationReplayResponse"] : action === "updateMany" ? ["revoked"] : ["revoked", "rotatedAt", "rotationReplayExpiresAt"]
