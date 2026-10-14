@@ -133,7 +133,7 @@ WebMCP lets a web page register tools that an in-browser agent can call. It work
 
 ## Open decisions
 
-- The auth-replacement decisions listed in [Self-hosted auth to replace Supabase](self-hosted-auth.md#open-decisions), above all where the auth tables live.
+- The auth-replacement decisions listed in [Self-hosted auth to replace Supabase](self-hosted-auth.md#open-decisions), above all session durability and DPoP for the CrateDB-backed tables ([Better Auth on CrateDB](auth-on-cratedb.md)).
 - Whether MCP access follows the `REC_*` preview lists, i.e. only preview members at first.
 - Whether `search_titles` may spend the paid search budget, and the quota per member.
 - Whether the assistant may write without confirmation. The suggestion is: idempotent additive writes (log a watch, rate, Want to See) run directly; removals and undo always confirm.

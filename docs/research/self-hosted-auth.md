@@ -8,8 +8,8 @@ Two research passes produced this. One mapped every use of Supabase in the repo 
 
 1. **Supabase is only auth.** No app data, storage or realtime lives there. The surface to replace is sign-up, sign-in, Google, confirmation and reset emails, password change, sign-out and the session check. `@supabase/auth-ui-react` is a dead dependency.
 2. **Recommended: Better Auth 1.7.7, embedded in the webapp**, with `@better-auth/mcp` (built on `@better-auth/oauth-provider`) and `@better-auth/cimd`. It is the only option found that runs inside the Remix app and supports, in released code, everything the MCP 2026-07-28 auth profile asks for: CIMD, audience-bound JWTs (RFC 8707), PKCE, refresh rotation, and RFC 8414 and RFC 9728 metadata. It also ships a request guard for the `/mcp` route.
-3. **Auth needs its own small Postgres.** Better Auth and its OAuth provider rely on transactions and unique indexes, which CrateDB lacks. The provider's 2026 advisories were mostly concurrency bugs, which makes this a firm rule. Sessions and rate limits go to Valkey.
-4. **The migration keeps every user id.** Better Auth's official Supabase guide copies `auth.users` and `auth.identities` with the same UUIDs, so every `user_id` in CrateDB stays valid. bcrypt password hashes verify unchanged, and Google accounts link by `sub`. Every member has to sign in once more, because sessions cannot move.
+3. **The auth tables live in CrateDB; there will be no Postgres.** This works through a strict custom adapter that turns every lookup into a primary-key read and every conditional write into a `_seq_no` compare-and-set. Uniqueness comes from deterministic primary keys and claim tables. Sessions, rate limits and single-use tokens go to Valkey. The design, and what it costs without transactions, is in [Better Auth on CrateDB](auth-on-cratedb.md).
+4. **The migration keeps every user id.** A small importer, modelled on Better Auth's Supabase guide, copies `auth.users` and `auth.identities` with the same UUIDs, so every `user_id` in CrateDB stays valid. bcrypt password hashes verify unchanged, and Google accounts link by `sub`. Every member has to sign in once more, because sessions cannot move.
 5. **New work that Supabase did silently:** sending email (through Purelymail, see [Email](#email)), and a cookie name that the proxy, the page cache and metrics all recognise.
 
 ## What Supabase does today
@@ -77,14 +77,14 @@ The in-core `oidcProvider` and `mcp` plugins were **removed in 1.7**. Ignore old
 
 Fixes are frequent, and most of them are in the OAuth provider and in race conditions. Consequences for GoodWatch:
 
-- A real transactional database for auth.
+- Every race-sensitive operation goes through the adapter's primary-key compare-and-set, with a race test for each ([Better Auth on CrateDB](auth-on-cratedb.md#testing)).
 - Upgrades kept current. Add the packages to whatever watches webapp dependencies.
 - Only verified emails link to Google accounts.
 - No magic-link or OTP sign-in at first.
 
 ## Alternatives
 
-Support for CIMD, DCR and RFC 8707 was checked in each project's source unless noted. All of them except Auth.js need Postgres anyway.
+Support for CIMD, DCR and RFC 8707 was checked in each project's source unless noted. All of them except Auth.js need Postgres (or MySQL), which rules them out now that Postgres is excluded.
 
 | Option | Shape | CIMD | DCR | RFC 8707 | Verdict |
 | --- | --- | --- | --- | --- | --- |
@@ -118,16 +118,17 @@ Purelymail's terms of service were not read, because purelymail.com could not be
 
 ## Where the auth tables live
 
-| Option | For | Against |
-| --- | --- | --- |
-| **New small Postgres (recommended)** | Better Auth's main target: its migrate command works and the Supabase guide writes straight into it. Real transactions and unique and compound indexes for codes, refresh tokens and consents. `pg_dump` backups. | One more stateful service in Coolify. A single Postgres 17/18 with a few hundred MB of RAM and scheduled backups is enough while sessions stay in Valkey. This does not undo the [Postgres retirement](../postgres-final-removal.md), which was about app data: auth is a separate, small, low-churn store. |
-| MongoDB adapter on `goodwatch-mongo` | No new infrastructure. Transactions work on the replica set; 1.7.7 creates unique indexes itself; `generateId: "uuid"` keeps the Supabase UUIDs. | Today only the pipelines use it. Sign-in would depend on the pipeline database, and the webapp would need new firewall rules to reach it. The OAuth provider's race-sensitive paths are tested less on Mongo. The migration script has to be rewritten. |
-| SQLite | No service | Two webapp instances cannot share a file; libSQL or LiteFS brings a service back |
-| CrateDB | Already there | No transactions, no uniqueness beyond the primary key, reads lag until `REFRESH`. No adapter. |
+**CrateDB** (decided: no Postgres). See [Better Auth on CrateDB](auth-on-cratedb.md). Options considered and set aside:
+
+| Option | Why not |
+| --- | --- |
+| A new small Postgres | Excluded by decision |
+| MongoDB adapter on `goodwatch-mongo` | Sign-in would depend on the pipeline database, and the webapp cannot reach it today |
+| SQLite | Two webapp instances cannot share a file |
 
 ## Migration
 
-Better Auth's [Supabase migration guide](https://canary.better-auth.com/docs/guides/supabase-migration-guide) is a resumable batch script. It reads `auth.users` joined to `auth.identities` over a direct Postgres connection to Supabase and writes `user` and `account` rows into the new Postgres.
+Better Auth's [Supabase migration guide](https://canary.better-auth.com/docs/guides/supabase-migration-guide) is a resumable batch script that reads `auth.users` joined to `auth.identities` over a direct Postgres connection to Supabase. It writes into Postgres, so GoodWatch uses it as the model for a small importer instead. The importer writes, in this order, the email claim, the user and the accounts into the CrateDB tables, all with deterministic ids and `ON CONFLICT DO NOTHING`, so it can be re-run safely.
 
 - **Same ids.** `id: user.id`, so CrateDB `user_id`s, `REC_PREVIEW_USERS`, handles and imports stay valid with no data migration. Keep UUIDs for new users too (`generateId: "uuid"`), because the guest transfer validates `accountId` as a UUID.
 - **Passwords.** Email identities become `providerId: "credential"` and keep the bcrypt hash. Better Auth has no built-in "rehash on sign-in", so:
@@ -144,7 +145,14 @@ Better Auth's [Supabase migration guide](https://canary.better-auth.com/docs/gui
 
 ## Suggested order
 
-1. **Postgres and email.** Add a Postgres service in Coolify with backups and a firewall rule (with an owner comment, per AGENTS.md). Set up the Purelymail sending mailbox with DKIM, SPF and DMARC for goodwatch.app, and send a test through it from the webapp's network (SMTP egress on port 465 must be allowed).
+1. **CrateDB and email.**
+   - Upgrade CrateDB to 5.10.12 or later.
+   - Secure the webapp's CrateDB traffic: TLS, or the private network only.
+   - Add a dedicated CrateDB user for the auth tables.
+   - Create the auth tables with fixed replicas ([Better Auth on CrateDB](auth-on-cratedb.md#table-design)).
+   - Build the adapter and its conformance and race tests first.
+
+   Then set up the Purelymail sending mailbox with DKIM, SPF and DMARC for goodwatch.app, and send a test through it from the webapp's network (SMTP egress on port 465 must be allowed).
 2. **Better Auth behind a flag.**
    - Splat route `api.auth.$.ts`.
    - Valkey `secondaryStorage` and rate limits.
@@ -161,7 +169,7 @@ Steps 1–5 stand on their own merits: no per-request auth server call, our own 
 
 ## Open decisions
 
-- Postgres (recommended) or the MongoDB adapter for the auth tables.
+- The CrateDB-specific decisions in [Better Auth on CrateDB](auth-on-cratedb.md#open-decisions): session durability, DPoP, TLS, orphan cleanup window.
 - Session lifetime, and whether to use the cookie cache (faster, but revocation lags).
 - The new cookie name.
 - Whether to offer 2FA or passkeys at launch or later.
