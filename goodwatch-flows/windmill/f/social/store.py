@@ -137,7 +137,7 @@ class Store:
         return {'report_id': report_id, 'hidden': True}
 
     def remove(self, post_id, reason):
-        self.db.execute('UPDATE doc.social_post SET deleted_at=?,deletion_reason=?,text=NULL,context=NULL,author=NULL,author_id=NULL,url=NULL,provenance=NULL,checked_at=? WHERE post_id=?',
+        self.db.execute('UPDATE doc.social_post SET deleted_at=?,deletion_reason=?,text=NULL,context=NULL,author=NULL,author_id=NULL,source_id=NULL,url=NULL,provenance=NULL,checked_at=? WHERE post_id=?',
                         [now().isoformat(), reason, now().isoformat(), post_id])
         self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [post_id])
         self.refresh('social_post', 'social_title_link')

@@ -33,8 +33,7 @@ Posts and links retain thirty days by publication time; content-free deletion
 ID tombstones retain thirty days from removal; reports retain 180 days and runs
 ninety days. Maintenance deletes dependent links before expired posts. Deletion
 purges text, context, author identifiers/name, URL and provenance immediately;
-source/native IDs and hashes remain to prevent reingestion. This includes Bluesky
-AT URIs, which necessarily contain the author DID. Reports contain only hashed
+only the hashed post identity, source, timestamps and processing hashes remain to prevent reingestion. Native IDs are purged too, since Bluesky AT URIs contain the author DID. Reports contain only hashed
 post identity and user-supplied reason. Do not put personal data into reasons.
 
 ## Matching

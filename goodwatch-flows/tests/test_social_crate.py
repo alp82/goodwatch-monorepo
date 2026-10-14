@@ -53,10 +53,11 @@ class CrateLifecycleTests(unittest.TestCase):
         self.store.remove(item['post_id'], 'opt_out')
         self.store.save_posts([item])
         self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
-        stored = self.db.select('SELECT text,author,url,deleted_at FROM doc.social_post WHERE post_id=?', [item['post_id']])[0]
+        stored = self.db.select('SELECT text,author,url,source_id,deleted_at FROM doc.social_post WHERE post_id=?', [item['post_id']])[0]
         self.assertIsNone(stored['text'])
         self.assertIsNone(stored['author'])
         self.assertIsNone(stored['url'])
+        self.assertIsNone(stored['source_id'])
         self.assertIsNotNone(stored['deleted_at'])
 
     def test_disabling_lane_changes_reader_results(self):
