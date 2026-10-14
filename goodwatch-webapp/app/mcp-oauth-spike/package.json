@@ -1,0 +1,16 @@
+{
+  "name": "goodwatch-mcp-oauth-spike",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "better-auth": "1.7.7",
+    "@better-auth/mcp": "1.7.7",
+    "@better-auth/cimd": "1.7.7",
+    "@better-auth/oauth-provider": "1.7.7",
+    "@modelcontextprotocol/server": "2.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "2.11.0"
+  }
+}

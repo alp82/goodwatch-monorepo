@@ -11,7 +11,10 @@
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
-		"postinstall": "patch-package"
+		"postinstall": "patch-package",
+		"spike:mcp": "node scripts/mcp-oauth-spike.mjs",
+		"spike:mcp:tunnel": "node scripts/mcp-oauth-spike.mjs --tunnel",
+		"spike:mcp:check": "tsc -p app/mcp-oauth-spike/tsconfig.json"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",

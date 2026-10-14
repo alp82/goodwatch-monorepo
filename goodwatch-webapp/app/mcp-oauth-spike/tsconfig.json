@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["./**/*.ts", "./**/*.tsx", "../../scripts/mcp-oauth-spike.vite.ts"],
+  "exclude": ["node_modules"]
+}
