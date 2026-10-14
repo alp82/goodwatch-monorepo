@@ -1,5 +1,5 @@
-// The height of a title page's sticky header (title, section links, and the explore or journey bar). It differs by
-// viewport and by which bar shows, so it is measured in the browser.
+// The height of a title page's sticky header (title, section links, and the explore bar). It differs by viewport, so
+// it is measured in the browser.
 //
 // The height is a CSS custom property on the page's `main` element, not React state: a measured height that
 // differs from the first guess then costs a style update of the few elements that use it, where state at the top

@@ -1,6 +1,6 @@
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search for …" (the search page), then up to eight matching titles ending in "Show 120 more" (the search page
-// again) when more match, then matching destinations ("Go to Taste"), then Sign up
+// "Search for …" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
+// search mode again) when more match, then matching destinations ("Go to Taste"), then Sign up
 // for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
 // are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
 // it; Escape closes the dialog around it.

@@ -54,7 +54,7 @@ function useShortcutLabel() {
 	return label
 }
 
-/** The search query on screen (Discover's search mode or the search page), shown in the omnibox. */
+/** The search query on screen (Discover's search mode), shown in the omnibox. */
 function useCurrentQuery() {
 	const { pathname, search } = useLocation()
 	return currentSearchQuery(pathname, search)

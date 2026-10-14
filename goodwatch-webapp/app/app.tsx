@@ -1,4 +1,3 @@
-import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { Outlet, useLocation } from "@remix-run/react"
 import { Suspense, lazy } from "react"
@@ -49,7 +48,7 @@ export function loadShellCode({
 	])
 }
 
-function App() {
+export default function App() {
 	const location = useLocation()
 	const { user } = useUser()
 
@@ -78,8 +77,4 @@ function App() {
 			<SearchDialog />
 		</NavigationProvider>
 	)
-}
-
-export default function AppWithSearch() {
-	return <SearchJourneyProvider><App /></SearchJourneyProvider>
 }

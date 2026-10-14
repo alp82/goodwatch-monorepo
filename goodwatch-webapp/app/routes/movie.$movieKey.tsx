@@ -18,7 +18,6 @@ import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
-import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
 import { titleRedirectPath } from "~/utils/helpers"
@@ -164,6 +163,3 @@ export default function DetailsMovie() {
 
 	return <Details media={media} country={country} />
 }
-
-// Search refinements do not change the currently loaded title.
-export const shouldRevalidate = searchDetailShouldRevalidate

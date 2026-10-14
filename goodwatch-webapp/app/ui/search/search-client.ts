@@ -1,7 +1,6 @@
-// What the search page and Discover's free-text search keep in the app shell for a search: the words of the busy
-// answer, the rule for the Retry link, and a `requestSearch` that loads the code for the request itself
-// (search-request.ts) with the first search. The search page's controller is part of the app shell, which every
-// landing page downloads, so the request and its stream reading stay out of it.
+// What Discover's free-text search and the TV's search keep close at hand for a search: the words of the busy answer,
+// and a `requestSearch` that loads the code for the request itself (search-request.ts) with the first search, so the
+// request and its stream reading stay out of the pages' first view.
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 /**
@@ -10,15 +9,6 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
  */
 export const SEARCH_BUSY_MESSAGE =
 	"Search is busy right now. Try again in a moment."
-
-/** What the search page says when the search failed and the server didn't say why. */
-export const SEARCH_PAGE_UNAVAILABLE =
-	"Search is unavailable. Your previous results are kept."
-
-/** Whether the search page's status line gets the Retry link: for the busy answer and for a failed search. */
-export const offerRetry = (status: string) =>
-	status.startsWith("Search is busy") ||
-	status.startsWith("Search is unavailable")
 
 type SearchRequest = typeof import("./search-request")
 

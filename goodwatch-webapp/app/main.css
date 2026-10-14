@@ -286,8 +286,7 @@ html[data-tv-transition="out"] .tv-back {
 /* The height of a title page's sticky header (ui/details/header-height.ts) before the browser has measured it: what
    the server's HTML and a page without JavaScript place by. It differs by breakpoint: the title row wraps its
    details onto two lines below sm and the section links become a select; from 2xl the section links move to the
-   side. The values are what the header measures at those widths; a search journey bar adds its own height once
-   scripts have measured it. */
+   side. The values are what the header measures at those widths. */
 :root {
 	--details-header-guess: 143px;
 }

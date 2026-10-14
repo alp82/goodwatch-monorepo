@@ -172,26 +172,3 @@ export const toCrateSql = (
 	}
 	return { sql: clauses.map((c) => ` AND ${c}`).join(""), params };
 };
-
-// For rows retrieval cannot filter (title matches). Streaming is left to the watchability check.
-export const matchesRow = (
-	filters: SearchFilters | undefined,
-	row: {
-		type: string;
-		year?: string | number | null;
-		genres?: string[] | null;
-		anime?: boolean | null;
-	},
-) => {
-	if (!filters) return true;
-	if (filters.type && row.type !== filters.type) return false;
-	if (filters.anime && Boolean(row.anime) !== (filters.anime === "only"))
-		return false;
-	if (filters.genres?.some((genre) => !(row.genres ?? []).includes(genre)))
-		return false;
-	if (filters.minYear !== undefined && !(Number(row.year) >= filters.minYear))
-		return false;
-	if (filters.maxYear !== undefined && !(Number(row.year) <= filters.maxYear))
-		return false;
-	return true;
-};

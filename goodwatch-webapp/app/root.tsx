@@ -57,7 +57,6 @@ import { assetBase, assetUrl } from "~/utils/asset-url"
 import cssTailwind from "~/tailwind.css?url"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import App from "~/app"
-import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -195,54 +194,52 @@ export function ErrorBoundary() {
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
-					<SearchJourneyProvider>
-						<NavigationProvider>
-							<SiteHeader />
-							<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-								<InfoBox
-									text={
-										notFound
-											? "This page doesn't exist"
-											: "Sorry, but an error occurred"
-									}
-								/>
-								<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
-									{/* Error message */}
-									<strong className="text-xl text-white">
-										{(error as any)?.message || (error as any)?.data}
-									</strong>
+					<NavigationProvider>
+						<SiteHeader />
+						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+							<InfoBox
+								text={
+									notFound
+										? "This page doesn't exist"
+										: "Sorry, but an error occurred"
+								}
+							/>
+							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
+								{/* Error message */}
+								<strong className="text-xl text-white">
+									{(error as any)?.message || (error as any)?.data}
+								</strong>
 
-									{/* Try Again button */}
-									<button
-										type="button"
-										className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
-										onClick={() => window.location.reload()}
-									>
-										Try Again
-									</button>
+								{/* Try Again button */}
+								<button
+									type="button"
+									className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
+									onClick={() => window.location.reload()}
+								>
+									Try Again
+								</button>
 
-									{/* Error stack trace */}
-									{error?.stack && (
-										<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
-											<pre className="whitespace-pre-wrap break-words">
-												{(error as any).message}
-												<pre>{(error as any).data}</pre>
-											</pre>
-										</div>
-									)}
-								</div>
-							</main>
-							<Footer />
-							<MobileDock />
-							<HubDialog />
-							<SearchDialog />
-						</NavigationProvider>
-						<ToastContainer />
-						{/* <CookieConsent /> */}
-						<TelemetryBoot />
-						<ScrollRestoration />
-						<Scripts />
-					</SearchJourneyProvider>
+								{/* Error stack trace */}
+								{error?.stack && (
+									<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
+										<pre className="whitespace-pre-wrap break-words">
+											{(error as any).message}
+											<pre>{(error as any).data}</pre>
+										</pre>
+									</div>
+								)}
+							</div>
+						</main>
+						<Footer />
+						<MobileDock />
+						<HubDialog />
+						<SearchDialog />
+					</NavigationProvider>
+					<ToastContainer />
+					{/* <CookieConsent /> */}
+					<TelemetryBoot />
+					<ScrollRestoration />
+					<Scripts />
 				</QueryClientProvider>
 			</body>
 		</html>

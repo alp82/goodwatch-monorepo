@@ -1,4 +1,4 @@
-// One request to the combined search, for the search page and Discover's free-text search: what kind of answer came
+// One request to the combined search, for Discover's free-text search and the TV's search: what kind of answer came
 // back, and the ranked stream read to its batch. Every failure is an Error whose message the page shows next to Retry.
 // Nothing here retries.
 //

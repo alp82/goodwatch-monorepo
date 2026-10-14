@@ -1,7 +1,3 @@
-import {
-	JourneyNavigation,
-	useSearchJourney,
-} from "~/ui/search/SearchJourney"
 import ExploreBar from "~/ui/explore/ExploreBar"
 import React, { useEffect, useRef } from "react"
 import ShareButton from "~/ui/button/ShareButton"
@@ -39,7 +35,6 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 		const header = headerRef.current
 		if (header) return publishHeaderHeight(header)
 	}, [])
-	const journey = useSearchJourney()
 	const { details, mediaType } = media
 	const { genres, release_year, title } = details
 
@@ -66,7 +61,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 			data-details-header
 			className="sticky top-16 z-40 bg-black/80 backdrop-blur-sm border-b border-white/15"
 		>
-			{!journey?.active && <ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />}
+			<ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />
 
 			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
@@ -152,11 +147,6 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 					</div>
 				</div>
 			</div>
-			{journey?.active && (
-				<JourneyNavigation
-					current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }}
-				/>
-			)}
 			<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}

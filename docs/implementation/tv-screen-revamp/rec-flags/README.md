@@ -65,6 +65,8 @@ In all, before this notes commit: 248 files, +626 -13,589, 92 files deleted. The
 - **The search journey's provider and its bar on title pages** (`ui/search/SearchJourney.tsx`, `JourneyNavigation`).
   The plan lists only the search page's parts. A link with `searchJourney=1` (an old bookmark of a result) still
   reaches the bar, so it stays; its controller still runs a search for such a link. A candidate for a follow-up.
+  Removed afterwards, on `chore/remove-search-journey`: such a link now moves (301) to the title page's canonical
+  address with only its `country` and `language`.
 - **The plan's line numbers** were from before the revamp merged; the call sites were found again by a search of
   `goodwatch-webapp` for `isEnabled`, `getFeatureMode`, `getEnabledFeatures`, `useFeature`, `useFeatures` and the
   fields of `EnabledFeatures`.

@@ -21,6 +21,26 @@ test("the canonical path stays where it is", () => {
 	assert.equal(at("/movie/603-the-matrix", "?country=DE"), null)
 })
 
+test("a link from the old search journey moves to the title page with its own parameters only", () => {
+	assert.equal(
+		at(
+			"/movie/603-the-matrix",
+			"?searchJourney=1&q=matrix&type=movie&minYear=1990&country=US&language=de",
+		),
+		"/movie/603-the-matrix?country=US&language=de",
+	)
+	assert.equal(
+		at("/movie/603-the-matrix", "?q=heist&searchJourney=1"),
+		"/movie/603-the-matrix",
+	)
+	assert.equal(
+		at("/movie/603", "?searchJourney=1&country=DE"),
+		"/movie/603-the-matrix?country=DE",
+	)
+	// Without the journey's mark, any other parameter stays as it is.
+	assert.equal(at("/movie/603-the-matrix", "?q=matrix"), null)
+})
+
 test("a wrong slug moves to the canonical path", () => {
 	assert.equal(at("/movie/603-the-matrices"), "/movie/603-the-matrix")
 	assert.equal(at("/movie/603-mad-max"), "/movie/603-the-matrix")
