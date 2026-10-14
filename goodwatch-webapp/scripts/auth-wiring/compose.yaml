@@ -18,7 +18,7 @@ services:
     command: [valkey-server, --cluster-enabled, 'yes', --cluster-require-full-coverage, 'no', --appendonly, 'no']
     ports: ['127.0.0.1:15603:6379']
   smtp:
-    image: axllent/mailpit:v1.29.2
+    image: axllent/mailpit:v1.29.2@sha256:030f06031ce5c60913ac9363da1ab0d4be6fd2a78147dd0e1ca0fcac665d6b34
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: '1'
       MP_SMTP_AUTH_ALLOW_INSECURE: '1'

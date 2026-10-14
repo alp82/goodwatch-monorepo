@@ -36,7 +36,7 @@ while (Date.now() < deadline) {
  await new Promise(resolve => setTimeout(resolve, 500))
 }
 if (!ready) throw new Error('Pinned local CrateDB cluster did not become ready')
-await migrateAuthTables(sql)
+await migrateAuthTables(localCrateTransport(['http://127.0.0.1:15548'], 15000))
 JS
 npm run typecheck:auth | tee scripts/auth-wiring/results/typecheck.log
 bash scripts/auth-wiring/test-local.sh "$@" | tee scripts/auth-wiring/results/integration.log
