@@ -83,6 +83,13 @@ describe("what the search screen says", () => {
 			}),
 			"Search is busy right now. Try again in a moment.",
 		)
+		assert.equal(
+			searchEmptyLine({
+				waiting: false,
+				failed: "Too many searches right now. Try again in a moment.",
+			}),
+			"Too many searches right now. Try again in a moment.",
+		)
 	})
 
 	it("writes a found title's facts as mini Discover's list does", () => {

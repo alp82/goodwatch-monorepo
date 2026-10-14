@@ -275,7 +275,7 @@ export function homeApps(
 			art: { kind: "backdrop", path: tonightPicture },
 		},
 		discover: {
-			line: "Pick a mood, get four titles.",
+			line: "Pick a mood.",
 			art: {
 				kind: "posters",
 				paths: best
