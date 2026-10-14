@@ -1,5 +1,5 @@
-// The height of a title page's sticky header (title, section links, and the explore or journey bar). It differs by
-// viewport and by which bar shows, so it is measured in the browser.
+// The height of a title page's sticky header (title, section links, and the explore bar). It differs by viewport, so
+// it is measured in the browser.
 //
 // The height is a CSS custom property on the page's `main` element, not React state: a measured height that
 // differs from the first guess then costs a style update of the few elements that use it, where state at the top
@@ -8,8 +8,18 @@
 /** The custom property with the header's measured height. */
 export const HEADER_HEIGHT_PROPERTY = "--details-header-height"
 
-/** The header's height in CSS, with the guess that the server's HTML and the time before the measurement use. */
-export const HEADER_HEIGHT = `var(${HEADER_HEIGHT_PROPERTY}, 112px)`
+/**
+ * The header's height in CSS, with the guess that the server's HTML and the time before the measurement use.
+ * The guess is `--details-header-guess` (app/main.css), which follows the header's height at each breakpoint;
+ * 112px is the fallback where that sheet is missing.
+ */
+export const HEADER_HEIGHT = `var(${HEADER_HEIGHT_PROPERTY}, var(--details-header-guess, 112px))`
+
+/** How tall the site bar above the sticky header is. */
+export const SITE_BAR_HEIGHT = 64
+
+/** A scroll margin that leaves a link target 16px under the site bar and the sticky header. */
+export const UNDER_HEADERS = `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`
 
 /** Keeps the custom property at the header's height until the returned function is called. */
 export function publishHeaderHeight(header: HTMLElement): () => void {

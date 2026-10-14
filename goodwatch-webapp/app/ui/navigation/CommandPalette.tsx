@@ -1,8 +1,8 @@
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search for …" (the search page), then up to eight matching titles ending in "Show 120 more" (the search page
-// again) when more match, then matching destinations ("Go to Taste"), then Sign up
+// "Search for …" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
+// search mode again) when more match, then matching destinations ("Go to Taste"), then Sign up
 // for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
 // are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
 // it; Escape closes the dialog around it.
@@ -21,7 +21,6 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { useFeatures } from "~/hooks/useFeature"
 import { useUser } from "~/utils/auth"
 import {
 	MIN_PREFIX_CHARS,
@@ -98,7 +97,6 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const { pathname, search } = useLocation()
 	const { user } = useUser()
 	const signUp = useSignUpHref()
-	const features = useFeatures()
 	const { pick } = useTonightsPick()
 	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
 	const [active, setActive] = useState(0)
@@ -115,14 +113,14 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const trimmed = q.trim()
 	const needle = trimmed.toLowerCase()
 	const rows = useMemo(() => {
-		const destinations = getDestinations(features)
+		const destinations = getDestinations()
 		const here = currentDestination(pathname)
 		const result: Row[] = []
 		if (trimmed)
 			result.push({
 				key: "search",
 				label: `Search for “${trimmed}”`,
-				href: searchHref(trimmed, features),
+				href: searchHref(trimmed),
 				icon: MagnifyingGlassIcon,
 			})
 		for (const title of titles)
@@ -141,14 +139,13 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: "more",
 				label: `Show ${more.toLocaleString("en-US")} more`,
-				href: searchHref(trimmed, features),
+				href: searchHref(trimmed),
 				compact: true,
 				icon: MagnifyingGlassIcon,
 				title: true,
 			})
 		for (const key of PALETTE_DESTINATIONS) {
 			const destination = destinations[key]
-			if (!destination.available) continue
 			const words = `${destination.label} ${destination.short}`.toLowerCase()
 			if (needle && !words.includes(needle)) continue
 			result.push({
@@ -174,7 +171,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: ArrowRightEndOnRectangleIcon,
 			})
 		return result
-	}, [features, pathname, trimmed, needle, titles, more, pick, user, signUp])
+	}, [pathname, trimmed, needle, titles, more, pick, user, signUp])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`

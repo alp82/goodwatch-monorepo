@@ -1,5 +1,6 @@
 // The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
-// Mood, Genre, GoodWatch score, Taste match, Released, Age & content, Streaming services, Similar to, Cast and crew).
+// Mood, Theme, Style, Genre, GoodWatch score, Taste match, Released, Age & content, Streaming services, Similar to,
+// Cast and crew).
 // Each option shows what the result would be if tapped; an option that would leave nothing is dimmed. Typing two
 // letters or more also finds titles for Similar to and people for Cast and crew. Taste match needs taste: without it
 // the group shows dimmed with the way to get it. Age & content needs the viewer's rating ladder: without it the group
@@ -25,6 +26,14 @@ import {
 	RELEASED,
 } from "~/domain/filter-state"
 import { MOODS, toggleMood } from "~/domain/moods"
+import {
+	MAX_STYLES,
+	MAX_THEMES,
+	STYLES,
+	THEMES,
+	type TitleRule,
+	toggleKey,
+} from "~/domain/themes-styles"
 import { ANIME_CHOICES } from "~/domain/title-type"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { goodwatchVibeIndex } from "~/utils/ratings"
@@ -111,9 +120,15 @@ const toggleIn = <T,>(list: T[] | undefined, value: T) => {
 	return next.length ? next : undefined
 }
 
+/** A pick the group refused because it is full, said under that group. */
+interface Refusal {
+	group: FilterName
+	text: string
+}
+
 function buildGroups(
 	data: FilterGroupsData & Found,
-	onMoodRefused: (name: string) => void,
+	onRefused: (refusal: Refusal) => void,
 ): Group[] {
 	const { state, counts, onChange, myServices } = data
 	const count = (group: FilterName, option: string) =>
@@ -141,6 +156,42 @@ function buildGroups(
 	const people = state.people ?? []
 	const taste = data.taste ?? "ready"
 	const { ladder } = data
+
+	// Themes and styles: up to three of each, each option with its rule's color.
+	const ruleGroup = <K extends string>(
+		key: "themes" | "styles",
+		title: string,
+		rules: readonly TitleRule<K>[],
+		chosen: K[],
+		max: number,
+		pick: (chosen: K[]) => void,
+	): Group => ({
+		key,
+		title,
+		note: "Up to three",
+		badge: chosen.length,
+		options: rules.map((rule) => ({
+			id: rule.id,
+			label: rule.name,
+			active: chosen.includes(rule.id),
+			count: count(key, rule.id),
+			swatch: (
+				<span
+					className="h-2.5 w-2.5 rounded-full"
+					style={{ background: rule.color }}
+				/>
+			),
+			toggle: () => {
+				const next = toggleKey(chosen, rule.id, max)
+				if (next.refused)
+					onRefused({
+						group: key,
+						text: `Three ${key} is the most. Remove one to add ${rule.name}.`,
+					})
+				else pick(next.chosen)
+			},
+		})),
+	})
 
 	return [
 		{
@@ -185,11 +236,21 @@ function buildGroups(
 				),
 				toggle: () => {
 					const { moods, refused } = toggleMood(state.moods, mood.key)
-					if (refused) onMoodRefused(mood.name)
+					if (refused)
+						onRefused({
+							group: "moods",
+							text: `Three moods is the most. Remove one to add ${mood.name}.`,
+						})
 					else set({ moods })
 				},
 			})),
 		},
+		ruleGroup("themes", "Theme", THEMES, state.themes, MAX_THEMES, (themes) =>
+			set({ themes }),
+		),
+		ruleGroup("styles", "Style", STYLES, state.styles, MAX_STYLES, (styles) =>
+			set({ styles }),
+		),
 		{
 			key: "genres",
 			title: "Genre",
@@ -538,17 +599,17 @@ export function FilterGroups({
 	query: string
 	className?: string
 }) {
-	const [notice, setNotice] = useState("")
+	const [refusal, setRefusal] = useState<Refusal | null>(null)
+	const notice = refusal?.text ?? ""
 	const titles = useTitleNames(data.state.similarTo ?? [], query)
 	const people = usePeopleNames(data.state.people ?? [], query)
-	const moods = data.state.moods.join(",")
-	// A change of moods ends the refusal notice.
+	const { moods, themes, styles } = data.state
+	const picked = `${moods.join(",")}|${themes.join(",")}|${styles.join(",")}`
+	// A change of moods, themes or styles ends the refusal notice.
 	useEffect(() => {
-		setNotice("")
-	}, [moods])
-	const groups = buildGroups({ ...data, titles, people }, (name) =>
-		setNotice(`Three moods is the most. Remove one to add ${name}.`),
-	)
+		setRefusal(null)
+	}, [picked])
+	const groups = buildGroups({ ...data, titles, people }, setRefusal)
 	const q = query.trim().toLowerCase()
 	const searchable = (g: Group) => g.key === "similarTo" || g.key === "people"
 	const shown = groups
@@ -626,8 +687,8 @@ export function FilterGroups({
 									)}
 								</div>
 							)}
-							{g.key === "moods" && notice && (
-								<p className="mt-2 text-xs text-amber-300">{notice}</p>
+							{refusal && g.key === refusal.group && (
+								<p className="mt-2 text-xs text-amber-300">{refusal.text}</p>
 							)}
 							{g.needs && <NeedsTaste needs={g.needs} />}
 						</section>

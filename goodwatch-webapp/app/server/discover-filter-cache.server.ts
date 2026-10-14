@@ -39,7 +39,6 @@ export function discoverFilterKey(input: {
 	sort: SortKey
 	snapshotVersion: string
 	availabilityLoadedAt: number | null
-	ageFilter: boolean
 	year: number
 }): string | null {
 	const { viewer, taste, state } = input
@@ -62,6 +61,8 @@ export function discoverFilterKey(input: {
 		services: state.services,
 		notSeenYet: state.notSeenYet,
 		moods: state.moods,
+		themes: state.themes,
+		styles: state.styles,
 		genres: state.genres,
 		minScore: state.minScore,
 		minMatch: state.minMatch,
@@ -77,7 +78,6 @@ export function discoverFilterKey(input: {
 		viewer.country,
 		input.availabilityLoadedAt,
 		[...new Set(viewer.services)].sort((a, b) => a - b),
-		input.ageFilter,
 		input.year,
 		input.sort,
 		serialized,

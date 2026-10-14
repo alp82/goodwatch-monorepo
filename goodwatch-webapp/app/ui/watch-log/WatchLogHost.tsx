@@ -1,4 +1,4 @@
-// The movie watch log's place in the page (REC_TRACKING): one host in the app shell that a Seen button on any
+// The movie watch log's place in the page: one host in the app shell that a Seen button on any
 // surface hands its press to. The host is all a first view loads. What the press does (the watch for now and its
 // toast, or the log in a popover or a sheet) is in WatchLogSurface, fetched on intent and at the first press.
 //

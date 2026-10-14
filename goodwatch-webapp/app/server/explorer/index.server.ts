@@ -24,7 +24,6 @@ import {
 	availabilityLoadedAt,
 	servicesFor,
 } from "~/server/availability-index.server"
-import { getFeatureMode } from "~/server/features.server"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -80,8 +79,8 @@ const LOVED_FROM = 8
 const AVAILABILITY_WAIT_MS = 1500
 const PROVIDERS_KEEP_MS = 6 * 60 * 60 * 1000
 
-// While Explorer can be seen, the pool builds as soon as the snapshot loads, so no request waits for it.
-if (getFeatureMode("explorer") !== "off") keepExplorerPoolWarm(getTitleSnapshot)
+// The pool builds as soon as the snapshot loads, so no request waits for it.
+keepExplorerPoolWarm(getTitleSnapshot)
 
 // ---------------------------------------------------------------- the personal part, per request
 

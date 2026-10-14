@@ -5,7 +5,6 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
-import { isEnabled } from "~/server/features.server"
 import {
 	type PortraitTab,
 	getTastePortrait,
@@ -20,7 +19,6 @@ import type { TasteInteraction } from "~/ui/taste/types"
 // - Guests: POST /api/taste/portrait?tab=sides with { guest: { interactions, country, services } }, the guest
 //   progress their browser holds. With fewer than 5 guest ratings, the view is the sample taste. A signed-in member's
 //   POST reads the member's own ratings and ignores `guest`.
-// Served while REC_TASTE_PAGE lets the viewer see the Taste page; not found otherwise.
 
 const MAX_BODY_CHARS = 256 * 1024
 
@@ -35,7 +33,6 @@ const bodySchema = z.object({
 })
 
 const headers = { "Cache-Control": "private, no-store" }
-const notFound = () => json({ error: "Not found" }, { status: 404, headers })
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
 function tabOf(request: Request): PortraitTab | null {
@@ -47,8 +44,6 @@ async function respond(request: Request, guest?: GuestProgress) {
 	const tab = tabOf(request)
 	if (!tab) return invalid("Pass tab=sides, tab=everyone, or tab=fingerprint")
 	const who = await portraitViewer(request, guest)
-	const userId = who.viewer.kind === "member" ? who.viewer.userId : null
-	if (!isEnabled("tastePage", { userId })) return notFound()
 	return json(await getTastePortrait(who, tab), { headers })
 }
 

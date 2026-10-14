@@ -1,0 +1,96 @@
+{
+	"passed": 499,
+	"failed": [],
+	"numbers": {
+		"guest 1920x1080: after five scores Taste shows": "Made for you",
+		"guest 1920x1080: the portrait after five scores": {
+			"status": "empty",
+			"subject": "guest",
+			"sides": 0
+		},
+		"guest 390x844: after five scores Taste shows": "Made for you",
+		"guest 390x844: the portrait after five scores": {
+			"status": "empty",
+			"subject": "guest",
+			"sides": 0
+		},
+		"sides 1920x1080: the sides": [
+			"Intricate stories exploring big questions",
+			"Situationally funny stories about sport"
+		],
+		"sides 390x844: the sides": [
+			"Intricate stories exploring big questions",
+			"Situationally funny stories about sport"
+		],
+		"sizes 360x740: the room": "phone",
+		"sizes 360x740: a level of the strip": "74.0 x 45.3 px",
+		"sizes 360x740: the smallest key, px": {
+			"Taste, before five scores": 44.5,
+			"the quiz": 44.7,
+			"the rating": 44.5,
+			"Taste, the sides": 44.5,
+			"a side's titles": 44.5,
+			"Made for you": 44.5
+		},
+		"sizes 375x667: the room": "phone",
+		"sizes 375x667: a level of the strip": "77.4 x 47.4 px",
+		"sizes 375x667: the smallest key, px": {
+			"Taste, before five scores": 44.4,
+			"the quiz": 44.6,
+			"the rating": 44.4,
+			"Taste, the sides": 44.4,
+			"a side's titles": 44.4,
+			"Made for you": 44.4
+		},
+		"sizes 390x700: the room": "phone",
+		"sizes 390x700: a level of the strip": "80.4 x 49.2 px",
+		"sizes 390x700: the smallest key, px": {
+			"Taste, before five scores": 44.2,
+			"the quiz": 44.2,
+			"the rating": 44.2,
+			"Taste, the sides": 44.2,
+			"a side's titles": 44.2,
+			"Made for you": 44.2
+		},
+		"sizes 390x844: the room": "phone",
+		"sizes 390x844: a level of the strip": "80.5 x 49.3 px",
+		"sizes 390x844: the smallest key, px": {
+			"Taste, before five scores": 44.2,
+			"the quiz": 44.2,
+			"the rating": 44.2,
+			"Taste, the sides": 44.2,
+			"a side's titles": 44.2,
+			"Made for you": 44.2
+		},
+		"sizes 430x932: the room": "phone",
+		"sizes 430x932: a level of the strip": "90.2 x 55.3 px",
+		"sizes 430x932: the smallest key, px": {
+			"Taste, before five scores": 44.2,
+			"the quiz": 44.7,
+			"the rating": 44.2,
+			"Taste, the sides": 44.2,
+			"a side's titles": 44.2,
+			"Made for you": 44.2
+		},
+		"sizes 844x390: the room": "landscape",
+		"sizes 844x390: a level of the strip": "109.5 x 67.1 px",
+		"sizes 844x390: the smallest key, px": {
+			"Taste, before five scores": 52.7,
+			"the quiz": 51.3,
+			"the rating": 52.7,
+			"Taste, the sides": 52.7,
+			"a side's titles": 52.7,
+			"Made for you": 52.7
+		},
+		"sizes 1920x1080: the room": "desktop, below",
+		"sizes 1920x1080: the smallest key, px": {
+			"Taste, before five scores": 67.8,
+			"the quiz": 67.8,
+			"the rating": 67.8,
+			"Taste, the sides": 67.8,
+			"a side's titles": 67.8,
+			"Made for you": 67.8
+		},
+		"the guest's HTML of /home-preview, bytes (dev server)": 59736
+	}
+}

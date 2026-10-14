@@ -30,6 +30,8 @@ const state = (): FilterState => ({
 	onMyServices: true,
 	notSeenYet: false,
 	moods: [],
+	themes: [],
+	styles: [],
 	genres: [],
 	minScore: 0,
 	minMatch: 0,
@@ -42,7 +44,6 @@ const input = (): Parameters<typeof discoverFilterKey>[0] => ({
 	sort: "popular",
 	snapshotVersion: "one",
 	availabilityLoadedAt: 100,
-	ageFilter: true,
 	year: 2026,
 })
 const result = (keys = [3, 1, 2]): FilterResult => ({
@@ -118,7 +119,6 @@ test("keys include every filter dependency", () => {
 		{ viewer: { ...viewer(), services: [8] } },
 		{ snapshotVersion: "two" },
 		{ availabilityLoadedAt: 101 },
-		{ ageFilter: false },
 		{ year: 2027 },
 		{ sort: "top" },
 	]
@@ -131,6 +131,8 @@ test("keys include every filter dependency", () => {
 		{ services: [8] },
 		{ notSeenYet: true },
 		{ moods: ["funny"] },
+		{ themes: ["war"] },
+		{ styles: ["slow"] },
 		{ genres: ["Drama"] },
 		{ minScore: 70 },
 		{ minMatch: 80 },

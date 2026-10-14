@@ -109,7 +109,7 @@ Read from the page instance's container on vector1 on October 9, 2026, names onl
 - **No volume, no bind mount, and no extra host.** The query models are in the image, at the `SEARCH_MODEL_DIR` that the image sets.
 - **Labels:** Coolify's own and the proxy's. The app reads none.
 - **Variables that Coolify adds:** `SOURCE_COMMIT`, `HOST` (all interfaces), `PORT`, and five `COOLIFY_*` names. The compose file sets the first three.
-- **The application's 32 variables.** A role gets 26 of them (the list in `.env.example`): the Crate, Qdrant, and cache settings, the two Supabase settings for the session check, `TYPESAFE_API_KEY`, `SEARCH_STORAGE_KEY`, `SEARCH_TRUSTED_IP_HEADER`, `TMDB_API_KEY`, and the nine `REC_*` flags. The command palette answers 404 without `REC_NAVIGATION`.
+- **The application's 32 variables.** A role gets 26 of them (the list in `.env.example`): the Crate, Qdrant, and cache settings, the two Supabase settings for the session check, `TYPESAFE_API_KEY`, `SEARCH_STORAGE_KEY`, `SEARCH_TRUSTED_IP_HEADER` and `TMDB_API_KEY`. The nine `REC_*` flags were among them until they were removed on October 14, 2026 (`docs/implementation/tv-screen-revamp/rec-flags/`); a role's `.env` that still has them is harmless.
 - **Left out:** `NODE_ENV` and `SEARCH_MODEL_DIR` (the image sets the same values), `STATIC_ASSETS` and `STATIC_ASSETS_HOST` (they shape pages, which a role doesn't serve to visitors), `HOMEPAGE_WARMUP_SECRET` (a page route), and `SUPABASE_DB_PASS` (no code reads it).
 - **New for a role:** `WEBAPP_ROLE` and `SEARCH_MAX_IN_FLIGHT`, set in the compose file. `SEARCH_ENCODER_THREADS` stays unset: the role's default is 2.
 

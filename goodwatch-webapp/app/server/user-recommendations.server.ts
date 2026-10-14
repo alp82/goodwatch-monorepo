@@ -1,6 +1,5 @@
 import { excludeNotInterested } from "~/server/not-interested-store.server"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
-import { loadTaste, logRecommendedOverlap } from "~/server/taste/index.server"
+import { loadTaste } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
@@ -14,7 +13,6 @@ import {
 	buildPayloadFields,
 	searchByTaste,
 } from "~/server/utils/recommend"
-import { titleKey } from "~/utils/title-key"
 
 
 export interface UserRecommendation extends Partial<AllRatings> {
@@ -68,25 +66,23 @@ async function _getUserRecommendations({
 }: GetUserRecommendationsParams): Promise<UserRecommendation[]> {
 	console.log('[User Recommendations] userId:', userId, 'mediaType:', mediaType, 'limit:', limit)
 
-	// With taste match on, one vector query with the stored taste vector. A member below the minimum signal (or any
-	// member before the title snapshot has loaded) has no vector and keeps the recommend call.
-	if (isEnabled("tasteMatch", { userId })) {
-		const [taste, excluded] = await Promise.all([
-			loadTaste({ kind: "member", userId }),
-			getUserExcludeItems(userId),
-		])
-		if (taste.vector) {
-			const results = await searchByTaste<QdrantMediaPayload>({
-				taste,
-				filter: recommendationFilter(mediaType, excluded),
-				limit,
-				payloadFields: PAYLOAD_FIELDS,
-			})
-			// Best match first; a title not in the title snapshot yet shows no match (0 hides the pill).
-			return results.map((result) =>
-				toUserRecommendation(result.payload, result.score, result.match ?? 0),
-			)
-		}
+	// One vector query with the stored taste vector. A member below the minimum signal (or any member before the title
+	// snapshot has loaded) has no vector and keeps the recommend call.
+	const [taste, excluded] = await Promise.all([
+		loadTaste({ kind: "member", userId }),
+		getUserExcludeItems(userId),
+	])
+	if (taste.vector) {
+		const results = await searchByTaste<QdrantMediaPayload>({
+			taste,
+			filter: recommendationFilter(mediaType, excluded),
+			limit,
+			payloadFields: PAYLOAD_FIELDS,
+		})
+		// Best match first; a title not in the title snapshot yet shows no match (0 hides the pill).
+		return results.map((result) =>
+			toUserRecommendation(result.payload, result.score, result.match ?? 0),
+		)
 	}
 	return recommendFromExamples({ userId, mediaType, limit })
 }
@@ -110,7 +106,7 @@ function recommendationFilter(
 }
 
 // Qdrant's recommend API over the newest 50 liked and 50 disliked titles: a points read plus a recommend call.
-// Serves while REC_TASTE_MATCH is off or shadow, and for members without a taste vector.
+// Serves members without a taste vector.
 async function recommendFromExamples({
 	userId,
 	mediaType,
@@ -204,19 +200,6 @@ async function recommendFromExamples({
 	}
 
 	const results = await recommend<QdrantMediaPayload>(recommendParams)
-
-	// Compares the stored taste vector with this list and logs it, off the request path; the page doesn't change.
-	if (getFeatureMode("tasteMatch") === "shadow")
-		void logRecommendedOverlap({
-			userId,
-			mediaType,
-			minVotes: MIN_VOTING_COUNT,
-			minScore: MIN_SCORE,
-			excluded: allExcluded,
-			recommended: results.map((result) =>
-				titleKey(result.payload.media_type, result.payload.tmdb_id),
-			),
-		})
 
 	// The recommend path shows the raw cosine as the match, capped at 99
 	const mappedResults = results.map((result) =>

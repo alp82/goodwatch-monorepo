@@ -16,17 +16,11 @@ import {
  * manifest names none or a bad one, a chunk is missing, or Redis fails while reading them. Each is logged once per
  * load, and the snapshot then stays without ratings until the next version. The checksum and the column checks come
  * later, in prepareSnapshot or loadRatings.
- *
- * With `enabled` false it reads nothing: while REC_AGE_FILTER is off for everyone the ratings (about 16 MB, and as
- * much again while they load) would sit in every instance's memory unused. Flags are read when the container starts,
- * so turning the flag on already takes a restart, and the restart loads the ratings.
  */
 export async function readRatingsChunks(
 	redis: { getBuffer(key: string): Promise<Uint8Array | null> },
 	manifest: Manifest,
-	enabled: boolean,
 ): Promise<{ manifest: RatingsManifest; chunks: Uint8Array[] } | null> {
-	if (!enabled) return null
 	if (manifest.ratings === undefined || manifest.ratings === null) return null
 	try {
 		const ratings = checkRatingsManifest(manifest.ratings)
@@ -58,9 +52,8 @@ export async function readRatingsChunks(
 export async function loadRatings(
 	redis: { getBuffer(key: string): Promise<Uint8Array | null> },
 	manifest: Manifest,
-	enabled: boolean,
 ): Promise<RatingColumns | null> {
-	const input = await readRatingsChunks(redis, manifest, enabled)
+	const input = await readRatingsChunks(redis, manifest)
 	if (!input) return null
 	try {
 		return joinRatingsChunks(input.manifest, manifest.count, input.chunks)

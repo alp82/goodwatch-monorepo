@@ -22,7 +22,6 @@ import {
 	type ExplorerWorld,
 	GROUPING_NAMES,
 	MAX_PICKS,
-	isGrouping,
 } from "~/domain/explorer"
 import {
 	isAllTitleTypes,
@@ -58,6 +57,7 @@ import {
 } from "./combination-words"
 import { type Drawn, type MapEngine, type Pad, createMapEngine } from "./engine"
 import type { IslandInput, MapIsland } from "./island"
+import { openingOf } from "./opening"
 import { groupingOf, layRegions, localId, worldId } from "./regions"
 
 /** The map's filters as the URL holds them (null is the default). */
@@ -853,10 +853,14 @@ export function ExplorerMap({
 			.filter((id) => engine.island(id))
 			.slice(0, MAX_PICKS)
 		if (want.length) void applyRef.current(want)
-		// A link to a grouping (`grouping=decade`, as older links have it) opens on its region, once.
-		const to = currentParams().get("grouping")
-		if (!opened.current && !want.length && to && isGrouping(to))
-			engine.flyToRegion(to)
+		// A link to a grouping (`grouping=decade`, as older links have it) opens on its region, once; with an island
+		// of it (`&island=funny`, as the TV's Expand key has it), inside that island.
+		const to = openingOf(currentParams())
+		if (!opened.current && !want.length && to) {
+			const island = to.island && engine.island(worldId(to.grouping, to.island))
+			if (island) engine.flyToIsland(island)
+			else engine.flyToRegion(to.grouping)
+		}
 		opened.current = true
 	}, [engine, world])
 	useEffect(() => {

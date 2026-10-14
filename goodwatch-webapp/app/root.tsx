@@ -8,7 +8,6 @@ import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
 import type { EffectiveMediaContext } from "~/utils/media-language"
-import { getEnabledFeatures } from "~/server/features.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { startBrowserGate } from "~/server/browser-gate.server"
 import { startMetrics } from "~/server/metrics/index.server"
@@ -40,23 +39,26 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import React, { Suspense, lazy } from "react"
+import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
 import InfoBox from "~/ui/InfoBox"
-import BottomNav from "~/ui/nav/BottomNav"
-import type { EnabledFeatures } from "~/utils/features"
+import {
+	HubDialog,
+	MobileDock,
+	NavigationProvider,
+	SearchDialog,
+	SiteHeader,
+} from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
 import { assetBase, assetUrl } from "~/utils/asset-url"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import App from "~/app"
-import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -111,7 +113,6 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 type LoaderData = {
 	user: User | null
-	features: EnabledFeatures
 	dehydratedState: DehydratedState
 	locale: Pick<EffectiveMediaContext, "country" | "language">
 	env: {
@@ -145,7 +146,6 @@ export const loader: LoaderFunction = async ({
 	return json<LoaderData>(
 		{
 			user,
-			features: getEnabledFeatures({ userId: user?.id }),
 			dehydratedState: dehydrate(queryClient),
 			locale: { country: effectiveContext.country, language: isCrawler(request) ? "en" : effectiveContext.language },
 			env: {
@@ -157,10 +157,7 @@ export const loader: LoaderFunction = async ({
 	)
 }
 
-// The error page shows the header of the old navigation. Its menus bring the dialog library, so its code loads with
-// the error page and not with every page.
-const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
-
+// The error page draws the site's navigation without the root loader's data: the account slot stays empty.
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
@@ -197,10 +194,8 @@ export function ErrorBoundary() {
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
-					<SearchJourneyProvider>
-						<Suspense fallback={null}>
-							<Header />
-						</Suspense>
+					<NavigationProvider>
+						<SiteHeader />
 						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
 							<InfoBox
 								text={
@@ -236,13 +231,15 @@ export function ErrorBoundary() {
 							</div>
 						</main>
 						<Footer />
-						<BottomNav />
-						<ToastContainer />
-						{/* <CookieConsent /> */}
-						<TelemetryBoot />
-						<ScrollRestoration />
-						<Scripts />
-					</SearchJourneyProvider>
+						<MobileDock />
+						<HubDialog />
+						<SearchDialog />
+					</NavigationProvider>
+					<ToastContainer />
+					{/* <CookieConsent /> */}
+					<TelemetryBoot />
+					<ScrollRestoration />
+					<Scripts />
 				</QueryClientProvider>
 			</body>
 		</html>

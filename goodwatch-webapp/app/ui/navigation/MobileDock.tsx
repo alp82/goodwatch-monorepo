@@ -7,7 +7,6 @@ import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { useFeatures } from "~/hooks/useFeature"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, NewEpisodesMark } from "./bits"
@@ -19,18 +18,18 @@ const HUB_LABEL = "Browse GoodWatch"
 function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }) {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
-	const destinations = getDestinations(useFeatures())
+	const destinations = getDestinations()
 	const here = currentDestination(pathname)
 	const page = here ? destinations[here] : null
 	const Icon = page?.icon ?? Squares2X2Icon
-	const open = Boolean(navigation?.hubOpen)
+	const open = navigation.hubOpen
 	// My shows and My movies are tiles inside the hub, so the key that opens the hub says that something is new there.
 	const fresh = useOpenerSignal()
 	const label = page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL
 	return (
 		<button
 			type="button"
-			onClick={() => navigation?.setHubOpen(!open)}
+			onClick={() => navigation.setHubOpen(!open)}
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
@@ -76,8 +75,8 @@ function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }
 export function MobileDock() {
 	const navigation = useNavigation()
 	const dock = useRef<HTMLDivElement>(null)
-	const setStripTarget = navigation?.setStripTarget
-	const docked = Boolean(navigation?.strips)
+	const setStripTarget = navigation.setStripTarget
+	const docked = Boolean(navigation.strips)
 	const wayBack = useTvWayBack()
 
 	useEffect(() => {
@@ -131,23 +130,14 @@ export function MobileDock() {
 }
 
 /**
- * A page's phone controls, docked above the navigation (the slab). Renders nothing without the dock (REC_NAVIGATION
- * off for the viewer); `useHasDock` tells the page to place its controls itself then. Desktop layouts keep their
- * controls in the page: the dock is hidden from the large breakpoint up.
+ * A page's phone controls, docked above the navigation (the slab). Desktop layouts keep their controls in the page:
+ * the dock is hidden from the large breakpoint up.
  */
 export function DockStrip({ children }: { children: ReactNode }) {
-	const navigation = useNavigation()
-	const setStrips = navigation?.setStrips
+	const { setStrips, stripTarget } = useNavigation()
 	useEffect(() => {
-		if (!setStrips) return
 		setStrips((count) => count + 1)
 		return () => setStrips((count) => count - 1)
 	}, [setStrips])
-	const target = navigation?.stripTarget
-	return target ? createPortal(children, target) : null
-}
-
-/** Whether the phone dock is there to take a page's controls. */
-export function useHasDock(): boolean {
-	return Boolean(useNavigation())
+	return stripTarget ? createPortal(children, stripTarget) : null
 }

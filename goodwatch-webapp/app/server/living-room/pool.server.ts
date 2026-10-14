@@ -1,35 +1,32 @@
-import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
+// The pool: the titles the start page's TV draws its own picks from, read at the first interaction
+// (ui/living-room/tv/use-tv-pool.ts). The best six and three per mood for the person, as cards; a member's saved
+// services by name; and mini Discover's tile pictures, the same for everyone.
 import { loadTaste } from "~/server/taste/index.server"
 import {
 	MAX_KEYS,
 	type TitleCard,
+	getDisplayFields,
 	getServiceCards,
 	getTitleCards,
 } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
-import type {
-	LivingRoomData,
-	LivingRoomTitle,
-	TvPair,
-} from "~/ui/living-room/living-room-data"
-import { livingRoomServices } from "./data.server"
 import { LivingRoomUnavailable, rankOf } from "./picks.server"
 import { poolCandidates, selectPoolKeys } from "./pool-keys.server"
+import { type ChoiceArt, loadChoiceArt } from "./tv-choice-art.server"
 
-// Contrasting moods for "Which one, tonight?".
-const PAIRS: [MoodKey, MoodKey][] = [
-	["funny", "heavy"],
-	["action", "romance"],
-	["feelgood", "scary"],
-	["mind", "worlds"],
-	["crime", "growing"],
-	["history", "funny"],
-]
+export type LivingRoomPool = {
+	member: boolean
+	/** Best first for the person. */
+	suggestions: TitleCard[]
+	/** A member's saved services, by name. Empty for a guest. */
+	savedServices: string[]
+	choiceArt: ChoiceArt
+}
 
 export async function getLivingRoomPool(
 	ctx: ViewerContext,
-): Promise<LivingRoomData> {
+): Promise<LivingRoomPool> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot)
 		throw new LivingRoomUnavailable("The title snapshot is loading")
@@ -41,81 +38,23 @@ export async function getLivingRoomPool(
 	// pool-keys.server.ts).
 	const today = Math.floor(Date.now() / 86_400_000)
 	const candidates = poolCandidates(snapshot, today)
-	const { keys, byMood } = selectPoolKeys(
+	const { keys } = selectPoolKeys(
 		candidates,
 		ctx,
 		ctx.forYou && taste.signal === "some" ? (key) => rankOf(taste, key) : null,
 	)
 
-	const [cards, wishlist, saved, catalog] = await Promise.all([
+	const [suggestions, saved, choiceArt] = await Promise.all([
 		getTitleCards(keys.slice(0, MAX_KEYS), ctx, taste),
-		member ? livingRoomWishlistCards(ctx, taste) : [],
-		getServiceCards(ctx.services),
-		livingRoomServices(ctx.country, ctx.services),
+		member ? getServiceCards(ctx.services) : [],
+		// Mini Discover: a picture per option of its tabs, the same for everyone.
+		loadChoiceArt(snapshot, candidates, getDisplayFields),
 	])
-	const withMoods = (card: TitleCard): LivingRoomTitle => ({
-		...card,
-		moods: snapshot?.facts(card.key)?.moods ?? [],
-	})
-	const suggestions = cards.map(withMoods)
-
-	const pairs: TvPair[] = []
-	const used = new Set<number>()
-	const firstOf = (mood: MoodKey) => {
-		const key = (byMood.get(mood) ?? []).find(
-			(k) => !used.has(k) && suggestions.some((t) => t.key === k),
-		)
-		if (key !== undefined) used.add(key)
-		return key
-	}
-	for (const [ma, mb] of PAIRS) {
-		const a = firstOf(ma)
-		const b = firstOf(mb)
-		if (a === undefined || b === undefined) continue
-		pairs.push({
-			a,
-			b,
-			aLabel: MOOD_BY_KEY[ma].name,
-			bLabel: MOOD_BY_KEY[mb].name,
-			aMoods: [ma],
-			bMoods: [mb],
-		})
-	}
 
 	return {
 		member,
 		suggestions,
-		wishlist,
-		catalog,
-		savedServices: member ? saved.map((s) => s.name) : [],
-		pairs,
+		savedServices: saved.map((s) => s.name),
+		choiceArt,
 	}
-}
-
-// Read all Wishlist cards in bounded batches so the UI's mood counts cover the full Wishlist.
-export async function livingRoomWishlistCards(
-	ctx: ViewerContext,
-	taste: Awaited<ReturnType<typeof loadTaste>>,
-): Promise<LivingRoomTitle[]> {
-	const keys = [...ctx.wishlist.keys()]
-	const ordered = keys
-		.map((key) => ({ key, rank: rankOf(taste, key) }))
-		.sort((a, b) => b.rank - a.rank)
-		.map(({ key }) => key)
-	const snapshot = getTitleSnapshot()
-	const cards: LivingRoomTitle[] = []
-	for (let i = 0; i < ordered.length; i += MAX_KEYS) {
-		const batch = await getTitleCards(
-			ordered.slice(i, i + MAX_KEYS),
-			ctx,
-			taste,
-		)
-		cards.push(
-			...batch.map((card) => ({
-				...card,
-				moods: snapshot?.facts(card.key)?.moods ?? [],
-			})),
-		)
-	}
-	return cards
 }

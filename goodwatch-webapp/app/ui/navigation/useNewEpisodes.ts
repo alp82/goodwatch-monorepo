@@ -1,8 +1,8 @@
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The signal that something new aired for a member's shows (#442), for the Browse button, the dock's key, the My
-// shows tile and home's Continue door. Behind REC_TRACKING, for a member with a Watching or Seen show; everyone
-// else sends no request. It refetches when the member's watch state changes, since watching the new episode takes
+// shows tile and home's Continue door. For a member with a Watching or Seen show; everyone else sends no
+// request. It refetches when the member's watch state changes, since watching the new episode takes
 // its show out, and My shows clears it when it is opened.
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
@@ -12,7 +12,6 @@ import {
 	type SignalWords,
 	signalWords,
 } from "~/domain/new-episodes-signal"
-import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import { watchStateSignature } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -27,10 +26,9 @@ async function fetchNewEpisodes(language: string): Promise<NewEpisodes> {
 	return (await response.json()) as NewEpisodes
 }
 
-/** What the signal is told; null for a guest, a member without such a show, and while tracking is off. */
+/** What the signal is told; null for a guest and a member without such a show. */
 export function useNewEpisodesData(): NewEpisodes | null {
 	const { locale } = useLocale()
-	const tracking = useFeature("tracking")
 	const { user } = useUser()
 	const { data } = useUserData()
 	const watchState = data?.watchState
@@ -47,8 +45,8 @@ export function useNewEpisodesData(): NewEpisodes | null {
 	const query = useQuery({
 		queryKey: [...keyOf(user?.id ?? ""), signature, locale.language],
 		queryFn: () => fetchNewEpisodes(locale.language),
-		enabled: tracking && Boolean(user) && signature !== null,
-		placeholderData: (previous) => previous,
+		enabled: Boolean(user) && signature !== null,
+		placeholderData: (previous, query) => query?.queryKey.at(-1) === locale.language ? previous : undefined,
 	})
 	return signature === null ? null : (query.data ?? null)
 }

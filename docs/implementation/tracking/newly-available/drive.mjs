@@ -5,9 +5,7 @@
 // titles that landed; the door a landed title leads; a new episode (#442) and a landed title together; and a
 // landing 12 and 15 days old.
 //   cd goodwatch-webapp
-//   REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on REC_NAVIGATION=on \
-//     REC_AGE_FILTER=on REC_TRACKING=on \
-//     node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1      # without .env
+//   node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1      # without .env
 //   HARNESS=http://127.0.0.1:3107 node drive.mjs [screenshot dir]   # with system Chromium, and playwright-core
 //                                                                   # beside it or in the folder PLAYWRIGHT names
 // Posters, backdrops and logos are painted here: no request leaves for image.tmdb.org.

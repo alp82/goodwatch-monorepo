@@ -1,6 +1,6 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
 // Watch next: the top of the Wishlist under the person's chosen sort and moods, then the rest of the Wishlist in a
-// stepped grid. Not found while REC_WATCH_NEXT hides it from the viewer.
+// stepped grid.
 // A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
 // page reads /api/watch-next as the sort, moods, and On my services change.
 import {
@@ -10,9 +10,7 @@ import {
 	redirect,
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import { isEnabled } from "~/server/features.server"
-import { getViewerContext } from "~/server/viewer.server"
-import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
+import type { WatchNext } from "~/server/watch-next.server"
 import { WatchNextPage } from "~/ui/watch-next/WatchNextPage"
 import { apiQuery, choiceFromParams } from "~/ui/watch-next/useWatchNext"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -45,28 +43,15 @@ const headers = { "Cache-Control": "private, no-store" }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!isEnabled("watchNext", { userId }))
-		throw new Response("Not found", { status: 404 })
-	// With REC_TRACKING a member picks a movie on My movies and a show on My shows (#385); the sort, moods and
-	// services choice in the URL go along. Guests keep Watch next.
-	if (userId && isEnabled("tracking", { userId }))
+	// A member picks a movie on My movies and a show on My shows (#385); the sort, moods and services choice in the
+	// URL go along. Guests keep Watch next, which their browser fills: their Wishlist lives there.
+	if (userId)
 		return redirect(`/my-movies${new URL(request.url).search}`, {
-			// Personal, and a flag can switch back: browsers must not keep the redirect.
+			// Personal: browsers must not keep the redirect.
 			headers: { ...headers, Vary: "Cookie" },
 		})
-	const choice = choiceFromParams(new URL(request.url).searchParams)
-	const query = apiQuery(choice)
-	if (!userId)
-		return json({ query, data: null as WatchNext | null }, { headers })
-	try {
-		const ctx = await getViewerContext(request, undefined, userId)
-		const data = await getWatchNext(ctx, choice)
-		return json({ query, data: data as WatchNext | null }, { headers })
-	} catch (error) {
-		// The page asks /api/watch-next again from the browser.
-		console.error("Watch next: the first view failed", error)
-		return json({ query, data: null as WatchNext | null }, { headers })
-	}
+	const query = apiQuery(choiceFromParams(new URL(request.url).searchParams))
+	return json({ query, data: null as WatchNext | null }, { headers })
 }
 
 export default function WatchNextRoute() {

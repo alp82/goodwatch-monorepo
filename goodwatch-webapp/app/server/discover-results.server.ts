@@ -8,7 +8,6 @@ import {
 	discoverFilterCache,
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
-import { isEnabled } from "~/server/features.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
 import {
@@ -113,7 +112,6 @@ export async function getDiscoverResults(
 				sort,
 				snapshotVersion: snapshot.version,
 				availabilityLoadedAt: availabilityLoadedAt(ctx.country),
-				ageFilter: isEnabled("ageFilter", { userId: null }),
 				year: new Date().getUTCFullYear(),
 			})
 		: null

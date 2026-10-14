@@ -13,6 +13,8 @@ import {
 	harness,
 	installHarnessMember,
 } from "~/server/prototype-my-library.server"
+import { parseShowAction } from "~/server/show-tracking.server"
+import { TrackingConflictError } from "~/server/tracking.server"
 import {
 	parseKeys,
 	parseWatchNextOptions,
@@ -73,6 +75,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 	if (what === "new-episodes")
 		return json(summaryOf((await harness.newShows(now)).shows), { headers })
+	// As GET /api/tracking/show answers a member: the show's state, watches and episode list.
+	if (what === "tracking-show") {
+		const id = params.get("id") ?? ""
+		if (!/^[1-9]\d{0,9}$/.test(id))
+			return json({ error: "Send ?id=<show id>" }, { status: 400, headers })
+		return json(await harness.tracking(Number(id)), { headers })
+	}
 	return json({ error: "Unknown" }, { status: 400, headers })
 }
 
@@ -87,6 +96,22 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (params.get("what") === "new-episodes") {
 		await harness.visit(now)
 		return json(NOTHING_NEW, { headers })
+	}
+	// One action on a show's tracking, as POST /api/tracking/show applies it for a member.
+	if (params.get("what") === "tracking-show") {
+		const body = parseShowAction(await request.json().catch(() => null))
+		if (!body)
+			return json(
+				{ error: "Send { id, event, actionId }" },
+				{ status: 400, headers },
+			)
+		try {
+			return json(await harness.track(body), { headers })
+		} catch (error) {
+			if (error instanceof TrackingConflictError)
+				return json({ error: error.message }, { status: 409, headers })
+			throw error
+		}
 	}
 	if (params.get("what") !== "rate")
 		return json({ error: "Unknown" }, { status: 400, headers })

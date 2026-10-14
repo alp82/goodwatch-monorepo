@@ -1,10 +1,8 @@
-import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { Outlet, useLocation } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
 import Footer from "~/ui/Footer"
-import BottomNav from "~/ui/nav/BottomNav"
 import {
 	HubDialog,
 	MobileDock,
@@ -15,14 +13,8 @@ import {
 import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
-import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-
-// The header while REC_NAVIGATION is off. Its menus bring the dialog library, so its code stays out of the pages
-// that show the new navigation.
-const loadHeader = reloadOnStaleChunk(() => import("~/ui/main/Header"))
-const Header = lazy(loadHeader)
 
 // Only members see the onboarding banner, so its code loads for them alone.
 const loadAccountTransfer = reloadOnStaleChunk(() =>
@@ -44,40 +36,27 @@ const SHELL_CODE_TIMEOUT_MS = 3000
  * The conditions are the ones `App` renders by.
  */
 export function loadShellCode({
-	navigation,
 	member,
 }: {
-	navigation: boolean
 	member: boolean
 }): Promise<unknown> {
-	const loads: Promise<unknown>[] = []
-	if (!navigation) loads.push(loadHeader())
-	if (member) loads.push(loadAccountTransfer())
-	if (!loads.length) return Promise.resolve()
+	if (!member) return Promise.resolve()
 	return Promise.race([
 		// A failed load is not this function's to report: `lazy` asks again and handles it.
-		Promise.all(loads).catch(() => {}),
+		loadAccountTransfer().catch(() => {}),
 		new Promise((resolve) => setTimeout(resolve, SHELL_CODE_TIMEOUT_MS)),
 	])
 }
 
-function App() {
+export default function App() {
 	const location = useLocation()
 	const { user } = useUser()
-	const navigation = useFeature("navigation")
-	const tracking = useFeature("tracking")
 
 	useInvalidateOnVisibility()
 
-	const page = (
-		<>
-			{navigation ? (
-				<SiteHeader />
-			) : (
-				<Suspense fallback={null}>
-					<Header />
-				</Suspense>
-			)}
+	return (
+		<NavigationProvider>
+			<SiteHeader />
 			{/* Show smart onboarding banner for logged-in users */}
 			{user && (
 				<Suspense fallback={null}>
@@ -90,23 +69,12 @@ function App() {
 			</main>
 			<Footer />
 			{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
-			{tracking && <WatchLogHost />}
+			<WatchLogHost />
 			{/* The way back to the TV for a person who left the living room through it: nothing renders before that. */}
 			<TvWayBackHost />
-			{navigation ? (
-				<>
-					<MobileDock />
-					<HubDialog />
-					<SearchDialog />
-				</>
-			) : (
-				<BottomNav />
-			)}
-		</>
+			<MobileDock />
+			<HubDialog />
+			<SearchDialog />
+		</NavigationProvider>
 	)
-	return navigation ? <NavigationProvider>{page}</NavigationProvider> : page
-}
-
-export default function AppWithSearch() {
-	return <SearchJourneyProvider><App /></SearchJourneyProvider>
 }

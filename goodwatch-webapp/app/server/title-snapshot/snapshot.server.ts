@@ -2,6 +2,7 @@
 // in webapp memory. Row data is derived in a worker, then wrapped once per version; never changed afterwards.
 import type { LadderStep } from "~/domain/age-content"
 import { type MoodKey, moodMaskOf, moodsInMask } from "~/domain/moods"
+import { styleMaskOf, themeMaskOf } from "~/domain/themes-styles"
 import {
 	type CatalogStats,
 	catalogStats,
@@ -66,6 +67,10 @@ export interface TitleColumns {
 	readonly flags: Uint8Array
 	/** Bit i set for MOOD_KEYS[i]. */
 	readonly moods: Uint16Array
+	/** Bit i set for THEME_KEYS[i]: the themes the title has at each rule's own threshold. */
+	readonly themes: Uint16Array
+	/** Bit i set for STYLE_KEYS[i]: the styles the title has at each rule's own threshold. */
+	readonly styles: Uint16Array
 	/** What the age and content filter reads; null for a snapshot published without ratings, or whose ratings were refused. */
 	readonly ratings: TitleRatings | null
 }
@@ -133,6 +138,8 @@ const K = FINGERPRINT_LENGTH
 export function deriveSnapshot(manifest: Manifest, c: Columns) {
 	const inverseNorms = new Float32Array(c.count)
 	const moodMasks = new Uint16Array(c.count)
+	const themeMasks = new Uint16Array(c.count)
+	const styleMasks = new Uint16Array(c.count)
 	const genreLists = new Map<number, string[]>()
 	for (let row = 0; row < c.count; row++) {
 		const fp = c.fingerprints.subarray(row * K, row * K + K)
@@ -149,10 +156,19 @@ export function deriveSnapshot(manifest: Manifest, c: Columns) {
 			genreLists.set(bits, genres)
 		}
 		moodMasks[row] = moodMaskOf(fp, genres)
+		themeMasks[row] = themeMaskOf(fp, genres)
+		styleMasks[row] = styleMaskOf(fp, genres)
 	}
 	const referenceRows = referencePool(c)
 	const stats = catalogStats(c, referenceRows)
-	return { inverseNorms, moodMasks, referenceRows, stats }
+	return {
+		inverseNorms,
+		moodMasks,
+		themeMasks,
+		styleMasks,
+		referenceRows,
+		stats,
+	}
 }
 
 class LoadedSnapshot implements TitleSnapshot {
@@ -197,6 +213,8 @@ class LoadedSnapshot implements TitleSnapshot {
 			scores: c.scores,
 			flags: c.flags,
 			moods: this.moodMasks,
+			themes: derived.themeMasks,
+			styles: derived.styleMasks,
 			ratings: ratings && titleRatings(ratings),
 		}
 	}

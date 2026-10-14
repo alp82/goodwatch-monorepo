@@ -14,7 +14,6 @@
 // TASTE_REDIS_URL points the store at a single Redis (for development and scripts); without it, it uses the webapp's
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
-import { getFeatureMode } from "~/server/features.server"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -136,6 +135,12 @@ async function rebuild(
 // One rebuild in flight per person; readers that find the key stale meanwhile wait for it.
 const inflight = new Map<string, Promise<StoredTaste>>()
 const scheduled = new Map<string, NodeJS.Timeout>()
+let rebuildsHeld = false
+
+/** Tests: markTasteChanged schedules no rebuild, which would read Crate after the test's own writes. */
+export function holdTasteRebuildsForTest(): void {
+	rebuildsHeld = true
+}
 
 function sharedRebuild(
 	userId: string,
@@ -180,7 +185,7 @@ export async function loadMemberTaste(userId: string): Promise<Taste> {
 
 /**
  * Call after every committed write to the person's ratings or Want to See. Records the write time for readers, clears
- * the person's cached Taste page views, and, unless REC_TASTE_MATCH is off, schedules a rebuild off the request path.
+ * the person's cached Taste page views, and schedules a rebuild off the request path.
  * Never throws.
  */
 export async function markTasteChanged(
@@ -188,7 +193,6 @@ export async function markTasteChanged(
 ): Promise<void> {
 	if (!userId) return
 	try {
-		// Recorded in every mode, so vectors stored while the flag was on are known to be stale when it's on again.
 		const redis = await tasteRedis()
 		await redis?.set(touchedKey(userId), String(Date.now()), "EX", TTL_SECONDS)
 	} catch (error) {
@@ -196,7 +200,7 @@ export async function markTasteChanged(
 	}
 	// The Taste page's cached views describe the old ratings.
 	await clearTastePortrait(userId)
-	if (getFeatureMode("tasteMatch") === "off" || scheduled.has(userId)) return
+	if (rebuildsHeld || scheduled.has(userId)) return
 	const timer = setTimeout(async () => {
 		scheduled.delete(userId)
 		try {

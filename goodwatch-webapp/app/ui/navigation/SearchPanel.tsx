@@ -20,12 +20,10 @@ export const preloadCommandPalette = () => {
 }
 
 export function SearchPanel() {
-	const navigation = useNavigation()
-	const open = useOpenAfterMount(Boolean(navigation?.searchOpen))
-	const setSearchOpen = navigation?.setSearchOpen
-	const close = () => setSearchOpen?.(false)
+	const { searchOpen, setSearchOpen } = useNavigation()
+	const open = useOpenAfterMount(searchOpen)
+	const close = () => setSearchOpen(false)
 	const panel = useDragToClose(close)
-	if (!setSearchOpen) return null
 	return (
 		<Dialog
 			open={open}

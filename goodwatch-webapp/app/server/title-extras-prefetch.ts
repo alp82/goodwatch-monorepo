@@ -95,7 +95,8 @@ export async function prefetchTitleExtras({
 		await Promise.race([
 			Promise.all(work),
 			new Promise<void>((resolve) => {
-				// As in related-prefetch.ts: answers that arrived while a late timer waited win over the timer.
+				// A timer that fires late, after a long render of another request, runs before the answers that arrived
+				// in the meantime. setImmediate lets those answers win.
 				timer = setTimeout(() => setImmediate(resolve), budgetMs)
 			}),
 		])

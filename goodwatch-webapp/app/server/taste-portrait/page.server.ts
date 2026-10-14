@@ -1,8 +1,6 @@
 // The Taste page's loaders: one tab's view for a signed-in member, rendered on the server. A guest's taste lives in
 // their browser, so a guest's page asks /api/taste/portrait with the guest progress instead (view: null here).
-// Not found while REC_TASTE_PAGE hides the page from the viewer.
 import { json } from "@remix-run/node"
-import { isEnabled } from "~/server/features.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import {
 	type PortraitTab,
@@ -17,10 +15,9 @@ export interface TasteTabData<T extends PortraitTab> {
 	view: PortraitViewOf<T> | null
 }
 
-/** Whether the viewer sees the new Taste page, and who they are. */
+/** Who views the Taste page: a member's id, or null for a guest. */
 export async function tastePageViewer(request: Request) {
-	const userId = (await getUserIdFromRequest({ request })) ?? null
-	return { userId, enabled: isEnabled("tastePage", { userId }) }
+	return { userId: (await getUserIdFromRequest({ request })) ?? null }
 }
 
 export async function loadTasteTab<T extends PortraitTab>(
@@ -39,8 +36,4 @@ export async function loadTasteTab<T extends PortraitTab>(
 		{ kind: "tabs", view },
 		userId ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
 	)
-}
-
-export function notFound(): never {
-	throw new Response("Not found", { status: 404 })
 }

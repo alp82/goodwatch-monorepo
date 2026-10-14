@@ -82,7 +82,7 @@ export function summary(answers: Answers, prototypes: HubPrototype[]): string {
 	const all = prototypes.flatMap((p) => p.questions)
 	const lines = [`GoodWatch tracking decisions: ${countAnswered(answers, all)} of ${all.length} answered`]
 	for (const prototype of prototypes) {
-		lines.push("", `== ${prototype.title} (${prototype.link.split("?")[0]}, #${prototype.issue}): ${countAnswered(answers, prototype.questions)} of ${prototype.questions.length}`)
+		lines.push("", `== ${prototype.title} (${prototype.link ? `${prototype.link.split("?")[0]}, ` : "removed, "}#${prototype.issue}): ${countAnswered(answers, prototype.questions)} of ${prototype.questions.length}`)
 		for (const question of prototype.questions) {
 			const answer = answers[question.id]
 			const option = question.options.find((o) => o.id === answer?.option)

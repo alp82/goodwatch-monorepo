@@ -110,7 +110,7 @@ The run's `urls.json` records `static_url`, `files`, `page_names` (`static` or `
 - **Requests to other hosts:** TMDB images, the analytics host, and Google's tag.
 - **`POST /api/e`, the error tracking tunnel.** The app forwards every envelope to the vendor, so a replay would create events there or load a third party. Every page view sends one, with 38 to 75 KB of request body. Its cost isn't in any page-view number.
 - **Other requests with a body,** such as `POST /api/poster-impressions` on Discover, which writes.
-- **One exception:** `POST /api/living-room/picks?view=pool`, the home page's read of its title pool, is replayed with the body that the captured browser sent. It only reads. The list of replayed requests is `REPLAYED_POSTS` in `scripts/page-view-set.mjs`.
+- **One exception:** `POST /api/living-room/picks?view=pool`, the home page's read of its title pool, is replayed with the body that the captured browser sent. It only reads. The list of replayed requests is `REPLAYED_POSTS` in `scripts/page-view-set.mjs`. Since the start page's new TV (slice 13 of `docs/implementation/tv-screen-revamp`), the page asks for its pool at a visitor's first interaction and not on load, so a capture, which loads the page and touches nothing, has no such request: a page view of home is the document, its files and images, without the pool. Page views of home from before the new TV are not comparable with later ones.
 
 **Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with files on the site. Static requests use an empty cookie jar and never receive the site's cookies.
 
@@ -254,7 +254,7 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
 | `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
 
-`related_tab` and `related_next` belong to the related titles carousel, which serves only while the related map is off (`REC_RELATED_MAP=off`). A default run leaves them out.
+`related_tab` and `related_next` belong to the related titles carousel, which serves only for a title whose related map was not there in time. A default run leaves them out.
 
 The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 

@@ -140,12 +140,12 @@ expect 'no argument prints the usage' 2 $? 'deploy.sh <commit>' 'copy-env'
 # copy-env: the values below are made up. None of them may appear in the output.
 reset none
 echo "registry.example/webapp:$OLD" > "$FAKE/gk4owk8-20261009T105807.image"
-printf '%s\n' 'CRATE_HOSTS=crate1.example,crate2.example' 'CRATE_PASS=pa$$w#rd x' 'REC_NAVIGATION=on' 'QDRANT_API_KEY=s3cr3t-value' 'SOURCE_COMMIT=abc' 'COOLIFY_URL=u' 'SUPABASE_DB_PASS=unused' '' > "$FAKE/gk4owk8-20261009T105807.env"
+printf '%s\n' 'CRATE_HOSTS=crate1.example,crate2.example' 'CRATE_PASS=pa$$w#rd x' 'TMDB_API_KEY=tmdb-key' 'QDRANT_API_KEY=s3cr3t-value' 'SOURCE_COMMIT=abc' 'COOLIFY_URL=u' 'SUPABASE_DB_PASS=unused' '' > "$FAKE/gk4owk8-20261009T105807.env"
 run copy-env
 expect 'copy-env writes .env and prints names only' 0 $? 'Wrote .env \(mode 600\) from gk4owk8-20261009T105807: SEARCH_IMAGE, SEARCH_COMMIT \(1111111111111111111111111111111111111111\), and 4 variables' \
-  '^Copied: CRATE_HOSTS CRATE_PASS QDRANT_API_KEY REC_NAVIGATION$' '^Written in single quotes: CRATE_PASS$' '^Not set on gk4owk8-20261009T105807, left out: .*REDIS_HOST' '!s3cr3t|w#rd|crate1'
+  '^Copied: CRATE_HOSTS CRATE_PASS QDRANT_API_KEY TMDB_API_KEY$' '^Written in single quotes: CRATE_PASS$' '^Not set on gk4owk8-20261009T105807, left out: .*REDIS_HOST' '!s3cr3t|w#rd|crate1'
 check '  the file has the image, the commit, and the values, quoted where Compose would change them' test "$(grep -v '^#' "$work/dir/.env" | tr '\n' '|')" = \
-  "SEARCH_IMAGE=registry.example/webapp|SEARCH_COMMIT=$OLD|CRATE_HOSTS=crate1.example,crate2.example|CRATE_PASS='pa\$\$w#rd x'|QDRANT_API_KEY=s3cr3t-value|REC_NAVIGATION=on|"
+  "SEARCH_IMAGE=registry.example/webapp|SEARCH_COMMIT=$OLD|CRATE_HOSTS=crate1.example,crate2.example|CRATE_PASS='pa\$\$w#rd x'|QDRANT_API_KEY=s3cr3t-value|TMDB_API_KEY=tmdb-key|"
 run copy-env
 expect 'copy-env does not overwrite .env' 1 $? '.env exists'
 reset none; echo "registry.example/webapp:$OLD" > "$FAKE/c.image"; printf '%s\n' "CRATE_PASS=it's" > "$FAKE/c.env"; run copy-env c

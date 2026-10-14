@@ -13,10 +13,10 @@ const titles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	poster_path: i === 7 ? null : `/poster${i}.jpg`,
 }))
 
-const render = (list: StartTitle[], docked = false) =>
+const render = (list: StartTitle[]) =>
 	renderToStaticMarkup(
 		<MemoryRouter>
-			<BelowRoom titles={list} docked={docked} />
+			<BelowRoom titles={list} />
 		</MemoryRouter>,
 	)
 
@@ -25,6 +25,5 @@ console.log(
 		full: render(titles),
 		again: render(titles),
 		empty: render([]),
-		docked: render(titles, true),
 	})}`,
 )

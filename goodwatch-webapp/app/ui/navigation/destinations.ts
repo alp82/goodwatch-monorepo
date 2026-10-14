@@ -11,7 +11,6 @@ import {
 	TvIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType, SVGProps } from "react"
-import type { EnabledFeatures } from "~/utils/features"
 
 export type DestinationKey =
 	| "home"
@@ -21,7 +20,7 @@ export type DestinationKey =
 	| "explorer"
 	| "movies"
 	| "shows"
-	// A member's pages with REC_TRACKING (#385). They take Watch next's tile in the hub.
+	// A member's pages (#385). They take Watch next's tile in the hub.
 	| "myShows"
 	| "myMovies"
 	| "myLibrary"
@@ -34,30 +33,22 @@ export interface Destination {
 	short: string
 	href: string
 	icon: ComponentType<SVGProps<SVGSVGElement>>
-	/** False while the page's own feature is off for the viewer; the tile shows but doesn't link. */
-	available: boolean
 }
 
-/**
- * Where a search for a query goes: Discover's search mode while the new filter bar is on for the viewer (`/search`
- * redirects there too), else the search page.
- */
-export function searchHref(q: string, features: EnabledFeatures): string {
+/** Where a search for a query goes: Discover's search mode (`/search` redirects there too). */
+export function searchHref(q: string): string {
 	const text = q.trim()
-	const path = features.filterBar ? "/discover" : "/search"
-	return text ? `${path}?q=${encodeURIComponent(text)}` : path
+	return text ? `/discover?q=${encodeURIComponent(text)}` : "/discover"
 }
 
-/** The query of the search on screen (Discover's search mode or the search page), for prefilling a search field. */
+/** The query of the search on screen (Discover's search mode), for prefilling a search field. */
 export function currentSearchQuery(pathname: string, search: string): string {
-	return pathname === "/search" || pathname.startsWith("/discover")
+	return pathname.startsWith("/discover")
 		? (new URLSearchParams(search).get("q") ?? "")
 		: ""
 }
 
-export function getDestinations(
-	features: EnabledFeatures,
-): Record<DestinationKey, Destination> {
+export function getDestinations(): Record<DestinationKey, Destination> {
 	return {
 		home: {
 			key: "home",
@@ -65,16 +56,13 @@ export function getDestinations(
 			short: "Home",
 			href: "/",
 			icon: HomeIcon,
-			available: true,
 		},
 		watchNext: {
 			key: "watchNext",
 			label: "Watch next",
 			short: "Watch",
-			// Until Watch next is on for the viewer, the Wishlist page is where their Wishlist lives.
-			href: features.watchNext ? "/watch-next" : "/wishlist",
+			href: "/watch-next",
 			icon: PlayIcon,
-			available: true,
 		},
 		discover: {
 			key: "discover",
@@ -82,7 +70,6 @@ export function getDestinations(
 			short: "Discover",
 			href: "/discover",
 			icon: MagnifyingGlassIcon,
-			available: true,
 		},
 		taste: {
 			key: "taste",
@@ -90,7 +77,6 @@ export function getDestinations(
 			short: "Taste",
 			href: "/taste",
 			icon: FingerPrintIcon,
-			available: true,
 		},
 		explorer: {
 			key: "explorer",
@@ -98,7 +84,6 @@ export function getDestinations(
 			short: "Explorer",
 			href: "/explorer",
 			icon: MapIcon,
-			available: features.explorer,
 		},
 		movies: {
 			key: "movies",
@@ -106,7 +91,6 @@ export function getDestinations(
 			short: "Movies",
 			href: "/movies",
 			icon: FilmIcon,
-			available: true,
 		},
 		shows: {
 			key: "shows",
@@ -114,7 +98,6 @@ export function getDestinations(
 			short: "Shows",
 			href: "/shows",
 			icon: TvIcon,
-			available: true,
 		},
 		myShows: {
 			key: "myShows",
@@ -122,7 +105,6 @@ export function getDestinations(
 			short: "My shows",
 			href: "/my-shows",
 			icon: TvIcon,
-			available: features.tracking,
 		},
 		myMovies: {
 			key: "myMovies",
@@ -130,7 +112,6 @@ export function getDestinations(
 			short: "My movies",
 			href: "/my-movies",
 			icon: FilmIcon,
-			available: features.tracking,
 		},
 		myLibrary: {
 			key: "myLibrary",
@@ -138,7 +119,6 @@ export function getDestinations(
 			short: "Library",
 			href: "/my-library",
 			icon: BookmarkIcon,
-			available: features.tracking,
 		},
 	}
 }
@@ -150,7 +130,6 @@ const PREFIXES: [string, DestinationKey][] = [
 	["/watch-next", "watchNext"],
 	["/wishlist", "watchNext"],
 	["/discover", "discover"],
-	["/search", "discover"],
 	["/taste", "taste"],
 	["/explorer", "explorer"],
 	["/movies", "movies"],

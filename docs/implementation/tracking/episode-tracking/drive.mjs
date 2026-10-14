@@ -1,6 +1,6 @@
 // Scripted checks of the real episode tracking components on /prototype/episode-tracking-real, at 390 and 1280.
 // HARNESS=http://127.0.0.1:3084 SHOTS=./shots node drive.mjs [phone,desktop]
-// Needs playwright-core installed beside it, system Chromium, and the dev server started with REC_TRACKING=on.
+// Needs playwright-core installed beside it, system Chromium, and a dev server.
 import { mkdirSync } from "node:fs"
 import { SHOTS, VIEWPORTS, checker, launch, open, settle, stored } from "./lib.mjs"
 

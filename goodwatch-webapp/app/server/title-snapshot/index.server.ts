@@ -8,13 +8,11 @@
 //
 // The ratings sidecar (what the age and content filter reads) is optional: a manifest without `ratings`, a missing
 // ratings chunk, ratings that are refused (a bad shape, size, or checksum), or a Redis error on the ratings keys leave
-// the snapshot loaded without ratings, and the filter unavailable until the next version. It isn't read at all while
-// REC_AGE_FILTER is off (see loadRatings).
+// the snapshot loaded without ratings, and the filter unavailable until the next version.
 //
 // TITLE_SNAPSHOT_REDIS_URL points the loader at a single Redis (for example a local one that
 // scripts/write-title-snapshot.ts filled with a sample); without it, it reads the webapp's Redis cluster.
 import Redis from "ioredis"
-import { getFeatureMode } from "~/server/features.server"
 import {
 	addReadinessCheck,
 	isShuttingDown,
@@ -138,11 +136,7 @@ async function check(): Promise<boolean> {
 			throw new Error(
 				`Title snapshot ${manifest.version} lacks chunk ${missing}; retrying at the next check`,
 			)
-		const ratingsInput = await readRatingsChunks(
-			redis,
-			manifest,
-			getFeatureMode("ageFilter") !== "off",
-		)
+		const ratingsInput = await readRatingsChunks(redis, manifest)
 		const readMs = performance.now() - startedAt
 		if (!started) return true
 		const { columns, derived, ratings, ratingsRefusal } = await prepareInWorker(

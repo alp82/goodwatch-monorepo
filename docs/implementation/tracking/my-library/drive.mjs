@@ -1,7 +1,6 @@
 // Drives /prototype/my-library-real (issue #385) in headless Chromium and checks the real pages at two sizes.
 //   cd goodwatch-webapp
-//   REC_TRACKING=on REC_WATCH_NEXT=on REC_NAVIGATION=on REC_TASTE_MATCH=on \
-//     node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1      # without .env
+//   node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1      # without .env
 //   HARNESS=http://127.0.0.1:3107 node drive.mjs [screenshot dir]   # with playwright-core beside it, and system Chromium
 // Posters and backdrops are painted here: no request leaves for image.tmdb.org.
 import { chromium } from "playwright-core"

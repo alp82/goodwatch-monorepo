@@ -1,4 +1,4 @@
-// When the root loader reruns on the client. Its data (the member, their user data, features, locale, env) doesn't
+// When the root loader reruns on the client. Its data (the member, their user data, locale, env) doesn't
 // depend on the URL, so a navigation never reloads it: Remix would rerun it for every navigation that changes the
 // query string. It reruns for what can change that data:
 // - a sign-in or sign-out, which the auth provider announces with requestRootRevalidation before it revalidates.

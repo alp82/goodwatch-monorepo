@@ -1,7 +1,6 @@
 import { localizeTitlePayload } from "./media-payload.server.ts"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 import { counter } from "~/server/metrics/registry.server"
-import { prefetchRelatedState } from "~/server/related-prefetch"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -187,25 +186,6 @@ export const getRelatedPanel = async ({
 		},
 	})
 }
-
-/**
- * Prefetches the default ("overall") panel of related titles for a title page and returns it
- * as dehydrated query state for the loader. The title page then server-renders real links to
- * related titles, and the client hook starts with this data instead of requesting it. Only the
- * fields a card shows are embedded in the HTML. The query doesn't depend on the user, so every
- * visitor, including crawlers, gets the same panel. A failed lookup is logged and left out, so
- * the page still renders and the browser requests the panel.
- */
-export const prefetchRelatedTitlesState = (params: {
-	tmdbId: number
-	sourceMediaType: "movie" | "show"
-	/** How long the document waits for the lookup. Without it, the document waits until the lookup settles. */
-	budgetMs?: number
-	language?: string
-}) => prefetchRelatedState(params, async () => {
-	const panel = await getRelatedPanel(params)
-	return params.language ? localizeTitlePayload(panel, params.language) : panel
-})
 
 const extractRatingsFromPayload = (payload: QdrantMediaPayload): AllRatings => {
 	return {

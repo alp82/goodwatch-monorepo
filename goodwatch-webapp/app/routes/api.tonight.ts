@@ -13,9 +13,8 @@ import { headers, watchNextViewer } from "~/server/watch-next-request.server"
 // Tonight's pick, or null: the title the navigation dock and the Living room's TV put forward for tonight.
 // - Members: GET /api/tonight
 // - Guests: POST /api/tonight with { guest: { interactions, country, services } }.
-// Not found while REC_WATCH_NEXT hides Watch next from the viewer: the pick opens Watch next.
 //
-// With REC_TRACKING a member's answer also says which of their titles landed on one of their services (#456),
+// A member's answer also says which of their titles landed on one of their services (#456),
 // `landed`, left out when none did. It rides along because the navigation asks for the pick on every page, and
 // it is read from memory: no statement unless something landed.
 
@@ -23,8 +22,8 @@ async function respond(request: Request) {
 	const viewer = await watchNextViewer(request)
 	if ("response" in viewer) return viewer.response
 	const [pick, landed] = await Promise.all([
-		getTonightsPick(viewer.ctx, viewer.tracking),
-		viewer.tracking
+		getTonightsPick(viewer.ctx),
+		viewer.member
 			? getNewlyAvailable(viewer.ctx)
 					.then(signalOf)
 					// The pick is the answer; what landed is an addition to it.

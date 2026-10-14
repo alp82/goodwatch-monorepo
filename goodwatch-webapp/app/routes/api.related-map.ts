@@ -6,7 +6,6 @@ import { PUBLIC_DATA_CACHE_CONTROL } from "~/server/cache-identity.server"
 import { apiDisplayLanguage, mediaApiCacheControl } from "~/server/media-payload.server"
 import {
 	localizeRelatedMapPack,
-	relatedMapEnabled,
 	relatedMapPack,
 	relatedMapPage,
 } from "~/server/related-map.server"
@@ -14,8 +13,6 @@ import {
 const noStore = { "Cache-Control": "no-store" }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	if (!relatedMapEnabled())
-		throw new Response("Not found", { status: 404, headers: noStore })
 	const params = new URL(request.url).searchParams
 	const key = /^([ms])(\d{1,9})$/.exec(params.get("key") ?? "")
 	const page = params.get("d")

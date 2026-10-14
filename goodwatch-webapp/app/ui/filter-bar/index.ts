@@ -1,5 +1,5 @@
 // The shared filter bar (Discover, Watch next, Explorer). See FilterBar.tsx for the composed bar; the pieces are
-// exported for surfaces that arrange their own (Watch next's phone drawers build on SlabShell and SnapSheet).
+// exported for surfaces that arrange their own (Watch next's phone drawers build on SnapSheet).
 export { FilterBar, type FilterBarProps, SLAB_CLEARANCE } from "./FilterBar"
 export { ForYouExplanation, ForYouRow, ForYouSwitch } from "./ForYou"
 export { FilterGroups, FilterSearchField } from "./FilterGroups"
@@ -16,7 +16,7 @@ export {
 	recoveryLabel,
 	tasteStateOf,
 } from "./labels"
-export { SLAB_SEGMENT, Slab, SlabNav, SlabShell, useScrollFold } from "./Slab"
+export { SLAB_SEGMENT, Slab, useScrollFold } from "./Slab"
 export { SHEET_SNAPS, SnapSheet } from "./SnapSheet"
 export {
 	CountLine,

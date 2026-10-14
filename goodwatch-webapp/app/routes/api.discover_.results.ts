@@ -18,7 +18,6 @@ import {
 	forYouFromParams,
 	getDiscoverResults,
 } from "~/server/discover-results.server"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import type { TitleKey } from "~/utils/title-key"
@@ -30,8 +29,7 @@ import type { TitleKey } from "~/utils/title-key"
 // Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, match, released, similar,
 // people, sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
 // order (title keys, comma-separated, at most SEARCH_RESULTS; empty when the search found nothing), and the results are
-// that list filtered in memory, with Relevance as the default sort. Served while REC_FILTER_BAR lets the viewer see
-// it; not found otherwise.
+// that list filtered in memory, with Relevance as the default sort.
 
 export type DiscoverResultsResponse = DiscoverResults
 
@@ -64,14 +62,11 @@ function rankedFromParams(params: URLSearchParams): TitleKey[] | undefined {
 		)
 	return [...new Set(keys)].slice(0, SEARCH_RESULTS)
 }
-const notFound = () => json({ error: "Not found" }, { status: 404, headers })
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
 async function respond(request: Request, guest?: GuestProgress) {
 	const startedAt = performance.now()
 	const ctx = await getViewerContext(request, guest)
-	const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-	if (!isEnabled("filterBar", { userId })) return notFound()
 	const contextMs = performance.now() - startedAt
 
 	const params = new URL(request.url).searchParams
@@ -106,7 +101,6 @@ async function respond(request: Request, guest?: GuestProgress) {
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
-	if (getFeatureMode("filterBar") === "off") return notFound()
 	return respond(request)
 }
 
@@ -157,13 +151,14 @@ export function useDiscoverResults({
 				throw new Error(`Discover results failed: ${response.status}`)
 			return response.json()
 		},
-		placeholderData: (previous) => previous,
+		placeholderData: (previous, previousQuery) =>
+			typeof previousQuery?.queryKey[1] === "string" &&
+			new URL(previousQuery.queryKey[1], "https://goodwatch.invalid").searchParams.get("displayLanguage") === locale.language ? previous : undefined,
 		enabled,
 	})
 }
 
 async function canonicalAction({ request }: ActionFunctionArgs) {
-	if (getFeatureMode("filterBar") === "off") return notFound()
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const text = await request.text()

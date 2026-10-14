@@ -1,6 +1,5 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// My shows (#385): a member's shows for tonight. Behind REC_TRACKING: not found while the flag hides tracking from
-// the viewer. A guest has no watch state, so they are asked to sign up
+// My shows (#385): a member's shows for tonight. A guest has no watch state, so they are asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
 import {
 	type LoaderFunctionArgs,
@@ -10,7 +9,6 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import type { Arrival } from "~/domain/new-episodes"
 import type { LandedTitle } from "~/domain/newly-available-words"
-import { isEnabled } from "~/server/features.server"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { getNewShows } from "~/server/new-episodes.server"
 import { getRecentlyLanded } from "~/server/newly-available.server"
@@ -37,8 +35,6 @@ const headers = { "Cache-Control": "private, no-store" }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!isEnabled("tracking", { userId }))
-		throw new Response("Not found", { status: 404 })
 	if (!userId)
 		return json(
 			{

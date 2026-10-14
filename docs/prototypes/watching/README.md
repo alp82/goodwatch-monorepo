@@ -1,5 +1,11 @@
 # Watching on home and beside the Wishlist
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
+> **Removed:** this prototype (`/prototype/watching`) was removed after the TV revamp merge (`be36991b`). Its code and history are in git.
+
 Prototype for [#371](https://github.com/alp82/goodwatch-monorepo/issues/371), part of the map
 [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Throwaway code on the branch `prototype/watching`.
 

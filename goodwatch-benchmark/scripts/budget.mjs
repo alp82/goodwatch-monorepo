@@ -90,11 +90,15 @@ export function medianMetrics(runs) {
   return Object.fromEntries([...keys].map((key) => [key, median(runs.map((run) => run[key]))]));
 }
 
-/** Whether an LCP element is the one the budget names: the tag, and a text its markup must contain. */
+/**
+ * Whether an LCP element is the one the budget names: the tag, and a text its markup must contain. `contains` is one
+ * text or a list of texts, any one of which will do.
+ */
 export function lcpMatches(element, expected) {
   if (!element) return false;
   if (expected.tag && element.tag !== expected.tag) return false;
-  return !expected.contains || element.snippet.includes(expected.contains);
+  const texts = [expected.contains ?? []].flat();
+  return !texts.length || texts.some((text) => element.snippet.includes(text));
 }
 
 // What a mismatch may print: the tag and the image's origin, never a path.
@@ -182,7 +186,8 @@ export function formatValue(key, value) {
 
 function lineCells(line) {
   if (line.key === "lcp_element") {
-    const expected = [line.expected.tag && `<${line.expected.tag}>`, line.expected.contains && `"${line.expected.contains}"`].filter(Boolean).join(" with ");
+    const texts = [line.expected.contains ?? []].flat().map((text) => `"${text}"`);
+    const expected = [line.expected.tag && `<${line.expected.tag}>`, texts.length && texts.join(" or ")].filter(Boolean).join(" with ");
     return ["LCP element", line.found ? `${line.value}, found ${line.found}` : line.value, expected, "", ""];
   }
   const limit = line.info ? "" : line.max != null ? `max ${formatValue(line.key, line.max)}` : `min ${formatValue(line.key, line.min)}`;

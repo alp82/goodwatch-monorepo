@@ -1,5 +1,9 @@
 # Home doors, My shows, My movies and My library
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 What [#385](https://github.com/alp82/goodwatch-monorepo/issues/385) built, from the decisions of
 [#371](https://github.com/alp82/goodwatch-monorepo/issues/371). Everything is behind `REC_TRACKING`, the flag of the
 movie watch log and of episode tracking. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md). Reads:

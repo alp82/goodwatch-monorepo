@@ -1,4 +1,4 @@
-// Stand-ins for what the browser can get on the search paths, for the tests of the search page, Discover's search,
+// Stand-ins for what the browser can get on the search paths, for the tests of the search requests, Discover's search,
 // and the command palette. Only tests import this.
 import { mock } from "node:test"
 

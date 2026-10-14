@@ -1,18 +1,17 @@
-// Taste on a search's rows, while the new filter bar is on for a member: each row's taste match, and how far For you
+// Taste on a member's search rows: each row's taste match, and how far For you
 // moves it. For you on a search keeps relevance in charge: a row moves at most SEARCH_MAX_MOVE places (for-you.ts).
 // The rows keep the ranking's order; `moved` says where For you puts each one, so a caller can apply it or not.
 import { rankForYou } from "~/domain/for-you"
-import { isEnabled } from "~/server/features.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import type { Row } from "~/ui/search/search-model"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
-/** The member's taste when the filter bar is on for them; null for guests (their progress isn't in the request). */
+/** The member's taste; null for guests (their progress isn't in the request). */
 export async function searchTaste(
 	accountId: Promise<string | null>,
 ): Promise<Taste | null> {
 	const userId = await accountId.catch(() => null)
-	if (!userId || !isEnabled("filterBar", { userId })) return null
+	if (!userId) return null
 	return loadTaste({ kind: "member", userId }).catch((error) => {
 		console.error("Taste for the search failed", error)
 		return null

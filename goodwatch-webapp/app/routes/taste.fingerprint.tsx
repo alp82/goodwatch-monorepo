@@ -4,7 +4,6 @@ import { useLoaderData } from "@remix-run/react"
 import {
 	type TasteTabData,
 	loadTasteTab,
-	notFound,
 	tastePageViewer,
 } from "~/server/taste-portrait/page.server"
 import { Fingerprint } from "~/ui/taste/tabs/Fingerprint"
@@ -26,8 +25,7 @@ export const meta: MetaFunction = () => {
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
-	const { userId, enabled } = await tastePageViewer(request)
-	if (!enabled) notFound()
+	const { userId } = await tastePageViewer(request)
 	return loadTasteTab(request, "fingerprint", userId)
 }
 

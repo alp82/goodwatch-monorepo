@@ -148,7 +148,9 @@ export function useDiscoverBrowse({
 						pageParams: initial.pages.map((p) => p.page),
 					}
 				: undefined,
-		placeholderData: keepPreviousData,
+		placeholderData: (previous, previousQuery) =>
+			typeof previousQuery?.queryKey[2] === "string" &&
+			new URLSearchParams(previousQuery.queryKey[2]).get("displayLanguage") === locale.language ? previous : undefined,
 		// Guests wait until their progress is read, so the first request already carries it. A search waits for its list.
 		enabled: guest !== undefined && ranked !== null,
 	})

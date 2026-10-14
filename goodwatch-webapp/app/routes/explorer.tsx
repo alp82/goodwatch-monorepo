@@ -11,7 +11,6 @@ import type { ExplorerWorld } from "~/domain/explorer"
 import { explorerQueryOf } from "~/server/explorer/http.server"
 import { ExplorerUnavailable } from "~/server/explorer/index.server"
 import { getExplorerWorld } from "~/server/explorer/world.server"
-import { isEnabled } from "~/server/features.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { ExplorerMap } from "~/ui/explorer/ExplorerMap"
 import { IslandList } from "~/ui/explorer/IslandList"
@@ -21,14 +20,12 @@ import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-// Explorer: the islands map, behind REC_EXPLORER (not found while it's off, or for viewers outside the preview list).
+// Explorer: the islands map.
 // The server renders every grouping's islands as a list of headings and links, for browsers without JavaScript and
 // for search engines; the map replaces it once the page runs.
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!isEnabled("explorer", { userId }))
-		throw new Response("Not found", { status: 404 })
 	let world: ExplorerWorld | null = null
 	try {
 		const ctx = await getViewerContext(request, undefined, userId)

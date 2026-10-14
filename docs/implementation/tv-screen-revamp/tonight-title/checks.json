@@ -1,0 +1,85 @@
+{
+	"passed": 632,
+	"failed": [],
+	"numbers": {
+		"the Watch key 1920x1080: samples taken during the transition from the TV": 5,
+		"the Watch key 1920x1080: the block's top on arrival, px": 173,
+		"the Watch key 1920x1080: the pulse lasted, ms": 3940,
+		"the Watch key 390x844: samples taken during the transition from the TV": 5,
+		"the Watch key 390x844: the block's top on arrival, px": 223,
+		"the Watch key 390x844: the pulse lasted, ms": 4101,
+		"reduced motion: the outline stayed, ms": 3878,
+		"a typed address 1920x1080: the block's top, px": 173,
+		"a typed address 390x844: the block's top, px": 223,
+		"a title of the pool that streams nowhere in the United States": "Spider-Man: Brand New Day",
+		"sizes 360x740: the room": "phone",
+		"the long title": "The Lord of the Rings: The Fellowship of the Ring",
+		"sizes 360x740: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 360x740: the menu's smallest key (slice 3), px": 31.9,
+		"sizes 360x740: the smallest key, px": {
+			"home": 44.5,
+			"tonight": 44.5,
+			"title": 44.5,
+			"rate": 45.2
+		},
+		"sizes 375x667: the room": "phone",
+		"sizes 375x667: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 375x667: the menu's smallest key (slice 3), px": 33.3,
+		"sizes 375x667: the smallest key, px": {
+			"home": 44.4,
+			"tonight": 44.4,
+			"title": 44.4,
+			"rate": 45.4
+		},
+		"sizes 390x700: the room": "phone",
+		"sizes 390x700: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 390x700: the menu's smallest key (slice 3), px": 34.8,
+		"sizes 390x700: the smallest key, px": {
+			"home": 44.2,
+			"tonight": 44.2,
+			"title": 44.2,
+			"rate": 45.2
+		},
+		"sizes 390x844: the room": "phone",
+		"sizes 390x844: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 390x844: the menu's smallest key (slice 3), px": 34.8,
+		"sizes 390x844: the smallest key, px": {
+			"home": 44.2,
+			"tonight": 44.2,
+			"title": 44.2,
+			"rate": 45.5
+		},
+		"sizes 430x932: the room": "phone",
+		"sizes 430x932: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 430x932: the menu's smallest key (slice 3), px": 38.6,
+		"sizes 430x932: the smallest key, px": {
+			"home": 44.2,
+			"tonight": 44.2,
+			"title": 44.2,
+			"rate": 45.6
+		},
+		"sizes 844x390: the room": "landscape",
+		"sizes 844x390: the longest toast seen": "Rated 5 · Mediocre",
+		"sizes 844x390: the menu's smallest key (slice 3), px": 46.8,
+		"sizes 844x390: the smallest key, px": {
+			"home": 52.7,
+			"tonight": 50.7,
+			"title": 50.7,
+			"rate": 51.5
+		},
+		"sizes 1920x1080: the room": "desktop, below",
+		"sizes 1920x1080: the longest toast seen": "Rated 9 · Excellent",
+		"sizes 1920x1080: the menu's smallest key (slice 3), px": 80.5,
+		"sizes 1920x1080: the smallest key, px": {
+			"home": 67.8,
+			"tonight": 67.8,
+			"title": 67.8,
+			"rate": 69.9
+		},
+		"the pool for a guest in the United States": "20 titles, 15 of them streaming; its first three by its own order: Spider-Man: Brand New Day (not streaming), Resident Evil (not streaming), The Tonight Show Starring Johnny Carson (Pluto TV)",
+		"Tonight with a saved service": "Amazon Prime Video",
+		"the pool's titles on Amazon Prime Video": 4,
+		"the title page's HTML, bytes (dev server)": 291281,
+		"the streaming block's opening tag, bytes": 215
+	}
+}

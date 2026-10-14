@@ -13,7 +13,6 @@ import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
-import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
@@ -91,7 +90,7 @@ function Tile({
 		here
 			? "shadow-[inset_0_0_0_2px_#fbbf24]"
 			: "shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_0_1px_rgba(255,255,255,0.08)]"
-	} ${destination.available ? "hover:brightness-125" : "opacity-60"}`
+	} hover:brightness-125`
 	const body = (
 		<>
 			{backdrop && (
@@ -126,12 +125,6 @@ function Tile({
 			)}
 		</>
 	)
-	if (!destination.available)
-		return (
-			<div className={className} aria-disabled="true">
-				{body}
-			</div>
-		)
 	return (
 		<Link
 			to={destination.href}
@@ -165,7 +158,7 @@ function SecondaryKey({
 function AccountRow() {
 	const { user } = useUser()
 	const signUp = useSignUpHref()
-	const destinations = getDestinations(useFeatures())
+	const destinations = getDestinations()
 	if (!user)
 		return (
 			<Link
@@ -196,12 +189,8 @@ function AccountRow() {
 			<span className="grow" />
 			<nav aria-label="Your account" className="flex text-[13px] font-medium">
 				<Link
-					to={
-						// With REC_TRACKING the Wishlist is the first choice of My library.
-						destinations.myLibrary.available
-							? destinations.myLibrary.href
-							: destinations.watchNext.href
-					}
+					// The Wishlist is the first choice of My library.
+					to={destinations.myLibrary.href}
 					className={link}
 				>
 					Wishlist
@@ -222,18 +211,18 @@ function HubContent() {
 	const { user } = useUser()
 	const { pathname } = useLocation()
 	const here = currentDestination(pathname)
-	const d = getDestinations(useFeatures())
+	const d = getDestinations()
 	const { pick, wishlistCount } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()
-	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
-	const tracked = Boolean(user) && d.myShows.available
+	// A member has My shows, My movies and My library in place of Watch next (#385).
+	const tracked = Boolean(user)
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
 	// Search opens over the hub, which stays open beneath it: closing the hub would hand focus back to the key that
 	// opened it and take the keyboard down. Closing search comes back here; following a result closes both.
 	const openSearch = () => {
 		holdKeyboardForSearch()
-		navigation?.setSearchOpen(true)
+		navigation.setSearchOpen(true)
 	}
 	const watchSubtitle = user
 		? pick
@@ -243,7 +232,7 @@ function HubContent() {
 	// A link to the page the person is already on changes no location, so close on any link click.
 	const closeOnLink = (event: React.MouseEvent) => {
 		if ((event.target as HTMLElement).closest("a"))
-			navigation?.setHubOpen(false)
+			navigation.setHubOpen(false)
 	}
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: only observes clicks on the links inside
@@ -304,7 +293,7 @@ function HubContent() {
 				/>
 				<Tile
 					destination={d.explorer}
-					subtitle={d.explorer.available ? "Islands map" : "Coming soon"}
+					subtitle="Islands map"
 					here={here === "explorer"}
 				/>
 				{tracked && (
@@ -337,12 +326,10 @@ function HubContent() {
 
 /** The hub sheet (phones) and Browse panel (desktop): one dialog, opened from the hub key or the Browse button. */
 export function HubDialog() {
-	const navigation = useNavigation()
+	const { hubOpen, setHubOpen } = useNavigation()
 	// This module loads with the hub's first opening (see LazyDialogs.tsx).
-	const open = useOpenAfterMount(Boolean(navigation?.hubOpen))
-	const setHubOpen = navigation?.setHubOpen
-	const panel = useDragToClose(() => setHubOpen?.(false))
-	if (!setHubOpen) return null
+	const open = useOpenAfterMount(hubOpen)
+	const panel = useDragToClose(() => setHubOpen(false))
 	return (
 		<Dialog
 			open={open}

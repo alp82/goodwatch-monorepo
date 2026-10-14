@@ -747,6 +747,22 @@ on October 11, 2026, with the flags of `lighthouse/run.sh`, shows which:
   list. One file for both would save six requests and tie the list's `srcset` to what the TV shows at each window
   size.
 
+## The start page's new TV
+
+The new TV replaced the old one on the start page (slice 13 of `docs/implementation/tv-screen-revamp`). One line
+of the home changed, and no limit:
+
+- **`lcp_element` takes either of our own photos**, the room (`/assets/room-phone-`) or the phone's hand
+  (`/assets/hand-`). On Lighthouse's phone with the Remote in the hand, the hand photo is the room's largest picture
+  (3 of 3 runs against a local production build). The owner's decision: the line's point is that a TMDB picture is
+  never the LCP, and either photo is ours. `contains` in `budget.json` takes a list for this; any of its texts will
+  do (`scripts/budget.mjs`, `lcpMatches`).
+- The pool request is no longer on the first view: the TV asks for it at the first interaction. A captured page view
+  of home has none, and page views of home from before the new TV are not comparable with later ones.
+
+The local numbers, both sides on the same machine, are in
+[the slice's notes](../implementation/tv-screen-revamp/switch/README.md). Production is measured after the merge.
+
 ## Not verified
 
 - The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.

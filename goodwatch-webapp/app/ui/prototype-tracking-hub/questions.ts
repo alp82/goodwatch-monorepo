@@ -21,8 +21,8 @@ export interface HubQuestion {
 	short: string
 	text: string
 	options: HubOption[]
-	/** Opens the prototype in the state that shows the question. */
-	link: string
+	/** Opens the prototype in the state that shows the question. Missing when the prototype has been removed. */
+	link?: string
 	/** The first questions of the tracking rules change settled wording. */
 	group?: string
 }
@@ -31,7 +31,8 @@ export interface HubPrototype {
 	key: string
 	title: string
 	about: string
-	link: string
+	/** Missing when the prototype has been removed: the questions stay as the record of the decisions. */
+	link?: string
 	readme: string
 	issue: number
 	questions: HubQuestion[]
@@ -39,7 +40,7 @@ export interface HubPrototype {
 	earlier?: { link: string; label: string }
 }
 
-const q = (id: string, short: string, text: string, link: string, suggested: number, labels: string[]): HubQuestion => ({
+const q = (id: string, short: string, text: string, link: string | undefined, suggested: number, labels: string[]): HubQuestion => ({
 	id,
 	short,
 	text,
@@ -49,7 +50,6 @@ const q = (id: string, short: string, text: string, link: string, suggested: num
 
 const WL = "/prototype/watch-log"
 const EL = "/prototype/episode-list"
-const W = "/prototype/watching"
 
 /** The 27 questions of the earlier tracking-rules playground. Only that playground shows them now. */
 export const OLD_RULE_QUESTIONS: HubQuestion[] = CASES.flatMap((found) =>
@@ -199,48 +199,48 @@ export const HUB: HubPrototype[] = [
 		key: "watching",
 		title: "Watching views",
 		about: "Where the shows a member is in the middle of live: on home and beside the Wishlist.",
-		link: `${W}?variant=mix&surface=home&member=six`,
+		link: undefined,
 		readme: "docs/prototypes/watching/README.md",
 		issue: 371,
 		questions: [
-			q("w1", "Tonight's pick as an episode", "Should Tonight's pick be able to be an episode? Compare the dashed preview in A and D.", `${W}?variant=mix&surface=home&member=six`, 0, [
+			q("w1", "Tonight's pick as an episode", "Should Tonight's pick be able to be an episode? Compare the dashed preview in A and D.", undefined, 0, [
 				"Yes",
 				"No, a title from Watch next only",
 			]),
-			q("w2", "Watch next and the Wishlist", "Should Watch next stay a view of the Wishlist? Compare the Wishlist area in B and D.", `${W}?variant=merged&surface=wishlist&member=six`, 0, [
+			q("w2", "Watch next and the Wishlist", "Should Watch next stay a view of the Wishlist? Compare the Wishlist area in B and D.", undefined, 0, [
 				"Yes, it stays a view of the Wishlist",
 				"No, merge Watching shows into it (B)",
 			]),
-			q("w3", "Home: a row or one line", "Home: a row of shows, or one line?", `${W}?variant=view&surface=home&member=six`, 1, [
+			q("w3", "Home: a row or one line", "Home: a row of shows, or one line?", undefined, 1, [
 				"A row of shows (A)",
 				"One line (C)",
 			]),
-			q("w4", "Beside the Wishlist", "Beside the Wishlist: a shelf above the hero, or a second tab? Look with 6 and with 25 shows.", `${W}?variant=section&surface=wishlist&member=many`, 0, [
+			q("w4", "Beside the Wishlist", "Beside the Wishlist: a shelf above the hero, or a second tab? Look with 6 and with 25 shows.", undefined, 0, [
 				"A shelf above the hero (A)",
 				"A second tab (C)",
 			]),
-			q("w5", "A show not watched for a while", "Does a show the member has not watched for a while keep leading?", `${W}?variant=merged&surface=wishlist&member=many`, 0, [
+			q("w5", "A show not watched for a while", "Does a show the member has not watched for a while keep leading?", undefined, 0, [
 				"No: after 30 days it stays in Watching but is never Tonight's pick",
 				"Yes, it keeps leading",
 			]),
-			q("w6", "Seen shows with new episodes", "Do Seen shows with new episodes sit with the Watching shows?", `${W}?variant=section&surface=wishlist&member=six`, 0, [
+			q("w6", "Seen shows with new episodes", "Do Seen shows with new episodes sit with the Watching shows?", undefined, 0, [
 				"Yes, at the end of the shelf with a \"Seen\" tag",
 				"In a group of their own (C)",
 				"No, not in the Watching views",
 			]),
-			q("w7", "Caught-up shows", "Where do caught-up shows and seasons that start on a date go?", `${W}?variant=mix&surface=wishlist&member=six`, 0, [
+			q("w7", "Caught-up shows", "Where do caught-up shows and seasons that start on a date go?", undefined, 0, [
 				"One compact group under the shelf, open, never on home",
 				"With the other Watching shows",
 			]),
-			q("w8", "One tap to mark the next episode", "Is one tap enough to mark the Next episode watched, with Undo in a toast?", `${W}?variant=mix&surface=wishlist&member=six`, 0, [
+			q("w8", "One tap to mark the next episode", "Is one tap enough to mark the Next episode watched, with Undo in a toast?", undefined, 0, [
 				"Yes, and the card moves on to the following episode",
 				"No, ask first",
 			]),
-			q("w9", "A member who tracks nothing", "What does a member who tracks nothing see?", `${W}?variant=section&surface=wishlist&member=none`, 0, [
+			q("w9", "A member who tracks nothing", "What does a member who tracks nothing see?", undefined, 0, [
 				"Nothing on home; beside the Wishlist a note with their Wishlist shows to start",
 				"Nothing anywhere",
 			]),
-			q("w10", "\"Watched S1 E1\" on a Wishlist card", "Does a Wishlist show get \"Watched S1 E1\" on its card?", `${W}?variant=mix&surface=wishlist&member=six`, 0, [
+			q("w10", "\"Watched S1 E1\" on a Wishlist card", "Does a Wishlist show get \"Watched S1 E1\" on its card?", undefined, 0, [
 				"Yes, on the hero and the largest cards",
 				"No",
 			]),

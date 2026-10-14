@@ -5,7 +5,7 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
-import { DockStrip, useHasDock } from "~/ui/navigation"
+import { DockStrip } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { useAuthHref } from "~/utils/auth-href"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
@@ -153,23 +153,14 @@ export function GoogleButton({
 	)
 }
 
-/** Phone actions above the navigation dock; above the legacy BottomNav while the new navigation is off. */
+/** Phone actions above the navigation dock. */
 function PhoneDock({ children }: { children: ReactNode }) {
-	const hasDock = useHasDock()
-	if (hasDock)
-		return (
-			<DockStrip>
-				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-					{children}
-				</div>
-			</DockStrip>
-		)
 	return (
-		<div className="fixed inset-x-0 bottom-16 z-40 border-t border-gray-800 bg-gray-950/95 backdrop-blur lg:hidden">
-			<div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+		<DockStrip>
+			<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
 				{children}
 			</div>
-		</div>
+		</DockStrip>
 	)
 }
 

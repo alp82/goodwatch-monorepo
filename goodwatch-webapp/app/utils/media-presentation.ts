@@ -22,6 +22,16 @@ export interface PresentedMedia {
 	canonical_title?: string
 	presentation?: MediaPresentation
 }
+/** Preserve optional provenance through thin DTO adapters without adding fields to legacy payloads. */
+export function copyMediaPresentation(value: unknown): PresentedMedia {
+	const media = value as PresentedMedia | null | undefined
+	return {
+		...(media?.canonical_title !== undefined
+			? { canonical_title: media.canonical_title }
+			: {}),
+		...(media?.presentation ? { presentation: media.presentation } : {}),
+	}
+}
 export const presentationLanguage = (
 	value: string | null | undefined,
 ): MediaLanguage => {

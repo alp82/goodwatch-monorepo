@@ -11,6 +11,7 @@ import type {
 	StreamingType,
 } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { UNDER_HEADERS } from "~/ui/details/header-height"
 import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
 	type CountryCount,
@@ -22,6 +23,8 @@ import {
 } from "~/ui/details/hero/countryOffers"
 import { useMediaPreference } from "~/ui/media-preference/MediaPreference"
 import { preloadPreferenceDialog } from "~/ui/media-preference/PreferencePair"
+import { useClickOutside } from "~/ui/details/hero/useClickOutside"
+import { useStreamingGlow } from "~/ui/details/hero/useStreamingGlow"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { regionName } from "~/utils/display-names"
 import {
@@ -160,6 +163,8 @@ export default function WhereToWatch({
 	const ref = useRef<HTMLDivElement>(null)
 	useReplayedTap("offer", (el) => Boolean(ref.current?.contains(el)))
 	const preference = useMediaPreference()
+	// Arriving from the TV's Watch key, the block is highlighted once.
+	const arrival = useStreamingGlow(ref)
 	const owned = useOwnedProviderIds()
 	const linksByTab = Object.fromEntries(
 		OFFER_TABS.map((t) => [
@@ -200,8 +205,12 @@ export default function WhereToWatch({
 			id="streaming"
 			ref={ref}
 			data-where-to-watch
-			className={`@container relative min-w-0 ${className}`}
+			{...arrival.block}
+			className={`@container relative min-w-0 ${className}${arrival.className}`}
+			// An address with `#streaming` lands the block clear of the site bar and the sticky title header.
+			style={{ scrollMarginTop: UNDER_HEADERS }}
 		>
+			{arrival.rules}
 			<div className="flex min-w-0 items-center justify-end gap-1.5">
 				<h2
 					aria-label="Where to watch"

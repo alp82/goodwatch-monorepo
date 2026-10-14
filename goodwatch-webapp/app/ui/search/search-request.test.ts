@@ -1,6 +1,6 @@
-// The search page against the answers a search can get once the search roles sit behind the proxy: the status line
-// shows the busy message with Retry for a bare 502, 503, or 504 and for a request without an answer, as it does for
-// the search role's own busy answer. Nothing is requested twice.
+// A search request against the answers a search can get once the search roles sit behind the proxy: it rejects with
+// the busy message for a bare 502, 503, or 504 and for a request without an answer, as it does for the search role's
+// own busy answer. Nothing is requested twice.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
@@ -13,22 +13,22 @@ import {
 	stubFetch,
 } from "./search-test-answers.ts"
 
-const {
-	SEARCH_BUSY_MESSAGE,
-	SEARCH_PAGE_UNAVAILABLE,
-	offerRetry,
-	requestSearch,
-} = await import("./search-client.ts")
+const { SEARCH_BUSY_MESSAGE, requestSearch } = await import(
+	"./search-client.ts"
+)
 const { classifySearchResponse } = await import("./search-request.ts")
 
-// What the search page's query does with one search: the status line shows the rejection's message.
-const searchPage = (signal = new AbortController().signal) => {
+// What the caller says when the search failed and the server didn't say why.
+const UNAVAILABLE = "Search is unavailable. Your previous results are kept."
+
+// One search, as a caller makes it: its status line shows the rejection's message.
+const oneSearch = (signal = new AbortController().signal) => {
 	const readings: unknown[] = []
 	const batch = requestSearch({
 		body: { q: "heist movies", includeAdult: false, filters: {} },
 		signal,
 		onReading: (chips) => readings.push(chips),
-		unavailable: SEARCH_PAGE_UNAVAILABLE,
+		unavailable: UNAVAILABLE,
 	})
 	return { batch, readings }
 }
@@ -45,30 +45,27 @@ test("the browser's busy message is the server's", () => {
 	assert.equal(SEARCH_BUSY_MESSAGE, SERVER_BUSY_MESSAGE)
 })
 
-test("the search role's busy answer shows its message with Retry, as before", async (t) => {
+test("the search role's busy answer shows its message, as before", async (t) => {
 	const fetched = stubFetch(t, busyAnswer)
-	const status = await statusOf(searchPage().batch)
+	const status = await statusOf(oneSearch().batch)
 	assert.equal(status, SERVER_BUSY_MESSAGE)
-	assert.equal(offerRetry(status), true)
 	assert.equal(fetched.mock.callCount(), 1)
 })
 
 for (const [name, answer] of Object.entries(gatewayAnswers))
-	test(`${name} shows the busy message with Retry`, async (t) => {
+	test(`${name} shows the busy message`, async (t) => {
 		const fetched = stubFetch(t, answer)
-		const status = await statusOf(searchPage().batch)
+		const status = await statusOf(oneSearch().batch)
 		assert.equal(status, SEARCH_BUSY_MESSAGE)
-		assert.equal(offerRetry(status), true)
 		assert.equal(fetched.mock.callCount(), 1, "no automatic retry")
 	})
 
-test("a request without an answer shows the busy message with Retry", async (t) => {
+test("a request without an answer shows the busy message", async (t) => {
 	const fetched = stubFetch(t, () => {
 		throw networkError()
 	})
-	const status = await statusOf(searchPage().batch)
+	const status = await statusOf(oneSearch().batch)
 	assert.equal(status, SEARCH_BUSY_MESSAGE)
-	assert.equal(offerRetry(status), true)
 	assert.equal(fetched.mock.callCount(), 1, "no automatic retry")
 })
 
@@ -87,7 +84,7 @@ test("a stream that breaks off partway shows the busy message", async (t) => {
 				}),
 			),
 	)
-	assert.equal(await statusOf(searchPage().batch), SEARCH_BUSY_MESSAGE)
+	assert.equal(await statusOf(oneSearch().batch), SEARCH_BUSY_MESSAGE)
 })
 
 test("a cancelled search keeps its own error, so it isn't shown as busy", async (t) => {
@@ -96,36 +93,34 @@ test("a cancelled search keeps its own error, so it isn't shown as busy", async 
 	stubFetch(t, () => {
 		throw new DOMException("The operation was aborted.", "AbortError")
 	})
-	const error = await searchPage(cancelled.signal).batch.catch(
+	const error = await oneSearch(cancelled.signal).batch.catch(
 		(reason: unknown) => reason,
 	)
 	assert.equal((error as Error).name, "AbortError")
 })
 
-test("a 200 whose body isn't the stream rejects with the page's own message", async (t) => {
+test("a 200 whose body isn't the stream rejects with the caller's own message", async (t) => {
 	for (const body of ["<html><body>Welcome</body></html>", "null\n", ""]) {
 		stubFetch(t, () => new Response(body))
-		const status = await statusOf(searchPage().batch)
-		assert.equal(status, SEARCH_PAGE_UNAVAILABLE)
-		assert.equal(offerRetry(status), true)
+		const status = await statusOf(oneSearch().batch)
+		assert.equal(status, UNAVAILABLE)
 	}
 })
 
 test("a refusal with a message of its own shows that message", async (t) => {
 	stubFetch(t, () => Response.json({ error: "Search is too long" }, { status: 413 }))
-	const status = await statusOf(searchPage().batch)
+	const status = await statusOf(oneSearch().batch)
 	assert.equal(status, "Search is too long")
-	assert.equal(offerRetry(status), false)
 })
 
 test("the route's 503 for a failed search keeps its own message", async (t) => {
-	stubFetch(t, () => Response.json({ error: SEARCH_PAGE_UNAVAILABLE }, { status: 503 }))
-	assert.equal(await statusOf(searchPage().batch), SEARCH_PAGE_UNAVAILABLE)
+	stubFetch(t, () => Response.json({ error: UNAVAILABLE }, { status: 503 }))
+	assert.equal(await statusOf(oneSearch().batch), UNAVAILABLE)
 })
 
-test("a refusal without a message shows the page's own", async (t) => {
+test("a refusal without a message shows the caller's own", async (t) => {
 	stubFetch(t, () => new Response("Internal Server Error", { status: 500 }))
-	assert.equal(await statusOf(searchPage().batch), SEARCH_PAGE_UNAVAILABLE)
+	assert.equal(await statusOf(oneSearch().batch), UNAVAILABLE)
 })
 
 test("the ranked stream gives the reading first and then the batch", async (t) => {
@@ -133,14 +128,14 @@ test("the ranked stream gives the reading first and then the batch", async (t) =
 	stubFetch(t, () =>
 		streamAnswer({ kind: "reading", reading: [{ label: "heist" }] }, { kind: "batch", batch }),
 	)
-	const search = searchPage()
+	const search = oneSearch()
 	assert.deepEqual(await search.batch, batch)
 	assert.deepEqual(search.readings, [[{ label: "heist" }]])
 })
 
 test("an error inside the stream shows its message", async (t) => {
 	stubFetch(t, () => streamAnswer({ kind: "error", error: "Search is unavailable right now." }))
-	assert.equal(await statusOf(searchPage().batch), "Search is unavailable right now.")
+	assert.equal(await statusOf(oneSearch().batch), "Search is unavailable right now.")
 })
 
 test("each answer is one of four kinds", async () => {
@@ -173,7 +168,7 @@ test("provisional results arrive before full completion and never resolve the re
 	const progress: unknown[] = []
 	let completed = false
 	const answer = requestSearch({ body: { q: "fixture" }, signal: new AbortController().signal,
-		onReading: () => {}, onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+		onReading: () => {}, onProgress: batch => progress.push(batch), unavailable: UNAVAILABLE })
 	answer.then(() => { completed = true })
 	await new Promise(resolve => setImmediate(resolve))
 	const send = (packet: unknown) => writer.enqueue(new TextEncoder().encode(`${JSON.stringify(packet)}\n`))
@@ -189,7 +184,7 @@ test("provisional results arrive before full completion and never resolve the re
 	assert.deepEqual(progress, [partial])
 })
 
-// The wire only: which reading the page then shows is chosen inside the search page's controller.
+// The wire only: which reading a page then shows is chosen inside its controller.
 test("a reading streamed after a pendingRanking batch still arrives, after that batch and never after the completed answer", async (t) => {
 	const early = { q: "fixture", rows: [{ key: "movie:42" }], reading: [], pendingRanking: true }
 	const final = { q: "fixture", rows: [{ key: "movie:43" }], reading: [{ label: "heist" }], pendingRanking: false }
@@ -202,7 +197,7 @@ test("a reading streamed after a pendingRanking batch still arrives, after that 
 	const events: unknown[] = []
 	const answer = await requestSearch({ body: { q: "fixture" }, signal: new AbortController().signal,
 		onReading: chips => events.push(["reading", chips]), onProgress: batch => events.push(["provisional", batch]),
-		unavailable: SEARCH_PAGE_UNAVAILABLE })
+		unavailable: UNAVAILABLE })
 	assert.deepEqual(events, [["provisional", early], ["reading", [{ label: "heist" }]]])
 	assert.deepEqual(answer, final)
 })
@@ -212,7 +207,7 @@ test("a failure after provisional results rejects without discarding delivered p
 	stubFetch(t, () => streamAnswer({ kind: "provisional", batch: partial }, { kind: "error", error: "Title check failed" }))
 	const progress: unknown[] = []
 	const answer = requestSearch({ body: {}, signal: new AbortController().signal, onReading: () => {},
-		onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+		onProgress: batch => progress.push(batch), unavailable: UNAVAILABLE })
 	await assert.rejects(answer, /Title check failed/)
 	assert.deepEqual(progress, [partial])
 })
@@ -226,7 +221,7 @@ test("aborted requests do not deliver queued provisional packets and cancel thei
 	})))
 	const progress: unknown[] = []
 	const answer = requestSearch({ body: {}, signal: stop.signal, onReading: () => {},
-		onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+		onProgress: batch => progress.push(batch), unavailable: UNAVAILABLE })
 	stop.abort()
 	await assert.rejects(answer, error => (error as Error).name === "AbortError")
 	assert.deepEqual(progress, [])

@@ -3,7 +3,6 @@
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react"
 import { CheckIcon } from "@heroicons/react/24/solid"
 import { Suspense, lazy, useMemo } from "react"
-import { useFeature } from "~/hooks/useFeature"
 import type { WatchNext } from "~/server/watch-next.server"
 import { TitleScore } from "~/ui/title-actions/TitleScore"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
@@ -24,7 +23,6 @@ export function FinishPrompt({
 	onClose: (scored: boolean) => void
 }) {
 	const title = finished?.title
-	const tracking = useFeature("tracking")
 	// One promise per "I watched it", so the line doesn't start over when the dialog renders again.
 	const watchId = useMemo(
 		() => finished?.undo?.then((undo) => undo?.watchId ?? null) ?? null,
@@ -70,7 +68,7 @@ export function FinishPrompt({
 							/>
 						</div>
 						{/* The movie watch log: the watch was recorded for now, and one line lets the person say otherwise. */}
-						{tracking && title.media_type === "movie" && watchId && (
+						{title.media_type === "movie" && watchId && (
 							<Suspense fallback={null}>
 								<WatchedLine movieId={title.tmdb_id} watchId={watchId} />
 							</Suspense>

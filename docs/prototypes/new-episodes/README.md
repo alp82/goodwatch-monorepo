@@ -1,5 +1,11 @@
 # New episodes for the shows a member tracks
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
+> **Removed:** this prototype (`/prototype/new-episodes`) was removed after the TV revamp merge (`be36991b`). Its code and history are in git.
+
 A prototype for the map [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Throwaway code. The feature
 is "new episodes for shows you watch", in the app only: no email, no push, no release calendar.
 

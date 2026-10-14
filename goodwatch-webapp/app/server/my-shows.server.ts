@@ -392,7 +392,7 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
 /**
  * A member's shows for tonight, in the page's groups. `episodeLists` bounds how many rows get their Next episode
  * from the show's cached episode list, Continue first and then Pick up: the page reads them for the rows it draws
- * first, home's Continue door for one. `upcoming: false` leaves out when the waiting shows return, which only the
+ * first, home for three (home-doors.server.ts). `upcoming: false` leaves out when the waiting shows return, which only the
  * page shows.
  */
 export async function getMyShows(

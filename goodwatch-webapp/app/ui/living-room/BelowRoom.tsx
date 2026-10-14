@@ -75,15 +75,12 @@ export const CATEGORY_HUBS = [
 export type BelowRoomProps = {
 	/** Most popular first; empty while the title snapshot loads. */
 	titles: StartTitle[]
-	/** The phone has the navigation's dock (REC_NAVIGATION): the lip is the dock's upper row, one sheet with it. */
-	docked?: boolean
 	onDown?: (e: MouseEvent) => void
 	onBack?: (e: MouseEvent) => void
 }
 
 export function BelowRoom({
 	titles,
-	docked = false,
 	onDown,
 	onBack,
 }: BelowRoomProps) {
@@ -96,7 +93,7 @@ export function BelowRoom({
 		<section
 			id={BELOW_ID}
 			aria-labelledby="browse-title"
-			className={docked ? "lrb lrb-docked" : "lrb"}
+			className="lrb"
 		>
 			<a href={`#${BELOW_ID}`} onClick={onDown} className="lrb-lip">
 				<span>

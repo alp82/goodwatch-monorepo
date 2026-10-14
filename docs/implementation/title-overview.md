@@ -1,5 +1,9 @@
 # The title overview
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The card at the top of a movie's or a show's page (`ui/details/hero/DetailsHero.tsx`), as built on October 9, 2026.
 It is variant L of [the title overview prototype](../prototypes/title-overview/README.md), which lives on the branch
 `proto/title-overview` and is not merged.

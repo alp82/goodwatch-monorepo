@@ -1,0 +1,234 @@
+{
+	"passed": 620,
+	"failed": [],
+	"numbers": {
+		"the pool's answer, bytes": 48602,
+		"of which the tile pictures, bytes": 912,
+		"five pool requests in a row, ms": [
+			512,
+			144,
+			92,
+			79,
+			80
+		],
+		"guest 1920x1080: Down from Themes lands on": "theme:crime",
+		"guest 1920x1080: Up from the tabs lands on": "bar:back",
+		"guest 1920x1080: Crime's titles": [
+			"Reacher",
+			"Law & Order: Special Victims Unit",
+			"Law & Order",
+			"The Mentalist"
+		],
+		"guest 1920x1080: Discover's answer for Crime, titles in all": 10596,
+		"guest 1920x1080: Future's titles": [
+			"Doraemon",
+			"Rick and Morty",
+			"Doctor Who",
+			"The Flash"
+		],
+		"guest 1920x1080: Slow burn's titles": [
+			"The Office",
+			"Breaking Bad",
+			"Lanterns",
+			"Bones"
+		],
+		"guest 390x844: Down from Themes lands on": "theme:mystery",
+		"guest 390x844: Up from the tabs lands on": "bar:back",
+		"guest 390x844: Crime's titles": [
+			"Reacher",
+			"Law & Order: Special Victims Unit",
+			"Law & Order",
+			"The Mentalist"
+		],
+		"guest 390x844: Discover's answer for Crime, titles in all": 10596,
+		"guest 390x844: Future's titles": [
+			"Doraemon",
+			"Rick and Morty",
+			"Doctor Who",
+			"The Flash"
+		],
+		"guest 390x844: Slow burn's titles": [
+			"The Office",
+			"Breaking Bad",
+			"Lanterns",
+			"Bones"
+		],
+		"member 1920x1080: Down from Themes lands on": "theme:crime",
+		"member 1920x1080: Up from the tabs lands on": "bar:back",
+		"member 1920x1080: Crime's titles": [
+			"Reacher",
+			"Law & Order: Special Victims Unit",
+			"Law & Order",
+			"The Mentalist"
+		],
+		"member 1920x1080: Future's titles": [
+			"Doraemon",
+			"Rick and Morty",
+			"Doctor Who",
+			"The Flash"
+		],
+		"member 1920x1080: Slow burn's titles": [
+			"The Office",
+			"Breaking Bad",
+			"Lanterns",
+			"Bones"
+		],
+		"member 390x844: Down from Themes lands on": "theme:mystery",
+		"member 390x844: Up from the tabs lands on": "bar:back",
+		"member 390x844: Crime's titles": [
+			"Reacher",
+			"Law & Order: Special Victims Unit",
+			"Law & Order",
+			"The Mentalist"
+		],
+		"member 390x844: Future's titles": [
+			"Doraemon",
+			"Rick and Morty",
+			"Doctor Who",
+			"The Flash"
+		],
+		"member 390x844: Slow burn's titles": [
+			"The Office",
+			"Breaking Bad",
+			"Lanterns",
+			"Bones"
+		],
+		"Funny for a guest nobody knows: on the TV": [
+			"Watch What Happens Live with Andy Cohen",
+			"The Tonight Show Starring Johnny Carson",
+			"The Tonight Show Starring Jimmy Fallon",
+			"The Office"
+		],
+		"Funny for a guest nobody knows: Discover has": 8229,
+		"Crime for a guest with Netflix saved: on the TV": [
+			"Law & Order",
+			"NCIS",
+			"C.I.D.",
+			"Breaking Bad"
+		],
+		"Crime for a guest with Netflix saved: Discover has": 1267,
+		"Slow burn for a guest with Netflix saved and three ratings: on the TV": [
+			"Miraculous: Tales of Ladybug & Cat Noir",
+			"How I Met Your Mother",
+			"Better Call Saul",
+			"Frieren: Beyond Journey's End"
+		],
+		"Slow burn for a guest with Netflix saved and three ratings: Discover has": 465,
+		"Crime for a guest with Netflix saved and three ratings: on the TV": [
+			"Law & Order",
+			"NCIS",
+			"C.I.D.",
+			"The Blacklist"
+		],
+		"Crime for a guest with Netflix saved and three ratings: Discover has": 1266,
+		"sizes 360x740: the room": "phone",
+		"sizes 360x740: a tab and a tile, px": [
+			"98 x 44",
+			"96 x 50"
+		],
+		"sizes 360x740: a poster and Change, px": [
+			"69 x 104",
+			"80 x 44"
+		],
+		"sizes 360x740: the smallest key, px": {
+			"moods": 44.5,
+			"themes": 44.5,
+			"styles": 44.5,
+			"list": 44.5
+		},
+		"sizes 375x667: the room": "phone",
+		"sizes 375x667: a tab and a tile, px": [
+			"103 x 44",
+			"101 x 44"
+		],
+		"sizes 375x667: a poster and Change, px": [
+			"55 x 83",
+			"83 x 44"
+		],
+		"sizes 375x667: the smallest key, px": {
+			"moods": 44.4,
+			"themes": 44.4,
+			"styles": 44.4,
+			"list": 44.4
+		},
+		"sizes 390x700: the room": "phone",
+		"sizes 390x700: a tab and a tile, px": [
+			"107 x 44",
+			"105 x 54"
+		],
+		"sizes 390x700: a poster and Change, px": [
+			"73 x 110",
+			"87 x 44"
+		],
+		"sizes 390x700: the smallest key, px": {
+			"moods": 44.2,
+			"themes": 44.2,
+			"styles": 44.2,
+			"list": 44.2
+		},
+		"sizes 390x844: the room": "phone",
+		"sizes 390x844: a tab and a tile, px": [
+			"107 x 44",
+			"105 x 59"
+		],
+		"sizes 390x844: a poster and Change, px": [
+			"75 x 113",
+			"87 x 44"
+		],
+		"sizes 390x844: the smallest key, px": {
+			"moods": 44.2,
+			"themes": 44.2,
+			"styles": 44.2,
+			"list": 44.2
+		},
+		"sizes 430x932: the room": "phone",
+		"sizes 430x932: a tab and a tile, px": [
+			"119 x 44",
+			"117 x 71"
+		],
+		"sizes 430x932: a poster and Change, px": [
+			"84 x 125",
+			"96 x 44"
+		],
+		"sizes 430x932: the smallest key, px": {
+			"moods": 44.2,
+			"themes": 44.2,
+			"styles": 44.2,
+			"list": 44.2
+		},
+		"sizes 844x390: the room": "landscape",
+		"sizes 844x390: a tab and a tile, px": [
+			"144 x 51",
+			"141 x 67"
+		],
+		"sizes 844x390: a poster and Change, px": [
+			"85 x 127",
+			"117 x 53"
+		],
+		"sizes 844x390: the smallest key, px": {
+			"moods": 50.7,
+			"themes": 50.7,
+			"styles": 50.7,
+			"list": 52.7
+		},
+		"sizes 1920x1080: the room": "desktop, below",
+		"sizes 1920x1080: a tab and a tile, px": [
+			"179 x 68",
+			"368 x 167"
+		],
+		"sizes 1920x1080: a poster and Change, px": [
+			"182 x 273",
+			"162 x 72"
+		],
+		"sizes 1920x1080: the smallest key, px": {
+			"moods": 67.8,
+			"themes": 67.8,
+			"styles": 67.8,
+			"list": 67.8
+		},
+		"the guest's HTML of /home-preview, bytes": 59743,
+		"the guest's HTML of ?tv=discover, bytes": 50783,
+		"the guest's HTML of ?tv=discover&tab=themes, bytes": 50783,
+		"the guest's HTML of ?tv=discover&theme=crime, bytes": 50783
+	}
+}

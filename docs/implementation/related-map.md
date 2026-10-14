@@ -114,15 +114,13 @@ their way."
 | The nearest titles came within the budget (150 ms, 1,000 ms for a declared crawler) | The map | Yes |
 | They came late, or the lookup failed | The related titles carousel, which asks for its panel from the browser. The lookup keeps running, so the next render has the map | No (`private, no-store`) |
 | The title has no fingerprint | No related section, as before | Yes |
-| `REC_RELATED_MAP=off` | The related titles carousel with its first panel in the HTML | Yes |
 
 The counter `goodwatch_related_map_total` counts these outcomes per media type: `map`, `none`, `budget`, `error`.
 
 ## How to turn it off
 
-Set `REC_RELATED_MAP=off` in the webapp's environment and restart the containers. No build is needed. Title pages
-then show the related titles carousel (`DetailsRelated`), and `/api/related-map` answers 404. Any other value, or no
-value, means on. A restart also empties the page cache, so no stored page keeps the map.
+It can't be turned off any more: the `REC_RELATED_MAP` setting was removed on October 14, 2026 with the other `REC_*`
+flags (`docs/implementation/tv-screen-revamp/rec-flags/`). The way back is a revert of that commit.
 
 ## Page weight
 

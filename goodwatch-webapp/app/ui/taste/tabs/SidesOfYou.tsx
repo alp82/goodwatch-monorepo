@@ -1,6 +1,6 @@
 // Sides of you: the contradiction in the person's taste as the first line, the sides picked from poster chips, each
 // side as "You're here" next to "Just past it" (a place they've barely tried but rate above their usual), then
-// "More of this" on their services.
+// "More of this" on their services. The route says which side opens first (the address's `?side=`).
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { type KeyboardEvent, type ReactNode, useRef, useState } from "react"
 import type {
@@ -24,10 +24,24 @@ import {
 	useServicesFilter,
 } from "./parts"
 
-export function SidesOfYou({ view }: { view: SidesView }) {
+export function SidesOfYou({
+	view,
+	opening,
+	onOpen,
+}: {
+	view: SidesView
+	/** The side to open first; without it the view's own first. */
+	opening?: string
+	/** A side the person picked. */
+	onOpen?: (id: string) => void
+}) {
 	const [openId, setOpenId] = useState(
-		view.openFirst ?? view.sides[0]?.id ?? "",
+		opening ?? view.openFirst ?? view.sides[0]?.id ?? "",
 	)
+	const open = (id: string) => {
+		setOpenId(id)
+		onOpen?.(id)
+	}
 	const side = view.sides.find((s) => s.id === openId) ?? view.sides[0]
 	const services = useServicesFilter(view.hasServices)
 	const reduceMotion = useReducedMotion()
@@ -57,7 +71,7 @@ export function SidesOfYou({ view }: { view: SidesView }) {
 					sides={view.sides}
 					titles={view.titles}
 					openId={side.id}
-					onOpen={setOpenId}
+					onOpen={open}
 				/>
 			</section>
 

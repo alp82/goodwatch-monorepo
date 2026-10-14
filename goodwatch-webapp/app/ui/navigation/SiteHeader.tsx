@@ -1,9 +1,8 @@
-// The header while REC_NAVIGATION is on. Desktop: the wordmark and the Browse button (the current page's name away
-// from Home) that opens the Browse panel, the omnibox in the middle, Tonight's pick, and the account slot. Phones: the
-// wordmark, a search bar that opens the hub, and the account slot; everything else lives in the dock.
+// The site header. Desktop: the wordmark and the Browse button (the current page's name away from Home) that opens
+// the Browse panel, the omnibox in the middle, Tonight's pick, and the account slot. Phones: the wordmark, a search
+// bar that opens the hub, and the account slot; everything else lives in the dock.
 import { ChevronDownIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
-import { useFeatures } from "~/hooks/useFeature"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useNavigation } from "./NavigationContext"
@@ -16,14 +15,14 @@ function BrowseButton() {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
 	const here = currentDestination(pathname)
-	const destinations = getDestinations(useFeatures())
-	const open = Boolean(navigation?.hubOpen)
+	const destinations = getDestinations()
+	const open = navigation.hubOpen
 	// My shows and My movies are tiles inside the hub, so what opens the hub says that something is new there.
 	const fresh = useOpenerSignal()
 	return (
 		<button
 			type="button"
-			onClick={() => navigation?.setHubOpen(!open)}
+			onClick={() => navigation.setHubOpen(!open)}
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"

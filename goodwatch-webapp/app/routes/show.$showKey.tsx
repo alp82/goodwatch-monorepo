@@ -19,14 +19,13 @@ import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import {
-	prefetchRelatedSection,
+	relatedMapLookup,
 	relatedSectionData,
 } from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
 import Details from "~/ui/details/Details"
-import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
 import {
@@ -84,12 +83,7 @@ export const loader: LoaderFunction = async ({
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
-		prefetchRelatedSection({
-			tmdbId: Number(showId),
-			sourceMediaType: "show",
-			budgetMs,
-			language: canonicalContent ? undefined : language,
-		}),
+		relatedMapLookup({ type: "show", id: Number(showId), budgetMs, language: canonicalContent ? undefined : language }),
 		// The header's genre links, which the page requested after load before.
 		details.then(
 			(media) =>
@@ -127,13 +121,13 @@ export const loader: LoaderFunction = async ({
 			}
 		: catalogMedia
 	const media = canonicalContent ? alignedMedia : await presentShowSeasonsAfterAlignment(alignedMedia, language)
-	// The related map's section, or with the map off the related titles carousel's first panel.
+	// The related map's section.
 	const related = relatedSectionData(
 		relatedSection,
 		media.details.title,
 		request,
 	)
-	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
+	const dehydratedState = mergeDehydratedStates(extrasState)
 
 	const data = {
 		media,
@@ -202,6 +196,3 @@ export default function DetailsTV() {
 
 	return <Details media={media} country={country} episodeGrid={episodeGrid} />
 }
-
-// Search refinements do not change the currently loaded title.
-export const shouldRevalidate = searchDetailShouldRevalidate

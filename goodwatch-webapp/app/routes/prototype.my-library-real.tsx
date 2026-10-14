@@ -1,10 +1,11 @@
-// DEVELOPMENT HARNESS (issue #385), not a prototype of a design: the REAL My shows, My movies and My library pages
-// and home's doors, mounted with a member who does not exist. The loader and the harness's API run the app's own
+// DEVELOPMENT HARNESS (issue #385), not a prototype of a design: the REAL My shows, My movies and My library pages,
+// mounted with a member who does not exist. The start page's TV for that member is the route next to it,
+// /prototype/my-library-real/tv (the "Home" link). The loader and the harness's API run the app's own
 // server reads against an in-memory Crate (server/prototype-my-library.server.ts), and the page sends the member's
 // requests there. It is how the pages are driven in a headless browser without a signed-in session or a database.
-// Start the dev server without .env and with the flags on:
-//   REC_TRACKING=on REC_WATCH_NEXT=on REC_NAVIGATION=on REC_TASTE_MATCH=on node_modules/.bin/remix vite:dev --port 3107
-//   /prototype/my-library-real?page=library|shows|movies|home&member=six|one|many|none|empty&seen=30|1500|0
+// Start the dev server without .env:
+//   node_modules/.bin/remix vite:dev --port 3107
+//   /prototype/my-library-real?page=library|shows|movies&member=six|one|many|none|empty&seen=30|1500|0
 // `reset=1` starts the sample member over, `chrome=off` hides the harness's own controls. The library's own
 // parameters (`status`, `sort`, `type`, `q`) work as on /my-library.
 // The member `new` (#442) opened My shows five days ago: shows have returned since and others are waiting. The site's
@@ -12,27 +13,16 @@
 // them can be looked at; `hub=open` starts with the hub open.
 // `landed=movie|show|several|episode|old|gone` (#456, #489) puts titles of the member on their services, 1 to 15 days
 // ago, for any member: the signal counts them until the page is opened, and for 14 days My movies and My shows list
-// and mark them and home's doors lead with them (ui/prototype-my-library/setup.ts).
+// and mark them and the TV's Tonight leads with them (ui/prototype-my-library/setup.ts).
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
-import {
-	type LinksFunction,
-	type LoaderFunctionArgs,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import {
 	Link,
 	type ShouldRevalidateFunction,
 	useLoaderData,
-	useNavigate,
 	useSearchParams,
 } from "@remix-run/react"
-import {
-	startTransition,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
+import { startTransition, useEffect, useMemo, useState } from "react"
 import { libraryChoiceOf } from "~/domain/my-library"
 import type { Arrival } from "~/domain/new-episodes"
 import type { LandedTitle } from "~/domain/newly-available-words"
@@ -43,10 +33,6 @@ import {
 	installHarnessMember,
 } from "~/server/prototype-my-library.server"
 import type { WatchNext } from "~/server/watch-next.server"
-import { LivingRoom } from "~/ui/living-room/LivingRoom"
-import type { LivingRoomData } from "~/ui/living-room/living-room-data"
-import livingRoomCss from "~/ui/living-room/living-room.css?url"
-import type { TvEffect } from "~/ui/living-room/tv-flow"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
 import { MyMoviesPage } from "~/ui/my-movies/MyMoviesPage"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
@@ -70,13 +56,12 @@ import {
 import { apiQuery, pageChoiceOf } from "~/ui/watch-next/useWatchNext"
 import { AuthContext } from "~/utils/auth"
 
-const PAGES = ["library", "shows", "movies", "home"] as const
+const PAGES = ["library", "shows", "movies"] as const
 type PageKey = (typeof PAGES)[number]
 const PAGE_NAME: Record<PageKey, string> = {
 	library: "My library",
 	shows: "My shows",
 	movies: "My movies",
-	home: "Home",
 }
 const pageOf = (value: string | null): PageKey =>
 	(PAGES as readonly string[]).includes(value ?? "")
@@ -99,7 +84,6 @@ type Loaded =
 			movies: { query: string; data: WatchNext }
 			landed: LandedTitle[]
 	  }
-	| { page: "home"; now: number; room: LivingRoomData }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const params = new URL(request.url).searchParams
@@ -134,36 +118,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			landed: landed.shows,
 		})
 	}
-	if (page === "movies") {
-		const choice = pageChoiceOf(params, true)
-		return json<Loaded>({
-			page,
-			now,
-			movies: { query: apiQuery(choice), data: await harness.movies(choice) },
-			landed: (await harness.recent(now)).movies,
-		})
-	}
+	const choice = pageChoiceOf(params, true)
 	return json<Loaded>({
 		page,
 		now,
-		room: {
-			member: true,
-			suggestions: [],
-			wishlist: [],
-			catalog: [],
-			savedServices: [],
-			pairs: [],
-			doors: await harness.doors(now),
-		},
+		movies: { query: apiQuery(choice), data: await harness.movies(choice) },
+		landed: (await harness.recent(now)).movies,
 	})
 }
 
 export const meta = () => [
 	{ title: "My library, the real pages · GoodWatch" },
 	{ name: "robots", content: "noindex, nofollow" },
-]
-export const links: LinksFunction = () => [
-	{ rel: "stylesheet", href: livingRoomCss },
 ]
 // The loader runs again for another page or sample member, not for a page's own choices.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -231,6 +197,12 @@ function Chrome({ page }: { page: PageKey }) {
 		>
 			<b className="text-fuchsia-300">Harness #385</b>
 			{PAGES.map((key) => link("page", key, PAGE_NAME[key]))}
+			<Link
+				to={`/prototype/my-library-real/tv?member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}&landed=${landedOf(params.get("landed"))}`}
+				className={`${PILL} bg-white text-black`}
+			>
+				Home
+			</Link>
 			<span className="mx-1">member</span>
 			{MEMBERS.map((key) => link("member", key, key))}
 			<span className="mx-1">Seen</span>
@@ -242,23 +214,20 @@ function Chrome({ page }: { page: PageKey }) {
 				live in the dev server. Showing {PAGE_NAME[page]}.
 			</span>
 			{/* The site's header and dock above see a guest. This is Tonight's pick as the member's would show it. */}
-			{page !== "home" && (
-				<span
-					data-harness-pick
-					className="flex items-center gap-2 rounded-xl bg-gray-950 pr-3 ring-1 ring-fuchsia-400/60"
-				>
-					<TonightsPickThumb />
-				</span>
-			)}
+			<span
+				data-harness-pick
+				className="flex items-center gap-2 rounded-xl bg-gray-950 pr-3 ring-1 ring-fuchsia-400/60"
+			>
+				<TonightsPickThumb />
+			</span>
 		</div>
 	)
 }
 
 /** Opens the member's hub once, for a screenshot of it. */
 function OpenHub() {
-	const navigation = useNavigation()
-	const open = navigation?.setHubOpen
-	useEffect(() => open?.(true), [open])
+	const { setHubOpen } = useNavigation()
+	useEffect(() => setHubOpen(true), [setHubOpen])
 	return null
 }
 
@@ -283,7 +252,6 @@ function MemberNavigation({ hub }: { hub: boolean }) {
 export default function MyLibraryHarness() {
 	const loaded = useLoaderData<typeof loader>() as unknown as Loaded
 	const [params] = useSearchParams()
-	const navigate = useNavigate()
 	const setup = `member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}&landed=${landedOf(params.get("landed"))}`
 	// The member's requests go to the harness before any page below asks for anything.
 	const [ready, setReady] = useState("")
@@ -303,35 +271,10 @@ export default function MyLibraryHarness() {
 		}),
 		[],
 	)
-	// A door leaves for its page: here, for the harness's copy of it.
-	const onEffect = (effect: TvEffect) => {
-		if (effect.type !== "leave" || effect.to.kind !== "page") return
-		const [path, hash] = effect.to.href.split("#")
-		const next = new URLSearchParams(params)
-		next.set("page", path === "/my-movies" ? "movies" : "shows")
-		navigate(`?${next}${hash ? `#${hash}` : ""}`)
-	}
 	const chrome = params.get("chrome") !== "off" && <Chrome page={loaded.page} />
-	const guest = useContext(AuthContext)
 	const navigation = ready === setup && (
 		<MemberNavigation hub={params.get("hub") === "open"} />
 	)
-	// Home's doors come with the loader, so it is rendered on the server too, as the real home is. The member is
-	// there once their requests go to the harness: the Continue door then asks what is new.
-	if (loaded.page === "home")
-		return (
-			<AuthContext.Provider value={ready === setup ? auth : guest}>
-				<div data-harness="home">
-					{chrome}
-					<LivingRoom
-						data={loaded.room}
-						onEffect={onEffect}
-						onRate={() => {}}
-					/>
-				</div>
-				{navigation}
-			</AuthContext.Provider>
-		)
 	if (ready !== setup)
 		return <p className="p-8 text-gray-400">Starting the harness.</p>
 	return (

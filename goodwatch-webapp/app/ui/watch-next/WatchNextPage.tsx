@@ -3,7 +3,6 @@
 import { type ReactNode, useCallback, useState } from "react"
 import { type MoodKey, toggleMood } from "~/domain/moods"
 import type { WatchNextSort } from "~/domain/watch-next"
-import { useFeature } from "~/hooks/useFeature"
 import { useWishlistMutation } from "~/hooks/useUserDataMutations"
 import { useUserData } from "~/routes/api.user-data"
 import type { TitleCard } from "~/server/title-cards.server"
@@ -55,7 +54,6 @@ export function WatchNextPage({
 }) {
 	const state = useWatchNext(initial, Boolean(movies))
 	const { data, choice, setChoice } = state
-	const showMatch = useFeature("tasteMatch")
 	const finishing = useFinish()
 	const refresh = useRefreshWatchNext()
 	const { mutate: updateWishlist } = useWishlistMutation()
@@ -176,7 +174,6 @@ export function WatchNextPage({
 			<WatchNextHero
 				data={data}
 				strip={strip}
-				showMatch={showMatch}
 				onFinish={finishing.finish}
 				onPass={(title) => state.pass(title.key)}
 				onWant={want}
@@ -200,7 +197,7 @@ export function WatchNextPage({
 					className={`${WRAP} pt-8 transition-opacity ${state.isFetching && !state.isLoading ? "opacity-80" : ""}`}
 				>
 					<HideFeedbackContext.Provider value={onHide}>
-						<SteppedGrid data={data} state={state} showMatch={showMatch} />
+						<SteppedGrid data={data} state={state} />
 						<WorthAdding data={data} onWant={want} isWanted={isWanted} />
 					</HideFeedbackContext.Provider>
 					{state.guest && (

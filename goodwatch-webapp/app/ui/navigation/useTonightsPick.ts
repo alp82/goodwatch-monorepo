@@ -9,7 +9,6 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { type QueryClient, useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import type { NewOnServices } from "~/domain/newly-available-signal"
-import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import type { TonightsPick } from "~/server/tonight.server"
 import { watchStateSignature } from "~/types/user-data"
@@ -33,8 +32,6 @@ async function fetchTonight(guest: boolean, language: string): Promise<Tonight> 
 				body: JSON.stringify({ guest: snapshotGuestProgress() }),
 			})
 		: await fetch(mediaLanguageUrl("/api/tonight", language))
-	// Not found while Watch next is off for the viewer: no pick, the dock shows the Wishlist icon.
-	if (response.status === 404) return { pick: null }
 	if (!response.ok) throw new Error(`Tonight's pick: ${response.status}`)
 	return (await response.json()) as Tonight
 }
@@ -47,7 +44,6 @@ export function useTonightsPick(): {
 	landed: NewOnServices | null
 } {
 	const { locale } = useLocale()
-	const watchNext = useFeature("watchNext")
 	const { user, loading } = useUser()
 	const { data } = useUserData()
 	const signature = useMemo(() => {
@@ -62,8 +58,8 @@ export function useTonightsPick(): {
 	const query = useQuery({
 		queryKey: [...tonightKey(user?.id ?? "guest"), signature, locale.language],
 		queryFn: () => fetchTonight(!user, locale.language),
-		enabled: watchNext && !loading && !guestWithoutWishlist,
-		placeholderData: (previous) => previous,
+		enabled: !loading && !guestWithoutWishlist,
+		placeholderData: (previous, query) => query?.queryKey.at(-1) === locale.language ? previous : undefined,
 	})
 	return {
 		// Without the check, a guest who empties their Wishlist would keep seeing the previous pick as placeholder.

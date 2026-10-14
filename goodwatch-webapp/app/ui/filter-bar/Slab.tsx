@@ -1,6 +1,6 @@
-// The phone slab: one fixed panel at the bottom that merges the filter strip with the site navigation. Top to
-// bottom: the hidden line, the strip (On my services, Not seen yet, For you on Discover, Sort) with the 52 px Filters
-// key, and the navigation dock. Scrolling down folds the hidden line and the dock away; the strip stays.
+// The phone slab: the filter strip docked above the site navigation's dock. Top to bottom: the hidden line, then the
+// strip (On my services, Not seen yet, For you on Discover, Sort) with the 52 px Filters key. Scrolling down folds
+// the hidden line away; the strip stays.
 import {
 	AdjustmentsHorizontalIcon,
 	ArrowUpIcon,
@@ -11,16 +11,10 @@ import {
 	PlusIcon,
 } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
-import { Link, useLocation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import type { FilterName, FilterState } from "~/domain/filter-state"
-import {
-	BOTTOM_NAV_ITEMS,
-	SLAB_NAV_ATTRIBUTE,
-	isBottomNavActive,
-} from "~/ui/nav/BottomNav"
-import { DockStrip, useHasDock } from "~/ui/navigation/MobileDock"
+import { DockStrip } from "~/ui/navigation/MobileDock"
 import {
 	FilterGroups,
 	type FilterGroupsData,
@@ -57,51 +51,6 @@ export function useScrollFold(threshold = 10, top = 80) {
 		return () => window.removeEventListener("scroll", onScroll)
 	}, [threshold, top])
 	return folded
-}
-
-/** The site navigation as the slab's dock row, with Taste as the round key in the middle. */
-export function SlabNav() {
-	const { pathname } = useLocation()
-	const [home, discover, movies, shows] = BOTTOM_NAV_ITEMS
-	const tasteActive = pathname.startsWith("/taste")
-	const item = ({ title, Icon, url }: (typeof BOTTOM_NAV_ITEMS)[number]) => {
-		const active = isBottomNavActive(pathname, url)
-		return (
-			<Link
-				key={url}
-				to={url}
-				prefetch="render"
-				aria-current={active ? "page" : undefined}
-				className="flex flex-col items-center justify-center pt-2 pb-3"
-			>
-				<Icon
-					className={`mb-1 h-5 w-5 ${active ? "text-amber-500" : "text-gray-400"}`}
-				/>
-				<span className="text-xs text-gray-200">{title}</span>
-			</Link>
-		)
-	}
-	return (
-		<nav aria-label="Main" className="grid h-16 grid-cols-5">
-			{item(home)}
-			{item(discover)}
-			<Link
-				to="/taste"
-				prefetch="render"
-				aria-label="Taste"
-				aria-current={tasteActive ? "page" : undefined}
-				className="flex items-center justify-center"
-			>
-				<span
-					className={`grid h-11 w-11 place-items-center rounded-full bg-linear-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-900/40 ${tasteActive ? "ring-4 ring-amber-600/30" : ""}`}
-				>
-					<FingerPrintIcon className="h-6 w-6 text-white" />
-				</span>
-			</Link>
-			{item(movies)}
-			{item(shows)}
-		</nav>
-	)
 }
 
 /** A menu that opens above the slab's strip, anchored right, above the thumb. */
@@ -229,15 +178,13 @@ function Block({
 }
 
 /**
- * The slab's frame: an optional line, a filter strip and its menus. With the new navigation it lives in DockStrip,
- * above the shared hub row. Otherwise it owns a fixed panel and the legacy navigation row, hiding BottomNav.
- * Scrolling down folds the line and the legacy row away; the filter strip stays.
+ * The slab's frame: an optional line, a filter strip and its menus. It lives in DockStrip, above the shared hub row.
+ * Scrolling down folds the line away; the filter strip stays.
  */
 export function SlabShell({
 	line,
 	strip,
 	trailing,
-	nav,
 	children,
 }: {
 	line?: ReactNode
@@ -245,68 +192,35 @@ export function SlabShell({
 	strip: ReactNode
 	/** The key after the strip, for example Filters. */
 	trailing?: ReactNode
-	/** The dock row; the site navigation by default. */
-	nav?: ReactNode
 	/** Anchored above the strip, for example its menus. */
 	children?: ReactNode
 }) {
 	const folded = useScrollFold()
-	const hasDock = useHasDock()
-	useEffect(() => {
-		if (hasDock) return
-		document.documentElement.setAttribute(SLAB_NAV_ATTRIBUTE, "")
-		return () => document.documentElement.removeAttribute(SLAB_NAV_ATTRIBUTE)
-	}, [hasDock])
-	const panel = (
-		<motion.div
-			layout
-			transition={SPRING}
-			className={
-				hasDock
-					? "relative min-w-0 flex-1"
-					: "relative rounded-t-[26px] bg-gray-950/90 ring-1 ring-white/10 backdrop-blur-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.07)]"
-			}
-		>
-			<AnimatePresence initial={false}>
-				{!folded && line && (
-					<motion.div
-						initial={{ height: 0, opacity: 0 }}
-						animate={{ height: "auto", opacity: 1 }}
-						exit={{ height: 0, opacity: 0 }}
-						transition={SPRING}
-						className="overflow-hidden"
-					>
-						{line}
-					</motion.div>
-				)}
-			</AnimatePresence>
-			<div
-				className={`flex items-center gap-2 ${hasDock ? "" : "px-3 pt-2.5 pb-2.5"}`}
-			>
-				<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
-					{strip}
-				</div>
-				{trailing}
-			</div>
-			{children}
-			<AnimatePresence initial={false}>
-				{!hasDock && !folded && (
-					<motion.div
-						initial={{ height: 0 }}
-						animate={{ height: "auto" }}
-						exit={{ height: 0 }}
-						transition={SPRING}
-						className="overflow-hidden border-t border-white/5"
-					>
-						{nav ?? <SlabNav />}
-					</motion.div>
-				)}
-			</AnimatePresence>
-		</motion.div>
-	)
-	if (hasDock) return <DockStrip>{panel}</DockStrip>
 	return (
-		<div className="fixed inset-x-0 bottom-0 z-[60] lg:hidden">{panel}</div>
+		<DockStrip>
+			<motion.div layout transition={SPRING} className="relative min-w-0 flex-1">
+				<AnimatePresence initial={false}>
+					{!folded && line && (
+						<motion.div
+							initial={{ height: 0, opacity: 0 }}
+							animate={{ height: "auto", opacity: 1 }}
+							exit={{ height: 0, opacity: 0 }}
+							transition={SPRING}
+							className="overflow-hidden"
+						>
+							{line}
+						</motion.div>
+					)}
+				</AnimatePresence>
+				<div className="flex items-center gap-2">
+					<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
+						{strip}
+					</div>
+					{trailing}
+				</div>
+				{children}
+			</motion.div>
+		</DockStrip>
 	)
 }
 
@@ -331,8 +245,6 @@ export interface SlabProps {
 	groups: FilterGroupsData
 	/** Replaces the hidden line, always shown (for example a search's own line). */
 	line?: ReactNode
-	/** Replaces the dock row; the site navigation by default. */
-	nav?: ReactNode
 }
 
 export function Slab(props: SlabProps) {
@@ -560,7 +472,6 @@ export function Slab(props: SlabProps) {
 						)}
 					</motion.button>
 				}
-				nav={props.nav}
 			>
 				<div ref={sortMenu}>
 					<SlabMenu open={menu === "sort"} label="Sort" width={272} id={sortId}>

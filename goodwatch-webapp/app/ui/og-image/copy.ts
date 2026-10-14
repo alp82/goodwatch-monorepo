@@ -85,11 +85,6 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Discover your next favorite",
 		subtitle: "Filter by streaming service, score, mood, cast, and more.",
 	},
-	"/search": {
-		tag: "Search",
-		title: "Describe what you want to watch",
-		subtitle: "We'll find movies and shows by topic, feeling or content.",
-	},
 	"/how-it-works": {
 		tag: "How it works",
 		title: "Ratings and Fingerprints",

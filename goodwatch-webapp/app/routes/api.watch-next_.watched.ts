@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
 import {
 	type FinishUndo,
 	finishTitle,
@@ -33,9 +32,8 @@ const bodySchema = z.union([
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
-	if (getFeatureMode("watchNext") === "off") return notFound()
 	const userId = await getUserIdFromRequest({ request })
-	if (!userId || !isEnabled("watchNext", { userId })) return notFound()
+	if (!userId) return notFound()
 	let body: z.infer<typeof bodySchema>
 	try {
 		body = bodySchema.parse(await request.json())
