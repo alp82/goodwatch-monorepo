@@ -42,14 +42,14 @@ Read this first. Rewritten at the end of every session.
 
 ## Next action
 
-Phase 0 exit is met. Owner checkpoint: show the T1 table, the T2a table and the first 20 titles per rung (done in
-session 1). Then phase 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
+Phase 0 exit is met. Owner checkpoint done. Next session starts phase 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
 tilt; register the leads and use gate looks only on registered comparisons; a gate review by two models other than
 the orchestrator's.
 
 ## What the owner owes
 
-Nothing. Optional: whether the first-20 lists match their sense of what they would want to see.
+Nothing. Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+list plausible.
 
 ## What the census changed
 

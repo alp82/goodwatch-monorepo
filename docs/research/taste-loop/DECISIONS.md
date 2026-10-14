@@ -31,7 +31,8 @@ minus B2's (−0.008). Intervals against B2 for B3, B4 and B5 are in the T1 tabl
   B5 is good at pushing down what a member will dislike (titles rated 5 or less fall to percentile 0.41, against
   0.56 for B2) and bad at choosing the top.
 - B3's first 20 look like a plausible list for the owner (Isle of Dogs, Severance, Maniac, Russian Doll, The Owl
-  House), heavy on shows.
+  House), heavy on shows. The owner, shown all six lists on October 14, 2026, said B3's "looks plausible". This is one
+  reader's judgement of one list, not a measurement; it does not settle the popularity tilt.
 - B2, today's taste, gives obscure titles with GoodWatch scores down to 37.
 - B1 gives very high-scoring regional shows with few votes.
 
