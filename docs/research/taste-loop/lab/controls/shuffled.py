@@ -45,6 +45,9 @@ RUNGS = ('b1_public.py', 'b2_taste_today.py', 'b3_taste_standardized.py', 'b4_co
 TOLERANCE = 0.015                                     # T2a, T2b: half the win floor of 0.03 (item 004)
 SEEDS = (_lib.SEED, _lib.SEED + 1, _lib.SEED + 2)     # T2a, T2b: three independent shuffles
 B2 = 'ladder/b2_taste_today.py'
+# Candidates that claimed a win, as pinned byte-identical copies under controls/predictors/: the orchestrator reruns
+# the shuffled control on them (PLAN.md 4, check 3), judged by the same figures and tolerance as the rungs.
+CANDIDATES = ('g1_mix.py',)                           # item 009
 
 
 def judge(figures):
@@ -77,10 +80,11 @@ def t2(a):
                 continue
             runs.append(line['run_id'])
             lines_of.setdefault(name, []).append(line)
-    if a.only:
+    candidates_only = bool(a.only) and set(a.only) <= set(CANDIDATES) and not a.seed
+    if a.only and not candidates_only:
         print(f'{len(runs)} runs on {len(a.seed or SEEDS)} shuffles; no verdict (--only)')
         sys.exit(0 if ok else 1)
-    for name in RUNGS:
+    for name in (chosen(a) if candidates_only else RUNGS):
         lines = lines_of.get(name, [])
         if len(lines) != len(SEEDS):
             ok = False
@@ -143,7 +147,7 @@ def t2(a):
 
 def one(a, name, refs, seed=_lib.SEED):
     """One rung on shuffled labels: (exit code, ledger line, output)."""
-    path = os.path.join(_lib.LADDER, name)
+    path = os.path.join(_lib.LADDER if name in RUNGS else os.path.join(_lib.LAB, 'controls', 'predictors'), name)
     line = _lib.stored(a, 'shuffled', path, seed) if a.reuse else None
     if line:
         return 0, line, ''
@@ -152,10 +156,10 @@ def one(a, name, refs, seed=_lib.SEED):
 
 def chosen(a):
     """The rungs of this call; with --only, no verdict is written."""
-    unknown = [x for x in a.only or () if x not in RUNGS]
+    unknown = [x for x in a.only or () if x not in RUNGS + CANDIDATES]
     if unknown:
-        sys.exit(f'--only names a rung file: {", ".join(RUNGS)}')
-    return [x for x in RUNGS if not a.only or x in a.only]
+        sys.exit(f'--only names a rung file or a pinned candidate: {", ".join(RUNGS + CANDIDATES)}')
+    return [x for x in RUNGS + CANDIDATES if not a.only or x in a.only]
 
 
 if __name__ == '__main__':
