@@ -1,0 +1,64 @@
+name: goodwatch-cas-530
+
+x-crate: &crate
+  image: crate:5.10.12@sha256:cfce7e180eafa1eb57ebda20a7b3678d65fbac2bbd08ba7e5a7b0dbf553d7696
+  environment:
+    CRATE_HEAP_SIZE: 384m
+  mem_limit: 1g
+  cpus: 1
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
+
+services:
+  node1:
+    <<: *crate
+    hostname: node1
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-cas-530
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node1
+    ports: ["127.0.0.1:15430:4200"]
+    volumes: ["node1-data:/data"]
+  node2:
+    <<: *crate
+    hostname: node2
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-cas-530
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node2
+    ports: ["127.0.0.1:15431:4200"]
+    volumes: ["node2-data:/data"]
+  node3:
+    <<: *crate
+    hostname: node3
+    command:
+      - crate
+      - -Ccluster.name=goodwatch-local-cas-530
+      - -Cnetwork.host=0.0.0.0
+      - -Cdiscovery.seed_hosts=node1,node2,node3
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node3
+    ports: ["127.0.0.1:15432:4200"]
+    volumes: ["node3-data:/data"]
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
