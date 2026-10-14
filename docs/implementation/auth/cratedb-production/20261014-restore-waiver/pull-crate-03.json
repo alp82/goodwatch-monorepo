@@ -1,0 +1,17 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "operation": "pull",
+    "node": "crate-03",
+    "startedAt": "2026-10-14T19:01:53.906341+00:00",
+    "pullOutput": "docker.io/library/crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307: Pulling from library/crate\nc6c90a8e8690: Pulling fs layer\n758a6eede0c4: Pulling fs layer\n6486f30ee1e1: Pulling fs layer\n002d41765d3b: Pulling fs layer\n83943f4fb15d: Pulling fs layer\n4f4fb700ef54: Pulling fs layer\n24b0a9edf578: Pulling fs layer\n28dae7917978: Pulling fs layer\na41efa7a19e3: Pulling fs layer\n4f4fb700ef54: Waiting\n24b0a9edf578: Waiting\n28dae7917978: Waiting\na41efa7a19e3: Waiting\n002d41765d3b: Waiting\n83943f4fb15d: Waiting\n758a6eede0c4: Verifying Checksum\n758a6eede0c4: Download complete\n002d41765d3b: Verifying Checksum\n002d41765d3b: Download complete\nc6c90a8e8690: Download complete\n83943f4fb15d: Download complete\n4f4fb700ef54: Verifying Checksum\n4f4fb700ef54: Download complete\n24b0a9edf578: Verifying Checksum\n24b0a9edf578: Download complete\n28dae7917978: Download complete\na41efa7a19e3: Verifying Checksum\na41efa7a19e3: Download complete\n6486f30ee1e1: Verifying Checksum\n6486f30ee1e1: Download complete\nc6c90a8e8690: Pull complete\n758a6eede0c4: Pull complete\n6486f30ee1e1: Pull complete\n002d41765d3b: Pull complete\n83943f4fb15d: Pull complete\n4f4fb700ef54: Pull complete\n24b0a9edf578: Pull complete\n28dae7917978: Pull complete\na41efa7a19e3: Pull complete\nDigest: sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\nStatus: Downloaded newer image for crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\ndocker.io/library/crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\n",
+    "targetImageId": "sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f",
+    "targetDigests": [
+      "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+    ],
+    "architecture": "amd64",
+    "finishedAt": "2026-10-14T19:02:06.489019+00:00"
+  },
+  "failureOutput": null
+}

@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "at": "2026-10-14T18:53:19.893873+00:00",
+  "logicalShards": 460,
+  "singleCopyShards": 0,
+  "replicaCopyCounts": {
+    "2": 460
+  },
+  "masterNodeId": "xlclgwGeSHe18p5J4WvfFA",
+  "plannedOrder": [
+    "crate-02",
+    "crate-03",
+    "crate-01"
+  ],
+  "restoreValidationWaived": true
+}
