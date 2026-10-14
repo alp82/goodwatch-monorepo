@@ -1,0 +1,280 @@
+{
+  "startedAt": "2026-10-14T18:15:37.284900+00:00",
+  "oldImage": "crate:5.10.9@sha256:0ab5077b2cc4180a855250c8f0af425386197f7586af39a7b5d7a08c16558184",
+  "targetImage": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+  "stages": [
+    {
+      "label": "baseline",
+      "at": "2026-10-14T18:15:55.247186+00:00",
+      "nodes": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "health": {
+        "status": 200,
+        "cols": [
+          "table_schema",
+          "table_name",
+          "partition_ident",
+          "health",
+          "missing_shards",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "doc",
+            "catalog_probe",
+            null,
+            "GREEN",
+            0,
+            0
+          ],
+          [
+            "doc",
+            "auth_upgrade_probe",
+            null,
+            "GREEN",
+            0,
+            0
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 1.578791
+      },
+      "shards": {
+        "status": 200,
+        "cols": [
+          "table_name",
+          "id",
+          "primary",
+          "state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "auth_upgrade_probe",
+            0,
+            true,
+            "STARTED",
+            "node3"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node1"
+          ],
+          [
+            "catalog_probe",
+            0,
+            false,
+            "STARTED",
+            "node2"
+          ],
+          [
+            "catalog_probe",
+            0,
+            true,
+            "STARTED",
+            "node3"
+          ]
+        ],
+        "rowcount": 6,
+        "duration": 16.902103
+      },
+      "containers": "[{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node1-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node3-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"},{\"ID\":\"sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f\",\"ContainerName\":\"goodwatch-upgrade-547-node2-1\",\"Repository\":\"crate\",\"Tag\":\"\",\"Platform\":\"linux/amd64\",\"Size\":495787064,\"Created\":\"2026-01-29T18:44:08.863793445Z\"}]\n\n"
+    }
+  ],
+  "writes": [
+    {
+      "id": "rollback-down-0",
+      "coordinator": 1,
+      "nodeDown": 0,
+      "acknowledged": true,
+      "healthWhileDown": {
+        "status": 200,
+        "cols": [
+          "health",
+          "missing_shards",
+          "underreplicated_shards"
+        ],
+        "rows": [
+          [
+            "YELLOW",
+            0,
+            1
+          ],
+          [
+            "YELLOW",
+            0,
+            1
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 1.888293
+      }
+    }
+  ],
+  "upgradeEvidence": "upgrade-policy-observations.json (prior upgrade and local HBA roll)",
+  "authEnforced": [
+    {
+      "node": 0,
+      "identity": {
+        "status": 200,
+        "cols": [
+          "CURRENT_USER"
+        ],
+        "rows": [
+          [
+            "goodwatch_auth"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 4.464487
+      },
+      "allowed": {
+        "status": 200,
+        "cols": [
+          "n"
+        ],
+        "rows": [],
+        "rowcount": 0,
+        "duration": 19.759644
+      },
+      "catalogDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "ddlDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "crudRowcounts": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "node": 1,
+      "identity": {
+        "status": 200,
+        "cols": [
+          "CURRENT_USER"
+        ],
+        "rows": [
+          [
+            "goodwatch_auth"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1335.8057
+      },
+      "allowed": {
+        "status": 200,
+        "cols": [
+          "n"
+        ],
+        "rows": [],
+        "rowcount": 0,
+        "duration": 77.084656
+      },
+      "catalogDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "ddlDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "crudRowcounts": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "node": 2,
+      "identity": {
+        "status": 200,
+        "cols": [
+          "CURRENT_USER"
+        ],
+        "rows": [
+          [
+            "goodwatch_auth"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1783.7399
+      },
+      "allowed": {
+        "status": 200,
+        "cols": [
+          "n"
+        ],
+        "rows": [],
+        "rowcount": 0,
+        "duration": 100.826035
+      },
+      "catalogDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "ddlDenied": {
+        "status": 404,
+        "error": {
+          "message": "SchemaUnknownException[Schema 'doc' unknown]",
+          "code": 4045
+        }
+      },
+      "crudRowcounts": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "failure": "Timeout: three nodes including target version",
+  "finishedAt": "2026-10-14T18:20:16.741323+00:00"
+}

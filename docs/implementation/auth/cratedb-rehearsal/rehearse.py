@@ -21,7 +21,8 @@ ENDPOINTS = [f'http://127.0.0.1:{port}/_sql' for port in (16430, 16431, 16432)]
 REPORT = {'startedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'oldImage': OLD, 'targetImage': NEW, 'stages': [], 'writes': []}
 START_AUTH = '--start-at-auth' in sys.argv
-ENV = dict(os.environ, CRATE_IMAGE=NEW if START_AUTH else OLD, LOCAL_HBA_ENABLED='true' if START_AUTH else 'false')
+HBA_FROM_START = '--hba-from-start' in sys.argv
+ENV = dict(os.environ, CRATE_IMAGE=NEW if START_AUTH else OLD, LOCAL_HBA_ENABLED='true' if START_AUTH or HBA_FROM_START else 'false')
 assert ENV['DOCKER_HOST'].startswith('unix:///')
 COMPOSE = ['docker', '--host', ENV['DOCKER_HOST'], 'compose', '-f', str(ROOT / 'compose.yaml'), '-p', 'goodwatch-upgrade-547']
 
@@ -81,6 +82,7 @@ def record(label, node=0):
              'shards': ok(sql("SELECT table_name, id, primary, state, node['name'] FROM sys.shards ORDER BY table_name, id, primary", node=node)),
              'containers': compose('images', '--format', 'json')}
     REPORT['stages'].append(value)
+    (ROOT / 'results/rolling-observations.json').write_text(json.dumps(REPORT, indent=2) + '\n')
     print(label, value['nodes'], flush=True)
 
 
@@ -128,14 +130,14 @@ try:
         roll(NEW, 'upgrade')
     ok(sql('CREATE USER goodwatch_auth WITH (password = ?)', ['local-rehearsal-only-547']))
     ok(sql('GRANT DQL, DML ON TABLE doc.auth_upgrade_probe TO goodwatch_auth'))
-    if not START_AUTH:
+    if not START_AUTH and not HBA_FROM_START:
         REPORT['authWithoutHba'] = sql('SELECT current_user', user='crate', password='wrong-password')
         assert REPORT['authWithoutHba']['rows'] == [['crate']]
         # Local-only demonstration; not a production client migration.
         ENV['LOCAL_HBA_ENABLED'] = 'true'
         roll(NEW, 'local-hba-enable')
     else:
-        REPORT['upgradeEvidence'] = 'upgrade-policy-observations.json (prior upgrade and local HBA roll)' 
+        REPORT['hbaEvidence'] = 'upgrade-policy-observations.json (prior local HBA roll)'
     auth_results = []
     for index in range(3):
         assert sql('SELECT current_user', node=index, user='goodwatch_auth', password='wrong-password')['status'] == 401
@@ -160,6 +162,7 @@ try:
         assert ok(sql('SELECT n FROM doc.auth_upgrade_probe WHERE id = ?', [key], **credentials))['rows'] == []
         auth_results.append({'node': index, 'identity': who, 'allowed': allowed, 'catalogDenied': denied, 'ddlDenied': denied_ddl, 'crudRowcounts': [created['rowcount'], updated['rowcount'], deleted['rowcount']]})
     REPORT['authEnforced'] = auth_results
+    (ROOT / 'results/rolling-observations.json').write_text(json.dumps(REPORT, indent=2) + '\n')
     roll(OLD, 'rollback')
     assert nodes() == [[f'node{i}', '5.10.9'] for i in (1, 2, 3)]
     REPORT['userAfterRollback'] = ok(sql('SELECT current_user', user='goodwatch_auth', password='local-rehearsal-only-547'))
