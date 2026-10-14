@@ -16,6 +16,7 @@ import {
 	QuizCode,
 	RateCode,
 	ServiceData,
+	SearchData,
 	ShowsCode,
 	ShowsData,
 	TasteCode,
@@ -26,6 +27,7 @@ import {
 	type TvDiscoverScreens,
 	TvScreen,
 	type TvServiceScreens,
+	type TvSearchScreens,
 	type TvShowsScreens,
 	loadFirstScreens,
 } from "./TvScreen"
@@ -48,6 +50,7 @@ import type { TvEpisodeReport } from "./use-tv-episode"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
 import type { TvServiceReport } from "./use-tv-service"
+import type { TvSearchReport } from "./use-tv-search"
 import type { TvShowsReport } from "./use-tv-shows"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
@@ -173,7 +176,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	// them here (`DiscoverData`, mounted below).
 	const [list, setList] = useState<TvDiscoverReport | null>(null)
 	// The titles a list showed stay known after the list has left, so a title's screen names it at once.
-	// SEAM (slices 7 to 10): each app's list hands its titles to `setListed` as Discover's does.
+	// Discover's list and the search's results hand their titles to `setListed`.
 	const [listed, setListed] = useState<readonly TvKnownTitle[]>([])
 	const onList = useCallback((report: TvDiscoverReport | null) => {
 		setList(report)
@@ -199,6 +202,21 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		() => ({ tiles: serviceTiles, list: serviceList }),
 		[serviceTiles, serviceList],
 	)
+	// Search (slice 10). What is typed on its line is the scene's: the machine's context needs it for the key that
+	// searches for it. It starts empty every time the line is shown. The titles a search found are held by a
+	// component of the search screen's chunk, which reports them here (`SearchData`, mounted below) while the
+	// address names a query.
+	const [draft, setDraft] = useState("")
+	const asking = screen.name === "search" && !screen.query
+	useEffect(() => {
+		if (!asking) setDraft("")
+	}, [asking])
+	const [found, setFound] = useState<TvSearchReport | null>(null)
+	const onFound = useCallback((report: TvSearchReport | null) => {
+		setFound(report)
+		if (report?.cards.length) setListed(report.cards)
+	}, [])
+	const searched = screen.name === "search" && Boolean(screen.query)
 	const discover: TvDiscoverScreens = useMemo(
 		() => ({ art: pool?.choiceArt ?? {}, list }),
 		[pool, list],
@@ -250,13 +268,18 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		owed.current -= 1
 		revalidate()
 	}, [revalidator.state, location.key, revalidate])
-	// The titles of the list on screen. SEAM (slice 10): the search's follow.
-	const listTitles = choosing ? list?.titles : serviceList?.titles
+	// The titles of the list on screen.
+	const listTitles = choosing
+		? list?.titles
+		: searched
+			? found?.titles
+			: serviceList?.titles
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
 		() => ({
 			...tvContextOf(data, pool, wished),
 			titleName,
+			draft,
 			...(listTitles && { titles: listTitles }),
 			// The mini Explorer (slice 7): its islands, and an island's titles and hops, while it is on screen.
 			...explorerContext,
@@ -271,6 +294,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			pool,
 			wished,
 			titleName,
+			draft,
 			listTitles,
 			explorerContext,
 			tasteCtx,
@@ -323,6 +347,19 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		[google, say, leave, titleEffect, tasteEffect, episodeEffect],
 	)
 	const tv = useTv(ctx, onEffect)
+	// Typing puts the TV's focus on the key that searches for what is typed (the machine's `typed`).
+	const { dispatch } = tv
+	const onDraft = useCallback(
+		(text: string) => {
+			setDraft(text)
+			dispatch({ type: "typed" })
+		},
+		[dispatch],
+	)
+	const search: TvSearchScreens = useMemo(
+		() => ({ draft, onDraft, list: searched ? found : null }),
+		[draft, onDraft, searched, found],
+	)
 	useEffect(() => {
 		if (
 			tv.screen.name === "home" &&
@@ -344,6 +381,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		// On a service the title screen's, which a title opens. The service screen's own code is asked for at the
 		// first interaction, because a streaming key of the Remote opens it from any screen.
 		if (tv.screen.name === "service") TitleCode.load().catch(() => {})
+		// Slice 10: on search the title screen's too, which a found title opens.
+		if (tv.screen.name === "search") TitleCode.load().catch(() => {})
 		// Slice 8: Taste's while its tile has the focus, the quiz's on Taste.
 		if (tv.screen.name === "home" && tv.focused === "app:taste")
 			TasteCode.load().catch(() => {})
@@ -388,6 +427,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							explorer={explorer?.view}
 							taste={onTaste ? mine?.screens : undefined}
 							services={services}
+							search={search}
 							shows={shows}
 						/>
 					</>
@@ -423,6 +463,15 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					screen={screen}
 					member={data.member}
 					report={onServiceList}
+				/>
+			)}
+			{/* Search (slice 10): the search for the query in the address, asked for with OK. */}
+			{searched && (
+				<SearchData
+					screen={screen}
+					member={data.member}
+					scope={data.scope ?? null}
+					report={onFound}
 				/>
 			)}
 			{/* My shows (slice 9): what is new for a member's shows, and the Next episode of the show on screen. */}

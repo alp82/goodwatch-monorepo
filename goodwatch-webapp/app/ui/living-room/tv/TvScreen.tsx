@@ -2,13 +2,11 @@
 // Drawn on the canvas the room hands it (TvRoom.tsx), in either edition; before the window is measured, in both.
 //
 // The screen switch: home is part of the first view. Every other screen is a chunk of its own, asked for on first
-// use (screen-code.tsx), and each mini app's slice adds its entry here.
+// use (screen-code.tsx). Every screen the machine knows has its entry here.
 import { type ReactNode, useMemo, useRef } from "react"
 import {
 	Boot,
 	CornerBar,
-	Frame,
-	Item,
 	Layer,
 	Shade,
 	type TvView,
@@ -24,6 +22,7 @@ import {
 	QuizCode,
 	RateCode,
 	ServiceCode,
+	SearchCode,
 	ShowsCode,
 	TasteCode,
 	TitleCode,
@@ -49,6 +48,7 @@ import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvServiceReport } from "./use-tv-service"
+import type { TvSearchReport } from "./use-tv-search"
 import type { TvShowsReport } from "./use-tv-shows"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
@@ -69,6 +69,8 @@ export {
 export { ExplorerData } from "./screen-code"
 // "On <service>" (slice 6b).
 export { ServiceData } from "./screen-code"
+// Search (slice 10).
+export { SearchData } from "./screen-code"
 // My shows (slice 9).
 export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 
@@ -106,6 +108,8 @@ export type TvScreenProps = {
 	taste?: TvTasteScreens
 	/** The person's two streaming services: home's tiles after the apps, and the titles of the one on screen. */
 	services?: TvServiceScreens
+	/** Search (slice 10): what is typed, and the titles found for the query on screen. */
+	search?: TvSearchScreens
 	/** My shows: the member's shows, and what is new for them. */
 	shows?: TvShowsScreens
 }
@@ -126,6 +130,15 @@ export type TvServiceScreens = {
 	list: TvServiceReport | null
 }
 const NO_SERVICES: readonly TvService[] = []
+/** What search draws from. */
+export type TvSearchScreens = {
+	/** What is typed on the search screen's line, and where a change of it goes. */
+	draft: string
+	onDraft: (text: string) => void
+	/** The titles found for the query on screen; null until their data component has reported. */
+	list: TvSearchReport | null
+}
+const NOT_TYPING: TvSearchScreens = { draft: "", onDraft: () => {}, list: null }
 
 /** What mini Discover draws from. */
 export type TvDiscoverScreens = {
@@ -147,6 +160,7 @@ export function TvScreen({
 	explorer,
 	taste,
 	services,
+	search,
 	shows,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
@@ -210,6 +224,7 @@ export function TvScreen({
 								explorer={explorer}
 								taste={taste}
 								services={services}
+								search={search}
 								shows={shows}
 							/>
 						</Layer>
@@ -269,6 +284,7 @@ function ScreenOf({
 	explorer,
 	taste,
 	services,
+	search = NOT_TYPING,
 	shows,
 }: {
 	screen: Screen
@@ -279,6 +295,7 @@ function ScreenOf({
 	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
 	services?: TvServiceScreens
+	search?: TvSearchScreens
 	shows?: TvShowsScreens
 }): ReactNode {
 	const first = <Bare items={items} />
@@ -345,6 +362,18 @@ function ScreenOf({
 					first={first}
 				/>
 			)
+		// Slice 10: the line to type into without a query, the titles found with one.
+		case "search":
+			return (
+				<SearchCode.Screen
+					items={items}
+					screen={screen}
+					draft={search.draft}
+					onDraft={search.onDraft}
+					list={search.list}
+					first={first}
+				/>
+			)
 		// My shows (slice 9).
 		case "shows":
 			return (
@@ -355,9 +384,6 @@ function ScreenOf({
 					first={first}
 				/>
 			)
-		// SEAM (slice 10): search takes its entry here.
-		default:
-			return <NotBuilt screen={screen} items={items} />
 	}
 }
 
@@ -368,41 +394,5 @@ function Bare({ items }: { items: readonly string[] }) {
 			<Shade dim={0.82} />
 			<CornerBar items={items} />
 		</>
-	)
-}
-
-/**
- * A screen no slice has built yet. It draws the machine's items for it as plain keys, so the focus and the keys
- * work as on any screen, and its bar, so the way back works. The Expand key is not among them: its place is the
- * `Frame`'s corner (slice 11).
- */
-function NotBuilt({
-	screen,
-	items,
-}: { screen: Screen; items: readonly string[] }) {
-	const own = items.filter(
-		(item) => item !== "expand" && !item.startsWith("bar:"),
-	)
-	return (
-		<Frame name={SCREEN_NAME[screen.name]} items={items} dim={0.82}>
-			<div className="flex min-h-full flex-col justify-center gap-4">
-				<div className="text-[26px] text-white/70">
-					This screen is not built yet.
-				</div>
-				{own.length > 0 && (
-					<div className="flex flex-wrap gap-3">
-						{own.map((item) => (
-							<Item
-								key={item}
-								id={item}
-								className="tvc-btn flex h-[60px] items-center px-6 text-[22px]"
-							>
-								{item}
-							</Item>
-						))}
-					</div>
-				)}
-			</div>
-		</Frame>
 	)
 }

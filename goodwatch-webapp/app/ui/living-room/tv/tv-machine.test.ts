@@ -475,24 +475,28 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("search without a query: the ideas, and the typed query once it has two characters; no Search, no Expand", () => {
-		assert.deepEqual(items("tv=search"), [
+	it("search without a query: the ideas, and what is typed from its first character on; no Search, no Expand", () => {
+		const ideas = [
 			"idea:cozy mystery",
 			"idea:space adventure",
 			"idea:feel-good comedy",
 			"idea:mind-bending thriller",
+		]
+		assert.deepEqual(items("tv=search"), [...ideas, "bar:back", "bar:menu"])
+		// Spaces alone are nothing typed.
+		assert.deepEqual(items("tv=search", { ...guest, draft: "  " }), [
+			...ideas,
 			"bar:back",
 			"bar:menu",
 		])
-		assert.deepEqual(items("tv=search", { ...guest, draft: "h" }).length, 6)
-		assert.deepEqual(items("tv=search", { ...guest, draft: " he " }), [
-			"go",
-			"idea:cozy mystery",
-			"idea:space adventure",
-			"idea:feel-good comedy",
-			"bar:back",
-			"bar:menu",
-		])
+		// What is typed has its own key, in an idea's place, also while it is too short to search for.
+		for (const draft of ["h", " he ", "heist movies"])
+			assert.deepEqual(items("tv=search", { ...guest, draft }), [
+				"go",
+				...ideas.slice(0, 3),
+				"bar:back",
+				"bar:menu",
+			])
 	})
 
 	it("search with a query: up to four titles; no Search", () => {
@@ -1350,6 +1354,74 @@ describe("search", () => {
 		const t = run(at("tv=search", 1), typing, { type: "ok" })
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=search&q=heist")
+	})
+
+	it("typing puts the focus on the key that searches for what is typed, wherever it was", () => {
+		const typing = { ...guest, draft: "he" }
+		// The focus was moved to an idea, or to the bar, before the person typed.
+		for (const focus of ["idea:space adventure", "bar:menu", null]) {
+			const start = { ...at("tv=search", 1), focus }
+			const t = run(start, typing, { type: "typed" })
+			assert.equal(t.history, "none")
+			assert.deepEqual(t.effects, [])
+			assert.equal(focusedItem(t.state, typing), "go")
+			// OK then searches for what is typed, not for the idea.
+			assert.equal(run(t.state, typing, { type: "ok" }).url, "tv=search&q=he")
+		}
+	})
+
+	it("one character has its key, and OK on it searches for nothing", () => {
+		const typing = { ...guest, draft: "h" }
+		const start = run(at("tv=search", 1), typing, { type: "typed" }).state
+		assert.equal(focusedItem(start, typing), "go")
+		for (const action of [
+			{ type: "ok" },
+			{ type: "choose", item: "go" },
+		] as const) {
+			const t = run(start, typing, action)
+			assert.equal(t.history, "none")
+			assert.deepEqual(t.effects, [])
+			assert.deepEqual(t.state.screen, { name: "search", query: null })
+		}
+	})
+
+	it("with the line emptied again the focus is back where the screen starts, and an idea is chosen by OK", () => {
+		const start = run(at("tv=search", 1), guest, { type: "typed" }).state
+		assert.equal(focusedItem(start, guest), "idea:cozy mystery")
+		assert.equal(
+			run(start, guest, { type: "ok" }).url,
+			"tv=search&q=cozy+mystery",
+		)
+	})
+
+	it("typing is the search screen's alone", () => {
+		for (const [query, open] of [
+			["tv=search&q=heist", false],
+			["tv=discover", false],
+			["", false],
+			["tv=search", true],
+		] as const) {
+			const start = { ...at(query, 1), menuOpen: open }
+			assert.equal(run(start, guest, { type: "typed" }).state, start)
+		}
+	})
+
+	it("nothing searches without OK: a move, a focus and typing leave the address alone", () => {
+		const typing = { ...guest, draft: "heist" }
+		let state = at("tv=search", 1)
+		for (const action of [
+			{ type: "typed" },
+			{ type: "step", by: 1 },
+			{ type: "focus", item: "idea:space adventure" },
+			{ type: "step", by: -1 },
+			{ type: "typed" },
+		] as const) {
+			const t = run(state, typing, action)
+			assert.equal(t.history, "none")
+			assert.deepEqual(t.effects, [])
+			assert.deepEqual(t.state.screen, { name: "search", query: null })
+			state = t.state
+		}
 	})
 
 	it("an idea searches for its words", () => {

@@ -87,6 +87,12 @@ export type TvHomeData = {
 	 * country's catalog, so a guest's HTML is the same for every guest of a country.
 	 */
 	services: TvService[]
+	/**
+	 * A member's country and saved services, as the Discover page's loader gives them to its search: the TV's
+	 * search narrows its ranking to them as the page does (tv-search.ts). A guest's are in their browser, and
+	 * nothing of them is in the HTML.
+	 */
+	scope?: { country: string; services: number[] }
 }
 
 /** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */

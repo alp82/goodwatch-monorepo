@@ -185,11 +185,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		params.get("reset") === "1",
 	)
 	await harness.ready()
-	const home = await loadMemberHome(
-		await getMemberViewerContext(HARNESS_MEMBER, "US"),
-		HARNESS_TASTE,
-		now,
-	)
+	const viewer = await getMemberViewerContext(HARNESS_MEMBER, "US")
+	const home = await loadMemberHome(viewer, HARNESS_TASTE, now)
 	return json<TvHomeData>({
 		member: true,
 		startTitles: START_TITLES,
@@ -203,6 +200,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			start: home.shows.start.map((show) => paint(show, show.id)),
 		},
 		services: tvServices(savedServices(params.get("services")), SERVICES),
+		// The member's country and saved services, as the TV's own loader gives them to its search (slice 10).
+		scope: { country: viewer.country, services: viewer.services },
 	})
 }
 

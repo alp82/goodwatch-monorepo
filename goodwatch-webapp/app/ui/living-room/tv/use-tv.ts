@@ -21,8 +21,10 @@ import { focusKey, tabFocusMemory } from "./focus-memory"
 import type { RoomKey, RoomTv } from "./room-tv"
 import {
 	TV_CANVAS_ATTR,
+	TV_INPUT_ATTR,
 	TV_ITEM_ATTR,
 	bringIntoView,
+	inputElement,
 	itemElement,
 	measureItems,
 	roomElement,
@@ -53,6 +55,16 @@ const leaves = (effect: TvEffect) =>
 
 const reducedMotion = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+/** The keys that stay the Remote's while the search screen's line has the browser's focus. Every other key types. */
+const REMOTE_KEYS_WHILE_TYPING = new Set([
+	"ArrowUp",
+	"ArrowDown",
+	"ArrowLeft",
+	"ArrowRight",
+	"Enter",
+	"Escape",
+])
 
 export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	const [params] = useSearchParams()
@@ -193,6 +205,10 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		if (!el) return
 		bringIntoView(el, !reducedMotion())
 		const active = document.activeElement
+		// The search screen's line keeps the browser's focus while the TV's focus moves: what is typed goes on
+		// landing in it, and a phone's keyboard stays open.
+		if (active instanceof HTMLElement && active.closest(`[${TV_INPUT_ATTR}]`))
+			return
 		const held =
 			active instanceof HTMLElement && active.closest(`[${TV_CANVAS_ATTR}]`)
 		// An item that had the browser's focus and left with its screen leaves the focus on the page's body.
@@ -249,11 +265,21 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 
 	// ---- The keyboard works like the Remote: the arrows move, Enter is OK, Escape and Backspace are Back, H is
 	// Home, M is the menu, S is search ("/" is the site's own search). While the set is off, any key turns it on.
-	// SEAM (slice 10): on the search screen, typing goes to its input, which the first guard leaves alone.
+	//
+	// On the search screen the keyboard types. Its line is a real input: while it has the browser's focus, only the
+	// arrows, Enter and Escape are the Remote's, and every other key is the input's own. With the browser's focus
+	// anywhere else (a key of the Remote was clicked, an idea was reached with Tab), a key that types gives the
+	// line the focus first and then lands in it, so H, M and S are letters there.
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			const target = e.target as HTMLElement
-			if (target.closest("input, textarea, select, [contenteditable]")) return
+			const typing = Boolean(target.closest(`[${TV_INPUT_ATTR}]`))
+			if (typing) {
+				// Shift with an arrow selects, and a key that ends a composition is the keyboard's own.
+				if (!REMOTE_KEYS_WHILE_TYPING.has(e.key) || e.shiftKey || e.isComposing)
+					return
+			} else if (target.closest("input, textarea, select, [contenteditable]"))
+				return
 			if (e.metaKey || e.ctrlKey || e.altKey) return
 			// Buttons have their own Enter and Space.
 			if ((e.key === "Enter" || e.key === " ") && target.closest("button, a"))
@@ -263,6 +289,13 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			if (latest.current.state.power === "off") {
 				press({ type: "power", on: true })
 				e.preventDefault()
+				return
+			}
+			// What is typed belongs to the line of the screen on show. Backspace deletes there while there is
+			// something to delete; on an empty line it is Back, as everywhere.
+			const line = typing ? null : inputElement()
+			if (line && (e.key.length === 1 || (e.key === "Backspace" && line.value))) {
+				line.focus({ preventScroll: true })
 				return
 			}
 			switch (e.key) {

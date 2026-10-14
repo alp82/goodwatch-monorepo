@@ -23,7 +23,7 @@ const rendered = JSON.parse(
 	aboutFirst: string
 	menu: { guest: Editions; member: Editions }
 	menuOpen: string
-	notBuilt: string
+	lazy: Record<"search" | "results" | "shows", string>
 	booting: string
 	toast: Editions
 	room: { guest: string; again: string; member: string; off: string }
@@ -31,7 +31,6 @@ const rendered = JSON.parse(
 		| "homeGuest"
 		| "homeMember"
 		| "about"
-		| "notBuilt"
 		| "menuGuest"
 		| "menuMember",
 		string[]
@@ -99,7 +98,7 @@ test("the home is the page's H1, the same sentence for a guest and a member, onc
 	// No other screen has one.
 	for (const html of [
 		rendered.about.desktop,
-		rendered.notBuilt,
+		...Object.values(rendered.lazy),
 		rendered.booting,
 	])
 		assert.equal(count(html, "<h1"), 0)
@@ -187,11 +186,17 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 	assert.deepEqual(ids(rendered.menuOpen), rendered.items.homeGuest)
 })
 
-test("a screen no slice has built yet has its bar, and the Expand key's place is reserved", () => {
-	const built = rendered.items.notBuilt.filter((item) => item !== "expand")
-	assert.deepEqual(ids(rendered.notBuilt), built)
-	assert.match(rendered.notBuilt, /data-tv-expand-place/)
-	assert.match(rendered.notBuilt, />Search</)
+test("every screen has its own code: before it is there the server draws the screen's bar alone", () => {
+	// No Search key on the search screens: the person is there.
+	assert.deepEqual(ids(rendered.lazy.search), ["bar:back", "bar:menu"])
+	assert.deepEqual(ids(rendered.lazy.results), ["bar:back", "bar:menu"])
+	assert.deepEqual(ids(rendered.lazy.shows), [
+		"bar:back",
+		"bar:search",
+		"bar:menu",
+	])
+	for (const html of Object.values(rendered.lazy))
+		assert.ok(!html.includes("not built"))
 })
 
 test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {

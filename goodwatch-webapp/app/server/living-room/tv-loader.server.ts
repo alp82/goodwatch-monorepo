@@ -110,8 +110,12 @@ export async function loadTvHome(request: Request) {
 		.catch(() => loadTvServices(country))
 	const own = (async () => {
 		const [taste, v] = await Promise.all([loadMemberTaste(user.id), viewer])
-		return await loadMemberHome(v, taste)
-	})().catch((error): Pick<TvHomeData, "tonight" | "shows"> => {
+		return {
+			...(await loadMemberHome(v, taste)),
+			// What the Discover page's loader hands its search (`searchScope`), for the TV's.
+			scope: { country: v.country, services: v.services },
+		}
+	})().catch((error): Pick<TvHomeData, "tonight" | "shows" | "scope"> => {
 		console.error(
 			"The TV: loading a member's Tonight and My shows failed",
 			error,
