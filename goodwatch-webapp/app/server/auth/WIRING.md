@@ -115,6 +115,6 @@ and session issuance. Password updates and session sweeps are separate writes.
 The MCP build must preserve #534's connected-app policy when adding provider
 session-delete hooks, and must enforce its own JWT/client revocation policy.
 
-The wiring manifest adds core's OAuth-state `verification.delete(id)` call and
+The wiring manifest adds core's OAuth-state `verification.delete(identifier)` call and
 its delete-hook pre-read. It uses the existing adapter deletion path; the callback
 regression covers state validation, PKCE, successful sign-in and replay rejection.

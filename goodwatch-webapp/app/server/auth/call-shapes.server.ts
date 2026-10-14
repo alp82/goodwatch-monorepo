@@ -7,7 +7,7 @@ const rules: Record<string, Record<string, string[]>> = {
 	user: { findOne: ["id", "email"], update: ["id", "email"], findMany: ["id"], delete: ["id"], incrementOne: ["id+confirmationDigest"] },
 	account: { findMany: ["providerId+accountId", "userId", "id"], findOne: ["userId+providerId+accountId"], updateMany: ["userId+providerId+accountId"], update: ["id"], delete: ["id"], deleteMany: ["userId"], incrementOne: ["id+password"] },
 	session: { findOne: ["token", "id"], update: ["token"], findMany: ["token", "userId", "token:in", "userId+expiresAt:gt", "token:in+expiresAt:gt", "token+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
-	verification: { findOne: ["id"], findMany: ["identifier", "expiresAt:lt"], update: ["identifier"], consumeOne: ["id"], delete: ["id"], deleteMany: ["identifier", "expiresAt:lt"] },
+	verification: { findOne: ["id"], findMany: ["identifier", "expiresAt:lt"], update: ["identifier"], consumeOne: ["id"], delete: ["identifier"], deleteMany: ["identifier", "expiresAt:lt"] },
 	jwks: { findMany: [""], findOne: ["id"] },
 	oauthClient: { findOne: ["clientId"], findMany: ["referenceId", "userId", "clientId:in"], update: ["clientId", "clientId+clientDiscoveryId"], delete: ["clientId"] },
 	oauthResource: { findOne: ["identifier"], findMany: ["", "identifier:in"], update: ["identifier"], delete: ["identifier"] },
