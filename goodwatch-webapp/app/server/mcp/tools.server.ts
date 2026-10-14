@@ -34,6 +34,7 @@ export interface ReadArgs {
 	cursor?: string
 	limit?: number
 	query?: string
+	ranked?: boolean
 	filter?: string
 	title_id?: string
 	title_name?: string
@@ -49,9 +50,13 @@ const definitions: {
 		name: "search_titles",
 		title: "Search all catalog titles",
 		description:
-			"Cheap catalog name lookup of all titles, separate from your library. Does not run ranked search or spend its daily budget.",
+			"Search all catalog titles, separate from your library. Cheap name lookup by default; ranked=true explicitly opts into ranked search: 20 uncached searches per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
-			.object({ query: z.string().trim().max(120).default(""), ...paging })
+			.object({
+				query: z.string().trim().max(120).default(""),
+				ranked: z.boolean().default(false),
+				...paging,
+			})
 			.strict(),
 	},
 	{

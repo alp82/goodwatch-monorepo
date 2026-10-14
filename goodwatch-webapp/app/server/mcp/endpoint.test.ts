@@ -221,6 +221,22 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 	}
 })
 
+test("Ranked catalog search is an explicit opt-in and documents its member quota", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	const search = tools.find(
+		(tool: { name: string }) => tool.name === "search_titles",
+	)
+	assert.equal(search.inputSchema.properties.ranked.type, "boolean")
+	assert.equal(search.inputSchema.properties.ranked.default, false)
+	assert.match(search.description, /20.*UTC day/)
+	assert.match(search.description, /paging.*free/i)
+})
+
 test("Write scopes expose seven writes with conservative destructive hints and no approval-token schema", async () => {
 	const handle = createReadMcpHandler({
 		resource,
