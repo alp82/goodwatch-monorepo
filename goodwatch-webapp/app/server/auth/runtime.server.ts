@@ -3,7 +3,7 @@ import type { User } from "@supabase/auth-js"
 import type { Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 import { onShutdown } from "../lifecycle.server.ts"
-import { createGoodwatchAuth } from "./auth.server.ts"
+import { createGoodwatchAuth, jsonResponse } from "./auth.server.ts"
 import { crateAuthTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
@@ -73,13 +73,19 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 			response = await (await getBetterAuth()).handler(request)
 		} catch {
 			captureMessage("Auth request failed closed", "error")
-			response = Response.json(
+			response = jsonResponse(
 				{ message: "Sign-in is temporarily unavailable." },
 				{ status: 503 },
 			)
 		}
 	response.headers.set("Cache-Control", "private, no-store")
 	return response
+}
+// remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
+function setCookiesOf(headers: Headers): string[] {
+	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
+	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
+	return raw?.["set-cookie"] ?? []
 }
 export async function resolveBetterAuthSession(cookieHeader: string | null) {
 	const auth = await getBetterAuth()
@@ -111,7 +117,7 @@ export async function resolveBetterAuthSession(cookieHeader: string | null) {
 		: null
 	return {
 		user,
-		setCookies: response.headers.getSetCookie(),
+		setCookies: setCookiesOf(response.headers),
 		source: "server" as const,
 	}
 }

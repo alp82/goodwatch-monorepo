@@ -3,6 +3,9 @@ import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
 import { authPayloadCodec } from "./payload-codec.server.ts"
+// Not the global fetch: remix-serve replaces it with @remix-run/web-fetch (no v3_singleFetch), which fails every
+// second request to CrateDB's HTTP endpoint with ECONNRESET (seen with CrateDB 5.10.12 on Node 24.22 and 26.8).
+import { fetch } from "undici"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
 export type AuthSql = (statement: string, args?: unknown[]) => Promise<SqlResult>
@@ -35,7 +38,7 @@ export function crateAuthTransport(urls: string[], timeoutMs = 15_000, credentia
 				const response = await fetch(`${urls[next++ % urls.length].replace(/\/$/, "")}/_sql`, {
 					method: "POST", headers, body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(timeoutMs),
 				})
-				const result = await response.json()
+				const result: any = await response.json()
 				if (!response.ok || result.error) {
 					// Cancellation and unknown server codes are not proof of non-application.
 					const refused = response.status === 401 || response.status === 403 || response.status >= 400 && response.status < 500 && [4000, 4041, 4043, 4091].includes(result.error?.code)
