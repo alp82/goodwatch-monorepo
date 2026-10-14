@@ -1,10 +1,6 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
-import { assetUrl } from "~/utils/asset-url"
-import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
-	Suspense,
 	createContext,
-	lazy,
 	useContext,
 	useEffect,
 	useRef,
@@ -23,57 +19,22 @@ import {
 	ArrowPathIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid";
-import { Highlight, type Row } from "./search-model";
+import { type Row } from "./search-model";
 import { foundSoFar, selectReading, showsNoResults } from "./search-partial";
 import {
 	SEARCH_PAGE_UNAVAILABLE,
-	offerRetry,
 	preloadSearchRequest,
 	requestSearch,
 } from "./search-client";
 import type { SearchBatch } from "~/server/combined-search/search.server";
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server";
-import { useGenres } from "~/routes/api.genres.all";
 import {
 	type SearchFilters,
 	matchesRow,
 	searchFiltersKey,
 } from "~/server/combined-search/search-filters";
-import type { StreamingPreset } from "~/server/discover.server";
 import { useUserSettings } from "~/routes/api.user-settings.get";
-import type { TitleType } from "~/ui/filter/sections/SectionType";
-import { discoverFilters } from "~/server/types/discover-types";
-import placeholder from "~/img/placeholder-poster.png";
-import { useFeature } from "~/hooks/useFeature";
-import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame";
 import { titlePath } from "~/utils/helpers";
-import { reloadOnStaleChunk } from "~/utils/stale-chunk";
-
-// The provider below is on every page, but the filter sections and the people results are only on screen inside an
-// open search. They load with it, so that a page that never opens the search doesn't download them.
-const SectionGenre = lazy(
-	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionGenre")),
-);
-const SectionStreaming = lazy(
-	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionStreaming")),
-);
-const SectionRelease = lazy(
-	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionRelease")),
-);
-const SectionType = lazy(
-	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionType")),
-);
-// The cast keeps the menu's type parameter, which `lazy` drops.
-const AddFilterMenu = lazy(
-	reloadOnStaleChunk(() => import("~/ui/filter/AddFilterMenu")),
-) as unknown as typeof import("~/ui/filter/AddFilterMenu").default;
-const SearchPeople = lazy(
-	reloadOnStaleChunk(() =>
-		import("./SearchPeople").then((module) => ({
-			default: module.SearchPeople,
-		})),
-	),
-);
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -90,14 +51,10 @@ const MAX_QUERY_LENGTH = 512;
 const CACHED_BATCHES = 6;
 // Give up restoring the scroll position after this long, when the page never reaches it.
 const SCROLL_RESTORE_MS = 3000;
-// How many reasons a result card reveals on hover or focus.
-const RESULT_REASONS = 3;
 
 type Batch = SearchBatch & { cacheKey: string };
 const path = "/search";
 const storage = "goodwatch_search_journey_v1";
-const control =
-	"rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300 disabled:opacity-40";
 const refinements = [
 	"type",
 	"lesserKnown",
@@ -173,29 +130,18 @@ function useController() {
 	};
 	const resultsHref = (changes: Record<string, string | null> = {}) =>
 		`${path}?${makeParams(changes)}`;
-	// With the new filter bar, Search is Discover's search mode: the header's box only holds the text until Enter,
-	// which opens Discover with the query.
-	const discoverSearch = useFeature("filterBar");
+	// Search is Discover's search mode: the header's box only holds the text until Enter, which opens Discover with
+	// the query.
 	const changeQuery = (value: string) => {
 		editing.current = value;
 		setDraft(value);
 		setFocusedKey(null);
-		if (discoverSearch) return;
-		navigate(resultsHref({ q: value, page: null, allTitles: null }), {
-			replace: true,
-			preventScrollReset: location.pathname === path,
-		});
 	};
 	const commit = (value: string) => {
-		if (discoverSearch) {
-			const text = value.trim();
-			setOpen(false);
-			input.current?.blur();
-			navigate(text ? `/discover?q=${encodeURIComponent(text)}` : "/discover");
-			return;
-		}
-		changeQuery(value);
-		setRequested(value);
+		const text = value.trim();
+		setOpen(false);
+		input.current?.blur();
+		navigate(text ? `/discover?q=${encodeURIComponent(text)}` : "/discover");
 	};
 
 	useEffect(() => {
@@ -601,7 +547,6 @@ function useController() {
 				: "Search for a title, a person, or describe what you want to watch.";
 	return {
 		active,
-		discoverSearch,
 		q,
 		draft,
 		setDraft,
@@ -677,21 +622,9 @@ function ReadingChips() {
 	const j = useSearchJourney()!;
 	const row = "flex flex-wrap items-center gap-1 pt-2 min-h-8 text-xs";
 	if (!j.chips.length) {
-		const query = j.draft.trim();
-		const empty = j.discoverSearch
-			? "Describe a mood, a story, or a title, then press Enter."
-			: query.length < MIN_QUERY_LENGTH
-				? "Describe a mood, a story, or a title. The search shows what it understood here."
-				: j.loading
-					? "Reading your request…"
-					: j.batch?.q === j.q
-						? "Title and name matches only for this search."
-						: "Waiting for the search to start…";
 		return (
-			<p
-				className={`${row} text-gray-500 ${j.loading && query.length >= MIN_QUERY_LENGTH ? "animate-pulse motion-reduce:animate-none" : ""}`}
-			>
-				{empty}
+			<p className={`${row} text-gray-500`}>
+				Describe a mood, a story, or a title, then press Enter.
 			</p>
 		);
 	}
@@ -733,7 +666,6 @@ export function JourneyHeader() {
 						return;
 					}
 					j.commit(j.draft);
-					if (!j.discoverSearch) j.setOpen(true);
 				}}
 			>
 				{/* Open, the box grows downward and shows the reading chips under the input. */}
@@ -822,337 +754,10 @@ function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 		</Link>
 	);
 }
-function JourneyList() {
-	const j = useSearchJourney()!;
-	const posterUrl = (r: Row) =>
-		r.poster
-			? tmdbImageUrl(r.poster, "w342")
-			: assetUrl(placeholder);
-	const meta = (r: Row) => `${r.year} · ${r.type}`;
-	const active = (r: Row) =>
-		j.currentKey === r.key || j.focusedRow?.key === r.key;
-	return (
-		<section aria-label="Search results" className="min-w-0">
-			<div
-				role="status"
-				className={`flex flex-wrap items-center gap-2 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
-			>
-				{j.loading && (
-					<ArrowPathIcon
-						aria-hidden="true"
-						className="h-5 w-5 shrink-0 animate-spin motion-reduce:animate-none"
-					/>
-				)}
-				<span>{j.status}</span>
-				<HiddenResultsLink />
-				{/* Not while a search is running: Retry would cancel it and start over. */}
-				{!j.loading &&
-				(j.batch?.errors.length || offerRetry(j.status) || j.lateFailure) ? (
-					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
-						Retry
-					</button>
-				) : null}
-			</div>
-			{j.batch?.q === j.q && (
-				<Suspense fallback={null}>
-					<SearchPeople
-						people={j.batch.people}
-						scope={j.batch.creditScope}
-						allTitlesHref={j.resultsHref({ q: j.q, page: null, allTitles: "1" })}
-					/>
-				</Suspense>
-			)}
-			{/* Columns of 2, 4, and 5 all divide the page size of 20, so a full page
-			    always ends on a complete row. */}
-			<ul
-				aria-busy={j.loading}
-				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 py-2"
-			>
-				{j.pageRows.map((r) => {
-					const reasons = (r.discovery?.reasons ?? [])
-						.filter((x) => x.kind !== "mismatch")
-						.slice(0, RESULT_REASONS);
-					// Reasons stay hidden until hover or keyboard focus. The title block
-					// rises and the reasons unfold beneath it. Rows without offer evidence
-					// stay quiet: retrieval already matched them to the selected services.
-					const body = (
-						<>
-							<img
-								loading="lazy"
-								decoding="async"
-								src={posterUrl(r)}
-								alt=""
-								className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-105 group-focus-within:scale-105"
-							/>
-							<div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent transition-colors duration-300 group-hover:from-black/95 group-hover:via-black/70 group-focus-within:from-black/95 group-focus-within:via-black/70" />
-							<div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
-								<div className="transition-transform duration-300 ease-out motion-reduce:transition-none group-hover:-translate-y-1 group-focus-within:-translate-y-1">
-									<h3 className="text-sm font-bold text-white leading-tight line-clamp-2">
-										<Highlight text={r.title} query={j.batch?.q ?? ""} />
-									</h3>
-									<p className="text-[11px] text-gray-300 truncate">{meta(r)}</p>
-								</div>
-								<div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none group-hover:grid-rows-[1fr] group-focus-within:grid-rows-[1fr]">
-									<ul className="min-h-0 overflow-hidden space-y-0.5 text-[11px] text-cyan-200 opacity-0 translate-y-2 transition-all duration-300 delay-75 motion-reduce:transition-none group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
-										{r.lexical > 0 && r.match.endsWith("(original name)") && (
-											<li className="truncate text-amber-200">Matches original name</li>
-										)}
-										{reasons.map((x) => (
-											<li key={x.text} className="truncate">
-												{x.text}
-											</li>
-										))}
-										{j.mode !== "all" && j.watchable(r) && (
-											<li className="truncate text-gray-300">Current matching offer</li>
-										)}
-									</ul>
-								</div>
-							</div>
-						</>
-					);
-					const card =
-						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
-					return (
-						<li key={r.key} className="min-w-0">
-							{/* The title actions sit along the top: the bottom holds the title and its reasons. */}
-							<TitleActionsFrame
-								media={{
-									mediaType: r.type === "show" ? "show" : "movie",
-									details: {
-										tmdb_id: Number(r.key.split(":")[1]),
-										title: r.title,
-									},
-								}}
-								placement="top"
-							>
-								<Link
-									prefetch="intent"
-									data-result={r.key}
-									to={j.detailHref(r)}
-									onClick={j.remember}
-									className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
-								>
-									{body}
-								</Link>
-							</TitleActionsFrame>
-						</li>
-					);
-				})}
-			</ul>
-			{j.rows.length > 0 && (
-				<nav
-					aria-label="Search pages"
-					className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 py-4 text-sm"
-				>
-					<span className="text-gray-400">
-						{(j.page - 1) * 20 + 1}–{Math.min(j.page * 20, j.rows.length)} of{" "}
-						{j.rows.length}
-					</span>
-					<div className="flex items-center gap-3">
-						{j.page > 1 && (
-							<Link
-								prefetch="intent"
-								className={control}
-								to={j.resultsHref({
-									q: j.batch?.q ?? j.q,
-									page: String(j.page - 1),
-								})}
-							>
-								Previous page
-							</Link>
-						)}
-						<span>
-							Page {j.page} of {j.pageCount}
-						</span>
-						{j.page < j.pageCount && (
-							<Link
-								prefetch="intent"
-								className={control}
-								to={j.resultsHref({
-									q: j.batch?.q ?? j.q,
-									page: String(j.page + 1),
-								})}
-							>
-								Next page
-							</Link>
-						)}
-					</div>
-				</nav>
-			)}
-			{j.noResults && (
-				<div className="py-6 text-gray-400">
-					{j.batch
-						? j.filtersActive
-							? "No titles match these filters. Use the link above to see the results without filters."
-							: "No results for this search. Try a different request."
-						: "Try Heat, a favorite actor, or a description such as ‘tense but not bleak’."}
-				</div>
-			)}
-		</section>
-	);
-}
-type FilterKey = "type" | "streaming" | "genre" | "release"
-const filterKeys: FilterKey[] = ["type", "streaming", "genre", "release"]
-// Every search filter renders the matching Discover section, so both pages
-// share one look. Only the URL parameters differ.
-export function JourneyFilters() {
-	// With the new filter bar, Discover's search mode has the filters; these chips don't render.
-	if (useFeature("filterBar")) return null
-	return (
-		<Suspense fallback={null}>
-			<JourneyFilterChips />
-		</Suspense>
-	)
-}
-function JourneyFilterChips() {
-	const j = useSearchJourney()!
-	const [added, setAdded] = useState<FilterKey[]>([])
-	const [editing, setEditing] = useState<FilterKey | null>(null)
-	const { data: genres = [] } = useGenres()
-	const hasValue: Record<FilterKey, boolean> = {
-		type: j.setting("type", "all") !== "all",
-		streaming: Boolean(j.setting("streamingPreset")),
-		genre: Boolean(j.setting("genre")),
-		release: Boolean(j.setting("minYear") || j.setting("maxYear")),
-	}
-	const visible = filterKeys.filter((k) => added.includes(k) || hasValue[k])
-	const reset = () => {
-		j.update(
-			Object.fromEntries(
-				refinements.filter((k) => k !== "country").map((k) => [k, null]),
-			),
-		)
-		setAdded([])
-		setEditing(null)
-	}
-	// Closing the editor keeps the chip only when the filter has a value.
-	const close = (field: FilterKey) => {
-		setAdded((a) => a.filter((k) => k !== field))
-		setEditing(null)
-	}
-	const section = (field: FilterKey) => ({
-		editing: editing === field,
-		onEdit: () => setEditing(field),
-		onClose: () => close(field),
-	})
-	return (
-		<div aria-label="Search filters" className="relative">
-			<div className="flex flex-wrap gap-4 mb-3 text-sm text-gray-300">
-				<label className="flex items-center gap-2">
-					<input
-						type="checkbox"
-						checked={j.setting("lesserKnown") === "1"}
-						onChange={(e) =>
-							j.update({ lesserKnown: e.target.checked ? "1" : null })
-						}
-					/>
-					Include lesser-known titles
-				</label>
-			</div>
-			<div className="flex flex-wrap items-stretch gap-1 mb-3 text-sm">
-				{visible.includes("type") && (
-					<SectionType
-						value={hasValue.type ? (j.setting("type") as TitleType) : undefined}
-						onChange={(type) => j.update({ type: type ?? null })}
-						{...section("type")}
-					/>
-				)}
-				{visible.includes("streaming") && (
-					<SectionStreaming
-						params={{
-							streamingPreset:
-								(j.setting("streamingPreset") as StreamingPreset) || undefined,
-							withStreamingProviders: j.setting("services"),
-							country: j.setting("country"),
-						}}
-						presets={["mine", "custom"]}
-						defaultPreset="custom"
-						onChange={(changes) =>
-							j.update({
-								...("streamingPreset" in changes
-									? { streamingPreset: changes.streamingPreset ?? null }
-									: {}),
-								...("withStreamingProviders" in changes
-									? { services: changes.withStreamingProviders || null }
-									: {}),
-								...(changes.country ? { country: changes.country } : {}),
-							})
-						}
-						{...section("streaming")}
-					/>
-				)}
-				{visible.includes("genre") && (
-					<SectionGenre
-						params={{
-							withGenres: genres
-								.filter((g) => j.setting("genre").split(",").includes(g.name))
-								.map((g) => g.id)
-								.join(","),
-						}}
-						onChange={({ withGenres }) =>
-							j.update({
-								genre:
-									genres
-										.filter((g) => withGenres.split(",").includes(String(g.id)))
-										.map((g) => g.name)
-										.join(",") || null,
-							})
-						}
-						{...section("genre")}
-					/>
-				)}
-				{visible.includes("release") && (
-					<SectionRelease
-						params={{
-							minYear: j.setting("minYear") || undefined,
-							maxYear: j.setting("maxYear") || undefined,
-						}}
-						initializeOnEdit={false}
-						onChange={(years) =>
-							j.update({
-								minYear: years.minYear || null,
-								maxYear: years.maxYear || null,
-							})
-						}
-						{...section("release")}
-					/>
-				)}
-				<AddFilterMenu
-					options={filterKeys
-						.filter((k) => !visible.includes(k))
-						.map((k) => ({
-							key: k,
-							label: discoverFilters[k].label,
-							color: discoverFilters[k].color,
-						}))}
-					onSelect={(field) => {
-						setAdded((a) => [...a, field])
-						setEditing(field)
-					}}
-				/>
-				{visible.length > 0 && (
-					<button
-						type="button"
-						className="text-xs text-gray-400 px-2 cursor-pointer hover:text-white"
-						onClick={reset}
-					>
-						Reset
-					</button>
-				)}
-			</div>
-			{j.watch.isError && (
-				<p className="mb-3 text-xs text-amber-200">
-					Availability could not be checked; results remain visible.
-				</p>
-			)}
-		</div>
-	)
-}
 export function JourneyNavigation({
 	current,
 }: { current: { tmdb_id: number; media_type: string; title: string } }) {
 	const j = useSearchJourney()!;
-	const [expanded, setExpanded] = useState(false);
 	if (!j.batch || !j.q || (!j.sequence.length && !j.filtersActive)) return null;
 	return (
 		<nav
@@ -1206,12 +811,6 @@ export function JourneyNavigation({
 						)}
 					</div>
 					<HiddenResultsLink titlesOnly />
-					<button
-						onClick={() => setExpanded((x) => !x)}
-						className="text-gray-300"
-					>
-						Refine {expanded ? "−" : "+"}
-					</button>
 				</div>
 				{j.index < 0 && (
 					<p className="text-xs text-gray-400 mt-2">
@@ -1219,25 +818,7 @@ export function JourneyNavigation({
 						title.
 					</p>
 				)}
-				{expanded && (
-					<div className="mt-4">
-						<JourneyFilters />
-					</div>
-				)}
 			</div>
 		</nav>
-	);
-}
-export function JourneyResultsPage() {
-	return (
-		<div className="search-private ph-no-capture sentry-mask mx-auto max-w-7xl p-4 sm:p-6 pb-36">
-			<h1 className="text-3xl text-white mt-2 mb-5">Find your next watch</h1>
-			<div className="mb-4">
-				<JourneyFilters />
-			</div>
-			<div className="min-w-0">
-				<JourneyList />
-			</div>
-		</div>
 	);
 }

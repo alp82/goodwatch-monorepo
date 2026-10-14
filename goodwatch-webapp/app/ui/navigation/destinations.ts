@@ -38,19 +38,15 @@ export interface Destination {
 	available: boolean
 }
 
-/**
- * Where a search for a query goes: Discover's search mode while the new filter bar is on for the viewer (`/search`
- * redirects there too), else the search page.
- */
-export function searchHref(q: string, features: EnabledFeatures): string {
+/** Where a search for a query goes: Discover's search mode (`/search` redirects there too). */
+export function searchHref(q: string): string {
 	const text = q.trim()
-	const path = features.filterBar ? "/discover" : "/search"
-	return text ? `${path}?q=${encodeURIComponent(text)}` : path
+	return text ? `/discover?q=${encodeURIComponent(text)}` : "/discover"
 }
 
-/** The query of the search on screen (Discover's search mode or the search page), for prefilling a search field. */
+/** The query of the search on screen (Discover's search mode), for prefilling a search field. */
 export function currentSearchQuery(pathname: string, search: string): string {
-	return pathname === "/search" || pathname.startsWith("/discover")
+	return pathname.startsWith("/discover")
 		? (new URLSearchParams(search).get("q") ?? "")
 		: ""
 }
@@ -150,7 +146,6 @@ const PREFIXES: [string, DestinationKey][] = [
 	["/watch-next", "watchNext"],
 	["/wishlist", "watchNext"],
 	["/discover", "discover"],
-	["/search", "discover"],
 	["/taste", "taste"],
 	["/explorer", "explorer"],
 	["/movies", "movies"],

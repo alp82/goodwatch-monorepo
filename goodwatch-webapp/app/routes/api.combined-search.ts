@@ -3,7 +3,6 @@ import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch, type SearchBatch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
-import { getFeatureMode } from "~/server/features.server";
 import { runsSearch } from "~/server/role.server";
 import {
 	searchAdmission,
@@ -92,13 +91,12 @@ export async function action({ request }: ActionFunctionArgs) {
 			},
 		);
 		accountId.catch(() => {});
-		// With the new filter bar, a member's rows carry their taste match and For you movement (see taste-rows).
+		// A member's rows carry their taste match and For you movement (see taste-rows).
 		// The taste loads while the search runs. `forYou` is the switch; the rows keep the ranking's order.
 		const taste = searchTaste(accountId);
 		taste.catch(() => {});
 		const forYou = body.forYou === true;
-		const fullList =
-			body.discover === true && getFeatureMode("filterBar") !== "off";
+		const fullList = body.discover === true;
 		// Newline-delimited JSON: a "reading" line as soon as the interpretation is known,
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.

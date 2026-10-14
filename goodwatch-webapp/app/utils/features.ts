@@ -2,7 +2,6 @@
 // (features.server.ts reads their environment variables) and the browser
 // (useFeature reads what the root loader resolved for the viewer).
 export const FEATURES = [
-	"filterBar",
 	"watchNext",
 	"tastePage",
 	"navigation",
@@ -15,7 +14,6 @@ export type Feature = (typeof FEATURES)[number]
 export type EnabledFeatures = Record<Feature, boolean>
 
 export const NO_FEATURES: EnabledFeatures = {
-	filterBar: false,
 	watchNext: false,
 	tastePage: false,
 	navigation: false,

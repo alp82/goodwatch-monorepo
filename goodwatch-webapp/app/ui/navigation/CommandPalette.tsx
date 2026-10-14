@@ -118,7 +118,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: "search",
 				label: `Search for “${trimmed}”`,
-				href: searchHref(trimmed, features),
+				href: searchHref(trimmed),
 				icon: MagnifyingGlassIcon,
 			})
 		for (const title of titles)
@@ -136,7 +136,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: "more",
 				label: `Show ${more.toLocaleString("en-US")} more`,
-				href: searchHref(trimmed, features),
+				href: searchHref(trimmed),
 				compact: true,
 				icon: MagnifyingGlassIcon,
 				title: true,

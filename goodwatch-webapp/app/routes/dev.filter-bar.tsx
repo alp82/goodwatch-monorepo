@@ -1,5 +1,5 @@
 // Development only: the shared filter bar on the real catalog, before Discover uses it. The bar binds to this page's
-// URL, counts come from /api/discover/results (so REC_FILTER_BAR must be on for the viewer), and the first page of
+// URL, counts come from /api/discover/results, and the first page of
 // titles shows as cards. For you is a local switch here; Discover owns it for real. Returns 404 in production.
 import {
 	type ActionFunctionArgs,
@@ -13,7 +13,6 @@ import {
 } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
-import { isEnabled } from "~/server/features.server"
 import { loadTaste } from "~/server/taste/index.server"
 import {
 	MAX_KEYS,
@@ -41,9 +40,7 @@ function notInProduction() {
 export async function loader({ request }: LoaderFunctionArgs) {
 	notInProduction()
 	const ctx = await getViewerContext(request)
-	const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
 	return json({
-		enabled: isEnabled("filterBar", { userId }),
 		member: ctx.viewer.kind === "member",
 		hasServices: ctx.services.length > 0,
 	})
@@ -74,7 +71,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 		: false
 
 export default function DevFilterBar() {
-	const { enabled, member, hasServices } = useLoaderData<typeof loader>()
+	const { member, hasServices } = useLoaderData<typeof loader>()
 	const { user, loading } = useUser()
 	const [forYouOn, setForYouOn] = useState(true)
 	const [guest, setGuest] = useState<ReturnType<
@@ -99,7 +96,7 @@ export default function DevFilterBar() {
 		query: filters.query,
 		forYou: forYouOn,
 		guest,
-		enabled: enabled && !loading && (Boolean(user) || guest !== null),
+		enabled: !loading && (Boolean(user) || guest !== null),
 	})
 	const data = results.data ?? null
 	const taste = tasteStateOf(data)
@@ -121,11 +118,7 @@ export default function DevFilterBar() {
 			<h1 className="brand-header text-4xl text-white">Discover</h1>
 			<p className="mt-1 text-xs text-gray-500">
 				Filter bar preview · {member ? "member" : "guest"} ·{" "}
-				{enabled
-					? results.isFetching
-						? "counting"
-						: "live counts"
-					: "REC_FILTER_BAR is off for this viewer, so there are no counts"}
+				{results.isFetching ? "counting" : "live counts"}
 			</p>
 			<div className="mt-7">
 				<FilterBar

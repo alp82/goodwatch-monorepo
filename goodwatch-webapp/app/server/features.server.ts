@@ -13,7 +13,6 @@ const FEATURE_VARIABLES: Record<
 	Feature,
 	{ name: string; modes: readonly FeatureMode[] }
 > = {
-	filterBar: { name: "REC_FILTER_BAR", modes: ["off", "preview", "on"] },
 	watchNext: { name: "REC_WATCH_NEXT", modes: ["off", "preview", "on"] },
 	tastePage: { name: "REC_TASTE_PAGE", modes: ["off", "preview", "on"] },
 	navigation: { name: "REC_NAVIGATION", modes: ["off", "preview", "on"] },

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import type { EnabledFeatures } from "~/utils/features"
 import { searchHref } from "../../navigation/destinations.ts"
 import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
 import {
@@ -1001,7 +1000,7 @@ describe("the Expand key's destinations", () => {
 		for (const q of ["heist", "cozy mystery", "feel-good & more"])
 			assert.equal(
 				destinationHref({ name: "search", query: q }, guest),
-				searchHref(q, { filterBar: true } as EnabledFeatures),
+				searchHref(q),
 			)
 	})
 
