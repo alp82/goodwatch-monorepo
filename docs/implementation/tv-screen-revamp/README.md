@@ -710,7 +710,7 @@ A pure function `destinationHref(screen, context)` in the machine, with a test p
 | Discover, the titles | `/discover?moods=<key>`, `?themes=<key>` or `?styles=<key>` | The one mood, theme or style (`domain/filter-state.ts:163-185`; `themes` and `styles` once the filter branch is merged) |
 | Explorer, the map | `/explorer?grouping=mood` | The grouping |
 | Explorer, an island | `/explorer?grouping=mood&island=<id>` | The island (`ui/explorer/history.ts:14-22`) |
-| Taste, and a side | `/taste` | Nothing. Not verified: whether the page can open on one side |
+| Taste, and a side | `/taste`, and `/taste?side=<id>` from a side | The side: the page opens on it (built in slice 11, `ui/taste/side-address.ts`) |
 | My shows | `/my-shows` | Nothing |
 | A title | `titlePath(media_type, tmdb_id, title)` (`utils/helpers.ts:13`) | The title |
 | A title, by the Watch key (not Expand) | The same address with `#streaming` | The title, and in the history entry's state the wish to highlight the block |

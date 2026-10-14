@@ -102,7 +102,8 @@ phone; the member's two on the harness.
 | On <service> (slice 6b) | `/discover?services=<id>` | slice 6b's script checks the page |
 | The Explorer's map | `/explorer?grouping=mood` | the map on the Mood region |
 | An island | `/explorer?grouping=mood&island=<id>` | the map inside that island |
-| Taste, its sides, a side | `/taste` | the Taste page; a side does not travel (the page has no address for one) |
+| Taste, its sides | `/taste` | the Taste page |
+| A side | `/taste?side=<id>` | the Taste page open on that side |
 | My shows | `/my-shows` | (the harness, below) |
 | A title | its page, `/movie/603-the-matrix` | the title, at its top, nothing highlighted |
 | Search results | `/discover?q=heist` | the TV's titles first, with no second search |
@@ -121,6 +122,42 @@ island. Now `grouping=mood&island=<id>` opens it inside that island, once, when 
 
 Checked on the page at both sizes: inside the island and none picked; `grouping=mood` alone is the region; an
 island the map lacks is the region; an island without its grouping is the whole world; with `mix=` the pick wins.
+
+## The Taste page's side
+
+Asked for by the owner after the first report. The page showed the side with the highest average first and had no
+address for one. Now `/taste?side=<id>` opens it on that side, and the TV's Expand key on a side's screen goes
+there. The ids are the portrait's (`Side.id`), which the TV and the page both read from `/api/taste/portrait`.
+
+- `ui/taste/side-address.ts` (new, with `side-address.test.ts`): `requestedSide`, `openingSide` (the side asked for
+  when the person has it, else the page's own first), `withSide`, and `onlySideChanged`.
+- `ui/taste/tabs/SidesOfYou.tsx` opens on the side the route names (`opening`) and reports a side the person picks
+  (`onOpen`).
+- `routes/taste._index.tsx` works out that side from the address (`Sides`, beside the route). It is the module's
+  one importer: with a second, the build counted the small module as shared and put it in the shell of every page
+  (+121 bytes Brotli, measured, and taken back). It puts a side the person picks in the address in place of the one there (`replace`,
+  no history entry), so a reload keeps it and Back still leaves the page in one step. A side that the person does
+  not have is the page as without one, and leaves the address. `shouldRevalidate`: a change of the side alone
+  does not run the loader again.
+- `destinationHref` in the machine: `/taste?side=<id>` from a side's screen; Taste itself and its sides stay
+  `/taste`.
+
+Checked at 1920 x 1080 and 390 x 844 (`PARTS=sides`), as a guest with eighteen scores and two sides: from each
+side's screen the key opens `/taste?side=<id>` with that side's tab selected, and Back returns to the side's screen
+with the focus on the key; picking the other side on the page puts it in the address with no history entry and
+nothing asked for again, Back then leaves the page in one step to the TV, and a reload keeps it; `?side=nowhere`
+opens the side the page opens on without one and drops the parameter.
+
+The first view, two builds with `SENTRY_RELEASE=compare` against the integration branch at `eaa39ff8` (slice 12),
+raw / gzip / Brotli:
+
+| Page | Before | After |
+| --- | --- | --- |
+| `/taste` | 23 files, 957,612 / 309,139 / 268,097 | 23 files, 958,460 / 309,551 / 268,593: its own chunk 31,774 to 32,622 (+331 Brotli) |
+| `/home-preview` | 12 files, 680,780 / 226,780 / 196,725 | 12 files, 680,832 / 226,795 / 196,878: its own chunk +52 raw, +5 Brotli (the side in the address) |
+| `/`, Discover, a movie's page | | The same raw bytes; their Brotli moves by up to 214 bytes because chunk names inside them changed |
+
+`shell` and every stylesheet are byte for byte the same.
 
 ## Two timings of slice 5
 
@@ -181,9 +218,10 @@ slice 6b), built in a throwaway worktree; "after" is this branch with it merged.
 
 ## What the checks say
 
-The guest's half: **2,705 checks pass, none fail**. The member's half on the harness: **202 pass, none fail**.
-Both on this branch after the merge of the integration branch at `493fe1e3` (slice 6b). `checks.json` has the
-numbers. A wait that ends in time counts as a check that passed.
+The guest's half: **2,703 checks pass, none fail**. The member's half on the harness: **202 pass, none fail**.
+Both on this branch after the merge of the integration branch at `eaa39ff8` (slices 6b and 12), with the Taste
+page's side (`PARTS=sides`, 58 of them). `checks.json` has the numbers. A wait that ends in time counts as a check
+that passed.
 
 - **The key on every screen with a page, at seven sizes** (1920 x 1080, 1366 x 650, 360 x 740, 375 x 667,
   390 x 844, 430 x 932, 844 x 390), twelve guest screens and My shows: it says "Expand" and nothing longer, a
@@ -252,7 +290,6 @@ numbers. A wait that ends in time counts as a check that passed.
 - **The member's pages behind the key** (`/my-shows`, `/my-movies`) were opened from the harness, whose server has
   no services and no session for the real pages: they show what a guest sees there. The addresses are the
   machine's, with tests.
-- **A side does not travel to Taste.** The Taste page has no address for one side.
 - **The 15 px under the title page's header** on a phone, until the page runs, for a typed `#streaming` address
   (above).
 - **A development-only warning on the Discover page on a phone**, "Detected a large number of updates inside

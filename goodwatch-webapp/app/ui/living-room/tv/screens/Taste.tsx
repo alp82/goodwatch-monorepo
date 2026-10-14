@@ -1,7 +1,8 @@
 // Taste on the TV, in its three states (tv-taste.ts): the way into the quiz before the person has five scores, the
 // sides of their taste as tiles once there are some, and the quiz's picks as a list ("Made for you") when there
 // are five scores and no sides yet. A side's screen lists the titles of it the person rated. The Expand key opens
-// the Taste page; its place at the bottom right is the Frame's, and every state keeps the corner free.
+// the Taste page, on the side on screen (`/taste?side=`); its place at the bottom right is the Frame's, and every
+// state keeps the corner free.
 // A chunk the TV asks for on first use (screen-code.tsx).
 import { type ReactNode, useRef } from "react"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"

@@ -430,7 +430,10 @@ export function destinationHref(
 			return `/explorer?${query}`
 		}
 		case "taste":
-			return "/taste"
+			// A side travels: the Taste page opens on it.
+			return screen.side
+				? `/taste?side=${encodeURIComponent(screen.side)}`
+				: "/taste"
 		case "shows":
 			return DOOR_HREF.continue
 		case "title": {

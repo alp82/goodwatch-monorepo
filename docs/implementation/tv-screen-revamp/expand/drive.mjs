@@ -11,7 +11,7 @@
 // One dev server at a time: SIDE=guest with the reading server alone, then SIDE=member with the harness's alone
 // (README.md here has both commands). The guest's half keeps its count in a file (STOCK=); the member's half
 // writes checks.json for both. `drive.mjs checks` and `drive.mjs shots` do one of the two;
-// PARTS=key,trips,motion,cancel,calm,deep,reload,pointer,layouts,rest,explorer,timing runs some of the checks.
+// PARTS=key,trips,sides,motion,cancel,calm,deep,reload,pointer,layouts,rest,explorer,timing runs some of the checks.
 //
 // A search is stood in for, as in ../search/drive.mjs: the reading server refuses one, and a real one would be
 // written to the search history. Never on port 3003. The script signs in nowhere and writes to no server.
@@ -33,7 +33,7 @@ const only = process.argv[2]
 const SIDE = process.env.SIDE ?? "guest"
 const guestSide = SIDE === "guest"
 const STOCK = process.env.STOCK ?? join(tmpdir(), "tv-drive-expand-stock.json")
-const PARTS = (process.env.PARTS ?? "key,trips,motion,cancel,calm,deep,reload,pointer,layouts,rest,explorer,timing").split(",")
+const PARTS = (process.env.PARTS ?? "key,trips,sides,motion,cancel,calm,deep,reload,pointer,layouts,rest,explorer,timing").split(",")
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 if ([ORIGIN, MEMBER_ORIGIN].some((origin) => new URL(origin).port === "3003")) throw new Error("Not on port 3003: a search from there is not refused")
 
@@ -282,9 +282,11 @@ const remoteKey = (page, label) =>
 	label === "OK"
 		? page.locator('#room [aria-label="Remote control"] button', { hasText: /^OK$/ })
 		: page.locator(`#room [aria-label="Remote control"] button[aria-label="${label}"]`)
-// What a dev server's console says on any page. The last is the Discover page's own, on a touch device: its poster
-// cards take the answer "this pointer cannot hover" as one transition for all of them (ui/title-actions/pointer.ts).
-const noise = (logs) => logs.filter((l) => !l.includes("large number of updates inside startTransition") && !l.includes("Future Flag") && !l.includes("net::ERR_FAILED") && !l.includes("503") && !l.includes("403") && !l.includes("Failed to load resource") && !l.includes("Swiper Loop Warning"))
+// What a dev server's console says on any page. Two more: the Discover page's own, on a touch device, whose poster
+// cards take the answer "this pointer cannot hover" as one transition for all of them (ui/title-actions/pointer.ts),
+// and Chromium's hint that a stylesheet the router preloaded was not used within seconds (the dev server's
+// living-room.css, which /home-preview links; seen once in three runs, on a phone).
+const noise = (logs) => logs.filter((l) => !l.includes("was preloaded using link preload but not used") && !l.includes("large number of updates inside startTransition") && !l.includes("Future Flag") && !l.includes("net::ERR_FAILED") && !l.includes("503") && !l.includes("403") && !l.includes("Failed to load resource") && !l.includes("Swiper Loop Warning"))
 
 /**
  * Moves the focus to the Expand key with the direction keys: Down while that moves the focus, else Right. Returns
@@ -441,7 +443,7 @@ function guestScreens(island) {
 		},
 		{ name: "Taste, before a taste", at: "?tv=taste", to: "/taste", says: "Taste", sign: async (page) => check(/taste/i.test((await read(page)).title), "the Taste page") },
 		{ name: "Taste, the sides", at: "?tv=taste", to: "/taste", says: "Taste", storage: WITH_SIDES, wait: (s) => s.items.some((id) => id.startsWith("side:")), sign: async (page) => check(/taste/i.test((await read(page)).title), "the Taste page") },
-		{ name: "a side", at: "?tv=taste&side=side-1", to: "/taste", says: "Taste", storage: WITH_SIDES, wait: (s) => s.items.some((id) => id.startsWith("title:")), sign: async (page) => check(/taste/i.test((await read(page)).title), "the Taste page") },
+		{ name: "a side", at: "?tv=taste&side=side-1", to: "/taste?side=side-1", says: "Taste", storage: WITH_SIDES, wait: (s) => s.items.some((id) => id.startsWith("title:")), sign: async (page) => is(await sideOnPage(page), "side-1", "the Taste page opens on that side") },
 		{
 			name: "a title",
 			at: `?tv=title&title=${MATRIX.key}`,
@@ -499,7 +501,11 @@ async function openScreen(base, screen, size, options = {}) {
 	const url = `${base}${base.includes("?") ? screen.at.replace(/^\?/, "&") : screen.at}`
 	const opened = await open(`${url}${options.focus ? `&focus=${options.focus}` : ""}`, size, { storage: screen.storage ?? FRESH, ...options })
 	const search = new URL(url).search + (options.focus ? `&focus=${options.focus}` : "")
-	const s = await until(opened.page, (x) => onTv(search)(x) && x.items.includes("expand") && (screen.wait?.(x) ?? true), `${screen.name}: the screen with its Expand key`, 120000)
+	// The screen's own items, not only the bar and the key that stand in for it while its code is on its way.
+	const own = (x) => x.items.some((id) => id !== "expand" && !id.startsWith("bar:"))
+	const s = await until(opened.page, (x) => onTv(search)(x) && x.items.includes("expand") && own(x) && (screen.wait?.(x) ?? true), `${screen.name}: the screen with its Expand key`, 120000)
+	// It arrives with a short zoom (0.3 s): its boxes are measured once that is over.
+	await opened.page.waitForTimeout(400)
 	return { ...opened, s, search }
 }
 
@@ -665,7 +671,21 @@ async function trip(base, screen, size, way, by) {
 	if (by !== "finger") {
 		s = await until(page, (x) => focusIs("expand")(x) && x.framed && near(x.back ?? 0, 0.94, 0.001), "the key has the focus and the picture stands in its frame", 8000)
 		if (by === "pointer") {
-			is(s.ring, { shown: "true", out: "true" }, "the ring is amber over the key")
+			// The ring's code comes with the first sign of the person (TvPointer.tsx) and sees the moves after it: a
+			// hand never holds still, the script nudges the cursor a pixel over the key until the ring is up.
+			let nudge = 0
+			await eventually(
+				page,
+				async () => {
+					const x = await read(page)
+					if (x.ring?.shown === "true" && x.ring?.out === "true") return x
+					nudge = 1 - nudge
+					await page.mouse.move(spot[0] - nudge, spot[1])
+					return null
+				},
+				"the ring is amber over the key",
+				8000,
+			)
 			const under = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest("[data-tv-item]")?.getAttribute("data-tv-item") ?? null, spot)
 			is(under, "expand", "the key is still under the cursor after the picture stepped back")
 		}
@@ -721,6 +741,76 @@ async function trips() {
 		const results = screens.find((screen) => screen.at === "?tv=discover&mood=funny")
 		for (const size of [DESKTOP, PHONE]) for (const way of WAYS) await trip(GUEST, results, size, way, "keys").catch((error) => check(false, String(error.message).split("\n")[0]))
 	}
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The Taste page's side: Expand from a side's screen opens the page on that side (`/taste?side=<id>`).
+
+/** The side the Taste page shows: its selected tab, once the page's view is there. */
+const sideOnPage = async (page, timeout = 60000) => {
+	await page.waitForSelector('[role="tab"][aria-selected="true"][id^="taste-side-tab-"]', { timeout }).catch(() => {})
+	return page.evaluate(() => document.querySelector('[role="tab"][aria-selected="true"][id^="taste-side-tab-"]')?.id.slice("taste-side-tab-".length) ?? null)
+}
+
+async function sides(size) {
+	const touch = size[0] < 768
+	where = `Taste's sides ${size.join("x")}`
+	console.log(where)
+	const { ctx, page, requests } = await open(`${GUEST}?tv=taste`, size, { storage: WITH_SIDES })
+	let s = await until(page, (x) => x.items.some((id) => id.startsWith("side:")), "Taste shows the person's sides", 120000)
+	const ids = s.items.filter((id) => id.startsWith("side:")).map((id) => id.slice(5))
+	numbers[`${where}: the sides on the TV`] = ids
+	check(ids.length >= 2, `two sides or more: ${ids.join(", ")}`)
+	for (const id of ids) {
+		await page.goto(`${GUEST}?tv=taste&side=${id}`, { waitUntil: "load", timeout: 180000 })
+		const search = `?tv=taste&side=${id}`
+		s = await until(page, (x) => onTv(search)(x) && x.items.includes("expand") && x.items.some((item) => item.startsWith("title:")), `${id}: the side's screen`, 120000)
+		is(s.aria.expand, "Expand: Taste", `${id}: the key leads to Taste`)
+		const pressed = await reach(page)
+		check(Boolean(pressed), `${id}: the direction keys reach the key`)
+		await until(page, (x) => focusIs("expand")(x) && x.framed, `${id}: the key has the focus`, 8000)
+		if (touch) await item(page, "expand").tap()
+		else await page.keyboard.press("Enter")
+		await arrive(page, `/taste?side=${id}`, `${id}: the key opens /taste?side=${id}`)
+		is(await sideOnPage(page), id, `${id}: the Taste page opens on that side`)
+		await page.goBack()
+		await until(page, backOn(search), `${id}: Back returns to the side's screen with the focus on the key`, 60000)
+	}
+	// ---- On the page another side takes the address's place: no history entry, and the page's data stays.
+	const [first, second] = ids
+	await page.goto(`${GUEST}?tv=taste&side=${first}`, { waitUntil: "load", timeout: 180000 })
+	const search = `?tv=taste&side=${first}`
+	await until(page, (x) => onTv(search)(x) && x.items.includes("expand") && x.items.some((item) => item.startsWith("title:")), "the first side's screen", 120000)
+	await reach(page)
+	await page.keyboard.press("Enter")
+	const there = await arrive(page, `/taste?side=${first}`, "the page on the first side")
+	is(await sideOnPage(page), first, "on that side")
+	const asked = () => requests.filter((r) => r.path === "/api/taste/portrait" || (r.path === "/taste" && r.url.includes("_data"))).length
+	const before = asked()
+	const length = await page.evaluate(() => history.length)
+	const tab = page.locator(`#taste-side-tab-${second}`)
+	if (touch) await tab.tap()
+	else await tab.click()
+	let now = await until(page, (x) => x.path === "/taste" && x.search === `?side=${second}`, "picking another side puts it in the address", 10000)
+	is(await sideOnPage(page), second, "and shows it")
+	await page.waitForTimeout(1500)
+	is([now.idx, await page.evaluate(() => history.length), asked() - before], [there.idx, length, 0], "in place of the address: no history entry, and nothing asked for again")
+	await until(page, (x) => x.wayBack.length === 1, "the TV button is still there", 10000)
+	await page.goBack()
+	await until(page, backOn(search), "Back leaves the page in one step, to the side's screen with the focus on the key", 60000)
+	// ---- A reload keeps the side the person picked.
+	await page.goForward()
+	await until(page, (x) => x.path === "/taste" && x.search === `?side=${second}`, "Forward is the page on the side picked", 60000)
+	await page.reload({ waitUntil: "load", timeout: 180000 })
+	is(await sideOnPage(page), second, "a reload keeps the side picked")
+	// ---- An id that names no side of the person's: the page as without one, and the address says so.
+	await page.goto(`${ORIGIN}/taste?side=nowhere`, { waitUntil: "load", timeout: 180000 })
+	const opened = await sideOnPage(page)
+	check(ids.includes(opened), `an unknown side opens the page on one of the person's sides: ${opened}`)
+	now = await until(page, (x) => x.path === "/taste" && x.search === "", "and the address loses the unknown side", 10000)
+	await page.goto(`${ORIGIN}/taste`, { waitUntil: "load", timeout: 180000 })
+	is(await sideOnPage(page), opened, "the same side the page opens on without one")
+	await ctx.close()
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1382,6 +1472,7 @@ if (only !== "shots") {
 	if (PARTS.includes("trips")) await trips()
 	if (guestSide) {
 		for (const size of [DESKTOP, PHONE]) {
+			if (PARTS.includes("sides")) await sides(size)
 			if (PARTS.includes("motion")) await motion(size)
 			if (PARTS.includes("cancel")) await cancel(size)
 			if (PARTS.includes("calm")) await calm(size)
