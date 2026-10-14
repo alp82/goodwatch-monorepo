@@ -80,6 +80,12 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 	response.headers.set("Cache-Control", "private, no-store")
 	return response
 }
+// remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
+function setCookiesOf(headers: Headers): string[] {
+	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
+	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
+	return raw?.["set-cookie"] ?? []
+}
 export async function resolveBetterAuthSession(cookieHeader: string | null) {
 	const auth = await getBetterAuth()
 	// Server loaders bypass the HTTP router's missing-IP rate-limit bucket.
@@ -110,7 +116,7 @@ export async function resolveBetterAuthSession(cookieHeader: string | null) {
 		: null
 	return {
 		user,
-		setCookies: response.headers.getSetCookie(),
+		setCookies: setCookiesOf(response.headers),
 		source: "server" as const,
 	}
 }
