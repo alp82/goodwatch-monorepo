@@ -29,7 +29,7 @@ const usage = counter(
 	"goodwatch_mcp_ranked_requests_total",
 	"MCP ranked calls by bounded outcome.",
 	["outcome"],
-	12,
+	16,
 )
 const cost = counter(
 	"goodwatch_mcp_ranked_cost_nano_total",
@@ -87,6 +87,8 @@ const failure = (status: string, v?: Verdict) => ({
 				search_busy:
 					"Search is busy right now. Try again in a moment; no member query was charged.",
 				wrong_role: "Ranked search must reach a search-role process.",
+				search_cancelled:
+					"Search was cancelled before a new ranked search started.",
 				cursor_expired:
 					"This result page has expired. Start a new ranked search explicitly; paging never reruns a search.",
 				invalid_cursor: "This cursor does not match the search or member.",
@@ -119,6 +121,7 @@ export function createRankedSearch(
 		if (!readToolEnabled(userId, "ranked_search"))
 			return finish("disabled", failure("ranked_disabled"))
 		if (!runsSearch()) return finish("wrong_role", failure("wrong_role"))
+		if (signal?.aborted) return finish("cancelled", failure("search_cancelled"))
 		const storageKey = process.env.SEARCH_STORAGE_KEY ?? ""
 		const redis = (options.redis ?? getRedisCluster)()
 		if (!redis || !/^[a-fA-F0-9]{64}$/.test(storageKey))
@@ -207,6 +210,8 @@ export function createRankedSearch(
 			claimed = true
 			release = searchAdmission.enter()
 			if (!release) return finish("search_busy", failure("search_busy", v))
+			if (abort.signal.aborted)
+				return finish("cancelled", failure("search_cancelled", v))
 			const admitted = await evalVerdict(start)
 			if (admitted[0] !== "started")
 				return finish(admitted[0], failure(admitted[0], admitted))
@@ -223,11 +228,11 @@ export function createRankedSearch(
 					}, stop)
 			}, 5000)
 			heartbeat.unref()
-			const run =
-				options.run ??
-				(await import("./ranked-engine.server.ts")).runRankedSearch
 			let batch: RankedBatch
 			try {
+				const run =
+					options.run ??
+					(await import("./ranked-engine.server.ts")).runRankedSearch
 				batch = await searchAdmission.track(track, () =>
 					run(query, userId, abort.signal),
 				)

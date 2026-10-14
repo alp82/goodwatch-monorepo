@@ -46,7 +46,13 @@ test("admission reads its limit on every entry", () => {
 test("concurrent searches observe only their own detached holds", async () => {
 	const admission = createSearchAdmission()
 	const seen: Promise<unknown>[][] = [[], []]
-	const gates = [Promise.withResolvers<void>(), Promise.withResolvers<void>()]
+	const gates = [0, 1].map(() => {
+		let resolve!: () => void
+		const promise = new Promise<void>((settle) => {
+			resolve = settle
+		})
+		return { promise, resolve }
+	})
 	const work = [Promise.resolve("first"), Promise.resolve("second")]
 	const searches = gates.map((gate, index) =>
 		admission.track(

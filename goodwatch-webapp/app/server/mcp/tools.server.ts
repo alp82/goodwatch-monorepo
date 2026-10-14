@@ -169,7 +169,7 @@ export function createToolServer(
 								? await (
 										rankedSearch ??
 										(await import("./ranked.server.ts")).rankedSearch
-									)(userId, origin, args, context.signal)
+									)(userId, origin, args, context.mcpReq.signal)
 								: await (await import("./data.server.ts")).readMemberTool(
 										userId,
 										origin,

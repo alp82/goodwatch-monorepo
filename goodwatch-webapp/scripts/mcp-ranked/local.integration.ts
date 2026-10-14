@@ -15,6 +15,13 @@ process.env.WEBAPP_ROLE = "search"
 const redis = new Redis("redis://127.0.0.1:16767", { maxRetriesPerRequest: 1 })
 const resource = "http://localhost:3336/mcp"
 const member = `mcp-ranked-${Date.now()}`
+function deferred() {
+	let resolve!: () => void
+	const promise = new Promise<void>((settle) => {
+		resolve = settle
+	})
+	return { promise, resolve }
+}
 let calls = 0
 const run = async () => {
 	calls++
@@ -118,7 +125,7 @@ try {
 	const { searchAdmission } = await import(
 		"../../app/server/search-runtime/admission.server"
 	)
-	const background = Promise.withResolvers<void>()
+	const background = deferred()
 	const held = createRankedSearch({
 		redis: () => redis,
 		run: async () => {
@@ -309,8 +316,8 @@ try {
 		).structuredContent.quota.used,
 		1,
 	)
-	const started = Promise.withResolvers<void>()
-	const settle = Promise.withResolvers<void>()
+	const started = deferred()
+	const settle = deferred()
 	const inFlight = createRankedSearch({
 		redis: () => redis,
 		run: async () => {
@@ -412,6 +419,15 @@ try {
 			.structuredContent.quota.used,
 		2,
 	)
+	const beforeCancelled = calls
+	const cancelled = await rankedSearch(
+		`${member}-cancel`,
+		resource,
+		{ query: "already cancelled", ranked: true },
+		AbortSignal.abort(),
+	)
+	assert.equal(cancelled.status, "search_cancelled")
+	assert.equal(calls, beforeCancelled)
 	const { renderMetrics } = await import(
 		"../../app/server/metrics/registry.server"
 	)
@@ -429,7 +445,7 @@ try {
 	if (process.argv.includes("--ttl")) {
 		const ttlMember = `${member}-ttl`
 		const ttlFirst = await call({ query: "TTL query", ranked: true }, ttlMember)
-		const longWork = Promise.withResolvers<void>()
+		const longWork = deferred()
 		const longRunner = createRankedSearch({
 			redis: () => redis,
 			run: async () => {

@@ -37,7 +37,7 @@ Object.assign(process.env, {
 	SEARCH_STORAGE_KEY: "ab".repeat(32),
 	TYPESAFE_API_KEY: "loopback-fixture",
 	TMDB_API_KEY: "loopback-fixture",
-	SEARCH_TRANSLATION: "off",
+	SEARCH_TRANSLATION_ENABLED: "false",
 	SEARCH_MODEL_DIR: "/tmp/gw-mcp-569-no-models",
 })
 const redis = new Redis("redis://127.0.0.1:16767", { maxRetriesPerRequest: 1 })
@@ -161,7 +161,8 @@ async function call(query: string) {
 	return result.structuredContent
 }
 try {
-	const found = await call("Local Movie")
+	const query = `Local Movie ${Date.now()}`
+	const found = await call(query)
 	assert.equal(found.quota.used, 1)
 	assert.equal(found.charged_nano, 8400)
 	assert.equal(paidCalls, 2)
@@ -170,7 +171,7 @@ try {
 	assert.match(found.items[0].url, /\/movie\/20[0-9]{2}/)
 	assert.equal(found.ranked, false)
 	assert.ok(found.messages.includes("Showing basic search results."))
-	const cached = await call("  LOCAL   movie  ")
+	const cached = await call(`  ${query.toUpperCase().replaceAll(" ", "   ")}  `)
 	assert.equal(cached.cached, true)
 	assert.equal(cached.charged_nano, 0)
 	assert.equal(paidCalls, 2)
@@ -181,7 +182,7 @@ try {
 		"../../app/server/search-runtime/runtime.server"
 	)
 	await getSearchStore().haltPaidAdmissions()
-	const denied = await call("quiet local friends")
+	const denied = await call(`quiet local friends ${member}`)
 	assert.equal(denied.quota.used, 2)
 	assert.equal(denied.charged_nano, 0)
 	assert.equal(paidCalls, 2)
