@@ -63,7 +63,7 @@ export const ISLAND_HOPS = 2
 export const TASTE_SIDES = 4
 export const SHOWS_PER_GROUP = 3
 
-/** The search screen's ideas. Four show, three once the typed query has its own key. */
+/** The search screen's ideas. Four show, three once what is typed has its own key. */
 export const SEARCH_IDEAS: readonly string[] = [
 	"cozy mystery",
 	"space adventure",
@@ -72,7 +72,10 @@ export const SEARCH_IDEAS: readonly string[] = [
 	"true story",
 	"animated for adults",
 ]
+/** The shortest query the search takes (`SEARCH_MIN_CHARS`, domain/discover-search.ts). */
 export const MIN_QUERY_LENGTH = 2
+/** The key that searches for what is typed on the search screen. */
+export const SEARCH_GO = "go"
 
 export type TvScreen =
 	| { name: "home" }
@@ -200,6 +203,8 @@ export type TvAction =
 	| { type: "toggle-menu" }
 	| { type: "open-search" }
 	| { type: "submit-search"; query: string }
+	/** Something was typed into the search screen's line: the focus goes to the key that searches for it. */
+	| { type: "typed" }
 	/** A streaming key on the Remote, with the service's name. */
 	| { type: "service-key"; service: string }
 	| { type: "power"; on: boolean }
@@ -442,7 +447,12 @@ export function watchHref(
 const titleItems = (keys: readonly string[], max = LIST_TITLES) =>
 	keys.slice(0, max).map((key) => `title:${key}`)
 
-const typed = (ctx: TvContext) => ctx.draft.trim().length >= MIN_QUERY_LENGTH
+/**
+ * Something is typed on the search screen: it has its own key from the first character on, so the focus is on what
+ * OK would search for and never on an idea the person did not choose. Until the query is long enough the key does
+ * nothing (`submitSearch`).
+ */
+const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 
 /** A screen's own items, before the Expand key and the top bar. */
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
@@ -486,7 +496,7 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 		case "search":
 			if (screen.query) return titleItems(ctx.titles)
 			return [
-				...(typed(ctx) ? ["go"] : []),
+				...(typed(ctx) ? [SEARCH_GO] : []),
 				...SEARCH_IDEAS.slice(0, typed(ctx) ? 3 : 4).map(
 					(idea) => `idea:${idea}`,
 				),
@@ -651,7 +661,10 @@ function openSearch(state: TvState): TvTransition {
 		: push(state, { name: "search", query: null })
 }
 
-/** Results take the search screen's place, so Back from them is one step. */
+/**
+ * Results take the search screen's place, so Back from them is one step. This is the one way a search starts: OK
+ * on what is typed or on an idea. Nothing searches while the person types.
+ */
 function submitSearch(state: TvState, text: string): TvTransition {
 	const query = text.trim()
 	if (query.length < MIN_QUERY_LENGTH) return none(state)
@@ -659,6 +672,17 @@ function submitSearch(state: TvState, text: string): TvTransition {
 	return state.screen.name === "search"
 		? replace(state, screen)
 		: push(state, screen)
+}
+
+/**
+ * Typing on the search screen puts the focus on the key that searches for what is typed, wherever the focus was.
+ * The key is listed once the page's context holds the text; until then the focus falls back to where it starts.
+ */
+function typedOnSearch(state: TvState): TvTransition {
+	const s = state.screen
+	return s.name === "search" && !s.query && !state.menuOpen
+		? none({ ...state, focus: SEARCH_GO })
+		: none(state)
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1093,6 +1117,8 @@ export function transition(
 			return openSearch(state)
 		case "submit-search":
 			return submitSearch(state, action.query)
+		case "typed":
+			return typedOnSearch(state)
 		case "service-key":
 			return serviceKey(state, action.service)
 	}

@@ -191,7 +191,7 @@ test("a screen no slice has built yet has its bar, and the Expand key's place is
 	const built = rendered.items.notBuilt.filter((item) => item !== "expand")
 	assert.deepEqual(ids(rendered.notBuilt), built)
 	assert.match(rendered.notBuilt, /data-tv-expand-place/)
-	assert.match(rendered.notBuilt, />Search</)
+	assert.match(rendered.notBuilt, />My shows</)
 })
 
 test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {

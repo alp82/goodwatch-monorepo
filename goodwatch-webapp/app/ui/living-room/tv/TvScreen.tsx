@@ -23,6 +23,7 @@ import {
 	MenuCode,
 	QuizCode,
 	RateCode,
+	SearchCode,
 	TasteCode,
 	TitleCode,
 	TonightCode,
@@ -41,6 +42,7 @@ import type { TvTasteScreens } from "./tv-taste"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
+import type { TvSearchReport } from "./use-tv-search"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
@@ -58,6 +60,8 @@ export {
 } from "./screen-code"
 // The mini Explorer (slice 7).
 export { ExplorerData } from "./screen-code"
+// Search (slice 10).
+export { SearchData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -90,7 +94,19 @@ export type TvScreenProps = {
 	explorer?: TvExplorerView | null
 	/** The person's taste and the quiz, on Taste, a side's screen and the quiz. */
 	taste?: TvTasteScreens
+	/** Search (slice 10): what is typed, and the titles found for the query on screen. */
+	search?: TvSearchScreens
 }
+
+/** What search draws from. */
+export type TvSearchScreens = {
+	/** What is typed on the search screen's line, and where a change of it goes. */
+	draft: string
+	onDraft: (text: string) => void
+	/** The titles found for the query on screen; null until their data component has reported. */
+	list: TvSearchReport | null
+}
+const NOT_TYPING: TvSearchScreens = { draft: "", onDraft: () => {}, list: null }
 
 /** What mini Discover draws from. */
 export type TvDiscoverScreens = {
@@ -111,6 +127,7 @@ export function TvScreen({
 	discover,
 	explorer,
 	taste,
+	search,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -166,6 +183,7 @@ export function TvScreen({
 								discover={discover}
 								explorer={explorer}
 								taste={taste}
+								search={search}
 							/>
 						</Layer>
 					</TvViewProvider>
@@ -217,6 +235,7 @@ function ScreenOf({
 	discover,
 	explorer,
 	taste,
+	search = NOT_TYPING,
 }: {
 	screen: Screen
 	items: readonly string[]
@@ -225,6 +244,7 @@ function ScreenOf({
 	discover?: TvDiscoverScreens
 	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
+	search?: TvSearchScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -279,7 +299,19 @@ function ScreenOf({
 		case "quiz":
 			if (!taste) return first
 			return <QuizCode.Screen items={items} quiz={taste.quiz} first={first} />
-		// SEAM (slices 9 and 10): My shows and search each take their entry here.
+		// Slice 10: the line to type into without a query, the titles found with one.
+		case "search":
+			return (
+				<SearchCode.Screen
+					items={items}
+					screen={screen}
+					draft={search.draft}
+					onDraft={search.onDraft}
+					list={search.list}
+					first={first}
+				/>
+			)
+		// SEAM (slice 9): My shows takes its entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />
 	}

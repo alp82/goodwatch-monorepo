@@ -185,12 +185,8 @@ console.log(
 			CANVAS.desktop,
 			stateOf(HOME, { menuOpen: true }),
 		),
-		// Discover, the Explorer and Taste are built; search is not yet.
-		notBuilt: screenHtml(
-			guest,
-			CANVAS.desktop,
-			stateOf({ name: "search", query: "heist" }),
-		),
+		// Discover, the Explorer, Taste and search are built; a member's My shows is not yet.
+		notBuilt: screenHtml(member, CANVAS.desktop, stateOf({ name: "shows" })),
 		booting: screenHtml(
 			guest,
 			CANVAS.desktop,
@@ -209,7 +205,7 @@ console.log(
 			homeGuest: tvItems(HOME, guestCtx),
 			homeMember: tvItems(HOME, memberCtx),
 			about: tvItems(ABOUT, guestCtx),
-			notBuilt: tvItems({ name: "search", query: "heist" }, guestCtx),
+			notBuilt: tvItems({ name: "shows" }, memberCtx),
 			menuGuest: menuItems(guestCtx),
 			menuMember: menuItems(memberCtx),
 		},

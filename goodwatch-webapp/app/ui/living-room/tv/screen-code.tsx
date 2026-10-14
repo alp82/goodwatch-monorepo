@@ -97,7 +97,20 @@ export const TasteData = screenCode<
 	import("./screens/Taste").then((code) => ({ default: code.TasteData })),
 ).Screen
 
-/** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
+// Slice 10: search, its question screen and its results, with the search's data.
+export const SearchCode = screenCode(() => import("./screens/Search"))
+/** The full search for the query in the address, and the cards of what it found. */
+export const SearchData = screenCode<
+	ComponentProps<typeof import("./screens/Search").SearchData>
+>(() =>
+	import("./screens/Search").then((code) => ({ default: code.SearchData })),
+).Screen
+
+/**
+ * Asks for the screens any key can open, so they are there by the first press: the menu, What is GoodWatch? and
+ * search, which the Remote's Search key and every top bar open. Called at the first interaction.
+ */
 export function loadFirstScreens() {
-	for (const code of [MenuCode, AboutCode]) code.load().catch(() => {})
+	for (const code of [MenuCode, AboutCode, SearchCode])
+		code.load().catch(() => {})
 }

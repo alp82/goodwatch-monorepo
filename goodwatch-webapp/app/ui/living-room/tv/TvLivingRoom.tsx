@@ -13,6 +13,7 @@ import {
 	ExplorerData,
 	QuizCode,
 	RateCode,
+	SearchData,
 	TasteCode,
 	TasteData,
 	TitleCode,
@@ -20,6 +21,7 @@ import {
 	TonightCode,
 	type TvDiscoverScreens,
 	TvScreen,
+	type TvSearchScreens,
 	loadFirstScreens,
 } from "./TvScreen"
 import { useReport } from "./kit"
@@ -37,6 +39,7 @@ import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
+import type { TvSearchReport } from "./use-tv-search"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
 
@@ -159,6 +162,21 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (report?.cards.length) setListed(report.cards)
 	}, [])
 	const choosing = screen.name === "discover" && Boolean(screen.choice)
+	// Search (slice 10). What is typed on its line is the scene's: the machine's context needs it for the key that
+	// searches for it. It starts empty every time the line is shown. The titles a search found are held by a
+	// component of the search screen's chunk, which reports them here (`SearchData`, mounted below) while the
+	// address names a query.
+	const [draft, setDraft] = useState("")
+	const asking = screen.name === "search" && !screen.query
+	useEffect(() => {
+		if (!asking) setDraft("")
+	}, [asking])
+	const [found, setFound] = useState<TvSearchReport | null>(null)
+	const onFound = useCallback((report: TvSearchReport | null) => {
+		setFound(report)
+		if (report?.cards.length) setListed(report.cards)
+	}, [])
+	const searched = screen.name === "search" && Boolean(screen.query)
 	const discover: TvDiscoverScreens = useMemo(
 		() => ({ art: pool?.choiceArt ?? {}, list }),
 		[pool, list],
@@ -181,13 +199,18 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const [one, setOne] = useState<TvTitleReport | null>(null)
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
-	// The titles of the list on screen. SEAM (slices 9 and 10): My shows' and the search's follow.
-	const listTitles = choosing ? list?.titles : undefined
+	// The titles of the list on screen. SEAM (slice 9): My shows' follow.
+	const listTitles = choosing
+		? list?.titles
+		: searched
+			? found?.titles
+			: undefined
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
 		() => ({
 			...tvContextOf(data, pool, wished),
 			titleName,
+			draft,
 			...(listTitles && { titles: listTitles }),
 			// The mini Explorer (slice 7): its islands, and an island's titles and hops, while it is on screen.
 			...explorerContext,
@@ -200,6 +223,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			pool,
 			wished,
 			titleName,
+			draft,
 			listTitles,
 			explorerContext,
 			tasteCtx,
@@ -240,6 +264,19 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		[google, say, leave, titleEffect, tasteEffect],
 	)
 	const tv = useTv(ctx, onEffect)
+	// Typing puts the TV's focus on the key that searches for what is typed (the machine's `typed`).
+	const { dispatch } = tv
+	const onDraft = useCallback(
+		(text: string) => {
+			setDraft(text)
+			dispatch({ type: "typed" })
+		},
+		[dispatch],
+	)
+	const search: TvSearchScreens = useMemo(
+		() => ({ draft, onDraft, list: searched ? found : null }),
+		[draft, onDraft, searched, found],
+	)
 	useEffect(() => {
 		if (tv.screen.name === "home" && tv.focused === "app:discover")
 			setDiscoverSeen(true)
@@ -255,6 +292,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (tv.screen.name === "home" && tv.focused === "app:discover")
 			DiscoverCode.load().catch(() => {})
 		if (tv.screen.name === "discover") TitleCode.load().catch(() => {})
+		// Slice 10: on search the title screen's too, which a found title opens.
+		if (tv.screen.name === "search") TitleCode.load().catch(() => {})
 		// Slice 8: Taste's while its tile has the focus, the quiz's on Taste.
 		if (tv.screen.name === "home" && tv.focused === "app:taste")
 			TasteCode.load().catch(() => {})
@@ -289,6 +328,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							discover={discover}
 							explorer={explorer?.view}
 							taste={onTaste ? mine?.screens : undefined}
+							search={search}
 						/>
 					</>
 				)}
@@ -316,6 +356,15 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			)}
 			{onTaste && (
 				<TasteData screen={screen} member={data.member} report={setMine} />
+			)}
+			{/* Search (slice 10): the search for the query in the address, asked for with OK. */}
+			{searched && (
+				<SearchData
+					screen={screen}
+					member={data.member}
+					scope={data.scope ?? null}
+					report={onFound}
+				/>
 			)}
 		</>
 	)

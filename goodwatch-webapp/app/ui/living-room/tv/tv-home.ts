@@ -58,6 +58,12 @@ export type TvHomeData = {
 	tonight: TvTonightPick[]
 	/** A member's My shows on the TV. Null for a guest. */
 	shows: { next: TvShowNext[]; start: TvShowStart[] } | null
+	/**
+	 * A member's country and saved services, as the Discover page's loader gives them to its search: the TV's
+	 * search narrows its ranking to them as the page does (tv-search.ts). A guest's are in their browser, and
+	 * nothing of them is in the HTML.
+	 */
+	scope?: { country: string; services: number[] }
 }
 
 /** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */

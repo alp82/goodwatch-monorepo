@@ -56,8 +56,12 @@ export async function loadTvHome(request: Request) {
 			loadMemberTaste(user.id),
 			getMemberViewerContext(user.id, country),
 		])
-		return await loadMemberHome(viewer, taste)
-	})().catch((error): Pick<TvHomeData, "tonight" | "shows"> => {
+		return {
+			...(await loadMemberHome(viewer, taste)),
+			// What the Discover page's loader hands its search (`searchScope`), for the TV's.
+			scope: { country: viewer.country, services: viewer.services },
+		}
+	})().catch((error): Pick<TvHomeData, "tonight" | "shows" | "scope"> => {
 		console.error(
 			"The TV: loading a member's Tonight and My shows failed",
 			error,
