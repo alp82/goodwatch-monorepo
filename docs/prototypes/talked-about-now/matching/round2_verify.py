@@ -52,13 +52,16 @@ def verify():
     buzz={t['key'] for t in read('buzz-top-titles.json')['titles']}
     assert export['selection']['top_post_count_keys']==top and len(top)==25
     assert set(export['selection']['buzz_top_keys'])==buzz
-    assert {t['key'] for t in export['titles']}==set(top)|buzz
-    statuses=Counter();link_count=0
+    diagnostics={l['key'] for id,label in labels.items() if not label.get('ambiguous') for l in predictions[id]['links'] if l['key'] not in label['gold']}
+    assert set(export['selection']['diagnostic_wrong_link_keys'])==diagnostics
+    assert {t['key'] for t in export['titles']}==set(top)|buzz|diagnostics
+    statuses=Counter();link_count=0;exported_wrong=set()
     for t in export['titles']:
         assert t['key']==f"{t['type']}:{t['tmdb_id']}"
         assert t['post_count']==len(t['posts'])==len({p['source_id'] for p in t['posts']})
         assert t['post_count']==t['general_discovery_post_count']+t['buzz_targeted_only_post_count']
         assert t['source_counts']==dict(Counter(p['source'] for p in t['posts']))
+        assert t['selection']['diagnostic_wrong_link']==(t['key'] in diagnostics)
         for p in t['posts']:
             raw=by_id[p['post_id']]
             assert (p['url'],p['author'],p['timestamp'],p['text'])==(raw['url'],raw['author'],raw['published_at'],raw['text'])
@@ -67,9 +70,11 @@ def verify():
                 label=labels[p['post_id']]
                 expected='unsure' if label.get('ambiguous') else 'right' if t['key'] in label['gold'] else 'wrong'
                 assert p['hand_label']==expected
+                if expected=='wrong':exported_wrong.add((p['post_id'],t['key']))
             if p['lane']=='official_video_id':
                 assert raw['source']=='youtube' and raw['channel_id'] in collection['channels'].values()
             statuses[str(p['hand_label'])]+=1;link_count+=1
+    assert exported_wrong=={(id,l['key']) for id,label in labels.items() if not label.get('ambiguous') for l in predictions[id]['links'] if l['key'] not in label['gold']}
     for sql in ['INSERT INTO movie VALUES (1)','UPDATE show SET title=1','DELETE FROM movie','CREATE TABLE test (id int)']:
         try:crate(sql)
         except ValueError:pass

@@ -129,6 +129,9 @@
             "buzz_date"
           ],
           "properties": {
+            "diagnostic_wrong_link": {
+              "type": "boolean"
+            },
             "top_post_count_rank": {
               "type": [
                 "integer",

@@ -1,0 +1,8 @@
+{
+  "branch": "prototype/talked-about-now-buzz-score",
+  "commit": "302a28ce7722ff3eb7104052120a3bff4c95ba6c",
+  "file": "docs/prototypes/talked-about-now/buzz-score/scores.json",
+  "input_sha256": "50a6e31c58ebb20fde72e8ae5e19157b03ba342e94408eaead221321fa0937d6",
+  "used_day": "2026-10-13",
+  "snapshot": "buzz-top-titles.json"
+}

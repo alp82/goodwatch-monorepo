@@ -1,0 +1,29 @@
+{
+  "start": "2026-10-12T00:00:00+00:00",
+  "end": "2026-10-14T13:40:33.128736+00:00",
+  "sources": {
+    "youtube": 47,
+    "rss": 670,
+    "bluesky": 3266
+  },
+  "channels": {
+    "Universal Pictures": "UCq0OueAsdxH6b8nyAspwViw",
+    "Warner Bros.": "UCjmJDM5pRKbUlVIzDYYWb6g",
+    "Sony Pictures": "UCz97F7dMxBNOfGYu3rx8aCw",
+    "A24": "UCuPivVjnfNo4mb3Oog_frZg",
+    "NEON": "UCpy5dRhZd-JbZP4NsrnLt1w",
+    "Constantin Film": "UC51KZjUZokzJfb08mzAGS2A",
+    "Disney+": "UCIrgJInjLS2BhlHOMDW7v0g",
+    "Netflix": "UCWOA1ZGywLbqmigxE4Qlvuw",
+    "Netflix Brasil": "UCc1l5mTmAv2GC_PXrBpqyKQ",
+    "Netflix India": "UCZSNzBgFub_WWil6TOTYwAg"
+  },
+  "rss_scope": "Working discovery feeds; paginated WordPress trade feeds, rolling inventory elsewhere",
+  "bluesky_scope": "Anonymous dated first-page search by fixed general and buzz-title queries; not Jetstream or a complete platform census",
+  "pagination": "Bluesky cursors not followed; RSS fetched at most 18 pages per supported publisher feed",
+  "buzz_variants": [
+    "floor_lift",
+    "regularized_z",
+    "pageviews_tmdb"
+  ]
+}

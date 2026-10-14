@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "corpus_items": 3983,
+  "fresh_labels": 200,
+  "ambiguous": 15,
+  "titles": 50,
+  "links": 668,
+  "exported_hand_labels": {
+    "None": 636,
+    "right": 19,
+    "unsure": 1,
+    "wrong": 12
+  },
+  "checks": [
+    "JSON Schema + URI/date formats",
+    "frozen prompt/rule fingerprint",
+    "full corpus decision coverage",
+    "fresh holdout disjointness",
+    "multi-day/source/date coverage",
+    "independent source/lane metric arithmetic",
+    "top-25 exact ranking + complete buzz union",
+    "title/post IDs + source attribution + label consistency",
+    "read-only adapter mutation rejection"
+  ]
+}

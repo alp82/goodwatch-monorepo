@@ -1,0 +1,600 @@
+{
+  "definitions": {
+    "precision": "correct emitted title links / all emitted title links",
+    "recall": "positive catalog-linkable items with at least one correct link / all positive catalog-linkable items",
+    "entity_recall": "correct emitted title links / catalog-linkable gold title links",
+    "lane_recall": "lane correct links / gold title links in its source; contribution, not unresolved-cohort recall",
+    "ambiguous": "excluded from scoring, retained as unsure labels",
+    "confidence": "uncalibrated rule score or LLM self-report, not measured probability"
+  },
+  "by_source": {
+    "youtube": {
+      "items": 29,
+      "unsure": 2,
+      "tp": 20,
+      "fp": 2,
+      "fn": 5,
+      "positive_items": 25,
+      "named_positive_items": 27,
+      "gold_entities": 25,
+      "correctly_linked_items": 20,
+      "precision": 0.9090909090909091,
+      "recall": 0.8,
+      "entity_recall": 0.8,
+      "end_to_end_item_recall": 0.7407407407407407,
+      "precision_95_wilson": [
+        0.7218461934161421,
+        0.9747051037171622
+      ],
+      "correct_abstentions": 3
+    },
+    "rss": {
+      "items": 78,
+      "unsure": 6,
+      "tp": 32,
+      "fp": 9,
+      "fn": 10,
+      "positive_items": 40,
+      "named_positive_items": 44,
+      "gold_entities": 42,
+      "correctly_linked_items": 32,
+      "precision": 0.7804878048780488,
+      "recall": 0.8,
+      "entity_recall": 0.7619047619047619,
+      "end_to_end_item_recall": 0.7272727272727273,
+      "precision_95_wilson": [
+        0.6329469790176472,
+        0.8799695984461366
+      ],
+      "correct_abstentions": 34
+    },
+    "bluesky": {
+      "items": 78,
+      "unsure": 7,
+      "tp": 28,
+      "fp": 1,
+      "fn": 12,
+      "positive_items": 30,
+      "named_positive_items": 31,
+      "gold_entities": 40,
+      "correctly_linked_items": 22,
+      "precision": 0.9655172413793104,
+      "recall": 0.7333333333333333,
+      "entity_recall": 0.7,
+      "end_to_end_item_recall": 0.7096774193548387,
+      "precision_95_wilson": [
+        0.8282410893529976,
+        0.9938869433859677
+      ],
+      "correct_abstentions": 48
+    },
+    "all": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 80,
+      "fp": 12,
+      "fn": 27,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 74,
+      "precision": 0.8695652173913043,
+      "recall": 0.7789473684210526,
+      "entity_recall": 0.7476635514018691,
+      "end_to_end_item_recall": 0.7254901960784313,
+      "precision_95_wilson": [
+        0.7857180674970731,
+        0.923785947460941
+      ],
+      "correct_abstentions": 85
+    }
+  },
+  "by_lane": {
+    "official_video_id": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 1,
+      "fp": 0,
+      "fn": 106,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 1,
+      "precision": 1.0,
+      "recall": 0.010526315789473684,
+      "entity_recall": 0.009345794392523364,
+      "end_to_end_item_recall": 0.00980392156862745,
+      "precision_95_wilson": [
+        0.20654329147389294,
+        1.0
+      ],
+      "correct_abstentions": 90
+    },
+    "foreground_exact": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 70,
+      "fp": 12,
+      "fn": 37,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 65,
+      "precision": 0.8536585365853658,
+      "recall": 0.6842105263157895,
+      "entity_recall": 0.6542056074766355,
+      "end_to_end_item_recall": 0.6372549019607843,
+      "precision_95_wilson": [
+        0.7614038604287782,
+        0.914259221340434
+      ],
+      "correct_abstentions": 85
+    },
+    "alt_title_context": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 4,
+      "fp": 0,
+      "fn": 103,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 4,
+      "precision": 1.0,
+      "recall": 0.042105263157894736,
+      "entity_recall": 0.037383177570093455,
+      "end_to_end_item_recall": 0.0392156862745098,
+      "precision_95_wilson": [
+        0.5100999795960008,
+        1.0
+      ],
+      "correct_abstentions": 90
+    },
+    "foreground_fuzzy": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 3,
+      "fp": 0,
+      "fn": 104,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 3,
+      "precision": 1.0,
+      "recall": 0.031578947368421054,
+      "entity_recall": 0.028037383177570093,
+      "end_to_end_item_recall": 0.029411764705882353,
+      "precision_95_wilson": [
+        0.43849391955098227,
+        1.0
+      ],
+      "correct_abstentions": 90
+    },
+    "vector_context": {
+      "items": 185,
+      "unsure": 15,
+      "tp": 2,
+      "fp": 0,
+      "fn": 105,
+      "positive_items": 95,
+      "named_positive_items": 102,
+      "gold_entities": 107,
+      "correctly_linked_items": 2,
+      "precision": 1.0,
+      "recall": 0.021052631578947368,
+      "entity_recall": 0.018691588785046728,
+      "end_to_end_item_recall": 0.0196078431372549,
+      "precision_95_wilson": [
+        0.34237195288961925,
+        1.0
+      ],
+      "correct_abstentions": 90
+    }
+  },
+  "by_source_lane": {
+    "youtube": {
+      "official_video_id": {
+        "items": 29,
+        "unsure": 2,
+        "tp": 1,
+        "fp": 0,
+        "fn": 24,
+        "positive_items": 25,
+        "named_positive_items": 27,
+        "gold_entities": 25,
+        "correctly_linked_items": 1,
+        "precision": 1.0,
+        "recall": 0.04,
+        "entity_recall": 0.04,
+        "end_to_end_item_recall": 0.037037037037037035,
+        "precision_95_wilson": [
+          0.20654329147389294,
+          1.0
+        ],
+        "correct_abstentions": 4
+      },
+      "foreground_exact": {
+        "items": 29,
+        "unsure": 2,
+        "tp": 14,
+        "fp": 2,
+        "fn": 11,
+        "positive_items": 25,
+        "named_positive_items": 27,
+        "gold_entities": 25,
+        "correctly_linked_items": 14,
+        "precision": 0.875,
+        "recall": 0.56,
+        "entity_recall": 0.56,
+        "end_to_end_item_recall": 0.5185185185185185,
+        "precision_95_wilson": [
+          0.6397666856325173,
+          0.9650232506629428
+        ],
+        "correct_abstentions": 3
+      },
+      "alt_title_context": {
+        "items": 29,
+        "unsure": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 25,
+        "positive_items": 25,
+        "named_positive_items": 27,
+        "gold_entities": 25,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 4
+      },
+      "foreground_fuzzy": {
+        "items": 29,
+        "unsure": 2,
+        "tp": 3,
+        "fp": 0,
+        "fn": 22,
+        "positive_items": 25,
+        "named_positive_items": 27,
+        "gold_entities": 25,
+        "correctly_linked_items": 3,
+        "precision": 1.0,
+        "recall": 0.12,
+        "entity_recall": 0.12,
+        "end_to_end_item_recall": 0.1111111111111111,
+        "precision_95_wilson": [
+          0.43849391955098227,
+          1.0
+        ],
+        "correct_abstentions": 4
+      },
+      "vector_context": {
+        "items": 29,
+        "unsure": 2,
+        "tp": 2,
+        "fp": 0,
+        "fn": 23,
+        "positive_items": 25,
+        "named_positive_items": 27,
+        "gold_entities": 25,
+        "correctly_linked_items": 2,
+        "precision": 1.0,
+        "recall": 0.08,
+        "entity_recall": 0.08,
+        "end_to_end_item_recall": 0.07407407407407407,
+        "precision_95_wilson": [
+          0.34237195288961925,
+          1.0
+        ],
+        "correct_abstentions": 4
+      }
+    },
+    "rss": {
+      "official_video_id": {
+        "items": 78,
+        "unsure": 6,
+        "tp": 0,
+        "fp": 0,
+        "fn": 42,
+        "positive_items": 40,
+        "named_positive_items": 44,
+        "gold_entities": 42,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 38
+      },
+      "foreground_exact": {
+        "items": 78,
+        "unsure": 6,
+        "tp": 30,
+        "fp": 9,
+        "fn": 12,
+        "positive_items": 40,
+        "named_positive_items": 44,
+        "gold_entities": 42,
+        "correctly_linked_items": 30,
+        "precision": 0.7692307692307693,
+        "recall": 0.75,
+        "entity_recall": 0.7142857142857143,
+        "end_to_end_item_recall": 0.6818181818181818,
+        "precision_95_wilson": [
+          0.6166343954261704,
+          0.8735433757121625
+        ],
+        "correct_abstentions": 34
+      },
+      "alt_title_context": {
+        "items": 78,
+        "unsure": 6,
+        "tp": 2,
+        "fp": 0,
+        "fn": 40,
+        "positive_items": 40,
+        "named_positive_items": 44,
+        "gold_entities": 42,
+        "correctly_linked_items": 2,
+        "precision": 1.0,
+        "recall": 0.05,
+        "entity_recall": 0.047619047619047616,
+        "end_to_end_item_recall": 0.045454545454545456,
+        "precision_95_wilson": [
+          0.34237195288961925,
+          1.0
+        ],
+        "correct_abstentions": 38
+      },
+      "foreground_fuzzy": {
+        "items": 78,
+        "unsure": 6,
+        "tp": 0,
+        "fp": 0,
+        "fn": 42,
+        "positive_items": 40,
+        "named_positive_items": 44,
+        "gold_entities": 42,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 38
+      },
+      "vector_context": {
+        "items": 78,
+        "unsure": 6,
+        "tp": 0,
+        "fp": 0,
+        "fn": 42,
+        "positive_items": 40,
+        "named_positive_items": 44,
+        "gold_entities": 42,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 38
+      }
+    },
+    "bluesky": {
+      "official_video_id": {
+        "items": 78,
+        "unsure": 7,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40,
+        "positive_items": 30,
+        "named_positive_items": 31,
+        "gold_entities": 40,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 48
+      },
+      "foreground_exact": {
+        "items": 78,
+        "unsure": 7,
+        "tp": 26,
+        "fp": 1,
+        "fn": 14,
+        "positive_items": 30,
+        "named_positive_items": 31,
+        "gold_entities": 40,
+        "correctly_linked_items": 21,
+        "precision": 0.9629629629629629,
+        "recall": 0.7,
+        "entity_recall": 0.65,
+        "end_to_end_item_recall": 0.6774193548387096,
+        "precision_95_wilson": [
+          0.8171614606584348,
+          0.9934320234669025
+        ],
+        "correct_abstentions": 48
+      },
+      "alt_title_context": {
+        "items": 78,
+        "unsure": 7,
+        "tp": 2,
+        "fp": 0,
+        "fn": 38,
+        "positive_items": 30,
+        "named_positive_items": 31,
+        "gold_entities": 40,
+        "correctly_linked_items": 2,
+        "precision": 1.0,
+        "recall": 0.06666666666666667,
+        "entity_recall": 0.05,
+        "end_to_end_item_recall": 0.06451612903225806,
+        "precision_95_wilson": [
+          0.34237195288961925,
+          1.0
+        ],
+        "correct_abstentions": 48
+      },
+      "foreground_fuzzy": {
+        "items": 78,
+        "unsure": 7,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40,
+        "positive_items": 30,
+        "named_positive_items": 31,
+        "gold_entities": 40,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 48
+      },
+      "vector_context": {
+        "items": 78,
+        "unsure": 7,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40,
+        "positive_items": 30,
+        "named_positive_items": 31,
+        "gold_entities": 40,
+        "correctly_linked_items": 0,
+        "precision": null,
+        "recall": 0.0,
+        "entity_recall": 0.0,
+        "end_to_end_item_recall": 0.0,
+        "precision_95_wilson": null,
+        "correct_abstentions": 48
+      }
+    },
+    "all": {
+      "official_video_id": {
+        "items": 185,
+        "unsure": 15,
+        "tp": 1,
+        "fp": 0,
+        "fn": 106,
+        "positive_items": 95,
+        "named_positive_items": 102,
+        "gold_entities": 107,
+        "correctly_linked_items": 1,
+        "precision": 1.0,
+        "recall": 0.010526315789473684,
+        "entity_recall": 0.009345794392523364,
+        "end_to_end_item_recall": 0.00980392156862745,
+        "precision_95_wilson": [
+          0.20654329147389294,
+          1.0
+        ],
+        "correct_abstentions": 90
+      },
+      "foreground_exact": {
+        "items": 185,
+        "unsure": 15,
+        "tp": 70,
+        "fp": 12,
+        "fn": 37,
+        "positive_items": 95,
+        "named_positive_items": 102,
+        "gold_entities": 107,
+        "correctly_linked_items": 65,
+        "precision": 0.8536585365853658,
+        "recall": 0.6842105263157895,
+        "entity_recall": 0.6542056074766355,
+        "end_to_end_item_recall": 0.6372549019607843,
+        "precision_95_wilson": [
+          0.7614038604287782,
+          0.914259221340434
+        ],
+        "correct_abstentions": 85
+      },
+      "alt_title_context": {
+        "items": 185,
+        "unsure": 15,
+        "tp": 4,
+        "fp": 0,
+        "fn": 103,
+        "positive_items": 95,
+        "named_positive_items": 102,
+        "gold_entities": 107,
+        "correctly_linked_items": 4,
+        "precision": 1.0,
+        "recall": 0.042105263157894736,
+        "entity_recall": 0.037383177570093455,
+        "end_to_end_item_recall": 0.0392156862745098,
+        "precision_95_wilson": [
+          0.5100999795960008,
+          1.0
+        ],
+        "correct_abstentions": 90
+      },
+      "foreground_fuzzy": {
+        "items": 185,
+        "unsure": 15,
+        "tp": 3,
+        "fp": 0,
+        "fn": 104,
+        "positive_items": 95,
+        "named_positive_items": 102,
+        "gold_entities": 107,
+        "correctly_linked_items": 3,
+        "precision": 1.0,
+        "recall": 0.031578947368421054,
+        "entity_recall": 0.028037383177570093,
+        "end_to_end_item_recall": 0.029411764705882353,
+        "precision_95_wilson": [
+          0.43849391955098227,
+          1.0
+        ],
+        "correct_abstentions": 90
+      },
+      "vector_context": {
+        "items": 185,
+        "unsure": 15,
+        "tp": 2,
+        "fp": 0,
+        "fn": 105,
+        "positive_items": 95,
+        "named_positive_items": 102,
+        "gold_entities": 107,
+        "correctly_linked_items": 2,
+        "precision": 1.0,
+        "recall": 0.021052631578947368,
+        "entity_recall": 0.018691588785046728,
+        "end_to_end_item_recall": 0.0196078431372549,
+        "precision_95_wilson": [
+          0.34237195288961925,
+          1.0
+        ],
+        "correct_abstentions": 90
+      }
+    }
+  },
+  "snapshot": {
+    "sample_sha256": "fc9f823c4d930a2f7cd3c0b3499946fe2fc85800b49bddd7535c0d4941538c8b",
+    "rules_sha256": "5980179c8db1f7432db7d8b1dd18dca2e5f0a571387f31bccfdc6ebbfa1571db",
+    "labeled_items": 200,
+    "corpus_items": 3983
+  },
+  "reported_cost": {
+    "journal_usd_by_phase": {
+      "extract": 0.702754,
+      "gate": 1.3423964
+    },
+    "journal_usd": 2.0451504,
+    "journal_requests": 751,
+    "journal_usd_per_1000_inputs": 0.5134698468491087,
+    "complete_billing_reconciliation": false,
+    "note": "Lower bound from returned OpenRouter usage.cost, including journaled retries. Some interrupted extraction requests preceded journal logging; timeout/non-returned request billing is unknown. Local embeddings and production reads have no per-item API charge here; compute/operations costs excluded."
+  }
+}

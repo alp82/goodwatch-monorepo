@@ -55,9 +55,12 @@ def api_batch(prompt,items):
   r.raise_for_status();b=r.json()
   with API_LOG_LOCK:
    with (R2/'api-charges.jsonl').open('a') as log:log.write(json.dumps({'at':datetime.now(timezone.utc).isoformat(),'phase':'extract' if prompt==EXTRACT_PROMPT else 'gate','ids':[x['id'] for x in items],'request_id':b.get('id'),'usage':b.get('usage',{})})+'\n')
-  res=json.loads(b['choices'][0]['message']['content'])
-  actual={x['id'] for x in res['items']};expected={x['id'] for x in items}
-  if actual!=expected:
+  try:res=json.loads(b['choices'][0]['message']['content'])
+  except (ValueError,KeyError,IndexError):res={}
+  field='entities' if prompt==EXTRACT_PROMPT else 'links'
+  valid=isinstance(res,dict) and isinstance(res.get('items'),list) and all(isinstance(x,dict) and isinstance(x.get('id'),str) and isinstance(x.get(field),list) and all(isinstance(y,dict) for y in x[field]) for x in res['items'])
+  actual={x['id'] for x in res['items']} if valid else set();expected={x['id'] for x in items}
+  if not valid or actual!=expected or len(res['items'])!=len(items):
    if attempt<2:continue
    if len(items)>1:
     combined=[];charges=[]

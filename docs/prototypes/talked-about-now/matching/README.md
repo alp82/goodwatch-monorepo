@@ -6,7 +6,7 @@ This is a data experiment, not an application feature. Production access is rest
 
 ## Round two: renderer handover
 
-The improved foreground/context matcher and its **fresh 200-item benchmark** are in [results-round2.md](results-round2.md). [matches.json](matches.json) is the data input for the separate title-page prototype; this branch builds no review page. [matches.schema.json](matches.schema.json) specifies title IDs, source posts, lanes, confidence, discovery provenance and manual right/wrong/unsure labels. Dates and acquisition limits are embedded in the JSON.
+The improved foreground/context matcher and its **fresh 200-item benchmark** are in [results-round2.md](results-round2.md). [matches.json](matches.json) is the data input for the separate title-page prototype; this branch builds no review page. It includes the top 25 titles by observed post count, the buzz-list union, and additional diagnostic titles exposing every wrong link from the holdout. [matches.schema.json](matches.schema.json) specifies title IDs, source posts, lanes, confidence, discovery provenance and manual right/wrong/unsure labels. Dates and acquisition limits are embedded in the JSON.
 
 For the committed evidence, run `python round2_publish.py metrics` and `python round2_verify.py` offline. Rebuilding the Markdown report uses `python round2_publish.py report`. Export metadata hydration uses read-only production SELECTs.
 
