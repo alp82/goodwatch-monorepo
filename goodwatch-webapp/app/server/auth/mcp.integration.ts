@@ -80,7 +80,7 @@ async function grant(scope = "mcp:read mcp:write offline_access") {
  grant_type: "authorization_code", client_id: client.client_id, redirect_uri: client.redirect_uris[0],
  code: callback.searchParams.get("code")!, code_verifier: verifier, resource})}))
  assert.equal(token.status, 200)
- return {client, token: await token.json(), cookie}
+ return {client, token: await token.json(), cookie, consentQuery: consentUrl.search.slice(1)}
 }
 
 test("a resource-bound Better Auth JWKS token reaches the MCP verifier with its member and client", async () => {
@@ -121,4 +121,83 @@ test("a signed-in member cannot administer OAuth resources or disable another ap
  const response = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/create-client`, {method: "POST",
  headers: {origin, cookie: issued.cookie, "content-type": "application/json"}, body: JSON.stringify({client_name: "Privileged app", redirect_uris: ["https://other.example/callback"], skip_consent: true})}))
  assert.equal(response.status, 401)
+})
+
+async function refresh(issued: Awaited<ReturnType<typeof grant>>, token = issued.token.refresh_token) {
+ return memberAuth.handler(new Request(`${origin}/api/auth/oauth2/token`, {method: "POST", headers: {"content-type": "application/x-www-form-urlencoded"},
+  body: new URLSearchParams({grant_type: "refresh_token", client_id: issued.client.client_id, refresh_token: token, resource})}))
+}
+
+test("disconnecting an app stops its existing JWT and refresh token", async () => {
+ const issued = await grant()
+ const listed = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/get-consents`, {headers: {cookie: issued.cookie}}))
+ const consent = (await listed.json()).find((c: {clientId: string}) => c.clientId === issued.client.client_id)
+ assert.equal((await post("/oauth2/delete-consent", {id: consent.id}, issued.cookie)).status, 200)
+ const {setAuthForTest} = await import("./runtime.server.ts")
+ const {mcpAuthorization} = await import("../mcp/authorization.server.ts")
+ process.env.BETTER_AUTH_ENABLED = "true"; process.env.MCP_RESOURCE_URL = resource; setAuthForTest(memberAuth)
+ try {await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))}
+ finally {setAuthForTest(null); delete process.env.BETTER_AUTH_ENABLED; delete process.env.MCP_RESOURCE_URL}
+ const renewed = await refresh(issued)
+ assert.equal(renewed.status, 400)
+ assert.equal((await renewed.json()).error, "invalid_grant")
+})
+
+test("durable signing keys and grants survive a new auth instance and refresh rotates with retry recovery", async () => {
+ const issued = await grant()
+ const fresh = createGoodwatchAuth({sql, storage: new ValkeyAuthStorage(() => redis), mail: capturedMail,
+  baseURL: origin, secret: "local-mcp-secret-at-least-32-characters", google: {clientId: "local", clientSecret: "local"},
+  mcp: {resource, accessTokenExpiresIn: 60}})
+ assert.deepEqual(await fresh.api.getJwks(), await memberAuth.api.getJwks())
+ const body = new URLSearchParams({grant_type: "refresh_token", client_id: issued.client.client_id,
+  refresh_token: issued.token.refresh_token, resource})
+ const renew = () => fresh.handler(new Request(`${origin}/api/auth/oauth2/token`, {method: "POST",
+  headers: {"content-type": "application/x-www-form-urlencoded"}, body}))
+ const first = await renew(); assert.equal(first.status, 200)
+ const rotated = await first.json()
+ assert.notEqual(rotated.refresh_token, issued.token.refresh_token)
+ const retried = await renew(); assert.equal(retried.status, 200)
+ const recovered = await retried.json()
+ assert.equal(recovered.refresh_token, rotated.refresh_token)
+ assert.equal(recovered.access_token, rotated.access_token)
+ const {setAuthForTest} = await import("./runtime.server.ts")
+ const {mcpAuthorization} = await import("../mcp/authorization.server.ts")
+ process.env.BETTER_AUTH_ENABLED = "true"; process.env.MCP_RESOURCE_URL = resource; setAuthForTest(fresh)
+ try {assert.equal((await mcpAuthorization.verifyAccessToken(rotated.access_token)).clientId, issued.client.client_id)}
+ finally {setAuthForTest(null); delete process.env.BETTER_AUTH_ENABLED; delete process.env.MCP_RESOURCE_URL}
+})
+
+test("MCP rejects altered signatures, expired JWTs, wrong resources and the disabled auth flag", async (t) => {
+ const issued = await grant()
+ const {setAuthForTest} = await import("./runtime.server.ts")
+ const {mcpAuthorization} = await import("../mcp/authorization.server.ts")
+ process.env.BETTER_AUTH_ENABLED = "true"; process.env.MCP_RESOURCE_URL = resource; setAuthForTest(memberAuth)
+ try {
+  const parts = issued.token.access_token.split(".")
+  const signature = Buffer.from(parts[2], "base64url"); signature[0] ^= 1
+  await assert.rejects(mcpAuthorization.verifyAccessToken(`${parts[0]}.${parts[1]}.${signature.toString("base64url")}`))
+  process.env.MCP_RESOURCE_URL = "http://127.0.0.1:3356/other"
+  await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))
+  process.env.MCP_RESOURCE_URL = resource
+  process.env.BETTER_AUTH_ENABLED = "false"
+  await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))
+  process.env.BETTER_AUTH_ENABLED = "true"
+  t.mock.timers.enable({apis: ["Date"], now: Date.now() + 120000})
+  await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))
+ } finally {t.mock.timers.reset(); setAuthForTest(null); delete process.env.BETTER_AUTH_ENABLED; delete process.env.MCP_RESOURCE_URL}
+})
+
+
+test("reconnecting an app never revives its disconnected tokens", async () => {
+ const issued = await grant()
+ const listed = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/get-consents`, {headers: {cookie: issued.cookie}}))
+ const consent = (await listed.json()).find((c: {clientId: string}) => c.clientId === issued.client.client_id)
+ assert.equal((await post("/oauth2/delete-consent", {id: consent.id}, issued.cookie)).status, 200)
+ assert.equal((await post("/oauth2/consent", {accept: true, oauth_query: issued.consentQuery}, issued.cookie)).status, 200)
+ const {setAuthForTest} = await import("./runtime.server.ts")
+ const {mcpAuthorization} = await import("../mcp/authorization.server.ts")
+ process.env.BETTER_AUTH_ENABLED = "true"; process.env.MCP_RESOURCE_URL = resource; setAuthForTest(memberAuth)
+ try {await assert.rejects(mcpAuthorization.verifyAccessToken(issued.token.access_token))}
+ finally {setAuthForTest(null); delete process.env.BETTER_AUTH_ENABLED; delete process.env.MCP_RESOURCE_URL}
+ assert.equal((await refresh(issued)).status, 400)
 })

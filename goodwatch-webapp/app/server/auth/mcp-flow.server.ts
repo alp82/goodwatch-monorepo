@@ -12,9 +12,15 @@ export async function handleMcpAccountRequest(
 ): Promise<Response> {
  const response = await handle()
  response.headers.set("Cache-Control", "private, no-store")
- response.headers.set("Referrer-Policy", "no-referrer")
+ response.headers.set("Referrer-Policy", "strict-origin")
  response.headers.set("X-Content-Type-Options", "nosniff")
- response.headers.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+ let formAction = "'self'"
+ if (response.status < 400) {
+  const callback = new URL(new URL(request.url).searchParams.get("redirect_uri")!)
+  // Chromium applies form-action to redirects too. This callback came from the verified signed query.
+  formAction += ` ${["http:", "https:"].includes(callback.protocol) ? callback.origin : callback.protocol}`
+ }
+ response.headers.set("Content-Security-Policy", `default-src 'none'; style-src 'unsafe-inline'; form-action ${formAction}; frame-ancestors 'none'; base-uri 'none'`)
  return response
  async function handle(): Promise<Response> {
   const query = new URL(request.url).search.slice(1)

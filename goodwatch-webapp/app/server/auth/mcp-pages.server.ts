@@ -11,7 +11,7 @@ const page = (title: string, body: string): string => `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin">
 <title>${escapeHtml(title)} – GoodWatch</title>
 <style>
 body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:0;padding:2rem 1rem;line-height:1.5}

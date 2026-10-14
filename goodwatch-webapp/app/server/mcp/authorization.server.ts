@@ -13,11 +13,11 @@ export const mcpAuthorization: OAuthTokenVerifier = {
    const keys = await auth.api.getJwks()
    const {payload} = await jwtVerify(token, createLocalJWKSet(keys), {
     issuer: context.baseURL, audience: resource, algorithms: ["EdDSA"], typ: "at+jwt",
-    requiredClaims: ["sub", "exp", "iat", "jti", "client_id", "scope"],
+    requiredClaims: ["sub", "exp", "iat", "jti", "client_id", "scope", "gw_grant_id", "gw_grant_version"],
    })
    if (payload.aud !== resource || typeof payload.sub !== "string" || !payload.sub.trim() ||
     typeof payload.client_id !== "string" || !payload.client_id.trim() ||
-    payload.azp !== payload.client_id || typeof payload.scope !== "string" ||
+    typeof payload.gw_grant_id !== "string" || typeof payload.gw_grant_version !== "string" || payload.azp !== payload.client_id || typeof payload.scope !== "string" ||
     !Number.isSafeInteger(payload.exp) || payload.cnf !== undefined) throw new Error("Invalid token claims")
    const clientId = payload.client_id
    const userId = payload.sub
@@ -25,12 +25,10 @@ export const mcpAuthorization: OAuthTokenVerifier = {
    const [user, client, consent] = await Promise.all([
     context.adapter.findOne<{emailVerified: boolean}>({model: "user", where: [{field: "id", value: userId}]}),
     context.adapter.findOne<{disabled?: boolean}>({model: "oauthClient", where: [{field: "clientId", value: clientId}]}),
-    context.adapter.findOne<{id: string; scopes: string[]; resources?: string[]; lastUsedAt?: Date}>({model: "oauthConsent", where: [
-     {field: "clientId", value: clientId}, {field: "userId", value: userId},
-    ]}),
+    context.adapter.findOne<{id: string; clientId: string; userId: string; grantVersion: string; scopes: string[]; resources?: string[]; lastUsedAt?: Date}>({model: "oauthConsent", where: [{field: "id", value: payload.gw_grant_id}]}),
    ])
    if (!user?.emailVerified || !client || client.disabled || !consent ||
-    !consent.resources?.includes(resource) || !scopes.every(scope => consent.scopes.includes(scope)))
+    consent.clientId !== clientId || consent.userId !== userId || consent.grantVersion !== payload.gw_grant_version || !consent.resources?.includes(resource) || !scopes.every(scope => consent.scopes.includes(scope)))
     throw new Error("Grant is no longer active")
    // Bound durable write frequency; conditional touch cannot resurrect a deleted grant.
    const now = new Date()
@@ -39,8 +37,8 @@ export const mcpAuthorization: OAuthTokenVerifier = {
      {field: "id", value: consent.id}, {field: "lastUsedAt", value: consent.lastUsedAt ?? null},
     ], increment: {}, set: {lastUsedAt: now}})
     if (!touched) {
-     const current = await context.adapter.findOne<{scopes: string[]; resources?: string[]}>({model: "oauthConsent", where: [{field: "id", value: consent.id}]})
-     if (!current?.resources?.includes(resource) || !scopes.every(scope => current.scopes.includes(scope))) throw new Error("Grant changed during usage update")
+     const current = await context.adapter.findOne<{scopes: string[]; resources?: string[]; grantVersion: string}>({model: "oauthConsent", where: [{field: "id", value: consent.id}]})
+     if (current?.grantVersion !== payload.gw_grant_version || !current?.resources?.includes(resource) || !scopes.every(scope => current.scopes.includes(scope))) throw new Error("Grant changed during usage update")
     }
    }
    return {token, clientId, scopes, expiresAt: payload.exp!, resource: new URL(resource), extra: {userId}}

@@ -14,7 +14,7 @@ const rules: Record<string, Record<string, string[]>> = {
 	oauthClientResource: { findOne: ["clientId+resourceId"], findMany: ["clientId", "clientId+resourceId:in"], deleteMany: ["clientId+resourceId"] },
 	oauthConsent: { incrementOne: ["id+lastUsedAt"], findOne: ["clientId+userId", "clientId+userId+referenceId", "id"], findMany: ["userId"], update: ["id"], delete: ["id"] },
 	oauthAccessToken: { findOne: ["token"], findMany: ["sessionId"], delete: ["id", "token"], deleteMany: ["refreshId", "refreshId:in", "authorizationCodeId"], updateMany: ["id:in"] },
-	oauthRefreshToken: { findOne: ["token"], findMany: ["sessionId", "clientId+userId"], deleteMany: ["authorizationCodeId", "clientId+userId"], updateMany: ["id:in"], incrementOne: ["id+revoked"], update: ["id"] },
+	oauthRefreshToken: { findOne: ["token"], findMany: ["sessionId", "clientId+userId"], deleteMany: ["authorizationCodeId", "clientId+userId"], updateMany: ["id:in"], incrementOne: ["id+revoked", "id+grantVersion"], update: ["id"] },
 	oauthClientAssertion: { findOne: ["id"] },
 	rateLimit: { findMany: ["key"], incrementOne: ["key+lastRequest:lte", "key+lastRequest:gt+count:lt"], deleteMany: ["lastRequest:lt"] },
 }
@@ -32,7 +32,7 @@ export function assertAuthShape(model: string, action: string, where: CleanedWhe
 	const patterns = [...(rules[model]?.[action] ?? [])]
 	if (action === "findMany") patterns.push(...(rules[model].delete ?? []), ...(rules[model].deleteMany ?? []))
 	if (!patterns.some(p => signature(p ? p.split("+") : []) === signature(where.map(p => `${p.field}:${p.operator}`)))) fail()
-	if (model === "oauthRefreshToken" && action === "incrementOne" && where.find(p => p.field === "revoked")?.value !== null) fail()
+	if (model === "oauthRefreshToken" && action === "incrementOne" && where.some(p => p.field === "revoked") && where.find(p => p.field === "revoked")?.value !== null) fail()
 	if (model === "account" && ["findOne", "updateMany"].includes(action)) {
 		const values = Object.fromEntries(where.map(p => [p.field, p.value]))
 		if (values.providerId !== "credential" || values.accountId !== values.userId) fail()
@@ -66,11 +66,13 @@ export function assertAuthMutation(model: string, action: string, input: Record<
 		if (model === "account" && action === "incrementOne" && (Object.keys(input.increment).length || Object.keys(data).some(field => !["password", "updatedAt"].includes(field)) || typeof data.password !== "string" || !data.password || !String(input.where.find((p: CleanedWhere) => p.field === "password")?.value ?? "").startsWith("$2"))) fail()
 		if (model === "account" && ["id", "accountId", "userId"].some(field => field in data)) fail()
 		if (model === "session" && ["id", "token", "userId"].some(field => field in data)) fail()
-		const allowed = model === "oauthRefreshToken"
+		const binding = model === "oauthRefreshToken" && action === "incrementOne" && input.where.some((p: CleanedWhere) => p.field === "grantVersion")
+		if (binding && (Object.keys(input.increment ?? {}).length || Object.keys(data).length !== 1 || typeof data.grantVersion !== "string" || !data.grantVersion || input.where.find((p: CleanedWhere) => p.field === "grantVersion")?.value !== null)) fail()
+		const allowed = binding ? ["grantVersion"] : model === "oauthRefreshToken"
 			? action === "update" ? ["rotationReplayResponse"] : action === "updateMany" ? ["revoked"] : ["revoked", "rotatedAt", "rotationReplayExpiresAt"]
 			: model === "oauthAccessToken" ? ["revoked"] : undefined
 		if (allowed && Object.keys(data).some(field => !allowed.includes(field))) fail()
-		if (["oauthRefreshToken", "oauthAccessToken"].includes(model) && action !== "update" && (!(data.revoked instanceof Date) || !Number.isFinite(data.revoked.getTime()))) fail()
+		if (["oauthRefreshToken", "oauthAccessToken"].includes(model) && !binding && action !== "update" && (!(data.revoked instanceof Date) || !Number.isFinite(data.revoked.getTime()))) fail()
 		if (model === "oauthRefreshToken" && action === "incrementOne" && Object.keys(input.increment ?? {}).length) fail()
 		if (model === "rateLimit" && action === "incrementOne") {
 			if (Object.keys(data).some(field => !["count", "lastRequest"].includes(field)) || !Number.isFinite(data.lastRequest)) fail()
