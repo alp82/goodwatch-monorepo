@@ -341,3 +341,18 @@ from a copy of it.
 
 The prototype's shots show the Expand key at the bottom right, which is slice 11's, sample titles, and "Good
 evening." where the start page's H1 stands.
+
+## After the merge of search
+
+The integration branch at `48486cbc` (slice 10, search) is merged into this slice's branch. Both screens are in the
+machine, the switch and the scene, and the screens any key opens are asked for together at the first interaction:
+the menu, What is GoodWatch?, search and a service's screen. Taken again after it:
+
+- `npm test` on the TV and the living room (`ui/living-room/**`, `server/living-room/*`): 715 tests, all pass.
+- `tsc` at 212 errors, as on the integration branch at `48486cbc`. Lint clean on the files of the merge. The build
+  passes; the first view of `/home-preview` is 12 files, 677,040 / 225,358 / 195,474.
+- A short run of this slice's drive script (the walks and the links, both sizes): 145 checks as a guest with one
+  that waits a fixed 380 ms for a row's smooth paging, which passed on a second run (136 of 136 for the walks), and
+  197 as a member, none failed.
+- Search's own drive script (`../search/drive.mjs`, the refused search and the walks, both sizes): 156 checks as a
+  guest and 143 as a member, none failed.
