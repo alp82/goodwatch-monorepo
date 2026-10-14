@@ -53,6 +53,13 @@
 	.tvr-body {
 		transition: none;
 	}
+	/* The Remotes' keys do not give under a press: their light still changes, nothing of them moves. */
+	.tvr :is(.remote-key, .remote-ok, .remote-arrow, .remote-wheel) {
+		transition-property: color, background-color, background, box-shadow, opacity;
+	}
+	.tvr :is(.remote-key, .remote-ok, .remote-arrow):active {
+		scale: none;
+	}
 }
 
 /* The frame around the picture while the Expand key has the focus (TvRoom.tsx): four amber brackets 14 px inside

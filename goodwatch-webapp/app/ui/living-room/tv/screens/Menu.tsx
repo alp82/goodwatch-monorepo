@@ -59,6 +59,7 @@ export default function Menu({ items }: { items: readonly string[] }) {
 				<Item
 					key={id}
 					id={id}
+					role="menuitem"
 					className={`tvc-btn flex shrink-0 items-center ${P ? "px-6 text-[21px]" : "h-[76px] px-9 text-[30px]"}`}
 					style={P ? { height: phone.key } : undefined}
 				>

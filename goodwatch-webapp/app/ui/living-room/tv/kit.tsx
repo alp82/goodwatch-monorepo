@@ -122,6 +122,7 @@ export function Item({
 	id,
 	label,
 	pressed,
+	role,
 	className = "",
 	style,
 	children,
@@ -131,6 +132,8 @@ export function Item({
 	label?: string
 	/** For an item that is on or off, such as a tab: whether it is on. */
 	pressed?: boolean
+	/** What the item is to a screen reader where a button is not enough: an item of the menu. */
+	role?: "menuitem"
 	className?: string
 	style?: CSSProperties
 	children: ReactNode
@@ -153,6 +156,7 @@ export function Item({
 			aria-current={on || undefined}
 			aria-label={label}
 			aria-pressed={pressed}
+			role={role}
 			// The mouse: the item under the cursor takes the focus, and the ring shows it (pointing.ts). A finger
 			// points through pointing.ts, which gives the focus itself and lets go with this button's click.
 			// A move, not an enter: an item that comes to lie under a resting cursor (a new screen, a row that pages)

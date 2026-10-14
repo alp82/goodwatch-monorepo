@@ -143,6 +143,13 @@ test("a member's tiles show their own Tonight and My shows", () => {
 test("What is GoodWatch? and the menu draw the machine's items", () => {
 	for (const edition of ["desktop", "phone"] as const) {
 		assert.deepEqual(ids(rendered.about[edition]), rendered.items.about)
+		// A screen reader meets a menu of menu items, each named by its word.
+		const menu = rendered.menu.guest[edition]
+		assert.match(menu, /role="menu" aria-label="Menu"/)
+		assert.equal(
+			count(menu, 'role="menuitem"'),
+			rendered.items.menuGuest.length,
+		)
 		assert.deepEqual(
 			ids(rendered.menu.guest[edition]),
 			rendered.items.menuGuest,
