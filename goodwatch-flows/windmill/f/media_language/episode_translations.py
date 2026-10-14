@@ -53,8 +53,8 @@ def publish_rows(connector, table, rows, *, preserve_existing=False):
         groups.setdefault(columns, []).append(tuple(row[column] for column in columns))
     for columns, values in groups.items():
         updates = ', '.join(
-            (f"{column} = CASE WHEN {table}.{column} IS NULL OR {table}.{column} = '' "
-             f"THEN excluded.{column} ELSE {table}.{column} END") if preserve_existing
+            (f"{column} = CASE WHEN {column} IS NULL OR {column} = '' "
+             f"THEN excluded.{column} ELSE {column} END") if preserve_existing
             else f'{column} = excluded.{column}' for column in columns if column not in KEY)
         sql = (f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join('?' for _ in columns)}) "
                f"ON CONFLICT ({', '.join(KEY)}) DO UPDATE SET {updates}")

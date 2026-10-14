@@ -45,6 +45,24 @@ class TranslationIngestionTest(unittest.TestCase):
         publish_rows(connector, 'episode_translation', [])
         self.assertEqual(len(connector.calls), 1)
 
+    def test_preserve_existing_renders_crate_conflict_sql_and_bound_values(self):
+        class Connector:
+            def __init__(self): self.calls = []
+            def run_many(self, sql, values): self.calls.append((sql, values))
+        rows = translation_rows(1396, 42, payload(42, name='Neu', overview='Beschreibung'))
+        for table in ('season_translation', 'episode_translation'):
+            with self.subTest(table=table):
+                connector = Connector()
+                publish_rows(connector, table, rows, preserve_existing=True)
+                self.assertEqual(connector.calls, [(
+                    f'INSERT INTO {table} (show_id, tmdb_id, language_code, country_code, name, overview) '
+                    'VALUES (?, ?, ?, ?, ?, ?) '
+                    'ON CONFLICT (show_id, tmdb_id, language_code, country_code) DO UPDATE SET '
+                    "name = CASE WHEN name IS NULL OR name = '' THEN excluded.name ELSE name END, "
+                    "overview = CASE WHEN overview IS NULL OR overview = '' THEN excluded.overview ELSE overview END",
+                    [(1396, 42, 'de', 'DE', 'Neu', 'Beschreibung')],
+                )])
+
     def catalog(self, title):
         return {f'tv/{title}': {'id': title, 'seasons': [{'id': title*10, 'season_number': 1}]},
                 f'tv/{title}/season/1': {'id': title*10, 'season_number': 1, 'episodes': [
@@ -78,8 +96,8 @@ class TranslationIngestionTest(unittest.TestCase):
         self.assertEqual(len(result['failures']), 1)
         self.assertEqual(len(connector.calls), 1)
         self.assertNotIn('DELETE', connector.calls[0])
-        self.assertIn('CASE WHEN season_translation.name IS NULL', connector.calls[0])
-        self.assertIn('ELSE season_translation.name END', connector.calls[0])
+        self.assertIn('CASE WHEN name IS NULL', connector.calls[0])
+        self.assertIn('ELSE name END', connector.calls[0])
 
     def test_request_cap_and_input_limits(self):
         fixture = self.catalog(1396)
