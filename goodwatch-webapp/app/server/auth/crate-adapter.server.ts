@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto"
 import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
+import { admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec } from "./payload-codec.server.ts"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
@@ -71,7 +72,7 @@ type Row = Record<string, any>
 export const authModels = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
 const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
 type Receipt = { operation: string; baseSeq: number; at?: string }
-type Stored = { row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[]; emailClaim?: string }
+type Stored = { envelope: Record<string, any>; row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[]; emailClaim?: string }
 export class IndeterminateAuthWriteError extends Error {
 	constructor() { super("Auth write outcome is indeterminate; do not retry the logical operation"); this.name = "IndeterminateAuthWriteError" }
 }
@@ -81,7 +82,7 @@ export class AuthMutationConflictError extends Error {
 
 export async function migrateAuthTables(sql: AuthSql, additionalModels: string[] = []) {
 	if (additionalModels.length && !localTransports.has(sql)) throw new Error("Additional tables require the disposable local transport")
-	for (const model of new Set([...authModels, ...additionalModels])) {
+	for (const model of new Set([...authModels, "capacity", ...additionalModels])) {
 		await sql(`CREATE TABLE IF NOT EXISTS ${authModelTable(model)} (
 		id TEXT PRIMARY KEY, payload TEXT INDEX OFF STORAGE WITH (columnstore = false) NOT NULL,
 		lookup OBJECT(STRICT) AS (${indexedFields.map(field => `"${field}" ${["lastRequest", "count"].includes(field) ? "DOUBLE PRECISION" : "TEXT"}`).join(",")}),
@@ -100,12 +101,14 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 	if (!String((await sql("SHOW CREATE TABLE doc.auth_user_email")).rows[0]?.[0]).includes('"user_seq" BIGINT NOT NULL')) throw new Error("Incompatible prerelease email claim schema: offline migration required")
 }
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string }) {
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, populationBounds }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; populationBounds?: true | AuthPopulationBounds }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
 	const payloadSecret = encryptionSecret ?? "disposable-local-auth-integration-key-548"
 	const codec = authPayloadCodec(payloadSecret)
+	const bounds = populationBounds === true ? launchPopulationBounds : populationBounds
+	if (bounds) validatePopulationBounds(bounds, maxEnumeration)
 	const privateKey = (purpose: string, value: unknown) => createHmac("sha256", payloadSecret).update(JSON.stringify([purpose, value])).digest("hex")
 	const emailKey = (email: unknown) => privateKey("email-claim", normalizeEmail(email))
 	const indexValue = (model: string, field: string, value: unknown) => model === "verification" && field === "identifier" && value != null ? privateKey("verification-identifier", value) : value
@@ -160,7 +163,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const [payload, seq, term, , receipts] = result.rows[0]
 				const envelope = codec.decode(payload, `${authModelTable(model)}:${id}:payload`)
 				if (typeof envelope.deleted !== "boolean" || envelope.row?.id !== id) throw new Error("Invalid authenticated auth row")
-				return { row: decodeRow(model, envelope.row), seq: Number(seq), term: Number(term), deleted: envelope.deleted, receipts: codec.decode(receipts, `${authModelTable(model)}:${id}:receipts`), emailClaim: envelope.emailClaim }
+				if (bounds && model !== "user" && !envelope.deleted && !envelope.admission) throw new Error("Unadmitted prerelease auth row; offline rebuild/import required")
+				return { envelope, row: decodeRow(model, envelope.row), seq: Number(seq), term: Number(term), deleted: envelope.deleted, receipts: codec.decode(receipts, `${authModelTable(model)}:${id}:receipts`), emailClaim: envelope.emailClaim }
 			}
 			const key = (model: string, row: Row): string => {
 				switch (model) {
@@ -226,7 +230,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				}
 				return result
 			}
-			const mutate = async (model: string, original: Stored, update: Row, deleting = false, replacing = false): Promise<Row | null> => {
+			const mutate = async (model: string, original: Stored, update: Row, deleting = false, replacing = false, admission?: AuthAdmission): Promise<Row | null> => {
 				let emailClaim = original.emailClaim
 				if (model === "user" && update.email !== undefined && update.email !== original.row.email) {
 					update = { ...update, email: testOnlyConformance ? update.email : normalizeEmail(update.email) }
@@ -243,7 +247,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${authModelTable(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ row: deleting ? { id } : result, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
@@ -284,10 +288,11 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						emailClaim = await reserveEmail(row.email, row.id, randomUUID(), -1, true)
 					}
 					row.id = key(model, row)
+					const admission = bounds && model !== "user" && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, bounds) : undefined
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
-							[row.id, codec.encode({ row, deleted: false, emailClaim }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
+							[row.id, codec.encode({ row, deleted: false, emailClaim, admission }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {
@@ -299,8 +304,9 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						try { existing = await stored(model, row.id) } catch { throw new IndeterminateAuthWriteError() }
 						const receipt = existing?.receipts.find(r => r.operation === operation)
 						if (receipt) return row as typeof data
+						if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && ["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model)) {
-							const recreated = await mutate(model, existing, row, false, true)
+							const recreated = await mutate(model, existing, row, false, true, admission)
 							if (recreated) return recreated as typeof data
 							throw Object.assign(new Error("duplicate key: auth association"), { code: "23505" })
 						}

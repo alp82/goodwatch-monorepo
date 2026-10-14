@@ -40,6 +40,7 @@ export function createGoodwatchAuth(options: {
 		database: crateAuthAdapter({
 			sql: options.sql,
 			encryptionSecret: options.encryptionSecret,
+			populationBounds: true,
 		}),
 		plugins: options.mcp
 			? [
