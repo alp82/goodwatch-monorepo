@@ -1,6 +1,12 @@
 locks:
   f/apps/stats.app:
     __app_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+  f/buzz/collect: ebf2896710506b45d398384b14feb475bb68021fd3d77b6ee959df18b765c50a
+  f/buzz/daily: a8db85b2155c5117dc2eedffa3318462e1aa1531f9d9b1a13e6bfc5f9c1214a8
+  f/buzz/daily.flow:
+    __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+  f/buzz/score: 808666f15468b53436dfe87c1c4dcae83e702947764a689324e6088ae0a708e5
+  f/buzz/store: 658cbc8ece89ae2c320cc292ec4c721b229a23183d59bd1a5a7ec9cfb393ca52
   f/critic_sites/polite_http: 28950e75e2f9f69be195db67de94d2a17a52aa318100527e7a7f4c624236d0bd
   f/data_source/common: 442d137713e1bfd91db22e185a42c6f05ed356420d7cb5cb7d5e1f4a4464237e
   f/data_source/models: 83dac008dff5170169bccd88c43ee803fbfa6e202444865c2ffde413c9661238
