@@ -1,7 +1,8 @@
 // The one-time "please sign in again" notice of the move to Better Auth (#534: variant A). It shows in a browser that
 // still holds a Supabase sign-in from before, under the header of whatever page the member opened. Dismissing it, or
 // following it to the sign-in page, removes that old sign-in, so it never comes back.
-import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline"
+// Solid icons: their set is on every page already; the outline set would join the shell with every icon the site uses.
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation, useRouteLoaderData } from "@remix-run/react"
 import { useState } from "react"
 import { useUser } from "~/utils/auth"
