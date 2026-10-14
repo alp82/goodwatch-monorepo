@@ -1,3 +1,4 @@
+import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 // Fingerprint: the person named from their fingerprint families ("The dreamlike novelty hunter") with one line on what
 // gets them and what doesn't, then the five families as rows. Opening a family shows its attributes against everyone;
 // picking one shows what it means, the person's stance, the titles that carry it, and the exception. Last, the titles
@@ -96,17 +97,17 @@ export function Fingerprint({ view }: { view: FingerprintView }) {
 						<>
 							<p className="text-sm text-gray-400">You are</p>
 							<h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
-								{capitalize(view.identity.name)}
+								<span lang={proseFieldLanguage(view.identity, "name")}>{capitalize(view.identity.name)}</span>
 							</h1>
 							{view.line && (
 								<p className="mt-5 max-w-xl text-xl leading-snug text-gray-100 md:text-2xl">
-									{view.line}
+									<span lang={proseFieldLanguage(view, "line")}>{view.line}</span>
 								</p>
 							)}
 						</>
 					) : (
 						<h1 className="max-w-xl text-2xl font-bold leading-snug md:text-4xl">
-							{view.line || "Your fingerprint"}
+							<span lang={proseFieldLanguage(view, "line")}>{view.line || "Your fingerprint"}</span>
 						</h1>
 					)}
 					<p className="mt-4 max-w-xl text-sm text-gray-400">
@@ -165,10 +166,10 @@ export function Fingerprint({ view }: { view: FingerprintView }) {
 								>
 									<span>
 										<span className="block text-xl font-bold transition group-hover:text-amber-200 md:text-2xl">
-											{family.name}
+											<span lang={proseFieldLanguage(family, "name")}>{family.name}</span>
 										</span>
 										<span className="block text-sm text-gray-400">
-											{family.line}
+											<span lang={proseFieldLanguage(family, "line")}>{family.line}</span>
 										</span>
 									</span>
 									<span className="col-span-2 row-start-2 min-w-0 md:col-span-1 md:col-start-2 md:row-start-1">

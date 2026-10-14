@@ -1,3 +1,4 @@
+import { overlayProsePayload } from "./prose-overlay.server.ts"
 import { overlayTitles } from "./media-overlay.server.ts"
 import { presentationLanguage } from "../utils/media-presentation.ts"
 import { isbot } from "isbot"
@@ -29,7 +30,7 @@ export function localizeTitlePayload<T>(
 	hint?: Kind,
 	overlay: typeof overlayTitles = overlayTitles,
 ) {
-	return localizeCore(payload, language, hint, overlay)
+	return localizeCore(payload, language, hint, overlay).then(value => overlayProsePayload(value, language))
 }
 
 /** Route boundary for JSON catalog responses. Base data caches stay canonical; explicit URLs partition public payloads. */

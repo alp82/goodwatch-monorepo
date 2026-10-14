@@ -39,7 +39,7 @@ function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) 
 					<img src={assetUrl(fingerprintIcon)} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
 					{t.title} fingerprint
 				</h2>
-				<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
+				<p lang={t.prose?.language ?? "en"} className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
 			</div>
 			{children}
 		</div>
@@ -95,8 +95,8 @@ function Verdict({ t, p, size = "base" }: { t: F.TitleInput; p: Pillar; size?: "
 	const cls = { base: "text-base", lg: "text-lg", "2xl": "text-2xl tracking-tight" }[size]
 	return (
 		<div>
-			<p className={`font-semibold leading-snug text-white ${cls}`}>{b.verdict}</p>
-			{b.note && <p className="mt-1 text-sm text-gray-400 leading-relaxed">{b.note}</p>}
+			<p lang={t.prose?.language ?? "en"} className={`font-semibold leading-snug text-white ${cls}`}>{b.verdict}</p>
+			{b.note && <p lang={t.prose?.language ?? "en"} className="mt-1 text-sm text-gray-400 leading-relaxed">{b.note}</p>}
 		</div>
 	)
 }
@@ -130,8 +130,8 @@ function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "st
 				<section>
 					<h3 className="text-sm font-semibold text-gray-300">Skip it if</h3>
 					<div className="mt-2 flex flex-wrap gap-1.5">
-						{skip.map((s) => (
-							<span key={s} className="rounded-full bg-rose-400/15 px-2.5 py-1 text-sm text-rose-100">
+						{skip.map((s, index) => (
+							<span key={s} lang={t.prose?.fingerprint.skipLanguages?.[index] ?? "en"} className="rounded-full bg-rose-400/15 px-2.5 py-1 text-sm text-rose-100">
 								{s.charAt(0).toUpperCase() + s.slice(1)}
 							</span>
 						))}
@@ -355,7 +355,7 @@ function PillarDetail({ t, p, onBack, onSelect, backRef }: ViewProps) {
 			<div className="mt-10 grid min-h-0 content-start gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16 [&>*]:min-w-0">
 				<div className="space-y-7">
 					<BigPillar t={t} p={p} />
-					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+					<p lang={t.prose?.language ?? "en"} className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
 					<MoreLinks t={t} p={p} />
 				</div>
 				<AttributeGrid t={t} p={p} />
@@ -420,6 +420,7 @@ export default function DetailsFingerprint({
 }) {
 	if (!media.fingerprint) return null
 	const t: F.TitleInput = {
+		prose: (media as { templateProse?: import("~/utils/media-template-types").TitleTemplateProse }).templateProse,
 		title: media.details.title,
 		mediaType: media.mediaType,
 		year: media.details.release_year,

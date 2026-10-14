@@ -2,6 +2,7 @@ import React from 'react'
 
 type Badge = {
 	label: string
+	language?: string
 }
 
 type Props = { 
@@ -19,6 +20,7 @@ export default function Badges({ badges, className = '' }: Props): JSX.Element {
 			{badges.map((badge, index) => (
 				<span
 					key={`${badge.label}-${index}`}
+					lang={badge.language ?? "en"}
 					className="inline px-2 py-1 rounded-md text-xs font-medium text-gray-300 bg-gray-800 border border-gray-600"
 				>
 					{badge.label}

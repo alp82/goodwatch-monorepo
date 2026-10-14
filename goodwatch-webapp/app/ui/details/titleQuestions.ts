@@ -105,6 +105,8 @@ export interface TitleQuestion {
 	id: QuestionId
 	q: string
 	a: string
+	language?: string
+	sourceRevision?: string
 }
 
 export type QuestionId = "stream" | "worth" | "rated" | "length" | "source" | "agree" | "boxoffice" | "tropes" | "language" | "countries" | "aired"
@@ -203,6 +205,8 @@ function airedAnswer(media: MovieResult | ShowResult) {
 }
 
 export function titleQuestions(media: MovieResult | ShowResult, country: string): TitleQuestion[] {
+	const projected = (media as { templateProse?: import("~/utils/media-template-types").TitleTemplateProse }).templateProse
+	if (projected?.country === country) return projected.questions
 	const T = media.details.title
 	const rows: [QuestionId, string, string | null][] = [
 		["stream", `Where can I stream ${T} legally?`, streamingAnswer(media, country)],

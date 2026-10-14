@@ -79,7 +79,7 @@ const FAQ_ICON: Record<QuestionId, React.ComponentType<{ className?: string }>> 
 
 const WIDE: QuestionId[] = ["stream", "tropes"]
 
-function QuestionCard({ media, country, faq, wide = false }: { media: Media; country: string; faq: { id: QuestionId; q: string; a: string }; wide?: boolean }) {
+function QuestionCard({ media, country, faq, wide = false }: { media: Media; country: string; faq: TitleQuestion; wide?: boolean }) {
 	const Icon = FAQ_ICON[faq.id]
 	return (
 		<article className={`flex gap-4 rounded-2xl border border-white/8 bg-white/4 p-5 sm:p-6 ${WIDE.includes(faq.id) || wide ? "md:col-span-2" : ""}`}>
@@ -87,9 +87,9 @@ function QuestionCard({ media, country, faq, wide = false }: { media: Media; cou
 				<Icon className="h-5 w-5" />
 			</span>
 			<div className="min-w-0 grow">
-				<h3 className="text-lg font-semibold leading-snug">{faq.q}</h3>
+				<h3 lang={faq.language ?? "en"} className="text-lg font-semibold leading-snug">{faq.q}</h3>
 				<AnswerVisual media={media} country={country} id={faq.id} />
-				<p className="mt-3 text-gray-300 leading-relaxed">{faq.a}</p>
+				<p lang={faq.language ?? "en"} className="mt-3 text-gray-300 leading-relaxed">{faq.a}</p>
 			</div>
 		</article>
 	)

@@ -1,3 +1,4 @@
+import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { TasteTitleLink } from "~/ui/taste/exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
@@ -194,9 +195,10 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 						<div className="w-104 flex-shrink-0">
 							<h3 className="text-lg font-semibold text-white mb-3">Tags</h3>
 							<div className="flex flex-wrap gap-2">
-								{media.essence_tags.slice(0, 8).map((tag) => (
+								{media.essence_tags.slice(0, 8).map((tag, index) => (
 									<span
 										key={tag}
+										lang={proseFieldLanguage(media, "essence_tags", index)}
 										className="px-2.5 py-1 bg-gray-800 text-gray-300 text-sm rounded-full"
 									>
 										{tag}

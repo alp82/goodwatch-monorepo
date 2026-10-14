@@ -1,3 +1,4 @@
+import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 // Sides of you: the contradiction in the person's taste as the first line, the sides picked from poster chips, each
 // side as "You're here" next to "Just past it" (a place they've barely tried but rate above their usual), then
 // "More of this" on their services.
@@ -221,7 +222,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 			<div>
 				<p className="text-sm font-semibold text-amber-300">You're here</p>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
-					{side.name}
+					<span lang={proseFieldLanguage(side, "name")}>{side.name}</span>
 				</h2>
 				<p className="mt-2 text-gray-200">
 					{percent(side.share)} of what you love, rated {side.average} on
@@ -284,7 +285,7 @@ function JustPastIt({
 						))}
 				</div>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
-					{edge.lead} {edge.place}
+					<span lang={proseFieldLanguage(edge, "lead")}>{edge.lead}</span> <span lang={proseFieldLanguage(edge, "place")}>{edge.place}</span>
 				</h2>
 				<p className="mt-2 text-gray-200">
 					When you go, you rate it {edge.average}. Usually you give {usual}.

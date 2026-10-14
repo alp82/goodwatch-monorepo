@@ -1,3 +1,4 @@
+import { proseFieldLanguage } from "~/utils/prose-overlay-core"
 import React from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import Description from "~/ui/details/Description"
@@ -15,7 +16,7 @@ export default function About({ media, navigateToSection }: AboutProps) {
 	const { synopsis, tagline } = details
 	const { essenceTags = [] } = fingerprint || {}
 
-	const badges = essenceTags.map(tag => ({ label: tag }))
+	const badges = essenceTags.map((tag, index) => ({ label: tag, language: proseFieldLanguage(fingerprint, "essenceTags", index) }))
 	return (
 		<section className="mt-12 rounded-xl border border-white/3 bg-white/3 p-4 sm:p-6">
 			<h2 className="flex items-center gap-3 text-2xl font-bolds">

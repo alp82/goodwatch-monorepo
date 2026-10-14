@@ -1,3 +1,4 @@
+import { presentTitleTemplates } from "~/server/media-templates.server"
 import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
@@ -136,7 +137,7 @@ export const loader: LoaderFunction = async ({
 	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
 
 	const data = {
-		media,
+		media: canonicalContent ? media : presentTitleTemplates(media, country, language),
 		episodeGrid,
 		params: {
 			country,

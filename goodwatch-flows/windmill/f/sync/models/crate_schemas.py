@@ -385,6 +385,54 @@ SCHEMAS = {
     },
     # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
     # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
+    "season_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
+    "episode_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
+    "prose_translation": {
+        "columns": {
+            "source_id": "TEXT",
+            "source_revision": "TEXT",
+            "language": "TEXT",
+            "text": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "status": "TEXT",
+            "model": "TEXT",
+            "attempts": "INTEGER",
+            "prompt_tokens": "LONG",
+            "completion_tokens": "LONG",
+            "cost_usd": "DOUBLE",
+            "validation_revision": "TEXT",
+        },
+        "primary_key": ["source_id", "source_revision", "language"],
+        "shards": 3,
+        "replicas": "0-1",
+    },
     "imdb_episode": {
         "columns": {
             "show_id": "INTEGER",

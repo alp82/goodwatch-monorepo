@@ -8,6 +8,7 @@ import { moods } from "~/ui/explore/category/moods"
 type Key = keyof CoreScores
 
 export interface TitleInput {
+	prose?: import("~/utils/media-template-types").TitleTemplateProse
 	title: string
 	mediaType: "movie" | "show"
 	year: string
@@ -135,6 +136,7 @@ function genreLabel(t: TitleInput) {
 
 // The one-line headline, for example "Relentless energy, masterful craft".
 export function pillarLine(t: TitleInput) {
+	if (t.prose) return t.prose.fingerprint.line
 	const p = t.fingerprint.pillars
 	const entries = Object.entries(p) as [string, number][]
 	const strong = entries.filter(([, v]) => v >= 3).sort((a, b) => b[1] - a[1]).slice(0, 2)
@@ -181,6 +183,7 @@ export function summary(t: TitleInput) {
 
 
 export function skipIf(t: TitleInput) {
+	if (t.prose) return t.prose.fingerprint.skip
 	const s = t.fingerprint.scores
 	const out: string[] = []
 	if (humorPhrase(s).level === "none") out.push("you want something to laugh at")
@@ -235,6 +238,7 @@ export function pillarDrivers(t: TitleInput, pillar: string) {
 }
 
 export function pillarSentence(t: TitleInput, pillar: string) {
+	if (t.prose?.fingerprint.sentences[pillar]) return t.prose.fingerprint.sentences[pillar]
 	const s = t.fingerprint.scores
 	const pick = (keys: readonly Key[], lex: Partial<Record<Key, string>>, min = 7) =>
 		keys.filter((k) => s[k] >= min && lex[k]).sort((a, b) => s[b] - s[a]).map((k) => word(lex, k))
@@ -285,6 +289,7 @@ export interface PillarBrief {
 }
 
 export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
+	if (t.prose?.fingerprint.briefs[pillar]) return t.prose.fingerprint.briefs[pillar]
 	const s = t.fingerprint.scores
 	const drivers = pillarDrivers(t, pillar)
 	const feel = (keys: readonly Key[], n: number) =>
