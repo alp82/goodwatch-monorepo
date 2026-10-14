@@ -38,17 +38,22 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import React, { Suspense, lazy } from "react"
+import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
 import InfoBox from "~/ui/InfoBox"
-import BottomNav from "~/ui/nav/BottomNav"
+import {
+	HubDialog,
+	MobileDock,
+	NavigationProvider,
+	SearchDialog,
+	SiteHeader,
+} from "~/ui/navigation"
 import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext } from "~/utils/locale"
 import { assetBase, assetUrl } from "~/utils/asset-url"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
@@ -157,10 +162,7 @@ export const loader: LoaderFunction = async ({
 	)
 }
 
-// The error page shows the header of the old navigation. Its menus bring the dialog library, so its code loads with
-// the error page and not with every page.
-const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
-
+// The error page draws the site's navigation without the root loader's data: the account slot stays empty.
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
@@ -198,45 +200,47 @@ export function ErrorBoundary() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<SearchJourneyProvider>
-						<Suspense fallback={null}>
-							<Header />
-						</Suspense>
-						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-							<InfoBox
-								text={
-									notFound
-										? "This page doesn't exist"
-										: "Sorry, but an error occurred"
-								}
-							/>
-							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
-								{/* Error message */}
-								<strong className="text-xl text-white">
-									{(error as any)?.message || (error as any)?.data}
-								</strong>
+						<NavigationProvider>
+							<SiteHeader />
+							<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+								<InfoBox
+									text={
+										notFound
+											? "This page doesn't exist"
+											: "Sorry, but an error occurred"
+									}
+								/>
+								<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
+									{/* Error message */}
+									<strong className="text-xl text-white">
+										{(error as any)?.message || (error as any)?.data}
+									</strong>
 
-								{/* Try Again button */}
-								<button
-									type="button"
-									className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
-									onClick={() => window.location.reload()}
-								>
-									Try Again
-								</button>
+									{/* Try Again button */}
+									<button
+										type="button"
+										className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
+										onClick={() => window.location.reload()}
+									>
+										Try Again
+									</button>
 
-								{/* Error stack trace */}
-								{error?.stack && (
-									<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
-										<pre className="whitespace-pre-wrap break-words">
-											{(error as any).message}
-											<pre>{(error as any).data}</pre>
-										</pre>
-									</div>
-								)}
-							</div>
-						</main>
-						<Footer />
-						<BottomNav />
+									{/* Error stack trace */}
+									{error?.stack && (
+										<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
+											<pre className="whitespace-pre-wrap break-words">
+												{(error as any).message}
+												<pre>{(error as any).data}</pre>
+											</pre>
+										</div>
+									)}
+								</div>
+							</main>
+							<Footer />
+							<MobileDock />
+							<HubDialog />
+							<SearchDialog />
+						</NavigationProvider>
 						<ToastContainer />
 						{/* <CookieConsent /> */}
 						<TelemetryBoot />
