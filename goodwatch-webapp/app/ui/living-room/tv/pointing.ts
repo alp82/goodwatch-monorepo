@@ -106,6 +106,8 @@ export function startPointing(
 	// After a touch that was acted on here, the browser's own click for it is still to come, and is dropped.
 	let owed = false
 	let ours = false
+	/** The item the last touch chose, for the mouse events the browser sends after it. */
+	let chosen: HTMLElement | null = null
 
 	const set = (name: string, value: boolean) => {
 		const el = els.pointer.current
@@ -311,6 +313,7 @@ export function startPointing(
 		// let through: it is a press beside the menu, which closes it.
 		const target = shown && item?.isConnected ? item : null
 		owed = Boolean(target) || dragged
+		chosen = target
 		set("hold", false)
 		if (target) {
 			press(160)
@@ -337,6 +340,17 @@ export function startPointing(
 		if (ours || !owed || !e.isTrusted) return
 		owed = false
 		e.stopPropagation()
+		e.preventDefault()
+	}
+	/**
+	 * The browser's mouse press after a touch on the picture gives the browser's focus to what is under the finger.
+	 * When the touch changed the screen, that is another screen's key by then, or none: it must not take the focus,
+	 * least of all from the search screen's line, which a phone's keyboard hangs on.
+	 */
+	const onMouseDown = (e: MouseEvent) => {
+		if (ours || !owed || !e.isTrusted) return
+		const target = e.target instanceof Node ? e.target : null
+		if (chosen?.isConnected && target && chosen.contains(target)) return
 		e.preventDefault()
 	}
 	/** No menu and no callout under a finger that is held. */
@@ -373,6 +387,7 @@ export function startPointing(
 	window.addEventListener("pointerup", onUp)
 	window.addEventListener("pointercancel", onCancel)
 	root?.addEventListener("click", onClick, true)
+	root?.addEventListener("mousedown", onMouseDown, true)
 	root?.addEventListener("contextmenu", onMenu)
 	document.documentElement.addEventListener("mouseleave", rest)
 	window.addEventListener("blur", rest)
@@ -388,6 +403,7 @@ export function startPointing(
 			window.removeEventListener("pointerup", onUp)
 			window.removeEventListener("pointercancel", onCancel)
 			root?.removeEventListener("click", onClick, true)
+			root?.removeEventListener("mousedown", onMouseDown, true)
 			root?.removeEventListener("contextmenu", onMenu)
 			document.documentElement.removeEventListener("mouseleave", rest)
 			window.removeEventListener("blur", rest)

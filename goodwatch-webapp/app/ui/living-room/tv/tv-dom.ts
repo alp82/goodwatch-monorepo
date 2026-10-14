@@ -3,7 +3,7 @@
 //
 // The markup contract (kit.tsx): a screen and the menu are each a `[data-tv-layer]`, the focus moves inside the
 // topmost one; an item is a `[data-tv-item="<id>"]`; a row that pages sideways is a `[data-tv-row]` whose items
-// are its children.
+// are its children; the line a screen takes typing on is a `[data-tv-input]`.
 import { ROOM_ID } from "../use-below-room"
 import type { TvBox } from "./tv-move"
 
@@ -11,6 +11,8 @@ export const TV_LAYER_ATTR = "data-tv-layer"
 export const TV_ITEM_ATTR = "data-tv-item"
 export const TV_ROW_ATTR = "data-tv-row"
 export const TV_CANVAS_ATTR = "data-tv-canvas"
+/** The line a screen takes typing on: the search screen's (screens/Search.tsx). It is not an item. */
+export const TV_INPUT_ATTR = "data-tv-input"
 
 /** How far from a row's edge a focused item stays, in TV canvas pixels, so the item before or after it shows. */
 const ROW_MARGIN = 30
@@ -32,6 +34,13 @@ export function itemElement(id: string): HTMLElement | null {
 		topLayer()?.querySelector<HTMLElement>(
 			`[${TV_ITEM_ATTR}="${CSS.escape(id)}"]`,
 		) ?? null
+	)
+}
+
+/** The line the screen on show takes typing on, or null: no screen under the open menu has one. */
+export function inputElement(): HTMLInputElement | null {
+	return (
+		topLayer()?.querySelector<HTMLInputElement>(`[${TV_INPUT_ATTR}]`) ?? null
 	)
 }
 

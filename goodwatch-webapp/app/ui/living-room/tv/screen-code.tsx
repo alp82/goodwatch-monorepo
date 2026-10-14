@@ -97,6 +97,15 @@ export const TasteData = screenCode<
 	import("./screens/Taste").then((code) => ({ default: code.TasteData })),
 ).Screen
 
+// Slice 10: search, its question screen and its results, with the search's data.
+export const SearchCode = screenCode(() => import("./screens/Search"))
+/** The full search for the query in the address, and the cards of what it found. */
+export const SearchData = screenCode<
+	ComponentProps<typeof import("./screens/Search").SearchData>
+>(() =>
+	import("./screens/Search").then((code) => ({ default: code.SearchData })),
+).Screen
+
 // My shows (slice 9): the screen, what is new for the member's shows, and the Next episode of a show on the title
 // screen. The last is a chunk of its own: it brings the show page's tracking code, which only a member on a show's
 // title screen needs.
@@ -111,7 +120,11 @@ export const EpisodeCode = screenCode(() => import("./screens/ShowEpisode"))
 /** The Next episode of a member's show on the title screen, and its mark. */
 export const EpisodeData = EpisodeCode.Screen
 
-/** Asks for the screens any key can open, so they are there by the first press. Called at the first interaction. */
+/**
+ * Asks for the screens any key can open, so they are there by the first press: the menu, What is GoodWatch? and
+ * search, which the Remote's Search key and every top bar open. Called at the first interaction.
+ */
 export function loadFirstScreens() {
-	for (const code of [MenuCode, AboutCode]) code.load().catch(() => {})
+	for (const code of [MenuCode, AboutCode, SearchCode])
+		code.load().catch(() => {})
 }

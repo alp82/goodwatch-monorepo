@@ -185,12 +185,16 @@ console.log(
 			CANVAS.desktop,
 			stateOf(HOME, { menuOpen: true }),
 		),
-		// Discover, the Explorer and Taste are built; search is not yet.
-		notBuilt: screenHtml(
-			guest,
-			CANVAS.desktop,
-			stateOf({ name: "search", query: "heist" }),
-		),
+		// Every screen but home is a chunk of its own: before its code is there, the server draws its bar alone.
+		lazy: {
+			search: screenHtml(guest, CANVAS.desktop, stateOf({ name: "search", query: null })),
+			results: screenHtml(
+				guest,
+				CANVAS.desktop,
+				stateOf({ name: "search", query: "heist" }),
+			),
+			shows: screenHtml(member, CANVAS.desktop, stateOf({ name: "shows" })),
+		},
 		booting: screenHtml(
 			guest,
 			CANVAS.desktop,
@@ -209,7 +213,6 @@ console.log(
 			homeGuest: tvItems(HOME, guestCtx),
 			homeMember: tvItems(HOME, memberCtx),
 			about: tvItems(ABOUT, guestCtx),
-			notBuilt: tvItems({ name: "search", query: "heist" }, guestCtx),
 			menuGuest: menuItems(guestCtx),
 			menuMember: menuItems(memberCtx),
 		},
