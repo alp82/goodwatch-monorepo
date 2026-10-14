@@ -7,7 +7,7 @@ The decision is in [Decide whether search becomes its own service](https://githu
 ## The target
 
 - **Two search roles on vector1.** Each is a container of the webapp image with `WEBAPP_ROLE=search`: one encoder with 2 threads, and at most 4 searches in flight. They run from a compose file and are deployed by a command, not by a push.
-- **The route.** abio's proxy sends `POST /api/combined-search` and `GET /api/command-palette` to the search roles. Every other request keeps going to the page instances.
+- **The route.** abio's proxy sends `POST /api/combined-search`, `GET /api/command-palette` and `/mcp` to the search roles. Every other request keeps going to the page instances.
 - **The page instances** run with `WEBAPP_ROLE=page` afterward, and each one gets about 1.76 GB lighter.
 - **Order:** search roles up, route on, checks, then the page role. Each step is undone by itself.
 
@@ -38,7 +38,7 @@ abio's proxy reaches vector1 through one address: vector1's proxy. It can't tell
 
 | Case | Result |
 | --- | --- |
-| Paths | `/api/combined-search` and `/api/command-palette` reach the roles, with or without a query string. `/`, `/api/search-config`, `/health/ready`, a longer path, a trailing slash, and a query string that contains a search path stay with the page instances. The method isn't matched: the app answers a wrong one. |
+| Paths | `/api/combined-search`, `/api/command-palette` and exact `/mcp` reach the roles, with or without a query string. `/`, `/api/search-config`, `/health/ready`, a longer path, a trailing slash, and a query string that contains a search path stay with the page instances. The method isn't matched: the app answers a wrong one. |
 | Balancing | 20 requests: 10 per role, for lookups, searches, and member searches. |
 | Only vector1's file installed | Nothing changes. |
 | Request headers and body | The method, the path, the body, `Cookie`, `Origin`, `Content-Type`, `Accept-Language`, and a custom header arrive unchanged. `X-Real-Ip` is the visitor's address, the same value that the page instance on abio gets, and a value that the visitor sends is replaced. `X-Forwarded-For` has abio's address appended, as for the page instance on vector1. |
@@ -284,3 +284,9 @@ This list was written before the deploy. The deploy has since shown, as the tick
 - Coolify's rewrite of the two proxy files. The rules have no backslash, like the installed ones.
 - The roles behind network aliases, and a restart of one role, in a proxy test. With compose, a role never runs two containers at once.
 - The label values of the roles' series in Grafana Cloud. The Alloy file loads in Alloy v1.7.5 next to the two existing files, and both targets are scraped.
+
+## MCP routing extension (#569)
+
+The repository routing files now include `/mcp` so ranked tool calls run on search-role processes, inside their existing admission and spending controls. The extension has not been deployed. Upgrade the roles to the MCP-capable image first, configure the #566 verifier and the same canonical `MCP_RESOURCE_URL`, then follow the existing vector1-before-abio installation order. All MCP reads and writes share the roles' availability after that routing change. Keep OAuth and well-known metadata routes on their existing page routes.
+
+The local proxy probe covers `/mcp` balancing, query strings and bearer-header forwarding; `/mcp/`, longer paths and protected-resource metadata remain with page instances. It also accepts both the permanent HTTPS redirect in the repository balance file and the temporary redirect in its older installed copy. See [MCP ranked search](implementation/mcp-ranked-search.md) for the local application probes and quota/cache behavior.
