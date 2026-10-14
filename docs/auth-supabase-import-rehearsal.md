@@ -145,7 +145,9 @@ or an explicitly designed delta procedure, not repeated stale imports.
    writers. After sign-ins refresh tokens or profiles, stale reruns can correctly
    reject mismatched rows; never overwrite those differences automatically.
 8. **Start an isolated auth service on the copy.** Use #564's strict adapter and
-   the same payload key; require email verification and disable implicit account
+   the same payload key. Set `verification.storeIdentifier: 'hashed'` and
+   `advanced.database.defaultFindManyLimit: 10000` for complete bounded hook reads;
+   require email verification and disable implicit account
    linking, including `requireLocalEmailVerified: true`. Configure existing-password
    verification for imported bcrypt and new Better Auth scrypt:
 

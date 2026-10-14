@@ -29,7 +29,10 @@ const source = new Client({
 })
 const sql = crateAuthTransport(["http://127.0.0.1:15648"])
 const encryptionSecret = "disposable-local-importer-encryption-key-551"
-const adapter = crateAuthAdapter({ sql, encryptionSecret })({})
+const adapter = crateAuthAdapter({ sql, encryptionSecret })({
+	verification: { storeIdentifier: "hashed" },
+	advanced: { database: { defaultFindManyLimit: 10000 } },
+})
 let hashes: Map<string, string>
 before(async () => {
 	await source.connect()
@@ -242,6 +245,8 @@ test("imported passwords and local Google ID tokens sign in to their original UU
 		baseURL: "http://127.0.0.1:15680",
 		secret: "disposable-better-auth-test-secret-for-551",
 		database: crateAuthAdapter({ sql, encryptionSecret }),
+		verification: { storeIdentifier: "hashed" },
+		advanced: { database: { defaultFindManyLimit: 10000 } },
 		logger: { disabled: true },
 		emailAndPassword: {
 			enabled: true,

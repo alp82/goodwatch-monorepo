@@ -77,7 +77,10 @@ export async function importSupabaseAuth({
 		elapsedMs: 0,
 	}
 	const codec = authPayloadCodec(encryptionSecret)
-	const adapter = crateAuthAdapter({ sql, encryptionSecret })({})
+	const adapter = crateAuthAdapter({ sql, encryptionSecret })({
+		verification: { storeIdentifier: "hashed" },
+		advanced: { database: { defaultFindManyLimit: 10000 } },
+	})
 	const counts = async (): Promise<TargetCounts> => {
 		await sql(
 			"REFRESH TABLE doc.auth_user, doc.auth_account, doc.auth_user_email",
