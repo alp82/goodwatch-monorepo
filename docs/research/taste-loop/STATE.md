@@ -10,6 +10,8 @@ Read this first. Rewritten at the end of every session.
 
 ## Owner decisions on record
 
+- The loop does not stop at item or phase boundaries: after an item is accepted, the next brief is written and its
+  builder started in the same session. Pause only at the owner checkpoints in PLAN.md (October 14, 2026).
 - Reviewers and agents of any model family may read whatever they need (October 13, 2026).
 - No re-rating and no labelling by the owner. The owner's ratings are tested one hidden title at a time (T2a).
 
@@ -42,7 +44,7 @@ Read this first. Rewritten at the end of every session.
 
 ## Next action
 
-Phase 0 exit is met. Owner checkpoint done. Next session starts phase 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
+Phase 0 exit is met. Owner checkpoint done. Phase 1 is running in session 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
 tilt; register the leads and use gate looks only on registered comparisons; a gate review by two models other than
 the orchestrator's.
 
