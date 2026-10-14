@@ -12,10 +12,10 @@ drawing members again (others) or franchises again (owner). Sources: `items/002-
 
 | Rung | T1 error vs B2, others | T2a separation vs B2, others | T2a, among equally well-rated, vs B2 | T2a, rated 8+ in the first 50, vs B2 | T2a separation vs B2, owner | T2b | Verdict |
 |---|---:|---:|---:|---:|---:|---|---|
-| B1 GoodWatch score | +0.014 | −0.049 (−0.113 to +0.015) | −0.089 (−0.146 to −0.032) | −0.005 (−0.015 to +0.005) | +0.160 (+0.093 to +0.231) | not measured yet, needs item 004 | indistinguishable on the main measure; worse once well-rated titles are compared with each other |
-| B3 standardized | +0.004; pair accuracy +0.031 (+0.013 to +0.051) | −0.003 (−0.041 to +0.030), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.070 (+0.053 to +0.088)** | +0.154 (+0.103 to +0.207) | not measured yet, needs item 004 | indistinguishable on the main measure; **win at the top of the list**; guard: tilts to popular titles (median votes 142,136 against 7,181) and animation (+0.213 over the members' own mix) |
-| B4 consensus | −0.081 | +0.005 (−0.077 to +0.080), detectable 0.115 | −0.023 (−0.099 to +0.050) | −0.019 (−0.028 to −0.011) | +0.132 (+0.074 to +0.193) | not measured yet, needs item 004 | null; worse at the top |
-| B5 pooled | −0.107 | **+0.133 (+0.100 to +0.166)**, detectable 0.049, 24 of 26 members improved | **+0.088 (+0.053 to +0.123)** | −0.017 (−0.027 to −0.009) | +0.231 (+0.179 to +0.285) | not measured yet, needs item 004 | **win at ordering the whole list, fails at the top**: see below |
+| B1 GoodWatch score | +0.014 | −0.049 (−0.113 to +0.015) | −0.089 (−0.146 to −0.032) | −0.005 (−0.015 to +0.005) | +0.160 (+0.093 to +0.231) | not measured yet, needs item 004 | exploratory: no clear difference on the main measure; worse once well-rated titles are compared with each other |
+| B3 standardized | +0.004; pair accuracy +0.031 (+0.013 to +0.051) | −0.003 (−0.041 to +0.030), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.070 (+0.053 to +0.088)** | +0.154 (+0.103 to +0.207) | not measured yet, needs item 004 | exploratory: no clear difference on the main measure; better at the top for loved titles, but **fails the guards**: titles rated 5 or less in the first 50 +0.024 (+0.008 to +0.043) and first 200 +0.064 (+0.036 to +0.098); franchise repeats +0.51 (+0.36 to +0.67); popular titles (median votes 142,136 against 7,181); animation +0.213 over the members' own mix |
+| B4 consensus | −0.081 | +0.005 (−0.077 to +0.080), detectable 0.115 | −0.023 (−0.099 to +0.050) | −0.019 (−0.028 to −0.011) | +0.132 (+0.074 to +0.193) | not measured yet, needs item 004 | exploratory: no clear difference; worse at the top |
+| B5 pooled | −0.107 | **+0.133 (+0.100 to +0.166)**, detectable 0.049, 24 of 26 members improved | **+0.088 (+0.053 to +0.123)** | −0.017 (−0.027 to −0.009) | +0.231 (+0.179 to +0.285) | not measured yet, needs item 004 | exploratory: best separation, but **fails the guards**: worse at the top, franchise repeats +0.82 (+0.55 to +1.08), fewer shows (8% in the first 50 against the members' 39%); see below |
 | BP vote count | −0.010 | −0.114 (−0.168 to −0.061) | −0.118 (−0.172 to −0.064) | +0.369, but titles rated 5 or less too (0.264 in the first 50) | −0.202 (−0.266 to −0.133) | not measured yet, needs item 004 | loses; its first-50 hits are "people watch popular titles", not taste |
 
 T1 column: difference in error against B2 (below zero is better), from each rung's paired difference against B0
@@ -42,14 +42,24 @@ re-ran the B3 run, which reproduced all 907 values; 22 raw per-member rows of
 B5 and B3 read; no two accounts mirror each other's ratings (the closest pair agrees on 55% of 20 shared titles), so
 B5's pooled gain is not a copied account.
 
-**Where D1 stands:** no rung replaces today's taste yet. Two leads for phase 1: B5's ordering with a fixed top
+**Where D1 stands:** no rung replaces today's taste yet; keeping it is what the evidence supports. Two leads for phase 1: B5's ordering with a fixed top
 (its standardization done as in T1, or the list-composition re-ranker of phase 2 with a relevance floor), and B3,
 which is cheap and better at the top but must be checked for its popularity tilt. A combination of the two (B5 to
 push down, B3 to choose the top) is a candidate to register, not something measured.
 
 **Caveat of the test itself:** T2a only sees titles members chose to watch. Popularity predicts that choice, so
-first-50 shares favour popular scorers for every band. The separation and the "equally well-rated" figure are the
-measures that remove that.
+first-50 shares favour popular scorers for every band. The separation and the "equally well-rated" figure reduce
+that, but do not remove it: vote count alone keeps a separation of 0.020 (0.005 to 0.040), and GoodWatch score alone
+keeps 0.043 among equally well-rated titles. Beating them is evidence beyond those baselines, not proof that what
+is left is personal. Item 004 adds an "equally popular" figure.
+
+**Review (Sol 6.1, `items/003-hidden-title/REVIEW-sol.md`): sound after fixes.** Its fixes are in item 004 and the
+T2a figures above will be replaced by item 004's: a title still on the member's Want to See, Skip or Not interested
+list was certainly not hidden, a shortcut no rung used on purpose but that the comparison set must remove; the
+shuffled control's pass rule could pass a bias as large as the win floor; the owner's figures skipped the
+five-title band minimum (no effect at present); folds of up to 20 hidden titles can hurt learned rungs more than
+plain lists for members with few ratings, so a sensitivity run with at most 5 hidden titles follows. Nothing here is
+a win under PLAN.md 2.5: every lead fails a guard, and none is registered.
 
 ## D2. Whether to show a personal predicted score or risk
 

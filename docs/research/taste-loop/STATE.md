@@ -12,6 +12,9 @@ Read this first. Rewritten at the end of every session.
 
 - The loop does not stop at item or phase boundaries: after an item is accepted, the next brief is written and its
   builder started in the same session. Pause only at the owner checkpoints in PLAN.md (October 14, 2026).
+- Most building, experimenting and routine review goes to Astra (`gpt-6-astra`) and Sol 6.1 (`gpt-6.1-sol`) through
+  `codex exec`; Opus and Fable only for the most critical tasks and reviews: phase-gate reviews, red teams, accepting a
+  claimed win (October 14, 2026). Item 004 was already with an Opus builder.
 - Reviewers and agents of any model family may read whatever they need (October 13, 2026).
 - No re-rating and no labelling by the owner. The owner's ratings are tested one hidden title at a time (T2a).
 
