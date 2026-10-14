@@ -1,0 +1,5870 @@
+[
+  {
+    "id": "Y001",
+    "result": {
+      "key": "movie:315162",
+      "response": {
+        "id": "movie:315162",
+        "reason": "The post explicitly discusses 'Puss in Boots: The Last Wish (2022)'."
+      },
+      "usage": {
+        "prompt_tokens": 2327,
+        "completion_tokens": 33,
+        "total_tokens": 2360,
+        "cost": 0.0009836,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009836,
+          "upstream_inference_prompt_cost": 0.0009308,
+          "upstream_inference_completions_cost": 5.28e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980968-WVXN4HtXZVu6JUvAIuIo"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y002",
+    "result": {
+      "key": "movie:1244523",
+      "response": {
+        "id": "movie:1244523",
+        "reason": "The post explicitly discusses 'Beware Boiúna' with a release date of November 12, matching the candidate movie 'Beware Boiúna' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 1804,
+        "completion_tokens": 51,
+        "total_tokens": 1855,
+        "cost": 0.0008032,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008032,
+          "upstream_inference_prompt_cost": 0.0007216,
+          "upstream_inference_completions_cost": 8.16e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980968-K2orFSbpHdFYc97nnQFg"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y003",
+    "result": {
+      "key": "movie:1381273",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y004",
+    "result": {
+      "key": "movie:1401459",
+      "response": {
+        "id": "movie:1401459",
+        "reason": "The post explicitly discusses 'Fjord,' matching the candidate movie titled 'Fjord' with a 2026 release year."
+      },
+      "usage": {
+        "prompt_tokens": 1896,
+        "completion_tokens": 41,
+        "total_tokens": 1937,
+        "cost": 0.000824,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000824,
+          "upstream_inference_prompt_cost": 0.0007584,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980968-4ytdMUfcivkOixFCpjOA"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y005",
+    "result": {
+      "key": "movie:933260",
+      "response": {
+        "id": "movie:933260",
+        "reason": "The post explicitly discusses 'The Substance' available on Hulu via Disney+, matching the 2024 movie 'The Substance'."
+      },
+      "usage": {
+        "prompt_tokens": 2004,
+        "completion_tokens": 40,
+        "total_tokens": 2044,
+        "cost": 0.0008656,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008656,
+          "upstream_inference_prompt_cost": 0.0008016,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980970-fZFcaZKdKHXT5Xz04dhp"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y006",
+    "result": {
+      "key": "movie:1381221",
+      "response": {
+        "id": "movie:1381221",
+        "reason": "The post explicitly discusses the movie 'Misty Green' including its director, cast, and release date."
+      },
+      "usage": {
+        "prompt_tokens": 2085,
+        "completion_tokens": 37,
+        "total_tokens": 2122,
+        "cost": 0.0008932,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008932,
+          "upstream_inference_prompt_cost": 0.000834,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980970-giXIi5Nkd0rJ1oMZ0S58"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y007",
+    "result": {
+      "key": "movie:1297467",
+      "response": {
+        "id": "movie:1297467",
+        "reason": "The post explicitly discusses 'The Exorcist: Martyrs' including its trailer, cast, and plot details."
+      },
+      "usage": {
+        "prompt_tokens": 2393,
+        "completion_tokens": 39,
+        "total_tokens": 2432,
+        "cost": 0.0010196,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010196,
+          "upstream_inference_prompt_cost": 0.0009572,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980769-QeTnMWNYCLWpGE8o6fde"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y008",
+    "result": {
+      "key": "movie:570670",
+      "response": {
+        "id": "movie:570670",
+        "reason": "The post explicitly discusses 'The Invisible Man' (2020) movie, mentioning the main character Cecilia (Elizabeth Moss) and the plot details from this film."
+      },
+      "usage": {
+        "prompt_tokens": 2300,
+        "completion_tokens": 47,
+        "total_tokens": 2347,
+        "cost": 0.0009952,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009952,
+          "upstream_inference_prompt_cost": 0.00092,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980970-mDqZS3eCfgHkXomOAHyV"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y009",
+    "result": {
+      "key": "movie:1000475",
+      "response": {
+        "id": "movie:1000475",
+        "reason": "The post explicitly discusses the movie 'River,' which matches the title and context of the trailer released by Universal Pictures and Blumhouse Atomic Monster."
+      },
+      "usage": {
+        "prompt_tokens": 2265,
+        "completion_tokens": 44,
+        "total_tokens": 2309,
+        "cost": 0.0009764,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009764,
+          "upstream_inference_prompt_cost": 0.000906,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980971-gMPZh4RWZeGf9Djw778Q"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y010",
+    "result": {
+      "key": "movie:545611",
+      "response": {
+        "id": "movie:545611",
+        "reason": "The post explicitly mentions A24, the studio behind 'Everything Everywhere All at Once,' and lists it among their notable films, linking the post to this movie."
+      },
+      "usage": {
+        "prompt_tokens": 2063,
+        "completion_tokens": 47,
+        "total_tokens": 2110,
+        "cost": 0.0009004,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009004,
+          "upstream_inference_prompt_cost": 0.0008252,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980971-Vus49BbBHpiOyWqTNlIc"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y011",
+    "result": {
+      "key": "movie:1765072",
+      "response": {
+        "id": "movie:1765072",
+        "reason": "The post explicitly discusses the movie 'Primetime' which is currently in theaters and is linked to the A24 podcast featuring Skyler Gisondo and Austin Abrams."
+      },
+      "usage": {
+        "prompt_tokens": 2029,
+        "completion_tokens": 48,
+        "total_tokens": 2077,
+        "cost": 0.0008884,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008884,
+          "upstream_inference_prompt_cost": 0.0008116,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980971-LOxpunrpNOCEDD0MH6ql"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y012",
+    "result": {
+      "key": "movie:419430",
+      "response": {
+        "id": "movie:419430",
+        "reason": "The post explicitly discusses the movie 'Get Out' (2017), mentioning characters, plot, and purchase links."
+      },
+      "usage": {
+        "prompt_tokens": 2266,
+        "completion_tokens": 38,
+        "total_tokens": 2304,
+        "cost": 0.0009672,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009672,
+          "upstream_inference_prompt_cost": 0.0009064,
+          "upstream_inference_completions_cost": 6.08e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980972-CQuLzPbMCeS4kV13cvY7"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y013",
+    "result": {
+      "key": "movie:1375441",
+      "response": {
+        "id": "movie:1375441",
+        "reason": "The post explicitly discusses the movie 'Primetime' starring Robert Pattinson and directed by Lance Oppenheim, which matches the candidate movie:1375441 titled 'Primetime'."
+      },
+      "usage": {
+        "prompt_tokens": 2076,
+        "completion_tokens": 53,
+        "total_tokens": 2129,
+        "cost": 0.0009152,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009152,
+          "upstream_inference_prompt_cost": 0.0008304,
+          "upstream_inference_completions_cost": 8.48e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980973-qycc3nwzhY5gSH4EOCOk"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y014",
+    "result": {
+      "key": "movie:1400837",
+      "response": {
+        "id": "movie:1400837",
+        "reason": "The post explicitly discusses the movie 'Other Mommy' and mentions the stunt performer for 'Other Mommy's Bela."
+      },
+      "usage": {
+        "prompt_tokens": 1902,
+        "completion_tokens": 38,
+        "total_tokens": 1940,
+        "cost": 0.0008216,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008216,
+          "upstream_inference_prompt_cost": 0.0007608,
+          "upstream_inference_completions_cost": 6.08e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980972-ZaLCfVxqDYQnzzGjH2zh"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y015",
+    "result": {
+      "key": "tv:298505",
+      "response": {
+        "id": "tv:298505",
+        "reason": "The post explicitly discusses the TV show 'Coven Academy' and its Season 1 soundtrack, streaming on Disney+ and Hulu."
+      },
+      "usage": {
+        "prompt_tokens": 2073,
+        "completion_tokens": 41,
+        "total_tokens": 2114,
+        "cost": 0.0008948,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008948,
+          "upstream_inference_prompt_cost": 0.0008292,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980974-KsuGmYL1IpGWbovbT2Eh"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y016",
+    "result": {
+      "key": "movie:1248832",
+      "response": {
+        "id": "movie:1248832",
+        "reason": "The post explicitly mentions the DIGGER world tour and invites viewers to see it in theaters and IMAX, which aligns with the movie titled 'Digger' (2026) in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1890,
+        "completion_tokens": 55,
+        "total_tokens": 1945,
+        "cost": 0.000844,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000844,
+          "upstream_inference_prompt_cost": 0.000756,
+          "upstream_inference_completions_cost": 8.8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980772-ORlbjiyh1O2EBXTnpRx7"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y017",
+    "result": {
+      "key": "movie:1595301",
+      "response": {
+        "id": "movie:1595301",
+        "reason": "The post explicitly discusses 'RESIDENT EVIL – Jetzt im Kino!' and mentions actors Zach Cregger and Austin Abrams, linking it to the 2023 Resident Evil movie."
+      },
+      "usage": {
+        "prompt_tokens": 1906,
+        "completion_tokens": 52,
+        "total_tokens": 1958,
+        "cost": 0.0008456,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008456,
+          "upstream_inference_prompt_cost": 0.0007624,
+          "upstream_inference_completions_cost": 8.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980974-Ogj43E262wd9FFSKztq1"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y018",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post is a general promotional message for Disney+ and Hulu bundle subscribers for Halloween-themed content, without explicitly discussing any specific movie or TV show."
+      },
+      "usage": {
+        "prompt_tokens": 1994,
+        "completion_tokens": 41,
+        "total_tokens": 2035,
+        "cost": 0.0008632,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008632,
+          "upstream_inference_prompt_cost": 0.0007976,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980975-kypvJT1ikLyzgtB7YmwS"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y019",
+    "result": {
+      "key": "tv:290296",
+      "response": {
+        "id": "tv:290296",
+        "reason": "The post explicitly discusses the new crime series 'FRANKFURT MORD' starting on ZDF, which matches the description of a TV show rather than any 'One Night Stand' movie or TV show listed."
+      },
+      "usage": {
+        "prompt_tokens": 2137,
+        "completion_tokens": 59,
+        "total_tokens": 2196,
+        "cost": 0.0009492,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009492,
+          "upstream_inference_prompt_cost": 0.0008548,
+          "upstream_inference_completions_cost": 9.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980774-VKqRHhTxcHragNUuu4xG"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y020",
+    "result": {
+      "key": "movie:1400940",
+      "response": {
+        "id": "movie:1400940",
+        "reason": "The post explicitly discusses '#ClayfaceMovie' with a theatrical release date, matching the 2026 movie titled 'Clayface'."
+      },
+      "usage": {
+        "prompt_tokens": 2074,
+        "completion_tokens": 43,
+        "total_tokens": 2117,
+        "cost": 0.0008984,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008984,
+          "upstream_inference_prompt_cost": 0.0008296,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980774-uPh5GkisZmPwp7qvUS8q"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y021",
+    "result": {
+      "key": "movie:425909",
+      "response": {
+        "id": "movie:425909",
+        "reason": "The post explicitly discusses 'Ghostbusters: Afterlife' and mentions its availability on Disney+."
+      },
+      "usage": {
+        "prompt_tokens": 1936,
+        "completion_tokens": 34,
+        "total_tokens": 1970,
+        "cost": 0.0008288,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008288,
+          "upstream_inference_prompt_cost": 0.0007744,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980975-nDCyvrk8cPaK7nvgvf4c"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y022",
+    "result": {
+      "key": "movie:1117898",
+      "response": {
+        "id": "movie:1117898",
+        "reason": "The post explicitly mentions '#TheCatInTheHat' and 'Only in theaters November 6,' matching the 2026 movie 'The Cat in the Hat'."
+      },
+      "usage": {
+        "prompt_tokens": 1762,
+        "completion_tokens": 50,
+        "total_tokens": 1812,
+        "cost": 0.0007848,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007848,
+          "upstream_inference_prompt_cost": 0.0007048,
+          "upstream_inference_completions_cost": 8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980775-n5Pzu8IX3ajSp35ApXff"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y023",
+    "result": {
+      "key": "movie:419430",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y024",
+    "result": {
+      "key": "movie:1117898",
+      "response": {
+        "id": "movie:1117898",
+        "reason": "The post explicitly mentions '#TheCatInTheHat' and a release date in theaters on November 6, which matches the 2026 movie 'The Cat in the Hat'."
+      },
+      "usage": {
+        "prompt_tokens": 1886,
+        "completion_tokens": 53,
+        "total_tokens": 1939,
+        "cost": 0.0008392,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008392,
+          "upstream_inference_prompt_cost": 0.0007544,
+          "upstream_inference_completions_cost": 8.48e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980777-agiDE73kE1g7aLCs9mpp"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y025",
+    "result": {
+      "key": "movie:1525072",
+      "response": {
+        "id": "movie:1525072",
+        "reason": "The post explicitly mentions 'DER PERFEKTE URLAUB' (The Perfect Holiday) with a release date in October, matching the candidate movie 'The Perfect Holiday' (Der perfekte Urlaub) releasing in 2026."
+      },
+      "usage": {
+        "prompt_tokens": 1868,
+        "completion_tokens": 62,
+        "total_tokens": 1930,
+        "cost": 0.0008464,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008464,
+          "upstream_inference_prompt_cost": 0.0007472,
+          "upstream_inference_completions_cost": 9.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980976-CtZQ6Asj1ODywqJtpV6t"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y026",
+    "result": {
+      "key": "tv:114461",
+      "response": {
+        "id": "tv:114461",
+        "reason": "The post explicitly discusses 'Ahsoka' on Disney+, which matches the TV show 'Ahsoka' (2023) in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 2000,
+        "completion_tokens": 45,
+        "total_tokens": 2045,
+        "cost": 0.000872,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000872,
+          "upstream_inference_prompt_cost": 0.0008,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980977-as3QEk5YvGRBXAb1E1rI"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y027",
+    "result": {
+      "key": "movie:1692623",
+      "response": {
+        "id": "movie:1692623",
+        "reason": "The post explicitly mentions 'Now Playing' as currently playing, which matches the movie titled 'Now Playing' (2026) in the candidates list from A24."
+      },
+      "usage": {
+        "prompt_tokens": 2041,
+        "completion_tokens": 49,
+        "total_tokens": 2090,
+        "cost": 0.0008948,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008948,
+          "upstream_inference_prompt_cost": 0.0008164,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980977-hNsFmCEIGLd3gJRzMr4f"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y028",
+    "result": {
+      "key": "movie:1692623",
+      "response": {
+        "id": "movie:1692623",
+        "reason": "The post explicitly discusses the movie 'Primetime,' which is now playing in theaters, matching the candidate 'Now Playing' (id: movie:1692623) as the closest relevant title related to 'Primetime'."
+      },
+      "usage": {
+        "prompt_tokens": 2055,
+        "completion_tokens": 61,
+        "total_tokens": 2116,
+        "cost": 0.0009196,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009196,
+          "upstream_inference_prompt_cost": 0.000822,
+          "upstream_inference_completions_cost": 9.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980978-fLqFWpBj1yaCir2E4Ug0"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y029",
+    "result": {
+      "key": "movie:1525072",
+      "response": {
+        "id": "movie:1525072",
+        "reason": "The post explicitly promotes 'DER PERFEKTE URLAUB' (The Perfect Holiday) with a release date matching the candidate movie: 22 October, which aligns with the 2026 movie 'Der perfekte Urlaub'."
+      },
+      "usage": {
+        "prompt_tokens": 1905,
+        "completion_tokens": 62,
+        "total_tokens": 1967,
+        "cost": 0.0008612,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008612,
+          "upstream_inference_prompt_cost": 0.000762,
+          "upstream_inference_completions_cost": 9.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980978-qkwN6YpjqNxWzIDiNe1t"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y030",
+    "result": {
+      "key": "movie:1400940",
+      "response": {
+        "id": "movie:1400940",
+        "reason": "The post explicitly promotes 'ClayfaceMovie' with a theatrical release date, matching the 2026 movie 'Clayface'."
+      },
+      "usage": {
+        "prompt_tokens": 2003,
+        "completion_tokens": 42,
+        "total_tokens": 2045,
+        "cost": 0.0008684,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008684,
+          "upstream_inference_prompt_cost": 0.0008012,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980784-IcrhJVx1RdKkM6r3XTOi"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y031",
+    "result": {
+      "key": "movie:969681",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y032",
+    "result": {
+      "key": "movie:1473439",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y033",
+    "result": {
+      "key": "movie:1595301",
+      "response": {
+        "id": "movie:1595301",
+        "reason": "The post explicitly discusses the movie 'Resident Evil' currently in cinemas, matching the 2023 film 'Resident Evil'."
+      },
+      "usage": {
+        "prompt_tokens": 1875,
+        "completion_tokens": 41,
+        "total_tokens": 1916,
+        "cost": 0.0008156,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008156,
+          "upstream_inference_prompt_cost": 0.00075,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980786-P6yAJKQub7jnDa7g60lH"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y034",
+    "result": {
+      "key": "movie:1562642",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y035",
+    "result": {
+      "key": "movie:1291595",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y036",
+    "result": {
+      "key": "movie:136799",
+      "response": {
+        "id": "movie:136799",
+        "reason": "The post explicitly discusses 'Trolls (2016)' as indicated in the text and hashtags."
+      },
+      "usage": {
+        "prompt_tokens": 2329,
+        "completion_tokens": 35,
+        "total_tokens": 2364,
+        "cost": 0.0009876,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009876,
+          "upstream_inference_prompt_cost": 0.0009316,
+          "upstream_inference_completions_cost": 5.6e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980789-blDmT1dEkVJuHioatbfS"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y037",
+    "result": {
+      "key": "movie:1630464",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y038",
+    "result": {
+      "key": "movie:1280102",
+      "response": {
+        "id": "movie:1280102",
+        "reason": "The post explicitly mentions 'Primetime' as now playing, which matches the upcoming A24 movie 'Primetime' (id: movie:1280102)."
+      },
+      "usage": {
+        "prompt_tokens": 2056,
+        "completion_tokens": 48,
+        "total_tokens": 2104,
+        "cost": 0.0008992,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008992,
+          "upstream_inference_prompt_cost": 0.0008224,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980979-198WulRqadOc8Z7eljVE"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y039",
+    "result": {
+      "key": "movie:1525072",
+      "response": {
+        "id": "movie:1525072",
+        "reason": "The post explicitly promotes 'DER PERFEKTE URLAUB' (The Perfect Holiday) with a release date matching the candidate movie: 22.10 (October 22), linking directly to movie:1525072."
+      },
+      "usage": {
+        "prompt_tokens": 1870,
+        "completion_tokens": 62,
+        "total_tokens": 1932,
+        "cost": 0.0008472,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008472,
+          "upstream_inference_prompt_cost": 0.000748,
+          "upstream_inference_completions_cost": 9.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980980-4uGvxQqSeJnxNIkpnqnz"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y040",
+    "result": {
+      "key": "movie:1792739",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y041",
+    "result": {
+      "key": "movie:1595301",
+      "response": {
+        "id": "movie:1595301",
+        "reason": "The post explicitly promotes 'RESIDENT EVIL' currently in cinemas, matching the 2023 Resident Evil movie."
+      },
+      "usage": {
+        "prompt_tokens": 1871,
+        "completion_tokens": 39,
+        "total_tokens": 1910,
+        "cost": 0.0008108,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008108,
+          "upstream_inference_prompt_cost": 0.0007484,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980789-phdLqldlSO8jGVsnoW6w"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y042",
+    "result": {
+      "key": "movie:1492198",
+      "response": {
+        "id": "movie:1492198",
+        "reason": "The post explicitly mentions 'Artificial' and a world premiere at the New York Film Festival, matching the 2026 movie titled 'Artificial'."
+      },
+      "usage": {
+        "prompt_tokens": 1880,
+        "completion_tokens": 45,
+        "total_tokens": 1925,
+        "cost": 0.000824,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000824,
+          "upstream_inference_prompt_cost": 0.000752,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980794-ad2EN2aVWId0sUGA5N8j"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y043",
+    "result": {
+      "key": "movie:969681",
+      "skipped": "exact official video crosswalk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y044",
+    "result": {
+      "key": "movie:1562642",
+      "response": {
+        "id": "movie:1562642",
+        "reason": "The post explicitly discusses the movie 'Ghost Soldier' starring Jim Caviezel, matching the title and details provided."
+      },
+      "usage": {
+        "prompt_tokens": 2218,
+        "completion_tokens": 39,
+        "total_tokens": 2257,
+        "cost": 0.0009496,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009496,
+          "upstream_inference_prompt_cost": 0.0008872,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980981-aVurHVIOwWejZCH0MKqW"
+    },
+    "reused": false
+  },
+  {
+    "id": "Y045",
+    "result": {
+      "key": "tv:325839",
+      "response": {
+        "id": "tv:325839",
+        "reason": "The post explicitly discusses the 'Banana Bowl' event involving all six Banana Ball teams and casts, linking it to the TV show 'Banana' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 2197,
+        "completion_tokens": 49,
+        "total_tokens": 2246,
+        "cost": 0.0009572,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009572,
+          "upstream_inference_prompt_cost": 0.0008788,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980796-7of2z7h7FbmCQCeodUD8"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y046",
+    "result": {
+      "key": "movie:1248832",
+      "response": {
+        "id": "movie:1248832",
+        "reason": "The post explicitly discusses the movie 'Digger' which is now playing in theaters and IMAX, matching the 2026 movie 'Digger' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1432,
+        "completion_tokens": 50,
+        "total_tokens": 1482,
+        "cost": 0.0006528,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006528,
+          "upstream_inference_prompt_cost": 0.0005728,
+          "upstream_inference_completions_cost": 8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980796-mKnzv96WMLIupRF6dT8J"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y047",
+    "result": {
+      "key": "movie:1400940",
+      "response": {
+        "id": "movie:1400940",
+        "reason": "The post explicitly mentions '#ClayfaceMovie' releasing in theaters October 23, matching the 2026 movie titled 'Clayface'."
+      },
+      "usage": {
+        "prompt_tokens": 1852,
+        "completion_tokens": 44,
+        "total_tokens": 1896,
+        "cost": 0.0008112,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008112,
+          "upstream_inference_prompt_cost": 0.0007408,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980796-nEYdtZN7UNUgVnrSiyO4"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y048",
+    "result": {
+      "key": "tv:298505",
+      "response": {
+        "id": "tv:298505",
+        "reason": "The post explicitly discusses the TV show 'Coven Academy' available on Disney+."
+      },
+      "usage": {
+        "prompt_tokens": 2005,
+        "completion_tokens": 32,
+        "total_tokens": 2037,
+        "cost": 0.0008532,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008532,
+          "upstream_inference_prompt_cost": 0.000802,
+          "upstream_inference_completions_cost": 5.12e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980799-J0AmVrqShlKsJHFp3QLk"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y049",
+    "result": {
+      "key": "movie:1117898",
+      "response": {
+        "id": "movie:1117898",
+        "reason": "The post explicitly discusses 'The Cat in the Hat' with a release date of November 6, matching the 2026 movie entry."
+      },
+      "usage": {
+        "prompt_tokens": 1844,
+        "completion_tokens": 44,
+        "total_tokens": 1888,
+        "cost": 0.000808,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000808,
+          "upstream_inference_prompt_cost": 0.0007376,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980799-dLD1gYDZoGaGM8q4E1RS"
+    },
+    "reused": true
+  },
+  {
+    "id": "Y050",
+    "result": {
+      "key": "tv:74159",
+      "response": {
+        "id": "tv:74159",
+        "reason": "The post explicitly discusses 'Loki' on Disney+, which is a TV show, and among the candidates, 'The First' (tv:74159) is the closest TV show, but it is not 'Loki'. None of the candidates match 'Loki'. Therefore, the correct mapping is none."
+      },
+      "usage": {
+        "prompt_tokens": 2046,
+        "completion_tokens": 78,
+        "total_tokens": 2124,
+        "cost": 0.0009432,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009432,
+          "upstream_inference_prompt_cost": 0.0008184,
+          "upstream_inference_completions_cost": 0.0001248
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980982-0CtqL2gb54ySP24Dpu7R"
+    },
+    "reused": false
+  },
+  {
+    "id": "R001",
+    "result": {
+      "key": "movie:1646767",
+      "response": {
+        "id": "movie:1646767",
+        "reason": "The post explicitly discusses 'Junkies of Dreaming – Mahler 3 Currentzis,' matching the movie title 'Junkies of Dreaming' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 1960,
+        "completion_tokens": 51,
+        "total_tokens": 2011,
+        "cost": 0.0008656,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008656,
+          "upstream_inference_prompt_cost": 0.000784,
+          "upstream_inference_completions_cost": 8.16e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980982-OaUJpOmofOZi1kiuNG2Q"
+    },
+    "reused": false
+  },
+  {
+    "id": "R002",
+    "result": {
+      "key": "movie:1645880",
+      "response": {
+        "id": "movie:1645880",
+        "reason": "The post explicitly discusses 'The Revolution Against Death,' a film directed by Joshua Oppenheimer, which matches the candidate movie with the same title."
+      },
+      "usage": {
+        "prompt_tokens": 1975,
+        "completion_tokens": 45,
+        "total_tokens": 2020,
+        "cost": 0.000862,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000862,
+          "upstream_inference_prompt_cost": 0.00079,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980983-VC52B3OTqOhZdv6ahLYO"
+    },
+    "reused": false
+  },
+  {
+    "id": "R003",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post explicitly discusses the fantasy film 'Der Sternwanderer' (Stardust), which is not among the provided candidate titles."
+      },
+      "usage": {
+        "prompt_tokens": 1894,
+        "completion_tokens": 39,
+        "total_tokens": 1933,
+        "cost": 0.00082,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00082,
+          "upstream_inference_prompt_cost": 0.0007576,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980805-hixpPVzcX5ZOBerh8bs3"
+    },
+    "reused": true
+  },
+  {
+    "id": "R004",
+    "result": {
+      "key": "movie:1423191",
+      "response": {
+        "id": "movie:1423191",
+        "reason": "The post explicitly discusses a scene from Zach Cregger's Resident Evil, which corresponds to the 2026 movie titled 'Resident Evil'."
+      },
+      "usage": {
+        "prompt_tokens": 1821,
+        "completion_tokens": 45,
+        "total_tokens": 1866,
+        "cost": 0.0008004,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008004,
+          "upstream_inference_prompt_cost": 0.0007284,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980803-26tKV5zAN7HKLw0kSWkZ"
+    },
+    "reused": true
+  },
+  {
+    "id": "R005",
+    "result": {
+      "key": "movie:1255833",
+      "response": {
+        "id": "movie:1255833",
+        "reason": "The post explicitly discusses the survival thriller 'Whalefall'."
+      },
+      "usage": {
+        "prompt_tokens": 1819,
+        "completion_tokens": 30,
+        "total_tokens": 1849,
+        "cost": 0.0007756,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007756,
+          "upstream_inference_prompt_cost": 0.0007276,
+          "upstream_inference_completions_cost": 4.8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980809-0hOFjjbtzbKTrRxELhXz"
+    },
+    "reused": true
+  },
+  {
+    "id": "R006",
+    "result": {
+      "key": "tv:213562",
+      "response": {
+        "id": "tv:213562",
+        "reason": "The post explicitly discusses an episode of the TV show 'Crystal Lake' that gives Jason Voorhees a new origin story, which is related to the Friday the 13th franchise."
+      },
+      "usage": {
+        "prompt_tokens": 1967,
+        "completion_tokens": 52,
+        "total_tokens": 2019,
+        "cost": 0.00087,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00087,
+          "upstream_inference_prompt_cost": 0.0007868,
+          "upstream_inference_completions_cost": 8.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980809-7BL7L0ugiKKlAQFRMmvT"
+    },
+    "reused": true
+  },
+  {
+    "id": "R007",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the acquisition of Good News Network, a digital publisher, and does not explicitly discuss any movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1888,
+        "completion_tokens": 40,
+        "total_tokens": 1928,
+        "cost": 0.0008192,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008192,
+          "upstream_inference_prompt_cost": 0.0007552,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980809-HU2w9RlOPSvGzwAVb4Am"
+    },
+    "reused": true
+  },
+  {
+    "id": "R008",
+    "result": {
+      "key": "tv:247718",
+      "response": {
+        "id": "tv:247718",
+        "reason": "The post explicitly discusses 'MobLand' by Guy Ritchie, comparing it to Taylor Sheridan's work."
+      },
+      "usage": {
+        "prompt_tokens": 1751,
+        "completion_tokens": 36,
+        "total_tokens": 1787,
+        "cost": 0.000758,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000758,
+          "upstream_inference_prompt_cost": 0.0007004,
+          "upstream_inference_completions_cost": 5.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980984-H6LbiLWGYTMEp4Exn8a1"
+    },
+    "reused": false
+  },
+  {
+    "id": "R009",
+    "result": {
+      "key": "tv:2691",
+      "response": {
+        "id": "tv:2691",
+        "reason": "The post explicitly discusses the TV show 'Two and a Half Men' and details about casting and production changes related to it."
+      },
+      "usage": {
+        "prompt_tokens": 1845,
+        "completion_tokens": 40,
+        "total_tokens": 1885,
+        "cost": 0.000802,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000802,
+          "upstream_inference_prompt_cost": 0.000738,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980811-dXCmfKhLYmcXrFDZmaop"
+    },
+    "reused": true
+  },
+  {
+    "id": "R010",
+    "result": {
+      "key": "movie:1772726",
+      "response": {
+        "id": "movie:1772726",
+        "reason": "The post explicitly discusses the new work 'Confession' by the director of 'The Painted Bird', referring to the upcoming film by Václav Marhoul."
+      },
+      "usage": {
+        "prompt_tokens": 1832,
+        "completion_tokens": 49,
+        "total_tokens": 1881,
+        "cost": 0.0008112,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008112,
+          "upstream_inference_prompt_cost": 0.0007328,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980983-R5LK2CY7ZsTifkfC4NhB"
+    },
+    "reused": false
+  },
+  {
+    "id": "R011",
+    "result": {
+      "key": "tv:213562",
+      "response": {
+        "id": "tv:213562",
+        "reason": "The post explicitly discusses 'Crystal Lake,' described as a 'Friday the 13th' prequel and a Voorhees family origin story, matching the 2026 TV show 'Crystal Lake'."
+      },
+      "usage": {
+        "prompt_tokens": 1934,
+        "completion_tokens": 56,
+        "total_tokens": 1990,
+        "cost": 0.0008632,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008632,
+          "upstream_inference_prompt_cost": 0.0007736,
+          "upstream_inference_completions_cost": 8.96e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980812-hatQIZRtay2H5SFzwaTG"
+    },
+    "reused": true
+  },
+  {
+    "id": "R012",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Ben Frow leaving Skydance's UK network 5, which is a general industry news item about a TV network executive, not about any specific movie or TV show from the candidate list."
+      },
+      "usage": {
+        "prompt_tokens": 1923,
+        "completion_tokens": 54,
+        "total_tokens": 1977,
+        "cost": 0.0008556,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008556,
+          "upstream_inference_prompt_cost": 0.0007692,
+          "upstream_inference_completions_cost": 8.64e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980813-4gE5i6QISUEH3xE1npQf"
+    },
+    "reused": true
+  },
+  {
+    "id": "R013",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a product collaboration between Lola Blankets and LoveShackFancy, not a movie or TV show explicitly mentioned in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1886,
+        "completion_tokens": 40,
+        "total_tokens": 1926,
+        "cost": 0.0008184,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008184,
+          "upstream_inference_prompt_cost": 0.0007544,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980814-CabAvxbd0GIBb3PjIrr6"
+    },
+    "reused": true
+  },
+  {
+    "id": "R014",
+    "result": {
+      "key": "tv:288673",
+      "response": {
+        "id": "tv:288673",
+        "reason": "The post explicitly discusses Mike Flanagan's series adaptation of Stephen King's 'Carrie'."
+      },
+      "usage": {
+        "prompt_tokens": 1793,
+        "completion_tokens": 34,
+        "total_tokens": 1827,
+        "cost": 0.0007716,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007716,
+          "upstream_inference_prompt_cost": 0.0007172,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980815-8YW307UA3F4VmqIdfa3N"
+    },
+    "reused": true
+  },
+  {
+    "id": "R015",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses unusual jobs people have but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1904,
+        "completion_tokens": 36,
+        "total_tokens": 1940,
+        "cost": 0.0008192,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008192,
+          "upstream_inference_prompt_cost": 0.0007616,
+          "upstream_inference_completions_cost": 5.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980985-tXOnhVDHQSkRqTr7ooiz"
+    },
+    "reused": false
+  },
+  {
+    "id": "R016",
+    "result": {
+      "key": "movie:589158",
+      "response": {
+        "id": "movie:589158",
+        "reason": "The post explicitly discusses Linda Hamilton and Arnold Schwarzenegger during the filming of Terminator, which is directly related to 'The Making of the Terminator' (1985)."
+      },
+      "usage": {
+        "prompt_tokens": 1825,
+        "completion_tokens": 49,
+        "total_tokens": 1874,
+        "cost": 0.0008084,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008084,
+          "upstream_inference_prompt_cost": 0.00073,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980817-ICzGwmho5PXxGu7QhhYN"
+    },
+    "reused": true
+  },
+  {
+    "id": "R017",
+    "result": {
+      "key": "movie:1596300",
+      "response": {
+        "id": "movie:1596300",
+        "reason": "The post explicitly discusses the documentary 'Once Upon A Time In Harlem' and its Oscar contention, matching the candidate movie with the same title and a 2026 release year."
+      },
+      "usage": {
+        "prompt_tokens": 2053,
+        "completion_tokens": 51,
+        "total_tokens": 2104,
+        "cost": 0.0009028,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009028,
+          "upstream_inference_prompt_cost": 0.0008212,
+          "upstream_inference_completions_cost": 8.16e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980985-BJtPahNwynieGoLanzMt"
+    },
+    "reused": false
+  },
+  {
+    "id": "R018",
+    "result": {
+      "key": "movie:156022",
+      "response": {
+        "id": "movie:156022",
+        "reason": "The post explicitly discusses Denzel Washington's action blockbuster 'The Equalizer' which matches the 2014 movie 'The Equalizer'."
+      },
+      "usage": {
+        "prompt_tokens": 1760,
+        "completion_tokens": 43,
+        "total_tokens": 1803,
+        "cost": 0.0007728,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007728,
+          "upstream_inference_prompt_cost": 0.000704,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980824-eNk477gcFUc4kecqSdJk"
+    },
+    "reused": true
+  },
+  {
+    "id": "R019",
+    "result": {
+      "key": "movie:1429592",
+      "response": {
+        "id": "movie:1429592",
+        "reason": "The post explicitly reviews 'All About Corinne' featuring Isabelle Huppert, matching the candidate movie with the same title and release year 2026."
+      },
+      "usage": {
+        "prompt_tokens": 1855,
+        "completion_tokens": 47,
+        "total_tokens": 1902,
+        "cost": 0.0008172,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008172,
+          "upstream_inference_prompt_cost": 0.000742,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980985-cto8xopVpi6qcLHEB4uA"
+    },
+    "reused": false
+  },
+  {
+    "id": "R020",
+    "result": {
+      "key": "movie:1255833",
+      "response": {
+        "id": "movie:1255833",
+        "reason": "The post explicitly discusses 'Whalefall', matching the 2026 movie titled 'Whalefall' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1653,
+        "completion_tokens": 43,
+        "total_tokens": 1696,
+        "cost": 0.00073,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00073,
+          "upstream_inference_prompt_cost": 0.0006612,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980824-CVPASJ9K8l5mLxT1k0yn"
+    },
+    "reused": true
+  },
+  {
+    "id": "R021",
+    "result": {
+      "key": "tv:243006",
+      "response": {
+        "id": "tv:243006",
+        "reason": "The post explicitly discusses a reunion related to 'NCIS', and 'NCIS: Origins' is the only NCIS-related TV show in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1890,
+        "completion_tokens": 46,
+        "total_tokens": 1936,
+        "cost": 0.0008296,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008296,
+          "upstream_inference_prompt_cost": 0.000756,
+          "upstream_inference_completions_cost": 7.36e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980825-0pM3fwFP9A4YmxH0imIS"
+    },
+    "reused": true
+  },
+  {
+    "id": "R022",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a film finance company and its funding but does not explicitly discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1823,
+        "completion_tokens": 37,
+        "total_tokens": 1860,
+        "cost": 0.0007884,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007884,
+          "upstream_inference_prompt_cost": 0.0007292,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980986-dzisKvnukCA53d0UjuGE"
+    },
+    "reused": false
+  },
+  {
+    "id": "R023",
+    "result": {
+      "key": "movie:82",
+      "response": {
+        "id": "movie:82",
+        "reason": "The post explicitly discusses the new 'Miami Vice' film, a remake directed by Joseph Kosinski, linking it to the 2006 'Miami Vice' movie."
+      },
+      "usage": {
+        "prompt_tokens": 1729,
+        "completion_tokens": 47,
+        "total_tokens": 1776,
+        "cost": 0.0007668,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007668,
+          "upstream_inference_prompt_cost": 0.0006916,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980986-Y0GsO8ZUzDVRFmR8bdvt"
+    },
+    "reused": false
+  },
+  {
+    "id": "R024",
+    "result": {
+      "key": "tv:1396",
+      "response": {
+        "id": "tv:1396",
+        "reason": "The post explicitly discusses Breaking Bad and reactions from its stars to the death of RJ Mitte, who was a cast member of Breaking Bad."
+      },
+      "usage": {
+        "prompt_tokens": 1840,
+        "completion_tokens": 42,
+        "total_tokens": 1882,
+        "cost": 0.0008032,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008032,
+          "upstream_inference_prompt_cost": 0.000736,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980986-AN9b1XeeawhOUulG5L6b"
+    },
+    "reused": false
+  },
+  {
+    "id": "R025",
+    "result": {
+      "key": "movie:62",
+      "response": {
+        "id": "movie:62",
+        "reason": "The post explicitly discusses '2001: A Space Odyssey' as one of the most intelligent classic movies."
+      },
+      "usage": {
+        "prompt_tokens": 1748,
+        "completion_tokens": 35,
+        "total_tokens": 1783,
+        "cost": 0.0007552,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007552,
+          "upstream_inference_prompt_cost": 0.0006992,
+          "upstream_inference_completions_cost": 5.6e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980987-ks0fjlqOsiI44NyVkTul"
+    },
+    "reused": false
+  },
+  {
+    "id": "R026",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the reopening of a theater venue and mentions Paramount and Rick Caruso, but does not explicitly discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1866,
+        "completion_tokens": 44,
+        "total_tokens": 1910,
+        "cost": 0.0008168,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008168,
+          "upstream_inference_prompt_cost": 0.0007464,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980827-WZJV5s3jWFvGg1OtuYn3"
+    },
+    "reused": true
+  },
+  {
+    "id": "R027",
+    "result": {
+      "key": "movie:1491920",
+      "response": {
+        "id": "movie:1491920",
+        "reason": "The post explicitly discusses the 'Shaolin Soccer' spinoff titled 'Kung Fu Soccer' and its U.S. release."
+      },
+      "usage": {
+        "prompt_tokens": 1815,
+        "completion_tokens": 42,
+        "total_tokens": 1857,
+        "cost": 0.0007932,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007932,
+          "upstream_inference_prompt_cost": 0.000726,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980830-san1Wf8sTLTxPkZAmiZG"
+    },
+    "reused": true
+  },
+  {
+    "id": "R028",
+    "result": {
+      "key": "tv:213562",
+      "response": {
+        "id": "tv:213562",
+        "reason": "The post explicitly discusses the TV series 'Crystal Lake,' described as a Friday the 13th origin series."
+      },
+      "usage": {
+        "prompt_tokens": 1812,
+        "completion_tokens": 37,
+        "total_tokens": 1849,
+        "cost": 0.000784,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000784,
+          "upstream_inference_prompt_cost": 0.0007248,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980828-Vd7W0gTtk1dw9Mz99JrT"
+    },
+    "reused": true
+  },
+  {
+    "id": "R029",
+    "result": {
+      "key": "tv:213562",
+      "response": {
+        "id": "tv:213562",
+        "reason": "The post explicitly mentions HBO Max sending iconic killers to Camp Crystal Lake, which directly relates to the TV show 'Crystal Lake' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 1768,
+        "completion_tokens": 44,
+        "total_tokens": 1812,
+        "cost": 0.0007776,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007776,
+          "upstream_inference_prompt_cost": 0.0007072,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980830-Gd792VAPnVSpRNaofSfG"
+    },
+    "reused": true
+  },
+  {
+    "id": "R030",
+    "result": {
+      "key": "movie:1147572",
+      "response": {
+        "id": "movie:1147572",
+        "reason": "The post explicitly discusses 'The Magician's Nephew' and its connection to Narnia, which matches the title 'Narnia: The Magician's Nephew' (2027)."
+      },
+      "usage": {
+        "prompt_tokens": 2022,
+        "completion_tokens": 54,
+        "total_tokens": 2076,
+        "cost": 0.0008952,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008952,
+          "upstream_inference_prompt_cost": 0.0008088,
+          "upstream_inference_completions_cost": 8.64e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980830-EbvBzpOdIWbDQ9Mu9spY"
+    },
+    "reused": true
+  },
+  {
+    "id": "R031",
+    "result": {
+      "key": "tv:248172",
+      "response": {
+        "id": "tv:248172",
+        "reason": "The post explicitly discusses a new reboot series of 'Baywatch', matching the TV show entry with no release year but identified as a reboot series."
+      },
+      "usage": {
+        "prompt_tokens": 1580,
+        "completion_tokens": 44,
+        "total_tokens": 1624,
+        "cost": 0.0007024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007024,
+          "upstream_inference_prompt_cost": 0.000632,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980835-UZFUPJWGhG09f9CZvCUA"
+    },
+    "reused": true
+  },
+  {
+    "id": "R032",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post explicitly discusses the TV series 'Girls' by Lena Dunham, which is not among the candidate titles provided."
+      },
+      "usage": {
+        "prompt_tokens": 1872,
+        "completion_tokens": 36,
+        "total_tokens": 1908,
+        "cost": 0.0008064,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008064,
+          "upstream_inference_prompt_cost": 0.0007488,
+          "upstream_inference_completions_cost": 5.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980836-iO3uRubtJKG31cn4ltgg"
+    },
+    "reused": true
+  },
+  {
+    "id": "R033",
+    "result": {
+      "key": "movie:329996",
+      "response": {
+        "id": "movie:329996",
+        "reason": "The post explicitly discusses Tim Burton's live-action Dumbo remake, which corresponds to the 2019 movie Dumbo."
+      },
+      "usage": {
+        "prompt_tokens": 1830,
+        "completion_tokens": 39,
+        "total_tokens": 1869,
+        "cost": 0.0007944,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007944,
+          "upstream_inference_prompt_cost": 0.000732,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980837-F0sN0kT8tkpBlwR1VtRj"
+    },
+    "reused": true
+  },
+  {
+    "id": "R034",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses casting news for the upcoming Sony comedy 'Narcs', which is a distinct title and not explicitly linked to any of the listed 'Coming of Age' or other titles."
+      },
+      "usage": {
+        "prompt_tokens": 1908,
+        "completion_tokens": 49,
+        "total_tokens": 1957,
+        "cost": 0.0008416,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008416,
+          "upstream_inference_prompt_cost": 0.0007632,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980838-G3lE00tI3uiSYoM4gSqV"
+    },
+    "reused": true
+  },
+  {
+    "id": "R035",
+    "result": {
+      "key": "movie:1698863",
+      "response": {
+        "id": "movie:1698863",
+        "reason": "The post explicitly compares a new epic film to Christopher Nolan's 'Die Odyssee' (The Odyssey), indicating the new film is considered the best of the year, which aligns with the 2026 movie 'The Odyssey' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1897,
+        "completion_tokens": 66,
+        "total_tokens": 1963,
+        "cost": 0.0008644,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008644,
+          "upstream_inference_prompt_cost": 0.0007588,
+          "upstream_inference_completions_cost": 0.0001056
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980839-QivH9vhRddbQeLut4Pdg"
+    },
+    "reused": true
+  },
+  {
+    "id": "R036",
+    "result": {
+      "key": "movie:283127",
+      "response": {
+        "id": "movie:283127",
+        "reason": "The post explicitly discusses the movie 'Yakuza Apocalypse' as the 'durchgeknalltesten Vampir-Film' available on Amazon Prime Video."
+      },
+      "usage": {
+        "prompt_tokens": 1896,
+        "completion_tokens": 46,
+        "total_tokens": 1942,
+        "cost": 0.000832,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000832,
+          "upstream_inference_prompt_cost": 0.0007584,
+          "upstream_inference_completions_cost": 7.36e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980988-ZIeigtPChJvgIB6NtmeG"
+    },
+    "reused": false
+  },
+  {
+    "id": "R037",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a highly praised martial arts action film returning to home video uncut and in 4K, but does not explicitly name or identify any specific movie or TV show from the candidate list."
+      },
+      "usage": {
+        "prompt_tokens": 1900,
+        "completion_tokens": 52,
+        "total_tokens": 1952,
+        "cost": 0.0008432,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008432,
+          "upstream_inference_prompt_cost": 0.00076,
+          "upstream_inference_completions_cost": 8.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980839-ql2xRY220I2O3xPb2eox"
+    },
+    "reused": true
+  },
+  {
+    "id": "R038",
+    "result": {
+      "key": "movie:1232493",
+      "response": {
+        "id": "movie:1232493",
+        "reason": "The post explicitly mentions the documentary 'No Other Land' as one of the films about Gaza, Israel, and Palestine that have self-distributed and faced distribution challenges."
+      },
+      "usage": {
+        "prompt_tokens": 1933,
+        "completion_tokens": 49,
+        "total_tokens": 1982,
+        "cost": 0.0008516,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008516,
+          "upstream_inference_prompt_cost": 0.0007732,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980839-sPieIkxNxM2Cte4jm7bn"
+    },
+    "reused": true
+  },
+  {
+    "id": "R039",
+    "result": {
+      "key": "movie:1760623",
+      "response": {
+        "id": "movie:1760623",
+        "reason": "The post explicitly discusses Mohsen Amiryousefi's new film 'The Banning Curse', which matches the candidate movie with the same title and original title 'نفرینِ توقیف'."
+      },
+      "usage": {
+        "prompt_tokens": 1958,
+        "completion_tokens": 57,
+        "total_tokens": 2015,
+        "cost": 0.0008744,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008744,
+          "upstream_inference_prompt_cost": 0.0007832,
+          "upstream_inference_completions_cost": 9.12e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980843-cMwTsDHWsduD0aXCFMRm"
+    },
+    "reused": true
+  },
+  {
+    "id": "R040",
+    "result": {
+      "key": "movie:1000837",
+      "response": {
+        "id": "movie:1000837",
+        "reason": "The post explicitly mentions Maeve Jinkings' role in the Oscar-winning 'I'm Still Here,' which corresponds to the 2024 movie 'I'm Still Here' (Ainda Estou Aqui)."
+      },
+      "usage": {
+        "prompt_tokens": 1894,
+        "completion_tokens": 54,
+        "total_tokens": 1948,
+        "cost": 0.000844,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000844,
+          "upstream_inference_prompt_cost": 0.0007576,
+          "upstream_inference_completions_cost": 8.64e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980846-osBI0rvMqb1jEkfdjeUV"
+    },
+    "reused": true
+  },
+  {
+    "id": "R041",
+    "result": {
+      "key": "movie:1422041",
+      "response": {
+        "id": "movie:1422041",
+        "reason": "The post explicitly mentions 'La Bola Negra' as one of the films shortlisted for the 39th European Film Awards, matching the candidate movie 'La bola negra' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 1908,
+        "completion_tokens": 53,
+        "total_tokens": 1961,
+        "cost": 0.000848,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000848,
+          "upstream_inference_prompt_cost": 0.0007632,
+          "upstream_inference_completions_cost": 8.48e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980988-zygG1jiuObvFgdpkMvxs"
+    },
+    "reused": false
+  },
+  {
+    "id": "R042",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses AI in Asian directors' workflows and a subway scene with a man turning into a worm, but does not explicitly mention or discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1843,
+        "completion_tokens": 50,
+        "total_tokens": 1893,
+        "cost": 0.0008172,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008172,
+          "upstream_inference_prompt_cost": 0.0007372,
+          "upstream_inference_completions_cost": 8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980989-AJHAj5N4HThkm6yPyRro"
+    },
+    "reused": false
+  },
+  {
+    "id": "R043",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a general list of movies that are hard to watch but does not explicitly mention or discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1971,
+        "completion_tokens": 42,
+        "total_tokens": 2013,
+        "cost": 0.0008556,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008556,
+          "upstream_inference_prompt_cost": 0.0007884,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980849-1BG3sR9y5MZ04Eio8IQf"
+    },
+    "reused": true
+  },
+  {
+    "id": "R044",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Pablo Torre and Kelly Clarkson in relation to 'Art of Play Security Camera Footage,' but does not explicitly reference any specific movie or TV show from the candidate list."
+      },
+      "usage": {
+        "prompt_tokens": 1771,
+        "completion_tokens": 48,
+        "total_tokens": 1819,
+        "cost": 0.0007852,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007852,
+          "upstream_inference_prompt_cost": 0.0007084,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980989-Z7HfHgUz0MEuMbEvEve0"
+    },
+    "reused": false
+  },
+  {
+    "id": "R045",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a highly viewed and expensive fantasy series on Prime Video returning for its third season, but no specific title is mentioned or matched among the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1905,
+        "completion_tokens": 43,
+        "total_tokens": 1948,
+        "cost": 0.0008308,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008308,
+          "upstream_inference_prompt_cost": 0.000762,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980849-gPlNlGOSBNRIeCFPskxZ"
+    },
+    "reused": true
+  },
+  {
+    "id": "R046",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the launch of a streaming platform called Tiger TV dedicated to Hindi and Punjabi content, but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1877,
+        "completion_tokens": 48,
+        "total_tokens": 1925,
+        "cost": 0.0008276,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008276,
+          "upstream_inference_prompt_cost": 0.0007508,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980849-kwyIZiB2lw5IVYgF5ItB"
+    },
+    "reused": true
+  },
+  {
+    "id": "R047",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the Indian drama 'Kidney' and its production details, but does not explicitly discuss or identify any of the listed movies or TV shows."
+      },
+      "usage": {
+        "prompt_tokens": 1978,
+        "completion_tokens": 43,
+        "total_tokens": 2021,
+        "cost": 0.00086,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00086,
+          "upstream_inference_prompt_cost": 0.0007912,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980851-wVYAkAwJjCfhp4iT8LsH"
+    },
+    "reused": true
+  },
+  {
+    "id": "R048",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Sean Connery's personal life and residence, not any specific movie or TV show explicitly."
+      },
+      "usage": {
+        "prompt_tokens": 2420,
+        "completion_tokens": 33,
+        "total_tokens": 2453,
+        "cost": 0.0010208,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010208,
+          "upstream_inference_prompt_cost": 0.000968,
+          "upstream_inference_completions_cost": 5.28e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980851-ByFWv6aw4sDL8z9ExNSc"
+    },
+    "reused": true
+  },
+  {
+    "id": "R049",
+    "result": {
+      "key": "movie:10706",
+      "response": {
+        "id": "movie:10706",
+        "reason": "The post explicitly discusses Roy Scheider appearing in two direct-to-video horror sequels about a creature with sharp teeth, which aligns with 'Mimic 2' (2001), a direct-to-video sequel featuring Scheider."
+      },
+      "usage": {
+        "prompt_tokens": 1835,
+        "completion_tokens": 61,
+        "total_tokens": 1896,
+        "cost": 0.0008316,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008316,
+          "upstream_inference_prompt_cost": 0.000734,
+          "upstream_inference_completions_cost": 9.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980851-wsQaosUnjeuLk4VZNVb9"
+    },
+    "reused": true
+  },
+  {
+    "id": "R050",
+    "result": {
+      "key": "movie:1400940",
+      "response": {
+        "id": "movie:1400940",
+        "reason": "The post explicitly discusses 'DC Studios’ Clayface,' which matches the candidate movie titled 'Clayface' with release year 2026."
+      },
+      "usage": {
+        "prompt_tokens": 1734,
+        "completion_tokens": 44,
+        "total_tokens": 1778,
+        "cost": 0.000764,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000764,
+          "upstream_inference_prompt_cost": 0.0006936,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980993-NveNksgS43khXWPHWhgW"
+    },
+    "reused": false
+  },
+  {
+    "id": "R051",
+    "result": {
+      "key": "movie:1153576",
+      "response": {
+        "id": "movie:1153576",
+        "reason": "The post explicitly discusses the upcoming 2026 'Street Fighter' movie directed by Kitao Sakurai, starring Noah Centineo and Andrew Koji."
+      },
+      "usage": {
+        "prompt_tokens": 1796,
+        "completion_tokens": 47,
+        "total_tokens": 1843,
+        "cost": 0.0007936,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007936,
+          "upstream_inference_prompt_cost": 0.0007184,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980853-hGoAe3IMQJo0rcKqowZP"
+    },
+    "reused": true
+  },
+  {
+    "id": "R052",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a TV adaptation of Simon Wroe’s novel 'Ghost Month,' which is not among the provided candidate titles."
+      },
+      "usage": {
+        "prompt_tokens": 1855,
+        "completion_tokens": 37,
+        "total_tokens": 1892,
+        "cost": 0.0008012,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008012,
+          "upstream_inference_prompt_cost": 0.000742,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980853-fVAFkIip24DkhxNKsO3m"
+    },
+    "reused": true
+  },
+  {
+    "id": "R053",
+    "result": {
+      "key": "movie:1425825",
+      "response": {
+        "id": "movie:1425825",
+        "reason": "The post explicitly discusses the Spanish horror-comedy film 'Together Until Death' (Juntas Hasta la Muerte), which matches the title 'Hasta la Muerte' in the candidates without a release year, indicating it is the same or upcoming film."
+      },
+      "usage": {
+        "prompt_tokens": 1905,
+        "completion_tokens": 66,
+        "total_tokens": 1971,
+        "cost": 0.0008676,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008676,
+          "upstream_inference_prompt_cost": 0.000762,
+          "upstream_inference_completions_cost": 0.0001056
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980853-5DdY4Ub0poWPksDjisbq"
+    },
+    "reused": true
+  },
+  {
+    "id": "R054",
+    "result": {
+      "key": "movie:1291486",
+      "response": {
+        "id": "movie:1291486",
+        "reason": "The post explicitly discusses a redo of the rom-com 'Serendipity' by Michael Showalter, which matches the 2024 movie 'Serendipity' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1946,
+        "completion_tokens": 54,
+        "total_tokens": 2000,
+        "cost": 0.0008648,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008648,
+          "upstream_inference_prompt_cost": 0.0007784,
+          "upstream_inference_completions_cost": 8.64e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980857-zssjuSzo2spwmVd0Laoy"
+    },
+    "reused": true
+  },
+  {
+    "id": "R055",
+    "result": {
+      "key": "movie:1339713",
+      "response": {
+        "id": "movie:1339713",
+        "reason": "The post explicitly discusses Michael Johnston's role in 'Die Mumie 4' (The Mummy 4), an adventure sequel, and dispels rumors about it. None of the 'Obsession' titles match this context, so the best fit is the movie related to 'Die Mumie 4', which is not in candidates, but since the post focuses on Michael Johnston from 'Obsession' and the adventure sequel 'Die Mumie 4', the closest explicit work discussed is the adventure sequel 'Die Mumie 4'. However, since 'Die Mumie 4' is not in candidates, and the post mentions 'Obsession' star Michael Johnston, the best match is the 2026 movie 'Obsession' starring Michael Johnston."
+      },
+      "usage": {
+        "prompt_tokens": 1937,
+        "completion_tokens": 168,
+        "total_tokens": 2105,
+        "cost": 0.0010436,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010436,
+          "upstream_inference_prompt_cost": 0.0007748,
+          "upstream_inference_completions_cost": 0.0002688
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980862-2favwy0GVwNeseUee7Tq"
+    },
+    "reused": true
+  },
+  {
+    "id": "R056",
+    "result": {
+      "key": "movie:1452110",
+      "response": {
+        "id": "movie:1452110",
+        "reason": "The post explicitly discusses the movie 'Clean Hands' featuring Zach Braff as a cop, matching the title and context of the 2026 movie 'Clean Hands' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1897,
+        "completion_tokens": 53,
+        "total_tokens": 1950,
+        "cost": 0.0008436,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008436,
+          "upstream_inference_prompt_cost": 0.0007588,
+          "upstream_inference_completions_cost": 8.48e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980862-XC7OFuUfO6oJP7y8Pbi5"
+    },
+    "reused": true
+  },
+  {
+    "id": "R057",
+    "result": {
+      "key": "tv:271361",
+      "response": {
+        "id": "tv:271361",
+        "reason": "The post explicitly discusses the monster-horror series 'Below' as a Netflix record-breaking Canadian title, which aligns with the 2024 TV show 'MONSTER' (モンスター) listed as a candidate for 2024, matching the monster-horror genre and recent release."
+      },
+      "usage": {
+        "prompt_tokens": 1793,
+        "completion_tokens": 72,
+        "total_tokens": 1865,
+        "cost": 0.0008324,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008324,
+          "upstream_inference_prompt_cost": 0.0007172,
+          "upstream_inference_completions_cost": 0.0001152
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980862-66XibGxWW31s9L69p4NF"
+    },
+    "reused": true
+  },
+  {
+    "id": "R058",
+    "result": {
+      "key": "movie:54966",
+      "response": {
+        "id": "movie:54966",
+        "reason": "The post explicitly discusses the Indian epic film 'Pakeezah' from 1972, directed by Kamal Amrohi and starring Meena Kumari."
+      },
+      "usage": {
+        "prompt_tokens": 1952,
+        "completion_tokens": 48,
+        "total_tokens": 2000,
+        "cost": 0.0008576,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008576,
+          "upstream_inference_prompt_cost": 0.0007808,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980864-E7Zrb4QM6QFhMPOCaTFQ"
+    },
+    "reused": true
+  },
+  {
+    "id": "R059",
+    "result": {
+      "key": "movie:666433",
+      "response": {
+        "id": "movie:666433",
+        "reason": "The post explicitly discusses Todd Haynes' upcoming Pedro Pascal-led romantic noir drama 'De Noche,' which aligns with the 2023 movie titled 'Power of Love' in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 2006,
+        "completion_tokens": 53,
+        "total_tokens": 2059,
+        "cost": 0.0008872,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008872,
+          "upstream_inference_prompt_cost": 0.0008024,
+          "upstream_inference_completions_cost": 8.48e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980993-bCeywh0AADijxdTHzESm"
+    },
+    "reused": false
+  },
+  {
+    "id": "R060",
+    "result": {
+      "key": "movie:687163",
+      "response": {
+        "id": "movie:687163",
+        "reason": "The post explicitly discusses 'Project Hail Mary' and mentions the character Rocky from that movie."
+      },
+      "usage": {
+        "prompt_tokens": 1825,
+        "completion_tokens": 34,
+        "total_tokens": 1859,
+        "cost": 0.0007844,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007844,
+          "upstream_inference_prompt_cost": 0.00073,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791980993-uTQcrNZ8VyWgUOwtEvBF"
+    },
+    "reused": false
+  },
+  {
+    "id": "B001",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses 'The Land' Hulu series by Dan Fogelman featuring Christopher Meloni, Mandy Moore, and William H. Macy, but none of the candidate titles correspond to this series explicitly."
+      },
+      "usage": {
+        "prompt_tokens": 1997,
+        "completion_tokens": 52,
+        "total_tokens": 2049,
+        "cost": 0.000882,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000882,
+          "upstream_inference_prompt_cost": 0.0007988,
+          "upstream_inference_completions_cost": 8.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982420-mzFHm7fPrFHgXyRKcMN5"
+    },
+    "reused": false
+  },
+  {
+    "id": "B002",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses real-life football events and personnel related to Manchester United, not any movie or TV show explicitly."
+      },
+      "usage": {
+        "prompt_tokens": 1896,
+        "completion_tokens": 34,
+        "total_tokens": 1930,
+        "cost": 0.0008128,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008128,
+          "upstream_inference_prompt_cost": 0.0007584,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982302-5R8FPTEbHrtrEQ6ViJWd"
+    },
+    "reused": true
+  },
+  {
+    "id": "B003",
+    "result": {
+      "key": "movie:1719646",
+      "response": {
+        "id": "movie:1719646",
+        "reason": "The post explicitly discusses gossip about Yann Sommer, linking to a gossip-themed movie titled 'Gossip' (2026)."
+      },
+      "usage": {
+        "prompt_tokens": 2376,
+        "completion_tokens": 40,
+        "total_tokens": 2416,
+        "cost": 0.0010144,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010144,
+          "upstream_inference_prompt_cost": 0.0009504,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982302-ipgEXeDisaWBQZS9Y64a"
+    },
+    "reused": true
+  },
+  {
+    "id": "B004",
+    "result": {
+      "key": "tv:60572",
+      "response": {
+        "id": "tv:60572",
+        "reason": "The post explicitly discusses 'Pokemon - Season 2 Episode 5 - Fit to Be Tide!', which matches the TV show 'Pokémon' (1997)."
+      },
+      "usage": {
+        "prompt_tokens": 2082,
+        "completion_tokens": 47,
+        "total_tokens": 2129,
+        "cost": 0.000908,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000908,
+          "upstream_inference_prompt_cost": 0.0008328,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982306-F2SH5unuyFhKnVbS0apC"
+    },
+    "reused": true
+  },
+  {
+    "id": "B005",
+    "result": {
+      "key": "tv:2543",
+      "response": {
+        "id": "tv:2543",
+        "reason": "The post explicitly discusses shooting 'THE PERSUADERS' with Tony Curtis, which corresponds to the TV show 'The Persuaders!' from 1971."
+      },
+      "usage": {
+        "prompt_tokens": 1885,
+        "completion_tokens": 49,
+        "total_tokens": 1934,
+        "cost": 0.0008324,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008324,
+          "upstream_inference_prompt_cost": 0.000754,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982306-zBF5oIm2TtYJ9eZ6OWbj"
+    },
+    "reused": true
+  },
+  {
+    "id": "B006",
+    "result": {
+      "key": "movie:124557",
+      "response": {
+        "id": "movie:124557",
+        "reason": "The post explicitly discusses the 1954 British crime drama 'The Stranger Came Home' also known as 'The Unholy Four', matching the candidate movie:124557."
+      },
+      "usage": {
+        "prompt_tokens": 1902,
+        "completion_tokens": 49,
+        "total_tokens": 1951,
+        "cost": 0.0008392,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008392,
+          "upstream_inference_prompt_cost": 0.0007608,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982420-6CnPvUb5wt3cHRW7CC63"
+    },
+    "reused": false
+  },
+  {
+    "id": "B007",
+    "result": {
+      "key": "tv:70217",
+      "response": {
+        "id": "tv:70217",
+        "reason": "The post explicitly mentions the TV show 'Farmacia de guardia' and an episode titled 'El regalo' aired in 1993, matching the TV show candidate 'Farmacia de guardia' (1991)."
+      },
+      "usage": {
+        "prompt_tokens": 1940,
+        "completion_tokens": 59,
+        "total_tokens": 1999,
+        "cost": 0.0008704,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008704,
+          "upstream_inference_prompt_cost": 0.000776,
+          "upstream_inference_completions_cost": 9.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982311-EtcVcSE4I0NVbDPoeYMs"
+    },
+    "reused": true
+  },
+  {
+    "id": "B008",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Juventus football club executives' salaries, which is unrelated to any listed movie or TV show."
+      },
+      "usage": {
+        "prompt_tokens": 2379,
+        "completion_tokens": 33,
+        "total_tokens": 2412,
+        "cost": 0.0010044,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010044,
+          "upstream_inference_prompt_cost": 0.0009516,
+          "upstream_inference_completions_cost": 5.28e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982309-zzG17hnPa9gfBXYI52tJ"
+    },
+    "reused": true
+  },
+  {
+    "id": "B009",
+    "result": {
+      "key": "tv:6727",
+      "response": {
+        "id": "tv:6727",
+        "reason": "The post explicitly discusses the TV show 'Nikki' (2000) about Nikki White and her wrestler husband, matching the candidate tv:6727."
+      },
+      "usage": {
+        "prompt_tokens": 2202,
+        "completion_tokens": 46,
+        "total_tokens": 2248,
+        "cost": 0.0009544,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009544,
+          "upstream_inference_prompt_cost": 0.0008808,
+          "upstream_inference_completions_cost": 7.36e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982420-56wvGEKX9E0SfxSteFUZ"
+    },
+    "reused": false
+  },
+  {
+    "id": "B010",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a general stance on AI use in creative industries without explicitly referencing any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1828,
+        "completion_tokens": 37,
+        "total_tokens": 1865,
+        "cost": 0.0007904,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007904,
+          "upstream_inference_prompt_cost": 0.0007312,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982311-y9Qr6o7G3d3BUkpuK3IH"
+    },
+    "reused": true
+  },
+  {
+    "id": "B011",
+    "result": {
+      "key": "movie:1147572",
+      "response": {
+        "id": "movie:1147572",
+        "reason": "The post explicitly discusses Greta Gerwig winning over Led Zeppelin for 'Stairway to Heaven' in the 'Narnia' trailer, linking it to the upcoming movie 'Narnia: The Magician's Nephew'."
+      },
+      "usage": {
+        "prompt_tokens": 2015,
+        "completion_tokens": 61,
+        "total_tokens": 2076,
+        "cost": 0.0009036,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009036,
+          "upstream_inference_prompt_cost": 0.000806,
+          "upstream_inference_completions_cost": 9.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982317-B9T5KRdScUjFhS8ywQsa"
+    },
+    "reused": true
+  },
+  {
+    "id": "B012",
+    "result": {
+      "key": "movie:9599",
+      "response": {
+        "id": "movie:9599",
+        "reason": "The post explicitly mentions 'THE BLOB 1988' and expresses love for that movie, matching the 1988 film 'The Blob'."
+      },
+      "usage": {
+        "prompt_tokens": 2066,
+        "completion_tokens": 45,
+        "total_tokens": 2111,
+        "cost": 0.0008984,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008984,
+          "upstream_inference_prompt_cost": 0.0008264,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982421-o1I2fHMiWSnEvBA9cPGs"
+    },
+    "reused": false
+  },
+  {
+    "id": "B013",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses new Apple hardware products like Apple TV 4K and smart home devices, but does not explicitly discuss or reference any movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1487,
+        "completion_tokens": 46,
+        "total_tokens": 1533,
+        "cost": 0.0006684,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006684,
+          "upstream_inference_prompt_cost": 0.0005948,
+          "upstream_inference_completions_cost": 7.36e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982316-hvZrLWvz7UCt1kbKbGrZ"
+    },
+    "reused": true
+  },
+  {
+    "id": "B014",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the TV show 'Girls' returning to HBO, but the candidates do not include the original 'Girls' series; the listed 'Girls' candidate is a different 2026 movie titled 'Tjej'."
+      },
+      "usage": {
+        "prompt_tokens": 2356,
+        "completion_tokens": 57,
+        "total_tokens": 2413,
+        "cost": 0.0010336,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010336,
+          "upstream_inference_prompt_cost": 0.0009424,
+          "upstream_inference_completions_cost": 9.12e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982317-qMUJkA27tcK821bu779j"
+    },
+    "reused": true
+  },
+  {
+    "id": "B015",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post is a general prompt asking for any movie starting with 'R' before and after 2000, but does not explicitly discuss or mention any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 2183,
+        "completion_tokens": 51,
+        "total_tokens": 2234,
+        "cost": 0.0009548,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009548,
+          "upstream_inference_prompt_cost": 0.0008732,
+          "upstream_inference_completions_cost": 8.16e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982422-mobFNq3gUIaNJHiVQcnL"
+    },
+    "reused": false
+  },
+  {
+    "id": "B016",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post is a general call to action about local art house cinemas and screenings, without explicitly discussing any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1803,
+        "completion_tokens": 41,
+        "total_tokens": 1844,
+        "cost": 0.0007868,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007868,
+          "upstream_inference_prompt_cost": 0.0007212,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982319-NOzKGzqZcv0FEcnQPYuC"
+    },
+    "reused": true
+  },
+  {
+    "id": "B017",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post is a poetic expression mentioning phrases like 'private screening,' 'in the field,' and 'trapped inside this house,' but it does not explicitly discuss or reference any specific movie or TV show title from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1865,
+        "completion_tokens": 57,
+        "total_tokens": 1922,
+        "cost": 0.0008372,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008372,
+          "upstream_inference_prompt_cost": 0.000746,
+          "upstream_inference_completions_cost": 9.12e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982422-pEpzFkmvp0UoLiUY1iJM"
+    },
+    "reused": false
+  },
+  {
+    "id": "B018",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post explicitly discusses the video game Paper Mario 64, which is not a movie or TV show listed among the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1868,
+        "completion_tokens": 37,
+        "total_tokens": 1905,
+        "cost": 0.0008064,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008064,
+          "upstream_inference_prompt_cost": 0.0007472,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982321-OuwLQZX8Fnezfq2xfzLu"
+    },
+    "reused": true
+  },
+  {
+    "id": "B019",
+    "result": {
+      "key": "movie:916405",
+      "response": {
+        "id": "movie:916405",
+        "reason": "The post explicitly discusses the Irish film 'The Quiet Girl' and recommends it."
+      },
+      "usage": {
+        "prompt_tokens": 1779,
+        "completion_tokens": 31,
+        "total_tokens": 1810,
+        "cost": 0.0007612,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007612,
+          "upstream_inference_prompt_cost": 0.0007116,
+          "upstream_inference_completions_cost": 4.96e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982423-02CjfrdR0S4XiRDjEBYA"
+    },
+    "reused": false
+  },
+  {
+    "id": "B020",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses themes of bravery and abuse but does not explicitly mention or discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1894,
+        "completion_tokens": 37,
+        "total_tokens": 1931,
+        "cost": 0.0008168,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008168,
+          "upstream_inference_prompt_cost": 0.0007576,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982329-QLTLQMTCZ4tYYknhfflA"
+    },
+    "reused": true
+  },
+  {
+    "id": "B021",
+    "result": {
+      "key": "movie:681",
+      "response": {
+        "id": "movie:681",
+        "reason": "The post explicitly references 'Diamonds Are Forever' in relation to a space laser plot, which is a key element of the 1971 James Bond movie 'Diamonds Are Forever'."
+      },
+      "usage": {
+        "prompt_tokens": 1805,
+        "completion_tokens": 52,
+        "total_tokens": 1857,
+        "cost": 0.0008052,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008052,
+          "upstream_inference_prompt_cost": 0.000722,
+          "upstream_inference_completions_cost": 8.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982324-flxJM88KjlcfQAvhjRsc"
+    },
+    "reused": true
+  },
+  {
+    "id": "B022",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post references characters Blitz and Stolas and a 'courtroom episode' and a 'reckoning,' but does not explicitly discuss any of the listed movies or TV shows titled 'The Courtroom' or 'Reckoning.' The mention appears to be about a specific episode or storyline not clearly linked to any candidate title."
+      },
+      "usage": {
+        "prompt_tokens": 1861,
+        "completion_tokens": 77,
+        "total_tokens": 1938,
+        "cost": 0.0008676,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008676,
+          "upstream_inference_prompt_cost": 0.0007444,
+          "upstream_inference_completions_cost": 0.0001232
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982323-ZgcrtrIUWfgTKIdgOw9R"
+    },
+    "reused": true
+  },
+  {
+    "id": "B023",
+    "result": {
+      "key": "tv:2048",
+      "response": {
+        "id": "tv:2048",
+        "reason": "The post explicitly discusses the 1981 BBC TV adaptation of The Hitchhiker's Guide to the Galaxy."
+      },
+      "usage": {
+        "prompt_tokens": 1927,
+        "completion_tokens": 37,
+        "total_tokens": 1964,
+        "cost": 0.00083,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00083,
+          "upstream_inference_prompt_cost": 0.0007708,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982329-4K2QTdzJMETYRX77Mtq8"
+    },
+    "reused": true
+  },
+  {
+    "id": "B024",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses political and social issues but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1951,
+        "completion_tokens": 36,
+        "total_tokens": 1987,
+        "cost": 0.000838,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000838,
+          "upstream_inference_prompt_cost": 0.0007804,
+          "upstream_inference_completions_cost": 5.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982423-ydFST9gn2LuFdOZZBxBJ"
+    },
+    "reused": false
+  },
+  {
+    "id": "B025",
+    "result": {
+      "key": "movie:575731",
+      "response": {
+        "id": "movie:575731",
+        "reason": "The post explicitly mentions 'a oscuras' (in the dark), which matches the movie title 'A oscuras' (2019). The other terms like Dolby Atmos and Smart TV are general technology references, not specific titles discussed."
+      },
+      "usage": {
+        "prompt_tokens": 1464,
+        "completion_tokens": 62,
+        "total_tokens": 1526,
+        "cost": 0.0006848,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006848,
+          "upstream_inference_prompt_cost": 0.0005856,
+          "upstream_inference_completions_cost": 9.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982424-BNYrVJ6lgun4LggGzWx3"
+    },
+    "reused": false
+  },
+  {
+    "id": "B026",
+    "result": {
+      "key": "movie:1375441",
+      "response": {
+        "id": "movie:1375441",
+        "reason": "The post explicitly discusses the film 'Primetime' (2026), providing a review and mentioning it by name."
+      },
+      "usage": {
+        "prompt_tokens": 2050,
+        "completion_tokens": 39,
+        "total_tokens": 2089,
+        "cost": 0.0008824,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008824,
+          "upstream_inference_prompt_cost": 0.00082,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982424-CWSkLr26WCuQn4LQBWbY"
+    },
+    "reused": false
+  },
+  {
+    "id": "B027",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post mentions a new episode titled 'The Vessel' but does not explicitly discuss or reference any specific movie or TV show from the candidate list."
+      },
+      "usage": {
+        "prompt_tokens": 1836,
+        "completion_tokens": 41,
+        "total_tokens": 1877,
+        "cost": 0.0008,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008,
+          "upstream_inference_prompt_cost": 0.0007344,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982424-dTFVQXEhISQrTUgRsfjV"
+    },
+    "reused": false
+  },
+  {
+    "id": "B028",
+    "result": {
+      "key": "tv:1402",
+      "response": {
+        "id": "tv:1402",
+        "reason": "The post explicitly mentions a known actor from The Walking Dead launching a fanmade Resident Evil 7 preview, directly referencing the TV show The Walking Dead."
+      },
+      "usage": {
+        "prompt_tokens": 1891,
+        "completion_tokens": 45,
+        "total_tokens": 1936,
+        "cost": 0.0008284,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008284,
+          "upstream_inference_prompt_cost": 0.0007564,
+          "upstream_inference_completions_cost": 7.2e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982332-2kJooF2hpc4XVaLJR0d3"
+    },
+    "reused": true
+  },
+  {
+    "id": "B029",
+    "result": {
+      "key": "movie:9678",
+      "response": {
+        "id": "movie:9678",
+        "reason": "The post explicitly names 'Little Nicky' as a film with a talking pet."
+      },
+      "usage": {
+        "prompt_tokens": 2042,
+        "completion_tokens": 32,
+        "total_tokens": 2074,
+        "cost": 0.000868,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000868,
+          "upstream_inference_prompt_cost": 0.0008168,
+          "upstream_inference_completions_cost": 5.12e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982426-CquFJzW9HDZTVuMC5fpu"
+    },
+    "reused": false
+  },
+  {
+    "id": "B030",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses smart glasses technology and public perception but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1845,
+        "completion_tokens": 38,
+        "total_tokens": 1883,
+        "cost": 0.0007988,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007988,
+          "upstream_inference_prompt_cost": 0.000738,
+          "upstream_inference_completions_cost": 6.08e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982334-zzPOGQZ4x9SV2txecafW"
+    },
+    "reused": true
+  },
+  {
+    "id": "B031",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Eva Marie Saint, an actress, but does not explicitly mention any specific movie or TV show from the candidate list."
+      },
+      "usage": {
+        "prompt_tokens": 1850,
+        "completion_tokens": 38,
+        "total_tokens": 1888,
+        "cost": 0.0008008,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008008,
+          "upstream_inference_prompt_cost": 0.00074,
+          "upstream_inference_completions_cost": 6.08e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982333-Em8r41It9DqjPKieX57j"
+    },
+    "reused": true
+  },
+  {
+    "id": "B032",
+    "result": {
+      "key": "movie:43691",
+      "response": {
+        "id": "movie:43691",
+        "reason": "The post explicitly discusses Elissa Landi's role in the 1934 film The Count of Monte Cristo, matching the 1934 movie in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 2295,
+        "completion_tokens": 47,
+        "total_tokens": 2342,
+        "cost": 0.0009932,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009932,
+          "upstream_inference_prompt_cost": 0.000918,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982336-Z03OxQnoh66QiVPabVUZ"
+    },
+    "reused": true
+  },
+  {
+    "id": "B033",
+    "result": {
+      "key": "tv:101048",
+      "response": {
+        "id": "tv:101048",
+        "reason": "The post explicitly discusses 'Doc' Season 3 Episode 4, which matches the TV show 'Doc – Nelle tue mani' (2020) in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1874,
+        "completion_tokens": 50,
+        "total_tokens": 1924,
+        "cost": 0.0008296,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008296,
+          "upstream_inference_prompt_cost": 0.0007496,
+          "upstream_inference_completions_cost": 8e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982335-p0U7ROll10ijJoH05dxm"
+    },
+    "reused": true
+  },
+  {
+    "id": "B034",
+    "result": {
+      "key": "movie:9334",
+      "response": {
+        "id": "movie:9334",
+        "reason": "The post explicitly discusses 'The Scorpion King' (2002), matching the candidate movie with the same title and release year."
+      },
+      "usage": {
+        "prompt_tokens": 2358,
+        "completion_tokens": 41,
+        "total_tokens": 2399,
+        "cost": 0.0010088,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010088,
+          "upstream_inference_prompt_cost": 0.0009432,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982426-XEJtSGbGUbwmQbDES4rO"
+    },
+    "reused": false
+  },
+  {
+    "id": "B035",
+    "result": {
+      "key": "tv:89456",
+      "response": {
+        "id": "tv:89456",
+        "reason": "The post explicitly discusses the TV show 'Primal' and mentions its animation and storytelling, as well as the creator Tartakovsky."
+      },
+      "usage": {
+        "prompt_tokens": 1915,
+        "completion_tokens": 42,
+        "total_tokens": 1957,
+        "cost": 0.0008332,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008332,
+          "upstream_inference_prompt_cost": 0.000766,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982338-lSG0uRWtqAuh0926fz0X"
+    },
+    "reused": true
+  },
+  {
+    "id": "B036",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post is an advertisement for a Samsung TV and does not explicitly discuss any movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1869,
+        "completion_tokens": 35,
+        "total_tokens": 1904,
+        "cost": 0.0008036,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008036,
+          "upstream_inference_prompt_cost": 0.0007476,
+          "upstream_inference_completions_cost": 5.6e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982338-smCYZl9JUSIzlkc9Z8PI"
+    },
+    "reused": true
+  },
+  {
+    "id": "B037",
+    "result": {
+      "key": "tv:210879",
+      "response": {
+        "id": "tv:210879",
+        "reason": "The post explicitly discusses the 2023 TV series 'Rurouni Kenshin'."
+      },
+      "usage": {
+        "prompt_tokens": 2384,
+        "completion_tokens": 34,
+        "total_tokens": 2418,
+        "cost": 0.001008,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001008,
+          "upstream_inference_prompt_cost": 0.0009536,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982426-Fr904sPx6fN58kOYzcqL"
+    },
+    "reused": false
+  },
+  {
+    "id": "B038",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a real-world political event involving a Turkish TV channel and does not explicitly discuss any movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1889,
+        "completion_tokens": 39,
+        "total_tokens": 1928,
+        "cost": 0.000818,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000818,
+          "upstream_inference_prompt_cost": 0.0007556,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982427-Nne6j4MOGyERlAORxA8B"
+    },
+    "reused": false
+  },
+  {
+    "id": "B039",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a person and an event related to tech startups and investments, with no explicit mention of any movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1823,
+        "completion_tokens": 41,
+        "total_tokens": 1864,
+        "cost": 0.0007948,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007948,
+          "upstream_inference_prompt_cost": 0.0007292,
+          "upstream_inference_completions_cost": 6.56e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982344-RIpOUEgnoNmInkWT7pfR"
+    },
+    "reused": true
+  },
+  {
+    "id": "B040",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses Netflix acquiring live broadcast rights for the 2030 FIFA World Cup, which is a sports event, not a movie or TV show explicitly discussed in the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1972,
+        "completion_tokens": 47,
+        "total_tokens": 2019,
+        "cost": 0.000864,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000864,
+          "upstream_inference_prompt_cost": 0.0007888,
+          "upstream_inference_completions_cost": 7.52e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982345-lXVmBCOJX4E80XbvG0CY"
+    },
+    "reused": true
+  },
+  {
+    "id": "B041",
+    "result": {
+      "key": "tv:44",
+      "response": {
+        "id": "tv:44",
+        "reason": "The post explicitly discusses 'Adventures of Sonic the Hedgehog' Season 1 Episode 7."
+      },
+      "usage": {
+        "prompt_tokens": 1900,
+        "completion_tokens": 34,
+        "total_tokens": 1934,
+        "cost": 0.0008144,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008144,
+          "upstream_inference_prompt_cost": 0.00076,
+          "upstream_inference_completions_cost": 5.44e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982427-HOHzORzEbBKedOqmgwAI"
+    },
+    "reused": false
+  },
+  {
+    "id": "B042",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a Korean film-type supplement product and a beauty brand, not any movie or TV show titled 'Mellow' or 'Fred' or 'Film' or similar. No explicit discussion of any listed movie or TV show is present."
+      },
+      "usage": {
+        "prompt_tokens": 2228,
+        "completion_tokens": 61,
+        "total_tokens": 2289,
+        "cost": 0.0009888,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009888,
+          "upstream_inference_prompt_cost": 0.0008912,
+          "upstream_inference_completions_cost": 9.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982346-ayRHQYQbNPthgVCSU5Jb"
+    },
+    "reused": true
+  },
+  {
+    "id": "B043",
+    "result": {
+      "key": "movie:179111",
+      "response": {
+        "id": "movie:179111",
+        "reason": "The post explicitly mentions the movie 'A Field in England (2014)', which corresponds to movie:179111 titled 'A Field in England' released in 2013 (close to 2014)."
+      },
+      "usage": {
+        "prompt_tokens": 2334,
+        "completion_tokens": 56,
+        "total_tokens": 2390,
+        "cost": 0.0010232,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010232,
+          "upstream_inference_prompt_cost": 0.0009336,
+          "upstream_inference_completions_cost": 8.96e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982349-5AcbNl5zZ8sJoO3z3teh"
+    },
+    "reused": true
+  },
+  {
+    "id": "B044",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post explicitly discusses the video game Xenoblade 2, which is not a movie or TV show listed among the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1931,
+        "completion_tokens": 38,
+        "total_tokens": 1969,
+        "cost": 0.0008332,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008332,
+          "upstream_inference_prompt_cost": 0.0007724,
+          "upstream_inference_completions_cost": 6.08e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982353-aUj5jkcfgxaC73AkAcop"
+    },
+    "reused": true
+  },
+  {
+    "id": "B045",
+    "result": {
+      "key": "movie:1919",
+      "response": {
+        "id": "movie:1919",
+        "reason": "The post explicitly discusses the 2006 film 'Away From Her' directed by Sarah Polley, which matches the candidate movie 'Away from Her' (2007)."
+      },
+      "usage": {
+        "prompt_tokens": 2287,
+        "completion_tokens": 49,
+        "total_tokens": 2336,
+        "cost": 0.0009932,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009932,
+          "upstream_inference_prompt_cost": 0.0009148,
+          "upstream_inference_completions_cost": 7.84e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982427-kcvQoNMMT8NpB2fp5hMr"
+    },
+    "reused": false
+  },
+  {
+    "id": "B046",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses a special weather statement and provides a weather-related link, but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 2231,
+        "completion_tokens": 43,
+        "total_tokens": 2274,
+        "cost": 0.0009612,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009612,
+          "upstream_inference_prompt_cost": 0.0008924,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982356-Q8GslGV9t3x18o0b8qnS"
+    },
+    "reused": true
+  },
+  {
+    "id": "B047",
+    "result": {
+      "key": "tv:289892",
+      "response": {
+        "id": "tv:289892",
+        "reason": "The post explicitly discusses 'Helluva Boss' and mentions a character named Millie from that show."
+      },
+      "usage": {
+        "prompt_tokens": 1899,
+        "completion_tokens": 35,
+        "total_tokens": 1934,
+        "cost": 0.0008156,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008156,
+          "upstream_inference_prompt_cost": 0.0007596,
+          "upstream_inference_completions_cost": 5.6e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982356-XAXOOdXThyTTOFpCETav"
+    },
+    "reused": true
+  },
+  {
+    "id": "B048",
+    "result": {
+      "key": "tv:3744",
+      "response": {
+        "id": "tv:3744",
+        "reason": "The post explicitly discusses the TV show 'Buzz Lightyear of Star Command' and its episode 'Lost in Time' aired in 2000."
+      },
+      "usage": {
+        "prompt_tokens": 2079,
+        "completion_tokens": 44,
+        "total_tokens": 2123,
+        "cost": 0.000902,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000902,
+          "upstream_inference_prompt_cost": 0.0008316,
+          "upstream_inference_completions_cost": 7.04e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982428-ie6kkemNJ8PlnI30VMSt"
+    },
+    "reused": false
+  },
+  {
+    "id": "B049",
+    "result": {
+      "key": "movie:395460",
+      "response": {
+        "id": "movie:395460",
+        "reason": "The post explicitly discusses vintage Tupperware, linking directly to the movie titled 'Tupperware!' from 2004."
+      },
+      "usage": {
+        "prompt_tokens": 1902,
+        "completion_tokens": 40,
+        "total_tokens": 1942,
+        "cost": 0.0008248,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008248,
+          "upstream_inference_prompt_cost": 0.0007608,
+          "upstream_inference_completions_cost": 6.4e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982359-pb8619D7DjGAfiPBkyzh"
+    },
+    "reused": true
+  },
+  {
+    "id": "B050",
+    "result": {
+      "key": "movie:1381078",
+      "response": {
+        "id": "movie:1381078",
+        "reason": "The post explicitly reviews the 2026 movie 'Love of Your Life' starring Margaret Qualley."
+      },
+      "usage": {
+        "prompt_tokens": 1949,
+        "completion_tokens": 36,
+        "total_tokens": 1985,
+        "cost": 0.0008372,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008372,
+          "upstream_inference_prompt_cost": 0.0007796,
+          "upstream_inference_completions_cost": 5.76e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982428-KXHjpVdjfmFRunqDWztr"
+    },
+    "reused": false
+  },
+  {
+    "id": "B051",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses current political tensions and migration issues between Spain and Morocco, but does not explicitly mention or discuss any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1977,
+        "completion_tokens": 43,
+        "total_tokens": 2020,
+        "cost": 0.0008596,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008596,
+          "upstream_inference_prompt_cost": 0.0007908,
+          "upstream_inference_completions_cost": 6.88e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982429-EayrMgygSUgRdn5ktV6E"
+    },
+    "reused": false
+  },
+  {
+    "id": "B052",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the TV show 'House' but none of the candidate titles correspond to 'House' or explicitly mention it."
+      },
+      "usage": {
+        "prompt_tokens": 1800,
+        "completion_tokens": 37,
+        "total_tokens": 1837,
+        "cost": 0.0007792,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007792,
+          "upstream_inference_prompt_cost": 0.00072,
+          "upstream_inference_completions_cost": 5.92e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982361-43zUMhIzEIR4yPUlaV6U"
+    },
+    "reused": true
+  },
+  {
+    "id": "B053",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post references a trailer with the phrase 'I am bad-assatron,' but none of the candidate titles explicitly match or discuss this phrase or a related movie. The post is too vague to link to a specific listed movie or TV show."
+      },
+      "usage": {
+        "prompt_tokens": 1808,
+        "completion_tokens": 60,
+        "total_tokens": 1868,
+        "cost": 0.0008192,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008192,
+          "upstream_inference_prompt_cost": 0.0007232,
+          "upstream_inference_completions_cost": 9.6e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982430-g9dp9LfXhWrQ1qrXK9zK"
+    },
+    "reused": false
+  },
+  {
+    "id": "B054",
+    "result": {
+      "key": "tv:688",
+      "response": {
+        "id": "tv:688",
+        "reason": "The post explicitly mentions thinking about an episode of The West Wing."
+      },
+      "usage": {
+        "prompt_tokens": 1802,
+        "completion_tokens": 27,
+        "total_tokens": 1829,
+        "cost": 0.000764,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000764,
+          "upstream_inference_prompt_cost": 0.0007208,
+          "upstream_inference_completions_cost": 4.32e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982430-67ddtt34OdCAXiIWQi0Y"
+    },
+    "reused": false
+  },
+  {
+    "id": "B055",
+    "result": {
+      "key": "movie:1383557",
+      "response": {
+        "id": "movie:1383557",
+        "reason": "The post explicitly discusses the 2024 horror thriller movie titled 'Revival'."
+      },
+      "usage": {
+        "prompt_tokens": 2351,
+        "completion_tokens": 33,
+        "total_tokens": 2384,
+        "cost": 0.0009932,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009932,
+          "upstream_inference_prompt_cost": 0.0009404,
+          "upstream_inference_completions_cost": 5.28e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982363-e3kdZ2Ht24pHqjCywAfV"
+    },
+    "reused": true
+  },
+  {
+    "id": "B056",
+    "result": {
+      "key": "tv:41234",
+      "response": {
+        "id": "tv:41234",
+        "reason": "The post explicitly discusses the TV show 'Blond: Eva Blond!' and an episode aired in 2002, matching the candidate tv:41234."
+      },
+      "usage": {
+        "prompt_tokens": 2288,
+        "completion_tokens": 46,
+        "total_tokens": 2334,
+        "cost": 0.0009888,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009888,
+          "upstream_inference_prompt_cost": 0.0009152,
+          "upstream_inference_completions_cost": 7.36e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982430-9J2tsioFSgcARQVqD9nN"
+    },
+    "reused": false
+  },
+  {
+    "id": "B057",
+    "result": {
+      "key": "movie:245891",
+      "response": {
+        "id": "movie:245891",
+        "reason": "The post explicitly references 'John Wick' and mentions 'Drive' profile pictures, linking it to the movie John Wick."
+      },
+      "usage": {
+        "prompt_tokens": 1887,
+        "completion_tokens": 39,
+        "total_tokens": 1926,
+        "cost": 0.0008172,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008172,
+          "upstream_inference_prompt_cost": 0.0007548,
+          "upstream_inference_completions_cost": 6.24e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982431-Zih9Gzv5S1U5aVji7Y8d"
+    },
+    "reused": false
+  },
+  {
+    "id": "B058",
+    "result": {
+      "key": null,
+      "response": {
+        "id": "none",
+        "reason": "The post discusses the death of Grammy-nominated singer Freddie Jackson, but does not explicitly discuss or reference any specific movie or TV show from the candidates."
+      },
+      "usage": {
+        "prompt_tokens": 1893,
+        "completion_tokens": 42,
+        "total_tokens": 1935,
+        "cost": 0.0008244,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008244,
+          "upstream_inference_prompt_cost": 0.0007572,
+          "upstream_inference_completions_cost": 6.72e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982365-q3qgBWRxTXCQUZJKjbdO"
+    },
+    "reused": true
+  },
+  {
+    "id": "B059",
+    "result": {
+      "key": "movie:8337",
+      "response": {
+        "id": "movie:8337",
+        "reason": "The post explicitly references the movie 'They Live'."
+      },
+      "usage": {
+        "prompt_tokens": 2426,
+        "completion_tokens": 26,
+        "total_tokens": 2452,
+        "cost": 0.001012,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001012,
+          "upstream_inference_prompt_cost": 0.0009704,
+          "upstream_inference_completions_cost": 4.16e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982431-E2rTmnruIEnDRBKP4CAL"
+    },
+    "reused": false
+  },
+  {
+    "id": "B060",
+    "result": {
+      "key": "movie:962192",
+      "response": {
+        "id": "movie:962192",
+        "reason": "The post explicitly discusses a Michael Jackson Super Bowl halftime show documentary, and 'Halftime' (2022) is a documentary movie about the Super Bowl halftime show."
+      },
+      "usage": {
+        "prompt_tokens": 1962,
+        "completion_tokens": 48,
+        "total_tokens": 2010,
+        "cost": 0.0008616,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008616,
+          "upstream_inference_prompt_cost": 0.0007848,
+          "upstream_inference_completions_cost": 7.68e-05
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "model": "openai/gpt-4.1-mini",
+      "request_id": "gen-1791982372-RX4btu86NyfMuXeHavQo"
+    },
+    "reused": true
+  }
+]

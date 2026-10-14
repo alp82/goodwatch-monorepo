@@ -1,0 +1,12 @@
+{
+  "fetched_at": "2026-10-14T12:12:27.728040+00:00",
+  "rows": 1495509,
+  "tables": [
+    "movie",
+    "show"
+  ],
+  "full_table_counts": {
+    "movie": 1261069,
+    "show": 234440
+  }
+}

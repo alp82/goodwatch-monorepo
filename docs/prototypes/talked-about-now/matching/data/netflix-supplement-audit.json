@@ -1,0 +1,18 @@
+[
+  {
+    "url": "https://about.netflix.com/en/feed.xml",
+    "status": 200,
+    "fetched_at": "2026-10-14T12:42:05.512301+00:00",
+    "parsed_items": 15,
+    "items_in_original_window_by_publisher_date": 2,
+    "note": "Publisher supplies date only; not included in timestamp-based trade-press evaluation sample."
+  },
+  {
+    "url": "https://about.netflix.com/de/feed.xml",
+    "status": 200,
+    "fetched_at": "2026-10-14T12:42:07.517839+00:00",
+    "parsed_items": 15,
+    "items_in_original_window_by_publisher_date": 0,
+    "note": "Publisher supplies date only; not included in timestamp-based trade-press evaluation sample."
+  }
+]

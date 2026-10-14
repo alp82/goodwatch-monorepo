@@ -1,0 +1,40 @@
+{
+  "checked_at": "2026-10-14T12:25:48.450081+00:00",
+  "directors": [
+    {
+      "media_tmdb_id": 1492198,
+      "job": "Director",
+      "name": "Luca Guadagnino"
+    },
+    {
+      "media_tmdb_id": 1520592,
+      "job": "Director",
+      "name": "Joshua Giuliano"
+    },
+    {
+      "media_tmdb_id": 1467853,
+      "job": "Director",
+      "name": "Joseph Kosinski"
+    },
+    {
+      "media_tmdb_id": 1720905,
+      "job": "Director",
+      "name": "Matteo Montresor"
+    },
+    {
+      "media_tmdb_id": 1536826,
+      "job": "Director",
+      "name": "Todd Haynes"
+    },
+    {
+      "media_tmdb_id": 1586108,
+      "job": "Director",
+      "name": "Tyler Woods"
+    },
+    {
+      "media_tmdb_id": 1772726,
+      "job": "Director",
+      "name": "Václav Marhoul"
+    }
+  ]
+}

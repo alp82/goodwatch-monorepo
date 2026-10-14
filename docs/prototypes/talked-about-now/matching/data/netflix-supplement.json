@@ -1,0 +1,22 @@
+[
+  {
+    "source": "rss",
+    "publisher": "about.netflix.com",
+    "source_id": "https://about.netflix.com/en/news/netflix-announces-release-date-for-love-is-blind-netherlands-the-reunion",
+    "url": "https://about.netflix.com/en/news/netflix-announces-release-date-for-love-is-blind-netherlands-the-reunion",
+    "published_at": "2026-10-14T00:00:00+00:00",
+    "published_at_precision": "day",
+    "text": "Netflix announces release date for Love Is Blind: Netherlands - The Reunion",
+    "context": "The countdown to the reunion of Love Is Blind: Netherlands has begun! During the reunion, the cast will come together again for the first time, and we’ll finally get answers to all our questions."
+  },
+  {
+    "source": "rss",
+    "publisher": "about.netflix.com",
+    "source_id": "https://about.netflix.com/en/news/paco-leon-miren-ibarguren-and-alicia-falco-star-in-rata-netflixs-new-and-exciting-comedy",
+    "url": "https://about.netflix.com/en/news/paco-leon-miren-ibarguren-and-alicia-falco-star-in-rata-netflixs-new-and-exciting-comedy",
+    "published_at": "2026-10-14T00:00:00+00:00",
+    "published_at_precision": "day",
+    "text": "Paco León, Miren Ibarguren and Alicia Falcó star in 'Rata', Netflix's new and exciting comedy",
+    "context": "Where does being a saver end and being a penny-pincher begin?"
+  }
+]

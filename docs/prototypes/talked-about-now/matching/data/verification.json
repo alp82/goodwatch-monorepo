@@ -1,0 +1,19 @@
+{
+  "verified_at": "2026-10-14T12:57:27.621262+00:00",
+  "items": 170,
+  "unambiguous": 159,
+  "ambiguous": 11,
+  "examples": 20,
+  "checks": [
+    "item/label/prediction/verification ID alignment",
+    "feed subset unchanged",
+    "chain decision identities",
+    "LLM candidate ID constraint",
+    "precision/recall arithmetic",
+    "Bluesky publication and event window",
+    "credential absence in committed JSON",
+    "production mutation rejection without network",
+    "Python compilation",
+    "offline metrics/report regeneration"
+  ]
+}

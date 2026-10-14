@@ -1,0 +1,713 @@
+{
+  "youtube": {
+    "chain_official": {
+      "n": 49,
+      "ambiguous": 1,
+      "positives": 47,
+      "tp": 8,
+      "fp": 0,
+      "fn": 39,
+      "precision": 1.0,
+      "recall": 0.1702127659574468,
+      "precision_95_wilson": [
+        0.6756,
+        1.0
+      ],
+      "coverage": 0.16326530612244897,
+      "named_positive_items": 47,
+      "end_to_end_recall": 0.1702127659574468
+    },
+    "chain_fuzzy": {
+      "n": 49,
+      "ambiguous": 1,
+      "positives": 47,
+      "tp": 13,
+      "fp": 20,
+      "fn": 34,
+      "precision": 0.3939393939393939,
+      "recall": 0.2765957446808511,
+      "precision_95_wilson": [
+        0.2468,
+        0.5632
+      ],
+      "coverage": 0.673469387755102,
+      "named_positive_items": 47,
+      "end_to_end_recall": 0.2765957446808511
+    },
+    "chain_vector": {
+      "n": 49,
+      "ambiguous": 1,
+      "positives": 47,
+      "tp": 13,
+      "fp": 20,
+      "fn": 34,
+      "precision": 0.3939393939393939,
+      "recall": 0.2765957446808511,
+      "precision_95_wilson": [
+        0.2468,
+        0.5632
+      ],
+      "coverage": 0.673469387755102,
+      "named_positive_items": 47,
+      "end_to_end_recall": 0.2765957446808511
+    },
+    "chain_llm": {
+      "n": 49,
+      "ambiguous": 1,
+      "positives": 47,
+      "tp": 25,
+      "fp": 24,
+      "fn": 22,
+      "precision": 0.5102040816326531,
+      "recall": 0.5319148936170213,
+      "precision_95_wilson": [
+        0.3747,
+        0.6443
+      ],
+      "coverage": 1.0,
+      "named_positive_items": 47,
+      "end_to_end_recall": 0.5319148936170213
+    },
+    "verified": {
+      "n": 49,
+      "ambiguous": 1,
+      "positives": 47,
+      "tp": 36,
+      "fp": 12,
+      "fn": 11,
+      "precision": 0.75,
+      "recall": 0.7659574468085106,
+      "precision_95_wilson": [
+        0.6122,
+        0.8508
+      ],
+      "coverage": 0.9795918367346939,
+      "named_positive_items": 47,
+      "end_to_end_recall": 0.7659574468085106
+    },
+    "candidate_recall": {
+      "lexical_candidates": 0.6382978723404256,
+      "vector_candidates": 0.44680851063829785,
+      "candidates": 0.8297872340425532
+    },
+    "incremental_stages": {
+      "chain_official": {
+        "n": 49,
+        "ambiguous": 1,
+        "positives": 47,
+        "tp": 8,
+        "fp": 0,
+        "fn": 39,
+        "precision": 1.0,
+        "recall": 0.1702127659574468,
+        "precision_95_wilson": [
+          0.6756,
+          1.0
+        ],
+        "coverage": 0.16326530612244897,
+        "named_positive_items": 47,
+        "end_to_end_recall": 0.1702127659574468
+      },
+      "chain_fuzzy": {
+        "n": 41,
+        "ambiguous": 0,
+        "positives": 39,
+        "tp": 5,
+        "fp": 20,
+        "fn": 34,
+        "precision": 0.2,
+        "recall": 0.1282051282051282,
+        "precision_95_wilson": [
+          0.0886,
+          0.3913
+        ],
+        "coverage": 0.6097560975609756,
+        "named_positive_items": 39,
+        "end_to_end_recall": 0.1282051282051282
+      },
+      "chain_vector": {
+        "n": 16,
+        "ambiguous": 0,
+        "positives": 15,
+        "tp": 0,
+        "fp": 0,
+        "fn": 15,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 15,
+        "end_to_end_recall": 0.0
+      },
+      "chain_llm": {
+        "n": 16,
+        "ambiguous": 0,
+        "positives": 15,
+        "tp": 12,
+        "fp": 4,
+        "fn": 3,
+        "precision": 0.75,
+        "recall": 0.8,
+        "precision_95_wilson": [
+          0.505,
+          0.8982
+        ],
+        "coverage": 1.0,
+        "named_positive_items": 15,
+        "end_to_end_recall": 0.8
+      }
+    },
+    "cost": {
+      "calls": 16,
+      "prompt_tokens": 31430,
+      "completion_tokens": 720,
+      "observed_usd": 0.013724,
+      "usd_per_1000_input_items": 0.27448
+    },
+    "verified_cost": {
+      "calls": 41,
+      "prompt_tokens": 82415,
+      "completion_tokens": 1911,
+      "observed_usd": 0.0360236,
+      "usd_per_1000_input_items": 0.720472
+    }
+  },
+  "rss": {
+    "chain_official": {
+      "n": 54,
+      "ambiguous": 6,
+      "positives": 39,
+      "tp": 0,
+      "fp": 0,
+      "fn": 39,
+      "precision": null,
+      "recall": 0.0,
+      "precision_95_wilson": null,
+      "coverage": 0.0,
+      "named_positive_items": 42,
+      "end_to_end_recall": 0.0
+    },
+    "chain_fuzzy": {
+      "n": 54,
+      "ambiguous": 6,
+      "positives": 39,
+      "tp": 8,
+      "fp": 10,
+      "fn": 31,
+      "precision": 0.4444444444444444,
+      "recall": 0.20512820512820512,
+      "precision_95_wilson": [
+        0.2456,
+        0.6628
+      ],
+      "coverage": 0.3333333333333333,
+      "named_positive_items": 42,
+      "end_to_end_recall": 0.19047619047619047
+    },
+    "chain_vector": {
+      "n": 54,
+      "ambiguous": 6,
+      "positives": 39,
+      "tp": 8,
+      "fp": 10,
+      "fn": 31,
+      "precision": 0.4444444444444444,
+      "recall": 0.20512820512820512,
+      "precision_95_wilson": [
+        0.2456,
+        0.6628
+      ],
+      "coverage": 0.3333333333333333,
+      "named_positive_items": 42,
+      "end_to_end_recall": 0.19047619047619047
+    },
+    "chain_llm": {
+      "n": 54,
+      "ambiguous": 6,
+      "positives": 39,
+      "tp": 26,
+      "fp": 16,
+      "fn": 13,
+      "precision": 0.6190476190476191,
+      "recall": 0.6666666666666666,
+      "precision_95_wilson": [
+        0.4681,
+        0.75
+      ],
+      "coverage": 0.7777777777777778,
+      "named_positive_items": 42,
+      "end_to_end_recall": 0.6190476190476191
+    },
+    "verified": {
+      "n": 54,
+      "ambiguous": 6,
+      "positives": 39,
+      "tp": 30,
+      "fp": 8,
+      "fn": 9,
+      "precision": 0.7894736842105263,
+      "recall": 0.7692307692307693,
+      "precision_95_wilson": [
+        0.6365,
+        0.8893
+      ],
+      "coverage": 0.7037037037037037,
+      "named_positive_items": 42,
+      "end_to_end_recall": 0.7142857142857143
+    },
+    "candidate_recall": {
+      "lexical_candidates": 0.717948717948718,
+      "vector_candidates": 0.358974358974359,
+      "candidates": 0.7948717948717948
+    },
+    "incremental_stages": {
+      "chain_official": {
+        "n": 54,
+        "ambiguous": 6,
+        "positives": 39,
+        "tp": 0,
+        "fp": 0,
+        "fn": 39,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 42,
+        "end_to_end_recall": 0.0
+      },
+      "chain_fuzzy": {
+        "n": 54,
+        "ambiguous": 6,
+        "positives": 39,
+        "tp": 8,
+        "fp": 10,
+        "fn": 31,
+        "precision": 0.4444444444444444,
+        "recall": 0.20512820512820512,
+        "precision_95_wilson": [
+          0.2456,
+          0.6628
+        ],
+        "coverage": 0.3333333333333333,
+        "named_positive_items": 42,
+        "end_to_end_recall": 0.19047619047619047
+      },
+      "chain_vector": {
+        "n": 36,
+        "ambiguous": 6,
+        "positives": 25,
+        "tp": 0,
+        "fp": 0,
+        "fn": 25,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 28,
+        "end_to_end_recall": 0.0
+      },
+      "chain_llm": {
+        "n": 36,
+        "ambiguous": 6,
+        "positives": 25,
+        "tp": 18,
+        "fp": 6,
+        "fn": 7,
+        "precision": 0.75,
+        "recall": 0.72,
+        "precision_95_wilson": [
+          0.551,
+          0.88
+        ],
+        "coverage": 0.6666666666666666,
+        "named_positive_items": 28,
+        "end_to_end_recall": 0.6428571428571429
+      }
+    },
+    "cost": {
+      "calls": 42,
+      "prompt_tokens": 79020,
+      "completion_tokens": 2093,
+      "observed_usd": 0.0349568,
+      "usd_per_1000_input_items": 0.5826133333333333
+    },
+    "verified_cost": {
+      "calls": 60,
+      "prompt_tokens": 112473,
+      "completion_tokens": 2897,
+      "observed_usd": 0.0496244,
+      "usd_per_1000_input_items": 0.8270733333333333
+    }
+  },
+  "bluesky": {
+    "chain_official": {
+      "n": 56,
+      "ambiguous": 4,
+      "positives": 29,
+      "tp": 0,
+      "fp": 0,
+      "fn": 29,
+      "precision": null,
+      "recall": 0.0,
+      "precision_95_wilson": null,
+      "coverage": 0.0,
+      "named_positive_items": 29,
+      "end_to_end_recall": 0.0
+    },
+    "chain_fuzzy": {
+      "n": 56,
+      "ambiguous": 4,
+      "positives": 29,
+      "tp": 11,
+      "fp": 12,
+      "fn": 18,
+      "precision": 0.4782608695652174,
+      "recall": 0.3793103448275862,
+      "precision_95_wilson": [
+        0.2924,
+        0.6704
+      ],
+      "coverage": 0.4107142857142857,
+      "named_positive_items": 29,
+      "end_to_end_recall": 0.3793103448275862
+    },
+    "chain_vector": {
+      "n": 56,
+      "ambiguous": 4,
+      "positives": 29,
+      "tp": 11,
+      "fp": 12,
+      "fn": 18,
+      "precision": 0.4782608695652174,
+      "recall": 0.3793103448275862,
+      "precision_95_wilson": [
+        0.2924,
+        0.6704
+      ],
+      "coverage": 0.4107142857142857,
+      "named_positive_items": 29,
+      "end_to_end_recall": 0.3793103448275862
+    },
+    "chain_llm": {
+      "n": 56,
+      "ambiguous": 4,
+      "positives": 29,
+      "tp": 21,
+      "fp": 17,
+      "fn": 8,
+      "precision": 0.5526315789473685,
+      "recall": 0.7241379310344828,
+      "precision_95_wilson": [
+        0.3971,
+        0.6985
+      ],
+      "coverage": 0.6785714285714286,
+      "named_positive_items": 29,
+      "end_to_end_recall": 0.7241379310344828
+    },
+    "verified": {
+      "n": 56,
+      "ambiguous": 4,
+      "positives": 29,
+      "tp": 25,
+      "fp": 6,
+      "fn": 4,
+      "precision": 0.8064516129032258,
+      "recall": 0.8620689655172413,
+      "precision_95_wilson": [
+        0.6372,
+        0.9081
+      ],
+      "coverage": 0.5535714285714286,
+      "named_positive_items": 29,
+      "end_to_end_recall": 0.8620689655172413
+    },
+    "candidate_recall": {
+      "lexical_candidates": 0.7241379310344828,
+      "vector_candidates": 0.7586206896551724,
+      "candidates": 0.896551724137931
+    },
+    "incremental_stages": {
+      "chain_official": {
+        "n": 56,
+        "ambiguous": 4,
+        "positives": 29,
+        "tp": 0,
+        "fp": 0,
+        "fn": 29,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 29,
+        "end_to_end_recall": 0.0
+      },
+      "chain_fuzzy": {
+        "n": 56,
+        "ambiguous": 4,
+        "positives": 29,
+        "tp": 11,
+        "fp": 12,
+        "fn": 18,
+        "precision": 0.4782608695652174,
+        "recall": 0.3793103448275862,
+        "precision_95_wilson": [
+          0.2924,
+          0.6704
+        ],
+        "coverage": 0.4107142857142857,
+        "named_positive_items": 29,
+        "end_to_end_recall": 0.3793103448275862
+      },
+      "chain_vector": {
+        "n": 33,
+        "ambiguous": 2,
+        "positives": 13,
+        "tp": 0,
+        "fp": 0,
+        "fn": 13,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 13,
+        "end_to_end_recall": 0.0
+      },
+      "chain_llm": {
+        "n": 33,
+        "ambiguous": 2,
+        "positives": 13,
+        "tp": 10,
+        "fp": 5,
+        "fn": 3,
+        "precision": 0.6666666666666666,
+        "recall": 0.7692307692307693,
+        "precision_95_wilson": [
+          0.4171,
+          0.8482
+        ],
+        "coverage": 0.45454545454545453,
+        "named_positive_items": 13,
+        "end_to_end_recall": 0.7692307692307693
+      }
+    },
+    "cost": {
+      "calls": 35,
+      "prompt_tokens": 69267,
+      "completion_tokens": 1560,
+      "observed_usd": 0.0302028,
+      "usd_per_1000_input_items": 0.50338
+    },
+    "verified_cost": {
+      "calls": 60,
+      "prompt_tokens": 119638,
+      "completion_tokens": 2619,
+      "observed_usd": 0.0520456,
+      "usd_per_1000_input_items": 0.8674266666666667
+    }
+  },
+  "all": {
+    "chain_official": {
+      "n": 159,
+      "ambiguous": 11,
+      "positives": 115,
+      "tp": 8,
+      "fp": 0,
+      "fn": 107,
+      "precision": 1.0,
+      "recall": 0.06956521739130435,
+      "precision_95_wilson": [
+        0.6756,
+        1.0
+      ],
+      "coverage": 0.050314465408805034,
+      "named_positive_items": 118,
+      "end_to_end_recall": 0.06779661016949153
+    },
+    "chain_fuzzy": {
+      "n": 159,
+      "ambiguous": 11,
+      "positives": 115,
+      "tp": 32,
+      "fp": 42,
+      "fn": 83,
+      "precision": 0.43243243243243246,
+      "recall": 0.2782608695652174,
+      "precision_95_wilson": [
+        0.3257,
+        0.5459
+      ],
+      "coverage": 0.46540880503144655,
+      "named_positive_items": 118,
+      "end_to_end_recall": 0.2711864406779661
+    },
+    "chain_vector": {
+      "n": 159,
+      "ambiguous": 11,
+      "positives": 115,
+      "tp": 32,
+      "fp": 42,
+      "fn": 83,
+      "precision": 0.43243243243243246,
+      "recall": 0.2782608695652174,
+      "precision_95_wilson": [
+        0.3257,
+        0.5459
+      ],
+      "coverage": 0.46540880503144655,
+      "named_positive_items": 118,
+      "end_to_end_recall": 0.2711864406779661
+    },
+    "chain_llm": {
+      "n": 159,
+      "ambiguous": 11,
+      "positives": 115,
+      "tp": 72,
+      "fp": 57,
+      "fn": 43,
+      "precision": 0.5581395348837209,
+      "recall": 0.6260869565217392,
+      "precision_95_wilson": [
+        0.472,
+        0.6409
+      ],
+      "coverage": 0.8113207547169812,
+      "named_positive_items": 118,
+      "end_to_end_recall": 0.6101694915254238
+    },
+    "verified": {
+      "n": 159,
+      "ambiguous": 11,
+      "positives": 115,
+      "tp": 91,
+      "fp": 26,
+      "fn": 24,
+      "precision": 0.7777777777777778,
+      "recall": 0.7913043478260869,
+      "precision_95_wilson": [
+        0.6943,
+        0.8436
+      ],
+      "coverage": 0.7358490566037735,
+      "named_positive_items": 118,
+      "end_to_end_recall": 0.7711864406779662
+    },
+    "candidate_recall": {
+      "lexical_candidates": 0.6869565217391305,
+      "vector_candidates": 0.4956521739130435,
+      "candidates": 0.8347826086956521
+    },
+    "incremental_stages": {
+      "chain_official": {
+        "n": 159,
+        "ambiguous": 11,
+        "positives": 115,
+        "tp": 8,
+        "fp": 0,
+        "fn": 107,
+        "precision": 1.0,
+        "recall": 0.06956521739130435,
+        "precision_95_wilson": [
+          0.6756,
+          1.0
+        ],
+        "coverage": 0.050314465408805034,
+        "named_positive_items": 118,
+        "end_to_end_recall": 0.06779661016949153
+      },
+      "chain_fuzzy": {
+        "n": 151,
+        "ambiguous": 10,
+        "positives": 107,
+        "tp": 24,
+        "fp": 42,
+        "fn": 83,
+        "precision": 0.36363636363636365,
+        "recall": 0.22429906542056074,
+        "precision_95_wilson": [
+          0.2581,
+          0.4842
+        ],
+        "coverage": 0.4370860927152318,
+        "named_positive_items": 110,
+        "end_to_end_recall": 0.21818181818181817
+      },
+      "chain_vector": {
+        "n": 85,
+        "ambiguous": 8,
+        "positives": 53,
+        "tp": 0,
+        "fp": 0,
+        "fn": 53,
+        "precision": null,
+        "recall": 0.0,
+        "precision_95_wilson": null,
+        "coverage": 0.0,
+        "named_positive_items": 56,
+        "end_to_end_recall": 0.0
+      },
+      "chain_llm": {
+        "n": 85,
+        "ambiguous": 8,
+        "positives": 53,
+        "tp": 40,
+        "fp": 15,
+        "fn": 13,
+        "precision": 0.7272727272727273,
+        "recall": 0.7547169811320755,
+        "precision_95_wilson": [
+          0.5977,
+          0.8272
+        ],
+        "coverage": 0.6470588235294118,
+        "named_positive_items": 56,
+        "end_to_end_recall": 0.7142857142857143
+      }
+    }
+  },
+  "cost": {
+    "waterfall": {
+      "calls": 93,
+      "prompt_tokens": 179717,
+      "completion_tokens": 4373,
+      "observed_usd": 0.0788836,
+      "usd_per_1000_input_items": 0.46402117647058827
+    },
+    "verification_additional": {
+      "calls": 68,
+      "prompt_tokens": 134809,
+      "completion_tokens": 3054,
+      "observed_usd": 0.05881,
+      "usd_per_1000_input_items": 0.34594117647058825
+    },
+    "guarded_total": {
+      "calls": 161,
+      "prompt_tokens": 314526,
+      "completion_tokens": 7427,
+      "observed_usd": 0.1376936,
+      "usd_per_1000_input_items": 0.8099623529411765
+    }
+  },
+  "independent_vector_top1": {
+    "youtube": {
+      "correct": 11,
+      "items": 49,
+      "precision": 0.22448979591836735
+    },
+    "rss": {
+      "correct": 9,
+      "items": 54,
+      "precision": 0.16666666666666666
+    },
+    "bluesky": {
+      "correct": 13,
+      "items": 56,
+      "precision": 0.23214285714285715
+    },
+    "all": {
+      "correct": 33,
+      "items": 159,
+      "precision": 0.20754716981132076
+    }
+  }
+}

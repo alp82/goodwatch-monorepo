@@ -1,0 +1,188 @@
+{
+  "window_start": "2026-10-13T12:10:06.818177+00:00",
+  "window_end": "2026-10-14T12:10:06.818177+00:00",
+  "feeds": [
+    {
+      "source": "Universal Pictures",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCq0OueAsdxH6b8nyAspwViw",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "Warner Bros.",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjmJDM5pRKbUlVIzDYYWb6g",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "Sony Pictures",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCz97F7dMxBNOfGYu3rx8aCw",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "A24",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCuPivVjnfNo4mb3Oog_frZg",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "NEON",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpy5dRhZd-JbZP4NsrnLt1w",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "Constantin Film",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC51KZjUZokzJfb08mzAGS2A",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "Disney+",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCIrgJInjLS2BhlHOMDW7v0g",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "variety.com",
+      "url": "https://variety.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "variety.com",
+      "url": "https://variety.com/v/film/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "deadline.com",
+      "url": "https://deadline.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 12
+    },
+    {
+      "source": "deadline.com",
+      "url": "https://deadline.com/v/film/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 12
+    },
+    {
+      "source": "www.hollywoodreporter.com",
+      "url": "https://www.hollywoodreporter.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "www.hollywoodreporter.com",
+      "url": "https://www.hollywoodreporter.com/c/movies/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "www.indiewire.com",
+      "url": "https://www.indiewire.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 12
+    },
+    {
+      "source": "collider.com",
+      "url": "https://collider.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "screenrant.com",
+      "url": "https://screenrant.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "www.slashfilm.com",
+      "url": "https://www.slashfilm.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 17
+    },
+    {
+      "source": "www.denofgeek.com",
+      "url": "https://www.denofgeek.com/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 10
+    },
+    {
+      "source": "www.filmstarts.de",
+      "url": "https://www.filmstarts.de/rss/nachrichten.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 20
+    },
+    {
+      "source": "www.filmstarts.de",
+      "url": "https://www.filmstarts.de/rss/filme-nachrichten.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 18
+    },
+    {
+      "source": "www.filmstarts.de",
+      "url": "https://www.filmstarts.de/rss/serien-nachrichten.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 9
+    },
+    {
+      "source": "www.moviepilot.de",
+      "url": "https://www.moviepilot.de/news.rss",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 18
+    },
+    {
+      "source": "www.film-rezensionen.de",
+      "url": "https://www.film-rezensionen.de/feed/",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 8
+    },
+    {
+      "source": "www.epd-film.de",
+      "url": "https://www.epd-film.de/rss.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "items_in_window": 0
+    },
+    {
+      "source": "about.netflix.com",
+      "url": "https://about.netflix.com/en/feed.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "error": "ValueError"
+    },
+    {
+      "source": "about.netflix.com",
+      "url": "https://about.netflix.com/de/feed.xml",
+      "status": 200,
+      "fetched_at": "2026-10-14T12:10:06.818177+00:00",
+      "error": "ValueError"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "requested_start": "2026-10-14T09:16:29.960370Z",
+  "requested_end": "2026-10-14T11:30:00+00:00",
+  "frames": 60526,
+  "bytes": 57736962,
+  "creates": 57812,
+  "reconnects": 2,
+  "resume_at": "2026-10-14T11:04:39.960306Z",
+  "migration_skip": "Manually resumed one second past a bulk migrated repository block at event time 10:05:32.421830; all its observed post dates were outside sampling window. Window therefore has a 1-second event-time gap. Pre-resume raw frame/byte counts unavailable; archived filtered items retained. Also skipped one second at 10:29:20.459213 after more than 30000 out-of-window posts. Timestamp resumes inside the 10:29 bulk block did not advance reliably, so resumed at 10:35:00; excluded event interval 10:29:20.459213–10:35:00 (5m39.54s).",
+  "scope_note": "Bounded to a 2h13m replay window (~2h7m after gaps), satisfying the few-hours spike scope; source reconnects and bulk historical imports preclude a census. Pre-resume frame/byte totals unavailable.",
+  "first_event": "2026-10-14T11:04:39.960306Z",
+  "last_event": "2026-10-14T11:30:00.056272Z",
+  "retained": 3468,
+  "wall_seconds": 423.82
+}

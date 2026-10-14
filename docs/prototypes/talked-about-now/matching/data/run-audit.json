@@ -1,0 +1,9 @@
+{
+  "completed_at": "2026-10-14T12:53:08.582030+00:00",
+  "wall_seconds": 111.70830077200662,
+  "model": "openai/gpt-4.1-mini",
+  "vector_threshold": 0.9,
+  "vector_margin": 0.04,
+  "sample_sha256": "8522b40c0fd114a7948d31cd86c223233bd165f722ce5e6f15ac162842f0ed69",
+  "llm_calls": 93
+}

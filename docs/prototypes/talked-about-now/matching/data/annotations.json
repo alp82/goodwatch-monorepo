@@ -1,0 +1,1690 @@
+{
+  "policy": "Agent manual review before reading matcher predictions. Main explicitly discussed/promoted work only; studio boilerplate and incidental creator credits do not qualify. Equal-topic lists accept any of the listed works. Catalog identity is verified separately; upcoming versions cannot map to older namesakes. Ambiguous items are excluded from primary scoring and listed.",
+  "items": [
+    {
+      "id": "Y001",
+      "targets": [
+        [
+          "Puss in Boots: The Last Wish",
+          2022,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title and year."
+    },
+    {
+      "id": "Y002",
+      "targets": [
+        [
+          "Beware Boiúna",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Upcoming German release; title stated."
+    },
+    {
+      "id": "Y003",
+      "targets": [
+        [
+          "Paper Tiger",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "James Gray, Russian mafia; not the 1975 namesake."
+    },
+    {
+      "id": "Y004",
+      "targets": [
+        [
+          "Fjord",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Cristian Mungiu feature, explicitly named."
+    },
+    {
+      "id": "Y005",
+      "targets": [
+        [
+          "The Substance",
+          2024,
+          "movie"
+        ]
+      ],
+      "note": "Description names clip source."
+    },
+    {
+      "id": "Y006",
+      "targets": [
+        [
+          "Misty Green",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Chris Rock feature; exclude A24 boilerplate."
+    },
+    {
+      "id": "Y007",
+      "targets": [
+        [
+          "The Exorcist: Martyrs",
+          2027,
+          "movie"
+        ]
+      ],
+      "note": "Mike Flanagan new installment; ignore filmography."
+    },
+    {
+      "id": "Y008",
+      "targets": [
+        [
+          "The Invisible Man",
+          2020,
+          "movie"
+        ]
+      ],
+      "note": "Elisabeth Moss/Cecilia and 2020 purchase link disambiguate."
+    },
+    {
+      "id": "Y009",
+      "targets": [
+        [
+          "River",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Joshua Giuliano/Jane Levy new film; not older Rivers. Production year is 2026; synopsis confirms identity despite January promotion.",
+      "gold_override": [
+        "movie:1520592"
+      ]
+    },
+    {
+      "id": "Y010",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Promoted feature; boilerplate excluded."
+    },
+    {
+      "id": "Y011",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Interview explicitly about performance in Primetime."
+    },
+    {
+      "id": "Y012",
+      "targets": [
+        [
+          "Get Out",
+          2017,
+          "movie"
+        ]
+      ],
+      "note": "Daniel Kaluuya/Rose/Rod plus purchase links."
+    },
+    {
+      "id": "Y013",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Lance Oppenheim/Robert Pattinson new movie."
+    },
+    {
+      "id": "Y014",
+      "targets": [
+        [
+          "Other Mommy",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Stunt performer discusses production."
+    },
+    {
+      "id": "Y015",
+      "targets": [
+        [
+          "Coven Academy",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Lyric video expressly tied to Season 1 soundtrack."
+    },
+    {
+      "id": "Y016",
+      "targets": [
+        [
+          "Digger",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit current theatrical promotion."
+    },
+    {
+      "id": "Y017",
+      "targets": [
+        [
+          "Resident Evil",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Zach Cregger/Austin Abrams disambiguate new reboot."
+    },
+    {
+      "id": "Y018",
+      "targets": [],
+      "note": "General Huluween bundle promotion, no named movie/show."
+    },
+    {
+      "id": "Y019",
+      "targets": [
+        [
+          "Frankfurt Mord",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "New crime series on ZDF; cast described."
+    },
+    {
+      "id": "Y020",
+      "targets": [
+        [
+          "Clayface",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Movie hashtag and October 23 theatrical promotion."
+    },
+    {
+      "id": "Y021",
+      "targets": [
+        [
+          "Ghostbusters: Afterlife",
+          2021,
+          "movie"
+        ]
+      ],
+      "note": "Description explicitly names clip."
+    },
+    {
+      "id": "Y022",
+      "targets": [
+        [
+          "The Cat in the Hat",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New November 6 theatrical movie, not 2003 Mike Myers film."
+    },
+    {
+      "id": "Y023",
+      "targets": [
+        [
+          "Get Out",
+          2017,
+          "movie"
+        ]
+      ],
+      "note": "Explicit clip title and recognizable plot."
+    },
+    {
+      "id": "Y024",
+      "targets": [
+        [
+          "The Cat in the Hat",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Description hashtag plus November 6 release."
+    },
+    {
+      "id": "Y025",
+      "targets": [
+        [
+          "Der perfekte Urlaub",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit upcoming title."
+    },
+    {
+      "id": "Y026",
+      "targets": [
+        [
+          "Ahsoka",
+          2023,
+          "tv"
+        ]
+      ],
+      "note": "Description identifies Disney+ series."
+    },
+    {
+      "id": "Y027",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ],
+        [
+          "Whalefall",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Podcast compares whales in two named works; boilerplate excluded."
+    },
+    {
+      "id": "Y028",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Current movie promotion."
+    },
+    {
+      "id": "Y029",
+      "targets": [
+        [
+          "Der perfekte Urlaub",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Title stated."
+    },
+    {
+      "id": "Y030",
+      "targets": [
+        [
+          "Clayface",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Movie hashtag and tickets."
+    },
+    {
+      "id": "Y031",
+      "targets": [
+        [
+          "Spider-Man: Brand New Day",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit sequel title."
+    },
+    {
+      "id": "Y032",
+      "targets": [
+        [
+          "Bad Lieutenant: Tokyo",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New Tokyo-set film, not 1992 or 2009 installments."
+    },
+    {
+      "id": "Y033",
+      "targets": [
+        [
+          "Resident Evil",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Current theatrical reboot on official distributor, Bryan character; version less explicit than Y017."
+    },
+    {
+      "id": "Y034",
+      "targets": [
+        [
+          "Ghost Soldier",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Jim Caviezel action film; explicit description."
+    },
+    {
+      "id": "Y035",
+      "targets": [
+        [
+          "Insidious: Out of the Further",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit installment title."
+    },
+    {
+      "id": "Y036",
+      "targets": [
+        [
+          "Trolls",
+          2016,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title/year."
+    },
+    {
+      "id": "Y037",
+      "targets": [
+        [
+          "Clarissa",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Arie/Chuko Esiri Nigerian Mrs Dalloway adaptation, not 1991 series."
+    },
+    {
+      "id": "Y038",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Interview with film director/star promotes Primetime; boilerplate excluded."
+    },
+    {
+      "id": "Y039",
+      "targets": [
+        [
+          "Der perfekte Urlaub",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title."
+    },
+    {
+      "id": "Y040",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Performance promotes On Video from Primetime soundtrack; boundary case but explicit association qualifies.",
+      "gold_override": [
+        "movie:1375441",
+        "movie:1792739"
+      ],
+      "ambiguous": "Concert performance has its own catalog movie and explicitly promotes the Primetime soundtrack; self-link versus promotional title depends on product policy."
+    },
+    {
+      "id": "Y041",
+      "targets": [
+        [
+          "Resident Evil",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New theatrical reboot, official distributor context; weaker version evidence than Y017."
+    },
+    {
+      "id": "Y042",
+      "targets": [
+        [
+          "Artificial",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New premiere with explicit movie title.",
+      "gold_override": [
+        "movie:1492198"
+      ]
+    },
+    {
+      "id": "Y043",
+      "targets": [
+        [
+          "Spider-Man: Brand New Day",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Director/plot and explicit title."
+    },
+    {
+      "id": "Y044",
+      "targets": [
+        [
+          "Ghost Soldier",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Description names Caviezel movie."
+    },
+    {
+      "id": "Y045",
+      "targets": [],
+      "note": "Banana Ball sports broadcast; no catalog movie/show."
+    },
+    {
+      "id": "Y046",
+      "targets": [
+        [
+          "Digger",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Current theatrical movie promotion."
+    },
+    {
+      "id": "Y047",
+      "targets": [
+        [
+          "Clayface",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Fortnite cross-promotion explicitly advertises Clayface movie tickets."
+    },
+    {
+      "id": "Y048",
+      "targets": [
+        [
+          "Coven Academy",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Explicit first chapter of show."
+    },
+    {
+      "id": "Y049",
+      "targets": [
+        [
+          "The Cat in the Hat",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Upcoming release, not older namesake."
+    },
+    {
+      "id": "Y050",
+      "targets": [
+        [
+          "Loki",
+          2021,
+          "tv"
+        ]
+      ],
+      "note": "Description explicitly identifies show."
+    },
+    {
+      "id": "R001",
+      "targets": [
+        [
+          "Junkies of Dreaming – Mahler 3 Currentzis",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Documentary review title. Catalog shortens title to Junkies of Dreaming.",
+      "gold_override": [
+        "movie:1646767"
+      ]
+    },
+    {
+      "id": "R002",
+      "targets": [
+        [
+          "The Revolution Against Death",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New short documentary by Oppenheimer."
+    },
+    {
+      "id": "R003",
+      "targets": [
+        [
+          "Stardust",
+          2007,
+          "movie"
+        ]
+      ],
+      "note": "Der Sternwanderer is German title, De Niro identifies 2007 film."
+    },
+    {
+      "id": "R004",
+      "targets": [
+        [
+          "Resident Evil",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Zach Cregger movie specifically identified."
+    },
+    {
+      "id": "R005",
+      "targets": [
+        [
+          "Whalefall",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Recent survival adaptation, explicit review."
+    },
+    {
+      "id": "R006",
+      "targets": [
+        [
+          "Crystal Lake",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Jason origin prequel series, not a film with same name."
+    },
+    {
+      "id": "R007",
+      "targets": [],
+      "note": "Digital publisher acquisition; no title."
+    },
+    {
+      "id": "R008",
+      "targets": [
+        [
+          "MobLand",
+          2025,
+          "tv"
+        ]
+      ],
+      "note": "Description names show being compared with Sheridan."
+    },
+    {
+      "id": "R009",
+      "targets": [
+        [
+          "Two and a Half Men",
+          2003,
+          "tv"
+        ]
+      ],
+      "note": "Explicit show, casting history."
+    },
+    {
+      "id": "R010",
+      "targets": [
+        [
+          "Confession",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New Vaclav Marhoul movie is main work; Painted Bird is creator credit.",
+      "gold_override": [
+        "movie:1772726"
+      ]
+    },
+    {
+      "id": "R011",
+      "targets": [
+        [
+          "Crystal Lake",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Explicit series review."
+    },
+    {
+      "id": "R012",
+      "targets": [],
+      "note": "Network executive leaving business, not title content."
+    },
+    {
+      "id": "R013",
+      "targets": [],
+      "note": "Blanket/brand merchandise story."
+    },
+    {
+      "id": "R014",
+      "targets": [
+        [
+          "Carrie",
+          null,
+          "tv"
+        ]
+      ],
+      "note": "Mike Flanagan series expressly referenced; specific traumatizing film unnamed.",
+      "ambiguous": "Headline's central horror film is absent from excerpt; Carrie is creator credit, cannot identify primary work."
+    },
+    {
+      "id": "R015",
+      "targets": [],
+      "note": "General strange jobs list, no movie/show."
+    },
+    {
+      "id": "R016",
+      "targets": [
+        [
+          "The Terminator",
+          1984,
+          "movie"
+        ]
+      ],
+      "note": "First Sarah Connor appearance/cast disambiguates original."
+    },
+    {
+      "id": "R017",
+      "targets": [
+        [
+          "Once Upon a Time in Harlem",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Named documentary podcast."
+    },
+    {
+      "id": "R018",
+      "targets": [
+        [
+          "The Equalizer",
+          2014,
+          "movie"
+        ]
+      ],
+      "note": "Denzel $192m action blockbuster, not TV show."
+    },
+    {
+      "id": "R019",
+      "targets": [
+        [
+          "All About Corinne",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Huppert/Kiberlain new French review."
+    },
+    {
+      "id": "R020",
+      "targets": [
+        [
+          "Whalefall",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit review title/plot."
+    },
+    {
+      "id": "R021",
+      "targets": [
+        [
+          "NCIS",
+          2003,
+          "tv"
+        ]
+      ],
+      "note": "Navy CIS title and continuing show, no reboot."
+    },
+    {
+      "id": "R022",
+      "targets": [],
+      "note": "Film financing facility, no named work."
+    },
+    {
+      "id": "R023",
+      "targets": [
+        [
+          "Miami Vice",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "Joseph Kosinski upcoming reboot, not Michael Mann 2006 film. Catalog lists reboot as Miami Vice 85 (2028), distinct from 2006 movie.",
+      "gold_override": [
+        "movie:1467853"
+      ]
+    },
+    {
+      "id": "R024",
+      "targets": [
+        [
+          "Breaking Bad",
+          2008,
+          "tv"
+        ]
+      ],
+      "note": "Cast death story tied explicitly to show; relevant show news."
+    },
+    {
+      "id": "R025",
+      "targets": [
+        [
+          "2001: A Space Odyssey",
+          1968,
+          "movie"
+        ],
+        [
+          "Sunset Boulevard",
+          1950,
+          "movie"
+        ],
+        [
+          "Citizen Kane",
+          1941,
+          "movie"
+        ]
+      ],
+      "note": "Equal-topic classic movie list, accept any explicitly listed work."
+    },
+    {
+      "id": "R026",
+      "targets": [],
+      "note": "Theater reopening, no work."
+    },
+    {
+      "id": "R027",
+      "targets": [
+        [
+          "Kung Fu Soccer",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New Stephen Chow spinoff, Shaolin Soccer is predecessor context."
+    },
+    {
+      "id": "R028",
+      "targets": [
+        [
+          "Crystal Lake",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Explicit prequel series review."
+    },
+    {
+      "id": "R029",
+      "targets": [
+        [
+          "Carrie",
+          null,
+          "tv"
+        ],
+        [
+          "Below",
+          2026,
+          "tv"
+        ],
+        [
+          "Crystal Lake",
+          2026,
+          "tv"
+        ]
+      ],
+      "note": "Multi-show comparison podcast, accept explicitly discussed shows; Carrie must be TV not 1976 movie."
+    },
+    {
+      "id": "R030",
+      "targets": [
+        [
+          "The Magician's Nephew",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New Narnia adaptation footage; title version identifiable. Catalog full title Narnia: The Magician's Nephew (2027), promotional year differs.",
+      "gold_override": [
+        "movie:1147572"
+      ]
+    },
+    {
+      "id": "R031",
+      "targets": [
+        [
+          "Baywatch",
+          null,
+          "tv"
+        ]
+      ],
+      "note": "New TV reboot, not original 1989 show. Catalog synopsis confirms action TV reboot; year unset.",
+      "gold_override": [
+        "tv:248172"
+      ]
+    },
+    {
+      "id": "R032",
+      "targets": [
+        [
+          "Girls",
+          2012,
+          "tv"
+        ]
+      ],
+      "note": "Lena Dunham existing show returning for season 7, not new namesake."
+    },
+    {
+      "id": "R033",
+      "targets": [
+        [
+          "Dumbo",
+          2019,
+          "movie"
+        ]
+      ],
+      "note": "Tim Burton live action explicitly distinguishes remake."
+    },
+    {
+      "id": "R034",
+      "targets": [
+        [
+          "Narcs",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "New coming-of-age Sony comedy; cast credits incidental."
+    },
+    {
+      "id": "R035",
+      "targets": [],
+      "note": "Main acclaimed film unnamed; Odyssey is comparator.",
+      "ambiguous": "Cannot identify main work from supplied headline/description."
+    },
+    {
+      "id": "R036",
+      "targets": [
+        [
+          "Yakuza Apocalypse",
+          2015,
+          "movie"
+        ]
+      ],
+      "note": "Explicit Takashi Miike title."
+    },
+    {
+      "id": "R037",
+      "targets": [],
+      "note": "Main martial arts movie unnamed.",
+      "ambiguous": "Excerpt does not identify the main work."
+    },
+    {
+      "id": "R038",
+      "targets": [
+        [
+          "NAZA",
+          2026,
+          "movie"
+        ],
+        [
+          "No Other Land",
+          2024,
+          "movie"
+        ]
+      ],
+      "note": "Docs explicitly discussed as equal examples of distribution problem."
+    },
+    {
+      "id": "R039",
+      "targets": [
+        [
+          "The Banning Curse",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Amiryousefi new movie, named premiere."
+    },
+    {
+      "id": "R040",
+      "targets": [
+        [
+          "Cabildo 71",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "New prison escape drama is main; I'm Still Here is cast credential."
+    },
+    {
+      "id": "R041",
+      "targets": [
+        [
+          "La Bola Negra",
+          2026,
+          "movie"
+        ],
+        [
+          "Woman Unknown",
+          2027,
+          "movie"
+        ],
+        [
+          "NAZA",
+          2026,
+          "movie"
+        ],
+        [
+          "Fjord",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Awards shortlist discusses four equal headline works. Woman Unknown production release year is 2027, distinct identity from awards date."
+    },
+    {
+      "id": "R042",
+      "targets": [],
+      "note": "AI filmmaking workflow, anonymous illustrated scene; no named catalog work."
+    },
+    {
+      "id": "R043",
+      "targets": [],
+      "note": "Generic list headline/excerpt without any named movie; no link supported."
+    },
+    {
+      "id": "R044",
+      "targets": [],
+      "note": "Celebrity security footage story, no work."
+    },
+    {
+      "id": "R045",
+      "targets": [],
+      "note": "Likely Rings of Power, but neither title nor characters named.",
+      "ambiguous": "Insufficient explicit identity in excerpt; don't label from guesses."
+    },
+    {
+      "id": "R046",
+      "targets": [],
+      "note": "Streaming platform launch, not a catalog title."
+    },
+    {
+      "id": "R047",
+      "targets": [
+        [
+          "Kidney",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "Aakarsh/Agrim Sansanwal second feature; requires director context to distinguish. Exact catalog namesake movie:1720905 is directed by Matteo Montresor, not the Sansanwals; target absent.",
+      "gold_override": []
+    },
+    {
+      "id": "R048",
+      "targets": [],
+      "note": "Connery real estate biography; no named Bond installment."
+    },
+    {
+      "id": "R049",
+      "targets": [],
+      "note": "Horror sequels unnamed; Jaws is cast credit.",
+      "ambiguous": "Cannot identify sequel works from excerpt."
+    },
+    {
+      "id": "R050",
+      "targets": [
+        [
+          "Clayface",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "James Watkins/Flanagan current new DC film."
+    },
+    {
+      "id": "R051",
+      "targets": [
+        [
+          "Street Fighter",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Kitao Sakurai/Noah Centineo new game adaptation."
+    },
+    {
+      "id": "R052",
+      "targets": [],
+      "note": "Ghost Month is a novel; television adaptation has no established work identity yet."
+    },
+    {
+      "id": "R053",
+      "targets": [
+        [
+          "Together Until Death",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "New Juntas Hasta la Muerte by Igna L Vacas; production casting."
+    },
+    {
+      "id": "R054",
+      "targets": [],
+      "note": "New Showalter Serendipity redo, distinguish 2001 original.",
+      "ambiguous": "New remake's title/year unconfirmed; Tangled is cast credential, not main topic."
+    },
+    {
+      "id": "R055",
+      "targets": [
+        [
+          "The Mummy 4",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "New fourth adventure film, not other Mummy works; Obsession is cast credit."
+    },
+    {
+      "id": "R056",
+      "targets": [
+        [
+          "Clean Hands",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "New Zach Braff police drama, not older films with same title."
+    },
+    {
+      "id": "R057",
+      "targets": [
+        [
+          "Below",
+          2026,
+          "tv"
+        ],
+        [
+          "Animals",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Two explicitly discussed Netflix releases; Below must be new Canadian series.",
+      "gold_override": [
+        "tv:285322",
+        "movie:1236045"
+      ]
+    },
+    {
+      "id": "R058",
+      "targets": [
+        [
+          "Pakeezah",
+          1972,
+          "movie"
+        ]
+      ],
+      "note": "Amrohi/Kumari release history explicitly identifies original."
+    },
+    {
+      "id": "R059",
+      "targets": [
+        [
+          "De Noche",
+          null,
+          "movie"
+        ]
+      ],
+      "note": "Haynes/Pascal upcoming romantic noir.",
+      "gold_override": [
+        "movie:1536826"
+      ]
+    },
+    {
+      "id": "R060",
+      "targets": [
+        [
+          "Project Hail Mary",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Rocky puppeteer/actor interview explicitly tied to movie."
+    },
+    {
+      "id": "B001",
+      "targets": [
+        [
+          "The Land",
+          null,
+          "tv"
+        ]
+      ],
+      "gold_override": [
+        "tv:274395"
+      ],
+      "note": "Fogelman Hulu football-family series; other shows/credits are incidental."
+    },
+    {
+      "id": "B002",
+      "targets": [],
+      "note": "Manchester United football personnel news; director of football triggers keyword, no catalog work."
+    },
+    {
+      "id": "B003",
+      "targets": [],
+      "note": "Italian footballer's separation/celebrity gossip; tv substring in URL, no work."
+    },
+    {
+      "id": "B004",
+      "targets": [
+        [
+          "Pokémon",
+          1997,
+          "tv"
+        ]
+      ],
+      "note": "Season 2 Fit to Be Tide belongs to original Pokemon anime, not a later spin-off."
+    },
+    {
+      "id": "B005",
+      "targets": [
+        [
+          "The Persuaders!",
+          1971,
+          "tv"
+        ]
+      ],
+      "note": "Moore and Curtis filming anecdotes explicitly identify series; memoir is context."
+    },
+    {
+      "id": "B006",
+      "targets": [
+        [
+          "The Unholy Four",
+          1954,
+          "movie"
+        ]
+      ],
+      "note": "Title alias The Stranger Came Home plus year/director/cast distinguish 1954 movie."
+    },
+    {
+      "id": "B007",
+      "targets": [
+        [
+          "Farmacia de guardia",
+          1991,
+          "tv"
+        ]
+      ],
+      "note": "Explicit series and episode airdate, not 1958 movie."
+    },
+    {
+      "id": "B008",
+      "targets": [],
+      "note": "Italian Juventus executive salaries, no movie/show."
+    },
+    {
+      "id": "B009",
+      "targets": [
+        [
+          "Nikki",
+          2000,
+          "tv"
+        ]
+      ],
+      "note": "WB show, cast/plot/year identify sitcom, not movie namesake."
+    },
+    {
+      "id": "B010",
+      "targets": [],
+      "note": "General opposition to AI in creative industries; no work identified."
+    },
+    {
+      "id": "B011",
+      "targets": [
+        [
+          "Narnia: The Magician's Nephew",
+          2027,
+          "movie"
+        ]
+      ],
+      "note": "Greta Gerwig new Narnia trailer, not older adaptations or a song catalog title."
+    },
+    {
+      "id": "B012",
+      "targets": [
+        [
+          "The Blob",
+          1988,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title and remake year."
+    },
+    {
+      "id": "B013",
+      "targets": [],
+      "note": "Persian smart locks/cameras/Apple TV hardware announcement; no movie/show."
+    },
+    {
+      "id": "B014",
+      "targets": [
+        [
+          "Girls",
+          2012,
+          "tv"
+        ]
+      ],
+      "note": "Spanish news describes Lena Dunham's HBO show returning, identifiable despite language noise."
+    },
+    {
+      "id": "B015",
+      "targets": [],
+      "note": "Generic movie naming prompt; no particular work named."
+    },
+    {
+      "id": "B016",
+      "targets": [],
+      "note": "Demand a local screening; unnamed movie, cannot link from text."
+    },
+    {
+      "id": "B017",
+      "targets": [],
+      "note": "Poetic/lyric-like imagined favorite movies, no filmed work named."
+    },
+    {
+      "id": "B018",
+      "targets": [],
+      "note": "Paper Mario 64 game livestream; tv URL triggers filter, not catalog movie/show."
+    },
+    {
+      "id": "B019",
+      "targets": [
+        [
+          "The Quiet Girl",
+          2022,
+          "movie"
+        ]
+      ],
+      "note": "Explicit Irish movie recommendation/streaming link."
+    },
+    {
+      "id": "B020",
+      "targets": [],
+      "note": "Microfiction writing prompt, movies/books generic; no named movie/show."
+    },
+    {
+      "id": "B021",
+      "targets": [
+        [
+          "Diamonds Are Forever",
+          1971,
+          "movie"
+        ]
+      ],
+      "note": "Explicit movie plot comparison with a contemporary political figure, qualifies as discussed work."
+    },
+    {
+      "id": "B022",
+      "targets": [
+        [
+          "Helluva Boss",
+          2020,
+          "tv"
+        ]
+      ],
+      "note": "Blitz/Stolas suggest Helluva Boss, but reply context absent.",
+      "ambiguous": "No show title; character names suggest Helluva Boss, but quoted/reply context was not inspected."
+    },
+    {
+      "id": "B023",
+      "targets": [
+        [
+          "The Hitchhiker's Guide to the Galaxy",
+          1981,
+          "tv"
+        ]
+      ],
+      "note": "BBC 1981 TV adaptation explicitly distinguishes 2005 film."
+    },
+    {
+      "id": "B024",
+      "targets": [],
+      "note": "Contemporary political opinion uses TV generically, no work."
+    },
+    {
+      "id": "B025",
+      "targets": [],
+      "note": "Spanish LG OLED TV shopping headline, no movie/show."
+    },
+    {
+      "id": "B026",
+      "targets": [
+        [
+          "Primetime",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit film review/year; Gentle Monster is a comparison, main work Primetime."
+    },
+    {
+      "id": "B027",
+      "targets": [],
+      "note": "Podcast episode titled The Vessel; no main movie/show identified, do not map episode name to movie namesake."
+    },
+    {
+      "id": "B028",
+      "targets": [],
+      "note": "Resident Evil 7 fanmade/game content is primary; Cregger movie and Walking Dead actor are incidental credits, not primary works."
+    },
+    {
+      "id": "B029",
+      "targets": [
+        [
+          "Little Nicky",
+          2000,
+          "movie"
+        ]
+      ],
+      "note": "Explicit response identifies movie with talking pet."
+    },
+    {
+      "id": "B030",
+      "targets": [],
+      "note": "Smart glasses/hardware complaint, TV used generically."
+    },
+    {
+      "id": "B031",
+      "targets": [],
+      "note": "Eva Marie Saint death notice, no movie/show title."
+    },
+    {
+      "id": "B032",
+      "targets": [],
+      "note": "Elissa Landi biography; Count of Monte Cristo/Sign of the Cross are incidental filmography, not main works."
+    },
+    {
+      "id": "B033",
+      "targets": [
+        [
+          "Doc",
+          2025,
+          "tv"
+        ]
+      ],
+      "note": "FOX series, Amy memory-loss doctor, distinct from Italian original and other Doc shows."
+    },
+    {
+      "id": "B034",
+      "targets": [
+        [
+          "The Scorpion King",
+          2002,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title/year. Piracy-promotion spam can be entity-linked but is not suitable discovery content."
+    },
+    {
+      "id": "B035",
+      "targets": [
+        [
+          "Primal",
+          2019,
+          "tv"
+        ]
+      ],
+      "note": "Animated TV with Tartakovsky, distinct from live-action movie namesake."
+    },
+    {
+      "id": "B036",
+      "targets": [],
+      "note": "Samsung television sales ad; no catalog work."
+    },
+    {
+      "id": "B037",
+      "targets": [
+        [
+          "Rurouni Kenshin",
+          2023,
+          "tv"
+        ]
+      ],
+      "note": "Explicit 2023 anime remake, not 1996 series. Piracy-promotion spam is separately unsuitable to publish."
+    },
+    {
+      "id": "B038",
+      "targets": [],
+      "note": "Turkish broadcast channel/police news, no catalog movie/show."
+    },
+    {
+      "id": "B039",
+      "targets": [],
+      "note": "Venture-capital executive conference promotion; managing director triggers keyword."
+    },
+    {
+      "id": "B040",
+      "targets": [],
+      "note": "Tamil Netflix FIFA rights news, sports rather than a catalog movie/show."
+    },
+    {
+      "id": "B041",
+      "targets": [
+        [
+          "Adventures of Sonic the Hedgehog",
+          1993,
+          "tv"
+        ]
+      ],
+      "note": "Explicit series and episode Robolympics."
+    },
+    {
+      "id": "B042",
+      "targets": [],
+      "note": "Japanese LIPO FILM supplement advertising, film is product form rather than movie."
+    },
+    {
+      "id": "B043",
+      "targets": [
+        [
+          "A Field in England",
+          2013,
+          "movie"
+        ]
+      ],
+      "note": "Explicit title; poster says 2014 but catalog release year 2013. Unique identity despite year error."
+    },
+    {
+      "id": "B044",
+      "targets": [],
+      "note": "Xenoblade 2 game character-design discussion; series keyword is game series, no movie/show."
+    },
+    {
+      "id": "B045",
+      "targets": [
+        [
+          "Away from Her",
+          2007,
+          "movie"
+        ]
+      ],
+      "note": "Sarah Polley/Fiona/Grant Alzheimer plot identifies movie. Post uses 2006 festival year; catalog uses 2007 release year."
+    },
+    {
+      "id": "B046",
+      "targets": [],
+      "note": "Weather alert with Twitch URL, no catalog work."
+    },
+    {
+      "id": "B047",
+      "targets": [
+        [
+          "Helluva Boss",
+          2020,
+          "tv"
+        ]
+      ],
+      "note": "Explicit animation series/character discussion; catalog year 2020, pilot predates it."
+    },
+    {
+      "id": "B048",
+      "targets": [
+        [
+          "Buzz Lightyear of Star Command",
+          2000,
+          "tv"
+        ]
+      ],
+      "note": "Explicit TV series and episode, not Toy Story/Lightyear movie."
+    },
+    {
+      "id": "B049",
+      "targets": [],
+      "note": "Tupperware household advice/newsletter series, no movie/show."
+    },
+    {
+      "id": "B050",
+      "targets": [
+        [
+          "Love of Your Life",
+          2026,
+          "movie"
+        ]
+      ],
+      "note": "Explicit Qualley film review and 2026 context."
+    },
+    {
+      "id": "B051",
+      "targets": [],
+      "note": "Spanish political podcast about Spain/Morocco, no movie/show."
+    },
+    {
+      "id": "B052",
+      "targets": [
+        [
+          "House",
+          2004,
+          "tv"
+        ]
+      ],
+      "note": "Watching episodes of House on Prime clearly indicates TV series, not horror movies."
+    },
+    {
+      "id": "B053",
+      "targets": [
+        [
+          "Transformers One",
+          2024,
+          "movie"
+        ]
+      ],
+      "note": "Bad-assatron quote suggests Transformers One but work unnamed.",
+      "ambiguous": "Film title absent and trailer not inspected; quote-based inference needs context/verification."
+    },
+    {
+      "id": "B054",
+      "targets": [
+        [
+          "The West Wing",
+          1999,
+          "tv"
+        ]
+      ],
+      "note": "Explicit named TV series; episode itself unspecified, series ID sufficient."
+    },
+    {
+      "id": "B055",
+      "targets": [
+        [
+          "Revival",
+          2024,
+          "movie"
+        ]
+      ],
+      "note": "Explicit movie/year; catalog has one 2024 exact movie identity. Spam/piracy suitability separate from linking."
+    },
+    {
+      "id": "B056",
+      "targets": [
+        [
+          "Blond: Eva Blond!",
+          2002,
+          "tv"
+        ]
+      ],
+      "note": "Explicit TV series, episode/date disambiguate."
+    },
+    {
+      "id": "B057",
+      "targets": [
+        [
+          "John Wick",
+          2014,
+          "movie"
+        ]
+      ],
+      "note": "Embedded fan-edit title refers to John Wick/Helen; Drive is incidental audience reference.",
+      "ambiguous": "Fan edit may span John Wick franchise installments; no video inspected, so exact installment remains unclear."
+    },
+    {
+      "id": "B058",
+      "targets": [],
+      "note": "Singer death notice, no movie/show title despite movies URL."
+    },
+    {
+      "id": "B059",
+      "targets": [
+        [
+          "They Live",
+          1988,
+          "movie"
+        ]
+      ],
+      "note": "Explicit cultural/political comparison to well-known 1988 movie, not obscure 2018 namesake."
+    },
+    {
+      "id": "B060",
+      "targets": [],
+      "note": "Untitled Michael Jackson Super Bowl documentary announcement.",
+      "ambiguous": "Documentary is described but title/catalog identity absent from headline and excerpt."
+    }
+  ]
+}

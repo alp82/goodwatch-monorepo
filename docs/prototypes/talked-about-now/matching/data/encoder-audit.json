@@ -1,0 +1,12 @@
+{
+  "repo": "Xenova/multilingual-e5-small",
+  "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+  "hashes": {
+    "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+    "model.onnx": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff"
+  },
+  "prefix": "query: ",
+  "pooling": "masked mean",
+  "normalize": true,
+  "max_tokens": 512
+}
