@@ -1,7 +1,7 @@
 // My movies (#385): the page for choosing a movie. It is the Watch next page for the Wishlist's movies, with "How
 // long?" as a fourth choice and one group for what does not fit tonight. For members, behind REC_TRACKING; it reads
-// /api/watch-next with `kind=movie`, so it needs REC_WATCH_NEXT too. Anyone else is sent to Watch next, which is
-// what they have today (docs/implementation/tracking/my-library/README.md).
+// /api/watch-next with `kind=movie`. Anyone else is sent to Watch next, which is what they have today
+// (docs/implementation/tracking/my-library/README.md).
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -47,8 +47,6 @@ const headers = { "Cache-Control": "private, no-store" }
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	const url = new URL(request.url)
-	if (!isEnabled("watchNext", { userId }))
-		throw new Response("Not found", { status: 404 })
 	// A guest, and a member the flag hides tracking from, have Watch next.
 	if (!userId || !isEnabled("tracking", { userId }))
 		return redirect(`/watch-next${url.search}`, {

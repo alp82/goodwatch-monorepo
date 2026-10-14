@@ -1,5 +1,5 @@
 // Watch next: the top of the Wishlist under the person's chosen sort and moods, then the rest of the Wishlist in a
-// stepped grid. Not found while REC_WATCH_NEXT hides it from the viewer.
+// stepped grid.
 // A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
 // page reads /api/watch-next as the sort, moods, and On my services change.
 import {
@@ -44,8 +44,6 @@ const headers = { "Cache-Control": "private, no-store" }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!isEnabled("watchNext", { userId }))
-		throw new Response("Not found", { status: 404 })
 	// With REC_TRACKING a member picks a movie on My movies and a show on My shows (#385); the sort, moods and
 	// services choice in the URL go along. Guests keep Watch next.
 	if (userId && isEnabled("tracking", { userId }))

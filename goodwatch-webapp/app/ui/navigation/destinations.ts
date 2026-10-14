@@ -67,8 +67,7 @@ export function getDestinations(
 			key: "watchNext",
 			label: "Watch next",
 			short: "Watch",
-			// Until Watch next is on for the viewer, the Wishlist page is where their Wishlist lives.
-			href: features.watchNext ? "/watch-next" : "/wishlist",
+			href: "/watch-next",
 			icon: PlayIcon,
 			available: true,
 		},

@@ -12,7 +12,6 @@ import { headers, watchNextViewer } from "~/server/watch-next-request.server"
 // Tonight's pick, or null: the title the navigation dock and the Living room's TV put forward for tonight.
 // - Members: GET /api/tonight
 // - Guests: POST /api/tonight with { guest: { interactions, country, services } }.
-// Not found while REC_WATCH_NEXT hides Watch next from the viewer: the pick opens Watch next.
 //
 // With REC_TRACKING a member's answer also says which of their titles landed on one of their services (#456),
 // `landed`, left out when none did. It rides along because the navigation asks for the pick on every page, and

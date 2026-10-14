@@ -15,16 +15,13 @@ import {
 import { Link } from "@remix-run/react"
 import type { User } from "@supabase/auth-js"
 import { Fragment } from "react"
-import { useFeature } from "~/hooks/useFeature"
 import { SignOutLink } from "~/ui/auth/SignOutLink"
 import { myListsPath } from "~/ui/share-card/links"
 
 // The signed-in member's avatar and account menu: Want to See, Already Watched, Lists, Settings, and Sign out.
 export function UserMenu({ user }: { user: User }) {
-	// Want to See opens Watch next while REC_WATCH_NEXT shows it to the viewer.
-	const wantToSee = useFeature("watchNext")
-		? "/watch-next"
-		: "/discover?type=all&watchedType=want-to-watch&streamingPreset=mine"
+	// Want to See opens Watch next.
+	const wantToSee = "/watch-next"
 	return (
 		<Menu as="div" className="relative ml-2 shrink-0">
 			<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 cursor-pointer">

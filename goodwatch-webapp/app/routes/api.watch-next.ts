@@ -16,7 +16,6 @@ import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
 // - Guests: POST to the same URL with { guest: { interactions, country, services } }, the guest progress their
 //   browser holds.
 // Every parameter is optional: Best match (or Last added without taste), no moods, On my services.
-// Not found while REC_WATCH_NEXT hides Watch next from the viewer.
 
 async function respond(request: Request) {
 	const viewer = await watchNextViewer(request)

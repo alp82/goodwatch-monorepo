@@ -7,7 +7,6 @@
 import { type QueryClient, useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import type { NewOnServices } from "~/domain/newly-available-signal"
-import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import type { TonightsPick } from "~/server/tonight.server"
 import { watchStateSignature } from "~/types/user-data"
@@ -31,8 +30,6 @@ async function fetchTonight(guest: boolean): Promise<Tonight> {
 				body: JSON.stringify({ guest: snapshotGuestProgress() }),
 			})
 		: await fetch("/api/tonight")
-	// Not found while Watch next is off for the viewer: no pick, the dock shows the Wishlist icon.
-	if (response.status === 404) return { pick: null }
 	if (!response.ok) throw new Error(`Tonight's pick: ${response.status}`)
 	return (await response.json()) as Tonight
 }
@@ -44,7 +41,6 @@ export function useTonightsPick(): {
 	/** A member's titles that landed on one of their services; null when none did. */
 	landed: NewOnServices | null
 } {
-	const watchNext = useFeature("watchNext")
 	const { user, loading } = useUser()
 	const { data } = useUserData()
 	const signature = useMemo(() => {
@@ -59,7 +55,7 @@ export function useTonightsPick(): {
 	const query = useQuery({
 		queryKey: [...tonightKey(user?.id ?? "guest"), signature],
 		queryFn: () => fetchTonight(!user),
-		enabled: watchNext && !loading && !guestWithoutWishlist,
+		enabled: !loading && !guestWithoutWishlist,
 		placeholderData: (previous) => previous,
 	})
 	return {

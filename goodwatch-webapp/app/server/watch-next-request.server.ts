@@ -4,7 +4,7 @@ import { json } from "@remix-run/node"
 import { z } from "zod"
 import { timeOf } from "~/domain/my-movies"
 import { watchNextChoiceOf } from "~/domain/watch-next"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
+import { isEnabled } from "~/server/features.server"
 import {
 	type GuestProgress,
 	type ViewerContext,
@@ -53,8 +53,7 @@ export function parseWatchNextOptions(
 }
 
 /**
- * The viewer of a Watch next request, or a response to send instead: not found while REC_WATCH_NEXT hides the
- * feature from this viewer, bad request for an unreadable body. A POST carries a guest's progress as
+ * The viewer of a Watch next request, or a response to send instead: bad request for an unreadable body. A POST carries a guest's progress as
  * `{ guest: { interactions, country, services } }`; a signed-in member's POST ignores it.
  */
 export async function watchNextViewer(
@@ -68,7 +67,6 @@ export async function watchNextViewer(
 	  }
 	| { response: Response }
 > {
-	if (getFeatureMode("watchNext") === "off") return { response: notFound() }
 	let body: Record<string, unknown> = {}
 	let guest: GuestProgress | undefined
 	if (request.method === "POST") {
@@ -94,7 +92,6 @@ export async function watchNextViewer(
 	}
 	const ctx = await getViewerContext(request, guest)
 	const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-	if (!isEnabled("watchNext", { userId })) return { response: notFound() }
 	return {
 		ctx,
 		body,
