@@ -131,6 +131,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Privacy policy",
 		subtitle: "Why your taste is safe with us.",
 	},
+	"/connect": {
+		tag: "Connected apps",
+		title: "GoodWatch in Claude and ChatGPT",
+		subtitle: "Ask what to watch. Log it by chatting.",
+	},
 	"/disclaimer": {
 		tag: "Disclaimer",
 		title: "Disclaimer",

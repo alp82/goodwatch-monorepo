@@ -1,7 +1,17 @@
 import type { MetaFunction } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import { isEnabled } from "~/server/features.server";
+import { AccountAndAppsPolicy } from "~/ui/privacy/AccountAndAppsPolicy";
+import { OwnerCheck } from "~/ui/privacy/OwnerCheck";
 import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export { pageHeaders as headers } from "~/utils/headers"
+
+// With REC_CONNECTOR on, the policy covers self-hosted sign-in, account email, the move from Supabase and connected
+// apps (#571). Off, the policy of June 2024 serves unchanged.
+export function loader() {
+	return { updated: isEnabled("connector") };
+}
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
@@ -16,11 +26,25 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] });
 };
 
-export default function About() {
+export default function Privacy() {
+	const { updated } = useLoaderData<typeof loader>();
 	return (
-		<div className="max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
+		<div
+			className={
+				updated
+					? "mx-auto max-w-3xl px-4 py-8 text-gray-300 sm:px-8 md:py-12 [&_p]:my-3"
+					: "max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8"
+			}
+		>
 			<h1 className="mb-8 text-3xl font-semibold">Privacy Policy</h1>
-			<p>Last updated: June 15, 2024</p>
+			{updated ? (
+				<p>
+					Last updated: [date of the cut-over]
+					<OwnerCheck>The date this version takes effect.</OwnerCheck>
+				</p>
+			) : (
+				<p>Last updated: June 15, 2024</p>
+			)}
 			<p>
 				This Privacy Policy describes Our policies and procedures on the
 				collection, use and disclosure of Your information when You use the
@@ -41,6 +65,14 @@ export default function About() {
 				</a>
 				.
 			</p>
+			{updated && (
+				<div className="mt-10">
+					<AccountAndAppsPolicy />
+					<p className="mt-12 text-gray-400">
+						The rest of this policy covers the website in general.
+					</p>
+				</div>
+			)}
 			<h2 className="mt-12 mb-4 text-2xl font-bold">
 				Interpretation and Definitions
 			</h2>
@@ -199,13 +231,25 @@ export default function About() {
 				The Company allows You to create an account and log in to use the
 				Service through the following Third-party Social Media Services:
 			</p>
-			<ul>
-				<li>Google</li>
-				<li>Facebook</li>
-				<li>Instagram</li>
-				<li>Twitter</li>
-				<li>LinkedIn</li>
-			</ul>
+			{updated ? (
+				<>
+					<ul>
+						<li>Google</li>
+					</ul>
+					<OwnerCheck>
+						Google is the only sign-in GoodWatch offers, so Facebook, Instagram,
+						Twitter and LinkedIn are left out of this version. Confirm.
+					</OwnerCheck>
+				</>
+			) : (
+				<ul>
+					<li>Google</li>
+					<li>Facebook</li>
+					<li>Instagram</li>
+					<li>Twitter</li>
+					<li>LinkedIn</li>
+				</ul>
+			)}
 			<p>
 				If You decide to register through or otherwise grant us access to a
 				Third-Party Social Media Service, We may collect Personal data that is
