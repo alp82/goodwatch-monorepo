@@ -1,5 +1,6 @@
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
 import useLocale from "~/utils/locale"
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
 import { assetUrl } from "~/utils/asset-url"
@@ -892,8 +893,9 @@ function JourneyList() {
 							<div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent transition-colors duration-300 group-hover:from-black/95 group-hover:via-black/70 group-focus-within:from-black/95 group-focus-within:via-black/70" />
 							<div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
 								<div className="transition-transform duration-300 ease-out motion-reduce:transition-none group-hover:-translate-y-1 group-focus-within:-translate-y-1">
-									<h3 className="text-sm font-bold text-white leading-tight line-clamp-2">
-										<span lang={mediaFieldLanguage(r)}><Highlight text={r.title} query={j.batch?.q ?? ""} /></span>
+									{/* The clamped element carries the title's language and direction (see media-text.ts). */}
+									<h3 {...mediaTextAttributes(mediaFieldLanguage(r))} className="text-sm font-bold text-white leading-tight line-clamp-2">
+										<Highlight text={r.title} query={j.batch?.q ?? ""} />
 									</h3>
 									<p className="text-[11px] text-gray-300 truncate">{meta(r)}</p>
 								</div>

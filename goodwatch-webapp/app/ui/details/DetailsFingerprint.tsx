@@ -14,6 +14,7 @@ import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import * as F from "~/ui/fingerprint/fingerprintText"
+import MediaText from "~/ui/media-text/MediaText"
 import { useReplayedTap } from "~/utils/useReplayedTap"
 
 
@@ -37,7 +38,7 @@ function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) 
 			<div>
 				<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
 					<img src={assetUrl(fingerprintIcon)} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
-					{t.title} fingerprint
+					<MediaText value={{ text: t.title, lang: t.titleLang ?? "en" }} /> fingerprint
 				</h2>
 				<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
 			</div>
@@ -421,6 +422,7 @@ export default function DetailsFingerprint({
 	if (!media.fingerprint) return null
 	const t: F.TitleInput = {
 		title: media.details.title,
+		titleLang: media.details.presentation?.title.language,
 		mediaType: media.mediaType,
 		year: media.details.release_year,
 		genres: media.details.genres,

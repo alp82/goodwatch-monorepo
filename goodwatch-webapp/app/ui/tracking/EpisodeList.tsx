@@ -47,6 +47,8 @@ import {
 	useDismiss,
 } from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
+import MediaText from "~/ui/media-text/MediaText"
+import { episodeText } from "~/ui/media-text/media-text"
 import type { TrackedMedia } from "./gate"
 import {
 	FOCUS,
@@ -656,9 +658,10 @@ function Finder({
 									<span className="w-16 shrink-0 text-xs font-bold tabular-nums text-gray-300">
 										{episodeLabel(choice.episode)}
 									</span>
-									<span className="min-w-0 flex-1 truncate text-white">
-										<span lang={choice.episode.textPresentation?.name.language ?? "en"}>{choice.episode.name}</span>
-									</span>
+									<MediaText
+										value={episodeText(choice.episode, "name")}
+										className="min-w-0 flex-1 truncate text-white"
+									/>
 									{model.view.watched.has(choice.episode.id) && (
 										<CheckIcon className="h-3.5 w-3.5 shrink-0 text-green-400" />
 									)}
@@ -1069,7 +1072,12 @@ function Matrix({ nav, model }: { nav: Nav; model: Model }) {
 							className={`cursor-pointer text-left text-sm font-semibold text-green-300 underline decoration-green-400/40 underline-offset-4 hover:text-green-200 ${FOCUS}`}
 						>
 							Next: {episodeLabel(next)}
-							{next.name ? ` · ${next.name}` : ""}
+							{next.name && (
+								<>
+									{" · "}
+									<MediaText value={episodeText(next, "name")} />
+								</>
+							)}
 						</button>
 					)}
 				</div>
@@ -1440,21 +1448,21 @@ function RowDetail({
 					</p>
 					{episode.overview &&
 						(seenIt || uncovered.text ? (
-							<p
+							<MediaText
+								as="p"
 								data-overview
+								value={episodeText(episode, "overview")}
 								className="mt-1 text-sm leading-relaxed text-gray-300"
-							>
-								<span lang={episode.textPresentation?.overview.language ?? "en"}>{episode.overview}</span>
-							</p>
+							/>
 						) : (
 							<div className="relative mt-1 min-h-10">
 								{/* The text holds its place under the cover, unseen and unread. */}
-								<p
+								<MediaText
+									as="p"
 									aria-hidden="true"
+									value={episodeText(episode, "overview")}
 									className="invisible select-none text-sm leading-relaxed"
-								>
-									<span lang={episode.textPresentation?.overview.language ?? "en"}>{episode.overview}</span>
-								</p>
+								/>
 								<button
 									type="button"
 									data-cover="text"
@@ -1662,11 +1670,14 @@ function Row({
 							? episodeLabel(episode)
 							: displayNumber(episode)}
 					</span>
-					<span
+					<MediaText
+						value={
+							episode.name
+								? episodeText(episode, "name")
+								: { text: episodeLabel(episode), lang: "en" }
+						}
 						className={`min-w-0 truncate text-sm ${watched ? "text-gray-400" : "font-medium text-white"}`}
-					>
-						<span lang={episode.textPresentation?.name.language ?? "en"}>{episode.name ?? episodeLabel(episode)}</span>
-					</span>
+					/>
 					{isNext && (
 						<span className="shrink-0 rounded bg-green-500 px-1 text-[10px] font-bold uppercase leading-4 text-black">
 							Next

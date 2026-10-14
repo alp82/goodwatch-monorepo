@@ -47,6 +47,7 @@ export const episodeSlots = (
 	return slots
 }
 
+import MediaText from "~/ui/media-text/MediaText"
 export { episodeLabel, episodeWhere } from "./labels"
 import { episodeWhere } from "./labels"
 
@@ -230,7 +231,7 @@ export function EpisodeTip({
 	const vibe = imdbVibe(episode.score)
 	const low = isLowVotes(episode.votes)
 	return (
-		<div className="flex items-start gap-2.5">
+		<div data-episode-tip className="flex items-start gap-2.5">
 			<span
 				className="mt-0.5 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-bold tabular-nums text-white"
 				style={{ background: vibeTileColor(vibe) }}
@@ -239,7 +240,13 @@ export function EpisodeTip({
 			</span>
 			<span className="min-w-0">
 				<span className="block font-semibold leading-snug text-gray-50">
-					<span lang={episode.nameLanguage ?? "und"}>{episode.name || "Untitled"}</span>
+					<MediaText
+						value={
+							episode.name
+								? { text: episode.name, lang: episode.nameLanguage ?? "und" }
+								: { text: "Untitled", lang: "en" }
+						}
+					/>
 				</span>
 				<span className="block text-xs text-gray-400">
 					{episodeWhere(season, episode)} ·{" "}

@@ -4,6 +4,8 @@ import Description from "~/ui/details/Description"
 import Badges from "~/ui/fingerprint/Badges"
 import type { Section } from "~/utils/scroll"
 import { NewspaperIcon } from "@heroicons/react/24/outline"
+import { mediaTextAttributes, presentedText } from "~/ui/media-text/media-text"
+import MediaText from "~/ui/media-text/MediaText"
 
 export interface AboutProps {
 	media: MovieResult | ShowResult
@@ -24,15 +26,17 @@ export default function About({ media, navigateToSection }: AboutProps) {
 
 			{tagline && (
 				<div className="mt-4">
-					<blockquote lang={details.presentation?.tagline.language ?? "en"} className="relative rounded-lg border border-l-8 border-white/10 bg-white/5 p-4 sm:p-5">
-						<p className="text-white/90 italic text-base sm:text-lg leading-relaxed">
-							{tagline}
-						</p>
+					<blockquote className="relative rounded-lg border border-l-8 border-white/10 bg-white/5 p-4 sm:p-5">
+						<MediaText
+							as="p"
+							value={presentedText(details, "tagline", tagline)}
+							className="text-white/90 italic text-base sm:text-lg leading-relaxed"
+						/>
 					</blockquote>
 				</div>
 			)}
 
-			<div lang={details.presentation?.overview.language ?? "en"} className="mt-4 text-gray-100">
+			<div {...mediaTextAttributes(presentedText(details, "overview", synopsis).lang)} className="mt-4 text-gray-100">
 				<Description description={synopsis} />
 			</div>
 
