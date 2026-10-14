@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-14T18:35:41.586525+00:00",
+  "sourceHost": "10.0.0.20",
+  "scope": "read-only webapp-to-private-endpoint SQL probes after clean stop",
+  "returncode": 0,
+  "results": [
+    {
+      "container": "gk4owk8-20261014T181405",
+      "returncode": 0,
+      "stdout": "{\"host\":\"10.0.0.11\",\"status\":200,\"elapsedMs\":127,\"result\":{\"cols\":[\"name\",\"version\"],\"rows\":[[\"crate-01\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-02\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-03\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}]],\"rowcount\":3,\"duration\":4.547026}}\n{\"host\":\"10.0.0.12\",\"status\":200,\"elapsedMs\":13,\"result\":{\"cols\":[\"name\",\"version\"],\"rows\":[[\"crate-01\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-02\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-03\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}]],\"rowcount\":3,\"duration\":4.66928}}\n{\"host\":\"10.0.0.13\",\"status\":200,\"elapsedMs\":13,\"result\":{\"cols\":[\"name\",\"version\"],\"rows\":[[\"crate-01\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-02\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}],[\"crate-03\",{\"number\":\"5.10.9\",\"build_snapshot\":false,\"minimum_index_compatibility_version\":\"4.0.0\",\"minimum_wire_compatibility_version\":\"4.0.0\",\"build_hash\":\"39b6f0f54b6a4d43495c023d4905e5d6c9cc3931\"}]],\"rowcount\":3,\"duration\":4.182792}}\n",
+      "stderr": ""
+    }
+  ],
+  "stderr": "",
+  "previousAttempt": {
+    "at": "2026-10-14T18:34:37.566626+00:00",
+    "sourceHost": "10.0.0.20",
+    "scope": "read-only webapp-to-private-endpoint SQL probes after clean stop",
+    "returncode": 0,
+    "stdout": "[{\"container\": \"gk4owk8-20261014T181405\", \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"[eval]:1\\n(async()=>{for(const host of ['10.0.0.11','10.0.0.12','10.0.0.13']){let start=Date.now();try{let r=await fetch('http://'+host+':4200/_sql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stmt: 'SELECT name, version['number'] FROM sys.nodes ORDER BY name'}),signal:AbortSignal.timeout(10000)});console.log(JSON.stringify({host,status:r.status,elapsedMs:Date.now()-start,result:await r.json()}))}catch(e){console.log(JSON.stringify({host,error:e.message,elapsedMs:Date.now()-start}))}}})()\\n                                                                                                                                                                                                                                                        ^^^^^^\\nExpected ',', got 'number'\\n\\nSyntaxError: Unexpected identifier 'number'\\n    at makeContextifyScript (node:internal/vm:194:14)\\n    at compileScript (node:internal/process/execution:388:10)\\n    at evalTypeScript (node:internal/process/execution:260:22)\\n    at node:internal/main/eval_string:71:3\\n\\nNode.js v24.21.0\\n\"}]\n",
+    "stderr": ""
+  }
+}

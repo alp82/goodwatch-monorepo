@@ -1,0 +1,37 @@
+{
+  "ownerGoAt": "2026-10-14T18:29:59Z",
+  "startedAt": "2026-10-14T18:31:59Z",
+  "prechecksRecordedAt": "2026-10-14T18:34:00.974662+00:00",
+  "cleanStopVerifiedAt": "2026-10-14T18:35:08.904907+00:00",
+  "clientVerificationFinishedAt": "2026-10-14T18:35:41.586525+00:00",
+  "elapsedSeconds": 222.587,
+  "outcome": "STOPPED_BEFORE_MUTATION",
+  "failedGate": "Runbook pre-check 3: no validated CrateDB restore for this deployment",
+  "versions": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.9",
+    "crate-03": "5.10.9"
+  },
+  "health": {
+    "greenTablePartitionRows": 90,
+    "startedShardCopies": 920,
+    "passedNodeChecks": 21
+  },
+  "snapshotName": null,
+  "snapshotCreated": false,
+  "clientProbeStatuses": [
+    200,
+    200,
+    200
+  ],
+  "clientProbeElapsedMs": [
+    127,
+    13,
+    13
+  ],
+  "clientErrorsObserved": 0,
+  "clientErrorObservationScope": "three read-only SQL probes from the actual webapp; not a full organic traffic log audit",
+  "productionMutations": [],
+  "authUserCreated": false,
+  "hbaFirewallTableSettingsChanged": false
+}
