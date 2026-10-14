@@ -1,0 +1,86 @@
+{
+  "label": "crate03-remaining-relocations",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], size, seq_no_stats, recovery FROM sys.shards WHERE routing_state != 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "size",
+        "seq_no_stats",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "movie",
+          1,
+          true,
+          "crate-01",
+          225004757,
+          {
+            "max_seq_no": 78367489,
+            "global_checkpoint": 78367489,
+            "local_checkpoint": 78367489
+          },
+          {
+            "files": {
+              "recovered": 1626,
+              "used": 1626,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 14685,
+            "size": {
+              "recovered": 224811891,
+              "used": 224811891,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          6,
+          true,
+          "crate-01",
+          2286575101,
+          {
+            "max_seq_no": 14610857,
+            "global_checkpoint": 14374814,
+            "local_checkpoint": 14610857
+          },
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 415,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 13.258897
+    },
+    "elapsedSeconds": 0.018,
+    "at": "2026-10-14T21:19:20.429577+00:00"
+  }
+}

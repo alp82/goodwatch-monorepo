@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-14T21:23:05.519550+00:00",
+  "crate02": "Incremental whole-window Docker log sampling, line-hash deduplication",
+  "crate03": "Incremental sampling plus continuous Docker logs followers added at approximately 21:22 UTC; union hashes across containers/collectors at end",
+  "crate01Plan": "Continuous followers before drain plus sampler, retaining readers through external app replacements",
+  "limitation": "External app replacements before continuous readers attached can remove unsampled tails; report captured minima where a container disappeared, not unique HTTP requests. No raw SQL text or parameters retained."
+}

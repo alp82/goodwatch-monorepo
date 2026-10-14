@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-14T21:08:17.999272+00:00",
-  "state": "CRATE02_TARGET_JOINED_RECOVERY_PENDING",
+  "at": "2026-10-14T21:26:34.056435+00:00",
+  "state": "CRATE02_PASSED_CRATE03_DECOMMISSION_PENDING",
   "node": "crate-02",
   "target": "5.10.16",
   "httpTimeoutSeconds": 7500,
@@ -35,5 +35,12 @@
   "localVerificationCorrections": [
     "Apply expected node-count warning 1 only to planned two-node phase; all checks remain mandatory after rejoin",
     "Canonicalize full Docker mount objects by destination to avoid variable array ordering; physical mounts unchanged"
-  ]
+  ],
+  "completedNodes": [
+    "crate-02"
+  ],
+  "currentNode": "crate-03",
+  "currentNodeTargetStarted": false,
+  "currentNodeDecommissionHttpSeconds": 7500,
+  "allocation": "primaries"
 }
