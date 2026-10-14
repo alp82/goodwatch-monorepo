@@ -1,0 +1,103 @@
+{
+  "label": "snapshot-metadata-columns",
+  "host": 11,
+  "stmt": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'sys' AND table_name = 'snapshots' ORDER BY ordinal_position",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "column_name",
+        "data_type"
+      ],
+      "rows": [
+        [
+          "concrete_indices",
+          "text_array"
+        ],
+        [
+          "failures",
+          "text_array"
+        ],
+        [
+          "finished",
+          "timestamp with time zone"
+        ],
+        [
+          "id",
+          "text"
+        ],
+        [
+          "include_global_state",
+          "boolean"
+        ],
+        [
+          "name",
+          "text"
+        ],
+        [
+          "reason",
+          "text"
+        ],
+        [
+          "relations",
+          "object_array"
+        ],
+        [
+          "relations['table_name']",
+          "text_array"
+        ],
+        [
+          "relations['table_schema']",
+          "text_array"
+        ],
+        [
+          "repository",
+          "text"
+        ],
+        [
+          "started",
+          "timestamp with time zone"
+        ],
+        [
+          "state",
+          "text"
+        ],
+        [
+          "table_partitions",
+          "object_array"
+        ],
+        [
+          "table_partitions['table_name']",
+          "text_array"
+        ],
+        [
+          "table_partitions['table_schema']",
+          "text_array"
+        ],
+        [
+          "table_partitions['values']",
+          "text_array_array"
+        ],
+        [
+          "tables",
+          "text_array"
+        ],
+        [
+          "total_shards",
+          "integer"
+        ],
+        [
+          "version",
+          "text"
+        ]
+      ],
+      "rowcount": 20,
+      "duration": 10.436197
+    },
+    "elapsedSeconds": 0.016,
+    "at": "2026-10-14T22:50:03.883614+00:00"
+  }
+}

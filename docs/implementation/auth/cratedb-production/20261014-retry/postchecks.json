@@ -1,12 +1,12 @@
 {
   "ownerDecisionAt": "2026-10-14T20:47:56Z",
-  "recordedAt": "2026-10-14T22:44:00.810949+00:00",
+  "recordedAt": "2026-10-14T23:10:10.364207+00:00",
   "hostPrechecks": [
     {
       "host": "10.0.0.11",
       "returncode": 0,
       "result": {
-        "at": "2026-10-14T22:43:41.512042+00:00",
+        "at": "2026-10-14T23:09:54.695412+00:00",
         "container": {
           "name": "/crate-01",
           "image": "crate:5.10.9",
@@ -180,7 +180,7 @@
         "backupReadable": true,
         "memory": {
           "returncode": 0,
-          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856395776 22516793344  4154384384     1413120  6185218048  9751265280\nSwap:     2147479552     4456448  2143023104\n",
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856395776 22537629696  2154180608     1425408  8164585472  9730433024\nSwap:     2147479552     4456448  2143023104\n",
           "stderr": ""
         },
         "firewallTimer": {
@@ -191,7 +191,7 @@
         "queries": {
           "nodes": {
             "status": 200,
-            "elapsedSeconds": 0.014,
+            "elapsedSeconds": 0.01,
             "result": {
               "cols": [
                 "id",
@@ -220,12 +220,12 @@
                 ]
               ],
               "rowcount": 3,
-              "duration": 3.964404
+              "duration": 3.556003
             }
           },
           "health": {
             "status": 200,
-            "elapsedSeconds": 0.004,
+            "elapsedSeconds": 0.005,
             "result": {
               "cols": [
                 "table_schema",
@@ -982,12 +982,12 @@
                 ]
               ],
               "rowcount": 93,
-              "duration": 1.910915
+              "duration": 2.529418
             }
           },
           "shardStates": {
             "status": 200,
-            "elapsedSeconds": 0.059,
+            "elapsedSeconds": 0.062,
             "result": {
               "cols": [
                 "state",
@@ -1000,12 +1000,12 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 57.554382
+              "duration": 59.396667
             }
           },
           "nodeChecks": {
             "status": 200,
-            "elapsedSeconds": 0.007,
+            "elapsedSeconds": 0.008,
             "result": {
               "cols": [
                 "node_id",
@@ -1142,12 +1142,12 @@
                 ]
               ],
               "rowcount": 21,
-              "duration": 4.598768
+              "duration": 5.428746
             }
           },
           "settings": {
             "status": 200,
-            "elapsedSeconds": 0.003,
+            "elapsedSeconds": 0.004,
             "result": {
               "cols": [
                 "settings['cluster']['routing']['allocation']['enable']",
@@ -1166,24 +1166,24 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 1.115771
+              "duration": 1.59153
             }
           },
           "authUser": {
             "status": 200,
-            "elapsedSeconds": 0.003,
+            "elapsedSeconds": 0.004,
             "result": {
               "cols": [
                 "name"
               ],
               "rows": [],
               "rowcount": 0,
-              "duration": 1.326883
+              "duration": 1.433856
             }
           },
           "repositories": {
             "status": 200,
-            "elapsedSeconds": 0.004,
+            "elapsedSeconds": 0.003,
             "result": {
               "cols": [
                 "name",
@@ -1206,12 +1206,12 @@
                 ]
               ],
               "rowcount": 2,
-              "duration": 1.51643
+              "duration": 1.392257
             }
           },
           "latestSnapshot": {
             "status": 200,
-            "elapsedSeconds": 18.504,
+            "elapsedSeconds": 15.067,
             "result": {
               "cols": [
                 "name",
@@ -1220,18 +1220,18 @@
               ],
               "rows": [
                 [
-                  "hourly_20261014_220501",
+                  "hourly_20261014_230502",
                   "SUCCESS",
-                  1792015581457
+                  1792019122395
                 ]
               ],
               "rowcount": 1,
-              "duration": 18501.623
+              "duration": 15064.9375
             }
           },
           "shardColumns": {
             "status": 200,
-            "elapsedSeconds": 0.013,
+            "elapsedSeconds": 0.01,
             "result": {
               "cols": [
                 "column_name"
@@ -1401,12 +1401,12 @@
                 ]
               ],
               "rowcount": 54,
-              "duration": 10.881333
+              "duration": 7.661511
             }
           },
           "monitoringColumns": {
             "status": 200,
-            "elapsedSeconds": 0.014,
+            "elapsedSeconds": 0.009,
             "result": {
               "cols": [
                 "column_name",
@@ -1443,13 +1443,13 @@
                 ]
               ],
               "rowcount": 7,
-              "duration": 10.920103
+              "duration": 7.265223
             }
           }
         },
         "backupLogTail": {
           "returncode": 0,
-          "stdout": "2026-10-14T19:05:17Z Checking for expired snapshots...\n2026-10-14T19:05:36Z Deleting expired snapshot: hourly_20261014_160501\n2026-10-14T19:05:51Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T19:05:51Z Verifying the snapshots of this run...\n2026-10-14T19:06:09Z Verified: hourly_20261014_190501\n2026-10-14T19:06:09Z Backup run finished.\n2026-10-14T20:05:01Z Creating snapshot: hourly_20261014_200501...\n2026-10-14T20:06:51Z Snapshot created successfully.\n2026-10-14T20:06:51Z Checking for expired snapshots...\n2026-10-14T20:07:06Z Deleting expired snapshot: hourly_20261014_170502\n2026-10-14T20:07:23Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T20:07:23Z Verifying the snapshots of this run...\n2026-10-14T20:07:42Z Verified: hourly_20261014_200501\n2026-10-14T20:07:42Z Backup run finished.\n2026-10-14T21:05:01Z Creating snapshot: hourly_20261014_210501...\n2026-10-14T21:05:40Z Snapshot created successfully.\n2026-10-14T21:05:40Z Checking for expired snapshots...\n2026-10-14T21:05:58Z Deleting expired snapshot: hourly_20261014_180501\n2026-10-14T21:06:15Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T21:06:15Z Verifying the snapshots of this run...\n2026-10-14T21:06:34Z Verified: hourly_20261014_210501\n2026-10-14T21:06:34Z Backup run finished.\n2026-10-14T22:05:01Z Creating snapshot: hourly_20261014_220501...\n2026-10-14T22:06:23Z Snapshot created successfully.\n2026-10-14T22:06:23Z Checking for expired snapshots...\n2026-10-14T22:06:42Z Deleting expired snapshot: hourly_20261014_190501\n2026-10-14T22:06:55Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T22:06:55Z Verifying the snapshots of this run...\n2026-10-14T22:07:14Z Verified: hourly_20261014_220501\n2026-10-14T22:07:14Z Backup run finished.\n",
+          "stdout": "2026-10-14T20:06:51Z Snapshot created successfully.\n2026-10-14T20:06:51Z Checking for expired snapshots...\n2026-10-14T20:07:06Z Deleting expired snapshot: hourly_20261014_170502\n2026-10-14T20:07:23Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T20:07:23Z Verifying the snapshots of this run...\n2026-10-14T20:07:42Z Verified: hourly_20261014_200501\n2026-10-14T20:07:42Z Backup run finished.\n2026-10-14T21:05:01Z Creating snapshot: hourly_20261014_210501...\n2026-10-14T21:05:40Z Snapshot created successfully.\n2026-10-14T21:05:40Z Checking for expired snapshots...\n2026-10-14T21:05:58Z Deleting expired snapshot: hourly_20261014_180501\n2026-10-14T21:06:15Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T21:06:15Z Verifying the snapshots of this run...\n2026-10-14T21:06:34Z Verified: hourly_20261014_210501\n2026-10-14T21:06:34Z Backup run finished.\n2026-10-14T22:05:01Z Creating snapshot: hourly_20261014_220501...\n2026-10-14T22:06:23Z Snapshot created successfully.\n2026-10-14T22:06:23Z Checking for expired snapshots...\n2026-10-14T22:06:42Z Deleting expired snapshot: hourly_20261014_190501\n2026-10-14T22:06:55Z Deleted 1 of 1 expired snapshot(s).\n2026-10-14T22:06:55Z Verifying the snapshots of this run...\n2026-10-14T22:07:14Z Verified: hourly_20261014_220501\n2026-10-14T22:07:14Z Backup run finished.\n2026-10-14T23:05:02Z Creating snapshot: hourly_20261014_230502...\n2026-10-14T23:05:23Z Snapshot created successfully.\n2026-10-14T23:05:23Z Checking for expired snapshots...\n2026-10-14T23:05:38Z Deleted 0 of 0 expired snapshot(s).\n2026-10-14T23:05:38Z Verifying the snapshots of this run...\n2026-10-14T23:05:54Z Verified: hourly_20261014_230502\n2026-10-14T23:05:54Z Backup run finished.\n",
           "stderr": ""
         }
       },
@@ -1460,7 +1460,7 @@
       "host": "10.0.0.12",
       "returncode": 0,
       "result": {
-        "at": "2026-10-14T22:43:42.349367+00:00",
+        "at": "2026-10-14T23:09:55.626369+00:00",
         "container": {
           "name": "/crate-02",
           "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
@@ -1513,14 +1513,6 @@
           },
           "mounts": [
             {
-              "Type": "bind",
-              "Source": "/mnt/backup-cratedb/snapshots",
-              "Destination": "/snapshots",
-              "Mode": "rw",
-              "RW": true,
-              "Propagation": "rprivate"
-            },
-            {
               "Type": "volume",
               "Name": "goodwatch-crate_crate_data",
               "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
@@ -1529,6 +1521,14 @@
               "Mode": "rw",
               "RW": true,
               "Propagation": ""
+            },
+            {
+              "Type": "bind",
+              "Source": "/mnt/backup-cratedb/snapshots",
+              "Destination": "/snapshots",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": "rprivate"
             }
           ],
           "memoryLimit": 27917287424,
@@ -1634,7 +1634,7 @@
         "backupReadable": true,
         "memory": {
           "returncode": 0,
-          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856408064 17080471552  6968381440     1454080  8807555072 15187550208\nSwap:     2147479552    22282240  2125197312\n",
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856408064 17260171264  6351544320     1458176  9244692480 15007846400\nSwap:     2147479552    22282240  2125197312\n",
           "stderr": ""
         },
         "firewallTimer": {
@@ -1645,7 +1645,7 @@
         "queries": {
           "nodes": {
             "status": 200,
-            "elapsedSeconds": 0.012,
+            "elapsedSeconds": 0.01,
             "result": {
               "cols": [
                 "id",
@@ -1674,12 +1674,12 @@
                 ]
               ],
               "rowcount": 3,
-              "duration": 4.246824
+              "duration": 3.467305
             }
           },
           "health": {
             "status": 200,
-            "elapsedSeconds": 0.012,
+            "elapsedSeconds": 0.006,
             "result": {
               "cols": [
                 "table_schema",
@@ -1723,16 +1723,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "media_image",
+                  "backup_20260925_deleted_titles",
+                  "show",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "show",
+                  "doc",
+                  "media_image",
                   null,
                   "GREEN",
                   0,
@@ -1748,7 +1748,7 @@
                 ],
                 [
                   "doc",
-                  "buzz_snapshot",
+                  "episode_translation",
                   null,
                   "GREEN",
                   0,
@@ -1756,7 +1756,7 @@
                 ],
                 [
                   "doc",
-                  "episode_translation",
+                  "buzz_snapshot",
                   null,
                   "GREEN",
                   0,
@@ -1765,14 +1765,6 @@
                 [
                   "backup_20260925_deleted_titles",
                   "person_appeared_in",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "backup_20260925_stale_child_rows",
-                  "streaming_availability",
                   null,
                   "GREEN",
                   0,
@@ -1789,6 +1781,14 @@
                 [
                   "doc",
                   "language",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_stale_child_rows",
+                  "streaming_availability",
                   null,
                   "GREEN",
                   0,
@@ -1859,7 +1859,7 @@
                   0
                 ],
                 [
-                  "doc",
+                  "backup_20260925_stale_child_rows",
                   "media_video",
                   null,
                   "GREEN",
@@ -1875,7 +1875,7 @@
                   0
                 ],
                 [
-                  "backup_20260925_stale_child_rows",
+                  "doc",
                   "media_video",
                   null,
                   "GREEN",
@@ -2036,7 +2036,7 @@
                 ],
                 [
                   "doc",
-                  "search_shadow",
+                  "user_watch_state",
                   null,
                   "GREEN",
                   0,
@@ -2044,7 +2044,7 @@
                 ],
                 [
                   "doc",
-                  "user_watch_state",
+                  "search_shadow",
                   null,
                   "GREEN",
                   0,
@@ -2060,7 +2060,7 @@
                 ],
                 [
                   "doc",
-                  "streaming_service",
+                  "timezone",
                   null,
                   "GREEN",
                   0,
@@ -2068,7 +2068,7 @@
                 ],
                 [
                   "doc",
-                  "timezone",
+                  "streaming_service",
                   null,
                   "GREEN",
                   0,
@@ -2123,8 +2123,8 @@
                   0
                 ],
                 [
-                  "blob",
-                  "search_index_files",
+                  "doc",
+                  "production_company",
                   null,
                   "GREEN",
                   0,
@@ -2139,8 +2139,8 @@
                   0
                 ],
                 [
-                  "doc",
-                  "production_company",
+                  "blob",
+                  "search_index_files",
                   null,
                   "GREEN",
                   0,
@@ -2212,22 +2212,6 @@
                 ],
                 [
                   "doc",
-                  "streaming_evidence",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
-                  "streaming_availability",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
                   "user_score",
                   null,
                   "GREEN",
@@ -2243,7 +2227,7 @@
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
+                  "doc",
                   "streaming_availability",
                   null,
                   "GREEN",
@@ -2252,7 +2236,15 @@
                 ],
                 [
                   "doc",
-                  "genre",
+                  "streaming_evidence",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "streaming_availability",
                   null,
                   "GREEN",
                   0,
@@ -2267,8 +2259,8 @@
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "alternative_title",
+                  "doc",
+                  "genre",
                   null,
                   "GREEN",
                   0,
@@ -2277,6 +2269,14 @@
                 [
                   "doc",
                   "user_list_exposure",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "backup_20260925_deleted_titles",
+                  "alternative_title",
                   null,
                   "GREEN",
                   0,
@@ -2331,16 +2331,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "buzz_trending",
+                  "backup_20260925_deleted_titles",
+                  "trope",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "trope",
+                  "doc",
+                  "buzz_trending",
                   null,
                   "GREEN",
                   0,
@@ -2436,12 +2436,12 @@
                 ]
               ],
               "rowcount": 93,
-              "duration": 8.895652
+              "duration": 3.685123
             }
           },
           "shardStates": {
             "status": 200,
-            "elapsedSeconds": 0.062,
+            "elapsedSeconds": 0.06,
             "result": {
               "cols": [
                 "state",
@@ -2454,12 +2454,12 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 59.92788
+              "duration": 57.464027
             }
           },
           "nodeChecks": {
             "status": 200,
-            "elapsedSeconds": 0.008,
+            "elapsedSeconds": 0.013,
             "result": {
               "cols": [
                 "node_id",
@@ -2596,12 +2596,12 @@
                 ]
               ],
               "rowcount": 21,
-              "duration": 5.463906
+              "duration": 9.552957
             }
           },
           "settings": {
             "status": 200,
-            "elapsedSeconds": 0.005,
+            "elapsedSeconds": 0.003,
             "result": {
               "cols": [
                 "settings['cluster']['routing']['allocation']['enable']",
@@ -2620,19 +2620,19 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 2.144166
+              "duration": 1.093465
             }
           },
           "authUser": {
             "status": 200,
-            "elapsedSeconds": 0.006,
+            "elapsedSeconds": 0.003,
             "result": {
               "cols": [
                 "name"
               ],
               "rows": [],
               "rowcount": 0,
-              "duration": 3.491577
+              "duration": 1.170125
             }
           }
         }
@@ -2644,7 +2644,7 @@
       "host": "10.0.0.13",
       "returncode": 0,
       "result": {
-        "at": "2026-10-14T22:43:41.463107+00:00",
+        "at": "2026-10-14T23:09:55.816076+00:00",
         "container": {
           "name": "/crate-03",
           "image": "crate:5.10.9",
@@ -2697,6 +2697,14 @@
           },
           "mounts": [
             {
+              "Type": "bind",
+              "Source": "/mnt/backup-cratedb/snapshots",
+              "Destination": "/snapshots",
+              "Mode": "rw",
+              "RW": true,
+              "Propagation": "rprivate"
+            },
+            {
               "Type": "volume",
               "Name": "goodwatch-crate_crate_data",
               "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
@@ -2705,14 +2713,6 @@
               "Mode": "rw",
               "RW": true,
               "Propagation": ""
-            },
-            {
-              "Type": "bind",
-              "Source": "/mnt/backup-cratedb/snapshots",
-              "Destination": "/snapshots",
-              "Mode": "rw",
-              "RW": true,
-              "Propagation": "rprivate"
             }
           ],
           "memoryLimit": 27917287424,
@@ -2818,7 +2818,7 @@
         "backupReadable": true,
         "memory": {
           "returncode": 0,
-          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856383488 13223235584  8594735104     5607424 11038412800 19036409856\nSwap:     2147479552     4194304  2143285248\n",
+          "stdout": "               total        used        free      shared  buff/cache   available\nMem:     32856383488 13508145152  7693017088     5611520 11655221248 18751557632\nSwap:     2147479552     4194304  2143285248\n",
           "stderr": ""
         },
         "firewallTimer": {
@@ -2829,7 +2829,7 @@
         "queries": {
           "nodes": {
             "status": 200,
-            "elapsedSeconds": 0.01,
+            "elapsedSeconds": 0.012,
             "result": {
               "cols": [
                 "id",
@@ -2858,12 +2858,12 @@
                 ]
               ],
               "rowcount": 3,
-              "duration": 3.790707
+              "duration": 3.932146
             }
           },
           "health": {
             "status": 200,
-            "elapsedSeconds": 0.007,
+            "elapsedSeconds": 0.008,
             "result": {
               "cols": [
                 "table_schema",
@@ -2907,16 +2907,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "media_image",
+                  "backup_20260925_deleted_titles",
+                  "show",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "show",
+                  "doc",
+                  "media_image",
                   null,
                   "GREEN",
                   0,
@@ -2932,7 +2932,7 @@
                 ],
                 [
                   "doc",
-                  "buzz_snapshot",
+                  "episode_translation",
                   null,
                   "GREEN",
                   0,
@@ -2940,7 +2940,7 @@
                 ],
                 [
                   "doc",
-                  "episode_translation",
+                  "buzz_snapshot",
                   null,
                   "GREEN",
                   0,
@@ -2988,7 +2988,7 @@
                 ],
                 [
                   "doc",
-                  "social_title_link",
+                  "search_spending",
                   null,
                   "GREEN",
                   0,
@@ -2996,7 +2996,7 @@
                 ],
                 [
                   "doc",
-                  "search_spending",
+                  "social_title_link",
                   null,
                   "GREEN",
                   0,
@@ -3051,16 +3051,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "season",
+                  "backup_20260925_stale_child_rows",
+                  "media_video",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_stale_child_rows",
-                  "media_video",
+                  "doc",
+                  "season",
                   null,
                   "GREEN",
                   0,
@@ -3147,16 +3147,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "search_control",
+                  "backup_20260925_stale_child_rows",
+                  "media_image",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_stale_child_rows",
-                  "media_image",
+                  "doc",
+                  "search_control",
                   null,
                   "GREEN",
                   0,
@@ -3220,7 +3220,7 @@
                 ],
                 [
                   "doc",
-                  "user_watch_state",
+                  "search_shadow",
                   null,
                   "GREEN",
                   0,
@@ -3228,7 +3228,7 @@
                 ],
                 [
                   "doc",
-                  "search_shadow",
+                  "user_watch_state",
                   null,
                   "GREEN",
                   0,
@@ -3244,7 +3244,7 @@
                 ],
                 [
                   "doc",
-                  "streaming_service",
+                  "timezone",
                   null,
                   "GREEN",
                   0,
@@ -3252,7 +3252,7 @@
                 ],
                 [
                   "doc",
-                  "timezone",
+                  "streaming_service",
                   null,
                   "GREEN",
                   0,
@@ -3284,7 +3284,7 @@
                 ],
                 [
                   "doc",
-                  "imdb_season",
+                  "user_profile",
                   null,
                   "GREEN",
                   0,
@@ -3292,7 +3292,7 @@
                 ],
                 [
                   "doc",
-                  "user_profile",
+                  "imdb_season",
                   null,
                   "GREEN",
                   0,
@@ -3301,22 +3301,6 @@
                 [
                   "backup_20260925_stale_child_rows",
                   "show",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
-                  "production_company",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "blob",
-                  "search_index_files",
                   null,
                   "GREEN",
                   0,
@@ -3339,6 +3323,22 @@
                   0
                 ],
                 [
+                  "blob",
+                  "search_index_files",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "production_company",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
                   "backup_20260925_deleted_titles",
                   "translation",
                   null,
@@ -3347,16 +3347,16 @@
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "person_worked_on",
+                  "doc",
+                  "user_not_interested",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "doc",
-                  "user_not_interested",
+                  "backup_20260925_deleted_titles",
+                  "person_worked_on",
                   null,
                   "GREEN",
                   0,
@@ -3372,14 +3372,6 @@
                 ],
                 [
                   "doc",
-                  "user_skipped",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
                   "user_watch_log",
                   null,
                   "GREEN",
@@ -3388,7 +3380,31 @@
                 ],
                 [
                   "doc",
+                  "user_skipped",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
                   "release_event",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "social_ingest_run",
+                  null,
+                  "GREEN",
+                  0,
+                  0
+                ],
+                [
+                  "doc",
+                  "streaming_evidence",
                   null,
                   "GREEN",
                   0,
@@ -3405,22 +3421,6 @@
                 [
                   "doc",
                   "streaming_availability",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
-                  "streaming_evidence",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
-                  "social_ingest_run",
                   null,
                   "GREEN",
                   0,
@@ -3451,16 +3451,16 @@
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "alternative_title",
+                  "doc",
+                  "user_list_exposure",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "doc",
-                  "user_list_exposure",
+                  "backup_20260925_deleted_titles",
+                  "alternative_title",
                   null,
                   "GREEN",
                   0,
@@ -3515,16 +3515,16 @@
                   0
                 ],
                 [
-                  "doc",
-                  "buzz_trending",
+                  "backup_20260925_deleted_titles",
+                  "trope",
                   null,
                   "GREEN",
                   0,
                   0
                 ],
                 [
-                  "backup_20260925_deleted_titles",
-                  "trope",
+                  "doc",
+                  "buzz_trending",
                   null,
                   "GREEN",
                   0,
@@ -3588,14 +3588,6 @@
                 ],
                 [
                   "doc",
-                  "user_wishlist",
-                  null,
-                  "GREEN",
-                  0,
-                  0
-                ],
-                [
-                  "doc",
                   "trope",
                   null,
                   "GREEN",
@@ -3604,7 +3596,7 @@
                 ],
                 [
                   "doc",
-                  "person_worked_on",
+                  "user_wishlist",
                   null,
                   "GREEN",
                   0,
@@ -3617,15 +3609,23 @@
                   "GREEN",
                   0,
                   0
+                ],
+                [
+                  "doc",
+                  "person_worked_on",
+                  null,
+                  "GREEN",
+                  0,
+                  0
                 ]
               ],
               "rowcount": 93,
-              "duration": 4.760421
+              "duration": 5.994396
             }
           },
           "shardStates": {
             "status": 200,
-            "elapsedSeconds": 0.066,
+            "elapsedSeconds": 0.063,
             "result": {
               "cols": [
                 "state",
@@ -3638,12 +3638,12 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 63.914043
+              "duration": 60.2785
             }
           },
           "nodeChecks": {
             "status": 200,
-            "elapsedSeconds": 0.009,
+            "elapsedSeconds": 0.007,
             "result": {
               "cols": [
                 "node_id",
@@ -3780,7 +3780,7 @@
                 ]
               ],
               "rowcount": 21,
-              "duration": 5.785565
+              "duration": 4.529587
             }
           },
           "settings": {
@@ -3804,7 +3804,7 @@
                 ]
               ],
               "rowcount": 1,
-              "duration": 2.147662
+              "duration": 2.270872
             }
           },
           "authUser": {
@@ -3816,7 +3816,7 @@
               ],
               "rows": [],
               "rowcount": 0,
-              "duration": 1.851607
+              "duration": 1.518146
             }
           }
         }

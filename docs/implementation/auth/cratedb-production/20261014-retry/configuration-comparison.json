@@ -66,11 +66,11 @@
   "newExternalTables": [
     [
       "doc",
-      "episode_translation"
+      "season_translation"
     ],
     [
       "doc",
-      "season_translation"
+      "episode_translation"
     ]
   ],
   "removedBaselineTables": [],

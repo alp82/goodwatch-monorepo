@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-14T22:45:31.731107+00:00",
-  "state": "CLEAN_STOP_HEALTH_VERIFIED_POST_BACKUP_PENDING",
+  "at": "2026-10-14T23:10:25.234990+00:00",
+  "state": "ABORTED_CLEANLY_STOPPED_PARTIAL_UPGRADE",
   "firstGenuineFailedGateAt": "2026-10-14T22:24:55.948868+00:00",
   "firstFailure": [
     "Unexpected new health identities: [('doc', 'episode_translation', None), ('doc', 'season_translation', None)]"
@@ -17,7 +17,7 @@
   },
   "crate03TargetStarted": false,
   "crate01Attempted": false,
-  "pending": "New scheduled backup after abort/owned probe cleanup; final report and push",
+  "pending": null,
   "noForcedStopOrJobCancellation": true,
   "compensation": {
     "crate03OriginalEnvRestored": true,
@@ -28,5 +28,13 @@
     "crate03Image": "crate:5.10.9",
     "originalContainerAndMountsRetained": true
   },
-  "firstGreenStartedAfterRecoveryAt": "2026-10-14T22:42:56.465257Z"
+  "firstGreenStartedAfterRecoveryAt": "2026-10-14T22:42:56.465257Z",
+  "finalVersions": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.16",
+    "crate-03": "5.10.9"
+  },
+  "postStopScheduledBackup": "hourly_20261014_230502",
+  "postBackupHealthGateAt": "2026-10-14T23:09:54.634129+00:00",
+  "outcomeFile": "outcome.json"
 }
