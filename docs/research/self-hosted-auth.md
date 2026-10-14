@@ -10,7 +10,7 @@ Two research passes produced this. One mapped every use of Supabase in the repo 
 2. **Recommended: Better Auth 1.7.7, embedded in the webapp**, with `@better-auth/mcp` (built on `@better-auth/oauth-provider`) and `@better-auth/cimd`. It is the only option found that runs inside the Remix app and supports, in released code, everything the MCP 2026-07-28 auth profile asks for: CIMD, audience-bound JWTs (RFC 8707), PKCE, refresh rotation, and RFC 8414 and RFC 9728 metadata. It also ships a request guard for the `/mcp` route.
 3. **Auth needs its own small Postgres.** Better Auth and its OAuth provider rely on transactions and unique indexes, which CrateDB lacks. The provider's 2026 advisories were mostly concurrency bugs, which makes this a firm rule. Sessions and rate limits go to Valkey.
 4. **The migration keeps every user id.** Better Auth's official Supabase guide copies `auth.users` and `auth.identities` with the same UUIDs, so every `user_id` in CrateDB stays valid. bcrypt password hashes verify unchanged, and Google accounts link by `sub`. Every member has to sign in once more, because sessions cannot move.
-5. **New work that Supabase did silently:** sending email, and a cookie name that the proxy, the page cache and metrics all recognise.
+5. **New work that Supabase did silently:** sending email (through Purelymail, see [Email](#email)), and a cookie name that the proxy, the page cache and metrics all recognise.
 
 ## What Supabase does today
 
@@ -101,6 +101,21 @@ Support for CIMD, DCR and RFC 8707 was checked in each project's source unless n
 
 **Hosted Supabase as a stopgap.** Hosted Supabase Auth now has an OAuth 2.1 server with DCR. Its source has no CIMD or RFC 8707, though. It could let the MCP ship before the migration, but would mean building the consent and Connected apps pages twice. Not recommended now that the migration is decided.
 
+## Email
+
+GoodWatch will send its auth emails through **Purelymail** over SMTP, from `nodemailer` inside the `sendVerificationEmail` and `sendResetPassword` callbacks.
+
+- **Connection.** `smtp.purelymail.com`, port 465 with TLS (587 with STARTTLS as a fallback), signed in as a dedicated mailbox such as `no-reply@goodwatch.app`. The password goes in the webapp environment in Coolify, like the other secrets.
+- **Limit.** Purelymail's FAQ caps outgoing external mail at about 3,000 messages a day and 300 at once, to discourage spam and marketing. Auth mail is one message per sign-up, resend or reset, far below that, but these follow from it:
+  - Rate-limit resends and resets per address and per IP (Better Auth's rate limiter on the email endpoints), so nobody can burn the daily cap by abusing the forms.
+  - No newsletters or bulk announcements through this mailbox, including the "please sign in again" notice at cut-over: that goes on the site, not by email.
+  - Send in the background with a short retry, so a refused SMTP connection does not fail sign-up. Log failures to Sentry and count them in Prometheus.
+- **Deliverability.** Add Purelymail's DKIM records for goodwatch.app, include Purelymail in SPF, and publish a DMARC policy (start at `p=none` with reports, then tighten). Purelymail provides no bounce or complaint webhooks the way transactional services do, so watch the mailbox for bounces at first.
+- **Templates.** Plain, short HTML plus a text part, in the GoodWatch voice, with the link and its expiry. Links point to `https://goodwatch.app/...`, never to a tracking domain.
+- **Later.** If volume ever nears the cap (a launch spike, notification emails), move to a transactional service. Only the transport in the two callbacks changes.
+
+Purelymail's terms of service were not read, because purelymail.com could not be fetched from the sandbox. The figures come from its FAQ as quoted in search results. Confirm the current limits and the rules for automated sending before cut-over.
+
 ## Where the auth tables live
 
 | Option | For | Against |
@@ -129,7 +144,7 @@ Better Auth's [Supabase migration guide](https://canary.better-auth.com/docs/gui
 
 ## Suggested order
 
-1. **Postgres and email.** Add a Postgres service in Coolify with backups and a firewall rule (with an owner comment, per AGENTS.md). Pick a transactional email provider (verification, reset) with SPF, DKIM and DMARC set up for goodwatch.app.
+1. **Postgres and email.** Add a Postgres service in Coolify with backups and a firewall rule (with an owner comment, per AGENTS.md). Set up the Purelymail sending mailbox with DKIM, SPF and DMARC for goodwatch.app, and send a test through it from the webapp's network (SMTP egress on port 465 must be allowed).
 2. **Better Auth behind a flag.**
    - Splat route `api.auth.$.ts`.
    - Valkey `secondaryStorage` and rate limits.
@@ -147,7 +162,6 @@ Steps 1–5 stand on their own merits: no per-request auth server call, our own 
 ## Open decisions
 
 - Postgres (recommended) or the MongoDB adapter for the auth tables.
-- Email provider.
 - Session lifetime, and whether to use the cookie cache (faster, but revocation lags).
 - The new cookie name.
 - Whether to offer 2FA or passkeys at launch or later.
@@ -158,6 +172,7 @@ Steps 1–5 stand on their own merits: no per-request auth server call, our own 
 - Better Auth source and docs, commit `c3f11cc`: `docs/content/docs/plugins/{mcp,cimd,oauth-provider}.mdx`, `guides/{supabase-migration-guide,1-7-upgrade-guide}.mdx`, `adapters/mongo.mdx`, `concepts/{session-management,rate-limit}.mdx`, `integrations/react-router.mdx`. Repository: https://github.com/better-auth/better-auth
 - [Better Auth seed round](https://better-auth.com/blog/seed-round)
 - Advisories: [GHSA-pw9m-5jxm-xr6h](https://github.com/advisories/GHSA-pw9m-5jxm-xr6h), [GHSA-7w99-5wm4-3g79](https://github.com/advisories/GHSA-7w99-5wm4-3g79) and the npm bulk advisory API
+- Purelymail: [technical setup](https://purelymail.com/docs/setup/technical), [server settings](https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3), [FAQ (sending limit)](https://purelymail.com/docs/faq)
 - [WorkOS: migrating from Supabase](https://workos.com/docs/migrate/supabase)
 - [Supabase OAuth 2.1 server](https://supabase.com/docs/guides/auth/oauth-server)
 - [Keycloak as MCP authorization server](https://www.keycloak.org/securing-apps/mcp-authz-server), [Keycloak CIMD](https://skycloak.io/blog/keycloak-cimd-mcp-authorization/), [Zitadel DCR](https://zitadel.com/docs/guides/integrate/dynamic-client-registration)
