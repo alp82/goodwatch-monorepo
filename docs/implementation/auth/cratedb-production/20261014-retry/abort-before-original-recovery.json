@@ -1,0 +1,25 @@
+{
+  "label": "abort-before-original-recovery",
+  "host": 11,
+  "stmt": "SELECT count(*) FROM sys.shards WHERE primary = true AND node['name'] = 'crate-03'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 12.391775
+    },
+    "elapsedSeconds": 0.017,
+    "at": "2026-10-14T22:27:39.134406+00:00"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "events": [
+    {
+      "time": 1792016896,
+      "timeNano": 1792016896773849950,
+      "action": "kill",
+      "signal": "15",
+      "exitCode": null,
+      "name": "crate-03",
+      "image": "crate:5.10.9"
+    },
+    {
+      "time": 1792016905,
+      "timeNano": 1792016905276958788,
+      "action": "stop",
+      "signal": null,
+      "exitCode": null,
+      "name": "crate-03",
+      "image": "crate:5.10.9"
+    },
+    {
+      "time": 1792016905,
+      "timeNano": 1792016905289613100,
+      "action": "die",
+      "signal": null,
+      "exitCode": "143",
+      "name": "crate-03",
+      "image": "crate:5.10.9"
+    },
+    {
+      "time": 1792016905,
+      "timeNano": 1792016905732470912,
+      "action": "start",
+      "signal": null,
+      "exitCode": null,
+      "name": "crate-03",
+      "image": "crate:5.10.9"
+    },
+    {
+      "time": 1792016905,
+      "timeNano": 1792016905732596149,
+      "action": "restart",
+      "signal": null,
+      "exitCode": null,
+      "name": "crate-03",
+      "image": "crate:5.10.9"
+    }
+  ],
+  "sigkillObserved": false
+}

@@ -1,0 +1,31 @@
+{
+  "label": "current-graceful-stop-config",
+  "host": 11,
+  "stmt": "SELECT settings['cluster']['graceful_stop'], settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "settings['cluster']['graceful_stop']",
+        "settings['cluster']['routing']['allocation']['enable']"
+      ],
+      "rows": [
+        [
+          {
+            "min_availability": "PRIMARIES",
+            "timeout": "2h",
+            "force": false
+          },
+          "primaries"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.480474
+    },
+    "elapsedSeconds": 0.007,
+    "at": "2026-10-14T22:01:40.373375+00:00"
+  }
+}

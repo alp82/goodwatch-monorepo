@@ -1,0 +1,21 @@
+{
+  "label": "abort-allocation-restored",
+  "host": 11,
+  "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 61.06138
+    },
+    "elapsedSeconds": 0.066,
+    "at": "2026-10-14T22:25:33.456955+00:00"
+  }
+}

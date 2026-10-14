@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-14T21:34:38.442615+00:00",
+  "at": "2026-10-14T22:01:38.718425+00:00",
   "state": "CRATE03_SQL_DECOMMISSION_SUCCEEDED_ACTUAL_EXIT_PENDING",
   "node": "crate-02",
   "target": "5.10.16",
@@ -45,5 +45,7 @@
   "allocation": "primaries",
   "currentNodeDecommissionSeconds": 878.374,
   "currentNodeDecommissionAcknowledgedAt": "2026-10-14T21:29:13.435795Z",
-  "pending": "Original 5.10.9 daemon reports active work; actual exit required before target startup. No forced stop or job cancellation."
+  "pending": "Original 5.10.9 daemon reports active work; actual exit required before target startup. No forced stop or job cancellation.",
+  "finalNodeNotStartedReason": "At 22:00 UTC the reserve for both separately documented 2h waits plus 30m recovery/postchecks no longer fits before 02:30 UTC. Finish/abort current crate03 safely, then stop at GREEN; do not decommission crate01.",
+  "furtherDecommissionsAllowedThisAttempt": false
 }

@@ -1,0 +1,39 @@
+{
+  "label": "abort-after-original-restart-nodes",
+  "host": 11,
+  "stmt": "SELECT id, name, version['number'] FROM sys.nodes ORDER BY name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "id",
+        "name",
+        "version['number']"
+      ],
+      "rows": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "rowcount": 3,
+      "duration": 3.680641
+    },
+    "elapsedSeconds": 0.008,
+    "at": "2026-10-14T22:29:55.804024+00:00"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "restartStartedAt": "2026-10-14T22:28:16.706824+00:00",
+    "command": [
+      "docker",
+      "restart",
+      "--timeout=-1",
+      "crate-03"
+    ],
+    "purpose": "Pre-target abort recovery of original SQL-disabled 5.10.9 service after unexpected external tables; no target upgrade",
+    "finishedAt": "2026-10-14T22:28:25.739831+00:00",
+    "elapsedSeconds": 9.033,
+    "returncode": 0,
+    "stdout": "crate-03\n",
+    "stderr": "",
+    "containerId": "69932c00c61eed95bb03cbce29483337bf36a4ab2eeef079b6001b8a3feeb025",
+    "oldImageRetained": true,
+    "image": "crate:5.10.9",
+    "mountsRetained": true,
+    "restartPolicy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "state": {
+      "Status": "running",
+      "Running": true,
+      "OOMKilled": false,
+      "ExitCode": 0,
+      "StartedAt": "2026-10-14T22:28:25.317290799Z",
+      "FinishedAt": "2026-10-14T22:28:22.752818219Z"
+    }
+  }
+}

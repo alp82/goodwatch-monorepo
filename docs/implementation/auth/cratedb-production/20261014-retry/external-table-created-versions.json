@@ -1,0 +1,40 @@
+{
+  "label": "external-table-created-versions",
+  "host": 11,
+  "stmt": "SELECT table_schema, table_name, version FROM information_schema.tables WHERE table_schema = 'doc' AND table_name IN ('episode_translation', 'season_translation') ORDER BY table_name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_schema",
+        "table_name",
+        "version"
+      ],
+      "rows": [
+        [
+          "doc",
+          "episode_translation",
+          {
+            "created": "5.10.9",
+            "upgraded": null
+          }
+        ],
+        [
+          "doc",
+          "season_translation",
+          {
+            "created": "5.10.9",
+            "upgraded": null
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 6.832764
+    },
+    "elapsedSeconds": 0.012,
+    "at": "2026-10-14T22:27:37.554699+00:00"
+  }
+}

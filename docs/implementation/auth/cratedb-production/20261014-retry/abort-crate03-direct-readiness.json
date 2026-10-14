@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-14T22:26:08.421794+00:00",
+  "purpose": "Read-only actual service readiness before any pre-target recovery restart decision",
+  "transportError": "timed out",
+  "elapsedSeconds": 5.011
+}
