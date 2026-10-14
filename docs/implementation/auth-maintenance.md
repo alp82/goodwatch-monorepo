@@ -271,3 +271,24 @@ and the existing auth/MCP HTTP suites. CI runs the same command in
 reported on #565 and draft #587. Production, hosted client relinking, root re-key
 execution and backup restore execution remain rollout/rehearsal work, not claims
 of this local verification.
+
+## Verified result — October 14, 2026
+
+At product-code commit `7c0c4ee3`, the clean local runner passed **53**
+maintenance/auth/MCP cases with real Docker CrateDB and Valkey. The adapter runner
+passed **25** integration/failover cases plus **262** upstream/conformance/core
+regressions (**287** total); both lost-primary schedules recovered their own
+outcome after SQL rowcount zero. Endpoint/cache/metrics regressions passed **63**
+cases. Local Node was **26.8.1**. Focused auth types, focused Biome, shell syntax
+and the production build passed (Sentry upload explicitly disabled). Full-app
+types retain exactly **174** normalized baseline diagnostics against #581's
+`b91ae3b0`, with none added or removed.
+
+Node 24 CI passed the same
+[53-case maintenance/auth runner](https://github.com/alp82/goodwatch-monorepo/actions/runs/38651541732)
+and the
+[287-case adapter runner](https://github.com/alp82/goodwatch-monorepo/actions/runs/38651545213).
+The operator CLI's `audit`, `run-once` and subsequent audit with legacy decryption
+disabled also succeeded against the disposable local store. Owned containers,
+volumes and networks were removed after verification. No production operation,
+merge, hosted-client relinking, root re-key execution or backup restore was run.

@@ -85,10 +85,10 @@ test("refresh revocation fences its grant before a child can escape the captured
 })
 
 test("a refresh-family sweep closes its grant even when no token was present in the captured set", async () => {
-	const clientId = randomUUID(),
-		userId = randomUUID(),
-		referenceId = randomUUID(),
-		grantVersion = randomUUID()
+	const clientId = randomUUID()
+	const userId = randomUUID()
+	const referenceId = randomUUID()
+	const grantVersion = randomUUID()
 	const consent = await healthy.create({
 		model: "oauthConsent",
 		data: { clientId, userId, referenceId, grantVersion, scopes: ["mcp:read"] },

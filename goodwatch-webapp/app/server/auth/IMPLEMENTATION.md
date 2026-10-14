@@ -225,3 +225,8 @@ runner. The complete policies, launch configuration, import requirements and
 local Docker command are in [auth-maintenance.md](../../../../docs/implementation/auth-maintenance.md).
 The original adapter-only evidence above remains historical; #565 additionally
 verifies live local Valkey and the combined auth/MCP HTTP flows.
+
+The #565 final code (`7c0c4ee3`) passed 25 adapter integration/failover cases and
+262 conformance/core cases, plus 53 maintenance/auth/MCP HTTP cases. Both Node 24
+CI runs are linked in the maintenance runbook; full-app types remain at the same
+174 baseline diagnostics, with no additions.
