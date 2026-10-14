@@ -2,7 +2,7 @@
 
 Read this first. Rewritten at the end of every session.
 
-- **Phase:** 0, foundations. Session 1 started October 13, 2026.
+- **Phase:** 1 exit, waiting for the owner checkpoint. Session 1 started October 13, 2026.
 - **Orchestrator:** Claude Opus 5.5.
 - **Branch and worktree:** `research/taste-loop`, in `.claude/worktrees/taste-loop` of the main checkout.
 - **Data:** `~/goodwatch-research/taste/` (mode 700). First loop's files in `packs/old/`. Pack: `packs/2026-10-13/`.
@@ -64,16 +64,25 @@ Read this first. Rewritten at the end of every session.
 - [x] **010 Gate for T2a** (`items/010-t2a-gate/`, Sol 6.1), accepted October 14, 2026: 105 tests pass, T2a table
   figures unchanged; Fable's review (accept with fixes) applied by the orchestrator. Real gate not opened.
 
+- [x] **011 Phase 1 exit** (`items/011-phase1-exit/`): gate reviews by Fable (met with fixes) and Sol 6.1 (not met
+  yet; fixes listed); fixes done: every DECISIONS cell filled (Sol 6.1), the orchestrator's five checks of G1,
+  `verify.py` on both registered runs, shuffled control on G1 (inconclusive, leaning against a win)
+
 ## Next action
 
-Phase 1 exit. Every cell of `DECISIONS.md` is filled. Gate review by two models other than the orchestrator's
-(Fable and Sol 6.1) is running; then the owner checkpoint: confirm phase 2's direction, including whether member
-recruitment for judged pools (T3) starts now that G1 replicated on T2a (PLAN.md open question 6), and the
-top-list harm criterion to freeze before confirmation.
+Owner checkpoint for phase 2 (PLAN.md phase 1 exit). Proposed phase 2 order, from both gate reviews:
+1. Amendment A3, reviewed by two families before any page exists: the top-list harm criterion for judged pools
+   (T3), the T3 pool composition, and the distance form of the shows/animation guard.
+2. Hash G1's and B2's rankings into the ledger, build the T3 page, recruit toward 20 members; issues #525 and #526.
+3. Register the first tier C window; D2 waits for it.
+4. In parallel, without members: T5 for D3 (the one decision with no result).
+5. No more gate looks on D1 variants.
 
 ## What the owner owes
 
-Nothing. Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+The phase 1 checkpoint: confirm phase 2's direction, whether recruitment for T3 starts, and the harm margin.
+
+Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed

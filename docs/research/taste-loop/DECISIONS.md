@@ -93,6 +93,29 @@ it, not whether a member would choose it. C3 has the most balanced profile measu
 +0.252 and franchise repeats +0.672 over B2. All three keep B5's T1 error gain (−0.107 against B2) and lose part of
 its T2a separation (−0.043 to −0.084 against B5).
 
+**The orchestrator's own checks of G1 (PLAN.md 4), October 14, 2026:**
+
+1. Raw rows: 20 members' per-member figures of the registered run read. The gain is broad: members with 18 and with
+   460 hidden titles both improve; 21 of 26 improve in all.
+2. The owner's first 20 (`~/goodwatch-research/taste/out/top20-owner-009.md`): positions 1 to 10 equal B3's (Isle
+   of Dogs, Ethos, Maniac, Good Omens, Loki, Fullmetal Alchemist: Brotherhood, Severance, Counterpart, Poor Things,
+   Atlanta), then films toward the owner's 14% shows (Brazil, Evangelion 3.0+1.0, Mickey 17, Citizen Kane, Children
+   of Paradise, Utena, Fanny and Alexander, Punch-Drunk Love, The Worst Person in the World, Tekkonkinkreet). B2's are
+   obscure titles with scores down to 37. Mechanism noted: with one or two titles placed no title can meet the
+   ±10-point band, so the first positions fall back to F3's order and the refill acts from about position 10.
+3. Shuffled labels (`controls/shuffled.py --only g1_mix.py`, three shuffles): **inconclusive**, as for every rung in
+   item 004. Others −0.020 (−0.050 to +0.005), equally well-rated −0.017 (−0.044 to +0.006); owner +0.008 (−0.026
+   to +0.042). No skill without the labels; the bias that cannot be excluded leans against a win, and its upper
+   bound (+0.005) is far below the effect (+0.086).
+4. "This would be wrong if G1 separated loved from disliked titles only because loved titles are more popular."
+   Test (`items/009-composition/STRATA.md`): among hidden titles under the median vote count the gain is +0.125
+   (+0.085 to +0.166), 13 of 13 members; at or over it +0.045 (−0.007 to +0.093). The gain is largest where
+   popularity helps least.
+5. Strata (same file): hidden movies +0.072 (+0.017 to +0.121), shows +0.072 (+0.026 to +0.113); members with fewer
+   hidden titles +0.079 (+0.018 to +0.135), more +0.093 (+0.048 to +0.130); owner in +0.091 (+0.054 to +0.126);
+   members rated in one sitting +0.081 (+0.039 to +0.121), in several: 4 members, too few.
+6. `verify.py` reproduced both registered runs: item 009, 799 values; item 008, 1,129 values.
+
 **Where D1 stands:** no rung replaces today's taste yet; keeping it is what the evidence supports. B5 is best at
 pushing down what a member will dislike and cannot choose the top; B3 chooses a plausible top and separates no better
 than today's taste. Next (item 007): B3's order with B5 as a floor (titles B5 places low go after the rest), so the
