@@ -2,13 +2,11 @@
 // Drawn on the canvas the room hands it (TvRoom.tsx), in either edition; before the window is measured, in both.
 //
 // The screen switch: home is part of the first view. Every other screen is a chunk of its own, asked for on first
-// use (screen-code.tsx), and each mini app's slice adds its entry here.
+// use (screen-code.tsx). Every screen the machine knows has its entry here.
 import { type ReactNode, useMemo, useRef } from "react"
 import {
 	Boot,
 	CornerBar,
-	Frame,
-	Item,
 	Layer,
 	Shade,
 	type TvView,
@@ -24,13 +22,14 @@ import {
 	QuizCode,
 	RateCode,
 	SearchCode,
+	ShowsCode,
 	TasteCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type { TvAppTile } from "./tv-home"
+import type { TvAppTile, TvHomeData } from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
@@ -43,6 +42,7 @@ import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvSearchReport } from "./use-tv-search"
+import type { TvShowsReport } from "./use-tv-shows"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
@@ -62,6 +62,8 @@ export {
 export { ExplorerData } from "./screen-code"
 // Search (slice 10).
 export { SearchData } from "./screen-code"
+// My shows (slice 9).
+export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -96,6 +98,16 @@ export type TvScreenProps = {
 	taste?: TvTasteScreens
 	/** Search (slice 10): what is typed, and the titles found for the query on screen. */
 	search?: TvSearchScreens
+	/** My shows: the member's shows, and what is new for them. */
+	shows?: TvShowsScreens
+}
+
+/** What My shows draws from. */
+export type TvShowsScreens = {
+	/** The member's shows on the TV, from the loader; null for a guest. */
+	list: TvHomeData["shows"]
+	/** The New episodes signal; null until its data component has reported. */
+	signal: TvShowsReport | null
 }
 
 /** What search draws from. */
@@ -128,6 +140,7 @@ export function TvScreen({
 	explorer,
 	taste,
 	search,
+	shows,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -184,12 +197,15 @@ export function TvScreen({
 								explorer={explorer}
 								taste={taste}
 								search={search}
+								shows={shows}
 							/>
 						</Layer>
 					</TvViewProvider>
 					{state.menuOpen && (
 						<TvViewProvider value={over}>
-							<Layer className="tvc-menu">
+							{/* Over everything of the screen under it: its focused tile and its bar's keys are raised, and a
+							    key of the menu may lie under none of them. */}
+							<Layer className="tvc-menu z-20">
 								{/* A press beside the menu closes it, as Back does. */}
 								{/* biome-ignore lint/a11y/useKeyWithClickEvents: the keys close it with Back (use-tv.ts) */}
 								<div
@@ -236,6 +252,7 @@ function ScreenOf({
 	explorer,
 	taste,
 	search = NOT_TYPING,
+	shows,
 }: {
 	screen: Screen
 	items: readonly string[]
@@ -245,6 +262,7 @@ function ScreenOf({
 	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
 	search?: TvSearchScreens
+	shows?: TvShowsScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
@@ -311,9 +329,16 @@ function ScreenOf({
 					first={first}
 				/>
 			)
-		// SEAM (slice 9): My shows takes its entry here.
-		default:
-			return <NotBuilt screen={screen} items={items} />
+		// My shows (slice 9).
+		case "shows":
+			return (
+				<ShowsCode.Screen
+					items={items}
+					shows={shows?.list ?? null}
+					signal={shows?.signal ?? null}
+					first={first}
+				/>
+			)
 	}
 }
 
@@ -324,41 +349,5 @@ function Bare({ items }: { items: readonly string[] }) {
 			<Shade dim={0.82} />
 			<CornerBar items={items} />
 		</>
-	)
-}
-
-/**
- * A screen no slice has built yet. It draws the machine's items for it as plain keys, so the focus and the keys
- * work as on any screen, and its bar, so the way back works. The Expand key is not among them: its place is the
- * `Frame`'s corner (slice 11).
- */
-function NotBuilt({
-	screen,
-	items,
-}: { screen: Screen; items: readonly string[] }) {
-	const own = items.filter(
-		(item) => item !== "expand" && !item.startsWith("bar:"),
-	)
-	return (
-		<Frame name={SCREEN_NAME[screen.name]} items={items} dim={0.82}>
-			<div className="flex min-h-full flex-col justify-center gap-4">
-				<div className="text-[26px] text-white/70">
-					This screen is not built yet.
-				</div>
-				{own.length > 0 && (
-					<div className="flex flex-wrap gap-3">
-						{own.map((item) => (
-							<Item
-								key={item}
-								id={item}
-								className="tvc-btn flex h-[60px] items-center px-6 text-[22px]"
-							>
-								{item}
-							</Item>
-						))}
-					</div>
-				)}
-			</div>
-		</Frame>
 	)
 }

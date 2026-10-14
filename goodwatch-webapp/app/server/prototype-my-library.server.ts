@@ -30,6 +30,11 @@ import {
 	recordMyMoviesVisit,
 } from "~/server/newly-available.server"
 import { updateScores } from "~/server/scores.server"
+import {
+	type ShowAction,
+	applyShowTrackingAction,
+	getShowTrackingPage,
+} from "~/server/show-tracking.server"
 import type { Taste } from "~/server/taste/index.server"
 import { getTonightsPick } from "~/server/tonight.server"
 import { FakeTrackingCrate } from "~/server/tracking-fake-crate"
@@ -1031,4 +1036,12 @@ export const harness = {
 			score: score as never,
 		}),
 	today: (now: number) => utcDay(now),
+	/**
+	 * A show's tracking as its page and the new TV's title screen read it, and one action on it, as
+	 * /api/tracking/show answers a member. The episodes have no IMDb ratings here.
+	 */
+	tracking: (showId: number) =>
+		getShowTrackingPage(HARNESS_MEMBER, showId, async () => null),
+	track: (action: ShowAction) =>
+		applyShowTrackingAction(HARNESS_MEMBER, action),
 }

@@ -4,7 +4,8 @@
 // Noindex with the canonical of `/`, in no sitemap, linked from nowhere, and never stored by a cache.
 //
 // The TV's screen lives in the search params (`?tv=discover&mood=funny`); changing only those never reruns the
-// loader.
+// loader. Asking again for the address the page is on does: that is the page itself after the member changed
+// what the loader read, such as an episode marked watched on the TV (ui/living-room/tv/use-tv-episode.ts).
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -26,7 +27,9 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	formMethod,
 	defaultShouldRevalidate,
 }) =>
-	!formMethod && isTvOnlyChange(currentUrl, nextUrl)
+	!formMethod &&
+	currentUrl.href !== nextUrl.href &&
+	isTvOnlyChange(currentUrl, nextUrl)
 		? false
 		: defaultShouldRevalidate
 

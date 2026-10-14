@@ -972,6 +972,50 @@ describe("the title screen and the rating", () => {
 		assert.equal(watchHref("nothing", named), null)
 	})
 
+	// My shows (slice 9): a show the member is midway through.
+	it("Seen it on a show with a Next episode marks that episode and stays", () => {
+		const midway = { ...member, nextEpisode: true }
+		const t = choose("tv=title&title=show-21", "seen", midway)
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=title&title=show-21")
+		assert.equal(t.state.depth, 1)
+		assert.deepEqual(t.effects, [{ type: "seen-episode", title: "show-21" }])
+		// The focus stays on the key, so the next press marks the episode after it.
+		assert.equal(focusedItem(t.state, midway), "seen")
+		const again = run(t.state, midway, { type: "ok" })
+		assert.equal(again.history, "none")
+		assert.deepEqual(again.effects, [
+			{ type: "seen-episode", title: "show-21" },
+		])
+	})
+
+	it("Seen it asks how it was once the show has no Next episode to mark", () => {
+		const midway = { ...member, nextEpisode: true }
+		const marked = choose("tv=title&title=show-21", "seen", midway)
+		// The last aired episode is marked: the show is Seen, and the page says so in the context.
+		const t = run(marked.state, member, { type: "ok" })
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=rate&title=show-21")
+		assert.deepEqual(t.effects, [{ type: "seen", title: "show-21" }])
+	})
+
+	it("a Next episode changes nothing but the Seen it key", () => {
+		const midway = { ...member, nextEpisode: true }
+		assert.deepEqual(
+			items("tv=title&title=show-21", midway),
+			items("tv=title&title=show-21", member),
+		)
+		for (const item of ["watch", "want-to-see"]) {
+			const t = choose("tv=title&title=show-21", item, midway)
+			assert.deepEqual(t.effects, [{ type: item, title: "show-21" }])
+		}
+		// The rating of another title is not this show's episode.
+		const rate = choose("tv=rate&title=show-21", "level:7", midway)
+		assert.deepEqual(rate.effects, [
+			{ type: "rate", title: "show-21", score: 7 },
+		])
+	})
+
 	it("ignores an action of another screen", () => {
 		for (const item of ["watch", "seen", "level:9", "details", "go"]) {
 			const start = at("tv=about", 1)
