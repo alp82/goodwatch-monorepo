@@ -1,11 +1,10 @@
 import { json } from "@remix-run/node"
 import { z } from "zod"
-import { isMoodKey } from "~/domain/moods"
 import { getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { applyCachePolicy } from "../cache-identity.server"
 import { PRIVATE_CACHE_CONTROL, livingRoomAuth } from "./data.server"
-import { LivingRoomUnavailable, getLivingRoomPicks } from "./picks.server"
+import { LivingRoomUnavailable } from "./picks.server"
 import { getLivingRoomPool } from "./pool.server"
 
 const guestSchema = z.object({
@@ -64,14 +63,9 @@ export async function livingRoomPicksResponse(request: Request) {
 		return failure("Method not allowed", 405)
 	}
 	const params = new URL(request.url).searchParams
-	const mood = params.get("mood") || null
-	const source = params.get("from") || "auto"
-	const service = params.get("service") || null
+	// The pool is the route's one answer. The old TV's picks for a night (`?mood=&from=&service=`) are gone.
+	if (params.get("view") !== "pool") return failure("Not found", 404)
 	const country = params.get("country")?.toUpperCase()
-	if (mood && !isMoodKey(mood)) return failure("Unknown mood")
-	if (source !== "auto" && source !== "wishlist" && source !== "new")
-		return failure("Unknown picks source")
-	if (service && service.length > 100) return failure("Invalid service")
 	if (country && !/^[A-Z]{2}$/.test(country)) return failure("Invalid country")
 	let guest: z.infer<typeof guestSchema> | undefined
 	if (request.method === "POST") {
@@ -94,10 +88,7 @@ export async function livingRoomPicksResponse(request: Request) {
 			},
 			user?.id ?? null,
 		)
-		const result =
-			params.get("view") === "pool"
-				? await getLivingRoomPool(viewer)
-				: await getLivingRoomPicks(viewer, { mood, source, service })
+		const result = await getLivingRoomPool(viewer)
 		applyCachePolicy(request, 200, headers)
 		return json(result, { headers })
 	} catch (error) {
@@ -106,7 +97,7 @@ export async function livingRoomPicksResponse(request: Request) {
 			return failure(error.message, 503)
 		}
 		if (error instanceof RangeError) return failure(error.message)
-		console.error("Living room: loading picks failed", error)
-		return failure("Unable to load picks", 503)
+		console.error("Living room: loading the pool failed", error)
+		return failure("Unable to load the pool", 503)
 	}
 }

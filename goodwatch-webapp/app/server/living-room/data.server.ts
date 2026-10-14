@@ -1,7 +1,3 @@
-import {
-	getStreamingProviders,
-	slimStreamingProviders,
-} from "~/server/streaming-providers.server"
 import { getAuthFromRequest } from "~/utils/auth"
 
 import {
@@ -24,23 +20,4 @@ export async function livingRoomAuth(request: Request) {
 		auth.headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
 	} else auth.headers.set("Cache-Control", SHARED_PAGE_CACHE_CONTROL)
 	return auth
-}
-
-export async function livingRoomServices(
-	country: string,
-	include: number[] = [],
-) {
-	const providers = slimStreamingProviders(
-		await getStreamingProviders({ country }),
-		country,
-		include,
-	)
-	const names = new Set<string>()
-	return providers
-		.filter(({ name }) => {
-			if (names.has(name)) return false
-			names.add(name)
-			return true
-		})
-		.map(({ id, name, logo_path }) => ({ id, name, logo_path }))
 }

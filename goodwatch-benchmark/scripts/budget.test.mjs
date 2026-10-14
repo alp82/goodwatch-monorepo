@@ -104,6 +104,19 @@ test("the LCP element line passes when most runs show the expected element", () 
   assert.equal(compareSurface({}, [], surface).pass, false);
 });
 
+test("the LCP element line takes any of a list of texts", () => {
+  const expected = { tag: "img", contains: ["/assets/room-phone-", "/assets/hand-"] };
+  const room = lcpElement(report({ snippet: '<img src="/assets/room-phone-a1.avif">' }));
+  const hand = lcpElement(report({ snippet: '<img src="/assets/hand-b2.avif">' }));
+  const poster = lcpElement(report());
+  assert.equal(lcpMatches(room, expected), true);
+  assert.equal(lcpMatches(hand, expected), true);
+  assert.equal(lcpMatches(poster, expected), false);
+  const failed = compareSurface({}, [poster, poster, hand], { lcp_element: expected });
+  assert.equal(failed.pass, false);
+  assert.match(formatReport({ pass: false, surfaces: { home: { ...failed, runs: 3, measured: {}, slowdowns: [2.7] } } }), /"\/assets\/room-phone-" or "\/assets\/hand-"/);
+});
+
 const budget = {
   targets: { lcp_ms: 2500 },
   surfaces: {

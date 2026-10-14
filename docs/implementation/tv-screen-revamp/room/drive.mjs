@@ -1,4 +1,4 @@
-// Slice 2 of the new TV (the room): walks /home-preview at every window size of the prototype's tables, checks
+// Slice 2 of the new TV (the room): walks / at every window size of the prototype's tables, checks
 // the room against them, presses every key of both Remotes, and takes the screenshots in shots/ and the sheets
 // beside the prototype's own.
 //
@@ -17,7 +17,7 @@ import {
 } from "../../../../goodwatch-webapp/app/ui/living-room/tv/room-layout.ts"
 
 const here = dirname(fileURLToPath(import.meta.url))
-const base = `${process.env.BASE ?? "http://localhost:3162"}/home-preview`
+const base = `${process.env.BASE ?? "http://localhost:3162"}/`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
@@ -314,7 +314,7 @@ if (doShots) {
 	await sheet(
 		"desktop-beside-prototype",
 		1960,
-		`<h2>1920 x 1080: the prototype's home (left), the room on /home-preview with an empty TV (right)</h2><div>${cell(uri(join(prototype, "screens/cinema/01-home-desktop.jpg")), "prototype", 956)}${cell(ours(1920, 1080), "slice 2", 956)}</div>`,
+		`<h2>1920 x 1080: the prototype's home (left), the room on / with an empty TV (right)</h2><div>${cell(uri(join(prototype, "screens/cinema/01-home-desktop.jpg")), "prototype", 956)}${cell(ours(1920, 1080), "slice 2", 956)}</div>`,
 	)
 	await sheet(
 		"desktop-sizes",
@@ -324,7 +324,7 @@ if (doShots) {
 	await sheet(
 		"phone-beside-prototype",
 		900,
-		`<h2>390 x 844: the prototype's home (left), the room on /home-preview with an empty TV (right)</h2><div>${cell(uri(join(prototype, "screens/cinema/01-home-phone.jpg")), "prototype", 390)}${cell(ours(390, 844), "slice 2: the lip is over the room's bottom edge", 390)}</div>`,
+		`<h2>390 x 844: the prototype's home (left), the room on / with an empty TV (right)</h2><div>${cell(uri(join(prototype, "screens/cinema/01-home-phone.jpg")), "prototype", 390)}${cell(ours(390, 844), "slice 2: the lip is over the room's bottom edge", 390)}</div>`,
 	)
 	await sheet(
 		"phone-sizes",

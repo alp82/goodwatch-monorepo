@@ -1,5 +1,5 @@
 // Slice 8 of the new TV (mini Taste, the taste quiz and the rating strip): walks Taste, the quiz, a side's screen
-// and the rating on /home-preview with the keyboard, both Remotes' keys and the pointer, as a guest on real data
+// and the rating on / with the keyboard, both Remotes' keys and the pointer, as a guest on real data
 // and as a member on the tracking harness; follows every score to where it is stored; measures every key on every
 // phone of the room's table; and takes the screenshots in shots/ and the sheets beside the prototype's own.
 //
@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3281"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER_ORIGIN = process.env.MEMBER ?? "http://localhost:3282"
 const SETUP = "member=six&seen=30&landed=none"
 const MEMBER = `${MEMBER_ORIGIN}/prototype/my-library-real/tv?member=six&session=on`
@@ -913,7 +913,7 @@ async function html() {
 		is(phone.slice(0, phone.indexOf('<section id="browse"')).replace(/nonce="[^"]*"/g, "").length, room.replace(/nonce="[^"]*"/g, "").length, `and as long for a phone as for a desktop browser`)
 	}
 	const home = await get(GUEST)
-	numbers["the guest's HTML of /home-preview, bytes (dev server)"] = Buffer.byteLength(home)
+	numbers["the guest's HTML of /, bytes (dev server)"] = Buffer.byteLength(home)
 	check(!home.includes("tvc-lvl") && !home.includes("Rate 5 titles you"), "home's HTML has nothing of the strip or of Taste's screens")
 }
 

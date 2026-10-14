@@ -5450,5 +5450,239 @@
 				]
 			}
 		}
+	},
+	"budget, slice 13 on /, production build without services, 1 round": {
+		"passed": 8,
+		"failed": [],
+		"numbers": {
+			"budget desktop, GPU, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 1,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 6448,
+							"frames": 384,
+							"meanFrameMs": 0.112,
+							"longestFrameMs": 0.5,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 57,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 0
+						},
+						"focusMoves": {
+							"ms": 2136,
+							"frames": 2,
+							"meanFrameMs": 0.15,
+							"longestFrameMs": 0.2,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 104
+						},
+						"screenChanges": {
+							"ms": 3396,
+							"frames": 12,
+							"meanFrameMs": 0.033,
+							"longestFrameMs": 0.1,
+							"tasksOver50ms": [],
+							"longFrames": [],
+							"slowestInteractionMs": 80
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0064
+				},
+				"longest": 0.5,
+				"tasks": []
+			},
+			"budget phone, CPU slowed 4 times, as served": {
+				"sentryLoaded": true,
+				"cpuSlowdown": 4,
+				"rounds": [
+					{
+						"pointing": {
+							"ms": 3537,
+							"frames": 206,
+							"meanFrameMs": 0.66,
+							"longestFrameMs": 4,
+							"tasksOver50ms": [],
+							"longFrames": [
+								{
+									"ms": 62,
+									"blocking": 0,
+									"scripts": []
+								}
+							],
+							"slowestInteractionMs": 72
+						},
+						"focusMoves": {
+							"ms": 4779,
+							"frames": 16,
+							"meanFrameMs": 0.3,
+							"longestFrameMs": 1.2,
+							"tasksOver50ms": [
+								72,
+								66,
+								54,
+								53
+							],
+							"longFrames": [
+								{
+									"ms": 80,
+									"blocking": 23,
+									"scripts": [
+										"11 ms event-listener #document.onclick in sentry-browser.js",
+										"44 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 75,
+									"blocking": 18,
+									"scripts": [
+										"48 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 65,
+									"blocking": 6,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 56,
+									"blocking": 0,
+									"scripts": [
+										"24 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 58,
+									"blocking": 0,
+									"scripts": [
+										"34 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 62,
+									"blocking": 4,
+									"scripts": [
+										"37 ms event-listener #document.onclick in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 136
+						},
+						"screenChanges": {
+							"ms": 4712,
+							"frames": 18,
+							"meanFrameMs": 0.078,
+							"longestFrameMs": 0.8,
+							"tasksOver50ms": [
+								65,
+								67
+							],
+							"longFrames": [
+								{
+									"ms": 64,
+									"blocking": 7,
+									"scripts": [
+										"33 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 71,
+									"blocking": 20,
+									"scripts": [
+										"66 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 123,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 91,
+									"blocking": 0,
+									"scripts": []
+								},
+								{
+									"ms": 55,
+									"blocking": 0,
+									"scripts": [
+										"45 ms event-listener MessagePort.onmessage in react.js"
+									]
+								},
+								{
+									"ms": 51,
+									"blocking": 0,
+									"scripts": [
+										"21 ms event-listener #document.onclick in react.js"
+									]
+								},
+								{
+									"ms": 69,
+									"blocking": 18,
+									"scripts": [
+										"67 ms event-listener MessagePort.onmessage in react.js"
+									]
+								}
+							],
+							"slowestInteractionMs": 104
+						}
+					}
+				],
+				"atRest": {
+					"framesIn5s": 0,
+					"mainThreadShare": 0.0022
+				},
+				"longest": 4,
+				"tasks": [
+					72,
+					66,
+					54,
+					53,
+					65,
+					67
+				]
+			}
+		}
+	},
+	"seo, slice 13 on /, dev server reading production": {
+		"passed": 18,
+		"failed": [],
+		"numbers": {
+			"seo": {
+				"roomCharacters": 45905,
+				"documentCharacters": 87381,
+				"titleLinks": 16
+			}
+		}
 	}
 }

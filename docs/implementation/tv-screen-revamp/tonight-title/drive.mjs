@@ -1,5 +1,5 @@
 // Slice 5 of the new TV (Tonight, the title screen, the rating and the Watch key): walks home, Tonight, a title and
-// the rating on /home-preview with the keyboard, both Remotes' keys and the pointer, as a guest on real data and as
+// the rating on / with the keyboard, both Remotes' keys and the pointer, as a guest on real data and as
 // a member on the tracking harness; asks /api/title-cards directly; follows the Watch key to the title page and
 // watches its streaming block; measures every key, the toast and the Expand key's corner on every phone of the
 // room's table; checks the order of Tonight's picks; and takes the screenshots in shots/ and the sheets beside the
@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3191"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3192"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]

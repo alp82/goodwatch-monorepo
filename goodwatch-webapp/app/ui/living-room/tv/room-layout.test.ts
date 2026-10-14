@@ -98,7 +98,7 @@ describe("the desktop room, at the prototype's window sizes", () => {
 	})
 
 	it("beside the TV, the lip's tab at the scene's bottom right is right of the TV", () => {
-		// The tab is its first line alone there (tv.css): about 175 px wide, 24 px from the right edge.
+		// The tab is its first line alone there (living-room.css): about 175 px wide, 24 px from the right edge.
 		for (let w = 768; w <= 2560; w += 37)
 			for (let h = 420; h <= 1100; h += 41) {
 				const L = layoutRoom(w, h, "beside")
@@ -453,7 +453,7 @@ describe("the phone's room, at any size", () => {
 
 // ---------------------------------------------------------------------------------------------------------
 
-// In landscape the room is the whole window, and the lip is a tab of 46 px (living-room.css) that tv.css moves
+// In landscape the room is the whole window, and the lip is a tab of 46 px that living-room.css moves
 // under the Remote.
 const TAB = { tv: 0, remote: 46 }
 

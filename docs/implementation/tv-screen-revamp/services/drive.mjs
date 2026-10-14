@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3371"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const HARNESS = `${process.env.MEMBER ?? "http://localhost:3372"}/prototype/my-library-real/tv`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
@@ -369,7 +369,7 @@ const handIn = (p) =>
 /** The loader's answer alone, for the browser's language: what the page knows of the person's services. */
 async function loaderOf(language, agent) {
 	const start = performance.now()
-	const response = await fetch(`${GUEST}?_data=routes%2Fhome-preview`, { headers: { "Accept-Language": language, ...(agent && { "User-Agent": agent }) } })
+	const response = await fetch(`${GUEST}?_data=routes%2F_index`, { headers: { "Accept-Language": language, ...(agent && { "User-Agent": agent }) } })
 	const data = await response.json()
 	return { data, ms: performance.now() - start }
 }
@@ -417,7 +417,7 @@ async function countries() {
 		pages[country] = texts[0]
 		is(idsIn(texts[0]).filter((id) => id.startsWith("service:")), ["service:8", "service:9", "service:8", "service:9"], `${country}: the two services' tiles are in the HTML, once per edition`)
 		is((texts[0].match(/<h1/g) ?? []).length, 2, `${country}: one H1 per edition`)
-		numbers[`a guest's HTML of /home-preview in ${country}, bytes`] = texts[0].length
+		numbers[`a guest's HTML of / in ${country}, bytes`] = texts[0].length
 	}
 	numbers["of which the two services (tiles in both editions and the loader's data), bytes"] = pages.US.length - withoutServices(pages.US).length
 	for (const country of ["FR", "BR"]) {

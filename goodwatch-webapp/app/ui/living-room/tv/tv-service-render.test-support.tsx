@@ -234,15 +234,12 @@ const roomTv: RoomTv = {
 const desktopRemote = (services: TvService[], open: number | null) =>
 	renderToStaticMarkup(
 		<Remote
-			screen={{ name: "home" }}
 			power="on"
 			menuOpen={false}
+			searching={false}
 			services={services}
 			openService={open}
-			onService={() => {}}
-			dispatch={() => {}}
-			onOk={() => {}}
-			onDirection={() => {}}
+			press={() => {}}
 		/>,
 	)
 const phoneRemote = (
@@ -347,18 +344,6 @@ console.log(
 			// A service that is none of the keys' is open: no key is lit.
 			other: remotes([NETFLIX, DISNEY], 15),
 			one: remotes([NETFLIX]),
-			// The old TV's Remote, without the person's services: its fixed pair.
-			old: renderToStaticMarkup(
-				<Remote
-					screen={{ name: "home" }}
-					power="on"
-					menuOpen={false}
-					serviceName={(key) => (key === "netflix" ? "Netflix" : "Prime")}
-					activeService="Netflix"
-					dispatch={() => {}}
-					onOk={() => {}}
-				/>,
-			),
 		},
 	})}`,
 )

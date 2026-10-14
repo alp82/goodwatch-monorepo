@@ -12,7 +12,7 @@
 //
 // The first paint (slice 12): the scene is laid out by script once it has measured itself. Until then (on the
 // server, and while the page hydrates) the room holds the parts of every layout at once, both editions of the TV's
-// screen and both forms of the phone's Remote, and tv.css places them where `layoutRoom`, `layoutPhoneRoom` and
+// screen and both forms of the phone's Remote, and living-room.css places them where `layoutRoom`, `layoutPhoneRoom` and
 // `layoutPhoneLandscape` will, and shows the ones the window's layout has. So the HTML is the same for every
 // window, it paints the room before any script runs, and hydration moves nothing.
 // Pointing (TvPointer.tsx, pointing.ts): the room hands it the measured scene, the element that turns (`remoteEl`)
@@ -20,7 +20,6 @@
 // The keyboard is the TV's (use-tv.ts), which leaves the keys alone while the room is `inert`.
 import {
 	memo,
-	useCallback,
 	useEffect,
 	useLayoutEffect,
 	useMemo,
@@ -34,7 +33,6 @@ import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
 import { HAND_IMAGE, PHONE_LIP, ROOM } from "../room"
-import type { TvAction, TvScreen as OldScreen } from "../tv-flow"
 import { TV_SCREEN_ATTR } from "../tv-transition"
 import { bracketArm } from "../tv-way-back"
 import { ROOM_ID, useBelowRoom } from "../use-below-room"
@@ -58,7 +56,7 @@ import {
 	layoutPhoneRoom,
 	layoutRoom,
 } from "./room-layout"
-import type { RoomDirection, RoomKey, RoomTv, TvCanvas } from "./room-tv"
+import type { RoomTv, TvCanvas } from "./room-tv"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -70,10 +68,10 @@ const useIsoLayoutEffect =
 const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
 /**
  * A phone's room: a window narrower than PHONE_BELOW. The window's width, not the room's, as living-room.css lays
- * out the lip and tv.css the first paint: on a desktop with a scrollbar's gutter the two differ by its width.
+ * out the lip and living-room.css the first paint: on a desktop with a scrollbar's gutter the two differ by its width.
  */
 const PHONE = `(max-width: ${PHONE_BELOW - 0.02}px)`
-/** The lip in landscape: a tab of 46 px (living-room.css), which tv.css puts under the Remote. */
+/** The lip in landscape: a tab of 46 px, which living-room.css puts under the Remote. */
 const LANDSCAPE_TAB = { tv: 0, remote: 46 }
 /** Under 768 px of width the room is not the whole window in landscape, and the lip is a bar across it. */
 const LANDSCAPE_BAR = { tv: PHONE_LIP, remote: PHONE_LIP }
@@ -104,26 +102,6 @@ const StillRemote = memo(Remote)
 const StillPhoneRemote = memo(PhoneRemote)
 const StillBelowRoom = memo(BelowRoom)
 
-/** The desktop Remote speaks the old TV's actions (ui/living-room/tv-flow.ts) until the old TV is gone. */
-function keyOf(action: TvAction): RoomKey | null {
-	switch (action.type) {
-		case "step":
-			return { type: "step", by: action.by }
-		case "back":
-			return { type: "back" }
-		case "home":
-			return { type: "home" }
-		case "toggle-menu":
-			return { type: "menu" }
-		case "open-search":
-			return { type: "search" }
-		case "power":
-			return { type: "power", on: action.on }
-		default:
-			return null
-	}
-}
-
 export function TvRoom({
 	tv,
 	renderScreen,
@@ -149,7 +127,7 @@ export function TvRoom({
 		if (!el) return
 		const landscape = window.matchMedia(LANDSCAPE)
 		const phone = window.matchMedia(PHONE)
-		// To the fraction of a pixel, as tv.css's first paint reads the room's size (a phone's window often has a
+		// To the fraction of a pixel, as living-room.css's first paint reads the room's size (a phone's window often has a
 		// fractional height). The room has no border, no padding and no transform but a slide up.
 		const measure = () => {
 			const { width: w, height: h } = el.getBoundingClientRect()
@@ -212,29 +190,7 @@ export function TvRoom({
 	const held = P ?? S
 
 	const on = tv.power !== "off"
-	// The desktop Remote's handlers and the screen it reads, the same from one focus move to the next.
 	const { press } = tv
-	const onService = useCallback(
-		(service: number) => press({ type: "service", service }),
-		[press],
-	)
-	const onRemote = useCallback(
-		(action: TvAction) => {
-			const key = keyOf(action)
-			if (key) press(key)
-		},
-		[press],
-	)
-	const onOk = useCallback(() => press({ type: "ok" }), [press])
-	const onDirection = useCallback(
-		(dir: RoomDirection) => press({ type: "move", dir }),
-		[press],
-	)
-	// The old TV's screen type: the Remote reads it only to light its Search key.
-	const remoteScreen: OldScreen = useMemo(
-		() => (tv.searching ? { name: "search", query: null } : { name: "home" }),
-		[tv.searching],
-	)
 
 	// ---- Pointing moves this element, the desktop Remote in its hand or the phone's Remote with its, and the ring.
 	const remoteEl = useRef<HTMLDivElement>(null)
@@ -266,7 +222,7 @@ export function TvRoom({
 		scale: L.canvas.scale,
 	}
 	// Before the window is measured (on the server and while the page hydrates) the room is drawn for every
-	// window at once: the parts of each layout, placed by tv.css (`tvr-f-*`), which shows the ones the window's
+	// window at once: the parts of each layout, placed by living-room.css (`tvr-f-*`), which shows the ones the window's
 	// layout has. Once measured, each part that stays keeps its node, so a picture is not drawn anew.
 	const first = !L
 	const canvases = canvas ? [canvas] : FIRST_CANVASES
@@ -407,22 +363,19 @@ export function TvRoom({
 							style={D ? { transform: `scale(${D.remote.scale})` } : undefined}
 						>
 							<StillRemote
-								screen={remoteScreen}
 								power={tv.power}
 								menuOpen={tv.menuOpen}
+								searching={tv.searching}
 								services={services}
 								openService={tv.openService}
-								onService={onService}
-								dispatch={onRemote}
-								onOk={onOk}
-								onDirection={onDirection}
+								press={press}
 							/>
 						</div>
 					</div>
 				)}
 
 				{/* The phone: the Remote and the hand that holds it move as one when the Remote aims. Before the window is
-				    measured both forms are here, and the rig's width tells tv.css which one the window's height holds. */}
+				    measured both forms are here, and the rig's width tells living-room.css which one the window's height holds. */}
 				{(first || held) && (
 					<div
 						key="rig"
@@ -478,7 +431,7 @@ function Hand({
 	style,
 	className = "",
 }: {
-	/** Its box, once the window is measured; before, tv.css places it (`className`). */
+	/** Its box, once the window is measured; before, living-room.css places it (`className`). */
 	style?: { left: number; top: number; width: number; height: number }
 	className?: string
 }) {

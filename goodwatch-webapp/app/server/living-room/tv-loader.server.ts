@@ -1,8 +1,9 @@
-// The loader of the start page with the new TV (docs/implementation/tv-screen-revamp, section 3). Until the
-// switch only /home-preview uses it; `/` keeps `loadLivingRoom` (server/living-room.server.ts).
+// The loader of the start page (docs/implementation/tv-screen-revamp, section 3).
 //
 // A guest gets the titles below the room and one picture, the first start title's backdrop: nothing personal, so
-// the HTML is the same for every guest. A member gets Tonight and My shows from `getTonightParts`, the read home's
+// the HTML is the same for every guest, and the page is stored under the shared cache policy `livingRoomAuth`
+// chose. Without start titles (the snapshot is still loading, or they couldn't be read) the page is incomplete and
+// no cache keeps it, so the titles are there as soon as they can be. A member's page is never stored. A member gets Tonight and My shows from `getTonightParts`, the read home's
 // doors use (tv-home.server.ts shapes them). Nothing here reads the Wishlist's cards: the new TV shows no count
 // of them.
 //
@@ -19,6 +20,7 @@ import {
 	getServiceCards,
 	getTitleCards,
 } from "~/server/title-cards.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import {
 	type ViewerContext,
@@ -26,7 +28,7 @@ import {
 } from "~/server/viewer.server"
 import type { TvHomeData, TvService } from "~/ui/living-room/tv/tv-home"
 import { titleKey } from "~/utils/title-key"
-import { PRIVATE_CACHE_CONTROL, livingRoomAuth } from "./data.server"
+import { livingRoomAuth } from "./data.server"
 import { loadStartTitlesAndPicture } from "./start-titles.server"
 import {
 	guestHome,
@@ -71,10 +73,14 @@ export async function loadMemberHome(
 
 export async function loadTvHome(request: Request) {
 	const { user, headers } = await livingRoomAuth(request)
-	// SEAM (the switch): on `/` a guest's page takes the shared cache policy `livingRoomAuth` chose, and the
-	// incomplete-page policy without start titles, as `loadLivingRoom` does. The preview address is never stored.
-	headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
-	const start = loadStartTitlesAndPicture(getTitleSnapshot(), getDisplayFields)
+	const start = loadStartTitlesAndPicture(
+		getTitleSnapshot(),
+		getDisplayFields,
+	).then((start) => {
+		if (!start.titles.length)
+			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
+		return start
+	})
 	if (!user) return { data: guestHome(await start), headers }
 
 	// A member's home works without Tonight and My shows: the tiles are there and Tonight falls back to the pool's

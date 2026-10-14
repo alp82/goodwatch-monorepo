@@ -56,7 +56,7 @@ export function DiscoverData({
 /** How wide the Expand key's corner is on the phone: the last row ends before it. */
 const CORNER = "pr-[158px]"
 
-/** A tab: quiet until it is open, and white while it has the focus (tv.css, `tvc-tab`). */
+/** A tab: quiet until it is open, and white while it has the focus (living-room.css, `tvc-tab`). */
 const TAB = "tvc-tab flex items-center justify-center whitespace-nowrap"
 
 /** An option's own colour over its picture: the picture shows through at the top. */

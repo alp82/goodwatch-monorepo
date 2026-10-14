@@ -32,7 +32,7 @@ The 16 titles the start page links to below the living room: the most popular ti
 The screen inside the living room where GoodWatch runs. It shows one TV screen at a time.
 
 **TV screen**:
-One view on the TV, such as the boot screen, home, a feature explanation, moods, search, or a title. It replaces the earlier notion of channels.
+One view on the TV, such as home, Tonight, Discover's moods, a streaming service's titles, search, or a title. It replaces the earlier notion of channels.
 
 **Remote**:
 The living room's main control. Everything on the remote is also reachable on the TV itself.
@@ -78,15 +78,15 @@ _Avoid_: Upcoming, Schedule, Release calendar
 A member opening My shows. The time of the last one is stored per member, and it is the only thing the New episodes signal stores. Loading the page ahead of a tap is not a visit.
 
 **New episodes signal**:
-The number outside My shows that says how many of a member's shows are new: on the Browse button, the phone dock's key, the My shows tile and home's Continue door. A show is new when its Next episode aired after the day of the last My shows visit, and for a member without a visit yet, in the last seven days. An On hold show, a Dropped show and a show the member was already behind on are never new. A My shows visit clears it, and a show leaves it when its new episode is watched. One new show is named; several are counted.
+The number outside My shows that says how many of a member's shows are new: on the Browse button, the phone dock's key, the My shows tile and the My shows tile on the TV's home. A show is new when its Next episode aired after the day of the last My shows visit, and for a member without a visit yet, in the last seven days. An On hold show, a Dropped show and a show the member was already behind on are never new. A My shows visit clears it, and a show leaves it when its new episode is watched. One new show is named; several are counted.
 _Avoid_: Notification, Unread count, Alert, Badge
 
 **Newly available**:
-A member's Want to See title, or a show they are Watching or have On hold, that was on none of their saved services in their saved country and is now on one, by a subscription or a free offer. A further service for a title that was already watchable is not newly available. It is news when the title landed after the member last opened the page it lives on, My movies for a movie and My shows for a show, and it joins the New episodes signal: the same number on the Browse button and the phone dock's key, on the tile and on home's door. A member without a saved country or a saved service has none. One title is named with its service; several are counted.
+A member's Want to See title, or a show they are Watching or have On hold, that was on none of their saved services in their saved country and is now on one, by a subscription or a free offer. A further service for a title that was already watchable is not newly available. It is news when the title landed after the member last opened the page it lives on, My movies for a movie and My shows for a show, and it joins the New episodes signal: the same number on the Browse button and the phone dock's key, on the tile of its page and, for a show, on the My shows tile on the TV's home. A member without a saved country or a saved service has none. One title is named with its service; several are counted.
 _Avoid_: Arrival (the member arriving on a page), Notification, Alert, Release
 
 **Recently landed**:
-A Newly available title in the 14 days from the day it landed, the day itself included, whether the member has opened its page since or not. For those days My movies and My shows list it in one row that names the latest title with its service and day and opens to all of them, the title carries the service's logo with "New", and it is the first title of its own home door, A movie or Start a show, which says "New on" and the service. Nothing is stored for it. A show the member is in the middle of is listed and marked and keeps its place.
+A Newly available title in the 14 days from the day it landed, the day itself included, whether the member has opened its page since or not. For those days My movies and My shows list it in one row that names the latest title with its service and day and opens to all of them, the title carries the service's logo with "New", and on the TV it comes first among Tonight's movies, or among the shows to start of Tonight and My shows. Nothing is stored for it. A show the member is in the middle of is listed and marked and keeps its place.
 _Avoid_: Fresh, Just arrived, Arrival, New release
 
 **My movies visit**:
