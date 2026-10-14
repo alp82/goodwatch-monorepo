@@ -5673,5 +5673,16 @@
 				]
 			}
 		}
+	},
+	"seo, slice 13 on /, dev server reading production": {
+		"passed": 18,
+		"failed": [],
+		"numbers": {
+			"seo": {
+				"roomCharacters": 45905,
+				"documentCharacters": 87381,
+				"titleLinks": 16
+			}
+		}
 	}
 }

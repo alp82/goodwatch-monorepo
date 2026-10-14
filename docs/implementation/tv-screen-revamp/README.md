@@ -1338,6 +1338,9 @@ wait:
 
 #### Slice 13: the switch and the cleanup
 
+**Built on October 14, 2026** on `feat/tv-slice-13-switch`; the proof and what was kept are in
+[switch/README.md](switch/README.md).
+
 One slice, by the owner's decision to replace without a flag. On a branch that production cannot reach, keeping
 the old TV's files after the switch buys nothing: the way back is the revert of the merge into `main`, and that
 brings every file back. What was slice 14 is part of this slice; there is no slice 14.
