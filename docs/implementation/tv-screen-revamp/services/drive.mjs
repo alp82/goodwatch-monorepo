@@ -349,7 +349,7 @@ const pressed = (s) => s.keys.filter((key) => key.pressed).map((key) => key.id)
 const serviceTv = (id) => `tv=service&service=${id}`
 
 // What the guest's half keeps for the member's half: real answers, the count of checks and the numbers.
-const stock = existsSync(STOCK) && !guestSide ? JSON.parse(readFileSync(STOCK, "utf8")) : { results: {}, passed: 0, failed: [], numbers: {} }
+const stock = existsSync(STOCK) ? JSON.parse(readFileSync(STOCK, "utf8")) : { results: {}, passed: 0, failed: [], numbers: {} }
 /** The reading server's results for a visitor nobody knows anything about, by the query the harness's page asks with. */
 async function realResults(search) {
 	if (!guestSide) return stock.results[search] ?? { status: 503, body: JSON.stringify({ error: `Not kept: ${search}` }) }
@@ -1191,6 +1191,13 @@ if (guestSide) {
 	for (let n = 0; n < 60; n++) {
 		const ready = await fetch(`${ORIGIN}/api/discover/results?services=8&page=1`).then((r) => r.status === 200, () => false)
 		if (ready) break
+		await sleep(5000)
+	}
+	// And a title's services are unknown until it has read the country's availability (a read that timed out is
+	// tried again after five minutes): until then a service's tile has no picture to show.
+	for (let n = 0; n < 90; n++) {
+		const pool = await fetch(`${ORIGIN}/api/living-room/picks?view=pool`, json({ guest: guestOf() })).then((r) => r.json(), () => null)
+		if (pool?.suggestions?.some((card) => card.services?.length)) break
 		await sleep(5000)
 	}
 	await warm(GUEST)

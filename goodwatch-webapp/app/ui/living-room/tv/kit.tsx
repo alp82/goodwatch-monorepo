@@ -210,7 +210,9 @@ function useDecoded<T>(next: T, id: string, files: readonly string[]): T {
 		return () => {
 			alive = false
 		}
-	}, [id, key])
+		// Also when another picture came to be shown than the one wanted: a picture that finished decoding in the
+		// moment the focus moved back would otherwise stay, with nothing left to replace it.
+	}, [id, key, shown.id])
 	// The same picture drawn anew (other props, the same id) is shown at once.
 	return shown.id === id ? next : shown.value
 }

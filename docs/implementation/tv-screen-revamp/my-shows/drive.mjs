@@ -343,7 +343,8 @@ async function walk(size) {
 
 	// ---- Arrival: nothing of a show's episodes is asked for, and nothing is written.
 	let s = await until(page, (x) => x.items.includes("app:shows"), "a member's home has the My shows tile")
-	is(s.items, ["app:tonight", "app:discover", "app:explorer", "app:taste", "app:shows", "bar:search", "bar:menu"], "home's items")
+	// (Slice 6b put a tile for each of the member's two streaming services after My shows: services/drive.mjs.)
+	is(s.items.filter((item) => !item.startsWith("service:")), ["app:tonight", "app:discover", "app:explorer", "app:taste", "app:shows", "bar:search", "bar:menu"], "home's items")
 	await page.waitForTimeout(1500)
 	check(!requests.some((r) => r.path.includes("ShowEpisode") || r.path.includes("use-tv-episode") || r.path.includes("/ui/tracking/")), "the code that marks an episode is not asked for on arrival")
 	is(requests.filter((r) => r.what === "tracking-show").length, 0, "no show's tracking is read on arrival")
