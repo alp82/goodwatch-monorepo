@@ -11,7 +11,7 @@ import type {
 	StreamingType,
 } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { HEADER_HEIGHT } from "~/ui/details/header-height"
+import { UNDER_HEADERS } from "~/ui/details/header-height"
 import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
 	type CountryCount,
@@ -142,8 +142,6 @@ const FlagStack = ({ codes }: { codes: string[] }) => (
 	</span>
 )
 
-const SITE_BAR_HEIGHT = 64
-
 // The hero's where-to-watch block. A title row carries the settings on its right: the offer type, with how many
 // services the country has for each, and the country. Under it the services as cards, logo beside name, two to a
 // row and yours first with a green ring. Four show; "All N services" opens the rest in place. A card that would
@@ -213,7 +211,7 @@ export default function WhereToWatch({
 			{...arrival.block}
 			className={`@container relative min-w-0 ${className}${arrival.className}`}
 			// An address with `#streaming` lands the block clear of the site bar and the sticky title header.
-			style={{ scrollMarginTop: `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)` }}
+			style={{ scrollMarginTop: UNDER_HEADERS }}
 		>
 			{arrival.rules}
 			<div className="flex min-w-0 items-center justify-end gap-1.5">
