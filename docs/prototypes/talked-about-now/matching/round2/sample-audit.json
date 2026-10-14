@@ -1,0 +1,32 @@
+{
+  "selected_at": "2026-10-14T13:43:06.184806+00:00",
+  "items": 200,
+  "counts": {
+    "youtube": 31,
+    "rss": 84,
+    "bluesky": 85
+  },
+  "old_url_overlap": 0,
+  "old_source_id_overlap": 0,
+  "seed": 5442026,
+  "dates": {
+    "youtube": [
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14"
+    ],
+    "rss": [
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14"
+    ],
+    "bluesky": [
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14"
+    ]
+  },
+  "rules_sha256": "5980179c8db1f7432db7d8b1dd18dca2e5f0a571387f31bccfdc6ebbfa1571db",
+  "corpus_sha256": "77c1d5904a97290f13ea36e7bec11cc3e021a7a1b3dc080aaa3325e56d40a608",
+  "no_targeted_only_bluesky_items": true
+}
