@@ -7,6 +7,7 @@
 // names because the HTML has a byte budget.
 import { Link } from "@remix-run/react"
 import type { MouseEvent } from "react"
+import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
 import { titleToDashed } from "~/utils/helpers"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
@@ -73,12 +74,15 @@ export const CATEGORY_HUBS = [
 export type BelowRoomProps = {
 	/** Most popular first; empty while the title snapshot loads. */
 	titles: StartTitle[]
+	/** "Talked about now" at the top of the section (#557); it loads once the visitor goes below. */
+	talked?: boolean
 	onDown?: (e: MouseEvent) => void
 	onBack?: (e: MouseEvent) => void
 }
 
 export function BelowRoom({
 	titles,
+	talked = false,
 	onDown,
 	onBack,
 }: BelowRoomProps) {
@@ -107,6 +111,7 @@ export function BelowRoom({
 				<i aria-hidden />
 			</a>
 			<div className="lrb-in">
+				{talked && <StartRowSlot />}
 				<header className="lrb-head">
 					<div>
 						<p className="lrb-eye">On GoodWatch tonight</p>
