@@ -1,0 +1,256 @@
+{
+ "measuredAt": "2026-10-14 13:09 UTC",
+ "runsPerSource": 3,
+ "sources": {
+  "control": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 0,
+    "hosts": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 0,
+    "scriptMs": 19,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   "runs": 3
+  },
+  "youtube": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 30,
+    "hosts": 8,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr10---sn-u0g3jxaa-n5fs.googlevideo.com",
+     "www.google.com",
+     "www.gstatic.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 2384,
+    "jsKb": 903,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 754,
+    "scriptMs": 1573,
+    "vendorMs": 1008,
+    "readyMs": 8788
+   },
+   "runs": 3
+  },
+  "short": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 24,
+    "hosts": 7,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr4---sn-u0g3jxaa-n5fe.googlevideo.com",
+     "www.google.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 1468,
+    "jsKb": 864,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 872,
+    "scriptMs": 1479,
+    "vendorMs": 1080,
+    "readyMs": 5187
+   },
+   "runs": 3
+  },
+  "tiktok": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 83,
+    "hosts": 9,
+    "hostList": [
+     "mcs-sg.tiktokv.com",
+     "mon.tiktokv.com",
+     "mssdk-sg.tiktok.com",
+     "p16-common-sign.tiktokcdn.com",
+     "sf16-website-login.neutral.ttwstatic.com",
+     "sgali-mcs.byteoversea.com",
+     "v16-webapp-prime.tiktok.com",
+     "vmweb-sg.byteoversea.com",
+     "www.tiktok.com"
+    ],
+    "kb": 4849,
+    "jsKb": 1231,
+    "cookies": 3,
+    "setCookies": 8,
+    "tbtMs": 2804,
+    "scriptMs": 5352,
+    "vendorMs": 8067,
+    "readyMs": 14702
+   },
+   "runs": 3
+  },
+  "reel": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 54,
+    "hosts": 6,
+    "hostList": [
+     "graph.instagram.com",
+     "instagram.fsaw1-11.fna.fbcdn.net",
+     "instagram.fsaw1-15.fna.fbcdn.net",
+     "scontent.cdninstagram.com",
+     "static.cdninstagram.com",
+     "www.instagram.com"
+    ],
+    "kb": 1379,
+    "jsKb": 900,
+    "cookies": 1,
+    "setCookies": 1,
+    "tbtMs": 3917,
+    "scriptMs": 2315,
+    "vendorMs": 1758,
+    "readyMs": 19908
+   },
+   "runs": 3
+  },
+  "threads": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 0,
+    "hosts": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 6641,
+    "scriptMs": 693,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   "runs": 3
+  },
+  "facebook": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 34,
+    "hosts": 6,
+    "hostList": [
+     "connect.facebook.net",
+     "scontent.fsaw1-12.fna.fbcdn.net",
+     "static.xx.fbcdn.net",
+     "video.fsaw1-11.fna.fbcdn.net",
+     "video.fsaw1-12.fna.fbcdn.net",
+     "video.fsaw1-14.fna.fbcdn.net",
+     "video.fsaw1-15.fna.fbcdn.net",
+     "www.facebook.com"
+    ],
+    "kb": 1596,
+    "jsKb": 983,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 9727,
+    "scriptMs": 9003,
+    "vendorMs": 6942,
+    "readyMs": 4167
+   },
+   "runs": 3
+  },
+  "bluesky": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 8,
+    "hosts": 3,
+    "hostList": [
+     "cdn.bsky.app",
+     "embed.bsky.app",
+     "public.api.bsky.app"
+    ],
+    "kb": 102,
+    "jsKb": 63,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 3644,
+    "scriptMs": 833,
+    "vendorMs": 74,
+    "readyMs": 7834
+   },
+   "runs": 3
+  },
+  "reddit": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 21,
+    "hosts": 6,
+    "hostList": [
+     "alb.reddit.com",
+     "embed.reddit.com",
+     "id.rlcdn.com",
+     "styles.redditmedia.com",
+     "w3-reporting.reddit.com",
+     "www.redditstatic.com"
+    ],
+    "kb": 347,
+    "jsKb": 242,
+    "cookies": 3,
+    "setCookies": 21,
+    "tbtMs": 1801,
+    "scriptMs": 550,
+    "vendorMs": 194,
+    "readyMs": 7008
+   },
+   "runs": 3
+  },
+  "mastodon": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 139,
+    "hosts": 2,
+    "hostList": [
+     "files.mastodon.social",
+     "mastodon.social"
+    ],
+    "kb": 2242,
+    "jsKb": 882,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 1572,
+    "scriptMs": 694,
+    "vendorMs": 359,
+    "readyMs": 10254
+   },
+   "runs": 3
+  }
+ },
+ "chromium": "154",
+ "load": "25 to 30",
+ "note": "Playwright on headless Chromium 154 against the dev server, unthrottled network; medians of 3 cold runs per source. Requests, bytes, hosts and Set-Cookie headers are reliable; milliseconds are inflated by a shared machine (load 25 to 30) and are for comparing rows only."
+}

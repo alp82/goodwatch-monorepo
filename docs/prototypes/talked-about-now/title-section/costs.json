@@ -1,0 +1,833 @@
+{
+ "measuredAt": "2026-10-14 13:09 UTC",
+ "runsPerSource": 3,
+ "sources": {
+  "control": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 0,
+    "hosts": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 0,
+    "scriptMs": 19,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   "runs": 3
+  },
+  "youtube": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 30,
+    "hosts": 8,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr10---sn-u0g3jxaa-n5fs.googlevideo.com",
+     "www.google.com",
+     "www.gstatic.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 2384,
+    "jsKb": 903,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 754,
+    "scriptMs": 1573,
+    "vendorMs": 1008,
+    "readyMs": 8788
+   },
+   "runs": 3
+  },
+  "short": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 24,
+    "hosts": 7,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr4---sn-u0g3jxaa-n5fe.googlevideo.com",
+     "www.google.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 1468,
+    "jsKb": 864,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 872,
+    "scriptMs": 1479,
+    "vendorMs": 1080,
+    "readyMs": 5187
+   },
+   "runs": 3
+  },
+  "tiktok": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 83,
+    "hosts": 9,
+    "hostList": [
+     "mcs-sg.tiktokv.com",
+     "mon.tiktokv.com",
+     "mssdk-sg.tiktok.com",
+     "p16-common-sign.tiktokcdn.com",
+     "sf16-website-login.neutral.ttwstatic.com",
+     "sgali-mcs.byteoversea.com",
+     "v16-webapp-prime.tiktok.com",
+     "vmweb-sg.byteoversea.com",
+     "www.tiktok.com"
+    ],
+    "kb": 4849,
+    "jsKb": 1231,
+    "cookies": 3,
+    "setCookies": 8,
+    "tbtMs": 2804,
+    "scriptMs": 5352,
+    "vendorMs": 8067,
+    "readyMs": 14702
+   },
+   "runs": 3
+  },
+  "reel": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 54,
+    "hosts": 6,
+    "hostList": [
+     "graph.instagram.com",
+     "instagram.fsaw1-11.fna.fbcdn.net",
+     "instagram.fsaw1-15.fna.fbcdn.net",
+     "scontent.cdninstagram.com",
+     "static.cdninstagram.com",
+     "www.instagram.com"
+    ],
+    "kb": 1379,
+    "jsKb": 900,
+    "cookies": 1,
+    "setCookies": 1,
+    "tbtMs": 3917,
+    "scriptMs": 2315,
+    "vendorMs": 1758,
+    "readyMs": 19908
+   },
+   "runs": 3
+  },
+  "threads": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 0,
+    "hosts": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 6641,
+    "scriptMs": 693,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   "runs": 3
+  },
+  "facebook": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 34,
+    "hosts": 6,
+    "hostList": [
+     "connect.facebook.net",
+     "scontent.fsaw1-12.fna.fbcdn.net",
+     "static.xx.fbcdn.net",
+     "video.fsaw1-11.fna.fbcdn.net",
+     "video.fsaw1-12.fna.fbcdn.net",
+     "video.fsaw1-14.fna.fbcdn.net",
+     "video.fsaw1-15.fna.fbcdn.net",
+     "www.facebook.com"
+    ],
+    "kb": 1596,
+    "jsKb": 983,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 9727,
+    "scriptMs": 9003,
+    "vendorMs": 6942,
+    "readyMs": 4167
+   },
+   "runs": 3
+  },
+  "bluesky": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 8,
+    "hosts": 3,
+    "hostList": [
+     "cdn.bsky.app",
+     "embed.bsky.app",
+     "public.api.bsky.app"
+    ],
+    "kb": 102,
+    "jsKb": 63,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 3644,
+    "scriptMs": 833,
+    "vendorMs": 74,
+    "readyMs": 7834
+   },
+   "runs": 3
+  },
+  "reddit": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 21,
+    "hosts": 6,
+    "hostList": [
+     "alb.reddit.com",
+     "embed.reddit.com",
+     "id.rlcdn.com",
+     "styles.redditmedia.com",
+     "w3-reporting.reddit.com",
+     "www.redditstatic.com"
+    ],
+    "kb": 347,
+    "jsKb": 242,
+    "cookies": 3,
+    "setCookies": 21,
+    "tbtMs": 1801,
+    "scriptMs": 550,
+    "vendorMs": 194,
+    "readyMs": 7008
+   },
+   "runs": 3
+  },
+  "mastodon": {
+   "before": {
+    "thirdPartyRequests": 0
+   },
+   "after": {
+    "requests": 139,
+    "hosts": 2,
+    "hostList": [
+     "files.mastodon.social",
+     "mastodon.social"
+    ],
+    "kb": 2242,
+    "jsKb": 882,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 1572,
+    "scriptMs": 694,
+    "vendorMs": 359,
+    "readyMs": 10254
+   },
+   "runs": 3
+  }
+ },
+ "raw": {
+  "control": [
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 376,
+    "scriptMs": 320,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 0,
+    "scriptMs": 18,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 0,
+    "scriptMs": 19,
+    "vendorMs": 0,
+    "readyMs": null
+   }
+  ],
+  "youtube": [
+   {
+    "beforeRequests": 0,
+    "requests": 30,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr10---sn-u0g3jxaa-n5fs.googlevideo.com",
+     "www.google.com",
+     "www.gstatic.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 2412,
+    "jsKb": 903,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 754,
+    "scriptMs": 1573,
+    "vendorMs": 1008,
+    "readyMs": 11453
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 30,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr10---sn-u0g3jxaa-n5fs.googlevideo.com",
+     "www.google.com",
+     "www.gstatic.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 2384,
+    "jsKb": 914,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 3763,
+    "scriptMs": 3089,
+    "vendorMs": 1705,
+    "readyMs": 4558
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 28,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr10---sn-u0g3jxaa-n5fs.googlevideo.com",
+     "www.google.com",
+     "www.gstatic.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 2179,
+    "jsKb": 899,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 385,
+    "scriptMs": 1013,
+    "vendorMs": 688,
+    "readyMs": 8788
+   }
+  ],
+  "short": [
+   {
+    "beforeRequests": 0,
+    "requests": 23,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr4---sn-u0g3jxaa-n5fe.googlevideo.com",
+     "www.google.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 1468,
+    "jsKb": 864,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 872,
+    "scriptMs": 1479,
+    "vendorMs": 1080,
+    "readyMs": 3090
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 25,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr4---sn-u0g3jxaa-n5fe.googlevideo.com",
+     "www.google.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 1470,
+    "jsKb": 864,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 605,
+    "scriptMs": 1334,
+    "vendorMs": 897,
+    "readyMs": 10845
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 24,
+    "hostList": [
+     "fonts.gstatic.com",
+     "i.ytimg.com",
+     "jnn-pa.googleapis.com",
+     "rr4---sn-u0g3jxaa-n5fe.googlevideo.com",
+     "www.google.com",
+     "www.youtube-nocookie.com",
+     "yt3.ggpht.com"
+    ],
+    "kb": 1468,
+    "jsKb": 866,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 1959,
+    "scriptMs": 2071,
+    "vendorMs": 2149,
+    "readyMs": 5187
+   }
+  ],
+  "tiktok": [
+   {
+    "beforeRequests": 0,
+    "requests": 89,
+    "hostList": [
+     "mcs-sg.tiktokv.com",
+     "mon.tiktokv.com",
+     "mssdk-sg.tiktok.com",
+     "p16-common-sign.tiktokcdn.com",
+     "sf16-website-login.neutral.ttwstatic.com",
+     "sgali-mcs.byteoversea.com",
+     "vmweb-sg.byteoversea.com",
+     "www.tiktok.com"
+    ],
+    "kb": 1943,
+    "jsKb": 1206,
+    "cookies": 3,
+    "setCookies": 8,
+    "tbtMs": 2131,
+    "scriptMs": 3379,
+    "vendorMs": 8067,
+    "readyMs": 17427
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 83,
+    "hostList": [
+     "mcs-sg.tiktokv.com",
+     "mon.tiktokv.com",
+     "mssdk-sg.tiktok.com",
+     "p16-common-sign.tiktokcdn.com",
+     "sf16-website-login.neutral.ttwstatic.com",
+     "sgali-mcs.byteoversea.com",
+     "v16-webapp-prime.tiktok.com",
+     "vmweb-sg.byteoversea.com",
+     "www.tiktok.com"
+    ],
+    "kb": 4961,
+    "jsKb": 1232,
+    "cookies": 3,
+    "setCookies": 7,
+    "tbtMs": 2804,
+    "scriptMs": 5352,
+    "vendorMs": 6832,
+    "readyMs": 2489
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 82,
+    "hostList": [
+     "mcs-sg.tiktokv.com",
+     "mon.tiktokv.com",
+     "mssdk-sg.tiktok.com",
+     "p16-common-sign.tiktokcdn.com",
+     "sf16-website-login.neutral.ttwstatic.com",
+     "sgali-mcs.byteoversea.com",
+     "v16-webapp-prime.tiktok.com",
+     "vmweb-sg.byteoversea.com",
+     "www.tiktok.com"
+    ],
+    "kb": 4849,
+    "jsKb": 1231,
+    "cookies": 3,
+    "setCookies": 8,
+    "tbtMs": 4897,
+    "scriptMs": 5797,
+    "vendorMs": 10451,
+    "readyMs": 14702
+   }
+  ],
+  "reel": [
+   {
+    "beforeRequests": 0,
+    "requests": 54,
+    "hostList": [
+     "graph.instagram.com",
+     "instagram.fsaw1-11.fna.fbcdn.net",
+     "instagram.fsaw1-15.fna.fbcdn.net",
+     "scontent.cdninstagram.com",
+     "static.cdninstagram.com",
+     "www.instagram.com"
+    ],
+    "kb": 1386,
+    "jsKb": 906,
+    "cookies": 1,
+    "setCookies": 1,
+    "tbtMs": 1048,
+    "scriptMs": 1385,
+    "vendorMs": 1226,
+    "readyMs": 19908
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 53,
+    "hostList": [
+     "instagram.fsaw1-11.fna.fbcdn.net",
+     "instagram.fsaw1-15.fna.fbcdn.net",
+     "scontent.cdninstagram.com",
+     "static.cdninstagram.com",
+     "www.instagram.com"
+    ],
+    "kb": 1378,
+    "jsKb": 900,
+    "cookies": 1,
+    "setCookies": 1,
+    "tbtMs": 8502,
+    "scriptMs": 4806,
+    "vendorMs": 4685,
+    "readyMs": 24873
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 54,
+    "hostList": [
+     "graph.instagram.com",
+     "instagram.fsaw1-11.fna.fbcdn.net",
+     "instagram.fsaw1-15.fna.fbcdn.net",
+     "scontent.cdninstagram.com",
+     "static.cdninstagram.com",
+     "www.instagram.com"
+    ],
+    "kb": 1379,
+    "jsKb": 900,
+    "cookies": 1,
+    "setCookies": 1,
+    "tbtMs": 3917,
+    "scriptMs": 2315,
+    "vendorMs": 1758,
+    "readyMs": 11887
+   }
+  ],
+  "threads": [
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 8969,
+    "scriptMs": 693,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 6641,
+    "scriptMs": 1132,
+    "vendorMs": 0,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 0,
+    "hostList": [],
+    "kb": 0,
+    "jsKb": 0,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 900,
+    "scriptMs": 446,
+    "vendorMs": 0,
+    "readyMs": null
+   }
+  ],
+  "facebook": [
+   {
+    "beforeRequests": 0,
+    "requests": 31,
+    "hostList": [
+     "connect.facebook.net",
+     "scontent.fsaw1-12.fna.fbcdn.net",
+     "static.xx.fbcdn.net",
+     "video.fsaw1-11.fna.fbcdn.net",
+     "video.fsaw1-15.fna.fbcdn.net",
+     "www.facebook.com"
+    ],
+    "kb": 1450,
+    "jsKb": 846,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 17313,
+    "scriptMs": 11953,
+    "vendorMs": 11491,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 34,
+    "hostList": [
+     "connect.facebook.net",
+     "scontent.fsaw1-12.fna.fbcdn.net",
+     "static.xx.fbcdn.net",
+     "video.fsaw1-11.fna.fbcdn.net",
+     "video.fsaw1-15.fna.fbcdn.net",
+     "www.facebook.com"
+    ],
+    "kb": 1596,
+    "jsKb": 983,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 9727,
+    "scriptMs": 9003,
+    "vendorMs": 6942,
+    "readyMs": null
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 58,
+    "hostList": [
+     "connect.facebook.net",
+     "scontent.fsaw1-12.fna.fbcdn.net",
+     "static.xx.fbcdn.net",
+     "video.fsaw1-11.fna.fbcdn.net",
+     "video.fsaw1-12.fna.fbcdn.net",
+     "video.fsaw1-14.fna.fbcdn.net",
+     "video.fsaw1-15.fna.fbcdn.net",
+     "www.facebook.com"
+    ],
+    "kb": 2430,
+    "jsKb": 983,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 143,
+    "scriptMs": 671,
+    "vendorMs": 681,
+    "readyMs": 4167
+   }
+  ],
+  "bluesky": [
+   {
+    "beforeRequests": 0,
+    "requests": 8,
+    "hostList": [
+     "cdn.bsky.app",
+     "embed.bsky.app",
+     "public.api.bsky.app"
+    ],
+    "kb": 102,
+    "jsKb": 63,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 345,
+    "scriptMs": 140,
+    "vendorMs": 11,
+    "readyMs": 2453
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 8,
+    "hostList": [
+     "cdn.bsky.app",
+     "embed.bsky.app",
+     "public.api.bsky.app"
+    ],
+    "kb": 102,
+    "jsKb": 63,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 4798,
+    "scriptMs": 833,
+    "vendorMs": 79,
+    "readyMs": 7834
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 8,
+    "hostList": [
+     "cdn.bsky.app",
+     "embed.bsky.app",
+     "public.api.bsky.app"
+    ],
+    "kb": 102,
+    "jsKb": 63,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 3644,
+    "scriptMs": 1194,
+    "vendorMs": 74,
+    "readyMs": 10075
+   }
+  ],
+  "reddit": [
+   {
+    "beforeRequests": 0,
+    "requests": 21,
+    "hostList": [
+     "alb.reddit.com",
+     "embed.reddit.com",
+     "id.rlcdn.com",
+     "styles.redditmedia.com",
+     "w3-reporting.reddit.com",
+     "www.redditstatic.com"
+    ],
+    "kb": 347,
+    "jsKb": 242,
+    "cookies": 3,
+    "setCookies": 21,
+    "tbtMs": 184,
+    "scriptMs": 291,
+    "vendorMs": 194,
+    "readyMs": 3333
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 21,
+    "hostList": [
+     "alb.reddit.com",
+     "embed.reddit.com",
+     "id.rlcdn.com",
+     "styles.redditmedia.com",
+     "w3-reporting.reddit.com",
+     "www.redditstatic.com"
+    ],
+    "kb": 347,
+    "jsKb": 241,
+    "cookies": 3,
+    "setCookies": 21,
+    "tbtMs": 1801,
+    "scriptMs": 550,
+    "vendorMs": 165,
+    "readyMs": 7008
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 22,
+    "hostList": [
+     "alb.reddit.com",
+     "embed.reddit.com",
+     "id.rlcdn.com",
+     "styles.redditmedia.com",
+     "w3-reporting.reddit.com",
+     "www.redditstatic.com"
+    ],
+    "kb": 351,
+    "jsKb": 242,
+    "cookies": 3,
+    "setCookies": 24,
+    "tbtMs": 3520,
+    "scriptMs": 1508,
+    "vendorMs": 1226,
+    "readyMs": 8054
+   }
+  ],
+  "mastodon": [
+   {
+    "beforeRequests": 0,
+    "requests": 139,
+    "hostList": [
+     "files.mastodon.social",
+     "mastodon.social"
+    ],
+    "kb": 2242,
+    "jsKb": 882,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 1572,
+    "scriptMs": 694,
+    "vendorMs": 359,
+    "readyMs": 10254
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 141,
+    "hostList": [
+     "files.mastodon.social",
+     "mastodon.social"
+    ],
+    "kb": 2647,
+    "jsKb": 883,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 14221,
+    "scriptMs": 7957,
+    "vendorMs": 4081,
+    "readyMs": 34513
+   },
+   {
+    "beforeRequests": 0,
+    "requests": 137,
+    "hostList": [
+     "files.mastodon.social",
+     "mastodon.social"
+    ],
+    "kb": 2205,
+    "jsKb": 873,
+    "cookies": 0,
+    "setCookies": 0,
+    "tbtMs": 767,
+    "scriptMs": 652,
+    "vendorMs": 313,
+    "readyMs": 3496
+   }
+  ]
+ },
+ "chromium": "154",
+ "load": "25 to 30",
+ "note": "Playwright on headless Chromium 154 against the dev server, unthrottled network; medians of 3 cold runs per source. Requests, bytes, hosts and Set-Cookie headers are reliable; milliseconds are inflated by a shared machine (load 25 to 30) and are for comparing rows only."
+}
