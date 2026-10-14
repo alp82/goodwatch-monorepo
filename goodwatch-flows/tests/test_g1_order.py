@@ -231,3 +231,13 @@ class Reads(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OmittedArguments(unittest.TestCase):
+    """Windmill passes None for arguments a caller leaves out (seen on the first production dry run)."""
+
+    def test_missing_ttl_takes_the_default_and_missing_dry_run_means_dry(self):
+        self.assertEqual(job.main_defaults(None, None), (job.TTL_SECONDS, True))
+
+    def test_given_values_are_kept(self):
+        self.assertEqual(job.main_defaults(60, False), (60, False))
