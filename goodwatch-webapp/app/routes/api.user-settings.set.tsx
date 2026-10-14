@@ -66,6 +66,8 @@ export const action: ActionFunction = async ({
 			!/^[\w-]{8,80}$/.test(params.clientId) ||
 			!Number.isSafeInteger(params.sequence) ||
 			params.sequence < 0 ||
+			(params.countryExplicit !== undefined &&
+				typeof params.countryExplicit !== "boolean") ||
 			(params.expectedVersion !== undefined &&
 				params.expectedVersion !== null &&
 				(typeof params.expectedVersion !== "string" ||
@@ -82,6 +84,7 @@ export const action: ActionFunction = async ({
 				clientId: params.clientId,
 				sequence: params.sequence,
 				expectedVersion: params.expectedVersion,
+				countryExplicit: params.countryExplicit,
 			})
 			return json(saved.response, {
 				headers: { "Set-Cookie": saved.setCookie, "Cache-Control": "no-store" },

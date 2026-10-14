@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { execute, query, upsert } from "../utils/crate.ts"
 import {
 	parseLocalizationRecord,
+	normalizeCountry,
 	type LocalizationPair,
 	type LocalizationRecord,
 	type LocalizationWriter,
@@ -12,6 +13,34 @@ export class MediaPreferencesConflict extends Error {
 	constructor() {
 		super("Preferences changed. Reload the saved pair before retrying.")
 	}
+}
+
+const memberReads = new Map<
+	string,
+	{ expires: number; pending: ReturnType<typeof readMediaPreferences> }
+>()
+export function invalidateMediaPreferencesRead(userId: string) {
+	memberReads.delete(userId)
+}
+/** Only presentation reads are briefly memoized; save/CAS/conflict/adoption reads remain real-time. */
+export function readEffectiveMediaPreferences(userId: string) {
+	const remembered = memberReads.get(userId)
+	if (remembered && remembered.expires > Date.now()) return remembered.pending
+	memberReads.delete(userId)
+	while (memberReads.size >= 2048)
+		memberReads.delete(memberReads.keys().next().value!)
+	const entry = {
+		expires: Date.now() + 15_000,
+		pending: readMediaPreferences(userId).then((value) => ({
+			...value,
+			raw: null,
+		})),
+	}
+	memberReads.set(userId, entry)
+	entry.pending.catch(() => {
+		if (memberReads.get(userId) === entry) memberReads.delete(userId)
+	})
+	return entry.pending
 }
 
 /** Full primary-key lookup: Crate real-time reads, independent of refresh and settings caches. */
@@ -36,6 +65,15 @@ export async function readMediaPreferences(userId: string): Promise<{
 		seqNo: rows[0]?.seq_no ?? null,
 		primaryTerm: rows[0]?.primary_term ?? null,
 	}
+}
+
+/** Adoption must preserve the latest legacy country, including writes by an older role's cache namespace. */
+export async function readLegacyMediaCountry(userId: string) {
+	const rows = await query<{ value: string }>(
+		"SELECT value FROM user_setting WHERE user_id = ? AND key = ?",
+		[userId, "country_default"],
+	)
+	return normalizeCountry(rows[0]?.value)
 }
 
 /** Exactly one row, including Keep, Undo and first sign-in adoption. No legacy row is deleted. */
@@ -122,6 +160,7 @@ export async function writeMediaPreferences(
 			),
 		})
 	}
+	invalidateMediaPreferencesRead(userId)
 	const stored = await readMediaPreferences(userId)
 	if (options.adoptOnly && stored.record) return stored.record
 	if (stored.raw !== raw) throw new MediaPreferencesConflict()

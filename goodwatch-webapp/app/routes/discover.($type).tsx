@@ -171,7 +171,15 @@ async function browseLoader(
 	const data: BrowseLoaderData = {
 		browse: {
 			initial: pages
-				? { key: browseKey(filterQuery(state, sort, defaults), forYou, undefined, ctx.language), pages }
+				? {
+						key: browseKey(
+							filterQuery(state, sort, defaults),
+							forYou,
+							undefined,
+							ctx.language ?? "en",
+						),
+						pages,
+					}
 				: null,
 			member: ctx.viewer.kind === "member",
 			hasServices: ctx.services.length > 0,
@@ -210,7 +218,7 @@ export function ErrorBoundary() {
 		<div className="max-w-7xl mt-8 mx-auto px-4 flex flex-col gap-5 items-center">
 			<h1 className="text-3xl font-bold">Oh no!</h1>
 			<p className="py-1 px-3 text-2xl text-gray-300 bg-red-900">
-				{error.message}
+				{error instanceof Error ? error.message : "Could not load Discover."}
 			</p>
 			<button
 				type="button"

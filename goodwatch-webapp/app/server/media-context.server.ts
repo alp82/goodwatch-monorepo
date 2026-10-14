@@ -12,6 +12,9 @@ import {
 import { getUserSettings, resetUserSettingsCache } from "./user-settings.server"
 import {
 	readMediaPreferences,
+	readEffectiveMediaPreferences,
+	readLegacyMediaCountry,
+	invalidateMediaPreferencesRead,
 	writeMediaPreferences,
 } from "./media-preferences-store.server.ts"
 import {
@@ -44,17 +47,34 @@ export function resolveMediaContext(request: Request, userId?: string | null) {
 }
 
 async function resolveOnce(request: Request, userId?: string | null) {
-	const cookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const rawCookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const cookie =
+		!userId ||
+		rawCookie?.sourceUserId === null ||
+		rawCookie?.sourceUserId === userId
+			? rawCookie
+			: null
 	let account: LocalizationRecord | null = userId
-		? (await readMediaPreferences(userId)).record
+		? (await readEffectiveMediaPreferences(userId)).record
 		: null
-	const adoption = userId ? signInAdoption(account, cookie) : null
-	if (userId && adoption) {
-		account = await writeMediaPreferences(userId, adoption, { adoptOnly: true })
-		await invalidateMediaSettings(userId)
+	if (
+		userId &&
+		cookie?.sourceUserId === userId &&
+		account?.version !== cookie?.version
+	) {
+		invalidateMediaPreferencesRead(userId)
+		account = (await readEffectiveMediaPreferences(userId)).record
 	}
 	const settings = userId ? await getUserSettings({ userId }) : null
-	const fallback = requestLocale(request)
+	const fallback = requestLocale(
+		userId && rawCookie && !cookie
+			? new Request(request.url, {
+					headers: {
+						"Accept-Language": request.headers.get("Accept-Language") ?? "",
+					},
+				})
+			: request,
+	)
 	const fallbackState = cacheContextState(
 		cacheIdentity(request),
 		request.headers.get("Accept-Language"),
@@ -76,10 +96,41 @@ async function resolveOnce(request: Request, userId?: string | null) {
 		effectiveContext,
 		record,
 		setCookie:
-			account && JSON.stringify(account) !== JSON.stringify(cookie)
-				? serializeLocalizationCookie(account, mediaCookieIsSecure(request))
+			account &&
+			(account.version !== cookie?.version ||
+				account.country !== cookie?.country ||
+				account.language !== cookie?.language ||
+				cookie?.sourceUserId !== userId)
+				? serializeLocalizationCookie(
+						account,
+						mediaCookieIsSecure(request),
+						userId ?? null,
+					)
 				: null,
 	}
+}
+
+/** Called only from the POST session-establishment boundary, never by a root/page GET. */
+export async function adoptMediaPreferencesAtSignIn(
+	request: Request,
+	userId: string,
+) {
+	const account = (await readMediaPreferences(userId)).record
+	invalidateMediaPreferencesRead(userId)
+	const cookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const legacyCountry =
+		!account && cookie?.sourceUserId === null && !cookie.countryExplicit
+			? await readLegacyMediaCountry(userId)
+			: null
+	const pair = signInAdoption(account, cookie, legacyCountry)
+	const record = pair
+		? await writeMediaPreferences(userId, pair, { adoptOnly: true })
+		: account
+	if (pair) await invalidateMediaSettings(userId)
+	const latest = record ? (await readMediaPreferences(userId)).record : null
+	return latest
+		? serializeLocalizationCookie(latest, mediaCookieIsSecure(request), userId)
+		: null
 }
 
 export async function saveMediaPreferences(
@@ -131,6 +182,8 @@ export async function saveMediaPreferences(
 							schemaVersion: 1 as const,
 							version: randomUUID(),
 							writer,
+							sourceUserId: null,
+							countryExplicit: input.countryExplicit ?? true,
 						}
 			remember(record)
 			if (userId) {
@@ -157,6 +210,7 @@ export async function saveMediaPreferences(
 				setCookie: serializeLocalizationCookie(
 					record,
 					mediaCookieIsSecure(request),
+					userId ?? null,
 				),
 			}
 		},

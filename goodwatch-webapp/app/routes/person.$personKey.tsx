@@ -1,3 +1,5 @@
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { assetUrl } from "~/utils/asset-url"
@@ -593,7 +595,9 @@ function Facts({ data }: { data: Data }) {
 						)}
 						<div className="min-w-0">
 							<div className="truncate text-sm font-semibold">
-								{s.best.title}
+								<MediaText
+									value={presentedText(s.best, "title", s.best.title)}
+								/>
 							</div>
 							<GoodWatchScore score={s.best.score} size="sm" />
 						</div>

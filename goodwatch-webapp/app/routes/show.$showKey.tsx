@@ -14,7 +14,7 @@ import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
-import { getDetailsForMovie, getDetailsForShow, presentShowSeasonsAfterAlignment } from "~/server/details.server"
+import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
@@ -67,27 +67,45 @@ export const loader: LoaderFunction = async ({
 	const canonicalContent = isCrawler(request)
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
-	const details = getDetailsForShow({
-		showId,
-		country,
-		language,
-	}, { canonical: canonicalContent })
+	const details = getDetailsForShow(
+		{
+			showId,
+			country,
+			language,
+		},
+		{ canonical: canonicalContent },
+	)
 	let episodeGridFailed = false
 	const parts = Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
-			.then(async (grid) => grid && packEpisodeGrid(canonicalContent ? grid : await overlayAlignedGrid(grid, language)))
+			.then(
+				async (grid) =>
+					grid &&
+					packEpisodeGrid(
+						canonicalContent ? grid : await overlayAlignedGrid(grid, language),
+					),
+			)
 			.catch((error) => {
 				episodeGridFailed = true
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
-		relatedMapLookup({ type: "show", id: Number(showId), budgetMs, language: canonicalContent ? undefined : language }),
+		relatedMapLookup({
+			type: "show",
+			id: Number(showId),
+			budgetMs,
+			language: canonicalContent ? undefined : language,
+		}),
 		// The header's genre links, which the page requested after load before.
 		details.then(
 			(media) =>
-				prefetchTitleExtrasState({ genres: media.details.genres, budgetMs, language: canonicalContent ? undefined : language }),
+				prefetchTitleExtrasState({
+					genres: media.details.genres,
+					budgetMs,
+					language: canonicalContent ? undefined : language,
+				}),
 			// A failed details read fails the page above.
 			() => null,
 		),
@@ -120,7 +138,7 @@ export const loader: LoaderFunction = async ({
 				},
 			}
 		: catalogMedia
-	const media = canonicalContent ? alignedMedia : await presentShowSeasonsAfterAlignment(alignedMedia, language)
+	const media = alignedMedia
 	// The related map's section.
 	const related = relatedSectionData(
 		relatedSection,
@@ -188,9 +206,12 @@ export default function DetailsTV() {
 		} catch {}
 		if (!stored || !/^[A-Z]{2}$/.test(stored) || stored === country) return
 		const controller = new AbortController()
-		void mayAdoptLegacyCountry(stored, country, controller.signal).then(allowed => {
-			if (allowed && !controller.signal.aborted) updateParams({ ...currentParams, country: stored! }, true)
-		}).catch(() => {})
+		void mayAdoptLegacyCountry(stored, country, controller.signal)
+			.then((allowed) => {
+				if (allowed && !controller.signal.aborted)
+					updateParams({ ...currentParams, country: stored! }, true)
+			})
+			.catch(() => {})
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 

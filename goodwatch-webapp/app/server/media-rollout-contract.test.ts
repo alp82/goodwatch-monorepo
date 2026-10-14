@@ -42,7 +42,7 @@ registerHooks({
 	load(url, context, next) {
 		let source: string | undefined
 		if (url.endsWith("/utils/cache.ts"))
-			source = `export const cached=async({name,params,target})=>{const s=globalThis.__mediaRolloutTest;const key=name+':'+JSON.stringify(params);if(s.cache.has(key))return s.cache.get(key);const value=await target(params);s.cache.set(key,value);return value}`
+			source = `export const getRedisCluster=()=>null;export const cached=async({name,params,target})=>{const s=globalThis.__mediaRolloutTest;const key=name+':'+JSON.stringify(params);if(s.cache.has(key))return s.cache.get(key);const value=await target(params);s.cache.set(key,value);return value}`
 		if (url.endsWith("/utils/crate.ts"))
 			source = `export const query=async(sql,args=[])=>{
 	 const s=globalThis.__mediaRolloutTest;s.queries.push(sql);
@@ -70,10 +70,13 @@ const {
 	localizeTitlePayload,
 	presentCatalogLoader,
 } = await import("./media-payload.server.ts")
-const { getDetailsForShow, presentShowSeasonsAfterAlignment } = await import(
-	"./details.server.ts"
+const { getDetailsForShow } = await import("./details.server.ts")
+const { overlayAlignedGrid, resetEpisodeTextCacheForTest } = await import(
+	"./episode-text-overlay.server.ts"
 )
-const { overlayAlignedGrid } = await import("./episode-text-overlay.server.ts")
+const { resetMediaOverlayCacheForTest } = await import(
+	"./media-overlay.server.ts"
+)
 const { canonicalMediaTitle, mediaFieldLanguage } = await import(
 	"../utils/media-presentation.ts"
 )
@@ -101,6 +104,8 @@ const count = () => ({
 		.length,
 })
 beforeEach(() => {
+	resetMediaOverlayCacheForTest()
+	resetEpisodeTextCacheForTest()
 	state.queries.length = 0
 	state.cache.clear()
 	state.live = 0
@@ -169,7 +174,7 @@ test("live HTML resolves the recipient language while legacy APIs and crawlers s
 		"public, max-age=3600",
 	)
 })
-test("show details + related cards + aligned episodes: cold 9 overlay queries, warm 2, no N+1", async () => {
+test("show details + related cards + aligned episodes: cold 8 overlay queries, warm 0, no N+1", async () => {
 	const scores = {
 		imdb: null,
 		tmdb: null,
@@ -206,29 +211,28 @@ test("show details + related cards + aligned episodes: cold 9 overlay queries, w
 			language: "fr",
 		})
 		await localizeTitlePayload({ rows: rows(40) }, "fr")
-		await presentShowSeasonsAfterAlignment(details, "fr")
 		await overlayAlignedGrid(grid, "fr")
 	}
 	await render()
 	assert.deepEqual(count(), {
-		total: 9,
+		total: 8,
 		catalog: 2,
 		text: 2,
 		posters: 2,
 		metadata: 1,
 		episodes: 1,
-		seasons: 1,
+		seasons: 0,
 	})
 	state.queries.length = 0
 	await render()
 	assert.deepEqual(count(), {
-		total: 2,
+		total: 0,
 		catalog: 0,
 		text: 0,
 		posters: 0,
 		metadata: 0,
-		episodes: 1,
-		seasons: 1,
+		episodes: 0,
+		seasons: 0,
 	})
 	assert.equal(state.canonical.details.title, "Breaking Bad")
 })
@@ -302,7 +306,7 @@ test("media-only preview separates canonical crawlers from English presentation 
 	const response = await previewLoader({ request, params: {}, context: {} })
 	const live = await response.json()
 	assert.ok("title" in live)
-	assert.equal(live.title.poster_path, "/english-localized.jpg")
+	assert.equal(live.title.poster_path, "/en.jpg")
 	assert.equal("essence_text" in live.title, false)
 	assert.equal("prosePresentation" in live.title, false)
 	assert.match(response.headers.get("Cache-Control")!, /public/)

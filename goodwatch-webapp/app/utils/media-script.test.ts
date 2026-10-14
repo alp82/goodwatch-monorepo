@@ -30,3 +30,16 @@ test("non-Latin locales require native letters, with mixed names and neutral tit
 	}
 	assert.equal(hasExpectedMediaScript("Amélie", "fr"), true)
 })
+
+test("Latin anime titles cannot borrow Arabic tatweel or a case-sensitive locale to bypass the guard", () => {
+	for (const text of [
+		"Sword Art Online",
+		"JUJUTSU KAISEN",
+		"JUJUTSU KAISENـ",
+		"Sword Art Online ١٢",
+	]) {
+		for (const locale of ["ar", "ar-SA", "AR-SA"])
+			assert.equal(hasExpectedMediaScript(text, locale), false)
+	}
+	assert.equal(hasExpectedMediaScript("TESTー", "ja"), false)
+})

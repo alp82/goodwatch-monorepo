@@ -18,12 +18,14 @@ const db = {
 	rows: new Map<string, string>(),
 	writes: [] as { key: string; value: string }[],
 	fail: false,
+	preferenceReads: 0,
 	failRefresh: false,
 	failWriteAfterLanding: false,
 }
 const crateMock = {
 	query: async (_sql: string, params: (string | number)[]) => {
 		if (params.length === 2) {
+			db.preferenceReads++
 			const value = db.rows.get(String(params[1]))
 			return value === undefined
 				? []
@@ -118,13 +120,16 @@ registerHooks({
 		return next(url, context)
 	},
 })
-const { resolveMediaContext, saveMediaPreferences } = await import(
-	"./media-context.server.ts"
-)
+const {
+	resolveMediaContext,
+	saveMediaPreferences,
+	adoptMediaPreferencesAtSignIn,
+} = await import("./media-context.server.ts")
 const {
 	MEDIA_PREFERENCES_KEY,
 	MediaPreferencesConflict,
 	writeMediaPreferences,
+	invalidateMediaPreferencesRead,
 } = await import("./media-preferences-store.server.ts")
 const { getUserSettings, setUserSettings } = await import(
 	"./user-settings.server.ts"
@@ -144,6 +149,8 @@ const saved = (
 	language,
 	schemaVersion: 1,
 	version: "previous",
+	sourceUserId: null,
+	countryExplicit: true,
 })
 const request = (
 	cookie?: LocalizationRecord,
@@ -157,7 +164,10 @@ const request = (
 		},
 	})
 beforeEach(() => {
+	invalidateMediaPreferencesRead("member")
+	invalidateMediaPreferencesRead("other")
 	resetMediaSaveOrderForTest()
+	db.preferenceReads = 0
 	db.rows.clear()
 	db.writes = []
 	db.fail = false
@@ -189,7 +199,9 @@ describe("server resolution and atomic storage", () => {
 	})
 	it("adopts guest pair in one account row on sign-in, ahead of legacy country", async () => {
 		db.rows.set("country_default", "US")
-		const context = await resolveMediaContext(request(saved()), "member")
+		const req = request(saved())
+		await adoptMediaPreferencesAtSignIn(req, "member")
+		const context = await resolveMediaContext(req, "member")
 		assertSubset(context.effectiveContext, {
 			country: "DE",
 			countryProvenance: "account",
@@ -198,7 +210,10 @@ describe("server resolution and atomic storage", () => {
 		assert.equal(db.writes.length, 1)
 		assert.equal(db.writes[0].key, MEDIA_PREFERENCES_KEY)
 		assert.equal(db.rows.get("country_default"), "US")
-		assert.deepEqual(parseLocalizationCookie(context.setCookie), context.record)
+		assertSubset(parseLocalizationCookie(context.setCookie), {
+			...context.record,
+			sourceUserId: "member",
+		})
 		assertSubset(await getUserSettings({ userId: "member" }), {
 			country_default: "DE",
 		})
@@ -237,14 +252,14 @@ describe("server resolution and atomic storage", () => {
 			country_default: "JP",
 		})
 	})
-	it("deduplicates parallel root/title resolution and sign-in adoption on one request", async () => {
+	it("deduplicates parallel root/title GET resolution without an adoption write", async () => {
 		const req = request(saved())
 		const [root, title] = await Promise.all([
 			resolveMediaContext(req, "member"),
 			resolveMediaContext(req, "member"),
 		])
 		assert.equal(root, title)
-		assert.equal(db.writes.length, 1)
+		assert.equal(db.writes.length, 0)
 	})
 	it("two concurrent saves from one revision cannot both publish", async () => {
 		db.rows.set(MEDIA_PREFERENCES_KEY, JSON.stringify(saved()))
@@ -735,4 +750,71 @@ it("configured public origin and Secure cookies work behind the HTTP proxy", asy
 		if (original === undefined) delete process.env.APP_ORIGIN
 		else process.env.APP_ORIGIN = original
 	}
+})
+
+it("member root GETs share a short per-user read and never adopt/persist a guest cookie", async () => {
+	db.rows.set("country_default", "US")
+	const cookie = saved("fr")
+	await resolveMediaContext(request(cookie), "member")
+	await resolveMediaContext(request(cookie), "member")
+	assert.equal(db.preferenceReads, 1)
+	assert.equal(db.writes.length, 0)
+	await adoptMediaPreferencesAtSignIn(request(cookie), "member")
+	assert.equal(db.writes.length, 1)
+	assert.equal(
+		(await resolveMediaContext(request(cookie), "member")).record?.language,
+		"fr",
+	)
+})
+it("session adoption rejects another member's cookie and an unproved legacy cookie", async () => {
+	const foreign = { ...saved("fr"), sourceUserId: "other" }
+	const legacy = {
+		country: "DE",
+		language: "de" as const,
+		schemaVersion: 1 as const,
+		version: "old",
+	}
+	for (const cookie of [foreign, legacy]) {
+		assert.equal(
+			await adoptMediaPreferencesAtSignIn(request(cookie), "member"),
+			null,
+		)
+		assert.equal(db.writes.length, 0)
+	}
+	db.rows.set("country_default", "US")
+	assert.equal(
+		(await resolveMediaContext(request(foreign), "member")).effectiveContext
+			.country,
+		"US",
+	)
+	assert.equal(
+		(await resolveMediaContext(request(foreign), "member")).effectiveContext
+			.language,
+		"ja",
+	)
+})
+it("guest-origin adoption preserves legacy country unless country was explicit", async () => {
+	db.rows.set("country_default", "US")
+	const cookie = { ...saved("fr"), countryExplicit: false }
+	const adopted = await adoptMediaPreferencesAtSignIn(request(cookie), "member")
+	assert.equal(parseLocalizationCookie(adopted)?.country, "US")
+	assert.equal(parseLocalizationCookie(adopted)?.language, "fr")
+	assert.equal(parseLocalizationCookie(adopted)?.sourceUserId, "member")
+	assert.equal(db.rows.get("country_default"), "US")
+})
+
+it("a newer owned cookie refreshes the short account memo instead of rewriting it from stale GET data", async () => {
+	const first = saved("de")
+	db.rows.set(MEDIA_PREFERENCES_KEY, JSON.stringify(first))
+	await resolveMediaContext(request(), "member")
+	const changed = {
+		...saved("fr"),
+		version: "other-instance",
+		sourceUserId: "member",
+	}
+	db.rows.set(MEDIA_PREFERENCES_KEY, JSON.stringify(changed))
+	const fresh = await resolveMediaContext(request(changed), "member")
+	assert.equal(fresh.effectiveContext.language, "fr")
+	assert.equal(fresh.setCookie, null)
+	assert.equal(db.writes.length, 0)
 })

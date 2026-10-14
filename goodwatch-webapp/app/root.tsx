@@ -134,7 +134,10 @@ export const loader: LoaderFunction = async ({
 	startMetrics()
 	startBrowserGate()
 	const { user, headers } = await getAuthFromRequest({ request })
-	const { effectiveContext, setCookie } = await resolveMediaContext(request, user?.id)
+	const { effectiveContext, setCookie } = await resolveMediaContext(
+		request,
+		user?.id,
+	)
 	if (setCookie) headers.append("Set-Cookie", setCookie)
 	const queryClient = new QueryClient()
 	if (user) {
@@ -147,7 +150,10 @@ export const loader: LoaderFunction = async ({
 		{
 			user,
 			dehydratedState: dehydrate(queryClient),
-			locale: { country: effectiveContext.country, language: isCrawler(request) ? "en" : effectiveContext.language },
+			locale: {
+				country: effectiveContext.country,
+				language: isCrawler(request) ? "en" : effectiveContext.language,
+			},
 			env: {
 				SUPABASE_URL: process.env.SUPABASE_URL!,
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
@@ -220,7 +226,7 @@ export function ErrorBoundary() {
 								</button>
 
 								{/* Error stack trace */}
-								{error?.stack && (
+								{error instanceof Error && error.stack && (
 									<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
 										<pre className="whitespace-pre-wrap break-words">
 											{(error as any).message}

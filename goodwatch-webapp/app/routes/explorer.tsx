@@ -1,4 +1,7 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
+import {
+	apiDisplayLanguage,
+	localizeTitlePayload,
+} from "~/server/media-payload.server"
 import { assetUrl } from "~/utils/asset-url"
 import {
 	type LoaderFunctionArgs,
@@ -8,7 +11,10 @@ import {
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import type { ExplorerWorld } from "~/domain/explorer"
-import { explorerQueryOf } from "~/server/explorer/http.server"
+import {
+	explorerQueryOf,
+	EXPLORER_OVERLAY_MAX_TITLES,
+} from "~/server/explorer/http.server"
 import { ExplorerUnavailable } from "~/server/explorer/index.server"
 import { getExplorerWorld } from "~/server/explorer/world.server"
 import { getViewerContext } from "~/server/viewer.server"
@@ -37,7 +43,15 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 		// The first seconds after the server starts: the page loads the map itself once the snapshot is in.
 		if (!(error instanceof ExplorerUnavailable)) throw error
 	}
-	return json({ world }, { headers: { "Cache-Control": "private, no-store" } })
+	const language = apiDisplayLanguage(request)
+	if (language && world)
+		world = await localizeTitlePayload(world, language, undefined, undefined, {
+			maxTitles: EXPLORER_OVERLAY_MAX_TITLES,
+		})
+	return json(
+		{ world, displayLanguage: language ?? "en" },
+		{ headers: { "Cache-Control": "private, no-store" } },
+	)
 }
 
 // The map follows the URL's filters and picked islands itself; only a new page load asks the server again.
@@ -70,7 +84,8 @@ const NO_SCRIPT_CSS =
 	".ex-list{inset:0;width:auto;height:auto;overflow-y:auto;clip-path:none;padding:24px 24px 48px}.ex-top,.ex-rail,.ex-hint,.ex-loading{display:none}"
 
 export default function ExplorerPage() {
-	const world = useLoaderData<typeof loader>().world as ExplorerWorld | null
+	const data = useLoaderData<typeof loader>()
+	const world = data.world as ExplorerWorld | null
 	const [running, setRunning] = useState(false)
 	useEffect(() => setRunning(true), [])
 	return (
@@ -80,10 +95,11 @@ export default function ExplorerPage() {
 			</noscript>
 			<ExplorerMap
 				initialWorld={world}
+				initialLanguage={data.displayLanguage}
 				fallback={!running && world ? <IslandList world={world} /> : null}
 			/>
 		</>
 	)
 }
 
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+export const loader = canonicalLoader

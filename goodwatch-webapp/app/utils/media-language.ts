@@ -30,6 +30,9 @@ export interface LocalizationRecord extends LocalizationPair {
 	/** Opaque saved-record revision, distinct from the client's request sequence. */
 	version: string
 	writer?: LocalizationWriter
+	/** Cookie ownership: null proves a guest choice; absence is an older, unproved cookie. */
+	sourceUserId?: string | null
+	countryExplicit?: boolean
 }
 export type CountryProvenance =
 	| "url"
@@ -200,10 +203,28 @@ export function parseLocalizationRecord(
 			sequence: candidate.sequence as number,
 		}
 	}
+	if (
+		record.sourceUserId !== undefined &&
+		record.sourceUserId !== null &&
+		(typeof record.sourceUserId !== "string" ||
+			!/^[\w-]{1,128}$/.test(record.sourceUserId))
+	)
+		return null
+	if (
+		record.countryExplicit !== undefined &&
+		typeof record.countryExplicit !== "boolean"
+	)
+		return null
 	return {
 		...pair,
 		schemaVersion: 1,
 		version: record.version,
+		...(record.sourceUserId !== undefined
+			? { sourceUserId: record.sourceUserId as string | null }
+			: {}),
+		...(record.countryExplicit !== undefined
+			? { countryExplicit: record.countryExplicit as boolean }
+			: {}),
 		...(writer ? { writer } : {}),
 	}
 }
@@ -228,8 +249,12 @@ export function parseLocalizationCookie(
 export function serializeLocalizationCookie(
 	record: LocalizationRecord,
 	secure = true,
+	sourceUserId?: string | null,
 ): string {
-	const normalized = parseLocalizationRecord(record)
+	const normalized = parseLocalizationRecord({
+		...record,
+		...(sourceUserId !== undefined ? { sourceUserId } : {}),
+	})
 	if (!normalized) throw new Error("Invalid localization record")
 	return `${LOCALIZATION_COOKIE}=${encodeURIComponent(JSON.stringify(normalized))}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`
 }
@@ -276,14 +301,19 @@ export function resolveEffectiveMediaContext({
 	}
 }
 
-/** A missing member record adopts the entire kept device pair; never persist a bare browser inference. */
+/** Only a guest-origin kept cookie can be adopted; inferred country never replaces legacy settings. */
 export function signInAdoption(
 	account: LocalizationRecord | null,
 	cookie: LocalizationRecord | null,
+	legacyCountry?: string | null,
 ): LocalizationPair | null {
-	return account || !cookie
-		? null
-		: { country: cookie.country, language: cookie.language }
+	if (account || !cookie || cookie.sourceUserId !== null) return null
+	return {
+		country: cookie.countryExplicit
+			? cookie.country
+			: (normalizeCountry(legacyCountry) ?? cookie.country),
+		language: cookie.language,
+	}
 }
 
 export interface GetMediaPreferencesResponse {
@@ -296,6 +326,7 @@ export interface SaveLocalizationRequest {
 	/** A fresh UUID for each picker/page session; sequences are scoped to this client. */
 	clientId: string
 	pair: LocalizationPair
+	countryExplicit?: boolean
 	sequence: number
 	expectedVersion?: string | null
 }

@@ -151,14 +151,20 @@ describe("effective context and sign-in", () => {
 		})
 	})
 	it("adopts a kept guest choice only for an account without a pair", () => {
-		assert.deepEqual(signInAdoption(null, record()), {
-			country: "DE",
-			language: "de",
-		})
-		assert.deepEqual(signInAdoption(null, record("DE", "browser")), {
-			country: "DE",
-			language: "browser",
-		})
+		assert.deepEqual(
+			signInAdoption(null, { ...record(), sourceUserId: null }),
+			{
+				country: "DE",
+				language: "de",
+			},
+		)
+		assert.deepEqual(
+			signInAdoption(null, { ...record("DE", "browser"), sourceUserId: null }),
+			{
+				country: "DE",
+				language: "browser",
+			},
+		)
 		assert.equal(signInAdoption(record("US", "en"), record()), null)
 		assert.equal(signInAdoption(null, null), null)
 	})

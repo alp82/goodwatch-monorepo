@@ -1,4 +1,7 @@
-import { localizeTitlePayload } from "../media-payload.server.ts"
+import {
+	apiDisplayLanguage,
+	localizeTitlePayload,
+} from "../media-payload.server.ts"
 // The `/api/explorer/*` endpoints share this: members send GET and are read from the session; guests send POST with
 // the guest progress their browser holds ({ guest: { interactions, country, services } }), and a signed-in member's
 // POST ignores it.
@@ -12,6 +15,7 @@ import {
 import type { TasteInteraction } from "~/ui/taste/types"
 import { ExplorerUnavailable } from "./index.server"
 
+export const EXPLORER_OVERLAY_MAX_TITLES = 200
 const MAX_BODY_CHARS = 256 * 1024
 const headers = { "Cache-Control": "private, no-store" }
 
@@ -62,12 +66,20 @@ export async function explorerResponse(
 		const result = await answer(ctx, new URL(request.url).searchParams)
 		if (result === null) return fail(404, "Not found")
 		const totalMs = performance.now() - startedAt
-		return json(await localizeTitlePayload(result, ctx.language ?? "en"), {
-			headers: {
-				...headers,
-				"Server-Timing": `viewer;dur=${viewerMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,
+		const language = apiDisplayLanguage(request)
+		return json(
+			language
+				? await localizeTitlePayload(result, language, undefined, undefined, {
+						maxTitles: EXPLORER_OVERLAY_MAX_TITLES,
+					})
+				: result,
+			{
+				headers: {
+					...headers,
+					"Server-Timing": `viewer;dur=${viewerMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,
+				},
 			},
-		})
+		)
 	} catch (error) {
 		if (error instanceof ExplorerUnavailable)
 			return json(

@@ -47,6 +47,11 @@ export async function overlayEpisodeText<T extends StableEpisodeText>(
 	read: EpisodeTextReader,
 ): Promise<(T & { textPresentation: EpisodeTextPresentation })[]> {
 	const selected = presentationLanguage(language)
+	if (selected === "en")
+		return rows.map((row) => ({
+			...row,
+			textPresentation: { name: canonical(), overview: canonical() },
+		}))
 	const ids = [
 		...new Set(
 			rows
@@ -70,15 +75,24 @@ export async function overlayEpisodeText<T extends StableEpisodeText>(
 			})
 		}
 	}
+	const indexed = new Map<string, EpisodeTextTranslation[]>()
+	for (const t of translations) {
+		const key = `${t.show_id}:${t.tmdb_id}`
+		const rows = indexed.get(key) ?? []
+		rows.push(t)
+		indexed.set(key, rows)
+	}
+	for (const [key, values] of indexed)
+		indexed.set(key, translationCandidates(values, selected))
 	return rows.map((row) => {
-		const candidates = translationCandidates(
-			translations.filter(
-				(t) => t.show_id === showId && t.tmdb_id === (row.tmdb_id ?? row.id),
+		const candidates = indexed.get(`${showId}:${row.tmdb_id ?? row.id}`) ?? []
+		const name = candidates.find(
+				(t) => t.name?.trim() && hasExpectedMediaScript(t.name, selected),
 			),
-			selected,
-		)
-		const name = candidates.find((t) => t.name?.trim() && hasExpectedMediaScript(t.name, selected)),
-			overview = candidates.find((t) => t.overview?.trim() && hasExpectedMediaScript(t.overview, selected))
+			overview = candidates.find(
+				(t) =>
+					t.overview?.trim() && hasExpectedMediaScript(t.overview, selected),
+			)
 		const provenance = (
 			t: EpisodeTextTranslation | undefined,
 		): FieldPresentation =>
@@ -143,7 +157,10 @@ export async function overlayAlignedGrid(
 				return {
 					...e,
 					name: text.name,
-					nameLanguage: text.textPresentation.name.source === "localized" ? text.textPresentation.name.language : e.nameLanguage ?? (e.tmdbId ? "en" : "und"),
+					nameLanguage:
+						text.textPresentation.name.source === "localized"
+							? text.textPresentation.name.language
+							: (e.nameLanguage ?? (e.tmdbId ? "en" : "und")),
 				}
 			}),
 		})),
@@ -152,7 +169,10 @@ export async function overlayAlignedGrid(
 			return {
 				...e,
 				name: text.name,
-				nameLanguage: text.textPresentation.name.source === "localized" ? text.textPresentation.name.language : e.nameLanguage ?? (e.tmdbId ? "en" : "und"),
+				nameLanguage:
+					text.textPresentation.name.source === "localized"
+						? text.textPresentation.name.language
+						: (e.nameLanguage ?? (e.tmdbId ? "en" : "und")),
 			}
 		}),
 	}
@@ -174,12 +194,25 @@ export async function overlayEpisodeTextGroups<T extends StableEpisodeText>(
 	language: string,
 	read: EpisodeGroupsReader,
 ) {
+	if (presentationLanguage(language) === "en")
+		return Promise.all(
+			groups.map(async (group) => ({
+				showId: group.showId,
+				rows: await overlayEpisodeText(
+					kind,
+					group.showId,
+					group.rows,
+					"en",
+					async () => [],
+				),
+			})),
+		)
 	const refs = [
 		...new Map(
 			groups.flatMap((group) =>
 				group.rows.flatMap((row) => {
-					const id = row.id ?? row.tmdb_id
-					return id
+					const id = row.tmdb_id ?? row.id
+					return typeof id === "number" && Number.isSafeInteger(id) && id > 0
 						? [[`${group.showId}:${id}`, { showId: group.showId, id }] as const]
 						: []
 				}),
@@ -187,7 +220,11 @@ export async function overlayEpisodeTextGroups<T extends StableEpisodeText>(
 		).values(),
 	]
 	const translations: EpisodeTextTranslation[] = []
-	for (let i = 0; i < refs.length; i += 200) {
+	for (
+		let i = 0;
+		presentationLanguage(language) !== "en" && i < refs.length;
+		i += 200
+	) {
 		try {
 			translations.push(
 				...(await read(

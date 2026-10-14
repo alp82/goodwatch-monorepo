@@ -25,8 +25,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const id = canonicalTitleId(type, Number(rawId)),
 		language = canonicalContent ? "en" : payloadLanguage(request)
 	const { title } = await cached({
-		name: "localized-title-payload-v3",
-		params: { type, id, language, policy: canonicalContent ? "canonical" : "localized" },
+		name: "localized-title-payload-v4",
+		params: {
+			type,
+			id,
+			language,
+			policy: canonicalContent ? "canonical" : "localized",
+		},
 		ttlMinutes: 30,
 		staleMinutes: 0,
 		target: async () => {
@@ -35,7 +40,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				[id],
 			)
 			if (!rows.length) return { title: null }
-			if (canonicalContent) return { title: overlayMediaRow(rows[0], "en", { canonical: rows, translations: [], posters: [] }) }
+			if (canonicalContent)
+				return {
+					title: overlayMediaRow(rows[0], "en", {
+						canonical: rows,
+						translations: [],
+						posters: [],
+					}),
+				}
 			return { title: (await overlayTitles(rows, language))[0] }
 		},
 	})
@@ -58,6 +70,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				presentation: title.presentation,
 			},
 		},
-		{ headers: { "Cache-Control": canonicalContent ? "private, no-store" : "public, max-age=1800, s-maxage=1800" } },
+		{
+			headers: {
+				"Cache-Control": canonicalContent
+					? "private, no-store"
+					: "public, max-age=1800, s-maxage=1800",
+			},
+		},
 	)
 }

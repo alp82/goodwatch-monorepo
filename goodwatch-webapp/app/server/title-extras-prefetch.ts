@@ -83,7 +83,7 @@ export async function prefetchTitleExtras({
 				.then(() => lookups.collection({ collectionId, movieIds }))
 				.then((collection) =>
 					client.setQueryData(
-						movieCollectionQueryKey(collectionId, movieIds, language),
+						movieCollectionQueryKey(collectionId, movieIds, language ?? "en"),
 						collection,
 					),
 				)

@@ -1,3 +1,7 @@
+import {
+	presentationLanguage,
+	hasValidMediaPresentation,
+} from "./media-presentation.ts"
 import { parseTitleKey } from "./title-key.ts"
 import type { CanonicalMediaRow } from "./media-overlay-core.ts"
 export type Kind = "movie" | "show"
@@ -31,7 +35,10 @@ export async function localizeTitlePayload<T>(
 			presentation: import("./media-presentation").MediaPresentation
 		})[]
 	>,
+	options: { maxTitles?: number } = {},
 ): Promise<T> {
+	const selected = presentationLanguage(language)
+	const keys = new Set<string>()
 	const found: {
 		object: ObjectValue
 		row: CanonicalMediaRow
@@ -74,34 +81,43 @@ export async function localizeTitlePayload<T>(
 			id > 0 &&
 			("title" in object || "poster_path" in object || "posterPath" in object)
 		) {
-			found.push({
-				object,
-				camel: "posterPath" in object,
-				name: false,
-				row: {
-					...object,
-					title: (object.title ?? object.name) as string | null | undefined,
-					original_title: (object.original_title ??
-						object.original_name ??
-						object.original) as string | null | undefined,
-					original_language_code: (object.original_language_code ??
-						object.original_language) as string | null | undefined,
-					media_type: kind,
-					tmdb_id: id,
-					poster_path:
-						typeof (
-							object.poster_path ??
-							object.posterPath ??
-							object.poster
-						) === "string"
-							? String(
-									object.poster_path ?? object.posterPath ?? object.poster,
-								).replace(/^https:\/\/image.tmdb.org\/t\/p\/[^/]+/, "")
-							: null,
-				} as CanonicalMediaRow,
-			})
+			const key = `${kind}-${id}`
+			if (
+				!hasValidMediaPresentation(object, selected) &&
+				(keys.has(key) ||
+					keys.size < (options.maxTitles ?? Number.POSITIVE_INFINITY))
+			) {
+				keys.add(key)
+				found.push({
+					object,
+					camel: "posterPath" in object,
+					name: false,
+					row: {
+						...object,
+						title: (object.title ?? object.name) as string | null | undefined,
+						original_title: (object.original_title ??
+							object.original_name ??
+							object.original) as string | null | undefined,
+						original_language_code: (object.original_language_code ??
+							object.original_language) as string | null | undefined,
+						media_type: kind,
+						tmdb_id: id,
+						poster_path:
+							typeof (
+								object.poster_path ??
+								object.posterPath ??
+								object.poster
+							) === "string"
+								? String(
+										object.poster_path ?? object.posterPath ?? object.poster,
+									).replace(/^https:\/\/image.tmdb.org\/t\/p\/[^/]+/, "")
+								: null,
+					} as CanonicalMediaRow,
+				})
+			}
 		}
 		for (const [key, child] of Object.entries(object)) {
+			if (key === "presentation" || key === "textPresentation") continue
 			// A page's genre labels, cast and generated prose remain English. Don't infer movie identity into cast.
 			const single =
 				key === "only" && Array.isArray(object.ids) && object.ids.length === 1

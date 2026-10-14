@@ -5,6 +5,8 @@ import {
 	createMediaOverlay,
 	overlayMediaRow,
 	translationCandidates,
+	overlayMediaRows,
+	type PosterRow,
 	type Sources,
 	type CanonicalMediaRow,
 	type OverlayQuery,
@@ -80,10 +82,20 @@ const sources: Sources = {
 }
 
 test("mislabeled Latin text in non-Latin translations falls back per field with actual language", () => {
-	const arabic: Sources = { ...sources, translations: [{
-		media_tmdb_id: 42, media_type: "movie", language_code: "ar", country_code: "SA",
-		title: "Sword Art Online", overview: "بداية رحلة جديدة", tagline: "An English tagline",
-	}] }
+	const arabic: Sources = {
+		...sources,
+		translations: [
+			{
+				media_tmdb_id: 42,
+				media_type: "movie",
+				language_code: "ar",
+				country_code: "SA",
+				title: "Sword Art Online",
+				overview: "بداية رحلة جديدة",
+				tagline: "An English tagline",
+			},
+		],
+	}
 	const result = overlayMediaRow(row, "ar", arabic)
 	assert.equal(result.title, "Canonical")
 	assert.equal(result.presentation.title.language, "en")
@@ -92,18 +104,46 @@ test("mislabeled Latin text in non-Latin translations falls back per field with 
 	assert.equal(result.presentation.overview.language, "ar-SA")
 	assert.equal(result.tagline, "English tagline")
 	assert.equal(result.presentation.tagline.language, "en")
-	const badOriginal = { ...row, original_title: "Sword Art Online", original_language_code: "ar" }
-	const fallback = overlayMediaRow(badOriginal, "ar", { ...arabic, canonical: [badOriginal], translations: [] })
+	const badOriginal = {
+		...row,
+		original_title: "Sword Art Online",
+		original_language_code: "ar",
+	}
+	const fallback = overlayMediaRow(badOriginal, "ar", {
+		...arabic,
+		canonical: [badOriginal],
+		translations: [],
+	})
 	assert.equal(fallback.title, "Canonical")
 	assert.equal(fallback.presentation.title.source, "canonical")
 	const titleless = { ...badOriginal, title: "" }
-	assert.equal(overlayMediaRow(titleless, "ar", { ...arabic, canonical: [titleless], translations: [] }).presentation.title.language, "und")
+	assert.equal(
+		overlayMediaRow(titleless, "ar", {
+			...arabic,
+			canonical: [titleless],
+			translations: [],
+		}).presentation.title.language,
+		"und",
+	)
 })
 test("season/episode candidates reject mislabeled fields without hiding canonical membership", async () => {
 	for (const kind of ["season", "episode"] as const) {
-		const translated = await overlayEpisodeText(kind, 1396, [{ id: 62085, name: "Pilot", overview: "Canonical overview" }], "ar", async () => [{
-			show_id: 1396, tmdb_id: 62085, language_code: "ar", country_code: "SA", name: "Pilot", overview: "البداية",
-		}])
+		const translated = await overlayEpisodeText(
+			kind,
+			1396,
+			[{ id: 62085, name: "Pilot", overview: "Canonical overview" }],
+			"ar",
+			async () => [
+				{
+					show_id: 1396,
+					tmdb_id: 62085,
+					language_code: "ar",
+					country_code: "SA",
+					name: "Pilot",
+					overview: "البداية",
+				},
+			],
+		)
 		assert.equal(translated.length, 1)
 		assert.equal(translated[0].name, "Pilot")
 		assert.equal(translated[0].textPresentation.name.language, "en")
@@ -196,9 +236,12 @@ test("one source statement per table per deduplicated batch; input order and mis
 test("source cache key is sorted IDs and language; cache failure preserves the entity", async () => {
 	const keys: unknown[] = []
 	const read: OverlayQuery = async <T extends {}>() => [] as T[]
-	const overlay = createMediaOverlay(read, async (params, get) => {
-		keys.push(params)
-		return get()
+	const overlay = createMediaOverlay(read, {
+		read: async (ids, language) => {
+			keys.push({ keys: ids, language })
+			return new Map()
+		},
+		write: async () => {},
 	})
 	await overlay([row], "pt-BR")
 	await overlay([row], "pt-PT")
@@ -452,7 +495,7 @@ test("browser exploration discards only old-language display data and preserves 
 		"../ui/taste/exploration-cache.ts"
 	)
 	const saved = {
-		titles: [{ presentation: { language: "fr" } }],
+		titles: [overlayMediaRow(row, "fr", sources)],
 		ratingQueue: [],
 		selectedMedia: null,
 		filters: { type: "show" },
@@ -533,4 +576,209 @@ test("TMDB television name/original_name aliases retain localized values and can
 	)
 	assert.equal(translated[0].name, "Titre")
 	assert.equal(payload[0].name, "Canonical")
+})
+
+test("500 titles × 100 posters are indexed once, comfortably below 100 ms", (t) => {
+	const canonical = Array.from({ length: 500 }, (_, i) => ({
+		...row,
+		tmdb_id: i + 1,
+	}))
+	const posters: PosterRow[] = canonical.flatMap((media) =>
+		Array.from({ length: 100 }, (_, i) => ({
+			...sources.posters[0],
+			media_tmdb_id: media.tmdb_id,
+			language_code: i === 0 ? "en" : "fr",
+			url_path: i === 0 ? "/en.jpg" : `/fr-${i}.jpg`,
+			tmdb_vote_average: i % 10,
+			tmdb_vote_count: i,
+		})),
+	)
+	const translations = canonical.map((media) => ({
+		...sources.translations[1],
+		media_tmdb_id: media.tmdb_id,
+	}))
+	const data = { canonical, translations, posters }
+	const references = [...canonical, ...canonical]
+	overlayMediaRows(references, "fr", data) // Warm the JIT; construction and DB latency are outside this CPU test.
+	const elapsed: number[] = []
+	for (let i = 0; i < 5; i++) {
+		const start = performance.now()
+		const result = overlayMediaRows(references, "fr", data)
+		elapsed.push(performance.now() - start)
+		assert.equal(result.length, 1000)
+		assert.equal(result[0].title, "Titre")
+		assert.equal(result[999].poster_path, "/fr-99.jpg")
+	}
+	const median = elapsed.sort((a, b) => a - b)[2]
+	t.diagnostic(
+		`500 unique titles, 1,000 references, 50,000 posters: median ${median.toFixed(2)} ms`,
+	)
+	assert.ok(
+		median < 75,
+		`Overlay CPU median ${median.toFixed(2)} ms must stay well below 100 ms`,
+	)
+})
+
+test("poster SQL restricts candidate languages or canonical paths, and overlapping batches reuse per-title sources", async () => {
+	const entries = new Map<string, Sources>(),
+		calls: { sql: string; params: unknown[] }[] = []
+	const cache = {
+		read: async (keys: readonly string[], language: string) =>
+			new Map(
+				keys.flatMap((key) =>
+					entries.has(`${language}:${key}`)
+						? [[key, entries.get(`${language}:${key}`)!] as const]
+						: [],
+				),
+			),
+		write: async (values: ReadonlyMap<string, Sources>, language: string) => {
+			for (const [key, value] of values)
+				entries.set(`${language}:${key}`, value)
+		},
+	}
+	const read: OverlayQuery = async <T extends {}>(
+		sql: string,
+		params: (string | number | Date)[] = [],
+	) => {
+		calls.push({ sql, params })
+		return [] as T[]
+	}
+	const overlay = createMediaOverlay(read, cache)
+	await overlay([row, { ...row, tmdb_id: 43 }], "fr")
+	await overlay(
+		[
+			{ ...row, tmdb_id: 43 },
+			{ ...row, tmdb_id: 44 },
+		],
+		"fr",
+	)
+	assert.equal(calls.length, 6)
+	assert.deepEqual(calls[3].params[0], [44])
+	const posters = calls.find((call) => call.sql.includes("FROM media_image"))!
+	assert.match(posters.sql, /language_code = ANY\(\?\) OR url_path = ANY\(\?\)/)
+	assert.deepEqual(posters.params.slice(2), [["fr"], ["/en.jpg"]])
+	await overlay([row, { ...row, tmdb_id: 43 }], "fr")
+	assert.equal(calls.length, 6)
+	await overlay([row], "en")
+	assert.equal(
+		calls.length,
+		6,
+		"English-equivalent projections never read translation or poster sources",
+	)
+})
+
+test("payload adapters skip completed overlays and cap Explorer source work without hiding canonical tail titles", async () => {
+	let calls = 0,
+		size = 0
+	const presented = overlayMediaRow(row, "fr", sources)
+	const existing = { movies: [presented] }
+	const fake = async <T extends CanonicalMediaRow>(
+		rows: readonly T[],
+		language: string,
+	) => {
+		calls++
+		size = rows.length
+		return overlayMediaRows(rows, language, sources)
+	}
+	assert.equal(
+		await localizeTitlePayload(existing, "fr", undefined, fake),
+		existing,
+	)
+	assert.equal(calls, 0)
+	const payload = {
+		movies: Array.from({ length: 250 }, (_, i) => ({ ...row, tmdb_id: i + 1 })),
+	}
+	const result = await localizeTitlePayload(payload, "fr", undefined, fake, {
+		maxTitles: 200,
+	})
+	assert.equal(size, 200)
+	assert.equal(result.movies.length, 250)
+	assert.ok("presentation" in result.movies[199])
+	assert.ok(!("presentation" in result.movies[200]))
+})
+
+test("English season, episode and grouped text return canonical provenance without a source read", async () => {
+	const { overlayEpisodeTextGroups } = await import(
+		"../utils/episode-text-overlay.ts"
+	)
+	const fail = async () => {
+		throw new Error("English must not query translations")
+	}
+	for (const kind of ["season", "episode"] as const) {
+		const result = await overlayEpisodeText(
+			kind,
+			1,
+			[{ id: 70, name: "Pilot" }],
+			"en",
+			fail,
+		)
+		assert.equal(result[0].name, "Pilot")
+		assert.equal(result[0].textPresentation.name.language, "en")
+	}
+	const groups = await overlayEpisodeTextGroups(
+		"episode",
+		[{ showId: 1, rows: [{ id: 70, name: "Pilot" }] }],
+		"en",
+		fail,
+	)
+	assert.equal(groups[0].rows[0].name, "Pilot")
+})
+
+test("cached Latin-only ar-SA presentations are repaired instead of bypassing the script guard", async () => {
+	for (const title of ["Sword Art Online", "JUJUTSU KAISEN"]) {
+		const base = {
+			...row,
+			title,
+			original_title: title,
+			original_language_code: "ja",
+		}
+		const bad = overlayMediaRow(base, "ar", {
+			canonical: [base],
+			translations: [],
+			posters: [],
+		})
+		bad.presentation.title = {
+			language: "ar-SA",
+			source: "localized",
+			fallback: false,
+		}
+		let calls = 0
+		const result = await localizeTitlePayload(
+			{ movies: [bad] },
+			"ar",
+			undefined,
+			async (rows, language) => {
+				calls++
+				return overlayMediaRows(rows, language, {
+					canonical: [base],
+					translations: [],
+					posters: [],
+				})
+			},
+		)
+		assert.equal(calls, 1)
+		assert.equal(result.movies[0].title, title)
+		assert.equal(result.movies[0].presentation.title.language, "en")
+		assert.equal(result.movies[0].presentation.title.source, "canonical")
+	}
+})
+
+test("English fast path does not mistake a prefilled original-language title for proved English", async () => {
+	const original = {
+		...row,
+		title: "原題",
+		original_title: "原題",
+		original_language_code: "ja",
+	}
+	let queries = 0
+	const overlay = createMediaOverlay(async <T extends {}>(sql: string) => {
+		queries++
+		return sql.includes("UNION ALL")
+			? [{ ...original, title: null } as unknown as T]
+			: []
+	})
+	const [result] = await overlay([original], "en")
+	assert.equal(queries, 3)
+	assert.equal(result.title, "原題")
+	assert.equal(result.presentation.title.language, "ja")
 })

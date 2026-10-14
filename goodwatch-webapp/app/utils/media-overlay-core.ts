@@ -1,6 +1,7 @@
 import { hasExpectedMediaScript } from "./media-script.ts"
 import {
 	presentationLanguage,
+	hasValidMediaPresentation,
 	type MediaPresentation,
 	type FieldPresentation,
 } from "./media-presentation.ts"
@@ -121,17 +122,74 @@ const field = (
 	...(locale ? { translationLocale: locale } : {}),
 })
 
+export interface IndexedMediaSources {
+	canonical: Map<string, CanonicalMediaRow>
+	translations: Map<string, TranslationRow[]>
+	posters: Map<string, { best?: PosterRow; paths: Map<string, PosterRow> }>
+}
+const betterPoster = (a: PosterRow, b: PosterRow) =>
+	(a.tmdb_vote_average ?? 0) > (b.tmdb_vote_average ?? 0) ||
+	((a.tmdb_vote_average ?? 0) === (b.tmdb_vote_average ?? 0) &&
+		((a.tmdb_vote_count ?? 0) > (b.tmdb_vote_count ?? 0) ||
+			((a.tmdb_vote_count ?? 0) === (b.tmdb_vote_count ?? 0) &&
+				((a.width ?? 0) > (b.width ?? 0) ||
+					((a.width ?? 0) === (b.width ?? 0) && a.url_path < b.url_path)))))
+
+/** Build once for a whole page. Poster selection is linear, without per-title scans/sorts. */
+export function indexMediaSources(
+	sources: Sources,
+	language: string,
+): IndexedMediaSources {
+	const indexed: IndexedMediaSources = {
+		canonical: new Map(),
+		translations: new Map(),
+		posters: new Map(),
+	}
+	for (const row of sources.canonical) indexed.canonical.set(keyOf(row), row)
+	for (const row of sources.translations) {
+		const key = keyOf(row)
+		const list = indexed.translations.get(key) ?? []
+		list.push(row)
+		indexed.translations.set(key, list)
+	}
+	for (const [key, rows] of indexed.translations)
+		indexed.translations.set(key, translationCandidates(rows, language))
+	const base = presentationLanguage(language).split("-")[0]
+	for (const row of sources.posters) {
+		const key = keyOf(row)
+		let entry = indexed.posters.get(key)
+		if (!entry) {
+			entry = { paths: new Map() }
+			indexed.posters.set(key, entry)
+		}
+		entry.paths.set(row.url_path, row)
+		if (
+			row.language_code === base &&
+			nonblank(row.url_path) &&
+			(!entry.best || betterPoster(row, entry.best))
+		)
+			entry.best = row
+	}
+	return indexed
+}
+
 /** Pure per-field resolver: never mutate or discard a canonical work for missing translations. */
 export function overlayMediaRow<T extends CanonicalMediaRow>(
 	row: T,
 	language: string,
-	sources: Sources,
+	sources: Sources | IndexedMediaSources,
 ): T & { canonical_title: string; presentation: MediaPresentation } {
 	const selected = presentationLanguage(language)
-	const base =
-		sources.canonical.find((item) => keyOf(item) === keyOf(row)) ?? row
+	const indexed =
+		sources.canonical instanceof Map
+			? (sources as IndexedMediaSources)
+			: indexMediaSources(sources as Sources, selected)
+	const key = keyOf(row)
+	const base = indexed.canonical.get(key) ?? row
 	const canonicalLanguage = base.canonical_language ?? "en"
-	const uncertainInput = row.canonical_language === "und"
+	const uncertainInput =
+		row.canonical_language === "und" ||
+		(!!row.presentation && !nonblank(row.canonical_title))
 	const canonicalTitle =
 		nonblank(row.canonical_title) ??
 		(uncertainInput
@@ -141,49 +199,57 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 		nonblank(base.title) ??
 		nonblank(base.original_title) ??
 		""
-	const candidates = translationCandidates(
-		sources.translations.filter((item) => keyOf(item) === keyOf(row)),
-		selected,
-	)
+	const candidates = indexed.translations.get(key) ?? []
 	const pick = (name: "title" | "overview" | "tagline") =>
-		candidates.find((candidate) => nonblank(candidate[name]) && hasExpectedMediaScript(candidate[name]!, selected))
+		candidates.find(
+			(candidate) =>
+				nonblank(candidate[name]) &&
+				hasExpectedMediaScript(candidate[name]!, selected),
+		)
 	const title = pick("title"),
 		overview = pick("overview"),
 		tagline = pick("tagline")
 	const original =
-		!title && languageMatches(base.original_language_code, selected) && hasExpectedMediaScript(base.original_title ?? "", selected)
+		!title &&
+		languageMatches(base.original_language_code, selected) &&
+		hasExpectedMediaScript(base.original_title ?? "", selected)
 			? nonblank(base.original_title)
 			: null
-	const posterRows = sources.posters.filter(
-		(item) => keyOf(item) === keyOf(row),
-	)
-	const posters = posterRows
-		.filter(
-			(item) =>
-				item.language_code === selected.split("-")[0] &&
-				nonblank(item.url_path),
-		)
-		.sort(
-			(a, b) =>
-				(b.tmdb_vote_average ?? 0) - (a.tmdb_vote_average ?? 0) ||
-				(b.tmdb_vote_count ?? 0) - (a.tmdb_vote_count ?? 0) ||
-				(b.width ?? 0) - (a.width ?? 0) ||
-				a.url_path.localeCompare(b.url_path),
-		)
-	const poster = posters[0]
+	const posterEntry = indexed.posters.get(key)
+	const poster = posterEntry?.best
 	const canonicalPoster = row.presentation
 		? (base.poster_path ?? null)
 		: (row.poster_path ?? base.poster_path ?? null)
-	const knownPoster = posterRows.find(
-		(item) => item.url_path === canonicalPoster,
-	)
+	const knownPoster = canonicalPoster
+		? posterEntry?.paths.get(canonicalPoster)
+		: undefined
+	const canonicalOverview =
+		row.presentation || uncertainInput
+			? (nonblank(base.synopsis) ?? nonblank(base.overview))
+			: (nonblank(row.synopsis) ??
+				nonblank(base.synopsis) ??
+				nonblank(row.overview) ??
+				nonblank(base.overview))
+	const canonicalTagline =
+		(row.presentation || uncertainInput ? null : nonblank(row.tagline)) ??
+		nonblank(base.tagline) ??
+		null
+	const actualCanonicalLanguage = (text: string | null) =>
+		hasExpectedMediaScript(text ?? "", canonicalLanguage)
+			? canonicalLanguage
+			: "und"
 	const titleLanguage = title
 		? translationLocale(title)
 		: original
 			? (base.original_language_code ?? "und")
 			: !nonblank(base.title) && canonicalTitle === base.original_title
-				? (hasExpectedMediaScript(canonicalTitle, base.original_language_code ?? "und") ? (base.original_language_code ?? "und") : "und")
-				: canonicalLanguage
+				? hasExpectedMediaScript(
+						canonicalTitle,
+						base.original_language_code ?? "und",
+					)
+					? (base.original_language_code ?? "und")
+					: "und"
+				: actualCanonicalLanguage(canonicalTitle)
 	const presentation: MediaPresentation = {
 		language: selected,
 		title: field(
@@ -198,25 +264,22 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 			selected,
 		),
 		overview: field(
-			overview ? translationLocale(overview) : canonicalLanguage,
+			overview
+				? translationLocale(overview)
+				: actualCanonicalLanguage(canonicalOverview),
 			overview ? "localized" : "canonical",
 			selected,
 			overview ? translationLocale(overview) : undefined,
 		),
 		tagline: field(
-			tagline ? translationLocale(tagline) : canonicalLanguage,
+			tagline
+				? translationLocale(tagline)
+				: actualCanonicalLanguage(canonicalTagline),
 			tagline ? "localized" : "canonical",
 			selected,
 			tagline ? translationLocale(tagline) : undefined,
 		),
 	}
-	const canonicalOverview =
-		row.presentation || uncertainInput
-			? (nonblank(base.synopsis) ?? nonblank(base.overview))
-			: (nonblank(row.synopsis) ??
-				nonblank(base.synopsis) ??
-				nonblank(row.overview) ??
-				nonblank(base.overview))
 	return {
 		...row,
 		canonical_title: canonicalTitle,
@@ -226,21 +289,42 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 		...(Object.prototype.hasOwnProperty.call(row, "overview")
 			? { overview: overview?.overview ?? canonicalOverview ?? null }
 			: {}),
-		tagline:
-			tagline?.tagline ??
-			(row.presentation || uncertainInput ? null : nonblank(row.tagline)) ??
-			nonblank(base.tagline) ??
-			null,
+		tagline: tagline?.tagline ?? canonicalTagline,
 		presentation,
 	}
 }
 
+export interface MediaSourceCache {
+	read(keys: readonly string[], language: string): Promise<Map<string, Sources>>
+	write(entries: ReadonlyMap<string, Sources>, language: string): Promise<void>
+}
+
+/** English catalog projections need no translation/image read; unproved upstream text still needs canonical repair. */
+export const canonicalEnglishEquivalent = (row: CanonicalMediaRow) =>
+	(!row.canonical_language || row.canonical_language === "en") &&
+	(!row.presentation || row.presentation.language === "en") &&
+	!!nonblank(row.title) &&
+	!(
+		row.original_language_code &&
+		row.original_language_code !== "en" &&
+		row.original_title === row.title
+	) &&
+	(row.original_language_code !== "en" ||
+		!nonblank(row.original_title) ||
+		row.original_title === row.title)
+
+export function overlayMediaRows<T extends CanonicalMediaRow>(
+	rows: readonly T[],
+	language: string,
+	sources: Sources,
+) {
+	const indexed = indexMediaSources(sources, language)
+	return rows.map((row) => overlayMediaRow(row, language, indexed))
+}
+
 export function createMediaOverlay(
 	read: OverlayQuery,
-	cache?: (
-		params: { keys: string[]; language: string },
-		get: () => Promise<Sources>,
-	) => Promise<Sources>,
+	cache?: MediaSourceCache,
 ) {
 	const load = async (
 		rows: readonly CanonicalMediaRow[],
@@ -255,19 +339,25 @@ export function createMediaOverlay(
 		const scope =
 			"((media_type = 'movie' AND media_tmdb_id = ANY(?)) OR (media_type = 'show' AND media_tmdb_id = ANY(?)))"
 		const args = [movies as never, shows as never]
-		const base = language.split("-")[0]
-		const [canonical, translations, posters] = await Promise.all([
-			read<CanonicalMediaRow>(
-				`SELECT 'movie' AS media_type, tmdb_id, title, original_title, original_language_code, poster_path, synopsis, tagline FROM movie WHERE tmdb_id = ANY(?) UNION ALL SELECT 'show' AS media_type, tmdb_id, title, original_title, original_language_code, poster_path, synopsis, tagline FROM show WHERE tmdb_id = ANY(?)`,
-				args,
+		const canonical = await read<CanonicalMediaRow>(
+			"SELECT 'movie' AS media_type, tmdb_id, title, original_title, original_language_code, poster_path, synopsis, tagline FROM movie WHERE tmdb_id = ANY(?) UNION ALL SELECT 'show' AS media_type, tmdb_id, title, original_title, original_language_code, poster_path, synopsis, tagline FROM show WHERE tmdb_id = ANY(?)",
+			args,
+		)
+		const paths = [
+			...new Set(
+				[...canonical, ...rows].flatMap((row) =>
+					row.poster_path ? [row.poster_path] : [],
+				),
 			),
+		]
+		const [translations, posters] = await Promise.all([
 			read<TranslationRow>(
 				`SELECT media_tmdb_id, media_type, language_code, country_code, title, overview, tagline FROM translation WHERE ${scope} AND language_code = ?`,
-				[...args, base],
+				[...args, language.split("-")[0]],
 			),
 			read<PosterRow>(
-				`SELECT media_tmdb_id, media_type, language_code, url_path, tmdb_vote_average, tmdb_vote_count, width, height FROM media_image WHERE ${scope} AND image_type = 'posters' `,
-				args,
+				`SELECT media_tmdb_id, media_type, language_code, url_path, tmdb_vote_average, tmdb_vote_count, width, height FROM media_image WHERE ${scope} AND image_type = 'posters' AND (language_code = ANY(?) OR url_path = ANY(?))`,
+				[...args, [language.split("-")[0]] as never, paths as never],
 			),
 		])
 		return { canonical, translations, posters }
@@ -277,32 +367,65 @@ export function createMediaOverlay(
 		language: string,
 	) {
 		const selected = presentationLanguage(language)
+		const pending = rows.filter(
+			(row) =>
+				!hasValidMediaPresentation(row, selected) &&
+				!(selected === "en" && canonicalEnglishEquivalent(row)),
+		)
 		const unique = [
-			...new Map(rows.map((row) => [keyOf(row), row])).values(),
-		].sort((a, b) => keyOf(a).localeCompare(keyOf(b)))
+			...new Map(pending.map((row) => [keyOf(row), row])).values(),
+		]
 		const all: Sources = { canonical: [], translations: [], posters: [] }
 		for (let i = 0; i < unique.length; i += OVERLAY_BATCH_SIZE) {
 			const batch = unique.slice(i, i + OVERLAY_BATCH_SIZE)
-			const params = { keys: batch.map(keyOf), language: selected }
-			// Canonical poster paths are facts from Crate, not device state; the cached batch reads include those rows.
-			let source: Sources
 			try {
-				source = cache
-					? await cache(params, () => load(batch, selected))
-					: await load(batch, selected)
+				const hits =
+					(await cache?.read(batch.map(keyOf), selected)) ??
+					new Map<string, Sources>()
+				const missing = batch.filter((row) => !hits.has(keyOf(row)))
+				if (missing.length) {
+					const loaded = await load(missing, selected)
+					const index = indexMediaSources(loaded, selected)
+					const entries = new Map<string, Sources>()
+					for (const row of missing) {
+						const key = keyOf(row),
+							base = index.canonical.get(key),
+							posters = index.posters.get(key)
+						// Only the winning locale poster and known canonical image belong in each reusable source value.
+						const kept = new Map<string, PosterRow>()
+						if (posters?.best) kept.set(posters.best.url_path, posters.best)
+						for (const path of [base?.poster_path, row.poster_path]) {
+							const image = path && posters?.paths.get(path)
+							if (image) kept.set(image.url_path, image)
+						}
+						const source: Sources = {
+							canonical: base ? [base] : [],
+							translations: index.translations.get(key) ?? [],
+							posters: [...kept.values()],
+						}
+						entries.set(key, source)
+						hits.set(key, source)
+					}
+					await cache?.write(entries, selected)
+				}
+				for (const source of hits.values()) {
+					all.canonical.push(...source.canonical)
+					all.translations.push(...source.translations)
+					all.posters.push(...source.posters)
+				}
 			} catch (error) {
-				// A failed translation read must not fail the canonical entity or fill the source cache.
 				console.error("Media presentation overlay unavailable", {
 					language: selected,
 					error,
 				})
-				source = { canonical: batch, translations: [], posters: [] }
 			}
-			all.canonical.push(...source.canonical)
-			all.translations.push(...source.translations)
-			all.posters.push(...source.posters)
 		}
-		return rows.map((row) => overlayMediaRow(row, selected, all))
+		const indexed = indexMediaSources(all, selected)
+		return rows.map((row) =>
+			hasValidMediaPresentation(row, selected)
+				? { ...row }
+				: overlayMediaRow(row, selected, indexed),
+		)
 	}
 }
 

@@ -1,3 +1,4 @@
+import { hasExpectedMediaScript } from "./media-script.ts"
 import {
 	normalizeLanguageSetting,
 	type MediaLanguage,
@@ -32,6 +33,54 @@ export function copyMediaPresentation(value: unknown): PresentedMedia {
 		...(media?.presentation ? { presentation: media.presentation } : {}),
 	}
 }
+/** A cached presentation is reusable only if its visible field text still agrees with its actual language. */
+export function hasValidMediaPresentation(
+	value: unknown,
+	language: string,
+): value is PresentedMedia & {
+	canonical_title: string
+	presentation: MediaPresentation
+} {
+	if (!value || typeof value !== "object") return false
+	const row = value as Record<string, unknown> & PresentedMedia
+	const metadata = row.presentation
+	if (
+		typeof row.canonical_title !== "string" ||
+		metadata?.language !== presentationLanguage(language)
+	)
+		return false
+	if (
+		!["title", "poster", "overview", "tagline"].every((field) => {
+			const info = metadata[field as keyof Omit<MediaPresentation, "language">]
+			return (
+				!!info &&
+				typeof info.language === "string" &&
+				typeof info.fallback === "boolean" &&
+				["canonical", "original", "localized"].includes(info.source)
+			)
+		})
+	)
+		return false
+	return (["title", "overview", "tagline"] as const).every((field) => {
+		const text = row[field] ?? (field === "overview" ? row.synopsis : undefined)
+		if (typeof text !== "string") return true
+		const info = metadata[field]
+		if (!info?.language || !hasExpectedMediaScript(text, info.language))
+			return false
+		if (info.source === "canonical") return true
+		const sameBase =
+			info.language.toLowerCase().split("-")[0] === language.split("-")[0]
+		if (info.source === "original")
+			return sameBase && hasExpectedMediaScript(text, language)
+		return (
+			info.source === "localized" &&
+			sameBase &&
+			normalizeLanguageSetting(info.language) === metadata.language &&
+			hasExpectedMediaScript(text, language)
+		)
+	})
+}
+
 export const presentationLanguage = (
 	value: string | null | undefined,
 ): MediaLanguage => {
@@ -76,9 +125,13 @@ export const localizedTitleUrl = (
 	type: "movie" | "show",
 	id: number,
 	language: string,
-) => mediaLanguageUrl(`/api/media-title?type=${type}&id=${id}`, language)
+) =>
+	mediaLanguageUrl(
+		`/api/media-title?type=${type}&id=${id}&presentationVersion=4`,
+		language,
+	)
 export const localizedTitleQueryKey = (
 	type: "movie" | "show",
 	id: number,
 	language: string,
-) => ["media-title", type, id, presentationLanguage(language)] as const
+) => ["media-title-v4", type, id, presentationLanguage(language)] as const

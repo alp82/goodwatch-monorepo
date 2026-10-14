@@ -11,6 +11,14 @@ def payload(identifier, **fields):
 
 
 class TranslationIngestionTest(unittest.TestCase):
+    def test_windmill_lock_pins_the_runtime_http_adapter(self):
+        lock = (Path(__file__).parents[1] / 'windmill/f/media_language/ingest_episode_translations.script.lock').read_text().splitlines()
+        packages = {line.split('==')[0] for line in lock if '==' in line}
+        self.assertTrue({'requests', 'charset-normalizer', 'certifi', 'idna', 'urllib3'}.issubset(packages))
+        reference = (Path(__file__).parents[1] / 'windmill/f/sync/populate/tmdb_genres.script.lock').read_text().splitlines()
+        self.assertEqual(next(line for line in lock if line.startswith('requests==')),
+                         next(line for line in reference if line.startswith('requests==')))
+
     def test_only_nonblank_owned_fields_and_supported_locales(self):
         rows = translation_rows(1396, 42, payload(42, name=' Name ', overview=' '))
         self.assertEqual(rows, [{'show_id': 1396, 'tmdb_id': 42, 'language_code': 'de', 'country_code': 'DE', 'name': 'Name'}])

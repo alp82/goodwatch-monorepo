@@ -45,8 +45,9 @@ export function localizeTitlePayload<T>(
 	language: string,
 	hint?: Kind,
 	overlay: typeof overlayTitles = overlayTitles,
+	options: { maxTitles?: number } = {},
 ) {
-	return localizeCore(payload, language, hint, overlay)
+	return localizeCore(payload, language, hint, overlay, options)
 }
 
 /** Route boundary for JSON catalog responses. Base data caches stay canonical; explicit URLs partition public payloads. */
