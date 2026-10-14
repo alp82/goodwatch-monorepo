@@ -6,7 +6,7 @@
 // most, and this is where it finds the rest of the site. Styles are in living-room.css (`.lrb`), with short class
 // names because the HTML has a byte budget.
 import { Link } from "@remix-run/react"
-import type { MouseEvent } from "react"
+import { type MouseEvent, type ReactNode, createContext, useContext } from "react"
 import { titleToDashed } from "~/utils/helpers"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
@@ -70,6 +70,15 @@ export const CATEGORY_HUBS = [
 	},
 ]
 
+/**
+ * PROTOTYPE slot (#541, on the prototype branch named in the ticket): the "Talked about now" prototype mounts its row at the top of
+ * the section, and may put a line of its own on the lip. Empty on the real start page.
+ */
+export const BelowRoomPrototypeSlot = createContext<{
+	row?: ReactNode
+	lip?: ReactNode
+}>({})
+
 export type BelowRoomProps = {
 	/** Most popular first; empty while the title snapshot loads. */
 	titles: StartTitle[]
@@ -85,6 +94,7 @@ export function BelowRoom({
 	onDown,
 	onBack,
 }: BelowRoomProps) {
+	const slot = useContext(BelowRoomPrototypeSlot)
 	const back = (
 		<a href={`#${ROOM_ID}`} onClick={onBack} className="lrb-back">
 			<span aria-hidden>↑</span> Back to Home
@@ -101,15 +111,17 @@ export function BelowRoom({
 					{/* An invitation, not the list's name: the heading under it has that. */}
 					<b>More below</b>
 					<small>
-						{titles.length
+						{slot.lip ??
+							(titles.length
 							? `${titles.length} popular titles`
-							: "Movies and shows"}
-						<u> and every way to browse</u>
+								: "Movies and shows")}
+						{!slot.lip && <u> and every way to browse</u>}
 					</small>
 				</span>
 				<i aria-hidden />
 			</a>
 			<div className="lrb-in">
+				{slot.row}
 				<header className="lrb-head">
 					<div>
 						<p className="lrb-eye">On GoodWatch tonight</p>
