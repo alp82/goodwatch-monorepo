@@ -1,4 +1,4 @@
-"""Opt-in integration checks on the four NEW social tables only; fixtures are removed."""
+"""Opt-in integration checks on the social-owned tables only; fixtures are removed."""
 import os
 import sys
 import unittest
