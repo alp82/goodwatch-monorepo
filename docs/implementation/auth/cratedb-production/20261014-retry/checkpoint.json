@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-14T21:26:34.056435+00:00",
-  "state": "CRATE02_PASSED_CRATE03_DECOMMISSION_PENDING",
+  "at": "2026-10-14T21:34:38.442615+00:00",
+  "state": "CRATE03_SQL_DECOMMISSION_SUCCEEDED_ACTUAL_EXIT_PENDING",
   "node": "crate-02",
   "target": "5.10.16",
   "httpTimeoutSeconds": 7500,
@@ -42,5 +42,8 @@
   "currentNode": "crate-03",
   "currentNodeTargetStarted": false,
   "currentNodeDecommissionHttpSeconds": 7500,
-  "allocation": "primaries"
+  "allocation": "primaries",
+  "currentNodeDecommissionSeconds": 878.374,
+  "currentNodeDecommissionAcknowledgedAt": "2026-10-14T21:29:13.435795Z",
+  "pending": "Original 5.10.9 daemon reports active work; actual exit required before target startup. No forced stop or job cancellation."
 }

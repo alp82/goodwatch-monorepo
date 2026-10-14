@@ -1,6 +1,6 @@
 {
   "since": "2026-10-14T21:13:45Z",
-  "through": "2026-10-14T21:26:30.001337+00:00",
+  "through": "2026-10-14T21:42:43.206810+00:00",
   "clients": {
     "gk4owk8-20261014T205004": {
       "failedQueryLogLines": 179,
@@ -38,10 +38,24 @@
       "logReadFailures": 0
     },
     "gk4owk8-20261014T212213": {
-      "failedQueryLogLines": 199,
+      "failedQueryLogLines": 470,
       "firstFailureAt": "2026-10-14T21:22:55.865646071Z",
-      "lastFailureAt": "2026-10-14T21:26:30.060107331Z",
+      "lastFailureAt": "2026-10-14T21:31:52.027648264Z",
       "image": "ghcr.io/alp82/goodwatch-webapp:449c374417ddaa2c9ddfc46b16fb78e60d7a442f",
+      "logReadFailures": 0
+    },
+    "gk4owk8-20261014T213055": {
+      "failedQueryLogLines": 367,
+      "firstFailureAt": "2026-10-14T21:31:43.066755507Z",
+      "lastFailureAt": "2026-10-14T21:40:19.562346576Z",
+      "image": "ghcr.io/alp82/goodwatch-webapp:edadea2f476b27f25f21db2c6b1af4dd6fec1ea5",
+      "logReadFailures": 0
+    },
+    "gk4owk8-20261014T213940": {
+      "failedQueryLogLines": 103,
+      "firstFailureAt": "2026-10-14T21:40:25.451693715Z",
+      "lastFailureAt": "2026-10-14T21:42:41.988571575Z",
+      "image": "ghcr.io/alp82/goodwatch-webapp:9086f883f5001e6f0e9d40c5621c925b75c6ce23",
       "logReadFailures": 0
     }
   },

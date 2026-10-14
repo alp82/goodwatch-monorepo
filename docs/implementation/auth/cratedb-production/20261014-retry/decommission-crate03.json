@@ -1,0 +1,23 @@
+{
+  "label": "decommission-crate03",
+  "host": 11,
+  "stmt": "ALTER CLUSTER DECOMMISSION ?",
+  "args": [
+    "ch8EXZwrQVmCls79_T_vUg"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 878368.1
+    },
+    "elapsedSeconds": 878.374,
+    "at": "2026-10-14T21:29:13.435795+00:00"
+  }
+}

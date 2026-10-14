@@ -1,0 +1,27 @@
+{
+  "label": "pending-job-times-after-crate03-ack",
+  "host": 11,
+  "stmt": "SELECT id, started FROM sys.jobs ORDER BY started LIMIT 20",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "id",
+        "started"
+      ],
+      "rows": [
+        [
+          "1608fb7f-a3f9-8d15-58a8-44c649d8432f",
+          1792013535997
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 5.541897
+    },
+    "elapsedSeconds": 0.01,
+    "at": "2026-10-14T21:32:16.002986+00:00"
+  }
+}

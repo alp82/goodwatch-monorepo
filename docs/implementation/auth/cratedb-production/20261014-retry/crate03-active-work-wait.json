@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-14T21:34:38.435939+00:00",
+  "returncode": 0,
+  "delayingGracefulShutdownLogLines": 14,
+  "gracefulAbortLogLines": 0,
+  "gracefulTimeoutLogLines": 0,
+  "rawLogTextRetained": false
+}

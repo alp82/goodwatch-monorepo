@@ -1,0 +1,106 @@
+{
+  "label": "crate03-last-relocation",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], state, routing_state, seq_no_stats FROM sys.shards WHERE table_name = 'show' AND id = 6",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state",
+        "seq_no_stats"
+      ],
+      "rows": [
+        [
+          "show",
+          6,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 40,
+            "global_checkpoint": 40,
+            "local_checkpoint": 40
+          }
+        ],
+        [
+          "show",
+          6,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14610888,
+            "global_checkpoint": 14374814,
+            "local_checkpoint": 14374814
+          }
+        ],
+        [
+          "show",
+          6,
+          false,
+          "crate-02",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 28,
+            "global_checkpoint": 28,
+            "local_checkpoint": 28
+          }
+        ],
+        [
+          "show",
+          6,
+          true,
+          "crate-02",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14610888,
+            "global_checkpoint": 14374814,
+            "local_checkpoint": 14610888
+          }
+        ],
+        [
+          "show",
+          6,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 40,
+            "global_checkpoint": 40,
+            "local_checkpoint": 40
+          }
+        ],
+        [
+          "show",
+          6,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 28,
+            "global_checkpoint": 28,
+            "local_checkpoint": 28
+          }
+        ]
+      ],
+      "rowcount": 6,
+      "duration": 13.469667
+    },
+    "elapsedSeconds": 0.018,
+    "at": "2026-10-14T21:27:45.135399+00:00"
+  }
+}
