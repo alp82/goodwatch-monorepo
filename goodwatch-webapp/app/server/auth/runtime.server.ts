@@ -6,6 +6,7 @@ import { onShutdown } from "../lifecycle.server.ts"
 import { createGoodwatchAuth } from "./auth.server.ts"
 import { crateAuthTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
+import { parseAuthEncryptionKeys } from "./payload-codec.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
@@ -48,6 +49,7 @@ export async function getBetterAuth(): Promise<AuthService> {
 				},
 			),
 			encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
+			encryptionKeys: parseAuthEncryptionKeys(required("AUTH_CRATEDB_ENCRYPTION_KEYS")),
 			secret: required("BETTER_AUTH_SECRET"),
 			baseURL: required("BETTER_AUTH_URL"),
 			mcp: { resource: required("MCP_RESOURCE_URL") },

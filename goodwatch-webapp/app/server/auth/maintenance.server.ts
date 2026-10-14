@@ -1,9 +1,9 @@
 import { createHmac, randomUUID } from "node:crypto"
 import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authModels, authModelTable } from "./crate-adapter.server.ts"
 import { readCapacity, type AuthAdmission } from "./population.server.ts"
-import { authPayloadCodec } from "./payload-codec.server.ts"
+import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
-type Options = { sql: AuthSql; encryptionSecret: string; cursor?: string; batchSize?: number; now?: Date }
+type Options = { sql: AuthSql; encryptionSecret: string; encryptionKeys?: AuthEncryptionKeys; cursor?: string; batchSize?: number; now?: Date }
 type Envelope = { row: Record<string, unknown>; deleted: boolean; emailClaim?: string; deletedAt?: string; admission?: AuthAdmission; admissionFence?: number }
 type Receipt = { operation: string; baseSeq: number; at?: string }
 
@@ -18,7 +18,7 @@ export async function recoverEmailClaims(options: Options) {
 	const size = batchSize(options.batchSize)
 	const now = options.now ?? new Date()
 	if (!Number.isFinite(now.getTime())) throw new Error("Invalid maintenance time")
-	const codec = authPayloadCodec(encryptionSecret)
+	const codec = authPayloadCodec(encryptionSecret, options.encryptionKeys)
 	await sql("REFRESH TABLE doc.auth_user_email")
 	const page = await sql(`SELECT email_norm FROM doc.auth_user_email ${cursor === undefined ? "" : "WHERE email_norm > ?"} ORDER BY email_norm LIMIT ${size + 1}`, cursor === undefined ? [] : [cursor])
 	const report = { scanned: 0, released: 0, retained: 0, conflicted: 0, cursor: null as string | null, complete: page.rows.length <= size }
@@ -71,7 +71,7 @@ export async function collectAuthGarbage(options: Options & { model: string; now
  const size = batchSize(options.batchSize)
  const now = options.now ?? new Date()
  if (!Number.isFinite(now.getTime())) throw new Error("Invalid maintenance time")
- const codec = authPayloadCodec(options.encryptionSecret)
+ const codec = authPayloadCodec(options.encryptionSecret, options.encryptionKeys)
  const name = authModelTable(model)
  await sql(`REFRESH TABLE ${name}`)
  const page = await sql(`SELECT id FROM ${name} ${cursor === undefined ? "" : "WHERE id > ?"} ORDER BY id LIMIT ${size + 1}`, cursor === undefined ? [] : [cursor])
@@ -106,7 +106,7 @@ export async function collectAuthGarbage(options: Options & { model: string; now
 /** Reclaim admission slots only after a permanent generation fence prevents late insertion. */
 export async function reconcileAuthCapacity(options: Options) {
  const { sql, cursor } = options
- const codec = authPayloadCodec(options.encryptionSecret)
+ const codec = authPayloadCodec(options.encryptionSecret, options.encryptionKeys)
  const size = batchSize(options.batchSize)
  const now = options.now ?? new Date()
  if (!Number.isFinite(now.getTime())) throw new Error("Invalid maintenance time")
@@ -161,7 +161,7 @@ export async function reconcileAuthCapacity(options: Options) {
 export async function auditAuthPopulation(options: Options & { model: string }) {
  const { sql, model, cursor } = options
  if (!authModels.includes(model)) throw new Error("Unsupported maintenance model")
- const codec = authPayloadCodec(options.encryptionSecret)
+ const codec = authPayloadCodec(options.encryptionSecret, options.encryptionKeys)
  const size = batchSize(options.batchSize)
  const name = authModelTable(model)
  await sql(`REFRESH TABLE ${name}`)
@@ -184,5 +184,36 @@ export async function auditAuthPopulation(options: Options & { model: string }) 
   if (capacity?.ledger.slots[id]?.generation !== envelope.admission.generation) report.inconsistent++
  }
  report.safe = report.unadmitted === 0 && report.inconsistent === 0
+ return report
+}
+
+/** Rewrite encrypted envelopes by CAS; do not change logical records, indexes or receipt ownership. */
+export async function rotateAuthEncryption(options: Options & { model: string }) {
+ const { sql, model, cursor } = options
+ if (![...authModels, "capacity"].includes(model)) throw new Error("Unsupported maintenance model")
+ if (!options.encryptionKeys) throw new Error("A versioned auth encryption key ring is required for rotation")
+ const codec = authPayloadCodec(options.encryptionSecret, options.encryptionKeys)
+ const size = batchSize(options.batchSize)
+ const name = authModelTable(model)
+ await sql(`REFRESH TABLE ${name}`)
+ const page = await sql(`SELECT id FROM ${name} ${cursor === undefined ? "" : "WHERE id > ?"} ORDER BY id LIMIT ${size + 1}`, cursor === undefined ? [] : [cursor])
+ const report = { scanned: 0, rotated: 0, conflicted: 0, cursor: null as string | null, complete: page.rows.length <= size }
+ for (const [value] of page.rows.slice(0, size)) {
+  const id = String(value)
+  report.scanned++
+  report.cursor = id
+  const current = (await sql(`SELECT payload,receipts,_seq_no,_primary_term FROM ${name} WHERE id=?`, [id])).rows[0]
+  if (!current) continue
+  const aad = `${name}:${id}`
+  // Authenticate both even when already at the active key. An audit must not
+  // certify a forged key id or leave an undecryptable receipt behind.
+  const envelope: Envelope = codec.decode(current[0], `${aad}:payload`)
+  if (envelope.row.id !== id || typeof envelope.deleted !== "boolean") throw new Error("Invalid authenticated auth row")
+  const receipts = codec.decode(current[1], `${aad}:receipts`)
+  if (codec.usesActiveKey(current[0]) && codec.usesActiveKey(current[1])) continue
+  const result = await sql(`UPDATE ${name} SET payload=?,receipts=? WHERE id=? AND _seq_no=? AND _primary_term=?`, [codec.encode(envelope, `${aad}:payload`), codec.encode(receipts, `${aad}:receipts`), id, current[2], current[3]])
+  if (result.rowcount === 1) report.rotated++
+  else report.conflicted++
+ }
  return report
 }

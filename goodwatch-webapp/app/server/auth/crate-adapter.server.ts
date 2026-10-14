@@ -3,7 +3,7 @@ import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
 import { admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
-import { authPayloadCodec } from "./payload-codec.server.ts"
+import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
 export type AuthSql = (statement: string, args?: unknown[]) => Promise<SqlResult>
@@ -101,12 +101,12 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 	if (!String((await sql("SHOW CREATE TABLE doc.auth_user_email")).rows[0]?.[0]).includes('"user_seq" BIGINT NOT NULL')) throw new Error("Incompatible prerelease email claim schema: offline migration required")
 }
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, populationBounds }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; populationBounds?: true | AuthPopulationBounds }) {
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
 	const payloadSecret = encryptionSecret ?? "disposable-local-auth-integration-key-548"
-	const codec = authPayloadCodec(payloadSecret)
+	const codec = authPayloadCodec(payloadSecret, encryptionKeys)
 	const bounds = populationBounds === true ? launchPopulationBounds : populationBounds
 	if (bounds) validatePopulationBounds(bounds, maxEnumeration)
 	const privateKey = (purpose: string, value: unknown) => createHmac("sha256", payloadSecret).update(JSON.stringify([purpose, value])).digest("hex")

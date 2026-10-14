@@ -15,6 +15,7 @@ import { jwt } from "@goodwatch/auth-stack/plugins"
 import { compare } from "bcryptjs"
 import { decodeJwt, jwtVerify } from "jose"
 import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
+import type { AuthEncryptionKeys } from "./payload-codec.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
@@ -25,6 +26,7 @@ export function createGoodwatchAuth(options: {
 	baseURL: string
 	secret: string
 	encryptionSecret?: string
+	encryptionKeys?: AuthEncryptionKeys
 	trustedIpHeader?: string
 	rateLimit?: BetterAuthOptions["rateLimit"]
 	mcp?: { resource: string; accessTokenExpiresIn?: number }
@@ -40,6 +42,7 @@ export function createGoodwatchAuth(options: {
 		database: crateAuthAdapter({
 			sql: options.sql,
 			encryptionSecret: options.encryptionSecret,
+			encryptionKeys: options.encryptionKeys,
 			populationBounds: true,
 		}),
 		plugins: options.mcp
