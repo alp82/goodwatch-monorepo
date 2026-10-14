@@ -106,6 +106,9 @@ need them.
 phone screenshots, measures the two heights, checks that a fresh visit asks for nothing of the row, and checks that
 nothing reaches a third party before a press.
 
+`shots/` has the row at 1440 × 900 (`desktop.png`) and at 390 × 844 on a phone (`phone.png`), taken on 14 October
+2026 with production data, and the script's `report.json` from that run.
+
 Tests: `node --test app/domain/talked-about-now.test.ts app/server/talked-about-now/start-row.test.ts app/server/features.test.ts`.
 
 ## After merge

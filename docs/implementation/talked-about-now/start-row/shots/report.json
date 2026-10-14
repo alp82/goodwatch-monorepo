@@ -1,0 +1,57 @@
+{
+  "firstView": {
+    "requests": 174,
+    "rowRequests": [],
+    "slotInHtml": false,
+    "locked": "locked"
+  },
+  "desktop": {
+    "lead": 876,
+    "board": 876,
+    "page": 1425,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hostsBeforePress": [
+      "image.tmdb.org",
+      "www.googletagmanager.com"
+    ]
+  },
+  "afterPress": {
+    "iframe": "https://www.youtube-nocookie.com/embed/3g28OdIj6cY?autoplay=1&rel=0&playsinline=1",
+    "hosts": [
+      "fonts.gstatic.com",
+      "i.ytimg.com",
+      "image.tmdb.org",
+      "jnn-pa.googleapis.com",
+      "rr8---sn-u0g3jxaa-n5fl.googlevideo.com",
+      "www.google.com",
+      "www.googletagmanager.com",
+      "www.gstatic.com",
+      "www.youtube-nocookie.com",
+      "yt3.ggpht.com"
+    ]
+  },
+  "desktop-second": {
+    "lead": 809,
+    "board": 809
+  },
+  "phone": {
+    "lead": 815,
+    "board": 1519,
+    "page": 390,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "hostsBeforePress": [
+      "image.tmdb.org",
+      "www.googletagmanager.com"
+    ]
+  },
+  "phone-second": {
+    "lead": 552,
+    "board": 1257
+  }
+}
