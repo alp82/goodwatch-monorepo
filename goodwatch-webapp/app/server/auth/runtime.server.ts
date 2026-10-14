@@ -50,6 +50,7 @@ export async function getBetterAuth(): Promise<AuthService> {
 			encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
 			secret: required("BETTER_AUTH_SECRET"),
 			baseURL: required("BETTER_AUTH_URL"),
+			mcp: {resource: required("MCP_RESOURCE_URL")},
 			trustedIpHeader: required("AUTH_TRUSTED_IP_HEADER"),
 			storage: new ValkeyAuthStorage(() => clusterProvider()),
 			mail,

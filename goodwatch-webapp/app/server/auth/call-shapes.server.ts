@@ -12,7 +12,7 @@ const rules: Record<string, Record<string, string[]>> = {
 	oauthClient: { findOne: ["clientId"], findMany: ["referenceId", "userId", "clientId:in"], update: ["clientId", "clientId+clientDiscoveryId"], delete: ["clientId"] },
 	oauthResource: { findOne: ["identifier"], findMany: ["", "identifier:in"], update: ["identifier"], delete: ["identifier"] },
 	oauthClientResource: { findOne: ["clientId+resourceId"], findMany: ["clientId", "clientId+resourceId:in"], deleteMany: ["clientId+resourceId"] },
-	oauthConsent: { findOne: ["clientId+userId", "clientId+userId+referenceId", "id"], findMany: ["userId"], update: ["id"], delete: ["id"] },
+	oauthConsent: { incrementOne: ["id+lastUsedAt"], findOne: ["clientId+userId", "clientId+userId+referenceId", "id"], findMany: ["userId"], update: ["id"], delete: ["id"] },
 	oauthAccessToken: { findOne: ["token"], findMany: ["sessionId"], delete: ["id", "token"], deleteMany: ["refreshId", "refreshId:in", "authorizationCodeId"], updateMany: ["id:in"] },
 	oauthRefreshToken: { findOne: ["token"], findMany: ["sessionId", "clientId+userId"], deleteMany: ["authorizationCodeId", "clientId+userId"], updateMany: ["id:in"], incrementOne: ["id+revoked"], update: ["id"] },
 	oauthClientAssertion: { findOne: ["id"] },
@@ -58,6 +58,8 @@ export function assertAuthMutation(model: string, action: string, input: Record<
 	if (["update", "updateMany", "incrementOne"].includes(action)) {
 		const data = action === "incrementOne" ? input.set ?? {} : input.update ?? {}
 		if (!Object.keys(data).length && !Object.keys(input.increment ?? {}).length) fail()
+		// #566: usage may only advance through an observed grant version.
+		if (model === "oauthConsent" && action === "incrementOne" && (Object.keys(input.increment ?? {}).length || Object.keys(data).length !== 1 || !(data.lastUsedAt instanceof Date) || !Number.isFinite(data.lastUsedAt.getTime()))) fail()
 		// #549: atomically consume only the newest email confirmation digest.
 		if (model === "user" && action === "incrementOne" && (Object.keys(input.increment).length || Object.keys(data).some(field => !["confirmationDigest", "updatedAt"].includes(field)) || data.confirmationDigest !== null || typeof input.where.find((p: CleanedWhere) => p.field === "confirmationDigest")?.value !== "string")) fail()
 		// #549: a legacy rehash must not overwrite a concurrent password change.
