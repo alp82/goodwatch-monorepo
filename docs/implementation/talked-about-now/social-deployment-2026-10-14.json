@@ -1,0 +1,506 @@
+{
+  "checked_at": "2026-10-14T21:33:59.081887+00:00",
+  "merged_commit": "449c374417ddaa2c9ddfc46b16fb78e60d7a442f",
+  "github_sync": {
+    "run_id": 38638902778,
+    "conclusion": "success"
+  },
+  "initial_main_sync_proof": [
+    {
+      "path": "f/social/bluesky",
+      "content_matches_main": true,
+      "hash": "cfa52b67e8d3faea",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/common",
+      "content_matches_main": true,
+      "hash": "44c0a016fb3bb424",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/deletion_sync",
+      "flow_matches_main": true
+    },
+    {
+      "path": "f/social/discover",
+      "flow_matches_main": true
+    },
+    {
+      "path": "f/social/ingest",
+      "content_matches_main": true,
+      "hash": "fe088704e29d81aa",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/inventory",
+      "content_matches_main": true,
+      "hash": "db9eef37d9467d6c",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/maintenance",
+      "content_matches_main": true,
+      "hash": "e008c9c81ddc76ad",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/mastodon",
+      "content_matches_main": true,
+      "hash": "5de4862a76f90c78",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/matcher",
+      "content_matches_main": true,
+      "hash": "e4548a03a8b9f9bb",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/quality",
+      "content_matches_main": true,
+      "hash": "f00a279888537085",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/rss",
+      "content_matches_main": true,
+      "hash": "af797c8fd0316b79",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/rules",
+      "content_matches_main": true,
+      "hash": "c8dc4fddfc922f94",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/schema",
+      "content_matches_main": true,
+      "hash": "8d6375e9cfa3cbf8",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/settings",
+      "content_matches_main": true,
+      "hash": "e31f7bd16a969139",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/store",
+      "content_matches_main": true,
+      "hash": "ffb561a7b6fcf862",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/vector",
+      "content_matches_main": true,
+      "hash": "732bb9e61d929868",
+      "lock_present": true,
+      "lock_error": false
+    },
+    {
+      "path": "f/social/youtube",
+      "content_matches_main": true,
+      "hash": "2acc1cfa6750d1d2",
+      "lock_present": true,
+      "lock_error": false
+    }
+  ],
+  "required_variables_present": [
+    "u/Alp/CRATE_HOSTS",
+    "u/Alp/CRATE_USER",
+    "u/Alp/CRATE_PASS",
+    "u/Alp/OPENROUTER_API_KEY",
+    "u/Alp/QDRANT_HOST",
+    "u/Alp/QDRANT_PORT",
+    "u/Alp/QDRANT_API_KEY"
+  ],
+  "optional_variables_absent": {
+    "CRATE_PORT": "defaults to 4200",
+    "YOUTUBE_API_KEY": "uses verified channel Atom feeds",
+    "QDRANT_URL": "derived from host/port with HTTP port 6333"
+  },
+  "required_resource_objects": [],
+  "hotfix": {
+    "branch": "feat/talked-about-now-social-deploy",
+    "pull_request": 582,
+    "scripts": {
+      "ingest": {
+        "path": "f/social/ingest",
+        "hash": "8ddd3b77a0a61693",
+        "has_wmill": true,
+        "concurrent_limit": 1
+      },
+      "maintenance": {
+        "path": "f/social/maintenance",
+        "hash": "c771b9cbc7a7292d",
+        "has_wmill": true,
+        "concurrent_limit": 1
+      }
+    },
+    "flow_concurrent_limit": 1,
+    "scope": "Extra dependency declarations, generated metadata/locks and concurrency metadata only; no source, quality, matching or storage logic changed."
+  },
+  "first_failed_job": "01a13c48-b7d6-4d13-b966-869c78f4a6ae",
+  "discover": {
+    "id": "01a13c4b-02c1-cd18-bd35-8ab9a0923d05",
+    "created_at": "2026-10-14T21:21:51.296103Z",
+    "started_at": "2026-10-14T21:21:51.303275Z",
+    "duration_ms": 328791,
+    "success": false,
+    "result": {
+      "error": {
+        "name": "RuntimeError",
+        "stack": "  File \"/tmp/windmill/wk-default-2f4bb8b4f321-COfKx/01a13c4b-02dc-8c53-af7a-6895444faca2/f/social/ingest.py\", line 98, in main\n    raise RuntimeError('Social sources failed (see social_ingest_run): ' + ','.join(failed))\n",
+        "message": "Social sources failed (see social_ingest_run): bluesky,mastodon",
+        "step_id": "run"
+      }
+    },
+    "flow_status": {
+      "step": 0,
+      "modules": [
+        {
+          "id": "run",
+          "job": "01a13c4b-02dc-8c53-af7a-6895444faca2",
+          "type": "Failure"
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    },
+    "worker": "wk-default-2f4bb8b4f321-COfKx"
+  },
+  "deletion_sync": {
+    "id": "01a13c53-0cb4-04a9-72ad-088cd7137563",
+    "duration_ms": 1726,
+    "success": true,
+    "result": {
+      "checked": 8,
+      "removed": 0,
+      "unknown": 0
+    },
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "run",
+          "job": "01a13c53-0ce3-33d2-9adc-2aec584420a9",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  "before": {
+    "posts": [
+      {
+        "source": "youtube",
+        "posts": 94
+      },
+      {
+        "source": "rss",
+        "posts": 523
+      },
+      {
+        "source": "bluesky",
+        "posts": 864
+      },
+      {
+        "source": "mastodon",
+        "posts": 77
+      }
+    ],
+    "links": [
+      {
+        "source": "youtube",
+        "links": 68
+      },
+      {
+        "source": "rss",
+        "links": 317
+      },
+      {
+        "source": "bluesky",
+        "links": 69
+      }
+    ]
+  },
+  "after": {
+    "posts": [
+      {
+        "source": "youtube",
+        "posts": 108
+      },
+      {
+        "source": "rss",
+        "posts": 636
+      },
+      {
+        "source": "mastodon",
+        "posts": 131
+      },
+      {
+        "source": "bluesky",
+        "posts": 1480
+      }
+    ],
+    "links": [
+      {
+        "source": "youtube",
+        "links": 76
+      },
+      {
+        "source": "rss",
+        "links": 375
+      },
+      {
+        "source": "bluesky",
+        "links": 120
+      }
+    ],
+    "pending": {
+      "youtube": 0,
+      "rss": 0,
+      "bluesky": 14,
+      "mastodon": 68
+    },
+    "nonpassing_links": 0,
+    "runs": [
+      {
+        "run_id": "b953ff2a6f564867ae3f8d5e1a125630",
+        "source": "youtube",
+        "status": "ok",
+        "collected": 50,
+        "processed": 14,
+        "published": 8,
+        "inference_cost_usd": 0.014068399999999998,
+        "details": "{\"audit\": [{\"channel\": \"UCq0OueAsdxH6b8nyAspwViw\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCjmJDM5pRKbUlVIzDYYWb6g\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCz97F7dMxBNOfGYu3rx8aCw\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCuPivVjnfNo4mb3Oog_frZg\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCpy5dRhZd-JbZP4NsrnLt1w\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UC51KZjUZokzJfb08mzAGS2A\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCIrgJInjLS2BhlHOMDW7v0g\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCWOA1ZGywLbqmigxE4Qlvuw\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCc1l5mTmAv2GC_PXrBpqyKQ\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}, {\"channel\": \"UCZSNzBgFub_WWil6TOTYwAg\", \"route\": \"official_channel_feed\", \"returned\": 15, \"missing_api_key\": true, \"bounded_pages\": 1}], \"errors\": [], \"content_quality\": {\"version\": \"content-quality-1\", \"pass\": 50, \"reject\": 0, \"reasons\": {}}, \"pending_after_run\": 0, \"vector_enabled\": true, \"disabled_lanes_for_readers\": []}"
+      },
+      {
+        "run_id": "a43ff190a16342caa276e0255d6bae36",
+        "source": "rss",
+        "status": "ok",
+        "collected": 260,
+        "processed": 121,
+        "published": 62,
+        "inference_cost_usd": 0.08289239999999999,
+        "details": "{\"audit\": [{\"feed\": \"https://variety.com/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T18:33:55+00:00\"}, {\"feed\": \"https://variety.com/feed/\", \"page\": 2, \"entries\": 10, \"oldest\": \"2026-10-14T17:10:57+00:00\"}, {\"feed\": \"https://variety.com/v/film/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T16:10:45+00:00\"}, {\"feed\": \"https://variety.com/v/film/feed/\", \"page\": 2, \"entries\": 10, \"oldest\": \"2026-10-14T14:09:11+00:00\"}, {\"feed\": \"https://deadline.com/feed/\", \"page\": 1, \"entries\": 12, \"oldest\": \"2026-10-14T18:03:47+00:00\"}, {\"feed\": \"https://deadline.com/feed/\", \"page\": 2, \"entries\": 12, \"oldest\": \"2026-10-14T16:56:12+00:00\"}, {\"feed\": \"https://deadline.com/v/film/feed/\", \"page\": 1, \"entries\": 12, \"oldest\": \"2026-10-14T13:26:09+00:00\"}, {\"feed\": \"https://deadline.com/v/film/feed/\", \"page\": 2, \"entries\": 12, \"oldest\": \"2026-10-13T19:21:48+00:00\"}, {\"feed\": \"https://www.hollywoodreporter.com/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T19:39:21+00:00\"}, {\"feed\": \"https://www.hollywoodreporter.com/feed/\", \"page\": 2, \"entries\": 10, \"oldest\": \"2026-10-14T17:00:00+00:00\"}, {\"feed\": \"https://www.hollywoodreporter.com/c/movies/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T15:41:25+00:00\"}, {\"feed\": \"https://www.hollywoodreporter.com/c/movies/feed/\", \"page\": 2, \"entries\": 10, \"oldest\": \"2026-10-13T21:14:33+00:00\"}, {\"feed\": \"https://www.indiewire.com/feed/\", \"page\": 1, \"entries\": 12, \"oldest\": \"2026-10-14T13:30:00+00:00\"}, {\"feed\": \"https://www.indiewire.com/feed/\", \"page\": 2, \"entries\": 12, \"oldest\": \"2026-10-13T15:30:00+00:00\"}, {\"feed\": \"https://collider.com/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T20:22:33+00:00\"}, {\"feed\": \"https://screenrant.com/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T20:37:33+00:00\"}, {\"feed\": \"https://www.slashfilm.com/feed/\", \"page\": 1, \"entries\": 20, \"oldest\": \"2026-10-13T16:52:49+00:00\"}, {\"feed\": \"https://www.slashfilm.com/feed/\", \"page\": 2, \"entries\": 20, \"oldest\": \"2026-10-13T16:52:49+00:00\"}, {\"feed\": \"https://www.denofgeek.com/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-14T11:45:00+00:00\"}, {\"feed\": \"https://www.filmstarts.de/rss/nachrichten.xml\", \"page\": 1, \"entries\": 20, \"oldest\": \"2026-10-14T11:00:00+00:00\"}, {\"feed\": \"https://www.filmstarts.de/rss/filme-nachrichten.xml\", \"page\": 1, \"entries\": 20, \"oldest\": \"2026-10-14T08:30:00+00:00\"}, {\"feed\": \"https://www.filmstarts.de/rss/serien-nachrichten.xml\", \"page\": 1, \"entries\": 20, \"oldest\": \"2026-10-12T16:45:00+00:00\"}, {\"feed\": \"https://www.moviepilot.de/news.rss\", \"page\": 1, \"entries\": 19, \"oldest\": \"2026-10-12T07:50:00+00:00\"}, {\"feed\": \"https://www.film-rezensionen.de/feed/\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-13T21:05:01+00:00\"}, {\"feed\": \"https://www.epd-film.de/rss.xml\", \"page\": 1, \"entries\": 10, \"oldest\": \"2026-10-08T10:30:01+00:00\"}, {\"feed\": \"https://about.netflix.com/en/feed.xml\", \"page\": 1, \"entries\": 15, \"oldest\": \"2026-10-08T00:00:00+00:00\"}, {\"feed\": \"https://about.netflix.com/de/feed.xml\", \"page\": 1, \"entries\": 15, \"oldest\": \"2026-01-26T00:00:00+00:00\"}], \"errors\": [], \"content_quality\": {\"version\": \"content-quality-1\", \"pass\": 259, \"reject\": 1, \"reasons\": {\"invalid_link\": 1}}, \"pending_after_run\": 0, \"vector_enabled\": true, \"disabled_lanes_for_readers\": []}"
+      },
+      {
+        "run_id": "6ea970099bf94185873751be344cf000",
+        "source": "bluesky",
+        "status": "failed",
+        "collected": 616,
+        "processed": 216,
+        "published": 51,
+        "inference_cost_usd": 0.11725039999999987,
+        "details": "{\"audit\": [{\"query\": \"movie\", \"returned\": 100, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"film\", \"returned\": 100, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"trailer\", \"returned\": 98, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"TV show\", \"returned\": 97, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"series\", \"returned\": 98, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"episode\", \"returned\": 99, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"netflix\", \"returned\": 98, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}, {\"query\": \"cinema\", \"returned\": 99, \"cursor_ignored\": true, \"scope\": \"bounded_first_page\"}], \"errors\": [], \"content_quality\": {\"version\": \"content-quality-1\", \"pass\": 230, \"reject\": 386, \"reasons\": {\"no_substantive_text\": 52, \"high_post_rate\": 126, \"unapproved_link_domain\": 301, \"new_account\": 38, \"repetitive_author\": 57, \"stream_promotion\": 38, \"link_shortener\": 25, \"declared_bot\": 32, \"automated_frame_post\": 5}}, \"error_type\": \"HTTPError\", \"error\": \"403 Client Error: Forbidden for url: https://openrouter.ai/api/v1/chat/completions\"}"
+      },
+      {
+        "run_id": "c61c3ab2b86d46069079bcba00084dbd",
+        "source": "mastodon",
+        "status": "failed",
+        "collected": 77,
+        "processed": 0,
+        "published": 0,
+        "inference_cost_usd": 0.0,
+        "details": "{\"audit\": [{\"instance\": \"https://mastodon.social\", \"returned\": 40, \"scope\": \"public_status_trends\"}, {\"instance\": \"https://mastodon.online\", \"returned\": 40, \"scope\": \"public_status_trends\"}, {\"instance\": \"https://fosstodon.org\", \"returned\": 38, \"scope\": \"public_status_trends\"}], \"errors\": [], \"content_quality\": {\"version\": \"content-quality-1\", \"pass\": 68, \"reject\": 9, \"reasons\": {\"no_substantive_text\": 7, \"declared_bot\": 1, \"new_account\": 1}}, \"error_type\": \"HTTPError\", \"error\": \"403 Client Error: Forbidden for url: https://openrouter.ai/api/v1/chat/completions\"}"
+      }
+    ]
+  },
+  "schedules": [
+    {
+      "path": "f/social/discover_youtube",
+      "enabled": true,
+      "script_path": "f/social/discover",
+      "is_flow": true,
+      "schedule": "0 0 * * * *",
+      "timezone": "UTC",
+      "args": {
+        "days": 2,
+        "pages": 2,
+        "source": "youtube",
+        "max_posts": 400,
+        "vector_enabled": true
+      },
+      "paused_until": "2026-10-15T00:00:00Z",
+      "no_flow_overlap": true,
+      "cron_version": "v2",
+      "permissioned_as": "u/Alp",
+      "error": null
+    },
+    {
+      "path": "f/social/discover_rss",
+      "enabled": true,
+      "script_path": "f/social/discover",
+      "is_flow": true,
+      "schedule": "0 20 * * * *",
+      "timezone": "UTC",
+      "args": {
+        "days": 2,
+        "pages": 2,
+        "source": "rss",
+        "max_posts": 400,
+        "vector_enabled": true
+      },
+      "paused_until": "2026-10-15T00:00:00Z",
+      "no_flow_overlap": true,
+      "cron_version": "v2",
+      "permissioned_as": "u/Alp",
+      "error": null
+    },
+    {
+      "path": "f/social/discover_bluesky",
+      "enabled": true,
+      "script_path": "f/social/discover",
+      "is_flow": true,
+      "schedule": "0 40 * * * *",
+      "timezone": "UTC",
+      "args": {
+        "days": 2,
+        "pages": 2,
+        "source": "bluesky",
+        "max_posts": 400,
+        "vector_enabled": true
+      },
+      "paused_until": "2026-10-15T00:00:00Z",
+      "no_flow_overlap": true,
+      "cron_version": "v2",
+      "permissioned_as": "u/Alp",
+      "error": null
+    },
+    {
+      "path": "f/social/discover_mastodon",
+      "enabled": true,
+      "script_path": "f/social/discover",
+      "is_flow": true,
+      "schedule": "0 10 3 * * *",
+      "timezone": "UTC",
+      "args": {
+        "days": 2,
+        "pages": 2,
+        "source": "mastodon",
+        "max_posts": 400,
+        "vector_enabled": true
+      },
+      "paused_until": "2026-10-15T00:00:00Z",
+      "no_flow_overlap": true,
+      "cron_version": "v2",
+      "permissioned_as": "u/Alp",
+      "error": null
+    },
+    {
+      "path": "f/social/deletion_sync",
+      "enabled": true,
+      "script_path": "f/social/deletion_sync",
+      "is_flow": true,
+      "schedule": "0 50 */6 * * *",
+      "timezone": "UTC",
+      "args": {
+        "limit": 2000,
+        "source": "all"
+      },
+      "paused_until": null,
+      "no_flow_overlap": true,
+      "cron_version": "v2",
+      "permissioned_as": "u/Alp",
+      "error": null
+    }
+  ],
+  "queued_jobs": [
+    {
+      "id": "01a13c53-b725-8df6-88f6-35e1fe010d76",
+      "script_path": "f/social/discover",
+      "schedule_path": null,
+      "scheduled_for": "2026-10-15T00:05:00Z",
+      "running": false,
+      "args": null
+    },
+    {
+      "id": "01a13c53-b6d4-4ad2-4822-a7265b4f700c",
+      "script_path": "f/social/deletion_sync",
+      "schedule_path": "f/social/deletion_sync",
+      "scheduled_for": "2026-10-15T00:50:00Z",
+      "running": false,
+      "args": null
+    },
+    {
+      "id": "01a13c53-b5d5-3d7a-c7e4-8405c4f5e187",
+      "script_path": "f/social/discover",
+      "schedule_path": "f/social/discover_mastodon",
+      "scheduled_for": "2026-10-15T03:10:00Z",
+      "running": false,
+      "args": null
+    },
+    {
+      "id": "01a13c53-b4a1-9972-afcd-1a883f48eb18",
+      "script_path": "f/social/discover",
+      "schedule_path": "f/social/discover_bluesky",
+      "scheduled_for": "2026-10-15T00:40:00Z",
+      "running": false,
+      "args": null
+    },
+    {
+      "id": "01a13c53-b3a2-9419-dab2-abeeb83b192b",
+      "script_path": "f/social/discover",
+      "schedule_path": "f/social/discover_rss",
+      "scheduled_for": "2026-10-15T00:20:00Z",
+      "running": false,
+      "args": null
+    },
+    {
+      "id": "01a13c53-b2d3-0b08-e828-b6c708c621e0",
+      "script_path": "f/social/discover",
+      "schedule_path": "f/social/discover_youtube",
+      "scheduled_for": "2026-10-15T01:00:00Z",
+      "running": false,
+      "args": null
+    }
+  ],
+  "after_reset_retry": {
+    "job_id": "01a13c53-b725-8df6-88f6-35e1fe010d76",
+    "scheduled_for": "2026-10-15T00:05:00+00:00",
+    "args": {
+      "source": "all",
+      "days": 2,
+      "pages": 2,
+      "max_posts": 400,
+      "vector_enabled": true
+    }
+  },
+  "provider_quota": {
+    "limit_usd": 1,
+    "reset": "daily at midnight UTC",
+    "remaining_usd": 0,
+    "usage_daily_usd": 1.011203746,
+    "diagnostic": "OpenRouter GET /api/v1/key; no spending limit or credential changed"
+  },
+  "tests": {
+    "offline_social_tests_passed": 31
+  },
+  "acceptance": "All-source green verification remains blocked by exhausted OpenRouter quota. Queued retry is not a success claim."
+}
