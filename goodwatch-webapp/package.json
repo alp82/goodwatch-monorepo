@@ -14,7 +14,8 @@
 		"postinstall": "patch-package",
 		"test:auth": "bash scripts/auth-cratedb/run.sh",
 		"test:auth:integration": "node --test --test-concurrency=1 app/server/auth/adapter.integration.ts app/server/auth/failover.integration.ts",
-		"typecheck:auth": "tsc -p scripts/auth-cratedb/tsconfig.json"
+		"typecheck:auth": "tsc -p scripts/auth-cratedb/tsconfig.json",
+		"test:auth:wiring": "bash scripts/auth-wiring/run.sh"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",

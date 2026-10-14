@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
+if [[ -S "/run/user/$(id -u)/docker.sock" ]]; then
+ export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
+else
+ export DOCKER_HOST=unix:///var/run/docker.sock
+fi
 unset DOCKER_CONTEXT
 compose=(docker compose -f scripts/auth-cratedb/compose.yaml -f scripts/auth-wiring/compose.yaml -p goodwatch-auth-549)
 AUTH_TEST_VALKEY_NAT=$(node --input-type=module <<'JS'
