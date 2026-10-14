@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-14T21:00:44.405321+00:00",
+  "state": "FIRST_NODE_DECOMMISSION_IN_FLIGHT",
+  "node": "crate-02",
+  "target": "5.10.16",
+  "httpTimeoutSeconds": 7500,
+  "serverGracefulStop": "2h",
+  "snapshot": "goodwatch-db-backup-v2.pre_auth_547_20261014204756",
+  "snapshotState": "SUCCESS",
+  "mutationsSoFar": [
+    "Fresh named snapshot and protected BLOB retention",
+    "Target image pull/verification on all hosts",
+    "Explicit transient graceful stop timeout 2h, same effective baseline",
+    "One owned idempotent maintenance-probe row in existing doc.workflow_monitoring",
+    "Only crate-02 image pin staged and restart no",
+    "Transient allocation primaries",
+    "One decommission request via crate-01"
+  ],
+  "excludedActionsStillUntouched": [
+    "app code/config",
+    "auth user",
+    "HBA",
+    "firewall",
+    "table settings"
+  ],
+  "cutoff": "2026-10-15T02:30:00Z"
+}

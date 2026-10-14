@@ -1,0 +1,25 @@
+{
+  "label": "monitor-probe-table-definition",
+  "host": 11,
+  "stmt": "SHOW CREATE TABLE doc.workflow_monitoring",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "SHOW CREATE TABLE doc.workflow_monitoring"
+      ],
+      "rows": [
+        [
+          "CREATE TABLE IF NOT EXISTS \"doc\".\"workflow_monitoring\" (\n   \"monitor_key\" TEXT NOT NULL,\n   \"kind\" TEXT,\n   \"pipeline\" TEXT,\n   \"payload\" TEXT INDEX OFF STORAGE WITH (\n      columnstore = false\n   ),\n   \"updated_at\" TIMESTAMP WITH TIME ZONE,\n   \"lease_token\" TEXT,\n   \"lease_expires_at\" TIMESTAMP WITH TIME ZONE,\n   PRIMARY KEY (\"monitor_key\")\n)\nCLUSTERED BY (\"monitor_key\") INTO 1 SHARDS\nWITH (\n   column_policy = 'strict',\n   number_of_replicas = '1'\n)"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.742104
+    },
+    "elapsedSeconds": 0.009,
+    "at": "2026-10-14T20:58:47.078285+00:00"
+  }
+}

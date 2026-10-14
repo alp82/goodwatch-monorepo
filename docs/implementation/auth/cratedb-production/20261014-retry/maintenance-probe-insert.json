@@ -1,0 +1,26 @@
+{
+  "label": "maintenance-probe-insert",
+  "host": 11,
+  "stmt": "INSERT INTO doc.workflow_monitoring (monitor_key, kind, pipeline, payload, updated_at) VALUES (?, ?, ?, ?, current_timestamp) ON CONFLICT (monitor_key) DO UPDATE SET payload = excluded.payload, updated_at = current_timestamp",
+  "args": [
+    "maintenance_auth_547_20261014204756",
+    "maintenance_probe",
+    "auth-prereqs",
+    "baseline"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 10.730294
+    },
+    "elapsedSeconds": 0.016,
+    "at": "2026-10-14T20:59:17.347661+00:00"
+  }
+}

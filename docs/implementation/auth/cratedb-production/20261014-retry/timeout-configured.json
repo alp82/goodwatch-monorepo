@@ -1,0 +1,21 @@
+{
+  "label": "timeout-configured",
+  "host": 11,
+  "stmt": "SET GLOBAL TRANSIENT \"cluster.graceful_stop.timeout\" = '2h'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 68.016815
+    },
+    "elapsedSeconds": 0.074,
+    "at": "2026-10-14T20:56:27.204674+00:00"
+  }
+}

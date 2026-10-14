@@ -1,0 +1,17 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "operation": "pull",
+    "node": "crate-02",
+    "startedAt": "2026-10-14T20:56:24.599397+00:00",
+    "pullOutput": "docker.io/library/crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307: Pulling from library/crate\nDigest: sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\nStatus: Image is up to date for crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\ndocker.io/library/crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307\n",
+    "targetImageId": "sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f",
+    "targetDigests": [
+      "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+    ],
+    "architecture": "amd64",
+    "finishedAt": "2026-10-14T20:56:25.089221+00:00"
+  },
+  "failureOutput": null
+}

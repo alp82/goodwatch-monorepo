@@ -1,0 +1,23 @@
+{
+  "label": "maintenance-probe-baseline",
+  "host": 11,
+  "stmt": "SELECT monitor_key FROM doc.workflow_monitoring WHERE monitor_key = ?",
+  "args": [
+    "maintenance_auth_547_20261014204756"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "monitor_key"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 1.841085
+    },
+    "elapsedSeconds": 0.007,
+    "at": "2026-10-14T20:57:56.092287+00:00"
+  }
+}

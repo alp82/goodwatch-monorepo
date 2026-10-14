@@ -1,0 +1,21 @@
+{
+  "label": "allocation-primaries-crate02",
+  "host": 11,
+  "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'primaries'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 48.386784
+    },
+    "elapsedSeconds": 0.054,
+    "at": "2026-10-14T20:59:57.489049+00:00"
+  }
+}
