@@ -140,6 +140,7 @@ export function pageCacheKey(
 	const path = parsed.pathname
 	if (
 		isHealthPath(path) ||
+		/^\/mcp(?:\/|$)/.test(path) ||
 		/^\/(api|og|assets|health)\//.test(path) ||
 		/(?:^|&)_data=/.test(parsed.search.slice(1)) ||
 		path.split("/").at(-1)?.includes(".")
