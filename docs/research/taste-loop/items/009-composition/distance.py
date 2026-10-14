@@ -18,6 +18,11 @@ WORK = Path.home() / 'goodwatch-research/taste/work'
 RUN = '20261014T113107-e864bd47-b08d'
 # This retained snapshot has exactly the requested run's harness hash.
 HARNESS = WORK / 'runs/20261014T104820-3321997e-abdc/harness'
+OUT = 'DISTANCE.md'
+if len(sys.argv) > 1 and sys.argv[1] == 'registered':
+    # Item 009's registered run 20261014T150814-e864bd47-58d5 keeps no predictor outputs, so the distance is read
+    # from an exploratory run of the same comparison under the same harness, whose views and paired figures equal it.
+    RUN, HARNESS, OUT = '20261014T152137-e864bd47-c7f9', LOOP / 'lab', 'DISTANCE-registered.md'
 sys.path.insert(0, str(HARNESS))
 import common
 from pack import Pack
@@ -34,6 +39,11 @@ def main():
     with (LOOP / 'ledger.jsonl').open() as f:
         run = next(d for s in f if (d := json.loads(s)).get('run_id') == RUN)
     assert (run['task'], run['tier'], run['status']) == ('T2a', 'A', 'ok')
+    if OUT != 'DISTANCE.md':
+        with (LOOP / 'ledger.jsonl').open() as f:
+            reg = next(d for s in f if (d := json.loads(s)).get('run_id') == '20261014T150814-e864bd47-58d5')
+        assert reg['mode'] == 'registered' and reg['measures'] == run['measures']
+        assert reg['views'] == run['views'] and reg['harness_sha256'] == run['harness_sha256']
     assert run['options'] == {'members': 'all', 'others': 'all',
                               'plant': None, 'shuffle_seed': None}
     assert (run['draws'], run['seed']) == (10000, 20261013)
@@ -67,7 +77,10 @@ def main():
             assert identity[field] == run[field]
         assert identity['views']['digest'] == digest
         assert identity['views']['titles_digest'] == titles_digest
-        assert identity['predictor'] == {k: predictor[k] for k in ('path', 'sha256')}
+        # A reference's cache file records the run that wrote it, whose predictor may be the candidate; its own
+        # hash is checked above (answer['sha256']).
+        assert identity['predictor'] in ({k: predictor[k] for k in ('path', 'sha256')},
+                                         {k: run['predictor'][k] for k in ('path', 'sha256')})
         assert identity['options']['others'] == 'all'
         assert not answer.get('n_attempts', 0) and not answer['attempts']
         cached.append(answer)
@@ -123,7 +136,7 @@ def main():
         'The script uses at most two numerical threads and writes only this aggregate report. '
         'No per-member rows are saved.', '',
     ])
-    (ITEM / 'DISTANCE.md').write_text(report)
+    (ITEM / OUT).write_text(report)
     print(report)
 
 
