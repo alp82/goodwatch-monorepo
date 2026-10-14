@@ -558,6 +558,12 @@ def read_titles(select, tables, fingerprint_keys):
     return build_titles(records, fingerprint_keys, touched)
 
 
+def main_defaults(ttl_seconds, dry_run):
+    """A missing TTL takes the default; a missing dry_run means a dry run, never a publish."""
+    return (TTL_SECONDS if ttl_seconds is None else ttl_seconds,
+            True if dry_run is None else dry_run)
+
+
 def validate_members(member_ids):
     if (not isinstance(member_ids, list) or not member_ids
             or any(not isinstance(m, str) or not m.strip() or m != m.strip()
@@ -598,6 +604,8 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
 
 def main(member_ids: list[str], ttl_seconds: int = TTL_SECONDS, dry_run: bool = True):
     """Windmill only: explicitly supplied preview ids; dry-run is the default."""
+    # Windmill passes None for an argument the caller leaves out, so the defaults above do not apply by themselves.
+    ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
     validate_members(member_ids)
     # Check before importing/constructing database connectors, including for manual dry runs.
     import wmill
