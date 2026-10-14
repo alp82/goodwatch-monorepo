@@ -1,0 +1,15 @@
+{
+  "ownerDecisionAt": "2026-10-14T18:46:29Z",
+  "targetVersion": "5.10.16",
+  "waiver": "Runbook pre-check 3 restore-validation requirement only, for this patch upgrade only",
+  "stillRequired": "live pre-checks; healthy backup repository; named pre-upgrade snapshot succeeds within reasonable time; per-node GREEN/STARTED gates; post-checks",
+  "excluded": [
+    "goodwatch_auth creation",
+    "HBA changes",
+    "firewall changes",
+    "table-setting changes"
+  ],
+  "cutoffUtc": "2026-10-15T03:00:00Z",
+  "runbookStartingCommit": "268d2f9a",
+  "writeProbePlan": "One uniquely named maintenance-only row in existing doc.workflow_monitoring, kind maintenance_probe, pipeline auth-prereqs. Idempotent upsert with an operation marker and real-time key reads; remove only this owned probe row at completion. No table creation or settings change."
+}
