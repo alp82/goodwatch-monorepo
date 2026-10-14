@@ -65,7 +65,6 @@ function App() {
 	const location = useLocation()
 	const { user } = useUser()
 	const navigation = useFeature("navigation")
-	const tracking = useFeature("tracking")
 
 	useInvalidateOnVisibility()
 
@@ -90,7 +89,7 @@ function App() {
 			</main>
 			<Footer />
 			{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
-			{tracking && <WatchLogHost />}
+			<WatchLogHost />
 			{/* The way back to the TV for a person who left the living room through it: nothing renders before that. */}
 			<TvWayBackHost />
 			{navigation ? (

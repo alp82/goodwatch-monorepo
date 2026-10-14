@@ -61,7 +61,7 @@ export function TonightsPickThumb({
 	const { pathname } = useLocation()
 	const { pick } = useTonightsPick()
 	const watchNext = getDestinations(useFeatures()).watchNext
-	// With REC_TRACKING a member's pick says which page it is the first thing on (#385), and may be an episode.
+	// A member's pick says which page it is the first thing on (#385), and may be an episode.
 	const to = pick?.href ?? watchNext.href
 	const here = pick?.href
 		? pathname === pick.href.split("#")[0]

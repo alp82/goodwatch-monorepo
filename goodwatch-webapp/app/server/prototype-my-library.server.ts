@@ -1022,7 +1022,7 @@ export const harness = {
 		)
 	},
 	async tonight() {
-		return getTonightsPick(await viewer(), true, HARNESS_TASTE)
+		return getTonightsPick(await viewer(), HARNESS_TASTE)
 	},
 	rate: (tmdbId: number, mediaType: "movie" | "show", score: number | null) =>
 		updateScores({

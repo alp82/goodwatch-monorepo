@@ -1,8 +1,7 @@
 // DEVELOPMENT HARNESS (issue #383), not a prototype of a design: the REAL title actions, poster card actions, watch
 // log and Watch next dialog, mounted with a member who does not exist and a server that lives in this tab
 // (ui/prototype-watch-log/harness-server.ts). It is how the movie watch log is driven in a headless browser without
-// a signed-in session or a database. Start the dev server with REC_TRACKING=on to see the log, without it to see
-// today's toggle.
+// a signed-in session or a database.
 //   /prototype/watch-log-real            a member
 //   /prototype/watch-log-real?guest=1    a guest: Seen asks to sign in
 //   &hero=693134|680|157336  also the REAL hero of the title page for that movie (Dune: Part Two, not seen;
@@ -11,7 +10,6 @@
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { startTransition, useEffect, useMemo, useReducer, useState } from "react"
-import { useFeature } from "~/hooks/useFeature"
 import type { MovieResult } from "~/server/types/details-types"
 import type { WatchNextTitle } from "~/server/watch-next.server"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
@@ -88,7 +86,7 @@ export default function WatchLogHarness() {
 				<h1 className="text-2xl font-bold">Movie watch log: the real components</h1>
 				<p className="mt-1 max-w-3xl text-sm text-gray-400">
 					Issue #383. The buttons, the log, the toast and the dialog are the app's own. The member and the server are stand-ins that live in this tab; nothing is
-					saved anywhere. <FlagNote /> Marks the page heard of through the mutation cache: <b data-marks>{marks}</b>.
+					saved anywhere. Marks the page heard of through the mutation cache: <b data-marks>{marks}</b>.
 				</p>
 				<RealHero />
 				<div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
@@ -140,15 +138,6 @@ export default function WatchLogHarness() {
 			{/* Inside the stand-in member, so it answers in place of the app shell's host. */}
 			<WatchLogHost />
 		</AuthContext.Provider>
-	)
-}
-
-function FlagNote() {
-	const tracking = useFeature("tracking")
-	return (
-		<span data-flag={tracking ? "on" : "off"}>
-			REC_TRACKING is <b>{tracking ? "on" : "off"}</b> for this dev server.
-		</span>
 	)
 }
 

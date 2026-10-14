@@ -131,7 +131,6 @@ beforeEach(() => {
 	setRedisClusterForTest(new Redis())
 	resetPendingResetsForTest()
 	session.user = user
-	process.env.REC_TRACKING = "on"
 	db.seed("episode", [
 		episode(100, 0, 1, "Making Of", LONG_AGO),
 		episode(101, 1, 1, "Pilot", LONG_AGO),
@@ -146,7 +145,6 @@ afterEach(() => {
 	setCrateClientForTest(null)
 	setRedisClusterForTest(null)
 	resetPendingResetsForTest()
-	process.env.REC_TRACKING = ""
 })
 
 const none = {
@@ -698,20 +696,6 @@ const tickBody = {
 	event: { type: "watch", season: 1, number: 1 },
 	actionId: "watch-000001",
 }
-
-test("both endpoints are not found while the flag is off, and for a member outside the preview", async () => {
-	process.env.REC_TRACKING = "off"
-	assert.equal((await get(`?id=${SHOW}`)).status, 404)
-	assert.equal((await post(tickBody)).status, 404)
-	process.env.REC_TRACKING = "preview"
-	process.env.REC_PREVIEW_USERS = "someone-else"
-	assert.equal((await get(`?id=${SHOW}`)).status, 404)
-	assert.equal((await post(tickBody)).status, 404)
-	process.env.REC_PREVIEW_USERS = user
-	assert.equal((await get(`?id=${SHOW}`)).status, 200)
-	process.env.REC_PREVIEW_USERS = ""
-	assert.equal(db.log(user).length, 0)
-})
 
 test("both endpoints are for members: a visitor gets 401 and nothing is written", async () => {
 	session.user = null

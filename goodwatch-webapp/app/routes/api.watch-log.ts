@@ -4,7 +4,6 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
 import {
 	type WatchLogAnswer,
 	applyWatchLogAction,
@@ -17,7 +16,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 // - POST { tmdb_id, action } does one thing in the log and answers { status, refused, watches }: watch, editDate,
 //   delete, removeAll, restore (Undo of a delete).
 // The member is the session's and the movie is the request's: no row says whose it is or which title it belongs to.
-// Not found while REC_TRACKING hides the log from the viewer. A guest is told to sign in.
+// A guest is told to sign in.
 
 const headers = { "Cache-Control": "private, no-store" }
 const answer = (body: unknown, status = 200) => json(body, { status, headers })
@@ -85,13 +84,9 @@ const bodySchema = z.object({ tmdb_id: movieId, action: actionSchema })
 async function member(
 	request: Request,
 ): Promise<{ userId: string } | { response: Response }> {
-	if (getFeatureMode("tracking") === "off")
-		return { response: answer({ error: "Not found" }, 404) }
 	const userId = await getUserIdFromRequest({ request })
 	if (!userId)
 		return { response: answer({ error: "Sign in to see your watches" }, 401) }
-	if (!isEnabled("tracking", { userId }))
-		return { response: answer({ error: "Not found" }, 404) }
 	return { userId }
 }
 

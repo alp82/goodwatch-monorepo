@@ -1,7 +1,6 @@
 // My movies (#385): the page for choosing a movie. It is the Watch next page for the Wishlist's movies, with "How
-// long?" as a fourth choice and one group for what does not fit tonight. For members, behind REC_TRACKING; it reads
-// /api/watch-next with `kind=movie`. Anyone else is sent to Watch next, which is what they have today
-// (docs/implementation/tracking/my-library/README.md).
+// long?" as a fourth choice and one group for what does not fit tonight. For members; it reads /api/watch-next with
+// `kind=movie`. A guest is sent to Watch next (docs/implementation/tracking/my-library/README.md).
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -10,7 +9,6 @@ import {
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { LandedTitle } from "~/domain/newly-available-words"
-import { isEnabled } from "~/server/features.server"
 import { getRecentlyLanded } from "~/server/newly-available.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
@@ -47,8 +45,8 @@ const headers = { "Cache-Control": "private, no-store" }
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	const url = new URL(request.url)
-	// A guest, and a member the flag hides tracking from, have Watch next.
-	if (!userId || !isEnabled("tracking", { userId }))
+	// A guest has Watch next.
+	if (!userId)
 		return redirect(`/watch-next${url.search}`, {
 			headers: { ...headers, Vary: "Cookie" },
 		})

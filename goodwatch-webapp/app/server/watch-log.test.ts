@@ -101,8 +101,6 @@ beforeEach(() => {
 	setRedisClusterForTest(new Redis())
 	resetPendingResetsForTest()
 	session.watchLogTestUser = MEMBER
-	process.env.REC_TRACKING = "on"
-	process.env.REC_PREVIEW_USERS = ""
 })
 afterEach(() => {
 	setCrateClientForTest(null)
@@ -179,21 +177,6 @@ test("the log is private and never cached; a guest is told to sign in and nothin
 	const guestWrite = await send({ type: "watch", watchId: "watch-0000001" })
 	assert.equal(guestWrite.response.status, 401)
 	assert.equal(db.statements.length, before)
-})
-
-test("while REC_TRACKING hides the log from the viewer there is no such endpoint", async () => {
-	process.env.REC_TRACKING = "off"
-	assert.equal((await read()).response.status, 404)
-	assert.equal(
-		(await send({ type: "watch", watchId: "watch-0000001" })).response.status,
-		404,
-	)
-	assert.deepEqual(logOf(), [])
-	// In preview only the listed members have it.
-	process.env.REC_TRACKING = "preview"
-	assert.equal((await read()).response.status, 404)
-	process.env.REC_PREVIEW_USERS = MEMBER
-	assert.equal((await read()).response.status, 200)
 })
 
 test("a request that names no movie or no action is refused before anything is written", async () => {

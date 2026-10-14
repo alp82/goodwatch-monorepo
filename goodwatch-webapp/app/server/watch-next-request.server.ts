@@ -4,7 +4,6 @@ import { json } from "@remix-run/node"
 import { z } from "zod"
 import { timeOf } from "~/domain/my-movies"
 import { watchNextChoiceOf } from "~/domain/watch-next"
-import { isEnabled } from "~/server/features.server"
 import {
 	type GuestProgress,
 	type ViewerContext,
@@ -41,20 +40,21 @@ export function parseKeys(value: string | null): TitleKey[] | null {
 /** Sort, moods, services, and passed-over titles from the URL: `sort=waiting&moods=funny,scary&services=all`. */
 export function parseWatchNextOptions(
 	url: URL,
-	/** REC_TRACKING is on for the viewer: `kind=movie&time=120` asks for My movies (#385). */
-	tracking = false,
+	/** The viewer is a member: `kind=movie&time=120` asks for My movies (#385). */
+	member = false,
 ): WatchNextOptions | null {
 	const params = url.searchParams
 	const notTonight = parseKeys(params.get("notTonight"))
 	if (!notTonight) return null
 	const options = { ...watchNextChoiceOf(params), notTonight }
-	if (!tracking || params.get("kind") !== "movie") return options
+	if (!member || params.get("kind") !== "movie") return options
 	return { ...options, kind: "movie", time: timeOf(params.get("time")) }
 }
 
 /**
- * The viewer of a Watch next request, or a response to send instead: bad request for an unreadable body. A POST carries a guest's progress as
- * `{ guest: { interactions, country, services } }`; a signed-in member's POST ignores it.
+ * The viewer of a Watch next request, or a response to send instead: bad request for an unreadable body. A POST
+ * carries a guest's progress as `{ guest: { interactions, country, services } }`; a signed-in member's POST ignores
+ * it.
  */
 export async function watchNextViewer(
 	request: Request,
@@ -62,8 +62,8 @@ export async function watchNextViewer(
 	| {
 			ctx: ViewerContext
 			body: Record<string, unknown>
-			/** REC_TRACKING is on for the viewer, and the viewer is a member: My movies is theirs to ask for. */
-			tracking: boolean
+			/** The viewer is a member: My movies is theirs to ask for. */
+			member: boolean
 	  }
 	| { response: Response }
 > {
@@ -95,6 +95,6 @@ export async function watchNextViewer(
 	return {
 		ctx,
 		body,
-		tracking: Boolean(userId) && isEnabled("tracking", { userId }),
+		member: Boolean(userId),
 	}
 }

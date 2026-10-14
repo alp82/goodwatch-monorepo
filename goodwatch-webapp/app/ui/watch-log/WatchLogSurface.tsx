@@ -1,4 +1,4 @@
-// What a press of a movie's Seen button does while REC_TRACKING is on, loaded at the first press:
+// What a press of a movie's Seen button does, loaded at the first press:
 // - a movie that is not Seen gets a watch for now, and a toast offers "Change date" and Undo;
 // - a movie that is Seen opens its watch log, in a popover beside the button, or in a sheet on phones.
 // Pressing Seen again never removes a watch: watches are removed in the log.

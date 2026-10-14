@@ -3,7 +3,6 @@ import {
 	type LoaderFunctionArgs,
 	redirect,
 } from "@remix-run/node"
-import { isEnabled } from "~/server/features.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 // The old Wishlist sorts, as Watch next names them.
@@ -31,8 +30,8 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
 	const userId = await getUserIdFromRequest({ request })
-	// With REC_TRACKING a member's Wishlist is the first choice of My library (#385). Guests keep what they have.
-	if (userId && isEnabled("tracking", { userId }))
+	// A member's Wishlist is the first choice of My library (#385). Guests keep what they have.
+	if (userId)
 		return redirect("/my-library", {
 			headers: { "Cache-Control": "private, no-store", Vary: "Cookie" },
 		})

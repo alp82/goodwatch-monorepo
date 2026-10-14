@@ -5,7 +5,6 @@
 //
 // A show's tracking is read only when the member's data says the show can have an episode to mark, which is a
 // Watching or a Seen show: a show the member has not started, has on hold or has dropped costs no request.
-import { useFeature } from "~/hooks/useFeature"
 import { useWatchState } from "~/hooks/useUserDataAccessors"
 import { useUser } from "~/utils/auth"
 import { useReport } from "../kit"
@@ -24,10 +23,9 @@ function Tracked({ report, ...on }: Props & { showId: number }) {
 
 export default function EpisodeData(props: Props) {
 	const show = parseTvTitleKey(props.title)
-	const tracking = useFeature("tracking")
 	const { user } = useUser()
 	const state = useWatchState("show", show?.tmdbId ?? 0)?.state
-	if (!show || show.mediaType !== "show" || !tracking || !user) return null
+	if (!show || show.mediaType !== "show" || !user) return null
 	if (!mayHaveNext(state)) return null
 	// A key per show: another show is another store and another report.
 	return <Tracked key={show.tmdbId} {...props} showId={show.tmdbId} />

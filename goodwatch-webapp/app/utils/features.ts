@@ -3,7 +3,6 @@
 // (useFeature reads what the root loader resolved for the viewer).
 export const FEATURES = [
 	"navigation",
-	"tracking",
 ] as const
 
 export type Feature = (typeof FEATURES)[number]
@@ -13,5 +12,4 @@ export type EnabledFeatures = Record<Feature, boolean>
 
 export const NO_FEATURES: EnabledFeatures = {
 	navigation: false,
-	tracking: false,
 }

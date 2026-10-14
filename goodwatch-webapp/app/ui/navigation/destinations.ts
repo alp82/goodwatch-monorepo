@@ -21,7 +21,7 @@ export type DestinationKey =
 	| "explorer"
 	| "movies"
 	| "shows"
-	// A member's pages with REC_TRACKING (#385). They take Watch next's tile in the hub.
+	// A member's pages (#385). They take Watch next's tile in the hub.
 	| "myShows"
 	| "myMovies"
 	| "myLibrary"
@@ -117,7 +117,7 @@ export function getDestinations(
 			short: "My shows",
 			href: "/my-shows",
 			icon: TvIcon,
-			available: features.tracking,
+			available: true,
 		},
 		myMovies: {
 			key: "myMovies",
@@ -125,7 +125,7 @@ export function getDestinations(
 			short: "My movies",
 			href: "/my-movies",
 			icon: FilmIcon,
-			available: features.tracking,
+			available: true,
 		},
 		myLibrary: {
 			key: "myLibrary",
@@ -133,7 +133,7 @@ export function getDestinations(
 			short: "Library",
 			href: "/my-library",
 			icon: BookmarkIcon,
-			available: features.tracking,
+			available: true,
 		},
 	}
 }

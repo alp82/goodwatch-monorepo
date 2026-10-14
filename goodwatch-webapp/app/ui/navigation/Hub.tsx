@@ -196,12 +196,8 @@ function AccountRow() {
 			<span className="grow" />
 			<nav aria-label="Your account" className="flex text-[13px] font-medium">
 				<Link
-					to={
-						// With REC_TRACKING the Wishlist is the first choice of My library.
-						destinations.myLibrary.available
-							? destinations.myLibrary.href
-							: destinations.watchNext.href
-					}
+					// The Wishlist is the first choice of My library.
+					to={destinations.myLibrary.href}
 					className={link}
 				>
 					Wishlist
@@ -226,8 +222,8 @@ function HubContent() {
 	const { pick, wishlistCount } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()
-	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
-	const tracked = Boolean(user) && d.myShows.available
+	// A member has My shows, My movies and My library in place of Watch next (#385).
+	const tracked = Boolean(user)
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
 	// Search opens over the hub, which stays open beneath it: closing the hub would hand focus back to the key that
 	// opened it and take the keyboard down. Closing search comes back here; following a result closes both.

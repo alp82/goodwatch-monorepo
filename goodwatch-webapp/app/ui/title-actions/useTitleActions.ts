@@ -2,7 +2,6 @@
 // that shows the title action set.
 import { useCallback } from "react"
 import { toast } from "react-toastify"
-import { useFeature } from "~/hooks/useFeature"
 import { useSeenToggle } from "~/hooks/useSeenToggle"
 import { useIsNotInterested, useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { useNotInterestedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"
@@ -23,9 +22,9 @@ export function useTitleActions(media: ScoredMedia) {
 	// The Seen button shows the state Seen, which is what one more press takes back.
 	const { seen, tracked, watches, toggle, isPending: seenPending } = useSeenToggle(mediaType, tmdbId)
 	const hidden = useIsNotInterested(mediaType, tmdbId)
-	// The movie watch log (REC_TRACKING): the press goes to the log's host, which records a watch for now or, once the
-	// movie is Seen, opens the log. A show's button stays the toggle.
-	const logged = useFeature("tracking") && mediaType === "movie"
+	// The movie watch log: the press goes to the log's host, which records a watch for now or, once the movie is Seen,
+	// opens the log. A show's button stays the toggle.
+	const logged = mediaType === "movie"
 
 	const { mutate: updateWishlist, isPending: wantPending } = useWishlistMutation()
 	const { mutate: updateNotInterested, isPending: hidePending } = useNotInterestedMutation()

@@ -1,7 +1,7 @@
 // Episode tracking on the show page (#384), as far as the page's first view knows of it: whether the viewer gets
 // it, the status line a tracked show paints from the member data, and the two places where the rest loads on first
 // use. Everything else (the state machine, the show's rows, the hero box, the episode list) is in chunks that only
-// a member with REC_TRACKING requests, after the page is up.
+// a member requests, after the page is up.
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -11,7 +11,6 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { useFeature } from "~/hooks/useFeature"
 import { useWatchState } from "~/hooks/useUserDataAccessors"
 import type { WatchStateEntry } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -32,11 +31,10 @@ export interface TrackedMedia {
 	details: { tmdb_id: number; title: string; in_production?: boolean }
 }
 
-/** Whether the viewer gets episode tracking on this title's page: a member, on a show, while REC_TRACKING shows it. */
+/** Whether the viewer gets episode tracking on this title's page: a member, on a show. */
 export function useEpisodeTracking(media: TrackedMedia): boolean {
-	const enabled = useFeature("tracking")
 	const { user } = useUser()
-	return enabled && Boolean(user) && media.mediaType === "show"
+	return Boolean(user) && media.mediaType === "show"
 }
 
 type Status = WatchStateEntry["state"]

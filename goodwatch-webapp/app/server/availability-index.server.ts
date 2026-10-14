@@ -8,7 +8,6 @@ import {
 	keptSince,
 	readFirstSeen,
 } from "~/server/availability-first-seen.server"
-import { getFeatureMode } from "~/server/features.server"
 import { execute, query } from "~/utils/crate"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -281,9 +280,8 @@ async function loadCountry(country: string) {
 	await loadFirstSeen(country)
 }
 
-// Newly available is behind REC_TRACKING: while that is off, nothing more is read than before.
+// When each offer first appeared, for Newly available.
 async function loadFirstSeen(country: string) {
-	if (getFeatureMode("tracking") === "off") return
 	try {
 		firstSeen.set(
 			country,

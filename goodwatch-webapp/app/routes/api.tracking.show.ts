@@ -7,7 +7,6 @@ import type {
 	ActionAnswer,
 	ShowTrackingPage,
 } from "~/domain/tracking/show-page"
-import { isEnabled } from "~/server/features.server"
 import {
 	applyShowTrackingAction,
 	getShowTrackingPage,
@@ -21,7 +20,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 //   dates and IMDb's ratings.
 // - POST { id, event, actionId?, restore? } applies one action and answers with the show's state row, the stored
 //   rows the action added or changed, the ids it removed, and what an Undo has to put back.
-// Both are one member's data and are never cached. Not found while REC_TRACKING hides tracking from the viewer.
+// Both are one member's data and are never cached.
 
 const headers = { "Cache-Control": "private, no-store" }
 const fail = (error: string, status: number) =>
@@ -30,7 +29,6 @@ const fail = (error: string, status: number) =>
 /** The member of a request, or the response to send instead. */
 async function member(request: Request): Promise<string | Response> {
 	const userId = await getUserIdFromRequest({ request })
-	if (!isEnabled("tracking", { userId })) return fail("Not found", 404)
 	if (!userId) return fail("Sign in to track episodes", 401)
 	return userId
 }

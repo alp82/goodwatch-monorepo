@@ -21,7 +21,7 @@ export type TonightReason =
 	| "lastAdded" // the top by Last added (no taste yet, or a guest)
 	| "notOnServices" // nothing on the Wishlist is on the person's services; the closest title
 	| "suggestion" // the Wishlist is empty; a worthwhile suggestion
-	// With REC_TRACKING (#385):
+	// A member's (#385):
 	| "nextEpisode" // the Next episode of the Watching show the member was last active on in the last 90 days
 	| "startShow" // no such show and no movie: the first show to start
 	| "landed" // the pick's door is led by a title that landed on the member's services in the last 14 days (#489)
@@ -29,17 +29,17 @@ export type TonightReason =
 export interface TonightsPick {
 	title: TitleCard
 	reason: TonightReason
-	/** With REC_TRACKING, when the pick is an episode: "S2 E3" and its name. */
+	/** When a member's pick is an episode: "S2 E3" and its name. */
 	episode?: { code: string; name: string | null }
-	/** With REC_TRACKING: the page the pick is the first thing on. Without it the pick opens Watch next. */
+	/** A member's pick: the page the pick is the first thing on. Without it the pick opens Watch next. */
 	href?: string
 }
 
 /**
- * Tonight's pick for a member with REC_TRACKING: the Next episode of the Watching show they were last active on in
+ * Tonight's pick for a member: the Next episode of the Watching show they were last active on in
  * the last 90 days; without one, the first movie of My movies; without one, the first show to start. The pick is
  * what its door shows first, so a movie or a show to start that landed lately is the pick when its door is (#489).
- * Null when the member has none of them, and the pick is then what it is without tracking.
+ * Null when the member has none of them, and the pick is then the top of Watch next.
  */
 async function trackedPick(
 	ctx: ViewerContext,
@@ -87,12 +87,10 @@ async function trackedPick(
 
 export async function getTonightsPick(
 	ctx: ViewerContext,
-	/** REC_TRACKING is on for the viewer, a member. */
-	tracking = false,
 	givenTaste?: Taste,
 ): Promise<TonightsPick | null> {
 	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
-	if (tracking && ctx.viewer.kind === "member") {
+	if (ctx.viewer.kind === "member") {
 		const pick = await trackedPick(ctx, taste)
 		if (pick) return pick
 	}

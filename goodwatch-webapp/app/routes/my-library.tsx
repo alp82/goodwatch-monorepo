@@ -1,5 +1,4 @@
-// My library (#385): every title a member has marked, one status at a time. Behind REC_TRACKING: not found while
-// the flag hides tracking from the viewer. A guest is asked to sign up
+// My library (#385): every title a member has marked, one status at a time. A guest is asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
 import {
 	type LoaderFunctionArgs,
@@ -8,7 +7,6 @@ import {
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { libraryChoiceOf } from "~/domain/my-library"
-import { isEnabled } from "~/server/features.server"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
 import { newOnForLibrary } from "~/server/newly-available.server"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
@@ -45,8 +43,6 @@ type Loaded = { page: LibraryPage; now: number; viewer: string } | null
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!isEnabled("tracking", { userId }))
-		throw new Response("Not found", { status: 404 })
 	if (!userId) return json<Loaded>(null, { headers })
 	const choice = libraryChoiceOf(new URL(request.url).searchParams)
 	const page = await getLibraryPage(
