@@ -8,7 +8,12 @@
 // The hook also measures: a direction is a `move` with the boxes of the items on show (tv-dom.ts), read at the
 // moment of the key press. And it is where the keys come in: the keyboard, which works like the Remote, and both
 // Remotes through the room's seam (`RoomKey`, room-tv.ts).
-import { useLocation, useNavigate, useSearchParams } from "@remix-run/react"
+import {
+	useLocation,
+	useNavigate,
+	useNavigationType,
+	useSearchParams,
+} from "@remix-run/react"
 import {
 	useCallback,
 	useEffect,
@@ -88,15 +93,28 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	const [focus, setFocus] = useState({ entry, item: linked })
 	/** The focus the machine gave the screen a `push` or `replace` is on its way to. */
 	const arriving = useRef<{ item: string | null } | null>(null)
+	/** The entry of the last commit with its address and its screen's focus. */
+	const shown = useRef<{ entry: string; search: string; focus: string } | null>(
+		null,
+	)
+	const navigationType = useNavigationType()
 	// Another entry arrived (a TV screen change, browser Back or Forward): its focus is the machine's when the TV
-	// navigated there itself, else what the memory holds for it, else the link's.
-	if (focus.entry !== entry)
+	// navigated there itself, else what the memory holds for it, else the link's. An entry that something else put
+	// in the place of the one on show, with the same address, keeps the focus on show: calling off a page that was
+	// on its way does that (tv-transition.ts).
+	if (focus.entry !== entry) {
+		const replaced =
+			navigationType === "REPLACE" && shown.current?.search === location.search
 		setFocus({
 			entry,
 			item: arriving.current
 				? arriving.current.item
-				: memory.recall(entry, linked),
+				: memory.recall(
+						entry,
+						(replaced ? shown.current?.focus : null) ?? linked,
+					),
 		})
+	}
 	// The entry the page arrived on. The server's HTML and the first render know the link's focus only; what the
 	// memory holds for it (a reload, Back from a real page) follows before the first paint. Kept in a ref, so
 	// running the effect twice gives the same focus.
@@ -129,9 +147,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	const latest = useRef({ state, ctx, onEffect, params, entry, focused })
 	latest.current = { state, ctx, onEffect, params, entry, focused }
 
-	// ---- Remembering the focus of an entry that is left.
-	/** The entry of the last commit with its screen's focus, and the focus a leaving action named for it. */
-	const shown = useRef<{ entry: string; focus: string } | null>(null)
+	// ---- Remembering the focus of an entry that is left: `shown`, and the focus a leaving action named for it.
 	const left = useRef<string | null>(null)
 	useIsoLayoutEffect(() => {
 		const before = shown.current
@@ -140,7 +156,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			left.current = null
 			arriving.current = null
 		}
-		shown.current = { entry, focus: screenFocus }
+		shown.current = { entry, search: location.search, focus: screenFocus }
 	})
 	// Leaving the page (the Expand key, a link, a reload) remembers the focus of the screen on show.
 	useEffect(() => {
@@ -343,9 +359,12 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		return () => window.removeEventListener("keydown", onKey)
 	}, [press])
 
+	// The menu lies over the screen and its key; a dark or booting TV shows no screen.
+	const framed = power === "on" && !menu.open && focused === "expand"
 	const room: RoomTv = useMemo(
 		() => ({
 			power,
+			framed,
 			menuOpen: menu.open,
 			searching: state.screen.name === "search",
 			// SEAM: the streaming keys wait for their prototype; until then no key is lit.
@@ -354,7 +373,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			press,
 			point: (item) => dispatch({ type: "focus", item }),
 		}),
-		[power, menu.open, state.screen.name, press, dispatch],
+		[power, menu.open, state.screen.name, framed, press, dispatch],
 	)
 
 	return {

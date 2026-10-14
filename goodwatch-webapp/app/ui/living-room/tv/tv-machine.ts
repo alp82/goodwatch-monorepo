@@ -431,6 +431,40 @@ export function destinationHref(
 	}
 }
 
+/** The pages of `DOOR_HREF`, by name. */
+const DOOR_NAME: Record<string, string> = {
+	[DOOR_HREF.continue]: "My shows",
+	[DOOR_HREF.start]: "My shows",
+	[DOOR_HREF.movie]: "My movies",
+}
+
+/**
+ * The name of the page the Expand key opens, for a screen reader ("Expand: Discover"), or null for a screen
+ * without a page. A title's page goes by the title's name once the page knows it.
+ */
+export function destinationName(
+	screen: TvScreen,
+	ctx: TvContext,
+): string | null {
+	if (!destinationHref(screen, ctx)) return null
+	switch (screen.name) {
+		case "tonight": {
+			const href = ctx.member ? tonightPick(screen, ctx).pick?.href : null
+			return (href && DOOR_NAME[href]) || "Discover"
+		}
+		case "explorer":
+			return "Explorer"
+		case "taste":
+			return "Taste"
+		case "shows":
+			return "My shows"
+		case "title":
+			return ctx.titleName ?? "Title page"
+		default:
+			return "Discover"
+	}
+}
+
 /** The id of the title page's block that says where a title streams (ui/details/hero/WhereToWatch.tsx). */
 export const STREAMING_BLOCK = "streaming"
 

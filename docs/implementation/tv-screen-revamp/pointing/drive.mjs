@@ -154,7 +154,7 @@ const look = (page) =>
 			power: room.dataset.tvPower,
 			away: room.hasAttribute("inert"),
 			layers: layers.length,
-			items: top ? [...top.querySelectorAll("[data-tv-item]")].map((el) => el.getAttribute("data-tv-item")) : [],
+			items: top ? [...top.querySelectorAll("[data-tv-item]")].map((el) => el.getAttribute("data-tv-item")).filter((id) => id !== "expand") : [],
 			focus: top?.querySelector("[data-tv-item][aria-current]")?.getAttribute("data-tv-item") ?? null,
 			pointing: room.dataset.pointing ?? null,
 			shown: ring?.dataset.shown === "true",

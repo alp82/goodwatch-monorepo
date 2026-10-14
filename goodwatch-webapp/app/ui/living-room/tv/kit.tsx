@@ -31,6 +31,8 @@ export type TvView = {
 	/** The focused item of the topmost layer. */
 	focused: string
 	dispatch: (action: TvAction) => void
+	/** The page the screen's Expand key opens, as a screen reader hears it ("Discover"). */
+	expands?: string | null
 }
 
 const ViewContext = createContext<TvView | null>(null)
@@ -331,11 +333,84 @@ export function CornerBar({ items }: { items: readonly string[] }) {
 	)
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// The Expand key: the one way out of the TV into a real page.
+
+/** The key's motif on the canvas: a small picture in its brackets. */
+const MOTIF = { w: 44, h: 32, arm: 9 }
+
+/**
+ * The Expand key: amber corner brackets around a small picture, and the word "Expand". OK on it grows the TV's
+ * picture into the page the screen stands for (`destinationHref`, tv-machine.ts). While it has the focus the
+ * whole picture steps back into a frame of the same brackets (TvRoom.tsx, tv.css), and its own brackets move out
+ * from the small picture twice and rest open: nothing loops (#190).
+ */
+function Expand() {
+	const { canvas, expands } = useTvView()
+	const P = canvas.edition === "phone"
+	return (
+		<Item
+			id="expand"
+			label={expands ? `Expand: ${expands}` : "Expand"}
+			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? "gap-2.5 px-3.5 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`}
+			style={P ? { height: keySize(canvas, 54) } : undefined}
+		>
+			<span
+				className="relative block shrink-0"
+				style={{ width: MOTIF.w, height: MOTIF.h }}
+			>
+				<span className="absolute inset-[30%] rounded-[3px] bg-current opacity-75" />
+				{[0, 1, 2, 3].map((corner) => (
+					<i
+						key={corner}
+						className="tvc-x-arm"
+						data-corner={corner}
+						style={{ width: MOTIF.arm, height: MOTIF.arm }}
+					/>
+				))}
+			</span>
+			Expand
+		</Item>
+	)
+}
+
+/** How far the picture steps back while the Expand key has the focus (tv.css, `data-tv-framed`). */
+const FRAMED = 0.94
+
+/**
+ * The Expand key in its place, the picture's bottom right corner, on the desktop and on the phone; nothing where
+ * the screen has no page to grow into (`items` are the screen's, from `tvItems`). The key stays where it is while
+ * the picture steps back around it: a pointer or a finger on it is still on it. Its place is moved against the
+ * picture's step by as much (`--tvx-x`, `--tvx-y`; tv.css applies them).
+ */
+export function ExpandCorner({ items }: { items: readonly string[] }) {
+	const { canvas } = useTvView()
+	const P = canvas.edition === "phone"
+	const [right, bottom] = P ? [20, 20] : [56, 40]
+	const back = (1 - FRAMED) / FRAMED
+	return (
+		<div
+			data-tv-expand-place
+			className="tvc-x-place absolute z-10"
+			style={
+				{
+					right,
+					bottom,
+					"--tvx-x": `${((canvas.w / 2 - right) * back).toFixed(2)}px`,
+					"--tvx-y": `${((canvas.h / 2 - bottom) * back).toFixed(2)}px`,
+				} as CSSProperties
+			}
+		>
+			{items.includes("expand") && <Expand />}
+		</div>
+	)
+}
+
 /**
  * A screen with the top bar: its name and crumb on the left, the bar's keys on the right, the content under it.
- * The Expand key's place is the picture's bottom right corner, on the desktop and on the phone.
- * SEAM (slice 11): the Expand key is drawn into `expand`; `reserve` keeps the band under the content free for it
- * on the desktop, where a screen fills its width. On the phone every screen leaves the corner free itself.
+ * The Expand key's place is the picture's bottom right corner, on the desktop and on the phone; `reserve` keeps
+ * the band under the content free for it on the desktop, where a screen fills its width. On the phone every
+ * screen leaves the corner free itself.
  */
 export function Frame({
 	name,
@@ -344,7 +419,6 @@ export function Frame({
 	art,
 	dim = 0.6,
 	reserve = false,
-	expand,
 	children,
 }: {
 	name: string
@@ -354,7 +428,6 @@ export function Frame({
 	art?: string
 	dim?: number
 	reserve?: boolean
-	expand?: ReactNode
 	children: ReactNode
 }) {
 	const P = usePhone()
@@ -367,12 +440,7 @@ export function Frame({
 			>
 				{children}
 			</div>
-			<div
-				data-tv-expand-place
-				className={`absolute z-10 ${P ? "bottom-5 right-5" : "bottom-10 right-14"}`}
-			>
-				{expand}
-			</div>
+			<ExpandCorner items={items} />
 			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. */}
 			<div
 				className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[78px] px-5" : "h-[108px] px-14"}`}

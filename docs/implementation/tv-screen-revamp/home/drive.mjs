@@ -99,7 +99,8 @@ const read = (page) =>
 		const room = document.getElementById("room")
 		const layers = [...room.querySelectorAll("[data-tv-layer]")]
 		const top = layers.at(-1)
-		const items = top ? [...top.querySelectorAll("[data-tv-item]")] : []
+		// The Expand key is slice 11's, drawn since; ../expand/drive.mjs checks it. Here it is left out, as before.
+		const items = top ? [...top.querySelectorAll("[data-tv-item]")].filter((el) => el.getAttribute("data-tv-item") !== "expand") : []
 		const id = (el) => el.getAttribute("data-tv-item")
 		const active = document.activeElement
 		return {
