@@ -25,6 +25,13 @@ export function jsonResponse(body: unknown, init: ResponseInit = {}) {
 	return new Response(JSON.stringify(body), { ...init, headers })
 }
 
+// remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
+export function setCookiesOf(headers: Headers): string[] {
+	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
+	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
+	return raw?.["set-cookie"] ?? []
+}
+
 export function createGoodwatchAuth(options: {
 	sql: AuthSql
 	storage: ValkeyAuthStorage
@@ -573,7 +580,7 @@ export function createGoodwatchAuth(options: {
 							throw new Error("Refresh binding changed")
 					}
 				} catch {
-					return Response.json(
+					return jsonResponse(
 						{ error: "temporarily_unavailable" },
 						{ status: 503 },
 					)
