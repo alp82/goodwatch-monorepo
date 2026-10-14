@@ -1,0 +1,81 @@
+{
+  "label": "abort-relocation-targets",
+  "host": 11,
+  "stmt": "SELECT schema_name, table_name, id, primary, node['name'], routing_state, relocating_node, recovery FROM sys.shards WHERE routing_state <> 'STARTED' OR state <> 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "routing_state",
+        "relocating_node",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "backup_20260925_stale_child_rows",
+          "streaming_availability",
+          0,
+          true,
+          "crate-02",
+          "RELOCATING",
+          "xlclgwGeSHe18p5J4WvfFA",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 87,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "doc",
+          "show",
+          5,
+          true,
+          "crate-02",
+          "RELOCATING",
+          "xlclgwGeSHe18p5J4WvfFA",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 210,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 18.34815
+    },
+    "elapsedSeconds": 0.024,
+    "at": "2026-10-14T19:13:32.527401+00:00"
+  }
+}

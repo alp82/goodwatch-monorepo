@@ -1,0 +1,29 @@
+{
+  "label": "abort-settling-jobs",
+  "host": 11,
+  "stmt": "SELECT id, started FROM sys.jobs WHERE stmt = ?",
+  "args": [
+    "ALTER CLUSTER DECOMMISSION ?"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "id",
+        "started"
+      ],
+      "rows": [
+        [
+          "b17f2cf8-33fa-5e58-2bb1-e0ea07d80201",
+          1792004843241
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.137921
+    },
+    "elapsedSeconds": 0.009,
+    "at": "2026-10-14T19:16:38.778192+00:00"
+  }
+}

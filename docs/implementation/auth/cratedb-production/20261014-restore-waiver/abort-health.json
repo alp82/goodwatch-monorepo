@@ -1,0 +1,31 @@
+{
+  "label": "abort-health",
+  "host": 11,
+  "stmt": "SELECT health, missing_shards, underreplicated_shards, count(*) FROM sys.health GROUP BY health, missing_shards, underreplicated_shards",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "health",
+        "missing_shards",
+        "underreplicated_shards",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "GREEN",
+          0,
+          0,
+          90
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.103238
+    },
+    "elapsedSeconds": 0.009,
+    "at": "2026-10-14T19:12:03.859359+00:00"
+  }
+}

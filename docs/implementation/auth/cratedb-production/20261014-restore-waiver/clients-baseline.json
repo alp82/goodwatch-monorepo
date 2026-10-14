@@ -1,0 +1,208 @@
+{
+  "label": "baseline",
+  "at": "2026-10-14T19:04:39.788996+00:00",
+  "sources": [
+    {
+      "host": 11,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 45.694,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 8.112,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 7.645,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 12,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 48.299,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 9.219,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 8.254,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 13,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 42.781,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 6.847,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 7.021,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 20,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "goodwatch-search-b",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 122,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 16,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 15,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 0,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        },
+        {
+          "container": "goodwatch-search-a",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 114,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 12,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 12,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 0,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        },
+        {
+          "container": "gk4owk8-20261014T181405",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 102,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 11,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 14,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 0,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        }
+      ],
+      "stderr": ""
+    }
+  ]
+}

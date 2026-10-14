@@ -1,0 +1,35 @@
+{
+  "label": "abort-cluster-state",
+  "host": 11,
+  "stmt": "SELECT name, version['number'] FROM sys.nodes ORDER BY name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "version['number']"
+      ],
+      "rows": [
+        [
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "crate-02",
+          "5.10.9"
+        ],
+        [
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "rowcount": 3,
+      "duration": 4.851857
+    },
+    "elapsedSeconds": 0.009,
+    "at": "2026-10-14T19:10:46.588577+00:00"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "sshReturncode": 0,
+  "result": {
+    "at": "2026-10-14T19:09:23.515343+00:00",
+    "image": "crate:5.10.9",
+    "oldEnvRestored": true,
+    "originalComposeRestored": true,
+    "restartPolicy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "state": "running",
+    "running": true,
+    "containerId": "5c692bdd13af7b94313d923fb0bc0b5829e05834b68e2e7da5c8fa6e423180cd"
+  },
+  "stderr": ""
+}

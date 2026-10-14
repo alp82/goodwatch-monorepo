@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-14T19:17:46.988421+00:00",
+  "state": "ABORTING_BEFORE_TARGET_STARTUP",
+  "firstFailure": "First decommission HTTP acknowledgement request timed out at the operator helper's 30-second timeout",
+  "targetStarted": false,
+  "newSnapshot": "pre_auth_547_20261014184629",
+  "snapshotState": "SUCCESS",
+  "compensation": "crate-02 .env restored to exact backup; restart always restored; allocation all restored",
+  "pending": "Original server decommission/relocations may still be running; wait for original job to settle, old-image restart if it exits, and full GREEN/STARTED gates; do not restart rollout",
+  "excludedActions": [
+    "auth user creation",
+    "HBA changes",
+    "firewall changes",
+    "table-setting changes",
+    "job cancellation",
+    "force stop"
+  ]
+}

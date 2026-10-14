@@ -1,0 +1,34 @@
+{
+  "label": "abort-settling-shards",
+  "host": 11,
+  "stmt": "SELECT state, routing_state, count(*) FROM sys.shards GROUP BY state, routing_state",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "state",
+        "routing_state",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          918
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 60.10179
+    },
+    "elapsedSeconds": 0.066,
+    "at": "2026-10-14T19:16:35.071037+00:00"
+  }
+}

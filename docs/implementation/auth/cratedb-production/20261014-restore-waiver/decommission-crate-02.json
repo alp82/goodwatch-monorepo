@@ -1,0 +1,15 @@
+{
+  "label": "decommission-crate-02",
+  "host": 11,
+  "stmt": "ALTER CLUSTER DECOMMISSION ?",
+  "args": [
+    "r0IgCe17SPOgudkQIGsRQA"
+  ],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "transportError": "timed out",
+    "elapsedSeconds": 30.031,
+    "at": "2026-10-14T19:07:53.260754+00:00"
+  }
+}
