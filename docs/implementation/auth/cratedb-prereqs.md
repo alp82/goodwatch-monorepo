@@ -197,6 +197,8 @@ Verify as admin that every approved auth table has the exact settings, all three
 
 ## Rehearsal and limits
 
+Checkpoint: rolling upgrade, local HBA roll and CAS/fault tests passed. Grant refusal status handling was corrected to accept CrateDB's deliberate schema masking; final grant/rollback/re-upgrade verification is pending in this checkpoint.
+
 The localhost-only runner in [cratedb-rehearsal/](cratedb-rehearsal/) reuses #530's Compose topology and full CAS/fault script from branch `research/cratedb-cas-proof`, commit `d87126eeaa8e9d98842f250722b86eed05005570`. Changes isolate its project/loopback ports, parameterize pinned images, match production's recover-after-three setting and verify 5.10.16 instead of 5.10.12. Run:
 
 ```sh

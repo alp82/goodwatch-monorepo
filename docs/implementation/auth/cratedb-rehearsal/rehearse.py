@@ -20,7 +20,8 @@ ROOT = Path(__file__).resolve().parent
 ENDPOINTS = [f'http://127.0.0.1:{port}/_sql' for port in (16430, 16431, 16432)]
 REPORT = {'startedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'oldImage': OLD, 'targetImage': NEW, 'stages': [], 'writes': []}
-ENV = dict(os.environ, CRATE_IMAGE=OLD, LOCAL_HBA_ENABLED='false')
+START_AUTH = '--start-at-auth' in sys.argv
+ENV = dict(os.environ, CRATE_IMAGE=NEW if START_AUTH else OLD, LOCAL_HBA_ENABLED='true' if START_AUTH else 'false')
 assert ENV['DOCKER_HOST'].startswith('unix:///')
 COMPOSE = ['docker', '--host', ENV['DOCKER_HOST'], 'compose', '-f', str(ROOT / 'compose.yaml'), '-p', 'goodwatch-upgrade-547']
 
@@ -117,19 +118,24 @@ def roll(image, label):
 
 try:
     compose('up', '-d')
-    wait('three baseline 5.10.9 nodes', lambda: nodes() == [[f'node{i}', '5.10.9'] for i in (1, 2, 3)])
+    baseline_version = '5.10.16' if START_AUTH else '5.10.9'
+    wait('three baseline nodes', lambda: nodes() == [[f'node{i}', baseline_version] for i in (1, 2, 3)])
     ok(sql('CREATE TABLE doc.auth_upgrade_probe (id TEXT PRIMARY KEY, n INTEGER) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = \'2\', "write.wait_for_active_shards" = 1, "translog.durability" = \'REQUEST\')'))
     ok(sql('CREATE TABLE doc.catalog_probe (id TEXT PRIMARY KEY) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = \'2\')'))
     wait('baseline green', healthy)
     record('baseline')
-    roll(NEW, 'upgrade')
+    if not START_AUTH:
+        roll(NEW, 'upgrade')
     ok(sql('CREATE USER goodwatch_auth WITH (password = ?)', ['local-rehearsal-only-547']))
     ok(sql('GRANT DQL, DML ON TABLE doc.auth_upgrade_probe TO goodwatch_auth'))
-    REPORT['authWithoutHba'] = sql('SELECT current_user', user='crate', password='wrong-password')
-    assert REPORT['authWithoutHba']['rows'] == [['crate']]
-    # Local-only demonstration; no claim that this is a safe prod client migration.
-    ENV['LOCAL_HBA_ENABLED'] = 'true'
-    roll(NEW, 'local-hba-enable')
+    if not START_AUTH:
+        REPORT['authWithoutHba'] = sql('SELECT current_user', user='crate', password='wrong-password')
+        assert REPORT['authWithoutHba']['rows'] == [['crate']]
+        # Local-only demonstration; not a production client migration.
+        ENV['LOCAL_HBA_ENABLED'] = 'true'
+        roll(NEW, 'local-hba-enable')
+    else:
+        REPORT['upgradeEvidence'] = 'upgrade-policy-observations.json (prior upgrade and local HBA roll)' 
     auth_results = []
     for index in range(3):
         assert sql('SELECT current_user', node=index, user='goodwatch_auth', password='wrong-password')['status'] == 401
@@ -138,7 +144,11 @@ try:
         allowed = ok(sql('SELECT n FROM doc.auth_upgrade_probe WHERE id = ?', ['upgrade-down-0'], node=index, user='goodwatch_auth', password='local-rehearsal-only-547'))
         denied = sql('SELECT * FROM doc.catalog_probe', node=index, user='goodwatch_auth', password='local-rehearsal-only-547')
         denied_ddl = sql('CREATE TABLE doc.auth_forbidden (id TEXT)', node=index, user='goodwatch_auth', password='local-rehearsal-only-547')
-        assert denied['status'] == 401 and denied_ddl['status'] == 401, (denied, denied_ddl)
+        # Unauthorized objects can deliberately be concealed as unknown schemas.
+        for refusal in (denied, denied_ddl):
+            assert refusal.get('status') in (401, 403, 404) and refusal.get('error'), refusal
+        visible_to_admin = ok(sql("SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc' AND table_name IN ('catalog_probe', 'auth_forbidden') ORDER BY table_name"))
+        assert visible_to_admin['rows'] == [['catalog_probe']], visible_to_admin
         credentials = dict(node=index, user='goodwatch_auth', password='local-rehearsal-only-547')
         key = f'auth-crud-{index}'
         created = ok(sql('INSERT INTO doc.auth_upgrade_probe (id, n) VALUES (?, 1)', [key], **credentials))
