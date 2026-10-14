@@ -64,3 +64,18 @@ test("reads survive a lost coordinator and leave it out of subsequent rotation",
 	assert.equal(received[2].length, 20)
 	assert.deepEqual(received[2][0].args, [42])
 })
+
+test("a stalled read closes its request and succeeds elsewhere within the caller's time budget", async (t) => {
+	let closed!: Promise<void>
+	const received = await cluster(t, [
+		(_, req) => { closed = new Promise((resolve) => req.socket.once("close", resolve)) },
+		(_, __, res) => answer(res),
+		(_, __, res) => answer(res),
+	])
+	const started = performance.now()
+	assert.deepEqual(await query("SELECT stalled", undefined, { timeoutMs: 300 }), [{ n: 1 }])
+	assert.ok(performance.now() - started < 500)
+	await closed
+	for (let i = 0; i < 6; i++) await query("SELECT recovered")
+	assert.equal(received[0].length, 1)
+})

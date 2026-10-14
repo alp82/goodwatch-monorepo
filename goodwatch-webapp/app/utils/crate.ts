@@ -73,7 +73,17 @@ const withNullTimestamps = <R extends { cols: string[]; rows: unknown[][]; col_t
 }
 
 let captureRequest: ((request: ClientRequest) => void) | undefined
-let requestCaptureInstalled = false
+
+type NodeCrate = typeof crate & {
+	getNewInstance(): NodeCrate
+	connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
+}
+
+const HOST_COOLDOWN_MS = 5_000
+
+const isConnectionError = (error: unknown): boolean =>
+	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN"]
+		.includes((error as NodeJS.ErrnoException).code ?? "")
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -99,20 +109,33 @@ export interface CrateReadOptions {
 }
 
 class CrateClient {
+	private readonly hosts: { driver: NodeCrate; unavailableUntil: number }[]
+	private nextHost = 0
+
 	constructor(hosts: string[]) {
-		crate.connect(hosts.join(" "))
-		if (!requestCaptureInstalled) {
-			const pool = (crate as typeof crate & {
-				connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
-			}).connectionPool
+		this.hosts = hosts.map((host) => {
+			const driver = (crate as NodeCrate).getNewInstance()
+			driver.connect(host)
+			const pool = driver.connectionPool
 			const getSqlRequest = pool.getSqlRequest
 			pool.getSqlRequest = function(this: typeof pool, callback: (response: IncomingMessage) => void) {
 				const request = getSqlRequest.call(this, callback)
 				captureRequest?.(request)
 				return request
 			}
-			requestCaptureInstalled = true
-		}
+			return { driver, unavailableUntil: 0 }
+		})
+	}
+
+	private takeHost(tried: Set<number>): number | undefined {
+		const remaining = this.hosts.map((_, i) => (this.nextHost + i) % this.hosts.length)
+			.filter((i) => !tried.has(i))
+		// When all hosts are cooling down, probe the earliest due once. Each operation
+		// still visits a host at most once, and one-node installations can recover.
+		const index = remaining.find((i) => this.hosts[i].unavailableUntil <= Date.now())
+			?? remaining.sort((a, b) => this.hosts[a].unavailableUntil - this.hosts[b].unavailableUntil)[0]
+		if (index !== undefined) this.nextHost = (index + 1) % this.hosts.length
+		return index
 	}
 
 	async execute(
@@ -123,14 +146,31 @@ class CrateClient {
 		const startTime = performance.now()
 		try {
 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
-			const result = await withBackendTimeout("CrateDB", timeoutMs, async (signal) => {
+			const deadline = performance.now() + timeoutMs
+			const read = /^\s*SELECT\b/i.test(query)
+			const tried = new Set<number>()
+			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
+			while (result === undefined) {
+			const index = this.takeHost(tried)
+			if (index === undefined) throw new Error("No CrateDB host available")
+			tried.add(index)
+			const host = this.hosts[index]
+			// Reserve time for the other coordinators rather than spending the entire
+			// caller budget waiting for the first dead socket.
+			const remaining = deadline - performance.now()
+			if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
+			const attemptTimeoutMs = read
+				? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
+				: timeoutMs
+			try {
+			result = await withBackendTimeout("CrateDB", attemptTimeoutMs, async (signal) => {
 				let request: ClientRequest | undefined
 				const previousCapture = captureRequest
 				let pending: ReturnType<typeof crate.execute>
 				// node-crate creates the request synchronously, before another statement can run.
 				captureRequest = (created) => { request = created }
 				try {
-					pending = crate.execute(query, params)
+					pending = host.driver.execute(query, params)
 				} finally {
 					captureRequest = previousCapture
 				}
@@ -141,7 +181,13 @@ class CrateClient {
 				} finally {
 					signal.removeEventListener("abort", destroy)
 				}
-			}, { error: () => new CrateTimeoutError(timeoutMs), signal: options.signal })
+			}, { error: () => new CrateTimeoutError(attemptTimeoutMs), signal: options.signal })
+			} catch (error) {
+				if (options.signal?.aborted || !(isConnectionError(error) || error instanceof CrateTimeoutError)) throw error
+				host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+				if (!read || tried.size === this.hosts.length) throw error
+			}
+			}
 			const duration = performance.now() - startTime
 			const querySummary = this.getQuerySummary(query)
 			const formattedLog = this.formatLog(querySummary, duration)
