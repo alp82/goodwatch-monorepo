@@ -98,7 +98,9 @@ async function lostResponseProof(kind, timeout = false) {
 		port = server.address().port
 		servers.push(server)
 	}
-	Object.assign(process.env, { CRATE_PORT: String(port), CRATE_TIMEOUT_MS: "1000" })
+	// Keep the production default budget. The write is stalled indefinitely, so
+	// timeouts remain deterministic without starving readback during node rejoin.
+	Object.assign(process.env, { CRATE_PORT: String(port), CRATE_TIMEOUT_MS: "10000" })
 	let outcome
 	try {
 		if (kind === "increment") {

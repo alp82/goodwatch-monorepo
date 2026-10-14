@@ -23,6 +23,19 @@ cleanup() {
     echo 'Cleanup failed: owned containers still exist.' >&2
     return 1
   fi
+  for resource in volume network; do
+    if [[ -n "$(docker "$resource" ls -q --filter label=com.docker.compose.project=goodwatch-client-588)" ]]; then
+      echo "Cleanup failed: owned $resource resources still exist." >&2
+      return 1
+    fi
+  done
+  node - "$output" <<'JS'
+const fs = require('node:fs');
+fs.writeFileSync(process.argv[2].replace(/\.json$/, '-cleanup.json'), JSON.stringify({
+  verifiedAt: new Date().toISOString(), project: 'goodwatch-client-588',
+  containersRemaining: 0, volumesRemaining: 0, networksRemaining: 0,
+}, null, 2) + '\n');
+JS
 }
 trap cleanup EXIT
 if [[ "${CRATE_PROOF_BASELINE:-0}" == 1 ]]; then
