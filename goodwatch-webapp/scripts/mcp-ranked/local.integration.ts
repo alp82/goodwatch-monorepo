@@ -44,6 +44,8 @@ async function call(
 	args: Record<string, unknown>,
 	who = member,
 	search = rankedSearch,
+	clientId = "local-ranked-probe",
+	name = "search_titles",
 ) {
 	const handle = createReadMcpHandler({
 		resource,
@@ -57,8 +59,9 @@ async function call(
 			async verifyAccessToken(token) {
 				return {
 					token,
-					clientId: "local-ranked-probe",
-					scopes: ["mcp:read"],
+					clientId,
+					scopes:
+						name === "search_titles" ? ["mcp:read"] : ["mcp:read", "mcp:write"],
 					expiresAt: Date.now() / 1000 + 60,
 					resource: new URL(resource),
 					extra: { userId: who },
@@ -78,7 +81,7 @@ async function call(
 				jsonrpc: "2.0",
 				id: ++id,
 				method: "tools/call",
-				params: { name: "search_titles", arguments: args },
+				params: { name, arguments: args },
 			}),
 		}),
 	)
@@ -161,6 +164,332 @@ try {
 	console.log(
 		"PASS: detached native search work retains the member's in-flight place after its response",
 	)
+	for (let i = 1; i < 20; i++) {
+		const found = await call(
+			{ query: `daily query ${i}`, ranked: true },
+			member,
+			rankedSearch,
+			i % 2 ? "second-client" : "first-client",
+		)
+		assert.equal(found.structuredContent.quota.used, i + 1)
+	}
+	const beforeDenied = calls
+	const denied = await call({ query: "over quota", ranked: true })
+	assert.equal(denied.structuredContent.status, "quota_exceeded")
+	assert.equal(denied.structuredContent.quota.remaining, 0)
+	assert.equal(calls, beforeDenied)
+	assert.equal(
+		(await call({ query: "quiet movies", ranked: true })).structuredContent
+			.cached,
+		true,
+	)
+	assert.equal(
+		(await call({ ranked: true, cursor: first.structuredContent.next_cursor }))
+			.isError,
+		false,
+	)
+	assert.equal(
+		(await call({ query: "new peer query", ranked: true }, `${member}-peer`))
+			.structuredContent.quota.used,
+		1,
+	)
+	assert.equal(
+		(await call({ query: "Local Movie" })).structuredContent.ranked,
+		false,
+	)
+	const beforeWrite = calls
+	const ambiguousWrite = await call(
+		{
+			title_name: "Harbor",
+			want_to_see: true,
+			action_id: `${member}-ambiguous`,
+		},
+		member,
+		rankedSearch,
+		"writer",
+		"set_want_to_see",
+	)
+	assert.equal(ambiguousWrite.structuredContent.outcome, "unresolved")
+	assert.equal(
+		(
+			await call(
+				{
+					title_name: "Local Movie 01",
+					want_to_see: true,
+					action_id: `${member}-wishlist`,
+				},
+				member,
+				rankedSearch,
+				"writer",
+				"set_want_to_see",
+			)
+		).isError,
+		false,
+	)
+	assert.equal(calls, beforeWrite)
+	console.log(
+		"PASS: 20/day quota is shared across OAuth clients; peers, name lookup and write resolution are independent",
+	)
+	const boundary = (Math.floor(Date.now() / 86400000) + 1) * 86400000
+	let at = boundary - 1000
+	const rollover = createRankedSearch({
+		redis: () => redis,
+		run,
+		clock: () => at,
+	})
+	for (let i = 0; i < 20; i++) {
+		const result = await call(
+			{ query: `rollover ${i}`, ranked: true },
+			`${member}-utc`,
+			rollover,
+		)
+		assert.equal(result.structuredContent.quota.used, i + 1)
+		assert.equal(
+			result.structuredContent.quota.resets_at,
+			new Date(boundary).toISOString(),
+		)
+	}
+	at = boundary
+	assert.equal(
+		(
+			await call(
+				{ query: "rollover 19", ranked: true },
+				`${member}-utc`,
+				rollover,
+			)
+		).structuredContent.quota.used,
+		0,
+	)
+	assert.equal(
+		(
+			await call(
+				{ query: "new UTC day", ranked: true },
+				`${member}-utc`,
+				rollover,
+			)
+		).structuredContent.quota.used,
+		1,
+	)
+	console.log(
+		"PASS: quota resets at UTC midnight; surviving cache hits remain free on the new day",
+	)
+	const slots: (() => void)[] = []
+	for (;;) {
+		const release = searchAdmission.enter()
+		if (!release) break
+		slots.push(release)
+	}
+	try {
+		const before = calls
+		const busy = await call(
+			{ query: "global admission denied", ranked: true },
+			`${member}-admission`,
+		)
+		assert.equal(busy.structuredContent.status, "search_busy")
+		assert.equal(busy.structuredContent.quota.used, 0)
+		assert.equal(calls, before)
+		assert.equal(
+			(
+				await call({
+					ranked: true,
+					cursor: first.structuredContent.next_cursor,
+				})
+			).isError,
+			false,
+		)
+	} finally {
+		slots.forEach((release) => release())
+	}
+	assert.equal(
+		(
+			await call(
+				{ query: "global admission denied", ranked: true },
+				`${member}-admission`,
+			)
+		).structuredContent.quota.used,
+		1,
+	)
+	const started = Promise.withResolvers<void>()
+	const settle = Promise.withResolvers<void>()
+	const inFlight = createRankedSearch({
+		redis: () => redis,
+		run: async () => {
+			started.resolve()
+			await settle.promise
+			return run()
+		},
+	})
+	const pendingCall = call(
+		{ query: "held foreground", ranked: true },
+		`${member}-flight`,
+		inFlight,
+	)
+	await started.promise
+	try {
+		const busy = await call(
+			{ query: "different foreground", ranked: true },
+			`${member}-flight`,
+			inFlight,
+			"other-client",
+		)
+		assert.equal(busy.structuredContent.status, "member_busy")
+		assert.equal(busy.structuredContent.quota.used, 1)
+		assert.equal(
+			(
+				await call(
+					{ query: "independent foreground", ranked: true },
+					`${member}-other`,
+				)
+			).isError,
+			false,
+		)
+	} finally {
+		settle.resolve()
+	}
+	assert.equal((await pendingCall).isError, false)
+	console.log(
+		"PASS: member and shared search-role admission reject before executing; rejection does not spend quota",
+	)
+	assert.equal(
+		(
+			await call(
+				{ ranked: true, cursor: first.structuredContent.next_cursor },
+				`${member}-peer`,
+			)
+		).structuredContent.status,
+		"cursor_expired",
+	)
+	assert.equal(
+		(
+			await call({
+				query: "different query",
+				ranked: true,
+				cursor: first.structuredContent.next_cursor,
+			})
+		).structuredContent.status,
+		"invalid_cursor",
+	)
+	const unavailable = createRankedSearch({ redis: () => null, run })
+	assert.equal(
+		(await call({ query: "no coordinator", ranked: true }, member, unavailable))
+			.structuredContent.status,
+		"ranked_unavailable",
+	)
+	process.env.REC_MCP_RANKED_SEARCH = "off"
+	try {
+		assert.equal(
+			(await call({ query: "flagged", ranked: true })).structuredContent.status,
+			"ranked_disabled",
+		)
+	} finally {
+		Reflect.deleteProperty(process.env, "REC_MCP_RANKED_SEARCH")
+	}
+	process.env.WEBAPP_ROLE = "page"
+	try {
+		assert.equal(
+			(await call({ query: "wrong role", ranked: true })).structuredContent
+				.status,
+			"wrong_role",
+		)
+	} finally {
+		process.env.WEBAPP_ROLE = "search"
+	}
+	const failures = createRankedSearch({
+		redis: () => redis,
+		run: async () => {
+			throw new Error("local simulated provider failure")
+		},
+	})
+	const failed = await call(
+		{ query: "failed attempt", ranked: true },
+		`${member}-failure`,
+		failures,
+	)
+	assert.equal(failed.structuredContent.quota.used, 1)
+	assert.equal(failed.structuredContent.status, "search_failed")
+	assert.equal(
+		(await call({ query: "next attempt", ranked: true }, `${member}-failure`))
+			.structuredContent.quota.used,
+		2,
+	)
+	const { renderMetrics } = await import(
+		"../../app/server/metrics/registry.server"
+	)
+	const metrics = renderMetrics()
+	assert.match(
+		metrics,
+		/goodwatch_mcp_ranked_requests_total\{outcome="quota_exceeded"\} 1\n/,
+	)
+	assert.match(metrics, /goodwatch_mcp_ranked_cost_nano_total [1-9][0-9]*\n/)
+	assert.match(metrics, /goodwatch_mcp_ranked_cost_unknown_total 1\n/)
+	assert.ok(!metrics.includes(member) && !metrics.includes("quiet movies"))
+	console.log(
+		"PASS: cursors are member-bound; flags, role refusal, failed attempts and bounded usage/cost metrics",
+	)
+	if (process.argv.includes("--ttl")) {
+		const ttlMember = `${member}-ttl`
+		const ttlFirst = await call({ query: "TTL query", ranked: true }, ttlMember)
+		const longWork = Promise.withResolvers<void>()
+		const longRunner = createRankedSearch({
+			redis: () => redis,
+			run: async () => {
+				searchAdmission.hold(longWork.promise)
+				return run()
+			},
+		})
+		await call(
+			{ query: "long background", ranked: true },
+			`${member}-long`,
+			longRunner,
+		)
+		try {
+			console.log(
+				"Waiting on local TTLs: query cache 60 s; background lease renewal past its original 30 s",
+			)
+			await new Promise((resolve) => setTimeout(resolve, 32000))
+			assert.equal(
+				(
+					await call(
+						{ query: "long competitor", ranked: true },
+						`${member}-long`,
+						longRunner,
+					)
+				).structuredContent.status,
+				"member_busy",
+			)
+			await new Promise((resolve) => setTimeout(resolve, 29000))
+			assert.equal(
+				(await call({ query: "ttl query", ranked: true }, ttlMember))
+					.structuredContent.quota.used,
+				2,
+			)
+			assert.equal(
+				(
+					await call(
+						{ ranked: true, cursor: ttlFirst.structuredContent.next_cursor },
+						ttlMember,
+					)
+				).structuredContent.quota.used,
+				2,
+			)
+		} finally {
+			longWork.resolve()
+			await new Promise((resolve) => setTimeout(resolve, 30))
+		}
+		console.log(
+			"PASS: query cache expires at 60 s, old paging stays free, and renewed leases retain long native work",
+		)
+	}
 } finally {
 	await redis.quit()
+	const { stopTitleSnapshot } = await import(
+		"../../app/server/title-snapshot/index.server"
+	)
+	const { stopTasteStore } = await import("../../app/server/taste/index.server")
+	const { stopTastePortraitCache } = await import(
+		"../../app/server/taste-portrait/cache.server"
+	)
+	stopTitleSnapshot()
+	stopTasteStore()
+	stopTastePortraitCache()
 }
