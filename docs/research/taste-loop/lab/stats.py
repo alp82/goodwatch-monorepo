@@ -5,6 +5,7 @@
 - The owner: one member, so the bootstrap is over the owner's sittings (whole sittings are drawn again). It gives
   an interval only with 10 or more sittings of which none holds more than a quarter of the targets; otherwise the
   number stands as a plain figure and `why` says so. A second, labelled figure resamples whole franchises.
+  T2a's separation (a mean over one group of the owner's titles minus the mean over another) follows the same rule.
 - Smallest detectable effect: the paired difference this data finds four times out of five with a two-sided 5%
   test: 2.80 standard errors. For members the standard error is the spread of the per-member differences over the
   root of their number; for the owner it is the spread of the bootstrap draws.
@@ -99,3 +100,32 @@ def cluster_paired(candidate, reference, cluster, draws, seed):
         out['why'] = m['why']
     out['sde'] = _r(Z_POWER * m['se']) if m.get('se') is not None else None
     return out
+
+
+def cluster_separation(values, high, low, cluster, draws, seed):
+    """One member's rows (T2a: hidden titles): the mean of `values` over the rows in `high` minus the mean over the
+    rows in `low`, with an interval from resampling whole clusters, under the rule of cluster_mean (the shares are
+    counted over the rows of the two groups). A draw that leaves one group empty is left out."""
+    v, high, low = np.asarray(values, float), np.asarray(high, bool), np.asarray(low, bool)
+    high, low = high & np.isfinite(v), low & np.isfinite(v)
+    out = {'value': None, 'lo': None, 'hi': None, 'se': None, 'n_high': int(high.sum()), 'n_low': int(low.sum()),
+           'clusters': 0}
+    if not high.any() or not low.any():
+        return out
+    use = high | low
+    _, inv = np.unique(np.asarray(cluster)[use], return_inverse=True)
+    x, h, l = v[use], high[use].astype(float), low[use].astype(float)
+    sh, kh, sl, kl = np.bincount(inv, x * h), np.bincount(inv, h), np.bincount(inv, x * l), np.bincount(inv, l)
+    k = kh + kl
+    share = float(k.max() / k.sum())
+    out.update(value=_r(sh.sum() / kh.sum() - sl.sum() / kl.sum()), clusters=int(len(k)), largest_share=_r(share))
+    if len(k) < MIN_CLUSTERS:
+        return {**out, 'why': f'{len(k)} clusters, fewer than {MIN_CLUSTERS}'}
+    if share > MAX_CLUSTER_SHARE:
+        return {**out, 'why': f'the largest of {len(k)} clusters holds {share:.0%} of the rows'}
+    idx = _index(len(k), draws, seed)
+    a, b = kh[idx].sum(1), kl[idx].sum(1)
+    ok = (a > 0) & (b > 0)
+    boot = sh[idx].sum(1)[ok] / a[ok] - sl[idx].sum(1)[ok] / b[ok]
+    lo, hi = np.percentile(boot, [2.5, 97.5])
+    return {**out, 'lo': _r(lo), 'hi': _r(hi), 'se': _r(boot.std(ddof=1))}

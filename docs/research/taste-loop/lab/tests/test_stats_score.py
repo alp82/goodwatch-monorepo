@@ -223,3 +223,107 @@ def test_floor_measures_compare_the_floor_with_b0_and_the_rung_with_its_floor():
     assert m['owner']['vs_b0']['diff'] == pytest.approx(0.005)
     far = score.floor_measures(t, rung, floor_err + 0.02, b0, owner=0, draws=200, seed=1)
     assert far['others']['within_tolerance'] is False
+
+
+# ------------------------------------------------------------------ T2a
+
+def facts(n):
+    return {'g': np.array([50., 52., 60., 51., 80., 49.])[:n], 'show': np.array([1, 0, 0, 1, 0, 0], bool)[:n],
+            'animation': np.array([0, 0, 1, 0, 0, 0], bool)[:n], 'franchise': np.array([7, 7, -3, 7, -5, -6])[:n],
+            'votes': np.array([100., 9e9, 300., 500., 9e9, 700.])[:n]}
+
+
+def test_t2a_view_places_each_hidden_title_among_the_candidates_by_hand():
+    # six targets; the titles at positions 1 and 4 are hidden, the candidates are 0, 2, 3 and 5
+    answer = {'rank': np.array([.1, .5, .5, .9, .2, .3]), 'score': np.array([5., 7.4, 5., 5., 11., 5.]), 'p_low': None}
+    r = score.t2a_view(answer, {'pos': np.array([1, 4])}, np.arange(6), facts(6))
+    # position 1 (rank .5): two candidates below, one tied, one above
+    assert r['pct'] == [pytest.approx(2.5 / 4), pytest.approx(1 / 4)] and r['above'] == [1.5, 3.0]
+    # equally well-rated, within 3 points: for 52 the candidates at 50, 51 and 49 (ranks .1, .9, .3); for 80 none
+    assert r['pct_matched'] == [pytest.approx(2 / 3), None] and r['n_matched'] == [3, 0]
+    # the first 50 candidates are all four: two shows, one animation, two of franchise 7 (the third is hidden),
+    # votes 100, 300, 500 and 700
+    assert r['top'] == {'top_shows': 0.5, 'top_animation': 0.25, 'top_franchise_max': 2, 'top_votes_median': 400.0}
+    assert r['score'] == [7, 10] and r['p_low'] is None and r['candidates'] == 4   # hidden titles only, rounded
+    flat = score.t2a_view({'rank': np.zeros(6), 'score': None, 'p_low': None}, {'pos': np.array([1, 4])},
+                          np.arange(6), facts(6))
+    assert flat['pct'] == [0.5, 0.5] and flat['above'] == [2.0, 2.0] and flat['score'] is None   # no order: 0.5
+
+
+def t2a_table(member, y, view=None, **kw):
+    n = len(y)
+    members = int(max(member)) + 1
+    view = np.array(member if view is None else view)
+    base = {'member': np.array(member), 'view': view, 'y': np.array(y), 'sitting': np.arange(n) % 12,
+            'franchise': np.arange(n), 'low_share': np.full(n, 0.25), 'title': np.arange(n),
+            'view_member': np.array([member[list(view).index(v)] for v in sorted(set(view.tolist()))]),
+            'n_outside': np.zeros(members, int), 'own_shows': np.full(members, 0.25),
+            'own_animation': np.full(members, 0.1)}
+    return {**base, **{k: np.array(v) for k, v in kw.items()}}
+
+
+def t2a_answers(pct, views=1, **kw):
+    n = len(pct)
+    base = {'pct': np.array(pct, float), 'above': np.zeros(n), 'pct_matched': np.array(pct, float), 'pred': None,
+            'p_low': None, 'candidates': np.full(views, 1000.), 'top_shows': np.full(views, 0.5),
+            'top_animation': np.full(views, 0.1), 'top_franchise_max': np.full(views, 2.),
+            'top_votes_median': np.full(views, 5000.)}
+    return {**base, **kw}
+
+
+def test_t2a_member_values_by_hand():
+    # member 0: five titles rated 9, five rated 3, one rated 7. member 1: five rated 9 and four rated 3
+    y = [9] * 5 + [3] * 5 + [7] + [9] * 5 + [3] * 4
+    member = [0] * 11 + [1] * 9
+    pct = [.9, .8, .7, .6, 1.0] + [.1, .2, .3, .4, .5] + [.5] + [.9] * 5 + [.1] * 4
+    above = [10, 60, 49, 50, 0] + [300] * 5 + [100] + [0] * 5 + [1000] * 4
+    v = score.t2a_member_values(t2a_table(member, y), t2a_answers(pct, 2, above=np.array(above, float),
+                                                                   pred=np.array(y) - 1))
+    assert v['pct_high'].tolist() == [pytest.approx(0.8), pytest.approx(0.9)]
+    assert v['pct_low'][0] == pytest.approx(0.3) and np.isnan(v['pct_low'][1])     # four titles are not a band
+    assert np.isnan(v['pct_mid']).all()
+    assert v['separation'][0] == pytest.approx(0.5) and np.isnan(v['separation'][1])
+    assert v['first50_high'][0] == pytest.approx(3 / 5) and v['first200_high'][0] == 1  # 50 above is not the first 50
+    assert v['first50_low'][0] == 0 and v['first200_low'][0] == 0
+    assert v['n_low'].tolist() == [5, 4] and v['hidden'].tolist() == [11, 9]
+    assert v['pct_min'].tolist() == [0.1, 0.1] and v['pct_max'].tolist() == [1.0, 0.9]
+    assert v['top_shows_vs_own'].tolist() == [0.25, 0.25] and v['mae'].tolist() == [1.0, 1.0]
+
+
+def test_t2a_measures_report_owner_and_others_apart():
+    rng = np.random.default_rng(3)
+    member = np.repeat(np.arange(6), 30)
+    y = np.tile(np.r_[np.full(10, 9), np.full(10, 6), np.full(10, 3)], 6)
+    good = np.where(y >= 8, 0.9, np.where(y <= 5, 0.2, 0.5)) + rng.uniform(-0.05, 0.05, 180)
+    none = np.full(180, 0.5)
+    t = t2a_table(member, y, franchise=np.arange(180) // 2)
+    m = score.t2a_measures(t, t2a_answers(good, 6), {'ref': t2a_answers(none, 6)}, owner=0, draws=500, seed=1)
+    o = m['others']
+    assert o['n_members'] == 5 and o['n_primary'] == 5 and o['n_hidden'] == 150 and o['members_low'] == 5
+    assert o['separation']['value'] == pytest.approx(0.7, abs=0.03) and o['separation']['se'] < 0.02
+    d = o['vs']['ref']['separation']
+    assert d['diff'] == o['separation']['value'] and d['improved'] == 5 and d['lo'] > 0.6   # higher is better
+    assert o['vs']['ref']['pct_low']['improved'] == 5 and o['vs']['ref']['pct_low']['diff'] < 0   # lower is better
+    assert 'improved' not in o['vs']['ref']['top_shows'] and 'mae' not in o
+    w = m['owner']
+    assert w['n_hidden'] == 30 and w['n_high'] == 10 and w['sittings'] == 12 and w['franchises'] == 15
+    assert w['separation']['value'] == pytest.approx(0.7, abs=0.05) and w['separation']['lo'] is not None
+    assert w['separation_franchise']['lo'] < w['separation_franchise']['value'] < w['separation_franchise']['hi']
+    assert w['vs']['ref']['separation']['value'] == w['separation']['value']
+    assert w['pct_high']['value'] == pytest.approx(0.9, abs=0.03)
+    # the owner's shape: one sitting holds most of the titles, so there is no interval over sittings
+    t['sitting'] = np.where(np.arange(180) % 30 < 20, 0, np.arange(180) % 30)
+    w = score.t2a_measures(t, t2a_answers(good, 6), {}, owner=0, draws=500, seed=1)['owner']
+    assert w['separation']['lo'] is None and 'holds' in w['separation']['why'] and w['separation']['value'] > 0.6
+    assert w['separation_franchise']['lo'] is not None
+
+
+def test_cluster_separation_resamples_whole_clusters():
+    values = np.r_[np.full(100, 0.8), np.full(100, 0.3)]
+    high = np.arange(200) < 100
+    s = stats.cluster_separation(values, high, ~high, np.arange(200) % 20, 1000, 1)
+    assert s['value'] == pytest.approx(0.5) and s['n_high'] == 100 and s['n_low'] == 100 and s['clusters'] == 20
+    assert s['lo'] == pytest.approx(0.5) and s['hi'] == pytest.approx(0.5)        # no spread inside a group
+    few = stats.cluster_separation(values, high, ~high, np.arange(200) % 5, 1000, 1)
+    assert few['value'] == pytest.approx(0.5) and few['lo'] is None and few['why'] == '5 clusters, fewer than 10'
+    assert stats.cluster_separation(values, high, np.zeros(200, bool), np.arange(200), 100, 1)['value'] is None

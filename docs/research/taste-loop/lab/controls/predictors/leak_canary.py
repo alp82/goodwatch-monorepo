@@ -1,8 +1,10 @@
 """Leak canary: a predictor that tries every way it can think of to find the hidden ratings.
 
-Where it finds a target's rating it returns it as the score; everywhere else it returns the median of the member's
-visible ratings, exactly as rung B0 does. So if the sandbox holds, its error equals B0's for every member, and the
-harness reports the attempts. If anything leaks, its error drops below B0's and the control fails.
+Where it finds a target's rating it returns it as the score and puts the title at the top of its order (rank 1);
+everywhere else it returns the median of the member's visible ratings, exactly as rung B0 does, and rank 0. So if
+the sandbox holds, its error equals B0's for every member, it has no order at all, and the harness reports the
+attempts. If anything leaks, its error drops below B0's and the control fails. In T2a (the hidden-title test) a
+found rating also marks the title as one of the hidden ones among the 60,000 candidates.
 
 What it tries (each attempt is printed to the log):
  1. the files an insider knows: the pack, the tier list, the owner file, the answer files, other runs' views, the
@@ -98,14 +100,24 @@ def arrays_of(data):
 
 
 def from_bin(data, view, found):
-    """Another view of the same member (a later block holds this block's ratings as history) or an answer file
-    (<view>.title and <view>.score, for exactly these targets)."""
-    targets = set(view['targets']['title'].tolist())
-    mine = set(view['me']['ratings']['title'].tolist())
+    """Another view of the same member or an answer file. T1: a later block holds this block's ratings as history;
+    the answer file holds <view>.title and <view>.score for exactly these targets. T2a: another fold of the same
+    member shows the titles hidden here with their ratings (the same member: most rated titles in common, and the
+    same rating for every one of them); the answer file holds <view>.title, <view>.score and <view>.pos, the place
+    of each hidden title in this view's target list."""
+    order = view['targets']['title']
+    targets = set(order.tolist())
+    seen = dict(zip(view['me']['ratings']['title'].tolist(), view['me']['ratings']['score'].tolist()))
+    mine = set(seen)
     z = arrays_of(data)
     if 'me.ratings.title' in z:
         title, score = z['me.ratings.title'].tolist(), z['me.ratings.score'].tolist()
-        if mine <= set(title):
+        same = mine <= set(title)
+        if not same and view.get('task') == 'T2a':
+            both = [(a, b) for a, b in zip(title, score) if a in seen]
+            same = len(both) >= 5 and len(both) >= 0.6 * max(len(mine), len(title)) and \
+                all(seen[a] == b for a, b in both)
+        if same:
             for a, b in zip(title, score):
                 if a in targets:
                     found.setdefault(a, b)
@@ -113,7 +125,10 @@ def from_bin(data, view, found):
     for name in z:
         if name.endswith('.title') and name[:-5] + 'score' in z:
             title = z[name].tolist()
-            if set(title) == targets:
+            pos = z.get(name[:-5] + 'pos')
+            here = pos is not None and len(pos) == len(title) > 0 and int(pos.max()) < len(order) and \
+                bool((order[pos] == z[name]).all())
+            if set(title) == targets or here:
                 for a, b in zip(title, z[name[:-5] + 'score'].tolist()):
                     found[a] = b
 
@@ -180,8 +195,9 @@ def answer(view, found):
     y = view['me']['ratings']['score']
     median = float(np.median(y)) if len(y) else 7.0
     score = np.array([float(found.get(int(t), median)) for t in view['targets']['title']])
+    rank = np.array([1.0 if int(t) in found else 0.0 for t in view['targets']['title']])
     print(f'leak canary: {len(found)} of {n} target ratings found\n  ' + '\n  '.join(LOG), file=sys.stderr)
-    return {'rank': np.zeros(n), 'score': score, 'p_low': None}
+    return {'rank': rank, 'score': score, 'p_low': None}
 
 
 def predict(view):

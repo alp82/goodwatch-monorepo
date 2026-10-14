@@ -4,7 +4,8 @@ What `lab/` does, in plain words. PLAN.md says what the benchmark is for; this f
 names every place where the plan left a choice open (marked **Decided here**). A change to this file needs a review.
 
 Built in item 002 and changed in its fix pass after three reviews (the changed decisions are marked **Changed in
-the fix pass**). Only task T1 exists so far.
+the fix pass**). Item 003 added task T2a, the hidden-title test (section 4a; what it changed elsewhere is marked
+**Item 003**). Tasks T1 and T2a exist.
 
 ## 1. The pieces
 
@@ -14,11 +15,12 @@ the fix pass**). Only task T1 exists so far.
 | `lab/run.py` | Refuses what the protocol refuses, builds views, runs predictors, scores, writes the ledger line |
 | `lab/views.py` | Builds what a predictor may see (views) and, apart from it, the answers |
 | `lab/sandbox.py` | The processes predictors run in |
-| `lab/score.py` | The contract check, the one output convention, the calibrator and its floor, the T1 measures |
+| `lab/score.py` | The contract check, the one output convention, the calibrator and its floor, the T1 and T2a measures |
 | `lab/stats.py` | Intervals and smallest detectable effects |
 | `lab/ladder/` | The fixed rungs B0 to B5 and BP |
 | `lab/pins.json`, `lab/pin.py` | The sha256 of every rung and every control predictor, and the tool that writes it |
-| `lab/table.py` | The ladder table, from the `ladder` lines of the ledger alone |
+| `lab/table.py` | The ladder tables (T1, T2a), from the `ladder` lines of the ledger alone |
+| `lab/top.py` | The first titles a pinned rung would show a member, to standard output. Not a run |
 | `lab/verify.py` | Reruns a ledgered run and compares |
 | `lab/gate.py` | The one look at tier B. Run by the orchestrator only |
 | `lab/controls/` | Six controls that show the benchmark can be trusted |
@@ -48,12 +50,15 @@ ledger therefore belongs to one pack, and no flag or environment variable points
 ## 2. Running
 
 ```
-lab/run.sh <predictor.py> --task T1 --tier A --mode explore|registered|ladder --item NNN
+lab/run.sh <predictor.py> --task T1|T2a --tier A --mode explore|registered|ladder --item NNN
            [--ref <ladder rung> ...] [--members owner,<hash prefix>,...] [--others all|no-owner|before] [--no-cache]
 lab/run.sh --verify <run id>
 lab/run.sh --gate NNN              # orchestrator only
-python3 lab/table.py T1
-python3 lab/controls/{shuffled,planted,leak,contract,clash,rankscale}.py
+python3 lab/table.py T1|T2a
+python3 lab/controls/{shuffled,planted,leak,contract,clash,rankscale}.py [--item NNN]
+python3 lab/controls/{shuffled,leak}.py --task T2a [--item NNN]
+python3 lab/controls/shuffled.py [--task T2a] --only <rung file> ... | --reuse
+python3 lab/top.py <rung> --member owner|<hash prefix> [--n 20]
 ```
 
 - **Slots and limits.** `run.sh` takes one of two lock files under the data root and waits when both are held. It
@@ -65,9 +70,9 @@ python3 lab/controls/{shuffled,planted,leak,contract,clash,rankscale}.py
   run's two threads are two predictor processes with one thread each, not one process with two; a run that counts
   (registered, gate, verify) uses one process at a time.
 - **References.** `--ref` names the rungs the candidate is compared with. The first is the run's primary reference
-  (the one the gate uses). Without `--ref` it is B0. **Changed in the fix pass:** in every mode a reference is a
-  pinned file of `lab/ladder/`, each named once, so a run scores at most the rungs of the ladder beside its
-  candidate.
+  (the one the gate uses). Without `--ref` it is B0 in T1 and B2 in T2a. **Changed in the fix pass:** in every
+  mode a reference is a pinned file of `lab/ladder/`, each named once, so a run scores at most the rungs of the
+  ladder beside its candidate. A rung named as its own reference is run once and differs from itself by nothing.
 - **Stored answers.** In an exploratory, ladder or control run, a reference whose answers for exactly these views
   are already stored (same views, same title data, same harness code, same predictor file) is not run again. A
   stored file is used only when it names the predictor's hash and holds an answer for exactly the views of the
@@ -95,7 +100,9 @@ python3 lab/controls/{shuffled,planted,leak,contract,clash,rankscale}.py
   - a reference, a ladder run or a control run whose file is not pinned in `lab/pins.json` with that hash;
   - a registered run that is not the comparison its pre-registration names, see below;
   - the 21st exploratory or 4th registered run of an item (every ledger line of that item and mode counts, failed
-    runs too).
+    runs too);
+  - **Item 003**, in T2a: `--others before` (T2a has no moment in time), a planted effect (a control of T1), and
+    tier B (the gate knows T1 only).
 - **Pre-registration. Changed in the fix pass:** `items/NNN-*/PREREG.md` is parsed, not searched. It must hold
   exactly one line of each of these four, each starting its line; everything else is prose and is not read:
 
@@ -116,7 +123,8 @@ A view is a folder with two files, plus one title file shared by all views.
 
 - `view.bin`: the task name; the predicted member's ratings written before the block (title, score, write time,
   sitting, position, bulk flag, provenance, edited flag); their Want to See, Skip and Not interested rows written
-  before the block, with times; and the titles to predict.
+  before the block, with times; and the titles to predict. (This section describes T1 views. A T2a view has the
+  same files and tables; section 4a says what it holds.)
 - `others.bin`: the same tables for every other tier A member, with a number that only groups a member's rows.
 - `titles.npz`: for all 72,101 titles of the pack: key, movie or show, the catalog, pool, poster and fingerprint
   flags, the 74 fingerprint scores, release date, every numeric column of the pack, genres, language, production
@@ -132,7 +140,7 @@ with), title text and the detail file. A later item that needs one of them adds 
 The answers (ratings, and what the measures need: sitting, provenance, movie or show, whether the rating was
 edited later, the franchise) are kept by `run.py` and written to `work/keys/<run id>.bin`, a path no view names and
 the predictor process cannot open. Views and answers are built again for every run and deleted after it.
-`views.py T1 owner <folder>` writes one member's views to look at.
+`views.py T1|T2a owner <folder>` writes one member's views to look at.
 
 **Other members.** By default (`--others all`) a view shows every other tier A member's rows as of the pull,
 whatever they wrote and whenever, also after the block (leave one member out), as in the product. This is not what
@@ -187,6 +195,94 @@ T1 is a retrospective test in entry order. Read every T1 number with these four 
 - **Title data is as of the pull,** as said above.
 
 So T1 results are retrospective comparisons on today's data, not forecasts that could have been made at the time.
+
+## 4a. Task T2a: the hidden-title test
+
+**Item 003.** The question: take a title a member rated, remove that one rating, treat the title as unwatched, and
+see where a scorer places it among every title the member has not rated. Hiding one title at a time would cost one
+view per rating, so a view hides a fold of titles.
+
+### Views
+
+- **Eligible members:** tier A, 20 or more ratings, at least 5 of them 8 or more. **Decided here:** the two counts
+  are over all of the member's ratings, whether or not the title is in the candidate universe. On this pack: 62
+  members, the owner and 61 others.
+- **Candidate universe:** titles with `in_pool` and `has_fingerprint`: 60,759 of the 72,101.
+- **Folds.** A member's rated titles that lie in the universe are dealt into folds by a seeded shuffle; a view hides
+  one fold. **Decided here**, and a change to the letter of the brief ("folds of 20"): a fold holds at most 20
+  titles and there are never fewer than 5 folds, so a view hides at most 20 titles and at most a fifth of the
+  member's rated titles. The number of folds is the larger of 5 and the count divided by 20, rounded up. With
+  folds of 20 alone, a member with 20 rated titles would have one view that hides every rating, and the 44 of the
+  61 other members with 80 or fewer rated universe titles would have a quarter to all of their ratings hidden at
+  once; the test is meant to stand in for hiding one rating. For the owner the rule gives the brief's 50 views.
+  **Decided here:** the shuffle is the order of the sha256 of `seed|T2a|member hash|title key`, dealt round; it
+  does not change with the labels, so the shuffled control hides the same titles.
+- **History:** every other rating of the member, and the member's Want to See, Skip and Not interested rows, with
+  the hidden titles removed from each of those lists. **Decided here:** T2a has no moment in time. The history is
+  as of the pull, a rating carries its current score, and the rule about ratings edited later does not apply.
+  Rated titles outside the universe (74 of other members, 12 of the owner) are history in every view and never
+  hidden.
+- **Targets:** the hidden titles and every universe title the member has not rated, about 60,700 in a view, in one
+  list shuffled with a seed made from the view. The view holds the list and nothing else about a target.
+  **Decided here**, following the brief: a title the member has not rated is a candidate also when it is on the
+  member's Want to See, Skip or Not interested list. So a target that stands on one of the member's lists is known
+  not to be hidden; nothing marks a hidden title.
+- **Other members:** `all` (the default, as in T1: the pooled rungs see other members' ratings of the hidden title,
+  as the product would) or `no-owner`. `before` is refused.
+- On this pack: 434 views (50 of the owner), 5,780 hidden titles (992 of the owner), 26.3 million ranks per rung.
+
+### Measures
+
+Each hidden title is placed, alone, among the view's unrated candidates. **Decided here:** the other hidden titles
+of the view are not part of that comparison (they are titles the member has watched).
+
+- **Percentile:** the share of the candidates the scorer ranks below the hidden title, a tie counting a half. 1.0
+  is the top; a scorer with no order gives 0.5 everywhere.
+- **In the first 50, in the first 200:** fewer than 50 (200) candidates rank above it, a tie counting a half.
+- **Bands** by the member's real rating: 8 or more, 6 to 7, 5 or less. Per member, the mean percentile of a band
+  and the share of the band in the first 50 and 200. **Decided here:** a band counts for a member only with 5 or
+  more titles in it, for the band's own figures as well as for the separation (the brief asks it of the
+  separation).
+- **Primary: separation.** Mean percentile of the titles rated 8 or more minus that of the titles rated 5 or less,
+  per member, for members with both bands. 26 of the 61 other members count; all 61 have the high band, 49 the
+  middle band. The paired difference to a reference is the rung's separation minus the reference's, per member.
+- **Among equally well-rated titles:** the same percentile, counted only against candidates whose GoodWatch score
+  lies within 3 points of the hidden title's. **Decided here:** the score is `goodwatch_overall_score` on its 0 to
+  100 scale and "within 3" includes 3; a hidden title typically has several thousand such candidates. The same
+  band means and the same separation are reported on it.
+- **Guards**, read on the first 50 candidates of every view (hidden titles left out, ties in the order of the
+  view's list), averaged over a member's views: the share of shows and of animation, each also minus the member's
+  own share among their rated universe titles; the largest number of titles from one franchise; the median vote
+  count. **Decided here:** animation is production method "Animation"; a franchise is a movie series of the pack
+  (`movie_series_id`), every other title its own.
+- **Score.** **Decided here:** T2a has no calibrator and no calibration views. A predictor that gives `score` (or
+  `p_low`) is scored on the hidden titles as in T1 (error of the rounded score, by band; Brier); what it gives for
+  candidates is not read. A rung without `score` has no error in T2a. The contract is unchanged, including the
+  rule that a predictor without `score` gives `rank` in 0..1.
+- **Others:** the mean over members with a 95% interval from drawing members again (10,000 draws, the same seed),
+  and for every reference the paired difference, its interval, the members improved and the smallest detectable
+  effect, with the functions T1 uses.
+- **Owner:** plain figures. An interval over sittings follows the rule of section 8 (`stats.cluster_separation`
+  for the separation: the mean over one group of titles minus the mean over another, whole sittings drawn again);
+  on this pack the largest sitting holds 34% of the titles rated 8 or more or 5 or less, so there is none.
+  Beside it stands the second figure, with whole franchises drawn again.
+- **Win rule** (PLAN.md 2.5): interval of the paired separation excludes zero, effect of 0.03 or more, no guard
+  worse with an interval that excludes zero. The table gives the numbers; it draws no verdict.
+
+### Running it
+
+- **Decided here:** an answer has about 60,000 ranks. The runner turns it into the few numbers above the moment it
+  is read (`score.t2a_view`) and drops the ranks, so neither the runner nor the stored answers of a reference hold
+  more than one view's ranks. A sandbox worker gets 64 views at a time. Peak memory of a run: 271 MB.
+- **The ladder:** B1, B2, B3, B4, B5, BP, each with B2, B1 and BP as references (B2 first: it is the primary
+  reference). B0 gives no order and is left out. **Decided here:** the rungs run unchanged, the files pinned for
+  T1. One consequence is stated plainly: B4 and B5 standardize their title columns over every title a view names,
+  and learn the consensus from the titles members rated. In T1 a view names a few thousand titles, most of them
+  rated by someone; in T2a it names the whole universe, so the consensus is extended to tens of thousands of
+  titles nobody rated. Their first 50 candidates have a median vote count of 3,600 (B4) and 6,800 (B5).
+- **Not built for T2a:** the gate (`gate.py` refuses a task other than T1 and uses no look). A registered T2a run
+  would be accepted by `run.py` with `task: T2a` in `PREREG.md`; no test covers it.
+- **Time** on two processes, this pack: B1 105 s, BP 65 s, B2 133 s, B3 169 s, B4 379 s, B5 522 s.
 
 ## 5. The contract
 
@@ -356,6 +452,9 @@ Owner and other members are always apart. "Others" are tier A members other than
   rating of any other member (with `--others before`, every block of the owner), or the others are too few for the
   fit to give finite numbers, B4 and B5 answer as B1 does. Before, they failed.
 - Nothing on the ladder was tuned on this pack.
+- **Item 003:** no rung was changed for T2a; section 4a says how the ladder runs there. Only the leak canary among
+  the pinned files changed (section 11), so the harness hash changed and the T1 ladder was run again: every
+  measure of the T1 table is the same as before.
 
 ## 10. The ledger
 
@@ -374,7 +473,12 @@ a rank-only candidate, seconds per predictor, peak memory.
 - **`table.py`** reads lines of mode `ladder` with status ok, all members, the true labels, for each of the three
   `others` options, and takes the newest per rung. **Changed in the fix pass:** it refuses to build a table unless
   every row carries the pack hash and the harness hash of B0's row and, within one `others` option, B0's views
-  digest and title digest. After a harness change the whole ladder is run again.
+  digest and title digest. After a harness change the whole ladder is run again. **Item 003:** `table.py T2a`
+  reads the T2a lines the same way; B2's row takes the part of B0's. A rung's row shows the paired differences its
+  own line holds, so each rung is run with B2, B1 and BP as references.
+- **Item 003:** a T2a line holds, beside what every line holds, `views.targets` (hidden titles),
+  `views.targets_listed` (ranks asked for), and the T2a measures of section 4a for others and owner.
+  `result.json` has one row per member: counts, band percentiles, separation, the lowest and highest percentile.
 
 ## 11. Verify, gate, controls
 
@@ -416,15 +520,39 @@ a rank-only candidate, seconds per predictor, peak memory.
   - `contract.py`: a predictor that returns a bare array. Pass: the run fails and has no measures.
   - `clash.py`: two files named `best.py`, one answering 1, one answering 10, each run against B0. Pass: each gets
     its own result (for every member the two errors add up to 9).
+  - **Item 003, `shuffled.py --task T2a`:** the same shuffle through the hidden-title test, B2 first. Pass: for
+    every rung the separation and the separation among equally well-rated titles are level with zero, for others
+    and for the owner. **Decided here:** "level with zero" is that a two-sided test against zero does not reject
+    at 0.001: Student's t over the per-member separations for others; for the owner the figure over the spread of
+    the separation with whole franchises drawn again, on the normal curve. The level is 0.001 because 24 figures
+    are checked at once; with true zeros the control fails about once in forty times. A 3-standard-error rule
+    written first failed on the made-up pack, where a handful of members give an unreliable standard error.
+  - **Item 003, `leak.py --task T2a`:** the canary on T2a views, behind the same boundary. Pass: for every member
+    its error on the hidden titles equals B0's and every hidden title stands at percentile 0.5 exactly, and the
+    attempts are reported. For that the canary changed (its pin too): a title whose rating it finds now also gets
+    rank 1, all others rank 0; and it knows the two T2a ways to an answer (another fold of the same member, which
+    shows the hidden titles as history, and the answer file's `pos` column). A test shows it finds every hidden
+    rating on a made-up pack when nothing confines it, from the answer file, from the other folds alone, and from
+    the pack. That the view itself marks no hidden title is covered by tests on the made-up pack (`test_views.py`),
+    not by this control.
+  - **Item 003, `--only` and `--reuse`** (`shuffled.py`, both tasks): `--only <rung file>` runs the named rungs
+    and writes no verdict; `--reuse` takes for every rung the run the ledger already holds for exactly this control
+    (same task, item, harness hash, rung hash and seed, all members) and runs what is missing. The six runs can
+    then be started one at a time and judged together.
   - `rankscale.py`, **new in the fix pass**: rung B2 with a constant added to every rank of a view (the number of
     ratings the view shows). The order inside every view is B2's. Outcome, by decision: **it fails the contract
     check** (rank outside 0..1 without a score); it does not run and change nothing. Pass: the run fails and has
     no measures.
 
-## 12. Not built in item 002
+## 12. Not built
 
-T2a, T2b, T3, T5; tier C and `sealed.py`; a `p_low` for any rung but B0; intervals for the owner's pair accuracy
-and AUC.
+T2b, T3, T5; tier C and `sealed.py`; a `p_low` for any rung but B0; intervals for the owner's pair accuracy and
+AUC; the gate for T2a; a calibrated score for rank-only rungs in T2a.
+
+`lab/top.py` (**item 003**) is not a run: it calls a pinned rung of `lab/ladder/` in its own process, without the
+sandbox, on a view of the member in which nothing is hidden (every unrated universe title is a target), and prints
+the first titles. Nothing is hidden there, so nothing can leak; it refuses any file that is not a pinned rung,
+writes no file and no ledger line. Its output names titles; keep it out of the repository.
 
 Limits of the process checks, stated plainly. They stop mistakes and shortcuts, not a person who edits the lab:
 ledger lines that are not committed yet can still be removed; the pins can be rewritten (the harness hash then

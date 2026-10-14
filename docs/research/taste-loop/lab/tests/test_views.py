@@ -210,3 +210,124 @@ def test_a_bulk_write_after_a_block_start_is_neither_target_nor_history_of_that_
         if v['kind'] == 'main':
             assert not bulk_titles & set(view['targets']['title'].tolist())
     assert sum(len(keys[v['vid']]['score']) for v in index if v['kind'] == 'main') == n - 5 - 10
+
+
+# ------------------------------------------------------------------ T2a
+
+def build_t2a(pack, tmp_path, name='t2a', **kw):
+    out = str(tmp_path / name)
+    index, keys, digest = views.build_t2a(pack, out, **kw)
+    views.export_titles(pack, os.path.join(out, 'titles.npz'))
+    return out, index, keys, digest, views.load_titles(os.path.join(out, 'titles.npz'))
+
+
+def test_t2a_hides_a_fold_among_every_title_the_member_has_not_rated(pack, tmp_path):
+    out, index, keys, _, titles = build_t2a(pack, tmp_path)
+    r = pack.ratings
+    row = pack.title_index(r['title_key'])
+    universe = views.t2a_universe(pack.titles)
+    counts = np.bincount(r['member'], minlength=len(pack.members['tier']))
+    high = np.bincount(r['member'][r['score'] >= 8], minlength=len(counts))
+    members = sorted({v['member'] for v in index})
+    assert members == np.flatnonzero((counts >= 20) & (high >= 5)).tolist() and pack.owner in members
+    assert all(v['kind'] == 'main' for v in index) and len(index) >= 5 * len(members)
+    places = []
+    for u in members:
+        mine = np.flatnonzero(r['member'] == u)
+        score_of = dict(zip(row[mine].tolist(), r['score'][mine].tolist()))
+        rated = set(score_of)
+        in_universe = {t for t in rated if universe[t]}
+        unrated = set(np.flatnonzero(universe).tolist()) - rated
+        hidden_once = []
+        mine_views = [v for v in index if v['member'] == u]
+        assert len(mine_views) == max(5, -(-len(in_universe) // 20))
+        for v in mine_views:
+            folder = os.path.join(out, 'views', v['vid'])
+            view, key = views.load_view(folder, titles), keys[v['vid']]
+            targets = view['targets']['title']
+            hidden = set(key['title'].tolist())
+            assert view['task'] == 'T2a' and list(view['targets']) == ['title']
+            assert 0 < len(hidden) <= 20 and len(hidden) <= -(-len(in_universe) // 5)   # at most a fifth, at most 20
+            # the targets: the hidden titles and every universe title the member has not rated, each once
+            assert len(targets) == len(set(targets.tolist())) == int(key['n_targets'])
+            assert set(targets.tolist()) == unrated | hidden and hidden <= in_universe
+            assert (targets[key['pos']] == key['title']).all()
+            assert [score_of[t] for t in key['title'].tolist()] == key['score'].tolist()
+            # the history: every other rating, also of titles outside the universe, and nothing of the hidden ones
+            me = view['me']['ratings']
+            assert set(me['title'].tolist()) == rated - hidden and len(me['title']) == len(rated) - len(hidden)
+            assert [score_of[t] for t in me['title'].tolist()] == me['score'].tolist()
+            assert (key['history_score'] == me['score']).all() and int(key['n_outside']) == len(rated - in_universe)
+            for table in ('want_to_see', 'skip', 'not_interested'):
+                assert not set(view['me'][table]['title'].tolist()) & hidden
+            for table in view['others'].values():
+                assert u not in set(table['member'].tolist())          # leave one member out
+            # nothing in the view files has the shape of the answers
+            for name in ('view.bin', 'others.bin'):
+                for k, a in views.load_arrays(os.path.join(folder, name)).items():
+                    assert not (a.shape == key['score'].shape and a.dtype.kind in 'iu' and len(a) >= 4
+                                and (np.sort(a) == np.sort(key['title'])).all()), (name, k)
+                    assert not (a.shape == key['score'].shape and a.dtype.kind in 'iu' and len(a) >= 6
+                                and ((a == key['score']).all() or (a == key['pos']).all())), (name, k)
+            hidden_once += sorted(hidden)
+            places += (key['pos'] / len(targets)).tolist()
+            assert (np.diff(titles['key'][targets]) < 0).any()         # a shuffled list, not sorted by title key
+        assert sorted(hidden_once) == sorted(in_universe)              # every rated universe title is hidden once
+    # where a hidden title stands in the list says nothing: the places are spread over the whole list
+    places = np.array(places)
+    assert len(places) > 300 and abs(places.mean() - 0.5) < 0.05 and places.min() < 0.05 and places.max() > 0.95
+    assert sorted(os.listdir(out)) == ['others', 'titles.npz', 'views']
+
+
+def test_t2a_a_hidden_title_on_want_to_see_is_removed_from_that_list(pack, tmp_path):
+    """A member can rate a title and still have it on Want to See; in the view that hides it, the list would hand
+    the scorer the answer. The made-up pack has no such row, so one is made here."""
+    import copy
+    u = pack.owner
+    r = pack.ratings
+    mine = np.flatnonzero(r['member'] == u)
+    universe = views.t2a_universe(pack.titles)
+    both = [int(k) for k in r['title_key'][mine] if universe[pack.title_index([k])[0]]][:6]
+    made = copy.copy(pack)
+    w = {c: v.copy() for c, v in pack.wishlist.items()}
+    at = int(np.flatnonzero(w['member'] == u)[0])
+    made.wishlist = {c: np.insert(v, at, [v[at]] * len(both)) for c, v in w.items()}
+    made.wishlist['title_key'][at:at + len(both)] = both
+    out, index, keys, _, titles = build_t2a(made, tmp_path, members=[u])
+    rows = set(pack.title_index(both).tolist())
+    shown = 0
+    for v in index:
+        view = views.load_view(os.path.join(out, 'views', v['vid']), titles)
+        hidden = set(keys[v['vid']]['title'].tolist())
+        listed = set(view['me']['want_to_see']['title'].tolist())
+        assert not listed & hidden and listed & rows == rows - hidden
+        shown += len(rows & hidden)
+    assert shown == len(both)                                          # each was hidden in one view, and absent there
+
+
+def test_t2a_views_are_the_same_on_a_second_build_and_shuffling_moves_only_the_ratings(pack, tmp_path):
+    a = views.build_t2a(pack, str(tmp_path / 'a'))
+    b = views.build_t2a(pack, '', write=False)
+    assert a[2] == b[2] and [v['vid'] for v in a[0]] == [v['vid'] for v in b[0]]
+    s = views.build_t2a(pack, '', write=False, shuffle_seed=7)
+    assert s[2] != a[2] and [v['vid'] for v in s[0]] == [v['vid'] for v in a[0]]
+    moved = 0
+    for v in a[0]:
+        assert (s[1][v['vid']]['title'] == a[1][v['vid']]['title']).all()          # the same titles are hidden
+        moved += int((s[1][v['vid']]['score'] != a[1][v['vid']]['score']).sum())
+    assert moved > 100
+    no_owner = views.build_t2a(pack, str(tmp_path / 'n'), members=[a[0][-1]['member']], others_mode='no-owner')
+    titles_path = str(tmp_path / 'titles.npz')
+    views.export_titles(pack, titles_path)
+    view = views.load_view(os.path.join(str(tmp_path / 'n'), 'views', no_owner[0][0]['vid']),
+                           views.load_titles(titles_path))
+    assert pack.owner not in set(view['others']['ratings']['member'].tolist())
+
+
+def test_t2a_full_view_hides_nothing(pack):
+    titles = views.titles_of(views.title_arrays(pack))
+    view = views.t2a_full_view(pack, pack.owner, titles)
+    r = pack.ratings
+    rated = set(pack.title_index(r['title_key'][r['member'] == pack.owner]).tolist())
+    assert set(view['me']['ratings']['title'].tolist()) == rated
+    assert set(view['targets']['title'].tolist()) == set(np.flatnonzero(views.t2a_universe(pack.titles)).tolist()) - rated

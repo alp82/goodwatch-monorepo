@@ -23,26 +23,33 @@ Read this first. Rewritten at the end of every session.
   - [x] no UUID-like string in any pack or gate file
   - [x] member files identical on a second run; title files differ in 2 of 72,101 titles because production
         rewrites title rows continuously. Accepted as is: title data is "as of the pull".
-- [ ] **002 Harness, ladder and controls** (`items/002-harness-ladder/`)
-  - [ ] one process per predictor, view file without hidden labels
-  - [ ] T1 ladder table rebuilds from the ledger, with intervals and smallest detectable effects
-  - [ ] shuffled-label control: no skill; planted 0.15 effect: found; leak canary: gets nothing
-  - [ ] same-named predictor files do not clash; `verify.py` reproduces a run
-  - [ ] full ladder under 10 minutes on 2 threads
-  - [ ] red team (Astra) and protocol reviews (Sol 6.1, Fable) filed, findings fixed or answered
-- [ ] **003 Hidden-title test** (`items/003-hidden-title/`)
-  - [ ] T2a for every rung plus vote count, owner and members apart, with intervals
-  - [ ] first 20 titles per rung for the owner read by the orchestrator
-  - [ ] result written into `DECISIONS.md` under D1
+- [x] **002 Harness, ladder and controls** (`items/002-harness-ladder/`), accepted October 13, 2026
+  - [x] one process per predictor, view file without hidden labels
+  - [x] T1 ladder table rebuilds from the ledger, with intervals and smallest detectable effects
+  - [x] shuffled-label control: no skill; planted 0.15 effect: found (−0.148); leak canary: gets nothing
+  - [x] same-named predictor files do not clash; `verify.py` reproduced a run (786 values)
+  - [x] full T1 ladder under 10 minutes on 2 threads
+  - [x] red team (Fable, because Astra's provider blocked the run) and protocol reviews (Sol 6.1, Fable) filed; all
+        15 findings fixed. A first builder ran the leak canary once outside the sandbox; counted as no gate look.
+- [x] **003 Hidden-title test** (`items/003-hidden-title/`), accepted October 14, 2026
+  - [x] T2a for every rung plus vote count, owner and members apart, with intervals (owner: franchises drawn again,
+        because one sitting holds 34% of the owner's titles)
+  - [x] T2a shuffled and leak controls pass; T1 ladder and its six controls rerun under the new harness, identical
+  - [x] first 20 titles per rung for the owner read by the orchestrator
+  - [x] result written into `DECISIONS.md` under D1
+  - Folds: at most 20 hidden titles per view and at least 5 views per member (the brief said folds of 20).
 - [x] Issues filed: #525 exposure log; #526 one-tap reason on low ratings
 
 ## Next action
 
-Item 002: builder running. Then red team (Astra) and protocol reviews (Sol 6.1, Fable), then item 003.
+Phase 0 exit is met. Owner checkpoint: show the T1 table, the T2a table and the first 20 titles per rung (done in
+session 1). Then phase 1: item 004 T2b for every rung; fix B5's top (standardize as in T1) and check B3's popularity
+tilt; register the leads and use gate looks only on registered comparisons; a gate review by two models other than
+the orchestrator's.
 
 ## What the owner owes
 
-Nothing right now.
+Nothing. Optional: whether the first-20 lists match their sense of what they would want to see.
 
 ## What the census changed
 

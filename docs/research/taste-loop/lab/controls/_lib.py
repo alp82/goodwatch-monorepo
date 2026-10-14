@@ -7,7 +7,7 @@ import sys
 
 LAB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, LAB)
-from common import LOOP, SEED, append_ledger, read_ledger  # noqa: E402
+from common import LOOP, SEED, append_ledger, harness_sha256, read_ledger, sha256_file  # noqa: E402
 
 LADDER = os.path.join(LAB, 'ladder')
 PREDICTORS = os.path.join(LAB, 'controls', 'predictors')
@@ -20,27 +20,45 @@ FLOOR = 0.05                                          # PLAN.md 2.5: the T1 effe
 def arguments(doc):
     ap = argparse.ArgumentParser(description=doc, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--item', default='002')
+    ap.add_argument('--task', default='T1', choices=['T1', 'T2a'])
+    ap.add_argument('--only', action='append', help='shuffled: run these rung files only, write no verdict')
+    ap.add_argument('--reuse', action='store_true', help='shuffled: take the runs the ledger already holds')
     return ap.parse_args()
 
 
 def run(a, control, predictor, refs=(B0,), extra=()):
     """One control run. Returns (exit code, the ledger line it wrote or None, what it printed)."""
     before = len(read_ledger(LEDGER))
-    cmd = [os.path.join(LAB, 'run.sh'), predictor, '--task', 'T1', '--tier', 'A', '--mode', 'control',
+    cmd = [os.path.join(LAB, 'run.sh'), predictor, '--task', a.task, '--tier', 'A', '--mode', 'control',
            '--control', control, '--item', a.item]
     for r in refs:
         cmd += ['--ref', r]
     done = subprocess.run(cmd + list(extra), capture_output=True, text=True)
     lines = read_ledger(LEDGER)[before:]
-    lines = [x for x in lines if x.get('control') == control and 'predictor' in x]
+    lines = [x for x in lines if x.get('control') == control and 'predictor' in x and x.get('task') == a.task]
     return done.returncode, (lines[-1] if lines else None), done.stdout + done.stderr
+
+
+def stored(a, control, predictor, shuffle_seed=None):
+    """The newest finished run of this control in the ledger that is this run exactly: the same task, item,
+    harness code, predictor file and options, on all members. For a control whose runs are started one at a time
+    (`--only`) and judged together afterwards (`--reuse`). None when there is none."""
+    harness, sha = harness_sha256(), sha256_file(predictor)
+    for x in reversed(read_ledger(LEDGER)):
+        o = x.get('options', {})
+        if x.get('control') == control and x.get('mode') == 'control' and x.get('task') == a.task \
+                and x.get('item') == a.item and x.get('status') == 'ok' and x.get('harness_sha256') == harness \
+                and x.get('predictor', {}).get('sha256') == sha and o.get('shuffle_seed') == shuffle_seed \
+                and o.get('members') == 'all' and o.get('others') == 'all' and o.get('plant') is None:
+            return x
+    return None
 
 
 def verdict(a, control, passed, runs, detail):
     stamp = f'{datetime.datetime.now(datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}'
     append_ledger(LEDGER, {'mode': 'control', 'control': control, 'verdict': 'pass' if passed else 'fail',
-                           'item': a.item, 'time': stamp, 'runs': runs, 'detail': detail})
-    print(f'{control}: {"PASS" if passed else "FAIL"}')
+                           'item': a.item, 'task': a.task, 'time': stamp, 'runs': runs, 'detail': detail})
+    print(f'{control} ({a.task}): {"PASS" if passed else "FAIL"}')
     sys.exit(0 if passed else 1)
 
 

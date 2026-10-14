@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 import numpy as np
+import pytest
 
 from conftest import REAL_LAB, ledger
 
@@ -583,6 +584,201 @@ def test_table_reads_ladder_lines_only_and_refuses_a_mixed_cohort(world):
         assert done.returncode != 0 and 'do not belong together' in done.stderr and what in done.stderr
         open(path, 'w').write(kept)
     assert table().returncode == 0
+
+
+# ------------------------------------------------------------------ T2a, the hidden-title test
+
+BP, B3 = 'ladder/bp_votes.py', 'ladder/b3_taste_standardized.py'
+
+
+def t2a(world, rung, *refs, mode='ladder', item='001', extra=()):
+    lab = world['lab']
+    args = [x for r in refs for x in ('--ref', os.path.join(lab, r))]
+    return world['sh'](os.path.join(lab, rung), '--task', 'T2a', '--tier', 'A', '--mode', mode, '--item', item,
+                       *args, *extra)
+
+
+def test_t2a_runs_the_ladder_through_the_hidden_title_test(world, pack):
+    n = len(ledger(world))
+    refused(t2a(world, B2, extra=['--others', 'before']), 'no moment in time')
+    refused(t2a(world, B1, mode='control', extra=['--control', 'planted', '--plant', '0.1']), 'control of task T1')
+    assert len(ledger(world)) == n
+    # without --ref the reference is B2; a rung against itself costs nothing and differs by nothing
+    done = t2a(world, B2)
+    own = ledger(world)[-1]
+    assert done.returncode == 0 and own['primary_ref'] == B2 and len(own['predictor_seconds']) == 1
+    assert own['measures']['others']['vs'][B2]['separation']['diff'] == 0
+    for rung, refs in ((B2, (B1, BP)), (B1, (B2, BP)), (B5, (B2, B1, BP))):
+        done = t2a(world, rung, *refs)
+        assert done.returncode == 0, done.stdout + done.stderr
+    b2, b1, b5 = ledger(world)[-3:]
+    assert 'separation' in done.stdout and 'among equally well-rated' in done.stdout
+    for line in (b2, b1, b5):
+        assert line['task'] == 'T2a' and line['mode'] == 'ladder' and line['status'] == 'ok'
+        assert line['calibrated'] == [] and line['views']['calibration'] == 0 and line['views']['main'] >= 50
+        assert line['views']['digest'] == b2['views']['digest'] and line['sandbox']['attempts'] == 0
+        assert line['views']['targets_listed'] > 10 * line['views']['targets']    # many candidates to a hidden title
+    assert [r['cached'] for r in b1['refs']] == [True, True] and [r['cached'] for r in b5['refs']] == [True] * 3
+    assert b5['primary_ref'] == B2 and b2['primary_ref'] == B1
+    m = b5['measures']
+    o = m['others']
+    assert m['primary'] == 'separation' and m['gives_score'] is True and b2['measures']['gives_score'] is False
+    assert o['n_members'] >= 5 and 0 < o['n_primary'] <= o['n_members'] and o['n_hidden'] == b5['views']['targets'] - \
+        m['owner']['n_hidden']
+    for name in ('pct_high', 'pct_mid', 'pct_low', 'separation', 'separation_matched', 'first50_high', 'first200_low',
+                 'top_shows', 'top_animation_vs_own', 'top_franchise_max', 'top_votes_median', 'mae'):
+        assert o[name]['lo'] <= o[name]['value'] <= o[name]['hi'], name
+    assert 0 <= o['pct_low']['value'] <= 1 and 'mae' not in b2['measures']['others']
+    # the made-up ratings follow title quality and a little taste: the pooled predictor separates them
+    assert o['separation']['value'] > 0.1 and o['separation']['lo'] > 0
+    d = o['vs'][B2]
+    assert d['separation']['lo'] < d['separation']['diff'] < d['separation']['hi'] and d['separation']['sde'] > 0
+    assert d['separation']['n'] == o['n_primary'] and 'mae' not in d and o['vs'][B1]['mae']['n'] == o['n_members']
+    assert set(o['vs']) == {B2, B1, BP} and set(b2['measures']['others']['vs']) == {B1, BP}
+    # the owner alone: plain figures; 4 sittings carry no interval, franchises drawn again do
+    w = m['owner']
+    assert w['n_hidden'] > 100 and w['sittings'] == 4 and w['views'] >= 5
+    assert w['separation']['value'] is not None and w['separation']['lo'] is None
+    assert w['separation']['why'] == '4 clusters, fewer than 10'
+    assert w['separation_franchise']['lo'] < w['separation_franchise']['value'] < w['separation_franchise']['hi']
+    assert w['vs'][B2]['separation']['value'] == pytest.approx(
+        w['separation']['value'] - b2['measures']['owner']['separation']['value'], abs=1e-5)
+    # result.json holds one row per member; nothing of the views is left
+    result = json.load(open(os.path.join(world['data'], 'results', b5['run_id'], 'result.json')))
+    row = result['per_member'][0]
+    assert len(result['per_member']) == o['n_members'] + 1 and row['hidden'] >= 3 and f'separation:{B2}' in row
+    work = os.path.join(world['data'], 'work')
+    assert os.listdir(os.path.join(work, 'runs')) == [] and os.listdir(os.path.join(work, 'keys')) == []
+    # a rerun reproduces every number
+    done = world['sh']('--verify', b5['run_id'])
+    assert done.returncode == 0 and 'verified' in done.stdout, done.stdout + done.stderr
+
+
+def test_t2a_table_is_built_from_the_ladder_lines(world):
+    lab = world['lab']
+    done = subprocess.run([sys.executable, os.path.join(lab, 'table.py'), 'T2a'], capture_output=True, text=True,
+                          env=world['env'])
+    assert done.returncode == 0, done.stderr
+    text = done.stdout
+    lines = [x for x in ledger(world) if x.get('mode') == 'ladder' and x.get('task') == 'T2a']
+    b5 = [x for x in lines if x['predictor']['path'] == B5][-1]
+    o, w = b5['measures']['others'], b5['measures']['owner']
+    s, d = o['separation'], o['vs'][B2]['separation']
+    assert f'{s["value"]:.3f} ({s["lo"]:.3f} to {s["hi"]:.3f})' in text
+    assert f'{d["diff"]:+.3f} ({d["lo"]:+.3f} to {d["hi"]:+.3f})' in text
+    assert f'**{o["n_primary"]} members count for the separation.**' in text
+    assert '| B3 | Taste on standardized fingerprints | not run' in text and '| B0 |' not in text
+    row = [x for x in text.splitlines() if x.startswith('| B2 | reference |')]
+    assert len(row) == 2 and 'not run' not in ''.join(row)             # B2 is the reference; it has B1 and BP beside it
+    assert '## The owner alone' in text and 'n/a: 4 sittings, fewer than 10' in text
+    assert f'{w["separation"]["value"]:.3f}' in text and '### Guards: the first 50 candidates' in text
+    assert '### Error of the predicted rating on the hidden titles' in text
+    t1 = subprocess.run([sys.executable, os.path.join(lab, 'table.py'), 'T1'], capture_output=True, text=True,
+                        env=world['env'])
+    assert t1.returncode == 0 and 'hidden' not in t1.stdout           # the T1 table reads no T2a line
+
+
+def test_t2a_controls(world):
+    for name in ('leak', 'shuffled'):
+        done = subprocess.run([sys.executable, os.path.join(world['lab'], 'controls', f'{name}.py'), '--task', 'T2a',
+                               '--item', '001'], capture_output=True, text=True, env=world['env'])
+        assert done.returncode == 0, done.stdout + done.stderr
+    verdicts = [x for x in ledger(world) if x.get('task') == 'T2a' and 'verdict' in x]
+    assert [(x['control'], x['verdict']) for x in verdicts[-2:]] == [('leak', 'pass'), ('shuffled', 'pass')]
+    leak = [x for x in ledger(world) if x.get('control') == 'leak' and x.get('task') == 'T2a' and 'predictor' in x][-1]
+    assert leak['status'] == 'attempts' and leak['sandbox']['attempts'] > 100
+    log = open(os.path.join(world['data'], 'results', leak['run_id'], 'log.txt')).read()
+    assert 'leak canary: 0 of' in log and '/gate/' not in log
+    assert not [x for x in log.splitlines() if 'target ratings found' in x and not x.startswith('leak canary: 0 of')]
+    # the six shuffled runs can be started one at a time and judged together: --only writes no verdict, --reuse
+    # takes the runs the ledger holds for exactly this control and code
+    shuffled = (lambda *args: subprocess.run(
+        [sys.executable, os.path.join(world['lab'], 'controls', 'shuffled.py'), '--task', 'T2a', '--item', '001',
+         *args], capture_output=True, text=True, env=world['env']))
+    n = len(ledger(world))
+    done = shuffled('--only', 'b1_public.py')
+    assert done.returncode == 0 and 'PASS' not in done.stdout, done.stdout + done.stderr
+    assert len(ledger(world)) == n + 1 and 'verdict' not in ledger(world)[-1]
+    done = shuffled('--reuse')
+    assert done.returncode == 0 and 'shuffled (T2a): PASS' in done.stdout, done.stdout + done.stderr
+    last = ledger(world)[-1]
+    assert len(ledger(world)) == n + 2 and last['verdict'] == 'pass' and len(last['runs']) == 6
+    assert ledger(world)[-2]['run_id'] in last['runs'] and set(last['runs'][1:]) & set(verdicts[-1]['runs'])
+    refused(shuffled('--only', 'b9.py'), '--only names a rung file')
+
+
+def test_t2a_leak_canary_finds_the_hidden_ratings_when_nothing_confines_it(world, pack, tmp_path):
+    """On the made-up pack, outside the sandbox, the canary reads the hidden ratings from the answer file, from
+    another fold of the same member, and from the pack, and puts exactly those titles at the top of its order."""
+    import views
+    out = str(tmp_path / 'data' / 'work' / 'runs' / 'r1')
+    index, keys, _ = views.build_t2a(pack, out, members=[pack.owner])
+    views.export_titles(pack, os.path.join(out, 'titles.npz'))
+    keys_path = str(tmp_path / 'data' / 'work' / 'keys' / 'r1.bin')
+    views.write_keys(keys_path, index, keys)
+    code = f"""
+import sys, json, importlib.util
+sys.path.insert(0, {REAL_LAB!r})
+import views
+spec = importlib.util.spec_from_file_location('canary', {os.path.join(REAL_LAB, 'controls/predictors/leak_canary.py')!r})
+canary = importlib.util.module_from_spec(spec); spec.loader.exec_module(canary)
+titles = views.load_titles({os.path.join(out, 'titles.npz')!r})
+out = {{}}
+for vid in {[v['vid'] for v in index]!r}:
+    a = canary.predict(views.load_view({os.path.join(out, 'views')!r} + '/' + vid, titles))
+    out[vid] = [a['rank'].tolist(), a['score'].tolist()]
+print(json.dumps(out))
+"""
+
+    def check(name, root):
+        env = {'PATH': '/usr/bin:/bin', 'HOME': str(tmp_path), 'TMPDIR': str(tmp_path), 'TASTE_CANARY_ROOT': root,
+               'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'}
+        done = subprocess.run([sys.executable, '-B', '-c', code], capture_output=True, text=True, env=env,
+                              cwd=str(tmp_path), timeout=300)
+        assert done.returncode == 0, done.stderr[-2000:]
+        got = json.loads(done.stdout.strip().splitlines()[-1])
+        for v in index:
+            rank, score = (np.array(x) for x in got[v['vid']])
+            key = keys[v['vid']]
+            assert np.flatnonzero(rank == 1).tolist() == key['pos'].tolist(), name   # it tells them apart
+            assert score[key['pos']].tolist() == key['score'].tolist(), name         # and knows their ratings
+
+    check('the answer file and the other folds', str(tmp_path / 'data'))
+    os.remove(keys_path)
+    check('the other folds alone', str(tmp_path / 'data'))
+    check('the pack', os.path.dirname(world['pack_dir']))
+
+
+def test_top_prints_the_first_unrated_candidates_and_writes_nothing(world, pack):
+    lab = world['lab']
+    n = len(ledger(world))
+    before = sorted(os.listdir(os.path.join(world['data'], 'results')))
+    status = world['git']('status', '--porcelain').stdout
+    top = (lambda *args: subprocess.run([sys.executable, '-B', os.path.join(lab, 'top.py'), *args],
+                                        capture_output=True, text=True, env=world['env']))
+    done = top('B5', '--member', 'owner', '--n', '7')
+    assert done.returncode == 0, done.stderr
+    rows = [x for x in done.stdout.splitlines() if x.startswith('| ') and x[2].isdigit()]
+    assert len(rows) == 7 and '| # | Title | Year | Type | GoodWatch score |' in done.stdout
+    r = pack.ratings
+    rated = set(pack.title_index(r['title_key'][r['member'] == pack.owner]).tolist())
+    shown = [int(x.split('|')[2].strip().split()[1]) for x in rows]     # the made-up titles are "Title <row>"
+    assert len(set(shown)) == 7 and not set(shown) & rated
+    assert all(views_universe(pack)[i] for i in shown) and all(x.split('|')[4].strip() in ('movie', 'show') for x in rows)
+    assert top('B5', '--member', 'owner', '--n', '7').stdout == done.stdout
+    assert top('B2', '--member', 'owner', '--n', '7').stdout != done.stdout
+    # only the pinned rungs: this file runs a predictor outside the sandbox
+    mine = os.path.join(lab, 'ladder', 'b9_mine.py')
+    open(mine, 'w').write(open(os.path.join(lab, B1)).read() + '# mine\n')
+    refused(top(mine, '--member', 'owner'), 'pinned rungs')
+    os.remove(mine)
+    assert len(ledger(world)) == n and sorted(os.listdir(os.path.join(world['data'], 'results'))) == before
+    assert world['git']('status', '--porcelain').stdout == status       # no file anywhere in the loop folder
+
+
+def views_universe(pack):
+    import views
+    return views.t2a_universe(pack.titles)
 
 
 def test_the_pins_match_the_ladder_and_the_control_predictors():

@@ -1,13 +1,15 @@
 """The ladder table, rebuilt from the ledger alone.
 
     python3 table.py T1 > items/NNN-name/ladder-T1.md
+    python3 table.py T2a > items/NNN-name/ladder-T2a.md
 
 For each rung and each `others` option it takes the newest finished run in mode `ladder`, on tier A, with every
 member. No other mode is read: exploratory and registered runs are candidates' runs, and control, verify and gate
 lines are never results. Every number is copied from a ledger line; nothing is computed here but the layout.
 
 It refuses to build a table from rows that do not belong together: every row must carry the pack hash and the
-harness hash of rung B0's row, and, within one `others` option, B0's views digest and title digest.
+harness hash of rung B0's row, and, within one `others` option, B0's views digest and title digest. In T2a, where
+B0 has no place (it gives no order), the row of B2, the reference, takes B0's part.
 """
 import argparse
 import os
@@ -74,27 +76,27 @@ def newest(ledger, task):
     return out
 
 
-def check_one_cohort(runs):
-    base = runs['all'].get('B0')
+def check_one_cohort(runs, first='B0'):
+    base = runs['all'].get(first)
     if not base:
-        raise Mixed('no ladder run of B0 with others: all')
+        raise Mixed(f'no ladder run of {first} with others: all')
     problems = []
     for others, rows in runs.items():
         if not rows:
             continue
-        b0 = rows.get('B0')
+        b0 = rows.get(first)
         if not b0:
-            problems.append(f'others: {others} has rungs but no run of B0')
+            problems.append(f'others: {others} has rungs but no run of {first}')
             continue
         for label, line in rows.items():
-            for key, ref, where in (('pack_sha256', base, 'B0'), ('harness_sha256', base, 'B0'),
-                                    ('titles_sha256', base, 'B0')):
+            for key, ref, where in (('pack_sha256', base, first), ('harness_sha256', base, first),
+                                    ('titles_sha256', base, first)):
                 if line.get(key) != ref.get(key):
                     problems.append(f'{label} (others: {others}, run {line["run_id"]}): {key} differs from {where}\'s')
             for key in ('digest', 'titles_digest'):
                 if line['views'].get(key) != b0['views'].get(key):
                     problems.append(f'{label} (others: {others}, run {line["run_id"]}): views {key} differs from '
-                                    f'B0\'s in the same option')
+                                    f'{first}\'s in the same option')
     if problems:
         raise Mixed('the newest ladder rows do not belong together; run the stale rungs again:\n  '
                     + '\n  '.join(problems))
@@ -112,6 +114,8 @@ def vs(line, ref, who='others'):
 
 
 def build(ledger, task='T1'):
+    if task == 'T2a':
+        return build_t2a(ledger)
     runs = newest(ledger, task)
     if not any(runs.values()):
         return 'No ladder run in the ledger.\n'
@@ -328,9 +332,236 @@ def build(ledger, task='T1'):
     return '\n'.join(out) + '\n'
 
 
+# ------------------------------------------------------------------ T2a
+
+T2A_RUNGS = [r for r in RUNGS if r[0] != 'B0']         # B0 gives no order
+T2A_AGAINST = ('B2', 'B1', 'BP')
+T2A_SCORER = {'B1': 'GoodWatch score', 'BP': 'Vote count'}
+
+
+def val(d, digits=3, sign=False):
+    return f((d or {}).get('value'), digits, sign)
+
+
+def owner_interval(d):
+    """The owner's interval over sittings, or n/a with the reason the harness gave."""
+    return interval(d, ('sittings', 'hidden titles'))
+
+
+def build_t2a(ledger):
+    runs = newest(ledger, 'T2a')
+    if not any(runs.values()):
+        return 'No T2a ladder run in the ledger.\n'
+    base = check_one_cohort(runs, 'B2')
+    main = runs['all']
+    m0 = base['measures']
+    o, w0 = m0['others'], m0.get('owner')
+    rows = [(label, text if label not in T2A_SCORER else T2A_SCORER[label], main.get(label))
+            for label, _, text in T2A_RUNGS]
+
+    def against(line, label, ref, who='others'):
+        return None if label == ref else vs(line, ref, who)
+
+    def diff(line, label, ref, name, who='others'):
+        """A paired difference to a reference with its interval; 'reference' on the reference's own row."""
+        if label == ref:
+            return 'reference'
+        d = (against(line, label, ref, who) or {}).get(name)
+        if not d:
+            return 'not run'
+        return ci(d, 'diff', True) if who == 'others' else f(d.get('value'), sign=True)
+
+    out = ['# The T2a ladder, tier A: the hidden-title test', '',
+           f'Built by `lab/table.py T2a` from the `ladder` lines of `ledger.jsonl`. Pack {base["pack"]} '
+           f'(`{base["pack_sha256"][:12]}`), harness `{base["harness_sha256"][:12]}`, {base["draws"]:,} bootstrap '
+           f'draws, seed {base["seed"]}. Every row below carries this pack hash, harness hash and views digest '
+           f'(`{base["views"]["digest"][:12]}`). Other members\' rows: all.', '',
+           'What T2a measures (PROTOCOL.md, section 4a). A view hides a fold of a member\'s rated titles and treats '
+           'them as unwatched. The scorer ranks them together with every title the member has not rated '
+           f'(about {o["candidates"]["value"]:,.0f} candidates per view), from the member\'s other ratings. Each '
+           'hidden title is then placed, alone, among those unrated candidates. Percentile: the share of '
+           'candidates ranked below it; 1.0 is the top of the list and 0.5 is what a scorer with no order gives. '
+           '"In the first 50": fewer than 50 candidates rank above it.', '',
+           f'Separation is the primary measure: the mean percentile of the titles a member rated 8 or more minus '
+           f'that of the titles the member rated 5 or less. A band counts for a member with {m0["band_min"]} or '
+           f'more titles in it; the separation needs both bands. "Among equally well-rated" is the same '
+           f'percentile, counted only against candidates whose GoodWatch score lies within '
+           f'{m0["score_window"]:g} points of the hidden title\'s.', '',
+           'A difference is the rung minus the reference, per member, then averaged. Intervals are 95%, from '
+           'drawing members again. "Smallest detectable" is the difference this data would find four times out of '
+           'five. The test only sees titles the member chose to watch: it says where a known favourite lands, '
+           'not whether the unrated titles above it are any good.', '',
+           '## Members other than the owner: where the hidden titles land', '',
+           f'{o["n_members"]} members, {o["n_hidden"]:,} hidden titles in {o["views"]} views: {o["n_high"]:,} rated 8 '
+           f'or more, {o["n_mid"]:,} rated 6 to 7, {o["n_low"]:,} rated 5 or less. {o["n_outside"]} more rated titles '
+           f'lie outside the candidate universe; they are history in every view and never hidden. Members with '
+           f'{m0["band_min"]} or more titles in the band: {o["members_high"]} (8 or more), {o["members_mid"]} (6 to 7), '
+           f'{o["members_low"]} (5 or less). **{o["n_primary"]} members count for the separation.** Each member '
+           f'counts once.', '',
+           '| Rung | Scorer | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Run |',
+           '|---|---|---:|---:|---:|---:|---|']
+    for label, text, line in rows:
+        if not line:
+            out.append(f'| {label} | {text} | not run | | | | |')
+            continue
+        m = line['measures']['others']
+        out.append(f'| {label} | {text} | {ci(m["pct_high"])} | {ci(m["pct_mid"])} | {ci(m["pct_low"])} | '
+                   f'{ci(m["separation"])} | `{line["run_id"]}` |')
+
+    out += ['', '### Separation against B2, B1 and BP', '',
+            'Above zero the rung separates better than the reference.', '',
+            '| Rung | Against B2 (today\'s taste) | Smallest detectable | Members improved | Against B1 (GoodWatch '
+            'score) | Against BP (vote count) |', '|---|---:|---:|---:|---:|---:|']
+    for label, text, line in rows:
+        if not line:
+            continue
+        d = (against(line, label, 'B2') or {}).get('separation') or {}
+        out.append(f'| {label} | {diff(line, label, "B2", "separation")} | {f(d.get("sde")) if d else ""} | '
+                   + (f'{d.get("improved")} of {d["n"]}' if d else '') +
+                   f' | {diff(line, label, "B1", "separation")} | {diff(line, label, "BP", "separation")} |')
+
+    out += ['', '### Share of hidden titles in the first 50 and the first 200', '',
+            'For titles rated 8 or more a larger share is better; for titles rated 5 or less a smaller one.', '',
+            '| Rung | Rated 8 or more: first 50 | First 200 | Rated 5 or less: first 50 | First 200 | First 50 (8 or '
+            'more) against B2 | First 200 (8 or more) against B2 |', '|---|---:|---:|---:|---:|---:|---:|']
+    for label, text, line in rows:
+        if not line:
+            continue
+        m = line['measures']['others']
+        out.append(f'| {label} | {ci(m["first50_high"])} | {ci(m["first200_high"])} | {ci(m["first50_low"])} | '
+                   f'{ci(m["first200_low"])} | {diff(line, label, "B2", "first50_high")} | '
+                   f'{diff(line, label, "B2", "first200_high")} |')
+
+    out += ['', '### Among equally well-rated titles', '',
+            'This removes "it is simply a well-rated title" and leaves what is personal.', '',
+            '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Against B2 | '
+            'Smallest detectable | Against B1 | Against BP |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|']
+    for label, text, line in rows:
+        if not line:
+            continue
+        m = line['measures']['others']
+        d = (against(line, label, 'B2') or {}).get('separation_matched') or {}
+        out.append(f'| {label} | {ci(m["pct_matched_high"])} | {ci(m["pct_matched_mid"])} | '
+                   f'{ci(m["pct_matched_low"])} | {ci(m["separation_matched"])} | '
+                   f'{diff(line, label, "B2", "separation_matched")} | {f(d.get("sde")) if d else ""} | '
+                   f'{diff(line, label, "B1", "separation_matched")} | {diff(line, label, "BP", "separation_matched")} |')
+
+    out += ['', '### Guards: the first 50 candidates', '',
+            f'The {m0["top"]} unrated candidates a rung ranks highest in a view, averaged over a member\'s views, '
+            f'then over the {o["n_members"]} members. The members\' own rated titles are '
+            f'{o["own_shows"]["value"]:.0%} shows and {o["own_animation"]["value"]:.0%} animation (production method '
+            f'"Animation"). "Against own mix" is the share in the first 50 minus the member\'s own share. A '
+            f'franchise is a movie series of the pack; every other title is its own.', '',
+            '| Rung | Shows | Shows against own mix | Animation | Animation against own mix | Most titles from one '
+            'franchise | Median vote count |', '|---|---:|---:|---:|---:|---:|---:|']
+    for label, text, line in rows:
+        if not line:
+            continue
+        m = line['measures']['others']
+        out.append(f'| {label} | {f(m["top_shows"]["value"])} | {ci(m["top_shows_vs_own"], sign=True)} | '
+                   f'{f(m["top_animation"]["value"])} | {ci(m["top_animation_vs_own"], sign=True)} | '
+                   f'{f(m["top_franchise_max"]["value"], 1)} | {m["top_votes_median"]["value"]:,.0f} |')
+    out += ['', '| Rung | Shows against B2 | Animation against B2 | Most titles from one franchise against B2 | Median '
+            'vote count against B2 |', '|---|---:|---:|---:|---:|']
+    for label, text, line in rows:
+        if not line or label == 'B2':
+            continue
+        v = against(line, label, 'B2') or {}
+        votes = v.get('top_votes_median') or {}
+        out.append(f'| {label} | {ci(v.get("top_shows"), "diff", True)} | {ci(v.get("top_animation"), "diff", True)} | '
+                   f'{ci(v.get("top_franchise_max"), "diff", True)} | '
+                   + (f'{votes["diff"]:+,.0f} ({votes["lo"]:+,.0f} to {votes["hi"]:+,.0f})' if votes.get('lo') is not None
+                      else 'n/a') + ' |')
+
+    scored = [(label, line) for label, _, line in rows if line and line['measures'].get('gives_score')]
+    if scored:
+        out += ['', '### Error of the predicted rating on the hidden titles', '',
+                'Only for rungs that give a score (T2a has no calibrator). Error as in T1: the average distance '
+                'between the rounded prediction and the rating, per member, then averaged.', '',
+                '| Rung | Error | Rated 5 or less | Rated 6 to 7 | Rated 8 or more | Against B1 | Owner: error | '
+                'Owner: against B1 |', '|---|---:|---:|---:|---:|---:|---:|---:|']
+        for label, line in scored:
+            m, w = line['measures']['others'], line['measures'].get('owner', {})
+            out.append(f'| {label} | {ci(m["mae"])} | {f(m["mae_low"]["value"])} | {f(m["mae_mid"]["value"])} | '
+                       f'{f(m["mae_high"]["value"])} | {diff(line, label, "B1", "mae")} | {val(w.get("mae"))} | '
+                       f'{diff(line, label, "B1", "mae", "owner")} |')
+
+    if w0:
+        out += ['', '## The owner alone', '',
+                f'One member: {w0["n_hidden"]} hidden titles in {w0["views"]} views ({w0["n_high"]} rated 8 or more, '
+                f'{w0["n_mid"]} rated 6 to 7, {w0["n_low"]} rated 5 or less; {w0["n_outside"]} more rated titles lie '
+                f'outside the candidate universe), rated in {w0["sittings"]} sittings. The numbers are plain '
+                f'figures. An interval over sittings is given only when there are 10 or more sittings and none '
+                f'holds more than a quarter of the titles; otherwise the column says why not (the separation reads '
+                f'only titles rated 8 or more or 5 or less, which lie in {w0["separation"]["clusters"]} of the '
+                f'sittings). "Franchises drawn '
+                f'again" is a second figure, not that interval: whole movie series are resampled together and '
+                f'every other title alone ({w0["franchises"]} units), with sittings ignored.', '',
+                '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Interval over '
+                'sittings | Franchises drawn again | First 50 (8 or more) | First 200 (8 or more) | First 50 (5 or '
+                'less) | First 200 (5 or less) |', '|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|']
+        for label, text, line in rows:
+            w = (line or {}).get('measures', {}).get('owner')
+            if not w:
+                continue
+            out.append(f'| {label} | {val(w["pct_high"])} | {val(w["pct_mid"])} | {val(w["pct_low"])} | '
+                       f'{val(w["separation"])} | {owner_interval(w["separation"])} | '
+                       f'{interval(w["separation_franchise"])} | {val(w["first50_high"])} | '
+                       f'{val(w["first200_high"])} | {val(w["first50_low"])} | {val(w["first200_low"])} |')
+        out += ['', '| Rung | Separation against B2 | Franchises drawn again | Against B1 | Franchises drawn again | '
+                'Against BP | Franchises drawn again |', '|---|---:|---:|---:|---:|---:|---:|']
+        for label, text, line in rows:
+            if not line or 'owner' not in line['measures']:
+                continue
+            cells = []
+            for ref in T2A_AGAINST:
+                v = against(line, label, ref, 'owner')
+                cells += ['reference', ''] if label == ref else ['not run', ''] if not v else \
+                    [val(v['separation'], sign=True), interval(v['separation_franchise'])]
+            out.append(f'| {label} | ' + ' | '.join(cells) + ' |')
+        out += ['', 'Among equally well-rated titles:', '',
+                '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Franchises '
+                'drawn again | Against B2 | Franchises drawn again | Against B1 | Against BP |',
+                '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+        for label, text, line in rows:
+            w = (line or {}).get('measures', {}).get('owner')
+            if not w:
+                continue
+            v = {ref: against(line, label, ref, 'owner') for ref in T2A_AGAINST}
+            cell = (lambda ref: 'reference' if label == ref else 'not run' if not v[ref]
+                    else val(v[ref]['separation_matched'], sign=True))
+            out.append(f'| {label} | {val(w["pct_matched_high"])} | {val(w["pct_matched_mid"])} | '
+                       f'{val(w["pct_matched_low"])} | {val(w["separation_matched"])} | '
+                       f'{interval(w["separation_matched_franchise"])} | {cell("B2")} | '
+                       + (interval(v['B2']['separation_matched_franchise']) if v['B2'] else '') +
+                       f' | {cell("B1")} | {cell("BP")} |')
+        out += ['', f'Guards, the first {m0["top"]} candidates. The owner\'s own rated titles are '
+                f'{w0["own_shows"]["value"]:.0%} shows and {w0["own_animation"]["value"]:.0%} animation.', '',
+                '| Rung | Shows | Shows against own mix | Animation | Animation against own mix | Most titles from '
+                'one franchise | Median vote count |', '|---|---:|---:|---:|---:|---:|---:|']
+        for label, text, line in rows:
+            w = (line or {}).get('measures', {}).get('owner')
+            if not w:
+                continue
+            out.append(f'| {label} | {val(w["top_shows"])} | {val(w["top_shows_vs_own"], sign=True)} | '
+                       f'{val(w["top_animation"])} | {val(w["top_animation_vs_own"], sign=True)} | '
+                       f'{val(w["top_franchise_max"], 1)} | {w["top_votes_median"]["value"]:,.0f} |')
+
+    out += ['', '## Runs', '', '| Rung | Run | References | Seconds | Peak memory, MB | Predictor sha256 |',
+            '|---|---|---|---:|---:|---|']
+    label_of = {path: label for label, path, _ in RUNGS}
+    for label, text, line in rows:
+        if line:
+            refs = ', '.join(label_of.get(r['path'], r['path']) + (' (stored)' if r.get('cached') else '')
+                             for r in line['refs'])
+            out.append(f'| {label} | `{line["run_id"]}` | {refs} | {line["seconds"]} | {line["peak_mb"]} | '
+                       f'`{line["predictor"]["sha256"][:16]}` |')
+    return '\n'.join(out) + '\n'
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('task', choices=['T1'])
+    ap.add_argument('task', choices=['T1', 'T2a'])
     a = ap.parse_args()
     try:
         sys.stdout.write(build(read_ledger(os.path.join(LOOP, 'ledger.jsonl')), a.task))
