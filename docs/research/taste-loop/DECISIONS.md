@@ -103,11 +103,21 @@ a win under PLAN.md 2.5: every lead fails a guard, and none is registered.
 
 ## D2. Whether to show a personal predicted score or risk
 
+**Registered (item 008, `items/008-d2-forward/PREREG.md`): win on tier A, not replicated on tier B. Today's
+behaviour stays: no personal predicted score.**
+
 | Measure | Value |
 |---|---|
-| T1 error of the best scorer against B1 (GoodWatch score + offset) | B5 −0.121 (others); owner 0.852 against 1.008 |
-| T2a error on hidden titles against B1 | B5 −0.158 (−0.211 to −0.107); owner 0.817 against 1.010 |
-| Thresholds of PLAN.md 2.5 | not measured yet, needs the D2 item of phase 1 |
+| T1, B5 against B1, others before the block, tier A, registered (`20261014T112515-d288d6bc-a54f`) | −0.088 (−0.141 to −0.033), smallest detectable 0.077, 46 of 72 members improved: a win under PLAN.md 2.5 |
+| The same, against B0 | −0.105 (−0.183 to −0.025) |
+| Owner | 0.000 against B1: under "before" other members had written almost nothing before the owner's blocks, so B5 falls back to B1's rule |
+| Tier B gate look (look 1 of 8) | **not replicated**: on the held-out members the difference has the other sign or is under half of 0.088. The numbers stay unread. |
+| T2a error on hidden titles, exploratory | B5 against B1 −0.158 (−0.211 to −0.107); owner 0.817 against 1.010 |
+| Calibration of a risk on tier C | not measured, and not needed until a forward gain replicates |
+
+Reading: the forward gain of a personal score over the GoodWatch score with an offset does not hold up on members
+the loop has not looked at. The threshold of PLAN.md 2.5 is not met. Two confirmation attempts per decision are
+allowed, each on a fresh window; the second waits for tier C ratings written after T0.
 
 ## D3. How Taste is described
 

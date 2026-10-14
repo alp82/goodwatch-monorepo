@@ -51,7 +51,9 @@ Read this first. Rewritten at the end of every session.
   cause of B5's top
 - [x] **006 Harness fixes from Astra's review** (frozen predictor copy, retained counts for "both", fold table), Sol
   6.1, accepted: 95 tests, figures unchanged
-- [ ] **007 B3 with a B5 floor** (Astra experimenter)
+- [x] **007 B3 with a B5 floor** (Astra): nothing registered; F1 misses the franchise limit by 0.01, F3 the
+  first-50 bar by 0.005. Owner's first 20 under F1 and F3 equal B3's.
+- [x] **008 D2 forward comparison, registered:** tier A win (−0.088), tier B not replicated. Gate looks used: 1 of 8.
 - [x] Issues filed: #525 exposure log; #526 one-tap reason on low ratings
 
 ## Next action
