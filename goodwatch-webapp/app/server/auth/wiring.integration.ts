@@ -875,3 +875,67 @@ test("server session checks bypass HTTP throttling while the public session endp
 		setAuthForTest(null)
 	}
 })
+
+test("a full background mail queue does not reveal membership through password-reset responses", async () => {
+	const { address } = await confirmed()
+	let release!: () => void
+	let started!: () => void
+	let alerts = 0
+	const blocked = new Promise<void>((resolve) => {
+		release = resolve
+	})
+	const sending = new Promise<void>((resolve) => {
+		started = resolve
+	})
+	const queue = new AuthMailQueue(
+		{
+			sendMail: async () => {
+				started()
+				await blocked
+			},
+		},
+		{
+			reportFailure: () => {
+				alerts++
+			},
+		},
+	)
+	queue.enqueue(email(), "Local queue test", "Synthetic message")
+	await sending
+	for (let n = 0; n < 1000; n++)
+		queue.enqueue(email(), "Local queue test", "Synthetic message")
+	const overloaded = createGoodwatchAuth({
+		sql,
+		storage,
+		mail: queue,
+		baseURL,
+		secret: "disposable-local-wiring-secret-at-least-32",
+		google: {
+			clientId: "local-google-client",
+			clientSecret: "local-google-secret",
+		},
+	})
+	const reset = (email: string) =>
+		overloaded.handler(
+			new Request(`${baseURL}/api/auth/request-password-reset`, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					origin: baseURL,
+					"x-forwarded-for": "127.0.0.99",
+				},
+				body: JSON.stringify({ email }),
+			}),
+		)
+	try {
+		const known = await reset(address)
+		const unknown = await reset(email())
+		assert.equal(known.status, 200)
+		assert.equal(unknown.status, known.status)
+		assert.deepEqual(await known.json(), await unknown.json())
+		assert.equal(alerts, 1)
+	} finally {
+		release()
+		await queue.drain()
+	}
+})
