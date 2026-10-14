@@ -688,3 +688,28 @@ Limits of the process checks, stated plainly. They stop mistakes and shortcuts, 
 ledger lines that are not committed yet can still be removed; the pins can be rewritten (the harness hash then
 changes in every later line); `run.py`'s own checks can be edited (the same). What the checks guarantee is that
 each of these leaves a trace in git or in the ledger.
+
+## 13. Amendments
+
+### A1. The disliked-share guard (October 14, 2026)
+
+Made after tier A results of items 003 to 007 had been read, and committed before the results of item 009 were
+read. Proposed by Fable's review (`items/009-composition/REVIEW-guard-fable.md`); a second review by another model
+family is in `items/009-composition/REVIEW-guard-astra.md`.
+
+- **What changes.** In T2a, "share of hidden titles rated 5 or less in the first 50 / 200" is no longer a guard. It
+  stays in every table as a descriptive figure. Reason: against today's taste (B2), whose first 50 hold almost no
+  titles members watched (loved 0.019, disliked 0.001), any scorer that surfaces watched titles is worse with an
+  interval excluding zero; about a fifth of what members watch they dislike. The guard measured popularity, which the
+  vote-count figure and the matched measures already cover.
+- **The replacement guard.** For each member with 5 or more hidden titles rated 5 or less, the mean percentile of
+  those titles among candidates within a factor of 1.5 in vote count (`pct_popular_low`, section 4a), paired
+  against the primary reference, 95% interval from 10,000 draws over members. A candidate fails if it is higher with
+  an interval excluding zero.
+- **Reported, not judged:** the share of disliked titles among hidden titles in the first 50, per member with 5 or
+  more hidden titles there, against the member's own share of titles rated 5 or less.
+- **Median vote count of the first 50** is descriptive, not a guard.
+- **Unchanged:** the primary measure, the 0.03 floor, the shows, animation and franchise guards, the references.
+- **Applies to every rung and candidate, past and future.** Retroactively: B3, C3, F1 and F3 pass the new guard;
+  none becomes a win, because each still fails the animation guard (and F1 item 007's franchise limit).
+- **No T2a registration before the gate supports T2a** (`gate.py` was T1-only when this was written).
