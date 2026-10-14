@@ -1,6 +1,6 @@
 {
   "summary": "Social store",
-  "description": "Crate persistence, restricted to writes in the four social-owned tables.",
+  "description": "Crate persistence restricted to social-owned tables, with fail-closed quality and report visibility.",
   "lock": "!inline f/social/store.script.lock",
   "kind": "script",
   "schema": {

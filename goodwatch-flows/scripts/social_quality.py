@@ -62,7 +62,7 @@ def run(settings, *, apply=False, output):
             # Do not publish piracy destination URLs as clickable links in evidence.
             text = quality.URL.sub('[outbound link]', p['text']).replace('|', '/').replace('\n', ' ')
             samples.append({'post_id': p['post_id'], 'source': p['source'], 'url': p['url'],
-                            'author': p['author'], 'text': text[:220], 'reasons': decisions[p['post_id']]['reasons'],
+                            'author': p['author'], 'text': ' '.join(text.split()[:24])[:220], 'reasons': decisions[p['post_id']]['reasons'],
                             'title_keys': sorted({l['media_type'] + ':' + str(l['media_tmdb_id']) for l in links if l['post_id'] == p['post_id']})})
     evidence['rejected_examples'] = samples
     evidence['rejected_published_posts'] = len(rejected)

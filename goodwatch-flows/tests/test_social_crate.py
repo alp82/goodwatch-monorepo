@@ -133,3 +133,32 @@ class CrateLifecycleTests(unittest.TestCase):
         self.store.publish(first, [self.link])
         self.store.refresh()
         self.assertFalse(any(p['post_id'] == first['post_id'] for p in self.store.read_title('movie', self.title_id)))
+
+    def test_changed_hidden_link_target_rejects_without_changing_visible_text(self):
+        item = self.item('A thoughtful review of Dune with lovely cinematography.', 'bluesky')
+        original_hash = item['content_hash']
+        item['quality_evidence']['urls'] = ['https://variety.com.evil.test/dune']
+        self.store.save_posts([item])
+        self.assertEqual(item['content_hash'], original_hash)
+        self.store.publish(item, [self.link])
+        self.store.refresh()
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.pending('bluesky', 10000)))
+
+    def test_invalidated_evidence_stays_hidden_if_post_save_fails(self):
+        from unittest.mock import patch
+        import requests
+        item = self.item('A thoughtful review of Dune with lovely cinematography.', 'bluesky')
+        item['quality_evidence']['urls'] = ['https://bit.ly/hidden-target']
+        real_post = requests.post
+        def fail_post_save(url, **kwargs):
+            if kwargs.get('json', {}).get('stmt', '').startswith('INSERT INTO doc.social_post '):
+                raise requests.ConnectionError('Fixture connection failure')
+            return real_post(url, **kwargs)
+        with patch('requests.post', side_effect=fail_post_save):
+            with self.assertRaisesRegex(RuntimeError, 'unreachable'):
+                self.store.save_posts([item])
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+        self.store.publish(item, [self.link])
+        self.store.refresh()
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))

@@ -259,7 +259,7 @@ Schedule `f/social/discover` hourly for each of `source=youtube`, `rss` and
 `bluesky` with the other defaults (2-day overlap, two pages,
 400 unprocessed posts/source/run). Keep Mastodon available as `source=mastodon`
 for a daily or on-demand run: its 77 initial trend posts produced zero links,
-which does not justify hourly polling, and `f/social/deletion_sync` every six hours
+which does not justify hourly polling. Schedule `f/social/deletion_sync` every six hours
 (limit 2,000), in UTC. Configure a single concurrent discovery run; overlap is
 idempotent but wastes inference and may race changed-content processing.
 Backfill and deletion limits must be adjusted to measured volume: alert on growing

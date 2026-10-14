@@ -118,4 +118,7 @@ to resume. Redis errors remain visible rather than permitting unguarded inferenc
 `f/social/discover` and `f/social/deletion_sync` collect and match YouTube, RSS,
 Bluesky and Mastodon content in new Crate tables. See the
 [store/API contract and operations guide](../docs/implementation/talked-about-now/social.md)
-for local backfills, tests, deletion/opt-out handling and post-merge schedules.
+for local backfills, the content-quality gate, tests, deletion/opt-out handling
+and post-merge schedules. Re-screen existing rows with
+`scripts/social_quality.py` (read-only preview by default, `--apply` unpublishes
+failures). Title reads must require a current passing quality verdict.
