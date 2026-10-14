@@ -68,13 +68,11 @@ function TierRow({
 	tier,
 	state,
 	sort,
-	showMatch,
 	mine,
 }: {
 	tier: WatchNextTier
 	state: WatchNextState
 	sort: WatchNext["sort"]
-	showMatch: boolean
 	mine: CardService[]
 }) {
 	const [all, setAll] = useState(false)
@@ -105,7 +103,7 @@ function TierRow({
 	const meta = (title: WatchNextTitle) => {
 		const offer = offersOf(title, mine)?.[0]
 		return [
-			sortFact(sort, title, showMatch) ??
+			sortFact(sort, title) ??
 				runtimeLabel(title, movies ? "Movie" : undefined),
 			offer?.owned ? `on ${offer.name}` : null,
 		]
@@ -223,11 +221,9 @@ function TierRow({
 export function SteppedGrid({
 	data,
 	state,
-	showMatch,
 }: {
 	data: WatchNext
 	state: WatchNextState
-	showMatch: boolean
 }) {
 	const movies = useMoviesPage()
 	if (!data.tiers.length) return null
@@ -261,7 +257,6 @@ export function SteppedGrid({
 						tier={tier}
 						state={state}
 						sort={data.sort}
-						showMatch={showMatch}
 						mine={data.myServices}
 					/>
 				))}

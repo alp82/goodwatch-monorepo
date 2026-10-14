@@ -160,11 +160,10 @@ const dayLabel = (day: string) =>
 export function sortFact(
 	sort: WatchNextSort,
 	title: WatchNextTitle,
-	showMatch: boolean,
 ): string | null {
 	switch (sort) {
 		case "match":
-			return showMatch && title.match ? `${title.match}% taste match` : null
+			return title.match ? `${title.match}% taste match` : null
 		case "waiting":
 		case "added":
 			return `Added ${ageLabel(title.addedAt)}`

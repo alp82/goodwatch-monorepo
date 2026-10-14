@@ -71,7 +71,9 @@ const day = (n: number) => LAUNCH + n * DAY
 
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
-process.env.REC_TASTE_MATCH = "off"
+// No scheduled taste rebuild: it would read Crate after the test's own writes.
+const { holdTasteRebuildsForTest } = await import("./taste/member.server.ts")
+holdTasteRebuildsForTest()
 process.env.REC_TRACKING = "on"
 process.env.NEWLY_AVAILABLE_SINCE = new Date(LAUNCH).toISOString()
 const { setCrateClientForTest } = await import("../utils/crate.ts")

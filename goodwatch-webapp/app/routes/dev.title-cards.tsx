@@ -9,9 +9,7 @@ import {
 } from "@remix-run/node"
 import { useFetcher, useLoaderData, useLocation } from "@remix-run/react"
 import { useEffect } from "react"
-import { isEnabled } from "~/server/features.server"
 import { loadTaste } from "~/server/taste/index.server"
-import { NO_TASTE } from "~/server/taste/taste.server"
 import {
 	MAX_KEYS,
 	type TitleCard,
@@ -69,10 +67,7 @@ async function cardsFor(
 	viewer: ViewerContext,
 ): Promise<CardsData> {
 	const started = performance.now()
-	const userId = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
-	const taste = isEnabled("tasteMatch", { userId })
-		? await loadTaste(viewer.viewer)
-		: NO_TASTE
+	const taste = await loadTaste(viewer.viewer)
 	const cards = await getTitleCards(keysOf(request), viewer, taste)
 	return {
 		viewer: viewer.viewer.kind,

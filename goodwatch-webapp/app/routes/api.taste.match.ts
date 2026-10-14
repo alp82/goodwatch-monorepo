@@ -4,7 +4,6 @@ import {
 	json,
 } from "@remix-run/node"
 import { z } from "zod"
-import { getFeatureMode } from "~/server/features.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import type { Viewer } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
@@ -15,7 +14,6 @@ import type { TitleKey } from "~/utils/title-key"
 // - Members: GET /api/taste/match?keys=1000000000550,2000000001399
 // - Guests: POST /api/taste/match with { keys: [...], guest: { interactions: [...] } }, the guest progress their
 //   browser holds. A signed-in member's POST reads the member's taste and ignores `guest`.
-// Served while REC_TASTE_MATCH is shadow or on; not found while it's off.
 
 const MAX_KEYS = 100
 const MAX_BODY_CHARS = 256 * 1024
@@ -59,11 +57,9 @@ function respond(taste: Taste, keys: TitleKey[]) {
 	)
 }
 
-const notFound = () => json({ error: "Not found" }, { status: 404, headers })
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	if (getFeatureMode("tasteMatch") === "off") return notFound()
 	const raw = new URL(request.url).searchParams.get("keys") ?? ""
 	const keys = raw ? raw.split(",").map(Number) : []
 	if (!z.array(keySchema).max(MAX_KEYS).safeParse(keys).success)
@@ -76,7 +72,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	if (getFeatureMode("tasteMatch") === "off") return notFound()
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const text = await request.text()

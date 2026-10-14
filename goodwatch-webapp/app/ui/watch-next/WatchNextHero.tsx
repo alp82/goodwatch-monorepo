@@ -104,15 +104,12 @@ export function ServiceTiles({
 function Eyebrow({
 	data,
 	hero,
-	showMatch,
 }: {
 	data: WatchNext
 	hero: WatchNextTitle
-	showMatch: boolean
 }) {
 	const movies = useMoviesPage()
-	const fact =
-		data.sort === "match" ? null : sortFact(data.sort, hero, showMatch)
+	const fact = data.sort === "match" ? null : sortFact(data.sort, hero)
 	return (
 		<motion.div
 			key={`${hero.key}:${data.sort}`}
@@ -253,14 +250,12 @@ function ThenColumn({
 export function WatchNextHero({
 	data,
 	strip,
-	showMatch,
 	onFinish,
 	onPass,
 	onWant,
 }: {
 	data: WatchNext | null
 	strip: React.ReactNode
-	showMatch: boolean
 	onFinish: (title: WatchNextTitle) => void
 	onPass: (title: WatchNextTitle) => void
 	onWant: (title: TitleCard) => void
@@ -303,7 +298,7 @@ export function WatchNextHero({
 			>
 				<div className="min-w-0">
 					{data && hero && (
-						<Eyebrow data={data} hero={hero} showMatch={showMatch} />
+						<Eyebrow data={data} hero={hero} />
 					)}
 					<AnimatePresence mode="wait" initial={false}>
 						{hero ? (
@@ -329,9 +324,7 @@ export function WatchNextHero({
 									{[
 										hero.release_year,
 										runtimeLabel(hero, movieWord),
-										showMatch && hero.match
-											? `${hero.match}% taste match`
-											: null,
+										hero.match ? `${hero.match}% taste match` : null,
 										hero.goodwatch_overall_score_normalized_percent
 											? `GoodWatch score ${Math.round(hero.goodwatch_overall_score_normalized_percent)}`
 											: null,
@@ -383,9 +376,7 @@ export function WatchNextHero({
 										</Link>
 										<p className="mt-3 text-base text-gray-200 md:text-lg">
 											Start with this?{" "}
-											{showMatch && start.match
-												? `${start.match}% taste match. `
-												: ""}
+											{start.match ? `${start.match}% taste match. ` : ""}
 											{runtimeLabel(start, movieWord)}.
 										</p>
 										<div className="mt-5">

@@ -70,7 +70,9 @@ registerHooks({
 
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
-process.env.REC_TASTE_MATCH = "off"
+// No scheduled taste rebuild: it would read Crate after the test's own writes.
+const { holdTasteRebuildsForTest } = await import("./taste/member.server.ts")
+holdTasteRebuildsForTest()
 const { setCrateClientForTest } = await import("../utils/crate.ts")
 const { setRedisClusterForTest, resetPendingResetsForTest } = await import(
 	"../utils/cache.ts"

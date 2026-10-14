@@ -1,4 +1,3 @@
-import { isEnabled } from "~/server/features.server"
 import type { Score } from "~/server/scores.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
@@ -203,40 +202,38 @@ async function getGuestRecommendations({
 		],
 	}
 
-	// With taste match on, one vector query with the guest's taste, built in memory from these ratings. Below the
-	// minimum signal (5 liked titles), or before the title snapshot has loaded, the recommend call serves.
-	if (isEnabled("tasteMatch", null)) {
-		const taste = await loadTaste({
-			kind: "guest",
-			progress: {
-				interactions: scored_items.map((item) => ({
-					type: "score",
-					tmdb_id: item.tmdb_id,
-					media_type: item.media_type,
-					score: item.score as Score,
-					timestamp: 0,
-				})),
-			},
+	// One vector query with the guest's taste, built in memory from these ratings. Below the minimum signal (5 liked
+	// titles), or before the title snapshot has loaded, the recommend call serves.
+	const taste = await loadTaste({
+		kind: "guest",
+		progress: {
+			interactions: scored_items.map((item) => ({
+				type: "score",
+				tmdb_id: item.tmdb_id,
+				media_type: item.media_type,
+				score: item.score as Score,
+				timestamp: 0,
+			})),
+		},
+	})
+	if (taste.vector) {
+		const results = await searchByTaste<QdrantMediaPayload>({
+			taste,
+			filter: filterConditions,
+			limit,
+			payloadFields: PAYLOAD_FIELDS,
 		})
-		if (taste.vector) {
-			const results = await searchByTaste<QdrantMediaPayload>({
-				taste,
-				filter: filterConditions,
-				limit,
-				payloadFields: PAYLOAD_FIELDS,
-			})
-			// Best match first; a title not in the title snapshot yet shows no match (0 hides the pill).
-			return results.map((result) =>
-				toGuestRecommendation(result.payload, target_media_type, result.score, result.match ?? 0),
-			)
-		}
+		// Best match first; a title not in the title snapshot yet shows no match (0 hides the pill).
+		return results.map((result) =>
+			toGuestRecommendation(result.payload, target_media_type, result.score, result.match ?? 0),
+		)
 	}
 
 	return recommendFromExamples({ scored_items, target_media_type, filterConditions, limit })
 }
 
 // Qdrant's recommend API with the top half of the ratings as positive and the bottom half as negative examples: a
-// points read plus a recommend call. Serves while REC_TASTE_MATCH is off or shadow, and for guests without taste.
+// points read plus a recommend call. Serves guests without taste.
 async function recommendFromExamples({
 	scored_items,
 	target_media_type,

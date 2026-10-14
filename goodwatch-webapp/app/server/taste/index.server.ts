@@ -10,7 +10,6 @@ import { loadMemberTaste } from "./member.server"
 import { NO_TASTE, type Taste } from "./taste.server"
 
 export { markTasteChanged, stopTasteStore } from "./member.server"
-export { type RecommendedList, logRecommendedOverlap } from "./shadow.server"
 export { CRAFT_KEYS, type FingerprintKey, type Taste } from "./taste.server"
 
 export async function loadTaste(viewer: Viewer): Promise<Taste> {

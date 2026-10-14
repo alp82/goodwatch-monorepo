@@ -15,7 +15,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import { isEnabled } from "~/server/features.server"
 import { loadTaste } from "~/server/taste/index.server"
-import { NO_TASTE } from "~/server/taste/taste.server"
 import {
 	MAX_KEYS,
 	type TitleCard,
@@ -58,10 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		guest: GuestProgress | null
 	}
 	const ctx = await getViewerContext(request, body.guest ?? undefined)
-	const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-	const taste = isEnabled("tasteMatch", { userId })
-		? await loadTaste(ctx.viewer)
-		: NO_TASTE
+	const taste = await loadTaste(ctx.viewer)
 	const cards = await getTitleCards(body.keys.slice(0, MAX_KEYS), ctx, taste)
 	return json({ cards })
 }

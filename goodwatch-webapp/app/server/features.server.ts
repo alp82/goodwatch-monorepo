@@ -6,15 +6,13 @@ import { type EnabledFeatures, FEATURES, type Feature } from "~/utils/features"
 // mean off, and the old page serves.
 // - off: the feature is hidden for everyone.
 // - preview: only the members listed in REC_PREVIEW_USERS see it.
-// - shadow (REC_TASTE_MATCH only): the work runs and is logged, nobody sees it.
 // - on: everyone sees it.
-export type FeatureMode = "off" | "shadow" | "preview" | "on"
+export type FeatureMode = "off" | "preview" | "on"
 
 const FEATURE_VARIABLES: Record<
 	Feature,
 	{ name: string; modes: readonly FeatureMode[] }
 > = {
-	tasteMatch: { name: "REC_TASTE_MATCH", modes: ["off", "shadow", "on"] },
 	filterBar: { name: "REC_FILTER_BAR", modes: ["off", "preview", "on"] },
 	watchNext: { name: "REC_WATCH_NEXT", modes: ["off", "preview", "on"] },
 	tastePage: { name: "REC_TASTE_PAGE", modes: ["off", "preview", "on"] },
@@ -49,8 +47,7 @@ function getPreviewUserIds(): Set<string> {
 	)
 }
 
-// Whether the viewer sees the feature. Shadow counts as not enabled; callers
-// that do shadow work check getFeatureMode(feature) === "shadow".
+// Whether the viewer sees the feature.
 export function isEnabled(feature: Feature, viewer: FeatureViewer): boolean {
 	const mode = getFeatureMode(feature)
 	if (mode === "on") return true
