@@ -1,10 +1,11 @@
-// PROTOTYPE - throwaway (#541, on the prototype branch named in the ticket). Four variants of the "Talked about now" row on the real
+// PROTOTYPE - throwaway (#541, on the prototype branch named in the ticket). Five variants of the "Talked about now" row on the real
 // start page: the living room and the section below it as a guest sees them, with the row mounted at the top of the
-// section (BelowRoom.tsx's prototype slot). `?variant=A|B|C|D`, switched by the floating bar or ← → below the room.
+// section (BelowRoom.tsx's prototype slot). `?variant=A|B|C|D|E`, switched by the floating bar or ← → below the room.
 //   A Ranked: ten title cards with big rank numbers and a "why it's hot" chip.
 //   B Mixed: each hot title followed by its trailer (click-to-load facade), a post and a headline.
 //   C Ticker: one crawling line, Expand opens the ten; the room's lip names the top three.
 //   D Pulse: a board with each title's 14-day buzz curve; the lead title large with its curve and best content.
+//   E Pulse + native: D with B's native content: the lead carries its two or three best pieces, each row a preview.
 // All data is made up in memory (ui/prototype-start-row/data.ts); nothing is read or written, nothing is fetched from
 // a third party. Run without services and with the flags on, as docs/prototypes/talked-about-now/start-row/README.md
 // says, and open /prototype/start-row?variant=A#browse.
@@ -21,6 +22,7 @@ import type { TvHomeData } from "~/ui/living-room/tv/tv-home"
 import { Switcher } from "~/ui/prototype-start-row/Switcher"
 import { VariantMixed } from "~/ui/prototype-start-row/VariantMixed"
 import { VariantPulse } from "~/ui/prototype-start-row/VariantPulse"
+import { VariantPulseNative } from "~/ui/prototype-start-row/VariantPulseNative"
 import { VariantRanked } from "~/ui/prototype-start-row/VariantRanked"
 import { TICKER_LIP, VariantTicker } from "~/ui/prototype-start-row/VariantTicker"
 
@@ -29,6 +31,7 @@ const VARIANTS = {
 	B: "Mixed",
 	C: "Ticker",
 	D: "Pulse",
+	E: "Pulse + native",
 }
 
 /** The section's own "Popular right now" list, as on the real page (there it is the 16 start titles). */
@@ -73,7 +76,13 @@ export default function StartRowPrototype() {
 	const slot = useMemo(
 		() => ({
 			row:
-				variant === "B" ? <VariantMixed /> : variant === "C" ? <VariantTicker /> : variant === "D" ? <VariantPulse /> : <VariantRanked />,
+				variant === "B" ? <VariantMixed /> : variant === "C" ? <VariantTicker /> : variant === "D" ? (
+						<VariantPulse />
+					) : variant === "E" ? (
+						<VariantPulseNative />
+					) : (
+						<VariantRanked />
+					),
 			lip: variant === "C" ? TICKER_LIP : undefined,
 		}),
 		[variant],

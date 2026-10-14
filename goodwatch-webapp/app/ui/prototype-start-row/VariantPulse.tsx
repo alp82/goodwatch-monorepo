@@ -23,7 +23,7 @@ import {
 const BOARD = HOT.slice(0, 8)
 
 /** The box's width, once measured: the lead's curve fills its card at every window size. */
-function useWidth(fallback: number) {
+export function useWidth(fallback: number) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [width, setWidth] = useState(fallback)
 	useEffect(() => {

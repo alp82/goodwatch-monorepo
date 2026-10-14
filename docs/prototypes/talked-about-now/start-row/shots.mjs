@@ -1,6 +1,7 @@
-// PROTOTYPE - throwaway (#541). Screenshots of the four variants of /prototype/start-row at desktop and phone width,
+// PROTOTYPE - throwaway (#541). Screenshots of the five variants of /prototype/start-row at desktop and phone width,
 // for review.html. Takes the driver from PLAYWRIGHT=<folder with playwright-core> and the server from BASE=.
 //   PLAYWRIGHT=/path/to/scratch BASE=http://localhost:3141 node docs/prototypes/talked-about-now/start-row/shots.mjs <out dir>
+// ONLY=E shoots only the variants named (E, or A,D); the room's first screens come with C.
 import { createRequire } from "node:module"
 import { mkdirSync } from "node:fs"
 import path from "node:path"
@@ -9,6 +10,7 @@ const require = createRequire(path.join(process.env.PLAYWRIGHT ?? ".", "x.js"))
 const { chromium } = require("playwright-core")
 const BASE = process.env.BASE ?? "http://localhost:3141"
 const OUT = process.argv[2] ?? "shots"
+const ONLY = process.env.ONLY?.split(",") ?? ["A", "B", "C", "D", "E"]
 mkdirSync(OUT, { recursive: true })
 
 const SIZES = {
@@ -60,7 +62,7 @@ async function shootRow(page, file, extra = 140) {
 }
 
 for (const size of Object.keys(SIZES)) {
-	for (const variant of ["A", "B", "C", "D"]) {
+	for (const variant of ONLY) {
 		const { context, page } = await open(size, variant)
 		await shootRow(page, `${variant}-${size}.jpg`)
 		if (variant === "B") {
@@ -78,9 +80,18 @@ for (const size of Object.keys(SIZES)) {
 			await page.waitForTimeout(400)
 			await shootRow(page, "D-desktop-lead3.jpg", 20)
 		}
+		if (variant === "E" && size === "desktop") {
+			// Rank 3 has a trailer, a post and a headline; rank 6 has no video, so its backdrop heads the lead.
+			for (const rank of [3, 6]) {
+				await page.click(`section[aria-labelledby=talked-title] ol > li:nth-child(${rank}) > button`)
+				await page.waitForTimeout(400)
+				await shootRow(page, `E-desktop-lead${rank}.jpg`, 20)
+			}
+		}
 		await context.close()
 	}
 	// The room's first screen with the ticker's lip.
+	if (!ONLY.includes("C")) continue
 	const { context, page } = await open(size, "C", "")
 	await page.waitForTimeout(2500)
 	await page.screenshot({ path: path.join(OUT, `C-${size}-room.jpg`), type: "jpeg", quality: 80 })

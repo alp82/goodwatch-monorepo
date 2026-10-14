@@ -1,0 +1,143 @@
+// PROTOTYPE - throwaway (#541). More sample content for variant E only, so every title on its board has two or three
+// pieces (B and D keep the content in data.ts as it was). Made-up people, headlines paraphrased from the week's
+// coverage, the videos' pictures are the titles' own TMDB backdrops. Nothing is fetched.
+import { CONTENT, type Content, HOT } from "./data"
+
+const still = (key: number) => HOT.find((title) => title.tmdb_id === key)?.backdrop_path ?? ""
+
+const EXTRA: Content[] = [
+	{
+		kind: "post",
+		id: "e-p-doom",
+		about: 1003596,
+		platform: "Bluesky",
+		name: "Rosa Lindqvist",
+		handle: "rosalind.bsky.social",
+		text: "Two and a half minutes and the only line Doom gets is 'Kneel.' I have watched it eleven times. December cannot come fast enough.",
+		ago: "14h",
+		likes: "9.8K",
+		replies: "730",
+	},
+	{
+		kind: "video",
+		id: "e-v-below",
+		about: 285322,
+		platform: "YouTube",
+		channel: "Netflix",
+		label: "Official trailer",
+		duration: "2:07",
+		ago: "3 weeks ago",
+		views: "4.6M views",
+		still: still(285322),
+	},
+	{
+		kind: "headline",
+		id: "e-h-below",
+		about: 285322,
+		source: "The Guardian",
+		headline: "Below dethrones East of Eden: how a claustrophobic submarine thriller became Netflix's surprise hit",
+		ago: "Yesterday",
+	},
+	{
+		kind: "video",
+		id: "e-v-carrie",
+		about: 288673,
+		platform: "YouTube",
+		channel: "Prime Video",
+		label: "Official trailer",
+		duration: "2:31",
+		ago: "1 month ago",
+		views: "6.2M views",
+		still: still(288673),
+	},
+	{
+		kind: "headline",
+		id: "e-h-carrie",
+		about: 288673,
+		source: "Vulture",
+		headline: "Mike Flanagan on making Carrie wait nine episodes for the prom",
+		ago: "2 days ago",
+	},
+	{
+		kind: "video",
+		id: "e-v-dune",
+		about: 1170608,
+		platform: "YouTube",
+		channel: "Warner Bros. Pictures",
+		label: "IMAX trailer",
+		duration: "2:38",
+		ago: "5 days ago",
+		views: "12M views",
+		still: still(1170608),
+	},
+	{
+		kind: "post",
+		id: "e-p-dune",
+		about: 1170608,
+		platform: "Mastodon",
+		name: "Jonas Pereira",
+		handle: "@jonas@film.social",
+		text: "Set three alarms for the 70mm tickets and still got row B. Two months of neck pain, booked.",
+		ago: "2d",
+		likes: "1.1K",
+		replies: "94",
+	},
+	{
+		kind: "headline",
+		id: "e-h-unabomber",
+		about: 1492640,
+		source: "Collider",
+		headline: "UNABOMBER tops Netflix in 31 countries as the true-crime film reopens the manhunt debate",
+		ago: "4 days ago",
+	},
+	{
+		kind: "post",
+		id: "e-p-unabomber",
+		about: 1492640,
+		platform: "Bluesky",
+		name: "Dana Whitfield",
+		handle: "danawhitfield.bsky.social",
+		text: "UNABOMBER spends more time with the linguists who caught him than with the man himself, and it is so much better for it.",
+		ago: "1d",
+		likes: "1.7K",
+		replies: "120",
+	},
+	{
+		kind: "video",
+		id: "e-v-street",
+		about: 1153576,
+		platform: "YouTube",
+		channel: "Legendary",
+		label: "Final trailer",
+		duration: "2:12",
+		ago: "1 week ago",
+		views: "9.4M views",
+		still: still(1153576),
+	},
+	{
+		kind: "headline",
+		id: "e-h-street",
+		about: 1153576,
+		source: "IGN",
+		headline: "Street Fighter's first reviews: a loud, loving video game movie that knows exactly what it is",
+		ago: "6h",
+	},
+	{
+		kind: "post",
+		id: "e-p-dexter",
+		about: 259909,
+		platform: "Mastodon",
+		name: "Mika Hollis",
+		handle: "@mika@tv.social",
+		text: "The Season 2 trailer ends on Batista in New York and I have not been calm since.",
+		ago: "4h",
+		likes: "520",
+		replies: "61",
+	},
+]
+
+/** A title's content for E: data.ts's first, then the extra, the video always first. */
+export const nativeOf = (key: number) =>
+	[...CONTENT, ...EXTRA]
+		.filter((item) => item.about === key)
+		.sort((a, b) => Number(b.kind === "video") - Number(a.kind === "video"))

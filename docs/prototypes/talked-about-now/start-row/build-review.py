@@ -7,12 +7,14 @@ import sys
 
 SHOTS = pathlib.Path(sys.argv[1])
 OUT = pathlib.Path(__file__).with_name("review.html")
-URL = "http://localhost:3141/prototype/start-row?variant=A#browse"
+URL = "http://alp-laptop.tail3b99f1.ts.net:3151/prototype/start-row?variant=E#browse"
 RUN = (
     "cd goodwatch-webapp   # a worktree without .env\n"
     "npm ci && npx patch-package\n"
+    "__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=alp-laptop.tail3b99f1.ts.net \\\n"
     "REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on \\\n"
-    "REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on npx remix vite:dev --port 3141"
+    "REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on \\\n"
+    "npx remix vite:dev --port 3151 --strictPort --host 100.71.215.115"
 )
 
 
@@ -65,10 +67,25 @@ VARIANTS = [
             ("D-desktop-lead3.jpg", "Desktop, after pressing rank 3"),
         ],
     },
+    {
+        "key": "E",
+        "name": "Pulse + native (after the owner's pick of D)",
+        "tests": "D with B's native displays in it. The lead keeps D's curve and “×N its usual” and adds its two or three best pieces as they are on their platforms: the trailer behind the click-to-load facade, then a headline and a Bluesky or Mastodon post side by side (a strip to swipe on a phone). Each row of the board gets one line of preview: the platforms' marks and a post's first words (or a headline), so the board says what is being said before it is pressed.",
+        "trade": "Keeps D's honesty about the ranking and gets B's life without B's long rail: only the lead carries full content, so one good title a day is enough and a title with less shows less (rank 6 has no video, so its backdrop heads the lead). It still brings the consent facade and the lawyer's question (post text on our server) onto the start page, the rows grow a line, and the lead is now taller than the board on desktop.",
+        "shots": [
+            ("E-desktop.jpg", "Desktop, 1440 px, rank 1 as the lead"),
+            ("E-phone.jpg", "Phone, 390 px, first row open"),
+            ("E-desktop-lead3.jpg", "Desktop, after pressing rank 3 (trailer, headline, post)"),
+            ("E-desktop-lead6.jpg", "Desktop, after pressing rank 6 (no video: the backdrop heads the lead)"),
+        ],
+    },
 ]
 
 RECOMMENDATION = """
-<p><b>Ship A, with C's lip line, and keep the talk itself for the title page.</b> A works on the buzz score and a reason
+<p><b>Update, after the owner's pick:</b> D was chosen, with more of B's native content in it; that is E. Build E,
+with two guards: the lead shows only the pieces it has (no empty slots), and rows without any content keep D's two
+lines. C's lip line still works on top of it, so the room's first screen names the top three.</p>
+<p style="color:var(--muted)"><b>The first recommendation, before the pick:</b> ship A, with C's lip line, and keep the talk itself for the title page.</b> A works on the buzz score and a reason
 alone, so it can launch before the content flows are good, it needs no consent on the start page, and it stays
 cacheable and light. The lip line (C) is the only thing that reaches the room's first screen and costs one line of
 text. B is the right shape for a title page's section, where one title's content is enough to fill it; on the start
@@ -152,14 +169,14 @@ figcaption {{ font-size: 13px; color: var(--muted); padding: 8px 4px 2px; }}
 <main>
   <p class="eyebrow">Prototype · #541 · for the owner's review</p>
   <h1>Talked about now: the start page row</h1>
-  <p class="lede">Four variants of the row, at the top of the real section below the living room, on the real room
+  <p class="lede">Five variants of the row (E added after the owner picked D), at the top of the real section below the living room, on the real room
   as a guest sees it. Real titles in the news in the week of 14 October 2026 with their TMDB posters; the reasons
   follow the week's news, the numbers, curves, posts and headlines are made up. Nothing is fetched from a third party.</p>
 
   <div class="box">
     <h3>Run it</h3>
     <pre><code>{html.escape(RUN)}</code></pre>
-    <p style="margin:6px 0 0">Then open <code>{html.escape(URL)}</code> and switch with the floating bar or ← → (A, B, C, D).
+    <p style="margin:6px 0 0">Then open <code>{html.escape(URL)}</code> and switch with the floating bar or ← → (A to E).
     The <code>#browse</code> opens the page below the room, as “More below” does.</p>
   </div>
 

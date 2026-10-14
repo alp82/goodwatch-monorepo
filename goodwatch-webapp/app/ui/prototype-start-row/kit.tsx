@@ -221,7 +221,7 @@ const PLATFORM_DOT: Record<string, string> = {
 	Mastodon: "bg-[#6364ff]",
 }
 
-function Platform({ name }: { name: string }) {
+export function Platform({ name }: { name: string }) {
 	return (
 		<span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-300">
 			<i className={`h-2 w-2 rounded-full ${PLATFORM_DOT[name] ?? "bg-neutral-400"}`} />
