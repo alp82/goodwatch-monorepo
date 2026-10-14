@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+export COMPOSE_PROGRESS=plain
 if [[ -S "/run/user/$(id -u)/docker.sock" ]]; then
  export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
 else
@@ -53,5 +54,15 @@ JS
 if [[ "${1:-test}" == dev ]]; then
  bash --noprofile --norc
 else
- node --test --test-concurrency=1 app/server/auth/maintenance.integration.ts | tee scripts/auth-maintenance/results/integration.log
+ npm run typecheck:auth | tee scripts/auth-maintenance/results/typecheck.log
+ node --test --test-concurrency=1 \
+  app/server/auth/maintenance.integration.ts \
+  app/server/auth/retention.integration.ts \
+  app/server/auth/population.integration.ts \
+  app/server/auth/key-lifecycle.integration.ts \
+  app/server/auth/revocation.integration.ts \
+  app/server/auth/reconciliation.integration.ts \
+  app/server/auth/maintenance-worker.integration.ts \
+  app/server/auth/mcp.integration.ts \
+  app/server/auth/wiring.integration.ts | tee scripts/auth-maintenance/results/integration.log
 fi

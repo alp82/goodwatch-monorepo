@@ -6,6 +6,7 @@ import { onShutdown } from "../lifecycle.server.ts"
 import { createGoodwatchAuth } from "./auth.server.ts"
 import { crateAuthTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
+import { startAuthMaintenance } from "./maintenance-worker.server.ts"
 import { parseAuthEncryptionKeys } from "./payload-codec.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
@@ -37,30 +38,32 @@ export async function getBetterAuth(): Promise<AuthService> {
 			}),
 		)
 		onShutdown("auth mail", () => mail.drain())
-		return createGoodwatchAuth({
-			sql: crateAuthTransport(
-				required("AUTH_CRATEDB_ORIGINS")
-					.split(",")
-					.map((url) => url.trim()),
-				15000,
-				{
-					username: required("AUTH_CRATEDB_USERNAME"),
-					password: required("AUTH_CRATEDB_PASSWORD"),
-				},
-			),
-			encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
-			encryptionKeys: parseAuthEncryptionKeys(required("AUTH_CRATEDB_ENCRYPTION_KEYS")),
+		const sql = crateAuthTransport(
+			required("AUTH_CRATEDB_ORIGINS").split(",").map(url => url.trim()),
+			15000,
+			{ username: required("AUTH_CRATEDB_USERNAME"), password: required("AUTH_CRATEDB_PASSWORD") },
+		)
+		const encryptionSecret = required("AUTH_CRATEDB_ENCRYPTION_SECRET")
+		const encryptionKeys = parseAuthEncryptionKeys(required("AUTH_CRATEDB_ENCRYPTION_KEYS"))
+		const storage = new ValkeyAuthStorage(() => clusterProvider())
+		const auth = createGoodwatchAuth({
+			sql,
+			encryptionSecret,
+			encryptionKeys,
 			secret: required("BETTER_AUTH_SECRET"),
 			baseURL: required("BETTER_AUTH_URL"),
 			mcp: { resource: required("MCP_RESOURCE_URL") },
 			trustedIpHeader: required("AUTH_TRUSTED_IP_HEADER"),
-			storage: new ValkeyAuthStorage(() => clusterProvider()),
+			storage,
 			mail,
 			google: {
 				clientId: required("AUTH_GOOGLE_CLIENT_ID"),
 				clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),
 			},
 		})
+		const maintenance = startAuthMaintenance({ sql, encryptionSecret, encryptionKeys, storage })
+		onShutdown("auth maintenance", () => maintenance.stop())
+		return auth
 	})().catch((error) => {
 		instance = null
 		throw error

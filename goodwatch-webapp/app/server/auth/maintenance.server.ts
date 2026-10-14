@@ -1,6 +1,6 @@
 import { createHmac, createHash, randomUUID } from "node:crypto"
 import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authModels, authModelTable } from "./crate-adapter.server.ts"
-import { readCapacity, type AuthAdmission } from "./population.server.ts"
+import { readCapacity, launchPopulationBounds, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type AuthMaintenanceOptions = { sql: AuthSql; encryptionSecret: string; encryptionKeys?: AuthEncryptionKeys; cursor?: string; batchSize?: number; now?: Date }
@@ -172,17 +172,18 @@ export async function auditAuthPopulation(options: Options & { model: string }) 
   const id = String(value)
   report.scanned++
   report.cursor = id
-  const current = (await sql(`SELECT payload,deleted FROM ${name} WHERE id=?`, [id])).rows[0]
+  const current = (await sql(`SELECT payload,deleted,receipts FROM ${name} WHERE id=?`, [id])).rows[0]
   if (!current) continue
   const envelope: Envelope = codec.decode(current[0], `${name}:${id}:payload`)
   if (envelope.row.id !== id || typeof envelope.deleted !== "boolean") throw new Error("Invalid authenticated auth row")
+  codec.decode(current[2], `${name}:${id}:receipts`)
   if (envelope.deleted !== current[1]) report.inconsistent++
   if (envelope.deleted) continue
   report.live++
   if (model === "user") continue // User lookups use physical ids or the unique email claim.
   if (!envelope.admission) { report.unadmitted++; continue }
   const capacity = await readCapacity(sql, codec, envelope.admission.bucket)
-  if (capacity?.ledger.slots[id]?.generation !== envelope.admission.generation) report.inconsistent++
+  if (capacity?.ledger.slots[id]?.generation !== envelope.admission.generation || capacity.ledger.bounds.buckets !== launchPopulationBounds.buckets || capacity.ledger.bounds.limitPerBucket !== launchPopulationBounds.limitPerBucket || Object.keys(capacity.ledger.slots).length > launchPopulationBounds.limitPerBucket) report.inconsistent++
  }
  report.safe = report.unadmitted === 0 && report.inconsistent === 0
  return report
