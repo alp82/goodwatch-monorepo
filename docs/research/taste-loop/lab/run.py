@@ -54,7 +54,7 @@ import numpy as np
 
 import score
 import views
-from common import (BUDGET, CONTROL_PREDICTORS, CONTROLS, DRAWS, LAB, LADDER, LOOP, MANIFEST, OTHERS,
+from common import (BUDGET, DATA_ROOT, HARNESS_FILES, CONTROL_PREDICTORS, CONTROLS, DRAWS, LAB, LADDER, LOOP, MANIFEST, OTHERS, PACK_FOLDER,
                     PREDICTOR_BYTES, SEED, append_ledger, checked_ledger, git, harness_sha256, inside, loop_pack,
                     pinned, rel, sha256_file)
 from pack import Pack
@@ -76,6 +76,7 @@ VIEW_WALL_SECONDS = 600
 MODES = ('explore', 'registered', 'ladder', 'control', 'verify', 'gate')
 LEDGER = os.path.join(LOOP, 'ledger.jsonl')
 PREREG_KEYS = ('candidate', 'reference', 'others', 'task')
+LOADED_HARNESS_SHA256 = harness_sha256()
 
 
 class Refused(Exception):
@@ -240,6 +241,52 @@ def check_files(predictor, refs, mode, control):
 
 # ------------------------------------------------------------------ running predictors
 
+def freeze_files(run_dir, line, predictor, refs):
+    """Copy once; the ledger identifies the bytes we execute, even if the originals change."""
+    folder = os.path.join(run_dir, 'predictors')
+    os.makedirs(folder)
+    frozen = {}
+    for path, record in zip([predictor] + refs, [line['predictor']] + line['refs']):
+        if path in frozen:
+            continue
+        destination = os.path.join(folder, record['sha256'])
+        os.makedirs(destination, exist_ok=True)
+        copy = os.path.join(destination, os.path.basename(path))
+        shutil.copyfile(path, copy)
+        if sha256_file(copy) != record['sha256']:
+            raise Refused(f'{record["path"]} changed while freezing its source')
+        os.chmod(copy, 0o400)
+        frozen[path] = copy
+    folder = os.path.join(run_dir, 'harness')
+    os.makedirs(folder)
+    digest = hashlib.sha256()
+    for name in HARNESS_FILES:
+        copy = os.path.join(folder, name)
+        shutil.copyfile(os.path.join(LAB, name), copy)
+        digest.update(f'{name}:{sha256_file(copy)}\n'.encode())
+        os.chmod(copy, 0o400)
+    if digest.hexdigest() != line['harness_sha256']:
+        raise Refused('the harness changed while freezing its source')
+    return frozen
+
+
+def resume_identity(line):
+    identity = {key: line[key] for key in ('harness_sha256', 'pack', 'pack_sha256', 'titles_sha256',
+                                      'predictor', 'refs', 'options', 'views', 'task', 'tier', 'mode', 'item')}
+    identity['refs'] = [{k: r[k] for k in ('path', 'sha256')} for r in line['refs']]
+    return identity
+
+
+def check_resume(path, identity):
+    """A stopped invocation must be repeated exactly; a changed identity is never silently restarted."""
+    if os.path.exists(path):
+        with open(path) as f:
+            previous = json.load(f)
+        if previous != identity:
+            changed = [key for key in identity if previous.get(key) != identity[key]]
+            raise Refused('stopped run differs: ' + ', '.join(changed))
+
+
 def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers, each):
     """Start sandbox.py for one predictor and a list of views; read back what it left in its output folder and
     hand each view's result to `each(vid, result)` the moment it is read. Nothing of a view is kept after that."""
@@ -247,8 +294,8 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers, each)
     os.makedirs(out_dir, mode=0o700)
     views_fd = os.open(os.path.join(run_dir, 'views'), os.O_RDONLY | os.O_DIRECTORY)
     out_fd = os.open(out_dir, os.O_RDONLY | os.O_DIRECTORY)
-    job = {'predictor': predictor, 'module': f'predictor_{sha[:12]}', 'titles': titles_path, 'views_fd': views_fd,
-           'out_fd': out_fd, 'view_list': list(vids), 'memory_mb': MEMORY_MB, 'cpu_seconds': VIEW_CPU_SECONDS,
+    job = {'predictor': predictor, 'lab': LAB, 'data_root': DATA_ROOT, 'pack_folder': PACK_FOLDER, 'module': f'predictor_{sha[:12]}', 'titles': titles_path, 'views_fd': views_fd,
+           'sha256': sha, 'out_fd': out_fd, 'view_list': list(vids), 'memory_mb': MEMORY_MB, 'cpu_seconds': VIEW_CPU_SECONDS,
            'wall_seconds': VIEW_WALL_SECONDS, 'workers': workers}
     env = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8', 'PYTHONHASHSEED': '0',
            **{v: SANDBOX_THREADS for v in THREAD_VARS}}
@@ -256,7 +303,7 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers, each)
         with open(log, 'a') as lf:
             lf.write(f'--- {predictor} ({sha[:12]}), {len(vids)} views, {tag}\n')
             lf.flush()
-            done = subprocess.run([sys.executable, '-s', '-P', '-B', os.path.join(LAB, 'sandbox.py')],
+            done = subprocess.run([sys.executable, '-s', '-P', '-B', os.path.join(run_dir, 'harness', 'sandbox.py')],
                                   input=json.dumps(job).encode(), env=env, cwd='/', stdout=lf, stderr=lf,
                                   pass_fds=(views_fd, out_fd), close_fds=True)
     finally:
@@ -316,7 +363,7 @@ def _worker(predictor, sha, vids, run_dir, titles_path, log, tag, workers, each)
 
 
 def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=None, cache_key=None, workers=2,
-                  reduce=None, batch=None):
+                  reduce=None, batch=None, identity=None):
     """Answers of one predictor for the main views and, when it gives no score, for the calibration views.
     Returns {'main': {vid: {'rank','score','p_low'}}, 'cal': {...}, 'seconds', 'peak_mb', 'attempts', 'sandbox'}
     with lists in place of arrays. With `reduce` (T2a) a checked answer is replaced at once by
@@ -346,7 +393,7 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
         os.remove(cache_file)
     start = time.time()
     out = {'main': {}, 'cal': {}, 'attempts': [], 'peak_mb': 0.0, 'sandbox': {}, 'cached': False, 'sha256': sha,
-           'views': cache_key, 'resumed': 0}
+           'views': cache_key, 'resumed': 0, 'identity': identity}
     part_file = cache_file + '.part' if cache_file and reduce else None
     if part_file and os.path.exists(part_file):
         try:
@@ -354,7 +401,9 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
                 part = json.load(f)
         except (OSError, ValueError):
             part = {}
-        if part.get('sha256') == sha and part.get('views') == cache_key and set(part.get('main', ())) <= set(main):
+        if part.get('sha256') != sha or part.get('views') != cache_key or part.get('identity') != identity:
+            raise Refused('stopped predictor differs: predictor hash, views or run identity')
+        if set(part.get('main', ())) <= set(main):
             out['main'].update(part['main'])
             out['sandbox'], out['peak_mb'] = part.get('sandbox', {}), part.get('peak_mb', 0.0)
             out['resumed'] = len(part['main'])
@@ -365,7 +414,7 @@ def run_predictor(predictor, index, keys, run_dir, titles_path, log, cache_file=
             tmp = part_file + f'.tmp{os.getpid()}'
             with open(tmp, 'w') as f:
                 json.dump({'sha256': sha, 'views': cache_key, 'main': out['main'], 'sandbox': out['sandbox'],
-                           'peak_mb': out['peak_mb']}, f)
+                           'peak_mb': out['peak_mb'], 'identity': identity}, f)
             os.replace(tmp, part_file)
 
     def take(vids, tag, into):
@@ -540,6 +589,12 @@ def measure_t2a(pack, index, keys, facts, answers, predictor, refs, names, owner
     cand = score.t2a_collect(answers[sha256_file(predictor)], index)
     ref_preds = {names[r]: score.t2a_collect(answers[sha256_file(r)], index) for r in refs}
     line['measures'] = score.t2a_measures(table, cand, ref_preds, owner, DRAWS, SEED)
+    if line['options'].get('retained_check'):
+        counts = np.bincount(pack.ratings['member'], minlength=len(pack.members['tier']))
+        line['retained_check'] = score.t2a_retained_check(table, {names[predictor]: cand, **ref_preds},
+                                                        rel(B2), owner,
+                                                        counts < 60, DRAWS, SEED)
+
     line['views'].update(members=int(len(np.unique(table['member']))), targets=int(len(table['y'])),
                          targets_listed=int(sum(views.n_targets(keys[v['vid']]) for v in index)))
     cv = score.t2a_member_values(table, cand)
@@ -590,7 +645,7 @@ def measure_t2b(pack, index, keys, facts, answers, predictor, refs, names, owner
 
 def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=None, others=None,
             shuffle_seed=None, plant=None, control=None, use_cache=True, keep=False, quiet=False,
-            verify_of=None, gate=None, split=None, fold_check=False):
+            verify_of=None, gate=None, split=None, retained_check=False, fold_check=False):
     """Run one predictor against its references. Returns the ledger line (also when the run failed).
 
     verify_of   mode verify only (verify.py): the ledger line that is run again; the run must be that line's.
@@ -612,6 +667,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             raise Refused(f'unknown --split {split}')
     elif split is not None:
         raise Refused('--split is an option of task T2b')
+    if retained_check and (task != 'T2a' or mode != 'ladder' or fold_check):
+        raise Refused('--retained-check needs a main-fold T2a ladder run')
     if fold_check and task != 'T2a':
         raise Refused('--fold-check is an option of task T2a')
     if mode not in MODES:
@@ -658,6 +715,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
                'shuffle_seed': shuffle_seed, 'plant': plant}
     if task == 'T2b':
         options['split'] = split
+    if retained_check:
+        options['retained_check'] = True
     if fold_check:
         options['fold_check'] = True
     if mode == 'registered':
@@ -695,7 +754,7 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
     os.makedirs(run_dir, mode=0o700)
     os.makedirs(results_dir, mode=0o700)
     log = os.path.join(results_dir, 'log.txt')
-    harness = harness_sha256()
+    harness = LOADED_HARNESS_SHA256
     commit = git(['rev-parse', 'HEAD'], LOOP).stdout.strip() or None
     dirty = bool(git(['status', '--porcelain', '--', '.'], LAB).stdout.strip())
     line = {'run_id': run_id, 'time': f'{stamp:%Y-%m-%dT%H:%M:%SZ}', 'item': item, 'mode': mode, 'task': task,
@@ -708,7 +767,11 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
             'seed': SEED, 'draws': DRAWS, 'threads': int(THREADS)}
     if control:
         line['control'] = control
+    resume_file = None
     try:
+        frozen = freeze_files(run_dir, line, predictor, refs)
+        names = {frozen[path]: name for path, name in names.items()}
+        predictor, refs = frozen[predictor], [frozen[r] for r in refs]
         t_sha = pack.manifest['files_sha256']['titles.pkl']
         titles_dir = os.path.join(work, 'titles', f'{t_sha[:16]}-{sha256_file(os.path.join(LAB, "views.py"))[:8]}')
         titles_path = os.path.join(titles_dir, 'titles.npz')
@@ -751,6 +814,17 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
         cache_key = hashlib.sha256(f'{digest}|{titles_digest}|{harness}|{answers_digest}'.encode()).hexdigest()[:32]
         cache_dir = os.path.join(work, 'cache', cache_key)
 
+        identity = resume_identity(line)
+        if use_cache and mode in ('explore', 'ladder', 'control') and reduce:
+            invocation = {key: line[key] for key in ('item', 'mode', 'task', 'tier')}
+            invocation['paths'] = [line['predictor']['path']] + [r['path'] for r in line['refs']]
+            token = hashlib.sha256(json.dumps(invocation, sort_keys=True).encode()).hexdigest()
+            pending = os.path.join(work, 'resume', token + '.json')
+            check_resume(pending, identity)
+            os.makedirs(os.path.dirname(pending), exist_ok=True)
+            with open(pending, 'w') as f:
+                json.dump(identity, f)
+            resume_file = pending
         answers, seconds, peak, attempts, sandbox = {}, {}, 0.0, 0, {}
         strict = mode in ('registered', 'gate')
         workers = 1 if mode in ('registered', 'gate', 'verify') else 2      # runs that count: one view at a time
@@ -764,7 +838,7 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
                 if os.path.exists(cache_file):
                     os.remove(cache_file)
             got = run_predictor(p, index, keys, run_dir, titles_path, log, cache_file, cache_key, workers,
-                                reduce, VIEWS_PER_WORKER.get(task))
+                                reduce, VIEWS_PER_WORKER.get(task), identity)
             if strict and not all(got['sandbox'].get(k) for k in FULL_SANDBOX):
                 raise Failed(f'a {mode} run needs the full sandbox; this machine gave {got["sandbox"]}')
             answers[p_sha] = got
@@ -793,6 +867,8 @@ def execute(predictor, refs=None, *, item, mode, task='T1', tier='A', members=No
         line['error'] = str(e)
         result = dict(line)
     finally:
+        if resume_file and os.path.exists(resume_file):
+            os.remove(resume_file)
         if not keep:
             shutil.rmtree(run_dir, ignore_errors=True)
             if os.path.exists(keys_path):
@@ -915,6 +991,7 @@ def main(argv=None):
     ap.add_argument('--members')
     ap.add_argument('--others', choices=list(OTHERS), help='default: before in T2b, all otherwise')
     ap.add_argument('--split', choices=['sitting', 'order'], help='T2b only; default sitting')
+    ap.add_argument('--retained-check', action='store_true', help='T2a ladder: supplemental same-title comparisons')
     ap.add_argument('--fold-check', action='store_true', help='T2a only: folds of 5, members under 60 ratings')
     ap.add_argument('--no-cache', action='store_true')
     ap.add_argument('--control', help='the name of the control (mode control only)')
@@ -928,7 +1005,7 @@ def main(argv=None):
         line = execute(a.predictor, a.ref, item=a.item, mode=a.mode, task=a.task, tier=a.tier,
                        members=a.members.split(',') if a.members else None, others=a.others,
                        shuffle_seed=a.shuffle_seed, plant=a.plant, control=a.control, use_cache=not a.no_cache,
-                       keep=a.keep, split=a.split, fold_check=a.fold_check)
+                       keep=a.keep, split=a.split, retained_check=a.retained_check, fold_check=a.fold_check)
     except Refused as e:
         sys.exit(f'refused: {e}')
     sys.exit(0 if line['status'] in ('ok', 'attempts') else 2)

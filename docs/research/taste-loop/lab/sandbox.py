@@ -43,6 +43,7 @@ around Python through the C library, where it is stopped without a note. Landloc
 What still connects two predictor processes that run at the same moment: the load they put on the machine. Runs
 that count (registered, gate, verify) therefore run one view at a time; other runs run two.
 """
+import hashlib
 import json
 import os
 import sys
@@ -468,11 +469,15 @@ def main():
     lab = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, lab)
     from views import load_titles, load_view
+    import common
+    common.LAB, common.DATA_ROOT, common.PACK_FOLDER = job['lab'], job['data_root'], job['pack_folder']
     sys.path.remove(lab)                               # a predictor imports from the system's Python only
     sys.path_importer_cache.clear()
     titles = load_titles(job['titles'])
     with open(job['predictor'], 'rb') as f:
         source = f.read()
+    if hashlib.sha256(source).hexdigest() != job['sha256']:
+        finish({'error': 'frozen predictor hash differs from the ledger'}, 0)
     null_fd = os.open('/dev/null', os.O_WRONLY)
     maps = open('/proc/self/maps')
     sys.dont_write_bytecode = True

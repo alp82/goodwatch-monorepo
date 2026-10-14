@@ -19,7 +19,7 @@ the fix pass**). Item 003 added task T2a, the hidden-title test (section 4a; wha
 | `lab/stats.py` | Intervals and smallest detectable effects |
 | `lab/ladder/` | The fixed rungs B0 to B5 and BP |
 | `lab/pins.json`, `lab/pin.py` | The sha256 of every rung and every control predictor, and the tool that writes it |
-| `lab/table.py` | The ladder tables (T1, T2a), from the `ladder` lines of the ledger alone |
+| `lab/table.py` | The ladder tables (T1, T2a, T2b), from the `ladder` lines of the ledger alone |
 | `lab/top.py` | The first titles a pinned rung would show a member, to standard output. Not a run |
 | `lab/verify.py` | Reruns a ledgered run and compares |
 | `lab/gate.py` | The one look at tier B. Run by the orchestrator only |
@@ -42,6 +42,11 @@ requires committed code. `table.py` and `gate.py` compare harness hashes, never 
 predictor of a `control` run. A file dropped into `lab/ladder/`, or a rung edited in place, is refused. Changing a
 rung on purpose means running `python3 lab/pin.py`, which changes the harness hash; the table then refuses to mix
 the old ladder rows with new ones, so the whole ladder is run again and the change is visible in every line.
+
+**Frozen source (item 006).** At the start of a run, every predictor and reference is copied once into its
+work folder. Each copy must have the sha256 in the ledger record; only the copy runs. The harness files are
+also copied and their combined hash checked; sandbox batches use that frozen sandbox and view loader. Edits
+to a live predictor, reference or harness file after this point cannot change the run's execution.
 
 **Which pack.** The committed `MANIFEST.json` beside the ledger names the pack's folder and the hash of `pack.pkl`.
 Every run reads that pack and no other; `~` in the folder is the home of the account, whatever `$HOME` says. A
@@ -270,7 +275,13 @@ of the view are not part of that comparison (they are titles the member has watc
   included (on a log scale). **Both at once:** within 3 GoodWatch points and within a factor of 2 in votes; a
   hidden title counts only with 50 or more such candidates. 1,506 of the 4,788 hidden titles of other members
   (31%) and 234 of the owner's 992 (24%) have fewer and are left out of "both"; most titles have 50 or more, so the
-  figure is reported. The bands were fixed in the brief and before any rung ran; none was changed.
+  figure is reported. Tables show the retained titles and eligible members in each rating band, and the
+  separation member count. The supplemental `--retained-check` T2a ladder run compares plain, popularity-only
+  and both separation against B2 on exactly the same titles (retained by both, with defined plain and
+  popularity-only percentiles), applying the five-title band minimum
+  to all three. This holds the sample fixed; matching reduces popularity's part without removing it. Results
+  describe titles with dense matching neighborhoods and need not generalize to excluded titles.
+  The bands were fixed in the brief and before any rung ran; none was changed.
 - **Guards**, read on the first 50 candidates of every view (hidden titles left out, ties in the order of the
   view's list), averaged over a member's views: the share of shows and of animation, each also minus the member's
   own share among their rated universe titles; the largest number of titles from one franchise; the median vote
@@ -286,8 +297,8 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Fold check** (item 004, `--fold-check`, Sol 6.1's review): T2a hides folds, not one title, and a fold can
   take a sparse member's taste below B2's five liked titles. For the members other than the owner with fewer than
   60 ratings (40 members, 10 of them with both bands) the check builds folds of at most 5 titles and reruns B1,
-  B2, B3 and B5; `table.py T2a` shows it beside the main figure and never mixes it into the main rows. T2a is a
-  fold test; differences between rungs are read as such, not as leave-one-out results.
+  B2, B3 and B5; `table.py T2a` shows it beside the main figure on the same separation-eligible members
+  and never mixes it into the main rows. T2a is a fold test; differences between rungs are read as such, not as leave-one-out results.
 - **Owner:** plain figures. An interval over sittings follows the rule of section 8 (`stats.cluster_separation`
   for the separation: the mean over one group of titles minus the mean over another, whole sittings drawn again);
   on this pack the largest sitting holds 34% of the titles rated 8 or more or 5 or less, so there is none.
@@ -300,6 +311,11 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Decided here:** an answer has about 60,000 ranks. The runner turns it into the few numbers above the moment it
   is read (`score.t2a_view`) and drops the ranks, so neither the runner nor the stored answers of a reference hold
   more than one view's ranks. A sandbox worker gets 64 views at a time. Peak memory of a run: 271 MB.
+- **Supplemental comparisons (item 006):** `--retained-check` is accepted only for a main-fold T2a ladder
+  run. One B2 run with B2, B1, B3, B4, B5 and BP as references records all six same-sample comparisons, retained
+  counts, and the main-fold comparison for members below 60 ratings. The table keeps this supplemental line
+  separate from the existing ladder cohort: it checks pack, full views, options apart from the flag, predictor
+  hashes and every raw metric before displaying the added figures, and labels the supplemental harness hash.
 - **The ladder:** B1, B2, B3, B4, B5, BP, each with B2, B1 and BP as references (B2 first: it is the primary
   reference). B0 gives no order and is left out. **Decided here:** the rungs run unchanged, the files pinned for
   T1. One consequence is stated plainly: B4 and B5 standardize their title columns over every title a view names,
@@ -314,7 +330,11 @@ of the view are not part of that comparison (they are titles the member has watc
 - **Resuming** (item 004): a T2a or T2b run stopped by its time limit leaves the answers of the batches it finished
   (`<stored answers>.part`), and the next run of the same file on exactly the same views and answers (the cache
   key: views digest, title digest, harness hash and a digest of the answers) starts where it stopped; the ledger
-  line says how many views it took over (`resumed`). Only explore, ladder and control runs store answers, so
+  line says how many views it took over (`resumed`). The stopped invocation stores its identity separately
+  from the hash-addressed answer cache. Repeating it refuses changed harness or predictor/reference hashes,
+  pack and title hashes, options, or views/title digests instead of silently restarting. Partial answers carry
+  that full identity too, and mismatches are refused. Each resumed predictor executes a fresh hash-checked
+  frozen copy. Only explore, ladder and control runs store answers, so
   registered, gate and verify runs never resume. The cache key includes the answers since item 004, because a
   reduced answer depends on them (the T2b shuffled control has the real views and other targets).
 
@@ -359,7 +379,8 @@ would keep 4 members and the `order` rule 28.
 - **Percentile** of each target among the list's titles that are not targets (a tie a half; 1.0 the top), and the
   member's mean: the primary measure, paired against B2 (**decided here:** the other targets are left out of a
   target's comparison, as the other hidden titles are in T2a). In the first 50 and 200, equally well-rated,
-  equally popular and both, as in T2a.
+  equally popular and both, as in T2a. Beside each both figure the table gives retained target titles and
+  members (T2b has one Want to See target band), and `both_under_min`, for others and the owner separately.
 - **Guards:** the first 50 titles that are not targets (as in T2a): shows and animation against the member's own
   mix (**decided here:** their rated and added universe titles before the cutoff), the largest franchise count,
   the median vote count. **Touched titles:** how many titles touched before the cutoff stand in a first 50 and in

@@ -69,7 +69,7 @@ def newest(ledger, task):
         o = line.get('options', {})
         if line.get('mode') != 'ladder' or line.get('status') != 'ok' or line.get('task') != task \
                 or line.get('tier') != 'A' or o.get('members') != 'all' or o.get('others') not in out \
-                or o.get('shuffle_seed') is not None or o.get('plant') is not None or o.get('fold_check'):
+                or o.get('shuffle_seed') is not None or o.get('plant') is not None or o.get('fold_check') or o.get('retained_check'):
             continue
         for label, path, _ in RUNGS:
             if line['predictor']['path'] == path:
@@ -342,11 +342,12 @@ T2A_AGAINST = ('B2', 'B1', 'BP')
 T2A_SCORER = {'B1': 'GoodWatch score', 'BP': 'Vote count'}
 T2A_BOTH_MIN = 50                                       # score.T2A_BOTH_MIN, as the ledger line states it
 T2A_KINDS = [('matched', 'Among equally well-rated titles',
-              'This removes "it is simply a well-rated title" and leaves what is personal: candidates whose GoodWatch '
+              'These adjustments reduce public quality\'s part without removing it: candidates whose GoodWatch '
               'score lies within 3 points of the title\'s.'),
              ('popular', 'Among equally popular titles',
               'Candidates whose vote count lies within a factor of 1.5 of the title\'s, either way (item 004). This '
-              'removes "it is simply a popular title".'),
+              'reduces popularity\'s part without removing it (DECISIONS.md D1). Gains that survive these particular '
+              'adjustments describe the retained titles only.'),
              ('both', 'Among titles equally well-rated and equally popular',
               'Candidates within 3 GoodWatch points and within a factor of 2 in votes at once; a title counts only '
               'with 50 or more of them.')]
@@ -361,6 +362,22 @@ def owner_interval(d):
     return interval(d, ('sittings', 'hidden titles'))
 
 
+def both_counts(check, who, comparison=False):
+    counts = check.get('comparison_counts' if comparison else 'counts', {}).get(who)
+    if not counts:
+        return 'retained counts unavailable'
+    bands = '; '.join(f'{band}: {counts[band]["titles"]:,} titles / {counts[band]["members"]} members'
+                      for band in ('high', 'mid', 'low'))
+    return f'{bands}; separation: {counts["separation_members"]} members'
+
+
+def t2b_both(value, measures, paired=None):
+    titles = measures['n_targets'] - measures['both_under_min']
+    members = int(measures['pct_both'].get('value') is not None) if 'sittings' in measures else \
+        (paired or measures['pct_both']).get('n', int(value != 'n/a'))
+    return f'{value} ({titles} targets / {members} members; both_under_min: {measures["both_under_min"]})'
+
+
 def build_t2a(ledger):
     runs = newest(ledger, 'T2a')
     if not any(runs.values()):
@@ -369,6 +386,23 @@ def build_t2a(ledger):
     main = runs['all']
     m0 = base['measures']
     o, w0 = m0['others'], m0.get('owner')
+    supplemental = None
+    for line in ledger:
+        if line.get('mode') == 'ladder' and line.get('status') == 'ok' and line.get('task') == 'T2a' \
+                and line.get('options', {}).get('retained_check') and line.get('pack_sha256') == base['pack_sha256'] \
+                and line.get('views') == base['views'] \
+                and {k: v for k, v in line['options'].items() if k != 'retained_check'} == base['options']:
+            hashes = {r['path']: r['sha256'] for r in [line['predictor']] + line['refs']}
+            if all(hashes.get(row['predictor']['path']) == row['predictor']['sha256'] for row in main.values()):
+                # Supplemental code may have a newer harness hash, but must reproduce every existing raw metric.
+                for label, row in main.items():
+                    raw = line['retained_check']['raw'][row['predictor']['path']]
+                    for who in ('others', 'owner'):
+                        for key, value in row['measures'].get(who, {}).items():
+                            if key != 'vs' and raw.get(who, {}).get(key) != value:
+                                raise Mixed(f'supplemental {label} {who} {key} differs from the main figure')
+                supplemental = line
+    retained = (supplemental or {}).get('retained_check', {})
     rows = [(label, text if label not in T2A_SCORER else T2A_SCORER[label], main.get(label))
             for label, _, text in T2A_RUNGS]
 
@@ -447,7 +481,7 @@ def build_t2a(ledger):
         out += ['', '### Fold check: at most 5 hidden titles in a view', '',
                 f'The members other than the owner with fewer than 60 ratings ({c0["n_members"]} members, '
                 f'{c0["n_primary"]} of them with both bands), folds of at most 5 titles instead of the folds above, '
-                'which hide a fifth of such a member\'s titles. Beside it the main figure, over all members above. '
+                'which hide a fifth of such a member\'s titles. Both columns compare the same separation-eligible members. '
                 'Above zero the rung separates better than B2.', '',
                 '| Rung | Separation, folds of 5 | Against B2, folds of 5 | Main figure: separation against B2 |',
                 '|---|---:|---:|---:|']
@@ -457,7 +491,7 @@ def build_t2a(ledger):
                 continue
             m = c['measures']['others']
             out.append(f'| {label} | {ci(m["separation"])} | {diff(c, label, "B2", "separation")} | '
-                       f'{diff(line, label, "B2", "separation") if line else "not run"} |')
+                       f'{ci(retained.get("main_small_members", {}).get(PATH[label]), "diff", True)} |')
 
     out += ['', '### Share of hidden titles in the first 50 and the first 200', '',
             'For titles rated 8 or more a larger share is better; for titles rated 5 or less a smaller one.', '',
@@ -476,10 +510,13 @@ def build_t2a(ledger):
             continue
         under = f' {o["both_under_min"]:,} of the {o["n_hidden"]:,} hidden titles have fewer than ' \
                 f'{T2A_BOTH_MIN} such candidates and are left out.' if kind == 'both' else ''
-        out += ['', f'### {title}', '', note + under, '',
+        out += ['', f'### {title}', '', note + under + (' Retained: ' + both_counts(retained, 'others') + '.' if kind == 'both' else ''), '',
                 '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Against B2 | '
                 'Smallest detectable | Against B1 | Against BP | Rated 8 or more against B2 |',
                 '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+        if kind == 'both':
+            out[-2] += ' Retained titles / members by band |'
+            out[-1] += '---|'
         for label, text, line in rows:
             if not line:
                 continue
@@ -489,7 +526,25 @@ def build_t2a(ledger):
                        f'{ci(m[f"pct_{kind}_low"])} | {ci(m[f"separation_{kind}"])} | '
                        f'{diff(line, label, "B2", f"separation_{kind}")} | {f(d.get("sde")) if d else ""} | '
                        f'{diff(line, label, "B1", f"separation_{kind}")} | '
-                       f'{diff(line, label, "BP", f"separation_{kind}")} | {diff(line, label, "B2", f"pct_{kind}_high")} |')
+                       f'{diff(line, label, "BP", f"separation_{kind}")} | {diff(line, label, "B2", f"pct_{kind}_high")} |'
+                       + (f' {both_counts(retained, "others")} |' if kind == 'both' else ''))
+
+    out += ['', '### Plain, popularity-only and both separation against B2 on the same retained titles', '',
+            'Every column uses the same titles: retained by both with defined plain and popularity-only percentiles, '
+            'and the five-title minimum in each band. '
+            'The adjustments reduce popularity\'s part without removing it. These titles have dense matching '
+            'neighborhoods; results need not generalize to excluded titles.', '',
+            '| Rung | Plain against B2 | Popularity-only against B2 | Both against B2 | Retained titles / members by band |',
+            '|---|---:|---:|---:|---|']
+    for label, _, line in rows:
+        data = retained.get('vs_b2', {}).get(PATH[label], {})
+        out.append(f'| {label} | ' + ' | '.join(ci(data.get(kind), 'diff', True)
+                                               for kind in ('plain', 'popular', 'both'))
+                   + f' | {both_counts(retained, "others", comparison=True)} |')
+    if supplemental:
+        out += ['', f'Supplemental ladder run `{supplemental["run_id"]}`, harness '
+                f'`{supplemental["harness_sha256"][:12]}`; same pack, views, options and predictor hashes as '
+                'the main rows (apart from the supplemental flag). Its raw figures are checked against them.']
 
     out += ['', '### Guards: the first 50 candidates', '',
             f'The {m0["top"]} unrated candidates a rung ranks highest in a view, averaged over a member\'s views, '
@@ -569,10 +624,13 @@ def build_t2a(ledger):
                 continue
             under = f' ({w0["both_under_min"]} hidden titles have fewer than {T2A_BOTH_MIN} such candidates and are ' \
                     f'left out)' if kind == 'both' else ''
-            out += ['', f'{title}{under}:', '',
+            out += ['', f'{title}{under}' + ('; retained: ' + both_counts(retained, 'owner') if kind == 'both' else '') + ':', '',
                     '| Rung | Percentile, rated 8 or more | Rated 6 to 7 | Rated 5 or less | Separation | Franchises '
                     'drawn again | Against B2 | Franchises drawn again | Against B1 | Against BP |',
                     '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+            if kind == 'both':
+                out[-2] += ' Retained titles / members by band |'
+                out[-1] += '---|'
             for label, text, line in rows:
                 w = (line or {}).get('measures', {}).get('owner')
                 if not w:
@@ -584,7 +642,8 @@ def build_t2a(ledger):
                            f'{val(w[f"pct_{kind}_low"])} | {val(w[f"separation_{kind}"])} | '
                            f'{interval(w[f"separation_{kind}_franchise"])} | {cell("B2")} | '
                            + (interval(v['B2'][f'separation_{kind}_franchise']) if v['B2'] else '') +
-                           f' | {cell("B1")} | {cell("BP")} |')
+                           f' | {cell("B1")} | {cell("BP")} |'
+                           + (f' {both_counts(retained, "owner")} |' if kind == 'both' else ''))
         out += ['', f'Guards, the first {m0["top"]} candidates. The owner\'s own rated titles are '
                 f'{w0["own_shows"]["value"]:.0%} shows and {w0["own_animation"]["value"]:.0%} animation.', '',
                 '| Rung | Shows | Shows against own mix | Animation | Animation against own mix | Most titles from '
@@ -705,7 +764,7 @@ def build_t2b(ledger):
             out.append(f'| {label} | {text} | {ci(m["pct"])} | {diff(line, label, "B2", "pct")} | '
                        f'{f(d.get("sde")) if d else ""} | ' + (f'{d.get("improved")} of {d["n"]}' if d else '') +
                        f' | {diff(line, label, "B1", "pct")} | {diff(line, label, "BP", "pct")} | {ci(m["first50"])} | '
-                       f'{ci(m["first200"])} | {ci(m["pct_matched"])} | {ci(m["pct_popular"])} | {ci(m["pct_both"])} |')
+                       f'{ci(m["first200"])} | {ci(m["pct_matched"])} | {ci(m["pct_popular"])} | {t2b_both(ci(m["pct_both"]), m)} |')
         out += ['', f'Equally well-rated, equally popular and both, against B2; then the guards. The members\' own rated '
                 f'and added titles are {f(o["own_shows"]["value"])} shows and {f(o["own_animation"]["value"])} '
                 f'animation. Later skips: the mean percentile of the titles skipped or marked Not interested after the '
@@ -719,7 +778,7 @@ def build_t2b(ledger):
                 continue
             m = line['measures']['others']
             out.append(f'| {label} | {diff(line, label, "B2", "pct_matched")} | {diff(line, label, "B2", "pct_popular")} | '
-                       f'{diff(line, label, "B2", "pct_both")} | {ci(m["top_shows_vs_own"], sign=True)} | '
+                       f'{t2b_both(diff(line, label, "B2", "pct_both"), m, (vs(line, "B2") or {}).get("pct_both"))} | {ci(m["top_shows_vs_own"], sign=True)} | '
                        f'{ci(m["top_animation_vs_own"], sign=True)} | {f(m["top_franchise_max"]["value"], 1)} | '
                        f'{m["top_votes_median"]["value"]:,.0f} | {ci(m["later_pct"])} | {ci(m["auc"])} |')
         if w0:
@@ -741,7 +800,7 @@ def build_t2b(ledger):
                 out.append(f'| {label} | {val(w["pct"])} | {interval(w["pct"], ("sittings", "targets"))} | '
                            f'{interval(w["pct_franchise"])} | {cell("B2")} | '
                            f'{interval(v2["pct_franchise"]) if v2 else ""} | {cell("B1")} | {cell("BP")} | '
-                           f'{val(w["pct_matched"])} | {val(w["pct_popular"])} | {val(w["pct_both"])} | '
+                           f'{val(w["pct_matched"])} | {val(w["pct_popular"])} | {t2b_both(val(w["pct_both"]), w)} | '
                            f'{val(w["first50"])} | {val(w["first200"])} | {val(w["later_pct"])} | {val(w["auc"])} |')
     out += ['', '## Runs', '', '| Rung | Split | Others | Run | References | Seconds | Peak memory, MB | Predictor sha256 |',
             '|---|---|---|---|---|---:|---:|---|']

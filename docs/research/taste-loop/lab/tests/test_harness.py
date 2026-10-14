@@ -297,6 +297,11 @@ def test_leak_canary_refuses_to_run_outside_the_sandbox(tmp_path):
 import importlib.util
 spec = importlib.util.spec_from_file_location('canary', {os.path.join(REAL_LAB, 'controls/predictors/leak_canary.py')!r})
 canary = importlib.util.module_from_spec(spec); spec.loader.exec_module(canary)
+# Codex already applies seccomp: simulate its absence to exercise the canary's guard safely.
+class NoSeccomp:
+    def prctl(self, *args):
+        return 0
+canary.ctypes.CDLL = lambda *args, **kwargs: NoSeccomp()
 canary.predict({{}})
 '''
     done = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=str(tmp_path), timeout=60,
@@ -729,17 +734,19 @@ def test_a_stopped_t2a_run_resumes_where_it_stopped(world):
     got = json.load(open(newest))
     half = dict(list(got['main'].items())[:len(got['main']) // 2])
     json.dump({'sha256': got['sha256'], 'views': got['views'], 'main': half, 'sandbox': got['sandbox'],
-               'peak_mb': got['peak_mb']}, open(newest + '.part', 'w'))
+               'peak_mb': got['peak_mb'], 'identity': got['identity']}, open(newest + '.part', 'w'))
     assert t2a(world, BP).returncode == 0
     again = ledger(world)[-1]
     assert again['resumed'] == {BP: len(half)} and 'resumed' not in full
     assert again['measures'] == full['measures'] and not os.path.exists(newest + '.part')
     json.dump({'sha256': '0' * 64, 'views': got['views'], 'main': half}, open(newest + '.part', 'w'))
-    assert t2a(world, BP).returncode == 0                               # another file's answers are not taken
-    assert 'resumed' not in ledger(world)[-1] and ledger(world)[-1]['measures'] == full['measures']
+    refused(t2a(world, BP), 'stopped predictor differs')
+    os.remove(newest + '.part')
 
 
 def test_t2a_fold_check(world, pack):
+    done = t2a(world, B2, B1, B5, BP, extra=['--retained-check'])
+    assert done.returncode == 0, done.stdout + done.stderr
     done = t2a(world, B2, B1, extra=['--fold-check'])
     assert done.returncode == 0, done.stdout + done.stderr
     line = ledger(world)[-1]
@@ -752,6 +759,13 @@ def test_t2a_fold_check(world, pack):
     done = subprocess.run([sys.executable, os.path.join(world['lab'], 'table.py'), 'T2a'], capture_output=True,
                           text=True, env=world['env'])
     assert done.returncode == 0 and '### Fold check: at most 5 hidden titles in a view' in done.stdout, done.stderr
+    supplemental = [row for row in ledger(world) if row.get('options', {}).get('retained_check')][-1]
+    import table
+    assert table.both_counts(supplemental['retained_check'], 'others') in done.stdout
+    assert '### Plain, popularity-only and both separation against B2 on the same retained titles' in done.stdout
+    main_same = supplemental['retained_check']['main_small_members'][B2]
+    assert main_same['n'] == line['measures']['others']['n_primary']
+    assert table.ci(main_same, 'diff', True) in done.stdout
     refused(world['run'](B1, '--fold-check'), '--fold-check is an option of task T2a')
 
 

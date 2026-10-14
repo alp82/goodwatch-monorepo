@@ -807,3 +807,55 @@ def t2b_measures(table, candidate, refs, owner, draws, seed):
             w['vs'][ref] = d
         out['owner'] = w
     return out
+
+
+def t2a_retained_check(table, predictors, reference, owner, small_members, draws, seed):
+    """Hold titles and members fixed while changing percentile matching; preserve the raw ladder separately."""
+    base = predictors[reference]
+    both_keep = np.isfinite(base['pct_both'])
+    keep = both_keep & np.isfinite(base['pct']) & np.isfinite(base['pct_popular'])
+    if any(not np.array_equal(np.isfinite(p['pct_both']), both_keep) for p in predictors.values()):
+        raise ValueError('both retention differs between predictors')
+    member, y = table['member'], table['y']
+    n = len(table['n_outside'])
+    others = np.ones(n, bool)
+    if owner is not None:
+        others[owner] = False
+    def retained_counts(mask):
+        counts = {}
+        for who, members in (('others', others), ('owner', ~others)):
+            counts[who], per_band = {}, {}
+            for band, lo, hi in T2A_BANDS:
+                at = mask & (y >= lo) & (y <= hi)
+                per = np.bincount(member[at], minlength=n)
+                per_band[band] = per
+                counts[who][band] = {'titles': int(per[members].sum()),
+                                     'members': int((members & (per >= T2A_BAND_MIN)).sum())}
+            counts[who]['titles'] = int((mask & members[member]).sum())
+            counts[who]['separation_members'] = int((members & (per_band['high'] >= T2A_BAND_MIN)
+                                                    & (per_band['low'] >= T2A_BAND_MIN)).sum())
+        return counts
+
+    counts, comparison_counts = retained_counts(both_keep), retained_counts(keep)
+    values = {}
+    for path, p in predictors.items():
+        values[path] = {}
+        for label, column in (('plain', 'pct'), ('popular', 'pct_popular'), ('both', 'pct_both')):
+            # Only percentile columns are altered; guards and first-50 metrics are not used here.
+            retained = dict(p)
+            retained['pct'] = np.where(keep, p[column], np.nan)
+            with np.errstate(invalid='ignore'):
+                values[path][label] = t2a_member_values(table, retained)['separation']
+    comparisons = {}
+    for path, kinds in values.items():
+        comparisons[path] = {kind: _t2a_pair(v[others], values[reference][kind][others], draws, seed, 'higher')
+                             for kind, v in kinds.items()}
+        comparisons[path]['owner'] = {kind: {'value': stats._r(v[owner] - values[reference][kind][owner])
+                                            if owner is not None and np.isfinite(v[owner]) else None}
+                                      for kind, v in kinds.items()}
+    raw = {path: t2a_member_values(table, p)['separation'] for path, p in predictors.items()}
+    folds = {path: _t2a_pair(v[others & small_members], raw[reference][others & small_members],
+                            draws, seed, 'higher') for path, v in raw.items()}
+    return {'counts': counts, 'comparison_counts': comparison_counts, 'vs_b2': comparisons, 'main_small_members': folds,
+            'raw': {path: t2a_measures(table, p, {reference: base}, owner, draws, seed)
+                    for path, p in predictors.items()}}
