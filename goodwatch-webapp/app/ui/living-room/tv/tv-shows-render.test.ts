@@ -66,9 +66,6 @@ const focused = (html: string) =>
 		?.slice(1)
 		.find(Boolean)
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The Expand key is slice 11's: its place is there, and empty. */
-const withoutExpand = (items: string[]) =>
-	items.filter((item) => item !== "expand")
 
 test("My shows draws the machine's items in its order, in both editions", () => {
 	assert.deepEqual(rendered.items, [
@@ -84,10 +81,10 @@ test("My shows draws the machine's items in its order, in both editions", () => 
 		"bar:menu",
 	])
 	for (const html of Object.values(rendered.shows.signal)) {
-		assert.deepEqual(ids(html), withoutExpand(rendered.items))
+		assert.deepEqual(ids(html), rendered.items)
 		assert.equal(focused(html), "title:show-10")
-		// The Expand key's corner is there and nothing is in it.
-		assert.match(html, /data-tv-expand-place="true" class="[^"]*"><\/div>/)
+		// The Expand key stands in its corner.
+		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
 	}
 })
 
@@ -155,7 +152,7 @@ test("a member without a show to continue or to start is told how one gets here"
 		"bar:menu",
 	])
 	for (const html of Object.values(rendered.shows.empty)) {
-		assert.deepEqual(ids(html), ["bar:back", "bar:search", "bar:menu"])
+		assert.deepEqual(ids(html), rendered.emptyItems)
 		assert.match(
 			html,
 			/>No show for tonight\. Want to See on a show puts it here to start\./,
@@ -163,8 +160,13 @@ test("a member without a show to continue or to start is told how one gets here"
 	}
 })
 
-test("the server draws My shows as its bar alone, and nothing of the member's shows", () => {
-	assert.deepEqual(ids(rendered.first), ["bar:back", "bar:search", "bar:menu"])
+test("the server draws My shows as its bar and Expand key alone, and nothing of the member's shows", () => {
+	assert.deepEqual(ids(rendered.first), [
+		"expand",
+		"bar:back",
+		"bar:search",
+		"bar:menu",
+	])
 	assert.ok(!rendered.first.includes("Severance"))
 	assert.ok(!rendered.first.includes("poster-"))
 })
@@ -173,7 +175,7 @@ test("Seen it on a show the member is midway through names the episode it marks"
 	const key = (html: string) =>
 		/data-tv-item="seen"[^>]*>(?:<span[^>]*>)?([^<]*)</.exec(html)?.[1]
 	for (const html of Object.values(rendered.title.episode)) {
-		assert.deepEqual(ids(html), withoutExpand(rendered.titleItems))
+		assert.deepEqual(ids(html), rendered.titleItems)
 		assert.equal(key(html), "Seen S2 E4")
 	}
 	// A score does not take the episode's place; without an episode the key is as on any title.
@@ -210,12 +212,12 @@ test("on every phone of the room's table every key of My shows and of a show's t
 	for (const p of rendered.phones) {
 		// My shows: the bar's keys take their size from the rule; the posters share the height the name, the facts
 		// and the Expand key's row leave, and the drive script measures them on the page.
-		assert.deepEqual(ids(p.shows), withoutExpand(rendered.items))
+		assert.deepEqual(ids(p.shows), rendered.items)
 		for (const item of heights(p.shows))
 			assert.ok(item.height * p.scale >= 44, `${p.phone} shows ${item.id}`)
 		assert.deepEqual(
 			heights(p.shows).map((item) => item.id),
-			["bar:back", "bar:search", "bar:menu"],
+			["expand", "bar:back", "bar:search", "bar:menu"],
 		)
 		// The Expand key's row under the posters is a key tall, and empty.
 		const row = Number(
@@ -228,7 +230,7 @@ test("on every phone of the room's table every key of My shows and of a show's t
 		const title = heights(p.title)
 		assert.deepEqual(
 			title.map((item) => item.id),
-			withoutExpand(rendered.titleItems),
+			rendered.titleItems,
 		)
 		for (const item of title)
 			assert.ok(item.height * p.scale >= 44, `${p.phone} title ${item.id}`)

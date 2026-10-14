@@ -82,7 +82,7 @@ const focused = (html: string) =>
 		(match) => match[1],
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 /** The side of a bar's key on a phone's canvas shown at `scale`. */
@@ -92,7 +92,7 @@ const EDITIONS = ["desktop", "phone"] as const
 test("Tonight's items in the markup are the machine's, in reading order, in both editions", () => {
 	for (const screen of Object.values(rendered.tonight))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), drawn(screen.items))
+			assert.deepEqual(ids(screen[edition]), screen.items)
 	assert.deepEqual(rendered.tonight.guest.items, [
 		"details",
 		"another",
@@ -175,16 +175,16 @@ test("the title screen's items in the markup are the machine's, in reading order
 	const { items, short, ...states } = rendered.title
 	for (const state of Object.values(states))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(state[edition]), drawn(items))
-	assert.deepEqual(ids(short), drawn(items))
+			assert.deepEqual(ids(state[edition]), items)
+	assert.deepEqual(ids(short), items)
 	for (const edition of EDITIONS)
 		assert.deepEqual(focused(rendered.title.known[edition]), ["watch"])
 })
 
 test("every key of the title screen is a real button, 74 canvas px tall on the desktop", () => {
 	const { known } = rendered.title
-	assert.equal(count(known.desktop, "<button"), 6)
-	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 6)
+	assert.equal(count(known.desktop, "<button"), 7)
+	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 7)
 	assert.equal(count(known.desktop, "h-[74px]"), 3)
 	// The desktop's keys are drawn as designed; the rule is the phone's.
 	assert.equal(rendered.keySizes.desktop, 74)
@@ -203,10 +203,10 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 			["rate", rendered.rate.items],
 		] as const) {
 			const drawn = sizes(p[screen])
-			// Every item of the screen has its size from the rule, the bar's keys included.
+			// Every item of the screen has its size from the rule, the Expand key and the bar's keys included.
 			assert.deepEqual(
 				drawn.map((item) => item.id),
-				items.filter((item) => item !== "expand"),
+				items,
 				`${p.phone} ${screen}`,
 			)
 			for (const item of drawn) {
@@ -316,15 +316,15 @@ test("a title is drawn from what a list knew, from its key alone, and says when 
 	assert.match(missing.desktop, />GoodWatch doesn&#x27;t have this title\.</)
 })
 
-test("the Expand key's corner is reserved and empty on Tonight and on the title screen", () => {
+test("the Expand key stands in its corner on Tonight and on the title screen", () => {
 	for (const html of [
 		rendered.tonight.guest.desktop,
 		rendered.tonight.guest.phone,
 		rendered.title.known.desktop,
 		rendered.title.known.phone,
 	]) {
-		assert.match(html, /<div data-tv-expand-place="true" class="[^"]*"><\/div>/)
-		assert.ok(!ids(html).includes("expand"))
+		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 	}
 })
 
@@ -346,8 +346,11 @@ test("the rating asks how the title was, on the strip's levels from low to high"
 })
 
 test("a screen in a chunk of its own is not in the server's HTML: its bar alone is, and no h1", () => {
+	// With the Expand key where the screen has a page: a focus that came back to it is on something.
+	assert.deepEqual(ids(rendered.first.tonight), ["expand", ...BAR])
+	assert.deepEqual(ids(rendered.first.title), ["expand", ...BAR])
+	assert.deepEqual(ids(rendered.first.rate), BAR)
 	for (const html of Object.values(rendered.first)) {
-		assert.deepEqual(ids(html), BAR)
 		assert.ok(!html.includes("<template"))
 		assert.equal(count(html, "<h1"), 0)
 	}

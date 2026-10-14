@@ -17,6 +17,7 @@ import {
 	type TvState,
 	activeItems,
 	destinationHref,
+	destinationName,
 	focusLeftBehind,
 	focusedItem,
 	isTvOnlyChange,
@@ -870,6 +871,36 @@ describe("history: what changes nothing", () => {
 describe("the Expand key's destinations", () => {
 	const dest = (query: string, ctx: TvContext = guest) =>
 		destinationHref(at(query, 0, ctx).screen, ctx)
+	const name = (query: string, ctx: TvContext = guest) =>
+		destinationName(at(query, 0, ctx).screen, ctx)
+
+	it("the key says where it leads, by the page's name", () => {
+		assert.equal(name("tv=tonight"), "Discover")
+		assert.equal(name("tv=tonight", member), "My shows")
+		assert.equal(name("tv=tonight&pick=1", member), "My movies")
+		assert.equal(name("tv=tonight&pick=2", member), "My shows")
+		assert.equal(name("tv=tonight", { ...member, tonight: [] }), "Discover")
+		assert.equal(name("tv=discover"), "Discover")
+		assert.equal(name("tv=discover&theme=crime"), "Discover")
+		assert.equal(name("tv=explorer"), "Explorer")
+		assert.equal(name("tv=explorer&island=i3"), "Explorer")
+		assert.equal(name("tv=taste"), "Taste")
+		assert.equal(name("tv=shows", member), "My shows")
+		assert.equal(name("tv=search&q=heist"), "Discover")
+	})
+
+	it("a title's page goes by the title's name once the page knows it", () => {
+		assert.equal(name("tv=title&title=movie-603"), "Title page")
+		assert.equal(
+			name("tv=title&title=movie-603", { ...guest, titleName: "The Matrix" }),
+			"The Matrix",
+		)
+	})
+
+	it("a screen without a page has no name for one", () => {
+		for (const query of ["", "tv=quiz", "tv=about", "tv=search", "tv=rate&title=movie-603"])
+			assert.equal(name(query), null, query)
+	})
 
 	it("Tonight, a member: the pick's own page", () => {
 		assert.equal(dest("tv=tonight", member), "/my-shows")

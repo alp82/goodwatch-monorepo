@@ -23,6 +23,8 @@ export type RoomKey =
 /** What the room shows of the TV's state, and where the Remotes' keys go. */
 export type RoomTv = {
 	power: "off" | "booting" | "on"
+	/** The Expand key has the focus: the picture stands back in its frame of brackets. */
+	framed?: boolean
 	menuOpen: boolean
 	/** The search screen is showing: the Remotes' Search key is lit. */
 	searching: boolean

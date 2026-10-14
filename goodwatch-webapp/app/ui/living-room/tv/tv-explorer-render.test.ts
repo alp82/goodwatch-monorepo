@@ -60,7 +60,7 @@ const tag = (html: string, id: string) =>
 	)?.[0] ?? ""
 const count = (html: string, part: string) => html.split(part).length - 1
 const BAR = ["bar:back", "bar:search", "bar:menu"]
-/** The Expand key is the machine's item; its place is kept, and slice 11 draws the key. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 
 test("every screen's items in the markup are exactly the machine's, in reading order, in both editions", () => {
@@ -75,8 +75,8 @@ test("every screen's items in the markup are exactly the machine's, in reading o
 	}))
 		for (const edition of ["desktop", "phone"] as const) {
 			const { items, html } = screen[edition]
-			assert.deepEqual(ids(html), drawn(items), `${name} ${edition}`)
-			assert.equal(count(html, "<button"), drawn(items).length)
+			assert.deepEqual(ids(html), items, `${name} ${edition}`)
+			assert.equal(count(html, "<button"), items.length)
 			assert.equal(focused(html).length, 1, `${name} ${edition}: one focus`)
 			assert.match(html, /data-tv-expand-place/)
 			assert.match(html, />Explorer</)
@@ -230,13 +230,13 @@ test("an island without titles says so and still sails on; one the map lacks has
 	}
 })
 
-test("the server, and the page until the map has reported, draw the bar alone", () => {
+test("the server, and the page until the map has reported, draw the bar and the Expand key alone", () => {
 	for (const html of [
 		rendered.first,
 		rendered.firstIsland,
 		rendered.reported,
 	]) {
-		assert.deepEqual(ids(html), BAR)
+		assert.deepEqual(ids(html), ["expand", ...BAR])
 		assert.doesNotMatch(html, /island|Sail to|not built/)
 		assert.equal(count(html, "<img"), 0)
 	}

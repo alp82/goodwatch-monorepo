@@ -75,7 +75,7 @@ const styleOf = (html: string, id: string) =>
 const heightOf = (html: string, id: string) =>
 	Number(/(?:^|;)height:(\d+)px/.exec(styleOf(html, id))?.[1] ?? Number.NaN)
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 const LEVELS = RATING_LEVELS.map((level) => `level:${level.score}`)
@@ -94,7 +94,7 @@ test("every screen's items in the markup are the machine's, in reading order, in
 	])
 		assert.deepEqual(
 			ids(screen.html),
-			drawn(screen.items),
+			screen.items,
 			`${screen.name} ${screen.edition}`,
 		)
 })
@@ -268,15 +268,15 @@ test("five scores and no sides yet: the quiz's picks as Made for you, four of th
 	}
 })
 
-test("the Expand key's corner is reserved and empty on Taste and a side, and the quiz and the rating have none", () => {
+test("the Expand key stands in its corner on Taste and a side, and the quiz and the rating have none", () => {
 	for (const screen of all(rendered.taste)) {
 		assert.match(
 			screen.html,
-			/<div data-tv-expand-place="true" class="[^"]*"><\/div>/,
+			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/,
 			`${screen.name} ${screen.edition}`,
 		)
 		assert.ok(screen.items.includes("expand"))
-		assert.ok(!ids(screen.html).includes("expand"))
+		assert.equal(count(screen.html, 'data-tv-item="expand"'), 1)
 	}
 	for (const screen of [...all(rendered.quiz), ...all(rendered.rate)]) {
 		assert.ok(!screen.html.includes("data-tv-expand-place"))
@@ -434,10 +434,10 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 	for (const p of rendered.phones)
 		for (const screen of ["start", "sides", "picks", "quiz", "rate"] as const) {
 			const { html, items } = p[screen]
-			assert.deepEqual(ids(html), drawn(items), `${p.phone} ${screen}`)
+			assert.deepEqual(ids(html), items, `${p.phone} ${screen}`)
 			// A side's tile and a title's poster fill what is left of the picture; the drive script measures them in
 			// the browser. Every other item is a key with its height from the rule.
-			const keys = drawn(items).filter(
+			const keys = items.filter(
 				(item) => !item.startsWith("side:") && !item.startsWith("title:"),
 			)
 			for (const item of keys) {
@@ -470,8 +470,15 @@ test("on the phone the last row keeps the Expand key's corner free, with or with
 })
 
 test("a screen in a chunk of its own is not in the server's HTML: its bar alone is, and no h1", () => {
+	// With the Expand key where the screen has a page: a focus that came back to it is on something.
+	assert.deepEqual(ids(rendered.first.quiz), BAR)
+	for (const html of [
+		rendered.first.taste,
+		rendered.first.side,
+		rendered.first.tasteWithData,
+	])
+		assert.deepEqual(ids(html), ["expand", ...BAR])
 	for (const html of Object.values(rendered.first)) {
-		assert.deepEqual(ids(html), BAR)
 		assert.ok(!html.includes("<template"))
 		assert.equal(count(html, "<h1"), 0)
 		assert.ok(!html.includes("Rate 5 titles"))

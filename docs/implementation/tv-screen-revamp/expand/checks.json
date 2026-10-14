@@ -1,0 +1,379 @@
+{
+	"taken": "2026-10-14T05:07:36.374Z",
+	"guest": {
+		"passed": 2705,
+		"failed": []
+	},
+	"member": {
+		"passed": 202,
+		"failed": []
+	},
+	"numbers": {
+		"the key on Tonight 1920x1080: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 1920x1080: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 1920x1080: ArrowUp from the key lands on": "change",
+		"the key on Discover, a theme's titles 1920x1080: ArrowUp from the key lands on": "change",
+		"the key on Discover, a style's titles 1920x1080: ArrowUp from the key lands on": "change",
+		"the key on the Explorer's map 1920x1080: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 1920x1080: ArrowUp from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 1920x1080: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 1920x1080: ArrowUp from the key lands on": "start-quiz",
+		"the key on a side 1920x1080: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 1920x1080: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 1920x1080: ArrowUp from the key lands on": "title:show-1396",
+		"the key on search results 1920x1080: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 1366x650: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 1366x650: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 1366x650: ArrowUp from the key lands on": "change",
+		"the key on Discover, a theme's titles 1366x650: ArrowUp from the key lands on": "change",
+		"the key on Discover, a style's titles 1366x650: ArrowUp from the key lands on": "change",
+		"the key on the Explorer's map 1366x650: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 1366x650: ArrowUp from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 1366x650: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 1366x650: ArrowUp from the key lands on": "start-quiz",
+		"the key on a side 1366x650: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 1366x650: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 1366x650: ArrowUp from the key lands on": "title:show-1396",
+		"the key on search results 1366x650: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 360x740: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 360x740: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 360x740: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a theme's titles 360x740: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a style's titles 360x740: ArrowLeft from the key lands on": "change",
+		"the key on the Explorer's map 360x740: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 360x740: ArrowLeft from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 360x740: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 360x740: ArrowLeft from the key lands on": "start-quiz",
+		"the key on a side 360x740: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 360x740: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 360x740: ArrowUp from the key lands on": "title:show-15226",
+		"the key on search results 360x740: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 375x667: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 375x667: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 375x667: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a theme's titles 375x667: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a style's titles 375x667: ArrowLeft from the key lands on": "change",
+		"the key on the Explorer's map 375x667: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 375x667: ArrowLeft from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 375x667: ArrowLeft from the key lands on": "start-quiz",
+		"the key on Taste, the sides 375x667: ArrowLeft from the key lands on": "start-quiz",
+		"the key on a side 375x667: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 375x667: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 375x667: ArrowUp from the key lands on": "title:show-549",
+		"the key on search results 375x667: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 390x844: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 390x844: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 390x844: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a theme's titles 390x844: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a style's titles 390x844: ArrowLeft from the key lands on": "change",
+		"the key on the Explorer's map 390x844: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 390x844: ArrowLeft from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 390x844: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 390x844: ArrowLeft from the key lands on": "start-quiz",
+		"the key on a side 390x844: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 390x844: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 390x844: ArrowUp from the key lands on": "title:show-15226",
+		"the key on search results 390x844: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 430x932: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 430x932: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 430x932: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a theme's titles 430x932: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a style's titles 430x932: ArrowLeft from the key lands on": "change",
+		"the key on the Explorer's map 430x932: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 430x932: ArrowLeft from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 430x932: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 430x932: ArrowLeft from the key lands on": "start-quiz",
+		"the key on a side 430x932: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 430x932: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 430x932: ArrowUp from the key lands on": "title:show-15226",
+		"the key on search results 430x932: ArrowUp from the key lands on": "title:show-5920",
+		"the key on Tonight 844x390: ArrowLeft from the key lands on": "another",
+		"the key on Discover, the choice 844x390: ArrowUp from the key lands on": "mood:mind",
+		"the key on Discover, a mood's titles 844x390: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a theme's titles 844x390: ArrowLeft from the key lands on": "change",
+		"the key on Discover, a style's titles 844x390: ArrowLeft from the key lands on": "change",
+		"the key on the Explorer's map 844x390: ArrowUp from the key lands on": "island:funny",
+		"the key on an island 844x390: ArrowLeft from the key lands on": "hop:sad",
+		"the key on Taste, before a taste 844x390: ArrowUp from the key lands on": "start-quiz",
+		"the key on Taste, the sides 844x390: ArrowLeft from the key lands on": "start-quiz",
+		"the key on a side 844x390: ArrowUp from the key lands on": "title:show-46648",
+		"the key on a title 844x390: ArrowLeft from the key lands on": "seen",
+		"the key on On Netflix 844x390: ArrowUp from the key lands on": "title:show-4656",
+		"the key on search results 844x390: ArrowUp from the key lands on": "title:show-5920",
+		"the key's smallest side at rest, px, by phone": {
+			"360x740": 44.5,
+			"375x667": 44.4,
+			"390x844": 44.2,
+			"430x932": 44.2,
+			"844x390": 52.7
+		},
+		"Tonight 1920x1080: keys to the Expand key": "ArrowRight ArrowRight",
+		"Tonight 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Discover, the choice 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Discover, a mood's titles 1920x1080: keys to the Expand key": "ArrowDown",
+		"Discover, a mood's titles 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Discover, a theme's titles 1920x1080: keys to the Expand key": "ArrowDown",
+		"Discover, a theme's titles 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Discover, a style's titles 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"the Explorer's map 1920x1080: keys to the Expand key": "ArrowDown ArrowDown",
+		"the Explorer's map 1920x1080: the TV button": "207 x 58 at 856, 64",
+		"an island 1920x1080: keys to the Expand key": "ArrowDown",
+		"an island 1920x1080: the TV button": "207 x 58 at 856, 64",
+		"Taste, before a taste 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Taste, the sides 1920x1080: keys to the Expand key": "ArrowDown ArrowDown",
+		"Taste, the sides 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"a side 1920x1080: keys to the Expand key": "ArrowDown",
+		"a side 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"a title 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"On Netflix 1920x1080: keys to the Expand key": "ArrowDown",
+		"On Netflix 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"search results 1920x1080: keys to the Expand key": "ArrowDown",
+		"search results 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"Tonight 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"Tonight 390x844: the TV button": "131 x 50 at 12, 783",
+		"Discover, the choice 390x844: keys to the Expand key": "ArrowDown ArrowDown",
+		"Discover, the choice 390x844: the TV button": "131 x 50 at 12, 783",
+		"Discover, a mood's titles 390x844: the TV button": "131 x 50 at 12, 783",
+		"Discover, a theme's titles 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"Discover, a theme's titles 390x844: the TV button": "131 x 50 at 12, 783",
+		"Discover, a style's titles 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"Discover, a style's titles 390x844: the TV button": "131 x 50 at 12, 783",
+		"the Explorer's map 390x844: the TV button": "131 x 50 at 12, 783",
+		"an island 390x844: keys to the Expand key": "ArrowDown ArrowRight ArrowRight",
+		"an island 390x844: the TV button": "131 x 50 at 12, 783",
+		"Taste, before a taste 390x844: keys to the Expand key": "ArrowDown",
+		"Taste, before a taste 390x844: the TV button": "131 x 50 at 12, 783",
+		"Taste, the sides 390x844: the TV button": "131 x 50 at 12, 783",
+		"a side 390x844: keys to the Expand key": "ArrowDown",
+		"a side 390x844: the TV button": "131 x 50 at 12, 783",
+		"a title 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"a title 390x844: the TV button": "131 x 50 at 12, 783",
+		"On Netflix 390x844: the TV button": "131 x 50 at 12, 783",
+		"search results 390x844: keys to the Expand key": "ArrowDown",
+		"search results 390x844: the TV button": "131 x 50 at 12, 783",
+		"Discover, a mood's titles 390x844: keys to the Expand key": "ArrowDown ArrowRight",
+		"the motion 1920x1080: the way out, s": 0.9,
+		"the motion 1920x1080: the way in, s": 0.6,
+		"two pages deep 1920x1080: the third page": "/show/67482-rupauls-drag-race-all-stars",
+		"at rest 1920x1080: on the page, what runs": {
+			"running": [],
+			"frames": 0
+		},
+		"the motion 390x844: the way out, s": 0.9,
+		"the motion 390x844: the way in, s": 0.6,
+		"two pages deep 390x844: the third page": "/show/67482-rupauls-drag-race-all-stars",
+		"at rest 390x844: on the page, what runs": {
+			"running": [],
+			"frames": 0
+		},
+		"the pointer on return: the tile under the resting cursor": "title:show-2261",
+		"the layout 1920x1080: the room": {
+			"edition": "desktop",
+			"place": "below",
+			"form": null,
+			"tv": {
+				"x": 316.97,
+				"y": 72.13,
+				"w": 1271.05,
+				"h": 686.48
+			}
+		},
+		"the layout 1366x650: the room": {
+			"edition": "desktop",
+			"place": "beside",
+			"form": null,
+			"tv": {
+				"x": 33.8,
+				"y": 79,
+				"w": 998.19,
+				"h": 539.11
+			}
+		},
+		"the layout 390x844: the room": {
+			"edition": "phone",
+			"place": null,
+			"form": "hand",
+			"tv": {
+				"x": 14,
+				"y": 77,
+				"w": 362,
+				"h": 301.66
+			}
+		},
+		"the layout 375x667: the room": {
+			"edition": "phone",
+			"place": null,
+			"form": "table",
+			"tv": {
+				"x": 14,
+				"y": 77,
+				"w": 347,
+				"h": 258
+			}
+		},
+		"the layout 844x390: the room": {
+			"edition": "landscape",
+			"place": null,
+			"form": "hand",
+			"tv": {
+				"x": 14,
+				"y": 13,
+				"w": 487.75,
+				"h": 364
+			}
+		},
+		"the pulse 1920x1080, run 1": {
+			"the transition's mark cleared at, ms": 3418,
+			"the pulse started after the mark cleared, ms": 29,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3961,
+			"the first sample that saw the pulse came after its start, ms": 48,
+			"the longest gap between two samples, ms": 190
+		},
+		"the pulse 1920x1080, run 2": {
+			"the transition's mark cleared at, ms": 3321,
+			"the pulse started after the mark cleared, ms": 25,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3950,
+			"the first sample that saw the pulse came after its start, ms": 16,
+			"the longest gap between two samples, ms": 179
+		},
+		"the pulse 1920x1080, run 3": {
+			"the transition's mark cleared at, ms": 4790,
+			"the pulse started after the mark cleared, ms": 21,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3935,
+			"the first sample that saw the pulse came after its start, ms": 77,
+			"the longest gap between two samples, ms": 150
+		},
+		"the pulse 390x844, run 1": {
+			"the transition's mark cleared at, ms": 3106,
+			"the pulse started after the mark cleared, ms": 23,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 20,
+			"from its start event to its end event, ms": 3897,
+			"the pulse ran, as sampled from outside, ms": 3856,
+			"the first sample that saw the pulse came after its start, ms": 76,
+			"the longest gap between two samples, ms": 180
+		},
+		"the pulse 390x844, run 2": {
+			"the transition's mark cleared at, ms": 3253,
+			"the pulse started after the mark cleared, ms": 7,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 18,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3964,
+			"the first sample that saw the pulse came after its start, ms": 14,
+			"the longest gap between two samples, ms": 174
+		},
+		"the pulse 390x844, run 3": {
+			"the transition's mark cleared at, ms": 3235,
+			"the pulse started after the mark cleared, ms": 12,
+			"the pulse runs, by its own clock, ms": 3900,
+			"its start event came after its start, ms": 19,
+			"from its start event to its end event, ms": 3899,
+			"the pulse ran, as sampled from outside, ms": 3971,
+			"the first sample that saw the pulse came after its start, ms": 12,
+			"the longest gap between two samples, ms": 190
+		},
+		"a typed #streaming address 1920x1080, run 1": {
+			"before the header is measured: the block's top, px": [
+				442,
+				239,
+				198,
+				192
+			],
+			"the header's bottom edge, px": [
+				157
+			],
+			"the header was measured after, ms": 3193,
+			"measured as": "93px",
+			"after it: the block's top, px": [
+				173
+			],
+			"settled after, ms": 3416
+		},
+		"a typed #streaming address 1920x1080, run 2": {
+			"before the header is measured: the block's top, px": [
+				442,
+				259,
+				208,
+				192
+			],
+			"the header's bottom edge, px": [
+				157
+			],
+			"the header was measured after, ms": 1345,
+			"measured as": "93px",
+			"after it: the block's top, px": [
+				173
+			],
+			"settled after, ms": 1694
+		},
+		"a typed #streaming address 390x844, run 1": {
+			"before the header is measured: the block's top, px": [
+				528,
+				436,
+				218,
+				193,
+				192
+			],
+			"the header's bottom edge, px": [
+				207
+			],
+			"the header was measured after, ms": 1576,
+			"measured as": "142.78125px",
+			"after it: the block's top, px": [
+				223
+			],
+			"settled after, ms": 1811
+		},
+		"a typed #streaming address 390x844, run 2": {
+			"before the header is measured: the block's top, px": [
+				528,
+				363,
+				218,
+				194,
+				192
+			],
+			"the header's bottom edge, px": [
+				207
+			],
+			"the header was measured after, ms": 992,
+			"measured as": "142.78125px",
+			"after it: the block's top, px": [
+				223
+			],
+			"settled after, ms": 1271
+		},
+		"clip discover desktop: from the press to the page standing, s": 2.16,
+		"clip discover phone: from the press to the page standing, s": 1.55,
+		"clip title desktop: from the press to the page standing, s": 2.21,
+		"clip title phone: from the press to the page standing, s": 1.66,
+		"the key on My shows 1920x1080: ArrowUp from the key lands on": "title:show-303",
+		"the key on My shows 1366x650: ArrowUp from the key lands on": "title:show-303",
+		"the key on My shows 360x740: ArrowUp from the key lands on": "title:show-302",
+		"the key on My shows 375x667: ArrowUp from the key lands on": "title:show-101",
+		"the key on My shows 390x844: ArrowUp from the key lands on": "title:show-302",
+		"the key on My shows 430x932: ArrowUp from the key lands on": "title:show-302",
+		"the key on My shows 844x390: ArrowUp from the key lands on": "title:show-309",
+		"My shows 1920x1080: keys to the Expand key": "ArrowDown",
+		"the harness's /my-shows says": "My shows",
+		"My shows 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"a member's Tonight 1920x1080: the TV button": "207 x 58 at 849, 64",
+		"My shows 390x844: keys to the Expand key": "ArrowDown",
+		"My shows 390x844: the TV button": "131 x 50 at 12, 783",
+		"a member's Tonight 390x844: the TV button": "131 x 50 at 12, 783",
+		"clip discover desktop: from Escape to the TV standing, s": 0.91,
+		"clip discover phone: from Escape to the TV standing, s": 0.84,
+		"clip title desktop: from Escape to the TV standing, s": 1,
+		"clip title phone: from Escape to the TV standing, s": 0.95,
+		"slice 5's Watch key part, rerun with the corrected checks (../tonight-title/drive.mjs, SIDE=guest PARTS=watch)": "93 passed, 0 failed; the pulse 3,900 ms at both sizes; a typed address 173 and 223 px"
+	}
+}

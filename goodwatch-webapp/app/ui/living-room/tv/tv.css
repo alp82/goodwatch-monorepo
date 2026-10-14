@@ -55,6 +55,36 @@
 	}
 }
 
+/* The frame around the picture while the Expand key has the focus (TvRoom.tsx): four amber brackets 14 px inside
+   the picture's edge, where the brackets of the way out stand at the press (`[data-tv-bracket]`, main.css). Those
+   take their place for as long as a transition is marked, so the two sets never show together. They do not
+   move: nothing of the frame animates at rest (#190). */
+.tvr-bracket {
+	position: absolute;
+	box-sizing: border-box;
+	border: 0 solid #fbbf24;
+	pointer-events: none;
+}
+.tvr-bracket:is([data-corner="0"], [data-corner="1"]) {
+	top: 14px;
+	border-top-width: 3px;
+}
+.tvr-bracket:is([data-corner="2"], [data-corner="3"]) {
+	bottom: 14px;
+	border-bottom-width: 3px;
+}
+.tvr-bracket:is([data-corner="0"], [data-corner="2"]) {
+	left: 14px;
+	border-left-width: 3px;
+}
+.tvr-bracket:is([data-corner="1"], [data-corner="3"]) {
+	right: 14px;
+	border-right-width: 3px;
+}
+html[data-tv-transition] .tvr-bracket {
+	visibility: hidden;
+}
+
 /* The TV's own pointer, the ring (TvPointer.tsx): a circle with a centre dot, white with a dark edge, so it reads
    on any picture. The pointing loop (pointing.ts) moves it by `transform` and writes its states as attributes.
    Rendering budget (#190): it moves by `transform` and shows by `opacity`; its shape changes are one-shot
@@ -245,6 +275,80 @@
 		transform: scale(1.06);
 		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 	}
+	/* The Expand key: a dark glass pill with an amber outline, amber once it has the focus. */
+	.tvc-x {
+		background: rgba(0, 0, 0, 0.5);
+		color: #fbbf24;
+		border-radius: 999px;
+		box-shadow: inset 0 0 0 2px rgba(251, 191, 36, 0.6);
+		font-weight: 700;
+	}
+	.tvc-x.tvc-on {
+		background: #fbbf24;
+		color: #000;
+		transform: scale(1.06);
+		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	}
+	/* Its motif: four brackets at the corners of a small picture. At rest they stand close to the picture; with
+	   the focus they move out twice and rest open. `transform` only, and the animation ends (#190). */
+	.tvc-x-arm {
+		position: absolute;
+		box-sizing: border-box;
+		border: 0 solid currentColor;
+		transform: translate(calc(var(--tvx-in-x) * 7.5px), calc(var(--tvx-in-y) * 5.5px));
+	}
+	.tvc-x-arm:is([data-corner="0"], [data-corner="1"]) {
+		top: 0;
+		border-top-width: 3px;
+		--tvx-in-y: 1;
+	}
+	.tvc-x-arm:is([data-corner="2"], [data-corner="3"]) {
+		bottom: 0;
+		border-bottom-width: 3px;
+		--tvx-in-y: -1;
+	}
+	.tvc-x-arm:is([data-corner="0"], [data-corner="2"]) {
+		left: 0;
+		border-left-width: 3px;
+		--tvx-in-x: 1;
+	}
+	.tvc-x-arm:is([data-corner="1"], [data-corner="3"]) {
+		right: 0;
+		border-right-width: 3px;
+		--tvx-in-x: -1;
+	}
+	.tvc-x-arm[data-corner="0"] {
+		border-top-left-radius: 3.6px;
+	}
+	.tvc-x-arm[data-corner="1"] {
+		border-top-right-radius: 3.6px;
+	}
+	.tvc-x-arm[data-corner="2"] {
+		border-bottom-left-radius: 3.6px;
+	}
+	.tvc-x-arm[data-corner="3"] {
+		border-bottom-right-radius: 3.6px;
+	}
+	.tvc-on .tvc-x-arm {
+		transform: none;
+		animation: tvc-x-out 0.9s ease-in-out 3 alternate both;
+	}
+	/* With the Expand key focused the whole picture steps back into its frame (`data-tv-framed` on the TV's box,
+	   TvRoom.tsx). The key keeps its place: it is moved against the step by as much (kit.tsx, `ExpandCorner`), so
+	   what points at it still does. One-shot transitions of `transform`. */
+	.tvc,
+	.tvc-x-place {
+		transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.tvc-x-place {
+		transform-origin: 100% 100%;
+	}
+	[data-tv-framed] .tvc {
+		transform: scale(0.94);
+	}
+	[data-tv-framed] .tvc-x-place {
+		transform: translate(var(--tvx-x), var(--tvx-y)) scale(1.0638);
+	}
 	/* Mini Discover's tabs: quiet until open. The open one is marked whether or not it has the focus. */
 	.tvc-tab {
 		color: rgba(255, 255, 255, 0.72);
@@ -319,8 +423,14 @@
 		transform: scale(1.04);
 	}
 }
+@keyframes tvc-x-out {
+	from {
+		transform: translate(calc(var(--tvx-in-x) * 7.5px), calc(var(--tvx-in-y) * 5.5px));
+	}
+}
 
 @media (prefers-reduced-motion: reduce) {
+	.tvc,
 	.tvc *,
 	.tvc *::after {
 		animation: none !important;

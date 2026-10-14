@@ -141,7 +141,8 @@ const read = (page) =>
 		if (!room) return { search: location.search, path: location.pathname, hash: location.hash, room: false, items: [], focus: [], labels: {}, layers: 0 }
 		const layers = [...room.querySelectorAll("[data-tv-layer]")]
 		const top = layers.at(-1)
-		const items = top ? [...top.querySelectorAll("[data-tv-item]")] : []
+		// The Expand key is slice 11's, drawn since; ../expand/drive.mjs checks it. Here it is left out, as before.
+		const items = top ? [...top.querySelectorAll("[data-tv-item]")].filter((el) => el.getAttribute("data-tv-item") !== "expand") : []
 		const id = (el) => el.getAttribute("data-tv-item")
 		const place = top?.querySelector("[data-tv-expand-place]")
 		return {
@@ -159,7 +160,7 @@ const read = (page) =>
 			text: top?.innerText ?? "",
 			toast: room.querySelector(".tvc-toast")?.textContent ?? null,
 			history: history.length,
-			expandPlace: place ? place.childElementCount : null,
+			expandPlace: place ? place.querySelectorAll(':scope > :not([data-tv-item="expand"])').length : null,
 			picture: top?.querySelector(":scope > .absolute.inset-0.overflow-hidden img")?.getAttribute("src") ?? null,
 		}
 	})
@@ -549,7 +550,7 @@ const layout = (page) =>
 		return {
 			k,
 			tv: { left: tv.left, top: tv.top, right: tv.right, bottom: tv.bottom },
-			items: [...layer.querySelectorAll("[data-tv-item]")].map((el) => ({
+			items: [...layer.querySelectorAll("[data-tv-item]")].filter((el) => el.getAttribute("data-tv-item") !== "expand").map((el) => ({
 				id: el.getAttribute("data-tv-item"),
 				...rest(el),
 				// What a key says is cut short where it does not fit.
@@ -739,16 +740,36 @@ const block = (page) =>
 		}
 	})
 
-/** Counts the pulse's animation events from now on, also on the page a navigation inside the app opens. */
+/**
+ * Counts the pulse's animation events from now on, also on the page a navigation inside the app opens, and keeps
+ * the animation's own timing (`__glowAt.clock`). The pulse is timed by its animation: sampled from outside, and even
+ * by its events, it looks shorter or longer whenever the page's main thread is busy as the pulse starts or ends
+ * (../expand/README.md, "Two timings of slice 5").
+ */
 const countPulses = (page) =>
 	page.evaluate(() => {
 		window.__glow = { start: 0, iteration: 0, end: 0 }
+		window.__glowAt = {}
 		for (const [type, name] of [
 			["animationstart", "start"],
 			["animationiteration", "iteration"],
 			["animationend", "end"],
 		])
-			document.addEventListener(type, (e) => e.animationName === "gw-watch-glow" && window.__glow[name]++, true)
+			document.addEventListener(
+				type,
+				(e) => {
+					if (e.animationName !== "gw-watch-glow") return
+					window.__glow[name]++
+					window.__glowAt[name] ??= performance.now()
+					// The animation's own clock: when it started on the document's timeline, and for how long it runs.
+					const pulse = e.target.getAnimations?.().find((one) => one.animationName === "gw-watch-glow")
+					if (name === "start" && pulse) {
+						const { duration, iterations, activeDuration } = pulse.effect.getComputedTiming()
+						window.__glowAt.clock = { startTime: pulse.startTime, duration, iterations, activeDuration }
+					}
+				},
+				true,
+			)
 	})
 
 /** Opens The Matrix's title screen as a guest in the United States, with `services` saved, and waits for its card. */
@@ -801,9 +822,14 @@ async function watch(size, own) {
 	const last = samples.at(-1)
 	check(last && !last.glow && last.animation === "none" && last.rules === 0, "the highlight ends by itself, and its rules leave the page")
 	is(last?.events, { start: 1, iteration: 2, end: 1 }, "it pulsed exactly three times")
-	const lasted = pulsing.length ? last.t - pulsing[0].t : 0
+	// How long it runs, by the animation's own clock; it ended (the events above) and was not cut short.
+	const at = await page.evaluate(() => window.__glowAt)
+	const lasted = Math.round(at.clock?.activeDuration ?? 0)
 	numbers[`${where}: the pulse lasted, ms`] = Math.round(lasted)
-	check(lasted > 3 * PULSE_MS - 400 && lasted < 3 * PULSE_MS + 600, `three pulses of ${PULSE_MS} ms: ${Math.round(lasted)} ms`)
+	numbers[`${where}: from its start event to its end event, ms`] = at.start != null && at.end != null ? Math.round(at.end - at.start) : null
+	numbers[`${where}: the pulse as sampled every 100 ms from outside, ms`] = pulsing.length ? Math.round(last.t - pulsing[0].t) : 0
+	is([at.clock?.iterations, at.clock?.duration], [3, PULSE_MS], `three pulses of ${PULSE_MS} ms`)
+	check(lasted === 3 * PULSE_MS, `the pulse runs ${3 * PULSE_MS} ms on the page's clock: ${Math.round(lasted)} ms`)
 	const rest = await sample(page, 1500)
 	check(rest.every((x) => !x.glow && x.animation === "none"), "nothing animates at rest afterwards")
 	is(await page.evaluate(() => document.getElementById("streaming").getAnimations().length), 0, "the block has no animation left")
@@ -896,6 +922,9 @@ async function watchEdges(own, pool) {
 	console.log(where)
 	for (const size of [DESKTOP, PHONE]) {
 		opened = await open(`${ORIGIN}${MATRIX.path}#streaming`, size, { room: false, storage: { country: "US" } })
+		// Until the page runs, the browser has scrolled by the server's guess of the header's height (112 px); the
+		// page lands on the block again once it has measured the header. On a busy machine that takes seconds.
+		await opened.page.waitForFunction(() => document.querySelector("main")?.style.getPropertyValue("--details-header-height"), null, { timeout: 60000 }).catch(() => {})
 		samples = await sample(opened.page, 3000)
 		check(samples.length > 0 && samples.every((x) => !x.glow && x.rules === 0 && x.animation === "none"), `${size.join("x")}: the block does not glow`)
 		check(samples.every((x) => x.tabindex === null && !x.focused), `${size.join("x")}: the block is not focused and takes no focus`)
