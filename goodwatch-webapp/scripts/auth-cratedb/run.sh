@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+node --version
 if [[ -S "/run/user/$(id -u)/docker.sock" ]]; then
   export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
 else
