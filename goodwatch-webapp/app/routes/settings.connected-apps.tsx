@@ -66,7 +66,7 @@ function AppRow({ connected, now, onDisconnected }: { connected: ConnectedApp; n
 	const [confirming, setConfirming] = useState(false)
 	const [busy, setBusy] = useState(false)
 	const [failed, setFailed] = useState(false)
-	const onComputer = app.host === "this computer"
+	const onComputer = app.returnsTo === "this computer"
 	const disconnect = async () => {
 		setBusy(true)
 		setFailed(false)

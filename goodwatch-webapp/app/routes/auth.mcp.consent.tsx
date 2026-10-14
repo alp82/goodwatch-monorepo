@@ -23,7 +23,6 @@ import type { ConsentApp, ConsentView } from "~/utils/mcp-connect"
 import { ConnectAppBadge, GoodWatchBadge } from "~/ui/auth/connect"
 import { APP_CAN_CHANGE, APP_CAN_NEVER, APP_CAN_SEE, CONNECTED_APPS_PATH } from "~/ui/connector/connector"
 import { Spinner } from "~/ui/wait/Spinner"
-import { useAuthClient } from "~/utils/auth-client"
 
 export const handle = STANDALONE
 
@@ -39,7 +38,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const headers = consentHeaders(request)
 	if (view instanceof Response) {
 		for (const [key, value] of headers) if (!view.headers.has(key)) view.headers.set(key, value)
-		return view
+		// A redirect (sign in first) is followed; any other answer (an expired request, an unknown app) is the error page.
+		if (view.status >= 300 && view.status < 400) return view
+		throw view
 	}
 	return json(view, { headers })
 }
@@ -47,7 +48,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const answer = await mcpConsentAction(request)
 	for (const [key, value] of consentHeaders(request)) if (!answer.headers.has(key)) answer.headers.set(key, value)
-	return answer
+	if (answer.status >= 300 && answer.status < 400) return answer
+	throw answer
 }
 
 type Item = { icon: ComponentType<SVGProps<SVGSVGElement>>; text: string }
@@ -110,7 +112,7 @@ export default function Consent() {
 				</Form>
 				{!leaving && (
 					<p className="text-center text-xs leading-relaxed text-gray-500">
-						Afterwards you go back to {app.host === "this computer" ? app.name : app.host}. Disconnect {app.name} any time in
+						Afterwards you go back to {app.returnsTo === "this computer" ? `${app.name} on this computer` : app.returnsTo}. Disconnect {app.name} any time in
 						Settings, Connected apps.
 					</p>
 				)}
@@ -150,7 +152,7 @@ function UnverifiedWarning({ app }: { app: ConsentApp }) {
 			<p className="font-semibold">GoodWatch can't check who made this app.</p>
 			<p className="mt-1">
 				It calls itself "{app.name}". Only allow it if you started this connection yourself, in an app you trust. It
-				returns to {app.host}.
+				returns to {app.returnsTo}.
 			</p>
 		</div>
 	)
@@ -158,11 +160,13 @@ function UnverifiedWarning({ app }: { app: ConsentApp }) {
 
 // "Not you?" signs out and starts the app's request again, so it asks the right member to sign in.
 function SignedInAs({ email, restartUrl }: { email: string; restartUrl: string }) {
-	const auth = useAuthClient()
 	const [busy, setBusy] = useState(false)
+	// Straight to the sign-out route: rerunning this page's loader signed out would race the restart.
 	const switchAccount = async () => {
 		setBusy(true)
-		await auth.signOut()
+		try {
+			await fetch("/api/auth/sign-out", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+		} catch {}
 		window.location.assign(restartUrl)
 	}
 	return (
@@ -226,7 +230,7 @@ function Leaving({ app, allowed }: { app: ConsentApp; allowed: boolean }): React
 			)}
 			<h1 className="text-2xl font-bold text-white">{allowed ? `${app.name} is connected` : `${app.name} was not connected`}</h1>
 			<div className="flex items-center gap-2 text-gray-400">
-				<Spinner size="small" /> Taking you back to {app.host === "this computer" ? app.name : app.host}…
+				<Spinner size="small" /> Taking you back to {app.returnsTo === "this computer" ? app.name : app.returnsTo}…
 			</div>
 			{allowed && (
 				<p className="text-sm text-gray-500">

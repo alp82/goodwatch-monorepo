@@ -4,8 +4,10 @@
 /** How the page shows the app. Verified means it published its details (CIMD); one that registered itself (DCR) is not. */
 export type ConsentApp = {
 	name: string
-	/** Where its details live (CIMD), or where it returns to. "this computer" for a loopback callback. */
+	/** Where its details live (CIMD), or else where it returns to. */
 	host: string
+	/** Where the browser goes after the answer: a host, or "this computer" for a loopback callback (Claude Code). */
+	returnsTo: string
 	verified: boolean
 	kind: "claude" | "claude-code" | "chatgpt" | null
 }

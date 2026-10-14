@@ -10,7 +10,6 @@ type AuthService = ReturnType<typeof createGoodwatchAuth>
 // the member here with a signed query; nothing in it is trusted before the signature is checked. The sign-in step is
 // the site's own sign-in page (the provider's loginPage), which sends the same signed query along.
 
-
 /** The security headers of the consent page. `request` names the callback that a redirect after the form may go to. */
 export function consentHeaders(request: Request): Headers {
 	const headers = new Headers({
@@ -114,16 +113,16 @@ export function describeApp(input: {
 	redirectUri?: string | null
 }): ConsentApp {
 	const name = input.name?.trim() || "An app"
+	let returnsTo = ""
+	try {
+		const callback = new URL(input.redirectUri ?? "")
+		returnsTo = ["127.0.0.1", "localhost", "[::1]"].includes(callback.hostname) ? "this computer" : callback.hostname
+	} catch {}
 	let host = ""
 	try {
 		// A published client's id is the address of its details (CIMD).
 		if (input.verified) host = new URL(input.clientId).hostname
 	} catch {}
-	if (!host)
-		try {
-			const callback = new URL(input.redirectUri ?? "")
-			host = ["127.0.0.1", "localhost", "[::1]"].includes(callback.hostname) ? "this computer" : callback.hostname
-		} catch {}
 	const lower = name.toLowerCase()
 	const kind =
 		input.verified && /claude code/.test(lower)
@@ -133,7 +132,7 @@ export function describeApp(input: {
 				: input.verified && /chatgpt|openai/.test(lower)
 					? "chatgpt"
 					: null
-	return { name, host: host || "unknown", verified: input.verified, kind }
+	return { name, host: host || returnsTo || "unknown", returnsTo: returnsTo || "the app", verified: input.verified, kind }
 }
 
 async function service() {
