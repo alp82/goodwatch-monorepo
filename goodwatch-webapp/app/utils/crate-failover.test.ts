@@ -6,9 +6,9 @@ import { CrateError, CrateTimeoutError, execute, getCrateClient, insertRows, que
 type Statement = { stmt: string; args: unknown[] }
 type Handler = (statement: Statement, req: IncomingMessage, res: ServerResponse) => void
 
-const answer = (res: ServerResponse) => {
+const answer = (res: ServerResponse, n = 1) => {
 	res.setHeader("Content-Type", "application/json")
-	res.end(JSON.stringify({ cols: ["n"], col_types: [9], rows: [[1]], rowcount: 1, duration: 1 }))
+	res.end(JSON.stringify({ cols: ["n"], col_types: [9], rows: [[n]], rowcount: 1, duration: 1 }))
 }
 
 async function cluster(t: TestContext, handlers: Handler[]) {
@@ -253,4 +253,19 @@ test("a single coordinator's routing retry uses the remaining timeout rather tha
 		assert.ok(error.timeoutMs < 450, `Retry received ${error.timeoutMs} ms after its backoff`)
 		return true
 	})
+})
+
+test("an insert helper without every fixed key returns a lost response without replaying", async (t) => {
+	const received = await cluster(t, Array.from({ length: 3 }, () => (_, req) => req.socket.destroy()))
+	await assert.rejects(insertRows("saved", ["n"], [[1]], { conflict: ["id"] }), { code: "ECONNRESET" })
+	assert.equal(received.flat().length, 1)
+})
+
+test("an upsert helper without every fixed key returns the original lost response without readback or replay", async (t) => {
+	const received = await cluster(t, Array.from({ length: 3 }, () => ({ stmt }, req, res) => {
+		if (stmt.includes("INSERT")) req.socket.destroy()
+		else answer(res, 0)
+	}))
+	await assert.rejects(upsert({ table: "saved", data: [{ n: 1 }], conflictColumns: ["id"] }), { code: "ECONNRESET" })
+	assert.equal(received.flat().length, 1)
 })

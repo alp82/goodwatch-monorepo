@@ -486,6 +486,7 @@ export const upsert = async ({
 	`
 	const writeRow = async (row: (typeof rows)[number]) => {
 		const record = Object.fromEntries(allColumns.map((col, i) => [col, row[i]]))
+		const fixedKey = conflictColumns.length > 0 && conflictColumns.every((col) => record[col] != null)
 		const readBackParams = [
 			...conflictColumns.map(col => record[col]),
 			...(updateClause === "NOTHING" ? [] : [now]),
@@ -494,13 +495,13 @@ export const upsert = async ({
 			try {
 				return await client.execute(sql, row)
 			} catch (error) {
-				if (!isRecoverableError(error)) throw error
+				if (!fixedKey || !isRecoverableError(error)) throw error
 			}
-			// The write timed out but may still have landed. Primary key lookups are real-time in CrateDB.
+			// The response was lost but the write may have landed. Primary key lookups are real-time in CrateDB.
 			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
 			if (n > 0) return { rowcount: 1 }
 		}
-		throw new Error(`Saving to ${table} timed out twice and the row is not stored. Please try again.`)
+		throw new Error(`Saving to ${table} could not be confirmed after two attempts. Please try again.`)
 	}
 
 	// Execute the query
@@ -571,13 +572,16 @@ export const insertRows = async (
 	let statements = 0
 	for (let start = 0; start < rows.length; start += chunk) {
 		const batch = rows.slice(start, start + chunk)
+		const keyIndexes = conflict.map((name) => columns.indexOf(name))
+		const fixedKeys = keyIndexes.length > 0 && keyIndexes.every((index) => index >= 0) &&
+			batch.every((row) => keyIndexes.every((index) => row[index] != null))
 		const sql = `INSERT INTO ${table} (${quoted(columns)}) VALUES ${batch.map(() => tuple).join(", ")} ON CONFLICT (${quoted(conflict)}) DO NOTHING`
 		const params = batch.flat() as (string | number | Date)[]
 		let result: { rowcount?: number }
 		try {
 			result = await client.execute(sql, params)
 		} catch (error) {
-			if (!isRecoverableError(error)) throw error
+			if (!fixedKeys || !isRecoverableError(error)) throw error
 			result = await client.execute(sql, params)
 		}
 		rowcount += result.rowcount || 0
