@@ -1369,6 +1369,9 @@ brings every file back. What was slice 14 is part of this slice; there is no sli
 
 #### Slice 15: the `REC_*` flags go
 
+**Built** on `chore/remove-rec-flags` on October 14, 2026, one commit per flag: what was done, what was kept and
+the proof are in [rec-flags/README.md](rec-flags/README.md).
+
 Decided by the owner: after the revamp is merged, every `REC_*` flag is removed, what `on` does becomes what the site
 does, and the code, routes, assets and settings that only `off` or `preview` reached are deleted.
 
