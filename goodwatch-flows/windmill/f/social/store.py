@@ -75,6 +75,19 @@ class Store:
             self.db.execute('REFRESH TABLE doc.' + table)
 
     def save_posts(self, posts):
+        if not posts:
+            return
+        prior = {r['post_id']: r for r in self.db.select(
+            'SELECT * FROM doc.social_content_quality WHERE post_id=ANY(?)', [[p['post_id'] for p in posts]])}
+        changed = [p['post_id'] for p in posts if p['post_id'] in prior and (
+            prior[p['post_id']]['content_hash'] != p['content_hash'] or
+            prior[p['post_id']]['version'] != quality.VERSION or
+            json.loads(prior[p['post_id']]['evidence'] or '{}') != (p.get('quality_evidence') or {}))]
+        if changed:
+            # Invalidate before saving changed link/profile evidence, even when the
+            # visible text and content hash are unchanged. Readers fail closed.
+            self.db.execute("UPDATE doc.social_content_quality SET status='reject',reasons='[\"revalidation_pending\"]' WHERE post_id=ANY(?)", [changed])
+            self.refresh('social_content_quality')
         at = now().isoformat()
         for p in posts:
             cols = ['post_id', 'source', 'source_id', 'url', 'author_id', 'author', 'published_at',
@@ -84,12 +97,15 @@ class Store:
             self.db.execute(f"INSERT INTO doc.social_post ({','.join(cols)},discovered_at,last_seen_at,checked_at) VALUES ({','.join('?' for _ in cols)},?,?,?) ON CONFLICT (post_id) DO UPDATE SET {updates},last_seen_at=excluded.last_seen_at",
                             [p[c] for c in cols] + [at, at, at])
         self.refresh('social_post')
-        self.screen(posts)
+        self.screen(posts, previous=prior)
 
-    def screen(self, posts):
+    def screen(self, posts, *, previous=None):
         """Persist current decisions and unpublish rejects, including author patterns."""
         if not posts:
             return {}
+        if previous is None:
+            previous = {r['post_id']: r for r in self.db.select(
+                'SELECT post_id,status FROM doc.social_content_quality WHERE post_id=ANY(?)', [[p['post_id'] for p in posts]])}
         active = {r['post_id'] for r in self.db.select(
             'SELECT post_id FROM doc.social_post WHERE post_id=ANY(?) AND deleted_at IS NULL',
             [[p['post_id'] for p in posts]])}
@@ -99,8 +115,13 @@ class Store:
             LEFT JOIN doc.social_content_quality q ON q.post_id=p.post_id AND q.content_hash=p.content_hash
             WHERE p.deleted_at IS NULL AND p.source IN ('bluesky','mastodon') AND p.author_id=ANY(?)
             ORDER BY p.published_at DESC LIMIT 10001''', [authors]) if authors else []
+        bad_profiles = {(p['source'], p.get('author_id')): (p.get('quality_evidence') or {}).get('profile')
+            for p in posts if set(quality.evaluate(p)['reasons']) & {'new_account', 'high_post_rate', 'no_profile', 'declared_bot'}}
         for p in corpus:
             p['quality_evidence'] = json.loads(p.pop('evidence') or '{}')
+            profile = bad_profiles.get((p['source'], p.get('author_id')))
+            if profile:
+                p['quality_evidence']['profile'] = profile
         if len(corpus) > 10000:
             for p in posts:
                 if p['source'] in ('bluesky', 'mastodon'):
@@ -112,7 +133,7 @@ class Store:
         target_ids = {p['post_id'] for p in posts}
         for p in merged.values():
             verdict = decisions[p['post_id']]
-            if p['post_id'] not in target_ids and 'repetitive_author' not in verdict['reasons']:
+            if p['post_id'] not in target_ids and not (set(verdict['reasons']) & {'repetitive_author', 'new_account', 'high_post_rate', 'no_profile', 'declared_bot'}):
                 continue
             evidence = dict(p.get('quality_evidence') or {})
             if 'repetitive_author' in verdict['reasons']:
@@ -123,6 +144,8 @@ class Store:
                 status=excluded.status,reasons=excluded.reasons,evidence=excluded.evidence,checked_at=excluded.checked_at''',
                 [p['post_id'], p['content_hash'], quality.VERSION, verdict['status'], json.dumps(verdict['reasons']),
                  json.dumps(evidence, ensure_ascii=False), now().isoformat()])
+            if verdict['status'] == 'pass' and previous.get(p['post_id'], {}).get('status') == 'reject':
+                self.db.execute('UPDATE doc.social_post SET processed_hash=NULL WHERE post_id=? AND content_hash=?', [p['post_id'], p['content_hash']])
             if verdict['status'] != 'pass':
                 self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [p['post_id']])
         self.refresh('social_content_quality', 'social_title_link')

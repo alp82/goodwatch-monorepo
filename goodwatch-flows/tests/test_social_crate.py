@@ -6,6 +6,7 @@ from pathlib import Path
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
+from datetime import timedelta
 from f.social.common import now, post
 from f.social.store import Crate, Store
 
@@ -26,6 +27,9 @@ class CrateLifecycleTests(unittest.TestCase):
     def item(self, text='A thoughtful review of this movie', source='rss'):
         identity = 'https://example.com/social-test-' + uuid4().hex
         item = post(source, identity, identity, self.author_id, 'Test fixture', now(), text, '', 'test:556')
+        if source == 'bluesky':
+            item['quality_evidence'] = {'links_complete': True, 'urls': [], 'profile': {
+                'present': True, 'created_at': (now()-timedelta(days=365)).isoformat(), 'posts_count': 50}}
         self.posts.append(item)
         self.store.save_posts([item])
         self.store.publish(item, [self.link])
@@ -108,3 +112,21 @@ class CrateLifecycleTests(unittest.TestCase):
         self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [item['post_id']])
         self.store.refresh('social_content_quality')
         self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+
+    def test_new_account_rejection_can_be_reprocessed_after_account_qualifies(self):
+        item = self.item('A thoughtful review of Dune with lovely cinematography.', 'bluesky')
+        item['quality_evidence']['profile']['created_at'] = now().isoformat()
+        self.store.save_posts([item])
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.pending('bluesky', 10000)))
+        item['quality_evidence']['profile']['created_at'] = (now()-timedelta(days=365)).isoformat()
+        self.store.save_posts([item])
+        self.assertTrue(any(p['post_id'] == item['post_id'] for p in self.store.pending('bluesky', 10000)))
+
+    def test_new_batch_repetition_revokes_earlier_links_by_same_author(self):
+        first = self.item('Today we celebrate Dune, a classic movie from our daily movie archives. Join us every day for another amazing classic movie.', 'bluesky')
+        second = self.item('Today we celebrate Alien, a classic movie from our daily movie archives. Join us every day for another amazing classic movie.', 'bluesky')
+        third = self.item('Today we celebrate Jaws, a classic movie from our daily movie archives. Join us every day for another amazing classic movie.', 'bluesky')
+        self.assertFalse(any(p['post_id'] in {first['post_id'], second['post_id'], third['post_id']} for p in self.store.read_title('movie', self.title_id)))
+        self.store.publish(first, [self.link])
+        self.store.refresh()
+        self.assertFalse(any(p['post_id'] == first['post_id'] for p in self.store.read_title('movie', self.title_id)))

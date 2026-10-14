@@ -1,5 +1,6 @@
 """Conservative, deterministic publication gate, independent of title identity."""
 import re
+import math
 import unicodedata
 from urllib.parse import urlsplit
 from html.parser import HTMLParser
@@ -61,12 +62,16 @@ def within(host, domains):
     return any(host == d or host.endswith('.' + d) for d in domains)
 
 
+def clean_text(value):
+    return ''.join(c for c in unicodedata.normalize('NFKC', value) if unicodedata.category(c) != 'Cf')
+
+
 def evaluate(item, *, at=None):
     # This inventory consists exclusively of verified official distributor channels.
     if item['source'] == 'youtube':
         return {'status': 'pass', 'reasons': []}
-    text = unicodedata.normalize('NFKC', item.get('text') or '')
-    context = unicodedata.normalize('NFKC', item.get('context') or '')
+    text = clean_text(item.get('text') or '')
+    context = clean_text(item.get('context') or '')
     reasons = []
     if PROMOTION.search(text + '\n' + context):
         reasons.append('stream_promotion')
@@ -76,7 +81,7 @@ def evaluate(item, *, at=None):
     for flag in ('opted_out', 'source_content_changed', 'incomplete_author_corpus'):
         if evidence.get(flag):
             reasons.append(flag)
-    context += '\n' + (evidence.get('extra_text') or '')
+    context += '\n' + clean_text(evidence.get('extra_text') or '')
     if PROMOTION.search(context):
         reasons.append('stream_promotion')
     urls = set(evidence.get('urls') or []) | set(urls_in(text + '\n' + context))
@@ -104,9 +109,12 @@ def evaluate(item, *, at=None):
             age = ((at or now()) - stamp(profile['created_at'])).total_seconds() / 86400
             if age < 7:
                 reasons.append('new_account')
-            if float(profile['posts_count']) / max(age, 1) > 100:
+            count = float(profile['posts_count'])
+            if not math.isfinite(count) or count < 0:
+                raise ValueError('Invalid post count')
+            if count / max(age, 1) > 100:
                 reasons.append('high_post_rate')
-        except (KeyError, ValueError, TypeError):
+        except (KeyError, ValueError, TypeError, AttributeError, OverflowError):
             if item['source'] == 'bluesky':
                 reasons.append('missing_account_metrics')
     if evidence.get('repetitive_author'):

@@ -117,3 +117,10 @@ class QualityTests(unittest.TestCase):
         item = self.item('Mobile Suit Gundam (2015)\nEpisode 14 - Vessel of Hope\n22:19.779')
         self.assertIn('automated_frame_post', evaluate(item)['reasons'])
         self.assertIn('stream_promotion', evaluate(self.item('The latest Dune movie is here #WatchFree #FullMovie'))['reasons'])
+
+    def test_missing_account_metrics_and_invisible_promotion_fail_closed(self):
+        from f.social.quality import evaluate
+        item = self.item('Dune has beautiful images and an extraordinary score.')
+        item['quality_evidence']['profile']['created_at'] = None
+        self.assertIn('missing_account_metrics', evaluate(item)['reasons'])
+        self.assertIn('stream_promotion', evaluate(self.item('Dune w\u200batch free tonight and enjoy it.'))['reasons'])
