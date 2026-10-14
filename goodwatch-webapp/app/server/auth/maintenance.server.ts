@@ -3,7 +3,8 @@ import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authM
 import { readCapacity, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
-type Options = { sql: AuthSql; encryptionSecret: string; encryptionKeys?: AuthEncryptionKeys; cursor?: string; batchSize?: number; now?: Date }
+export type AuthMaintenanceOptions = { sql: AuthSql; encryptionSecret: string; encryptionKeys?: AuthEncryptionKeys; cursor?: string; batchSize?: number; now?: Date }
+type Options = AuthMaintenanceOptions
 type Envelope = { row: Record<string, unknown>; deleted: boolean; emailClaim?: string; deletedAt?: string; admission?: AuthAdmission; admissionFence?: number }
 type Receipt = { operation: string; baseSeq: number; at?: string }
 
@@ -85,7 +86,7 @@ export async function collectAuthGarbage(options: Options & { model: string; now
   const envelope: Envelope = codec.decode(current[0], `${name}:${id}:payload`)
   if (envelope.row.id !== id || typeof envelope.deleted !== "boolean") throw new Error("Invalid authenticated auth row")
   const receipts: Receipt[] = codec.decode(current[1], `${name}:${id}:receipts`)
-  const expired = !envelope.deleted && expiringModels.has(model) && typeof envelope.row.expiresAt === "string" && new Date(envelope.row.expiresAt).getTime() <= now.getTime()
+  const expired = !envelope.deleted && (expiringModels.has(model) || model === "jwks") && typeof envelope.row.expiresAt === "string" && new Date(envelope.row.expiresAt).getTime() + (model === "jwks" ? 86400000 : 0) <= now.getTime()
   if (envelope.deleted && envelope.deletedAt && now.getTime() - new Date(envelope.deletedAt).getTime() >= retentionMs && reusableModels.has(model) && !envelope.admission && !envelope.admissionFence) {
    const result = await sql(`DELETE FROM ${name} WHERE id=? AND _seq_no=? AND _primary_term=?`, [id, current[2], current[3]])
    if (result.rowcount === 1) report.purged++

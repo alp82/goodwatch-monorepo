@@ -543,3 +543,31 @@ test("revoking a refresh token disconnects that grant immediately for MCP JWTs a
 		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
 	}
 })
+
+test("durable signing keys rotate after thirty days and retire only after their verification grace", async (t) => {
+	const { decodeProtectedHeader } = await import("jose")
+	const { collectAuthGarbage } = await import("./maintenance.server.ts")
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	const issued = await grant()
+	const oldKid = decodeProtectedHeader(issued.token.access_token).kid
+	t.mock.timers.tick(30 * 86400000 + 1000)
+	const refresh = async (token: string) => {
+		const response = await memberAuth.handler(new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: token, client_id: issued.client.client_id, resource }),
+		}))
+		assert.equal(response.status, 200)
+		return response.json()
+	}
+	const rotated = await refresh(issued.token.refresh_token)
+	const newKid = decodeProtectedHeader(rotated.access_token).kid
+	assert.notEqual(newKid, oldKid)
+	assert.ok((await memberAuth.api.getJwks()).keys.some(key => key.kid === oldKid))
+	t.mock.timers.tick(86400000 + 1000)
+	const collected = await collectAuthGarbage({ sql, encryptionSecret: "disposable-local-auth-integration-key-548", model: "jwks" })
+	assert.ok(collected.expired >= 1)
+	const keys = (await memberAuth.api.getJwks()).keys
+	assert.equal(keys.some(key => key.kid === oldKid), false)
+	assert.ok(keys.some(key => key.kid === newKid))
+	await refresh(rotated.refresh_token)
+})

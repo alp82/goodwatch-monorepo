@@ -48,7 +48,7 @@ export function createGoodwatchAuth(options: {
 		}),
 		plugins: options.mcp
 			? [
-					jwt(),
+					jwt({ jwks: { rotationInterval: 30 * 86400, gracePeriod: 86400 } }),
 					mcp({
 						loginPage: "/auth/mcp/login",
 						consentPage: "/auth/mcp/consent",
