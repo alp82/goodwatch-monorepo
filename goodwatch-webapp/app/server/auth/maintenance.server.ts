@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto"
+import { createHmac, createHash, randomUUID } from "node:crypto"
 import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authModels, authModelTable } from "./crate-adapter.server.ts"
 import { readCapacity, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec, type AuthEncryptionKeys } from "./payload-codec.server.ts"
@@ -214,6 +214,86 @@ export async function rotateAuthEncryption(options: Options & { model: string })
   const result = await sql(`UPDATE ${name} SET payload=?,receipts=? WHERE id=? AND _seq_no=? AND _primary_term=?`, [codec.encode(envelope, `${aad}:payload`), codec.encode(receipts, `${aad}:receipts`), id, current[2], current[3]])
   if (result.rowcount === 1) report.rotated++
   else report.conflicted++
+ }
+ return report
+}
+
+export const reconcilableAuthModels = ["account", "session", "oauthClient", "oauthConsent", "oauthClientResource", "oauthRefreshToken", "oauthAccessToken"]
+
+/** Remove leftovers of multi-row auth operations. Authorization remains authoritative between sweeps. */
+export async function reconcileAuthRows(options: Options & { model: string; storage?: { delete(key: string): Promise<unknown> } }) {
+ const { sql, model, cursor } = options
+ if (!reconcilableAuthModels.includes(model)) throw new Error("Unsupported reconciliation model")
+ const codec = authPayloadCodec(options.encryptionSecret, options.encryptionKeys)
+ const size = batchSize(options.batchSize)
+ const now = options.now ?? new Date()
+ if (!Number.isFinite(now.getTime())) throw new Error("Invalid maintenance time")
+ const read = async (parentModel: string, id: string) => {
+  const name = authModelTable(parentModel)
+  const stored = (await sql(`SELECT payload,receipts,_seq_no,_primary_term FROM ${name} WHERE id=?`, [id])).rows[0]
+  if (!stored) return null
+  const envelope: Envelope = codec.decode(stored[0], `${name}:${id}:payload`)
+  if (envelope.row.id !== id || typeof envelope.deleted !== "boolean") throw new Error("Invalid authenticated auth row")
+  return { envelope, receipts: codec.decode(stored[1], `${name}:${id}:receipts`) as Receipt[], seq: stored[2], term: stored[3] }
+ }
+ const remove = async (targetModel: string, id: string, stored: NonNullable<Awaited<ReturnType<typeof read>>>) => {
+  const name = authModelTable(targetModel)
+  const envelope: Envelope = { ...stored.envelope, row: { id }, deleted: true, deletedAt: now.toISOString(), emailClaim: undefined }
+  const receipts = [...stored.receipts, { operation: randomUUID(), baseSeq: Number(stored.seq), at: now.toISOString() }].slice(-256)
+  return (await sql(`UPDATE ${name} SET payload=?,receipts=?,deleted=true,lookup=?,created_at=NULL,expires_at=NULL WHERE id=? AND _seq_no=? AND _primary_term=?`, [codec.encode(envelope, `${name}:${id}:payload`), codec.encode(receipts, `${name}:${id}:receipts`), {}, id, stored.seq, stored.term])).rowcount === 1
+ }
+ const name = authModelTable(model)
+ await sql(`REFRESH TABLE ${name}`)
+ const page = await sql(`SELECT id FROM ${name} ${cursor === undefined ? "" : "WHERE id > ?"} ORDER BY id LIMIT ${size + 1}`, cursor === undefined ? [] : [cursor])
+ const report = { scanned: 0, removed: 0, conflicted: 0, cursor: null as string | null, complete: page.rows.length <= size }
+ for (const [value] of page.rows.slice(0, size)) {
+  const id = String(value)
+  report.scanned++
+  report.cursor = id
+  const current = await read(model, id)
+  if (!current || current.envelope.deleted) continue
+  const row = current.envelope.row
+  const user = typeof row.userId === "string" ? await read("user", row.userId) : null
+  let orphan = (model === "account" || model === "session") && (!user || user.envelope.deleted || model === "session" && !user.envelope.row.emailVerified)
+  if (model === "oauthClient" && typeof row.userId === "string") orphan = !user || user.envelope.deleted
+  if (["oauthConsent", "oauthRefreshToken", "oauthAccessToken", "oauthClientResource"].includes(model)) {
+   const client = typeof row.clientId === "string" ? await read("oauthClient", row.clientId) : null
+   orphan = !client || client.envelope.deleted || client.envelope.row.disabled === true
+   if (model !== "oauthClientResource") orphan ||= !user || user.envelope.deleted || !user.envelope.row.emailVerified
+   else {
+    const resource = typeof row.resourceId === "string" ? await read("oauthResource", row.resourceId) : null
+    orphan ||= !resource || resource.envelope.deleted
+   }
+  }
+  if (["oauthRefreshToken", "oauthAccessToken"].includes(model) && !orphan) {
+   const grantId = createHash("sha256").update(JSON.stringify([row.clientId, row.userId, row.referenceId ?? null])).digest("hex")
+   const consent = await read("oauthConsent", grantId)
+   orphan = !consent || consent.envelope.deleted
+   if (consent && !orphan) {
+    const grant = consent.envelope.row
+    if (model === "oauthRefreshToken") {
+     if (row.grantVersion) orphan ||= row.grantVersion !== grant.grantVersion
+     else if (typeof row.createdAt === "string") orphan ||= now.getTime() - new Date(row.createdAt).getTime() >= 15 * 60000
+     // Reconcile pre-fence/failed revocations too. Do not confuse ordinary
+     // rotation with terminal revocation; replay parents stay until expiry.
+     if (row.revoked && !row.rotatedAt && row.grantVersion === grant.grantVersion) {
+      if (!await remove("oauthConsent", grantId, consent)) { report.conflicted++; continue }
+      orphan = true
+     }
+    }
+    if (Array.isArray(row.scopes)) orphan ||= !row.scopes.every(scope => Array.isArray(grant.scopes) && grant.scopes.includes(scope))
+    if (Array.isArray(row.resources)) orphan ||= !row.resources.every(resource => Array.isArray(grant.resources) && grant.resources.includes(resource))
+   }
+   if (typeof row.sessionId === "string" && !(Array.isArray(row.scopes) && row.scopes.includes("offline_access"))) {
+    const session = await read("session", row.sessionId)
+    orphan ||= !session || session.envelope.deleted || typeof session.envelope.row.expiresAt !== "string" || new Date(session.envelope.row.expiresAt).getTime() <= now.getTime()
+   }
+  }
+  if (!orphan) continue
+  if (await remove(model, id, current)) {
+   report.removed++
+   if (model === "session" && typeof row.token === "string") await options.storage?.delete(row.token)
+  } else report.conflicted++
  }
  return report
 }

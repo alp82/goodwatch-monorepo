@@ -39,3 +39,21 @@ test("a lost consumption acknowledgement whose receipt was collected remains ind
 	await assert.rejects(consumer.consumeOne({ model: "verification", where: [{ field: "id", value: verification.id }] }), /indeterminate/)
 	assert.equal(await adapter.consumeOne({ model: "verification", where: [{ field: "id", value: verification.id }] }), null)
 })
+
+test("garbage collection paginates a population that exceeds the adapter's enumeration bound", async () => {
+	const restricted = crateAuthAdapter({ sql, maxEnumeration: 2 })({})
+	const userId = randomUUID()
+	for (let i = 0; i < 7; i++) await restricted.create({ model: "session", data: { userId, token: randomUUID(), expiresAt: new Date(Date.now() - 1000) } })
+	await assert.rejects(restricted.findMany({ model: "session", where: [{ field: "userId", value: userId }] }), /safe bound/)
+	let cursor: string | undefined
+	let expired = 0
+	for (;;) {
+		const report = await collectAuthGarbage({ sql, encryptionSecret, model: "session", batchSize: 2, cursor })
+		assert.ok(report.scanned <= 2)
+		expired += report.expired
+		if (report.complete) break
+		cursor = report.cursor!
+	}
+	assert.equal(expired, 7)
+	assert.deepEqual(await restricted.findMany({ model: "session", where: [{ field: "userId", value: userId }] }), [])
+})
