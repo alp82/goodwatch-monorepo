@@ -23,7 +23,7 @@ class CrateLifecycleTests(unittest.TestCase):
         self.link = {'key': f'movie:{self.title_id}', 'lane': 'foreground_exact', 'confidence': .99,
                      'confidence_basis': 'llm_self_report_not_calibrated', 'reason': 'Integration fixture'}
 
-    def item(self, text='Integration fixture', source='rss'):
+    def item(self, text='A thoughtful review of this movie', source='rss'):
         identity = 'https://example.com/social-test-' + uuid4().hex
         item = post(source, identity, identity, self.author_id, 'Test fixture', now(), text, '', 'test:556')
         self.posts.append(item)
@@ -36,6 +36,7 @@ class CrateLifecycleTests(unittest.TestCase):
         for p in self.posts:
             self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [p['post_id']])
             self.db.execute('DELETE FROM doc.social_link_report WHERE post_id=?', [p['post_id']])
+            self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [p['post_id']])
             self.db.execute('DELETE FROM doc.social_post WHERE post_id=?', [p['post_id']])
         self.store.refresh()
 
@@ -83,3 +84,27 @@ class CrateLifecycleTests(unittest.TestCase):
         removed = self.store.remove_author('bluesky', self.author_id)
         self.assertEqual(set(removed), {first['post_id'], second['post_id']})
         self.assertFalse(any(p['post_id'] in removed for p in self.store.read_title('movie', self.title_id)))
+
+    def test_quality_gate_unpublishes_existing_link_and_blocks_direct_republication(self):
+        item = self.item('Dune has beautiful images and an extraordinary score.')
+        self.assertTrue(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+        item['text'] = 'Dune full movie — watch free online now!'
+        from f.social.common import digest
+        item['content_hash'] = digest(item['text'] + '\n')
+        self.store.save_posts([item])
+        self.store.publish(item, [self.link])
+        self.store.refresh()
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+        self.assertEqual(self.db.select('SELECT post_id FROM doc.social_title_link WHERE post_id=?', [item['post_id']]), [])
+
+    def test_missing_quality_decision_and_changed_gate_version_are_hidden(self):
+        item = self.item('Dune has beautiful images and an extraordinary score.')
+        self.db.execute("UPDATE doc.social_content_quality SET version='outdated' WHERE post_id=?", [item['post_id']])
+        self.store.refresh('social_content_quality')
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))
+        self.store.publish(item, [self.link])
+        self.store.refresh()
+        self.assertEqual(self.db.select('SELECT post_id FROM doc.social_title_link WHERE post_id=?', [item['post_id']]), [])
+        self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [item['post_id']])
+        self.store.refresh('social_content_quality')
+        self.assertFalse(any(p['post_id'] == item['post_id'] for p in self.store.read_title('movie', self.title_id)))

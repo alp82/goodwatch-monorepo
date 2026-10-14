@@ -1,5 +1,13 @@
 """Social-owned tables, also registered in the repository's central Crate schema."""
 SOCIAL_SCHEMAS = {
+    'social_content_quality': {
+        'columns': {
+            'post_id': 'TEXT', 'content_hash': 'TEXT', 'version': 'TEXT',
+            'status': "TEXT CHECK (status IN ('pass','reject'))", 'reasons': 'TEXT',
+            'evidence': 'TEXT', 'checked_at': 'TIMESTAMP WITH TIME ZONE',
+        },
+        'primary_key': ['post_id'], 'shards': 1, 'replicas': '0-1', 'timestamps': False,
+    },
     'social_post': {
         'columns': {
             'post_id': 'TEXT', 'source': "TEXT CHECK (source IN ('youtube','rss','bluesky','mastodon'))",

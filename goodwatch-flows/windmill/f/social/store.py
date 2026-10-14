@@ -1,9 +1,10 @@
-"""Crate persistence, restricted to writes in the four social-owned tables."""
+"""Crate persistence, restricted to writes in the social-owned tables."""
 import json
 import re
 from urllib.parse import urlsplit
 from f.social.common import VERSION, digest, norm, now
 from f.social.schema import SOCIAL_SCHEMAS
+from f.social import quality
 
 
 def duplicate_group(post):
@@ -83,11 +84,65 @@ class Store:
             self.db.execute(f"INSERT INTO doc.social_post ({','.join(cols)},discovered_at,last_seen_at,checked_at) VALUES ({','.join('?' for _ in cols)},?,?,?) ON CONFLICT (post_id) DO UPDATE SET {updates},last_seen_at=excluded.last_seen_at",
                             [p[c] for c in cols] + [at, at, at])
         self.refresh('social_post')
+        self.screen(posts)
+
+    def screen(self, posts):
+        """Persist current decisions and unpublish rejects, including author patterns."""
+        if not posts:
+            return {}
+        active = {r['post_id'] for r in self.db.select(
+            'SELECT post_id FROM doc.social_post WHERE post_id=ANY(?) AND deleted_at IS NULL',
+            [[p['post_id'] for p in posts]])}
+        posts = [p for p in posts if p['post_id'] in active]
+        authors = sorted({p['author_id'] for p in posts if p['source'] in ('bluesky', 'mastodon') and p.get('author_id')})
+        corpus = self.db.select('''SELECT p.*,q.evidence FROM doc.social_post p
+            LEFT JOIN doc.social_content_quality q ON q.post_id=p.post_id AND q.content_hash=p.content_hash
+            WHERE p.deleted_at IS NULL AND p.source IN ('bluesky','mastodon') AND p.author_id=ANY(?)
+            ORDER BY p.published_at DESC LIMIT 10001''', [authors]) if authors else []
+        for p in corpus:
+            p['quality_evidence'] = json.loads(p.pop('evidence') or '{}')
+        if len(corpus) > 10000:
+            for p in posts:
+                if p['source'] in ('bluesky', 'mastodon'):
+                    p.setdefault('quality_evidence', {})['incomplete_author_corpus'] = True
+        merged = {p['post_id']: p for p in corpus}
+        merged.update({p['post_id']: p for p in posts})
+        decisions = quality.evaluate_batch(list(merged.values()))
+        # Repetition discovered in this batch also revokes older links by the author.
+        target_ids = {p['post_id'] for p in posts}
+        for p in merged.values():
+            verdict = decisions[p['post_id']]
+            if p['post_id'] not in target_ids and 'repetitive_author' not in verdict['reasons']:
+                continue
+            evidence = dict(p.get('quality_evidence') or {})
+            if 'repetitive_author' in verdict['reasons']:
+                evidence['repetitive_author'] = True
+            self.db.execute('''INSERT INTO doc.social_content_quality
+                (post_id,content_hash,version,status,reasons,evidence,checked_at) VALUES (?,?,?,?,?,?,?)
+                ON CONFLICT (post_id) DO UPDATE SET content_hash=excluded.content_hash,version=excluded.version,
+                status=excluded.status,reasons=excluded.reasons,evidence=excluded.evidence,checked_at=excluded.checked_at''',
+                [p['post_id'], p['content_hash'], quality.VERSION, verdict['status'], json.dumps(verdict['reasons']),
+                 json.dumps(evidence, ensure_ascii=False), now().isoformat()])
+            if verdict['status'] != 'pass':
+                self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [p['post_id']])
+        self.refresh('social_content_quality', 'social_title_link')
+        return decisions
 
     def pending(self, source, limit=400, disabled_lanes=()):
-        return self.db.select('SELECT * FROM doc.social_post WHERE source=? AND deleted_at IS NULL AND published_at >= CURRENT_TIMESTAMP - INTERVAL \'30 days\' AND (processed_hash IS NULL OR processed_hash <> content_hash OR matcher_version <> ?) ORDER BY published_at DESC,post_id LIMIT ?', [source, VERSION, limit])
+        return self.db.select("""SELECT p.* FROM doc.social_post p JOIN doc.social_content_quality q
+            ON q.post_id=p.post_id AND q.content_hash=p.content_hash AND q.version=? AND q.status='pass'
+            WHERE p.source=? AND p.deleted_at IS NULL AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+            AND (p.processed_hash IS NULL OR p.processed_hash <> p.content_hash OR p.matcher_version <> ?)
+            ORDER BY p.published_at DESC,p.post_id LIMIT ?""", [quality.VERSION, source, VERSION, limit])
 
     def publish(self, post, links):
+        rows = self.db.select('''SELECT q.* FROM doc.social_content_quality q JOIN doc.social_post p
+            ON p.post_id=q.post_id AND p.content_hash=q.content_hash AND p.deleted_at IS NULL
+            WHERE q.post_id=? AND q.content_hash=? AND q.version=? AND q.status='pass' ''',
+            [post['post_id'], post['content_hash'], quality.VERSION])
+        allowed = bool(rows) and quality.evaluate(dict(post, quality_evidence=json.loads(rows[0]['evidence'] or '{}')))['status'] == 'pass'
+        if not allowed:
+            links = []
         at = now().isoformat()
         for link in links:
             kind, identifier = link['key'].split(':')
@@ -108,7 +163,7 @@ class Store:
             raise ValueError('Invalid title identity')
         # Window before cursor filtering ensures older duplicate uploads cannot reappear on later pages.
         cursor = ''
-        args = [media_type, tmdb_id, list(disabled_lanes)]
+        args = [quality.VERSION, media_type, tmdb_id, list(disabled_lanes)]
         if before:
             cursor = ' AND (published_at < ? OR (published_at = ? AND post_id < ?))'
             args += [before[0], before[0], before[1]]
@@ -118,6 +173,8 @@ class Store:
             l.confidence_basis,l.duplicate_group,
             ROW_NUMBER() OVER (PARTITION BY l.duplicate_group ORDER BY p.published_at DESC,p.post_id DESC) AS duplicate_rank
           FROM doc.social_title_link l JOIN doc.social_post p ON p.post_id=l.post_id
+          JOIN doc.social_content_quality q ON q.post_id=p.post_id AND q.content_hash=p.content_hash
+            AND q.version=? AND q.status='pass'
           LEFT JOIN doc.social_link_report r ON r.media_type=l.media_type AND r.media_tmdb_id=l.media_tmdb_id
             AND r.post_id=l.post_id AND r.status IN ('open','confirmed')
           WHERE l.media_type=? AND l.media_tmdb_id=? AND l.hidden_at IS NULL AND p.deleted_at IS NULL
@@ -140,7 +197,8 @@ class Store:
         self.db.execute('UPDATE doc.social_post SET deleted_at=?,deletion_reason=?,text=NULL,context=NULL,author=NULL,author_id=NULL,source_id=NULL,url=NULL,provenance=NULL,checked_at=? WHERE post_id=?',
                         [now().isoformat(), reason, now().isoformat(), post_id])
         self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [post_id])
-        self.refresh('social_post', 'social_title_link')
+        self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [post_id])
+        self.refresh('social_post', 'social_title_link', 'social_content_quality')
 
     def remove_author(self, source, author_id):
         if source != 'bluesky' or not author_id:
@@ -158,6 +216,7 @@ class Store:
     def retain(self):
         # Remove dependent rows first. Tombstones live thirty days from their deletion.
         self.db.execute("DELETE FROM doc.social_title_link WHERE post_id IN (SELECT post_id FROM doc.social_post WHERE published_at < CURRENT_TIMESTAMP - INTERVAL '30 days')")
+        self.db.execute("DELETE FROM doc.social_content_quality WHERE post_id IN (SELECT post_id FROM doc.social_post WHERE deleted_at IS NOT NULL OR published_at < CURRENT_TIMESTAMP - INTERVAL '30 days')")
         self.db.execute("DELETE FROM doc.social_post WHERE (deleted_at IS NULL AND published_at < CURRENT_TIMESTAMP - INTERVAL '30 days') OR deleted_at < CURRENT_TIMESTAMP - INTERVAL '30 days'")
         self.db.execute("DELETE FROM doc.social_link_report WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '180 days'")
         self.db.execute("DELETE FROM doc.social_ingest_run WHERE started_at < CURRENT_TIMESTAMP - INTERVAL '90 days'")

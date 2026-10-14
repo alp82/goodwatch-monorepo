@@ -1,6 +1,7 @@
 """Bounded public status trends; federated URI deduplication across instances."""
 from f.social.common import http_get, post, stamp
 from f.social.inventory import MASTODON_INSTANCES
+from f.social.quality import html_urls
 
 
 def collect(settings, start, end, *, get=http_get, pages=1, instances=MASTODON_INSTANCES):
@@ -17,6 +18,12 @@ def collect(settings, start, end, *, get=http_get, pages=1, instances=MASTODON_I
                 posts[uri] = post('mastodon', uri, item.get('url') or uri, account['url'], account['acct'],
                                   item['created_at'], item['content'], item.get('spoiler_text', ''),
                                   'trends:' + instance)
+                posts[uri]['quality_evidence'] = {
+                    'links_complete': True, 'urls': html_urls(item['content']),
+                    'profile': {'present': bool(account.get('display_name') or account.get('note') or account.get('avatar_static')),
+                                'created_at': account.get('created_at'), 'posts_count': account.get('statuses_count'),
+                                'bot': bool(account.get('bot'))},
+                }
             audit.append({'instance': instance, 'returned': len(body), 'scope': 'public_status_trends'})
         except Exception as exc:
             errors.append({'instance': instance, 'error': type(exc).__name__})
