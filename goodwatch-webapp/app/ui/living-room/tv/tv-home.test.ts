@@ -6,7 +6,9 @@ import type { StartTitle } from "../living-room-data"
 import {
 	type TvHomeData,
 	type TvPool,
+	type TvService,
 	homeApps,
+	homeServices,
 	tonightOrder,
 	tonightPicks,
 	tvContextOf,
@@ -37,6 +39,7 @@ const guest: TvHomeData = {
 	picture: "/first-picture.jpg",
 	tonight: [],
 	shows: null,
+	services: [],
 }
 
 const pool: TvPool = {
@@ -72,6 +75,7 @@ const member: TvHomeData = {
 		],
 		start: [{ ...show(20), match: 80, service: "Netflix" }],
 	},
+	services: [],
 }
 
 const artOf = (data: TvHomeData, p: TvPool | null, app: string) =>
@@ -338,4 +342,101 @@ test("a guest's own pick still leads, and a member's Tonight is not reordered", 
 		[9, 2, 3],
 	)
 	assert.deepEqual(tonightPicks(member, pool), member.tonight)
+})
+
+// ---- The person's two streaming services: the Remote's keys and home's tiles after the apps.
+
+const netflix: TvService = { id: 8, name: "Netflix", logo_path: "/netflix.jpg" }
+const disney: TvService = { id: 337, name: "Disney+", logo_path: "/disney.jpg" }
+const keyed: TvHomeData = { ...guest, services: [netflix, disney] }
+
+test("the machine's context names the person's two services by their ids, in the keys' order", () => {
+	assert.deepEqual(tvContextOf(keyed, null).services, [8, 337])
+	assert.deepEqual(tvContextOf(guest, null).services, [])
+	// Home has a tile for each after the apps, for a guest and a member.
+	assert.deepEqual(tvItems({ name: "home" }, tvContextOf(keyed, null)), [
+		"app:tonight",
+		"app:discover",
+		"app:explorer",
+		"app:taste",
+		"service:8",
+		"service:337",
+		"bar:search",
+		"bar:menu",
+	])
+	assert.deepEqual(
+		tvItems(
+			{ name: "home" },
+			tvContextOf({ ...member, services: [disney, netflix] }, null),
+		).slice(4, 7),
+		["app:shows", "service:337", "service:8"],
+	)
+})
+
+test("a service's tile says what it opens, and before the pool it has no picture", () => {
+	assert.deepEqual(homeServices(keyed, null), [
+		{ service: netflix, line: "What to watch on Netflix.", picture: null },
+		{ service: disney, line: "What to watch on Disney+.", picture: null },
+	])
+	assert.deepEqual(homeServices(guest, pool), [])
+})
+
+test("a service's tile shows the first of the person's picks that streams there", () => {
+	const p: TvPool = {
+		suggestions: [
+			streams(1, [PRIME]),
+			streams(2, [DISNEY]),
+			streams(3, [NETFLIX]),
+			streams(4, [NETFLIX, DISNEY]),
+		],
+	}
+	assert.deepEqual(
+		homeServices(keyed, p).map((tile) => tile.picture),
+		["/backdrop-3.jpg", "/backdrop-2.jpg"],
+	)
+	// A title that streams nowhere there, or nobody knows where, is no picture of the service.
+	assert.deepEqual(
+		homeServices(keyed, {
+			suggestions: [streams(1, [PRIME]), streams(2, null), streams(3, [])],
+		}).map((tile) => tile.picture),
+		[null, null],
+	)
+})
+
+test("a service's tile takes another picture than Tonight's tile and the service before it, while it can", () => {
+	// Tonight's tile shows the first pick, which streams on both.
+	const both: TvPool = {
+		suggestions: [
+			streams(1, [NETFLIX, DISNEY]),
+			streams(2, [NETFLIX, DISNEY]),
+			streams(3, [NETFLIX, DISNEY]),
+		],
+	}
+	assert.equal(homeApps(keyed, both)[0].art.kind, "backdrop")
+	assert.deepEqual(
+		homeServices(keyed, both).map((tile) => tile.picture),
+		["/backdrop-2.jpg", "/backdrop-3.jpg"],
+	)
+	// With one title on a service, its picture is that title's, whoever else shows it.
+	const one: TvPool = { suggestions: [streams(1, [NETFLIX, DISNEY])] }
+	assert.deepEqual(
+		homeServices(keyed, one).map((tile) => tile.picture),
+		["/backdrop-1.jpg", "/backdrop-1.jpg"],
+	)
+})
+
+test("a member's service tiles draw from their own Tonight before the pool is asked for", () => {
+	const own: TvHomeData = {
+		...member,
+		services: [netflix, disney],
+		tonight: [
+			{ card: streams(10, [NETFLIX]), href: "/my-shows" },
+			{ card: streams(11, [NETFLIX]), href: "/my-movies" },
+			{ card: streams(12, [DISNEY]), href: "/my-movies" },
+		],
+	}
+	assert.deepEqual(
+		homeServices(own, null).map((tile) => tile.picture),
+		["/backdrop-11.jpg", "/backdrop-12.jpg"],
+	)
 })

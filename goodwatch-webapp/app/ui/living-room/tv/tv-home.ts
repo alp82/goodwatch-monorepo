@@ -4,7 +4,11 @@
 // A guest's first paint is the same for every guest: the tiles, and one picture, the first start title's backdrop.
 // The pool (`POST /api/living-room/picks?view=pool`) arrives after the first interaction and swaps in the person's
 // own picks. A member's Tonight and My shows come with the loader; a member asks for the pool only for the
-// Discover tile's posters.
+// Discover tile's posters and the service tiles' pictures.
+//
+// The person's two streaming services come with the loader too (`TvService`): a member's first two saved ones, a
+// guest's the first two of their country's catalog. The Remote's two keys and home's two tiles after the apps
+// stand for them.
 import type { TitleCard } from "~/server/title-cards.server"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import type { StartTitle } from "../living-room-data"
@@ -47,6 +51,19 @@ export type TvShowStart = {
 	service: string | null
 }
 
+/**
+ * A streaming service that a key of the Remote and a tile of home stand for. The Remote has a drawn mark for
+ * Netflix and for Prime Video (`ServiceMark`, ui/living-room/Remote.tsx); any other shows the catalog's logo.
+ */
+export type TvService = {
+	/** Its TMDB provider id, which Discover's `services` parameter takes. */
+	id: number
+	/** Its name as the app says it in a line: "Netflix", "Prime", "Disney+". */
+	name: string
+	/** The catalog's logo, a TMDB path; null when the catalog has none. */
+	logo_path: string | null
+}
+
 /** What the loader of the start page with the new TV returns. */
 export type TvHomeData = {
 	member: boolean
@@ -58,6 +75,11 @@ export type TvHomeData = {
 	tonight: TvTonightPick[]
 	/** A member's My shows on the TV. Null for a guest. */
 	shows: { next: TvShowNext[]; start: TvShowStart[] } | null
+	/**
+	 * The person's two streaming services: a member's first two saved ones, a guest's the first two of their
+	 * country's catalog, so a guest's HTML is the same for every guest of a country.
+	 */
+	services: TvService[]
 }
 
 /** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */
@@ -149,13 +171,14 @@ export function tvContextOf(
 		})),
 		nextEpisodes: (data.shows?.next ?? []).map((show) => `show-${show.id}`),
 		toStart: (data.shows?.start ?? []).map((show) => `show-${show.id}`),
+		services: data.services.map((service) => service.id),
 	}
 }
 
 /** An app tile's picture: real art for Tonight, Discover and My shows, a drawing for Explorer and Taste. */
 export type TvAppArt =
-	/** A backdrop; without a path the tile is plain. */
-	| { kind: "backdrop"; path: string | null }
+	/** A backdrop; without a path the tile is plain: dark, or of `color`, a service's own. */
+	| { kind: "backdrop"; path: string | null; color?: string | null }
 	/** Posters side by side. */
 	| { kind: "posters"; paths: string[] }
 	| { kind: "map" }
@@ -238,4 +261,46 @@ export function homeApps(
 		name: APP_NAME[app],
 		...tile[app],
 	}))
+}
+
+/** A service's tile on home, after the apps. */
+export type TvServiceTile = {
+	service: TvService
+	/** What the home says about the service while its tile has the focus. */
+	line: string
+	/**
+	 * A picture from that service, a backdrop's path: the first of the person's picks that streams there. Null
+	 * until one is known (before the pool is there, and when none of its titles streams there): the tile is then
+	 * the service's own colour.
+	 */
+	picture: string | null
+}
+
+/** Whether a card streams on a service, by the catalog's id for it. */
+const streamsOn = (card: Pick<TitleCard, "services">, service: TvService) =>
+	Boolean(card.services?.some((one) => one.id === service.id))
+
+/**
+ * Home's tiles for the person's services, in the order of the Remote's keys. A tile's picture is the first of
+ * Tonight's picks and then of the pool's titles that streams on the service, a picture no tile before it shows
+ * (Tonight's tile and the service before it) while there is such a title.
+ */
+export function homeServices(
+	data: TvHomeData,
+	pool: TvPool | null,
+	wished: TitleCard | null = null,
+): TvServiceTile[] {
+	const picks = tonightPicks(data, pool, wished).map((pick) => pick.card)
+	const cards = [...picks, ...(pool?.suggestions ?? [])]
+	const shown = new Set([picks[0]?.backdrop_path ?? data.picture])
+	return data.services.map((service) => {
+		const there = cards.filter(
+			(card) => card.backdrop_path && streamsOn(card, service),
+		)
+		const picture =
+			(there.find((card) => !shown.has(card.backdrop_path)) ?? there[0])
+				?.backdrop_path ?? null
+		shown.add(picture)
+		return { service, line: `What to watch on ${service.name}.`, picture }
+	})
 }

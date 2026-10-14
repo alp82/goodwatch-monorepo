@@ -23,13 +23,14 @@ import {
 	MenuCode,
 	QuizCode,
 	RateCode,
+	ServiceCode,
 	TasteCode,
 	TitleCode,
 	TonightCode,
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type { TvAppTile } from "./tv-home"
+import type { TvAppTile, TvService, TvServiceTile } from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
@@ -41,6 +42,7 @@ import type { TvTasteScreens } from "./tv-taste"
 import type { TvTitleScreens } from "./tv-title"
 import type { Tv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
+import type { TvServiceReport } from "./use-tv-service"
 
 // What the scene needs of the lazy screens. It takes them from here, so that this file stays the one importer of
 // screen-code.tsx (see there).
@@ -58,6 +60,8 @@ export {
 } from "./screen-code"
 // The mini Explorer (slice 7).
 export { ExplorerData } from "./screen-code"
+// "On <service>" (slice 6b).
+export { ServiceData } from "./screen-code"
 
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
@@ -72,6 +76,7 @@ const SCREEN_NAME: Record<Screen["name"], string> = {
 	rate: "Seen it",
 	search: "Search",
 	about: "What is GoodWatch?",
+	service: "On a streaming service",
 }
 
 export type TvScreenProps = {
@@ -90,7 +95,18 @@ export type TvScreenProps = {
 	explorer?: TvExplorerView | null
 	/** The person's taste and the quiz, on Taste, a side's screen and the quiz. */
 	taste?: TvTasteScreens
+	/** The person's two streaming services: home's tiles after the apps, and the titles of the one on screen. */
+	services?: TvServiceScreens
 }
+
+/** What home's service tiles and "On <service>" draw from. */
+export type TvServiceScreens = {
+	/** Home's tiles, in the order of the Remote's keys. */
+	tiles: readonly TvServiceTile[]
+	/** The titles of the service on screen; null until their data component has reported. */
+	list: TvServiceReport | null
+}
+const NO_SERVICES: readonly TvService[] = []
 
 /** What mini Discover draws from. */
 export type TvDiscoverScreens = {
@@ -111,6 +127,7 @@ export function TvScreen({
 	discover,
 	explorer,
 	taste,
+	services,
 }: TvScreenProps) {
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
@@ -135,6 +152,12 @@ export function TvScreen({
 
 	const phone = canvas.edition === "phone"
 	const items = tvItems(screen, ctx)
+	// One of the person's own services is read out by its name when its screen opens.
+	const onService =
+		screen.name === "service"
+			? services?.tiles.find((tile) => tile.service.id === screen.service)
+					?.service
+			: undefined
 	// The toast stands in the top bar's row, at the left, where a screen's name is: no screen has a focus target
 	// there, so it never covers a key, least of all the one it is about. The name steps back while it shows
 	// (`data-tv-toast`; kit.tsx's Frame and the home's wordmark listen). It ends before the bar's keys, which are
@@ -166,6 +189,7 @@ export function TvScreen({
 								discover={discover}
 								explorer={explorer}
 								taste={taste}
+								services={services}
 							/>
 						</Layer>
 					</TvViewProvider>
@@ -187,7 +211,11 @@ export function TvScreen({
 			)}
 			{/* The screen's name is read out when the screen changes. */}
 			<div aria-live="polite" className="sr-only">
-				{state.power === "on" ? SCREEN_NAME[screen.name] : ""}
+				{state.power !== "on"
+					? ""
+					: onService
+						? `On ${onService.name}`
+						: SCREEN_NAME[screen.name]}
 			</div>
 			{says && (
 				<div
@@ -217,6 +245,7 @@ function ScreenOf({
 	discover,
 	explorer,
 	taste,
+	services,
 }: {
 	screen: Screen
 	items: readonly string[]
@@ -225,11 +254,12 @@ function ScreenOf({
 	discover?: TvDiscoverScreens
 	explorer?: TvExplorerView | null
 	taste?: TvTasteScreens
+	services?: TvServiceScreens
 }): ReactNode {
 	const first = <Bare items={items} />
 	switch (screen.name) {
 		case "home":
-			return <Home apps={apps} items={items} />
+			return <Home apps={apps} services={services?.tiles} items={items} />
 		case "about":
 			return <AboutCode.Screen items={items} first={first} />
 		case "tonight":
@@ -279,6 +309,17 @@ function ScreenOf({
 		case "quiz":
 			if (!taste) return first
 			return <QuizCode.Screen items={items} quiz={taste.quiz} first={first} />
+		// Slice 6b: titles to watch on one streaming service.
+		case "service":
+			return (
+				<ServiceCode.Screen
+					items={items}
+					screen={screen}
+					own={services?.tiles.map((tile) => tile.service) ?? NO_SERVICES}
+					list={services?.list ?? null}
+					first={first}
+				/>
+			)
 		// SEAM (slices 9 and 10): My shows and search each take their entry here.
 		default:
 			return <NotBuilt screen={screen} items={items} />

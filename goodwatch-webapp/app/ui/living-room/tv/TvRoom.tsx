@@ -22,7 +22,7 @@ import type { ReactNode } from "react"
 import { useHasDock } from "~/ui/navigation"
 import { assetUrl } from "~/utils/asset-url"
 import { BelowRoom } from "../BelowRoom"
-import { Remote } from "../Remote"
+import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
 import { HAND_IMAGE, PHONE_LIP, ROOM } from "../room"
 import type { TvAction } from "../tv-flow"
@@ -69,6 +69,8 @@ export type TvRoomProps = {
 	renderScreen?: (canvas: TvCanvas) => ReactNode
 	/** The titles the section below the room links to. */
 	startTitles: StartTitle[]
+	/** The person's own two streaming services: the Remotes' two keys, in their order. */
+	services: readonly RemoteService[]
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */
 	want?: { place?: RemotePlace; form?: PhoneRemoteForm }
 }
@@ -92,8 +94,6 @@ function keyOf(action: TvAction): RoomKey | null {
 			return { type: "menu" }
 		case "open-search":
 			return { type: "search" }
-		case "service-key":
-			return { type: "service", service: action.service }
 		case "power":
 			return { type: "power", on: action.on }
 		default:
@@ -101,7 +101,13 @@ function keyOf(action: TvAction): RoomKey | null {
 	}
 }
 
-export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
+export function TvRoom({
+	tv,
+	renderScreen,
+	startTitles,
+	services,
+	want,
+}: TvRoomProps) {
 	// The room is the first screen of the page; use-below-room.ts owns how the page moves between it and the
 	// section below. Its contract: a block with the room's id that takes no input while it is away.
 	const travel = useBelowRoom()
@@ -320,8 +326,9 @@ export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
 								}
 								power={tv.power}
 								menuOpen={tv.menuOpen}
-								serviceName={tv.serviceName}
-								activeService={tv.activeService}
+								services={services}
+								openService={tv.openService}
+								onService={(service) => tv.press({ type: "service", service })}
 								dispatch={(action) => {
 									const key = keyOf(action)
 									if (key) tv.press(key)
@@ -344,6 +351,7 @@ export function TvRoom({ tv, renderScreen, startTitles, want }: TvRoomProps) {
 						{held.hand && <Hand style={held.hand} />}
 						<PhoneRemote
 							tv={tv}
+							services={services}
 							form={held.form}
 							at={held.remote}
 							bottom={held.h}

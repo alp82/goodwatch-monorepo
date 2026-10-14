@@ -336,6 +336,7 @@ export function CornerBar({ items }: { items: readonly string[] }) {
  * The Expand key's place is the picture's bottom right corner, on the desktop and on the phone.
  * SEAM (slice 11): the Expand key is drawn into `expand`; `reserve` keeps the band under the content free for it
  * on the desktop, where a screen fills its width. On the phone every screen leaves the corner free itself.
+ * A service's screen leads with the service's mark (`mark`) and has a line of its colour along the top (`edge`).
  */
 export function Frame({
 	name,
@@ -345,6 +346,8 @@ export function Frame({
 	dim = 0.6,
 	reserve = false,
 	expand,
+	mark,
+	edge,
 	children,
 }: {
 	name: string
@@ -355,13 +358,40 @@ export function Frame({
 	dim?: number
 	reserve?: boolean
 	expand?: ReactNode
+	/** What stands before the screen's name in the top bar. */
+	mark?: ReactNode
+	/** A colour for a thin line along the picture's top edge. */
+	edge?: string
 	children: ReactNode
 }) {
 	const P = usePhone()
+	const words = (
+		<>
+			<div
+				className={`truncate font-bold leading-none ${P ? "text-[24px]" : "text-[36px]"}`}
+			>
+				{name}
+			</div>
+			{crumb && (
+				<div
+					className={`mt-1.5 truncate leading-tight text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`}
+				>
+					{crumb}
+				</div>
+			)}
+		</>
+	)
 	return (
 		<>
 			{art && <Ambient src={art} />}
 			<Shade dim={dim} />
+			{edge && (
+				<div
+					data-tv-edge
+					className="pointer-events-none absolute inset-x-0 top-0 h-1"
+					style={{ background: edge }}
+				/>
+			)}
 			<div
 				className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : `top-[108px] px-14 ${reserve ? "pb-[120px]" : "pb-10"}`}`}
 			>
@@ -378,19 +408,11 @@ export function Frame({
 				className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[78px] px-5" : "h-[108px] px-14"}`}
 			>
 				{/* The toast takes this place while it shows (TvScreen.tsx). */}
-				<div className="min-w-0 flex-1 transition-opacity [[data-tv-toast]_&]:opacity-0">
-					<div
-						className={`truncate font-bold leading-none ${P ? "text-[24px]" : "text-[36px]"}`}
-					>
-						{name}
-					</div>
-					{crumb && (
-						<div
-							className={`mt-1.5 truncate leading-tight text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`}
-						>
-							{crumb}
-						</div>
-					)}
+				<div
+					className={`min-w-0 flex-1 transition-opacity [[data-tv-toast]_&]:opacity-0 ${mark ? `flex items-center ${P ? "gap-3" : "gap-5"}` : ""}`}
+				>
+					{mark}
+					{mark ? <div className="min-w-0">{words}</div> : words}
 				</div>
 				<Bar items={items} />
 			</div>

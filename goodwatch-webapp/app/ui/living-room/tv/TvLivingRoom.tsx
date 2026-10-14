@@ -13,6 +13,7 @@ import {
 	ExplorerData,
 	QuizCode,
 	RateCode,
+	ServiceData,
 	TasteCode,
 	TasteData,
 	TitleCode,
@@ -20,6 +21,7 @@ import {
 	TonightCode,
 	type TvDiscoverScreens,
 	TvScreen,
+	type TvServiceScreens,
 	loadFirstScreens,
 } from "./TvScreen"
 import { useReport } from "./kit"
@@ -27,6 +29,7 @@ import type { TvCanvas } from "./room-tv"
 import {
 	type TvHomeData,
 	homeApps,
+	homeServices,
 	tonightPicks,
 	tvContextOf,
 	tvTitleKey,
@@ -37,6 +40,7 @@ import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
+import type { TvServiceReport } from "./use-tv-service"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
 
@@ -97,8 +101,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			}),
 		[],
 	)
-	// A member's Tonight came with the loader; they need the pool only for the Discover tile's posters, so it waits
-	// until that tile first has the focus. A member with nothing to pick from gets the pool's best, as a guest does,
+	// A member's Tonight came with the loader; they need the pool only for the Discover tile's posters and the
+	// service tiles' pictures, so it waits until one of those tiles first has the focus. A member with nothing to pick from gets the pool's best, as a guest does,
 	// and a link straight to Tonight asks for them without waiting for a sign of the person.
 	const [discoverSeen, setDiscoverSeen] = useState(false)
 	const own = data.member && data.tonight.length > 0
@@ -159,6 +163,25 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (report?.cards.length) setListed(report.cards)
 	}, [])
 	const choosing = screen.name === "discover" && Boolean(screen.choice)
+	// Slice 6b. "On <service>": the titles to watch there are held by a component of the service screen's chunk,
+	// which reports them here (`ServiceData`, mounted below) while the address names a service.
+	const [onService, setOnService] = useState<TvServiceReport | null>(null)
+	const onServiceList = useCallback((report: TvServiceReport | null) => {
+		setOnService(report)
+		if (report?.cards.length) setListed(report.cards)
+	}, [])
+	const streaming = screen.name === "service"
+	// Another service's titles are not this screen's: the report follows the address a moment later.
+	const serviceList =
+		streaming && onService?.id === screen.service ? onService : null
+	const serviceTiles = useMemo(
+		() => homeServices(data, pool, wished),
+		[data, pool, wished],
+	)
+	const services: TvServiceScreens = useMemo(
+		() => ({ tiles: serviceTiles, list: serviceList }),
+		[serviceTiles, serviceList],
+	)
 	const discover: TvDiscoverScreens = useMemo(
 		() => ({ art: pool?.choiceArt ?? {}, list }),
 		[pool, list],
@@ -182,7 +205,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
 	// The titles of the list on screen. SEAM (slices 9 and 10): My shows' and the search's follow.
-	const listTitles = choosing ? list?.titles : undefined
+	const listTitles = choosing ? list?.titles : serviceList?.titles
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
 		() => ({
@@ -241,7 +264,10 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	)
 	const tv = useTv(ctx, onEffect)
 	useEffect(() => {
-		if (tv.screen.name === "home" && tv.focused === "app:discover")
+		if (
+			tv.screen.name === "home" &&
+			(tv.focused === "app:discover" || tv.focused.startsWith("service:"))
+		)
 			setDiscoverSeen(true)
 	}, [tv.screen.name, tv.focused])
 	// A screen's code is asked for when the person is about to need it: Tonight's, which brings the title screen's,
@@ -255,6 +281,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		if (tv.screen.name === "home" && tv.focused === "app:discover")
 			DiscoverCode.load().catch(() => {})
 		if (tv.screen.name === "discover") TitleCode.load().catch(() => {})
+		// On a service the title screen's, which a title opens. The service screen's own code is asked for at the
+		// first interaction, because a streaming key of the Remote opens it from any screen.
+		if (tv.screen.name === "service") TitleCode.load().catch(() => {})
 		// Slice 8: Taste's while its tile has the focus, the quiz's on Taste.
 		if (tv.screen.name === "home" && tv.focused === "app:taste")
 			TasteCode.load().catch(() => {})
@@ -276,6 +305,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			<TvRoom
 				tv={tv.room}
 				startTitles={data.startTitles}
+				services={data.services}
 				renderScreen={(canvas) => (
 					<>
 						<Edition canvas={canvas} report={setEdition} />
@@ -289,6 +319,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							discover={discover}
 							explorer={explorer?.view}
 							taste={onTaste ? mine?.screens : undefined}
+							services={services}
 						/>
 					</>
 				)}
@@ -316,6 +347,14 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			)}
 			{onTaste && (
 				<TasteData screen={screen} member={data.member} report={setMine} />
+			)}
+			{/* "On <service>" (slice 6b): the titles to watch there. */}
+			{streaming && (
+				<ServiceData
+					screen={screen}
+					member={data.member}
+					report={onServiceList}
+				/>
 			)}
 		</>
 	)

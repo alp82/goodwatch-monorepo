@@ -1,10 +1,13 @@
-// Home: a row of app tiles along the bottom, and above it the app that has the focus, large, with its picture
-// behind everything. Nothing here leaves the TV: OK on a tile opens the app on the TV.
+// Home: a row of tiles along the bottom, and above it the one that has the focus, large, with its picture behind
+// everything. The apps come first; after them a tile for each of the person's two streaming services, with the
+// service's mark, which opens "On <service>" as its key on the Remote does. Nothing here leaves the TV: OK on a
+// tile opens it on the TV.
 //
 // The headline is the start page's H1, the same sentence for a guest and a member. Until the pool is there, a
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
 import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { ServiceMark, hasDrawnMark, serviceColor } from "../../Remote"
 import {
 	CornerBar,
 	Cross,
@@ -15,7 +18,7 @@ import {
 	useTvView,
 } from "../kit"
 import { TV_ROW_ATTR } from "../tv-dom"
-import type { TvAppArt, TvAppTile } from "../tv-home"
+import type { TvAppArt, TvAppTile, TvService, TvServiceTile } from "../tv-home"
 
 export const HOME_HEADLINE = "Let's find something good for tonight."
 
@@ -108,39 +111,71 @@ function AppArt({
 				))}
 			</span>
 		)
-	// Without a picture the tile is the dark of the room, and its name says what it is.
+	// Without a picture the tile is the dark of the room, or its service's own colour, and its name or mark says
+	// what it is.
 	return files[0] ? (
 		<Img src={files[0]} className={className} />
 	) : (
 		<span
-			className={`block bg-[linear-gradient(160deg,#1c2433,#0b0e15)] ${className}`}
+			className={`block ${className}`}
+			style={{
+				background: art.color
+					? `linear-gradient(160deg, color-mix(in srgb, ${art.color} 58%, #05060a) 0%, color-mix(in srgb, ${art.color} 20%, #05060a) 100%)`
+					: "linear-gradient(160deg,#1c2433,#0b0e15)",
+			}}
 		/>
 	)
 }
 
+/** A tile of home's row: an app, or a streaming service. */
+type Tile = {
+	/** Its item: `app:tonight`, `service:8`. */
+	id: string
+	name: string
+	line: string
+	art: TvAppArt
+	service?: TvService
+}
+
 export function Home({
 	apps,
+	services = [],
 	items,
 }: {
 	apps: readonly TvAppTile[]
+	/** The person's two streaming services, after the apps. */
+	services?: readonly TvServiceTile[]
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
-	// The app the home shows large: the one whose tile has the focus, and while the focus is on the bar, the one
-	// that had it last.
-	const last = useRef(apps[0].app)
-	const at = apps.find((a) => `app:${a.app}` === focused)
-	if (at) last.current = at.app
-	const shown = apps.find((a) => a.app === last.current) ?? apps[0]
+	const tiles: Tile[] = [
+		...apps.map((a) => ({ ...a, id: `app:${a.app}` })),
+		...services.map(({ service, line, picture }) => ({
+			id: `service:${service.id}`,
+			name: service.name,
+			line,
+			art: {
+				kind: "backdrop" as const,
+				path: picture,
+				color: serviceColor(service),
+			},
+			service,
+		})),
+	]
+	// The tile the home shows large: the one that has the focus, and while the focus is on the bar, the one that
+	// had it last.
+	const last = useRef(tiles[0].id)
+	if (tiles.some((tile) => tile.id === focused)) last.current = focused
+	const shown = tiles.find((tile) => tile.id === last.current) ?? tiles[0]
 	// One file per picture: a tile shows the file the whole picture uses, so its app's picture is there when the
 	// tile takes the focus.
 	const backdrop = backdropSize(canvas)
 	const whole = artFiles(shown.art, backdrop, "w342")
 	return (
 		<>
-			<Cross id={`${shown.app} ${whole.join(" ")}`} files={whole}>
+			<Cross id={`${shown.id} ${whole.join(" ")}`} files={whole}>
 				<AppArt art={shown.art} files={whole} className="h-full w-full" />
 			</Cross>
 			<Shade dim={0.5} />
@@ -156,7 +191,7 @@ export function Home({
 				<h1 className={`text-white/75 ${P ? "text-[20px]" : "text-[28px]"}`}>
 					{HOME_HEADLINE}
 				</h1>
-				<div key={shown.app} className="tvc-fade">
+				<div key={shown.id} className="tvc-fade">
 					<div
 						className="font-bold leading-[0.95] tracking-tight"
 						style={{ fontSize: P ? 56 : 108 }}
@@ -174,10 +209,12 @@ export function Home({
 				{...{ [TV_ROW_ATTR]: "" }}
 				className={`absolute inset-x-0 bottom-0 flex overflow-hidden ${P ? "gap-3.5 px-5 pb-5 pt-4" : "gap-[22px] px-14 pb-12 pt-6"}`}
 			>
-				{apps.map((a) => (
+				{tiles.map((a) => (
 					<Item
-						key={a.app}
-						id={`app:${a.app}`}
+						key={a.id}
+						id={a.id}
+						// A service's mark is a picture: its tile says what it opens.
+						label={a.service ? `On ${a.service.name}` : undefined}
 						className="tvc-tile shrink-0"
 						style={
 							P ? { width: 172, height: 110 } : { width: 200, height: 128 }
@@ -189,11 +226,25 @@ export function Home({
 							className="absolute inset-0 h-full w-full"
 						/>
 						<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-						<span
-							className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}
-						>
-							{a.name}
-						</span>
+						{a.service ? (
+							<span className="absolute inset-x-4 bottom-3 flex items-center gap-2.5">
+								<ServiceMark service={a.service} height={P ? 24 : 28} />
+								{/* A drawn mark says the name; a logo from the catalog does not. */}
+								{!hasDrawnMark(a.service) && (
+									<span
+										className={`truncate font-bold leading-none ${P ? "text-[21px]" : "text-[23px]"}`}
+									>
+										{a.name}
+									</span>
+								)}
+							</span>
+						) : (
+							<span
+								className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}
+							>
+								{a.name}
+							</span>
+						)}
 					</Item>
 				))}
 			</div>

@@ -58,6 +58,7 @@ const guest: TvHomeData = {
 	picture: "/first-picture.jpg",
 	tonight: [],
 	shows: null,
+	services: [],
 }
 const pool: TvPool = {
 	suggestions: [card("movie", 1), card("show", 2), card("movie", 3), card("movie", 4)],

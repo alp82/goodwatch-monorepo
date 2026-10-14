@@ -1,27 +1,91 @@
 // What the start page with the new TV shows a guest and a member, shaped from what the loader read
-// (tv-loader.server.ts). Pure: no request, no read.
+// (tv-loader.server.ts). Pure: no request, and no read but the one it is handed (`keepCountryServices`).
 import { episodeCode, tonightsPickOf } from "~/domain/my-shows"
 import type { TonightParts } from "~/server/home-doors.server"
 import type { TitleCard } from "~/server/title-cards.server"
-import type { TvHomeData, TvTonightPick } from "~/ui/living-room/tv/tv-home"
+import type {
+	TvHomeData,
+	TvService,
+	TvTonightPick,
+} from "~/ui/living-room/tv/tv-home"
 import {
 	DOOR_HREF,
 	SHOWS_PER_GROUP,
 	TONIGHT_PICKS,
 } from "~/ui/living-room/tv/tv-machine"
+import { brandName, getShorterProviderLabel } from "~/utils/streaming-links"
 
-/** What every guest gets: the start titles and the first picture. */
-export function guestHome(start: {
-	titles: TvHomeData["startTitles"]
-	picture: string | null
-}): TvHomeData {
+/**
+ * What every guest of a country gets: the start titles, the first picture, and the two services the Remote's
+ * keys and home's tiles stand for.
+ */
+export function guestHome(
+	start: { titles: TvHomeData["startTitles"]; picture: string | null },
+	services: TvService[],
+): TvHomeData {
 	return {
 		member: false,
 		startTitles: start.titles,
 		picture: start.picture,
 		tonight: [],
 		shows: null,
+		services,
 	}
+}
+
+// ---- The person's two streaming services: the Remote's keys and home's tiles after the apps.
+
+/** How many services the Remotes have a key for. */
+export const TV_SERVICES = 2
+
+/** The pair every Remote had before: Netflix and Prime Video, by TMDB provider id. They fill up what is missing. */
+const FIXED_PAIR: TvService[] = [
+	{ id: 8, name: "Netflix", logo_path: null },
+	{ id: 9, name: "Prime", logo_path: null },
+]
+
+/** A service as the catalog lists it. */
+type CatalogService = { id: number; name: string; logo_path: string | null }
+
+/** A service's name as the app says it in a line: "Prime", "Disney+". Plans and channels of one brand share it. */
+const brandOf = (name: string) => brandName(getShorterProviderLabel(name))
+
+/**
+ * The services of a country's catalog in the country's own order, the one the settings and Discover list them
+ * in. A service the country does not have is left out; services at the same place keep the order they came in.
+ */
+export function countryCatalog<
+	S extends CatalogService & { order_by_country?: Record<string, number> },
+>(providers: readonly S[], country: string): S[] {
+	return providers
+		.map((service, at) => ({
+			service,
+			at,
+			order: service.order_by_country?.[country],
+		}))
+		.filter((one): one is typeof one & { order: number } => one.order != null)
+		.sort((a, b) => a.order - b.order || a.at - b.at)
+		.map(({ service }) => service)
+}
+
+/**
+ * The person's services, as many as the Remotes have keys for, one per brand: their own saved services in the
+ * order they saved them, filled up from their country's catalog in its order, and then from the fixed pair where
+ * the catalog has too few (a country nobody has data for, a failed read). A guest has no saved services, so a
+ * guest's are the first of the country's catalog.
+ */
+export function tvServices(
+	saved: readonly CatalogService[],
+	catalog: readonly CatalogService[],
+	count = TV_SERVICES,
+): TvService[] {
+	const byBrand = new Map<string, TvService>()
+	for (const { id, name, logo_path } of [...saved, ...catalog, ...FIXED_PAIR]) {
+		const brand = brandOf(name)
+		if (!byBrand.has(brand))
+			byBrand.set(brand, { id, name: brand, logo_path: logo_path || null })
+	}
+	return [...byBrand.values()].slice(0, count)
 }
 
 /**
@@ -98,5 +162,52 @@ export function memberHome(
 				service: show.service,
 			})),
 		},
+	}
+}
+
+/** A country's first services are kept for a day; a failed read is tried again after a minute. */
+const COUNTRY_SERVICES_MS = 24 * 60 * 60 * 1000
+const COUNTRY_SERVICES_RETRY_MS = 60 * 1000
+/** As many as fill up a member who saved services of the catalog's first brands. */
+const COUNTRY_SERVICES_KEPT = 2 * TV_SERVICES
+
+/**
+ * Keeps the first services of each country's catalog in memory: `read` runs once per country and day, and
+ * requests that arrive while it runs wait for the same read. A failed read answers none (the fixed pair then
+ * fills up) and is tried again after a minute. It never throws.
+ */
+export function keepCountryServices<
+	S extends CatalogService & { order_by_country?: Record<string, number> },
+>(
+	read: (country: string) => Promise<readonly S[]>,
+	clock: () => number = Date.now,
+): (country: string) => Promise<TvService[]> {
+	const kept = new Map<
+		string,
+		{ services: Promise<TvService[]>; until: number }
+	>()
+	return (country) => {
+		const now = clock()
+		const have = kept.get(country)
+		if (have && have.until > now) return have.services
+		const entry = {
+			until: now + COUNTRY_SERVICES_MS,
+			services: Promise.resolve()
+				.then(() => read(country))
+				.then((providers) =>
+					tvServices(
+						[],
+						countryCatalog(providers, country),
+						COUNTRY_SERVICES_KEPT,
+					),
+				)
+				.catch((error): TvService[] => {
+					console.error("The TV: loading a country's services failed", error)
+					entry.until = clock() + COUNTRY_SERVICES_RETRY_MS
+					return []
+				}),
+		}
+		kept.set(country, entry)
+		return entry.services
 	}
 }

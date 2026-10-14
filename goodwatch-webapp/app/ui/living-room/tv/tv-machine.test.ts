@@ -55,6 +55,9 @@ const member: TvContext = {
 	toStart: ["show-31", "show-32", "show-33", "show-34"],
 }
 
+/** A person with the Remote's two streaming keys: Netflix (8) and Disney Plus (337). */
+const keyed: TvContext = { ...guest, services: [8, 337] }
+
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 /** The rating strip: its levels low to high, and the exact scores the desktop shows under them. */
@@ -108,6 +111,8 @@ describe("TV state in the URL", () => {
 			"tv=search",
 			"tv=search&q=heist",
 			"tv=about",
+			"tv=service&service=8",
+			"tv=service&service=1796",
 		])
 			assert.equal(url(at(q)), q)
 		assert.equal(url(at("tv=shows", 0, member)), "tv=shows")
@@ -122,6 +127,12 @@ describe("TV state in the URL", () => {
 			"tv=title&title=knives-out",
 			"tv=title&title=tv-1399",
 			"tv=title&title=movie-0",
+			"tv=service",
+			"tv=service&service=Netflix",
+			"tv=service&service=0",
+			"tv=service&service=8,9",
+			"tv=service&service=-8",
+			"tv=service&service=12345678901",
 		])
 			assert.deepEqual(at(q).screen, { name: "home" }, q)
 	})
@@ -204,6 +215,55 @@ describe("old addresses", () => {
 })
 
 describe("the screens and their items, in reading order", () => {
+	it("home: a tile per service of the person's two, after the apps", () => {
+		assert.deepEqual(items("", keyed), [
+			"app:tonight",
+			"app:discover",
+			"app:explorer",
+			"app:taste",
+			"service:8",
+			"service:337",
+			"bar:search",
+			"bar:menu",
+		])
+		assert.deepEqual(items("", { ...member, services: [9] }), [
+			"app:tonight",
+			"app:discover",
+			"app:explorer",
+			"app:taste",
+			"app:shows",
+			"service:9",
+			"bar:search",
+			"bar:menu",
+		])
+	})
+
+	it("on a service: up to twelve titles in a row that pages, then Expand and the bar", () => {
+		const twenty = Array.from({ length: 20 }, (_, at) => `movie-${at + 1}`)
+		assert.deepEqual(
+			items("tv=service&service=8", { ...guest, titles: twenty }),
+			[...twenty.slice(0, 12).map((key) => `title:${key}`), "expand", ...BAR],
+		)
+		// Whatever service a link names has a screen, the person's own or not.
+		assert.deepEqual(items("tv=service&service=1796", keyed), [
+			"title:movie-11",
+			"title:show-12",
+			"title:movie-13",
+			"title:movie-14",
+			"title:movie-15",
+			"expand",
+			...BAR,
+		])
+		// Without titles the focus starts on the bar, never on the Expand key.
+		const empty = { ...guest, titles: [] }
+		assert.deepEqual(items("tv=service&service=8", empty), ["expand", ...BAR])
+		assert.equal(focusedItem(at("tv=service&service=8"), empty), "bar:back")
+		assert.equal(
+			focusedItem(at("tv=service&service=8"), guest),
+			"title:movie-11",
+		)
+	})
+
 	it("home: the apps, and My shows for a member; no Back, no Expand", () => {
 		assert.deepEqual(items(""), [
 			"app:tonight",
@@ -843,6 +903,17 @@ describe("the Expand key's destinations", () => {
 				const href = dest(`tv=discover&${param.slice(0, -1)}=${key}`)
 				assert.equal(href, `/discover?${param}=${key}`)
 			}
+	})
+
+	it("on a service: Discover with that one service, by its TMDB provider id", () => {
+		assert.equal(dest("tv=service&service=8"), "/discover?services=8")
+		assert.equal(dest("tv=service&service=9"), "/discover?services=9")
+		assert.equal(dest("tv=service&service=337"), "/discover?services=337")
+		const t = choose("tv=service&service=337", "expand", keyed)
+		assert.equal(t.history, "none")
+		assert.deepEqual(t.effects, [
+			{ type: "expand", href: "/discover?services=337" },
+		])
 	})
 
 	it("Discover never carries a streaming service", () => {
@@ -1790,28 +1861,151 @@ describe("mini Discover: the tabs", () => {
 })
 
 describe("the Remote's streaming keys", () => {
-	// What a press does waits for the prototype of the service screen.
-	it("do nothing for now: no screen, no toast, nothing in the URL", () => {
+	const key = (service: number): TvAction => ({ type: "service-key", service })
+
+	it("a key opens its service's screen from any screen, as a new one", () => {
 		for (const query of [
 			"",
 			"tv=tonight",
 			"tv=discover",
 			"tv=discover&mood=funny",
+			"tv=title&title=movie-1",
+			"tv=search&q=heist",
 		])
-			for (const service of ["Netflix", "Amazon Prime Video"]) {
-				const start = at(query, 1)
-				const t = run(start, guest, { type: "service-key", service })
-				assert.equal(t.history, "none", query)
-				assert.equal(t.state, start)
+			for (const service of [8, 337]) {
+				const t = run(at(query, 2, keyed), keyed, key(service))
+				assert.equal(t.history, "push", query)
+				assert.equal(t.url, `tv=service&service=${service}`)
+				assert.equal(t.state.depth, 3)
 				assert.deepEqual(t.effects, [])
+				// The focus starts over on the list's first title.
+				assert.equal(focusedItem(t.state, keyed), "title:movie-11")
 			}
 	})
 
-	it("leave an open menu open", () => {
-		const menu = run(at(""), guest, { type: "toggle-menu" }).state
+	it("the same key on its own screen leaves it: one step back", () => {
+		const t = run(at("tv=service&service=8", 3, keyed), keyed, key(8))
+		assert.equal(t.history, "back")
+		assert.deepEqual(t.effects, [])
+	})
+
+	it("the same key on a deep link shows home in its place", () => {
+		const t = run(at("tv=service&service=8", 0, keyed), keyed, key(8))
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "")
+	})
+
+	it("the other key takes the screen's place, so Back from either is one step", () => {
+		const t = run(at("tv=service&service=8", 3, keyed), keyed, key(337))
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "tv=service&service=337")
+		assert.equal(t.state.depth, 3)
+		assert.equal(focusedItem(t.state, keyed), "title:movie-11")
+		assert.equal(run(t.state, keyed, { type: "back" }).history, "back")
+		// And the first key again takes it back.
+		assert.equal(run(t.state, keyed, key(8)).url, "tv=service&service=8")
+	})
+
+	it("a key closes an open menu: over another screen it opens its screen, over its own it leaves", () => {
+		const menu = run(at("tv=tonight", 1, keyed), keyed, {
+			type: "toggle-menu",
+		}).state
+		const opened = run(menu, keyed, key(8))
+		assert.equal(opened.history, "push")
+		assert.equal(opened.state.menuOpen, false)
+		const over = run(at("tv=service&service=8", 2, keyed), keyed, {
+			type: "toggle-menu",
+		}).state
+		const left = run(over, keyed, key(8))
+		assert.equal(left.history, "back")
+		assert.equal(left.state.menuOpen, false)
+	})
+
+	it("a key works for a service that is not among the person's two", () => {
+		const t = run(at("", 0, guest), guest, key(15))
+		assert.equal(t.url, "tv=service&service=15")
+	})
+
+	it("a dark TV takes no key", () => {
+		const off = run(at("", 1, keyed), keyed, { type: "power", on: false }).state
+		const t = run(off, keyed, key(8))
+		assert.equal(t.history, "none")
+		assert.equal(t.state, off)
+	})
+})
+
+describe("on a service", () => {
+	it("a service's tile on home opens its screen as a new one", () => {
+		const t = choose("", "service:337", keyed)
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=service&service=337")
+		assert.equal(t.state.depth, 2)
+		// Only the person's own two have a tile.
+		assert.equal(choose("", "service:15", keyed).history, "none")
+		assert.equal(choose("", "service:8", guest).history, "none")
+	})
+
+	it("OK on the focused tile does the same", () => {
+		const home = run(at("", 0, keyed), keyed, {
+			type: "focus",
+			item: "service:8",
+		}).state
+		const t = run(home, keyed, { type: "ok" })
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=service&service=8")
+	})
+
+	it("a title opens its title screen, and Back returns to the list", () => {
+		const t = choose("tv=service&service=8", "title:show-12", keyed)
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=title&title=show-12")
+		assert.equal(run(t.state, keyed, { type: "back" }).history, "back")
+	})
+
+	it("the wheel steps through the twelve titles, Expand and the bar, and wraps", () => {
+		const twelve = Array.from({ length: 12 }, (_, at) => `movie-${at + 1}`)
+		const ctx = { ...keyed, titles: twelve }
+		let state = at("tv=service&service=8", 1, ctx)
+		const seen: string[] = []
+		for (let n = 0; n < 16; n++) {
+			seen.push(focusedItem(state, ctx))
+			state = run(state, ctx, { type: "step", by: 1 }).state
+		}
+		assert.deepEqual(seen, [
+			...twelve.map((key) => `title:${key}`),
+			"expand",
+			...BAR,
+		])
+		assert.equal(focusedItem(state, ctx), "title:movie-1")
+	})
+
+	it("Back leaves: one step with history, home on a deep link", () => {
 		assert.equal(
-			run(menu, guest, { type: "service-key", service: "Netflix" }).state,
-			menu,
+			run(at("tv=service&service=8", 2, keyed), keyed, { type: "back" })
+				.history,
+			"back",
+		)
+		const deep = run(at("tv=service&service=8", 0, keyed), keyed, {
+			type: "back",
+		})
+		assert.equal(deep.history, "replace")
+		assert.equal(deep.url, "")
+	})
+
+	it("a change of service is a TV-only change of the address", () => {
+		assert.equal(
+			isTvOnlyChange(
+				new URL("https://x/?tv=service&service=8"),
+				new URL("https://x/?tv=service&service=337"),
+			),
+			true,
+		)
+		assert.equal(
+			isTvOnlyChange(
+				new URL("https://x/"),
+				new URL("https://x/?tv=service&service=8"),
+			),
+			true,
 		)
 	})
 })
@@ -1916,8 +2110,9 @@ describe("every screen", () => {
 		"tv=search",
 		"tv=search&q=heist",
 		"tv=about",
+		"tv=service&service=8",
 	].flatMap((q) =>
-		[guest, member, EMPTY_CONTEXT].map((ctx): [TvScreen, TvContext] => [
+		[guest, member, EMPTY_CONTEXT, keyed].map((ctx): [TvScreen, TvContext] => [
 			at(q, 0, ctx).screen,
 			ctx,
 		]),
