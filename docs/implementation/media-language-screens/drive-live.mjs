@@ -1,11 +1,11 @@
-// Live check of localized titles on real data: a dev server on the production catalog (read only), every REC_* flag
-// on, as a guest. The header pair's picks save only the guest cookie (no account, no catalog write).
+// Live check of localized titles on real data: a dev server on the production catalog (read only), as a guest. The header pair's picks save only the guest cookie (no account, no catalog write).
 //   PLAYWRIGHT=<folder with node_modules/playwright-core> node docs/implementation/media-language-screens/drive-live.mjs http://localhost:3141
 // For German, Japanese, Arabic and then Browser default (an en-US browser, so English):
 // - on The Matrix, the pick previews title, poster, tagline and description in place (no layout shift), then Keep;
-// - the title pages (header, hero poster, About, fingerprint and questions headings, related carousel, collection,
+// - the start page (the living room's TV and the titles below the room), the title pages (header, hero poster, About, fingerprint and questions headings, related carousel, collection,
 //   episode tips of a show), Discover, a person page and the command palette's title search then carry text in that
-//   language with its `lang` (and `dir="rtl"` for Arabic), and no text of another picked language.
+//   language with its `lang` (and `dir="rtl"` for Arabic), and no text of another picked language; Arabic or Japanese
+//   letters whose nearest `lang` is English are untagged media text.
 // Main search (/api/combined-search) is not run: a real search writes a history row and may call the paid
 // interpreter, so the drive aborts it.
 import { createRequire } from "node:module"
@@ -15,7 +15,10 @@ import { fileURLToPath } from "node:url"
 const require = createRequire(`${process.env.PLAYWRIGHT ?? "."}/`)
 const { chromium } = require("playwright-core")
 const base = process.argv[2] ?? "http://localhost:3141"
-const here = path.dirname(fileURLToPath(import.meta.url))
+// Screenshots stay out of the repo (see README.md): SCREENS, or a folder beside the repository's checkout.
+const here =
+	process.env.SCREENS ??
+	path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../goodwatch-media-language-screens")
 // HeadlessChrome's own user agent is a crawler to the app, which serves crawlers canonical English by policy.
 const userAgent =
 	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
@@ -23,6 +26,7 @@ const userAgent =
 let failures = 0
 const bugs = []
 const notes = new Set()
+const sentences = new Set()
 const check = (ok, what) => {
 	console.log(`${ok ? "ok  " : "FAIL"} ${what}`)
 	if (!ok) failures++
@@ -30,6 +34,7 @@ const check = (ok, what) => {
 
 const MATRIX = "/movie/603-the-matrix"
 const PAGES = [
+	["home", "/"],
 	["matrix", MATRIX],
 	["spirited-away", "/movie/129-spirited-away"],
 	["breaking-bad", "/show/1396-breaking-bad"],
@@ -78,17 +83,37 @@ async function scrollThrough(p) {
 }
 
 /** Every piece of media text on the page: elements with their own `lang`, outside the pair's own controls. */
+const OWN_CONTROLS = "[data-preference-dialog],[data-preference-question],[data-pair-chip],[data-toast]"
 const mediaText = (p, scope = "body") =>
-	p.$$eval(`${scope} [lang]`, (els) =>
+	p.$$eval(`${scope} [lang]`, (els, own) =>
 		els
-			.filter((e) => !e.closest("[data-preference-dialog],[data-preference-question],[data-pair-chip],[data-toast]"))
+			.filter((e) => e !== document.documentElement && !e.closest(own))
 			.map((e) => ({
 				tag: e.tagName,
 				lang: e.getAttribute("lang"),
 				dir: e.getAttribute("dir"),
 				text: (e.tagName === "IMG" ? e.getAttribute("alt") : e.textContent)?.trim().slice(0, 60) ?? "",
 			})),
-	)
+	OWN_CONTROLS)
+
+/** Visible text in Arabic or Japanese letters whose nearest `lang` is English: media text nobody tagged. */
+const untagged = (p, scope = "body") =>
+	p.$eval(scope, (root, own) => {
+		const out = []
+		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+		for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+			const e = n.parentElement
+			if (!e || e.closest(own) || e.closest("script,style,noscript")) continue
+			if (!/[\u0600-\u06ff\u3040-\u30ff\u4e00-\u9fff]/.test(n.textContent)) continue
+			if ((e.closest("[lang]")?.getAttribute("lang") ?? "en").split("-")[0] !== "en") continue
+			const text = n.textContent.trim()
+			// A title inside an English sentence (FAQ answers, questions): page prose stays English by owner decision, and
+			// a built string has no element of its own for the title to carry its `lang`.
+			const sentence = /[A-Za-z]{3,}/.test(text.replace(/[\u0600-\u06ff\u3040-\u30ff\u4e00-\u9fff].*[\u0600-\u06ff\u3040-\u30ff\u4e00-\u9fff]/, ""))
+			out.push({ tag: e.tagName, lang: null, dir: null, text: text.slice(0, 60), sentence, path: [e.parentElement?.tagName, e.tagName, e.className?.toString().slice(0, 50)].join(" ") })
+		}
+		return out
+	}, OWN_CONTROLS)
 
 const ARABIC = /[؀-ۿ]/
 const KANA_HAN = /[぀-ヿ一-鿿]/
@@ -116,7 +141,9 @@ async function survey(p, page, url, language, name) {
 		check(tip.length > 0, `${name} breaking-bad: an episode tip names its episode with a language: ${tip.slice(0, 2).join(", ")}`)
 	}
 	const items = await mediaText(p)
-	const found = problems(items, language)
+	const loose = await untagged(p)
+	for (const i of loose) if (i.sentence) sentences.add(`${url}: ${i.tag} "${i.text}"`)
+	const found = problems(items, language).concat(loose.filter((i) => !i.sentence).map((i) => ["untagged media text", i]))
 	// Data, not a reader fault: an Arabic translation row whose title keeps the Latin name. Listed, not failed.
 	for (const i of items) if (baseOf(i.lang) === "ar" && i.tag !== "IMG" && i.text && !ARABIC.test(i.text)) notes.add(`${url}: [${i.lang}] "${i.text}"`)
 	const own = items.filter((i) => baseOf(i.lang) === language).length
@@ -136,7 +163,7 @@ async function palette(p, language, name) {
 	await input.fill("matrix")
 	await p.waitForTimeout(4000)
 	const items = await mediaText(p, "[role=dialog]")
-	const found = problems(items, language)
+	const found = problems(items, language).concat((await untagged(p, "[role=dialog]")).map((i) => ["untagged media text", i]))
 	check(items.length > 0 && found.length === 0, `${name} palette "matrix": ${items.map((i) => `${i.text}[${i.lang}]`).slice(0, 4).join(", ")}${found.length ? ` WRONG ${JSON.stringify(found.slice(0, 2))}` : ""}`)
 	for (const [what, i] of found) bugs.push({ url: "palette", language, what, ...i })
 	if (language !== "en") check(items.some((i) => baseOf(i.lang) === language), `${name} palette: a title in ${language}`)
@@ -223,7 +250,7 @@ try {
 			await go(d, url)
 			await survey(d, page, url, want, "desktop")
 			await d.screenshot({ path: path.join(here, `live-${want}-${page}-desktop.png`) })
-			if (page === "matrix" || page === "breaking-bad" || page === "discover") {
+			if (page === "home" || page === "matrix" || page === "breaking-bad" || page === "discover") {
 				await go(m, url)
 				await survey(m, page, url, want, "phone")
 				await m.screenshot({ path: path.join(here, `live-${want}-${page}-phone.png`) })
@@ -241,5 +268,6 @@ if (bugs.length) {
 	for (const b of bugs) console.log(JSON.stringify(b))
 }
 if (notes.size) console.log(`\nArabic-tagged text without Arabic letters (translation data):\n${[...notes].join("\n")}`)
+if (sentences.size) console.log(`\nTitles inside English sentences (no element to tag):\n${[...sentences].slice(0, 30).join("\n")}${sentences.size > 30 ? `\n… ${sentences.size - 30} more` : ""}`)
 console.log(failures ? `${failures} failed` : "all passed")
 process.exit(failures ? 1 : 0)

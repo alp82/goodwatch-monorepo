@@ -142,3 +142,23 @@ test("a 409 for this save is a conflict carrying the record on file, or null", a
 	const third = await stale.catch((e) => e)
 	assert.ok(third instanceof Error && !(third instanceof PreferenceConflict))
 })
+
+test("a save without an answer in time fails, and the next one still goes", async () => {
+	const signals: AbortSignal[] = []
+	globalThis.fetch = ((_: string, init: RequestInit) =>
+		new Promise<Response>((answer, fail) => {
+			const signal = init.signal as AbortSignal
+			signals.push(signal)
+			if (signals.length > 1) {
+				const b = JSON.parse(String(init.body)) as Body
+				return answer(saved(b, "v2"))
+			}
+			signal.addEventListener("abort", () => fail(signal.reason))
+		})) as typeof fetch
+	const saver = endpointSaver("/save", 20)
+	const hung = saver.save({ country: "JP", language: "ja" }, none)
+	const next = saver.save({ country: "DE", language: "browser" }, none)
+	await assert.rejects(hung)
+	assert.equal(signals[0].aborted, true)
+	assert.equal((await next).version, "v2")
+})

@@ -28,8 +28,8 @@ import {
 	type PreferenceState,
 	changes,
 	initialState,
-	intended,
 	isPending,
+	onScreen,
 	reduce,
 	shownLanguage,
 } from "./machine"
@@ -60,6 +60,9 @@ export interface MediaPreference {
 	warm: () => void
 	/** The private read arrived: whether the language is explicit or follows the browser is known. */
 	known: boolean
+	/** The private read failed: the page's own pair stands in for what is saved until `retryRead`. */
+	readFailed: boolean
+	retryRead: () => void
 	pickCountry: (country: string) => void
 	pickLanguage: (language: string) => void
 	tickCompanion: (language: string | null) => void
@@ -111,8 +114,8 @@ export function MediaPreferenceProvider({
 	children,
 }: {
 	/**
-	 * The country the page loaded with. It counts as saved: the server resolves it from the saved pair, or from a
-	 * country in the address, which is the page's own until a pick.
+	 * The country the page loaded with. Until the private read it counts as saved; then, when it is not the saved one
+	 * (a country in the address), it stays on screen as this page's view and is never saved.
 	 */
 	country: string
 	saver?: PreferenceSaver
@@ -150,9 +153,15 @@ export function MediaPreferenceProvider({
 	const prefs = useQuery({ ...prefsQuery, enabled: wanted })
 	// The revision of the saved record, which a save says it replaces.
 	const version = useRef<string | null>(null)
+	// Only the first read compares the saved country with the page's: later the page follows what was kept.
+	const pageCountry = useRef<string | null>(country)
 	const adopt = useCallback(
 		(data: GetMediaPreferencesResponse) => {
 			const context = data.effectiveContext
+			// The read's own address has no `?country=`: its country is the saved one, or the guess a Keep confirms.
+			const savedCountry = data.mediaPreferences?.country ?? context.country
+			const view = pageCountry.current
+			pageCountry.current = null
 			version.current = data.mediaPreferences?.version ?? null
 			// "Browser default" follows the browser: the server's negotiation while it follows it, else the same rule
 			// on the browser's own list.
@@ -164,11 +173,9 @@ export function MediaPreferenceProvider({
 			)
 			dispatch({
 				type: "syncSaved",
-				pair: {
-					country: stateRef.current.saved.country,
-					language: context.languageSetting,
-				},
+				pair: { country: savedCountry, language: context.languageSetting },
 				recorded: data.mediaPreferences !== null,
+				...(view !== null && { view: view === savedCountry ? null : view }),
 			})
 		},
 		[dispatch],
@@ -205,6 +212,8 @@ export function MediaPreferenceProvider({
 			language: pair.language !== was.language,
 		})
 		setAnnouncement(kind === "undo" ? "Restoring…" : "Saving…")
+		// An earlier toast's Undo would be dropped while this saves: it goes; this save's toast follows.
+		toast.dismiss()
 		// The save replaces the revision on record, so it waits for the private read if a pick came first.
 		queryClient
 			.fetchQuery(prefsQuery)
@@ -272,6 +281,7 @@ export function MediaPreferenceProvider({
 		browserLanguage,
 		destination,
 		toast.say,
+		toast.dismiss,
 		queryClient,
 		revalidate,
 		prefsKey,
@@ -294,7 +304,7 @@ export function MediaPreferenceProvider({
 		wasPending.current = pending
 	}, [pending])
 
-	const next = intended(state)
+	const next = onScreen(state)
 	const shown = {
 		country: next.country,
 		language: shownLanguage(next.language, browserLanguage),
@@ -309,6 +319,10 @@ export function MediaPreferenceProvider({
 		destination,
 		warm,
 		known: prefs.data !== undefined,
+		readFailed: prefs.isError && prefs.data === undefined,
+		retryRead: () => {
+			void prefs.refetch()
+		},
 		pickCountry: (code) => {
 			setWanted(true)
 			dispatch({
@@ -323,7 +337,15 @@ export function MediaPreferenceProvider({
 		},
 		tickCompanion: (language) => dispatch({ type: "tickCompanion", language }),
 		discard: () => dispatch({ type: "discard" }),
-		keep: () => dispatch({ type: "keep" }),
+		// The saved pair is read first: a Keep of one value keeps the other as saved, never as the page shows it.
+		keep: () => {
+			if (prefs.data) return void dispatch({ type: "keep" })
+			queryClient
+				.fetchQuery(prefsQuery)
+				.then(adopt)
+				.catch(() => {})
+				.then(() => dispatch({ type: "keep" }))
+		},
 		dialog,
 		openDialog: (tab) => {
 			if (stateRef.current.status === "saving") return

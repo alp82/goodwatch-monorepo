@@ -28,7 +28,7 @@ export default function PreferencePair({
 	const language = englishName(shown.language)
 	const follows = intended(state).language === BROWSER
 	const spoken = [
-		`Country ${country}, ${changed.country ? "not saved" : "saved"}.`,
+		`Country ${country}, ${changed.country ? "not saved" : shown.country !== state.saved.country ? "for this page only" : "saved"}.`,
 		// The shared page does not say whether the language is chosen or the browser's: only the private read does.
 		!p.known && !changed.language
 			? `Titles in ${language}.`
@@ -156,7 +156,7 @@ function Question() {
 						<p className="min-w-0 flex-1 truncate text-xs">
 							{failed ? (
 								<span role="alert" className="text-red-300">
-									{state.conflict ? "Saved elsewhere." : "Didn't save."}
+									{state.conflict ? "Saved elsewhere." : "Couldn't confirm."}
 								</span>
 							) : (
 								<>
@@ -178,7 +178,7 @@ function Question() {
 							<p role="alert" className="mt-2 text-xs text-red-300">
 								{state.conflict
 									? "Saved elsewhere meanwhile. Retry keeps this."
-									: "Didn't save. Nothing changed."}
+									: "Couldn't confirm the save. It may have gone through; Retry to make sure."}
 							</p>
 						) : (
 							<p className="mt-2 text-xs text-gray-500">{status}</p>

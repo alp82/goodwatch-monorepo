@@ -6,8 +6,9 @@ Decided 2026-10-14 in the UI thread of the multi-language work, under the orches
 
 - `/settings/country` is the only settings page that edits the country. It now edits the pair: **Country** and **Titles** lists side by side (stacked on a phone). The navigation entry is "Country & titles".
 - Same pair rules as the title page's F pair (`ui/media-preference/machine.ts`, `MediaPreference.tsx`): one save call for the whole pair through `/api/user-settings/set`, a client id per page load, `expectedVersion` from the private `GET /api/media-preferences`, a 409 that adopts the saved record and keeps the pick for Retry.
-- **No preview there: a pick saves at once.** A settings page has no title to show a pick on, so a pending "Keep this?" step would add a click without anything to look at. The toast offers Undo of the whole pair, through the same call ("Saved to your account: Japan" / "Restored …").
-- While a save runs, both lists are off (a disabled fieldset) and "Saving to your account…" is said. A failure keeps the pick, shows it as "not saved", and offers **Retry** and **Cancel**; a conflict says "Saved elsewhere meanwhile".
+- **No preview there: a pick saves at once** (owner decision, 2026-10-14, replacing the decisions doc's earlier "same preview/Keep/Undo" line). A settings page has no title to show a pick on, so a pending "Keep this?" step would add a click without anything to look at. The toast offers Undo of the whole pair, through the same call ("Saved to your account: Japan" / "Restored …").
+- While a save runs, both lists are off (a disabled fieldset) and "Saving to your account…" is said, and an earlier toast goes (its Undo would be dropped while the save runs). A failure keeps the pick, shows it as "not saved", and offers **Retry** and **Cancel**: a 400, 503, no network, or no answer within 10 s says "Couldn't confirm the save. It may have gone through; Retry to make sure.", because the write may have landed; a conflict says "Saved elsewhere meanwhile".
+- If the private read of what is saved fails, the lists open on the page's own pair with "Couldn't read what is saved" and Try again; a save then sends no revision, and a conflict adopts the record on file.
 - Browser default reads "Follow browser (currently German)"; the save destination comes from the server's answer ("to your account" for members; the page is members-only).
 - **No companion offer on settings.** The language list stands right beside the country list, so a country pick saves only the country.
 
@@ -23,7 +24,7 @@ Decided 2026-10-14 in the UI thread of the multi-language work, under the orches
   - Scripts whose marks reach above and below the line (Arabic) get `data-media-script="tall"`. A rule in `main.css` gives them 0.15 em of room inside their own clipping box and takes it back outside, so nothing moves.
   - Use MediaText as the element that clips (`truncate`, `line-clamp-*`), not as a span inside it.
 - **Korean** breaks lines between words (`word-break: keep-all` on `[lang|=ko]`); a word longer than its box still breaks.
-- Evidence is in `media-language-screens/`: `text-*.png`, `arabic-zoom-*.png`, `cjk-zoom-*.png` (from `/prototype/media-language-ui?view=text`, development only).
+- Evidence is in the screenshot folder outside the repository (`media-language-screens/README.md`): `text-*.png`, `arabic-zoom-*.png`, `cjk-zoom-*.png` (from `/prototype/media-language-ui?view=text`, development only).
 
 ## Localized preview on the title page (F) and media text readers
 
@@ -35,4 +36,13 @@ Added 2026-10-14, after the backend overlays (4718b47c).
 - While a language's text is on its way the page keeps the text it has; the header title says `aria-busy`.
 - **MediaText on the readers.** `presentedText(media, field, text)` and `episodeText(episode, field)` adapt the payload's provenance to `{ text, lang }`; `und` (language not established) gives `lang="und" dir="auto"`. Used as the clipping element in: the details header title, About's tagline and description, MovieTvCard titles (TitlePosterCard, Discover, related carousel, person pages; the year stays interface text), the fingerprint and questions headings' title mention, the command palette's titles, main search result titles, the episode grid's tip and the tracking episode rows (names, descriptions, Next).
 - **Not tagged:** title mentions inside English sentences that are built as strings (the questions' answers, aria labels, toasts) cannot carry a language of their own.
-- Evidence: `media-language-screens/drive-live.mjs` and `live-*.png`.
+- Evidence: `media-language-screens/drive-live.mjs`, with its `live-*.png` in the screenshot folder outside the repository (`media-language-screens/README.md`).
+
+## Review fixes (2026-10-14)
+
+- **`?country=` is a view, never saved.** The pair keeps the saved country (from the private read, whose own address has no `?country=`) apart from the country the page shows (`view` in `machine.ts`, `onScreen`). A member with Germany saved on `/movie/1?country=FR` who picks Japanese and keeps saves `{DE, ja}`; the page still shows France, and the pair says "Country France, for this page only". A Keep waits for the private read when a pick came before it. A kept country replaces the view.
+- **One provider per title** (`Details.tsx` keys it by media type and id): a preview and its question never carry over to the next title.
+- **The toast's Undo is never dropped silently**: a save takes the earlier toast away when it starts; its own toast follows.
+- **A saved pair read during a save is taken**, so the toast's Undo returns to the pair really saved before, not to the first guess.
+- **Where-to-watch's loading or failure line sits over the services** (dimmed below it), so a country preview moves nothing.
+- The dev harness routes `prototype.watch-log-real` and `prototype.episode-tracking-real` wrap the real hero in the pair's provider.

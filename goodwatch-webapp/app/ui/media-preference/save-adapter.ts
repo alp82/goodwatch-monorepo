@@ -4,7 +4,7 @@
 //   POST /api/user-settings/set   { clientId, pair, sequence, expectedVersion }
 //     -> 200 { pair, version, sequence, effectiveContext, destination }, and the `gw_loc` cookie
 //     -> 409 { error, sequence, current: { pair, version, sequence } | null }: saved meanwhile elsewhere
-//     -> 400 / 503: not saved (or not confirmed)
+//     -> 400 / 503, no answer within SAVE_TIMEOUT_MS, or no network: not confirmed (the write may have landed)
 import {
 	type GetMediaPreferencesResponse,
 	type LocalizationPair,
@@ -45,6 +45,9 @@ export async function readMediaPreferences(
 	return response.json()
 }
 
+/** A save without an answer by then is given up as not confirmed, so the pair and Retry do not stay locked. */
+export const SAVE_TIMEOUT_MS = 10_000
+
 /**
  * Saves one at a time, in the order asked: each waits for the one before (every save writes the cookie). The
  * sequence counts within this saver's client id, a fresh one per page load, as the server expects. An answer, a
@@ -52,6 +55,7 @@ export async function readMediaPreferences(
  */
 export function endpointSaver(
 	path = "/api/user-settings/set",
+	timeoutMs = SAVE_TIMEOUT_MS,
 ): PreferenceSaver {
 	let clientId: string | null = null
 	let sequence = 0
@@ -69,11 +73,14 @@ export function endpointSaver(
 			sequence: sent,
 			expectedVersion,
 		}
+		const abort = new AbortController()
+		const timer = setTimeout(() => abort.abort(), timeoutMs)
 		const response = await fetch(path, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(request),
-		})
+			signal: abort.signal,
+		}).finally(() => clearTimeout(timer))
 		const body = await response.json().catch(() => null)
 		if (
 			response.status === 409 &&

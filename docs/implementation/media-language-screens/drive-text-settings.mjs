@@ -10,7 +10,10 @@ import { fileURLToPath } from "node:url"
 const require = createRequire(`${process.env.PLAYWRIGHT ?? "."}/`)
 const { chromium } = require("playwright-core")
 const base = process.argv[2] ?? "http://localhost:3141"
-const here = path.dirname(fileURLToPath(import.meta.url))
+// Screenshots stay out of the repo (see README.md): SCREENS, or a folder beside the repository's checkout.
+const here =
+	process.env.SCREENS ??
+	path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../goodwatch-media-language-screens")
 
 let failures = 0
 const check = (ok, what) => {

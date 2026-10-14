@@ -10,6 +10,7 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { Link } from "@remix-run/react"
 import type { MouseEvent } from "react"
 import { titleToDashed } from "~/utils/helpers"
+import MediaText from "~/ui/media-text/MediaText"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
 
@@ -135,7 +136,7 @@ export function BelowRoom({
 									/>
 								)}
 								<Link to={startTitleHref(title)} discover="none">
-									<span lang={mediaFieldLanguage(title)}>{title.title}</span>
+									<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title) }} />
 								</Link>
 								<span>{startTitleLine(title)}</span>
 							</li>
