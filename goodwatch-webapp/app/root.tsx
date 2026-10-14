@@ -14,6 +14,7 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserData } from "~/server/userData.server"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
+import { createAuthCookieMatcher } from "~/utils/auth-cookie"
 import type {
 	LinksFunction,
 	LoaderFunction,
@@ -28,6 +29,7 @@ import {
 	useLoaderData,
 	useLocation,
 	useRouteError,
+	useRouteLoaderData,
 } from "@remix-run/react"
 import {
 	type DehydratedState,
@@ -42,7 +44,7 @@ import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
-import InfoBox from "~/ui/InfoBox"
+import { ErrorPage } from "~/ui/ErrorPage"
 import {
 	HubDialog,
 	MobileDock,
@@ -57,7 +59,7 @@ import { assetBase, assetUrl } from "~/utils/asset-url"
 import cssTailwind from "~/tailwind.css?url"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import App from "~/app"
-import { getAuthFromRequest } from "./utils/auth"
+import { AuthContext, getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
 	...(assetBase()
@@ -157,16 +159,51 @@ export const loader: LoaderFunction = async ({
 	)
 }
 
-// The error page draws the site's navigation without the root loader's data: the account slot stays empty.
+// What the error page's header knows about the person: the root loader's data when it succeeded (a missing page, or
+// a failure of a child route), else what the browser can find out.
+type BoundaryRoot = LoaderData | "guest" | "pending"
+
+// The root loader's data is missing when the root loader itself failed. Someone with a sign-in cookie may still be a
+// member then, so the loader is asked once more; without the cookie there's nothing to ask, and the page is a guest's.
+function useBoundaryRoot(rootData: LoaderData | undefined): BoundaryRoot {
+	const [fallback, setFallback] = React.useState<BoundaryRoot>("pending")
+	React.useEffect(() => {
+		if (rootData) return
+		if (!createAuthCookieMatcher("")(document.cookie)) {
+			setFallback("guest")
+			return
+		}
+		const controller = new AbortController()
+		fetch("/?_data=root", { signal: controller.signal })
+			.then((response) => (response.ok ? response.json() : null))
+			.then((data) => setFallback(data?.env ? data : "guest"))
+			.catch(() => {
+				if (!controller.signal.aborted) setFallback("guest")
+			})
+		return () => controller.abort()
+	}, [rootData])
+	return rootData ?? fallback
+}
+
+// The error page draws the site's navigation and the account slot like any page, from the root loader's data.
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
+	// The data went through JSON, which is how it reaches the browser: its type here is the loader's own.
+	const rootData = useRouteLoaderData("root") as LoaderData | undefined
+	const root = useBoundaryRoot(rootData)
 	// An address that names no page is an answer, not a failure of the app.
-	const notFound = isRouteErrorResponse(error) && error.status === 404
+	const status = isRouteErrorResponse(error) ? error.status : 500
+	const notFound = status === 404
 	if (!notFound) {
 		console.error(error)
 		reportBoundaryError(error)
 	}
+	const detail = import.meta.env.DEV && !notFound
+		? [(error as Error)?.message, (error as { data?: unknown })?.data]
+				.filter((part) => typeof part === "string" && part)
+				.join("\n")
+		: undefined
 
 	const [queryClient] = React.useState(
 		() =>
@@ -181,10 +218,23 @@ export function ErrorBoundary() {
 			}),
 	)
 
+	const page = (
+		<NavigationProvider>
+			<SiteHeader />
+			<ErrorPage status={status} detail={detail || undefined} />
+			<Footer />
+			<MobileDock />
+			<HubDialog />
+			<SearchDialog />
+		</NavigationProvider>
+	)
+
 	return (
 		<html lang="en">
 			<head>
-				<title>{notFound ? "Page not found | GoodWatch" : "Oh no!"}</title>
+				<title>
+					{notFound ? "Page not found | GoodWatch" : "Something went wrong | GoodWatch"}
+				</title>
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see telemetry/early.ts */}
 				<script dangerouslySetInnerHTML={{ __html: EARLY_TELEMETRY_SCRIPT }} />
 				<meta httpEquiv="Content-Type" content="text/html;charset=utf-8" />
@@ -194,49 +244,25 @@ export function ErrorBoundary() {
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
-					<NavigationProvider>
-						<SiteHeader />
-						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-							<InfoBox
-								text={
-									notFound
-										? "This page doesn't exist"
-										: "Sorry, but an error occurred"
-								}
-							/>
-							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
-								{/* Error message */}
-								<strong className="text-xl text-white">
-									{(error as any)?.message || (error as any)?.data}
-								</strong>
-
-								{/* Try Again button */}
-								<button
-									type="button"
-									className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
-									onClick={() => window.location.reload()}
-								>
-									Try Again
-								</button>
-
-								{/* Error stack trace */}
-								{error?.stack && (
-									<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
-										<pre className="whitespace-pre-wrap break-words">
-											{(error as any).message}
-											<pre>{(error as any).data}</pre>
-										</pre>
-									</div>
-								)}
-							</div>
-						</main>
-						<Footer />
-						<MobileDock />
-						<HubDialog />
-						<SearchDialog />
-					</NavigationProvider>
+					{typeof root === "object" ? (
+						<LocaleContext.Provider value={{ locale: root.locale }}>
+							<AuthProvider
+								supabaseUrl={root.env.SUPABASE_URL}
+								supabaseAnonKey={root.env.SUPABASE_ANON_KEY}
+								initialUser={root.user}
+							>
+								<HydrationBoundary state={root.dehydratedState}>
+									{page}
+								</HydrationBoundary>
+							</AuthProvider>
+						</LocaleContext.Provider>
+					) : (
+						// No client to sign in with yet: the slot is empty while the cookie check runs, then Sign in.
+						<AuthContext.Provider value={{ ...NO_CLIENT, loading: root === "pending" }}>
+							{page}
+						</AuthContext.Provider>
+					)}
 					<ToastContainer />
-					{/* <CookieConsent /> */}
 					<TelemetryBoot />
 					<ScrollRestoration />
 					<Scripts />
@@ -244,6 +270,12 @@ export function ErrorBoundary() {
 			</body>
 		</html>
 	)
+}
+
+const NO_CLIENT = {
+	supabase: undefined,
+	getSupabase: () => Promise.reject(new Error("No auth client")),
+	user: null,
 }
 
 function Root() {
