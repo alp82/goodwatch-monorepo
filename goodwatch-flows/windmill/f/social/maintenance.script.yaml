@@ -1,6 +1,6 @@
 summary: Social maintenance
-description: Bounded daily deletion/opt-out sync and retention. Unknown
-  responses preserve content.
+description: Bounded daily deletion/opt-out sync and retention. Unknown responses
+  preserve content.
 lock: '!inline f/social/maintenance.script.lock'
 kind: script
 schema:
@@ -16,9 +16,11 @@ schema:
       type: string
       default: all
       enum:
-        - all
-        - youtube
-        - rss
-        - bluesky
-        - mastodon
+      - all
+      - youtube
+      - rss
+      - bluesky
+      - mastodon
   required: []
+concurrent_limit: 1
+concurrency_time_window_s: 0

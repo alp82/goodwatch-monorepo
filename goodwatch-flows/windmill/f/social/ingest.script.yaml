@@ -1,6 +1,6 @@
 summary: Social ingest
-description: Bounded discovery/backfill; sources fail independently, all
-  accepted matches publish.
+description: Bounded discovery/backfill; sources fail independently, all accepted
+  matches publish.
 lock: '!inline f/social/ingest.script.lock'
 kind: script
 schema:
@@ -26,12 +26,14 @@ schema:
       type: string
       default: all
       enum:
-        - all
-        - youtube
-        - rss
-        - bluesky
-        - mastodon
+      - all
+      - youtube
+      - rss
+      - bluesky
+      - mastodon
     vector_enabled:
       type: boolean
       default: true
   required: []
+concurrent_limit: 1
+concurrency_time_window_s: 0
