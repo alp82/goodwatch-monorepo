@@ -1,0 +1,81 @@
+{
+  "label": "final-relocation-progress",
+  "host": 11,
+  "stmt": "SELECT schema_name, table_name, id, primary, node['name'], state, routing_state, recovery FROM sys.shards WHERE routing_state != 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "doc",
+          "show",
+          11,
+          false,
+          "crate-03",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 251,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "doc",
+          "show",
+          10,
+          true,
+          "crate-01",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 488,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 11.304754
+    },
+    "elapsedSeconds": 0.016,
+    "at": "2026-10-14T20:03:52.928534+00:00"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "hosts": [
+    {
+      "host": "10.0.0.11",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "effectiveService": true,
+        "oldImageDigests": true,
+        "runtime.name": true,
+        "runtime.image": true,
+        "runtime.imageId": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.mounts": true,
+        "runtime.memoryLimit": true
+      },
+      "firewallTimer": "active",
+      "authUserAbsent": true,
+      "backupReadable": true
+    },
+    {
+      "host": "10.0.0.12",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "effectiveService": true,
+        "oldImageDigests": true,
+        "runtime.name": true,
+        "runtime.image": true,
+        "runtime.imageId": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.mounts": true,
+        "runtime.memoryLimit": true
+      },
+      "firewallTimer": "active",
+      "authUserAbsent": true,
+      "backupReadable": true
+    },
+    {
+      "host": "10.0.0.13",
+      "unchanged": {
+        "composeFileSha256": true,
+        "crateGitStatus": true,
+        "effectiveService": true,
+        "oldImageDigests": true,
+        "runtime.name": true,
+        "runtime.image": true,
+        "runtime.imageId": true,
+        "runtime.command": true,
+        "runtime.restartPolicy": true,
+        "runtime.ports": true,
+        "runtime.mounts": true,
+        "runtime.memoryLimit": true
+      },
+      "firewallTimer": "active",
+      "authUserAbsent": true,
+      "backupReadable": true
+    }
+  ],
+  "allUnchanged": true,
+  "tableSettingsUnchanged": true
+}

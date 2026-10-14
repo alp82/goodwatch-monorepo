@@ -1,6 +1,6 @@
 # CrateDB prerequisites for auth: owner-gated production runbook
 
-Prepared 2026-10-14 for [#547](https://github.com/alp82/goodwatch-monorepo/issues/547), under map [#529](https://github.com/alp82/goodwatch-monorepo/issues/529). **Preparation only: no production upgrade, user creation, authentication change, snapshot creation, or firewall change was performed.** Owner go for upgrade-only execution was given at `2026-10-14T18:29:59Z`; that attempt stopped at pre-check 3 before any production mutation because restore validation is unproven. All nodes remain 5.10.9, GREEN/STARTED. See [execution notes](cratedb-production/20261014-owner-go/notes.md). The issue remains open. Auth-user creation is excluded from this go and deferred to #562.
+Prepared 2026-10-14 for [#547](https://github.com/alp82/goodwatch-monorepo/issues/547), under map [#529](https://github.com/alp82/goodwatch-monorepo/issues/529). **Production upgrade stopped before target startup: all three nodes remain 5.10.9.** The first owner-go attempt stopped at unproven restore validation. The owner waived that gate for this patch at `2026-10-14T18:46:29Z`; live pre-checks and the named safety snapshot then passed, but the first decommission request hit an incorrectly short operator HTTP timeout. The rollout was aborted, original configuration restored and crate-02 restarted on its retained original image. Final GREEN/STARTED recovery is still being observed; see the execution sections below. No auth user, HBA, firewall or table-setting changes were made. #547 remains open; user creation waits for #562.
 
 ## Target and inspected deployment
 
@@ -101,7 +101,7 @@ Execute one host at a time, preferring the current elected master last. Do not a
 
 For each `(10.0.0.11, crate-01)`, `(10.0.0.12, crate-02)`, `(10.0.0.13, crate-03)` in the chosen order:
 
-1. Repeat the baseline health/shard checks. Ensure live clients can use the other two endpoints and retries respect ambiguous write outcomes from [#530](https://github.com/alp82/goodwatch-monorepo/issues/530). A maintenance restart can fail an in-flight HTTP request; do not retry non-idempotent operations with fresh CAS versions merely because an answer was lost.
+1. Repeat the baseline health/shard checks. Before another production attempt, require a reviewed native-client coordinator drain/failover plan for webapp, search and workers: the 2026-10-14 attempt produced application timeouts while crate-02 disabled SQL, although direct requests to surviving endpoints passed. Remove/drain the selected endpoint from native client routing where supported **before** SQL decommission, under separately reviewed client configuration scope; stop if that prerequisite is unresolved. Do not change production client configuration as part of this stopped attempt. Ensure live clients can use the other two endpoints and retries respect ambiguous write outcomes from [#530](https://github.com/alp82/goodwatch-monorepo/issues/530). A maintenance restart can fail an in-flight HTTP request; do not retry non-idempotent operations with fresh CAS versions merely because an answer was lost.
 2. On this host, preserve `.env` securely and render a reviewed configuration with only `CRATE_VERSION` changed to the digest-pinned `5.10.16@sha256:...` suffix above (Compose prefixes `crate:`). Preserve file mode/ownership. Validate the rendered service still has the original private bindings and data mounts. Disable the existing container's automatic restart before SQL drain so Docker cannot restart the old binary:
 
    ```sh
@@ -110,14 +110,14 @@ For each `(10.0.0.11, crate-01)`, `(10.0.0.12, crate-02)`, `(10.0.0.13, crate-03
    # Replace crate-01 with the exact node for this host.
    ```
 
-3. On a **different, healthy coordinator**, set transient allocation and decommission the exact recorded node ID (or node name, supported by CrateDB). Execute each SQL once, checking its response. Do not direct the command through the endpoint about to exit:
+3. On a **different, healthy coordinator**, set transient allocation and decommission the exact recorded node ID (or node name, supported by CrateDB). Execute each SQL once, checking its response. Use an administrative decommission HTTP timeout of at least 7,500 seconds for the configured two-hour relocation wait, plus independent read-only progress monitoring; the application timeout is unsuitable. Do not direct the command through the endpoint about to exit:
 
    ```sql
    SET GLOBAL TRANSIENT "cluster.routing.allocation.enable" = 'primaries';
    ALTER CLUSTER DECOMMISSION '<recorded-node-id>';
    ```
 
-   Poll `sys.nodes` until the target is absent; inspect `docker inspect <node> --format '{{.State.Status}} {{.State.ExitCode}}'` until it has actually exited. Check the two survivors remain joined and every table has `missing_shards = 0`. YELLOW/underreplication is expected while this node is absent. Watch progress in logs and `SELECT id, stmt, started FROM sys.jobs`; decommission waits for active requests, including work whose HTTP caller already timed out. Drain/remove this endpoint from client routing where supported and wait for those operations to settle. Do not terminate production jobs without a separate decision. The cluster graceful timeout is two hours, not permission to kill it early. A failed/timed-out drain stops the rollout. Do not delete volumes or alter forced-stop settings.
+   Poll `sys.nodes` until the target is absent; inspect `docker inspect <node> --format '{{.State.Status}} {{.State.ExitCode}}'` until it has actually exited. Check the two survivors remain joined and every table has `missing_shards = 0`. YELLOW/underreplication is expected while this node is absent. Watch progress in logs and `SELECT id, stmt, started FROM sys.jobs`; decommission waits for active requests, including work whose HTTP caller already timed out. The client drain from step 1 must already be effective; wait for active operations to settle. Do not terminate production jobs without a separate decision. The cluster graceful timeout is two hours, not permission to kill it early. A failed/timed-out drain stops the rollout. Do not delete volumes or alter forced-stop settings.
 4. Recreate only this service using the reviewed target `.env`; Compose restores the declared `restart: always`. The named data volume is retained:
 
    ```sh
@@ -214,9 +214,9 @@ The rehearsal exercises the upgrade with writes while each node is down, all thr
 
 Only the operator-approved window runs: repeated read-only health/config/firewall/client checks; a serialized named pre-upgrade snapshot; target image pulls; per-node `.env` image pin updates, temporary `docker update --restart=no`, transient allocation `primaries`, SQL decommission, service recreation on existing volumes, restart-policy/allocation restoration and recovery checks; then a final backup/health check. This go explicitly excludes `CREATE USER goodwatch_auth`, HBA, firewall and table-setting changes. Account work waits for #562; the SQL above is retained for a separately authorized future operation.
 
-No production command above has run during preparation. No firewall command that changes rules, TLS rollout, HBA toggle, catalog schema change, Better Auth launch or Supabase cut-over is included. **Auth launch remains gated on the separately reviewed password/client migration.** Keep #547 open until production versions, user and firewall acceptance are recorded; report this document as runbook-ready preparation, not a completed production prerequisite.
+Preparation made no production changes; the later authorized execution and abort are recorded below. No firewall command that changes rules, TLS rollout, HBA toggle, catalog schema change, Better Auth launch or Supabase cut-over is included. **Auth launch remains gated on the separately reviewed password/client migration.** Keep #547 open until production versions, user and firewall acceptance are recorded; report the actual stopped execution; this is not a completed production prerequisite.
 
-## Production execution outcome
+## First owner-go execution outcome
 
 The upgrade attempt stopped at pre-check 3 before snapshot creation or any infrastructure/data/configuration change. Restore validation for this deployment is not established; the existing documentation explicitly says a Crate backup restore was never tried. No gate was waived. All three nodes remain at 5.10.9, all 90 table/partition health rows GREEN, all 920 shard copies STARTED and all 21 node checks passed. Three read-only probes from the actual webapp returned HTTP 200 with no SQL/transport errors. No named pre-upgrade snapshot was created, no rollback was needed, and no auth user was created. [Execution notes, timings and evidence](cratedb-production/20261014-owner-go/notes.md) preserve the owner go, the failed gate and the clean stop before the 03:00 UTC cutoff.
 

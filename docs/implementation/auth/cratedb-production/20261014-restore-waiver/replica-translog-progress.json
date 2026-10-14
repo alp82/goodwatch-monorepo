@@ -1,0 +1,96 @@
+{
+  "label": "replica-translog-progress",
+  "host": 11,
+  "stmt": "SELECT primary, node['name'], state, num_docs, seq_no_stats, translog_stats, recovery FROM sys.shards WHERE schema_name = 'doc' AND table_name = 'movie' AND id = 0",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "primary",
+        "node['name']",
+        "state",
+        "num_docs",
+        "seq_no_stats",
+        "translog_stats",
+        "recovery"
+      ],
+      "rows": [
+        [
+          true,
+          "crate-03",
+          "STARTED",
+          104975,
+          {
+            "max_seq_no": 78461669,
+            "global_checkpoint": 78461669,
+            "local_checkpoint": 78461669
+          },
+          {
+            "uncommitted_operations": 0,
+            "uncommitted_size": 55,
+            "size": 55,
+            "number_of_operations": 0
+          },
+          {
+            "files": {
+              "recovered": 461,
+              "used": 461,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 1311689,
+            "size": {
+              "recovered": 264173248,
+              "used": 264173248,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          false,
+          "crate-02",
+          "RECOVERING",
+          null,
+          {
+            "max_seq_no": 78461669,
+            "global_checkpoint": 75647929,
+            "local_checkpoint": 77548060
+          },
+          {
+            "uncommitted_operations": 4748682,
+            "uncommitted_size": 7288814109,
+            "size": 7288811522,
+            "number_of_operations": 4748680
+          },
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "TRANSLOG",
+            "type": "PEER",
+            "total_time": 797051,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 17.455572
+    },
+    "elapsedSeconds": 0.024,
+    "at": "2026-10-14T19:55:51.153900+00:00"
+  }
+}

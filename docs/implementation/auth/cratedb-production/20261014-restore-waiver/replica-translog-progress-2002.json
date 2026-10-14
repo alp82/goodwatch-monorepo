@@ -1,0 +1,80 @@
+{
+  "label": "replica-translog-progress-2002",
+  "host": 11,
+  "stmt": "SELECT primary, node['name'], state, seq_no_stats, recovery FROM sys.shards WHERE schema_name = 'doc' AND table_name = 'movie' AND id = 0",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "primary",
+        "node['name']",
+        "state",
+        "seq_no_stats",
+        "recovery"
+      ],
+      "rows": [
+        [
+          true,
+          "crate-03",
+          "STARTED",
+          {
+            "max_seq_no": 78461737,
+            "global_checkpoint": 78461737,
+            "local_checkpoint": 78461737
+          },
+          {
+            "files": {
+              "recovered": 461,
+              "used": 461,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 1311689,
+            "size": {
+              "recovered": 264173248,
+              "used": 264173248,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          false,
+          "crate-02",
+          "RECOVERING",
+          {
+            "max_seq_no": 78461737,
+            "global_checkpoint": 75647929,
+            "local_checkpoint": 78310067
+          },
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "TRANSLOG",
+            "type": "PEER",
+            "total_time": 1134594,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 12.652501
+    },
+    "elapsedSeconds": 0.019,
+    "at": "2026-10-14T20:01:28.699049+00:00"
+  }
+}
