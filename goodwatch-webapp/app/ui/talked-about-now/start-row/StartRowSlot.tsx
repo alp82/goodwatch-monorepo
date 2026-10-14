@@ -5,8 +5,21 @@
 // the space it needs.
 import { useQueryClient } from "@tanstack/react-query"
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
+import type { TalkedRow } from "~/domain/talked-about-now"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import { TALKED_QUERY_KEY, fetchTalked } from "./query"
+
+// The row's one request. The slot starts it early and hands it to the row: a module both import would go into the
+// shell chunk every page loads (rule 3 in vite.config.js).
+const TALKED_QUERY = {
+	queryKey: ["talked-about-now"],
+	queryFn: async (): Promise<TalkedRow | null> => {
+		const response = await fetch("/api/talked-about-now")
+		if (response.status === 404) return null
+		if (!response.ok) throw new Error(`Talked about now: ${response.status}`)
+		return ((await response.json()) as { row: TalkedRow | null }).row
+	},
+}
+export type TalkedQuery = typeof TALKED_QUERY
 
 const loadRow = () => import("./StartRow")
 const StartRow = lazy(reloadOnStaleChunk(loadRow))
@@ -27,10 +40,7 @@ export function StartRowSlot() {
 				(entries) => {
 					if (!entries.some((entry) => entry.isIntersecting)) return
 					stop()
-					client.prefetchQuery({
-						queryKey: TALKED_QUERY_KEY,
-						queryFn: fetchTalked,
-					})
+					client.prefetchQuery(TALKED_QUERY)
 					setWanted(true)
 				},
 				{ rootMargin: "0px 0px 50% 0px" },
@@ -51,7 +61,7 @@ export function StartRowSlot() {
 		<div ref={slot}>
 			{wanted && (
 				<Suspense fallback={null}>
-					<StartRow />
+					<StartRow query={TALKED_QUERY} />
 				</Suspense>
 			)}
 		</div>

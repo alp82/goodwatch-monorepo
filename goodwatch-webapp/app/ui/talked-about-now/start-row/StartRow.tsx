@@ -21,7 +21,7 @@ import {
 import { startTitleHref } from "~/ui/living-room/BelowRoom"
 import { NativeItems, Platform, SourceMark } from "./Items"
 import { Spark, dateLabel } from "./Spark"
-import { TALKED_QUERY_KEY, fetchTalked } from "./query"
+import type { TalkedQuery } from "./StartRowSlot"
 import "./start-row.css"
 
 const tmdb = (path: string, size: string) =>
@@ -307,11 +307,8 @@ function Board({ row }: { row: TalkedRow }) {
 	)
 }
 
-export default function StartRow() {
-	const { data, isPending } = useQuery({
-		queryKey: TALKED_QUERY_KEY,
-		queryFn: fetchTalked,
-	})
+export default function StartRow({ query }: { query: TalkedQuery }) {
+	const { data, isPending } = useQuery(query)
 	// While it loads, the row holds about its place, so the titles below don't jump when it comes.
 	if (isPending) return <div className="tn-wait" aria-hidden />
 	if (!data?.titles.length) return null

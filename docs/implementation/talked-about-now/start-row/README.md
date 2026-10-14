@@ -31,6 +31,27 @@ The flag module comes back in a smaller form: `a02f37bb` removed the old one whe
 - **Data:** `GET /api/talked-about-now` (`routes/api.talked-about-now.ts`). The server keeps one answer for every
   visitor for 10 minutes (`server/talked-about-now/start-row.server.ts`), and a failed read for one.
 
+### Measured
+
+Two production builds on 14 October 2026, this branch against its base (`8b3080ec`, #558), both with the same
+`SENTRY_RELEASE`. The start page's first-view files are the client manifest's entry, `root` and `routes/_index` with
+their imports.
+
+| | Base | This branch |
+| --- | --- | --- |
+| First-view scripts | 10 files, 206,128 B gzip | 10 files, 206,583 B gzip (+455) |
+| The start page's chunk (`_index`, the room) | 81,486 B raw, 27,882 gzip | 82,640 B raw, 28,350 gzip (+468) |
+| The shell chunk, every page | 131,923 B raw | 131,923 B raw (the same) |
+| `tailwind-*.css`, `living-room-*.css` | `tailwind-Dkit0sTB.css`, `living-room-BQaOAR4z.css` | the same files, byte for byte |
+| Row files in the first view | | none |
+
+The growth is the slot: it decides when to load the row. The row loads on its own: `StartRow-*.js` (10.5 KB raw,
+4.0 KB gzip) and `StartRow-*.css` (7.6 KB raw, 2.2 KB gzip). The home's script limit is 202,752 B; the last production
+runs measured 192,965 B (`docs/benchmarks/viral-spike-render-path-budget.md`), so `budget.json` stays as it is.
+
+The request helper is part of the slot module on purpose. As a module of its own, imported by the slot and the row, it
+went into the shell chunk that every page loads (rule 3 in `vite.config.js`).
+
 ## The read
 
 `server/talked-about-now/start-row.server.ts`; the rules are in `domain/talked-about-now.ts`.
