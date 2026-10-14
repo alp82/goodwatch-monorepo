@@ -22,7 +22,7 @@ must remain stable across processes and deployments. No migration runs at app
 startup; the existing explicit adapter migration already creates the OAuth/JWKS
 tables. The new fields are inside the encrypted payload schema.
 
-The plugin composition reuses the [#533 spike](../research/mcp-oauth-spike.md) on
+The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatch-monorepo/blob/auth/mcp-spike/docs/research/mcp-oauth-spike.md) on
 `auth/mcp-spike`:
 
 - `jwt()` stores signing keys through the CrateDB adapter. Better Auth encrypts
@@ -173,8 +173,8 @@ disconnection, reconnect fencing and independent grants for two computers.
 
 Focused types, production build, MCP/cache/metrics regression (63 cases) and
 focused Biome checks pass. Whole-app TypeScript retains the same **174** baseline
-diagnostics with no added normalized diagnostic messages. The `auth-mcp` CI job
-runs the Docker protocol/auth cases and endpoint regressions; actual Claude Code
+diagnostics with no added normalized diagnostic messages. The wiring CI job includes these protocol cases; the `auth-mcp` CI job
+also runs the Docker protocol/auth cases and endpoint regressions; actual Claude Code
 account tests remain a local command.
 
 Hosted Claude.ai/ChatGPT linking, assertion/private-key client authentication,
