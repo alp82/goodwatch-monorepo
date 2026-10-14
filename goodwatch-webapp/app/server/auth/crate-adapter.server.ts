@@ -35,6 +35,8 @@ const digest = (...parts: unknown[]) => createHash("sha256").update(JSON.stringi
 const normalizeEmail = (value: unknown) => String(value).trim().toLowerCase()
 type Row = Record<string, any>
 const models = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
+const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
+const lookup = (row: Row) => Object.fromEntries(indexedFields.map(field => [field, row[field] ?? null]))
 type Receipt = { operation: string; result: Row }
 type Stored = { row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[] }
 export class IndeterminateAuthWriteError extends Error {
@@ -47,6 +49,7 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 	if (additionalModels.length && !localTransports.has(sql)) throw new Error("Additional tables require the disposable local transport")
 	for (const model of new Set([...models, ...additionalModels])) await sql(`CREATE TABLE IF NOT EXISTS ${table(model)} (
 		id TEXT PRIMARY KEY, payload TEXT NOT NULL,
+		lookup OBJECT(STRICT) AS (${indexedFields.map(field => `"${field}" ${["lastRequest", "count"].includes(field) ? "DOUBLE PRECISION" : "TEXT"}`).join(",")}),
 		created_at TIMESTAMP WITH TIME ZONE, expires_at TIMESTAMP WITH TIME ZONE,
 		deleted BOOLEAN NOT NULL DEFAULT false, receipts TEXT NOT NULL DEFAULT '[]'
 	) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas='2', "write.wait_for_active_shards"=1,
@@ -58,8 +61,9 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 		"translog.durability"='REQUEST', refresh_interval=-1)`)
 }
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false }: { sql: AuthSql; testOnlyConformance?: boolean }) {
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000 }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
+	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	return createAdapterFactory({
 		config: { adapterId: "goodwatch-cratedb", adapterName: "Strict CrateDB", supportsDates: true,
 			supportsBooleans: true, supportsJSON: true, supportsArrays: true, transaction: false },
@@ -120,8 +124,22 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false }: { sql: Au
 				if (!ids && batch && !testOnlyConformance) ids = (batch.value as string[]).map(value => batch.field === "token" ? digest(value) : String(value))
 				if (!ids) {
 					await sql(`REFRESH TABLE ${table(model)}`)
-					const result = await sql(`SELECT id,payload FROM ${table(model)} WHERE deleted = false LIMIT 10001`)
-					if (result.rows.length > 10000) throw new Error("Auth enumeration exceeds safe bound")
+					const filters: string[] = [], args: unknown[] = []
+					if (!where.some(p => p.connector === "OR" || p.mode === "insensitive")) for (const p of where) {
+						const column = p.field === "expiresAt" ? "expires_at" : indexedFields.includes(p.field) ? `lookup['${p.field}']` : undefined
+						if (!column) continue
+						if (p.value === null && p.operator === "eq") { filters.push(`${column} IS NULL`); continue }
+						if (p.operator === "in") {
+							const values = p.value as unknown[]
+							filters.push(values.length ? `${column} IN (${values.map(() => "?").join(",")})` : "false")
+							args.push(...values)
+						} else {
+							const operator = { eq: "=", lt: "<", lte: "<=", gt: ">", gte: ">=" }[p.operator as "eq"]
+							if (operator) { filters.push(`${column} ${operator} ?`); args.push(p.value) }
+						}
+					}
+					const result = await sql(`SELECT id,payload FROM ${table(model)} WHERE deleted = false ${filters.length ? `AND ${filters.join(" AND ")}` : ""} ORDER BY id LIMIT ${maxEnumeration + 1}`, args)
+					if (result.rows.length > maxEnumeration) throw new Error("Auth enumeration exceeds safe bound")
 					ids = result.rows.filter(r => matches(decode(r[1]), where)).map(r => String(r[0]))
 				}
 				const result: Stored[] = []
@@ -144,8 +162,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false }: { sql: Au
 				const id = key(model, original.row)
 				let response: SqlResult | undefined
 				try {
-					response = await sql(`UPDATE ${table(model)} SET payload=?, deleted=?, receipts=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[JSON.stringify(result), deleting, JSON.stringify(receipts), result.createdAt ?? null, result.expiresAt ?? null, id, original.seq, original.term])
+					response = await sql(`UPDATE ${table(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
+						[JSON.stringify(result), deleting, JSON.stringify(receipts), lookup(result), result.createdAt ?? null, result.expiresAt ?? null, id, original.seq, original.term])
 				} catch { /* Only an atomic receipt can resolve an unknown write outcome. */ }
 				if (response?.rowcount === 1) return result
 				let current: Stored | null
@@ -164,8 +182,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false }: { sql: Au
 					}
 					row.id = key(model, row)
 					const operation = randomUUID()
-					try { await sql(`INSERT INTO ${table(model)} (id,payload,created_at,expires_at,receipts) VALUES (?,?,?,?,?)`,
-						[row.id, JSON.stringify(row), row.createdAt ?? null, row.expiresAt ?? null, JSON.stringify([{ operation, result: row }])]) }
+					try { await sql(`INSERT INTO ${table(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
+						[row.id, JSON.stringify(row), row.createdAt ?? null, row.expiresAt ?? null, JSON.stringify([{ operation, result: row }]), lookup(row)]) }
 					catch (error) {
 						const existing = await stored(model, row.id)
 						const receipt = existing?.receipts.find(r => r.operation === operation)
