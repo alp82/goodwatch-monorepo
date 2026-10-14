@@ -75,6 +75,11 @@ export type PreferenceEvent =
 			recorded: boolean
 			view?: string | null
 	  }
+	/**
+	 * The page now shows another country without a pick here: the address changed on the same title (an old saved
+	 * country moved into `?country=`). It becomes the page's view, never saved; a country picked here still shows over it.
+	 */
+	| { type: "pageCountry"; country: string }
 
 export function initialState(
 	saved: PreferencePair,
@@ -148,6 +153,7 @@ export function reduce(
 		if (event.type === "saveSucceeded") return succeeded(state, event)
 		if (event.type === "saveFailed") return failed(state, event)
 		if (event.type === "syncSaved") return synced(state, event)
+		if (event.type === "pageCountry") return viewing(state, event.country)
 		return state
 	}
 	switch (event.type) {
@@ -211,6 +217,8 @@ export function reduce(
 		}
 		case "syncSaved":
 			return settle(synced(state, event))
+		case "pageCountry":
+			return settle(viewing(state, event.country))
 		case "saveSucceeded":
 		case "saveFailed":
 			// Nothing is under way: an answer now belongs to a save that is over.
@@ -248,6 +256,11 @@ function synced(
 		recorded: event.recorded,
 		view: view === event.pair.country ? null : view,
 	}
+}
+
+function viewing(state: PreferenceState, country: string): PreferenceState {
+	const view = country === state.saved.country ? null : country
+	return view === state.view ? state : { ...state, view }
 }
 
 function failed(

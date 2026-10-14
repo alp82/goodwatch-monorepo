@@ -72,3 +72,10 @@ export function mediaTextAttributes(lang?: string | null): MediaTextAttributes {
 		...(TALL.has(base) && { "data-media-script": "tall" as const }),
 	}
 }
+
+/** The same attributes as HTML, for surfaces built as strings (the related map): ` lang="ar-SA" dir="rtl"`. */
+export function mediaTextHtml(lang?: string | null): string {
+	return Object.entries(mediaTextAttributes(lang))
+		.map(([name, value]) => ` ${name}="${String(value).replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`)}"`)
+		.join("")
+}

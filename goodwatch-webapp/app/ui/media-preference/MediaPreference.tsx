@@ -183,6 +183,16 @@ export function MediaPreferenceProvider({
 	useEffect(() => {
 		if (prefs.data) adopt(prefs.data)
 	}, [prefs.data, adopt])
+	// The same title with another country in its address (an old saved country moved into `?country=`): the page shows
+	// it as its view. A Keep's own reload brings the kept country, which is the saved one and so no view.
+	const loadedCountry = useRef(country)
+	useEffect(() => {
+		if (loadedCountry.current === country) return
+		loadedCountry.current = country
+		// Before the private read, that read compares this country with the saved one.
+		if (pageCountry.current !== null) pageCountry.current = country
+		dispatch({ type: "pageCountry", country })
+	}, [country, dispatch])
 
 	const [dialog, setDialog] = useState<{ open: boolean; tab: DialogTab }>({
 		open: false,

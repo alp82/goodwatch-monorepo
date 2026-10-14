@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { mediaTextAttributes, presentedText } from "./media-text.ts"
+import { mediaTextAttributes, mediaTextHtml, presentedText } from "./media-text.ts"
 
 test("a left-to-right language carries only its tag", () => {
 	for (const lang of [
@@ -59,4 +59,11 @@ test("a presented field reads its own language; without metadata it is canonical
 		lang: "en",
 	})
 	assert.deepEqual(presentedText({}, "overview", null), { text: "", lang: "en" })
+})
+
+test("the HTML form carries the same attributes, escaped, for surfaces built as strings", () => {
+	assert.equal(mediaTextHtml("ar-SA"), ' lang="ar-SA" dir="rtl" data-media-script="tall"')
+	assert.equal(mediaTextHtml("ja-JP"), ' lang="ja-JP"')
+	assert.equal(mediaTextHtml("de"), ' lang="de"')
+	assert.equal(mediaTextHtml('x"><b>'), ' dir="auto"')
 })

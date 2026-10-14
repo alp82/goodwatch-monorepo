@@ -16,6 +16,7 @@
 //
 // The form (trail.ts) gets this engine's `core` and returns how to draw the picture.
 import type { MapMeta } from "./traits"
+import { mediaTextHtml } from "../media-text/media-text"
 
 /** A title in a pack: key ("m603", "s1396"), title, year, poster path, similarity in thousandths, level string. */
 export type RawTitle = [string, string, string, string, number, string, { canonicalTitle: string; language: string }?]
@@ -270,7 +271,7 @@ export function relatedMapEngine(
 	const poster: MapCore["poster"] = (title, options = {}) =>
 		`<button type="button" class="pl-p ${options.cls ?? ""}"${
 			options.style ? ` style="${options.style}"` : ""
-		} data-pl-step="${title.k}" data-t="${esc(title.t)}"${title.language ? ` lang="${esc(title.language)}" data-canonical-title="${esc(title.canonicalTitle ?? title.t)}"` : ""} data-y="${esc(title.y)}"${
+		} data-pl-step="${title.k}" data-t="${esc(title.t)}"${title.language ? `${mediaTextHtml(title.language)} data-canonical-title="${esc(title.canonicalTitle ?? title.t)}"` : ""} data-y="${esc(title.y)}"${
 			options.came ? ' data-pl-came=""' : ""
 		}${options.attrs ?? ""}><img alt="${esc(
 			options.came ? `Back to ${title.t}` : title.t,
@@ -340,13 +341,13 @@ export function relatedMapEngine(
 			? `<p class="pl-more"><span>Open a page:</span>${input.links
 					.map(
 						(link) =>
-							`<a data-pl-nav="" tabindex="-1"${link.language ? ` lang="${esc(link.language)}"` : ""} href="${esc(link.href)}">${esc(link.text)}</a>`,
+							`<a data-pl-nav="" tabindex="-1"${link.language ? mediaTextHtml(link.language) : ""} href="${esc(link.href)}">${esc(link.text)}</a>`,
 					)
 					.join("")}</p>`
 			: ""
 		// The stage carries the levels of the page's title (`data-s`): the browser draws that title's chips again
 		// without its pack, which a crawler may not ask for (robots.txt).
-		return `<h2 class="pl-h">Titles like ${rootTitle.language ? `<span lang="${esc(rootTitle.language)}">${esc(input.title)}</span>` : esc(input.title)}</h2><div class="pl-body"><div class="pl-stage pl-map" data-pl-stage="" data-pl-at="${input.root}" data-y="${esc(
+		return `<h2 class="pl-h">Titles like ${rootTitle.language ? `<span${mediaTextHtml(rootTitle.language)}>${esc(input.title)}</span>` : esc(input.title)}</h2><div class="pl-body"><div class="pl-stage pl-map" data-pl-stage="" data-pl-at="${input.root}" data-y="${esc(
 			rootTitle.y,
 		)}" data-p="${esc(rootTitle.p)}" data-s="${esc(input.pack.c[5])}">${form.stage(ctxOf(st))}</div></div>${links}`
 	}
