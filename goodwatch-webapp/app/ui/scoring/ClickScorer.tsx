@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { TasteTitleLink } from "~/ui/taste/exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { motion } from "framer-motion"
@@ -80,7 +81,7 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 						<img
 							ref={impressionRef}
 							src={posterUrl}
-							alt={media.title}
+							alt={media.title} lang={mediaFieldLanguage(media)}
 							className="w-full h-full object-cover"
 						/>
 						
@@ -124,7 +125,7 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 					{/* Title & Genres Overlay - Top */}
 					<div className="absolute z-20 pointer-events-none inset-x-0 top-0 bg-gradient-to-b from-black/90 via-black/60 to-transparent pt-4 pb-8 pl-4 pr-20">
 						<h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
-							<TasteTitleLink media={media} className="pointer-events-auto hover:underline">{media.title}</TasteTitleLink>
+							<TasteTitleLink media={media} className="pointer-events-auto hover:underline"><span lang={mediaFieldLanguage(media)}>{media.title}</span></TasteTitleLink>
 							{media.release_year && (
 								<span className="text-gray-300 font-normal ml-2">({media.release_year})</span>
 							)}
@@ -181,7 +182,7 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 						<h3 className="text-lg font-semibold text-white mb-3">Description</h3>
 						{media.synopsis ? (
 							<p className="text-gray-300 text-lg leading-relaxed">
-								{media.synopsis}
+								<span lang={mediaFieldLanguage(media, "overview")}>{media.synopsis}</span>
 							</p>
 						) : (
 							<p className="text-gray-500 text-lg italic">Not available</p>

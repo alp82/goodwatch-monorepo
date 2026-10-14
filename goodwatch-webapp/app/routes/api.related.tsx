@@ -1,3 +1,4 @@
+import { localizeTitlePayload, payloadLanguage } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -58,11 +59,12 @@ export const loader: LoaderFunction = async ({
 
 	relatedRequests.inc([mediaType === null ? "panel" : "legacy"])
 	try {
-		const panel = await getRelatedPanel({
+		const canonicalPanel = await getRelatedPanel({
 			tmdbId: Number.parseInt(tmdbId),
 			sourceMediaType,
 			fingerprintKey: fingerprintKey || undefined,
 		})
+		const panel = await localizeTitlePayload(canonicalPanel, payloadLanguage(request))
 		const result =
 			mediaType === "movie"
 				? panel.movies

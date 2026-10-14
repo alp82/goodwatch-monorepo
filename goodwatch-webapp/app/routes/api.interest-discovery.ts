@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { json, type ActionFunctionArgs } from "@remix-run/node"
 import { z } from "zod"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -38,7 +39,7 @@ const input = z.object({
 		.max(2000)
 		.default([]),
 })
-export async function action({ request }: ActionFunctionArgs) {
+async function canonicalAction({ request }: ActionFunctionArgs) {
 	const parsed = input.safeParse(await request.json().catch(() => null))
 	if (!parsed.success)
 		return json({ error: "Invalid discovery input" }, { status: 400 })
@@ -50,3 +51,5 @@ export async function action({ request }: ActionFunctionArgs) {
 		headers: { "Cache-Control": "private, no-store" },
 	})
 }
+
+export const action = presentCatalogLoader(canonicalAction, { live: true })

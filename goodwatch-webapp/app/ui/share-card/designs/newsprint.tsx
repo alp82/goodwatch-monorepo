@@ -36,7 +36,7 @@ function Photo({ item, w, h, ink, slot, poster }: { item: CardTitle; w: number; 
 				<img src={src} width={w} height={h} style={{ ...layer, display: "flex", objectFit: "cover", objectPosition: poster ? "center 20%" : "center", filter: "grayscale(1) contrast(1.25) brightness(1.05)" }} />
 			) : (
 				<div style={col({ ...layer, justifyContent: "center", alignItems: "center", padding: 16, backgroundColor: "#d9d2c2", fontFamily: "Playfair Display", fontWeight: 900, fontSize: Math.min(40, w * 0.12), color: INK, textAlign: "center" })}>
-					<div style={{ display: "flex" }}>{item.title}</div>
+					<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 				</div>
 			)}
 			<div style={{ ...layer, display: "flex", backgroundColor: ink, opacity: 0.38 }} />

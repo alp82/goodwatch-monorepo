@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // The living room (#229): on phones the phone scene takes over (#230, `PhoneLivingRoom`). On the desktop: the room photo, the TV on the wall, and the Remote in a hand below it. The TV
 // flow (`useTvFlow`) drives both; the keyboard works like the Remote. The Remote leans back toward the screen and
 // turns at most 6 degrees toward what it points at: the pointer over the TV, else the focused item. No beam.
@@ -656,7 +657,7 @@ function handleQuizEffect(
 					type: "leave",
 					to: {
 						kind: "page",
-						href: `/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(pick.title)}`,
+						href: `/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(canonicalMediaTitle(pick))}`,
 					},
 				})
 			return

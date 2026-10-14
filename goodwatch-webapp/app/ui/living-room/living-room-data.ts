@@ -1,3 +1,4 @@
+import type { MediaPresentation } from "~/utils/media-presentation"
 // What the living room shows, and how the page turns it into the TV flow's `TvContext`. Pure and shared by the
 // server and the browser.
 //
@@ -24,7 +25,7 @@ export type TvPair = {
 /** A title the start page links to below the living room (#352). The same list for everyone. */
 export type StartTitle = Pick<
 	TitleCard,
-	"media_type" | "tmdb_id" | "title" | "release_year" | "poster_path"
+	"media_type" | "tmdb_id" | "title" | "release_year" | "poster_path" | "canonical_title" | "presentation"
 >
 
 export type LivingRoomData = {
@@ -50,6 +51,7 @@ export type LivingRoomData = {
  */
 export type HomeDoors = {
 	continue: {
+		presentation?: MediaPresentation
 		title: string
 		backdrop_path: string | null
 		/** The Next episode, "S2 E3"; null when the show has no episode list yet. */
@@ -61,6 +63,7 @@ export type HomeDoors = {
 		more: number
 	} | null
 	start: {
+		presentation?: MediaPresentation
 		count: number
 		title: string
 		posters: (string | null)[]
@@ -68,6 +71,7 @@ export type HomeDoors = {
 		newOn?: string
 	} | null
 	movie: {
+		presentation?: MediaPresentation
 		count: number
 		/** The first movie of My movies, or the movie that landed last (#489); null without a Want to See movie. */
 		title: string | null

@@ -1,3 +1,6 @@
+import { localizeTitlePayload, payloadLanguage } from "~/server/media-payload.server"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -31,24 +34,27 @@ export const loader: LoaderFunction = async ({
 		movieIds,
 	})
 
-	return json<LoaderData>(moviesInCollection)
+	return json<LoaderData>(await localizeTitlePayload(moviesInCollection, payloadLanguage(request)))
 }
 
 export const useMovieCollection = ({
 	collectionId,
 	movieIds,
-}: MovieCollectionParams) =>
-	useQuery<MoviesInCollection>({
-		queryKey: movieCollectionQueryKey(collectionId, movieIds),
+}: MovieCollectionParams) => {
+	const { locale } = useLocale()
+	return useQuery<MoviesInCollection>({
+		queryKey: movieCollectionQueryKey(collectionId, movieIds, locale.language),
 		enabled: Boolean(collectionId && movieIds),
 		// The movies come with the document; see TITLE_EXTRAS_STALE_TIME for the reason.
 		staleTime: TITLE_EXTRAS_STALE_TIME,
 		queryFn: async ({ signal }) => {
 			const params = new URLSearchParams({ collectionId, movieIds })
-			const response = await fetch(`/api/movie/collection?${params}`, {
+			const response = await fetch(mediaLanguageUrl(`/api/movie/collection?${params}`, locale.language), {
 				signal,
 			})
 			if (!response.ok) throw new Error("Could not load movie collection")
 			return response.json()
 		},
 	})
+
+}

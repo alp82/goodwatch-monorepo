@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 import { useInterestDiscovery } from "~/ui/discovery/useInterestDiscovery"
 import {
 	canGuestRate,
@@ -64,10 +65,11 @@ export default function TasteQuiz({
 	})
 
 	// Track selected media from recommendations/last rated
+	const { locale } = useLocale()
 	const [selectedMedia, setSelectedMedia] = useState<ScoringMedia | null>(null)
 	useEffect(() => {
-		if (resume) setSelectedMedia(readExploration().selectedMedia || null)
-	}, [resume])
+		if (resume) setSelectedMedia(readExploration(locale.language).selectedMedia || null)
+	}, [resume, locale.language])
 
 	// Track when a feature threshold is crossed (for celebration screen)
 	const [justUnlockedFeature, setJustUnlockedFeature] =
@@ -128,8 +130,8 @@ export default function TasteQuiz({
 
 	// Create fetch function for the queue
 	const fetchMoreTitles = useCallback(async () => {
-		return fetchSmartTitles({ count: 20 })
-	}, [])
+		return fetchSmartTitles({ count: 20, language: locale.language })
+	}, [locale.language])
 
 	// Use the stable title queue
 	const titleQueue = useTitleQueue({

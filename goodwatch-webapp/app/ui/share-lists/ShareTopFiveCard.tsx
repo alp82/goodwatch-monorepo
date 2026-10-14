@@ -1,3 +1,6 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // "Share your top 5" on Taste: a list prefilled from the person's highest-rated titles, one click from the editor.
 // It only reads ratings; share lists don't change the taste profile or recommendations.
 import { SparklesIcon } from "@heroicons/react/20/solid"
@@ -23,15 +26,17 @@ async function fetchTitles(url: string, signal: AbortSignal) {
 
 /** Signed-in people: their five highest-rated titles, ranked on the server. */
 function useAccountTopFive() {
+	const { locale } = useLocale()
 	const { data } = useQuery({
-		queryKey: ["share-list-top-rated"],
-		queryFn: ({ signal }) => fetchTitles("/api/share-lists/top-rated", signal),
+		queryKey: ["share-list-top-rated", locale.language],
+		queryFn: ({ signal }) => fetchTitles(mediaLanguageUrl("/api/share-lists/top-rated", locale.language), signal),
 	})
 	return { titles: data ?? [], path: topFivePath() }
 }
 
 /** Guests: their ratings from shared guest progress, ranked in the browser the same way the server ranks. */
 function useGuestTopFive() {
+	const { locale } = useLocale()
 	const interactions = useGuestInteractions()
 	const keys = useMemo(() => {
 		const ratings: RatedTitle[] = interactions
@@ -45,10 +50,10 @@ function useGuestTopFive() {
 		return prefillKeys(ratings)
 	}, [interactions])
 	const { data } = useQuery({
-		queryKey: ["share-list-titles", keys.join(",")],
+		queryKey: ["share-list-titles", keys.join(","), locale.language],
 		enabled: keys.length > 0,
 		queryFn: ({ signal }) =>
-			fetchTitles(`/api/share-lists/titles?keys=${keys.join(",")}`, signal),
+			fetchTitles(mediaLanguageUrl(`/api/share-lists/titles?keys=${keys.join(",")}`, locale.language), signal),
 	})
 	return { titles: keys.length ? (data ?? []) : [], path: topFivePath(keys) }
 }
@@ -88,7 +93,7 @@ function TopFiveCard({ titles, path }: { titles: CardTitle[]; path: string }) {
 								/>
 							) : (
 								<div className="flex aspect-[2/3] w-full items-center justify-center rounded-md bg-gray-800 p-1 text-center text-[9px] leading-tight text-gray-300 shadow-lg shadow-black/60">
-									{t.title}
+									<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 								</div>
 							)}
 							<span

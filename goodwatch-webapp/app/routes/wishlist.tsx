@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import WatchableList from "~/ui/discovery/WatchableList"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -62,7 +65,7 @@ function watchNextUrl(url: URL) {
 	return query ? `/watch-next?${query}` : "/watch-next"
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
@@ -96,6 +99,7 @@ export default function Wishlist() {
 	const { currentParams } = useLoaderData<LoaderData>()
 	const { data: userData } = useUserData()
 	const { sortBy, filterByStreaming } = currentParams
+	const { locale } = useLocale()
 	const keys = Object.keys(userData?.wishlist || {}).sort()
 	const {
 		data: titles = [],
@@ -103,7 +107,7 @@ export default function Wishlist() {
 		isError,
 		refetch,
 	} = useQuery<DiscoverResult[]>({
-		queryKey: ["wishlist-titles", keys],
+		queryKey: ["wishlist-titles", keys, locale.language],
 		enabled: keys.length > 0,
 		queryFn: async () => {
 			const chunks = Array.from(
@@ -113,7 +117,7 @@ export default function Wishlist() {
 			const results = await Promise.all(
 				chunks.map(async (chunk) => {
 					const response = await fetch(
-						`/api/wishlist-titles?keys=${encodeURIComponent(chunk.join(","))}`,
+						mediaLanguageUrl(`/api/wishlist-titles?keys=${encodeURIComponent(chunk.join(","))}`, locale.language),
 					)
 					if (!response.ok) throw new Error("Could not load Wishlist titles")
 					return (await response.json()).titles as DiscoverResult[]
@@ -230,3 +234,5 @@ export default function Wishlist() {
 		</div>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

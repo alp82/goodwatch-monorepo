@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
 import { assetUrl } from "~/utils/asset-url"
@@ -502,7 +503,7 @@ function MemberHome({ view }: { view: TvView }) {
 						<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
 						<span className="relative max-w-[62%]">
 							<span className="block text-[32px] font-extrabold leading-none">
-								{tile.title}
+								<span lang={mediaFieldLanguage(tile)}>{tile.title}</span>
 							</span>
 							<span className="mt-2 block text-[15px] text-white/60">
 								{tile.line}
@@ -868,7 +869,7 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 						/>
 						<div className="min-w-0 py-1">
 							<div className="line-clamp-2 text-[24px] font-extrabold leading-tight">
-								{first.title}
+								<span lang={mediaFieldLanguage(first)}>{first.title}</span>
 							</div>
 							<div className="mt-2 flex items-center gap-2">
 								<Score title={first} />
@@ -906,7 +907,7 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 							className="h-[200px] w-full rounded-xl object-cover"
 						/>
 						<div className="mt-1.5 truncate text-[14px] font-bold">
-							{t.title}
+							<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 						</div>
 						<div className="flex items-center gap-1.5 text-[12px] text-white/55">
 							<Match title={t} className="!px-1.5 !text-[11px]" />
@@ -984,7 +985,7 @@ function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 				/>
 				<div className="w-[500px] pt-1">
 					<h2 className="line-clamp-2 text-[34px] font-extrabold leading-none">
-						{t.title}
+						<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 					</h2>
 					<div className="mt-2 text-[14px] text-white/55">
 						{[t.release_year, runtimeLabel(t), text]
@@ -1001,7 +1002,7 @@ function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 					</div>
 					{t.tagline && (
 						<div className="mt-3 line-clamp-3 text-[15px] leading-snug text-white/65">
-							{t.tagline}
+							<span lang={mediaFieldLanguage(t, "tagline")}>{t.tagline}</span>
 						</div>
 					)}
 				</div>

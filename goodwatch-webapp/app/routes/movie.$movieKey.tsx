@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
 import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import { json, redirect } from "@remix-run/node"
@@ -60,19 +61,21 @@ export const loader: LoaderFunction = async ({
 	const { effectiveContext } = await resolveMediaContext(request, userId)
 	const { country } = effectiveContext
 	const countryIsFallback = !normalizeCountry(url.searchParams.get("country"))
-	const language = url.searchParams.get("language") || "en"
+	const canonicalContent = isCrawler(request)
+	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = getDetailsForMovie({
 		movieId,
 		country,
 		language,
-	})
+	}, { canonical: canonicalContent })
 	const parts = Promise.all([
 		details,
 		prefetchRelatedSection({
 			tmdbId: Number(movieId),
 			sourceMediaType: "movie",
 			budgetMs,
+			language: canonicalContent ? undefined : language,
 		}),
 		// The header's genre links and the collection's movies, which the page requested after load before.
 		details.then(
@@ -81,6 +84,7 @@ export const loader: LoaderFunction = async ({
 					genres: media.details.genres,
 					movieSeries: media.movie_series,
 					budgetMs,
+					language: canonicalContent ? undefined : language,
 				}),
 			// A failed details read fails the page above.
 			() => null,
@@ -97,7 +101,7 @@ export const loader: LoaderFunction = async ({
 		search: url.search,
 		mediaType: "movie",
 		tmdbId: titleDetails.tmdb_id,
-		title: titleDetails.title,
+		title: canonicalMediaTitle(titleDetails),
 	})
 	if (canonical) return redirect(canonical, 301)
 

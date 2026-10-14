@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -56,7 +57,7 @@ type ProfileData = {
 
 type LoaderData = ProfileData | TasteTabData<"sides">
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest({ request })
@@ -97,3 +98,5 @@ export default function TasteRoute() {
 		</div>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

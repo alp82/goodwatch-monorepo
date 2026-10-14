@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { useQuery } from "@tanstack/react-query"
 import { useRouteLoaderData } from "@remix-run/react"
 import { useGuestInteractions } from "~/utils/guest-progress"
@@ -6,6 +8,7 @@ import { ACTED_ON } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
 import type { DiscoveryResult } from "~/server/interest-discovery.server"
 export function useInterestDiscovery(genre = "") {
+	const { locale } = useLocale()
 	const interactions = useGuestInteractions()
 	const { user } = useUser()
 	const { data: history } = useUserData()
@@ -13,12 +16,12 @@ export function useInterestDiscovery(genre = "") {
 		| { discovery?: DiscoveryResult }
 		| undefined
 	const query = useQuery<DiscoveryResult>({
-		queryKey: ["interest-discovery", user?.id, history, genre],
+		queryKey: ["interest-discovery", user?.id, history, genre, locale.language],
 		initialDataUpdatedAt: 0,
 		initialData:
 			!genre && interactions.length === 0 ? initial?.discovery : undefined,
 		queryFn: async () => {
-			const response = await fetch("/api/interest-discovery", {
+			const response = await fetch(mediaLanguageUrl("/api/interest-discovery", locale.language), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ genre, interactions: user ? [] : interactions }),

@@ -1,3 +1,4 @@
+import { localizeTitlePayload, payloadLanguage } from "~/server/media-payload.server"
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
@@ -117,9 +118,10 @@ export async function action({ request }: ActionFunctionArgs) {
 				};
 				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
 					const memberTaste = await taste;
-					const sent = send({ kind, batch: memberTaste
+					const displayed = await localizeTitlePayload(memberTaste
 						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
-						: batch });
+						: batch, payloadLanguage(request));
+					const sent = send({ kind, batch: displayed });
 					if (sent) telemetry?.delivered(kind === "batch", Boolean(batch.rows.length || batch.people?.length), batch.elapsedMs, batch.errors ?? []);
 					// False when the stream had closed: the search then counts no delivery (see BatchDelivery).
 					return sent;

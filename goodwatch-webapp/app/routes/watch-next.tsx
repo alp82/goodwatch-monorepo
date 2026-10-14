@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // Watch next: the top of the Wishlist under the person's chosen sort and moods, then the rest of the Wishlist in a
 // stepped grid. Not found while REC_WATCH_NEXT hides it from the viewer.
 // A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
@@ -42,7 +43,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!isEnabled("watchNext", { userId }))
 		throw new Response("Not found", { status: 404 })
@@ -75,3 +76,5 @@ export default function WatchNextRoute() {
 	}
 	return <WatchNextPage initial={initial} />
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

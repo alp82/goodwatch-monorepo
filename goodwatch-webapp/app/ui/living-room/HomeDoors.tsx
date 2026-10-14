@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // A member's home with REC_TRACKING (#385): three doors in place of the two tiles. Continue opens My shows, Start a
 // show opens it at the Start group, A movie opens My movies. A door with nothing behind it is not drawn, and
 // Something new then takes its place as a tile; with all three doors it is a key in the head line.
@@ -82,6 +83,7 @@ function Door({
 	eyebrow,
 	title,
 	line,
+	lineLanguage,
 	sub,
 	signal,
 	news,
@@ -95,6 +97,7 @@ function Door({
 	eyebrow: string
 	title: string
 	line: string
+	lineLanguage?: string
 	sub?: string | null
 	/** A pill in the door's corner: what is new behind it. */
 	signal?: string | null
@@ -143,7 +146,7 @@ function Door({
 				<span
 					className={`block truncate text-white/85 ${phone ? "mt-1 text-[18px] leading-tight" : "mt-2 text-[16px] font-semibold"}`}
 				>
-					{phone && news ? <NewOn>{news}</NewOn> : line}
+					{phone && news ? <NewOn>{news}</NewOn> : <span lang={lineLanguage ?? "en"}>{line}</span>}
 				</span>
 				{!phone && (news || sub) && (
 					<span className="mt-0.5 block truncate text-[13.5px] text-white/55">
@@ -214,6 +217,7 @@ export default function HomeDoors({
 					<Door
 						{...door}
 						id="door:continue"
+						lineLanguage={mediaFieldLanguage(next)}
 						backdrop={next.backdrop_path}
 						eyebrow={next.fact}
 						title="Continue"
@@ -237,6 +241,7 @@ export default function HomeDoors({
 					<Door
 						{...door}
 						id="door:start"
+						lineLanguage={phone ? "en" : mediaFieldLanguage(start)}
 						posters={start.posters}
 						eyebrow={`${plural(start.count, "show")} to start`}
 						title={phone ? "New show" : "Start a show"}
@@ -250,6 +255,7 @@ export default function HomeDoors({
 				<Door
 					{...door}
 					id="door:movie"
+					lineLanguage={phone ? "en" : mediaFieldLanguage(movie)}
 					posters={[...movie.posters].reverse()}
 					eyebrow={`${plural(movie.count, "movie")} to see`}
 					title="A movie"

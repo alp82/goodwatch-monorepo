@@ -657,7 +657,7 @@ function Finder({
 										{episodeLabel(choice.episode)}
 									</span>
 									<span className="min-w-0 flex-1 truncate text-white">
-										{choice.episode.name}
+										<span lang={choice.episode.textPresentation?.name.language ?? "en"}>{choice.episode.name}</span>
 									</span>
 									{model.view.watched.has(choice.episode.id) && (
 										<CheckIcon className="h-3.5 w-3.5 shrink-0 text-green-400" />
@@ -1444,7 +1444,7 @@ function RowDetail({
 								data-overview
 								className="mt-1 text-sm leading-relaxed text-gray-300"
 							>
-								{episode.overview}
+								<span lang={episode.textPresentation?.overview.language ?? "en"}>{episode.overview}</span>
 							</p>
 						) : (
 							<div className="relative mt-1 min-h-10">
@@ -1453,7 +1453,7 @@ function RowDetail({
 									aria-hidden="true"
 									className="invisible select-none text-sm leading-relaxed"
 								>
-									{episode.overview}
+									<span lang={episode.textPresentation?.overview.language ?? "en"}>{episode.overview}</span>
 								</p>
 								<button
 									type="button"
@@ -1665,7 +1665,7 @@ function Row({
 					<span
 						className={`min-w-0 truncate text-sm ${watched ? "text-gray-400" : "font-medium text-white"}`}
 					>
-						{episode.name ?? episodeLabel(episode)}
+						<span lang={episode.textPresentation?.name.language ?? "en"}>{episode.name ?? episodeLabel(episode)}</span>
 					</span>
 					{isNext && (
 						<span className="shrink-0 rounded bg-green-500 px-1 text-[10px] font-bold uppercase leading-4 text-black">

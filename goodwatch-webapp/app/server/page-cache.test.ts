@@ -1488,3 +1488,9 @@ test("a saved guest's warmed HTML is a cache hit for another revision of the sam
 	assert.equal(response.headers["gw-page-cache"], "hit")
 	assert.equal(f.app.calls, calls)
 })
+
+test("canonical crawler HTML never shares a live English overlay entry", () => {
+	const human = pageCacheKey({ url: "/movie/42-title", userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36", acceptLanguage: "en-US" })
+	const crawler = pageCacheKey({ url: "/movie/42-title", userAgent: "Googlebot", acceptLanguage: "en-US" })
+	assert.notDeepEqual(human, crawler)
+})

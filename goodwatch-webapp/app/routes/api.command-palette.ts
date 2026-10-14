@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getPaletteTitles } from "~/server/command-palette.server"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
@@ -10,7 +11,7 @@ import type { PaletteTitles } from "~/utils/command-palette"
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const mode = getFeatureMode("navigation")
 	// Only preview needs to know who's asking, which costs a session check; on and off don't.
 	const allowed =
@@ -37,3 +38,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

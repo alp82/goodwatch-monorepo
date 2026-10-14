@@ -24,7 +24,7 @@ export default function About({ media, navigateToSection }: AboutProps) {
 
 			{tagline && (
 				<div className="mt-4">
-					<blockquote className="relative rounded-lg border border-l-8 border-white/10 bg-white/5 p-4 sm:p-5">
+					<blockquote lang={details.presentation?.tagline.language ?? "en"} className="relative rounded-lg border border-l-8 border-white/10 bg-white/5 p-4 sm:p-5">
 						<p className="text-white/90 italic text-base sm:text-lg leading-relaxed">
 							{tagline}
 						</p>
@@ -32,7 +32,7 @@ export default function About({ media, navigateToSection }: AboutProps) {
 				</div>
 			)}
 
-			<div className="mt-4 text-gray-100">
+			<div lang={details.presentation?.overview.language ?? "en"} className="mt-4 text-gray-100">
 				<Description description={synopsis} />
 			</div>
 

@@ -1,3 +1,4 @@
+import { isCrawler } from "~/server/crawlers.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
 import { GOOGLE_TAG_INLINE_SCRIPT } from "~/telemetry/google-tag"
@@ -146,7 +147,7 @@ export const loader: LoaderFunction = async ({
 			user,
 			features: getEnabledFeatures({ userId: user?.id }),
 			dehydratedState: dehydrate(queryClient),
-			locale: { country: effectiveContext.country, language: effectiveContext.language },
+			locale: { country: effectiveContext.country, language: isCrawler(request) ? "en" : effectiveContext.language },
 			env: {
 				SUPABASE_URL: process.env.SUPABASE_URL!,
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,

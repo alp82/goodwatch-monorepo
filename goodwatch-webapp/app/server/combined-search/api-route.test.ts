@@ -18,6 +18,7 @@ console.info = (line: string) => {
 after(() => { console.info = info })
 ;(globalThis as any).__routeSearchTest = state
 const stubs: Record<string, string> = {
+	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeTitlePayload=async(batch,language)=>({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:language}))});`,
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
 	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
 	"/combined-search/search.server.ts": `export const combinedSearch=(...args)=>globalThis.__routeSearchTest.run(...args);`,
@@ -51,7 +52,7 @@ registerHooks({
 })
 const { action } = await import("../../routes/api.combined-search.ts")
 const reset = () => { state.auth = 0; state.taste = 0; state.release = 0; events.length = 0 }
-const request = () => new Request("http://localhost:3003/api/combined-search", {
+const request = () => new Request("http://localhost:3003/api/combined-search?displayLanguage=fr", {
 	method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: "fixture", forYou: true }),
 })
 const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(r => { resolve = r }); return { promise, resolve } }
@@ -81,6 +82,8 @@ test("route applies the same member taste to provisional and final packets and h
 	const packets = text.trim().split("\n").map(line => JSON.parse(line))
 	assert.deepEqual(packets.map(packet => packet.kind), ["reading", "provisional", "batch"])
 	assert.equal(packets[2].batch.rows[0].tasteMatch, 87)
+	assert.equal(packets[1].batch.rows[0].displayLanguage, "fr")
+	assert.equal(packets[2].batch.rows[0].displayLanguage, "fr")
 	assert.equal(state.release, 1)
 	assert.deepEqual(events.map(event => event.phase), ["accepted", "finished"])
 	assert.equal(events[1].status, "completed")

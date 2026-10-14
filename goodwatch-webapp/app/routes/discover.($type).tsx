@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import {
 	type LoaderFunctionArgs,
@@ -139,7 +140,7 @@ interface LoaderData {
 	dehydratedState: DehydratedState
 }
 
-export const loader = async ({
+const canonicalLoader = async ({
 	request,
 	params: routeParams,
 }: LoaderFunctionArgs) => {
@@ -322,7 +323,7 @@ async function browseLoader(
 	const data: BrowseLoaderData = {
 		browse: {
 			initial: pages
-				? { key: browseKey(filterQuery(state, sort, defaults), forYou), pages }
+				? { key: browseKey(filterQuery(state, sort, defaults), forYou, undefined, ctx.language), pages }
 				: null,
 			member: ctx.viewer.kind === "member",
 			hasServices: ctx.services.length > 0,
@@ -465,3 +466,5 @@ function Discover() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

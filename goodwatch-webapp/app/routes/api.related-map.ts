@@ -4,6 +4,7 @@
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { PUBLIC_DATA_CACHE_CONTROL } from "~/server/cache-identity.server"
 import {
+	localizeRelatedMapPack,
 	relatedMapEnabled,
 	relatedMapPack,
 	relatedMapPage,
@@ -29,7 +30,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		// A title without a fingerprint has no pack, and a filter the chips can't make has no page.
 		if (!found)
 			throw new Response("Not found", { status: 404, headers: noStore })
-		return json(found, {
+		const language = params.get("displayLanguage")
+		return json(language ? await localizeRelatedMapPack(found, language) : found, {
 			headers: { "Cache-Control": PUBLIC_DATA_CACHE_CONTROL },
 		})
 	} catch (error) {

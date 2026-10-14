@@ -1,3 +1,4 @@
+import { localizeTitlePayload, liveMediaLanguage, payloadLanguage } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -31,7 +32,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await member(request)
 	if (typeof userId !== "string") return userId
 	const { shows } = await getNewShows(userId)
-	return json<NewEpisodes>(summaryOf(shows), { headers })
+	const summary = summaryOf(shows)
+	const language = new URL(request.url).searchParams.has("displayLanguage") ? payloadLanguage(request) : await liveMediaLanguage(request, userId)
+	const presented = summary.only && shows[0] ? await localizeTitlePayload({ ...summary.only, media_type: "show", tmdb_id: shows[0].id }, language) : null
+	return json<NewEpisodes>({ ...summary, only: presented }, { headers })
 }
 
 export async function action({ request }: ActionFunctionArgs) {

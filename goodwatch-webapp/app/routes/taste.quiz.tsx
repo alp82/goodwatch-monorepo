@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -55,7 +56,7 @@ type LoaderData = {
 	dehydratedState: DehydratedState
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest({ request })
@@ -134,3 +135,5 @@ export default function TasteQuizRoute() {
 		</div>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

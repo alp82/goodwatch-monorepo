@@ -1,3 +1,6 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useUserData } from "~/routes/api.user-data"
@@ -13,7 +16,7 @@ interface RecentAction {
 	updatedAt: Date
 }
 
-interface MediaMetadata {
+interface MediaMetadata extends PresentedMedia {
 	tmdb_id: number
 	media_type: "movie" | "show"
 	title: string
@@ -82,6 +85,7 @@ export const useRecentActions = ({ limit = 5, enabled = true }: UseRecentActions
 			.slice(0, limit)
 	}, [userData, limit])
 
+	const { locale } = useLocale()
 	const mediaItemsParam = useMemo(() => {
 		if (recentActions.length === 0) return null
 		return JSON.stringify(
@@ -93,10 +97,10 @@ export const useRecentActions = ({ limit = 5, enabled = true }: UseRecentActions
 	}, [recentActions])
 
 	const { data: mediaData, isLoading: mediaLoading } = useQuery<{ media: MediaMetadata[] }>({
-		queryKey: ["recent-actions-media", mediaItemsParam],
+		queryKey: ["recent-actions-media", mediaItemsParam, locale.language],
 		queryFn: async () => {
 			if (!mediaItemsParam) return { media: [] }
-			const response = await fetch(`/api/recent-actions-media?items=${encodeURIComponent(mediaItemsParam)}`)
+			const response = await fetch(mediaLanguageUrl(`/api/recent-actions-media?items=${encodeURIComponent(mediaItemsParam)}`, locale.language))
 			return response.json()
 		},
 		enabled: enabled && !!mediaItemsParam,
@@ -119,6 +123,8 @@ export const useRecentActions = ({ limit = 5, enabled = true }: UseRecentActions
 				media_type: action.media_type,
 				title: metadata?.title || "",
 				poster_path: metadata?.poster_path || "",
+				canonical_title: metadata?.canonical_title,
+				presentation: metadata?.presentation,
 			}
 
 			return {

@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The start page is the living room (the desktop scene, or the phone scene on phones). The TV's screen and keys live
 // in the search params (`?tv=picks&mood=cozy`); changing only those never reruns the loader.
 import { assetUrl } from "~/utils/asset-url"
@@ -102,6 +104,7 @@ export const meta: MetaFunction = () => [
 ]
 
 export default function Index() {
+	const { locale } = useLocale()
 	const initial = useLoaderData<typeof livingRoomLoader>()
 	const leave = useLeaveThroughTv()
 	const { search } = useLocation()
@@ -110,7 +113,7 @@ export default function Index() {
 	// The home's tiles draw their posters from the pool too (fetched after first paint, so the cached guest HTML
 	// stays the same for everyone).
 	const pool = useQuery<LivingRoomData>({
-		queryKey: ["living-room-pool", initial],
+		queryKey: ["living-room-pool", initial, locale.language],
 		enabled: [
 			"home",
 			"services",
@@ -120,7 +123,7 @@ export default function Index() {
 			"title",
 		].includes(screen),
 		queryFn: async () => {
-			const response = await fetch("/api/living-room/picks?view=pool", {
+			const response = await fetch(mediaLanguageUrl("/api/living-room/picks?view=pool", locale.language), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(

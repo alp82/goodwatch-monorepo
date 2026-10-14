@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node"
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
@@ -19,7 +21,7 @@ export type GetDiscoverResult = DiscoverResults
 
 // API endpoint
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const params = await buildDiscoverParams(request)
@@ -41,11 +43,13 @@ export const useDiscover = ({
 	initialData,
 	enabled = true,
 }: UseDiscoverParams) => {
+	const { locale } = useLocale()
 	const initialPageParam = params?.page || 1
 	if (params?.page) {
 		delete params.page
 	}
 	const queryParams = new URLSearchParams(params as Record<string, string>)
+	queryParams.set("displayLanguage", locale.language)
 	const queryString = queryParams.toString()
 	return useInfiniteQuery<GetDiscoverResult>({
 		queryKey: [...queryKeyDiscover, queryString],
@@ -93,3 +97,5 @@ export const convertSimilarTitles = (similarTitles: string): WithSimilar[] => {
 				.filter((category) => sortedDNACategories.includes(category)),
 		}))
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

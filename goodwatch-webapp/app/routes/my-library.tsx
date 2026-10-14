@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // My library (#385): every title a member has marked, one status at a time. Behind REC_TRACKING: not found while
 // the flag hides tracking from the viewer. A guest is asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
@@ -43,7 +44,7 @@ const headers = { "Cache-Control": "private, no-store" }
 
 type Loaded = { page: LibraryPage; now: number; viewer: string } | null
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!isEnabled("tracking", { userId }))
 		throw new Response("Not found", { status: 404 })
@@ -80,3 +81,5 @@ export default function MyLibraryRoute() {
 		/>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

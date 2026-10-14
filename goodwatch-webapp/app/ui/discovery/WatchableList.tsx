@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { useState, type ReactNode } from "react"
 import { Link } from "@remix-run/react"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -81,7 +82,7 @@ export default function WatchableList<T extends ScoringMedia>({
 										<Link
 											className="underline text-sky-200"
 											key={`${title.media_type}-${title.tmdb_id}`}
-											to={titlePath(title.media_type, title.tmdb_id, title.title)}
+											to={titlePath(title.media_type, title.tmdb_id, canonicalMediaTitle(title))}
 										>
 											{title.title}
 										</Link>

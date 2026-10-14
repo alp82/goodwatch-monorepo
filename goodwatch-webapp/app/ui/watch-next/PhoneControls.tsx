@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Watch next's controls on phones (below the large breakpoint): the slab's three buttons at the bottom, moods,
 // services, and sort, each opening its own drawer (owner addendum on #176). With the site's dock (REC_NAVIGATION)
 // the buttons dock above it; otherwise the slab frame carries them over the site navigation. Every drawer is a
@@ -519,7 +520,7 @@ export function PhoneControls({
 							header={
 								<DrawerHead>
 									<h2 className="text-base font-bold text-white">
-										{extra.title}
+										<span lang={mediaFieldLanguage(extra)}>{extra.title}</span>
 									</h2>
 								</DrawerHead>
 							}

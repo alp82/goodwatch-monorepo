@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // GET ?mood=crime&from=auto|wishlist|new&service=Netflix&country=DE.
 // POST the same URL with { guest: { interactions, country, services } } to use browser-owned progress.
 // Members always use their authenticated account; guest input cannot select or override an account.
@@ -6,7 +7,11 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
 import { livingRoomPicksResponse } from "~/server/living-room/request.server"
 
-export const loader = ({ request }: LoaderFunctionArgs) =>
+const canonicalLoader = ({ request }: LoaderFunctionArgs) =>
 	livingRoomPicksResponse(request)
-export const action = ({ request }: ActionFunctionArgs) =>
+const canonicalAction = ({ request }: ActionFunctionArgs) =>
 	livingRoomPicksResponse(request)
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+export const action = presentCatalogLoader(canonicalAction, { live: true })

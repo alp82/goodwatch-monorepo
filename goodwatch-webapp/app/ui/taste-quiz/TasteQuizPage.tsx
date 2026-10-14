@@ -1,3 +1,5 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // /taste/quiz: the taste quiz as a web page, on the title's backdrop. The flow lives in quiz-flow.ts and
 // useTasteQuiz; this file only renders it.
 import { Link } from "@remix-run/react"
@@ -233,7 +235,7 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 						/>
 						<div className="min-w-0 flex-1">
 							<div className="text-2xl font-extrabold leading-tight md:text-3xl">
-								{x.title}
+								<span lang={mediaFieldLanguage(x)}>{x.title}</span>
 							</div>
 							<div className="mt-1 text-sm text-gray-400">
 								{[x.release_year, x.genres?.slice(0, 3).join(", ")]
@@ -474,7 +476,7 @@ function PickCard({ pick }: { pick: QuizPick }) {
 	const score = Math.round(pick.goodwatch_overall_score_normalized_percent ?? 0)
 	return (
 		<Link
-			to={`/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(pick.title)}`}
+			to={`/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(canonicalMediaTitle(pick))}`}
 			className="flex flex-col overflow-hidden rounded-lg border-4 border-gray-800 bg-gray-900 hover:border-amber-700/50 hover:bg-gray-800"
 		>
 			<img
@@ -484,7 +486,7 @@ function PickCard({ pick }: { pick: QuizPick }) {
 			/>
 			<div className="flex flex-col gap-1 p-2 md:p-3">
 				<div className="truncate text-sm font-bold md:text-base">
-					{pick.title}
+					<span lang={mediaFieldLanguage(pick)}>{pick.title}</span>
 				</div>
 				<div className="flex flex-wrap items-center gap-1.5 text-xs">
 					{score > 0 && (

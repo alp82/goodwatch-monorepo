@@ -1,3 +1,5 @@
+import { isCrawler } from "./crawlers.server"
+import { liveMediaLanguage, presentCatalogLoader } from "./media-payload.server.ts"
 import { json } from "@remix-run/node"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { isEnabled } from "~/server/features.server"
@@ -56,7 +58,9 @@ export async function loadLivingRoom(request: Request) {
 			.split(",")
 			.map(Number)
 			.filter((id) => Number.isSafeInteger(id) && id > 0)
+		const language = isCrawler(request) ? undefined : await liveMediaLanguage(request, user.id)
 		const viewer: ViewerContext = {
+			language,
 			viewer: { kind: "member", userId: user.id },
 			country:
 				savedCountry && /^[A-Z]{2}$/.test(savedCountry)
@@ -83,7 +87,7 @@ export async function loadLivingRoom(request: Request) {
 		if (isEnabled("tracking", { userId: user.id }))
 			try {
 				data.doors = await getHomeDoors(
-					await getMemberViewerContext(user.id, country),
+					{ ...(await getMemberViewerContext(user.id, country)), language },
 					taste,
 				)
 			} catch (error) {
@@ -99,7 +103,9 @@ export async function loadLivingRoom(request: Request) {
 	return { data, headers }
 }
 
-export async function livingRoomLoader({ request }: { request: Request }) {
+async function canonicalLivingRoomLoader({ request }: { request: Request }) {
 	const { data, headers } = await loadLivingRoom(request)
 	return json(data, { headers })
 }
+
+export const livingRoomLoader = presentCatalogLoader(canonicalLivingRoomLoader, { live: true })

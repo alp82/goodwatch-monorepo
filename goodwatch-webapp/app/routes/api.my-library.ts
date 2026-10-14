@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
 import { isEnabled } from "~/server/features.server"
@@ -13,7 +14,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!isEnabled("tracking", { userId }))
 		return json({ error: "Not found" }, { status: 404, headers })
@@ -36,3 +37,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		{ headers },
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

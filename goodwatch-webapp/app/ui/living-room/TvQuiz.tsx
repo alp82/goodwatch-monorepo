@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The taste quiz on the TV (#226), for both editions: the desktop's 960 x 528 canvas and the phone's 560 x 308
 // canvas (18 px minimum type). The same flow as /taste/quiz: one title at a time with the `stack` rating, "Keep
 // these 5?", then picks three at a time between side arrows, and Rate more with the sign-up and "Back to my picks"
@@ -249,7 +250,7 @@ function RateStep({
 						<div
 							className={`truncate font-extrabold leading-tight ${z.phone ? "text-[22px]" : "text-[28px]"}`}
 						>
-							{x.title}
+							<span lang={mediaFieldLanguage(x)}>{x.title}</span>
 						</div>
 						<div
 							className={`truncate text-white/55 ${z.phone ? "text-[18px]" : "mt-1 text-[15px]"}`}
@@ -573,7 +574,7 @@ function PickCard({
 				className={`truncate px-2 font-bold ${z.phone ? "py-0.5 text-[18px]" : "py-2 text-[15px]"}`}
 				style={{ width: card.w }}
 			>
-				{pick.title}
+				<span lang={mediaFieldLanguage(pick)}>{pick.title}</span>
 			</div>
 		</QItem>
 	)

@@ -47,7 +47,7 @@ const Cell = ({ item, n, w, h, t, tab }: { item: CardTitle; n: number; w: number
 			<img src={item.poster} width={w} height={h} style={{ display: "flex", width: w, height: h, objectFit: "cover" }} />
 		) : (
 			<div style={col({ width: w, height: h, padding: 18, justifyContent: "flex-end", color: t.accent, fontFamily: "Gabarito", fontWeight: 900, fontSize: Math.round(w * 0.13), lineHeight: 0.95, letterSpacing: -1 })}>
-				<div style={{ display: "flex" }}>{item.title}</div>
+				<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 			</div>
 		)}
 		<Tab n={n} size={tab} t={t} />
@@ -147,7 +147,7 @@ export function ManifestoCard({ title, items, name, theme, date, editing }: Card
 					{items.map((item, i) => (
 						<div key={item.key} style={flex({ gap: 9 })}>
 							<div style={{ display: "flex", fontWeight: 400 }}>{String(i + 1).padStart(2, "0")}</div>
-							<div style={{ display: "flex" }}>{item.title}</div>
+							<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 						</div>
 					))}
 				</div>

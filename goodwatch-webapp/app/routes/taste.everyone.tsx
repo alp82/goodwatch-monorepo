@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import {
@@ -24,7 +25,7 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { userId, enabled } = await tastePageViewer(request)
 	if (!enabled) notFound()
 	return loadTasteTab(request, "everyone", userId)
@@ -38,3 +39,5 @@ export default function TasteEveryoneRoute() {
 		</TasteTabFrame>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

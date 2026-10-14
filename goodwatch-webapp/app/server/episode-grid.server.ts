@@ -11,6 +11,8 @@ import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
 export interface GridEpisode {
+	tmdbId?: number
+	nameLanguage?: string
 	/** IMDb episode number. 0 is a numbered special such as a Christmas episode. */
 	number: number
 	name: string
@@ -21,6 +23,8 @@ export interface GridEpisode {
 }
 
 export interface GridSpecial {
+	tmdbId?: number
+	nameLanguage?: string
 	name: string
 	score: number
 	votes: number

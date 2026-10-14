@@ -18,8 +18,9 @@
 import type { MapMeta } from "./traits"
 
 /** A title in a pack: key ("m603", "s1396"), title, year, poster path, similarity in thousandths, level string. */
-export type RawTitle = [string, string, string, string, number, string]
+export type RawTitle = [string, string, string, string, number, string, { canonicalTitle: string; language: string }?]
 export interface RawPack {
+	language?: string
 	c: RawTitle
 	n: RawTitle[]
 	/** Per filter, the similarity down to which the titles are all there. 0: there are no more. */
@@ -28,6 +29,8 @@ export interface RawPack {
 
 /** A title as the engine holds it. `n` is the similarity to the center of the pack it came from. */
 export interface MapTitle {
+	canonicalTitle?: string
+	language?: string
 	k: string
 	t: string
 	y: string
@@ -140,6 +143,7 @@ export function relatedMapEngine(
 		IDX[key] = i
 	})
 	const G: {
+		language: string
 		t: Record<string, MapTitle>
 		packs: Record<string, MapTitle[]>
 		soft: Record<string, MapTitle[]>
@@ -155,6 +159,7 @@ export function relatedMapEngine(
 		none: Record<string, boolean>
 		used: boolean
 	} = {
+		language: "",
 		t: {},
 		packs: {},
 		soft: {},
@@ -193,6 +198,8 @@ export function relatedMapEngine(
 		const title = {
 			k: raw[0],
 			t: raw[1],
+			canonicalTitle: raw[6]?.canonicalTitle,
+			language: raw[6]?.language,
 			y: raw[2],
 			p: raw[3],
 			n: raw[4] / 1000,
@@ -254,7 +261,7 @@ export function relatedMapEngine(
 	// --- Markup ---------------------------------------------------------------------------------------------------
 	const src = (path: string) => `${M.image}/w154/${path}`
 	const hrefOf = (title: MapTitle) =>
-		`/${title.k.charAt(0) === "m" ? "movie" : "show"}/${title.k.slice(1)}-${title.t
+		`/${title.k.charAt(0) === "m" ? "movie" : "show"}/${title.k.slice(1)}-${(title.canonicalTitle ?? title.t)
 			.toLowerCase()
 			.replace(/[^\w- ]+/g, "")
 			.replace(/ +/g, "-")}`
@@ -263,7 +270,7 @@ export function relatedMapEngine(
 	const poster: MapCore["poster"] = (title, options = {}) =>
 		`<button type="button" class="pl-p ${options.cls ?? ""}"${
 			options.style ? ` style="${options.style}"` : ""
-		} data-pl-step="${title.k}" data-t="${esc(title.t)}" data-y="${esc(title.y)}"${
+		} data-pl-step="${title.k}" data-t="${esc(title.t)}"${title.language ? ` lang="${esc(title.language)}" data-canonical-title="${esc(title.canonicalTitle ?? title.t)}"` : ""} data-y="${esc(title.y)}"${
 			options.came ? ' data-pl-came=""' : ""
 		}${options.attrs ?? ""}><img alt="${esc(
 			options.came ? `Back to ${title.t}` : title.t,
@@ -319,7 +326,7 @@ export function relatedMapEngine(
 		root: string
 		title: string
 		pack: RawPack
-		links: { href: string; text: string }[]
+		links: { href: string; text: string; language?: string }[]
 	}) => {
 		take(input.pack)
 		const rootTitle = G.t[input.root]
@@ -333,13 +340,13 @@ export function relatedMapEngine(
 			? `<p class="pl-more"><span>Open a page:</span>${input.links
 					.map(
 						(link) =>
-							`<a data-pl-nav="" tabindex="-1" href="${esc(link.href)}">${esc(link.text)}</a>`,
+							`<a data-pl-nav="" tabindex="-1"${link.language ? ` lang="${esc(link.language)}"` : ""} href="${esc(link.href)}">${esc(link.text)}</a>`,
 					)
 					.join("")}</p>`
 			: ""
 		// The stage carries the levels of the page's title (`data-s`): the browser draws that title's chips again
 		// without its pack, which a crawler may not ask for (robots.txt).
-		return `<h2 class="pl-h">Titles like ${esc(input.title)}</h2><div class="pl-body"><div class="pl-stage pl-map" data-pl-stage="" data-pl-at="${input.root}" data-y="${esc(
+		return `<h2 class="pl-h">Titles like ${rootTitle.language ? `<span lang="${esc(rootTitle.language)}">${esc(input.title)}</span>` : esc(input.title)}</h2><div class="pl-body"><div class="pl-stage pl-map" data-pl-stage="" data-pl-at="${input.root}" data-y="${esc(
 			rootTitle.y,
 		)}" data-p="${esc(rootTitle.p)}" data-s="${esc(input.pack.c[5])}">${form.stage(ctxOf(st))}</div></div>${links}`
 	}
@@ -377,6 +384,8 @@ export function relatedMapEngine(
 				G.t[root] = {
 					k: root,
 					t: s.getAttribute("data-pl-title") ?? "",
+					language: s.getAttribute("data-title-language") ?? undefined,
+					canonicalTitle: s.getAttribute("data-canonical-title") ?? undefined,
 					y: stage?.getAttribute("data-y") ?? "",
 					p: stage?.getAttribute("data-p") ?? "",
 					n: 1,
@@ -394,10 +403,10 @@ export function relatedMapEngine(
 	function harvest(s: Element, root: string) {
 		const out: MapTitle[] = []
 		const seen: Record<string, boolean> = {}
-		const add = (k: string, t: string, y: string, p: string) => {
+		const add = (k: string, t: string, y: string, p: string, meta?: { canonicalTitle?: string; language?: string }) => {
 			if (!k || seen[k] || k === root) return
 			seen[k] = true
-			const title = { k, t, y, p, n: 1 - out.length * 0.0001, s: null }
+			const title = { k, t, y, p, ...meta, n: 1 - out.length * 0.0001, s: null }
 			if (!G.t[k]) G.t[k] = title
 			out.push(G.t[k].s ? { ...G.t[k], n: title.n } : title)
 		}
@@ -409,13 +418,14 @@ export function relatedMapEngine(
 				b.getAttribute("data-t") ?? "",
 				b.getAttribute("data-y") ?? "",
 				(q(b, "img")?.getAttribute("src") ?? "").replace(/^.*\/w\d+\//, ""),
+				{ language: b.getAttribute("lang") ?? undefined, canonicalTitle: b.getAttribute("data-canonical-title") ?? undefined },
 			)
 		}
 		try {
 			const rest = JSON.parse(
 				q(s, "[data-pl-rest]")?.getAttribute("data-pl-rest") ?? "[]",
-			) as string[][]
-			for (const entry of rest) add(entry[0], entry[1], entry[2], entry[3])
+			) as [string, string, string, string, { canonicalTitle?: string; language?: string }?][]
+			for (const entry of rest) add(entry[0], entry[1], entry[2], entry[3], entry[4])
 		} catch {}
 		if (out.length) G.dom[root] = out
 	}
@@ -425,13 +435,13 @@ export function relatedMapEngine(
 			.then((response: Response) => {
 				if (!response.ok) throw new Error(String(response.status))
 				return response.json()
-			})
+			}).then((pack: RawPack) => { if (pack.language && pack.language !== G.language) throw new Error("Stale presentation language"); return pack })
 	function ask(key: string, urgent: boolean): Promise<unknown> {
 		if (G.packs[key] || G.none[key]) return Promise.resolve()
 		if (!G.wait[key]) {
 			if (!urgent && G.asked >= SESSION_CAP) return Promise.resolve()
 			G.asked++
-			G.wait[key] = fetchPack(PACK_PATH + key, urgent)
+			G.wait[key] = fetchPack(PACK_PATH + key + (G.language ? `&displayLanguage=${encodeURIComponent(G.language)}` : ""), urgent)
 				.then((raw) => {
 					take(raw)
 					arrived(key)
@@ -472,7 +482,7 @@ export function relatedMapEngine(
 			for (const s of sections())
 				if (here(stateOf(s)) === key && G.packs[key]) draw(s)
 		}
-		fetchPack(PACK_PATH + key + suffix, false)
+		fetchPack(PACK_PATH + key + suffix + (G.language ? `&displayLanguage=${encodeURIComponent(G.language)}` : ""), false)
 			.then((raw) => {
 				G.ex[id] = 2
 				if (G.packs[key]) merge(key, raw)
@@ -997,6 +1007,12 @@ export function relatedMapEngine(
 
 	const boot = () => {
 		for (const s of sections()) {
+			const language = s.getAttribute("data-media-language") ?? ""
+			if (language !== G.language) {
+				G.language = language
+				G.t = {}; G.packs = {}; G.soft = {}; G.wait = {}; G.fl = {}; G.ex = {}; G.late = {}; G.dom = {}; G.again = {}; G.none = {}; G.asked = 0
+				s.__pl = undefined; s.__awake = false; s.__seen = false
+			}
 			stateOf(s)
 			// The form hears the stage's size after the first layout and before the first paint, so the server's
 			// picture (drawn for a phone) is never seen at another width. A navigation inside the app puts a new stage

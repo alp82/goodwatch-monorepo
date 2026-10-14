@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Binds the taste quiz flow to the person: the title queue from smart-titles, scores through useTasteScoring (guest
 // progress for guests, the account for members), and the picks those scores make. Both the /taste/quiz page and the
 // Living room TV render from what this hook returns.
@@ -45,6 +47,7 @@ export function useTasteQuiz({
 
 	// Toward the goal: all guest scores (they resume), or a member's scores in this visit.
 	const progress = interactions.filter((i) => i.type === "score").length
+	const { locale } = useLocale()
 	const [state, send] = useReducer(
 		quizTransition,
 		{ progress: 0, member, showPicks },
@@ -73,9 +76,9 @@ export function useTasteQuiz({
 	const fetchMoreTitles = useCallback(
 		() =>
 			enabled
-				? fetchSmartTitles({ count: 20 })
+				? fetchSmartTitles({ count: 20, language: locale.language })
 				: Promise.resolve([] as ScoringMedia[]),
-		[enabled],
+		[enabled, locale.language],
 	)
 	const queue = useTitleQueue({
 		initialTitles: titles,

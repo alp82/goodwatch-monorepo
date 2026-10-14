@@ -47,27 +47,8 @@ export const episodeSlots = (
 	return slots
 }
 
-/** Where an episode sits, in words. `season` is null for a special. */
-export const episodeWhere = (
-	season: number | null,
-	episode: GridEpisode | GridSpecial,
-) =>
-	season === null
-		? "Special"
-		: season < 0
-			? (episode.canonicalLabel ?? "Additional episode")
-			: `Season ${season}, episode ${(episode as GridEpisode).number}`
-
-/** The accessible name of an episode cell: everything the tip shows. */
-export const episodeLabel = (
-	season: number | null,
-	episode: GridEpisode | GridSpecial,
-) => {
-	if (episode.unrated)
-		return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. No IMDb rating.`
-	const votes = `${formatCount(episode.votes)} IMDb vote${episode.votes === 1 ? "" : "s"}`
-	return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. Rated ${episode.unrated ? "—" : formatScore(episode.score)}, ${votes}${isLowVotes(episode.votes) ? ", few votes" : ""}.`
-}
+export { episodeLabel, episodeWhere } from "./labels"
+import { episodeWhere } from "./labels"
 
 /** The accessible name of a season trigger: every site's season score. */
 export const seasonLabel = (season: GridSeason, providers: ProviderKey[]) => {
@@ -258,7 +239,7 @@ export function EpisodeTip({
 			</span>
 			<span className="min-w-0">
 				<span className="block font-semibold leading-snug text-gray-50">
-					{episode.name || "Untitled"}
+					<span lang={episode.nameLanguage ?? "und"}>{episode.name || "Untitled"}</span>
 				</span>
 				<span className="block text-xs text-gray-400">
 					{episodeWhere(season, episode)} ·{" "}

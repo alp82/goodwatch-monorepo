@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // My movies (#385): the page for choosing a movie. It is the Watch next page for the Wishlist's movies, with "How
 // long?" as a fourth choice and one group for what does not fit tonight. For members, behind REC_TRACKING; it reads
 // /api/watch-next with `kind=movie`, so it needs REC_WATCH_NEXT too. Anyone else is sent to Watch next, which is
@@ -44,7 +45,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	const url = new URL(request.url)
 	if (!isEnabled("watchNext", { userId }))
@@ -90,3 +91,5 @@ export default function MyMoviesRoute() {
 	}
 	return <MyMoviesPage initial={initial} landed={landed} />
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
 // "Search for …" (the search page), then up to eight matching titles ending in "Show 120 more" (the search page
 // again) when more match, then matching destinations ("Go to Taste"), then Sign up
@@ -60,6 +61,7 @@ const PALETTE_DESTINATIONS: DestinationKey[] = [
 ]
 
 interface Row {
+	language?: string
 	key: string
 	label: string
 	sub?: string
@@ -85,7 +87,8 @@ function useDebounced<T>(value: T, ms: number): T {
 function usePaletteTitles(q: string): PaletteTitles {
 	const prefix = useDebounced(normalizePrefix(q), DEBOUNCE_MS)
 	const typed = normalizePrefix(q).length >= MIN_PREFIX_CHARS
-	const query = useQuery(paletteTitlesQuery(prefix))
+	const { locale } = useLocale()
+	const query = useQuery(paletteTitlesQuery(prefix, locale.language))
 	return shownPaletteTitles(typed, query.data)
 }
 
@@ -125,6 +128,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: `title-${title.mediaType}-${title.tmdbId}`,
 				label: title.title,
+				language: title.presentation?.title.language,
 				sub: [title.mediaType === "show" ? "Series" : "Movie", title.year]
 					.filter(Boolean)
 					.join(", "),
@@ -227,7 +231,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					<b
 						className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
 					>
-						{row.label}
+						<span lang={row.language ?? "en"}>{row.label}</span>
 					</b>
 					{row.sub && (
 						<small

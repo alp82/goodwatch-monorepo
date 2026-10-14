@@ -1,3 +1,4 @@
+import { isbot } from "isbot"
 // Which stored response may a request get? One answer for every cache: the in-process page cache and a cache in front
 // of the app.
 // - The identity of a request is its audience (anonymous or member), its country, and its language. With the URL it is
@@ -201,6 +202,8 @@ export function applyCachePolicy(
 		return "private"
 	}
 	if (policy === null) return "unset"
+	// Canonical crawlers use the origin cache policy dimension; future edge caches must bypass them.
+	const keyFromCache = identity.keyFromCache && !isbot(request.headers.get("user-agent"))
 	const lifetime = pageLifetime(policy)
 	const sharedPolicy =
 		lifetime.fresh < pageLifetime().fresh
@@ -208,12 +211,12 @@ export function applyCachePolicy(
 			: SHARED_PAGE_CACHE_CONTROL
 	headers.set(
 		"Cache-Control",
-		identity.keyFromCache ? sharedPolicy : KEYED_PAGE_CACHE_CONTROL,
+		keyFromCache ? sharedPolicy : KEYED_PAGE_CACHE_CONTROL,
 	)
 	headers.set(
 		"Vary",
-		identity.keyFromCache ? CACHE_IDENTITY_HEADER : "Accept-Language",
+		keyFromCache ? CACHE_IDENTITY_HEADER : "Accept-Language",
 	)
 	headers.set(CACHE_IDENTITY_HEADER, identity.key)
-	return identity.keyFromCache ? "shared" : "keyed"
+	return keyFromCache ? "shared" : "keyed"
 }

@@ -23,7 +23,8 @@ export async function prefetchRelatedState(
 		tmdbId,
 		sourceMediaType,
 		budgetMs,
-	}: { tmdbId: number; sourceMediaType: "movie" | "show"; budgetMs?: number },
+		language,
+	}: { tmdbId: number; sourceMediaType: "movie" | "show"; budgetMs?: number; language?: string },
 	lookup: () => Promise<RelatedPanel>,
 ) {
 	const empty = () => dehydrate(new QueryClient())
@@ -37,7 +38,7 @@ export async function prefetchRelatedState(
 		.then(lookup)
 		.then((panel) => {
 			client.setQueryData(
-				getQueryKeyRelatedPanel({ tmdbId, sourceMediaType }),
+				getQueryKeyRelatedPanel({ tmdbId, sourceMediaType, language }),
 				panel,
 			)
 			return "embedded" as const

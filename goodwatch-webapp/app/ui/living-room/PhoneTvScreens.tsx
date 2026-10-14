@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The phone edition of the TV screens (#224, `type-scale-rows`), drawn on the 560 x 308 canvas. On a phone the TV
 // is 320 to 450 px wide, so the desktop canvas would print at about 5 px. This edition keeps every element of the
 // home screens with type scaled up (18 px minimum on the canvas, about 11 px on a 390 px wide phone). The TV flow,
@@ -403,7 +404,7 @@ function MemberHome({ view }: { view: TvView }) {
 						<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
 						<span className="relative">
 							<span className="block text-[24px] font-extrabold leading-none">
-								{tile.title}
+								<span lang={mediaFieldLanguage(tile)}>{tile.title}</span>
 							</span>
 							<span className="mt-1 block text-[18px] text-white/60">
 								{tile.short}
@@ -665,7 +666,7 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 						/>
 						<div className="min-w-0">
 							<div className="line-clamp-2 text-[20px] font-extrabold leading-tight">
-								{first.title}
+								<span lang={mediaFieldLanguage(first)}>{first.title}</span>
 							</div>
 							<div className="mt-1.5 flex items-center gap-2">
 								<Score title={first} />
@@ -691,7 +692,7 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 							className="h-[118px] w-[79px] rounded-lg object-cover"
 						/>
 						<div className="w-[79px] truncate text-[18px] font-bold">
-							{t.title}
+							<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 						</div>
 					</PItem>
 				))}
@@ -749,7 +750,7 @@ function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 			/>
 			<div className="absolute right-5 top-3" style={{ left }}>
 				<h2 className="mr-[186px] truncate text-[24px] font-extrabold leading-tight">
-					{t.title}
+					<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 				</h2>
 				<div className="mt-3 flex items-center gap-2.5 text-[18px] text-white/55">
 					<Score title={t} />

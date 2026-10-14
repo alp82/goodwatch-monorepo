@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { Link } from "@remix-run/react"
 import type React from "react"
 import type { RatingBadge } from "~/domain/age-content"
@@ -79,7 +80,7 @@ export function MovieTvCard({
 				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
 				${actions ? "" : `${SCALE} group`}
 			`}
-			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
 		>
@@ -102,6 +103,7 @@ export function MovieTvCard({
 				<Poster
 					path={details.poster_path}
 					title={details.title}
+					lang={details.presentation?.title.language ?? "en"}
 					mediaType={mediaType}
 					tmdbId={details.tmdb_id}
 					sizes={posterSizes}
@@ -127,6 +129,7 @@ export function MovieTvCard({
 				>
 					{rating && <RatingMark rating={rating} />}
 					<span
+						lang={details.presentation?.title.language ?? "en"}
 						className="
 							text-sm font-bold text-white
 							transition-transform duration-200 group-hover:-translate-y-1

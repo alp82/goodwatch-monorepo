@@ -1,3 +1,5 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // The start hero: the first title of Watch next, large, over its backdrop, with its services and actions, and the
 // Then column with the next three. The docked strip sits on its top edge. With an empty Wishlist it offers the best
 // worthwhile suggestion instead ("Start with this?").
@@ -39,7 +41,7 @@ export const NewOnContext = createContext<NewOnMark | null>(null)
 
 export const titleHref = (
 	title: Pick<TitleCard, "media_type" | "tmdb_id" | "title">,
-) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(title.title)}`
+) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
 
 const SWAP = {
 	initial: { opacity: 0, x: 40 },
@@ -232,7 +234,7 @@ function ThenColumn({
 								</span>
 								<span className="min-w-0 flex-1">
 									<span className="block truncate text-sm font-bold text-white">
-										{title.title}
+										<span lang={mediaFieldLanguage(title)}>{title.title}</span>
 									</span>
 									<span className="block truncate text-xs text-gray-400">
 										{watchLine(offersOf(title, mine))}
@@ -317,12 +319,12 @@ export function WatchNextHero({
 									<h2
 										className={`${DISPLAY} mt-1 leading-[0.9] text-white ${hero.title.length > 22 ? "text-4xl md:text-6xl lg:text-7xl" : "text-5xl md:text-7xl lg:text-[7rem]"}`}
 									>
-										{hero.title}
+										<span lang={mediaFieldLanguage(hero)}>{hero.title}</span>
 									</h2>
 								</Link>
 								{hero.tagline && (
 									<p className="mt-3 text-base text-gray-200 md:text-lg">
-										{hero.tagline}
+										<span lang={mediaFieldLanguage(hero, "tagline")}>{hero.tagline}</span>
 									</p>
 								)}
 								<p className="mt-1 text-sm text-gray-400">
@@ -378,7 +380,7 @@ export function WatchNextHero({
 											<h2
 												className={`${DISPLAY} mt-1 text-5xl leading-[0.9] text-white md:text-7xl`}
 											>
-												{start.title}
+												<span lang={mediaFieldLanguage(start)}>{start.title}</span>
 											</h2>
 										</Link>
 										<p className="mt-3 text-base text-gray-200 md:text-lg">

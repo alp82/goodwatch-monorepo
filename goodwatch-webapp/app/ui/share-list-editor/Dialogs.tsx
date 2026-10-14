@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Dialogs the card opens: one rank (swap, move up, remove, or pick a title), and the title.
 import { useEffect, useState } from "react"
 import {
@@ -47,7 +48,7 @@ function RankDialog({
 						<span className="text-4xl font-black">#{index + 1}</span>
 						{current && (
 							<span className="truncate text-lg text-neutral-400">
-								{current.title}
+								<span lang={mediaFieldLanguage(current)}>{current.title}</span>
 							</span>
 						)}
 					</div>
@@ -124,7 +125,7 @@ function RankDialog({
 									</span>
 								)}
 								<div className="mt-1 truncate text-xs text-neutral-400">
-									{title.title}
+									<span lang={mediaFieldLanguage(title)}>{title.title}</span>
 								</div>
 							</button>
 						)

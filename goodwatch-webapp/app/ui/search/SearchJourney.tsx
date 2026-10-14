@@ -1,3 +1,6 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import useLocale from "~/utils/locale"
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
 import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
@@ -278,7 +281,8 @@ function useController() {
 	// Search all titles even when the query names people inside a longer phrase.
 	const allTitles = setting("allTitles") === "1";
 	const basePolicyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${allTitles ? ":allTitles" : ""}`;
-	const policyKey = `${basePolicyKey}${filtersKey ? `:${filtersKey}` : ""}`;
+	const { locale: mediaLocale } = useLocale();
+	const policyKey = `${mediaLocale.language}:${basePolicyKey}${filtersKey ? `:${filtersKey}` : ""}`;
 	const batchKey = `${policyKey}:${q}`;
 	const requestIdentity = `${batchKey}:${revision}`;
 	liveSearch.current = active ? requestIdentity : "";
@@ -310,6 +314,7 @@ function useController() {
 			setProvisional((old) => (old?.key === batchKey ? old : null));
 			const current = () => !signal.aborted && liveSearch.current === requestIdentity && requestGeneration.current === generation;
 			const batch = await requestSearch({
+				language: mediaLocale.language,
 				body: {
 					q: requested,
 					includeAdult: false,
@@ -536,7 +541,7 @@ function useController() {
 			)) ||
 		null;
 	const detailHref = (row: Row) =>
-		`${titlePath(row.type, Number(row.key.split(":")[1]), row.title)}?${makeParams({
+		`${titlePath(row.type, Number(row.key.split(":")[1]), canonicalMediaTitle(row))}?${makeParams({
 			q: batch?.q ?? q,
 			page: String(
 				Math.floor(
@@ -888,7 +893,7 @@ function JourneyList() {
 							<div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
 								<div className="transition-transform duration-300 ease-out motion-reduce:transition-none group-hover:-translate-y-1 group-focus-within:-translate-y-1">
 									<h3 className="text-sm font-bold text-white leading-tight line-clamp-2">
-										<Highlight text={r.title} query={j.batch?.q ?? ""} />
+										<span lang={mediaFieldLanguage(r)}><Highlight text={r.title} query={j.batch?.q ?? ""} /></span>
 									</h3>
 									<p className="text-[11px] text-gray-300 truncate">{meta(r)}</p>
 								</div>

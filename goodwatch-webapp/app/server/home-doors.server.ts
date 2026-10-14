@@ -48,6 +48,7 @@ export async function getTonightParts(
 		getMyShows(
 			{
 				userId: ctx.viewer.userId,
+				language: ctx.language,
 				country: ctx.country,
 				services: ctx.services,
 				taste,
@@ -131,6 +132,7 @@ export function homeDoorsOf(
 	return {
 		continue: first && {
 			title: first.title,
+			...(first.presentation ? { presentation: first.presentation } : {}),
 			backdrop_path: first.backdrop_path,
 			episode: first.next ? episodeCode(first.next) : null,
 			episodeName: first.next?.name ?? null,
@@ -144,6 +146,7 @@ export function homeDoorsOf(
 			? {
 					count: shows.start.length,
 					title: shows.start[0].title,
+					...(shows.start[0].presentation ? { presentation: shows.start[0].presentation } : {}),
 					posters: shows.start.slice(0, FAN).map((show) => show.poster_path),
 					...(parts.newOn.start ? { newOn: parts.newOn.start } : {}),
 				}
@@ -151,6 +154,7 @@ export function homeDoorsOf(
 		movie: {
 			count: parts.movieCount,
 			title: movie?.title ?? null,
+			...(movie?.presentation ? { presentation: movie.presentation } : {}),
 			runtime: movie?.runtime ?? null,
 			service:
 				movie?.services?.find((service) => own.has(service.id))?.name ?? null,

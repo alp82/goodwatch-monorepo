@@ -1,3 +1,5 @@
+import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
 import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import {
@@ -12,7 +14,7 @@ import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
-import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
+import { getDetailsForMovie, getDetailsForShow, presentShowSeasonsAfterAlignment } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
@@ -63,19 +65,20 @@ export const loader: LoaderFunction = async ({
 	const { effectiveContext } = await resolveMediaContext(request, userId)
 	const { country } = effectiveContext
 	const countryIsFallback = !normalizeCountry(url.searchParams.get("country"))
-	const language = url.searchParams.get("language") || "en"
+	const canonicalContent = isCrawler(request)
+	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = getDetailsForShow({
 		showId,
 		country,
 		language,
-	})
+	}, { canonical: canonicalContent })
 	let episodeGridFailed = false
 	const parts = Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
-			.then((grid) => grid && packEpisodeGrid(grid))
+			.then(async (grid) => grid && packEpisodeGrid(canonicalContent ? grid : await overlayAlignedGrid(grid, language)))
 			.catch((error) => {
 				episodeGridFailed = true
 				console.error("episode grid failed", { showId, error })
@@ -85,11 +88,12 @@ export const loader: LoaderFunction = async ({
 			tmdbId: Number(showId),
 			sourceMediaType: "show",
 			budgetMs,
+			language: canonicalContent ? undefined : language,
 		}),
 		// The header's genre links, which the page requested after load before.
 		details.then(
 			(media) =>
-				prefetchTitleExtrasState({ genres: media.details.genres, budgetMs }),
+				prefetchTitleExtrasState({ genres: media.details.genres, budgetMs, language: canonicalContent ? undefined : language }),
 			// A failed details read fails the page above.
 			() => null,
 		),
@@ -105,12 +109,12 @@ export const loader: LoaderFunction = async ({
 		search: url.search,
 		mediaType: "show",
 		tmdbId: titleDetails.tmdb_id,
-		title: titleDetails.title,
+		title: canonicalMediaTitle(titleDetails),
 	})
 	if (canonical) return redirect(canonical, 301)
 
 	const [catalogMedia, episodeGrid, relatedSection, extrasState] = await parts
-	const media = episodeGrid?.presentationVersion
+	const alignedMedia = episodeGrid?.presentationVersion
 		? {
 				...catalogMedia,
 				seasons: episodeGrid.seasons
@@ -122,6 +126,7 @@ export const loader: LoaderFunction = async ({
 				},
 			}
 		: catalogMedia
+	const media = canonicalContent ? alignedMedia : await presentShowSeasonsAfterAlignment(alignedMedia, language)
 	// The related map's section, or with the map off the related titles carousel's first panel.
 	const related = relatedSectionData(
 		relatedSection,
