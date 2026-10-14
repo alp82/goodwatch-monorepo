@@ -1,4 +1,4 @@
-// Slice 10 of the new TV (search): walks the search screen and its results on /home-preview with the keyboard, both
+// Slice 10 of the new TV (search): walks the search screen and its results on / with the keyboard, both
 // Remotes' keys and the pointer, as a guest on real data and as a member on the tracking harness; counts every
 // request, so that nothing is asked for before OK; compares the TV's search with the Discover page's; measures
 // every key on every phone of the room's table; and takes the screenshots in shots/ and the sheets beside the
@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3310"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER_ORIGIN = process.env.MEMBER ?? "http://localhost:3311"
 const MEMBER = `${MEMBER_ORIGIN}/prototype/my-library-real/tv?member=six&session=on`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
@@ -884,7 +884,7 @@ async function html() {
 		is([same(stable(room(pages.Googlebot)), stable(first)), same(stable(room(pages.iPhone)), stable(first))], [true, true], `${query}: the room's HTML is the same for a browser, Googlebot and an iPhone`)
 		numbers[`${query}: the guest's HTML, bytes`] = Object.fromEntries(Object.entries(pages).map(([name, text]) => [name, Buffer.byteLength(text)]))
 	}
-	numbers["the guest's HTML of /home-preview, bytes"] = Buffer.byteLength(await (await fetch(GUEST, { headers: { "User-Agent": agents.browser } })).text())
+	numbers["the guest's HTML of /, bytes"] = Buffer.byteLength(await (await fetch(GUEST, { headers: { "User-Agent": agents.browser } })).text())
 }
 
 // ---------------------------------------------------------------------------------------------------------

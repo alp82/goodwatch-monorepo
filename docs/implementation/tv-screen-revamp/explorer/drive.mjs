@@ -1,4 +1,4 @@
-// Slice 7 of the new TV (the mini Explorer): walks home, the map, an island, "Sail to" and a title on /home-preview
+// Slice 7 of the new TV (the mini Explorer): walks home, the map, an island, "Sail to" and a title on /
 // with the keyboard and the pointer, as a guest on real data and as a member on the tracking harness; presses every
 // direction on every island; measures every key and the Expand key's corner on every phone of the room's table;
 // weighs the map's answer; and takes the screenshots in shots/ and the sheets beside the prototype's own.
@@ -29,7 +29,7 @@ import { brotliCompressSync, gzipSync } from "node:zlib"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3207"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3208"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
@@ -672,7 +672,7 @@ async function html() {
 	const chrome = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36"
 	const googlebot = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 	const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
-	for (const path of ["/home-preview?tv=explorer", "/home-preview?tv=explorer&island=funny"]) {
+	for (const path of ["/?tv=explorer", "/?tv=explorer&island=funny"]) {
 		const pages = [await get(path, chrome), await get(path, googlebot), await get(path, iphone)]
 		check(pages[0] === pages[1] && pages[0] === pages[2], `${path}: the same HTML for a browser, Googlebot and an iPhone`)
 		const items = [...pages[0].matchAll(/data-tv-item="([^"]+)"/g)].map((m) => m[1])
@@ -680,7 +680,7 @@ async function html() {
 		check(!/Sail to|Six islands|tvc-tile/.test(pages[0]), `${path}: and nothing of the map`)
 		numbers[`html ${path}`] = pages[0].length
 	}
-	numbers["html /home-preview"] = (await get("/home-preview", chrome)).length
+	numbers["html /"] = (await get("/", chrome)).length
 }
 
 // ---------------------------------------------------------------------------------------------------------

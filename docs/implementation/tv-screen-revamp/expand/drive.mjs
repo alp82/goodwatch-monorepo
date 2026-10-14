@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3411"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER_ORIGIN = process.env.MEMBER ?? "http://localhost:3412"
 const MEMBER = `${MEMBER_ORIGIN}/prototype/my-library-real/tv?member=six&session=on`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
@@ -285,7 +285,7 @@ const remoteKey = (page, label) =>
 // What a dev server's console says on any page. Two more: the Discover page's own, on a touch device, whose poster
 // cards take the answer "this pointer cannot hover" as one transition for all of them (ui/title-actions/pointer.ts),
 // and Chromium's hint that a stylesheet the router preloaded was not used within seconds (the dev server's
-// living-room.css, which /home-preview links; seen once in three runs, on a phone).
+// living-room.css, which / links; seen once in three runs, on a phone).
 const noise = (logs) => logs.filter((l) => !l.includes("was preloaded using link preload but not used") && !l.includes("large number of updates inside startTransition") && !l.includes("Future Flag") && !l.includes("net::ERR_FAILED") && !l.includes("503") && !l.includes("403") && !l.includes("Failed to load resource") && !l.includes("Swiper Loop Warning"))
 
 /**

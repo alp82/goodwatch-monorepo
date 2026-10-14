@@ -1,5 +1,5 @@
 // Slice 4 of the new TV (pointing) and slice 4b as far as pointing goes (the phone in landscape): points at the
-// TV on /home-preview with the mouse and with a finger, as a guest on real data and as a member on the tracking
+// TV on / with the mouse and with a finger, as a guest on real data and as a member on the tracking
 // harness, checks the ring, the Remote and the TV's state after every step, measures what pointing costs, and takes
 // the screenshots in shots/ and the sheets beside the prototype's own strips.
 //
@@ -22,7 +22,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
-const GUEST = `${process.env.GUEST ?? "http://localhost:3184"}/home-preview`
+const GUEST = `${process.env.GUEST ?? "http://localhost:3184"}/`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3185"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
@@ -935,7 +935,7 @@ async function budget() {
 		is((await look(page)).focus, focusBefore, "(the path crossed no item)")
 		// A long task that the browser puts down to a script of another file is not pointing's: the site's error
 		// reporting listens to the mouse on every page and now and then takes 50 to 80 ms in that listener.
-		const others = moving.scripts.filter((script) => !/ in (pointing|home-preview)/.test(script))
+		const others = moving.scripts.filter((script) => !/ in (pointing|_index)/.test(script))
 		check(moving.tasks.length <= others.length, `the Remote and the ring follow the cursor for ${swept.toFixed(1)} s with no task over 50 ms of their own: ${JSON.stringify(moving.tasks)} ${JSON.stringify(moving.scripts)}`)
 		if (others.length) console.log(`  tasks over 50 ms while following, put down to other scripts: ${JSON.stringify(moving.tasks)} ${JSON.stringify(others)}`)
 		check(moving.longest <= 10, `no frame of the loop takes more than 10 ms of the main thread: ${moving.longest.toFixed(2)} ms at the most`)
@@ -1170,7 +1170,7 @@ async function shots() {
 		"desktop-beside-prototype",
 		1968,
 		`<h2>The prototype's strip of the ring pointer at 1920 x 1080 (its sample home, with the two service tiles that wait for their prototype)</h2><div class="row">${cell(uri(join(prototype, "pointing/ring-strip.jpg")), "", 1920)}</div>` +
-			`<h2>Slice 4 on /home-preview, a guest on real data: the Remote swings toward the cursor, the ring is the pointer over the picture</h2><div class="row">${stops.map((s) => cell(ours(`mouse-${s}-guest-desktop`), said[s], 636)).join("")}</div>` +
+			`<h2>Slice 4 on /, a guest on real data: the Remote swings toward the cursor, the ring is the pointer over the picture</h2><div class="row">${stops.map((s) => cell(ours(`mouse-${s}-guest-desktop`), said[s], 636)).join("")}</div>` +
 			`<h2>A member, on the harness</h2><div class="row">${stops.map((s) => cell(ours(`mouse-${s}-member-desktop`), said[s], 636)).join("")}</div>` +
 			`<h2>Beside the TV (1440 x 800) the Remote only nods</h2><div class="row">${["item", "top-left", "bar"].map((s) => cell(ours(`nod-${s}-guest-1440x800`), said[s], 636)).join("")}</div>`,
 	)

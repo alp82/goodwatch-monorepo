@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import type { EnabledFeatures } from "~/utils/features"
 import { searchHref } from "../../navigation/destinations.ts"
-import { DOOR_HREF as OLD_DOOR_HREF } from "../tv-flow.ts"
 import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
 import {
 	DISCOVER_TABS,
@@ -1029,8 +1028,12 @@ describe("the Expand key's destinations", () => {
 		])
 	})
 
-	it("keeps the member pages' addresses in step with the old TV's", () => {
-		assert.deepEqual(DOOR_HREF, OLD_DOOR_HREF)
+	it("knows the member pages' addresses, which the server's Tonight's pick links to too", () => {
+		assert.deepEqual(DOOR_HREF, {
+			continue: "/my-shows",
+			start: "/my-shows#start",
+			movie: "/my-movies",
+		})
 	})
 })
 

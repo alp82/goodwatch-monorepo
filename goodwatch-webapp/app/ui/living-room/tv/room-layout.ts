@@ -3,8 +3,7 @@
 // measures itself once per resize and calls `layoutRoom` or, under PHONE_BELOW of width, `layoutPhoneRoom`.
 //
 // The numbers of the photos, the hand and the Remote are room.ts's (ROOM, PHONE_ROOM, HAND, REMOTE_W, REMOTE_H);
-// room-render.test-support.tsx checks that they still agree. Until the new TV is the start page, room.ts keeps
-// the old scene's layouts and this file the new ones.
+// room-render.test-support.tsx checks that they still agree.
 
 export type Rect = { left: number; top: number; width: number; height: number }
 
@@ -435,7 +434,7 @@ export type LandscapeRoomLayout = {
 /**
  * Seats the TV and the Remote on a phone in landscape, in a scene of `w` x `h`. `reserve` is what lies over
  * the scene's bottom edge: under the TV (`tv`) and under the Remote (`remote`). The lip of the section below
- * the room is a tab there, which tv.css moves to the Remote's side, so the TV keeps the height.
+ * the room is a tab there, which living-room.css moves to the Remote's side, so the TV keeps the height.
  * - The TV comes first: as tall as the scene, and as wide as its canvas allows (`LANDSCAPE_MAX_ASPECT`) or as
  *   the Remote at its smallest leaves.
  * - The Remote is held in the hand where its keys fit the height, and lies on the table in a shorter scene. It

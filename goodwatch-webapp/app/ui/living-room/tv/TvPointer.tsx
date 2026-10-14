@@ -11,7 +11,7 @@ const loadPointing = reloadOnStaleChunk(() => import("./pointing"))
 
 /**
  * The ring: a circle with a centre dot, white with a dark edge so it reads on any picture. The pointing loop
- * moves it and writes its states as attributes (shown, over an item, over the Expand key, pressed); tv.css draws
+ * moves it and writes its states as attributes (shown, over an item, over the Expand key, pressed); living-room.css draws
  * them. The phone's is a fifth smaller, as its TV is.
  */
 export function TvPointer({

@@ -258,7 +258,7 @@ test("while the TV boots it shows the wordmark and no item; the toast stands in 
 test("before the window is measured the room holds both editions of the screen, one H1 each", () => {
 	const html = rendered.room.guest
 	const room = html.slice(0, html.indexOf('<section id="browse"'))
-	// tv.css places each edition's canvas for the first paint and shows the one the window's layout draws.
+	// living-room.css places each edition's canvas for the first paint and shows the one the window's layout draws.
 	assert.match(
 		room,
 		/<div data-tv-canvas="desktop" class="absolute left-0 top-0 origin-top-left tvr-f-cv tvr-f-cv-desktop">/,
@@ -284,7 +284,7 @@ test("before the window is measured the room holds both editions of the screen, 
 		...rendered.items.homeGuest,
 		...rendered.items.homeGuest,
 	])
-	// The phone's top bar keys are as tall as they will be once the window is measured (tv.css, `--tv-key`).
+	// The phone's top bar keys are as tall as they will be once the window is measured (living-room.css, `--tv-key`).
 	assert.match(
 		screens[1],
 		/style="width:max\(54px, var\(--tv-key, 54px\)\);height:max\(54px, var\(--tv-key, 54px\)\)"/,

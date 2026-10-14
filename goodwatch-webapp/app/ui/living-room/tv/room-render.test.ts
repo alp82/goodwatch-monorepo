@@ -52,8 +52,8 @@ test("the server renders the room as the block the section below relies on", () 
 test("the room's HTML is the same on every render and holds nothing that depends on the window", () => {
 	assert.equal(rendered.on, rendered.again)
 	const room = rendered.on.slice(0, rendered.on.indexOf('<section id="browse"'))
-	// Before the window is measured the room holds every layout's parts, which tv.css places (the first paint):
-	// nothing in a style attribute depends on the window, every part says where tv.css takes it.
+	// Before the window is measured the room holds every layout's parts, which living-room.css places (the first paint):
+	// nothing in a style attribute depends on the window, every part says where living-room.css takes it.
 	const styles = [...room.matchAll(/style="([^"]*)"/g)].map((m) => m[1])
 	for (const style of styles)
 		assert.doesNotMatch(style, /\b(left|top|transform):/, style)
@@ -107,8 +107,8 @@ test("the room's HTML is the same on every render and holds nothing that depends
 	assert.equal(count(rendered.off, '<div data-screen="true"></div>'), 0)
 })
 
-test("tv.css's first paint seats the desktop's Remote under the TV where layoutRoom does", () => {
-	const css = readFileSync("app/ui/living-room/tv/tv.css", "utf8")
+test("living-room.css's first paint seats the desktop's Remote under the TV where layoutRoom does", () => {
+	const css = readFileSync("app/ui/living-room/living-room.css", "utf8")
 	const [, w, h] =
 		/@container tvr \(min-width: ([\d.]+)px\) and \(min-height: ([\d.]+)px\)/.exec(
 			css,

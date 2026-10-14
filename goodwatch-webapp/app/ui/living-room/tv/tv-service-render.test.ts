@@ -408,7 +408,7 @@ test("a key shows the Remote's own mark where it has one, the catalog's logo oth
 })
 
 test("every drawn mark has its shape and its ink in the TV's stylesheet", () => {
-	const css = readFileSync("app/ui/living-room/tv/tv.css", "utf8")
+	const css = readFileSync("app/ui/living-room/living-room.css", "utf8")
 	const ids = [
 		...new Set(
 			Object.values(rendered.remotes)
@@ -425,7 +425,7 @@ test("every drawn mark has its shape and its ink in the TV's stylesheet", () => 
 		assert.match(rule, /background-color: #/, id)
 		assert.match(
 			rule,
-			/mask-image: url\("\.\.\/\.\.\/\.\.\/img\/[a-z-]+\.svg"\)/,
+			/mask-image: url\("\.\.\/\.\.\/img\/[a-z-]+\.svg"\)/,
 			id,
 		)
 	}
@@ -472,14 +472,4 @@ test("the phone Remote's keys are 44 px tall in both forms, and the desktop's 52
 			assert.match(tag, /style="height:44px"/)
 	for (const { tag } of keys(rendered.remotes.logos.desktop))
 		assert.match(tag, /h-\[52px\]/)
-})
-
-test("the old TV's Remote keeps its fixed pair and what a press narrows to", () => {
-	const { old } = rendered.remotes
-	assert.equal(count(old, "data-service-key"), 0)
-	assert.equal(count(old, 'aria-label="Only Netflix"'), 1)
-	assert.equal(count(old, 'aria-label="Only Prime"'), 1)
-	assert.match(old, /aria-pressed="true" aria-label="Only Netflix"/)
-	assert.match(old, /width:68px/)
-	assert.match(old, /width:71px/)
 })

@@ -44,7 +44,7 @@ export type TvCanvas = {
 	scale: number
 	/**
 	 * Drawn before the window is measured, on the server and while the page hydrates: both editions are in the
-	 * HTML then and CSS shows the one that fits the window (tv.css, `tvr-first`). The scale is not known yet.
+	 * HTML then and CSS shows the one that fits the window (living-room.css, `tvr-first`). The scale is not known yet.
 	 */
 	first?: boolean
 }

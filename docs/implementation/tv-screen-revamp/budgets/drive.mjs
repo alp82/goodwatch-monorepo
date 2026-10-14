@@ -1,4 +1,4 @@
-// Slice 12 of the new TV: the first paint, access and the budgets, on /home-preview.
+// Slice 12 of the new TV: the first paint, access and the budgets, on the start page.
 //
 //   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3191 node drive.mjs [paint|access|budget]
 //   BUILD=1 BASE=http://localhost:3196 node drive.mjs paint      against a production build, served without services
@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const BASE = process.env.BASE ?? "http://localhost:3191"
-const PAGE = `${BASE}/home-preview`
+const PAGE = `${BASE}/`
 const only = process.argv[2]
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
 
@@ -763,8 +763,8 @@ async function budget() {
 
 
 // ---------------------------------------------------------------------------------------------------------
-// SEO (docs/verification/235-living-room-seo.md, as far as /home-preview can show it before the switch): the
-// room's HTML is the same for every user agent, one H1 per window, the start titles and the hubs as links.
+// SEO (docs/verification/235-living-room-seo.md, run again on / in slice 13): the room's HTML is the same for every
+// user agent, one H1 per window, the start titles and the hubs as links.
 
 async function seo() {
 	where = "seo"

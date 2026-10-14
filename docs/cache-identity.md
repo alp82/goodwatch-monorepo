@@ -76,9 +76,8 @@ Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `
   (`public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400`) with no `Vary`. The URL alone is the key, and
   a member's request may be stored too. `/api/related` and `/api/related-map` use it. `/api/title-cast` and the OG images have their own
   public lifetimes.
-- `/api/living-room/services` depends on the country only. With `?country=` it has no `Vary`. Without it, it varies
-  on `GW-Cache-Identity` or `Accept-Language`, like a page.
-- `/api/living-room/picks` goes through `applyCachePolicy`.
+- `/api/living-room/picks?view=pool`, the start page's pool, goes through `applyCachePolicy`. A guest's POST and a
+  member's request are `private, no-store`.
 - Error responses of these endpoints are `no-store`.
 
 ## Cookies and parameters
@@ -126,7 +125,6 @@ a request with the auth cookie. `Accept-Encoding` in `Vary` comes from compressi
 | `/api/related-map`, everyone | none | `public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400` | same |
 | `/api/related-map` with bad parameters (400), for a title without a fingerprint (404), or when the lookup failed (503) | none | `no-store` | `no-store` |
 | `/api/title-cast`, everyone | `public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400` | unchanged | unchanged |
-| `/api/living-room/services`, everyone | `public, max-age=0, s-maxage=1800, stale-while-revalidate=7200`, `Vary: Accept-Language` | Shared policy, `Vary: Accept-Language` | Shared policy, `Vary: GW-Cache-Identity` |
 | `/api/share-lists/titles` | `public, max-age=3600` | unchanged | unchanged |
 | OG image (200) | `public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400` | unchanged | unchanged |
 | OG image for a missing page (404) | `public, max-age=60` | `no-store` | `no-store` |
@@ -135,7 +133,8 @@ a request with the auth cookie. `Accept-Encoding` in `Vary` comes from compressi
 After this change (October 4, 2026), anonymous public share list pages use 10 seconds fresh and 10 seconds stale
 with an identity header, or `private, max-age=0` with the identity key without it. Since October 5, 2026, anonymous
 share profile pages (`/u/<handle>`) do the same. Hidden lists and member views stay `private, no-store`. The
-measured inventory above records the earlier behavior.
+measured inventory above records the earlier behavior. `/api/living-room/services` (shared policy, `Vary` on the
+identity) was in it until the new TV replaced the old one on the start page and the endpoint went with it.
 
 Where each header is set:
 

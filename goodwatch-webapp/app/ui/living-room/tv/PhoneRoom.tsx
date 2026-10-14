@@ -3,7 +3,7 @@
 // This is everything of it that is behind the picture; the scene (TvRoom.tsx) puts the picture and the Remote
 // in front. The wall and the furniture are the portrait room photo, drawn twice from one file.
 //
-// Without a layout (`L` null) the window is not measured yet: the parts are drawn for tv.css to place
+// Without a layout (`L` null) the window is not measured yet: the parts are drawn for living-room.css to place
 // (`tvr-f-*`, the first paint), and the same nodes take their measured place afterwards.
 import { assetUrl } from "~/utils/asset-url"
 import { PHONE_ROOM } from "../room"
@@ -20,7 +20,7 @@ export function PhoneRoom({
 	on,
 }: { L: PhoneRoomLayout | null; on: boolean }) {
 	const first = !L
-	/** The first paint's class of a part, which tv.css places; once measured, the part's own style. */
+	/** The first paint's class of a part, which living-room.css places; once measured, the part's own style. */
 	const f = (part: string) => (first ? `tvr-f-up tvr-f-${part}` : "")
 	const photo = (style: Rect | undefined, part: string, lead: boolean) => (
 		<picture>

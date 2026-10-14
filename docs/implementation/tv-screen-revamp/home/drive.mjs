@@ -1,4 +1,4 @@
-// Slice 3 of the new TV (home, the bar and the menu): walks the home on /home-preview with the keyboard and with
+// Slice 3 of the new TV (home, the bar and the menu): walks the home on / with the keyboard and with
 // both Remotes' keys, as a guest on real data and as a member on the tracking harness, checks the TV's state after
 // every step, and takes the screenshots in shots/ and the sheets beside the prototype's own.
 //
@@ -16,9 +16,8 @@ import { fileURLToPath } from "node:url"
 import { gzipSync } from "node:zlib"
 
 const here = dirname(fileURLToPath(import.meta.url))
-const GUEST = `${process.env.GUEST ?? "http://localhost:3173"}/home-preview`
+const GUEST = `${process.env.GUEST ?? "http://localhost:3173"}/`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3174"}/prototype/my-library-real/tv?member=six`
-const START = `${process.env.GUEST ?? "http://localhost:3173"}/`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright-core")
@@ -515,8 +514,8 @@ async function links() {
 	const authorize = left.find((u) => u.includes("/auth/v1/authorize"))
 	const toast = authorize ? null : (await read(page)).toast
 	check(
-		authorize ? decodeURIComponent(authorize).includes("/home-preview?tv=discover") && authorize.includes("provider=google") : toast === "Sign in isn't working right now",
-		`Sign in starts Continue with Google back to this TV screen, or says it can't: ${authorize ? "it asked for /auth/v1/authorize with redirect_to=/home-preview?tv=discover" : toast}`,
+		authorize ? decodeURIComponent(authorize).includes("/?tv=discover") && authorize.includes("provider=google") : toast === "Sign in isn't working right now",
+		`Sign in starts Continue with Google back to this TV screen, or says it can't: ${authorize ? "it asked for /auth/v1/authorize with redirect_to=/?tv=discover" : toast}`,
 	)
 	await ctx.close()
 
@@ -569,19 +568,16 @@ async function html() {
 	check(bodies[0] === bodies[1] && bodies[1] === bodies[2], "the HTML is the same, byte for byte, for a browser, Googlebot and an iPhone")
 	const body = pages.browser.body
 	const count = (part) => body.split(part).length - 1
-	is(pages.browser.status, 200, "the preview address answers")
+	is(pages.browser.status, 200, "the start page answers")
 	is(count("<h1"), 2, "two H1s in the source, one per edition")
 	is(count("Let&#x27;s find something good for tonight.</h1>"), 2, "both are the home's headline")
-	check(/<meta name="robots" content="noindex, nofollow"\/?>/.test(body), "the preview address is noindex")
+	check(!/<meta name="robots" content="noindex/.test(body), "the start page is not noindex")
 	check(body.includes('<link rel="canonical" href="https://goodwatch.app/"'), "its canonical is the start page's")
-	check(pages.browser.cache?.includes("no-store"), `it is never stored by a cache: ${pages.browser.cache}`)
-	is(count('href="/movie/') + count('href="/show/'), 16, "the 16 start titles are linked below the room")
-	const start = await get(START, agents.browser)
-	const bytes = {
-		preview: { raw: Buffer.byteLength(body), gzip: gzipSync(body).length },
-		start: { raw: Buffer.byteLength(start.body), gzip: gzipSync(start.body).length },
-	}
-	console.log(`  the HTML: /home-preview ${bytes.preview.raw} bytes (${bytes.preview.gzip} gzip), / ${bytes.start.raw} bytes (${bytes.start.gzip} gzip); the dev server's, not a build's`)
+	const titles = count('href="/movie/') + count('href="/show/')
+	// Without start titles (a server without the title snapshot) the page is incomplete and never stored.
+	is(!pages.browser.cache?.includes("no-store"), titles > 0, `a guest's page is stored exactly when it has its start titles: ${pages.browser.cache}`)
+	if (titles) is(titles, 16, "the 16 start titles are linked below the room")
+	console.log(`  the HTML: / ${Buffer.byteLength(body)} bytes (${gzipSync(body).length} gzip); the dev server's, not a build's`)
 
 	// Which H1 a window gets before any script runs: CSS shows one edition.
 	for (const size of [DESKTOP, PHONE, [844, 390]]) {

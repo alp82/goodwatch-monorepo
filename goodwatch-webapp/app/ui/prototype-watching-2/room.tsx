@@ -4,9 +4,9 @@
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { usePhoneOrientation } from "~/ui/living-room/PhoneLivingRoom"
 import { Remote, type RemoteProps } from "~/ui/living-room/Remote"
-import { HAND_IMAGE, PHONE_ROOM, PHONE_TV_CANVAS, REMOTE_H, REMOTE_TILT_DEG, REMOTE_W, ROOM, TV_CANVAS, layoutPhone, layoutRoom } from "~/ui/living-room/room"
+import { HAND_IMAGE, PHONE_ROOM, REMOTE_H, REMOTE_TILT_DEG, REMOTE_W, ROOM } from "~/ui/living-room/room"
+import { PHONE_TV_CANVAS, TV_CANVAS, layoutPhone, layoutRoom, usePhoneOrientation } from "~/ui/prototype-watching/old-room"
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -59,15 +59,16 @@ export function Room({
 	const portrait = orientation === "portrait"
 	const canvas = orientation ? PHONE_TV_CANVAS : TV_CANVAS
 	const remote: RemoteProps = {
-		screen: { name: "home" },
 		power: "on",
 		menuOpen: false,
-		serviceName: (key) => key,
-		activeService: null,
-		dispatch: (action) => {
-			if (action.type === "step") onStep(action.by)
+		searching: false,
+		services: [],
+		openService: null,
+		press: (key) => {
+			if (key.type === "step") onStep(key.by)
+			if (key.type === "move") onStep(key.dir === "up" || key.dir === "left" ? -1 : 1)
+			if (key.type === "ok") onOk()
 		},
-		onOk,
 	}
 	return (
 		<div ref={root} className="living-room fixed inset-x-0 bottom-[72px] top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0">

@@ -1,7 +1,7 @@
 // Pointing the Remote at the TV. Two things follow the mouse:
 // - the Remote in the hand aims at the cursor wherever it is in the window (pointing-aim.ts says how);
 // - while the cursor is over the TV's picture, the TV draws its own pointer there, the ring, in place of the
-//   system cursor (TvPointer.tsx, tv.css).
+//   system cursor (TvPointer.tsx, living-room.css).
 // Both ease toward the cursor with a short lag, as a hand does. Over the Remote itself the Remote settles at rest,
 // so its keys are where they were and can be hit.
 //
@@ -366,7 +366,7 @@ export function startPointing(
 	const refresh = () => {
 		const g = scene()
 		const root = els.root.current
-		// The system cursor is hidden over the picture only while the TV draws its own (tv.css).
+		// The system cursor is hidden over the picture only while the TV draws its own (living-room.css).
 		if (root) root.dataset.pointing = g?.live ? "live" : "idle"
 		if (!g?.live) {
 			touch = null

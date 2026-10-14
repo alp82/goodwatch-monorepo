@@ -54,7 +54,6 @@ import type { StartTitle } from "~/ui/living-room/living-room-data"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import type { TvHomeData } from "~/ui/living-room/tv/tv-home"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
-import tvCss from "~/ui/living-room/tv/tv.css?url"
 import {
 	HARNESS_MEMBER,
 	landedOf,
@@ -211,10 +210,9 @@ export const meta = () => [
 ]
 export const links: LinksFunction = () => [
 	{ rel: "stylesheet", href: livingRoomCss },
-	{ rel: "stylesheet", href: tvCss },
 ]
-// The loader runs again for another sample member and when the page asks again for its own address (routes/
-// home-preview.tsx does the same), not for a TV screen.
+// The loader runs again for another sample member and when the page asks again for its own address (the start
+// page, routes/_index.tsx, does the same), not for a TV screen.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
 	currentUrl,
 	nextUrl,

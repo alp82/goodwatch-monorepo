@@ -44,8 +44,8 @@ export const TV_APPS: readonly TvApp[] = [
 ]
 
 /**
- * The member pages Tonight's pick is the first thing on; My shows expands into the first. The old TV's
- * `DOOR_HREF` (`tv-flow.ts`), kept under its name so the server can take it from here once the old TV is gone.
+ * The member pages Tonight's pick is the first thing on; My shows expands into the first. The server's Tonight's
+ * pick (server/tonight.server.ts) links to them too. The name is the old TV's, whose doors led there.
  */
 export type DoorKey = "continue" | "start" | "movie"
 export const DOOR_HREF: Record<DoorKey, string> = {

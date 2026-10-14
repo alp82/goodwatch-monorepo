@@ -5,7 +5,7 @@
 //
 // The markup contract (tv-dom.ts reads it): a screen and the menu are each a `Layer`, an item is an `Item` (a real
 // button with `data-tv-item`, `aria-current` while it has the focus), a row that pages sideways is marked
-// `data-tv-row`. The rules are in tv.css.
+// `data-tv-row`. The rules are in living-room.css.
 //
 // Rendering budget (#190): only `transform` and `opacity` move, each once per change. An item that is not focused
 // is dimmed by an overlay's opacity, not by a filter. A picture is decoded before it fades in, and at most two
@@ -68,7 +68,7 @@ export const useKeySize = (drawn: number) => keySize(useTvView().canvas, drawn)
 
 /**
  * `keySize` as a length for a style, for the keys the server draws: the top bar's and the Expand key. Before the
- * window is measured the phone's scale is tv.css's (`--tv-key`, the first paint), so the keys have the height they
+ * window is measured the phone's scale is living-room.css's (`--tv-key`, the first paint), so the keys have the height they
  * keep after hydration.
  */
 export function keyLength(canvas: TvCanvas, drawn: number): number | string {
@@ -375,7 +375,7 @@ const MOTIF = { w: 44, h: 32, arm: 9 }
 /**
  * The Expand key: amber corner brackets around a small picture, and the word "Expand". OK on it grows the TV's
  * picture into the page the screen stands for (`destinationHref`, tv-machine.ts). While it has the focus the
- * whole picture steps back into a frame of the same brackets (TvRoom.tsx, tv.css), and its own brackets move out
+ * whole picture steps back into a frame of the same brackets (TvRoom.tsx, living-room.css), and its own brackets move out
  * from the small picture twice and rest open: nothing loops (#190).
  */
 function Expand() {
@@ -407,14 +407,14 @@ function Expand() {
 	)
 }
 
-/** How far the picture steps back while the Expand key has the focus (tv.css, `data-tv-framed`). */
+/** How far the picture steps back while the Expand key has the focus (living-room.css, `data-tv-framed`). */
 const FRAMED = 0.94
 
 /**
  * The Expand key in its place, the picture's bottom right corner, on the desktop and on the phone; nothing where
  * the screen has no page to grow into (`items` are the screen's, from `tvItems`). The key stays where it is while
  * the picture steps back around it: a pointer or a finger on it is still on it. Its place is moved against the
- * picture's step by as much (`--tvx-x`, `--tvx-y`; tv.css applies them).
+ * picture's step by as much (`--tvx-x`, `--tvx-y`; living-room.css applies them).
  */
 export function ExpandCorner({ items }: { items: readonly string[] }) {
 	const { canvas } = useTvView()

@@ -1,19 +1,16 @@
 // The Remote ("Arc", round 6 of the prototype on branch prototype/living-room-remote): power, the IR window, and
 // the Menu key; the D-pad wheel with OK; Back, Search, and Home as round keys in an arc under the wheel, each with
 // its word printed on the body; and two streaming keys. It has no screen: the TV shows what is focused. Every
-// control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
+// control presses a key of the room (`RoomKey`, tv/room-tv.ts); the Remote keeps no state of its own besides the
+// wheel's arrow flash.
 //
-// The streaming keys: the old TV on `/` has a fixed pair, Netflix and Prime Video, and a press narrows its picks.
-// The new TV (ui/living-room/tv) hands the Remote the person's own two services (`services`): a key then shows
-// that service's mark (`ServiceMark`), opens the TV screen "On <service>" and is pressed while that screen shows.
+// The streaming keys stand for the person's own two services (`services`): a key shows that service's mark
+// (`ServiceMark`), opens the TV screen "On <service>" and is pressed while that screen shows.
 import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import netflixMark from "~/img/netflix-logo.svg"
-import primeMark from "~/img/primevideo-logo.svg"
-import { REMOTE_SERVICES, type RemoteServiceKey } from "./living-room-data"
 import { REMOTE_H } from "./room"
-import type { TvAction, TvApp, TvScreen } from "./tv-flow"
+import type { RoomKey } from "./tv/room-tv"
 
 export const ICON = {
 	back: "M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",
@@ -25,41 +22,6 @@ export const ICON = {
 	heart: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
 	info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01",
 } as const
-
-/** The four places: name, one line, icon, tint, and page. */
-export const APP: Record<
-	TvApp,
-	{ name: string; line: string; d: string; tint: string; href: string }
-> = {
-	"watch-next": {
-		name: "Watch next",
-		line: "Your Wishlist, best match first, on your services.",
-		d: "M6 4h12v16l-6-4-6 4z",
-		tint: "#38bdf8",
-		href: "/watch-next",
-	},
-	taste: {
-		name: "Taste",
-		line: "The sides of you, you versus everyone, and your fingerprint.",
-		d: "M12 11v3M8.5 8.5a5 5 0 0 1 7 0M6 12a6 6 0 0 1 12 0v2M9 13v1a3 3 0 0 0 6 0",
-		tint: "#f472b6",
-		href: "/taste",
-	},
-	discover: {
-		name: "Discover",
-		line: "Browse and search everything, sorted for you.",
-		d: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
-		tint: "#34d399",
-		href: "/discover",
-	},
-	explorer: {
-		name: "Explorer",
-		line: "Wander a map of titles grouped by how they feel.",
-		d: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z",
-		tint: "#a78bfa",
-		href: "/explorer",
-	},
-}
 
 export function Icon({
 	d,
@@ -81,14 +43,7 @@ export function Icon({
 	)
 }
 
-/** A streaming key's logo: the mark, its ink, and its width in Remote pixels (both are 28 px tall). */
-const BRAND: Record<RemoteServiceKey, { src: string; ink: string; w: number }> =
-	{
-		netflix: { src: netflixMark, ink: "#e50914", w: 68 },
-		prime: { src: primeMark, ink: "#ffffff", w: 71 },
-	}
-
-/** A streaming service a key stands for on the new TV (`TvService`, ui/living-room/tv/tv-home.ts). */
+/** A streaming service a key stands for (`TvService`, ui/living-room/tv/tv-home.ts). */
 export type RemoteService = {
 	/** Its TMDB provider id. */
 	id: number
@@ -99,8 +54,8 @@ export type RemoteService = {
 
 /**
  * The services the Remote has a drawn mark for, by TMDB provider id: how wide the mark is for its height and on
- * a key of this Remote (in Remote pixels, as on the old TV's keys), and the service's own colour. The mark's
- * shape and ink are in tv.css (`tv-mark-<id>`).
+ * a key of this Remote (in Remote pixels), and the service's own colour. The mark's
+ * shape and ink are in living-room.css (`tv-mark-<id>`).
  */
 const DRAWN: Record<number, { ratio: number; key: number; color: string }> = {
 	8: { ratio: 3.7, key: 68, color: "#e50914" },
@@ -175,42 +130,24 @@ export function ServiceMark({
 }
 
 export type RemoteProps = {
-	screen: TvScreen
 	power: "off" | "booting" | "on"
 	menuOpen: boolean
-	/** The old TV: the service a streaming key stands for, as the catalog spells it. */
-	serviceName?: (key: RemoteServiceKey) => string
-	/** The old TV: the service the picks are narrowed to, if any. */
-	activeService?: string | null
-	/**
-	 * The new TV: the person's own two services, in the keys' order. With them the keys show these services, a
-	 * press reports the service's id to `onService`, and the key of `openService` is pressed.
-	 */
-	services?: readonly RemoteService[]
-	/** The new TV: the service whose screen is showing, by its id, if any. */
-	openService?: number | null
-	onService?: (id: number) => void
-	dispatch: (action: TvAction) => void
-	/** OK: submits the search draft on the keyboard screen, otherwise opens the focused item. */
-	onOk: () => void
-	/** The new TV (ui/living-room/tv): an arrow of the wheel reports its direction here in place of a step. */
-	onDirection?: (dir: WheelDirection) => void
+	/** The search screen is showing: the Search key is pressed. */
+	searching: boolean
+	/** The person's own two services, in the keys' order. A key presses `service` with its id. */
+	services: readonly RemoteService[]
+	/** The service whose screen is showing, by its id, if any: its key is pressed. */
+	openService: number | null
+	press: (key: RoomKey) => void
 }
 
-export type WheelDirection = "up" | "down" | "left" | "right"
-
 export function Remote({
-	screen,
 	power,
 	menuOpen,
-	serviceName = (key) => key,
-	activeService = null,
+	searching,
 	services,
-	openService = null,
-	onService,
-	dispatch,
-	onOk,
-	onDirection,
+	openService,
+	press,
 }: RemoteProps) {
 	const waking = useRef(false)
 	return (
@@ -224,7 +161,7 @@ export function Remote({
 				if ((e.target as HTMLElement).closest("[data-power]")) return
 				waking.current = true
 				e.stopPropagation()
-				dispatch({ type: "power", on: true })
+				press({ type: "power", on: true })
 			}}
 			onClickCapture={(e) => {
 				if (!waking.current) return
@@ -249,7 +186,7 @@ export function Remote({
 						type="button"
 						data-power
 						aria-label={power === "off" ? "Turn on" : "Turn off"}
-						onClick={() => dispatch({ type: "power", on: power === "off" })}
+						onClick={() => press({ type: "power", on: power === "off" })}
 						className="remote-key flex h-11 w-11 items-center justify-center rounded-full text-rose-400"
 					>
 						<Icon d={ICON.power} className="h-5 w-5" />
@@ -260,7 +197,7 @@ export function Remote({
 						aria-label="Menu"
 						title="Menu"
 						aria-pressed={menuOpen}
-						onClick={() => dispatch({ type: "toggle-menu" })}
+						onClick={() => press({ type: "menu" })}
 						className="remote-key flex h-11 w-11 items-center justify-center rounded-full"
 					>
 						<Icon d={ICON.menu} className="h-5 w-5" />
@@ -269,36 +206,31 @@ export function Remote({
 				{/* The arc: Back and Home sit against the wheel's lower corners, Search hangs between them. */}
 				<div className="relative mt-10 h-[346px] w-full">
 					<div className="absolute left-1/2 top-0 -translate-x-1/2">
-						<Wheel
-							dispatch={dispatch}
-							onOk={onOk}
-							onDirection={onDirection}
-						/>
+						<Wheel press={press} />
 					</div>
 					<RoundKey
 						d={ICON.back}
 						label="Back"
 						at="left-0 top-[216px]"
-						onClick={() => dispatch({ type: "back" })}
+						onClick={() => press({ type: "back" })}
 					/>
 					<RoundKey
 						d={ICON.search}
 						label="Search"
 						at="left-1/2 top-[252px] -translate-x-1/2"
-						pressed={screen.name === "search"}
-						onClick={() => dispatch({ type: "open-search" })}
+						pressed={searching}
+						onClick={() => press({ type: "search" })}
 					/>
 					<RoundKey
 						d={ICON.home}
 						label="Home"
 						at="right-0 top-[216px]"
-						onClick={() => dispatch({ type: "home" })}
+						onClick={() => press({ type: "home" })}
 					/>
 				</div>
-				{/* Inset like the round keys, which are centered over their wider words. The keys end here
-				    (REMOTE_KEYS_END in room.ts). */}
+				{/* Inset like the round keys, which are centered over their wider words. */}
 				<div className="mt-6 grid grid-cols-2 gap-3 px-[7px]">
-					{services?.map((service) => (
+					{services.map((service) => (
 						<button
 							key={service.id}
 							type="button"
@@ -306,7 +238,7 @@ export function Remote({
 							aria-pressed={openService === service.id}
 							aria-label={`On ${service.name}`}
 							title={`On ${service.name}`}
-							onClick={() => onService?.(service.id)}
+							onClick={() => press({ type: "service", service: service.id })}
 							className="remote-key remote-service flex h-[52px] min-w-0 items-center justify-center rounded-full px-3"
 						>
 							<ServiceMark service={service} height={32} onKey={1} />
@@ -317,37 +249,6 @@ export function Remote({
 							)}
 						</button>
 					))}
-					{!services &&
-						REMOTE_SERVICES.map(({ key }) => {
-							const name = serviceName(key)
-							const b = BRAND[key]
-							const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
-							return (
-								<button
-									key={key}
-									type="button"
-									aria-pressed={activeService === name}
-									aria-label={`Only ${name}`}
-									title={`Only ${name}`}
-									onClick={() =>
-										dispatch({ type: "service-key", service: name })
-									}
-									className="remote-key remote-service flex h-[52px] items-center justify-center rounded-full"
-								>
-									{/* Quoted: small SVGs are inlined as data URLs, which break an unquoted url(). */}
-									<span
-										aria-hidden
-										className="block h-7"
-										style={{
-											width: b.w,
-											background: b.ink,
-											WebkitMask: mask,
-											mask,
-										}}
-									/>
-								</button>
-							)
-						})}
 				</div>
 				<div className="flex-1" />
 				<img
@@ -429,20 +330,12 @@ const ARROW_LABEL: Record<Dir, string> = {
 	right: "Next",
 }
 
-function Wheel({
-	dispatch,
-	onOk,
-	onDirection,
-}: {
-	dispatch: (action: TvAction) => void
-	onOk: () => void
-	onDirection?: (dir: WheelDirection) => void
-}) {
+function Wheel({ press }: { press: (key: RoomKey) => void }) {
 	const ref = useRef<HTMLDivElement>(null)
 	const drag = useRef<{ angle: number; acc: number } | null>(null)
 	const [flash, setFlash] = useState<{ dir: Dir; n: number } | null>(null)
-	const latest = useRef(dispatch)
-	latest.current = dispatch
+	const latest = useRef(press)
+	latest.current = press
 
 	const turn = (by: 1 | -1, dir: Dir = by > 0 ? "right" : "left") => {
 		setFlash((f) => ({ dir, n: (f?.n ?? 0) + 1 }))
@@ -534,16 +427,17 @@ function Wheel({
 					key={dir}
 					dir={dir}
 					onClick={() => {
-						if (!onDirection)
-							return turn(dir === "top" || dir === "left" ? -1 : 1, dir)
 						setFlash((f) => ({ dir, n: (f?.n ?? 0) + 1 }))
-						onDirection(dir === "top" ? "up" : dir === "bottom" ? "down" : dir)
+						press({
+							type: "move",
+							dir: dir === "top" ? "up" : dir === "bottom" ? "down" : dir,
+						})
 					}}
 				/>
 			))}
 			<button
 				type="button"
-				onClick={onOk}
+				onClick={() => press({ type: "ok" })}
 				className="remote-ok absolute left-1/2 top-1/2 flex h-[40%] w-[40%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[16px] font-bold tracking-wider text-white/85 transition-transform active:scale-95"
 			>
 				OK

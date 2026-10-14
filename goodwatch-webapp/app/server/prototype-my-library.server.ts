@@ -1,6 +1,6 @@
 // DEVELOPMENT HARNESS (issue #385), not a prototype of a design: what /prototype/my-library-real reads. The REAL
-// server reads of My shows, My movies, My library, home's doors and Tonight's pick run here against an in-memory
-// Crate that holds a member who does not exist. It is how the pages are driven in a headless browser without a
+// server reads of My shows, My movies, My library, the TV's Tonight and My shows, and Tonight's pick run here
+// against an in-memory Crate that holds a member who does not exist. It is how the pages are driven in a headless browser without a
 // signed-in session or a database.
 //
 // The stand-in takes the place of the Crate client of the dev server it runs in, and refuses to do so when that
@@ -15,7 +15,6 @@ import {
 	forgetAvailabilityForTest,
 	servicesFor,
 } from "~/server/availability-index.server"
-import { getHomeDoors } from "~/server/home-doors.server"
 import { getLibraryPage } from "~/server/my-library.server"
 import { getMyShows } from "~/server/my-shows.server"
 import {
@@ -1021,9 +1020,6 @@ export const harness = {
 			{ ...options, kind: "movie" },
 			HARNESS_TASTE,
 		)
-	},
-	async doors(now: number) {
-		return getHomeDoors(await viewer(), HARNESS_TASTE, now)
 	},
 	async tonight() {
 		return getTonightsPick(await viewer(), true, HARNESS_TASTE)

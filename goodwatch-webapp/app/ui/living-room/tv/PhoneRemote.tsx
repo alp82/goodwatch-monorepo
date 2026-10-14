@@ -61,7 +61,7 @@ export type PhoneRemoteProps = {
 	services: readonly RemoteService[]
 	form: PhoneRemoteForm
 	/**
-	 * Its box in the scene, at its scale `u` (`layoutPhoneRoom`). None before the window is measured: tv.css
+	 * Its box in the scene, at its scale `u` (`layoutPhoneRoom`). None before the window is measured: living-room.css
 	 * places it then (`tvr-f-*`, the first paint).
 	 */
 	at?: { left: number; top: number; u: number; width: number }

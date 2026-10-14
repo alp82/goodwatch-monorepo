@@ -1,6 +1,6 @@
 // The TV's screens that are needed only after an interaction are chunks of their own: the menu and What is
 // GoodWatch? here, and each mini app's screens as its slice adds them. This is how such a chunk is asked for and
-// drawn (the pattern of home-doors-code.tsx).
+// drawn.
 //
 // TvScreen.tsx alone imports this file, and the scene takes what it needs of it from there. With a second importer
 // the build would count this small module as shared and move it into the shell of every page, with the name of

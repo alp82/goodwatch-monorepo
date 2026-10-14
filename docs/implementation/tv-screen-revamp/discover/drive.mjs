@@ -1,5 +1,5 @@
 // Slice 6 of the new TV (mini Discover): walks home, Discover's three tabs, the titles of one choice, a title and
-// Change on /home-preview with the keyboard, both Remotes' keys, the pointer and a finger, as a guest on real data
+// Change on / with the keyboard, both Remotes' keys, the pointer and a finger, as a guest on real data
 // and as a member on the tracking harness; asks the pool for the tiles' pictures; compares the TV's four titles
 // with Discover's own address for the same person, and follows the Expand key's effect there; measures every key
 // and the Expand key's corner on every phone of the room's table; and takes the screenshots in shots/ and the
@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ORIGIN = process.env.GUEST ?? "http://localhost:3261"
-const GUEST = `${ORIGIN}/home-preview`
+const GUEST = `${ORIGIN}/`
 const MEMBER = `${process.env.MEMBER ?? "http://localhost:3262"}/prototype/my-library-real/tv?member=six`
 const prototype = process.env.PROTOTYPE ?? "/home/alper/projects/goodwatch-monorepo-38caebf4/docs/prototypes/tv-screen-design"
 const only = process.argv[2]
@@ -870,7 +870,7 @@ async function html() {
 	const page = async (query, agent) => (await fetch(`${GUEST}${query}`, { headers: { "User-Agent": agents[agent] } })).text()
 	const ids = (text) => [...text.matchAll(/data-tv-item="([^"]+)"/g)].map((m) => m[1])
 	const home = await page("", "browser")
-	numbers["the guest's HTML of /home-preview, bytes"] = home.length
+	numbers["the guest's HTML of /, bytes"] = home.length
 	for (const query of ["?tv=discover", "?tv=discover&tab=themes", "?tv=discover&theme=crime"]) {
 		const texts = await Promise.all(Object.keys(agents).map((agent) => page(query, agent)))
 		check(texts.every((text) => text === texts[0]), `${query}: the same HTML for a browser, Googlebot and an iPhone`)

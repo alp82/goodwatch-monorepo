@@ -109,7 +109,7 @@ export function RatingStrip({
 						key={score}
 						id={`score:${score}`}
 						label={`${score}, ${scoreLabels[score]}`}
-						// The focused score is dark type on its full colour (tv.css).
+						// The focused score is dark type on its full colour (living-room.css).
 						className={`tvc-num flex h-[64px] items-center justify-center text-[30px] ${light === "on" ? "" : light === "dim" ? "text-white/60" : "text-white"}`}
 						style={{
 							background: `${getVibeColorValue(score as Score)}${TINT[light]}`,

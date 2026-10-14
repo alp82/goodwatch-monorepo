@@ -1,33 +1,20 @@
-// The start page is the living room (the desktop scene, or the phone scene on phones). The TV's screen and keys live
-// in the search params (`?tv=picks&mood=cozy`); changing only those never reruns the loader.
-import { assetUrl } from "~/utils/asset-url"
+// The start page is the living room with its TV (docs/implementation/tv-screen-revamp): the room, the TV and the
+// Remote, and the section below the room with the start titles and the hubs (BelowRoom.tsx).
+//
+// The TV's screen lives in the search params (`?tv=discover&mood=funny`); changing only those never reruns the
+// loader. Asking again for the address the page is on does: that is the page itself after the member changed
+// what the loader read, such as an episode marked watched on the TV (ui/living-room/tv/use-tv-episode.ts). The
+// pool the TV draws its picks from is the TV's own request, at the first interaction
+// (ui/living-room/tv/use-tv-pool.ts).
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
-import {
-	type ShouldRevalidateFunction,
-	useLoaderData,
-	useLocation,
-} from "@remix-run/react"
-import { useQuery } from "@tanstack/react-query"
-import { useCallback, useMemo } from "react"
-import {
-	useScoreMutation,
-	useNotInterestedMutation,
-	useWatchedMutation,
-	useWishlistMutation,
-} from "~/hooks/useUserDataMutations"
-import type { Score } from "~/server/scores.server"
-import { LivingRoom } from "~/ui/living-room/LivingRoom"
-import { APP } from "~/ui/living-room/Remote"
-import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
+import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
+import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
-import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
-import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
-import { useUndoToast } from "~/ui/title-actions/useUndoToast"
-import { titleHref } from "~/ui/watch-next/WatchNextHero"
-import { snapshotGuestProgress } from "~/utils/guest-progress"
+import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
+import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
+import { assetUrl } from "~/utils/asset-url"
 
-export { livingRoomLoader as loader } from "~/server/living-room.server"
-import type { livingRoomLoader } from "~/server/living-room.server"
+export { tvHomeLoader as loader } from "~/server/living-room/tv-loader.server"
 export { pageHeaders as headers } from "~/utils/headers"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
 
@@ -37,7 +24,9 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	formMethod,
 	defaultShouldRevalidate,
 }) =>
-	!formMethod && isTvOnlyChange(currentUrl, nextUrl)
+	!formMethod &&
+	currentUrl.href !== nextUrl.href &&
+	isTvOnlyChange(currentUrl, nextUrl)
 		? false
 		: defaultShouldRevalidate
 
@@ -102,120 +91,6 @@ export const meta: MetaFunction = () => [
 ]
 
 export default function Index() {
-	const initial = useLoaderData<typeof livingRoomLoader>()
-	const leave = useLeaveThroughTv()
-	const { search } = useLocation()
-	const tvParams = new URLSearchParams(search)
-	const screen = tvParams.get("tv") ?? "home"
-	// The home's tiles draw their posters from the pool too (fetched after first paint, so the cached guest HTML
-	// stays the same for everyone).
-	const pool = useQuery<LivingRoomData>({
-		queryKey: ["living-room-pool", initial],
-		enabled: [
-			"home",
-			"services",
-			"this-or-that",
-			"moods",
-			"picks",
-			"title",
-		].includes(screen),
-		queryFn: async () => {
-			const response = await fetch("/api/living-room/picks?view=pool", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(
-					initial.member ? {} : { guest: snapshotGuestProgress() },
-				),
-			})
-			if (!response.ok) throw new Error("Unable to load living room picks")
-			return response.json()
-		},
-	})
-	// The pool has no doors and no start titles: a member's doors (#385) and the titles below the room (#352)
-	// come with the loader's data and stay.
-	const data: LivingRoomData = useMemo(
-		() =>
-			pool.data
-				? {
-						...pool.data,
-						...(initial.doors && { doors: initial.doors }),
-						...(initial.startTitles && { startTitles: initial.startTitles }),
-					}
-				: initial,
-		[pool.data, initial],
-	)
-
-	const wishlist = useWishlistMutation()
-	const watched = useWatchedMutation()
-	const notInterested = useNotInterestedMutation()
-	const hideToast = useUndoToast()
-	const score = useScoreMutation()
-	const onRate = useCallback(
-		(titleKey: string, value: Score) => {
-			const t = titleOf(data, titleKey)
-			if (t)
-				score.mutate({
-					mediaType: t.media_type,
-					tmdbId: t.tmdb_id,
-					score: value,
-				})
-		},
-		[data, score],
-	)
-
-	// Leaving grows the TV into the window (#232); browser Back shrinks the page into the same TV screen.
-	const onEffect = useCallback(
-		(effect: TvEffect) => {
-			const titleKey = "title" in effect ? effect.title : null
-			const title = titleKey ? titleOf(data, titleKey) : null
-			const target = title
-				? { mediaType: title.media_type, tmdbId: title.tmdb_id }
-				: null
-			switch (effect.type) {
-				case "leave": {
-					const to = effect.to
-					if (to.kind === "page") leave(to.href)
-					else if (to.kind === "app") leave(APP[to.app].href)
-					else {
-						const t = titleOf(data, to.title)
-						if (t) leave(titleHref(t))
-					}
-					return
-				}
-				case "watch":
-					if (title) leave(titleHref(title))
-					return
-				case "want-to-see":
-					if (target && !title?.wantToSee)
-						wishlist.mutate({ ...target, action: "add" })
-					return
-				case "seen":
-					if (target && data.member)
-						watched.mutate({ ...target, action: "add" })
-					return
-				case "not-for-me":
-					if (target && title) {
-						// Taking it back also restores Want to See, which Not interested cleared.
-						const undo = () =>
-							title.wantToSee
-								? wishlist.mutate({ ...target, action: "add" })
-								: notInterested.mutate({ ...target, action: "remove" })
-						notInterested.mutate({ ...target, action: "add" })
-						hideToast.say(
-							`${title.title} is hidden from your recommendations`,
-							undo,
-						)
-					}
-					return
-			}
-		},
-		[data, leave, wishlist, watched, notInterested, hideToast.say],
-	)
-
-	return (
-		<>
-			<LivingRoom data={data} onEffect={onEffect} onRate={onRate} />
-			{hideToast.node}
-		</>
-	)
+	const data = useLoaderData<typeof tvHomeLoader>()
+	return <TvLivingRoom data={data} />
 }
