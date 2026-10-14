@@ -5,6 +5,7 @@ import {
 import ExploreBar from "~/ui/explore/ExploreBar"
 import React, { useEffect, useRef } from "react"
 import ShareButton from "~/ui/button/ShareButton"
+import PreferencePair from "~/ui/media-preference/PreferencePair"
 import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
 import { publishHeaderHeight } from "~/ui/details/header-height"
 import type { ActiveSections, Section } from "~/utils/scroll"
@@ -68,7 +69,8 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 		>
 			{!journey?.active && <ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />}
 
-			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
+			{/* Not positioned: the pair's question anchors under the whole header. */}
+			<div className="m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex flex-col gap-2 min-w-0">
 						<h1 className="text-xl sm:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
@@ -121,7 +123,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 							</div>
 						</div>
 					</div>
-					<div className="flex items-center gap-4 shrink-0">
+					<div className="flex items-center gap-2 sm:gap-4 shrink-0">
 						{/*<button*/}
 						{/*	type="button"*/}
 						{/*	aria-label={*/}
@@ -148,6 +150,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						{/*>*/}
 						{/*	<HandThumbUpIcon className="h-7 w-7 stroke-blue-400" />*/}
 						{/*</button>*/}
+						<PreferencePair media={media} />
 						<ShareButton />
 					</div>
 				</div>

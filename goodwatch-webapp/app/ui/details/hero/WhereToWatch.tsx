@@ -2,8 +2,8 @@ import {
 	AdjustmentsHorizontalIcon,
 	ChevronRightIcon,
 } from "@heroicons/react/24/solid"
-import { Link, useNavigate } from "@remix-run/react"
-import React, { Suspense, lazy, useMemo, useRef, useState } from "react"
+import { Link } from "@remix-run/react"
+import React, { useMemo, useRef, useState } from "react"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import type {
 	MovieResult,
@@ -20,10 +20,10 @@ import {
 	plural,
 	topCountries,
 } from "~/ui/details/hero/countryOffers"
-import { useClickOutside } from "~/ui/details/hero/useClickOutside"
+import { useMediaPreference } from "~/ui/media-preference/MediaPreference"
+import { preloadPreferenceDialog } from "~/ui/media-preference/PreferencePair"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { regionName } from "~/utils/display-names"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	OFFER_TABS,
 	type OfferTab,
@@ -37,14 +37,6 @@ import {
 import { useReplayedTap } from "~/utils/useReplayedTap"
 
 type Media = MovieResult | ShowResult
-
-// The country list opens from the country button or from a link to all countries. Its code loads when a visitor
-// reaches for the button (pointer, touch or focus), or at the latest when the list opens.
-const loadCountryList = () => import("~/ui/details/hero/CountryList")
-const CountryList = lazy(reloadOnStaleChunk(loadCountryList))
-const preloadCountryList = () => {
-	void loadCountryList().catch(() => {})
-}
 
 export const OFFER_LABEL: Record<string, string> = {
 	flatrate: "Stream",
@@ -145,18 +137,29 @@ const FlagStack = ({ codes }: { codes: string[] }) => (
 // row and yours first with a green ring. Four show; "All N services" opens the rest in place. A card that would
 // stand alone in its row takes the whole row. One line under them tells how many other countries have the title.
 // A country without the title for the offer type names the three countries with most services instead.
+//
+// The country is the header pair's (variant F): the country button and every other country here open the pair's
+// dialog or preview a country through it, unsaved until Keep. While a save is under way they are off.
 export default function WhereToWatch({
 	media,
 	country,
+	shownCountry = country,
+	preview = null,
 	className = "",
-}: { media: Media; country: string; className?: string }) {
+}: {
+	media: Media
+	/** The country `media`'s offers are for. */
+	country: string
+	/** The country the header pair shows; differs from `country` while its offers load or failed to load. */
+	shownCountry?: string
+	preview?: "loading" | "failed" | null
+	className?: string
+}) {
 	const [type, setType] = useState<OfferTab>("flatrate")
-	const [countryOpen, setCountryOpen] = useState(false)
 	const [all, setAll] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
-	useClickOutside([ref], () => setCountryOpen(false))
 	useReplayedTap("offer", (el) => Boolean(ref.current?.contains(el)))
-	const navigate = useNavigate()
+	const preference = useMediaPreference()
 	const owned = useOwnedProviderIds()
 	const linksByTab = Object.fromEntries(
 		OFFER_TABS.map((t) => [
@@ -173,7 +176,6 @@ export default function WhereToWatch({
 	const top = topCountries(media, type, country)
 	const anyOwned = links.some((l) => l.owned)
 	const shown = all ? links : links.slice(0, SHOWN)
-	const flag = country ? countryFlagUrl(country) : null
 	const offer = OFFER_LABEL[type]
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
@@ -187,17 +189,11 @@ export default function WhereToWatch({
 		setAll(false)
 	}
 	const chooseCountry = (code: string) => {
-		setCountryOpen(false)
 		setAll(false)
-		try {
-			localStorage.setItem("country", code)
-		} catch {}
-		navigate(`?country=${code}`, { preventScrollReset: true })
+		preference.pickCountry(code)
 	}
-	const openList = () => {
-		preloadCountryList()
-		setCountryOpen(true)
-	}
+	const openList = () => preference.openDialog("country")
+	const off = preference.saving
 
 	return (
 		<div
@@ -251,43 +247,30 @@ export default function WhereToWatch({
 						)
 					})}
 				</div>
-				<div className="relative shrink-0 text-xs">
-					<button
-						type="button"
-						data-country
-						onClick={() => setCountryOpen(!countryOpen)}
-						onPointerEnter={preloadCountryList}
-						onTouchStart={preloadCountryList}
-						onFocus={preloadCountryList}
-						aria-expanded={countryOpen}
-						aria-label="Change country"
-						className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-1.5 text-gray-300 hover:bg-white/10"
-					>
-						{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
-						<span className="max-sm:hidden">{country || "Country"}</span>
-						<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
-					</button>
-					{countryOpen && (
-						<div className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
-							<h3 className="mb-2 text-xs font-semibold text-gray-400">
-								Show services in
-							</h3>
-							{/* The fallback has the height of the search field, so the popover grows only once. */}
-							<Suspense fallback={<div className="h-8" aria-busy="true" />}>
-								<CountryList
-									mediaType={media.mediaType}
-									titleId={media.details.tmdb_id}
-									tab={type}
-									rows={countries}
-									current={country}
-									verb={verb}
-									onChoose={chooseCountry}
-								/>
-							</Suspense>
-						</div>
-					)}
-				</div>
+				<button
+					type="button"
+					data-country
+					onClick={openList}
+					onPointerEnter={preloadPreferenceDialog}
+					onFocus={preloadPreferenceDialog}
+					disabled={off}
+					aria-haspopup="dialog"
+					aria-label={`Country: ${regionName(shownCountry)}. Change`}
+					className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-1.5 text-xs text-gray-300 hover:bg-white/10 disabled:cursor-wait disabled:opacity-50"
+				>
+					<img src={countryFlagUrl(shownCountry)} alt="" className="h-2.5 rounded-[1px]" />
+					<span className="max-sm:hidden">{shownCountry}</span>
+					<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+				</button>
 			</div>
+			{preview && (
+				<p className="mt-2 text-xs text-gray-400" aria-live="polite">
+					{preview === "loading"
+						? `Loading the services in ${regionName(shownCountry)}…`
+						: `The services in ${regionName(shownCountry)} could not be loaded. These are ${regionName(country)}'s.`}
+				</p>
+			)}
+			<div className={preview === "loading" ? "opacity-40" : ""} aria-busy={preview === "loading" || undefined}>
 			{links.length === 0 ? (
 				<NotHere
 					others={others}
@@ -295,6 +278,7 @@ export default function WhereToWatch({
 					known={media.streaming_countries !== undefined}
 					here={here}
 					verb={verb}
+					disabled={off}
 					onChoose={chooseCountry}
 					onAll={openList}
 				/>
@@ -367,9 +351,10 @@ export default function WhereToWatch({
 				<button
 					type="button"
 					data-other-countries
+					disabled={off}
 					onClick={openList}
-					onPointerEnter={preloadCountryList}
-					className="mt-2 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-left text-xs text-gray-400 hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+					onPointerEnter={preloadPreferenceDialog}
+					className="mt-2 flex w-full cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-left text-xs text-gray-400 hover:bg-white/5 hover:text-white disabled:cursor-wait disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-white"
 				>
 					<FlagStack codes={others.slice(0, 3).map((c) => c.code)} />
 					<span className="min-w-0 truncate">
@@ -391,6 +376,7 @@ export default function WhereToWatch({
 					<ChevronRightIcon className="h-3 w-3" />
 				</button>
 			)}
+			</div>
 			{/* Which services are yours is a setting. As before, the way to it shows from md up while none of these is. */}
 			{!anyOwned && links.length > 0 && (
 				<p className="mt-2 text-right max-md:hidden">
@@ -414,6 +400,7 @@ function NotHere({
 	known,
 	here,
 	verb,
+	disabled,
 	onChoose,
 	onAll,
 }: {
@@ -422,6 +409,7 @@ function NotHere({
 	known: boolean
 	here: string
 	verb: string
+	disabled: boolean
 	onChoose: (code: string) => void
 	onAll: () => void
 }) {
@@ -444,8 +432,9 @@ function NotHere({
 					<li key={c.code}>
 						<button
 							type="button"
+							disabled={disabled}
 							onClick={() => onChoose(c.code)}
-							className="flex h-11 w-full cursor-pointer items-center gap-2.5 px-3 text-left hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
+							className="flex h-11 w-full cursor-pointer items-center gap-2.5 px-3 text-left hover:bg-white/[0.06] disabled:cursor-wait disabled:opacity-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
 						>
 							<img
 								src={countryFlagUrl(c.code)}
@@ -464,9 +453,10 @@ function NotHere({
 			{others.length > 3 && (
 				<button
 					type="button"
+					disabled={disabled}
 					onClick={onAll}
-					onPointerEnter={preloadCountryList}
-					className="mt-1.5 cursor-pointer text-xs font-semibold text-gray-300 hover:text-white"
+					onPointerEnter={preloadPreferenceDialog}
+					className="mt-1.5 cursor-pointer text-xs font-semibold text-gray-300 hover:text-white disabled:cursor-wait disabled:opacity-50"
 				>
 					All {plural(others.length, "country", "countries")} →
 				</button>
