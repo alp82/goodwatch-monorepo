@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
 	createG1Reader,
+	createG1OrderCache,
 	G1_MODEL_HASH,
 	G1_CACHE_MS,
 	G1_MAX_AGE_MS,
@@ -31,6 +32,69 @@ const payload = (): G1Payload => ({
 	ownShares: null,
 	othersCount: 2,
 	othersRatingsCount: 8,
+})
+
+test("a warm reader cannot keep a payload beyond the 36-hour freshness limit", async () => {
+	let now = NOW + G1_MAX_AGE_MS - 1_000
+	const read = createG1Reader(
+		async () => JSON.stringify(payload()),
+		() => now,
+	)
+	assert.ok((await read("owner", snapshot)).data)
+	now += 2_000 // The reader is still inside its ten-minute mapping TTL.
+	assert.equal((await read("owner", snapshot)).fallbackReason, "stale-payload")
+})
+
+test("composed orders reuse metadata and isolate candidate order, mix, member, snapshot and payload identity", async () => {
+	let raw = JSON.stringify(payload()),
+		now = NOW
+	const read = createG1Reader(
+		async () => raw,
+		() => now,
+	)
+	const a = (await read("owner", snapshot)).data!
+	const order = createG1OrderCache({ now: () => now })
+	const first = order(keys, a, snapshot)
+	assert.equal(order([...keys], a, snapshot), first)
+	assert.notEqual(order([...keys].reverse(), a, snapshot), first)
+	assert.notEqual(order(keys.slice(1), a, snapshot), first)
+	assert.notEqual(order(keys, a, snapshot, false), first)
+	assert.notEqual(
+		order(keys, (await read("other", snapshot)).data!, snapshot),
+		first,
+	)
+	assert.notEqual(order(keys, a, { ...snapshot, version: "other" }), first)
+	raw = JSON.stringify({ ...payload(), b3Rank: [0.9, 0.1, 0.2] })
+	assert.notEqual(
+		order(keys, (await read("owner", snapshot)).data!, snapshot),
+		first,
+	)
+	now += G1_CACHE_MS
+	assert.notEqual(order(keys, a, snapshot), first)
+	// Even a warm mapping is rejected after its payload ages out.
+	now = NOW + G1_MAX_AGE_MS + 1
+	assert.equal((await read("owner", snapshot)).fallbackReason, "stale-payload")
+})
+
+test("composed cache bounds total titles, variants and entries", async () => {
+	const a = (
+		await createG1Reader(
+			async () => JSON.stringify(payload()),
+			() => NOW,
+		)("owner", snapshot)
+	).data!
+	for (const limits of [
+		{ maxTitles: 3 },
+		{ maxEntries: 1 },
+		{ maxPerMember: 1 },
+	]) {
+		const order = createG1OrderCache(limits)
+		const first = order(keys, a, snapshot)
+		order(keys.slice(1), a, snapshot)
+		assert.notEqual(order(keys, a, snapshot), first)
+	}
+	const order = createG1OrderCache({ maxTitles: 2 })
+	assert.notEqual(order(keys, a, snapshot), order(keys, a, snapshot))
 })
 
 test("modes are closed by default; preview and shadow only resolve for listed members", () => {

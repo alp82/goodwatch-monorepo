@@ -343,9 +343,14 @@ test("Watch next page and later batches use the reader and log actual G1 tiers",
 	assert.equal(state.exposures[0].watchNextTiers!.get(keys[3]), "hero")
 	assert.deepEqual(state.exposures[0].g1!.todayFirst100, keys)
 	// The later-batch helper normally loads taste; supply it via the test stub here.
-	const batch = await getWatchNextCardsPage(ctx(), [keys[5], keys[0]], {
-		sort: "match",
-	})
+	const batch = await getWatchNextCardsPage(
+		ctx(),
+		[keys[5], keys[0]],
+		{
+			sort: "match",
+		},
+		result.planId,
+	)
 	assert.equal(batch.listId, "list-1")
 	assert.equal(state.exposures[1].batch, "cards")
 	assert.deepEqual(
@@ -353,6 +358,100 @@ test("Watch next page and later batches use the reader and log actual G1 tiers",
 		[keys[5], keys[0]],
 	)
 	assert.equal(state.exposures[1].watchNextTiers!.get(keys[0]), "upNext")
+	assert.equal(state.reads, 1)
+})
+
+for (const change of ["publish", "delete"] as const) {
+	test(`later cards retain initial ordering provenance after payload ${change}`, async () => {
+		reset("preview")
+		const options = { sort: "match" as const }
+		const initial = await getWatchNext(ctx(), options, taste)
+		const original = state.exposures[0]
+		state.raw =
+			change === "delete"
+				? null
+				: JSON.stringify({
+						...payload(),
+						b3Rank: [0.99, 0.1, 0.2, 0.3, 0.4, 0.5],
+						builtAt: new Date(
+							Date.parse(original.g1!.payloadBuildTime!) - 1_000,
+						).toISOString(),
+					})
+		// A separate new list sees the publish/deletion, but old lazy batches keep their plan.
+		const warn = console.warn
+		console.warn = () => {}
+		try {
+			await getWatchNext(ctx(), options, taste)
+			const latest = state.exposures[1]
+			if (change === "delete")
+				assert.equal(latest.g1!.fallbackReason, "missing-payload")
+			else
+				assert.notEqual(
+					latest.g1!.payloadBuildTime,
+					original.g1!.payloadBuildTime,
+				)
+			const batch = await getWatchNextCardsPage(
+				ctx(),
+				[keys[5], keys[0]],
+				options,
+				initial.planId,
+			)
+			assert.equal(batch.refreshRequired, false)
+			assert.equal(state.exposures[2].g1, original.g1)
+			assert.deepEqual(
+				state.exposures[2].watchNextTiers,
+				original.watchNextTiers,
+			)
+			const reads = state.reads,
+				exposures = state.exposures.length
+			assert.deepEqual(
+				await getWatchNextCardsPage(ctx(), [keys[0]], options, "lost-plan"),
+				{
+					titles: [],
+					listId: null,
+					refreshRequired: true,
+				},
+			)
+			const stranger = ctx()
+			stranger.viewer = { kind: "member", userId: "stranger" }
+			assert.equal(
+				(
+					await getWatchNextCardsPage(
+						stranger,
+						[keys[0]],
+						options,
+						initial.planId,
+					)
+				).refreshRequired,
+				true,
+			)
+			assert.equal(
+				(
+					await getWatchNextCardsPage(
+						ctx(),
+						[keys[0]],
+						{ sort: "top" },
+						initial.planId,
+					)
+				).refreshRequired,
+				true,
+			)
+			assert.equal(state.reads, reads)
+			assert.equal(state.exposures.length, exposures)
+		} finally {
+			console.warn = warn
+		}
+	})
+}
+
+test("Watch next fitting metadata cannot mutate the shared composed order", async () => {
+	reset("preview")
+	state.raw = JSON.stringify({ ...payload(), ownShares: [1, 0] })
+	const read = await createG1Reader(async () => state.raw)("owner", snapshot)
+	const { orderG1 } = await import("./reader.server.ts")
+	const composed = orderG1(keys, read.data!, snapshot, false)
+	planWatchNext(ctx(), taste, { sort: "match" }, undefined, undefined, read)
+	assert.ok([...composed.titles.values()].every((t) => !t.mixPlaced))
 })
 
 test("a snapshot reload while reading G1 falls back safely", async () => {

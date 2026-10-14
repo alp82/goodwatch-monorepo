@@ -33,6 +33,7 @@ import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
 import { recG1Order } from "./features.server.ts"
+import { createWatchNextPlanStore } from "./watch-next-plans.server.ts"
 import {
 	loadG1,
 	g1Exposure,
@@ -79,6 +80,8 @@ export interface WatchNextTier {
 }
 
 export interface WatchNext {
+	/** Opaque identity of the ordering plan used for all later member card batches. */
+	planId: string | null
 	/** Exposure record for the cards in this member's initial view; null for guests or a dropped write. */
 	listId: string | null
 	sort: WatchNextSort
@@ -125,6 +128,16 @@ const SUGGEST_MIN_SCORE = 70
 const SUGGEST_MIN_VOTES = 1000
 
 type Plan = ReturnType<typeof planWatchNext>
+const plans = createWatchNextPlanStore<Plan>()
+const planChoice = (options: WatchNextOptions) =>
+	JSON.stringify([
+		options.sort ?? null,
+		options.moods ?? [],
+		options.onMyServices ?? true,
+		options.notTonight ?? [],
+		options.kind ?? null,
+		options.time ?? null,
+	])
 
 interface Entry {
 	key: TitleKey
@@ -380,7 +393,10 @@ export function planWatchNext(
 			next = next.map((e) =>
 				replace.has(e.key) ? byKey.get(mix.keys[i++])! : e,
 			)
-			g1.titles = f3.titles
+			// The composed F3 metadata is cached. This plan's fitting mix must not mutate it.
+			g1.titles = new Map(
+				[...f3.titles].map(([key, value]) => [key, { ...value }]),
+			)
 			for (const key of mix.placed) g1.titles.get(key)!.mixPlaced = true
 			logG1(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
@@ -761,6 +777,16 @@ export async function getWatchNext(
 
 	return {
 		listId,
+		planId:
+			ctx.viewer.kind === "member" &&
+			(plan.g1.flag.enabled || plan.g1.flag.shadow)
+				? plans.put(
+						ctx.viewer.userId,
+						planChoice(options),
+						plan,
+						plan.entries.size,
+					)
+				: null,
 		sort: plan.sort,
 		defaultSort: plan.defaultSort,
 		moods: plan.moods,
@@ -808,11 +834,35 @@ export async function getWatchNextCardsPage(
 	ctx: ViewerContext,
 	keys: TitleKey[],
 	options: WatchNextOptions,
-): Promise<{ titles: WatchNextTitle[]; listId: string | null }> {
-	const { plan, titles } = await readWatchNextTitles(ctx, keys, options)
+	planId?: string | null,
+): Promise<{
+	titles: WatchNextTitle[]
+	listId: string | null
+	refreshRequired: boolean
+}> {
+	let retained: Plan | null = null
+	const flag = recG1Order(
+		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
+	)
+	if (ctx.viewer.kind === "member" && (planId || flag.enabled || flag.shadow)) {
+		retained = planId
+			? plans.get(planId, ctx.viewer.userId, planChoice(options))
+			: null
+		// Fail closed: never attach a newly composed plan's provenance to old browser keys.
+		if (!retained || keys.some((key) => !retained!.entries.has(key)))
+			return { titles: [], listId: null, refreshRequired: true }
+	}
+	const { plan, titles } = await readWatchNextTitles(
+		ctx,
+		keys,
+		options,
+		undefined,
+		retained ?? undefined,
+	)
 	return {
 		titles,
 		listId: watchNextExposure(ctx, options, plan, titles, "cards"),
+		refreshRequired: false,
 	}
 }
 
@@ -821,10 +871,13 @@ async function readWatchNextTitles(
 	keys: TitleKey[],
 	options: WatchNextOptions,
 	givenTaste?: Taste,
+	retained?: Plan,
 ) {
 	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
-	const plan = await planFor(ctx, taste, options)
-	const wanted = keys.filter((key) => plan.entries.has(key)).slice(0, MAX_KEYS)
+	const plan = retained ?? (await planFor(ctx, taste, options))
+	const wanted = keys
+		.filter((key) => plan.entries.has(key) && ctx.wishlist.has(key))
+		.slice(0, MAX_KEYS)
 	const cards = await getTitleCards(wanted, ctx, taste)
 	return { plan, titles: cards.map((card) => wishlistTitle(plan, card)) }
 }

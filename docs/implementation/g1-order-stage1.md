@@ -2,7 +2,9 @@
 
 `goodwatch-flows/windmill/f/sync/copy/g1_order.py` builds ordering components for an explicit,
 nonempty list of preview member ids. Initially the caller passes only the owner's id. Its Windmill
-entrypoint defaults to `dry_run=True`. No job was run against production during this implementation.
+entrypoint defaults to `dry_run=True`. The stage 2 review fixes require every supplied member id
+to belong to Windmill variable `f/sync/g1_preview_members`, including manual dry runs, before
+opening database connectors. No job was run against production during this implementation.
 
 The frozen research source is `taste-loop/docs/research/taste-loop/lab/candidates/009/g1_mix.py`,
 SHA-256 `e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1`.

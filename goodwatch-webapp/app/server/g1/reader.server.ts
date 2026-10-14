@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import {
 	requestOrder,
 	refill,
@@ -21,6 +22,7 @@ export interface G1Payload extends G1Components {
 	othersRatingsCount: number
 }
 export interface G1Prepared {
+	member: string
 	payload: G1Payload
 	/** Payload index per snapshot row; -1 for unrated candidates outside the offline pool. */
 	indices: Int32Array
@@ -97,7 +99,7 @@ function decode(raw: string, snapshot: TitleSnapshot, now: number): G1Read {
 			return { data: null, fallbackReason: "malformed-shape" }
 		indices[row] = i
 	}
-	return { data: { payload: p, indices }, fallbackReason: null }
+	return { data: { member: "", payload: p, indices }, fallbackReason: null }
 }
 
 // Read on each request so a publish/deletion is visible immediately. Reuse validated row mapping by member,
@@ -130,6 +132,7 @@ export function createG1Reader(
 			cache.delete(member)
 			const result = decode(raw, snapshot, now())
 			if (result.data) {
+				result.data.member = member
 				if (cache.size >= 20) cache.delete(cache.keys().next().value!)
 				cache.set(member, {
 					raw,
@@ -172,7 +175,7 @@ export function g1Exposure(flag: G1Exposure["flag"], read: G1Read): G1Exposure {
 		titles: new Map(),
 	}
 }
-export function orderG1(
+function composeG1(
 	keys: number[],
 	data: G1Prepared,
 	snapshot: TitleSnapshot,
@@ -211,6 +214,80 @@ export function orderG1(
 		ranks: new Map(known.map((key, i) => [key, result.rank[i]])),
 	}
 }
+
+// Bound both the number of filter variants and total retained title metadata. Payload object identity
+// changes on publish (including identical build times), expiry, or revalidation by the reader.
+export function createG1OrderCache({
+	maxTitles = 200_000,
+	maxEntries = 40,
+	maxPerMember = 4,
+	now = Date.now,
+} = {}) {
+	type Result = ReturnType<typeof composeG1>
+	const cache = new Map<
+		string,
+		{
+			data: G1Prepared
+			result: Result
+			expires: number
+			size: number
+		}
+	>()
+	let titles = 0
+	const remove = (key: string) => {
+		titles -= cache.get(key)!.size
+		cache.delete(key)
+	}
+	return (
+		keys: number[],
+		data: G1Prepared,
+		snapshot: TitleSnapshot,
+		mix = true,
+	): Result => {
+		// Include order: F3 ties and the unknown suffix retain the input's relative order.
+		const bytes = Float64Array.from(keys)
+		const hash = createHash("sha256")
+			.update(new Uint8Array(bytes.buffer))
+			.digest("hex")
+		const key = JSON.stringify([
+			data.member,
+			data.payload.builtAt,
+			snapshot.version,
+			hash,
+			mix,
+		])
+		const cached = cache.get(key)
+		if (cached && cached.data === data && cached.expires > now()) {
+			cache.delete(key)
+			cache.set(key, cached)
+			return cached.result
+		}
+		if (cached) remove(key)
+		const result = composeG1(keys, data, snapshot, mix)
+		if (keys.length > maxTitles) return result
+		for (const [id, item] of cache)
+			if (
+				item.expires <= now() ||
+				(item.data.member === data.member && item.data !== data)
+			)
+				remove(id)
+		const memberKeys = [...cache]
+			.filter(([, item]) => item.data.member === data.member)
+			.map(([id]) => id)
+		while (memberKeys.length >= maxPerMember) remove(memberKeys.shift()!)
+		while (cache.size >= maxEntries || titles + keys.length > maxTitles)
+			remove(cache.keys().next().value!)
+		cache.set(key, {
+			data,
+			result,
+			expires: now() + G1_CACHE_MS,
+			size: keys.length,
+		})
+		titles += keys.length
+		return result
+	}
+}
+export const orderG1 = createG1OrderCache()
 
 // Preserve Watch next's fit/time/Not tonight groups. Only fitting, non-passed titles receive the mix.
 export function mixFitting(

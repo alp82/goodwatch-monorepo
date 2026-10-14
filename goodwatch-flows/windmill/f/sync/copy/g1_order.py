@@ -599,6 +599,13 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
 def main(member_ids: list[str], ttl_seconds: int = TTL_SECONDS, dry_run: bool = True):
     """Windmill only: explicitly supplied preview ids; dry-run is the default."""
     validate_members(member_ids)
+    # Check before importing/constructing database connectors, including for manual dry runs.
+    import wmill
+    from f.sync.copy.g1_trigger import MEMBERS_VARIABLE
+    configured = json.loads(wmill.get_variable(MEMBERS_VARIABLE) or "[]")
+    validate_members(configured)
+    if not set(member_ids).issubset(configured):
+        raise ValueError("G1 members must belong to the configured preview list")
     from f.db.cratedb import CrateConnector
     from f.db.redis import RedisConnector
     from f.dna.models import CoreScores

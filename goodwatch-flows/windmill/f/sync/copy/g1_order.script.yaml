@@ -1,5 +1,5 @@
 summary: Build G1 ordering components for explicit preview members
-description: Reads the reference pool and all members' ratings, Want to See, Skip and Not interested from Crate. Writes only g1:v1:<member> with a TTL. F3 and the first-100 mix are composed over the filtered list at request time. Preview ids must be supplied explicitly. Stage 2 enqueues via g1_trigger after snapshot attempts and nightly. Route to a dedicated g1-order worker group with exactly one worker to serialize builds.
+description: Reads the reference pool and all members' ratings, Want to See, Skip and Not interested from Crate. Writes only g1:v1:<member> with a TTL. F3 and the first-100 mix are composed over the filtered list at request time. Explicit ids must belong to f/sync/g1_preview_members, including manual dry runs. Enqueued after snapshot attempts, nightly, and debounced preview-member interaction writes. Route to a dedicated g1-order worker group with exactly one worker to serialize builds.
 kind: script
 tag: g1-order
 concurrent_limit: 1
@@ -19,7 +19,7 @@ schema:
         type: string
       minItems: 1
       uniqueItems: true
-      description: Explicit preview member ids; initially pass only the owner. Never all.
+      description: Explicit ids from f/sync/g1_preview_members; initially only the owner. Never all.
     ttl_seconds:
       type: integer
       minimum: 1

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -167,6 +168,32 @@ class Publication(unittest.TestCase):
 
 
 class Reads(unittest.TestCase):
+    def test_manual_calls_reject_unlisted_members_before_connector_imports(self):
+        for raw, members in [(None, ["owner"]), ("[]", ["owner"]), ('["owner"]', ["stranger"]),
+                             ('["owner"]', ["owner", "stranger"]), ('["all"]', ["owner"]),
+                             ('["owner","owner"]', ["owner"]), ("bad json", ["owner"])]:
+            with self.subTest(raw=raw, members=members), patch.dict(sys.modules, {
+                "wmill": SimpleNamespace(get_variable=Mock(return_value=raw)),
+                "f.db.cratedb": None, "f.db.redis": None,
+            }):
+                for dry_run in (True, False):
+                    with self.assertRaises(ValueError):
+                        job.main(members, dry_run=dry_run)
+
+    def test_manual_listed_member_reaches_serialized_job_and_keeps_dry_run_default(self):
+        crate, redis = Mock(), Mock()
+        with patch.dict(sys.modules, {
+            "wmill": SimpleNamespace(get_variable=Mock(return_value='["owner"]')),
+            "f.db.cratedb": SimpleNamespace(CrateConnector=Mock(return_value=crate)),
+            "f.db.redis": SimpleNamespace(RedisConnector=Mock(return_value=Mock(get_redis=Mock(return_value=redis)))),
+            "f.dna.models": SimpleNamespace(CoreScores=SimpleNamespace(model_fields={"a": None})),
+        }), patch.object(job, "run", return_value={"published": False}) as run:
+            self.assertEqual(job.main(["owner"]), {"published": False})
+            self.assertTrue(run.call_args.kwargs["dry_run"])
+            self.assertEqual(run.call_args.args[2], ["owner"])
+        crate.disconnect.assert_called_once()
+        redis.close.assert_called_once()
+
     def test_four_tables_keyset_paging_and_entry_order(self):
         calls = []
         pages = [[['z', 3, 'show', 30, 30, 6], ['z', 5, 'movie', 10, 10, 8]],
