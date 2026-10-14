@@ -79,6 +79,12 @@ test("the room's HTML is the same on every render and holds nothing that depends
 	assert.equal(count(room, 'data-phone-remote="hand"'), 1)
 	assert.equal(count(room, 'data-phone-remote="table"'), 1)
 	assert.equal(count(room, "tvr-f-premote"), 2)
+	// The phone Remote's printed words: each key has its own name, so a screen reader does not hear it twice.
+	const words = [...room.matchAll(/<span[^>]*text-\[8px\][^>]*>/g)].map(
+		(m) => m[0],
+	)
+	assert.equal(words.length, 8)
+	for (const word of words) assert.match(word, /aria-hidden="true"/)
 	// Each photo asks for nothing where the other room is drawn: the desktop's once, the phone's twice.
 	assert.equal(
 		count(

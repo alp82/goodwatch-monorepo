@@ -42,6 +42,7 @@ const ARROW_AT: Record<RoomDirection, string> = {
 	left: "left-[3px] top-1/2 -translate-y-1/2",
 	right: "right-[3px] top-1/2 -translate-y-1/2",
 }
+/** A key's printed word: a key has its own name, so a screen reader does not hear it twice. */
 const WORD =
 	"pointer-events-none whitespace-nowrap text-[8px] font-semibold uppercase leading-[11px] tracking-[0.08em] text-white/60"
 
@@ -169,7 +170,9 @@ export function PhoneRemote({
 		) => (
 			<>
 				<div className={`absolute ${where}`}>{key}</div>
-				<span className={`absolute ${WORD} ${wordAt}`}>{word}</span>
+				<span aria-hidden className={`absolute ${WORD} ${wordAt}`}>
+					{word}
+				</span>
 			</>
 		)
 		body = (
@@ -215,9 +218,13 @@ export function PhoneRemote({
 		) => (
 			<div className="flex w-[72px] shrink-0 flex-col items-center">
 				{a}
-				<span className={WORD}>{wordA}</span>
+				<span aria-hidden className={WORD}>
+					{wordA}
+				</span>
 				{b}
-				<span className={WORD}>{wordB}</span>
+				<span aria-hidden className={WORD}>
+					{wordB}
+				</span>
 				{c}
 			</div>
 		)

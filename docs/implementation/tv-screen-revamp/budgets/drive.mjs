@@ -2,6 +2,7 @@
 //
 //   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3191 node drive.mjs [paint|access|budget]
 //   BUILD=1 BASE=http://localhost:3196 node drive.mjs paint      against a production build, served without services
+//   LABEL=<text>                                                 files the run's numbers under "<mode>, <text>" in checks.json
 //
 // paint   At every room layout and at the sizes around each layout's threshold: the room as the server's HTML and
 //         CSS paint it before any script runs (the page's scripts are stopped), against the room once the script
@@ -141,7 +142,9 @@ const BOXES = () => {
 		out[key] = [b.left, b.top, b.width, b.height].map((v) => Math.round(v * 100) / 100)
 	}
 	put("room", room)
-	for (const el of room.querySelectorAll("img")) put(`img ${el.currentSrc.split("/").at(-1).split("?")[0].replace(/-[\w-]{8}\.(avif|webp)$/, ".$1")}`, el)
+	// By the file it shows, or for a picture whose file is chosen by a source, by its fallback: a lazy picture that
+	// has not loaded yet has no current file.
+	for (const el of room.querySelectorAll("img")) put(`img ${(el.currentSrc || el.getAttribute("src")).split("/").at(-1).split("?")[0].replace(/-[\w-]{8}\.(avif|webp)$/, ".$1").replace(/\.(avif|webp)$/, "")}`, el)
 	for (const [name, sel] of [
 		["tv", "[data-tv-screen]"],
 		["canvas", "[data-tv-canvas]"],
@@ -172,7 +175,9 @@ async function paint() {
 		before.page.on("request", (r) => r.resourceType() === "image" && pictures.push(r.url()))
 		await before.page.route((u) => u.pathname.endsWith(".js") || u.pathname.endsWith(".ts") || u.pathname.endsWith(".tsx") || u.pathname.includes("/@"), (route) => route.request().resourceType() === "script" ? route.abort() : route.fallback())
 		await goto(before.page, PAGE, "#room")
-		await before.page.waitForTimeout(800)
+		// The TV's pictures come from another host about a second in: the first paint draws them once they are here.
+		await before.page.waitForFunction(() => [...document.querySelectorAll("#room img")].every((i) => !i.getClientRects().length || i.complete), null, { timeout: 8000 }).catch(() => {})
+		await before.page.waitForTimeout(400)
 		const first = await before.page.evaluate(BOXES)
 		const firstShot = await before.page.screenshot({ clip: { x: 0, y: 0, width: size[0], height: size[1] } })
 		await before.ctx.close()
@@ -756,11 +761,59 @@ async function budget() {
 	}
 }
 
+
+// ---------------------------------------------------------------------------------------------------------
+// SEO (docs/verification/235-living-room-seo.md, as far as /home-preview can show it before the switch): the
+// room's HTML is the same for every user agent, one H1 per window, the start titles and the hubs as links.
+
+async function seo() {
+	where = "seo"
+	console.log(where)
+	const agents = {
+		googlebot: "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.126 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+		desktop: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+		iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+	}
+	const pages = {}
+	for (const [name, agent] of Object.entries(agents)) {
+		const response = await fetch(PAGE, { headers: { "user-agent": agent, "accept-language": "en-US,en;q=0.9" } })
+		const html = await response.text()
+		const start = html.indexOf('<div id="room"')
+		const end = html.indexOf("</section>", html.indexOf('<section id="browse"')) + "</section>".length
+		pages[name] = { status: response.status, room: html.slice(start, end), length: html.length }
+	}
+	const [first, ...rest] = Object.values(pages)
+	check(rest.every((p) => p.room === first.room), `the room and the section below are the same HTML for every user agent (${first.room.length} characters)`)
+	const room = first.room
+	const count = (text) => room.split(text).length - 1
+	is(count("<h1"), 2, "two H1s in the HTML, one per edition of the screen")
+	is([...room.matchAll(/<a href="\/(movie|show)\//g)].length, 16, "the 16 start titles as links")
+	for (const hub of ["/discover", "/explorer", "/taste"]) check(room.includes(`href="${hub}"`), `the hub ${hub} as a link`)
+	check(!/data-tv-item="app:shows"/.test(room), "a guest's HTML has no member's tile")
+	numbers.seo = { roomCharacters: room.length, documentCharacters: first.length, titleLinks: 16 }
+	// One H1 shows in every window, before any script and after hydration.
+	for (const size of [[1920, 1080], [1440, 800], [390, 844], [375, 667], [844, 390]]) {
+		for (const scripts of [false, true]) {
+			const { ctx, page } = await context(size)
+			if (!scripts) await page.route((u) => /\.(js|ts|tsx)$/.test(u.pathname) || u.pathname.includes("/@"), (route) => (route.request().resourceType() === "script" ? route.abort() : route.fallback()))
+			await goto(page, PAGE, scripts ? "#room:not([data-room=unmeasured]) [data-tv-item]" : "#room")
+			await page.waitForTimeout(500)
+			const shown = await page.evaluate(() => [...document.querySelectorAll("h1")].filter((h) => h.getClientRects().length && getComputedStyle(h).visibility !== "hidden").map((h) => h.textContent))
+			is(shown, ["Let's find something good for tonight."], `${size.join("x")} ${scripts ? "after hydration" : "before any script"}: one H1 shows`)
+			await ctx.close()
+		}
+	}
+	// The old address still answers 301 with its query.
+	const old = await fetch(`${BASE}/living-room?tv=moods`, { redirect: "manual" })
+	is([old.status, old.headers.get("location")], [301, "/?tv=moods"], "/living-room?tv=moods answers 301")
+}
+
 const is = (got, want, what) => check(JSON.stringify(got) === JSON.stringify(want), `${what}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)
 
 if (!only || only === "paint") await paint()
 if (!only || only === "access") await access()
 if (!only || only === "budget") await budget()
+if (!only || only === "seo") await seo()
 
 await browser.close()
 const file = join(here, "checks.json")
@@ -768,7 +821,7 @@ let previous = {}
 try {
 	previous = JSON.parse(readFileSync(file, "utf8"))
 } catch {}
-writeFileSync(file, `${JSON.stringify({ ...previous, [only ?? "all"]: { passed, failed, numbers } }, null, "\t")}\n`)
+writeFileSync(file, `${JSON.stringify({ ...previous, [`${only ?? "all"}${process.env.LABEL ? `, ${process.env.LABEL}` : ""}`]: { passed, failed, numbers } }, null, "\t")}\n`)
 console.log(`\n${passed} checks passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  ${f}`)
 process.exit(failed.length ? 1 : 0)
