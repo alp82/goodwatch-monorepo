@@ -185,6 +185,11 @@ yet the answer: T2a sees only titles members chose to watch, and G1's top is muc
 titles members have not seen, needs the confirmation step: judged pools (T3) or sealed tier C, with a top-list harm
 criterion frozen first. Today's behaviour stays until then.
 
+**Route to confirmation (owner, October 14, 2026):** T3 parked: the revised protocol (item 012) would pass G1 with
+about 2–8% probability at 20–30 judges, and only 7 of 97 eligible members were active in the last 30 days. Instead:
+exposure log, G1 behind a flag for the owner first, then for everyone if the owner finds it better, watched through
+the log and reversible. Weaker confirmation than PLAN.md 2.3; the owner's decision.
+
 ## D2. Whether to show a personal predicted score or risk
 
 **Registered (item 008, `items/008-d2-forward/PREREG.md`): win on tier A, not replicated on tier B. Today's

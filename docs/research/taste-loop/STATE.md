@@ -21,6 +21,12 @@ Read this first. Rewritten at the end of every session.
   upper bound of its extra harm over today's taste reaches 1 per 10 in the first 10 ("Not for me" plus "seen it,
   rated 5 or less"). Invitations to other members still wait for the owner checkpoint "before anything reaches
   another member".
+- T3 parked (October 14, 2026): with 7 of 97 eligible members active in 30 days, the revised T3 (item 012) would
+  pass G1 with about 2–8% probability at a feasible size. The owner chose instead: build the exposure log (#525),
+  put G1 behind a flag for the owner only first, then turn it on for everyone if the owner finds it better, with
+  the log recording Want to See adds, skips and ratings from those lists; the flag goes off if they turn worse.
+  Confirmation is weaker than PLAN.md 2.3 wanted; this is recorded as the owner's decision. T3 reopens when there
+  are enough active members.
 - No re-rating and no labelling by the owner. The owner's ratings are tested one hidden title at a time (T2a).
 
 ## Items
@@ -75,17 +81,15 @@ Read this first. Rewritten at the end of every session.
 
 ## Next action
 
-Phase 2, in this order (owner confirmed the direction October 14, 2026):
-1. Amendment A3, reviewed by two families before any page exists: the top-list harm criterion for judged pools
-   (T3), the T3 pool composition, and the distance form of the shows/animation guard.
-2. Hash G1's and B2's rankings into the ledger, build the T3 page, recruit toward 20 members; issues #525 and #526.
-3. Register the first tier C window; D2 waits for it.
-4. In parallel, without members: T5 for D3 (the one decision with no result).
-5. No more gate looks on D1 variants.
+Phase 2, D1 route chosen by the owner (October 14, 2026):
+1. Map how today's taste orders Best match and For you in the webapp; plan G1's port and the flag.
+2. Exposure log (#525), then G1 behind a flag, on for the owner only.
+3. Owner checkpoint: the owner looks at their own lists under G1. Only then everyone.
+4. In parallel, without members: T5 for D3; D2 waits for tier C.
 
 ## What the owner owes
 
-Nothing now. Next checkpoint: before the T3 page or any invitation reaches another member. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+Next checkpoint: the owner tries G1 on their own lists; nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed
