@@ -127,7 +127,7 @@ test("an unlinked Google account and withdrawn consent can be created again with
 	assert.equal((await adapter.create({ model: "oauthConsent", data })).id, consent.id)
 })
 
-test("a concurrent session refresh cannot be reported as a completed bulk revocation", async () => {
+test("a concurrent session refresh is retried until bulk revocation completes", async () => {
 	const transport = localCrateTransport(endpoints)
 	const healthy = crateAuthAdapter({ sql: transport })({})
 	const session = await healthy.create({ model: "session", data: { token: randomUUID(), userId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })

@@ -124,6 +124,16 @@ the strict adapter.
 
 ## Regression evidence
 
+Verified on October 14, 2026 in [CI run 38629108690](https://github.com/alp82/goodwatch-monorepo/actions/runs/38629108690)
+at code commit `e7033d40`, using Node **24.21.0** and the pinned three-node cluster:
+**261 Vitest cases** (246 upstream cases plus 15 real Better Auth regressions)
+and **25 integration/fault cases** passed with no failures or skips. Focused
+adapter and harness types passed. Both primary-loss schedules returned SQL
+rowcount 0 and recovered the invocation's own winning result. Whole-app typechecking
+reports the same **174 baseline diagnostics**, with zero added or removed
+diagnostics after normalizing the baseline checkout path.
+
+
 Each blocking defect was reproduced red through Better Auth before its fix:
 Google account updates failed with an indeterminate write, 103-session logout ran
 zero hooks, and parallel session checks returned unauthorized failures. Additional
@@ -138,7 +148,9 @@ The real Better Auth regression suite covers:
   sessions and 206 session-bound access/refresh tokens; every delete hook runs
   and every seeded token is revoked by the actual OAuth-provider plugin.
 - Four simultaneous session checks and four concurrent Google sign-in handlers,
-  with barriers forcing competing writes against the same version.
+  with barriers forcing competing writes against the same version. Google callbacks
+  enter through a disposable Better Auth endpoint calling its real OAuth sign-in
+  handler; provider identity/token fixtures replace the external Google service.
 - Sign-out racing session refresh, and OAuth logout racing a guarded rotation
   of the first captured refresh token; the remaining tokens are still revoked.
 - Email reuse after address change/deletion, delayed claim release during ABA,
