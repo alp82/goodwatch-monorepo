@@ -1,10 +1,10 @@
 # MCP tool-set conversation spike (#535)
 
-2026-10-14, same local branch `ghostex/817e1757`, on top of #533 commit `7d28df92`. Scope: a throwaway conversation prototype with mutable in-memory fixtures, no production data, no deployment. [Issue #535](https://github.com/alp82/goodwatch-monorepo/issues/535) asks how the tools should feel; [#528](https://github.com/alp82/goodwatch-monorepo/issues/528) supplies the proposed task list. The owner closed [#533](https://github.com/alp82/goodwatch-monorepo/issues/533#issuecomment-6169860955) after verifying Claude.ai login/consent, three read tools and data under the member ID. This follow-up adds writes, while Claude.ai refresh and an actual ChatGPT connection remain owner checks.
+2026-10-14, local branch `ghostex/817e1757`, published as [`auth/mcp-spike`](https://github.com/alp82/goodwatch-monorepo/tree/auth/mcp-spike), on top of #533 commit `7d28df92`. Scope: a throwaway conversation prototype with mutable in-memory fixtures, no production data, no deployment. [Issue #535](https://github.com/alp82/goodwatch-monorepo/issues/535) asks how the tools should feel; [#528](https://github.com/alp82/goodwatch-monorepo/issues/528) supplies the proposed task list. The owner closed [#533](https://github.com/alp82/goodwatch-monorepo/issues/533#issuecomment-6169860955) after verifying Claude.ai login/consent, three read tools and data under the member ID. This follow-up adds writes, while Claude.ai refresh and an actual ChatGPT connection remain owner checks.
 
 ## Start the owner test
 
-The agent tested localhost only for #535 and **did not start a tunnel**. From the existing worktree:
+The agent tested localhost only for #535 and **did not start a tunnel**. From the existing worktree (the owner starts the tunnel):
 
 ```bash
 cd /home/alper/projects/goodwatch-monorepo-817e1757/goodwatch-webapp
@@ -12,6 +12,18 @@ npm run spike:mcp:tunnel
 ```
 
 This is the exact start command. It runs `cloudflared tunnel --url http://127.0.0.1:3335 --no-autoupdate`, captures the newly printed HTTPS origin, and starts the isolated Remix server using that exact issuer/resource authority. Copy its printed `/mcp` URL and fresh password for `spike@example.test`. Keep this terminal open while testing; Ctrl-C stops both processes. Port 3335 must be free. Do not reuse the old #533 tunnel hostname or grant. Every restart changes the auth secret/keys, resets member data and requires reauthorization.
+
+Cloud handover: clone the repository and check out the published branch; no local conversation/session is needed:
+
+```bash
+git clone --branch auth/mcp-spike https://github.com/alp82/goodwatch-monorepo.git
+cd goodwatch-monorepo/goodwatch-webapp
+npm ci
+npm --prefix app/mcp-oauth-spike ci
+npm run spike:mcp:check
+```
+
+Then the owner runs `npm run spike:mcp:tunnel` on a machine with `cloudflared`, Node 24+ and port 3335 free. The cloud orchestrator can run `npm run spike:mcp` and the local probes without a tunnel. No production credentials, account session copied from this laptop, or database is required. The demo password is generated on startup. #535 remains the handover ticket; do not merge or deploy this prototype.
 
 Dependencies are unchanged from #533: Better Auth/MCP/CIMD/OAuth provider **1.7.7 exactly**, SDK **2.3.1**, separate Zod **4.6.7**, Inspector **2.11.0**. For a fresh dependency install:
 
