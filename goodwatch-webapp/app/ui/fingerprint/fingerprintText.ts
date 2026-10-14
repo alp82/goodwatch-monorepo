@@ -10,6 +10,8 @@ type Key = keyof CoreScores
 export interface TitleInput {
 	prose?: import("~/utils/media-template-types").TitleTemplateProse
 	title: string
+	/** The language `title` is in, when the server laid a localized one over it. */
+	titleLang?: string
 	mediaType: "movie" | "show"
 	year: string
 	genres: string[]

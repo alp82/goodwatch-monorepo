@@ -22,6 +22,8 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import { type QuestionId, type TitleQuestion, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { languageName } from "~/utils/display-names"
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
 
 type Media = MovieResult | ShowResult
 
@@ -44,7 +46,9 @@ export default function DetailsQuestions({
 	}
 	return (
 		<section>
-			<h2 className="text-2xl font-bold">Questions about {media.details.title}</h2>
+			<h2 className="text-2xl font-bold">
+				Questions about <MediaText value={presentedText(media.details, "title", media.details.title)} />
+			</h2>
 			<p className="mt-1 text-gray-400">Quick answers from GoodWatch data.</p>
 			<div className="mt-6 grid gap-4 md:grid-cols-2">
 				{faqs.map((f, i) => {

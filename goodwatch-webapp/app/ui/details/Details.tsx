@@ -1,4 +1,4 @@
-import React, { useRef } from "react"
+import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
@@ -35,16 +35,16 @@ export default function Details(props: DetailsProps) {
 
 function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
-	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so.
+	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
+	// language swaps the title, poster, description and tagline when its text is in.
 	const preference = useMediaPreference()
-	const firstLanguage = useRef(preference.shown.language).current
 	const preview = useTitlePreview({
 		media: loadedMedia,
-		loaded: { country: loadedCountry, language: firstLanguage },
+		loadedCountry,
 		want: preference.shown,
 	})
 	const media = preview.media
-	const country = preview.loading || preview.failed ? loadedCountry : preference.shown.country
+	const country = preview.offers ? loadedCountry : preference.shown.country
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -89,6 +89,7 @@ function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }
 				country={country}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
+				textPreview={preview.text}
 			/>
 
 			<DetailsSideNav
@@ -100,7 +101,7 @@ function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }
 				media={media}
 				country={country}
 				shownCountry={preference.shown.country}
-				preview={preview.loading ? "loading" : preview.failed ? "failed" : null}
+				preview={preview.offers}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 			/>

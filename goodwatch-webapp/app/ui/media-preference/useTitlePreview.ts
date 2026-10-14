@@ -3,6 +3,13 @@
 // stays as it is.
 import { useQuery } from "@tanstack/react-query"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import {
+	type LocalizedTitlePayload,
+	type LocalizedTitleResponse,
+	localizedTitleQueryKey,
+	localizedTitleUrl,
+} from "~/utils/media-presentation"
+import { needsText, textLanguage, withLocalizedText } from "./localized-preview"
 
 type Media = MovieResult | ShowResult
 
@@ -23,25 +30,19 @@ const ROUTE_ID = {
 }
 
 /**
- * The title route's own data for the country and language. The route reads `?language=` but does not localize yet,
- * so a language preview shows the canonical text until the backend's overlay exists; a country preview gets that
- * country's offers. A dedicated localized title payload can replace this fetcher without touching the page.
+ * The title route's own data for a country: that country's offers. The route takes its language from what is saved
+ * (an address cannot change it), so a picked language comes from `localizedTextFetcher` instead.
  */
 export const routeDataFetcher: TitlePreviewFetcher = async ({
 	mediaType,
 	tmdbId,
 	country,
-	language,
 	signal,
 }) => {
 	const path = window.location.pathname.startsWith(`/${mediaType}/`)
 		? window.location.pathname
 		: `/${mediaType}/${tmdbId}`
-	const query = new URLSearchParams({
-		country,
-		language,
-		_data: ROUTE_ID[mediaType],
-	})
+	const query = new URLSearchParams({ country, _data: ROUTE_ID[mediaType] })
 	const response = await fetch(`${path}?${query}`, { signal })
 	// A redirect answers 204 with the target in a header: not the title's data.
 	if (!response.ok || response.status === 204)
@@ -50,40 +51,74 @@ export const routeDataFetcher: TitlePreviewFetcher = async ({
 	return data.media as Media
 }
 
+/** The title's text in a titles language: the read-only localized payload, the same for every visitor. */
+export const localizedTextFetcher = async ({
+	mediaType,
+	tmdbId,
+	language,
+	signal,
+}: Omit<TitlePreviewParams, "country">): Promise<LocalizedTitlePayload> => {
+	const response = await fetch(localizedTitleUrl(mediaType, tmdbId, language), {
+		signal,
+	})
+	if (!response.ok) throw new Error("Could not load the title in this language")
+	return ((await response.json()) as LocalizedTitleResponse).title
+}
+
+export type PreviewStatus = "loading" | "failed" | null
+
 export function useTitlePreview({
 	media,
-	loaded,
+	loadedCountry,
 	want,
 	fetcher = routeDataFetcher,
+	textFetcher = localizedTextFetcher,
 }: {
 	media: Media
-	/** The country and language the page loaded with. */
-	loaded: { country: string; language: string }
+	/** The country the page loaded with. Its language is the one its text is in. */
+	loadedCountry: string
 	want: { country: string; language: string }
 	fetcher?: TitlePreviewFetcher
-}): { media: Media; loading: boolean; failed: boolean } {
-	const differs =
-		want.country !== loaded.country || want.language !== loaded.language
+	textFetcher?: typeof localizedTextFetcher
+}): { media: Media; offers: PreviewStatus; text: PreviewStatus } {
 	const tmdbId = media.details.tmdb_id
+	// A country preview: the title route's data for it (its offers), in the language the page has saved.
+	const otherCountry = want.country !== loadedCountry
 	const preview = useQuery({
-		queryKey: [
-			"title-preview",
-			media.mediaType,
-			tmdbId,
-			want.country,
-			want.language,
-		],
+		// The route answers in the saved language: another saved language is other data.
+		queryKey: ["title-preview", media.mediaType, tmdbId, want.country, textLanguage(media)],
 		queryFn: ({ signal }) =>
 			fetcher({ mediaType: media.mediaType, tmdbId, ...want, signal }),
-		enabled: differs,
+		enabled: otherCountry,
 		staleTime: 5 * 60_000,
 		retry: 1,
 	})
-	if (!differs) return { media, loading: false, failed: false }
-	// Until its own data is in, the page shows what it loaded with and says it is loading.
+	// Until its own data is in (or when it fails), the page keeps what it loaded with and says so.
+	const base = (otherCountry && preview.data) || media
+	const offers: PreviewStatus = !otherCountry
+		? null
+		: preview.isError
+			? "failed"
+			: preview.data
+				? null
+				: "loading"
+
+	// A language preview: the title's text in that language, over whichever data the page shows. One query per title
+	// and language, so a late answer for an earlier pick lands in its own entry and is never shown.
+	const otherText = needsText(base, want.language)
+	const text = useQuery({
+		queryKey: localizedTitleQueryKey(media.mediaType, tmdbId, want.language),
+		queryFn: ({ signal }) =>
+			textFetcher({ mediaType: media.mediaType, tmdbId, language: want.language, signal }),
+		enabled: otherText,
+		staleTime: 30 * 60_000,
+		retry: 1,
+	})
+	if (!otherText) return { media: base, offers, text: null }
+	const localized = withLocalizedText(base, text.data, want.language)
 	return {
-		media: preview.data ?? media,
-		loading: !preview.data && !preview.isError,
-		failed: preview.isError,
+		media: localized ?? base,
+		offers,
+		text: localized ? null : text.isError ? "failed" : "loading",
 	}
 }

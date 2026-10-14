@@ -1,4 +1,5 @@
 import useLocale from "~/utils/locale"
+import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
 // "Search for …" (the search page), then up to eight matching titles ending in "Show 120 more" (the search page
 // again) when more match, then matching destinations ("Go to Taste"), then Sign up
@@ -228,11 +229,12 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					)
 				)}
 				<span className="flex min-w-0 flex-col">
-					<b
+					{/* The clipping element carries the title's language, so truncation keeps Arabic marks and ends. */}
+					<MediaText
+						as="b"
+						value={{ text: row.label, lang: row.language ?? "en" }}
 						className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
-					>
-						<span lang={row.language ?? "en"}>{row.label}</span>
-					</b>
+					/>
 					{row.sub && (
 						<small
 							className={`truncate text-gray-400 ${row.compact ? "text-[11.5px]" : "text-[12.5px]"}`}

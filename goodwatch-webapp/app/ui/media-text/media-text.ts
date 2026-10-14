@@ -6,6 +6,30 @@
 // - a script whose marks reach far above and below the line gets room inside a clipping box (see tailwind.css).
 // No web font is loaded for any of this: the system's fonts cover these scripts.
 
+/** A field of a title as the server laid it out: its text with `presentation.<field>.language`. */
+export function presentedText(
+	media: { presentation?: { [F in PresentedField]?: { language: string } } } | null | undefined,
+	field: PresentedField,
+	text: string | null | undefined,
+): MediaTextValue {
+	// Without presentation metadata the field is the canonical (English) catalog text.
+	return { text: text ?? "", lang: media?.presentation?.[field]?.language ?? "en" }
+}
+export type PresentedField = "title" | "poster" | "overview" | "tagline"
+
+/** An episode's or season's name or description with `textPresentation.<field>.language`. */
+export const episodeText = (
+	episode: {
+		name?: string | null
+		overview?: string | null
+		textPresentation?: { name: { language: string }; overview: { language: string } }
+	},
+	field: "name" | "overview",
+): MediaTextValue => ({
+	text: episode[field] ?? "",
+	lang: episode.textPresentation?.[field].language ?? "en",
+})
+
 /** A field of media text with the language it is actually in, as the localized data gives it. */
 export interface MediaTextValue {
 	text: string
@@ -40,6 +64,8 @@ export function mediaTextAttributes(lang?: string | null): MediaTextAttributes {
 	if (!tag || !/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(tag))
 		return { dir: "auto" }
 	const base = tag.split("-")[0].toLowerCase()
+	// "und": the source could not establish the language. Say so, and let the text decide its direction.
+	if (base === "und") return { lang: "und", dir: "auto" }
 	return {
 		lang: tag,
 		...(RIGHT_TO_LEFT.has(base) && { dir: "rtl" as const }),
