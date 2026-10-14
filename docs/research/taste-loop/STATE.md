@@ -58,16 +58,18 @@ Read this first. Rewritten at the end of every session.
 - [x] **Amendment A1/A2** (`PROTOCOL.md` 13), after Fable's and Astra's reviews: the disliked first-50 share becomes
   descriptive, guard 1 is the popularity-matched disliked percentile, the T2a gate rule and G1's registration rule are
   frozen. Verdicts of items 003–007 were reached under the protocol before A1; none changes to a win.
-- [ ] **009 G1, the member's own mix at the front** (Sol 6.1): results committed unread; judged under A2 only after
-  item 010 is accepted
+- [x] **009 G1, the member's own mix at the front** (`items/009-composition/`, Sol 6.1): registered under A2 after
+  Fable's review; tier A separation +0.086 (+0.049 to +0.121) over B2, all guards pass; **gate look 2 of 8:
+  replicated**. G1 is D1's challenger for confirmation.
 - [x] **010 Gate for T2a** (`items/010-t2a-gate/`, Sol 6.1), accepted October 14, 2026: 105 tests pass, T2a table
   figures unchanged; Fable's review (accept with fixes) applied by the orchestrator. Real gate not opened.
 
 ## Next action
 
-Phase 1. Accept item 010, then read item 009 and apply A2 exactly: register G1 and take one gate look, or keep B2
-for D1 with the popularity tilt as the open question. Then fill every cell of `DECISIONS.md` and hold the phase 1
-gate review by two models other than the orchestrator's, then the owner checkpoint.
+Phase 1 exit. Every cell of `DECISIONS.md` is filled. Gate review by two models other than the orchestrator's
+(Fable and Sol 6.1) is running; then the owner checkpoint: confirm phase 2's direction, including whether member
+recruitment for judged pools (T3) starts now that G1 replicated on T2a (PLAN.md open question 6), and the
+top-list harm criterion to freeze before confirmation.
 
 ## What the owner owes
 

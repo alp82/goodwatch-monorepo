@@ -1,8 +1,10 @@
 # Decisions
 
 One section per decision in `PLAN.md` 1. Every cell holds a number with an interval, or "not measured yet, needs X".
-All figures so far are exploratory, tier A, pack 2026-10-13. No gate look has been used and nothing is
-registered, so no result here is established. Today's behaviour stays until a challenger passes.
+Pack 2026-10-13. Figures are exploratory, tier A, unless marked registered. Two comparisons are registered: D2
+(item 008, not replicated) and D1's G1 (item 009, replicated). Gate looks used: 2 of 8. Today's behaviour stays until a
+challenger passes confirmation. Verdicts of items 003 to 007 were reached under the protocol before amendment A1
+(`PROTOCOL.md` 13); none of them becomes a win under A1.
 
 ## D1. Which scorer orders Best match and For you
 
@@ -100,6 +102,42 @@ shuffled control's pass rule could pass a bias as large as the win floor; the ow
 five-title band minimum (no effect at present); folds of up to 20 hidden titles can hurt learned rungs more than
 plain lists for members with few ratings, so a sensitivity run with at most 5 hidden titles follows. Nothing here is
 a win under PLAN.md 2.5: every lead fails a guard, and none is registered.
+
+**Item 007 (B3 with a B5 floor, `items/007-b5-floor/`, Astra): nothing registered.** F1 and F2 miss item 007's
+franchise limit, F3 the first-50 bar for loved titles; all three put about 16 points more animation in the first 50
+than the members' own mix. Owner's first 20 under F1 and F3 equal B3's.
+
+**Amendment A1/A2 (`PROTOCOL.md` 13), after Fable's and Astra's reviews, before item 009's results were read.** The
+disliked first-50/200 shares and the median vote count become descriptive; guard 1 is the popularity-matched
+disliked percentile (upper bound below +0.03), guard 2 popularity-matched separation; the T2a gate rule (item 010)
+and G1's registration rule were frozen.
+
+**Item 009, G1: registered and replicated (`items/009-composition/PREREG.md`).** G1 is F3's order (B3, with titles
+B5 places in its bottom half moved back and one title per movie series at the front), with the first 100 positions
+refilled toward the member's own share of shows and animation.
+
+| Measure, G1 against B2, others | Value |
+|---|---|
+| T2a separation, registered (`20261014T150814-e864bd47-58d5`) | **+0.086 (+0.049 to +0.121)**, smallest detectable 0.053, 21 of 26 members improved |
+| Guard 1, disliked titles among equally popular candidates | −0.059 (−0.092 to −0.025): pass |
+| Guard 2, separation among equally popular candidates | +0.094 (+0.056 to +0.132): pass |
+| Distance of the first 50 from the member's own share of shows / animation | −0.157 (−0.200 to −0.118) / −0.075 (−0.110 to −0.043): closer (`DISTANCE-registered.md`) |
+| Largest franchise count in the first 50 | −0.47 (−0.66 to −0.31) |
+| Rated 8+ in the first 50 | 0.102 against 0.019 (B3 0.090) |
+| Tier B gate look (look 2 of 8) | **replicated**: same sign, at least half the size, guard 1 below +0.03. The numbers stay unread. |
+| Owner | separation +0.228 over B2 (+0.178 to +0.280, franchises drawn again); first 50: 20% shows against own 14%, 23% animation against own 16% |
+| Descriptive, carried to confirmation | rated 5 or less in the first 50 +0.029 (+0.009 to +0.055) and first 200 +0.059; median votes of the first 50 146,230 against 7,049; T2b order: later Skip ranked higher (+0.116, 6 members) |
+
+The shows guard is read as distance from the member's own mix, the record's reading before item 009 (B5 failed for
+too few shows); the exact statistic was fixed after the results were read, and Fable's review found the conclusion
+does not depend on its form (`REVIEW-registration-fable.md`).
+
+**Where D1 stands:** G1 is the challenger. It separates loved from disliked titles better than today's taste on
+members the loop never looked at, keeps the member's own mix at the front, and repeats no movie series. It is not
+yet the answer: T2a sees only titles members chose to watch, and G1's top is much more popular than today's
+(146,230 median votes against 7,049) and holds more titles members disliked. Whether that top is good, judged on
+titles members have not seen, needs the confirmation step: judged pools (T3) or sealed tier C, with a top-list harm
+criterion frozen first. Today's behaviour stays until then.
 
 ## D2. Whether to show a personal predicted score or risk
 
