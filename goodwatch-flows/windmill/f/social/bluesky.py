@@ -59,7 +59,7 @@ def evidence_for(item, profile):
             for key, child in value.items():
                 if key == 'uri' and isinstance(child, str) and child.startswith(('http:', 'https:')):
                     urls.add(child)
-                if key in ('alt', 'title', 'description') and isinstance(child, str):
+                if key in ('text', 'alt', 'title', 'description') and isinstance(child, str):
                     extra.append(child)
                 if isinstance(child, (dict, list)):
                     visit(child)

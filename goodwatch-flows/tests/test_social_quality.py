@@ -137,3 +137,12 @@ class QualityTests(unittest.TestCase):
         from f.social.quality import evaluate
         item = self.item('Movie: #Dune\nStarring: #TimotheeChalamet #Zendaya\nDirected By: #DenisVilleneuve\n#Film #Cinema https://variety.com/dune')
         self.assertIn('no_substantive_text', evaluate(item)['reasons'])
+
+    def test_quoted_post_promotion_is_checked_even_when_outer_text_is_clean(self):
+        from f.social.bluesky import evidence_for
+        from f.social.quality import evaluate
+        item = self.item('This is an interesting discussion of the new Dune movie.')
+        record = {'record': {'text': item['text']}, 'embed': {'record': {'record': {'value': {'text': 'Watch free Dune full movie now!'}}}}}
+        profile = {'displayName': 'Alice', 'createdAt': '2025-01-01T00:00:00Z', 'postsCount': 50}
+        item['quality_evidence'] = evidence_for(record, profile)
+        self.assertIn('stream_promotion', evaluate(item)['reasons'])
