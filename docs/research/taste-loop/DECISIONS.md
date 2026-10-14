@@ -9,19 +9,29 @@ challenger passes confirmation. Verdicts of items 003 to 007 were reached under 
 ## D1. Which scorer orders Best match and For you
 
 Reference: B2, today's taste. Win floors: T1 0.05 points of error; T2a 0.03 of separation. Intervals are 95%, from
-drawing members again (others) or franchises again (owner). Sources: `items/002-harness-ladder/ladder-T1.md`
-(rebuilt identically in `items/003-hidden-title/ladder-T1.md`) and `items/003-hidden-title/ladder-T2a.md`.
+drawing members again (others) or franchises again (owner). The ladder below uses the latest source tables cited
+per column below it; it remains exploratory tier A.
 
 | Rung | T1 error vs B2, others | T2a separation vs B2, others | T2a, among equally well-rated, vs B2 | T2a, rated 8+ in the first 50, vs B2 | T2a separation vs B2, owner | T2b later Want to See adds, percentile vs B2 | Verdict |
 |---|---:|---:|---:|---:|---:|---|---|
-| B1 GoodWatch score | +0.014 | −0.049 (−0.113 to +0.015) | −0.089 (−0.146 to −0.032) | −0.005 (−0.015 to +0.005) | +0.160 (+0.093 to +0.231) | owner +0.165 (+0.109 to +0.223); others: 3 members (sitting), +0.135 for 9 (order) | exploratory: no clear difference on the main measure; worse once well-rated titles are compared with each other |
-| B3 standardized | +0.004; pair accuracy +0.031 (+0.013 to +0.051) | −0.003 (−0.041 to +0.030), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.070 (+0.053 to +0.088)** | +0.154 (+0.103 to +0.207) | owner +0.196 (+0.148 to +0.243); others: 3 members (sitting), +0.105 for 9 (order) | exploratory: no clear difference on the main measure; better at the top for loved titles, but **fails the guards**: titles rated 5 or less in the first 50 +0.024 (+0.008 to +0.043) and first 200 +0.064 (+0.036 to +0.098); franchise repeats +0.51 (+0.36 to +0.67); popular titles (median votes 120,513 against 7,049, after the side-list fix); animation +0.213 over the members' own mix |
-| B4 consensus | −0.081 | +0.005 (−0.077 to +0.080), detectable 0.115 | −0.023 (−0.099 to +0.050) | −0.019 (−0.028 to −0.011) | +0.132 (+0.074 to +0.193) | owner +0.053 (−0.011 to +0.116); others: −0.005 for 9 (order) | exploratory: no clear difference; worse at the top |
-| B5 pooled | −0.107 | **+0.133 (+0.100 to +0.166)**, detectable 0.049, 24 of 26 members improved | **+0.088 (+0.053 to +0.123)** | −0.017 (−0.027 to −0.009) | +0.231 (+0.179 to +0.285) | owner +0.051 (−0.005 to +0.107); others: +0.014 for 9 (order) | exploratory: best separation, but **fails the guards**: worse at the top, franchise repeats +0.82 (+0.55 to +1.08), fewer shows (8% in the first 50 against the members' 39%); see below |
-| BP vote count | −0.010 | −0.114 (−0.168 to −0.061) | −0.118 (−0.172 to −0.064) | +0.369, but titles rated 5 or less too (0.314 in the first 50 after the side-list fix) | −0.202 (−0.266 to −0.133) | owner +0.274 (+0.211 to +0.337); others: +0.284 for 9 (order) | loses; its first-50 hits are "people watch popular titles", not taste |
+| B1 GoodWatch score | +0.013 (−0.091 to +0.115) | −0.049 (−0.113 to +0.015) | −0.089 (−0.146 to −0.032) | −0.004 (−0.014 to +0.006) | +0.160 (+0.093 to +0.231) | owner +0.165 (+0.109 to +0.223); others: +0.242 (+0.148 to +0.396), 3 members (sitting); +0.135 (+0.050 to +0.208), 9 members (order) | exploratory: no clear difference on the main measure; worse once well-rated titles are compared with each other |
+| B3 standardized | +0.004 (−0.005 to +0.013); pair accuracy +0.031 (+0.013 to +0.051) | −0.004 (−0.041 to +0.029), detectable 0.051 | +0.007 (−0.024 to +0.036) | **+0.071 (+0.054 to +0.089)** | +0.154 (+0.103 to +0.207) | owner +0.196 (+0.148 to +0.243); others: +0.163 (+0.000 to +0.317), 3 members (sitting); +0.105 (+0.025 to +0.202), 9 members (order) | exploratory: no clear difference on the main measure; better at the top for loved titles, but **fails the guards before A1**: titles rated 5 or less in the first 50 +0.023550 (+0.007700 to +0.042883) and first 200 +0.064941 (+0.036861 to +0.098505); franchise repeats +0.482 (+0.325 to +0.637); popular titles (median vote-count difference against B2 +113,464, +88,282 to +141,629); animation +0.220 (+0.161 to +0.275) over the members' own mix |
+| B4 consensus | −0.081 (−0.173 to +0.008) | +0.005 (−0.077 to +0.080), detectable 0.115 | −0.024 (−0.099 to +0.049) | −0.019 (−0.028 to −0.011) | +0.132 (+0.074 to +0.192) | owner +0.053 (−0.011 to +0.116); others: +0.155 (+0.110 to +0.183), 3 members (sitting); −0.005 (−0.101 to +0.077), 9 members (order) | exploratory: no clear difference; worse at the top |
+| B5 pooled | −0.107 (−0.192 to −0.025) | **+0.133 (+0.100 to +0.166)**, detectable 0.049, 24 of 26 members improved | **+0.088 (+0.053 to +0.122)** | −0.017 (−0.027 to −0.009) | +0.231 (+0.179 to +0.285) | owner +0.051 (−0.005 to +0.107); others: +0.184 (+0.073 to +0.240), 3 members (sitting); +0.014 (−0.046 to +0.080), 9 members (order) | exploratory: best separation, but **fails the guards before A1**: worse at the top, franchise repeats +0.812 (+0.539 to +1.075), fewer shows (first-50 share minus the members' own share −0.303, −0.373 to −0.235); see below |
+| BP vote count | −0.010; paired 95% interval not measurable yet, needs BP–B2 member differences (no paired comparison in the source table or ledger) | −0.114 (−0.168 to −0.061) | −0.118 (−0.172 to −0.064) | +0.425 (+0.346 to +0.506), but titles rated 5 or less too (0.314, 0.203 to 0.442, in the first 50) | −0.202 (−0.267 to −0.133) | owner +0.274 (+0.211 to +0.337); others: +0.228 (+0.062 to +0.464), 3 members (sitting); +0.284 (+0.178 to +0.382), 9 members (order) | loses; its first-50 hits are "people watch popular titles", not taste |
 
-T1 column: difference in error against B2 (below zero is better), from each rung's paired difference against B0
-minus B2's (−0.008). Intervals against B2 for B3, B4 and B5 are in the T1 table.
+Column sources: T1 error and pair accuracy: `items/006-harness-fixes/ladder-T1.md`, "Rung against rung",
+`all`; B1 reverses that table's B2-against-B1 row (negating the estimate and reversing the interval endpoints).
+BP's point estimate subtracts its and B2's differences against B0 in that table; their separate intervals cannot
+supply a paired interval. T2a separation, equally well-rated separation, first-50 gain and owner separation:
+`items/010-t2a-gate/ladder-T2a.md`, respectively "Separation against B2, B1 and BP", "Among equally well-rated
+titles", "Share of hidden titles in the first 50 and the first 200", and the owner's "Separation against B2,
+B1 and BP" (franchises drawn again). This replaces the earlier T2a table, including BP's stale +0.369 first-50
+gain with +0.425 (+0.346 to +0.506). T2b: `items/006-harness-fixes/ladder-T2b.md`, `before`, sitting for the owner
+(franchises drawn again) and the primary others figure, entry order for the others variant. Verdict figures:
+the same T2a table's first-50 and guard tables, plus `ledger.jsonl` run `20261014T070834-df4894a6-85a6` for B3's
+paired first-50/200 disliked shares, which the table does not print. Member counts and smallest detectable
+effects describe the fixed sample and detection calculation; they do not have bootstrap intervals.
 
 **What the orchestrator found by reading the lists** (the first 20 titles each rung would show the owner, in
 `~/goodwatch-research/taste/out/top20-owner.md`):
@@ -111,29 +121,42 @@ than the members' own mix. Owner's first 20 under F1 and F3 equal B3's.
 disliked first-50/200 shares and the median vote count become descriptive; guard 1 is the popularity-matched
 disliked percentile (upper bound below +0.03), guard 2 popularity-matched separation; the T2a gate rule (item 010)
 and G1's registration rule were frozen.
+Amendment A1 was decisive for registering G1: under the guard before A1 its disliked first-50 share
+(+0.029, +0.009 to +0.055) would have failed, and F3's figures, which G1's match, were known when A1 was written
+(`items/011-phase1-exit/GATE-REVIEW-fable.md`, finding 3).
 
 **Item 009, G1: registered and replicated (`items/009-composition/PREREG.md`).** G1 is F3's order (B3, with titles
 B5 places in its bottom half moved back and one title per movie series at the front), with the first 100 positions
-refilled toward the member's own share of shows and animation.
+refilled toward the member's own share of shows and animation. Tier B checked only separation and guard 1;
+the composition, franchise and first-50 figures below are tier A.
 
 | Measure, G1 against B2, others | Value |
 |---|---|
 | T2a separation, registered (`20261014T150814-e864bd47-58d5`) | **+0.086 (+0.049 to +0.121)**, smallest detectable 0.053, 21 of 26 members improved |
 | Guard 1, disliked titles among equally popular candidates | −0.059 (−0.092 to −0.025): pass |
 | Guard 2, separation among equally popular candidates | +0.094 (+0.056 to +0.132): pass |
-| Distance of the first 50 from the member's own share of shows / animation | −0.157 (−0.200 to −0.118) / −0.075 (−0.110 to −0.043): closer (`DISTANCE-registered.md`) |
-| Largest franchise count in the first 50 | −0.47 (−0.66 to −0.31) |
-| Rated 8+ in the first 50 | 0.102 against 0.019 (B3 0.090) |
-| Tier B gate look (look 2 of 8) | **replicated**: same sign, at least half the size, guard 1 below +0.03. The numbers stay unread. |
-| Owner | separation +0.228 over B2 (+0.178 to +0.280, franchises drawn again); first 50: 20% shows against own 14%, 23% animation against own 16% |
-| Descriptive, carried to confirmation | rated 5 or less in the first 50 +0.029 (+0.009 to +0.055) and first 200 +0.059; median votes of the first 50 146,230 against 7,049; T2b order: later Skip ranked higher (+0.116, 6 members) |
+| Distance of the first 50 from the member's own share of shows / animation, tier A | −0.157 (−0.200 to −0.118) / −0.075 (−0.110 to −0.043): closer (gate reviews, finding 4) |
+| Largest franchise count in the first 50, tier A | −0.474510 (−0.660755 to −0.307895); G1 absolute 1.000000 (1.000000 to 1.000000) |
+| Rated 8+ in the first 50, tier A | 0.102482 (0.082097 to 0.123462) against B2 0.019 (0.011 to 0.028); B3 0.090 (0.071 to 0.111) |
+| Tier B gate look (look 2 of 8) | **replicated**: checked only separation (same sign, at least half the size) and guard 1 (point estimate below +0.03). Estimates and intervals are withheld by the gate protocol; the numbers stay unread. |
+| Owner, tier A | separation +0.228 over B2 (+0.178 to +0.280, franchises drawn again); first-50 shows 0.200000 against own 0.138105, animation 0.231200 against own 0.157258; composition intervals unavailable: one member, no resampling interval for these measures in the registered ledger line |
+| Descriptive, carried to confirmation, tier A | rated 5 or less in the first 50 +0.029177 (+0.009347 to +0.055191) and first 200 +0.059203 (+0.029713 to +0.094181); median votes of the first 50 146229.704504 (115853.422105 to 178226.178753) against B2 7049.075151 (6236.158362 to 7970.846779); T2b order: later Skip / Not interested ranked higher (+0.115537, +0.049077 to +0.196381, 6 members) |
+
+Sources: registered separation and guards from `ledger.jsonl`, run `20261014T150814-e864bd47-58d5`;
+franchise, first-50 and descriptive T2a figures are copied at their printed precision from
+`items/009-composition/RESULTS.md`, "T2a: absolute comparison"; B2/B3 first-50 shares from
+`items/010-t2a-gate/ladder-T2a.md`; B2 median votes from the latter's ledger run
+`20261014T070354-0a3aacc3-7233`. Distance figures are verified in both gate reviews, finding 4;
+T2b order from `items/009-composition/RESULTS.md`, "others: all outcomes and guards", `later_pct`.
+That measure pools later Skip and Not interested. Counts and gate thresholds have no sampling intervals.
 
 The shows guard is read as distance from the member's own mix, the record's reading before item 009 (B5 failed for
 too few shows); the exact statistic was fixed after the results were read, and Fable's review found the conclusion
 does not depend on its form (`REVIEW-registration-fable.md`).
 
 **Where D1 stands:** G1 is the challenger. It separates loved from disliked titles better than today's taste on
-members the loop never looked at, keeps the member's own mix at the front, and repeats no movie series. It is not
+held-out tier B members; tier B checked only separation and guard 1. In the measured tier A first-50 lists,
+G1 is closer to the member's own mix of shows and animation and repeats no movie series. It is not
 yet the answer: T2a sees only titles members chose to watch, and G1's top is much more popular than today's
 (146,230 median votes against 7,049) and holds more titles members disliked. Whether that top is good, judged on
 titles members have not seen, needs the confirmation step: judged pools (T3) or sealed tier C, with a top-list harm
@@ -148,13 +171,22 @@ behaviour stays: no personal predicted score.**
 |---|---|
 | T1, B5 against B1, others before the block, tier A, registered (`20261014T112515-d288d6bc-a54f`) | −0.088 (−0.141 to −0.033), smallest detectable 0.077, 46 of 72 members improved: a win under PLAN.md 2.5 |
 | The same, against B0 | −0.105 (−0.183 to −0.025) |
-| Owner | 0.000 against B1: under "before" other members had written almost nothing before the owner's blocks, so B5 falls back to B1's rule |
-| Tier B gate look (look 1 of 8) | **not replicated**: on the held-out members the difference has the other sign or is under half of 0.088. The numbers stay unread. |
-| T2a error on hidden titles, exploratory | B5 against B1 −0.158 (−0.211 to −0.107); owner 0.817 against 1.010 |
-| Calibration of a risk on tier C | not measured, and not needed until a forward gain replicates |
+| Registered guards, B5 against B1, others before the block, tier A | pair accuracy +0.027514 (−0.009824 to +0.061931), 72 members; low-rating AUC +0.044124 (+0.004609 to +0.087386), 22 members: no guard worse with an interval excluding zero |
+| Reported rating-band errors, same registered comparison | low (5 or less) +0.045762 (−0.125459 to +0.250342), 41 members; middle (6 to 7) +0.101185 (−0.017989 to +0.216377), 66 members; high (8 or more) −0.100563 (−0.160970 to −0.039103), 72 members; reported, never optimised |
+| Owner | 0.000 against B1; sitting interval unavailable: the largest of 97 sittings holds 39% of the targets (franchises drawn again: +0.000 to +0.000). Under "before" other members had written almost nothing before the owner's blocks, so B5 falls back to B1's rule |
+| Tier B gate look (look 1 of 8) | **not replicated**: on the held-out members the difference has the other sign or is under half of 0.088. Estimates and intervals are withheld by the gate protocol; the numbers stay unread. |
+| T2a error on hidden titles, exploratory | B5 against B1 −0.158 (−0.211 to −0.107); owner 0.817 against 1.010, intervals unavailable: one member, the source table and ledger report only point estimates for owner error |
+| Calibration of a risk on tier C | not measurable yet, needs a predictor that gives `p_low` and tier C ratings |
 
-Reading: the forward gain of a personal score over the GoodWatch score with an offset does not hold up on members
-the loop has not looked at. The threshold of PLAN.md 2.5 is not met. Two confirmation attempts per decision are
+Registered guards and rating-band errors are copied at ledger precision from `ledger.jsonl`, run
+`20261014T112515-d288d6bc-a54f`, `measures.others.vs["ladder/b1_public.py"]`. The owner interval limitation and
+franchise interval come from that same run's `measures.owner` comparison against B1. Exploratory T2a error:
+`items/010-t2a-gate/ladder-T2a.md`, "Error of the predicted rating on the hidden titles"; owner error has no
+interval in its ledger runs `20261014T072025-d288d6bc-6742` (B5) and `20261014T070633-7d38ea9d-c41c` (B1).
+
+Reading: the forward gain of a personal score over the GoodWatch score with an offset did not meet the replication
+threshold on held-out tier B members; this does not establish that there is no benefit. The threshold of PLAN.md 2.5
+is not met. Two confirmation attempts per decision are
 allowed, each on a fresh window; the second waits for tier C ratings written after T0.
 
 ## D3. How Taste is described
