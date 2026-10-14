@@ -1,0 +1,43 @@
+{
+  "label": "relocation-progress-2013",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], state, routing_state FROM sys.shards WHERE routing_state != 'STARTED'",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state"
+      ],
+      "rows": [
+        [
+          "streaming_availability",
+          8,
+          false,
+          "crate-03",
+          "STARTED",
+          "RELOCATING"
+        ],
+        [
+          "crawl_priority",
+          1,
+          true,
+          "crate-01",
+          "STARTED",
+          "RELOCATING"
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 13.226281
+    },
+    "elapsedSeconds": 0.019,
+    "at": "2026-10-14T20:12:38.281242+00:00"
+  }
+}

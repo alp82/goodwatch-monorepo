@@ -1,0 +1,80 @@
+{
+  "label": "relocation-sequence-progress-2012",
+  "host": 11,
+  "stmt": "SELECT table_name, id, primary, node['name'], state, routing_state, seq_no_stats FROM sys.shards WHERE schema_name = 'doc' AND table_name = 'show' AND id IN (10, 11)",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state",
+        "seq_no_stats"
+      ],
+      "rows": [
+        [
+          "show",
+          10,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14571400,
+            "global_checkpoint": 14233687,
+            "local_checkpoint": 14233687
+          }
+        ],
+        [
+          "show",
+          10,
+          true,
+          "crate-02",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14571400,
+            "global_checkpoint": 14233687,
+            "local_checkpoint": 14571400
+          }
+        ],
+        [
+          "show",
+          11,
+          false,
+          "crate-02",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14511462,
+            "global_checkpoint": 14511462,
+            "local_checkpoint": 14511462
+          }
+        ],
+        [
+          "show",
+          11,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          {
+            "max_seq_no": 14511462,
+            "global_checkpoint": 14511462,
+            "local_checkpoint": 14511462
+          }
+        ]
+      ],
+      "rowcount": 4,
+      "duration": 12.566272
+    },
+    "elapsedSeconds": 0.019,
+    "at": "2026-10-14T20:12:01.072421+00:00"
+  }
+}

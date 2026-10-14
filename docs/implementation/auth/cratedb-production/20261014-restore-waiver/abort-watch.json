@@ -2173,5 +2173,164 @@
       "ownJob": []
     },
     "greenStartedNoOwnJob": false
+  },
+  {
+    "at": "2026-10-14T20:11:40.966350+00:00",
+    "queries": {
+      "nodes": [
+        [
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "crate-02",
+          "5.10.9"
+        ],
+        [
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          0,
+          0,
+          91
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          930
+        ]
+      ],
+      "ownJob": []
+    },
+    "greenStartedNoOwnJob": false
+  },
+  {
+    "at": "2026-10-14T20:12:13.205292+00:00",
+    "queries": {
+      "nodes": [
+        [
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "crate-02",
+          "5.10.9"
+        ],
+        [
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          0,
+          0,
+          91
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          930
+        ]
+      ],
+      "ownJob": []
+    },
+    "greenStartedNoOwnJob": false
+  },
+  {
+    "at": "2026-10-14T20:12:45.102440+00:00",
+    "queries": {
+      "nodes": [
+        [
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "crate-02",
+          "5.10.9"
+        ],
+        [
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          0,
+          0,
+          91
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          930
+        ]
+      ],
+      "ownJob": []
+    },
+    "greenStartedNoOwnJob": false
+  },
+  {
+    "at": "2026-10-14T20:13:17.597379+00:00",
+    "queries": {
+      "nodes": [
+        [
+          "crate-01",
+          "5.10.9"
+        ],
+        [
+          "crate-02",
+          "5.10.9"
+        ],
+        [
+          "crate-03",
+          "5.10.9"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          0,
+          0,
+          91
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "STARTED",
+          932
+        ]
+      ],
+      "ownJob": []
+    },
+    "greenStartedNoOwnJob": true
   }
 ]

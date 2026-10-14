@@ -61,6 +61,15 @@
       "backupReadable": true
     }
   ],
-  "allUnchanged": true,
-  "tableSettingsUnchanged": true
+  "allOriginalRuntimeAndComposeUnchanged": true,
+  "baselineTableRows": 120,
+  "currentTableRows": 121,
+  "newExternalTables": [
+    [
+      "doc",
+      "user_list_exposure"
+    ]
+  ],
+  "changedBaselineTableSettings": [],
+  "removedBaselineTables": []
 }

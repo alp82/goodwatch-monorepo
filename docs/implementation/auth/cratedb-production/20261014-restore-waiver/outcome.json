@@ -1,0 +1,97 @@
+{
+  "outcome": "ABORTED_CLEANLY_STOPPED_BEFORE_TARGET_STARTUP",
+  "recordedAt": "2026-10-14T20:17:24.772585+00:00",
+  "ownerRestoreWaiverAt": "2026-10-14T18:46:29Z",
+  "targetVersion": "5.10.16",
+  "targetStarted": false,
+  "versionsPerNode": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.9",
+    "crate-03": "5.10.9"
+  },
+  "firstFailureAt": "2026-10-14T19:07:53.261Z",
+  "firstFailure": "Operator helper used an incorrectly short 30-second decommission HTTP timeout",
+  "greenStartedFirstObservedAt": "2026-10-14T20:13:17.597379Z",
+  "greenStartedConfirmedAllEndpointsAt": "2026-10-14T20:14:39.864490+00:00",
+  "finalHealthRows": 91,
+  "finalStartedCopies": 932,
+  "nodeChecksPassed": 21,
+  "allocation": "all",
+  "transientBaselineAllOverrideRetained": true,
+  "authUserCreated": false,
+  "hbaChanged": false,
+  "firewallChanged": false,
+  "baselineTableSettingsChanged": false,
+  "externalNewTables": [
+    [
+      "doc",
+      "user_list_exposure"
+    ]
+  ],
+  "externalWebappDeploymentsObserved": true,
+  "snapshot": "goodwatch-db-backup-v2.pre_auth_547_20261014184629",
+  "snapshotState": "SUCCESS",
+  "snapshotRequestSeconds": 27.218,
+  "postAbortScheduledBackup": [
+    "hourly_20261014_200501",
+    "SUCCESS",
+    1792008301316,
+    1792008409485
+  ],
+  "clientProbes": {
+    "at": "2026-10-14T20:16:11.453019+00:00",
+    "passed": 18,
+    "latencyMsMin": 6.753,
+    "latencyMsMax": 132
+  },
+  "clientErrorsCapturedBeforeExternalReplacement": [
+    {
+      "container": "goodwatch-search-b",
+      "since": "2026-10-14T18:46:29Z",
+      "until": "2026-10-14T20:02:09.936773+00:00",
+      "logReturncode": 0,
+      "failedCrateQueryLogLines": 0,
+      "firstFailureAt": null,
+      "lastFailureAt": null,
+      "exceptionOccurrences": {
+        "CrateTimeoutError": 0,
+        "CrateError": 0,
+        "NodeDisconnectedException": 0,
+        "NoShardAvailableActionException": 0
+      }
+    },
+    {
+      "container": "goodwatch-search-a",
+      "since": "2026-10-14T18:46:29Z",
+      "until": "2026-10-14T20:02:09.936773+00:00",
+      "logReturncode": 0,
+      "failedCrateQueryLogLines": 1,
+      "firstFailureAt": "2026-10-14T19:15:19.584437615Z",
+      "lastFailureAt": "2026-10-14T19:15:19.584437615Z",
+      "exceptionOccurrences": {
+        "CrateTimeoutError": 3,
+        "CrateError": 0,
+        "NodeDisconnectedException": 0,
+        "NoShardAvailableActionException": 0
+      }
+    },
+    {
+      "container": "gk4owk8-20261014T181405",
+      "since": "2026-10-14T18:46:29Z",
+      "until": "2026-10-14T20:02:09.936773+00:00",
+      "logReturncode": 0,
+      "failedCrateQueryLogLines": 1962,
+      "firstFailureAt": "2026-10-14T19:07:44.504478305Z",
+      "lastFailureAt": "2026-10-14T19:42:29.073422733Z",
+      "exceptionOccurrences": {
+        "CrateTimeoutError": 5341,
+        "CrateError": 0,
+        "NodeDisconnectedException": 0,
+        "NoShardAvailableActionException": 0
+      }
+    }
+  ],
+  "errorAuditLimit": "Original webapp container removed externally; its historical logs were captured through 20:02:09 UTC. New current-container logs were audited at 20:14:39; there is no continuous retained original-container log audit between those times. Counts are log occurrences, not unique requests.",
+  "productionWriteProbeExecuted": false,
+  "nextStep": "Upgrade remains stopped. Review native-client coordinator drain/failover and administrative request timeout before another owner decision. Do not resume automatically."
+}

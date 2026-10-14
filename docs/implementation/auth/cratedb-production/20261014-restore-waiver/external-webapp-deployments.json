@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-14T20:16:10.369161+00:00",
+  "clients": [
+    "gk4owk8-20261014T201438|ghcr.io/alp82/goodwatch-webapp:8d57682058d1e8527f23d8fce3030e248a617b4f|Up About a minute (healthy)",
+    "goodwatch-search-b|ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8|Up 2 hours (healthy)",
+    "goodwatch-search-a|ghcr.io/alp82/goodwatch-webapp:ad7e6d1905706a565ab0f2635da3b9af32e877a8|Up 2 hours (healthy)"
+  ],
+  "originalWebappContainer": "gk4owk8-20261014T181405",
+  "originalContainerStillInspectable": false,
+  "originalInspectReturncode": 1,
+  "originalInspectStderr": "Error: No such object: gk4owk8-20261014T181405\n"
+}

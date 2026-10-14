@@ -1,0 +1,54 @@
+{
+  "label": "current-shard-distribution",
+  "host": 11,
+  "stmt": "SELECT node['name'], primary, count(*) FROM sys.shards GROUP BY node['name'], primary ORDER BY node['name'], primary",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "node['name']",
+        "primary",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "crate-01",
+          false,
+          11
+        ],
+        [
+          "crate-01",
+          true,
+          301
+        ],
+        [
+          "crate-02",
+          false,
+          229
+        ],
+        [
+          "crate-02",
+          true,
+          80
+        ],
+        [
+          "crate-03",
+          false,
+          226
+        ],
+        [
+          "crate-03",
+          true,
+          85
+        ]
+      ],
+      "rowcount": 6,
+      "duration": 61.065723
+    },
+    "elapsedSeconds": 0.066,
+    "at": "2026-10-14T20:12:54.746356+00:00"
+  }
+}

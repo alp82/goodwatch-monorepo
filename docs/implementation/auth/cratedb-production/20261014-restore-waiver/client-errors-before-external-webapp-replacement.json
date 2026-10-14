@@ -1,0 +1,192 @@
+{
+  "returncode": 0,
+  "stderr": "",
+  "result": {
+    "observedAt": "2026-10-14T20:02:09.936773+00:00",
+    "clients": [
+      {
+        "container": "goodwatch-search-b",
+        "windows": {
+          "baseline": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T19:07:23Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "drain_and_abort": {
+            "since": "2026-10-14T19:07:23Z",
+            "until": "2026-10-14T19:43:00Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "after_service_recovery": {
+            "since": "2026-10-14T19:43:00Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "total": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          }
+        }
+      },
+      {
+        "container": "goodwatch-search-a",
+        "windows": {
+          "baseline": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T19:07:23Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "drain_and_abort": {
+            "since": "2026-10-14T19:07:23Z",
+            "until": "2026-10-14T19:43:00Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 1,
+            "firstFailureAt": "2026-10-14T19:15:19.584437615Z",
+            "lastFailureAt": "2026-10-14T19:15:19.584437615Z",
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 3,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "after_service_recovery": {
+            "since": "2026-10-14T19:43:00Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "total": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 1,
+            "firstFailureAt": "2026-10-14T19:15:19.584437615Z",
+            "lastFailureAt": "2026-10-14T19:15:19.584437615Z",
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 3,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          }
+        }
+      },
+      {
+        "container": "gk4owk8-20261014T181405",
+        "windows": {
+          "baseline": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T19:07:23Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "drain_and_abort": {
+            "since": "2026-10-14T19:07:23Z",
+            "until": "2026-10-14T19:43:00Z",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 1962,
+            "firstFailureAt": "2026-10-14T19:07:44.504478305Z",
+            "lastFailureAt": "2026-10-14T19:42:29.073422733Z",
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 5341,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "after_service_recovery": {
+            "since": "2026-10-14T19:43:00Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 0,
+            "firstFailureAt": null,
+            "lastFailureAt": null,
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 0,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          },
+          "total": {
+            "since": "2026-10-14T18:46:29Z",
+            "until": "2026-10-14T20:02:09.936773+00:00",
+            "logReturncode": 0,
+            "failedCrateQueryLogLines": 1962,
+            "firstFailureAt": "2026-10-14T19:07:44.504478305Z",
+            "lastFailureAt": "2026-10-14T19:42:29.073422733Z",
+            "exceptionOccurrences": {
+              "CrateTimeoutError": 5341,
+              "CrateError": 0,
+              "NodeDisconnectedException": 0,
+              "NoShardAvailableActionException": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

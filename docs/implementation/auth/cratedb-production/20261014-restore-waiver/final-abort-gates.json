@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-14T19:44:46.049162+00:00",
+  "at": "2026-10-14T20:14:39.577297+00:00",
   "queries": {
     "nodes": {
       "cols": [
@@ -29,7 +29,7 @@
         ]
       ],
       "rowcount": 3,
-      "duration": 5.477948
+      "duration": 4.380535
     },
     "health": {
       "cols": [
@@ -69,17 +69,17 @@
           "doc",
           "media_image",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
           "movie",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          2
+          0
         ],
         [
           "backup_20260925_deleted_titles",
@@ -109,9 +109,9 @@
           "backup_20260925_deleted_titles",
           "person_appeared_in",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -133,9 +133,9 @@
           "backup_20260925_stale_child_rows",
           "streaming_availability",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -189,25 +189,25 @@
           "doc",
           "alternative_title",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "backup_20260925_stale_child_rows",
           "media_video",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          2
+          0
         ],
         [
           "doc",
           "season",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -229,9 +229,9 @@
           "doc",
           "crawl_priority",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "backup_20260925_stale_child_rows",
@@ -253,9 +253,9 @@
           "doc",
           "rotten_tomatoes_season",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -293,9 +293,9 @@
           "backup_20260925_deleted_titles",
           "release_event",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -373,9 +373,9 @@
           "backup_20260925_deleted_titles",
           "media_video",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -421,9 +421,9 @@
           "doc",
           "show",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          4
+          0
         ],
         [
           "backup_20260925_deleted_titles",
@@ -453,9 +453,9 @@
           "backup_20260925_stale_child_rows",
           "show",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          2
+          0
         ],
         [
           "backup_20260925_deleted_titles",
@@ -541,25 +541,25 @@
           "doc",
           "release_event",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
           "user_score",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
           "streaming_availability",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -589,13 +589,21 @@
           "backup_20260925_stale_child_rows",
           "movie",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
           "genre",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "doc",
+          "user_list_exposure",
           null,
           "GREEN",
           0,
@@ -645,9 +653,9 @@
           "doc",
           "social_post",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -669,9 +677,9 @@
           "backup_20260925_deleted_titles",
           "trope",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -701,17 +709,17 @@
           "doc",
           "translation",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          2
+          0
         ],
         [
           "backup_20260925_stale_child_rows",
           "season",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -733,17 +741,17 @@
           "doc",
           "trope",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
           "user_wishlist",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ],
         [
           "doc",
@@ -757,13 +765,13 @@
           "doc",
           "person_worked_on",
           null,
-          "YELLOW",
+          "GREEN",
           0,
-          1
+          0
         ]
       ],
-      "rowcount": 90,
-      "duration": 3.546163
+      "rowcount": 91,
+      "duration": 1.963363
     },
     "shards": {
       "cols": [
@@ -773,23 +781,13 @@
       ],
       "rows": [
         [
-          "RECOVERING",
-          "INITIALIZING",
-          2
-        ],
-        [
           "STARTED",
           "STARTED",
-          889
-        ],
-        [
-          "UNASSIGNED",
-          "UNASSIGNED",
-          29
+          932
         ]
       ],
-      "rowcount": 3,
-      "duration": 61.113632
+      "rowcount": 1,
+      "duration": 58.84197
     },
     "nodeChecks": {
       "cols": [
@@ -905,7 +903,7 @@
         ]
       ],
       "rowcount": 21,
-      "duration": 11.560482
+      "duration": 6.415684
     },
     "allocation": {
       "cols": [
@@ -917,8 +915,8 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 1.430874
+      "duration": 1.673096
     }
   },
-  "passed": false
+  "passed": true
 }

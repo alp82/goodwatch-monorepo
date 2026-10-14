@@ -1,0 +1,4815 @@
+{
+  "label": "final-table-settings",
+  "host": 11,
+  "stmt": "SELECT table_schema, table_name, settings FROM information_schema.tables WHERE table_schema NOT IN ('sys', 'information_schema') ORDER BY table_schema, table_name",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_schema",
+        "table_name",
+        "settings"
+      ],
+      "rows": [
+        [
+          "backup_20260925_deleted_titles",
+          "alternative_title",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "media_image",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "media_video",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "movie",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "person_appeared_in",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "person_worked_on",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "release_event",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "show",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "streaming_availability",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "streaming_evidence",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "translation",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "trope",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "alternative_title",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "media_image",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "media_video",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "movie",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "person_appeared_in",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "person_worked_on",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "release_event",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "show",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "streaming_availability",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "streaming_evidence",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "translation",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "backup_20260925_stale_child_rows",
+          "trope",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "blob",
+          "search_index_files",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "age_certification",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "alternative_title",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "buzz_pageview",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "buzz_score",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "buzz_snapshot",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "buzz_title",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "buzz_trending",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "country",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "crawl_priority",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "episode",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "genre",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "imdb_episode",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "imdb_season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "job",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "language",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "media_image",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "media_video",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "metacritic_season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "movie",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "movie_series",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "network",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "person",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "person_appeared_in",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "person_worked_on",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "production_company",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "release_event",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "rotten_tomatoes_season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_control",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_embedding_inputs",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_embedding_state",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_history",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_index_builds",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_interpretations",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_shadow",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_spending",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "search_terms",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "season",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "show",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "social_content_quality",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "social_ingest_run",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "social_link_report",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "social_post",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "social_title_link",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "streaming_availability",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "streaming_evidence",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "streaming_service",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "timezone",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "translation",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "trope",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_favorite",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_handle",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_import",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_import_item",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_list",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_list_exposure",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_not_interested",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_profile",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_score",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_setting",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_skipped",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_watch_log",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_watch_state",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "user_wishlist",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "doc",
+          "workflow_monitoring",
+          {
+            "codec": "default",
+            "routing": {
+              "allocation": {
+                "include": {},
+                "require": {},
+                "exclude": {},
+                "enable": "all",
+                "total_shards_per_node": -1
+              }
+            },
+            "mapping": {
+              "total_fields": {
+                "limit": 1000
+              }
+            },
+            "refresh_interval": 1000,
+            "translog": {
+              "flush_threshold_size": 536870912,
+              "sync_interval": 5000,
+              "durability": "REQUEST"
+            },
+            "blocks": {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            },
+            "merge": {
+              "scheduler": {
+                "max_thread_count": 4,
+                "max_merge_count": 9
+              }
+            },
+            "store": {
+              "type": "fs"
+            },
+            "unassigned": {
+              "node_left": {
+                "delayed_timeout": 60000
+              }
+            },
+            "write": {
+              "wait_for_active_shards": "1"
+            }
+          }
+        ],
+        [
+          "pg_catalog",
+          "pg_am",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_attrdef",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_attribute",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_class",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_constraint",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_cursors",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_database",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_depend",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_description",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_enum",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_event_trigger",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_index",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_indexes",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_locks",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_matviews",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_namespace",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_proc",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_publication",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_publication_tables",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_range",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_roles",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_settings",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_shdescription",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_stats",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_subscription",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_subscription_rel",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_tables",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_tablespace",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_type",
+          null
+        ],
+        [
+          "pg_catalog",
+          "pg_views",
+          null
+        ]
+      ],
+      "rowcount": 121,
+      "duration": 12.23941
+    },
+    "elapsedSeconds": 0.025,
+    "at": "2026-10-14T20:14:53.458730+00:00"
+  }
+}
