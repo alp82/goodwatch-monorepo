@@ -26,12 +26,16 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
         raise ValueError('Unknown source')
     if not 1 <= days <= 30 or not 1 <= pages <= 18 or not 1 <= max_posts <= 10000:
         raise ValueError('Unbounded collection request')
+    key = settings.get('OPENROUTER_API_KEY_SOCIAL')
+    if not key or not key.strip():
+        raise RuntimeError('Social discovery requires u/Alp/OPENROUTER_API_KEY_SOCIAL '
+                           '(OPENROUTER_API_KEY_SOCIAL locally); the shared OPENROUTER_API_KEY is never used')
     end = stamp(window_end) if window_end else now()
     start = end - timedelta(days=days)
     db = Crate(settings)
     store = Store(db)
     store.initialize()
-    llm = OpenRouter(settings.get('OPENROUTER_API_KEY'))
+    llm = OpenRouter(key)
     vector = VectorCandidates(settings) if vector_enabled and settings.get('QDRANT_URL') else None
     matcher = Matcher(db.select, llm=llm, vector=vector)
     results = []
@@ -76,7 +80,7 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
             # No raw exception URLs/bodies: may contain provider credentials or post text.
             details['error_type'] = type(exc).__name__
             message = str(exc)
-            for key in ('CRATE_PASS', 'OPENROUTER_API_KEY', 'YOUTUBE_API_KEY', 'QDRANT_API_KEY'):
+            for key in ('CRATE_PASS', 'OPENROUTER_API_KEY_SOCIAL', 'YOUTUBE_API_KEY', 'QDRANT_API_KEY'):
                 if settings.get(key):
                     message = message.replace(settings[key], '[redacted]')
             details['error'] = message[:500]

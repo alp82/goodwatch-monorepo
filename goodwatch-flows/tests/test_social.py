@@ -236,6 +236,82 @@ class ContextTests(unittest.TestCase):
         Matcher(sql, llm=llm).match([item])
 
 class SettingsTests(unittest.TestCase):
+    def test_windmill_loads_only_the_dedicated_social_inference_variable(self):
+        from unittest.mock import Mock, patch
+        from types import SimpleNamespace
+        from f.social.settings import load
+        variables = {'CRATE_HOSTS': 'crate.example', 'CRATE_USER': 'fixture',
+                     'CRATE_PASS': 'fixture-password', 'OPENROUTER_API_KEY_SOCIAL': 'social-fixture',
+                     'OPENROUTER_API_KEY': 'shared-fixture'}
+        variable = Mock(side_effect=lambda path: variables.get(path.rsplit('/', 1)[1]))
+        with patch.dict('os.environ', {'WM_JOB_ID': 'fixture', 'OPENROUTER_API_KEY': 'shared-env'}, clear=True), \
+                patch.dict(sys.modules, {'wmill': SimpleNamespace(get_variable=variable)}):
+            settings = load()
+        self.assertEqual(settings['OPENROUTER_API_KEY_SOCIAL'], 'social-fixture')
+        self.assertNotIn('OPENROUTER_API_KEY', settings)
+        self.assertNotIn('u/Alp/OPENROUTER_API_KEY', [call.args[0] for call in variable.call_args_list])
+
+    def test_discovery_missing_dedicated_key_fails_before_database_or_inference(self):
+        from unittest.mock import patch
+        from f.social.ingest import run
+        for value in (None, '', '   '):
+            settings = {'OPENROUTER_API_KEY': 'shared-fixture', 'OPENROUTER_API_KEY_SOCIAL': value}
+            with self.subTest(value=value), patch('f.social.ingest.Crate') as crate, \
+                    patch('f.social.ingest.OpenRouter') as llm, \
+                    self.assertRaisesRegex(RuntimeError, 'requires u/Alp/OPENROUTER_API_KEY_SOCIAL'):
+                try:
+                    run(settings)
+                finally:
+                    crate.assert_not_called()
+                    llm.assert_not_called()
+
+    def test_missing_social_variable_never_falls_back_to_shared_windmill_key(self):
+        from unittest.mock import Mock, patch
+        from types import SimpleNamespace
+        from f.social.ingest import run
+        from f.social.settings import load
+        variables = {'CRATE_HOSTS': 'crate.example', 'CRATE_USER': 'fixture',
+                     'CRATE_PASS': 'fixture-password', 'OPENROUTER_API_KEY': 'shared-fixture'}
+        variable = Mock(side_effect=lambda path: variables.get(path.rsplit('/', 1)[1]))
+        with patch.dict('os.environ', {'WM_JOB_ID': 'fixture'}, clear=True), \
+                patch.dict(sys.modules, {'wmill': SimpleNamespace(get_variable=variable)}), \
+                patch('f.social.ingest.Crate') as crate:
+            with self.assertRaisesRegex(RuntimeError, 'requires u/Alp/OPENROUTER_API_KEY_SOCIAL'):
+                run(load())
+        crate.assert_not_called()
+        self.assertNotIn('u/Alp/OPENROUTER_API_KEY', [call.args[0] for call in variable.call_args_list])
+
+    def test_discovery_uses_dedicated_key_when_shared_key_is_also_present(self):
+        from unittest.mock import patch
+        from f.social import ingest
+        settings = {'OPENROUTER_API_KEY': 'shared-fixture', 'OPENROUTER_API_KEY_SOCIAL': 'social-fixture'}
+        with patch.object(ingest, 'Crate'), patch.object(ingest, 'Store') as store, \
+                patch.object(ingest, 'OpenRouter') as llm, patch.object(ingest.rss, 'collect') as collect:
+            llm.return_value.cost = 0.0
+            store.return_value.pending.return_value = []
+            collect.return_value = {'status': 'ok', 'posts': [], 'audit': [], 'errors': []}
+            result = ingest.run(settings, source='rss', vector_enabled=False)
+        llm.assert_called_once_with('social-fixture')
+        self.assertEqual(result['sources'][0]['status'], 'ok')
+
+    def test_missing_social_variable_does_not_block_maintenance(self):
+        from unittest.mock import Mock, patch
+        from types import SimpleNamespace
+        from f.social import maintenance
+        variables = {'CRATE_HOSTS': 'crate.example', 'CRATE_USER': 'fixture', 'CRATE_PASS': 'fixture-password'}
+        def variable(path):
+            return variables[path.rsplit('/', 1)[1]]
+        lookup = Mock(side_effect=variable)
+        with patch.dict('os.environ', {'WM_JOB_ID': 'fixture'}, clear=True), \
+                patch.dict(sys.modules, {'wmill': SimpleNamespace(get_variable=lookup)}), \
+                patch.object(maintenance, 'Crate'), patch.object(maintenance, 'Store') as store, \
+                patch('requests.post') as inference:
+            store.return_value.db.select.return_value = []
+            result = maintenance.main()
+        self.assertEqual(result, {'checked': 0, 'removed': 0, 'unknown': 0})
+        inference.assert_not_called()
+        self.assertNotIn('u/Alp/OPENROUTER_API_KEY', [call.args[0] for call in lookup.call_args_list])
+
     def test_windmill_reuses_existing_qdrant_host_and_port_variables(self):
         from unittest.mock import patch
         from types import SimpleNamespace

@@ -1,7 +1,7 @@
 """Read only named flow secrets; local driver explicitly loads its env file."""
 import os
 
-KEYS = ('CRATE_HOSTS', 'CRATE_PORT', 'CRATE_USER', 'CRATE_PASS', 'OPENROUTER_API_KEY',
+KEYS = ('CRATE_HOSTS', 'CRATE_PORT', 'CRATE_USER', 'CRATE_PASS', 'OPENROUTER_API_KEY_SOCIAL',
         'YOUTUBE_API_KEY', 'QDRANT_URL', 'QDRANT_API_KEY', 'QDRANT_HOST', 'QDRANT_PORT')
 
 

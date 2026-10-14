@@ -250,10 +250,52 @@ fixture rows in the new tables and remove them afterwards.
 
 The main-branch workflow syncs checked-in scripts/flows to Windmill. No live
 schedule or secret is created by this branch. Provision/verify `u/Alp/CRATE_HOSTS`,
-`CRATE_USER`, `CRATE_PASS`, `OPENROUTER_API_KEY`, and existing `QDRANT_HOST` / `QDRANT_PORT` / `QDRANT_API_KEY` (or a `QDRANT_URL` override).
+`CRATE_USER`, `CRATE_PASS`, `OPENROUTER_API_KEY_SOCIAL`, and existing `QDRANT_HOST` / `QDRANT_PORT` / `QDRANT_API_KEY` (or a `QDRANT_URL` override).
 `YOUTUBE_API_KEY` is optional but needed for paginated uploads playlists; without
 it, official channel feeds work with a rolling approximately fifteen-upload
-inventory. Variable names match existing flows; no new Crate resource is needed.
+inventory. Social uses its own OpenRouter key; the shared DNA variable
+`u/Alp/OPENROUTER_API_KEY` is never read as a fallback. Local discovery requires
+`OPENROUTER_API_KEY_SOCIAL` in its env file/environment too. Missing or empty
+social credentials fail discovery before database access. Deletion/opt-out sync
+does not require an inference key. No new Crate resource is needed.
+
+### Separate-key cutover (manual enable only)
+
+Discovery was stopped on 2026-10-14 to protect DNA's shared $1/day allowance.
+The four discovery schedules have `enabled=false`, not just an expiring pause;
+the 2026-10-15 00:05 UTC all-source retry was cancelled. Deletion sync stays on.
+Keep discovery off until the owner chooses a social budget and authorizes restart.
+
+1. Create a **new** OpenRouter inference key with the owner's chosen daily cap.
+   Do not reuse the DNA key or change its cap. Per-key caps still share any
+   account-level credit/budget constraints.
+2. Create secret Windmill variable `u/Alp/OPENROUTER_API_KEY_SOCIAL` in workspace
+   `goodwatch`, readable by the discovery run identity `u/Alp`. Do not create an
+   alias to `u/Alp/OPENROUTER_API_KEY`. Repository sync skips secrets/variables.
+3. Merge the dedicated-key change only after authorization; let the main workflow
+   deploy it. Verify deployed `f/social/settings` loads only the social inference
+   variable and `f/social/ingest` requires it. Until that deploy, the live discovery
+   code still reads the shared key: do not manually run discovery.
+4. With discovery schedules still disabled, manually run `f/social/discover`
+   once with `source=all, days=2, pages=2, max_posts=400, vector_enabled=true`.
+   Check green completion, source counts/costs in `social_ingest_run`, and spend
+   on the **new** key. Leave schedules off if validation fails.
+5. Re-enable these existing schedules explicitly, preserving UTC, arguments,
+   concurrency limits and overlap protection:
+
+   | Schedule | Source | UTC cron |
+   | --- | --- | --- |
+   | `f/social/discover_youtube` | youtube | `0 0 * * * *` |
+   | `f/social/discover_rss` | rss | `0 20 * * * *` |
+   | `f/social/discover_bluesky` | bluesky | `0 40 * * * *` |
+   | `f/social/discover_mastodon` | mastodon | `0 10 3 * * *` |
+
+   Read back `enabled=true` and confirm subsequent jobs use the dedicated key.
+   If any old `paused_until` remains in the future, explicitly clear it as part of
+   this authorized restart. Do not recreate the cancelled one-off retry.
+6. Leave `f/social/deletion_sync` enabled at `0 50 */6 * * *` UTC, with
+   `source=all, limit=2000`; it does not call OpenRouter. Monitor backlog and costs
+   against the selected social cap before claiming full hourly coverage.
 
 Schedule `f/social/discover` hourly for each of `source=youtube`, `rss` and
 `bluesky` with the other defaults (2-day overlap, two pages,
