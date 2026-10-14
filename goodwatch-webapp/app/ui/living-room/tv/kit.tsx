@@ -17,12 +17,13 @@ import {
 	useContext,
 	useEffect,
 	useLayoutEffect,
+	useRef,
 	useState,
 } from "react"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { ICON, Icon } from "../Remote"
 import type { TvCanvas } from "./room-tv"
-import { TV_ITEM_ATTR, TV_LAYER_ATTR } from "./tv-dom"
+import { TV_ITEM_ATTR, TV_LAYER_ATTR, bringIntoView } from "./tv-dom"
 import type { TvAction } from "./tv-machine"
 
 /** What a screen knows about the TV it is drawn on. */
@@ -123,8 +124,17 @@ export function Item({
 }) {
 	const view = useTvView()
 	const on = view.focused === id
+	// An item that arrives with the focus is in view at once: its row pages to it before the first paint. A screen
+	// can arrive with the focus far along a row (a reload, a link, Back from a page), and the room draws its screen
+	// anew once it has measured the window. A focus that moves later is paged to by the TV's hook (use-tv.ts).
+	const el = useRef<HTMLButtonElement>(null)
+	const arrivedOn = useRef(on)
+	useIsoLayoutEffect(() => {
+		if (arrivedOn.current && el.current) bringIntoView(el.current, false)
+	}, [])
 	return (
 		<button
+			ref={el}
 			type="button"
 			{...{ [TV_ITEM_ATTR]: id }}
 			aria-current={on || undefined}

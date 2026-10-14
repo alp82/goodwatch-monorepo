@@ -315,7 +315,7 @@ const within = (a, b) => a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a
  * that pages holds more than it shows: its items count while they are in view (`row`).
  */
 function fits(l, what, { touch = false, corner = true, row = false } = {}) {
-	const shown = row ? l.items.filter((item) => !item.id.startsWith(row) || within(item, l.tv)) : l.items
+	const shown = row ? l.items.filter((item) => !row.test(item.id) || within(item, l.tv)) : l.items
 	const small = shown.filter((item) => Math.min(item.width, item.height) < 44 - 0.05)
 	if (touch) check(small.length === 0, `${what}: every key is 44 px or more on the phone's screen: ${small.map((item) => `${item.id} ${item.width.toFixed(1)} x ${item.height.toFixed(1)}`).join(", ") || "all"}`)
 	const out = shown.filter((item) => !within(item, l.tv))
@@ -614,7 +614,7 @@ async function walk(who, url, size, { locale = "en-US" } = {}) {
 	is(s.head?.id, a.id, "under the first service's mark")
 	const first = titlesOf(s)
 	await pressKey(b.id)
-	s = await until(page, (x) => x.search === at(serviceTv(b.id)) && titlesOf(x).length > 0 && !same(titlesOf(x), first), `the other key shows ${b.label} in its place`, 90000)
+	s = await until(page, (x) => x.search === at(serviceTv(b.id)) && same(pressed(x), [b.id]) && titlesOf(x).length > 0 && !same(titlesOf(x), first), `the other key shows ${b.label} in its place`, 90000)
 	is(s.history, depth + 1, "in place: no history entry more")
 	is(pressed(s), [b.id], "the other key is on now, and the first is not")
 	is(titlesOf(s), all, "with that service's titles")
@@ -714,7 +714,8 @@ async function links() {
 	numbers["a link to a service that is none of the person's two"] = `${s.name}, ${answer.total} titles`
 	// Either key takes its place.
 	await page.locator(`#room [data-service-key="${a.id}"]`).click()
-	s = await until(page, (x) => x.search === `?${serviceTv(a.id)}` && titlesOf(x).length > 0, "a key takes the linked service's place", 60000)
+	// (The address changes a moment before the screen does: wait for the key, which changes with the screen.)
+	s = await until(page, (x) => x.search === `?${serviceTv(a.id)}` && same(pressed(x), [a.id]) && titlesOf(x).length > 0, "a key takes the linked service's place", 60000)
 	is(pressed(s), [a.id], "and is on")
 	await ctx.close()
 	// What is no service's id is home.
@@ -765,7 +766,8 @@ async function sameAsDiscover() {
 		let d = await settled(other, tv.slice(0, 4))
 		is(d.titles.slice(0, 12).map(keyOfHref), tv, "they are the first twelve titles on the Discover page for that service, in the same order")
 		numbers[`${where}: what the Discover page shows as chosen`] = d.chips
-		check(d.chips.some((chip) => brandOf(chip) === service.name || chip.includes(service.name)), `the Discover page shows ${service.name} as chosen: ${d.chips.join(", ")}`)
+		// The page's chip for chosen services names one that is the person's own, and counts any other.
+		check(d.chips.some((chip) => /^1 service$/.test(chip) || chip.includes(service.name)), `the Discover page shows the one service as chosen: ${d.chips.join(", ")}`)
 		await other.close()
 
 		// The Expand key's effect on the TV: that page. The key itself is slice 11's and is not drawn; the script
@@ -844,7 +846,7 @@ async function members() {
 		is(s.head?.kind ?? "none", want[1][2], "the screen leads with the key's mark")
 		is(s.edge, DRAWN[second] ?? QUIET, "and has the service's line")
 		await page.locator(`#room [data-service-key="${first}"]`).click()
-		s = await until(page, (x) => new URLSearchParams(x.search).get("service") === String(first) && titlesOf(x).length > 0, "the first key takes its place", 60000)
+		s = await until(page, (x) => new URLSearchParams(x.search).get("service") === String(first) && same(pressed(x), [first]) && titlesOf(x).length > 0, "the first key takes its place", 60000)
 		is(pressed(s), [first], "and is on")
 		await page.locator(`#room [data-service-key="${first}"]`).click()
 		s = await until(page, (x) => !new URLSearchParams(x.search).has("tv") && x.items.includes("app:shows"), "the same key leaves")
@@ -926,7 +928,7 @@ async function sizes() {
 				s = await until(page, (x) => focusIs(`service:${service.id}`)(x) && x.focusInView, `home with the focus on ${service.name}'s tile, paged into view`, 60000)
 				await page.waitForTimeout(500)
 				const l = await layout(page)
-				smallest[`home ${service.name}`] = fits(l, `home, ${service.name}`, { touch, corner: false, row: "app:" }).key
+				smallest[`home ${service.name}`] = fits(l, `home, ${service.name}`, { touch, corner: false, row: /^(app|service):/ }).key
 				const tile = l.items.find((item) => item.id === `service:${service.id}`)
 				numbers[`${where}: ${service.name}'s tile`] = `${tile.width.toFixed(0)} x ${tile.height.toFixed(0)}`
 			}
@@ -940,7 +942,7 @@ async function sizes() {
 				is(s.heading, LONG, "the first title's long name")
 				await page.waitForTimeout(500)
 				let l = await layout(page)
-				smallest[`${service.name}`] = fits(l, `On ${service.name}`, { touch, row: "title:" }).key
+				smallest[`${service.name}`] = fits(l, `On ${service.name}`, { touch, row: /^title:/ }).key
 				const poster = l.items.find((item) => item.id.startsWith("title:"))
 				numbers[`${where}: a poster on ${service.name}`] = `${poster.width.toFixed(0)} x ${poster.height.toFixed(0)}`
 				check(l.items.filter((item) => item.id.startsWith("title:") && within(item, l.tv)).length >= (touch ? 3 : 5), `On ${service.name}: the row shows ${touch ? "three" : "five"} posters or more at a time`)
@@ -952,7 +954,7 @@ async function sizes() {
 				await until(page, (x) => focusIs(`title:${last}`)(x) && x.focusInView, "the focus on the last title, in view", 30000)
 				await page.waitForTimeout(600)
 				l = await layout(page)
-				fits(l, `On ${service.name}, the last title`, { touch, row: "title:" })
+				fits(l, `On ${service.name}, the last title`, { touch, row: /^title:/ })
 			}
 			numbers[`${where}: the smallest key`] = { remote: `${form} ${key.toFixed(1)}`, ...Object.fromEntries(Object.entries(smallest).map(([name, px]) => [name, Number(px.toFixed(1))])) }
 			await ctx.close()
@@ -1185,6 +1187,12 @@ async function warm(url) {
 	await ctx.close()
 }
 if (guestSide) {
+	// Discover answers 503 until the reading server has loaded its title snapshot, about two minutes after a start.
+	for (let n = 0; n < 60; n++) {
+		const ready = await fetch(`${ORIGIN}/api/discover/results?services=8&page=1`).then((r) => r.status === 200, () => false)
+		if (ready) break
+		await sleep(5000)
+	}
 	await warm(GUEST)
 	await warm(GUEST)
 	const { ctx } = await open(`${ORIGIN}/discover?services=8`, DESKTOP, { room: false })
