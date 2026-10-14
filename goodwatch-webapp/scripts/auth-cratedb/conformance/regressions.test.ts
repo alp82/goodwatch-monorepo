@@ -797,3 +797,34 @@ test("database rate limiting survives 300 requests through the real Better Auth 
 		expect(response.status).toBe(200)
 	}
 })
+
+test("a Better Auth user-id collision releases the rejected new email for signup", async () => {
+	const auth = makeAuth()
+	const ctx = await auth.$context
+	const original = await ctx.internalAdapter.createUser(
+		{
+			email: `${randomUUID()}@test.invalid`,
+			name: "Original member",
+			emailVerified: true,
+		},
+		{ method: "email-password" },
+	)
+	const email = `${randomUUID()}@test.invalid`
+	await expect(
+		ctx.internalAdapter.createUser(
+			{ id: original.id, email, name: "Rejected import", emailVerified: true },
+			{ method: "email-password" },
+		),
+	).rejects.toMatchObject({ code: "23505" })
+	expect(
+		(await ctx.internalAdapter.findUserByEmail(original.email))?.user.id,
+	).toBe(original.id)
+	const signup = await auth.api.signUpEmail({
+		body: { email, name: "New member", password: "new-member-password-548" },
+	})
+	expect(signup.user.email).toBe(email)
+	expect(signup.user.id).not.toBe(original.id)
+	expect((await ctx.internalAdapter.findUserByEmail(email))?.user.id).toBe(
+		signup.user.id,
+	)
+})

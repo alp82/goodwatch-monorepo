@@ -68,7 +68,9 @@ lookup indexing never stores them in clear text. Better Auth's default plain
 identifier configuration and its hashed configuration both remain compatible.
 Email change and account deletion release the old claim after successful user
 CAS. Claim generations fence delayed releases and A→B→A changes. A definite failed
-user insert also releases its claim. A process crash or an ambiguous multi-row
+user insert also releases its claim, including a supplied-id collision with an
+existing different insert. Own-receipt recovery happens before collision cleanup;
+claims already adopted by the current row or with uncertain ownership remain protected. A process crash or an ambiguous multi-row
 failure can still leave an orphan claim: user and claim writes are not one
 transaction, and uncertain ownership requires reconciliation rather than unsafe
 address reuse.

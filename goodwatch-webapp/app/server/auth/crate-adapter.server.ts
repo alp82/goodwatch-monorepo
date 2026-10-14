@@ -309,7 +309,12 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 							if (updated) return updated as typeof data
 							throw new IndeterminateAuthWriteError()
 						}
-						if ((error as { code?: number }).code === 4091) throw Object.assign(new Error("duplicate key: auth identity"), { code: "23505" })
+						if ((error as { code?: number }).code === 4091) {
+							// A supplied id may already belong to another insert. Only release
+							// our rejected reservation; never an adopted or uncertain claim.
+							if (model === "user" && existing && existing.emailClaim !== emailClaim) await releaseEmail(row.email, row.id, emailClaim)
+							throw Object.assign(new Error("duplicate key: auth identity"), { code: "23505" })
+						}
 						throw new IndeterminateAuthWriteError()
 					}
 					return row as typeof data
