@@ -2,6 +2,7 @@ import { canonicalTitleId } from "~/utils/title-identity"
 import { createHash } from "node:crypto"
 import type { ActionFunctionArgs } from "@remix-run/node"
 import { z } from "zod"
+import { hasSiteOrigin } from "~/server/site-origin.server"
 import { increasePriority } from "~/server/utils/priority"
 import { getRedisCluster } from "~/utils/cache"
 import { query } from "~/utils/crate"
@@ -22,12 +23,7 @@ return count
 
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return new Response(null, { status: 405 })
-	// remix-serve sees HTTP behind TLS termination. Use the public origin without
-	// trusting forwarded headers supplied by the caller.
-	const expectedOrigin = process.env.APP_ORIGIN || (
-		process.env.NODE_ENV === "production" ? "https://goodwatch.app" : "http://localhost:3003"
-	)
-	if (request.headers.get("origin") !== expectedOrigin) return new Response(null, { status: 403 })
+	if (!hasSiteOrigin(request)) return new Response(null, { status: 403 })
 	if (!request.headers.get("content-type")?.startsWith("application/json")) return new Response(null, { status: 415 })
 	// Bound actual streamed bytes, including requests without Content-Length.
 	const reader = request.body?.getReader()

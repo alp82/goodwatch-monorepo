@@ -50,8 +50,10 @@ registerHooks({
 })
 const { action } = await import("../../routes/api.combined-search.ts")
 const reset = () => { state.auth = 0; state.taste = 0; state.release = 0; events.length = 0 }
-const request = () => new Request("http://localhost:3003/api/combined-search", {
-	method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: "fixture", forYou: true }),
+// The route answers only the site's own pages (site-origin.server.ts); a development process has no origin by default.
+process.env.APP_ORIGIN = "http://localhost:3107"
+const request = (headers: Record<string, string> = { Origin: "http://localhost:3107" }) => new Request("http://localhost:3107/api/combined-search", {
+	method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify({ q: "fixture", forYou: true }),
 })
 const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(r => { resolve = r }); return { promise, resolve } }
 
@@ -137,4 +139,28 @@ test("accepted failures before any delivery remain visible in anonymous completi
 	assert.equal(events[1].firstResultsMs, null)
 	assert.ok(!JSON.stringify(events).includes("sentinel"))
 	assert.equal(state.release, 1)
+})
+
+test("a request from outside the site is refused before any search work", async () => {
+	for (const headers of [{}, { Origin: "https://evil.example" }, { Origin: "http://localhost:3003" }, { "Sec-Fetch-Site": "cross-site" }] as Record<string, string>[]) {
+		reset()
+		state.run = async () => { throw new Error("the search must not run") }
+		const response = await action({ request: request(headers) } as any)
+		assert.equal(response.status, 403, JSON.stringify(headers))
+		assert.deepEqual(await response.json(), { error: "Invalid origin" })
+		assert.equal(state.auth, 0)
+		assert.equal(state.release, 0)
+		assert.equal(events.length, 0)
+	}
+})
+
+test("a page's request without Origin passes on Sec-Fetch-Site or Referer", async () => {
+	for (const headers of [{ "Sec-Fetch-Site": "same-origin" }, { Referer: "http://localhost:3107/discover" }] as Record<string, string>[]) {
+		reset()
+		state.run = async () => ({ rows: [], pendingTitleLookup: false })
+		const response = await action({ request: request(headers) } as any)
+		assert.equal(response.status, 200, JSON.stringify(headers))
+		await response.text()
+		assert.equal(state.auth, 1)
+	}
 })

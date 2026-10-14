@@ -20,11 +20,11 @@
       "id": "api-combined-search-rejects-short-text",
       "path": "/api/combined-search",
       "method": "POST",
-      "requestHeaders": { "Content-Type": "application/json" },
+      "requestHeaders": { "Content-Type": "application/json", "Sec-Fetch-Site": "same-origin" },
       "body": "{\"q\":\"x\"}",
       "expect": [400],
       "contains": ["Enter between 2 and 4096 bytes"],
-      "guards": "The search route answers in this role. One character of text is rejected after the in-flight limit and before the search starts (routes/api.combined-search.ts), so nothing is read, paid for, or written. A 503 with 'Search is busy' means that four searches were in flight, or that the process isn't a search role."
+      "guards": "The search route answers in this role. One character of text is rejected after the in-flight limit and before the search starts (routes/api.combined-search.ts), so nothing is read, paid for, or written. The route answers only the site's own pages (server/site-origin.server.ts); Sec-Fetch-Site: same-origin is what a page sends, and works for goodwatch.app and for a tunnel to one container alike, where an Origin would have to match the container's configured origin. A 403 here means that guard changed. A 503 with 'Search is busy' means that four searches were in flight, or that the process isn't a search role."
     }
   ]
 }

@@ -4,6 +4,7 @@ import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch, type SearchBatch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { runsSearch } from "~/server/role.server";
+import { isSiteRequest } from "~/server/site-origin.server";
 import {
 	searchAdmission,
 	searchBusyResponse,
@@ -22,15 +23,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	});
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers });
-	// Coolify terminates TLS; remix-serve sees HTTP. Match the configured public
-	// origin, as in poster impressions, without trusting caller-supplied proxies.
-	const expectedOrigin = process.env.APP_ORIGIN || (
-		process.env.NODE_ENV === "production" ? "https://goodwatch.app" : "http://localhost:3003"
-	);
-	if (
-		request.headers.get("Origin") &&
-		request.headers.get("Origin") !== expectedOrigin
-	)
+	// A search costs money and writes a history row: only the site's own pages may start one (site-origin.server.ts).
+	if (!isSiteRequest(request))
 		return json({ error: "Invalid origin" }, { status: 403, headers });
 	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
 	if (!runsSearch()) { recordSearchRejection("wrong_role"); return searchBusyResponse(); }
