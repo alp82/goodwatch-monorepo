@@ -1,10 +1,10 @@
 import { createHmac, randomUUID } from "node:crypto"
-import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError } from "./crate-adapter.server.ts"
+import { type AuthSql, CrateAuthRequestError, IndeterminateAuthWriteError, authModels, authModelTable } from "./crate-adapter.server.ts"
 import { authPayloadCodec } from "./payload-codec.server.ts"
 
 type Options = { sql: AuthSql; encryptionSecret: string; cursor?: string; batchSize?: number }
 type Envelope = { row: Record<string, unknown>; deleted: boolean; emailClaim?: string; deletedAt?: string }
-type Receipt = { operation: string; baseSeq: number }
+type Receipt = { operation: string; baseSeq: number; at?: string }
 
 function batchSize(value = 1000) {
 	if (!Number.isSafeInteger(value) || value < 1 || value > 10000) throw new Error("Invalid maintenance batch size")
@@ -36,7 +36,7 @@ export async function recoverEmailClaims(options: Options) {
 			// Advancing the user version makes any delayed adoption CAS lose. Keep
 			// operation receipts so its recovery cannot mistake uncertainty for success.
 			const receipts: Receipt[] = codec.decode(current[1], `${aad}:receipts`)
-			const fenced = await sql("UPDATE doc.auth_user SET receipts=? WHERE id=? AND _seq_no=? AND _primary_term=?", [codec.encode([...receipts, { operation: randomUUID(), baseSeq: Number(current[2]) }].slice(-256), `${aad}:receipts`), id, current[2], current[3]])
+			const fenced = await sql("UPDATE doc.auth_user SET receipts=? WHERE id=? AND _seq_no=? AND _primary_term=?", [codec.encode([...receipts, { operation: randomUUID(), baseSeq: Number(current[2]), at: new Date().toISOString() }].slice(-256), `${aad}:receipts`), id, current[2], current[3]])
 			if (fenced.rowcount !== 1) { report.conflicted++; continue }
 		} else {
 			// A permanent user tombstone prevents a paused INSERT from appearing
@@ -54,4 +54,47 @@ export async function recoverEmailClaims(options: Options) {
 		else report.conflicted++
 	}
 	return report
+}
+
+const retentionMs = 24 * 3600000
+const expiringModels = new Set(["session", "verification", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion"])
+const reusableModels = new Set(["account", "oauthConsent", "oauthClientResource", "oauthResource", "rateLimit"])
+
+/** Each page is bounded independently of table size; all decisions use authenticated PK reads. */
+export async function collectAuthGarbage(options: Options & { model: string; now?: Date }) {
+ const { sql, model, cursor } = options
+ if (!authModels.includes(model)) throw new Error("Unsupported maintenance model")
+ const size = batchSize(options.batchSize)
+ const now = options.now ?? new Date()
+ if (!Number.isFinite(now.getTime())) throw new Error("Invalid maintenance time")
+ const codec = authPayloadCodec(options.encryptionSecret)
+ const name = authModelTable(model)
+ await sql(`REFRESH TABLE ${name}`)
+ const page = await sql(`SELECT id FROM ${name} ${cursor === undefined ? "" : "WHERE id > ?"} ORDER BY id LIMIT ${size + 1}`, cursor === undefined ? [] : [cursor])
+ const report = { scanned: 0, expired: 0, compacted: 0, purged: 0, conflicted: 0, cursor: null as string | null, complete: page.rows.length <= size }
+ for (const [value] of page.rows.slice(0, size)) {
+  const id = String(value)
+  report.cursor = id
+  report.scanned++
+  const current = (await sql(`SELECT payload,receipts,_seq_no,_primary_term,lookup FROM ${name} WHERE id=?`, [id])).rows[0]
+  if (!current) continue
+  const envelope: Envelope = codec.decode(current[0], `${name}:${id}:payload`)
+  if (envelope.row.id !== id || typeof envelope.deleted !== "boolean") throw new Error("Invalid authenticated auth row")
+  const receipts: Receipt[] = codec.decode(current[1], `${name}:${id}:receipts`)
+  const expired = !envelope.deleted && expiringModels.has(model) && typeof envelope.row.expiresAt === "string" && new Date(envelope.row.expiresAt).getTime() <= now.getTime()
+  if (envelope.deleted && envelope.deletedAt && now.getTime() - new Date(envelope.deletedAt).getTime() >= retentionMs && reusableModels.has(model)) {
+   const result = await sql(`DELETE FROM ${name} WHERE id=? AND _seq_no=? AND _primary_term=?`, [id, current[2], current[3]])
+   if (result.rowcount === 1) report.purged++
+   else report.conflicted++
+   continue
+  }
+  const kept = receipts.filter(receipt => !receipt.at || now.getTime() - new Date(receipt.at).getTime() < retentionMs).map(receipt => receipt.at ? receipt : { ...receipt, at: now.toISOString() })
+  const next: Envelope = expired ? { row: { id }, deleted: true, deletedAt: now.toISOString() } : envelope.deleted && !envelope.deletedAt ? { ...envelope, deletedAt: now.toISOString() } : envelope
+  if (!expired && next === envelope && JSON.stringify(kept) === JSON.stringify(receipts)) continue
+  const compacted = kept.length < receipts.length
+  const result = await sql(`UPDATE ${name} SET payload=?,receipts=?,deleted=?,lookup=?,created_at=?,expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`, [codec.encode(next, `${name}:${id}:payload`), codec.encode(kept, `${name}:${id}:receipts`), next.deleted, next.deleted ? {} : current[4], next.deleted ? null : envelope.row.createdAt ?? null, next.deleted ? null : envelope.row.expiresAt ?? null, id, current[2], current[3]])
+  if (result.rowcount === 1) { if (expired) report.expired++; if (compacted) report.compacted++ }
+  else report.conflicted++
+ }
+ return report
 }
