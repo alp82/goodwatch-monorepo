@@ -8,7 +8,7 @@ Two research passes produced this. One mapped the webapp code (read-only). The o
 
 1. **The idea is viable and nobody has built it.** Every movie or TV MCP server found is a community project that runs locally with one person's API key: Trakt (three servers, one exposing all 334 endpoints as tools), TMDB, JustWatch over an unofficial API, Letterboxd by scraping with the member's password, and Plex/Jellyfin. None is hosted, signed in with OAuth and combines tracking with availability on the person's services. Neither Claude's connector directory nor ChatGPT's app directory lists Trakt, Letterboxd, JustWatch, IMDb or Netflix (absence not fully confirmed). Both directories already carry consumer brands such as Spotify, Tripadvisor and Audible.
 2. **The domain logic is already reusable.** The `api.*` routes are thin wrappers over `app/server/*.server.ts` functions keyed by user id. Those writers already handle `canonicalTitleId`, cache resets and `markTasteChanged`. An MCP tool can call the same functions the routes call.
-3. **The real work is authorization, not tools.** Members sign in with Supabase cookies only. Nothing accepts a bearer token, and GoodWatch issues no tokens to third parties. A remote MCP server needs OAuth 2.1 with PKCE, protected resource metadata, and CIMD or DCR client registration (details below).
+3. **The real work is authorization, not tools.** Members sign in with Supabase cookies only. Nothing accepts a bearer token, and GoodWatch issues no tokens to third parties. A remote MCP server needs OAuth 2.1 with PKCE, protected resource metadata, and CIMD or DCR client registration. The planned move from Supabase to self-hosted Better Auth provides all of that as plugins ([Self-hosted auth to replace Supabase](self-hosted-auth.md)), so the MCP server's authorization follows that migration.
 4. **Two webapp constraints shape the tools.** Ranked search (combined search) runs only on the search-role processes and spends a paid model budget. Tracking, Watch next, My library, New episodes and the taste portrait sit behind `REC_*` feature flags.
 5. **WebMCP is not a viable alternative today, only a cheap later add-on.** It ships in no stable browser, no production agent calls it yet, and it only works while a GoodWatch tab is open. It never reaches Claude.ai, ChatGPT or mobile.
 
@@ -96,13 +96,7 @@ What Claude requires from a remote connector (from Claude's own [authentication 
 - Allowed redirects: `https://claude.ai/api/mcp/auth_callback`, plus loopback on any port for Claude Code, VS Code and Cursor. ChatGPT has its own callback **(unverified)**.
 - The server validates audience, issuer, expiry and scope on every call. Suggested scopes: `goodwatch:read`, `goodwatch:write`, `offline_access`.
 
-Options for the authorization server:
-
-| Option | Fit | Notes |
-| --- | --- | --- |
-| **Supabase OAuth 2.1 Server** | Best on paper: members already live in Supabase, so the sign-in pages and accounts stay as they are | DCR is opt-in; CIMD support is **unconfirmed**. GoodWatch still provides the consent page. Tokens are Supabase JWTs, so moving the project to asymmetric keys (already suggested in `docs/member-session.md`) lets `/mcp` verify locally instead of calling the auth server on every tool call. **Verify first.** |
-| Self-built on the Remix app (e.g. `oidc-provider`, or Better Auth's `oauth-provider` + `cimd` plugins in front of Supabase sign-in) | Full control; supports CIMD and DCR today | More code and more security surface: token storage, rotation, revocation |
-| Hosted (WorkOS AuthKit, Clerk) | Both support CIMD and DCR | A second identity system bridged to Supabase users; cost per active user |
+**Authorization server: Better Auth, as part of replacing Supabase.** Sign-in is moving from Supabase to a self-hosted Better Auth anyway. Its `@better-auth/mcp` and `@better-auth/cimd` plugins cover everything above in released code: CIMD, optional DCR, PKCE, audience-bound JWT access tokens, refresh rotation and both metadata documents. Its `requireMcpAuth` guard verifies tokens locally on `/mcp`. The comparison with Supabase's own OAuth server (DCR but no CIMD or RFC 8707), hosted providers and self-hosted IdPs is in [Self-hosted auth to replace Supabase](self-hosted-auth.md).
 
 Whichever is chosen, GoodWatch also needs a **Connected apps** section in Settings for revoking access, a consent screen that shows the client name and redirect host, and a per-member audit of MCP writes.
 
@@ -131,15 +125,15 @@ WebMCP lets a web page register tools that an in-browser agent can call. It work
 ## Recommended path
 
 1. **Spike, about one or two days.** `/mcp` with read-only tools (`get_my_shows`, `get_title`, `get_library`, `get_tonight`). For the spike only, accept a Supabase access token as a bearer token (a new `resolveBearer` beside `resolveSession`), copied by hand from a dev session. This tests tool shape and output size in Claude Code and the MCP Inspector before any OAuth work.
-2. **Verify Supabase's OAuth 2.1 server**: DCR, CIMD, the consent page, and whether its tokens can be audience-bound to `https://goodwatch.app/mcp`. This decides between Supabase and self-built in the table above.
-3. **OAuth and writes.** Add the metadata routes, the consent page and Connected apps, then the write tools (`log_watch`, `rate_title`, `set_want_to_see`, `set_show_status`, `set_not_interested`), with `destructiveHint` on undo and removal.
+2. **Replace Supabase with Better Auth** (steps 1–5 of [Self-hosted auth to replace Supabase](self-hosted-auth.md#suggested-order)). It stands on its own merits, and the spike's tools carry over unchanged because user ids stay the same.
+3. **OAuth and writes.** Add `@better-auth/mcp` and `@better-auth/cimd`, the consent page and Connected apps, and guard `/mcp` with `requireMcpAuth`. Then add the write tools (`log_watch`, `rate_title`, `set_want_to_see`, `set_show_status`, `set_not_interested`), with `destructiveHint` on undo and removal.
 4. **Search** through the search role, with a per-member quota.
 5. **Distribution.** Submit to Claude's connector directory (needs OAuth, annotations, a documentation page, the privacy policy updated for MCP clients, and a populated test account) and to ChatGPT's apps (needs a verified developer account; ChatGPT plan rules for write actions are **unverified**). Also publish to the MCP Registry. Any client that accepts a URL works without listing: Claude custom connectors (Free accounts get one), VS Code, Cursor, Gemini CLI, Claude Code.
 6. **Later.** An MCP App (`io.modelcontextprotocol/ui`, stable since 2026-01) that renders poster cards or the episode list inline in Claude and ChatGPT. A WebMCP experiment once an agent calls it.
 
 ## Open decisions
 
-- Which authorization server to use (step 2).
+- The auth-replacement decisions listed in [Self-hosted auth to replace Supabase](self-hosted-auth.md#open-decisions), above all where the auth tables live.
 - Whether MCP access follows the `REC_*` preview lists, i.e. only preview members at first.
 - Whether `search_titles` may spend the paid search budget, and the quota per member.
 - Whether the assistant may write without confirmation. The suggestion is: idempotent additive writes (log a watch, rate, Want to See) run directly; removals and undo always confirm.
