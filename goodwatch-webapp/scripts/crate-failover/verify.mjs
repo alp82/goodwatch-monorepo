@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { execFile } from "node:child_process"
 import { createServer, request } from "node:http"
-import { mkdir, writeFile } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { promisify, format } from "node:util"
 import { setTimeout as delay } from "node:timers/promises"
@@ -19,7 +20,9 @@ Object.assign(process.env, {
 })
 const clientPath = process.env.CRATE_PROOF_BASELINE === "1" ? "./baseline-crate.ts" : "../../app/utils/crate.ts"
 const { query, execute, upsert, insertRows, setCrateClientForTest } = await import(clientPath)
-const report = { startedAt: new Date().toISOString(), client: clientPath, endpointScope: endpoints, assertions: [], failures: [] }
+const report = { startedAt: new Date().toISOString(), client: clientPath,
+	clientSha256: createHash("sha256").update(await readFile(new URL(clientPath, import.meta.url))).digest("hex"),
+	nodeVersion: process.version, endpointScope: endpoints, assertions: [], failures: [] }
 const log = []
 const progress = console.log.bind(console)
 for (const method of ["log", "warn", "error", "trace"]) console[method] = (...args) => log.push(format(...args))

@@ -18,11 +18,17 @@ mkdir -p "$(dirname "$output")"
 cleanup() {
   "${compose[@]}" logs --no-color > "$(dirname "$output")/containers.log" 2>&1 || true
   "${compose[@]}" down --volumes --remove-orphans
+  rm -f baseline-crate.ts backend-timeout.ts
   if [[ -n "$("${compose[@]}" ps -aq)" ]]; then
     echo 'Cleanup failed: owned containers still exist.' >&2
     return 1
   fi
 }
 trap cleanup EXIT
+if [[ "${CRATE_PROOF_BASELINE:-0}" == 1 ]]; then
+  baseline_commit=$(git merge-base origin/main HEAD)
+  git show "$baseline_commit:goodwatch-webapp/app/utils/crate.ts" > baseline-crate.ts
+  git show "$baseline_commit:goodwatch-webapp/app/utils/backend-timeout.ts" > backend-timeout.ts
+fi
 "${compose[@]}" up -d
 node verify.mjs "$output"
