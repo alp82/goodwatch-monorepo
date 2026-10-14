@@ -1,0 +1,136 @@
+{
+  "at": "2026-10-14T20:50:19.445375+00:00",
+  "clients": [
+    {
+      "container": "gk4owk8-20261014T201438",
+      "data": {
+        "sockets": [
+          {
+            "remoteAddress": "10.0.0.12",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.13",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "01"
+          },
+          {
+            "remoteAddress": "10.0.0.13",
+            "port": 4200,
+            "state": "01"
+          },
+          {
+            "remoteAddress": "10.0.0.13",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.12",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.12",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "06"
+          },
+          {
+            "remoteAddress": "10.0.0.12",
+            "port": 4200,
+            "state": "01"
+          },
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "06"
+          }
+        ],
+        "bundle": [
+          {
+            "path": "build/server/index.js",
+            "crateHostCode": null,
+            "timeoutCode": null
+          }
+        ],
+        "readOnlyPoolSelection": [
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11",
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11"
+        ]
+      }
+    },
+    {
+      "container": "goodwatch-search-b",
+      "data": {
+        "sockets": [
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "01"
+          }
+        ],
+        "bundle": [
+          {
+            "path": "build/server/index.js",
+            "crateHostCode": null,
+            "timeoutCode": null
+          }
+        ],
+        "readOnlyPoolSelection": [
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11",
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11"
+        ]
+      }
+    },
+    {
+      "container": "goodwatch-search-a",
+      "data": {
+        "sockets": [
+          {
+            "remoteAddress": "10.0.0.11",
+            "port": 4200,
+            "state": "01"
+          }
+        ],
+        "bundle": [
+          {
+            "path": "build/server/index.js",
+            "crateHostCode": null,
+            "timeoutCode": null
+          }
+        ],
+        "readOnlyPoolSelection": [
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11",
+          "10.0.0.12",
+          "10.0.0.13",
+          "10.0.0.11"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "logicalShards": 466,
+  "copies": 932,
+  "minCopies": 2,
+  "maxCopies": 2,
+  "singleCopyShards": [],
+  "allCopiesStarted": true,
+  "distinctNodesPerShard": true
+}

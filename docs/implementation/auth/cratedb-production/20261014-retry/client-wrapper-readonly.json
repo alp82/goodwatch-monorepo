@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-14T20:53:25.874124+00:00",
+  "clients": [
+    {
+      "container": "gk4owk8-20261014T205004",
+      "matches": [
+        {
+          "path": "build/server/assets/server-build-CVV-DcRj.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": " client$2 = null;\nconst getCrateClient = () => {\n  if (!client$2) {\n    const hosts2 = (process.env.CRATE_HOSTS || \"\").split(\",\");\n    const port = Number.parseInt(process.env.CRATE_PORT || \"4200\");\n    const user = process.env.CRATE_USER || \"\";\n    const pass = process.env.CRATE_PASS || \"\";\n    const urls = hosts2.map((host) => `http://${user}:${pass}@${host}:${port}`);\n    client$2 = new CrateClient(urls);\n  }\n  return client$2;\n};\nconst query = async (query2, params) => {\n  const client2 = getCrateClient();\n  const response = await client2.select(query2, params);\n  return response.result;\n};\nconst execute = async (query2, params) => {\n  const client2 = getCrateClient();\n  return await client2.execute(query2, params);\n};\nconst upsert = async ({\n  table,\n  data,\n  conflictColumns,\n  ignoreUpdate = false\n}) => {\n  if (!data.length) return { rowcount: 0 };\n  const now = /* @__PURE__ */ ne"
+        },
+        {
+          "path": "build/server/search-index.worker.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": "3;\nvar BlobMissing = class extends Error {\n};\nfunction crateConfig() {\n  const hosts = (process.env.CRATE_HOSTS ?? \"\").split(\",\").map((h) => h.trim()).filter(Boolean);\n  if (!hosts.length) throw new Error(\"CRATE_HOSTS is not set\");\n  return {\n    hosts,\n    port: Number(process.env.CRATE_PORT || \"4200\"),\n    auth: `Basic ${Buffer.from(`${process.env.CRATE_USER || \"\"}:${process.env.CRATE_PASS || \"\"}`).toString(\"base64\")}`\n  };\n}\nvar agent = new http.Agent({ keepAlive: true, maxSockets: 8 });\nfunction request(url, method, headers, body) {\n  return new Promise((resolve, reject) => {\n    const req = http.request(\n      url,\n      {\n        method,\n        agent,\n        headers: body ? { ...headers, \"Content-Length\": Buffer.byteLength(body) } : headers\n      },\n      (res) => {\n        const chunks = [];\n        res.on(\"data\", (chunk) => chunks.push(chunk));\n        res.on(\n          \"end\",\n"
+        }
+      ]
+    },
+    {
+      "container": "goodwatch-search-b",
+      "matches": [
+        {
+          "path": "build/server/assets/server-build-DY_PMoVf.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": " client$2 = null;\nconst getCrateClient = () => {\n  if (!client$2) {\n    const hosts2 = (process.env.CRATE_HOSTS || \"\").split(\",\");\n    const port = Number.parseInt(process.env.CRATE_PORT || \"4200\");\n    const user = process.env.CRATE_USER || \"\";\n    const pass = process.env.CRATE_PASS || \"\";\n    const urls = hosts2.map((host) => `http://${user}:${pass}@${host}:${port}`);\n    client$2 = new CrateClient(urls);\n  }\n  return client$2;\n};\nconst query = async (query2, params) => {\n  const client2 = getCrateClient();\n  const response = await client2.select(query2, params);\n  return response.result;\n};\nconst execute = async (query2, params) => {\n  const client2 = getCrateClient();\n  return await client2.execute(query2, params);\n};\nconst upsert = async ({\n  table,\n  data,\n  conflictColumns,\n  ignoreUpdate = false\n}) => {\n  if (!data.length) return { rowcount: 0 };\n  const now = /* @__PURE__ */ ne"
+        },
+        {
+          "path": "build/server/search-index.worker.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": "3;\nvar BlobMissing = class extends Error {\n};\nfunction crateConfig() {\n  const hosts = (process.env.CRATE_HOSTS ?? \"\").split(\",\").map((h) => h.trim()).filter(Boolean);\n  if (!hosts.length) throw new Error(\"CRATE_HOSTS is not set\");\n  return {\n    hosts,\n    port: Number(process.env.CRATE_PORT || \"4200\"),\n    auth: `Basic ${Buffer.from(`${process.env.CRATE_USER || \"\"}:${process.env.CRATE_PASS || \"\"}`).toString(\"base64\")}`\n  };\n}\nvar agent = new http.Agent({ keepAlive: true, maxSockets: 8 });\nfunction request(url, method, headers, body) {\n  return new Promise((resolve, reject) => {\n    const req = http.request(\n      url,\n      {\n        method,\n        agent,\n        headers: body ? { ...headers, \"Content-Length\": Buffer.byteLength(body) } : headers\n      },\n      (res) => {\n        const chunks = [];\n        res.on(\"data\", (chunk) => chunks.push(chunk));\n        res.on(\n          \"end\",\n"
+        }
+      ]
+    },
+    {
+      "container": "goodwatch-search-a",
+      "matches": [
+        {
+          "path": "build/server/assets/server-build-DY_PMoVf.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": " client$2 = null;\nconst getCrateClient = () => {\n  if (!client$2) {\n    const hosts2 = (process.env.CRATE_HOSTS || \"\").split(\",\");\n    const port = Number.parseInt(process.env.CRATE_PORT || \"4200\");\n    const user = process.env.CRATE_USER || \"\";\n    const pass = process.env.CRATE_PASS || \"\";\n    const urls = hosts2.map((host) => `http://${user}:${pass}@${host}:${port}`);\n    client$2 = new CrateClient(urls);\n  }\n  return client$2;\n};\nconst query = async (query2, params) => {\n  const client2 = getCrateClient();\n  const response = await client2.select(query2, params);\n  return response.result;\n};\nconst execute = async (query2, params) => {\n  const client2 = getCrateClient();\n  return await client2.execute(query2, params);\n};\nconst upsert = async ({\n  table,\n  data,\n  conflictColumns,\n  ignoreUpdate = false\n}) => {\n  if (!data.length) return { rowcount: 0 };\n  const now = /* @__PURE__ */ ne"
+        },
+        {
+          "path": "build/server/search-index.worker.js",
+          "marker": "CRATE_HOSTS",
+          "snippet": "3;\nvar BlobMissing = class extends Error {\n};\nfunction crateConfig() {\n  const hosts = (process.env.CRATE_HOSTS ?? \"\").split(\",\").map((h) => h.trim()).filter(Boolean);\n  if (!hosts.length) throw new Error(\"CRATE_HOSTS is not set\");\n  return {\n    hosts,\n    port: Number(process.env.CRATE_PORT || \"4200\"),\n    auth: `Basic ${Buffer.from(`${process.env.CRATE_USER || \"\"}:${process.env.CRATE_PASS || \"\"}`).toString(\"base64\")}`\n  };\n}\nvar agent = new http.Agent({ keepAlive: true, maxSockets: 8 });\nfunction request(url, method, headers, body) {\n  return new Promise((resolve, reject) => {\n    const req = http.request(\n      url,\n      {\n        method,\n        agent,\n        headers: body ? { ...headers, \"Content-Length\": Buffer.byteLength(body) } : headers\n      },\n      (res) => {\n        const chunks = [];\n        res.on(\"data\", (chunk) => chunks.push(chunk));\n        res.on(\n          \"end\",\n"
+        }
+      ]
+    }
+  ]
+}
