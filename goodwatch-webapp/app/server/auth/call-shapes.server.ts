@@ -4,7 +4,7 @@ import type { CleanedWhere } from "better-auth/adapters"
 // delete hook's findMany pre-read is included below. Optional DB verification,
 // preservation and rate-limit shapes are gated by the factory configuration.
 const rules: Record<string, Record<string, string[]>> = {
-	user: { findOne: ["id", "email"], update: ["id", "email"], findMany: ["id"], delete: ["id"] },
+	user: { findOne: ["id", "email"], update: ["id", "email"], findMany: ["id"], delete: ["id"], incrementOne: ["id+confirmationDigest"] },
 	account: { findMany: ["providerId+accountId", "userId", "id"], findOne: ["userId+providerId+accountId"], updateMany: ["userId+providerId+accountId"], update: ["id"], delete: ["id"], deleteMany: ["userId"] },
 	session: { findOne: ["token", "id"], update: ["token"], findMany: ["token", "userId", "token:in", "userId+expiresAt:gt", "token:in+expiresAt:gt", "token+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
 	verification: { findOne: ["id"], findMany: ["identifier", "expiresAt:lt"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier", "expiresAt:lt"] },
@@ -58,6 +58,8 @@ export function assertAuthMutation(model: string, action: string, input: Record<
 	if (["update", "updateMany", "incrementOne"].includes(action)) {
 		const data = action === "incrementOne" ? input.set ?? {} : input.update ?? {}
 		if (!Object.keys(data).length && !Object.keys(input.increment ?? {}).length) fail()
+		// #549: atomically consume only the newest email confirmation digest.
+		if (model === "user" && action === "incrementOne" && (Object.keys(input.increment).length || Object.keys(data).some(field => !["confirmationDigest", "updatedAt"].includes(field)) || data.confirmationDigest !== null || typeof input.where.find((p: CleanedWhere) => p.field === "confirmationDigest")?.value !== "string")) fail()
 		if (model === "account" && ["id", "accountId", "userId"].some(field => field in data)) fail()
 		if (model === "session" && ["id", "token", "userId"].some(field => field in data)) fail()
 		const allowed = model === "oauthRefreshToken"
