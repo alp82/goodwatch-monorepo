@@ -88,7 +88,6 @@ Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `
 | `gw_browser` | Not part of the key. An unfiltered page doesn't read it. The gate requires it for filtered person URLs and for `/sign-in` and `/sign-up` with `redirectTo`. A cache forwards `Cookie` on a miss, never stores the 403, and may serve a stored filtered 200 page to anyone. |
 | Analytics cookies (`_ga*`, `ph_*`) | Irrelevant. The server doesn't read them. |
 | `gw_recording_sample`, `gw_stale_chunk_reload` | Browser storage keys, not cookies. Irrelevant. |
-| Feature flags (`REC_*`) | Environment variables. Preview users are members, so anonymous HTML doesn't depend on a visitor. A flag change needs a restart, and a purge of any page cache. |
 | `?country=`, `?language=`, filters, `?tv=`, every other query parameter | Part of the URL, which is part of the key. |
 | Tracking parameters (`utm_*`, `fbclid`, `gclid`, and the other click ids listed in [page-cache.md](page-cache.md)) | Not part of the key. The in-process page cache removes them from the request before the app sees it, because some pages copy the query string into links. No loader reads them. |
 | `?_data=` | Remix's loader request. Same rule as the page. |

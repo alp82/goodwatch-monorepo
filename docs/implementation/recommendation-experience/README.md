@@ -1,5 +1,9 @@
 # Recommendation experience implementation
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 This spec describes how to take the recommendation redesign from its accepted prototypes to production: one shared
 filter bar, taste match on every card, Watch next, a three-tab Taste page, one page for Discover and Search, the
 Explorer map, and the new site navigation. It also defines the storage and modules they share, the performance

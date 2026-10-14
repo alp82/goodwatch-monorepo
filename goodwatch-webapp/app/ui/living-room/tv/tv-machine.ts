@@ -412,7 +412,7 @@ function tonightPick(
 
 /**
  * Where the Expand key takes a screen, with what travels (the mood, the island, the query), or null for a screen without a page: home, the quiz, the rating, search before a query, What is
- * GoodWatch? The addresses are the pages' with every REC_* flag on.
+ * GoodWatch?
  */
 export function destinationHref(
 	screen: TvScreen,

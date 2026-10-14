@@ -1,5 +1,9 @@
 # Slice 2: the room
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The new TV's room on `/home-preview`, with an empty TV: the softened photos, the TV and the Remote at every
 window size the prototype measured, the phone's room with its Remote, and phone landscape. Proof for
 [the plan](../README.md), slice 2. Taken on October 13, 2026.

@@ -11,7 +11,6 @@ import {
 	TvIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType, SVGProps } from "react"
-import type { EnabledFeatures } from "~/utils/features"
 
 export type DestinationKey =
 	| "home"
@@ -34,8 +33,6 @@ export interface Destination {
 	short: string
 	href: string
 	icon: ComponentType<SVGProps<SVGSVGElement>>
-	/** False while the page's own feature is off for the viewer; the tile shows but doesn't link. */
-	available: boolean
 }
 
 /** Where a search for a query goes: Discover's search mode (`/search` redirects there too). */
@@ -51,9 +48,7 @@ export function currentSearchQuery(pathname: string, search: string): string {
 		: ""
 }
 
-export function getDestinations(
-	features: EnabledFeatures,
-): Record<DestinationKey, Destination> {
+export function getDestinations(): Record<DestinationKey, Destination> {
 	return {
 		home: {
 			key: "home",
@@ -61,7 +56,6 @@ export function getDestinations(
 			short: "Home",
 			href: "/",
 			icon: HomeIcon,
-			available: true,
 		},
 		watchNext: {
 			key: "watchNext",
@@ -69,7 +63,6 @@ export function getDestinations(
 			short: "Watch",
 			href: "/watch-next",
 			icon: PlayIcon,
-			available: true,
 		},
 		discover: {
 			key: "discover",
@@ -77,7 +70,6 @@ export function getDestinations(
 			short: "Discover",
 			href: "/discover",
 			icon: MagnifyingGlassIcon,
-			available: true,
 		},
 		taste: {
 			key: "taste",
@@ -85,7 +77,6 @@ export function getDestinations(
 			short: "Taste",
 			href: "/taste",
 			icon: FingerPrintIcon,
-			available: true,
 		},
 		explorer: {
 			key: "explorer",
@@ -93,7 +84,6 @@ export function getDestinations(
 			short: "Explorer",
 			href: "/explorer",
 			icon: MapIcon,
-			available: true,
 		},
 		movies: {
 			key: "movies",
@@ -101,7 +91,6 @@ export function getDestinations(
 			short: "Movies",
 			href: "/movies",
 			icon: FilmIcon,
-			available: true,
 		},
 		shows: {
 			key: "shows",
@@ -109,7 +98,6 @@ export function getDestinations(
 			short: "Shows",
 			href: "/shows",
 			icon: TvIcon,
-			available: true,
 		},
 		myShows: {
 			key: "myShows",
@@ -117,7 +105,6 @@ export function getDestinations(
 			short: "My shows",
 			href: "/my-shows",
 			icon: TvIcon,
-			available: true,
 		},
 		myMovies: {
 			key: "myMovies",
@@ -125,7 +112,6 @@ export function getDestinations(
 			short: "My movies",
 			href: "/my-movies",
 			icon: FilmIcon,
-			available: true,
 		},
 		myLibrary: {
 			key: "myLibrary",
@@ -133,7 +119,6 @@ export function getDestinations(
 			short: "Library",
 			href: "/my-library",
 			icon: BookmarkIcon,
-			available: true,
 		},
 	}
 }

@@ -1,5 +1,9 @@
 # Explorer, the way to the title page
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The prototype behind the way from the Explorer's title card to the title page. Round 2's header became the real
 card on 2026-10-13 (`app/ui/explorer/ProximityCard.tsx`), without the ring around the header, which the owner
 didn't want. The prototype's route, its files, and the `Card` seam on `ExplorerMap` were removed in the same change;

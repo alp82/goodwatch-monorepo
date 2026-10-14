@@ -1,5 +1,9 @@
 # Slice 10: search
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 Search on the new TV: one line to type into and four ideas; OK on what is typed, or on an idea, runs the full
 search and shows the first four titles it found in the list every app uses; a title leads to its title screen.
 The top bar's Search key, the menu's Search, the Remote's Search key and S on the keyboard open it. For a guest

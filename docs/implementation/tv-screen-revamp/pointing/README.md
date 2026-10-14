@@ -1,5 +1,9 @@
 # Slices 4 and 4b: pointing
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The ring pointer over the TV's picture, the Remote that follows the cursor (a swing under the TV, a nod beside
 it), a finger that points on the phone and on any touch screen, and the phone's Remote in landscape, which turns
 about its grip toward the spot it points at. On `/home-preview`. Proof for [the plan](../README.md), slice 4 and,

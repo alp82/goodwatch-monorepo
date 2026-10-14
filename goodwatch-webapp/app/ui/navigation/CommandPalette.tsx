@@ -19,7 +19,6 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { useFeatures } from "~/hooks/useFeature"
 import { useUser } from "~/utils/auth"
 import {
 	MIN_PREFIX_CHARS,
@@ -94,7 +93,6 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const { pathname, search } = useLocation()
 	const { user } = useUser()
 	const signUp = useSignUpHref()
-	const features = useFeatures()
 	const { pick } = useTonightsPick()
 	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
 	const [active, setActive] = useState(0)
@@ -111,7 +109,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const trimmed = q.trim()
 	const needle = trimmed.toLowerCase()
 	const rows = useMemo(() => {
-		const destinations = getDestinations(features)
+		const destinations = getDestinations()
 		const here = currentDestination(pathname)
 		const result: Row[] = []
 		if (trimmed)
@@ -143,7 +141,6 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			})
 		for (const key of PALETTE_DESTINATIONS) {
 			const destination = destinations[key]
-			if (!destination.available) continue
 			const words = `${destination.label} ${destination.short}`.toLowerCase()
 			if (needle && !words.includes(needle)) continue
 			result.push({
@@ -169,7 +166,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: ArrowRightEndOnRectangleIcon,
 			})
 		return result
-	}, [features, pathname, trimmed, needle, titles, more, pick, user, signUp])
+	}, [pathname, trimmed, needle, titles, more, pick, user, signUp])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`

@@ -1,5 +1,9 @@
 # Explorer, one world (round 10)
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The prototype behind the Explorer's one map. Its last round became the real Explorer on 2026-10-13 (`/explorer`,
 `app/ui/explorer/`, `app/server/explorer/world.server.ts`), and the prototype's route and files were removed in the
 same change; the rounds are in the history of branch `prototype/explorer-world`. What follows is the record of the

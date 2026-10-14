@@ -4,8 +4,8 @@
 //
 //   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3162 node drive.mjs [checks|shots]
 //
-// The repo has no browser driver: install playwright-core outside it. Needs a dev server of goodwatch-webapp with
-// every REC_* flag on (see README.md here). PROTOTYPE= is the folder of the prototype's notes
+// The repo has no browser driver: install playwright-core outside it. Needs a dev server of goodwatch-webapp (see
+// README.md here). PROTOTYPE= is the folder of the prototype's notes
 // (docs/prototypes/tv-screen-design on prototype/tv-screen-flow), for the sheets.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"

@@ -13,7 +13,6 @@ import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
-import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
@@ -91,7 +90,7 @@ function Tile({
 		here
 			? "shadow-[inset_0_0_0_2px_#fbbf24]"
 			: "shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_0_1px_rgba(255,255,255,0.08)]"
-	} ${destination.available ? "hover:brightness-125" : "opacity-60"}`
+	} hover:brightness-125`
 	const body = (
 		<>
 			{backdrop && (
@@ -126,12 +125,6 @@ function Tile({
 			)}
 		</>
 	)
-	if (!destination.available)
-		return (
-			<div className={className} aria-disabled="true">
-				{body}
-			</div>
-		)
 	return (
 		<Link
 			to={destination.href}
@@ -165,7 +158,7 @@ function SecondaryKey({
 function AccountRow() {
 	const { user } = useUser()
 	const signUp = useSignUpHref()
-	const destinations = getDestinations(useFeatures())
+	const destinations = getDestinations()
 	if (!user)
 		return (
 			<Link
@@ -218,7 +211,7 @@ function HubContent() {
 	const { user } = useUser()
 	const { pathname } = useLocation()
 	const here = currentDestination(pathname)
-	const d = getDestinations(useFeatures())
+	const d = getDestinations()
 	const { pick, wishlistCount } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()

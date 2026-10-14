@@ -1,5 +1,7 @@
 // Drives /prototype/watch-log-real (the real components over a stand-in server) in headless Chromium.
 //   node drive.mjs <desktop|phone> <port-on> <port-off> <screenshot dir>
+// REC_TRACKING was removed on October 14, 2026: every server is "on" now. The harness no longer says which it is, so
+// the "flag is on" check and the whole "Flag off" part fail; the rest still applies.
 import { chromium } from "playwright-core"
 
 const [mode = "desktop", portOn = "3105", portOff = "3106", shots = "."] = process.argv.slice(2)

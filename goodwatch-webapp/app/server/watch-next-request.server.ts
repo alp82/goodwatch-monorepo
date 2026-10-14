@@ -1,5 +1,5 @@
-// Request handling shared by the Watch next and Tonight's pick endpoints: the feature flag, the viewer (a member from
-// the session; a guest from the guest progress in a POST body), and the options in the URL.
+// Request handling shared by the Watch next and Tonight's pick endpoints: the viewer (a member from the session; a
+// guest from the guest progress in a POST body), and the options in the URL.
 import { json } from "@remix-run/node"
 import { z } from "zod"
 import { timeOf } from "~/domain/my-movies"

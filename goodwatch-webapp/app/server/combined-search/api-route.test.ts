@@ -22,7 +22,6 @@ const stubs: Record<string, string> = {
 	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
 	"/combined-search/search.server.ts": `export const combinedSearch=(...args)=>globalThis.__routeSearchTest.run(...args);`,
 	"/combined-search/search-filters.ts": `export const parseSearchFilters=()=>({});`,
-	"/features.server.ts": `export const getFeatureMode=()=> 'on';`,
 	"/role.server.ts": `export const runsSearch=()=>true;`,
 	"/search-runtime/admission.server.ts": `export const searchAdmission={enter:()=>()=>{globalThis.__routeSearchTest.release++}};export const searchBusyResponse=()=>Response.json({error:'busy'},{status:503});`,
 	"/search-ranking/ranking.server.ts": `export const RESULT_LENGTH=100;`,

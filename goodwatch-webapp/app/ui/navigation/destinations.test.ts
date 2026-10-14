@@ -3,17 +3,16 @@
 // second Home row.
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { NO_FEATURES } from "../../utils/features.ts"
 import { getDestinations } from "./destinations.ts"
 
 test("the home destination is called Home on the tile, in the palette and on the dock", () => {
-	const { home } = getDestinations(NO_FEATURES)
+	const { home } = getDestinations()
 	assert.equal(home.label, "Home")
 	assert.equal(home.short, "Home")
 })
 
 test("no two destinations share a label, so the palette never lists one twice", () => {
-	const labels = Object.values(getDestinations(NO_FEATURES)).map(
+	const labels = Object.values(getDestinations()).map(
 		(destination) => destination.label,
 	)
 	assert.equal(new Set(labels).size, labels.length)

@@ -1,5 +1,9 @@
 # Slice 13: the switch and the cleanup
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 `/` is the new TV and the old one is gone. Proof for [the plan](../README.md), slice 13. Taken on October 14, 2026,
 on `feat/tv-slice-13-switch`, branched from the integration branch at `9615ca70`. `origin/main` (`8cf806a1`) was
 already merged into it, so no change on `main` touched the files this slice replaces.

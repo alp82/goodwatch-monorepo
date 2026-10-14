@@ -1,5 +1,9 @@
 # Slice 9: My shows
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 A member's My shows on the new TV: the shows with a Next episode, then the shows to start; the New episodes signal
 on home's My shows tile and on the screen; a show opens its title screen, where Seen it marks the Next episode of a
 show the member is midway through. And slice 3's leftover: the menu and What is GoodWatch? on a phone. On

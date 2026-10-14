@@ -7,7 +7,6 @@ import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { useFeatures } from "~/hooks/useFeature"
 import { TvBackDockKey, useTvWayBack } from "~/ui/living-room/TvWayBackHost"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, NewEpisodesMark } from "./bits"
@@ -19,7 +18,7 @@ const HUB_LABEL = "Browse GoodWatch"
 function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }) {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
-	const destinations = getDestinations(useFeatures())
+	const destinations = getDestinations()
 	const here = currentDestination(pathname)
 	const page = here ? destinations[here] : null
 	const Icon = page?.icon ?? Squares2X2Icon

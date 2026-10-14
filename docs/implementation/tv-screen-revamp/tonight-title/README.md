@@ -1,5 +1,9 @@
 # Slice 5: Tonight and the title screen
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The first complete path on the new TV: home, Tonight, a title, Want to See, Seen it with the rating, and the
 Watch key, which opens the title's page on GoodWatch at its streaming block. For a guest and a member, on
 `/home-preview`. Proof for [the plan](../README.md), slice 5. Taken on October 13, 2026.

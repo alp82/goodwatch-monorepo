@@ -1,5 +1,9 @@
 # New episodes for the shows a member tracks
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 What [#442](https://github.com/alp82/goodwatch-monorepo/issues/442) built, from the decisions of
 [#437](https://github.com/alp82/goodwatch-monorepo/issues/437). In the app only: no email, no push, no release
 calendar. Everything is behind `REC_TRACKING`. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md) (Waiting for

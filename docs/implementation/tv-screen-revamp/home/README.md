@@ -1,5 +1,9 @@
 # Slice 3: home, the bar and the menu
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The Cinema home on `/home-preview`, driven by the TV's machine with the keyboard and both Remotes: the app
 tiles, the top bar, the menu, What is GoodWatch?, power and the boot screen, for a guest and a member, from the
 address's own loader. Proof for [the plan](../README.md), slice 3. Taken on October 13, 2026.

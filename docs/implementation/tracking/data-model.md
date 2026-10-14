@@ -1,5 +1,9 @@
 # Data model for watches, show state and what each page reads
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The decided data model for [#378](https://github.com/alp82/goodwatch-monorepo/issues/378), under the map
 [#365](https://github.com/alp82/goodwatch-monorepo/issues/365). Proposed on October 7, 2026, reviewed by the owner the
 same day, and rewritten here with every open point decided. Nothing is built yet. This is what the build tickets for

@@ -1,5 +1,9 @@
 # Slice 7: the mini Explorer
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The Explorer on the new TV: a small map of six islands of the real mood map, an island with its first four
 titles, and "Sail to" its two nearest islands. For a guest and a member, on `/home-preview`. Proof for
 [the plan](../README.md), slice 7. Taken on October 13, 2026.

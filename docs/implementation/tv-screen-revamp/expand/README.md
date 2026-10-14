@@ -1,5 +1,9 @@
 # Slice 11: the Expand key
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The Expand key on the new TV: amber corner brackets around a small picture and the word "Expand", at the
 picture's bottom right on every screen that has a page, and the way through it into the real page and back. It
 uses the motion the owner chose and that already runs on `main` (#232, commit `8cf806a1`, "lean in"): the room

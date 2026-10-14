@@ -3,7 +3,6 @@
 // bar that opens the hub, and the account slot; everything else lives in the dock.
 import { ChevronDownIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
-import { useFeatures } from "~/hooks/useFeature"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useNavigation } from "./NavigationContext"
@@ -16,7 +15,7 @@ function BrowseButton() {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
 	const here = currentDestination(pathname)
-	const destinations = getDestinations(useFeatures())
+	const destinations = getDestinations()
 	const open = navigation.hubOpen
 	// My shows and My movies are tiles inside the hub, so what opens the hub says that something is new there.
 	const fresh = useOpenerSignal()

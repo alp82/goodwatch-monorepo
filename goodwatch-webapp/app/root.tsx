@@ -6,7 +6,6 @@ import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
-import { getEnabledFeatures } from "~/server/features.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { startBrowserGate } from "~/server/browser-gate.server"
 import { startMetrics } from "~/server/metrics/index.server"
@@ -51,7 +50,6 @@ import {
 	SearchDialog,
 	SiteHeader,
 } from "~/ui/navigation"
-import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext } from "~/utils/locale"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 
@@ -114,7 +112,6 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 type LoaderData = {
 	user: User | null
-	features: EnabledFeatures
 	dehydratedState: DehydratedState
 	locale: {
 		language: string
@@ -150,7 +147,6 @@ export const loader: LoaderFunction = async ({
 	return json<LoaderData>(
 		{
 			user,
-			features: getEnabledFeatures({ userId: user?.id }),
 			dehydratedState: dehydrate(queryClient),
 			locale,
 			env: {

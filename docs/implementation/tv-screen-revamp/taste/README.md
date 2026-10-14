@@ -1,5 +1,9 @@
 # Slice 8: mini Taste, the quiz and the rating strip
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 Taste on the new TV in its three states, a side's screen, the taste quiz, and the rating strip the quiz and "How
 was it?" after Seen it both use. For a guest and a member, on `/home-preview`. Proof for [the plan](../README.md),
 slice 8. Taken on October 13, 2026.

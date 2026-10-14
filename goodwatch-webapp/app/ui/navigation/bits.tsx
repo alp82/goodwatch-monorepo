@@ -4,7 +4,6 @@ import { assetUrl } from "~/utils/asset-url"
 import { BookmarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
-import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
 import { LazyUserMenu } from "~/ui/main/LazyUserMenu"
 import { useUser } from "~/utils/auth"
@@ -60,7 +59,7 @@ export function TonightsPickThumb({
 	const { user } = useUser()
 	const { pathname } = useLocation()
 	const { pick } = useTonightsPick()
-	const watchNext = getDestinations(useFeatures()).watchNext
+	const watchNext = getDestinations().watchNext
 	// A member's pick says which page it is the first thing on (#385), and may be an episode.
 	const to = pick?.href ?? watchNext.href
 	const here = pick?.href

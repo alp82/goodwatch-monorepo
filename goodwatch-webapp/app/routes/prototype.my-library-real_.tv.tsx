@@ -3,9 +3,8 @@
 // /prototype/my-library-real (issue #385) with one more page: the loader runs the TV's own member read
 // (`loadMemberHome`, server/living-room/tv-loader.server.ts) against that harness's in-memory Crate, so a member's
 // home can be driven in a headless browser without a signed-in session or a database.
-// Start the dev server without .env and with the flags on (a server with CRATE_HOSTS is refused):
-//   REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on REC_NAVIGATION=on \
-//   REC_AGE_FILTER=on REC_TRACKING=on node_modules/.bin/remix vite:dev --port 3174
+// Start the dev server without .env (a server with CRATE_HOSTS is refused):
+//   node_modules/.bin/remix vite:dev --port 3174
 //   /prototype/my-library-real/tv?member=six|one|many|none|empty|new&seen=30|1500|0&landed=...
 //   &services=337,15 gives the member those saved streaming services, by TMDB provider id (one, two or more;
 //   `none` for a member who saved none). Without it they saved Netflix and Prime Video. The Remote's two keys and

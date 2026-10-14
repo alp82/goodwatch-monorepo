@@ -3,8 +3,8 @@
 // /prototype/my-library-real/tv (the "Home" link). The loader and the harness's API run the app's own
 // server reads against an in-memory Crate (server/prototype-my-library.server.ts), and the page sends the member's
 // requests there. It is how the pages are driven in a headless browser without a signed-in session or a database.
-// Start the dev server without .env and with the flags on:
-//   REC_TRACKING=on REC_WATCH_NEXT=on REC_NAVIGATION=on REC_TASTE_MATCH=on node_modules/.bin/remix vite:dev --port 3107
+// Start the dev server without .env:
+//   node_modules/.bin/remix vite:dev --port 3107
 //   /prototype/my-library-real?page=library|shows|movies&member=six|one|many|none|empty&seen=30|1500|0
 // `reset=1` starts the sample member over, `chrome=off` hides the harness's own controls. The library's own
 // parameters (`status`, `sort`, `type`, `q`) work as on /my-library.

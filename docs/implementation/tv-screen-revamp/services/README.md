@@ -1,5 +1,9 @@
 # Slice 6b: the streaming keys and their screens
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 The Remotes' two streaming keys stand for the person's own two services, home has a tile for each after the apps,
 and a key or a tile opens the TV screen "On <service>": the service's mark and titles to watch there. For a guest
 and a member, on `/home-preview`. Proof for [the plan](../README.md), slice 6b. Taken on October 14, 2026, after

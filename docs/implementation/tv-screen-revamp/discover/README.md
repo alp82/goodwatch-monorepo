@@ -1,5 +1,9 @@
 # Slice 6: mini Discover
 
+> Since October 14, 2026 the webapp reads no `REC_*` feature flag: what `on` did is what the site does
+> (`docs/implementation/tv-screen-revamp/rec-flags/`). The flags here record how this was built and run then. A server
+> of a later commit needs none of them.
+
 Discover on the new TV: three tabs, Moods, Themes and Styles, with six options each; one choice leads to the first
 four titles of Discover's own results for it; a title leads to its title screen; Change leads back to the tabs.
 For a guest and a member, on `/home-preview`. Proof for [the plan](../README.md), slice 6. Taken on October 13,
