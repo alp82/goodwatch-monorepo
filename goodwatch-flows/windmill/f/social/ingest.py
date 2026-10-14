@@ -1,9 +1,10 @@
 """Bounded discovery/backfill; sources fail independently, all accepted matches publish."""
 import json
+from collections import Counter
 from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
-from f.social import bluesky, mastodon, rss, youtube
+from f.social import bluesky, mastodon, rss, youtube, quality
 from f.social.common import SOURCES, now, stamp
 from f.social.matcher import Matcher, OpenRouter
 from f.social.settings import load
@@ -38,7 +39,12 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
             status = collected['status']
             details = {k: v for k, v in collected.items() if k not in ('posts', 'status')}
             counts['collected'] = len(collected['posts'])
-            store.save_posts(collected['posts'])
+            screened = store.save_posts(collected['posts']) or {}
+            decisions = [screened[p['post_id']] for p in collected['posts'] if p['post_id'] in screened]
+            details['content_quality'] = {'version': quality.VERSION,
+                'pass': sum(d['status'] == 'pass' for d in decisions),
+                'reject': sum(d['status'] == 'reject' for d in decisions),
+                'reasons': dict(Counter(r for d in decisions for r in d['reasons']))}
             pending = store.pending(name, max_posts)
             # Only source HTTP/model/catalog reads run concurrently. Publication
             # stays sequential and the queue holds at most three eight-post batches.
@@ -50,9 +56,8 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
                         matched = future.result()
                         for item in batch:
                             links = matched[item['post_id']]
-                            store.publish(item, links)
+                            counts['published'] += store.publish(item, links)
                             counts['processed'] += 1
-                            counts['published'] += len(links)
                         store.refresh('social_post', 'social_title_link')
                         store.run_record(run_id, **record, status='running', **counts)
                         print(json.dumps({'source': name, **counts}), flush=True)

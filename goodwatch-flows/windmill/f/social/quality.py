@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 from collections import defaultdict
 from difflib import SequenceMatcher
 from f.social.common import now, stamp
+from f.social.inventory import CHANNELS
 
 VERSION = 'content-quality-1'
 PROMOTION = re.compile(
@@ -69,7 +70,8 @@ def clean_text(value):
 def evaluate(item, *, at=None):
     # This inventory consists exclusively of verified official distributor channels.
     if item['source'] == 'youtube':
-        return {'status': 'pass', 'reasons': []}
+        trusted = item.get('author_id') in CHANNELS.values() and host_of(item.get('url') or '') in ('youtube.com', 'www.youtube.com')
+        return {'status': 'pass' if trusted else 'reject', 'reasons': [] if trusted else ['unverified_youtube_channel']}
     text = clean_text(item.get('text') or '')
     context = clean_text(item.get('context') or '')
     reasons = []

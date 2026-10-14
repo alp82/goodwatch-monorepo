@@ -124,3 +124,11 @@ class QualityTests(unittest.TestCase):
         item['quality_evidence']['profile']['created_at'] = None
         self.assertIn('missing_account_metrics', evaluate(item)['reasons'])
         self.assertIn('stream_promotion', evaluate(self.item('Dune w\u200batch free tonight and enjoy it.'))['reasons'])
+
+    def test_only_inventory_official_youtube_channels_get_the_trusted_exemption(self):
+        from f.social.quality import evaluate
+        from f.social.inventory import CHANNELS
+        item = self.item('Dune full movie watch free now', 'youtube')
+        self.assertEqual(evaluate(item)['status'], 'reject')
+        item.update(author_id=CHANNELS['Universal Pictures'], url='https://www.youtube.com/watch?v=fixture')
+        self.assertEqual(evaluate(item)['status'], 'pass')

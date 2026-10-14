@@ -97,7 +97,7 @@ class Store:
             self.db.execute(f"INSERT INTO doc.social_post ({','.join(cols)},discovered_at,last_seen_at,checked_at) VALUES ({','.join('?' for _ in cols)},?,?,?) ON CONFLICT (post_id) DO UPDATE SET {updates},last_seen_at=excluded.last_seen_at",
                             [p[c] for c in cols] + [at, at, at])
         self.refresh('social_post')
-        self.screen(posts, previous=prior)
+        return self.screen(posts, previous=prior)
 
     def screen(self, posts, *, previous=None):
         """Persist current decisions and unpublish rejects, including author patterns."""
@@ -180,6 +180,7 @@ class Store:
         self.db.execute("DELETE FROM doc.social_title_link WHERE post_id=? AND NOT ((media_type || ':' || CAST(media_tmdb_id AS TEXT))=ANY(?))", [post['post_id'], keys])
         self.db.execute('UPDATE doc.social_post SET processed_hash=?,matcher_version=? WHERE post_id=? AND deleted_at IS NULL AND content_hash=?',
                         [post['content_hash'], VERSION, post['post_id'], post['content_hash']])
+        return len(links)
 
     def read_title(self, media_type, tmdb_id, *, limit=50, disabled_lanes=(), before=None):
         if media_type not in ('movie', 'tv') or type(tmdb_id) is not int or tmdb_id <= 0:

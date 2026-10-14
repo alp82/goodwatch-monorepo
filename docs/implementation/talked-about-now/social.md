@@ -11,9 +11,9 @@ Netflix additions. Discovery is bounded inventory, never a platform census.
 
 Crate is the only store. Definitions live in `f/social/schema.py` and are registered
 in the central `f/sync/models/crate_schemas.py`. The social initializer creates only
-its four missing tables. Do **not** run the general initializer as part of local
+its five missing tables. Do **not** run the general initializer as part of local
 validation: it can write existing catalog tables. `f/social/store.py` restricts
-mutations to these four tables; catalog and Qdrant accesses are read-only. No
+mutations to these five tables; catalog and Qdrant accesses are read-only. No
 Valkey or application clients are imported.
 
 | Table | Primary key | Purpose |
@@ -21,6 +21,7 @@ Valkey or application clients are imported.
 | `doc.social_post` | `post_id` | SHA256(source + `:` + native ID), source ID, permalink, author ID/name, publication/discovery/seen/checked times, at most 1,000 text and 1,800 context characters, provenance, content/processed hashes, matcher version, deletion tombstone. |
 | `doc.social_title_link` | `(media_type, media_tmdb_id, post_id)` | Automatic links with lane, confidence/basis, bounded reason, matcher/content version, duplicate group, created time and optional operator hide fields. |
 | `doc.social_link_report` | `report_id` | SHA256(`media_type:tmdb_id:post_id`), title/post identity, optional 500-character reason, open/confirmed/dismissed status, first report time. No member identity or IP. |
+| `doc.social_content_quality` | `post_id` | Exact content hash, gate version, pass/reject status, bounded JSON reasons and link/account evidence, checked_at. Missing/stale decisions fail closed. |
 | `doc.social_ingest_run` | `run_id` | Source, requested window, start/finish/status, collected/processed/published counts, bounded collection audit/errors, matcher version and returned API usage cost. |
 
 Social identities use `movie` / `tv`, with numeric TMDB IDs. Existing Crate title
@@ -29,10 +30,10 @@ Hashes make reruns idempotent. Changed post text is rematched; until processing
 finishes, the read query rejects links whose content hash differs. A rejected
 reprocessing removes old links. Matching never clears operator hides or reports.
 
-Posts and links retain thirty days by publication time; content-free deletion
+Posts, links and quality evidence retain thirty days by publication time; content-free deletion
 ID tombstones retain thirty days from removal; reports retain 180 days and runs
 ninety days. Maintenance deletes dependent links before expired posts. Deletion
-purges text, context, author identifiers/name, URL and provenance immediately;
+purges text, context, author identifiers/name, URL, provenance and quality evidence immediately;
 only the hashed post identity, source, timestamps and processing hashes remain to prevent reingestion. Native IDs are purged too, since Bluesky AT URIs contain the author DID. Reports contain only hashed
 post identity and user-supplied reason. Do not put personal data into reasons.
 
@@ -74,12 +75,74 @@ storage. Heuristic groups can still miss differently named edits. Ordinary clips
 and non-YouTube posts retain their own group. The window rank is computed before
 cursor filtering, preventing duplicate trailers reappearing on later pages.
 
+## Content quality before publication
+
+Title identity and publication eligibility are independent. `quality.py` supplies
+versioned deterministic decisions **before inference**, and `Store.publish` checks
+the saved decision again. `Store.read_title` requires an inner join to
+`social_content_quality` with `status='pass'`, `version='content-quality-1'` and
+`content_hash=p.content_hash`. **The title-page loader must copy this additional
+join**; raw link rows are not a supported read contract. Changed link/profile
+metadata invalidates the previous verdict before the post is saved, even when
+visible text has not changed. Rejected links are deleted. A later pass requeues a
+previously rejected post for matching. Version changes require a re-screen before
+old rows can appear. Reports and operator hides remain in force.
+
+- All untrusted sources reject stream/download promotions (including watch free,
+  full movie, HD stream, 123movies/FMovies/Putlocker patterns, common compact
+  promotional hashtags and invisible-character variants), known shorteners and
+  redirect/link-hub domains, and text without three words/twelve letters after
+  removing hashtags and URLs. RSS can use the editorial summary for substance;
+  social link-card descriptions cannot supply the missing discussion.
+- Bluesky additionally requires complete facet/embed URL targets and public
+  profile evidence. All outbound domains must be among **17** editorial domains
+  listed in `BLUESKY_OUTLETS` (verified feed outlets plus BBC, The Guardian and
+  Roger Ebert). Exact hosts/subdomains are matched, never substrings. General
+  video, file and social hosts, including YouTube and Letterboxd, are excluded.
+  Legitimate links outside this intentionally small inventory are also rejected;
+  the gate makes no accusation about their legality. No promoted URL is fetched
+  or a shortener resolved. Nested quoted-record links and image alt text are
+  checked too. Missing link/profile/age/count data and hydration failures reject.
+- Accounts younger than seven days, lifetime posting rates over 100 posts/day,
+  no profile (no display name, biography or avatar), declared bot labels/flags,
+  frame/timestamp feeds and authors with three near-identical templates (at least
+  40 characters, similarity >=0.82 after URL/hashtag/number removal) reject.
+  Pattern detection uses the rolling stored author corpus, not just the current
+  batch, and revokes older links by the same bot/template author. These are
+  conservative heuristics, not proof that every automation pattern is detected.
+- Mastodon collects HTML hrefs, creation/count/profile signals and the native bot
+  flag; generic text/link/account/pattern rules apply without the Bluesky outlet
+  restriction. Legacy rows lacking link evidence fail closed until re-collected.
+  RSS uses its known publisher inventory and scans text, permalink and description
+  links; publisher syndication is not treated as a social bot account.
+- Only inventory-verified official YouTube channel IDs on YouTube permalinks get
+  the trusted source exemption, so legitimate distributor promos remain eligible.
+
+Minimal evidence stores link targets, bounded card/alt text and account presence,
+creation date, post count and bot signals, not full profiles or timelines. It is
+purged on deletion/opt-out and expires with the post after thirty days. No new
+secret is required. Quality counts and reasons appear in each ingest run audit.
+
+The re-screen driver defaults to a read-only preview; `--apply` writes only the
+social-owned tables and unpublishes failures. It hydrates current Bluesky records
+and profiles through fixed AppView endpoints; network failures fail closed. Output
+contains per-source before/after counts, reason counts, a zero-nonpassing-links
+check and thirty previously published rejected examples. Destination URLs are
+redacted in example text; only social permalinks are linked.
+
+```sh
+python goodwatch-flows/scripts/social_quality.py --env-file /path/to/production.env \
+  --output /path/to/quality-preview.json
+python goodwatch-flows/scripts/social_quality.py --env-file /path/to/production.env \
+  --apply --output /path/to/quality-applied.json
+```
+
 ## Webapp read contract
 
 The tested reference is `Store.read_title(media_type, tmdb_id, limit=50,
 disabled_lanes=(), before=None)`. It executes a parameterized join of links/posts,
 left-joins open/confirmed reports and filters report matches, deleted posts,
-operator hides, disabled lanes, expired posts and obsolete content hashes. It
+operator hides, disabled lanes, expired posts, obsolete content hashes and absent/stale/rejected content-quality verdicts. It
 orders by `(published_at DESC, post_id DESC)`, deduplicates trailer groups, and
 accepts the last item's `(published_at, post_id)` as a strict keyset cursor.
 Limits are 1–100. Do not fetch raw links and omit these visibility filters.
@@ -192,8 +255,11 @@ schedule or secret is created by this branch. Provision/verify `u/Alp/CRATE_HOST
 it, official channel feeds work with a rolling approximately fifteen-upload
 inventory. Variable names match existing flows; no new Crate resource is needed.
 
-Enable `f/social/discover` hourly with defaults (2-day overlap, two pages,
-400 unprocessed posts/source/run), and `f/social/deletion_sync` every six hours
+Schedule `f/social/discover` hourly for each of `source=youtube`, `rss` and
+`bluesky` with the other defaults (2-day overlap, two pages,
+400 unprocessed posts/source/run). Keep Mastodon available as `source=mastodon`
+for a daily or on-demand run: its 77 initial trend posts produced zero links,
+which does not justify hourly polling, and `f/social/deletion_sync` every six hours
 (limit 2,000), in UTC. Configure a single concurrent discovery run; overlap is
 idempotent but wastes inference and may race changed-content processing.
 Backfill and deletion limits must be adjusted to measured volume: alert on growing

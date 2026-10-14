@@ -10,6 +10,7 @@ from dotenv import dotenv_values
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
 from f.social.common import now, SOURCES
 from f.social.store import Crate
+from f.social.quality import VERSION as QUALITY_VERSION
 
 
 def export(settings, per_source=50):
@@ -18,11 +19,13 @@ def export(settings, per_source=50):
     links = db.select('''SELECT p.source,p.post_id,p.source_id,p.url,p.author,p.published_at,p.text,p.context,
         l.media_type,l.media_tmdb_id,l.lane,l.confidence,l.reason,l.duplicate_group
         FROM doc.social_title_link l JOIN doc.social_post p ON p.post_id=l.post_id
+        JOIN doc.social_content_quality q ON q.post_id=p.post_id AND q.content_hash=p.content_hash
+          AND q.version=? AND q.status='pass'
         LEFT JOIN doc.social_link_report r ON r.media_type=l.media_type AND r.media_tmdb_id=l.media_tmdb_id
           AND r.post_id=l.post_id AND r.status IN ('open','confirmed')
         WHERE p.deleted_at IS NULL AND l.hidden_at IS NULL AND r.report_id IS NULL AND l.content_hash=p.content_hash
           AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
-        ORDER BY p.published_at DESC,p.post_id DESC LIMIT 100000''')
+        ORDER BY p.published_at DESC,p.post_id DESC LIMIT 100000''', [QUALITY_VERSION])
     # Review the actual displayed representative, not repeated uploads.
     unique = {}
     for link in links:

@@ -27,6 +27,9 @@ class CrateLifecycleTests(unittest.TestCase):
     def item(self, text='A thoughtful review of this movie', source='rss'):
         identity = 'https://example.com/social-test-' + uuid4().hex
         item = post(source, identity, identity, self.author_id, 'Test fixture', now(), text, '', 'test:556')
+        if source == 'youtube':
+            from f.social.inventory import CHANNELS
+            item.update(author_id=CHANNELS['Universal Pictures'], url='https://www.youtube.com/watch?v=fixture')
         if source == 'bluesky':
             item['quality_evidence'] = {'links_complete': True, 'urls': [], 'profile': {
                 'present': True, 'created_at': (now()-timedelta(days=365)).isoformat(), 'posts_count': 50}}
