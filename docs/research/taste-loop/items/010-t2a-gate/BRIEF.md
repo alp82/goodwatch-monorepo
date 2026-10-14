@@ -21,17 +21,20 @@ gate file); `items/009-composition/REVIEW-guard-fable.md`.
 1. **T2a in `gate.py`.** Replay a registered T2a run on tier B members the same way T1's replay works: same
    predictor and reference files (hash-checked frozen copies), same options, same harness hash. Tier B members'
    ratings come from the gate file and are hidden in folds exactly as for tier A; other members' rows are what the
-   T1 gate gives a tier B view (say which in PROTOCOL.md). The effect compared is the primary measure, separation
-   against the primary reference, for other members. `replicated` = same sign and at least half the tier A effect.
+   T1 gate gives a tier B view (say which in PROTOCOL.md). The verdict follows the gate rule of `PROTOCOL.md` 13, A1, exactly:
+   separation against the primary reference (other members) with the same sign and at least half the tier A effect,
+   **and** guard 1's point estimate below +0.03; fewer than 10 tier B members for either is `not replicated`.
    Print only `replicated` / `not replicated` and the looks used; write numbers only under
    `~/goodwatch-research/taste/gate/results/`. A look is logged before the replay starts, as for T1. Refuse a T2a run
    that is not registered, uses `--members`, a shuffle or a plant, or whose files changed.
-2. **Tests on the made-up gate file only:** a planted T2a effect replicates; a shuffled one does not; a changed
+2. **Tests on the made-up gate file only:** a planted T2a effect replicates; a shuffled one does not; a planted
+   effect with guard 1 worsened by more than 0.03 does not; too few members gives `not replicated`; a changed
    predictor or a non-registered run is refused; nothing but the two words and the look count is printed. Never open
    the real gate file, not even to test.
-3. **Amendment A1 in the output:** in `table.py T2a` and in the printed summary of a T2a run, the guard
-   "disliked titles among equally popular candidates" (`pct_popular_low`, paired against the primary reference) is
-   shown as a guard; the disliked first-50/200 shares and the median vote count are labelled descriptive; the
+3. **Amendments A1 and A2 in the output:** in `table.py T2a` and in the printed summary of a T2a run, guard 1
+   ("disliked titles among equally popular candidates", with its upper bound against +0.03 and pass /
+   inconclusive) and guard 2 (separation among equally popular candidates) are shown as guards, defined as in A1
+   (members other than the owner, matched-title rules, paired coverage); the disliked first-50/200 shares and the median vote count are labelled descriptive; the
    per-member precision figure of A1 is reported. No other measure changes.
 4. **`PROTOCOL.md`:** section 11 gains the T2a gate; section 12 drops it from "not built".
 
