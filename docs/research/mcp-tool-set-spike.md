@@ -136,7 +136,7 @@ Sources for the existing connection contract: [OpenAI OAuth](https://developers.
 
 Code stays under `goodwatch-webapp/app/mcp-oauth-spike/`: `fixtures.server.ts` owns per-member mutable memory; `tools.server.ts` registers the separate schema-validated tools; `routes/mcp.ts` binds everything to verified JWT `sub` and enforces `mcp:write` at the HTTP boundary; auth/consent/launcher retain isolation from production. No Supabase, CrateDB, Valkey, Qdrant or paid search module is imported.
 
-Observed locally: authenticated tool-set and OAuth probes passed; the isolation probe passed with 13/14 tools and unchanged peer state. Inspector 2.11.0 completed DCR with read/write scope and logged Orbit Garden S1E5 through the real modern transport, returning an unknown watch date and updated progress. Fixture title URLs returned HTTP 200. Focused TypeScript and Biome formatting checks passed. No tunnel was started by the agent.
+Observed locally: authenticated tool-set and OAuth probes passed with the default 13 tools and, in a fresh run with `MCP_SPIKE_REC_TASTE=1`, all 14 including mutable taste; the isolation probe passed with 13/14 tools and unchanged peer state. Inspector 2.11.0 completed DCR with read/write scope and logged Orbit Garden S1E5 through the real modern transport, returning an unknown watch date and updated progress. Fixture title URLs returned HTTP 200. Focused TypeScript and Biome formatting checks passed, including the final published code. Both local server runs were stopped after testing. No tunnel was started by the agent.
 
 Local checks:
 
