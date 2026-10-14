@@ -14,16 +14,16 @@ export function warmUndoToast() {
 }
 
 /**
- * `say(text, undo)` shows the toast; `node` goes anywhere in the surface's markup (it renders at the end of the page,
+ * `say(text, undo)` shows the toast, without its Undo button when `undo` is left out; `node` goes anywhere in the surface's markup (it renders at the end of the page,
  * so no ancestor can clip or offset it).
  */
-export function useUndoToast(className?: string): { say: (text: string, undo: () => void) => void; node: ReactNode } {
-	const [toast, setToast] = useState<(UndoToastMessage & { undo: () => void }) | null>(null)
+export function useUndoToast(className?: string): { say: (text: string, undo?: () => void) => void; node: ReactNode } {
+	const [toast, setToast] = useState<(UndoToastMessage & { undo?: () => void }) | null>(null)
 	// Stays mounted after the first message, so a later one can animate out.
 	const [used, setUsed] = useState(false)
-	const say = useCallback((text: string, undo: () => void) => {
+	const say = useCallback((text: string, undo?: () => void) => {
 		setUsed(true)
-		setToast({ id: Date.now(), text, undo })
+		setToast({ id: Date.now(), text, undo, undoable: Boolean(undo) })
 	}, [])
 	const dismiss = useCallback(() => setToast(null), [])
 	const node = used
@@ -34,7 +34,7 @@ export function useUndoToast(className?: string): { say: (text: string, undo: ()
 						className={className}
 						onDismiss={dismiss}
 						onUndo={() => {
-							toast?.undo()
+							toast?.undo?.()
 							setToast(null)
 						}}
 					/>

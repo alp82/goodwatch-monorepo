@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef } from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
@@ -13,6 +13,8 @@ import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
+import { MediaPreferenceProvider, useMediaPreference } from "~/ui/media-preference/MediaPreference"
+import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -24,12 +26,25 @@ export default function Details(props: DetailsProps) {
 	const { details } = props.media
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
-			<DetailsPage {...props} />
+			<MediaPreferenceProvider country={props.country}>
+				<DetailsPage {...props} />
+			</MediaPreferenceProvider>
 		</BelowFoldProvider>
 	)
 }
 
-function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
+function DetailsPage({ media: loadedMedia, country: loadedCountry, episodeGrid }: DetailsProps) {
+	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
+	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so.
+	const preference = useMediaPreference()
+	const firstLanguage = useRef(preference.shown.language).current
+	const preview = useTitlePreview({
+		media: loadedMedia,
+		loaded: { country: loadedCountry, language: firstLanguage },
+		want: preference.shown,
+	})
+	const media = preview.media
+	const country = preview.loading || preview.failed ? loadedCountry : preference.shown.country
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
@@ -84,6 +99,8 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			<DetailsHero
 				media={media}
 				country={country}
+				shownCountry={preference.shown.country}
+				preview={preview.loading ? "loading" : preview.failed ? "failed" : null}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 			/>
