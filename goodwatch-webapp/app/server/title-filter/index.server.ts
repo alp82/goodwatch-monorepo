@@ -23,7 +23,6 @@ import {
 	countryServices,
 } from "~/server/availability-index.server"
 import type { Taste } from "~/server/taste/index.server"
-import { isEnabled } from "~/server/features.server"
 import {
 	type TitleSnapshot,
 	UNKNOWN_SCORE,
@@ -104,7 +103,7 @@ export interface FilterResult {
 	approximate: boolean
 	/**
 	 * What the age limit's control draws: the viewer's rating country and its ladder. Null when the snapshot has no
-	 * ratings or REC_AGE_FILTER is off for the viewer; then the age limit and content don't narrow either.
+	 * ratings; then the age limit and content don't narrow either.
 	 */
 	ladder: ViewerLadder | null
 }
@@ -289,16 +288,11 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 }
 
 /**
- * The ladder the viewer's age limit goes by (ladderFor), or null when the snapshot has no ratings (or hasn't loaded)
- * or REC_AGE_FILTER is off for the viewer: the flag turns the whole filter off, the URL parameters included.
+ * The ladder the viewer's age limit goes by (ladderFor), or null when the snapshot has no ratings (or hasn't loaded):
+ * then the whole filter is off, the URL parameters included.
  */
 export function viewerLadder(viewer: ViewerContext): ViewerLadder | null {
-	const userId = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
-	return ladderFor(
-		getTitleSnapshot()?.columns.ratings,
-		viewer.country,
-		isEnabled("ageFilter", { userId }),
-	)
+	return ladderFor(getTitleSnapshot()?.columns.ratings, viewer.country)
 }
 
 /** The universe's snapshot rows and keys in the plain order of the sort. */

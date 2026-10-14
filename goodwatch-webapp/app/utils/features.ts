@@ -7,7 +7,6 @@ export const FEATURES = [
 	"watchNext",
 	"tastePage",
 	"navigation",
-	"ageFilter",
 	"tracking",
 ] as const
 
@@ -22,6 +21,5 @@ export const NO_FEATURES: EnabledFeatures = {
 	watchNext: false,
 	tastePage: false,
 	navigation: false,
-	ageFilter: false,
 	tracking: false,
 }

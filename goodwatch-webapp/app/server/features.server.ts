@@ -19,7 +19,6 @@ const FEATURE_VARIABLES: Record<
 	watchNext: { name: "REC_WATCH_NEXT", modes: ["off", "preview", "on"] },
 	tastePage: { name: "REC_TASTE_PAGE", modes: ["off", "preview", "on"] },
 	navigation: { name: "REC_NAVIGATION", modes: ["off", "preview", "on"] },
-	ageFilter: { name: "REC_AGE_FILTER", modes: ["off", "preview", "on"] },
 	tracking: { name: "REC_TRACKING", modes: ["off", "preview", "on"] },
 }
 

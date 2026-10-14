@@ -44,7 +44,6 @@ const input = (): Parameters<typeof discoverFilterKey>[0] => ({
 	sort: "popular",
 	snapshotVersion: "one",
 	availabilityLoadedAt: 100,
-	ageFilter: true,
 	year: 2026,
 })
 const result = (keys = [3, 1, 2]): FilterResult => ({
@@ -120,7 +119,6 @@ test("keys include every filter dependency", () => {
 		{ viewer: { ...viewer(), services: [8] } },
 		{ snapshotVersion: "two" },
 		{ availabilityLoadedAt: 101 },
-		{ ageFilter: false },
 		{ year: 2027 },
 		{ sort: "top" },
 	]

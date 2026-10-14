@@ -116,14 +116,13 @@ export interface RatingsFilter {
 
 /**
  * The ladder a viewer's age limit goes by: their country's own, or plain ages for a country without ratings of its
- * own. Null without ratings, and when the age filter isn't enabled for the viewer.
+ * own. Null without ratings.
  */
 export function ladderFor(
 	ratings: Pick<TitleRatings, "ladderOf"> | null | undefined,
 	country: string,
-	enabled: boolean,
 ): ViewerLadder | null {
-	if (!ratings || !enabled) return null
+	if (!ratings) return null
 	const code = country.toUpperCase()
 	const steps = ratings.ladderOf(code)
 	return {

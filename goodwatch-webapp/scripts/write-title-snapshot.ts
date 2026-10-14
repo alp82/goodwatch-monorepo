@@ -11,7 +11,7 @@
 // ids from 900,000,000) until the snapshot has that many titles, to measure load time and memory at production size;
 // don't use a padded snapshot for anything else. It never writes to the Redis cluster the webapp's .env names.
 //
-// It also writes the ratings sidecar (the age and content filter's data; start the webapp with REC_AGE_FILTER=on), from
+// It also writes the ratings sidecar (the age and content filter's data), from
 // the titles' age_certifications and content_advisories and the age_certification table. How a rating code becomes an
 // age, which advisories make which kind of content, and how a ladder is built are kept minimal here: the publisher's
 // Python (goodwatch-flows) is the source of truth, and this sample may differ from what it publishes.

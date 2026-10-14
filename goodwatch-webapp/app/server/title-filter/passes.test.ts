@@ -450,27 +450,26 @@ const snapshotRatings = {
 		country === "DE" ? Uint8Array.from(DE_AGES) : null,
 }
 
-test("the viewer's ladder is their country's, plain ages without a column, and none with the age filter off", () => {
-	assert.deepEqual(ladderFor(snapshotRatings, "de", true), {
+test("the viewer's ladder is their country's, plain ages without a column, and none without ratings", () => {
+	assert.deepEqual(ladderFor(snapshotRatings, "de"), {
 		country: "DE",
 		steps: DE_LADDER,
 		local: true,
 	})
-	const plainLadder = ladderFor(snapshotRatings, "TR", true)
+	const plainLadder = ladderFor(snapshotRatings, "TR")
 	assert.equal(plainLadder?.local, false)
 	assert.deepEqual(
 		plainLadder?.steps.map((step) => step.label),
 		["0+", "6+", "12+", "16+", "18+"],
 	)
-	// The kill switch, and a snapshot without ratings.
-	assert.equal(ladderFor(snapshotRatings, "DE", false), null)
-	assert.equal(ladderFor(null, "DE", true), null)
-	assert.equal(ladderFor(undefined, "DE", true), null)
+	// A snapshot without ratings.
+	assert.equal(ladderFor(null, "DE"), null)
+	assert.equal(ladderFor(undefined, "DE"), null)
 })
 
 test("the age limit resolves on the viewer's ladder; without a ladder the parameters don't filter", () => {
 	const ok = { violence: "show", sex: "show" } as const
-	const de = ladderFor(snapshotRatings, "DE", true)
+	const de = ladderFor(snapshotRatings, "DE")
 	assert.ok(de)
 	// An age that isn't a step limits to the step below it: 14 is FSK 12. Content goes by the age as given: 14 hides
 	// nothing by itself.
@@ -489,7 +488,7 @@ test("the age limit resolves on the viewer's ladder; without a ladder the parame
 		],
 	)
 	// The plain ladder for a country without a column: every title by its estimate, row 3 at 14.
-	const tr = ladderFor(snapshotRatings, "TR", true)
+	const tr = ladderFor(snapshotRatings, "TR")
 	assert.ok(tr)
 	const estimated = ratingsFilter(snapshotRatings, tr, {
 		ageLimit: 16,
@@ -503,8 +502,7 @@ test("the age limit resolves on the viewer's ladder; without a ladder the parame
 		}).rows,
 		[0, 1, 2],
 	)
-	// The kill switch: no ladder, so the title filter passes no ratings and age, hide, and ok don't narrow.
-	assert.equal(ladderFor(snapshotRatings, "DE", false), null)
+	// Without a ladder the title filter passes no ratings, and age, hide, and ok don't narrow.
 	assert.deepEqual(passes(plain, { ratings: undefined }).rows, plain)
 })
 
@@ -543,49 +541,38 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 		logged.push(args)
 	}
 	try {
-		const loaded = await loadRatings(stored, manifest, true)
+		const loaded = await loadRatings(stored, manifest)
 		assert.deepEqual(read, ["title-snapshot:v1:ratings:0"])
 		assert.deepEqual([...(loaded?.estimates ?? [])], [6, 12])
 		assert.equal(logged.length, 0)
 
-		// REC_AGE_FILTER off: nothing is read.
-		read.length = 0
-		assert.equal(await loadRatings(stored, manifest, false), null)
-		assert.deepEqual(read, [])
 		// A manifest without ratings.
+		read.length = 0
 		const { ratings: _none, ...bare } = manifest
-		assert.equal(await loadRatings(stored, bare, true), null)
+		assert.equal(await loadRatings(stored, bare), null)
 		assert.deepEqual(read, [])
 		assert.equal(logged.length, 0)
 
 		// A missing chunk, a changed chunk, a bad manifest field, another title count: each logged once.
 		assert.equal(
-			await loadRatings(
-				redis(() => null),
-				manifest,
-				true,
-			),
+			await loadRatings(redis(() => null), manifest),
 			null,
 		)
 		assert.match(String(logged[0][1]), /chunk 0 is missing/)
 		const changed = Uint8Array.from(chunks[0])
 		changed[0] = 1
 		assert.equal(
-			await loadRatings(
-				redis(() => changed),
-				manifest,
-				true,
-			),
+			await loadRatings(redis(() => changed), manifest),
 			null,
 		)
 		assert.match(String(logged[1][1]), /checksum/)
 		assert.equal(
-			await loadRatings(stored, { ...manifest, ratings: { format: 2 } }, true),
+			await loadRatings(stored, { ...manifest, ratings: { format: 2 } }),
 			null,
 		)
 		assert.match(String(logged[2][1]), /format 2/)
 		assert.equal(
-			await loadRatings(stored, { ...manifest, count: 3 }, true),
+			await loadRatings(stored, { ...manifest, count: 3 }),
 			null,
 		)
 		assert.match(String(logged[3][1]), /need 9/)
@@ -595,7 +582,7 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 				throw new Error("connection lost")
 			},
 		}
-		assert.equal(await loadRatings(failing, manifest, true), null)
+		assert.equal(await loadRatings(failing, manifest), null)
 		assert.match(String(logged[4][1]), /connection lost/)
 		assert.equal(logged.length, 5)
 	} finally {
