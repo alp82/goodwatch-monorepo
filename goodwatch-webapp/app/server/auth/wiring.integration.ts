@@ -19,10 +19,10 @@ const auth = createGoodwatchAuth({ sql, storage, mail, baseURL, secret: "disposa
 const email = () => `member-${randomUUID()}@example.test`
 const password = "a secure password for tests"
 const cookie = (response: Response) => response.headers.getSetCookie().map(c => c.split(";")[0]).join("; ")
-async function call(path: string, body?: unknown, cookies = "") {
+async function call(path: string, body?: unknown, cookies = "", ip = "127.0.0.1") {
  return auth.handler(new Request(`${baseURL}/api/auth${path}`, {
   method: body === undefined ? "GET" : "POST",
-  headers: { "content-type": "application/json", origin: baseURL, cookie: cookies, "x-forwarded-for": "127.0.0.1" },
+  headers: { "content-type": "application/json", origin: baseURL, cookie: cookies, "x-forwarded-for": ip },
   body: body === undefined ? undefined : JSON.stringify(body),
  }))
 }
@@ -99,6 +99,7 @@ test("a password reset signs the member in, rejects replay, sends a notice and r
  assert.equal(resetRequest.status, 200, await resetRequest.clone().text())
  const resetMail = (await messages(member.address)).at(-1)
  const token = new URL(link(resetMail)).pathname.split("/").at(-1)
+ assert.equal((await call("/reset-password", { token, newPassword: "123456789" })).status, 400)
  const changed = await call("/reset-password", { token, newPassword: "a replacement secure password" })
  assert.equal(changed.status, 200, await changed.clone().text())
  assert.match(cookie(changed), /gw.session_token=/)
@@ -274,4 +275,23 @@ test("secondary storage atomically consumes a key once and uses a fixed-window c
  const ttl = await redis.ttl(`gw:auth:${counterKey}`)
  await storage.increment(counterKey, 600)
  assert.ok(await redis.ttl(`gw:auth:${counterKey}`) <= ttl)
+})
+
+test("a Google-only member requesting a reset receives guidance without gaining a password account", async () => {
+ const context = await auth.$context
+ const address = email()
+ const user = await context.internalAdapter.createUser({ email: address, name: "Google member", emailVerified: true }, { method: "email-password" })
+ await context.internalAdapter.createAccount({ userId: user.id, providerId: "google", accountId: `google-${randomUUID()}` })
+ const request = await call("/request-password-reset", { email: address })
+ assert.equal(request.status, 200)
+ const unknown = await call("/request-password-reset", { email: email() })
+ assert.deepEqual(await request.json(), await unknown.json())
+ assert.match((await messages(address)).at(-1).Subject, /sign in with Google/i)
+ assert.equal(await context.internalAdapter.findCredentialAccount(user.id), undefined)
+})
+
+
+test("request limits also apply per IP across different addresses", async () => {
+ for (let i = 0; i < 30; i++) assert.equal((await call("/request-password-reset", { email: email() }, "", "203.0.113.11")).status, 200)
+ assert.equal((await call("/request-password-reset", { email: email() }, "", "203.0.113.11")).status, 429)
 })

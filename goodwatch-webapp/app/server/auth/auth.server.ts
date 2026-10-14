@@ -33,7 +33,7 @@ export function createGoodwatchAuth(options: { sql: AuthSql; storage: ValkeyAuth
    getAndDelete: key => options.storage.getAndDelete(key),
    increment: (key, ttl) => options.storage.increment(key, ttl),
   },
-  verification: { storeInDatabase: true },
+  verification: { storeInDatabase: true, storeIdentifier: "hashed" },
   user: { additionalFields: { confirmationDigest: { type: "string", required: false, input: false, returned: false } } },
   advanced: { cookiePrefix: "gw", ipAddress: { ipAddressHeaders: [options.trustedIpHeader ?? "x-forwarded-for"] }, database: { generateId: "uuid", defaultFindManyLimit: 10000 }, cookies: { session_token: { name: "gw.session_token" } } },
   session: { expiresIn: 90 * 86400, updateAge: 86400, storeSessionInDatabase: true, preserveSessionInDatabase: false, cookieCache: { enabled: false } },
