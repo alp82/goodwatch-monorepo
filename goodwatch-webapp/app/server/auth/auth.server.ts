@@ -22,6 +22,13 @@ import {
 	resetPasswordEmail,
 } from "./emails.server.ts"
 
+// Not Response.json: remix-serve's polyfilled Response (no v3_singleFetch) has no static json().
+export function jsonResponse(body: unknown, init: ResponseInit = {}) {
+	const headers = new Headers(init.headers)
+	headers.set("Content-Type", "application/json")
+	return new Response(JSON.stringify(body), { ...init, headers })
+}
+
 export function createGoodwatchAuth(options: {
 	sql: AuthSql
 	storage: ValkeyAuthStorage
@@ -366,7 +373,7 @@ export function createGoodwatchAuth(options: {
 					headers: { Location: `${origin}/verify-email?state=expired` },
 				})
 			if (response.status >= 500)
-				return Response.json(
+				return jsonResponse(
 					{ message: "Sign-in is temporarily unavailable." },
 					{ status: 503 },
 				)
@@ -374,7 +381,7 @@ export function createGoodwatchAuth(options: {
 				path === "/api/auth/sign-in/email" &&
 				[401, 403].includes(response.status)
 			)
-				return Response.json(
+				return jsonResponse(
 					{
 						message:
 							"Unable to sign in. Check your details and confirmation email.",
@@ -382,7 +389,7 @@ export function createGoodwatchAuth(options: {
 					{ status: 401 },
 				)
 			if (path === "/api/auth/sign-up/email" && response.ok)
-				return Response.json({
+				return jsonResponse({
 					status: true,
 					message: "Check your inbox to continue.",
 				})

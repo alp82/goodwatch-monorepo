@@ -1,6 +1,6 @@
 import type { User } from "@supabase/auth-js"
 import Redis, { type Cluster } from "ioredis"
-import { createGoodwatchAuth } from "./auth.server.ts"
+import { createGoodwatchAuth, jsonResponse } from "./auth.server.ts"
 import {
 	crateAuthTransport,
 	localCrateTransport,
@@ -104,7 +104,7 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 			response = await (await getBetterAuth()).handler(request)
 		} catch {
 			captureMessage("Auth request failed closed", "error")
-			response = Response.json(
+			response = jsonResponse(
 				{ message: "Sign-in is temporarily unavailable." },
 				{ status: 503 },
 			)
