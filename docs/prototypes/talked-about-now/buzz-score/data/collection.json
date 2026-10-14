@@ -1,0 +1,1 @@
+{"start":"2026-08-15","end":"2026-10-13","user_agent":"GoodWatchResearch/1.0 (https://goodwatch.app; hello@goodwatch.app) issue-543-buzz-prototype","wiki_pause_after_response_seconds":0.5,"catalog_selection":"top 500 combined movies/shows by catalog TMDB popularity at collection time","production_operations":"Crate SELECT only; no application server or cache access"}

@@ -1,0 +1,15 @@
+{
+  "captured_json_files_parsed": 562,
+  "tmdb_exports": 120,
+  "independent_article_baseline_checks": 8976,
+  "scored_days": 21,
+  "ranked_tables": 48,
+  "ranked_review_slots": 960,
+  "coverage_rows": 500,
+  "broken_internal_anchors": 0,
+  "external_render_dependencies": 0,
+  "netflix_hash_matches": true,
+  "credential_scan": "existing TMDB key absent from all deliverables",
+  "chromium": "headless local file rendered successfully; screenshot inspected",
+  "production_operations": "Crate SELECT only; no app/cache access"
+}

@@ -1,0 +1,770 @@
+{
+  "method": "Dated event annotations, researched from calendars first and then ranked titles. Not exhaustive ground truth. Event coincidence does not establish pageview causation. Inferences and scheduled events are separate from direct events.",
+  "events": [
+    {
+      "id": "E01",
+      "keys": [
+        "tv:285322"
+      ],
+      "titles": [
+        "Below"
+      ],
+      "event_date": "2026-10-08",
+      "category": "release",
+      "text": "Netflix series release on October 8.",
+      "url": "https://www.netflix.com/tudum/articles/new-on-netflix",
+      "source": "Netflix Tudum",
+      "published": "2026-09-30",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E02",
+      "keys": [
+        "movie:1236045"
+      ],
+      "titles": [
+        "Animals"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "Netflix movie release on October 9; October 8 is anticipation.",
+      "url": "https://about.netflix.com/en/new-to-watch",
+      "source": "Netflix release calendar",
+      "published": "2026-10",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E03",
+      "keys": [
+        "movie:1148365"
+      ],
+      "titles": [
+        "Matchbox the Movie"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "Apple TV release October 9, following October 5 world premiere.",
+      "url": "https://www.apple.com/tv-pr/news/2026/10/apple-original-films-celebrates-the-world-premiere-of-matchbox-the-movie/",
+      "source": "Apple TV Press",
+      "published": "2026-10-05",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E04",
+      "keys": [
+        "tv:288673"
+      ],
+      "titles": [
+        "Carrie"
+      ],
+      "event_date": "2026-10-07",
+      "category": "release",
+      "text": "All eight episodes released on Prime Video October 7.",
+      "url": "https://www.aboutamazon.com/news/entertainment/carrie-stephen-king-mike-flanagan-prime-video",
+      "source": "Amazon",
+      "published": "2026-10-07",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E05",
+      "keys": [
+        "movie:1400837"
+      ],
+      "titles": [
+        "Other Mommy"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "US theatrical release October 9; October 8 is anticipation/preview context.",
+      "url": "https://www.nbcuniversal.com/article/universal-pictures-other-mommy-releases-october-9",
+      "source": "NBCUniversal",
+      "published": "2026-09-30",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E06",
+      "keys": [
+        "tv:284833"
+      ],
+      "titles": [
+        "Avatar: Seven Havens"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "First episodes released October 9 on Paramount+.",
+      "url": "https://www.paramountplus.com/shows/avatar-seven-havens/",
+      "source": "Paramount+ episode guide",
+      "published": "2026-10-09",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E07",
+      "keys": [
+        "tv:289423"
+      ],
+      "titles": [
+        "Take Charge of My Heart"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "Netflix series release October 9.",
+      "url": "https://www.netflix.com/tudum/articles/new-on-netflix",
+      "source": "Netflix Tudum",
+      "published": "2026-09-30",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E08",
+      "keys": [
+        "tv:44006",
+        "tv:58841",
+        "tv:62650"
+      ],
+      "titles": [
+        "Chicago Med",
+        "Chicago Fire",
+        "Chicago P.D."
+      ],
+      "event_date": "2026-10-07",
+      "category": "season",
+      "text": "Seasons 12, 15 and 14 premiered on NBC October 7, streamed next day on Peacock.",
+      "url": "https://www.nbcuniversal.com/article/dick-wolfs-one-chicago-franchise-returns-fall-nbc-and-peacock",
+      "source": "NBCUniversal",
+      "published": "2026-10-01",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E09",
+      "keys": [
+        "tv:2734"
+      ],
+      "titles": [
+        "Law & Order: Special Victims Unit"
+      ],
+      "event_date": "2026-10-08",
+      "category": "season",
+      "text": "Season 28 premiere October 8, next-day Peacock streaming.",
+      "url": "https://www.peacocktv.com/stream-tv/law-and-order-special-victims-unit",
+      "source": "Peacock",
+      "published": "2026-10-08",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E10",
+      "keys": [
+        "tv:549"
+      ],
+      "titles": [
+        "Law & Order"
+      ],
+      "event_date": "2026-10-08",
+      "category": "season",
+      "text": "NBC season premiere October 8.",
+      "url": "https://www.tvline.com/2200902/nbc-2026-fall-premiere-dates-chicago-fire-law-and-order-svu-the-voice-full-schedule/",
+      "source": "TVLine NBC schedule",
+      "published": "2026-06-24",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E11",
+      "keys": [
+        "tv:97546"
+      ],
+      "titles": [
+        "Ted Lasso"
+      ],
+      "event_date": "2026-10-07",
+      "category": "finale",
+      "text": "Season 4 finale October 7 included Brandi Carlile theme performance.",
+      "url": "https://au.rollingstone.com/music/music-news/brandi-carlile-ted-lasso-theme-song-101947/",
+      "source": "Rolling Stone",
+      "published": "2026-10-08",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E12",
+      "keys": [
+        "movie:969681"
+      ],
+      "titles": [
+        "Spider-Man: Brand New Day"
+      ],
+      "event_date": "2026-10-06",
+      "category": "digital",
+      "text": "Digital purchase/rental release October 6.",
+      "url": "https://www.sonypictures.com/movies/spidermanbrandnewday",
+      "source": "Sony Pictures",
+      "published": "2026-10-06",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E13",
+      "keys": [
+        "movie:1101412"
+      ],
+      "titles": [
+        "Fall 2: Deadpoint"
+      ],
+      "event_date": "2026-10-06",
+      "category": "digital",
+      "text": "Digital release October 6.",
+      "url": "https://justlovemovies.com/2026/10/05/lionsgate-announce-fall-2-arrives-on-digital-october-6-and-on-blu-ray-november-17/",
+      "source": "Lionsgate press release reproduced by Just Love Movies",
+      "published": "2026-10-05",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E14",
+      "keys": [
+        "movie:1291595"
+      ],
+      "titles": [
+        "Insidious: Out of the Further"
+      ],
+      "event_date": "2026-10-06",
+      "category": "digital",
+      "text": "Digital release October 6.",
+      "url": "https://www.cinemablend.com/streaming-news/new-recent-movies-streaming-vod",
+      "source": "CinemaBlend digital schedule",
+      "published": "2026-10-05",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E15",
+      "keys": [
+        "tv:79744"
+      ],
+      "titles": [
+        "The Rookie"
+      ],
+      "event_date": "2026-10-11",
+      "category": "trailer",
+      "text": "NYCC panel revealed season 9 trailer, guests and January 6 premiere; coverage continued October 12–13.",
+      "url": "https://www.tvinsider.com/1251609/the-rookie-season-9-cast-premiere-date-trailer-details/",
+      "source": "TV Insider",
+      "published": "2026-10-12",
+      "review_from": "2026-10-11",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E16",
+      "keys": [
+        "tv:1396"
+      ],
+      "titles": [
+        "Breaking Bad"
+      ],
+      "event_date": "2026-10-12",
+      "category": "death",
+      "text": "RJ Mitte death reported October 12; actor-related attention, not a new season or release.",
+      "url": "https://www.upi.com/Entertainment_News/2026/10/12/Breaking-Bad-RJ-Mitte-dies/5241791842396/",
+      "source": "UPI, representatives confirmation",
+      "published": "2026-10-12",
+      "review_from": "2026-10-12",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E17",
+      "keys": [
+        "tv:60059"
+      ],
+      "titles": [
+        "Better Call Saul"
+      ],
+      "event_date": "2026-10-12",
+      "category": "spillover",
+      "text": "Related Breaking Bad title rose alongside RJ Mitte news. The cross-title cause is an inference; no direct new Better Call Saul event verified.",
+      "url": "https://www.upi.com/Entertainment_News/2026/10/12/Breaking-Bad-RJ-Mitte-dies/5241791842396/",
+      "source": "UPI; relationship inferred",
+      "published": "2026-10-12",
+      "review_from": "2026-10-12",
+      "review_through": "2026-10-13",
+      "relationship": "inferred",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E18",
+      "keys": [
+        "tv:46260"
+      ],
+      "titles": [
+        "Naruto"
+      ],
+      "event_date": "2026-10-10",
+      "category": "franchise",
+      "text": "Official NYCC new-anime reveal panel October 10 (October 11 JST); not new episodes of the catalog’s original Naruto series.",
+      "url": "https://naruto-official.com/en/news/01_2695",
+      "source": "Naruto official site",
+      "published": "2026-09-29",
+      "review_from": "2026-10-10",
+      "review_through": "2026-10-13",
+      "relationship": "franchise-context",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E19",
+      "keys": [
+        "tv:12971"
+      ],
+      "titles": [
+        "Dragon Ball Z",
+        "Dragon Ball Super"
+      ],
+      "event_date": "2026-10-11",
+      "category": "spillover",
+      "text": "Dragon Ball Super: Beerus premiered October 11. A reason for franchise attention, not a release of Dragon Ball Z; spillover is inferred.",
+      "url": "https://en.dragon-ball-official.com/news/01_4425.html",
+      "source": "Dragon Ball official site",
+      "published": "2026-09-03",
+      "review_from": "2026-10-10",
+      "review_through": "2026-10-13",
+      "relationship": "inferred",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E20",
+      "keys": [
+        "tv:4604"
+      ],
+      "titles": [
+        "Smallville"
+      ],
+      "event_date": "2026-10-10",
+      "category": "anniversary",
+      "text": "25th-anniversary NYCC reunion; original debut was October 16, 2001. This is old-title rediscovery context.",
+      "url": "https://www.amny.com/entertainment/smallville-tom-welling-michael-rosenbaum-reflect-superhero-series/",
+      "source": "amNewYork panel reporting",
+      "published": "2026-10-13",
+      "review_from": "2026-10-10",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E21",
+      "keys": [
+        "tv:4087"
+      ],
+      "titles": [
+        "The X-Files"
+      ],
+      "event_date": "2026-10-13",
+      "category": "franchise",
+      "text": "Ryan Coogler reimagining ordered to series in October 13 dateline announcement; original series attention is franchise spillover. UK page carries October 14 heading.",
+      "url": "https://press.disney.co.uk/news/hulu-picks-up-the-x-files-project-to-series-coming-to-disney-in-the-uk",
+      "source": "Disney UK Press",
+      "published": "2026-10-14",
+      "review_from": "2026-10-13",
+      "review_through": "2026-10-13",
+      "relationship": "franchise-context",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E22",
+      "keys": [
+        "tv:1667"
+      ],
+      "titles": [
+        "Saturday Night Live"
+      ],
+      "event_date": "2026-10-11",
+      "category": "episode",
+      "text": "Shane Gillis/Rosalia episode aired October 10 US late night (October 11 UTC).",
+      "url": "https://www.boston.com/culture/entertainment/2026/10/11/snl-recap-shane-gillis-2026/",
+      "source": "Boston.com recap",
+      "published": "2026-10-11",
+      "review_from": "2026-10-11",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E23",
+      "keys": [
+        "tv:153312"
+      ],
+      "titles": [
+        "Tulsa King"
+      ],
+      "event_date": "2026-10-16",
+      "category": "scheduled",
+      "text": "Season 4 scheduled October 16. This is anticipation, not an event on the reviewed days.",
+      "url": "https://www.paramountplus.com/sneak-peak/new-on-paramount-plus/",
+      "source": "Paramount+ October schedule",
+      "published": "2026-09-24",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "scheduled",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E24",
+      "keys": [],
+      "titles": [
+        "East of Eden"
+      ],
+      "event_date": "2026-10-01",
+      "category": "release",
+      "text": "Netflix series release October 1; continuing post-release attention, outside the six-day release window.",
+      "url": "https://www.netflix.com/tudum/articles/east-of-eden-release-date-photos",
+      "source": "Netflix Tudum",
+      "published": "2026-09",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "continuing",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E25",
+      "keys": [
+        "tv:1877"
+      ],
+      "titles": [
+        "Phineas and Ferb"
+      ],
+      "event_date": "2026-10-07",
+      "category": "episode",
+      "text": "Halloween special premiere October 7 on Disney+.",
+      "url": "https://www.disneyplus.com/explore/articles/new-to-disney-plus",
+      "source": "Disney+ October schedule",
+      "published": "2026-10-12 (page revision)",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E26",
+      "keys": [
+        "tv:1402"
+      ],
+      "titles": [
+        "The Walking Dead"
+      ],
+      "event_date": "2026-10-09",
+      "category": "franchise",
+      "text": "AMC published NYCC panel coverage October 9 featuring Daryl Dixon. Original-show attention is inferred franchise context, not a new original season.",
+      "url": "https://www.amc.com/blogs",
+      "source": "AMC Talk dated NYCC coverage card",
+      "published": "2026-10-09",
+      "review_from": "2026-10-09",
+      "review_through": "2026-10-13",
+      "relationship": "franchise-context",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E27",
+      "keys": [
+        "tv:4608"
+      ],
+      "titles": [
+        "30 Rock"
+      ],
+      "event_date": "2026-10-11",
+      "category": "anniversary",
+      "text": "20th-anniversary cast reunion at Radio City Music Hall October 11.",
+      "url": "https://www.msg.com/events-tickets/tina-fey-radio-city-music-hall-october-2026/3C0065138E82128F",
+      "source": "Radio City event listing",
+      "published": "2026-10",
+      "review_from": "2026-10-10",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E28",
+      "keys": [
+        "tv:1908"
+      ],
+      "titles": [
+        "Miami Vice"
+      ],
+      "event_date": "2026-10-12",
+      "category": "franchise",
+      "text": "Universal first-look images for Miami Vice ’85 released October 12; original-series rise is inferred franchise spillover.",
+      "url": "https://medianewsjournal.com/2026/10/miami-vice-85-first-look-michael-b-jordan-austin-butler-as-tubbs-and-crockett",
+      "source": "Media News Journal reporting Universal first look",
+      "published": "2026-10-12",
+      "review_from": "2026-10-12",
+      "review_through": "2026-10-13",
+      "relationship": "franchise-context",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E29",
+      "keys": [
+        "movie:1275779"
+      ],
+      "titles": [
+        "Disclosure Day"
+      ],
+      "event_date": "2026-10-09",
+      "category": "release",
+      "text": "Peacock streaming release October 9.",
+      "url": "https://www.space.com/entertainment/space-movies-shows/how-to-watch-disclosure-day-online",
+      "source": "Space.com release guide",
+      "published": "2026-10-09",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E30",
+      "keys": [
+        "movie:1058424"
+      ],
+      "titles": [
+        "Hope"
+      ],
+      "event_date": "2026-10-08",
+      "category": "release",
+      "text": "MUBI German theatrical release October 8.",
+      "url": "https://www.youtube.com/watch?v=mYRc2Gl7geY",
+      "source": "MUBI verified official trailer description",
+      "published": "2026-08-10",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E31",
+      "keys": [
+        "movie:1058424"
+      ],
+      "titles": [
+        "Hope"
+      ],
+      "event_date": "2026-10-13",
+      "category": "digital",
+      "text": "US digital release October 13 via Neon.",
+      "url": "https://www.slashfilm.com/2282402/how-watch-hope-2026-sci-fi-movie-home/",
+      "source": "Slashfilm",
+      "published": "2026-10-09",
+      "review_from": "2026-10-11",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E32",
+      "keys": [
+        "tv:4614"
+      ],
+      "titles": [
+        "NCIS"
+      ],
+      "event_date": "2026-10-06",
+      "category": "season",
+      "text": "Season 24 premiere October 6.",
+      "url": "https://www.paramountplus.com/sneak-peak/new-on-paramount-plus/",
+      "source": "Paramount+ October calendar",
+      "published": "2026-09-24",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E33",
+      "keys": [
+        "tv:80748"
+      ],
+      "titles": [
+        "FBI"
+      ],
+      "event_date": "2026-10-05",
+      "category": "season",
+      "text": "Season 9 premiere October 5.",
+      "url": "https://www.paramountplus.com/sneak-peak/new-on-paramount-plus/",
+      "source": "Paramount+ October calendar",
+      "published": "2026-09-24",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E34",
+      "keys": [
+        "tv:290856",
+        "tv:211288"
+      ],
+      "titles": [
+        "Marshals",
+        "Tracker"
+      ],
+      "event_date": "2026-10-04",
+      "category": "season",
+      "text": "New seasons began October 4; subsequent attention is ongoing-season context.",
+      "url": "https://www.paramountplus.com/sneak-peak/new-on-paramount-plus/",
+      "source": "Paramount+ October calendar",
+      "published": "2026-09-24",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "continuing",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E35",
+      "keys": [
+        "tv:91239"
+      ],
+      "titles": [
+        "Bridgerton"
+      ],
+      "event_date": "2026-10-08",
+      "category": "news",
+      "text": "Shondaland announced a young-Violet spin-off October 8. Related-work announcement, not a new season of Bridgerton.",
+      "url": "https://www.shondaland.com/shondaland-series/bridgerton/bridgerton-spin-off-young-violet",
+      "source": "Shondaland",
+      "published": "2026-10-08",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "franchise-context",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E36",
+      "keys": [
+        "tv:14814"
+      ],
+      "titles": [
+        "Keeping Up with the Kardashians"
+      ],
+      "event_date": "2026-10-08",
+      "category": "spillover",
+      "text": "The Kardashians season 8 premiered October 8; the old Keeping Up series is a distinct work. Its lift is inferred related-family attention.",
+      "url": "https://abc.com/news/2a2d0782-a437-429c-93d9-a42edd6e85a2/category/3722338",
+      "source": "ABC / What’s on Hulu",
+      "published": "2026-10-06",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "inferred",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E37",
+      "keys": [
+        "movie:980431"
+      ],
+      "titles": [
+        "Avatar Aang: The Last Airbender"
+      ],
+      "event_date": "2026-10-09",
+      "category": "spillover",
+      "text": "Seven Havens launched October 9. Aang actually released July 25, per Paramount, despite stale pages listing October 9. Its current rise is inferred franchise attention, not a new movie release.",
+      "url": "https://www.paramountpressexpress.com/paramount-plus/shows/avatar-aang-the-last-airbender/releases",
+      "source": "Paramount Press Express",
+      "published": "2026-07-07",
+      "review_from": "2026-10-09",
+      "review_through": "2026-10-13",
+      "relationship": "inferred",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E38",
+      "keys": [
+        "tv:226637"
+      ],
+      "titles": [
+        "High Potential"
+      ],
+      "event_date": "2026-10-12",
+      "category": "news",
+      "text": "ABC announced the February 2027 post-Super-Bowl slot and released a promo October 12. News event, not an episode premiere in this review week.",
+      "url": "https://www.detpress.com/abc/pressrelease/high-potential-to-follow-super-bowl-lxi-on-abc-and-disney/",
+      "source": "ABC Press",
+      "published": "2026-10-12",
+      "review_from": "2026-10-12",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E39",
+      "keys": [
+        "tv:2710"
+      ],
+      "titles": [
+        "It's Always Sunny in Philadelphia"
+      ],
+      "event_date": "2026-10-13",
+      "category": "finale",
+      "text": "Disney lists the season 18 finale October 12 at 9pm PT, i.e. October 13 UTC. An outside guide lists October 19; the official schedule takes precedence.",
+      "url": "https://www.disneyplus.com/explore/articles/new-to-disney-plus",
+      "source": "Disney+ official October schedule",
+      "published": "2026-10-12 (revision)",
+      "review_from": "2026-10-13",
+      "review_through": "2026-10-13",
+      "relationship": "direct",
+      "checked": "2026-10-14"
+    },
+    {
+      "id": "E40",
+      "keys": [
+        "tv:1434"
+      ],
+      "titles": [
+        "Family Guy"
+      ],
+      "event_date": "2026-10-05",
+      "category": "episode",
+      "text": "Halloween special released on Hulu October 5; later attention is continuing seasonal context.",
+      "url": "https://www.disneyplus.com/explore/articles/new-to-disney-plus",
+      "source": "Disney+ official October schedule",
+      "published": "2026-10-12 (revision)",
+      "review_from": "2026-10-08",
+      "review_through": "2026-10-13",
+      "relationship": "continuing",
+      "checked": "2026-10-14"
+    }
+  ]
+}

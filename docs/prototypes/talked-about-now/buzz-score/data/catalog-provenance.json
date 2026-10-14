@@ -1,0 +1,1 @@
+{"retrieved_at": "2026-10-14T12:10:34.257416+00:00", "timestamp_method": "local capture file modification time", "source": "production Crate SELECT", "selection": "500 highest combined catalog popularity; fetch first 500 of each type, merge, take 500"}

@@ -1,0 +1,501 @@
+key,kind,title,catalog_popularity,mapping_status,article_url,article_days,tmdb_export_days,scored_days,netflix_recent_match
+movie:969681,movie,Spider-Man: Brand New Day,842.8543,matched,https://en.wikipedia.org/wiki/Spider-Man:_Brand_New_Day,60,60,21,False
+tv:22980,tv,Watch What Happens Live with Andy Cohen,580.3911,matched,https://en.wikipedia.org/wiki/Watch_What_Happens_Live_with_Andy_Cohen,60,60,21,False
+tv:61818,tv,Late Night with Seth Meyers,502.1885,matched,https://en.wikipedia.org/wiki/Late_Night_with_Seth_Meyers,60,60,21,False
+tv:91759,tv,Come Home Love: Lo and Behold,492.9561,matched,https://en.wikipedia.org/wiki/Come_Home_Love:_Lo_and_Behold,60,60,21,False
+movie:1423191,movie,Resident Evil,479.8812,matched,https://en.wikipedia.org/wiki/Resident_Evil_(2026_film),60,60,21,False
+movie:1291595,movie,Insidious: Out of the Further,477.9912,matched,https://en.wikipedia.org/wiki/Insidious:_Out_of_the_Further,60,60,21,False
+tv:2734,tv,Law & Order: Special Victims Unit,456.0151,matched,https://en.wikipedia.org/wiki/Law_%26_Order:_Special_Victims_Unit,60,60,21,False
+tv:2261,tv,The Tonight Show Starring Johnny Carson,447.8825,matched,https://en.wikipedia.org/wiki/The_Tonight_Show_Starring_Johnny_Carson,60,60,21,False
+tv:108978,tv,Reacher,445.8491,matched,https://en.wikipedia.org/wiki/Reacher_(TV_series),60,60,21,False
+tv:549,tv,Law & Order,428.3661,matched,https://en.wikipedia.org/wiki/Law_%26_Order,60,60,21,False
+tv:59941,tv,The Tonight Show Starring Jimmy Fallon,426.3989,matched,https://en.wikipedia.org/wiki/The_Tonight_Show_Starring_Jimmy_Fallon,60,60,21,False
+tv:108188,tv,Barbara Karlich – Talk um 4,394.1134,no-enwiki,,0,60,0,False
+tv:2316,tv,The Office,385.2133,matched,https://en.wikipedia.org/wiki/The_Office_(American_TV_series),60,60,21,False
+tv:5920,tv,The Mentalist,382.0129,matched,https://en.wikipedia.org/wiki/The_Mentalist,60,60,21,False
+movie:1148365,movie,Matchbox the Movie,381.2533,matched,https://en.wikipedia.org/wiki/Matchbox:_The_Movie,60,60,21,False
+movie:1368337,movie,The Odyssey,376.5459,matched,https://en.wikipedia.org/wiki/The_Odyssey_(2026_film),60,60,21,False
+tv:45789,tv,Storm of Love,373.5005,matched,https://en.wikipedia.org/wiki/Storm_of_Love,60,60,21,False
+tv:456,tv,The Simpsons,370.7174,matched,https://en.wikipedia.org/wiki/The_Simpsons,60,60,21,False
+tv:33238,tv,Running Man,360.8613,matched,https://en.wikipedia.org/wiki/Running_Man_(TV_program),60,60,21,False
+tv:4614,tv,NCIS,347.8382,matched,https://en.wikipedia.org/wiki/NCIS_(TV_series),60,60,21,False
+tv:70998,tv,Souryo to Majiwaru Shikiyoku no Yoru ni...,341.8535,no-enwiki,,0,60,0,False
+tv:63770,tv,The Late Show with Stephen Colbert,332.9279,matched,https://en.wikipedia.org/wiki/The_Late_Show_with_Stephen_Colbert,60,60,21,False
+tv:288673,tv,Carrie,326.3646,matched,https://en.wikipedia.org/wiki/Carrie_(miniseries),60,60,21,False
+tv:65733,tv,Doraemon,314.6383,matched,https://en.wikipedia.org/wiki/Doraemon_(2005_TV_series),60,60,21,False
+tv:2224,tv,The Daily Show,311.2515,matched,https://en.wikipedia.org/wiki/The_Daily_Show,60,60,21,False
+tv:2661,tv,Kamen Rider,300.8108,matched,https://en.wikipedia.org/wiki/Kamen_Rider_(1971_TV_series),60,60,21,False
+tv:1416,tv,Grey's Anatomy,295.3739,matched,https://en.wikipedia.org/wiki/Grey%27s_Anatomy,60,60,21,False
+tv:1434,tv,Family Guy,283.6598,matched,https://en.wikipedia.org/wiki/Family_Guy,60,60,21,False
+tv:1622,tv,Supernatural,276.6632,matched,https://en.wikipedia.org/wiki/Supernatural_(American_TV_series),60,60,21,False
+tv:247718,tv,MobLand,276.4069,matched,https://en.wikipedia.org/wiki/MobLand,60,60,21,False
+movie:1101412,movie,Fall 2: Deadpoint,275.6913,matched,https://en.wikipedia.org/wiki/Fall_2:_Deadpoint,60,60,21,False
+tv:15226,tv,C.I.D.,275.2833,matched,https://en.wikipedia.org/wiki/CID_(Indian_TV_series),60,60,21,False
+movie:1236045,movie,Animals,269.1292,matched,https://en.wikipedia.org/wiki/Animals_(2026_film),60,60,21,False
+tv:97546,tv,Ted Lasso,268.38,matched,https://en.wikipedia.org/wiki/Ted_Lasso,60,60,21,False
+tv:336510,tv,alpha Österreich,265.1763,no-enwiki,,0,18,0,False
+tv:498,tv,Late Show with David Letterman,264.9158,matched,https://en.wikipedia.org/wiki/Late_Show_with_David_Letterman,60,60,21,False
+movie:1377237,movie,Runner,262.417,matched,https://en.wikipedia.org/wiki/Runner_(2026_American_film),60,60,21,False
+tv:1396,tv,Breaking Bad,256.5251,matched,https://en.wikipedia.org/wiki/Breaking_Bad,60,60,21,False
+movie:1228834,movie,The Fix,255.1244,matched,https://en.wikipedia.org/wiki/The_Fix_(2026_film),60,60,21,False
+tv:70672,tv,Men on a Mission,254.027,matched,https://en.wikipedia.org/wiki/Knowing_Bros,60,60,21,False
+tv:4057,tv,Criminal Minds,251.0294,ambiguous,,0,60,0,False
+tv:14424,tv,Young Hearts,245.4775,matched,https://en.wikipedia.org/wiki/Malha%C3%A7%C3%A3o,60,60,21,False
+tv:206559,tv,Binnelanders,242.9025,matched,https://en.wikipedia.org/wiki/Binnelanders,60,60,21,False
+tv:82873,tv,The Kelly Clarkson Show,242.7876,matched,https://en.wikipedia.org/wiki/The_Kelly_Clarkson_Show,60,60,21,False
+tv:94722,tv,Tagesschau,238.9973,matched,https://en.wikipedia.org/wiki/Tagesschau_(German_TV_programme),60,60,21,False
+tv:1431,tv,CSI: Crime Scene Investigation,235.7584,matched,https://en.wikipedia.org/wiki/CSI:_Crime_Scene_Investigation,60,60,21,False
+tv:65282,tv,Home Alone,231.8272,matched,https://en.wikipedia.org/wiki/I_Live_Alone_(TV_program),60,60,21,False
+tv:291,tv,Coronation Street,231.6608,matched,https://en.wikipedia.org/wiki/Coronation_Street,60,60,21,False
+tv:39429,tv,You Hee-yeol's Sketchbook,229.6652,matched,https://en.wikipedia.org/wiki/You_Hee-yeol%27s_Sketchbook,60,60,21,False
+tv:5092,tv,Infinite Challenge,229.185,matched,https://en.wikipedia.org/wiki/Infinite_Challenge,60,60,21,False
+tv:4656,tv,Raw,224.9878,matched,https://en.wikipedia.org/wiki/WWE_Raw,60,60,21,True
+tv:1433,tv,American Dad!,224.6898,matched,https://en.wikipedia.org/wiki/American_Dad!,60,60,21,False
+tv:261102,tv,The Secret Lives of Mormon Wives,222.913,matched,https://en.wikipedia.org/wiki/The_Secret_Lives_of_Mormon_Wives,60,60,21,False
+tv:502,tv,Sesame Street,218.0959,matched,https://en.wikipedia.org/wiki/Sesame_Street,60,60,21,False
+tv:95480,tv,Slow Horses,217.9053,matched,https://en.wikipedia.org/wiki/Slow_Horses,60,60,21,False
+tv:79744,tv,The Rookie,217.4038,matched,https://en.wikipedia.org/wiki/The_Rookie,60,60,21,False
+tv:1399,tv,Game of Thrones,215.9584,matched,https://en.wikipedia.org/wiki/Game_of_Thrones,60,60,21,False
+movie:1712451,movie,Resident Dead,215.8786,no-enwiki,,0,60,0,False
+tv:65270,tv,Radio Star,213.0748,no-enwiki,,0,60,0,False
+tv:1413,tv,American Horror Story,209.045,matched,https://en.wikipedia.org/wiki/American_Horror_Story,60,60,21,False
+tv:113962,tv,Lioness,207.6542,matched,https://en.wikipedia.org/wiki/Lioness_(American_TV_series),60,60,21,False
+tv:10536,tv,The Mike Douglas Show,207.4354,matched,https://en.wikipedia.org/wiki/The_Mike_Douglas_Show,60,60,21,False
+tv:72879,tv,Tomorrow Is Ours,207.0855,matched,https://en.wikipedia.org/wiki/Tomorrow_Is_Ours,60,60,21,False
+tv:1911,tv,Bones,203.8331,matched,https://en.wikipedia.org/wiki/Bones_(TV_series),60,60,21,False
+tv:64190,tv,Volle Kanne,202.0327,no-enwiki,,0,60,0,False
+tv:32415,tv,Conan,201.0462,matched,https://en.wikipedia.org/wiki/Conan_(talk_show),60,60,21,False
+tv:11890,tv,"Goede Tijden, Slechte Tijden",198.8531,matched,"https://en.wikipedia.org/wiki/Goede_tijden,_slechte_tijden",60,60,21,False
+tv:44006,tv,Chicago Fire,198.8407,matched,https://en.wikipedia.org/wiki/Chicago_Fire_(TV_series),60,60,21,False
+tv:52910,tv,Law of the Jungle,198.2411,matched,https://en.wikipedia.org/wiki/Law_of_the_Jungle_(TV_program),60,60,21,False
+tv:1421,tv,Modern Family,197.3503,matched,https://en.wikipedia.org/wiki/Modern_Family,60,60,21,False
+tv:1402,tv,The Walking Dead,194.1935,matched,https://en.wikipedia.org/wiki/The_Walking_Dead_(TV_series),60,60,21,False
+tv:1408,tv,House,193.7798,matched,https://en.wikipedia.org/wiki/House_(TV_series),60,60,21,False
+tv:57243,tv,Doctor Who,193.4552,no-enwiki,,0,60,0,False
+tv:3034,tv,Scene of the Crime,191.691,matched,https://en.wikipedia.org/wiki/Tatort,60,60,21,False
+tv:65334,tv,Miraculous: Tales of Ladybug & Cat Noir,190.94,matched,https://en.wikipedia.org/wiki/Miraculous:_Tales_of_Ladybug_%26_Cat_Noir,60,60,21,False
+tv:265167,tv,ZIBB,189.9215,no-enwiki,,0,60,0,False
+tv:66046,tv,Mystery Music Show: King of Mask Singer,189.5842,matched,https://en.wikipedia.org/wiki/King_of_Mask_Singer,60,60,21,False
+tv:62992,tv,DAS!,187.027,no-enwiki,,0,60,0,False
+tv:60735,tv,The Flash,185.2648,matched,https://en.wikipedia.org/wiki/The_Flash_(2014_TV_series),60,60,21,False
+tv:764,tv,Midsomer Murders,181.9833,matched,https://en.wikipedia.org/wiki/Midsomer_Murders,60,60,21,False
+tv:46952,tv,The Blacklist,181.7759,matched,https://en.wikipedia.org/wiki/The_Blacklist,60,60,21,False
+tv:95350,tv,Lanterns,181.2335,matched,https://en.wikipedia.org/wiki/Lanterns_(TV_series),60,60,21,False
+tv:874,tv,One Life to Live,179.0105,matched,https://en.wikipedia.org/wiki/One_Life_to_Live,60,60,21,False
+tv:1667,tv,Saturday Night Live,176.9803,matched,https://en.wikipedia.org/wiki/Saturday_Night_Live,60,60,21,False
+tv:1620,tv,CSI: Miami,176.0915,matched,https://en.wikipedia.org/wiki/CSI:_Miami,60,60,21,False
+tv:1419,tv,Castle,174.0278,matched,https://en.wikipedia.org/wiki/Castle_(TV_series),60,60,21,False
+movie:1101383,movie,The End of Oak Street,173.095,matched,https://en.wikipedia.org/wiki/The_End_of_Oak_Street,60,60,21,False
+tv:58841,tv,Chicago P.D.,172.8393,matched,https://en.wikipedia.org/wiki/Chicago_P.D._(TV_series),60,60,21,False
+tv:57775,tv,Chibi Maruko-chan,171.9091,no-enwiki,,0,60,0,False
+tv:62223,tv,The Late Late Show with James Corden,171.6567,matched,https://en.wikipedia.org/wiki/The_Late_Late_Show_with_James_Corden,60,60,21,False
+tv:2190,tv,South Park,171.1069,matched,https://en.wikipedia.org/wiki/South_Park,60,60,21,False
+tv:65701,tv,Good Mythical Morning,168.9884,matched,https://en.wikipedia.org/wiki/Good_Mythical_Morning,60,60,21,False
+tv:13945,tv,"Gute Zeiten, schlechte Zeiten",168.2429,matched,"https://en.wikipedia.org/wiki/Gute_Zeiten,_schlechte_Zeiten",60,60,21,False
+tv:2288,tv,Prison Break,167.9777,matched,https://en.wikipedia.org/wiki/Prison_Break,60,60,21,False
+tv:221468,tv,Hollywood Squares,166.3973,no-enwiki,,0,60,0,False
+tv:4604,tv,Smallville,166.1396,matched,https://en.wikipedia.org/wiki/Smallville,60,60,21,False
+tv:2221,tv,The View,165.7302,matched,https://en.wikipedia.org/wiki/The_View,60,60,21,False
+tv:14981,tv,The Late Late Show with Craig Ferguson,165.3829,matched,https://en.wikipedia.org/wiki/The_Late_Late_Show_with_Craig_Ferguson,60,60,21,False
+tv:285322,tv,Below,165.1799,matched,https://en.wikipedia.org/wiki/Below_(miniseries),60,60,21,False
+tv:30984,tv,Bleach,165.0882,matched,https://en.wikipedia.org/wiki/Bleach_(TV_series),60,60,21,False
+tv:60625,tv,Rick and Morty,164.1936,matched,https://en.wikipedia.org/wiki/Rick_and_Morty,60,60,21,False
+tv:80748,tv,FBI,163.999,matched,https://en.wikipedia.org/wiki/FBI_(TV_series),60,60,21,False
+tv:34307,tv,Shameless,163.7144,matched,https://en.wikipedia.org/wiki/Shameless_(American_TV_series),60,60,21,False
+movie:1294189,movie,The Mongoose,163.4921,matched,https://en.wikipedia.org/wiki/The_Mongoose_(film),60,60,21,False
+movie:1339274,movie,Don't Leave the Kids Alone,162.0906,no-enwiki,,0,60,0,False
+tv:46260,tv,Naruto,161.7303,matched,https://en.wikipedia.org/wiki/Naruto_(TV_series),60,60,21,False
+tv:289423,tv,Take Charge of My Heart,161.3597,matched,https://en.wikipedia.org/wiki/Take_Charge_of_My_Heart,56,60,16,False
+tv:40663,tv,AIBOU: Tokyo Detective Duo,160.1797,matched,https://en.wikipedia.org/wiki/AIBOU:_Tokyo_Detective_Duo,60,60,21,False
+movie:1751701,movie,After Impact,159.6648,no-enwiki,,0,56,0,False
+tv:2912,tv,Jeopardy!,158.2321,matched,https://en.wikipedia.org/wiki/Jeopardy!,60,60,21,False
+movie:460458,movie,Resident Evil: Welcome to Raccoon City,158.1255,matched,https://en.wikipedia.org/wiki/Resident_Evil:_Welcome_to_Raccoon_City,60,60,21,False
+tv:4385,tv,The Colbert Report,158.1064,matched,https://en.wikipedia.org/wiki/The_Colbert_Report,60,60,21,False
+tv:60572,tv,Pokémon,157.6917,matched,https://en.wikipedia.org/wiki/Pok%C3%A9mon_(TV_series),60,60,21,False
+tv:31132,tv,Regular Show,156.0976,ambiguous,,0,60,0,False
+tv:30801,tv,2 Days and 1 Night,155.6738,matched,https://en.wikipedia.org/wiki/2_Days_%26_1_Night,60,60,21,False
+tv:94664,tv,Mushoku Tensei: Jobless Reincarnation,154.8749,matched,https://en.wikipedia.org/wiki/Mushoku_Tensei_(TV_series),60,60,21,False
+tv:4586,tv,Gilmore Girls,154.5054,matched,https://en.wikipedia.org/wiki/Gilmore_Girls,60,60,21,False
+tv:37288,tv,Morgenmagazin,153.2175,no-enwiki,,0,60,0,False
+tv:81329,tv,Chronicles of the Sun,152.5358,no-enwiki,,0,60,0,False
+tv:125988,tv,Silo,151.9133,matched,https://en.wikipedia.org/wiki/Silo_(TV_series),60,60,21,False
+tv:4601,tv,Law & Order: Criminal Intent,151.7345,matched,https://en.wikipedia.org/wiki/Law_%26_Order:_Criminal_Intent,60,60,21,False
+tv:1220,tv,The Graham Norton Show,151.6494,matched,https://en.wikipedia.org/wiki/The_Graham_Norton_Show,60,60,21,False
+tv:1871,tv,EastEnders,151.4687,matched,https://en.wikipedia.org/wiki/EastEnders,60,60,21,False
+tv:284833,tv,Avatar: Seven Havens,150.9785,matched,https://en.wikipedia.org/wiki/Avatar:_Seven_Havens,60,60,21,False
+tv:78648,tv,Amazing Saturday,150.419,matched,https://en.wikipedia.org/wiki/DoReMi_Market,60,60,21,False
+tv:17610,tv,NCIS: Los Angeles,150.119,matched,https://en.wikipedia.org/wiki/NCIS:_Los_Angeles,60,60,21,False
+movie:1084244,movie,Toy Story 5,149.9692,matched,https://en.wikipedia.org/wiki/Toy_Story_5,60,60,21,False
+tv:1405,tv,Dexter,149.6472,matched,https://en.wikipedia.org/wiki/Dexter_(TV_series),60,60,21,False
+tv:32798,tv,Hawaii Five-0,149.491,matched,https://en.wikipedia.org/wiki/Hawaii_Five-0_(2010_TV_series),60,60,21,False
+tv:154770,tv,Hello Saturday,149.2501,no-enwiki,,0,60,0,False
+tv:112470,tv,Ici tout commence,148.9256,no-enwiki,,0,60,0,False
+tv:84773,tv,The Lord of the Rings: The Rings of Power,148.1426,matched,https://en.wikipedia.org/wiki/The_Lord_of_the_Rings:_The_Rings_of_Power,60,60,21,False
+movie:1400837,movie,Other Mommy,147.3936,matched,https://en.wikipedia.org/wiki/Other_Mommy,60,60,21,False
+tv:32692,tv,Blue Bloods,146.7331,matched,https://en.wikipedia.org/wiki/Blue_Bloods,60,60,21,False
+tv:37680,tv,Suits,145.8175,matched,https://en.wikipedia.org/wiki/Suits_(American_TV_series),60,60,21,False
+tv:1973,tv,24,145.5421,matched,https://en.wikipedia.org/wiki/24_(TV_series),60,60,21,False
+tv:693,tv,Desperate Housewives,144.9567,matched,https://en.wikipedia.org/wiki/Desperate_Housewives,60,60,21,False
+movie:1204680,movie,Coyote vs. Acme,144.2493,matched,https://en.wikipedia.org/wiki/Coyote_vs._Acme,60,60,21,False
+tv:71790,tv,S.W.A.T.,141.7619,matched,https://en.wikipedia.org/wiki/S.W.A.T._(2017_TV_series),60,60,21,False
+tv:1668,tv,Friends,141.7433,matched,https://en.wikipedia.org/wiki/Friends,60,60,21,False
+tv:2691,tv,Two and a Half Men,140.8003,matched,https://en.wikipedia.org/wiki/Two_and_a_Half_Men,60,60,21,False
+tv:12971,tv,Dragon Ball Z,139.8491,matched,https://en.wikipedia.org/wiki/Dragon_Ball_Z,60,60,21,False
+tv:23915,tv,Markus Lanz,139.6974,matched,https://en.wikipedia.org/wiki/Markus_Lanz_(talk_show),60,60,21,False
+tv:4419,tv,Real Time with Bill Maher,138.0821,matched,https://en.wikipedia.org/wiki/Real_Time_with_Bill_Maher,60,60,21,False
+tv:74561,tv,Who's the Murderer,137.8324,matched,https://en.wikipedia.org/wiki/Who%27s_the_Murderer,60,60,21,False
+tv:873,tv,Columbo,137.5205,matched,https://en.wikipedia.org/wiki/Columbo,60,60,21,False
+tv:204746,tv,The Jennifer Hudson Show,137.3354,matched,https://en.wikipedia.org/wiki/The_Jennifer_Hudson_Show,60,60,21,False
+tv:50821,tv,Among Friends,137.1937,matched,https://en.wikipedia.org/wiki/Bar%C3%A1tok_k%C3%B6zt,60,60,21,False
+tv:275102,tv,The Scandal,136.4224,matched,https://en.wikipedia.org/wiki/The_Scandal_(2026_TV_series),60,60,21,True
+tv:1489,tv,Jimmy Kimmel Live!,136.3972,matched,https://en.wikipedia.org/wiki/Jimmy_Kimmel_Live!,60,60,21,False
+tv:17887,tv,7de Laan,135.9821,matched,https://en.wikipedia.org/wiki/7de_Laan,60,60,21,False
+tv:1400,tv,Seinfeld,135.3198,matched,https://en.wikipedia.org/wiki/Seinfeld,60,60,21,False
+tv:62650,tv,Chicago Med,134.4387,matched,https://en.wikipedia.org/wiki/Chicago_Med,60,60,21,False
+tv:4087,tv,The X-Files,134.3037,matched,https://en.wikipedia.org/wiki/The_X-Files,60,60,21,False
+movie:1285810,movie,Forbidden Immoral Sex 3: Too Young Stepmother,133.976,no-enwiki,,0,0,0,False
+tv:4376,tv,JAG,133.8167,matched,https://en.wikipedia.org/wiki/JAG_(TV_series),60,60,21,False
+tv:75219,tv,9-1-1,133.7726,matched,https://en.wikipedia.org/wiki/9-1-1_(TV_series),60,60,21,False
+tv:45140,tv,Teen Titans Go!,132.3567,matched,https://en.wikipedia.org/wiki/Teen_Titans_Go!,60,60,21,False
+tv:66732,tv,Stranger Things,130.9558,matched,https://en.wikipedia.org/wiki/Stranger_Things,60,60,21,False
+tv:124364,tv,FROM,130.9416,matched,https://en.wikipedia.org/wiki/From_(TV_series),60,60,21,False
+tv:121,tv,Doctor Who,130.1383,matched,https://en.wikipedia.org/wiki/Doctor_Who,60,60,21,False
+tv:34860,tv,Ninja Boy Rantaro,129.0115,no-enwiki,,0,60,0,False
+tv:71712,tv,The Good Doctor,128.8528,matched,https://en.wikipedia.org/wiki/The_Good_Doctor_(American_TV_series),60,60,21,False
+tv:235331,tv,Paluke Bangaramayenaa,128.2197,no-enwiki,,0,60,0,False
+movie:1058424,movie,Hope,126.804,matched,https://en.wikipedia.org/wiki/Hope_(2026_film),60,60,21,False
+movie:1232569,movie,Pinocchio: Unstrung,126.5003,matched,https://en.wikipedia.org/wiki/Pinocchio_Unstrung,60,60,21,False
+tv:2625,tv,Diagnosis: Murder,126.466,matched,https://en.wikipedia.org/wiki/Diagnosis:_Murder,60,60,21,False
+tv:1411,tv,Person of Interest,126.4385,matched,https://en.wikipedia.org/wiki/Person_of_Interest_(TV_series),60,60,21,False
+tv:82588,tv,Köln 50667,126.2355,no-enwiki,,0,60,0,False
+tv:40605,tv,Die Harald Schmidt Show,126.1404,matched,https://en.wikipedia.org/wiki/Die_Harald_Schmidt_Show,60,60,21,False
+tv:220542,tv,The Apothecary Diaries,126.0417,matched,https://en.wikipedia.org/wiki/The_Apothecary_Diaries_(TV_series),60,60,21,False
+tv:1407,tv,Homeland,125.9725,matched,https://en.wikipedia.org/wiki/Homeland_(TV_series),60,60,21,False
+tv:4607,tv,Lost,125.5149,matched,https://en.wikipedia.org/wiki/Lost_(TV_series),60,60,21,False
+movie:1284046,movie,Onslaught,124.7951,matched,https://en.wikipedia.org/wiki/Onslaught_(film),60,60,21,False
+tv:4629,tv,Stargate SG-1,124.2303,matched,https://en.wikipedia.org/wiki/Stargate_SG-1,60,60,21,False
+tv:76479,tv,The Boys,123.9892,matched,https://en.wikipedia.org/wiki/The_Boys_(TV_series),60,60,21,False
+movie:1302904,movie,Practical Magic 2,123.643,matched,https://en.wikipedia.org/wiki/Practical_Magic_2,60,60,21,False
+tv:18495,tv,Nonstop,122.9358,matched,https://en.wikipedia.org/wiki/Nonstop_(South_Korean_TV_series),60,60,21,False
+tv:94997,tv,House of the Dragon,122.6365,matched,https://en.wikipedia.org/wiki/House_of_the_Dragon,60,60,21,False
+tv:1695,tv,Monk,121.9526,matched,https://en.wikipedia.org/wiki/Monk_(TV_series),60,60,21,False
+tv:1412,tv,Arrow,121.6361,matched,https://en.wikipedia.org/wiki/Arrow_(TV_series),60,60,21,False
+tv:1636,tv,Top of the Pops,121.5476,matched,https://en.wikipedia.org/wiki/Top_of_the_Pops,60,60,21,False
+tv:1100,tv,How I Met Your Mother,121.0579,matched,https://en.wikipedia.org/wiki/How_I_Met_Your_Mother,60,60,21,False
+movie:1339713,movie,Obsession,120.0202,matched,https://en.wikipedia.org/wiki/Obsession_(2025_film),60,60,21,False
+tv:3452,tv,Frasier,119.9417,matched,https://en.wikipedia.org/wiki/Frasier,60,60,21,False
+tv:790,tv,Agatha Christie's Poirot,119.8812,matched,https://en.wikipedia.org/wiki/Agatha_Christie%27s_Poirot,60,60,21,False
+tv:15260,tv,Adventure Time,119.5199,matched,https://en.wikipedia.org/wiki/Adventure_Time,60,60,21,False
+tv:2122,tv,King of the Hill,119.2422,matched,https://en.wikipedia.org/wiki/King_of_the_Hill,60,60,21,False
+tv:60059,tv,Better Call Saul,119.1974,matched,https://en.wikipedia.org/wiki/Better_Call_Saul,60,60,21,False
+tv:1398,tv,The Sopranos,118.9933,matched,https://en.wikipedia.org/wiki/The_Sopranos,60,60,21,False
+tv:18165,tv,The Vampire Diaries,117.3778,matched,https://en.wikipedia.org/wiki/The_Vampire_Diaries,60,60,21,False
+tv:1900,tv,LIVE with Kelly and Mark,116.892,matched,https://en.wikipedia.org/wiki/Live_with_Kelly_and_Mark,60,60,21,False
+tv:37971,tv,The Old Fox,116.7876,matched,https://en.wikipedia.org/wiki/Der_Alte_(TV_series),56,60,12,False
+tv:46786,tv,Bates Motel,116.3899,matched,https://en.wikipedia.org/wiki/Bates_Motel_(TV_series),60,60,21,False
+tv:153312,tv,Tulsa King,116.1936,matched,https://en.wikipedia.org/wiki/Tulsa_King,60,60,21,False
+tv:111979,tv,Leute heute,116.1598,no-enwiki,,0,60,0,False
+movie:1288445,movie,Mutiny,116.0881,matched,https://en.wikipedia.org/wiki/Mutiny_(2026_film),60,60,21,False
+tv:95479,tv,JUJUTSU KAISEN,115.583,matched,https://en.wikipedia.org/wiki/Jujutsu_Kaisen_(TV_series),60,60,21,True
+movie:1389172,movie,Miss Paitu,114.7854,no-enwiki,,0,60,0,False
+tv:1508,tv,Dancing with the Stars,114.2662,matched,https://en.wikipedia.org/wiki/Dancing_with_the_Stars_(American_TV_series),60,60,21,False
+tv:65942,tv,Re:ZERO -Starting Life in Another World-,114.0519,matched,https://en.wikipedia.org/wiki/Re:Zero_(TV_series),60,60,21,False
+tv:6809,tv,El hormiguero,114.0227,matched,https://en.wikipedia.org/wiki/El_Hormiguero,60,60,21,False
+tv:57532,tv,PAW Patrol,113.8508,matched,https://en.wikipedia.org/wiki/Paw_Patrol,60,60,21,False
+movie:1280300,movie,The Whistler,113.8489,no-enwiki,,0,60,0,False
+tv:56570,tv,Outlander,113.7334,matched,https://en.wikipedia.org/wiki/Outlander_(TV_series),60,60,21,False
+tv:48891,tv,Brooklyn Nine-Nine,113.1967,matched,https://en.wikipedia.org/wiki/Brooklyn_Nine-Nine,60,60,21,False
+tv:2875,tv,MacGyver,113.0838,matched,https://en.wikipedia.org/wiki/MacGyver_(1985_TV_series),60,60,21,False
+tv:73586,tv,Yellowstone,112.6247,matched,https://en.wikipedia.org/wiki/Yellowstone_(TV_series),60,60,21,False
+tv:1435,tv,The Good Wife,112.5911,matched,https://en.wikipedia.org/wiki/The_Good_Wife,60,60,21,False
+tv:35024,tv,Show! Music Core,112.3105,matched,https://en.wikipedia.org/wiki/Show!_Music_Core,60,60,21,False
+tv:14658,tv,Survivor,111.6651,matched,https://en.wikipedia.org/wiki/Survivor_(American_TV_series),60,60,21,False
+tv:45790,tv,JoJo's Bizarre Adventure,111.2596,matched,https://en.wikipedia.org/wiki/JoJo%27s_Bizarre_Adventure_(TV_series),60,60,21,False
+tv:3673,tv,Crown Court,110.6703,matched,https://en.wikipedia.org/wiki/Crown_Court_(TV_series),60,60,21,False
+tv:269,tv,One Tree Hill,110.639,matched,https://en.wikipedia.org/wiki/One_Tree_Hill_(TV_series),60,60,21,False
+tv:72896,tv,My Little Old Boy,110.5884,matched,https://en.wikipedia.org/wiki/My_Little_Old_Boy,60,60,21,False
+tv:32726,tv,Bob's Burgers,110.2345,matched,https://en.wikipedia.org/wiki/Bob%27s_Burgers,60,60,21,False
+tv:32895,tv,Rizzoli & Isles,110.2235,matched,https://en.wikipedia.org/wiki/Rizzoli_%26_Isles,60,60,21,False
+tv:315014,tv,Because I Want You,110.0758,no-enwiki,,0,60,0,False
+movie:1742441,movie,V/H/S/Mixtape,109.7394,no-enwiki,,0,60,0,False
+tv:290856,tv,Marshals,109.3776,matched,https://en.wikipedia.org/wiki/Marshals_(TV_series),60,60,21,False
+tv:42009,tv,Black Mirror,109.0177,matched,https://en.wikipedia.org/wiki/Black_Mirror,60,60,21,False
+tv:210081,tv,Sherri,108.726,matched,https://en.wikipedia.org/wiki/Sherri_(talk_show),60,60,21,False
+tv:114863,tv,Mentiras verdaderas,108.7042,no-enwiki,,0,60,0,False
+tv:66465,tv,The Kapil Sharma Show,108.2745,matched,https://en.wikipedia.org/wiki/The_Kapil_Sharma_Show,60,60,21,False
+movie:1003596,movie,Avengers: Doomsday,108.2012,matched,https://en.wikipedia.org/wiki/Avengers:_Doomsday,60,60,21,False
+tv:45247,tv,Chihayafuru,108.1808,no-enwiki,,0,60,0,False
+tv:39351,tv,Grimm,108.1711,matched,https://en.wikipedia.org/wiki/Grimm_(TV_series),60,60,21,False
+tv:276074,tv,Paaru,107.7059,no-enwiki,,0,60,0,False
+tv:655,tv,Star Trek: The Next Generation,107.4693,matched,https://en.wikipedia.org/wiki/Star_Trek:_The_Next_Generation,60,60,21,False
+tv:71728,tv,Young Sheldon,107.3879,matched,https://en.wikipedia.org/wiki/Young_Sheldon,60,60,21,False
+tv:1855,tv,Star Trek: Voyager,107.1833,matched,https://en.wikipedia.org/wiki/Star_Trek:_Voyager,60,60,21,False
+tv:1877,tv,Phineas and Ferb,106.786,matched,https://en.wikipedia.org/wiki/Phineas_and_Ferb,60,60,21,False
+tv:81000,tv,The Fierce Wife,106.089,no-enwiki,,0,60,0,False
+tv:293610,tv,Doctor X: Mafia in White,106.0729,matched,https://en.wikipedia.org/wiki/Doctor_X:_Mafia_in_White,11,60,0,False
+movie:1248832,movie,Digger,105.9319,matched,https://en.wikipedia.org/wiki/Digger_(2026_film),60,60,21,False
+tv:63174,tv,Lucifer,105.8429,matched,https://en.wikipedia.org/wiki/Lucifer_(TV_series),60,60,21,False
+tv:41956,tv,Death in Paradise,105.8309,matched,https://en.wikipedia.org/wiki/Death_in_Paradise,60,60,21,False
+tv:60622,tv,Fargo,105.7379,matched,https://en.wikipedia.org/wiki/Fargo_(TV_series),60,60,21,False
+tv:615,tv,Futurama,105.6887,matched,https://en.wikipedia.org/wiki/Futurama,60,60,21,False
+movie:977942,movie,The Uprising,105.6884,matched,https://en.wikipedia.org/wiki/The_Uprising_(2026_film),60,60,21,False
+tv:90,tv,Mayday,105.3588,matched,https://en.wikipedia.org/wiki/Mayday_(Canadian_TV_series),60,60,21,False
+tv:40,tv,Dallas,105.346,matched,https://en.wikipedia.org/wiki/Dallas_(TV_series),60,60,21,False
+tv:95557,tv,INVINCIBLE,105.2187,matched,https://en.wikipedia.org/wiki/Invincible_(TV_series),60,60,21,False
+tv:688,tv,The West Wing,105.1108,matched,https://en.wikipedia.org/wiki/The_West_Wing,60,60,21,False
+tv:1415,tv,Elementary,105.0859,matched,https://en.wikipedia.org/wiki/Elementary_(TV_series),60,60,21,False
+tv:37678,tv,The Voice,105.0731,matched,https://en.wikipedia.org/wiki/The_Voice_(American_TV_series),60,60,21,False
+tv:71789,tv,SEAL Team,104.91,matched,https://en.wikipedia.org/wiki/SEAL_Team_(TV_series),60,60,21,True
+tv:95897,tv,Overflow,104.6458,no-enwiki,,0,60,0,False
+tv:36361,tv,Ulice,104.4749,matched,https://en.wikipedia.org/wiki/Ulice,60,60,21,False
+tv:1981,tv,Charmed,104.1204,matched,https://en.wikipedia.org/wiki/Charmed,60,60,21,False
+tv:44217,tv,Vikings,103.8307,matched,https://en.wikipedia.org/wiki/Vikings_(TV_series),60,60,21,False
+tv:278573,tv,Perfect Crown,103.3672,matched,https://en.wikipedia.org/wiki/Perfect_Crown,60,60,21,False
+tv:110181,tv,The God of War Dominates,102.9824,no-enwiki,,0,60,0,False
+tv:63247,tv,Westworld,102.9286,matched,https://en.wikipedia.org/wiki/Westworld_(TV_series),60,60,21,False
+tv:4177,tv,Perry Mason,102.8842,matched,https://en.wikipedia.org/wiki/Perry_Mason_(1957_TV_series),60,60,21,False
+tv:2025,tv,"Beverly Hills, 90210",102.7751,matched,"https://en.wikipedia.org/wiki/Beverly_Hills,_90210",60,60,21,False
+tv:38693,tv,Ninjago: Masters of Spinjitzu,102.3335,matched,https://en.wikipedia.org/wiki/Ninjago_(TV_series),60,60,21,False
+tv:1028,tv,Holby City,101.8882,matched,https://en.wikipedia.org/wiki/Holby_City,60,60,21,False
+tv:10160,tv,Big Brother,101.7663,matched,https://en.wikipedia.org/wiki/Big_Brother_(American_TV_series),60,60,21,False
+tv:12225,tv,Peppa Pig,101.661,matched,https://en.wikipedia.org/wiki/Peppa_Pig,60,60,21,False
+tv:46298,tv,Hunter x Hunter,101.6386,matched,https://en.wikipedia.org/wiki/Hunter_%C3%97_Hunter_(2011_TV_series),60,60,21,False
+tv:1447,tv,Psych,101.2855,matched,https://en.wikipedia.org/wiki/Psych,60,60,21,False
+tv:69478,tv,The Handmaid's Tale,101.1697,matched,https://en.wikipedia.org/wiki/The_Handmaid%27s_Tale_(TV_series),60,60,21,False
+tv:4546,tv,Curb Your Enthusiasm,101.0347,matched,https://en.wikipedia.org/wiki/Curb_Your_Enthusiasm,60,60,21,False
+tv:48866,tv,The 100,101.0261,matched,https://en.wikipedia.org/wiki/The_100_(TV_series),60,60,21,False
+tv:37854,tv,One Piece,100.6674,matched,https://en.wikipedia.org/wiki/One_Piece_(1999_TV_series),60,60,21,False
+tv:6744,tv,The Merv Griffin Show,100.4957,matched,https://en.wikipedia.org/wiki/The_Merv_Griffin_Show,60,60,21,False
+tv:1705,tv,Fringe,100.4,matched,https://en.wikipedia.org/wiki/Fringe_(TV_series),60,60,21,False
+tv:3091,tv,Family Affairs,100.3972,matched,https://en.wikipedia.org/wiki/Family_Affairs,60,60,21,False
+tv:236235,tv,The Gentlemen,100.2788,matched,https://en.wikipedia.org/wiki/The_Gentlemen_(2024_TV_series),60,60,21,True
+tv:121513,tv,Kang's Family,100.1797,matched,https://en.wikipedia.org/wiki/Kang%27s_Family,60,60,21,False
+tv:1409,tv,Sons of Anarchy,100.0898,matched,https://en.wikipedia.org/wiki/Sons_of_Anarchy,60,60,21,False
+tv:67824,tv,Quotidien,99.7907,matched,https://en.wikipedia.org/wiki/Quotidien,60,60,21,False
+tv:879,tv,All My Children,99.6108,matched,https://en.wikipedia.org/wiki/All_My_Children,60,60,21,False
+tv:220150,tv,Pokémon Horizons,99.6046,matched,https://en.wikipedia.org/wiki/Pok%C3%A9mon_Horizons:_The_Series,60,60,21,False
+tv:244984,tv,Idol Radio,99.5904,no-enwiki,,0,60,0,False
+tv:58003,tv,Chiritotechin,99.1165,no-enwiki,,0,60,0,False
+tv:250307,tv,The Pitt,98.9467,matched,https://en.wikipedia.org/wiki/The_Pitt,60,60,21,False
+tv:91555,tv,All Elite Wrestling: Dynamite,98.9156,matched,https://en.wikipedia.org/wiki/AEW_Dynamite,60,60,21,False
+movie:1084242,movie,Zootopia 2,98.5402,matched,https://en.wikipedia.org/wiki/Zootopia_2,60,60,21,False
+tv:2593,tv,Without a Trace,98.4992,matched,https://en.wikipedia.org/wiki/Without_a_Trace,60,60,21,False
+tv:30983,tv,Case Closed,98.3402,matched,https://en.wikipedia.org/wiki/Case_Closed_(TV_series),60,60,21,False
+tv:4496,tv,Meet the Press,98.2889,matched,https://en.wikipedia.org/wiki/Meet_the_Press,60,60,21,False
+tv:4239,tv,Married... with Children,97.7883,matched,https://en.wikipedia.org/wiki/Married..._with_Children,60,60,21,False
+tv:40694,tv,Lenßen & Partner,97.6054,no-enwiki,,0,60,0,False
+tv:41149,tv,Die Rosenheim-Cops,97.3686,matched,https://en.wikipedia.org/wiki/Die_Rosenheim-Cops,60,60,21,False
+tv:31991,tv,WWE NXT,97.2255,matched,https://en.wikipedia.org/wiki/WWE_NXT,60,60,21,False
+tv:153485,tv,Sazae-san,96.987,no-enwiki,,0,60,0,False
+tv:31917,tv,Pretty Little Liars,96.833,matched,https://en.wikipedia.org/wiki/Pretty_Little_Liars,60,60,21,False
+tv:3022,tv,Rugrats,96.7875,matched,https://en.wikipedia.org/wiki/Rugrats,60,60,21,False
+tv:71494,tv,Golden Globe Awards,96.4249,matched,https://en.wikipedia.org/wiki/Golden_Globes,60,60,21,False
+movie:299536,movie,Avengers: Infinity War,96.2886,matched,https://en.wikipedia.org/wiki/Avengers:_Infinity_War,60,60,21,False
+tv:82991,tv,Bharaghar,96.1418,no-enwiki,,0,60,0,False
+movie:82976,movie,The Novices,95.8131,matched,https://en.wikipedia.org/wiki/The_Beginner,59,60,20,False
+tv:1403,tv,Marvel's Agents of S.H.I.E.L.D.,95.29,matched,https://en.wikipedia.org/wiki/Agents_of_S.H.I.E.L.D.,60,60,21,False
+movie:687163,movie,Project Hail Mary,95.1887,matched,https://en.wikipedia.org/wiki/Project_Hail_Mary_(film),60,60,21,False
+tv:60708,tv,Gotham,95.0544,matched,https://en.wikipedia.org/wiki/Gotham_(TV_series),60,60,21,False
+tv:42680,tv,Sítio do Picapau Amarelo,94.9262,matched,https://en.wikipedia.org/wiki/S%C3%ADtio_do_Picapau_Amarelo_(2001_TV_series),60,60,21,False
+tv:4556,tv,Scrubs,94.8588,matched,https://en.wikipedia.org/wiki/Scrubs_(2001_TV_series),31,60,3,False
+tv:93120,tv,凤凰大视野,94.5808,no-enwiki,,0,60,0,False
+tv:209867,tv,Frieren: Beyond Journey's End,94.4919,matched,https://en.wikipedia.org/wiki/Frieren_(TV_series),60,60,21,False
+movie:45722,movie,Don't Look Down,94.3716,matched,https://en.wikipedia.org/wiki/Don%27t_Look_Down_(2008_film),60,60,21,False
+tv:67192,tv,New Japan Pro Wrestling,94.3525,no-enwiki,,0,60,0,False
+tv:207840,tv,Harem Camp!,94.0286,no-enwiki,,0,60,0,False
+tv:1422,tv,The Middle,93.8478,matched,https://en.wikipedia.org/wiki/The_Middle_(TV_series),60,60,21,False
+tv:580,tv,Star Trek: Deep Space Nine,93.8463,matched,https://en.wikipedia.org/wiki/Star_Trek:_Deep_Space_Nine,60,60,21,False
+tv:6489,tv,Klan,93.7469,matched,https://en.wikipedia.org/wiki/The_Clan_(TV_series),60,60,21,False
+tv:119051,tv,Wednesday,93.6777,matched,https://en.wikipedia.org/wiki/Wednesday_(TV_series),60,60,21,False
+tv:211288,tv,Tracker,93.6774,matched,https://en.wikipedia.org/wiki/Tracker_(American_TV_series),60,60,21,False
+tv:205715,tv,Gen V,93.524,matched,https://en.wikipedia.org/wiki/Gen_V,60,60,21,False
+movie:1375646,movie,Colony,93.3619,matched,https://en.wikipedia.org/wiki/Colony_(2026_film),60,60,21,False
+tv:57911,tv,Doraemon,93.3578,matched,https://en.wikipedia.org/wiki/Doraemon_(1979_TV_series),60,60,21,False
+tv:280110,tv,My Hero Academia: Vigilantes,93.3534,matched,https://en.wikipedia.org/wiki/My_Hero_Academia:_Vigilantes_(TV_series),25,60,0,False
+tv:4588,tv,ER,93.3049,matched,https://en.wikipedia.org/wiki/ER_(TV_series),60,60,21,False
+tv:51817,tv,Teenage Mutant Ninja Turtles,93.2692,matched,https://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles_(2012_TV_series),60,60,21,False
+tv:63639,tv,The Expanse,93.2671,matched,https://en.wikipedia.org/wiki/The_Expanse_(TV_series),60,60,21,False
+tv:8514,tv,RuPaul's Drag Race,93.1351,matched,https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race,60,60,21,False
+tv:25406,tv,Jason and the Argonauts,93.1322,matched,https://en.wikipedia.org/wiki/Jason_and_the_Argonauts_(miniseries),60,60,21,False
+tv:91239,tv,Bridgerton,92.9865,matched,https://en.wikipedia.org/wiki/Bridgerton,60,60,21,False
+movie:1482547,movie,Zip Wire,92.8591,no-enwiki,,0,60,0,False
+tv:2883,tv,Dark Shadows,92.7612,matched,https://en.wikipedia.org/wiki/Dark_Shadows,60,60,21,False
+movie:1304758,movie,Super Large Newcomer NO.1STYLE Emika Shirakami AV Debut,92.63,no-enwiki,,0,0,0,False
+tv:107113,tv,Only Murders in the Building,92.5379,matched,https://en.wikipedia.org/wiki/Only_Murders_in_the_Building,60,60,21,False
+tv:87917,tv,For All Mankind,92.3387,matched,https://en.wikipedia.org/wiki/For_All_Mankind_(TV_series),60,60,21,False
+tv:84791,tv,Come Home Love,92.2502,matched,https://en.wikipedia.org/wiki/Come_Home_Love,60,60,21,False
+tv:14743,tv,El cor de la ciutat,92.2453,matched,https://en.wikipedia.org/wiki/El_Cor_de_la_Ciutat,60,60,21,False
+tv:12786,tv,Murdoch Mysteries,92.0578,matched,https://en.wikipedia.org/wiki/Murdoch_Mysteries,60,60,21,False
+movie:671,movie,Harry Potter and the Philosopher's Stone,91.9167,matched,https://en.wikipedia.org/wiki/Harry_Potter_and_the_Philosopher%27s_Stone_(film),60,60,21,False
+tv:484,tv,"Murder, She Wrote",91.8722,matched,"https://en.wikipedia.org/wiki/Murder,_She_Wrote",60,60,21,False
+movie:1285366,movie,Shape of My Heart,91.7753,no-enwiki,,0,60,0,False
+movie:1032863,movie,The Love Hypothesis,91.687,matched,https://en.wikipedia.org/wiki/The_Love_Hypothesis_(film),60,60,21,False
+tv:15844,tv,A Kindred Spirit,91.4806,matched,https://en.wikipedia.org/wiki/A_Kindred_Spirit,60,60,21,False
+tv:1514,tv,The One Show,91.4068,matched,https://en.wikipedia.org/wiki/The_One_Show,60,60,21,False
+movie:83533,movie,Avatar: Fire and Ash,91.3899,matched,https://en.wikipedia.org/wiki/Avatar:_Fire_and_Ash,60,60,21,False
+movie:1022789,movie,Inside Out 2,91.3373,matched,https://en.wikipedia.org/wiki/Inside_Out_2,60,60,21,False
+tv:1417,tv,Glee,91.2994,matched,https://en.wikipedia.org/wiki/Glee_(TV_series),60,60,21,False
+tv:2813,tv,Mannix,91.242,matched,https://en.wikipedia.org/wiki/Mannix,60,60,21,False
+tv:217772,tv,GG Bond,91.2162,no-enwiki,,0,60,0,False
+tv:2458,tv,CSI: NY,91.1864,matched,https://en.wikipedia.org/wiki/CSI:_NY,60,60,21,False
+tv:97951,tv,Mayor of Kingstown,91.1438,matched,https://en.wikipedia.org/wiki/Mayor_of_Kingstown,60,60,21,False
+tv:318058,tv,A Girl's Guide to 21st Century Sex,91.0565,no-enwiki,,0,60,0,False
+tv:3508,tv,Anderson Cooper 360°,90.9501,matched,https://en.wikipedia.org/wiki/Anderson_Cooper_360%C2%B0,60,60,21,False
+movie:1108427,movie,Moana,90.6871,matched,https://en.wikipedia.org/wiki/Moana_(2026_film),60,60,21,False
+tv:60574,tv,Peaky Blinders,90.6364,matched,https://en.wikipedia.org/wiki/Peaky_Blinders_(TV_series),60,60,21,False
+tv:68073,tv,The Loud House,90.5853,matched,https://en.wikipedia.org/wiki/The_Loud_House,60,60,21,False
+tv:60694,tv,Last Week Tonight with John Oliver,90.4946,matched,https://en.wikipedia.org/wiki/Last_Week_Tonight_with_John_Oliver,60,60,21,False
+tv:5500,tv,SOKO München,90.4185,matched,https://en.wikipedia.org/wiki/SOKO_M%C3%BCnchen,60,60,21,False
+movie:299534,movie,Avengers: Endgame,90.4111,matched,https://en.wikipedia.org/wiki/Avengers:_Endgame,60,60,21,False
+tv:6060,tv,Kyunki Saas Bhi Kabhi Bahu Thi,90.3939,matched,https://en.wikipedia.org/wiki/Kyunki_Saas_Bhi_Kabhi_Bahu_Thi,60,60,21,False
+tv:223911,tv,Renegade Immortal,90.3781,matched,https://en.wikipedia.org/wiki/Renegade_Immortal,60,60,21,False
+movie:1184918,movie,The Wild Robot,90.2348,matched,https://en.wikipedia.org/wiki/The_Wild_Robot,60,60,21,False
+tv:141,tv,Cheers,90.1091,matched,https://en.wikipedia.org/wiki/Cheers,60,60,21,False
+tv:2673,tv,The O.C.,90.0657,matched,https://en.wikipedia.org/wiki/The_O.C.,60,60,21,False
+movie:1470424,movie,Virtual Assistant,89.9193,no-enwiki,,0,60,0,False
+tv:9537,tv,Atashin'chi,89.8492,no-enwiki,,0,60,0,False
+tv:224,tv,Match of the Day,89.828,matched,https://en.wikipedia.org/wiki/Match_of_the_Day,60,60,21,False
+tv:82428,tv,All American,89.749,matched,https://en.wikipedia.org/wiki/All_American_(TV_series),60,60,21,False
+tv:52823,tv,Weekly Idol,89.7337,matched,https://en.wikipedia.org/wiki/Weekly_Idol,60,60,21,False
+tv:46648,tv,True Detective,89.5277,matched,https://en.wikipedia.org/wiki/True_Detective,60,60,21,False
+tv:106,tv,The Andy Griffith Show,89.4318,matched,https://en.wikipedia.org/wiki/The_Andy_Griffith_Show,60,60,21,False
+tv:1549,tv,WWE Friday Night SmackDown,89.4285,matched,https://en.wikipedia.org/wiki/WWE_SmackDown,60,60,21,False
+movie:11,movie,Star Wars,89.1924,matched,https://en.wikipedia.org/wiki/Star_Wars_(film),60,60,21,False
+tv:4026,tv,CBS News Sunday Morning,89.1915,matched,https://en.wikipedia.org/wiki/CBS_News_Sunday_Morning,60,60,21,False
+tv:1639,tv,Heroes,89.1017,matched,https://en.wikipedia.org/wiki/Heroes_(American_TV_series),60,60,21,False
+tv:2527,tv,Emmerdale,89.0448,matched,https://en.wikipedia.org/wiki/Emmerdale,60,60,21,False
+tv:2354,tv,Home and Away,89.0407,matched,https://en.wikipedia.org/wiki/Home_and_Away,60,60,21,False
+tv:84958,tv,Loki,88.9936,matched,https://en.wikipedia.org/wiki/Loki_(TV_series),60,60,21,False
+tv:298505,tv,Coven Academy,88.6629,matched,https://en.wikipedia.org/wiki/Coven_Academy,60,60,21,False
+movie:1032984,movie,"SSIS-531 Studio S1 NO.1 STYLE Life's First Climax,To The Other Side Ayaka Kawakita",88.602,no-enwiki,,0,0,0,False
+movie:1275779,movie,Disclosure Day,88.5811,matched,https://en.wikipedia.org/wiki/Disclosure_Day,60,60,21,False
+tv:64153,tv,Kölner Treff,88.5702,no-enwiki,,0,60,0,False
+tv:4467,tv,Late Night with David Letterman,88.3426,matched,https://en.wikipedia.org/wiki/Late_Night_with_David_Letterman,60,60,21,False
+tv:1823,tv,The Love Boat,88.3028,matched,https://en.wikipedia.org/wiki/The_Love_Boat,60,60,21,False
+movie:9479,movie,The Nightmare Before Christmas,88.2999,matched,https://en.wikipedia.org/wiki/The_Nightmare_Before_Christmas,60,60,21,False
+tv:314,tv,Star Trek: Enterprise,88.2183,matched,https://en.wikipedia.org/wiki/Star_Trek:_Enterprise,60,60,21,False
+tv:9,tv,Match Game,88.0391,no-enwiki,,0,60,0,False
+tv:5675,tv,Panorama,87.8772,matched,https://en.wikipedia.org/wiki/Panorama_(British_TV_programme),60,60,21,False
+tv:14610,tv,Secret Lives,87.8145,matched,https://en.wikipedia.org/wiki/Salatut_el%C3%A4m%C3%A4t,60,60,21,False
+tv:4630,tv,The Fairly OddParents,87.8022,matched,https://en.wikipedia.org/wiki/The_Fairly_OddParents,60,60,21,False
+tv:14210,tv,Polizeiruf 110,87.7571,matched,https://en.wikipedia.org/wiki/Polizeiruf_110,60,60,21,False
+tv:9912,tv,Passions,87.3465,matched,https://en.wikipedia.org/wiki/Passions_(TV_series),60,60,21,False
+movie:3933,movie,Corpse Bride,87.055,matched,https://en.wikipedia.org/wiki/Corpse_Bride,60,60,21,False
+tv:12415,tv,Egoli: Place of Gold,86.9504,matched,https://en.wikipedia.org/wiki/Egoli:_Place_of_Gold,60,60,21,False
+tv:64189,tv,NDR Talk Show,86.9208,no-enwiki,,0,60,0,False
+tv:61025,tv,@midnight with Chris Hardwick,86.8757,matched,https://en.wikipedia.org/wiki/@midnight,60,60,21,False
+tv:31910,tv,Naruto Shippūden,86.8628,matched,https://en.wikipedia.org/wiki/Naruto:_Shipp%C5%ABden,60,60,21,False
+movie:1156869,movie,Blaze of Love,86.7685,no-enwiki,,0,60,0,False
+tv:91121,tv,How Do You Play?,86.6032,matched,https://en.wikipedia.org/wiki/Hangout_with_Yoo,60,60,21,False
+tv:1018,tv,Bonanza,86.5912,matched,https://en.wikipedia.org/wiki/Bonanza,60,60,21,False
+tv:69050,tv,Riverdale,86.556,matched,https://en.wikipedia.org/wiki/Riverdale_(American_TV_series),60,60,21,False
+movie:755898,movie,War of the Worlds,86.2263,matched,https://en.wikipedia.org/wiki/War_of_the_Worlds_(2025_film),60,60,21,False
+tv:67136,tv,This Is Us,86.2032,matched,https://en.wikipedia.org/wiki/This_Is_Us,60,60,21,False
+tv:155,tv,3rd Rock from the Sun,86.1376,matched,https://en.wikipedia.org/wiki/3rd_Rock_from_the_Sun,60,60,21,False
+tv:95,tv,Buffy the Vampire Slayer,85.9985,matched,https://en.wikipedia.org/wiki/Buffy_the_Vampire_Slayer,60,60,21,False
+tv:103108,tv,MDR um 4,85.9752,no-enwiki,,0,60,0,False
+tv:93449,tv,The Tamron Hall Show,85.9307,matched,https://en.wikipedia.org/wiki/Tamron_Hall_(talk_show),60,60,21,False
+tv:202555,tv,Daredevil: Born Again,85.6291,matched,https://en.wikipedia.org/wiki/Daredevil:_Born_Again,60,60,21,False
+movie:1010581,movie,My Fault,85.4756,matched,https://en.wikipedia.org/wiki/My_Fault_(film),60,60,21,False
+tv:62643,tv,DC's Legends of Tomorrow,85.3172,matched,https://en.wikipedia.org/wiki/Legends_of_Tomorrow,60,60,21,False
+movie:30723,movie,Cavegirl,85.2238,matched,https://en.wikipedia.org/wiki/Cavegirl_(film),60,60,21,False
+tv:1021,tv,Casualty,85.1701,matched,https://en.wikipedia.org/wiki/Casualty_(TV_series),60,60,21,False
+tv:40075,tv,Gravity Falls,85.0664,matched,https://en.wikipedia.org/wiki/Gravity_Falls,60,60,21,False
+tv:30981,tv,Monster,85.0085,no-enwiki,,0,60,0,False
+movie:1315772,movie,Minions & Monsters,84.9206,matched,https://en.wikipedia.org/wiki/Minions_%26_Monsters,60,60,21,False
+movie:1283515,movie,Verity,84.9024,matched,https://en.wikipedia.org/wiki/Verity_(film),60,60,21,False
+tv:1526,tv,Brookside,84.8912,matched,https://en.wikipedia.org/wiki/Brookside_(TV_series),60,60,21,False
+tv:2710,tv,It's Always Sunny in Philadelphia,84.8803,matched,https://en.wikipedia.org/wiki/It%27s_Always_Sunny_in_Philadelphia,60,60,21,False
+tv:93405,tv,Squid Game,84.8267,matched,https://en.wikipedia.org/wiki/Squid_Game,60,60,21,False
+tv:212989,tv,LEGO Ninjago: Dragons Rising,84.7692,matched,https://en.wikipedia.org/wiki/Ninjago:_Dragons_Rising,60,60,21,False
+tv:3750,tv,Nip/Tuck,84.7584,matched,https://en.wikipedia.org/wiki/Nip/Tuck,60,60,21,False
+movie:1263337,movie,Heart of the Beast,84.672,matched,https://en.wikipedia.org/wiki/Heart_of_the_Beast,60,60,21,False
+tv:14929,tv,Heartland,84.6042,matched,https://en.wikipedia.org/wiki/Heartland_(Canadian_TV_series),60,60,21,False
+tv:256059,tv,"Ready, Steady, Cook",84.5913,no-enwiki,,0,60,0,False
+tv:31911,tv,Fullmetal Alchemist: Brotherhood,84.4761,matched,https://en.wikipedia.org/wiki/Fullmetal_Alchemist:_Brotherhood,60,60,21,False
+tv:1908,tv,Miami Vice,84.1163,matched,https://en.wikipedia.org/wiki/Miami_Vice,60,60,21,False
+tv:120089,tv,SPY x FAMILY,84.0388,matched,https://en.wikipedia.org/wiki/Spy_%C3%97_Family_(TV_series),60,60,21,False
+tv:83411,tv,Mr. X and I,83.9352,no-enwiki,,0,60,0,False
+tv:1450,tv,The Closer,83.8717,matched,https://en.wikipedia.org/wiki/The_Closer,60,60,21,False
+tv:1395,tv,Gossip Girl,83.7939,matched,https://en.wikipedia.org/wiki/Gossip_Girl,60,60,21,False
+tv:14509,tv,In aller Freundschaft,83.6918,matched,https://en.wikipedia.org/wiki/In_aller_Freundschaft,60,60,21,False
+tv:1750,tv,"Doogie Howser, M.D.",83.6899,matched,"https://en.wikipedia.org/wiki/Doogie_Howser,_M.D.",60,60,21,False
+tv:39272,tv,Once Upon a Time,83.3505,matched,https://en.wikipedia.org/wiki/Once_Upon_a_Time_(TV_series),60,60,21,False
+tv:2352,tv,The Nanny,83.278,matched,https://en.wikipedia.org/wiki/The_Nanny,60,60,21,False
+movie:122917,movie,The Hobbit: The Battle of the Five Armies,83.2207,matched,https://en.wikipedia.org/wiki/The_Hobbit:_The_Battle_of_the_Five_Armies,60,60,21,False
+tv:226637,tv,High Potential,82.8925,matched,https://en.wikipedia.org/wiki/High_Potential,60,60,21,False
+tv:65682,tv,Sister-in-Law Is at Home!,82.8324,matched,https://en.wikipedia.org/wiki/Bhabiji_Ghar_Par_Hain!,60,60,21,False
+tv:196322,tv,Dark Matter,82.8239,matched,https://en.wikipedia.org/wiki/Dark_Matter_(2024_TV_series),60,60,21,False
+tv:80559,tv,Puzzle & Dragons,82.614,no-enwiki,,0,60,0,False
+tv:85077,tv,The Chosen,82.547,matched,https://en.wikipedia.org/wiki/The_Chosen_(TV_series),60,60,21,False
+tv:1104,tv,Mad Men,82.4277,matched,https://en.wikipedia.org/wiki/Mad_Men,60,60,21,False
+tv:4608,tv,30 Rock,82.3834,matched,https://en.wikipedia.org/wiki/30_Rock,60,60,21,False
+tv:4454,tv,Will & Grace,82.3766,matched,https://en.wikipedia.org/wiki/Will_%26_Grace,60,60,21,False
+tv:253,tv,Star Trek,82.3254,matched,https://en.wikipedia.org/wiki/Star_Trek:_The_Original_Series,60,60,21,False
+tv:80736,tv,The Manager,82.2669,matched,https://en.wikipedia.org/wiki/Omniscient_Interfering_View,60,60,21,False
+tv:4583,tv,Derrick,82.0768,matched,https://en.wikipedia.org/wiki/Derrick_(TV_series),60,60,21,False
+tv:14814,tv,Keeping Up with the Kardashians,81.8971,matched,https://en.wikipedia.org/wiki/Keeping_Up_with_the_Kardashians,60,60,21,False
+movie:700348,movie,The Intern: A Summer of Lust,81.664,no-enwiki,,0,0,0,False
+tv:1338,tv,Alarm for Cobra 11: The Motorway Police,81.4487,matched,https://en.wikipedia.org/wiki/Alarm_for_Cobra_11_%E2%80%93_The_Highway_Police,60,60,21,False
+tv:4349,tv,Melrose Place,81.3895,matched,https://en.wikipedia.org/wiki/Melrose_Place,60,60,21,False
+tv:26663,tv,What's My Line?,81.3751,matched,https://en.wikipedia.org/wiki/What%27s_My_Line%3F,60,60,21,False
+tv:16281,tv,WWE Superstars,81.2432,matched,https://en.wikipedia.org/wiki/WWE_Superstars,60,60,21,False
+tv:10809,tv,The Philco Television Playhouse,81.0855,matched,https://en.wikipedia.org/wiki/The_Philco_Television_Playhouse,60,60,21,False
+tv:49009,tv,The Goldbergs,80.9501,matched,https://en.wikipedia.org/wiki/The_Goldbergs_(2013_TV_series),60,60,21,False
+tv:14686,tv,Alles was zählt,80.9225,matched,https://en.wikipedia.org/wiki/Alles_was_z%C3%A4hlt,60,60,21,False
+tv:65494,tv,The Crown,80.8691,matched,https://en.wikipedia.org/wiki/The_Crown_(TV_series),60,60,21,False
+tv:112261,tv,Abendschau,80.8347,no-enwiki,,0,60,0,False
+tv:35007,tv,The Daily Fable,80.6097,matched,https://en.wikipedia.org/wiki/Fabeltjeskrant,60,60,21,False
+tv:823,tv,WWF Superstars,80.6047,matched,https://en.wikipedia.org/wiki/WWF_Superstars_of_Wrestling,60,60,21,False
+tv:4598,tv,Boston Legal,80.5992,matched,https://en.wikipedia.org/wiki/Boston_Legal,60,60,21,False
+tv:65763,tv,New Looney Tunes,80.4549,matched,https://en.wikipedia.org/wiki/New_Looney_Tunes,60,60,21,False
+tv:1996,tv,The Flintstones,80.3958,matched,https://en.wikipedia.org/wiki/The_Flintstones,60,60,21,False
+tv:578,tv,Numb3rs,80.2671,matched,https://en.wikipedia.org/wiki/Numbers_(TV_series),60,60,21,False
+movie:843352,movie,Legend of the White Dragon,80.2014,matched,https://en.wikipedia.org/wiki/Legend_of_the_White_Dragon,60,60,21,False
+tv:241002,tv,Adam's Sweet Agony,80.014,no-enwiki,,0,60,0,False
+tv:4582,tv,Ironside,80.0017,matched,https://en.wikipedia.org/wiki/Ironside_(1967_TV_series),60,60,21,False
+tv:2595,tv,Knots Landing,79.9702,matched,https://en.wikipedia.org/wiki/Knots_Landing,60,60,21,False
+tv:194766,tv,The Summer I Turned Pretty,79.8502,matched,https://en.wikipedia.org/wiki/The_Summer_I_Turned_Pretty_(TV_series),60,60,21,False
+tv:67198,tv,Star Trek: Discovery,79.807,matched,https://en.wikipedia.org/wiki/Star_Trek:_Discovery,60,60,21,False
+tv:4194,tv,Star Wars: The Clone Wars,79.738,matched,https://en.wikipedia.org/wiki/Star_Wars:_The_Clone_Wars,60,60,21,False
+tv:2317,tv,My Name Is Earl,79.7152,matched,https://en.wikipedia.org/wiki/My_Name_Is_Earl,60,60,21,False
+tv:81978,tv,You Quiz on the Block,79.6218,matched,https://en.wikipedia.org/wiki/You_Quiz_on_the_Block,60,60,21,False
+tv:4238,tv,The King of Queens,79.6093,matched,https://en.wikipedia.org/wiki/The_King_of_Queens,60,60,21,False
+tv:93,tv,Falcon Crest,79.5893,matched,https://en.wikipedia.org/wiki/Falcon_Crest,60,60,21,False
+tv:57706,tv,Ranma ½,79.5838,no-enwiki,,0,60,0,False
+tv:317326,tv,Fool in Love,79.5578,no-enwiki,,0,60,0,False
+tv:4018,tv,Quantum Leap,79.4796,matched,https://en.wikipedia.org/wiki/Quantum_Leap_(1989_TV_series),60,60,21,False
+tv:91363,tv,What If...?,79.4467,matched,https://en.wikipedia.org/wiki/What_If...%3F_(TV_series),60,60,21,False
+tv:63069,tv,The Johannes B. Kerner Show,79.3343,no-enwiki,,0,60,0,False
+movie:916404,movie,MIAA-525 Submissive Man Suddenly Shows Up At A Sleepover And Gets Teased By And Cums Inside Two Devilishly Cute Girls From Sundown To Sunup! Starring Hana Shirato and Mai Kagari,79.281,no-enwiki,,0,0,0,False
+tv:100088,tv,The Last of Us,79.2532,matched,https://en.wikipedia.org/wiki/The_Last_of_Us_(TV_series),60,60,21,False
+tv:2518,tv,The Tonight Show with Jay Leno,79.0812,matched,https://en.wikipedia.org/wiki/The_Tonight_Show_with_Jay_Leno,60,60,21,False
+tv:63809,tv,Camera Café,78.9963,no-enwiki,,0,60,0,False
+tv:6467,tv,Chicago Hope,78.9927,matched,https://en.wikipedia.org/wiki/Chicago_Hope,60,60,21,False
+tv:4573,tv,Late Night with Conan O'Brien,78.9768,matched,https://en.wikipedia.org/wiki/Late_Night_with_Conan_O%27Brien,60,60,21,False
+tv:10029,tv,Great Performances,78.9728,matched,https://en.wikipedia.org/wiki/Great_Performances,60,60,21,False
+tv:2750,tv,Silent Witness,78.9426,matched,https://en.wikipedia.org/wiki/Silent_Witness,60,60,21,False
+tv:36,tv,Medium,78.7883,matched,https://en.wikipedia.org/wiki/Medium_(TV_series),60,60,21,False
+tv:137726,tv,Mao Xue Woof,78.601,no-enwiki,,0,60,0,False
+tv:4616,tv,Xena: Warrior Princess,78.5113,matched,https://en.wikipedia.org/wiki/Xena:_Warrior_Princess,60,60,21,False
+tv:33765,tv,My Little Pony: Friendship Is Magic,78.4649,matched,https://en.wikipedia.org/wiki/My_Little_Pony:_Friendship_Is_Magic,60,60,21,False
+tv:44953,tv,El Señor de los Cielos,78.3558,matched,https://en.wikipedia.org/wiki/El_Se%C3%B1or_de_los_Cielos,60,60,21,False
+tv:80318,tv,CentoVetrine,78.3346,matched,https://en.wikipedia.org/wiki/CentoVetrine,60,60,21,False
+tv:79917,tv,Bares für Rares,78.1015,matched,https://en.wikipedia.org/wiki/Bares_f%C3%BCr_Rares,60,60,21,False
+movie:1450404,movie,The Treehouse,78.0667,no-enwiki,,0,60,0,False
+tv:24270,tv,maybrit illner,77.919,matched,https://en.wikipedia.org/wiki/Maybrit_Illner_(talk_show),60,60,21,False
+tv:62560,tv,Mr. Robot,77.7883,matched,https://en.wikipedia.org/wiki/Mr._Robot,60,60,21,False
+tv:8590,tv,Plus belle la vie,77.6375,matched,https://en.wikipedia.org/wiki/Plus_belle_la_vie,60,60,21,False
+tv:1606,tv,Ghost Whisperer,77.6318,matched,https://en.wikipedia.org/wiki/Ghost_Whisperer,60,60,21,False
+movie:980431,movie,Avatar Aang: The Last Airbender,77.5499,matched,https://en.wikipedia.org/wiki/Avatar_Aang:_The_Last_Airbender,60,60,21,False
+tv:245318,tv,Margo's Got Money Troubles,77.4195,matched,https://en.wikipedia.org/wiki/Margo%27s_Got_Money_Troubles,60,60,21,False
+tv:734,tv,"Magnum, P.I.",77.314,matched,"https://en.wikipedia.org/wiki/Magnum,_P.I.",60,60,21,False
+tv:902,tv,Yu-Gi-Oh! Duel Monsters,77.1873,matched,https://en.wikipedia.org/wiki/Yu-Gi-Oh!_Duel_Monsters,60,60,21,False
+tv:194,tv,NYPD Blue,77.1668,matched,https://en.wikipedia.org/wiki/NYPD_Blue,60,60,21,False
+tv:308,tv,Strawberries with Sugar,77.0887,matched,https://en.wikipedia.org/wiki/Morangos_com_A%C3%A7%C3%BAcar,60,60,21,False
+tv:33217,tv,Young Justice,76.944,matched,https://en.wikipedia.org/wiki/Young_Justice_(TV_series),60,60,21,False
+movie:157336,movie,Interstellar,76.9308,matched,https://en.wikipedia.org/wiki/Interstellar_(film),60,60,21,False
+tv:1950,tv,Everwood,76.8571,matched,https://en.wikipedia.org/wiki/Everwood,60,60,21,False
+tv:94372,tv,FBI: Most Wanted,76.7201,matched,https://en.wikipedia.org/wiki/FBI:_Most_Wanted,60,60,21,False
+tv:2098,tv,Batman: The Animated Series,76.7012,matched,https://en.wikipedia.org/wiki/Batman:_The_Animated_Series,60,60,21,False
+tv:60585,tv,Bosch,76.6613,matched,https://en.wikipedia.org/wiki/Bosch_(TV_series),60,60,21,False
