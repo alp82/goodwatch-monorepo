@@ -236,14 +236,15 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false }: { sql: Au
 				const mapped = (row: Row) => Object.fromEntries(Object.entries(row).filter(([field]) => !selected || selected.includes(field)).map(([field, value]) =>
 					[context.getFieldName({ model, field }), value != null && context.schema[model]?.fields[field]?.type === "date" ? new Date(value) : value]))
 				return Array.isArray(output) ? output.map(mapped) : output && typeof output === "object" ? mapped(output) : output
-			}])) as CustomAdapter
+			}])) as unknown as CustomAdapter
 		},
 	})
 }
 
 function matches(row: Row, where: CleanedWhere[]) {
 	const test = (p: CleanedWhere) => {
-		let a = row[p.field] ?? null, b = p.value
+		let a = row[p.field] ?? null
+		let b: any = p.value
 		if (p.mode === "insensitive" && typeof a === "string") { a = a.toLowerCase(); b = Array.isArray(b) ? b.map(v => typeof v === "string" ? v.toLowerCase() : v) : typeof b === "string" ? b.toLowerCase() : b }
 		switch (p.operator) {
 			case "eq": return a instanceof Date ? a.getTime() === new Date(b as string).getTime() : a === b

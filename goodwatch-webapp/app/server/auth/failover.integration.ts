@@ -57,13 +57,13 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 	]
 	let settled = false
 	armed = true
-	const pending = (kind === "consume" ? adapter.consumeOne({ model, where }) : adapter.incrementOne({ model, where, increment: { count: 1 }, set: { lastRequest: Date.now() } }))
+	const pending = (kind === "consume" ? adapter.consumeOne<Record<string, any>>({ model, where }) : adapter.incrementOne<Record<string, any>>({ model, where, increment: { count: 1 }, set: { lastRequest: Date.now() } }))
 		.then(result => { settled = true; return { result, error: undefined } }, error => { settled = true; return { result: undefined, error } })
 	try {
 		await started
 		const read = crateAuthAdapter({ sql: localCrateTransport([endpoint(primary)], 1500) })(options)
 		await until("mutation visible before acknowledgement", async () => {
-			const found = kind === "consume" ? await read.findOne({ model, where }) : (await read.findMany({ model, where: [{ field: "key", value: value.key }] }))[0]
+			const found = kind === "consume" ? await read.findOne<Record<string, any>>({ model, where }) : (await read.findMany<Record<string, any>>({ model, where: [{ field: "key", value: value.key }] }))[0]
 			return kind === "consume" ? found === null : found?.count === 1
 		}, 30_000)
 		assert.equal(settled, false, "fault must interrupt a pending write")
@@ -76,9 +76,9 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 		assert.equal(observedRowcount, 0, "reproduce #530's applied-write/zero-acknowledgement schedule")
 		if (kind === "consume") {
 			await adapter.deleteMany({ model, where: [{ field: "identifier", value: value.identifier }] })
-			assert.equal(await adapter.consumeOne({ model, where }), null)
+			assert.equal(await adapter.consumeOne<Record<string, any>>({ model, where }), null)
 		} else {
-			assert.equal((await adapter.findMany({ model, where: [{ field: "key", value: value.key }] }))[0].count, 1)
+			assert.equal((await adapter.findMany<Record<string, any>>({ model, where: [{ field: "key", value: value.key }] }))[0].count, 1)
 		}
 		console.log(JSON.stringify({ fault: kind, primary, coordinator, held, sqlRowcount: observedRowcount, recovered: true }))
 	} finally {
@@ -100,7 +100,7 @@ test("an unacknowledged write with no readable receipt throws rather than guessi
 	}
 	const adapter = crateAuthAdapter({ sql })({})
 	const value = await adapter.create({ model: "verification", data: { identifier: randomUUID(), value: "one-use", expiresAt: new Date(Date.now() + 60_000) } })
-	await assert.rejects(adapter.consumeOne({ model: "verification", where: [{ field: "id", value: value.id }] }), IndeterminateAuthWriteError)
+	await assert.rejects(adapter.consumeOne<Record<string, any>>({ model: "verification", where: [{ field: "id", value: value.id }] }), IndeterminateAuthWriteError)
 	failing = false
-	assert.equal(await adapter.consumeOne({ model: "verification", where: [{ field: "id", value: value.id }] }), null)
+	assert.equal(await adapter.consumeOne<Record<string, any>>({ model: "verification", where: [{ field: "id", value: value.id }] }), null)
 })

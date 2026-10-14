@@ -15,19 +15,19 @@ test("a new member is immediately readable by id and normalized email without re
 	const member = await adapter.create({ model: "user", data: {
 		id: randomUUID(), name: "Member", email: `${randomUUID()}@Example.test`, emailVerified: false,
 	}, forceAllowId: true })
-	assert.equal((await adapter.findOne({ model: "user", where: [{ field: "id", value: member.id }] }))?.name, "Member")
-	assert.equal((await adapter.findOne({ model: "user", where: [{ field: "email", value: member.email.toLowerCase() }] }))?.id, member.id)
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "id", value: member.id }] }))?.name, "Member")
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "email", value: member.email.toLowerCase() }] }))?.id, member.id)
 })
 
 test("email changes reserve the new address before mutation and preserve uniqueness", async () => {
 	const adapter = crateAuthAdapter({ sql: localCrateTransport(endpoints) })({})
 	const a = await adapter.create({ model: "user", data: { name: "A", email: `${randomUUID()}@example.test`, emailVerified: false } })
 	const b = await adapter.create({ model: "user", data: { name: "B", email: `${randomUUID()}@example.test`, emailVerified: false } })
-	await assert.rejects(adapter.update({ model: "user", where: [{ field: "id", value: a.id }], update: { email: b.email } }), /duplicate key/)
+	await assert.rejects(adapter.update<Record<string, any>>({ model: "user", where: [{ field: "id", value: a.id }], update: { email: b.email } }), /duplicate key/)
 	const newEmail = `${randomUUID()}@example.test`
-	assert.equal((await adapter.update({ model: "user", where: [{ field: "id", value: a.id }], update: { email: newEmail } }))?.email, newEmail)
-	assert.equal((await adapter.findOne({ model: "user", where: [{ field: "email", value: newEmail }] }))?.id, a.id)
-	assert.equal(await adapter.findOne({ model: "user", where: [{ field: "email", value: a.email }] }), null)
+	assert.equal((await adapter.update<Record<string, any>>({ model: "user", where: [{ field: "id", value: a.id }], update: { email: newEmail } }))?.email, newEmail)
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "email", value: newEmail }] }))?.id, a.id)
+	assert.equal(await adapter.findOne<Record<string, any>>({ model: "user", where: [{ field: "email", value: a.email }] }), null)
 })
 
 test("consent upsert keeps its deterministic id and absent referenceId is not an implicit null filter", async () => {
@@ -36,7 +36,7 @@ test("consent upsert keeps its deterministic id and absent referenceId is not an
 	const consent = await adapter.create({ model: "oauthConsent", data })
 	const updated = await adapter.create({ model: "oauthConsent", data: { ...data, scopes: ["read", "write"] } })
 	assert.equal(updated.id, consent.id)
-	assert.deepEqual((await adapter.findOne({ model: "oauthConsent", where: [{ field: "clientId", value: data.clientId }, { field: "userId", value: data.userId }] }))?.scopes, ["read", "write"])
+	assert.deepEqual((await adapter.findOne<Record<string, any>>({ model: "oauthConsent", where: [{ field: "clientId", value: data.clientId }, { field: "userId", value: data.userId }] }))?.scopes, ["read", "write"])
 })
 
 test("case-folded signup, Google linking and client registration each have one insert winner", async () => {
@@ -60,13 +60,13 @@ test("case-folded signup, Google linking and client registration each have one i
 test("sessions remain readable by token and id when the secondary key is absent", async () => {
 	const sql = localCrateTransport(endpoints)
 	const options = { ...authTestOptions, session: { storeSessionInDatabase: true }, secondaryStorage: {
-		get: async () => null, set: async () => {}, delete: async () => {},
+		get: async () => null, set: async () => {}, delete: async () => {}, getAndDelete: async () => null, increment: async () => 1,
 	} }
 	const adapter = crateAuthAdapter({ sql })(options)
 	const member = await adapter.create({ model: "user", data: { name: "Member", email: `${randomUUID()}@example.test`, emailVerified: true } })
 	const session = await adapter.create({ model: "session", data: { userId: member.id, token: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } })
-	assert.equal((await adapter.findOne({ model: "session", where: [{ field: "token", value: session.token }], join: { user: true } }))?.user.id, member.id)
-	assert.equal((await adapter.findOne({ model: "session", where: [{ field: "id", value: session.id }] }))?.token, session.token)
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "session", where: [{ field: "token", value: session.token }], join: { user: true } }))?.user.id, member.id)
+	assert.equal((await adapter.findOne<Record<string, any>>({ model: "session", where: [{ field: "id", value: session.id }] }))?.token, session.token)
 })
 
 test("every inventoried call shape and hook pre-read is accepted; other shapes are rejected", async () => {
@@ -95,19 +95,19 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 		}) : []
 		const params = { model, where, update: { updatedAt: new Date() }, increment: {}, set: { revoked: new Date(), count: 1, lastRequest: 1 } }
 		await (adapter as any)[action](params)
-		if (action === "delete" || action === "deleteMany") await adapter.findMany({ model, where: where as any, limit: action === "delete" ? 1 : 100 })
+		if (action === "delete" || action === "deleteMany") await adapter.findMany<Record<string, any>>({ model, where: where as any, limit: action === "delete" ? 1 : 100 })
 	}
 	for (const model of Object.keys(inventory)) {
-		await assert.rejects(adapter.findMany({ model, where: [{ field: "id", value: "x", operator: "contains" }] }), /Unsupported auth shape/)
+		await assert.rejects(adapter.findMany<Record<string, any>>({ model, where: [{ field: "id", value: "x", operator: "contains" }] }), /Unsupported auth shape/)
 	}
-	await assert.rejects(adapter.findMany({ model: "user", where: [] }), /Unsupported auth shape/)
+	await assert.rejects(adapter.findMany<Record<string, any>>({ model: "user", where: [] }), /Unsupported auth shape/)
 	await assert.rejects(adapter.count({ model: "user" }), /Unsupported auth shape/)
 })
 
 test("an unlisted OR query throws before reading any auth record", async () => {
 	const { crateAuthAdapter, localCrateTransport } = await import("./crate-adapter.server.ts")
 	const adapter = crateAuthAdapter({ sql: localCrateTransport(["http://127.0.0.1:15548"]) })({})
-	await assert.rejects(adapter.findOne({ model: "user", where: [
+	await assert.rejects(adapter.findOne<Record<string, any>>({ model: "user", where: [
 		{ field: "id", value: "missing", connector: "OR" },
 	] }), /Unsupported auth shape/)
 })
@@ -121,12 +121,12 @@ test("refresh rotation including empty increments races revocation with exactly 
 		token: randomUUID(), clientId: "client", userId: "member", revoked: null,
 	} })
 	const where = [{ field: "id", value: token.id }, { field: "revoked", value: null }]
-	const results = await Promise.all(Array.from({ length: 24 }, (_, i) => adapter.incrementOne({
+	const results = await Promise.all(Array.from({ length: 24 }, (_, i) => adapter.incrementOne<Record<string, any>>({
 		model: "oauthRefreshToken", where, increment: {},
 		set: i % 2 ? { revoked: new Date(), rotatedAt: new Date() } : { revoked: new Date() },
 	})))
 	assert.equal(results.filter(Boolean).length, 1)
-	assert.ok((await adapter.findOne({ model: "oauthRefreshToken", where: [{ field: "token", value: token.token }] }))?.revoked)
+	assert.ok((await adapter.findOne<Record<string, any>>({ model: "oauthRefreshToken", where: [{ field: "token", value: token.token }] }))?.revoked)
 })
 
 test("24 code redemptions across three coordinators have one winner and the token stays invisible", async () => {
@@ -138,11 +138,11 @@ test("24 code redemptions across three coordinators have one winner and the toke
 		identifier: randomUUID(), value: "authorization-code", expiresAt: new Date(Date.now() + 60_000),
 	} })
 	const where = [{ field: "id", value: token.id }]
-	const results = await Promise.all(Array.from({ length: 24 }, () => adapter.consumeOne({ model: "verification", where })))
+	const results = await Promise.all(Array.from({ length: 24 }, () => adapter.consumeOne<Record<string, any>>({ model: "verification", where })))
 	assert.equal(results.filter(Boolean).length, 1)
 	assert.equal(results.find(Boolean)?.value, "authorization-code")
-	assert.equal(await adapter.findOne({ model: "verification", where }), null)
-	assert.equal(await adapter.update({ model: "verification", where: [{ field: "identifier", value: token.identifier }], update: { value: "resurrected" } }), null)
+	assert.equal(await adapter.findOne<Record<string, any>>({ model: "verification", where }), null)
+	assert.equal(await adapter.update<Record<string, any>>({ model: "verification", where: [{ field: "identifier", value: token.identifier }], update: { value: "resurrected" } }), null)
 	await adapter.deleteMany({ model: "verification", where: [{ field: "identifier", value: token.identifier }] })
-	assert.equal(await adapter.consumeOne({ model: "verification", where }), null)
+	assert.equal(await adapter.consumeOne<Record<string, any>>({ model: "verification", where }), null)
 })
