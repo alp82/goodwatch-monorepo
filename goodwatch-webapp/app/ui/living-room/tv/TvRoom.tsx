@@ -27,6 +27,7 @@ import type { StartTitle } from "../living-room-data"
 import { HAND_IMAGE, PHONE_LIP, ROOM } from "../room"
 import type { TvAction } from "../tv-flow"
 import { TV_SCREEN_ATTR } from "../tv-transition"
+import { bracketArm } from "../tv-way-back"
 import { ROOM_ID, useBelowRoom } from "../use-below-room"
 import { PhoneRemote } from "./PhoneRemote"
 import { LandscapeRoom, PhoneRoom } from "./PhoneRoom"
@@ -214,6 +215,8 @@ export function TvRoom({
 		h: L.canvas.h,
 		scale: L.canvas.scale,
 	}
+	// The frame's brackets are as long as those of the way out, which stand in the same place at the press.
+	const arm = L && tv.framed ? bracketArm(L.tv) : 0
 	const tvCenter = {
 		x: ((ROOM_PHOTO.tv.x + ROOM_PHOTO.tv.w / 2) / ROOM_PHOTO.w) * 100,
 		y: ((ROOM_PHOTO.tv.y + ROOM_PHOTO.tv.h / 2) / ROOM_PHOTO.h) * 100,
@@ -280,6 +283,7 @@ export function TvRoom({
 				{L && canvas && (
 					<div
 						{...{ [TV_SCREEN_ATTR]: "" }}
+						data-tv-framed={tv.framed ? "" : undefined}
 						className={`tvr-tv absolute touch-none select-none overflow-hidden bg-black [-webkit-touch-callout:none] ${held ? "rounded-[3px]" : "rounded-[4px]"}`}
 						style={L.tv}
 					>
@@ -294,6 +298,17 @@ export function TvRoom({
 						>
 							{on && renderScreen?.(canvas)}
 						</div>
+						{/* The frame the picture stands in while the Expand key has the focus. */}
+						{tv.framed &&
+							[0, 1, 2, 3].map((corner) => (
+								<i
+									key={corner}
+									aria-hidden
+									className="tvr-bracket"
+									data-corner={corner}
+									style={{ width: arm, height: arm }}
+								/>
+							))}
 					</div>
 				)}
 

@@ -212,7 +212,8 @@ const read = (page) =>
 		if (!room) return { search: location.search, path: location.pathname, room: false, items: [], focus: [], labels: {}, layers: 0 }
 		const layers = [...room.querySelectorAll("[data-tv-layer]")]
 		const top = layers.at(-1)
-		const items = top ? [...top.querySelectorAll("[data-tv-item]")] : []
+		// The Expand key is slice 11's, drawn since; ../expand/drive.mjs checks it. Here it is left out, as before.
+		const items = top ? [...top.querySelectorAll("[data-tv-item]")].filter((el) => el.getAttribute("data-tv-item") !== "expand") : []
 		const id = (el) => el.getAttribute("data-tv-item")
 		const place = top?.querySelector("[data-tv-expand-place]")
 		return {
@@ -228,7 +229,7 @@ const read = (page) =>
 			crumb: top?.querySelector(".truncate.leading-tight.text-white\\/70")?.textContent ?? null,
 			text: top?.innerText ?? "",
 			history: history.length,
-			expandPlace: place ? place.childElementCount : null,
+			expandPlace: place ? place.querySelectorAll(':scope > :not([data-tv-item="expand"])').length : null,
 			// The pictures on show: the last one in the stack is the one fading in.
 			picture: [...(top?.querySelectorAll(":scope > .absolute.inset-0.overflow-hidden img") ?? [])].at(-1)?.getAttribute("src") ?? null,
 			lines: top?.querySelectorAll("svg line").length ?? 0,
@@ -560,7 +561,7 @@ const layout = (page) =>
 		return {
 			k,
 			tv: { left: tv.left, top: tv.top, right: tv.right, bottom: tv.bottom },
-			items: [...layer.querySelectorAll("[data-tv-item]")].map((el) => ({
+			items: [...layer.querySelectorAll("[data-tv-item]")].filter((el) => el.getAttribute("data-tv-item") !== "expand").map((el) => ({
 				id: el.getAttribute("data-tv-item"),
 				...rest(el),
 				// What a key says is cut short where it does not fit.

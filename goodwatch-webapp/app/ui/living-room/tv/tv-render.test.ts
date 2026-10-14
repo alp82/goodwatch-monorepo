@@ -189,14 +189,42 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 test("every screen has its own code: before it is there the server draws the screen's bar alone", () => {
 	// No Search key on the search screens: the person is there.
 	assert.deepEqual(ids(rendered.lazy.search), ["bar:back", "bar:menu"])
-	assert.deepEqual(ids(rendered.lazy.results), ["bar:back", "bar:menu"])
+	// A screen with a page has its Expand key too: a focus that came back to it is on something.
+	assert.deepEqual(ids(rendered.lazy.results), [
+		"expand",
+		"bar:back",
+		"bar:menu",
+	])
 	assert.deepEqual(ids(rendered.lazy.shows), [
+		"expand",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
 	])
 	for (const html of Object.values(rendered.lazy))
 		assert.ok(!html.includes("not built"))
+})
+
+test("the Expand key says Expand, and a screen reader hears where it leads", () => {
+	assert.match(
+		rendered.lazy.results,
+		/data-tv-item="expand"[^>]*aria-label="Expand: Discover"/,
+	)
+	assert.match(
+		rendered.lazy.shows,
+		/data-tv-item="expand"[^>]*aria-label="Expand: My shows"/,
+	)
+	for (const html of [rendered.lazy.results, rendered.lazy.shows]) {
+		// A small picture in four brackets, and one word.
+		assert.equal(count(html, "tvc-x-arm"), 4)
+		assert.match(html, /<\/span>Expand<\/button>/)
+		assert.ok(!html.includes("Open full"))
+	}
+	// The key keeps its place while the picture steps back to 94%: it is moved against the step by as much.
+	assert.match(
+		rendered.lazy.results,
+		/data-tv-expand-place="true"[^>]*style="right:56px;bottom:40px;--tvx-x:34\.72px;--tvx-y:18\.13px"/,
+	)
 })
 
 test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {

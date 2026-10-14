@@ -57,7 +57,7 @@ const focused = (html: string) =>
 		(match) => match[1],
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item's own tag, and the line's. */
 const tag = (html: string, id: string) =>
@@ -173,7 +173,7 @@ test("the focus is where the machine says: on the key for what is typed, on an i
 test("the results' items in the markup are the machine's, in reading order, in both editions", () => {
 	for (const screen of Object.values(rendered.results))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), drawn(screen.items))
+			assert.deepEqual(ids(screen[edition]), screen.items)
 	assert.deepEqual(rendered.results.found.items, [
 		"title:movie-161",
 		"title:movie-388",
@@ -246,13 +246,13 @@ test("without titles the results say that the search runs, why it failed, or tha
 	}
 })
 
-test("the Expand key's corner is reserved and empty on the results, in both editions", () => {
+test("the Expand key stands in its corner on the results, in both editions", () => {
 	for (const html of [
 		rendered.results.found.desktop,
 		rendered.results.found.phone,
 	]) {
-		assert.match(html, /<div data-tv-expand-place="true" class="[^"]*"><\/div>/)
-		assert.ok(!ids(html).includes("expand"))
+		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 	}
 	// On the desktop the band under the content is kept free for it; on the phone the last row ends before it.
 	assert.match(rendered.results.found.desktop, /pb-\[120px\]/)
@@ -297,9 +297,10 @@ test("on every phone of the room's table the question's keys, the bar's and the 
 	}
 })
 
-test("before its code is there the server draws search's bar alone: no line, and nothing typed or found", () => {
+test("before its code is there the server draws search's bar alone, with the Expand key on the results: no line, and nothing typed or found", () => {
+	assert.deepEqual(ids(rendered.first.question), BAR)
+	assert.deepEqual(ids(rendered.first.results), ["expand", ...BAR])
 	for (const html of [rendered.first.question, rendered.first.results]) {
-		assert.deepEqual(ids(html), BAR)
 		assert.equal(count(html, "<input"), 0)
 		assert.ok(!html.includes("heist"))
 		assert.ok(!html.includes("Ocean"))

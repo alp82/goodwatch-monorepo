@@ -7,6 +7,7 @@ import { type ReactNode, useMemo, useRef } from "react"
 import {
 	Boot,
 	CornerBar,
+	ExpandCorner,
 	Layer,
 	Shade,
 	type TvView,
@@ -34,6 +35,7 @@ import type { TvAppTile, TvHomeData, TvService, TvServiceTile } from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
+	destinationName,
 	menuItems,
 	tvItems,
 	writeTvParams,
@@ -161,9 +163,11 @@ export function TvScreen({
 	const { state, focused, screenFocus, dispatch } = tv
 	const { screen } = state
 	// The menu's items have the focus while it is open; the screen under it keeps showing its own.
+	// The Expand key says where it leads.
+	const expands = destinationName(screen, ctx)
 	const under = useMemo<TvView>(
-		() => ({ canvas, focused: screenFocus, dispatch }),
-		[canvas, screenFocus, dispatch],
+		() => ({ canvas, focused: screenFocus, dispatch, expands }),
+		[canvas, screenFocus, dispatch, expands],
 	)
 	const over = useMemo<TvView>(
 		() => ({ canvas, focused, dispatch }),
@@ -382,11 +386,15 @@ function ScreenOf({
 	}
 }
 
-/** A screen whose code is on its way: its bar alone, so Back, Search and the menu work. */
+/**
+ * A screen whose code is on its way: its bar alone, so Back, Search and the menu work, and the Expand key where
+ * the screen has one, so a focus that came back to it is on something.
+ */
 function Bare({ items }: { items: readonly string[] }) {
 	return (
 		<>
 			<Shade dim={0.82} />
+			<ExpandCorner items={items} />
 			<CornerBar items={items} />
 		</>
 	)

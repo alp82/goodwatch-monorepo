@@ -70,7 +70,7 @@ const focused = (html: string) =>
 		(match) => match[1],
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item with what is in it. */
 const item = (html: string, id: string) =>
@@ -189,7 +189,7 @@ test("the server's HTML of a guest's home has nothing of the guest but the count
 test("the service screen's items in the markup are the machine's, in reading order, in both editions", () => {
 	for (const screen of Object.values(rendered.service))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), drawn(screen.items))
+			assert.deepEqual(ids(screen[edition]), screen.items)
 	const { netflix } = rendered.service
 	assert.equal(netflix.items.length, 12 + 1 + 3)
 	assert.deepEqual(netflix.items.slice(0, 4), [
@@ -292,29 +292,31 @@ test("without titles the list says so, under the service's mark, with the bar", 
 		const { waiting, unreported, stale, none } = rendered.service
 		for (const screen of [waiting, unreported]) {
 			assert.equal(count(screen[edition], "Titles are on their way."), 1)
-			assert.deepEqual(ids(screen[edition]), BAR)
+			assert.deepEqual(ids(screen[edition]), ["expand", ...BAR])
 			assert.deepEqual(marks(screen[edition]), ["drawn"])
 		}
 		// The other service's titles are never shown as this one's.
 		assert.equal(count(stale[edition], "Titles are on their way."), 1)
-		assert.deepEqual(ids(stale[edition]), BAR)
+		assert.deepEqual(ids(stale[edition]), ["expand", ...BAR])
 		assert.equal(count(stale[edition], "/poster-"), 0)
 		assert.match(stale[edition], /w92\/disney\.jpg/)
 		assert.equal(
 			count(none[edition], "Nothing to watch on Netflix right now."),
 			1,
 		)
-		assert.deepEqual(ids(none[edition]), BAR)
+		assert.deepEqual(ids(none[edition]), ["expand", ...BAR])
 	}
 })
 
-test("the Expand key's corner is there, empty and free, and the desktop keeps the band under the posters for it", () => {
+test("the Expand key stands in its corner, and the desktop keeps the band under the posters for it", () => {
 	const { netflix } = rendered.service
-	for (const edition of EDITIONS)
+	for (const edition of EDITIONS) {
 		assert.match(
 			netflix[edition],
-			/<div data-tv-expand-place="true"[^>]*><\/div>/,
+			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*>.*?Expand<\/button><\/div>/,
 		)
+		assert.equal(count(netflix[edition], 'data-tv-item="expand"'), 1)
+	}
 	assert.match(netflix.desktop, /pb-\[120px\]/)
 	// The phone's last row ends before the corner.
 	assert.match(netflix.phone, /pr-\[158px\]/)
@@ -342,8 +344,8 @@ test("on every phone of the room's table the bar's keys are touch targets and th
 	}
 })
 
-test("the server draws the bar alone for a link to a service, and nothing of its titles", () => {
-	assert.deepEqual(ids(rendered.first), BAR)
+test("the server draws the bar and the Expand key alone for a link to a service, and nothing of its titles", () => {
+	assert.deepEqual(ids(rendered.first), ["expand", ...BAR])
 	assert.equal(count(rendered.first, "/poster-"), 0)
 	assert.equal(count(rendered.first, "tv-mark"), 0)
 	// The screen is read out by the service's name.

@@ -70,7 +70,7 @@ const open = (html: string) =>
 		...html.matchAll(/data-tv-item="(tab:[a-z]+)"[^>]*aria-pressed="true"/g),
 	].map((match) => match[1])
 const count = (html: string, part: string) => html.split(part).length - 1
-/** The machine's items that a slice has drawn: all but the Expand key, which is slice 11's. */
+/** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item's own tag. */
 const tag = (html: string, id: string) =>
@@ -82,7 +82,7 @@ const EDITIONS = ["desktop", "phone"] as const
 test("the choice screen's items in the markup are the machine's, in reading order, in both editions", () => {
 	for (const screen of Object.values(rendered.choice))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), drawn(screen.items))
+			assert.deepEqual(ids(screen[edition]), screen.items)
 	assert.deepEqual(rendered.choice.themes.items, [
 		...TABS,
 		"theme:crime",
@@ -212,7 +212,7 @@ test("until the pool is there, and for an option without a title, the tile is th
 test("the list's items in the markup are the machine's, in reading order, in both editions", () => {
 	for (const screen of Object.values(rendered.list))
 		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), drawn(screen.items))
+			assert.deepEqual(ids(screen[edition]), screen.items)
 	assert.deepEqual(rendered.list.theme.items, [
 		"title:movie-161",
 		"title:movie-388",
@@ -290,15 +290,15 @@ test("Change says Change, and the list without titles says why", () => {
 	}
 })
 
-test("the Expand key's corner is reserved and empty on both screens, in both editions", () => {
+test("the Expand key stands in its corner on both screens, in both editions", () => {
 	for (const html of [
 		rendered.choice.themes.desktop,
 		rendered.choice.themes.phone,
 		rendered.list.theme.desktop,
 		rendered.list.theme.phone,
 	]) {
-		assert.match(html, /<div data-tv-expand-place="true" class="[^"]*"><\/div>/)
-		assert.ok(!ids(html).includes("expand"))
+		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 	}
 	// On the desktop the band under the content is kept free for it.
 	assert.match(rendered.choice.themes.desktop, /pb-\[120px\]/)
@@ -334,9 +334,9 @@ test("on every phone of the room's table the tabs, the bar's keys and the last r
 	}
 })
 
-test("before its code is there the server draws Discover's bar alone, and nothing of a list", () => {
+test("before its code is there the server draws Discover's bar and Expand key alone, and nothing of a list", () => {
 	for (const html of [rendered.first.choice, rendered.first.list]) {
-		assert.deepEqual(ids(html), BAR)
+		assert.deepEqual(ids(html), ["expand", ...BAR])
 		assert.ok(!html.includes("Ocean"))
 		assert.ok(!html.includes("art-theme"))
 	}
