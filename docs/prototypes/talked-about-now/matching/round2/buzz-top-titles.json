@@ -1,0 +1,519 @@
+{
+  "branch": "prototype/talked-about-now-buzz-score",
+  "day": "2026-10-13",
+  "primary_variant": "floor_lift",
+  "rankings": {
+    "floor_lift": [
+      "tv:1396",
+      "tv:289423",
+      "tv:1908",
+      "tv:285322",
+      "movie:1236045",
+      "tv:288673",
+      "tv:284833",
+      "movie:1148365",
+      "movie:1275779",
+      "tv:4087",
+      "tv:60059",
+      "movie:1058424",
+      "movie:1400837",
+      "tv:97951",
+      "tv:80748",
+      "tv:2710",
+      "tv:2883",
+      "tv:1823",
+      "tv:79744",
+      "movie:980431"
+    ],
+    "regularized_z": [
+      "tv:1396",
+      "tv:1908",
+      "tv:4087",
+      "tv:60059",
+      "tv:2710",
+      "tv:226637",
+      "tv:153312",
+      "tv:79744",
+      "tv:1400",
+      "tv:4608",
+      "tv:289423",
+      "tv:2883",
+      "tv:80748",
+      "tv:1416",
+      "tv:1823",
+      "tv:285322",
+      "tv:288673",
+      "movie:1236045",
+      "movie:1275779",
+      "movie:980431"
+    ],
+    "pageviews_tmdb": [
+      "tv:1396",
+      "tv:1908",
+      "tv:4087",
+      "tv:60059",
+      "tv:42680",
+      "tv:226637",
+      "tv:2710",
+      "tv:3508",
+      "tv:1400",
+      "tv:289423",
+      "tv:46786",
+      "movie:45722",
+      "movie:1236045",
+      "tv:4616",
+      "tv:288673",
+      "tv:285322",
+      "tv:153312",
+      "tv:39429",
+      "movie:1148365",
+      "tv:1514"
+    ]
+  },
+  "titles": [
+    {
+      "key": "movie:1058424",
+      "title": "Hope",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 12
+      },
+      "scores": {
+        "floor_lift": 1.6099609502207346,
+        "regularized_z": 1.048722106481757,
+        "pageviews_tmdb": 0.7865415798613177
+      }
+    },
+    {
+      "key": "movie:1148365",
+      "title": "Matchbox the Movie",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 8,
+        "pageviews_tmdb": 19
+      },
+      "scores": {
+        "floor_lift": 2.1317610170069186,
+        "regularized_z": 0.8657165834425902,
+        "pageviews_tmdb": 1.8259772471209705
+      }
+    },
+    {
+      "key": "movie:1236045",
+      "title": "Animals",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 5,
+        "regularized_z": 18,
+        "pageviews_tmdb": 13
+      },
+      "scores": {
+        "floor_lift": 3.641781796390586,
+        "regularized_z": 1.381664262973338,
+        "pageviews_tmdb": 2.035984071748481
+      }
+    },
+    {
+      "key": "movie:1275779",
+      "title": "Disclosure Day",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 9,
+        "regularized_z": 19
+      },
+      "scores": {
+        "floor_lift": 1.982782381059466,
+        "regularized_z": 1.34197409944166,
+        "pageviews_tmdb": 1.1514377197469625
+      }
+    },
+    {
+      "key": "movie:1400837",
+      "title": "Other Mommy",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 13
+      },
+      "scores": {
+        "floor_lift": 1.5898038035449735,
+        "regularized_z": 0.5098431817710962,
+        "pageviews_tmdb": 1.2343827772314329
+      }
+    },
+    {
+      "key": "movie:45722",
+      "title": "Don't Look Down",
+      "type": "movie",
+      "buzz_ranks": {
+        "pageviews_tmdb": 12
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 2.0383363247604245
+      }
+    },
+    {
+      "key": "movie:980431",
+      "title": "Avatar Aang: The Last Airbender",
+      "type": "movie",
+      "buzz_ranks": {
+        "floor_lift": 20,
+        "regularized_z": 20
+      },
+      "scores": {
+        "floor_lift": 1.3905394692136357,
+        "regularized_z": 1.2977358598217454,
+        "pageviews_tmdb": 1.0115437269884162
+      }
+    },
+    {
+      "key": "tv:1396",
+      "title": "Breaking Bad",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 1,
+        "regularized_z": 1,
+        "pageviews_tmdb": 1
+      },
+      "scores": {
+        "floor_lift": 7.825784824271046,
+        "regularized_z": 12.708440698148726,
+        "pageviews_tmdb": 7.5
+      }
+    },
+    {
+      "key": "tv:1400",
+      "title": "Seinfeld",
+      "type": "tv",
+      "buzz_ranks": {
+        "regularized_z": 9,
+        "pageviews_tmdb": 9
+      },
+      "scores": {
+        "floor_lift": 1.1830935251798562,
+        "regularized_z": 1.830935251798561,
+        "pageviews_tmdb": 2.4138162996486305
+      }
+    },
+    {
+      "key": "tv:1416",
+      "title": "Grey's Anatomy",
+      "type": "tv",
+      "buzz_ranks": {
+        "regularized_z": 14
+      },
+      "scores": {
+        "floor_lift": 1.2325499282798191,
+        "regularized_z": 1.6491662702721208,
+        "pageviews_tmdb": 1.2368747027040907
+      }
+    },
+    {
+      "key": "tv:1514",
+      "title": "The One Show",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 20
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 1.8251954480025447
+      }
+    },
+    {
+      "key": "tv:153312",
+      "title": "Tulsa King",
+      "type": "tv",
+      "buzz_ranks": {
+        "regularized_z": 7,
+        "pageviews_tmdb": 17
+      },
+      "scores": {
+        "floor_lift": 1.3316733067729085,
+        "regularized_z": 2.202571518993592,
+        "pageviews_tmdb": 1.8515700687349168
+      }
+    },
+    {
+      "key": "tv:1823",
+      "title": "The Love Boat",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 18,
+        "regularized_z": 15
+      },
+      "scores": {
+        "floor_lift": 1.494290163508954,
+        "regularized_z": 1.5199441885297502,
+        "pageviews_tmdb": 1.1399581413973126
+      }
+    },
+    {
+      "key": "tv:1908",
+      "title": "Miami Vice",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 3,
+        "regularized_z": 2,
+        "pageviews_tmdb": 2
+      },
+      "scores": {
+        "floor_lift": 3.931721737471988,
+        "regularized_z": 5.777862618937694,
+        "pageviews_tmdb": 4.333396964203271
+      }
+    },
+    {
+      "key": "tv:226637",
+      "title": "High Potential",
+      "type": "tv",
+      "buzz_ranks": {
+        "regularized_z": 6,
+        "pageviews_tmdb": 6
+      },
+      "scores": {
+        "floor_lift": 1.3189633586511977,
+        "regularized_z": 3.1896335865119765,
+        "pageviews_tmdb": 2.7646871691361987
+      }
+    },
+    {
+      "key": "tv:2710",
+      "title": "It's Always Sunny in Philadelphia",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 16,
+        "regularized_z": 5,
+        "pageviews_tmdb": 7
+      },
+      "scores": {
+        "floor_lift": 1.5258808416511531,
+        "regularized_z": 3.378127700794011,
+        "pageviews_tmdb": 2.5335957755955083
+      }
+    },
+    {
+      "key": "tv:284833",
+      "title": "Avatar: Seven Havens",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 7
+      },
+      "scores": {
+        "floor_lift": 2.874995743135096,
+        "regularized_z": 1.1418562744897045,
+        "pageviews_tmdb": 1.6663001959592356
+      }
+    },
+    {
+      "key": "tv:285322",
+      "title": "Below",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 4,
+        "regularized_z": 16,
+        "pageviews_tmdb": 16
+      },
+      "scores": {
+        "floor_lift": 3.9179199879681157,
+        "regularized_z": 1.4857681654955233,
+        "pageviews_tmdb": 1.9081331203378462
+      }
+    },
+    {
+      "key": "tv:2883",
+      "title": "Dark Shadows",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 17,
+        "regularized_z": 12
+      },
+      "scores": {
+        "floor_lift": 1.5143789310820355,
+        "regularized_z": 1.7079771578386747,
+        "pageviews_tmdb": 1.2809828683790059
+      }
+    },
+    {
+      "key": "tv:288673",
+      "title": "Carrie",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 6,
+        "regularized_z": 17,
+        "pageviews_tmdb": 15
+      },
+      "scores": {
+        "floor_lift": 3.4253738048726916,
+        "regularized_z": 1.4755164089478707,
+        "pageviews_tmdb": 1.9094266379096236
+      }
+    },
+    {
+      "key": "tv:289423",
+      "title": "Take Charge of My Heart",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 2,
+        "regularized_z": 11,
+        "pageviews_tmdb": 10
+      },
+      "scores": {
+        "floor_lift": 4.682379803176346,
+        "regularized_z": 1.820209574772294,
+        "pageviews_tmdb": 2.266437306590616
+      }
+    },
+    {
+      "key": "tv:3508",
+      "title": "Anderson Cooper 360°",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 8
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 2.5260372228273043
+      }
+    },
+    {
+      "key": "tv:39429",
+      "title": "You Hee-yeol's Sketchbook",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 18
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 1.8466167886994524
+      }
+    },
+    {
+      "key": "tv:4087",
+      "title": "The X-Files",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 10,
+        "regularized_z": 3,
+        "pageviews_tmdb": 3
+      },
+      "scores": {
+        "floor_lift": 1.7207275384254066,
+        "regularized_z": 5.543359810862688,
+        "pageviews_tmdb": 4.157519858147015
+      }
+    },
+    {
+      "key": "tv:42680",
+      "title": "Sítio do Picapau Amarelo",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 5
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 3.8151633098086113
+      }
+    },
+    {
+      "key": "tv:4608",
+      "title": "30 Rock",
+      "type": "tv",
+      "buzz_ranks": {
+        "regularized_z": 10
+      },
+      "scores": {
+        "floor_lift": 1.2745141155973543,
+        "regularized_z": 1.8204444184990256,
+        "pageviews_tmdb": 1.3653333138742691
+      }
+    },
+    {
+      "key": "tv:4616",
+      "title": "Xena: Warrior Princess",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 14
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 1.9217485520703137
+      }
+    },
+    {
+      "key": "tv:46786",
+      "title": "Bates Motel",
+      "type": "tv",
+      "buzz_ranks": {
+        "pageviews_tmdb": 11
+      },
+      "scores": {
+        "floor_lift": null,
+        "regularized_z": null,
+        "pageviews_tmdb": 2.1340982444073533
+      }
+    },
+    {
+      "key": "tv:60059",
+      "title": "Better Call Saul",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 11,
+        "regularized_z": 4,
+        "pageviews_tmdb": 4
+      },
+      "scores": {
+        "floor_lift": 1.691056692024408,
+        "regularized_z": 5.010953466910899,
+        "pageviews_tmdb": 3.8750662172899877
+      }
+    },
+    {
+      "key": "tv:79744",
+      "title": "The Rookie",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 19,
+        "regularized_z": 8
+      },
+      "scores": {
+        "floor_lift": 1.44816288322022,
+        "regularized_z": 1.959182680059862,
+        "pageviews_tmdb": 1.5171991015420694
+      }
+    },
+    {
+      "key": "tv:80748",
+      "title": "FBI",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 15,
+        "regularized_z": 13
+      },
+      "scores": {
+        "floor_lift": 1.5352385289764316,
+        "regularized_z": 1.681681990450824,
+        "pageviews_tmdb": 1.3168739780626162
+      }
+    },
+    {
+      "key": "tv:97951",
+      "title": "Mayor of Kingstown",
+      "type": "tv",
+      "buzz_ranks": {
+        "floor_lift": 14
+      },
+      "scores": {
+        "floor_lift": 1.5728834917525216,
+        "regularized_z": 0.6242904607091626,
+        "pageviews_tmdb": 1.0177583072736338
+      }
+    }
+  ]
+}

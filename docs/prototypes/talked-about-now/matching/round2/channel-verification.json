@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Netflix",
+    "url": "https://www.youtube.com/Netflix",
+    "status": 200,
+    "canonical": [
+      "https://www.youtube.com/channel/UCWOA1ZGywLbqmigxE4Qlvuw"
+    ],
+    "metadata": [
+      [
+        "Netflix",
+        "UCWOA1ZGywLbqmigxE4Qlvuw"
+      ]
+    ]
+  },
+  {
+    "name": "Netflix Brasil",
+    "url": "https://www.youtube.com/NetflixBrasil",
+    "status": 200,
+    "canonical": [
+      "https://www.youtube.com/channel/UCc1l5mTmAv2GC_PXrBpqyKQ"
+    ],
+    "metadata": [
+      [
+        "Netflix Brasil",
+        "UCc1l5mTmAv2GC_PXrBpqyKQ"
+      ]
+    ]
+  },
+  {
+    "name": "Netflix India",
+    "url": "https://www.youtube.com/NetflixIndiaOfficial",
+    "status": 200,
+    "canonical": [
+      "https://www.youtube.com/channel/UCZSNzBgFub_WWil6TOTYwAg"
+    ],
+    "metadata": [
+      [
+        "Netflix India",
+        "UCZSNzBgFub_WWil6TOTYwAg"
+      ]
+    ]
+  }
+]
