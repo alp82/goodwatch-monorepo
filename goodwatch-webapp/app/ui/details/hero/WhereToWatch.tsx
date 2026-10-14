@@ -11,6 +11,7 @@ import type {
 	StreamingType,
 } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { UNDER_HEADERS } from "~/ui/details/header-height"
 import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
 	type CountryCount,
@@ -205,6 +206,7 @@ export default function WhereToWatch({
 			ref={ref}
 			data-where-to-watch
 			className={`@container relative min-w-0 ${className}`}
+			style={{ scrollMarginTop: UNDER_HEADERS }}
 		>
 			<div className="flex min-w-0 items-center justify-end gap-1.5">
 				<h2
