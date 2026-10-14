@@ -30,12 +30,24 @@ while (true) {
 }
 async function run(command, args, options = {}) {
 	return new Promise((resolve, reject) => {
-		const child = spawn(command, args, {
-			cwd,
-			env,
-			stdio: ["ignore", "pipe", "pipe"],
-			...options,
-		})
+		const interactive = args.includes("--relogin") || args.includes("login")
+		const child = spawn(
+			interactive ? "python" : command,
+			interactive
+				? [
+						"-c",
+						"import pty,sys; sys.exit(pty.spawn(sys.argv[1:]) >> 8)",
+						command,
+						...args,
+					]
+				: args,
+			{
+				cwd,
+				env,
+				stdio: ["ignore", "pipe", "pipe"],
+				...options,
+			},
+		)
 		let output = ""
 		let stdout = ""
 		let authorizing = false
@@ -46,7 +58,12 @@ async function run(command, args, options = {}) {
 			const match = output.match(
 				/http:\/\/127\.0\.0\.1:3356\/api\/auth\/oauth2\/authorize\?[!-~]+/,
 			)
-			if (match && !authorizing) {
+			if (
+				match &&
+				new URL(match[0]).searchParams.get("resource") ===
+					"http://127.0.0.1:3356/mcp" &&
+				!authorizing
+			) {
 				authorizing = true
 				browser = new Promise((res, rej) => {
 					const login = spawn(
@@ -140,7 +157,19 @@ try {
 		"PASS: Claude Code CIMD browser login, consent and issuer callback",
 	)
 	const prompt = `Use only ${name} MCP tools. Call search_titles with query "Local Movie", get_title with title_id "show:1399", and get_my_shows. Report the show name and next episode. Do not read files or use other tools.`
+	const mcpConfig = JSON.stringify({
+		mcpServers: {
+			[name]: {
+				type: "http",
+				url: "http://127.0.0.1:3356/mcp",
+				oauth: { callbackPort: 6277 },
+			},
+		},
+	})
 	const args = [
+		"--strict-mcp-config",
+		"--mcp-config",
+		mcpConfig,
 		"-p",
 		prompt,
 		"--allowedTools",
@@ -151,9 +180,13 @@ try {
 		"dontAsk",
 		"--no-session-persistence",
 		"--output-format",
-		"json",
+		"stream-json",
+		"--verbose",
 	]
-	const first = JSON.parse(await run("claude", args))
+	const firstRun = parseClaude(await run("claude", args))
+	const first = firstRun.result
+	for (const tool of ["search_titles", "get_title", "get_my_shows"])
+		assert.ok(firstRun.calls.includes(`mcp__${name}__${tool}`))
 	assert.equal(first.is_error, false)
 	assert.deepEqual(first.permission_denials, [])
 	assert.ok(first.result.includes("Local Orbit"))
@@ -169,8 +202,11 @@ try {
 			setTimeout(resolve, Math.min(10000, until - Date.now())),
 		)
 	await run(process.execPath, [here("inspector-calls.mjs")])
-	const later = JSON.parse(
+	const laterRun = parseClaude(
 		await run("claude", [
+			"--strict-mcp-config",
+			"--mcp-config",
+			mcpConfig,
 			"-p",
 			`Use only ${name} to call get_my_shows and report Local Orbit's next episode. Do not read files or use other tools.`,
 			"--allowedTools",
@@ -179,9 +215,12 @@ try {
 			"dontAsk",
 			"--no-session-persistence",
 			"--output-format",
-			"json",
+			"stream-json",
+			"--verbose",
 		]),
 	)
+	const later = laterRun.result
+	assert.ok(laterRun.calls.includes(`mcp__${name}__get_my_shows`))
 	assert.equal(later.is_error, false)
 	assert.deepEqual(later.permission_denials, [])
 	assert.ok(later.result.includes("Local Orbit"))
@@ -197,4 +236,21 @@ try {
 		} catch {}
 		await run("claude", ["mcp", "remove", "--scope", "local", name])
 	}
+}
+
+function parseClaude(output) {
+	const events = output
+		.trim()
+		.split("\n")
+		.map((line) => JSON.parse(line))
+	const result = events.findLast((event) => event.type === "result")
+	assert.ok(result)
+	const calls = events
+		.filter((event) => event.type === "assistant")
+		.flatMap((event) =>
+			event.message.content
+				.filter((part) => part.type === "tool_use")
+				.map((part) => part.name),
+		)
+	return { result, calls }
 }
