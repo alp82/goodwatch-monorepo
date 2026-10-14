@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/server"
 import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
+import type { RankedSearch } from "./ranked.server.ts"
 import { createToolServer } from "./tools.server.ts"
 import { isWriteCall } from "./write-names.ts"
 
@@ -24,6 +25,7 @@ export function createReadMcpHandler(
 		resource?: string
 		authorization?: OAuthTokenVerifier
 		limiter?: Limiter
+		rankedSearch?: RankedSearch
 	} = {},
 ) {
 	const resource = options.resource ?? process.env.MCP_RESOURCE_URL
@@ -109,6 +111,7 @@ export function createReadMcpHandler(
 					userId,
 					new URL(resource).origin,
 					auth.scopes.includes("mcp:write"),
+					options.rankedSearch,
 				),
 			{ legacy: "stateless" },
 		)

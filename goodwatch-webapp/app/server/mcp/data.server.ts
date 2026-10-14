@@ -191,11 +191,6 @@ export async function readMemberTool(
 	args: ReadArgs,
 ): Promise<Record<string, unknown>> {
 	if (name === "search_titles") {
-		if (args.ranked)
-			return {
-				status: "ranked_unavailable",
-				message: "Ranked search is not available yet",
-			}
 		const offset = offsetOf(args)
 		const limit = args.limit ?? 20
 		const found = await lookup(args.query ?? "", offset, limit + 1)
