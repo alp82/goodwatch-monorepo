@@ -939,3 +939,56 @@ test("a full background mail queue does not reveal membership through password-r
 		await queue.drain()
 	}
 })
+
+test("sign-up, sign-in and the server's session read work under remix-serve's fetch polyfill", async () => {
+	// remix-serve installs @remix-run/web-fetch (the app has no v3_singleFetch). With it, every second request
+	// to CrateDB failed, Response.json and Headers#getSetCookie were missing.
+	const member = await confirmed()
+	const { installGlobals } = await import("@remix-run/node")
+	const { handleAuthRequest, setAuthForTest } = await import(
+		"./runtime.server.ts"
+	)
+	const { resolveSession } = await import("../../utils/auth-session.ts")
+	const names = ["fetch", "Request", "Response", "Headers", "FormData"] as const
+	const original = Object.fromEntries(names.map((name) => [name, globalThis[name]]))
+	const previous = process.env.BETTER_AUTH_ENABLED
+	installGlobals()
+	setAuthForTest(auth)
+	process.env.BETTER_AUTH_ENABLED = "true"
+	try {
+		const post = (path: string, body: unknown) =>
+			handleAuthRequest(
+				new Request(`${baseURL}/api/auth${path}`, {
+					method: "POST",
+					headers: { "content-type": "application/json", origin: baseURL },
+					body: JSON.stringify(body),
+				}),
+			)
+		for (let attempt = 0; attempt < 3; attempt++) {
+			const signedIn = await post("/sign-in/email", {
+				email: member.address,
+				password,
+			})
+			assert.equal(signedIn.status, 200, await signedIn.clone().text())
+		}
+		const signup = await post("/sign-up/email", {
+			email: email(),
+			name: "",
+			password,
+		})
+		assert.equal(signup.status, 200, await signup.clone().text())
+		assert.deepEqual(await signup.json(), {
+			status: true,
+			message: "Check your inbox to continue.",
+		})
+		assert.equal(
+			(await resolveSession(member.cookies)).user?.email,
+			member.address,
+		)
+	} finally {
+		Object.assign(globalThis, original)
+		if (previous === undefined) delete process.env.BETTER_AUTH_ENABLED
+		else process.env.BETTER_AUTH_ENABLED = previous
+		setAuthForTest(null)
+	}
+})
