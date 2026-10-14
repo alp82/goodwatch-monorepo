@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import { test, type TestContext } from "node:test"
-import { CrateError, execute, getCrateClient, insertRows, query, setCrateClientForTest, upsert } from "./crate.ts"
+import { CrateError, CrateTimeoutError, execute, getCrateClient, insertRows, query, setCrateClientForTest, upsert } from "./crate.ts"
 
 type Statement = { stmt: string; args: unknown[] }
 type Handler = (statement: Statement, req: IncomingMessage, res: ServerResponse) => void
@@ -238,4 +238,18 @@ test("reads wait for shard routing to recover when surviving coordinators still 
 	const before = received.map((host) => host.length)
 	for (let i = 0; i < 3; i++) await query("SELECT n")
 	assert.deepEqual(received.map((host, i) => host.length - before[i]), [1, 1, 1])
+})
+
+test("a single coordinator's routing retry uses the remaining timeout rather than starting another full budget", async (t) => {
+	let calls = 0
+	await cluster(t, [(_, __, res) => {
+		if (++calls > 1) return
+		res.writeHead(500, { "Content-Type": "application/json" })
+		res.end(JSON.stringify({ error: { message: "NoSuchNodeException[No such node [old]]", code: 5000 } }))
+	}])
+	await assert.rejects(query("SELECT n", [], { timeoutMs: 500 }), (error) => {
+		assert.ok(error instanceof CrateTimeoutError)
+		assert.ok(error.timeoutMs < 450, `Retry received ${error.timeoutMs} ms after its backoff`)
+		return true
+	})
 })
