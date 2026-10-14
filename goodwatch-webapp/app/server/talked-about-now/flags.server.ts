@@ -16,6 +16,8 @@ const MODES: readonly FeatureMode[] = ["off", "preview", "on"]
 export const SURFACE_VARIABLES = {
 	/** The section on title pages (#558). */
 	title: "TALKED_ABOUT_NOW_TITLE",
+	/** The row below the start page's room (#557). */
+	row: "TALKED_ABOUT_NOW_ROW",
 } as const
 
 export type Surface = keyof typeof SURFACE_VARIABLES

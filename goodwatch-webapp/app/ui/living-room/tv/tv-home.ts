@@ -93,6 +93,8 @@ export type TvHomeData = {
 	 * nothing of them is in the HTML.
 	 */
 	scope?: { country: string; services: number[] }
+	/** "Talked about now" below the room (#557), for this viewer. Absent while the feature is off for them. */
+	talked?: true
 }
 
 /** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */
