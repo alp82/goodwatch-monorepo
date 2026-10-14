@@ -171,7 +171,7 @@ try {
 	assert.match(found.items[0].url, /\/movie\/20[0-9]{2}/)
 	assert.equal(found.ranked, false)
 	assert.ok(found.messages.includes("Showing basic search results."))
-	const cached = await call(`  ${query.toUpperCase().replaceAll(" ", "   ")}  `)
+	const cached = await call(`  ${query.toUpperCase().replace(/ /gu, "   ")}  `)
 	assert.equal(cached.cached, true)
 	assert.equal(cached.charged_nano, 0)
 	assert.equal(paidCalls, 2)
