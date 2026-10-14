@@ -7,6 +7,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from rapidfuzz import fuzz
 import requests
+from threading import Lock
+API_LOG_LOCK=Lock()
 
 R2=HERE/'round2';R2.mkdir(exist_ok=True)
 MODEL='openai/gpt-4.1-mini'
@@ -50,9 +52,19 @@ def api_batch(prompt,items):
    json={'model':MODEL,'messages':[{'role':'system','content':prompt},{'role':'user','content':json.dumps({'items':items},ensure_ascii=False)}],
          'temperature':0,'max_tokens':5000,'response_format':{'type':'json_object'}},timeout=150)
   if r.status_code in [429,502,503,504]:time.sleep(2*(attempt+1));continue
-  r.raise_for_status();b=r.json();res=json.loads(b['choices'][0]['message']['content'])
+  r.raise_for_status();b=r.json()
+  with API_LOG_LOCK:
+   with (R2/'api-charges.jsonl').open('a') as log:log.write(json.dumps({'at':datetime.now(timezone.utc).isoformat(),'phase':'extract' if prompt==EXTRACT_PROMPT else 'gate','ids':[x['id'] for x in items],'request_id':b.get('id'),'usage':b.get('usage',{})})+'\n')
+  res=json.loads(b['choices'][0]['message']['content'])
   actual={x['id'] for x in res['items']};expected={x['id'] for x in items}
-  if actual!=expected:raise RuntimeError('LLM omitted or invented batch IDs')
+  if actual!=expected:
+   if attempt<2:continue
+   if len(items)>1:
+    combined=[];charges=[]
+    for item in items:
+     results,charge=api_batch(prompt,[item]);combined+=results;charges.append(charge)
+    return combined,{'split_batch':True,'charges':charges,'ids':[x['id'] for x in items]}
+   raise RuntimeError('LLM omitted or invented singleton ID')
   return res['items'],{'usage':b.get('usage',{}),'request_id':b.get('id'),'model':b.get('model'),'ids':[x['id'] for x in items]}
  raise RuntimeError('OpenRouter transient failures')
 def extract():
@@ -63,7 +75,7 @@ def extract():
   payload=[{'id':x['id'],'source':x['source'],'author':x['author'],'foreground':foreground(x)} for x in batch]
   return api_batch(EXTRACT_PROMPT,payload)
  with ThreadPoolExecutor(max_workers=4) as pool:
-  for results,cost in pool.map(task,batches):
+  for results,cost in pool.map(task,batches,buffersize=4):
    old.update({x['id']:x for x in results});audit.append(cost)
    save('extractions.json',list(old.values()));save('extract-api.json',audit)
    print('Extracted',len(old),'/',len(items),flush=True)
@@ -72,16 +84,44 @@ def db():return sqlite3.connect(DATA/'catalog.local.sqlite')
 def find_titles(con,phrase):
  q=norm(phrase)
  return [json.loads(row[0]) for row in con.execute('SELECT DISTINCT t.body FROM names n JOIN titles t ON n.key=t.key WHERE n.name=?',[q])]
+def credits(details,kind,ids):
+ # Bound each relation before looking up people; avoid a distributed full-person join.
+ media_type='show' if kind=='tv' else 'movie'
+ crew=crate("SELECT media_tmdb_id,person_tmdb_id,job FROM person_worked_on WHERE media_type=? AND media_tmdb_id=ANY(?) AND job IN ('Director','Creator','Writer')",[media_type,ids])
+ cast=crate('SELECT media_tmdb_id,person_tmdb_id FROM person_appeared_in WHERE media_type=? AND media_tmdb_id=ANY(?) AND order_default < 8',[media_type,ids])
+ people=sorted({r['person_tmdb_id'] for r in crew+cast});names={}
+ for i in range(0,len(people),500):
+  names.update({r['tmdb_id']:r['name'] for r in crate('SELECT tmdb_id,name FROM person WHERE tmdb_id=ANY(?)',[people[i:i+500]])})
+ for row in crew+cast:
+  key=kind+':'+str(row['media_tmdb_id']);name=names.get(row['person_tmdb_id'])
+  if key in details and name:
+   field='cast' if 'job' not in row else {'Director':'directors','Creator':'creators','Writer':'writers'}[row['job']]
+   details[key].setdefault(field,[]).append(name)
 def candidates():
  corpus=read('corpus.json');ex={x['id']:x for x in read('extractions.json')};out=[];con=db()
  all_names=set()
  for item in ex.values():
   for e in item['entities']:
    all_names.update(str(n).lower() for n in [e.get('mention'),e.get('canonical_title')]+e.get('aliases',[]) if n)
+ # Refresh extracted-name entries with SELECTs so recent catalog additions are eligible.
+ current_index={}
+ current_rows=read('current-name-catalog.json') if (R2/'current-name-catalog.json').exists() else []
+ if not (R2/'current-name-catalog.json').exists():
+  for kind,table in [('movie','movie'),('tv','show')]:
+   for offset in range(0,len(all_names),400):
+    chunk=sorted(all_names)[offset:offset+400]
+    for row in crate(f'SELECT tmdb_id,title,original_title,release_year,popularity FROM {table} WHERE lower(title)=ANY(?) OR lower(original_title)=ANY(?) LIMIT 20000',[chunk,chunk]):
+     row['key']=kind+':'+str(row['tmdb_id']);row['media_type']=kind;current_rows.append(row)
+  save('current-name-catalog.json',current_rows)
+ for row in current_rows:
+  for title in {row.get('title'),row.get('original_title')}:
+   if title:current_index.setdefault(norm(title),[]).append(row)
  # Read alternate-title crosswalk once for all extracted names, with bound SQL parameters.
- aliases=[]
- for i in range(0,len(all_names),400):
-  aliases+=crate('SELECT media_type,media_tmdb_id,title FROM alternative_title WHERE lower(title)=ANY(?) LIMIT 20000',[sorted(all_names)[i:i+400]])
+ aliases=read('alternate-title-crosswalk.json') if (R2/'alternate-title-crosswalk.json').exists() else []
+ if not (R2/'alternate-title-crosswalk.json').exists():
+  for i in range(0,len(all_names),400):
+   aliases+=crate('SELECT media_type,media_tmdb_id,title FROM alternative_title WHERE lower(title)=ANY(?) LIMIT 20000',[sorted(all_names)[i:i+400]])
+  save('alternate-title-crosswalk.json',aliases)
  alias_map={}
  for a in aliases:
   kind='tv' if a['media_type'] in ['tv','show'] else 'movie';alias_map.setdefault(norm(a['title']),[]).append((kind+':'+str(a['media_tmdb_id']),a['title']))
@@ -98,12 +138,12 @@ def candidates():
    names=[e.get('mention'),e.get('canonical_title')]+e.get('aliases',[]);hits={}
    for name in names:
     if not name:continue
-    for row in find_titles(con,name):
+    for row in find_titles(con,name)+current_index.get(norm(name),[]):
      hits[row['key']]={'key':row['key'],'retrieval':'foreground_exact','name_score':100};used[row['key']]=row
     for key,alias in alias_map.get(norm(name),[]):
      row=con.execute('SELECT body FROM titles WHERE key=?',[key]).fetchone()
-     if row:
-      hits[key]={'key':key,'retrieval':'alt_title_context','name_score':100,'matched_alias':alias};used[key]=json.loads(row[0])
+     hits[key]={'key':key,'retrieval':'alt_title_context','name_score':100,'matched_alias':alias}
+     used[key]=json.loads(row[0]) if row else {'key':key,'tmdb_id':int(key.split(':')[1]),'media_type':key.split(':')[0],'title':alias,'original_title':alias,'release_year':None,'popularity':0}
    if len(hits)<2:
     for name in names:
      if not name or len(norm(name))<4:continue
@@ -115,25 +155,27 @@ def candidates():
    def rank(hit):
     row=used[hit['key']];score=hit['name_score']
     if e.get('type') and row['media_type']==e['type']:score+=20
-    if e.get('year') and row['release_year'] and abs(row['release_year']-e['year'])<=1:score+=20
+    year=e.get('year');year=int(year) if str(year).isdigit() else None
+    if year and row['release_year'] and abs(row['release_year']-year)<=1:score+=20
     return score,row.get('popularity') or 0
    hits=sorted(hits.values(),key=rank,reverse=True)[:18]
    proposals.append({'entity_index':idx,'entity':e,'grounded':True,'candidates':hits})
   entity_rows[item['id']]=proposals
+ # Only enrich the bounded candidates supplied to the gate, not discarded hits.
+ retained={c['key'] for ps in entity_rows.values() for p in ps for c in p['candidates']}
+ used={k:r for k,r in used.items() if k in retained}
+ save('candidates.json',entity_rows)
  # Read original/catalog details plus creator/cast context for all retrieved IDs.
- details={}
+ details={x['key']:x for x in read('candidate-catalog.local.checkpoint.json')} if (R2/'candidate-catalog.local.checkpoint.json').exists() else {}
+ details={k:r for k,r in details.items() if k in retained}
  for kind,table in [('movie','movie'),('tv','show')]:
-  ids=[int(k.split(':')[1]) for k in used if k.startswith(kind+':')]
+  ids=[int(k.split(':')[1]) for k in used if k.startswith(kind+':') and k not in details]
   for i in range(0,len(ids),500):
    for row in crate(f'SELECT tmdb_id,title,original_title,release_year,substr(synopsis,1,900) AS synopsis FROM {table} WHERE tmdb_id=ANY(?)',[ids[i:i+500]]):
     k=kind+':'+str(row['tmdb_id']);details[k]=used[k]|row|{'directors':[],'cast':[],'alternative_titles':[]}
-   for row in crate("SELECT w.media_tmdb_id,w.job,p.name FROM person_worked_on w JOIN person p ON w.person_tmdb_id=p.tmdb_id WHERE w.media_type=? AND w.media_tmdb_id=ANY(?) AND w.job IN ('Director','Creator','Writer')",[kind,ids[i:i+500]]):
-    k=kind+':'+str(row['media_tmdb_id'])
-    if k in details:details[k]['directors'].append(row['name'])
-   # Column convention is inspected before this command is run.
-   for row in crate('SELECT w.media_tmdb_id,p.name FROM person_appeared_in w JOIN person p ON w.person_tmdb_id=p.tmdb_id WHERE w.media_type=? AND w.media_tmdb_id=ANY(?) AND w.order_default < 8',[kind,ids[i:i+500]]):
-    k=kind+':'+str(row['media_tmdb_id'])
-    if k in details:details[k]['cast'].append(row['name'])
+   credits(details,kind,ids[i:i+500])
+   save('candidate-catalog.local.checkpoint.json',list(details.values()))
+   print('Enriched',len(details),'/',len(used),'catalog rows',flush=True)
  for a in aliases:
   kind='tv' if a['media_type'] in ['tv','show'] else 'movie';k=kind+':'+str(a['media_tmdb_id'])
   if k in details:details[k]['alternative_titles'].append(a['title'])
@@ -160,17 +202,12 @@ def vector_fallback():
   print('Vector fallback',min(i+16,len(missing)),'/',len(missing),flush=True)
  # Enrich fallback rows through SELECTs; same metadata contract as lexical candidates.
  for kind,table in [('movie','movie'),('tv','show')]:
-  ids=[int(k.split(':')[1]) for k in extra if k.startswith(kind+':')]
+  ids=[int(k.split(':')[1]) for k in extra if k.startswith(kind+':') and k not in details]
   for i in range(0,len(ids),500):
    chunk=ids[i:i+500]
    for row in crate(f'SELECT tmdb_id,title,original_title,release_year,substr(synopsis,1,900) AS synopsis FROM {table} WHERE tmdb_id=ANY(?)',[chunk]):
     k=kind+':'+str(row['tmdb_id']);details[k]=row|{'key':k,'media_type':kind,'directors':[],'cast':[],'alternative_titles':[]}
-   for row in crate("SELECT w.media_tmdb_id,w.job,p.name FROM person_worked_on w JOIN person p ON w.person_tmdb_id=p.tmdb_id WHERE w.media_type=? AND w.media_tmdb_id=ANY(?) AND w.job IN ('Director','Creator','Writer')",[kind,chunk]):
-    k=kind+':'+str(row['media_tmdb_id'])
-    if k in details:details[k]['directors'].append(row['name'])
-   for row in crate('SELECT w.media_tmdb_id,p.name FROM person_appeared_in w JOIN person p ON w.person_tmdb_id=p.tmdb_id WHERE w.media_type=? AND w.media_tmdb_id=ANY(?) AND w.order_default<8',[kind,chunk]):
-    k=kind+':'+str(row['media_tmdb_id'])
-    if k in details:details[k]['cast'].append(row['name'])
+   credits(details,kind,chunk)
  save('candidate-catalog.json',list(details.values()));save('candidates.json',props)
 
 def run():
@@ -195,7 +232,7 @@ def run():
   for item in batch:
    entities=[]
    for p in props[item['id']]:
-    entities.append({'entity_index':p['entity_index'],'extracted':p['entity'],'candidates':[catalog[c['key']]|{'directors':list(dict.fromkeys(catalog[c['key']].get('directors',[])))[:12],'cast':list(dict.fromkeys(catalog[c['key']].get('cast',[])))[:8],'retrieval':c['retrieval']} for c in p['candidates'] if c['key'] in catalog]})
+    entities.append({'entity_index':p['entity_index'],'extracted':p['entity'],'candidates':[catalog[c['key']]|{'directors':list(dict.fromkeys(catalog[c['key']].get('directors',[])))[:12],'cast':list(dict.fromkeys(catalog[c['key']].get('cast',[])))[:8],'creators':list(dict.fromkeys(catalog[c['key']].get('creators',[])))[:8],'writers':list(dict.fromkeys(catalog[c['key']].get('writers',[])))[:8],'retrieval':c['retrieval']} for c in p['candidates'] if c['key'] in catalog]})
    payload.append({'id':item['id'],'source':item['source'],'published_at':item['published_at'],'foreground':foreground(item),'entities':entities})
   results,cost=api_batch(GATE_PROMPT,payload);out=[]
   for result in results:
@@ -214,7 +251,7 @@ def run():
    out.append({'id':result['id'],'links':list({l['key']:l for l in links}.values()),'rejection':result.get('reject_reason') if links else result.get('reject_reason') or 'Identity insufficient or confidence below frozen threshold','gate_response':result})
   return out,cost
  with ThreadPoolExecutor(max_workers=3) as pool:
-  for results,cost in pool.map(task,batches):
+  for results,cost in pool.map(task,batches,buffersize=4):
    previous.update({x['id']:x for x in results});audit.append(cost);save('predictions.json',list(previous.values()));save('gate-api.json',audit)
    print('Gated',len(previous),'/',len(items),flush=True)
  save('run-audit.json',{'completed_at':datetime.now(timezone.utc).isoformat(),'corpus_sha256':fingerprint(items),'rules_sha256':read('frozen-rules.json')['logic_sha256'],'items':len(items),'accepted_items':sum(bool(p['links']) for p in previous.values())})

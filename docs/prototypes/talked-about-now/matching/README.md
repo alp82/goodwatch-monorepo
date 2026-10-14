@@ -4,6 +4,16 @@ Question: how reliably can public discovery items be linked to the production mo
 
 This is a data experiment, not an application feature. Production access is restricted in the script to Crate SELECTs and Qdrant point queries/retrieval. It does not import webapp search, Windmill connectors, Redis, or any cache-writing code. Never run the webapp to reproduce this experiment.
 
+## Round two: renderer handover
+
+The improved foreground/context matcher and its **fresh 200-item benchmark** are in [results-round2.md](results-round2.md). [matches.json](matches.json) is the data input for the separate title-page prototype; this branch builds no review page. [matches.schema.json](matches.schema.json) specifies title IDs, source posts, lanes, confidence, discovery provenance and manual right/wrong/unsure labels. Dates and acquisition limits are embedded in the JSON.
+
+For the committed evidence, run `python round2_publish.py metrics` and `python round2_verify.py` offline. Rebuilding the Markdown report uses `python round2_publish.py report`. Export metadata hydration uses read-only production SELECTs.
+
+For a **new** experiment, use a separate snapshot directory and freeze new rules before collecting/selecting/annotating a new holdout. `round2_collect.py collect` obtains dated channel/RSS/public Bluesky search history; `sample` selects a disjoint, date-stratified holdout. Author `round2/label-intents.json` independently, resolve identities with `round2_labels.py prepare`/`resolve`, then run `round2_matcher.py extract`, `candidates`, `vector_fallback`, `run` sequentially and `round2_publish.py metrics`, `export`, `report`. Round-two API calls require a usable existing `OPENROUTER_API_KEY`; no key or call failure stops that stage rather than generating fake output. Candidate caches and per-stage snapshots resume the **same fixed corpus** only; never reuse them for changed inputs. Frozen rules and labels have separate pre-decision commits.
+
+Round-two source coverage is bounded historical search rather than Jetstream: see the report before interpreting counts as activity. Its fresh YouTube cohort is Netflix-only. Original round-one fixtures and measurements below are preserved.
+
 ## Run
 
 ```bash

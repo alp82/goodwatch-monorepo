@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goodwatch.app/prototypes/title-post-matches-v2.schema.json",
+  "title": "GoodWatch matching spike renderer handover",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "branch",
+    "window",
+    "matcher",
+    "selection",
+    "coverage",
+    "evaluation",
+    "titles"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "goodwatch.title-post-matches.v2"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "branch": {
+      "const": "prototype/talked-about-now-matching"
+    },
+    "window": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "matcher": {
+      "type": "object"
+    },
+    "selection": {
+      "type": "object"
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "evaluation": {
+      "type": "object"
+    },
+    "titles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/title"
+      }
+    }
+  },
+  "$defs": {
+    "title": {
+      "type": "object",
+      "required": [
+        "key",
+        "tmdb_id",
+        "type",
+        "title",
+        "year",
+        "post_count",
+        "general_discovery_post_count",
+        "buzz_targeted_only_post_count",
+        "source_counts",
+        "selection",
+        "posts"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^(movie|tv):[1-9][0-9]*$"
+        },
+        "tmdb_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "enum": [
+            "movie",
+            "tv"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "post_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "general_discovery_post_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "buzz_targeted_only_post_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "selection": {
+          "type": "object",
+          "required": [
+            "top_post_count_rank",
+            "buzz_ranks",
+            "buzz_scores",
+            "buzz_date"
+          ],
+          "properties": {
+            "top_post_count_rank": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 25
+            },
+            "buzz_ranks": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
+              }
+            },
+            "buzz_scores": {
+              "type": "object"
+            },
+            "buzz_date": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "posts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/post"
+          }
+        }
+      }
+    },
+    "post": {
+      "type": "object",
+      "required": [
+        "post_id",
+        "source_id",
+        "source",
+        "url",
+        "author",
+        "timestamp",
+        "text",
+        "lane",
+        "stage",
+        "confidence",
+        "confidence_basis",
+        "hand_label"
+      ],
+      "properties": {
+        "post_id": {
+          "type": "string"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "youtube",
+            "rss",
+            "bluesky"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "author": {
+          "type": "string"
+        },
+        "author_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timestamp_precision": {
+          "enum": [
+            "timestamp",
+            "day"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "headline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "context": {
+          "type": "string"
+        },
+        "lane": {
+          "enum": [
+            "official_video_id",
+            "foreground_exact",
+            "alt_title_context",
+            "foreground_fuzzy",
+            "vector_context"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "exact_catalog_video_id",
+            "context_rejection_gate"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidence_basis": {
+          "enum": [
+            "rule_score_not_calibrated",
+            "llm_self_report_not_calibrated"
+          ]
+        },
+        "match_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "discovery": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hand_label": {
+          "enum": [
+            "right",
+            "wrong",
+            "unsure",
+            null
+          ]
+        },
+        "hand_label_set": {
+          "enum": [
+            "round2",
+            "round1_display_only",
+            null
+          ]
+        },
+        "hand_label_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -2,3 +2,5 @@ __pycache__/
 data/*.local.*
 models/
 .venv/
+round2/*.local.*
+matches.local.*
