@@ -1,0 +1,30 @@
+summary: Build G1 ordering components for explicit preview members
+description: Reads the reference pool and all members' ratings, Want to See, Skip and Not interested from Crate. Writes only g1:v1:<member> with a TTL. F3 and the first-100 mix are composed over the filtered list at request time. Preview ids must be supplied explicitly. Stage 1; scheduling and webapp integration follow separately.
+kind: script
+lock: '!inline f/sync/copy/g1_order.script.lock'
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - member_ids
+    - ttl_seconds
+    - dry_run
+  properties:
+    member_ids:
+      type: array
+      items:
+        type: string
+      minItems: 1
+      uniqueItems: true
+      description: Explicit preview member ids; initially pass only the owner. Never all.
+    ttl_seconds:
+      type: integer
+      minimum: 1
+      default: 172800
+    dry_run:
+      type: boolean
+      default: true
+      description: Read and compute but write nothing, including no locks.
+  required:
+    - member_ids
+timeout: 1800
