@@ -146,10 +146,12 @@ export function showsCrumb(
 }
 
 /** A member without a show to continue or to start, in the words of the My shows page. */
-export const SHOWS_EMPTY = {
-	title: "No show for tonight",
-	line: "Want to See on a show puts it here to start. Once you mark an episode watched, its next episode leads this list.",
-}
+export const SHOWS_EMPTY =
+	"No show for tonight. Want to See on a show puts it here to start. Once you mark an episode watched, its next episode leads this list."
+
+/** What a screen reader hears for a show's poster: the show, that it is new, and where a press leads. */
+export const showSays = (row: Pick<TvShowRow, "title" | "fresh" | "label">) =>
+	`${row.title}, ${row.fresh ? "new, " : ""}${row.label}`
 
 // ---------------------------------------------------------------------------------------------------------
 // Seen it on a show the member is midway through.

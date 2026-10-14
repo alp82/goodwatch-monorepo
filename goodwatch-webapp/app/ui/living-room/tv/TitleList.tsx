@@ -1,7 +1,8 @@
 // A handful of titles on the TV: the focused one's name and facts over a row of posters, its backdrop behind
 // everything, and the screen's own keys beside the row. One list for every app, as in the prototype: Discover's
 // titles of a choice (with Change), an island's titles (with the islands to sail to), a side's titles and the
-// quiz's picks (with Rate more).
+// quiz's picks (with Rate more), and a member's shows (My shows: a poster then says where a press leads, and a
+// show that is new is marked).
 //
 // What an app says of itself is its props: the screen's name and what stands under it, the titles, the keys with
 // what they are called, the words while there is no title, and a picture for while no title has one.
@@ -26,6 +27,12 @@ export type TvListTitle = {
 	backdrop: string | null
 	/** "2019 · Movie · 87 score · 93% match". */
 	facts: string
+	/** Words on the poster itself, on the desktop: where a press leads ("S2 E4 · 50 min", "Start"). My shows'. */
+	label?: string
+	/** A mark in the poster's corner, in the New episodes signal's sky blue: "New". My shows'. */
+	mark?: string
+	/** For a screen reader, where the title alone does not say it all ("Slow Horses, new, S2 E4 · 50 min"). */
+	says?: string
 }
 
 /** A key of the list's own, beside the posters. */
@@ -91,7 +98,7 @@ export function TitleList({
 		<Item
 			key={title.key}
 			id={`title:${title.key}`}
-			label={title.title}
+			label={title.says ?? title.title}
 			// The phone: as tall as the row, and no taller than lets four stand side by side.
 			className={`tvc-tile shrink-0 bg-[#10131c] ${P ? "aspect-[2/3] h-full max-h-[156px]" : ""}`}
 			style={P ? undefined : { width: 172, height: 258 }}
@@ -101,6 +108,20 @@ export function TitleList({
 					src={tmdbImageUrl(title.poster, P ? "w185" : "w342")}
 					className="absolute inset-0 h-full w-full"
 				/>
+			)}
+			{/* It stays bright on a poster that sits back: raised over the tile's shade. */}
+			{title.mark && (
+				<span
+					className={`absolute left-0 top-0 z-[1] rounded-br-[12px] bg-sky-300 text-[20px] font-bold uppercase leading-none tracking-[0.08em] text-black ${P ? "px-2 py-1.5" : "px-3 py-2"}`}
+				>
+					{title.mark}
+				</span>
+			)}
+			{/* On the phone a poster is too small for words: the focused title's line says them. */}
+			{!P && title.label && (
+				<span className="absolute inset-x-0 bottom-0 truncate bg-black/80 px-3 py-2 text-[21px] font-bold leading-tight">
+					{title.label}
+				</span>
 			)}
 		</Item>
 	))

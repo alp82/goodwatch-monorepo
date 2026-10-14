@@ -156,8 +156,10 @@ test("a member without a show to continue or to start is told how one gets here"
 	])
 	for (const html of Object.values(rendered.shows.empty)) {
 		assert.deepEqual(ids(html), ["bar:back", "bar:search", "bar:menu"])
-		assert.match(html, />No show for tonight</)
-		assert.match(html, /Want to See on a show puts it here to start\./)
+		assert.match(
+			html,
+			/>No show for tonight\. Want to See on a show puts it here to start\./,
+		)
 	}
 })
 
@@ -217,7 +219,9 @@ test("on every phone of the room's table every key of My shows and of a show's t
 		)
 		// The Expand key's row under the posters is a key tall, and empty.
 		const row = Number(
-			/<div class="shrink-0" style="height:(\d+)px"><\/div>/.exec(p.shows)?.[1],
+			/<div class="flex shrink-0 items-center gap-2 pr-\[158px\]" style="height:(\d+)px"><\/div>/.exec(
+				p.shows,
+			)?.[1],
 		)
 		assert.ok(row * p.scale >= 44, `${p.phone}: the corner's row is ${row}`)
 		// The title screen of a show: its three keys and the bar's.

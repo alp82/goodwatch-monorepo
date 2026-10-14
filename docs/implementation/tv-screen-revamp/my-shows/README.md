@@ -3,7 +3,9 @@
 A member's My shows on the new TV: the shows with a Next episode, then the shows to start; the New episodes signal
 on home's My shows tile and on the screen; a show opens its title screen, where Seen it marks the Next episode of a
 show the member is midway through. And slice 3's leftover: the menu and What is GoodWatch? on a phone. On
-`/home-preview`. Proof for [the plan](../README.md), slice 9. Taken on October 13, 2026.
+`/home-preview`. Proof for [the plan](../README.md), slice 9. Taken on October 13, 2026, and again on October 14
+after the merge of the integration branch at `8d20ff74` (mini Explorer, Taste, the quiz, the rating strip): see
+[After the merge](#after-the-merge).
 
 ## Run it
 
@@ -20,13 +22,14 @@ REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on node_modules/.bin/remix vite
 `http://localhost:3292/prototype/my-library-real/tv?member=six&session=member&tv=shows`. `member=new` has shows
 with new episodes; `landed=show` puts a show on one of the member's services.
 
-**New on the harness: `session=member`.** Until this slice the harness's browser was a guest's: a title's marks
-went to the browser's storage. With `session=member` the page sees a signed-in member (who does not exist), and
-the requests for the member's own data go to the harness's API, which answers from the dev server's in-memory
-Crate with the app's own server functions: `/api/user-data`, `/api/tonight`, `/api/new-episodes`,
-`/api/update-scores`, and, new, `/api/tracking/show` (the read and the actions of a show's tracking). Without the
-parameter the harness is as it was, so the earlier slices' drive scripts are not affected. Switching between
-sample members starts a member over: the harness holds one at a time.
+**The harness's member session.** Without a parameter the harness's browser is a guest's: a title's marks go to
+the browser's storage, as slices 3 and 5 use it. With `session=member` the page sees a signed-in member (who does
+not exist), and the requests for the member's own data go to the harness's API, which answers from the dev
+server's in-memory Crate with the app's own server functions: `/api/user-data`, `/api/tonight`,
+`/api/new-episodes`, `/api/update-scores`, and, new, `/api/tracking/show` (the read and the actions of a show's
+tracking). Slice 8 built the same session as `session=on` for its ratings; since the merge the two are one, and
+either word turns it on. Switching between sample members starts a member over: the harness holds one at a
+time.
 
 **A guest, on real data**, for the shots of the menu and What is GoodWatch? only. The server reads production
 Crate and Valkey and must stay a reader: no `APP_ORIGIN`.
@@ -58,12 +61,15 @@ production.
 
 - **The screen** (`tv/screens/Shows.tsx`), a chunk asked for while My shows' tile has the focus. The prototype's
   list: the focused show's name and one line over a row of posters that pages sideways, the show's backdrop
-  behind. Its rows and words are in `tv/tv-shows.ts`, pure and tested.
+  behind. Since the merge it is drawn by the list every app shares (`tv/TitleList.tsx`, slice 8), which gained
+  three optional fields for it: words on a poster, a mark in its corner, and what a screen reader hears. Its
+  rows and words are in `tv/tv-shows.ts`, pure and tested.
   - A show with a Next episode says "Next: S2 E4 · the episode's name · 50 min · 6 episodes left"; a Seen show
     with new episodes "2 new since you saw it". Its poster says "S2 E4 · 50 min".
   - A show to start says "To start · 2 seasons · 96% match · On Disney+". Its poster says "Start".
   - On the phone a poster is too small for words: the line of the focused show says them.
-  - A member without a show: "No show for tonight", in the My shows page's words.
+  - A member without a show: "No show for tonight. Want to See on a show puts it here to start. …", in the My
+    shows page's words.
 - **The list is the member's loader's**, as the plan says: `TvHomeData.shows`. The loader's shape gained three
   fields, all optional: what is left of a show (`left`), whether that counts new episodes of a Seen show
   (`caughtUp`), and a show to start's seasons.
@@ -193,13 +199,11 @@ Sizes in px of the window. Before this slice the menu's keys were 31.9 to 38.6 p
 - The rows, the words, the signal and the rule (`tv/tv-shows.test.ts`); the machine's branch
   (`tv/tv-machine.test.ts`); the screens as they are drawn, with the menu's layout on every phone
   (`tv/tv-shows-render.test.ts`); the loader's fields (`server/living-room/tv-home.test.ts`).
-- `npm test`: 2,150 tests, 2,148 pass, 1 skipped as before. One failed in the last whole run: a timing test
-  of the server's shutdown (`server/lifecycle.test.ts`, "a long-lived request doesn't close the listener
-  early"), on a machine at a load of 12. It passes by itself, twice in a row, and nothing of this slice is near
-  it. `npm run build` passes. `tsc`: 212 errors, the baseline's. `biome lint` on the changed files: nothing new.
-
-**After the last browser run** one line changed: the tracking store's event name (see below). The build, the
-tests and the first-view comparison were run after it; the drive script was not run again.
+- `npm test` after the merge: 2,264 tests, 2,261 pass, 1 skipped as before. Two failed in the whole run, both
+  timing tests on a machine at a load of 10: `server/combined-search/title-lookup.test.ts` ("primary lookup
+  winning the catalog race…") and `server/tmdb-timeout.test.ts`. Each passes by itself, and nothing of this
+  slice is near them. `npm run build` passes. `tsc`: 212 errors, the baseline's. `biome lint` on the changed
+  files: nothing new.
 
 ## Where it differs from the prototype and the plan
 
@@ -234,12 +238,12 @@ tests and the first-view comparison were run after it; the drive script was not 
 ## Numbers
 
 **The first view's scripts**, `npm run build` with `SENTRY_RELEASE=compare`, counted by
-`../tonight-title/first-view.mjs`: raw / gzip / Brotli. "Before" is the integration branch at `00578474`, built
-from a copy the same way.
+`../tonight-title/first-view.mjs`: raw / gzip / Brotli. Measured after the merge. "Before" is the integration
+branch at `8d20ff74`, built from a copy the same way.
 
 | Page | Before | Slice 9 | Of which |
 | --- | --- | --- | --- |
-| `/home-preview` | 12 files, 667,222 / 222,379 / 192,867 | 12 files, 668,769 / 222,898 / 193,369 (+1,547 / +519 / +502) | Its own chunk, 52,322 to 53,869: the machine's branch, the screen's entry, the tile's number, the scene's wiring |
+| `/home-preview` | 12 files, 669,192 / 222,983 / 193,389 | 12 files, 671,513 / 223,682 / 194,094 (+2,321 / +699 / +705) | Its own chunk, 54,292 to 56,613: the machine's branch, the screen's entry, the tile's number, the scene's wiring |
 | `/` (the old TV) | 17 files, 865,878 raw | 17 files, 865,878 raw | No file changed |
 | A show's page | 20 files, 860,295 raw | 20 files, 860,285 raw | The gate lost its export, 10 bytes |
 | A movie's page | 20 files, 859,743 raw | 20 files, 859,733 raw | The same |
@@ -247,15 +251,42 @@ from a copy the same way.
 | The Discover page | 32 files, 1,096,393 raw | 32 files, 1,096,393 raw | No file changed |
 
 - **`shell`, on every page:** 170,770 bytes, unchanged.
-- **Loaded on first use:** My shows' chunk, 4,177 bytes (1,709 gzip, 1,541 Brotli), with the signal's hook;
-  its words and rules, 2,339 (1,139, 1,034); the episode's chunk, 2,059 (1,091, 1,002), which brings the
-  tracking store, 40,295 (13,049, 11,946), code the show's page already has.
+- **Loaded on first use:** My shows' chunk, 1,645 bytes (875 gzip, 777 Brotli), with the signal's hook; its
+  words and rules, 2,383 (1,165, 1,051); the shared list, 3,548 to 3,926 (the three fields); the episode's
+  chunk, 2,059 (1,092, 1,000), which brings the tracking store, 40,295 (13,049, 11,913), code the show's page
+  already has.
 - **The menu's chunk** 1,532 to 1,829 bytes; **What is GoodWatch?'s** 2,021 to 2,053.
 - **`tv.css`** is not changed.
 - **A member's page** asks for My shows' chunk and the signal's words (`newly-available`, 5,878 bytes, which
   the hub loads too) right after it is up, for the tile's number. A guest's page asks for neither.
 - **The server's HTML** of `/home-preview` is not changed: home's markup gains the tile's number only once the
   signal has reported, in the browser.
+
+Before the merge, against the integration branch at `00578474`: `/home-preview` 12 files, 667,222 raw to 668,769
+(+1,547), and the same picture for every other page.
+
+## After the merge
+
+The integration branch at `8d20ff74` was merged into the slice on October 14, 2026, and everything was run again.
+
+- **What the merge needed.** Five files had both slices' changes: the machine (the strip's `exactScores` beside
+  `nextEpisode` in the context), `screen-code.tsx`, `TvScreen.tsx`, the scene, and the harness's TV route, where
+  slice 8's member session and this slice's became one.
+- **Seen it and the rating strip hold together.** On a show the member is midway through the key marks the Next
+  episode; on every other title it opens the strip (slice 8's `Rate.tsx`). The machine's tests cover both, and
+  both drive scripts walk them.
+- **My shows is drawn by the shared `TitleList`.**
+- **This slice's drive script:** 521 checks pass, none fail. It is also the first browser run after the
+  tracking store's event name was written out.
+- **Slice 8's drive script (Taste, the quiz, the strip):** the guest's half 449 checks, the member's half 50,
+  none fail.
+- **Slice 5's drive script (Tonight and the title screen):** the member's half 110 checks, none fail. The
+  guest's half 521 pass and 1 fails: a typed address with `#streaming` at 390 x 844 had the block at 192 px
+  when the script looked, not at 223. It is a matter of time on a loaded machine, not of the merge: the title
+  page first lands at the fallback offset (112 + 80 px) and corrects itself once its header is measured, which
+  took one to three seconds here (the page took 19 seconds to load), and the script looks for three. Sampled
+  for sixteen seconds, twice, the block settles at 223 px, the recorded value. The same check passed at
+  1920 x 1080 in the second run.
 
 ## Pictures
 
