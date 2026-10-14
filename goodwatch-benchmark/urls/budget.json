@@ -15,19 +15,19 @@
       "lcp_element": { "tag": "img", "contains": ["/assets/room-phone-", "/assets/hand-"] },
       "budget": {
         "html_bytes": { "max": 20480 },
-        "host_requests": { "max": 37 },
-        "script_count": { "max": 16 },
-        "script_bytes": { "max": 262144 },
-        "image_count": { "max": 32 },
+        "host_requests": { "max": 24 },
+        "script_count": { "max": 11 },
+        "script_bytes": { "max": 202752 },
+        "image_count": { "max": 28 },
         "image_bytes": { "max": 378880 },
-        "font_requests": { "max": 2 },
+        "font_requests": { "max": 1 },
         "blocking_requests": { "max": 2 },
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 768000 },
-        "lcp_ms": { "max": 6050 },
+        "lcp_ms": { "max": 5200 },
         "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },
-        "score": { "min": 63 }
+        "score": { "min": 70 }
       }
     },
     "movie": {
@@ -36,18 +36,18 @@
       "budget": {
         "html_bytes": { "max": 55808 },
         "host_requests": { "max": 37 },
-        "script_count": { "max": 22 },
+        "script_count": { "max": 20 },
         "script_bytes": { "max": 283648 },
         "image_count": { "max": 14 },
-        "image_bytes": { "max": 102400 },
+        "image_bytes": { "max": 94208 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 483328 },
         "lcp_ms": { "max": 5900 },
-        "tbt_ms": { "max": 200 },
+        "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },
-        "score": { "min": 61 }
+        "score": { "min": 63 }
       }
     },
     "show": {
@@ -56,18 +56,18 @@
       "budget": {
         "html_bytes": { "max": 58880 },
         "host_requests": { "max": 36 },
-        "script_count": { "max": 22 },
+        "script_count": { "max": 20 },
         "script_bytes": { "max": 284672 },
         "image_count": { "max": 11 },
-        "image_bytes": { "max": 169984 },
+        "image_bytes": { "max": 153088 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 545792 },
         "lcp_ms": { "max": 6250 },
-        "tbt_ms": { "max": 200 },
+        "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },
-        "score": { "min": 58 }
+        "score": { "min": 62 }
       }
     },
     "person": {
@@ -76,7 +76,7 @@
       "budget": {
         "html_bytes": { "max": 32768 },
         "host_requests": { "max": 24 },
-        "script_count": { "max": 14 },
+        "script_count": { "max": 13 },
         "script_bytes": { "max": 197632 },
         "image_count": { "max": 19 },
         "image_bytes": { "max": 230400 },
@@ -85,9 +85,9 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 504832 },
         "lcp_ms": { "max": 4700 },
-        "tbt_ms": { "max": 250 },
+        "tbt_ms": { "max": 200 },
         "cls": { "max": 0.01 },
-        "score": { "min": 72 }
+        "score": { "min": 73 }
       }
     },
     "discover": {
@@ -95,19 +95,19 @@
       "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w342/" },
       "budget": {
         "html_bytes": { "max": 29184 },
-        "host_requests": { "max": 41 },
-        "script_count": { "max": 31 },
-        "script_bytes": { "max": 348160 },
+        "host_requests": { "max": 30 },
+        "script_count": { "max": 20 },
+        "script_bytes": { "max": 265216 },
         "image_count": { "max": 18 },
         "image_bytes": { "max": 460800 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 848896 },
-        "lcp_ms": { "max": 7200 },
+        "lcp_ms": { "max": 5650 },
         "tbt_ms": { "max": 200 },
         "cls": { "max": 0.04 },
-        "score": { "min": 56 }
+        "score": { "min": 65 }
       }
     },
     "share_list": {
@@ -115,10 +115,10 @@
       "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 24576 },
-        "host_requests": { "max": 27 },
+        "host_requests": { "max": 24 },
         "script_count": { "max": 11 },
         "script_bytes": { "max": 209920 },
-        "image_count": { "max": 33 },
+        "image_count": { "max": 30 },
         "image_bytes": { "max": 225280 },
         "font_requests": { "max": 2 },
         "blocking_requests": { "max": 1 },
@@ -127,7 +127,7 @@
         "lcp_ms": { "max": 4900 },
         "tbt_ms": { "max": 100 },
         "cls": { "max": 0.01 },
-        "score": { "min": 71 }
+        "score": { "min": 72 }
       }
     }
   }
