@@ -1,7 +1,10 @@
 import type { User } from "@supabase/auth-js"
-import type { Cluster } from "ioredis"
+import Redis, { type Cluster } from "ioredis"
 import { createGoodwatchAuth } from "./auth.server.ts"
-import { crateAuthTransport } from "./crate-adapter.server.ts"
+import {
+	crateAuthTransport,
+	localCrateTransport,
+} from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 import { onShutdown } from "../lifecycle.server.ts"
@@ -28,6 +31,10 @@ function required(name: string) {
 export async function getBetterAuth(): Promise<AuthService> {
 	if (!betterAuthEnabled()) throw new Error("Better Auth is disabled")
 	if (testAuth) return testAuth
+	if (process.env.AUTH_LOCAL_SERVICES === "true") {
+		instance ??= Promise.resolve(localAuth())
+		return instance
+	}
 	instance ??= (async () => {
 		const mail = new AuthMailQueue(
 			smtpTransport({
@@ -64,6 +71,31 @@ export async function getBetterAuth(): Promise<AuthService> {
 	})
 	return instance
 }
+// A dev server against the disposable Docker services of `scripts/auth-wiring/dev.sh`: the wiring's CrateDB,
+// Valkey and SMTP catcher on loopback. Never in production, and never the site's own Valkey.
+function localAuth(): AuthService {
+	if (process.env.NODE_ENV === "production")
+		throw new Error("Local auth services are for development only")
+	const valkey = new Redis.Cluster([{ host: "127.0.0.1", port: 15901 }], {
+		natMap: JSON.parse(process.env.AUTH_LOCAL_VALKEY_NAT ?? "{}"),
+		redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
+	})
+	return createGoodwatchAuth({
+		sql: localCrateTransport(["http://127.0.0.1:15848"]),
+		storage: new ValkeyAuthStorage(() => valkey),
+		mail: new AuthMailQueue(
+			smtpTransport({ host: "127.0.0.1", port: 15925, localCatcher: true }),
+		),
+		baseURL: required("BETTER_AUTH_URL"),
+		secret: required("BETTER_AUTH_SECRET"),
+		encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
+		trustedIpHeader: "x-forwarded-for",
+		google: {
+			clientId: required("AUTH_GOOGLE_CLIENT_ID"),
+			clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),
+		},
+	})
+}
 export async function handleAuthRequest(request: Request): Promise<Response> {
 	let response: Response
 	if (!betterAuthEnabled()) response = new Response(null, { status: 404 })
@@ -97,8 +129,9 @@ export async function resolveBetterAuthSession(cookieHeader: string | null) {
 				role: "authenticated",
 				app_metadata: { provider: "better-auth" },
 				user_metadata: {
-					name: data.user.name,
-					full_name: data.user.name,
+					// Accounts made with an email have no name: the site then shows the address.
+					name: data.user.name || undefined,
+					full_name: data.user.name || undefined,
 					avatar_url: data.user.image,
 				},
 				created_at: new Date(data.user.createdAt).toISOString(),

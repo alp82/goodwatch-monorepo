@@ -13,6 +13,14 @@ import { setSessionCookie } from "better-auth/cookies"
 import { crateAuthAdapter, type AuthSql } from "./crate-adapter.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
+import {
+	type AuthEmail,
+	confirmEmail,
+	existingAccountEmail,
+	googleOnlyEmail,
+	passwordChangedEmail,
+	resetPasswordEmail,
+} from "./emails.server.ts"
 
 export function createGoodwatchAuth(options: {
 	sql: AuthSql
@@ -26,6 +34,9 @@ export function createGoodwatchAuth(options: {
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
+	const origin = new URL(options.baseURL).origin
+	const send = (to: string, message: AuthEmail) =>
+		mail.enqueue(to, message.subject, message.text, message.html)
 	const core = betterAuth({
 		baseURL: options.baseURL,
 		secret: options.secret,
@@ -109,25 +120,13 @@ export function createGoodwatchAuth(options: {
 			},
 			revokeSessionsOnPasswordReset: true,
 			sendResetPassword: async ({ user, url }) => {
-				mail.enqueue(
-					user.email,
-					"Reset your GoodWatch password",
-					`Choose a new password for GoodWatch.\n\n${url}\n`,
-				)
+				send(user.email, resetPasswordEmail(user.email, url))
 			},
 			onPasswordReset: async ({ user }) => {
-				mail.enqueue(
-					user.email,
-					"Your GoodWatch password changed",
-					"Your GoodWatch password changed. Other devices have been signed out. If you did not make this change, reset your password immediately.",
-				)
+				send(user.email, passwordChangedEmail(origin))
 			},
 			onExistingUserSignUp: async ({ user }) => {
-				mail.enqueue(
-					user.email,
-					"You already have a GoodWatch account",
-					"Someone tried to create a GoodWatch account with this email. You can sign in to your existing account or request a password reset. If this was not you, you can ignore this email.",
-				)
+				send(user.email, existingAccountEmail(origin))
 			},
 		},
 		emailVerification: {
@@ -153,11 +152,7 @@ export function createGoodwatchAuth(options: {
 				if (!updated) throw new Error("Confirmation issuance conflicted")
 				const confirmation = new URL(url)
 				confirmation.searchParams.set("token", token)
-				mail.enqueue(
-					user.email,
-					"Confirm your GoodWatch email",
-					`Confirm your email to start using GoodWatch. This link lasts 24 hours. Only the newest link works.\n\n${confirmation}\n`,
-				)
+				send(user.email, confirmEmail(user.email, confirmation.toString()))
 			},
 		},
 		hooks: {
@@ -201,11 +196,7 @@ export function createGoodwatchAuth(options: {
 							found.user.id,
 						))
 					) {
-						mail.enqueue(
-							found.user.email,
-							"You sign in with Google",
-							"You use Google to sign in to GoodWatch. Choose Continue with Google on the sign-in page. You do not need to reset a password.",
-						)
+						send(found.user.email, googleOnlyEmail(origin))
 						return ctx.json({
 							status: true,
 							message:
@@ -274,11 +265,7 @@ export function createGoodwatchAuth(options: {
 					(ctx.context.returned as { token?: string })?.token &&
 					ctx.context.session
 				) {
-					mail.enqueue(
-						ctx.context.session.user.email,
-						"Your GoodWatch password changed",
-						"Your GoodWatch password changed. Other devices have been signed out. If you did not make this change, reset your password immediately.",
-					)
+					send(ctx.context.session.user.email, passwordChangedEmail(origin))
 				}
 				if (
 					ctx.path === "/reset-password" &&
@@ -366,6 +353,18 @@ export function createGoodwatchAuth(options: {
 		handler: async (request: Request) => {
 			const response = await core.handler(request)
 			const path = new URL(request.url).pathname
+			// A confirmation link opened in a browser that no longer works lands on the page that says so and offers a
+			// new one. API callers keep the 401.
+			if (
+				path === "/api/auth/verify-email" &&
+				response.status === 401 &&
+				request.method === "GET" &&
+				request.headers.get("accept")?.includes("text/html")
+			)
+				return new Response(null, {
+					status: 302,
+					headers: { Location: `${origin}/verify-email?state=expired` },
+				})
 			if (response.status >= 500)
 				return Response.json(
 					{ message: "Sign-in is temporarily unavailable." },

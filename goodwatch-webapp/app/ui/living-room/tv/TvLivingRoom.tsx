@@ -3,7 +3,7 @@
 import { useLocation, useRevalidator } from "@remix-run/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
-import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
+import { useContinueWithGoogle } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
