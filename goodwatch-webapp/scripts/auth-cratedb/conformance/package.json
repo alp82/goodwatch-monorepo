@@ -1,0 +1,14 @@
+{
+  "name": "goodwatch-auth-conformance",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@better-auth/test-utils": "1.7.7",
+    "better-auth": "1.7.7",
+    "vitest": "4.0.18",
+    "zod": "4.6.7"
+  },
+  "scripts": {
+    "test": "vitest run --reporter=verbose"
+  }
+}

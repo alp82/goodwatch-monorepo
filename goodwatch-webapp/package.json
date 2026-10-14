@@ -11,7 +11,10 @@
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
-		"postinstall": "patch-package"
+		"postinstall": "patch-package",
+		"test:auth": "bash scripts/auth-cratedb/run.sh",
+		"test:auth:integration": "node --test --test-concurrency=1 app/server/auth/adapter.integration.ts app/server/auth/failover.integration.ts",
+		"typecheck:auth": "tsc -p scripts/auth-cratedb/tsconfig.json"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",
@@ -38,6 +41,7 @@
 		"@typesafe-ai/sdk": "0.6.0",
 		"accept-language-parser": "^1.5.0",
 		"axios": "^1.8.4",
+		"better-auth": "1.7.7",
 		"framer-motion": "^11.11.11",
 		"ioredis": "^5.4.1",
 		"is-ip": "^5.0.1",
