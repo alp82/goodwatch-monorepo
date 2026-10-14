@@ -1,3 +1,10 @@
+import {
+	withMediaReadHealth,
+	failedMediaResult,
+	markFailedMediaResult,
+	observeMediaResult,
+	noteMediaReadFailure,
+} from "../server/media-read-health.server.ts"
 // The Redis-backed data cache deduplicates target runs and serves stale catalog data during refreshes.
 // Lookup and refresh outcomes are counted per cache name
 // (see docs/benchmarks/viral-spike-metrics.md).
@@ -358,6 +365,7 @@ export function setResetRunClockForTest(clock: (() => number) | null): void {
 }
 
 type InFlight = {
+	degraded?: boolean
 	marker: string | null | undefined
 	promise: Promise<JsonData>
 	startedAt: number
@@ -607,6 +615,7 @@ export interface CachedParams<Params, Return> {
 // A Response body can be read only once.
 // Callers of one shared run must not share its rejected Response.
 function rethrowCacheError(error: unknown): never {
+	observeMediaResult(error)
 	throw error instanceof Response ? error.clone() : error
 }
 
@@ -635,7 +644,7 @@ export const cached = async <
 	const runTarget = async () => {
 		const start = performance.now()
 		try {
-			return await target(params)
+			return await withMediaReadHealth(() => Promise.resolve(target(params)))
 		} finally {
 			cacheDuration.observe([label], (performance.now() - start) / 1000)
 		}
@@ -661,9 +670,16 @@ export const cached = async <
 			background,
 			promise: Promise.resolve().then(async () => {
 				try {
-					const data = await runTarget()
-					let outcome = "discarded"
-					if (inFlight.get(cacheKey) === entry) {
+					const captured = await withMediaReadHealth(
+						async () => ({ data: await runTarget() }),
+						{ propagate: !background },
+					)
+					const data = captured.data
+					const degraded = failedMediaResult(captured)
+					entry.degraded = degraded
+					if (degraded) markFailedMediaResult(data)
+					let outcome = degraded ? "error" : "discarded"
+					if (inFlight.get(cacheKey) === entry && !degraded) {
 						try {
 							if (guarded) {
 								if (
@@ -799,8 +815,16 @@ export const cached = async <
 		cacheRequests.inc([label, result === "reset_pending" ? result : "joined"])
 		const data = await existing.promise.catch(rethrowCacheError)
 		try {
-			return structuredClone(data) as Return
+			const clone = structuredClone(data) as Return
+			if (existing.degraded) {
+				noteMediaReadFailure()
+				markFailedMediaResult(clone)
+			}
+			observeMediaResult(clone)
+			return clone
 		} catch {
+			if (existing.degraded) noteMediaReadFailure()
+			observeMediaResult(data)
 			return data as Return
 		}
 	}

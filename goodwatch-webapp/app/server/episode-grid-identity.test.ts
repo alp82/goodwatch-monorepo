@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import { beforeEach, test } from "node:test"
 import * as nodeModule from "node:module"
+import {
+	withMediaRequestHealth,
+	mediaReadFailed,
+	protectMediaResponse,
+} from "./media-read-health.server.ts"
 import "./title-filter/test-alias.ts"
 import {
 	identifyGridEpisodes,
@@ -75,7 +80,7 @@ beforeEach(() => {
 test("ordinary Breaking Bad grid proves Pilot identity in one show-scoped query and overlays afterwards", async () => {
 	const grid = await getEpisodeGrid({ showId: "1396" })
 	assert.ok(grid)
-	assert.equal(state.cacheName, "episode-grid-media-v2")
+	assert.equal(state.cacheName, "episode-grid-media-v3")
 	assert.equal(state.queries.length, 6)
 	assert.equal(
 		state.queries.filter((sql) => sql.includes("FROM episode WHERE")).length,
@@ -177,16 +182,21 @@ test("unique external IDs prove specials; duplicate IDs and conflicting sources 
 		"und",
 	)
 })
-test("catalog failure preserves rated grid and unknown language, without inventing IDs", async () => {
-	state.failIdentity = true
-	const grid = await getEpisodeGrid({ showId: "1396" })
-	assert.ok(grid)
-	const result = await overlayAlignedGrid(grid, "ja", async () =>
-		assert.fail("no stable ID to read"),
-	)
-	assert.equal(result.seasons[0].episodes[0].nameLanguage, "und")
-	assert.equal(result.seasons[0].episodes[0].score, 9)
-})
+test("catalog failure preserves rated grid and unknown language, without inventing IDs or cacheable fallback", async () =>
+	withMediaRequestHealth(async () => {
+		state.failIdentity = true
+		const grid = await getEpisodeGrid({ showId: "1396" })
+		assert.ok(grid)
+		const result = await overlayAlignedGrid(grid, "ja", async () =>
+			assert.fail("no stable ID to read"),
+		)
+		assert.equal(result.seasons[0].episodes[0].nameLanguage, "und")
+		assert.equal(result.seasons[0].episodes[0].score, 9)
+		assert.equal(mediaReadFailed(), true)
+		const headers = new Headers({ "Cache-Control": "public, s-maxage=1800" })
+		protectMediaResponse(headers)
+		assert.equal(headers.get("Cache-Control"), "private, no-store")
+	}))
 test("wire sidecars preserve original special indices when only later specials have identity", () => {
 	const grid = {
 		showId: 1396,

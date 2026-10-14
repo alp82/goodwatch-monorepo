@@ -10,6 +10,7 @@ import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 export { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
+import { overlayQuery } from "./media-overlay-query.server.ts"
 
 export interface GridEpisode {
 	tmdbId?: number
@@ -151,7 +152,7 @@ export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	const presentation = await getEpisodePresentation(Number(showId))
 	if (presentation) return presentationGrid(Number(showId), presentation)
 	return await cached<{ showId: string }, EpisodeGrid>({
-		name: "episode-grid-media-v2",
+		name: "episode-grid-media-v3",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
@@ -200,7 +201,7 @@ const _getEpisodeGrid = async ({
 				[id],
 			),
 			// Bounded to this show, not one query per grid cell. Identity failures keep the rated grid usable.
-			query<CanonicalGridEpisode>(
+			overlayQuery<CanonicalGridEpisode>(
 				"SELECT tmdb_id, imdb_id, season_number, episode_number, name FROM episode WHERE show_id = ? AND removed_at IS NULL",
 				[id],
 			).catch(() => []),

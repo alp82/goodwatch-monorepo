@@ -127,11 +127,11 @@ export const localizedTitleUrl = (
 	language: string,
 ) =>
 	mediaLanguageUrl(
-		`/api/media-title?type=${type}&id=${id}&presentationVersion=4`,
+		`/api/media-title?type=${type}&id=${id}&presentationVersion=5`,
 		language,
 	)
 export const localizedTitleQueryKey = (
 	type: "movie" | "show",
 	id: number,
 	language: string,
-) => ["media-title-v4", type, id, presentationLanguage(language)] as const
+) => ["media-title-v5", type, id, presentationLanguage(language)] as const

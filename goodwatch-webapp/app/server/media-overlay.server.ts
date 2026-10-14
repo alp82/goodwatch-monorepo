@@ -1,4 +1,8 @@
-import { query } from "../utils/crate.ts"
+import { overlayQuery } from "./media-overlay-query.server.ts"
+import {
+	noteMediaReadFailure,
+	withMediaReadHealth,
+} from "./media-read-health.server.ts"
 import { getRedisCluster, withRedisDeadline } from "../utils/cache.ts"
 import {
 	createMediaOverlay,
@@ -32,6 +36,11 @@ const sources = createLocaleSourceCache<Sources>(getRedisCluster, {
 			)
 		}),
 })
-export const overlayTitles = createMediaOverlay(query, sources)
+const overlay = createMediaOverlay(overlayQuery, sources, noteMediaReadFailure)
+export const overlayTitles: typeof overlay = (rows, language) =>
+	withMediaReadHealth(() => overlay(rows, language), {
+		inheritFailure: true,
+		overlay: true,
+	})
 
 export const resetMediaOverlayCacheForTest = () => sources.clear()

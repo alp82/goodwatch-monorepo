@@ -1,6 +1,6 @@
 # Media-language review fixes — 2026-10-14
 
-First-review snapshot (subsequently committed as `e5bae09f` and merged in `4bb8b818`). The second-review follow-up below is uncommitted on `feat/media-language`. All changes were made in `/home/alper/projects/goodwatch-media-language`. No deployment, production mutation, paid request, commit or push was performed.
+First-review snapshot (subsequently committed as `e5bae09f` and merged in `4bb8b818`). The second-review follow-up was subsequently committed as `384a2136` and merged; the read-error follow-up below is uncommitted on `feat/media-language`. All changes were made in `/home/alper/projects/goodwatch-media-language`. No deployment, production mutation, paid request, commit or push was performed.
 
 ## Presentation and source caches
 
@@ -155,3 +155,59 @@ The first-review counts and file inventory above are historical.
 - `goodwatch-webapp/app/utils/media-overlay-core.ts`
 - `goodwatch-webapp/app/utils/media-session.test.ts`
 - `goodwatch-webapp/app/utils/media-session.ts`
+
+
+## Read-error follow-up — transient fallback must not be cached
+
+Base `52d57be166e843afe24935b939718c9a60c96fbc` (includes committed backend and merged UI fixes). Only this follow-up is uncommitted. Protected UI files are untouched.
+
+- `media-read-health.server.ts` tracks localization failures in independent HTTP/cache-target scopes, with opaque result identity for direct loaders and shared in-flight work. Nothing is added to DTOs or cache keys. Fallback handling cannot mark a shared canonical object: failure-tagged plain objects/arrays are copied. Background refreshes are isolated from the healthy stale response being served.
+- `cached()` skips publication of any value depending on a failed localization read, including primitive-valued/shared runs, guarded writes and background refreshes. A failed refresh retains the last healthy value. Healthy independent canonical/table metadata reads still cache. Title/episode source loaders reject rather than storing failed absence. Joined episode-source rejections mark every reader before pure fallback handling.
+- Optional ordinary-grid canonical-ID enrichment is also deadline-bounded; its read error keeps IMDb ratings/membership but prevents caching an ID-incomplete result. The grid namespace moves to `episode-grid-media-v3` to bypass previously cached ID-read-error fallbacks. Missing canonical ID rows from a successful read retain normal cache policy.
+- HTTP preview/catalog/data/document responses use `private, no-store` after a failed read. Deferred shells also get no-store while optional localization is pending. Page-cache candidates check request health at selection, offer and after compression; no error-derived HTML can be admitted. Request health remains enabled when the page cache is off. New requests/background page renders have independent scopes.
+- `media-overlay-query.server.ts` bounds optional Crate reads at **1,000 ms** by default, configurable with `MEDIA_OVERLAY_TIMEOUT_MS`. It passes a per-read deadline and abort signal to the real Crate adapter, which destroys the stalled socket. Canonical reads/writes keep their existing default. The preview's required base lookup also uses the short boundary: failure returns 503/no-store instead of inventing a missing entity. Once an overlay operation fails, its subsequent missing-source batches skip Crate. A successful no-translation result remains cacheable.
+- Preview Valkey namespace, TanStack key and generated URL use **v5** (`localized-title-payload-v5`, `media-title-v5`, `presentationVersion=5`), bypassing poisoned v4 preview values and their browser/CDN URL. Source caches retain v3 because errors never published source values. Deploying a new build separates origin page entries. No cache purge or production call was made.
+
+### Read-error verification
+
+Focused cache/error/page/Crate contract run passed **74/74** (24.19 seconds), including nine new read-error regressions. The final dedicated contract file adds catalog adapter/API policy checks and passes **10/10** (0.40 seconds). They cover recovery, genuine absence, deadlines/late completion, generic/episode in-flight joins, background stale preservation, shared-object safety, deferred headers, episode-grid writes and skipping subsequent title batches.
+
+The first reduced-concurrency full run (before the final episode-join regression) reported **2,487 tests, 2,485 passed, 1 failed, 1 skipped**, 197.18 seconds. The failure was the unchanged lifecycle test's timing-sensitive request-count assertion (served six versus the expected minimum eight under load). Its file is unchanged from main. The lifecycle suite then passed **11/11** on this branch and **11/11** on frozen main `8d57682058d1e8527f23d8fce3030e248a617b4f`; no lifecycle implementation/test was changed.
+
+
+- Final full suite: `node --test --test-concurrency=2 'app/**/*.test.ts'` — **2,491 tests, 2,490 passed, 1 skipped, 0 failed**, **163.46 seconds**. An intermediate full run also passed all 2,489 active tests before the last catalog regression was added. The one skipped test requires an opt-in real cross-process Valkey backend.
+- The final focused error/identity run passed **15/15**, **1.71 seconds**. Real loopback Crate tests verify per-read timeout, cancellation/socket destruction, unchanged ordinary timeout, concurrent statement isolation and successful subsequent reads. No live production database or Valkey cluster was used.
+- **Final-snapshot typecheck**: branch **174 diagnostics**, frozen main `8d57682058d1e8527f23d8fce3030e248a617b4f` **174**, **zero new/removed**. Commands: `NODE_OPTIONS=--max-old-space-size=2048 npm run typecheck -- --noEmit`; both exit 2 for existing diagnostics. Final branch **156.74 seconds**, fresh main **142.81 seconds**. Same installed dependencies; extracted baseline outside project worktrees. Comparison normalizes file line/column shifts and quoted union ordering only. Origin/main advanced during validation; this comparison deliberately remains fixed to that recorded commit.
+- Local Lighthouse budget attempted with a localhost-only target after confirming no `config.env` override. **Exit 2: Docker API socket permission denied**, no result directory; no fixture server or production benchmark ran.
+
+
+- Production bundle: `SENTRY_DISABLE_AUTO_UPLOAD=true NODE_OPTIONS=--max-old-space-size=2048 npm run build` — **passed, exit 0**, **58.68 seconds**; client/server bundles and **703 precompressed files**. Sentry upload disabled. All heavy jobs ran sequentially.
+
+### Read-error changed files
+
+- `docs/implementation/media-language-decisions.md`
+- `docs/implementation/media-language-review-fixes.md`
+- `docs/implementation/media-language-rollout.md`
+- `docs/implementation/media-language-surface-matrix.md`
+- `goodwatch-webapp/app/entry.server.tsx`
+- `goodwatch-webapp/app/routes/api.media-title.ts`
+- `goodwatch-webapp/app/routes/api.related-map.ts`
+- `goodwatch-webapp/app/routes/api.related.tsx`
+- `goodwatch-webapp/app/server/episode-grid-identity.test.ts`
+- `goodwatch-webapp/app/server/episode-grid.server.ts`
+- `goodwatch-webapp/app/server/episode-text-overlay.server.ts`
+- `goodwatch-webapp/app/server/media-error-cache.test.ts`
+- `goodwatch-webapp/app/server/media-overlay-query.server.ts`
+- `goodwatch-webapp/app/server/media-overlay.server.ts`
+- `goodwatch-webapp/app/server/media-payload.server.ts`
+- `goodwatch-webapp/app/server/media-read-health.server.ts`
+- `goodwatch-webapp/app/server/page-cache.server.ts`
+- `goodwatch-webapp/app/server/page-cache.test.ts`
+- `goodwatch-webapp/app/utils/cache.ts`
+- `goodwatch-webapp/app/utils/crate-timeout.test.ts`
+- `goodwatch-webapp/app/utils/crate.ts`
+- `goodwatch-webapp/app/utils/media-overlay-core.ts`
+- `goodwatch-webapp/app/utils/media-presentation.ts`
+
+
+Final `git diff --check` is clean. All 23 read-error files are uncommitted/unstaged on `feat/media-language`, HEAD `52d57be1`. Protected UI files, manifests and lockfile are unchanged. No commit, push, deployment, production query/write or paid call occurred. Live browser/production Crate/real Valkey-cluster checks were not run; Docker permissions blocked the local Lighthouse attempt. No decision is needed from this thread.

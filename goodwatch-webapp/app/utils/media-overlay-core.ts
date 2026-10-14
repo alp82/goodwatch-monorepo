@@ -330,6 +330,7 @@ export function overlayMediaRows<T extends CanonicalMediaRow>(
 export function createMediaOverlay(
 	read: OverlayQuery,
 	cache?: MediaSourceCache,
+	onReadError: () => void = () => {},
 ) {
 	const load = async (
 		rows: readonly CanonicalMediaRow[],
@@ -426,6 +427,7 @@ export function createMediaOverlay(
 					all.posters.push(...source.posters)
 				}
 			} catch (error) {
+				onReadError()
 				console.error("Media presentation overlay unavailable", {
 					language: selected,
 					error,

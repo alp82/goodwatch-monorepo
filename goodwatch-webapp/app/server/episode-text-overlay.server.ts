@@ -5,7 +5,11 @@ import type {
 	EpisodeTextTranslation,
 } from "../utils/episode-text-overlay.ts"
 import { cached, getRedisCluster, withRedisDeadline } from "../utils/cache.ts"
-import { query } from "../utils/crate.ts"
+import { overlayQuery as query } from "./media-overlay-query.server.ts"
+import {
+	withMediaReadHealth,
+	noteMediaReadFailure,
+} from "./media-read-health.server.ts"
 import {
 	overlayEpisodeText as overlayCore,
 	overlayAlignedGrid as overlayGridCore,
@@ -47,7 +51,7 @@ const textCache = createLocaleSourceCache<EpisodeTextTranslation[]>(
 			Array.isArray(value),
 	},
 )
-async function readTexts(
+async function readTextsUnchecked(
 	kind: "season" | "episode",
 	refs: { showId: number; id: number }[],
 	language: string,
@@ -77,6 +81,16 @@ async function readTexts(
 		rows.filter((row) => wanted.has(`${row.show_id}:${row.tmdb_id}`)),
 	)
 }
+async function readTexts(...args: Parameters<typeof readTextsUnchecked>) {
+	try {
+		return await readTextsUnchecked(...args)
+	} catch (error) {
+		// Joined source work rejects in the owner's async scope. Mark every reader
+		// before the pure overlay handles that rejection as canonical fallback.
+		noteMediaReadFailure()
+		throw error
+	}
+}
 const readEpisodeText: EpisodeTextReader = (kind, showId, ids, language) =>
 	readTexts(
 		kind,
@@ -90,13 +104,19 @@ export function overlayEpisodeText<T extends StableEpisodeText>(
 	rows: readonly T[],
 	language: string,
 ) {
-	return overlayCore(kind, showId, rows, language, readEpisodeText)
+	return withMediaReadHealth(
+		() => overlayCore(kind, showId, rows, language, readEpisodeText),
+		{ inheritFailure: true, overlay: true },
+	)
 }
 export function overlayAlignedGrid(
 	grid: import("./episode-grid.server").EpisodeGrid,
 	language: string,
 ) {
-	return overlayGridCore(grid, language, readEpisodeText)
+	return withMediaReadHealth(
+		() => overlayGridCore(grid, language, readEpisodeText),
+		{ inheritFailure: true, overlay: true },
+	)
 }
 
 export async function overlayEpisodeTextGroups<T extends StableEpisodeText>(
@@ -104,7 +124,10 @@ export async function overlayEpisodeTextGroups<T extends StableEpisodeText>(
 	groups: import("../utils/episode-text-overlay").EpisodeTextGroup<T>[],
 	language: string,
 ) {
-	return overlayGroupsCore(kind, groups, language, readTexts)
+	return withMediaReadHealth(
+		() => overlayGroupsCore(kind, groups, language, readTexts),
+		{ inheritFailure: true, overlay: true },
+	)
 }
 
 export const resetEpisodeTextCacheForTest = () => textCache.clear()

@@ -93,6 +93,11 @@ const capLog = (value: unknown, indent?: number): string => {
 		: text
 }
 
+export interface CrateReadOptions {
+	timeoutMs?: number
+	signal?: AbortSignal
+}
+
 class CrateClient {
 	constructor(hosts: string[]) {
 		crate.connect(hosts.join(" "))
@@ -113,10 +118,11 @@ class CrateClient {
 	async execute(
 		query: string,
 		params?: (string | number | Date)[],
+		options: CrateReadOptions = {},
 	) {
 		const startTime = performance.now()
 		try {
-			const timeoutMs = getTimeoutMs()
+			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
 			const result = await withBackendTimeout("CrateDB", timeoutMs, async (signal) => {
 				let request: ClientRequest | undefined
 				const previousCapture = captureRequest
@@ -135,7 +141,7 @@ class CrateClient {
 				} finally {
 					signal.removeEventListener("abort", destroy)
 				}
-			}, { error: () => new CrateTimeoutError(timeoutMs) })
+			}, { error: () => new CrateTimeoutError(timeoutMs), signal: options.signal })
 			const duration = performance.now() - startTime
 			const querySummary = this.getQuerySummary(query)
 			const formattedLog = this.formatLog(querySummary, duration)
@@ -243,10 +249,12 @@ class CrateClient {
 	async select<T extends {}>(
 		query: string,
 		params?: (string | number | Date)[],
+		options: CrateReadOptions = {},
 	) {
 		const { json, duration, rowcount, rows, cols } = await this.execute(
 			query,
 			params,
+			options,
 		)
 		const result = json as T[]
 		return {
@@ -292,9 +300,10 @@ export const getCrateClient = () => {
 export const query = async <T extends {}>(
 	query: string,
 	params?: (string | number | Date)[],
+	options?: CrateReadOptions,
 ): Promise<T[]> => {
 	const client = getCrateClient()
-	const response = await client.select<T>(query, params)
+	const response = await client.select<T>(query, params, options)
 	return response.result
 }
 
