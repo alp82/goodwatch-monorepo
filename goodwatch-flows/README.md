@@ -112,3 +112,10 @@ return zero fingerprints without accessing MongoDB or the inference service.
 The key expires automatically. If the owner changes the provider budget before
 the deadline, deleting this key from the configured Redis cluster allows selection
 to resume. Redis errors remain visible rather than permitting unguarded inference.
+
+## Social discovery
+
+`f/social/discover` and `f/social/deletion_sync` collect and match YouTube, RSS,
+Bluesky and Mastodon content in new Crate tables. See the
+[store/API contract and operations guide](../docs/implementation/talked-about-now/social.md)
+for local backfills, tests, deletion/opt-out handling and post-merge schedules.
