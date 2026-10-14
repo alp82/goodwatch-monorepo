@@ -1125,3 +1125,7 @@ BLOB_TABLES = {
 
 def main():
     pass
+
+# Social discovery owns these tables; its local initializer touches only these four.
+from f.social.schema import SOCIAL_SCHEMAS
+SCHEMAS.update(SOCIAL_SCHEMAS)

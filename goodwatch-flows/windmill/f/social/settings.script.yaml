@@ -1,0 +1,12 @@
+{
+  "summary": "Social settings",
+  "description": "Read only named flow secrets; local driver explicitly loads its env file.",
+  "lock": "!inline f/social/settings.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
