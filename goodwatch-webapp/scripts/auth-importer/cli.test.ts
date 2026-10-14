@@ -25,6 +25,14 @@ for (const [name, env, args] of [
 		[],
 	],
 	["missing copy declaration", { AUTH_IMPORT_COPY_ONLY: "" }, []],
+	[
+		"incomplete CrateDB credentials",
+		{
+			AUTH_IMPORT_CRATE_USERNAME: "copy-reader",
+			AUTH_IMPORT_CRATE_PASSWORD: "",
+		},
+		[],
+	],
 	["unknown arguments", {}, ["--force"]],
 ] as const)
 	test(`CLI refuses ${name} before connecting and never prints connection secrets`, () => {

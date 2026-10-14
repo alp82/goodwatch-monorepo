@@ -14,7 +14,7 @@ const source = new Client({
 	password: "local-fake-only",
 	connectionTimeoutMillis: 2000,
 })
-const sql = crateAuthTransport(["http://127.0.0.1:15648"], 2000)
+const sql = crateAuthTransport(["http://127.0.0.1:15648"], 15_000)
 try {
 	await source.connect()
 	const deadline = Date.now() + 60_000

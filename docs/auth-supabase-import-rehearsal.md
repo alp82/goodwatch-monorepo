@@ -44,6 +44,11 @@ rejects; an old source never resets a changed password or transfers an identity.
 Exact reruns do no writes. A partial run can resume missing accounts/users. Email
 claim recovery and release belong to the adapter's lifecycle implementation;
 the importer never deletes or transfers a claim to make a row fit.
+Claim keys use the adapter's HMAC format. An unknown user-insert outcome can still
+leave a claim without a visible user; `target_orphan_email_claim` rejects the next
+run before writes. Keep the claim for adapter recovery or restore the isolated
+target backup after establishing that no write is still in flight. The importer
+does not guess that an unknown write failed or steal its reservation.
 
 CrateDB has no multi-row transaction here. On an operational failure, the JSON
 report says `failed` and includes actual after-counts where available. A failure
@@ -119,6 +124,12 @@ or an explicitly designed delta procedure, not repeated stale imports.
    `AUTH_IMPORT_SOURCE_URL=postgresql://auth_copy_reader:<encoded-copy-password>@127.0.0.1:15651/auth_copy`,
    `AUTH_IMPORT_CRATE_ORIGIN=http://127.0.0.1:15648`, and
    `AUTH_IMPORT_PAYLOAD_SECRET=<backed-up-target-secret-at-least-32-characters>`.
+   For an authenticated CrateDB copy, also set `AUTH_IMPORT_CRATE_USERNAME` and
+   `AUTH_IMPORT_CRATE_PASSWORD` as a complete pair for the copy's dedicated auth
+   role. It needs `DQL`/`DML` on the auth tables and `DQL` on `sys.cluster` and
+   `sys.nodes` for the CLI's copy-identity checks; table creation remains an
+   administrator step. These are passed through the adapter's header-based credential support;
+   never put credentials in the origin URL or reuse application environment names.
    Supply secrets through the operator's approved secret mechanism; do not commit
    them, put them in issue comments, or print them. The CLI loads no `.env` and
    rejects remote hosts, extra URL query options, wrong ports/database/node/version,
@@ -204,3 +215,8 @@ cutover plan. This importer has no production-mode flag.
 - Better Auth **1.7.7** installed source: `dist/api/routes/sign-in.mjs` and
   `dist/oauth2/link-account.mjs`. Google token updates repeat the unchanged
   `providerId`; the adapter permits that repeat and still rejects key changes.
+- [CrateDB host-based authentication](https://cratedb.com/docs/crate/reference/en/5.10/admin/auth/hba.html):
+  the fake harness trusts its loopback-bound administrator connection and requires
+  password authentication for its dedicated copy role.
+- [CrateDB privileges](https://cratedb.com/docs/crate/reference/en/5.10/admin/privileges.html):
+  grant metadata reads on the two system tables used by the CLI's identity guard.

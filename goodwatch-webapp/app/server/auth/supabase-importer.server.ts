@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto"
 import type { Client } from "pg"
 import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
 import { authPayloadCodec } from "./payload-codec.server.ts"
@@ -304,16 +305,23 @@ export async function importSupabaseAuth({
 							})
 						)[0]
 			if (model === "user") {
+				// Storage audit only: use the adapter's HMAC claim key. All changes
+				// to claims remain exclusively inside the adapter lifecycle.
+				const emailKey = createHmac("sha256", encryptionSecret)
+					.update(JSON.stringify(["email-claim", data.email]))
+					.digest("hex")
 				const claimed = (
 					await sql(
 						"SELECT user_id FROM doc.auth_user_email WHERE email_norm=?",
-						[data.email],
+						[emailKey],
 					)
 				).rows[0]
 				if (claimed && claimed[0] !== data.id)
 					issue("target_email_collision", String(data.id))
 				if (existing && !claimed)
 					issue("target_email_claim_missing", String(data.id))
+				if (!existing && claimed?.[0] === data.id)
+					issue("target_orphan_email_claim", String(data.id))
 				if (!existing && !claimed) newEmailClaims++
 			}
 			if (existing) {

@@ -11,6 +11,7 @@ import {
 	seedFakeAuth,
 } from "../../../scripts/auth-importer/fixtures.ts"
 import {
+	CrateAuthRequestError,
 	crateAuthAdapter,
 	crateAuthTransport,
 	migrateAuthTables,
@@ -49,6 +50,10 @@ before(async () => {
 		"fake",
 	)
 	await migrateAuthTables(sql)
+	await sql("CREATE USER importer_551 WITH (password='fake-target-551')")
+	await sql("GRANT DQL,DML ON SCHEMA doc TO importer_551")
+	await sql("GRANT DQL ON TABLE sys.cluster TO importer_551")
+	await sql("GRANT DQL ON TABLE sys.nodes TO importer_551")
 	await sql(
 		"CREATE TABLE IF NOT EXISTS doc.importer_member_fixture (user_id TEXT PRIMARY KEY, wishlist_title TEXT) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas=0)",
 	)
@@ -78,6 +83,10 @@ beforeEach(async () => {
 })
 
 test("imports fake members with their UUIDs, verification state, Google subject and exact bcrypt hashes", async () => {
+	await source.query(
+		"UPDATE auth.identities SET provider_id='legacy-provider-id-551' WHERE user_id=$1 AND provider='google'",
+		[ids.google],
+	)
 	const report = await importSupabaseAuth({
 		source,
 		sql,
@@ -114,17 +123,19 @@ test("imports fake members with their UUIDs, verification state, Google subject 
 		assert.equal(member?.id, id)
 		assert.equal(member?.emailVerified, id !== ids.unconfirmed)
 	}
-	const password = (
-		await adapter.findMany<Account>({
-			model: "account",
-			where: [
-				{ field: "providerId", value: "credential" },
-				{ field: "accountId", value: ids.password },
-			],
-			limit: 2,
-		})
-	)[0]
-	assert.equal(password.password, hashes.get(ids.password))
+	for (const id of [ids.password, ids.unconfirmed, ids.both, ids.mixedCase]) {
+		const credential = (
+			await adapter.findMany<Account>({
+				model: "account",
+				where: [
+					{ field: "providerId", value: "credential" },
+					{ field: "accountId", value: id },
+				],
+				limit: 2,
+			})
+		)[0]
+		assert.equal(credential.password, hashes.get(id))
+	}
 	const google = (
 		await adapter.findMany<Account>({
 			model: "account",
@@ -148,23 +159,25 @@ test("imports fake members with their UUIDs, verification state, Google subject 
 	)
 })
 
-test("resumes a crash between reserving an email and inserting its user, then reruns without writes", async () => {
-	await sql(
-		"INSERT INTO doc.auth_user_email (email_norm,user_id,operation_id,created_at) VALUES (?,?,?,?)",
-		["password@example.test", ids.password, "interrupted-import", new Date()],
-	)
+test("a known non-applied user insert releases its claim through the adapter and reruns without duplicates", async () => {
+	const refused = async (statement: string, args?: unknown[]) => {
+		if (statement.startsWith("INSERT INTO doc.auth_user "))
+			throw new CrateAuthRequestError(
+				"Simulated deterministic refusal",
+				4000,
+				400,
+				true,
+			)
+		return sql(statement, args)
+	}
 	await assert.rejects(
-		adapter.create({
-			model: "user",
-			data: {
-				id: ids.password,
-				name: "Regular signup",
-				email: "password@example.test",
-				emailVerified: true,
-			},
-			forceAllowId: true,
-		}),
-		/duplicate key/,
+		importSupabaseAuth({ source, sql: refused, encryptionSecret, apply: true }),
+		(error: unknown) => {
+			assert.ok(error instanceof SupabaseImportError)
+			assert.equal(error.report.after.users, 0)
+			assert.equal(error.report.after.emailClaims, 0)
+			return true
+		},
 	)
 	const first = await importSupabaseAuth({
 		source,
@@ -183,6 +196,38 @@ test("resumes a crash between reserving an email and inserting its user, then re
 	assert.deepEqual(second.created, { users: 0, accounts: 0 })
 	assert.deepEqual(second.unchanged, { users: 6, accounts: 7 })
 	assert.deepEqual(second.before, second.after)
+})
+
+test("an unknown user insert outcome leaves its claim intact and the next run rejects the orphan before writes", async () => {
+	const interrupted = async (statement: string, args?: unknown[]) => {
+		if (statement.startsWith("INSERT INTO doc.auth_user "))
+			throw new Error("Simulated unknown outcome")
+		return sql(statement, args)
+	}
+	await assert.rejects(
+		importSupabaseAuth({
+			source,
+			sql: interrupted,
+			encryptionSecret,
+			apply: true,
+		}),
+	)
+	await assert.rejects(
+		importSupabaseAuth({ source, sql, encryptionSecret, apply: true }),
+		(error: unknown) => {
+			assert.ok(error instanceof SupabaseImportError)
+			assert.equal(error.report.status, "rejected")
+			assert.ok(
+				error.report.issues.some(
+					(issue) => issue.code === "target_orphan_email_claim",
+				),
+			)
+			assert.deepEqual(error.report.before, error.report.after)
+			assert.equal(error.report.after.users, 0)
+			assert.equal(error.report.after.emailClaims, 1)
+			return true
+		},
+	)
 })
 
 test("case variants belonging to different UUIDs reject the entire import without linking an unverified email", async () => {
@@ -590,6 +635,30 @@ test("a SELECT-only Postgres role imports successfully without source write priv
 	}
 })
 
+test("a password-authenticated CrateDB copy role imports users while wrong credentials fail", async () => {
+	const authenticated = crateAuthTransport(["http://127.0.0.1:15648"], 15_000, {
+		username: "importer_551",
+		password: "fake-target-551",
+	})
+	const wrong = crateAuthTransport(["http://127.0.0.1:15648"], 15_000, {
+		username: "importer_551",
+		password: "wrong-fake-password",
+	})
+	await assert.rejects(wrong("SELECT current_user"))
+	assert.equal(
+		(await authenticated("SELECT current_user")).rows[0][0],
+		"importer_551",
+	)
+	const report = await importSupabaseAuth({
+		source,
+		sql: authenticated,
+		encryptionSecret,
+		apply: true,
+	})
+	assert.equal(report.status, "complete")
+	assert.equal(report.after.users, 6)
+})
+
 test("counts and reruns include more than 500 accounts without adapter enumeration truncation", async () => {
 	await source.query(`INSERT INTO auth.users (id,email,encrypted_password,email_confirmed_at,created_at,updated_at)
  SELECT ('55110000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'bulk-'||n||'@example.test','',
@@ -631,9 +700,7 @@ test("counts and reruns include more than 500 accounts without adapter enumerati
 
 test("an imported user missing its email lookup claim rejects instead of reporting a usable account", async () => {
 	await importSupabaseAuth({ source, sql, encryptionSecret, apply: true })
-	await sql("DELETE FROM doc.auth_user_email WHERE email_norm=?", [
-		"password@example.test",
-	])
+	await sql("DELETE FROM doc.auth_user_email WHERE user_id=?", [ids.password])
 	await assert.rejects(
 		importSupabaseAuth({ source, sql, encryptionSecret, apply: true }),
 		(error: unknown) => {

@@ -24,7 +24,7 @@ node --version | tee scripts/auth-importer/results/node.log
 "${compose[@]}" up -d
 ready=false
 for ((attempt=0; attempt<60; attempt++)); do
-  if "${compose[@]}" exec -T source pg_isready -U importer -d auth_copy >/dev/null 2>&1; then ready=true; break; fi
+  if "${compose[@]}" exec -T source pg_isready -h 127.0.0.1 -U importer -d auth_copy >/dev/null 2>&1; then ready=true; break; fi
   sleep 1
 done
 if [[ "$ready" != true ]]; then echo 'Disposable Postgres did not become ready.' >&2; exit 1; fi
@@ -35,6 +35,8 @@ node scripts/auth-importer/prepare-fake.ts
 export AUTH_IMPORT_COPY_ONLY=yes
 export AUTH_IMPORT_SOURCE_URL=postgresql://importer:local-fake-only@127.0.0.1:15651/auth_copy
 export AUTH_IMPORT_CRATE_ORIGIN=http://127.0.0.1:15648
+export AUTH_IMPORT_CRATE_USERNAME=importer_551
+export AUTH_IMPORT_CRATE_PASSWORD=fake-target-551
 export AUTH_IMPORT_PAYLOAD_SECRET=disposable-local-importer-encryption-key-551
 node scripts/auth-importer/import.ts | tee scripts/auth-importer/results/dry-run.json
 node scripts/auth-importer/import.ts --apply | tee scripts/auth-importer/results/import.json

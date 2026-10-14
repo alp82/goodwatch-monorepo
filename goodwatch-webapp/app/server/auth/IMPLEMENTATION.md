@@ -4,6 +4,9 @@ Better Auth and the regression harness use exactly **1.7.7**. This branch suppli
 the database adapter, schema and CI. Auth-service wiring belongs to #549;
 production and Supabase are unchanged.
 
+Use the [copy rehearsal runbook](../../../../docs/auth-supabase-import-rehearsal.md)
+for #551's Supabase importer.
+
 ## Interface and transport
 
 `crateAuthAdapter({ sql, encryptionSecret, maxEnumeration? })` keeps its existing

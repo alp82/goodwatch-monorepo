@@ -17,9 +17,13 @@ try {
 	const sourceUrl = new URL(process.env.AUTH_IMPORT_SOURCE_URL ?? "")
 	const targetUrl = new URL(process.env.AUTH_IMPORT_CRATE_ORIGIN ?? "")
 	const encryptionSecret = process.env.AUTH_IMPORT_PAYLOAD_SECRET ?? ""
+	const crateUsername = process.env.AUTH_IMPORT_CRATE_USERNAME
+	const cratePassword = process.env.AUTH_IMPORT_CRATE_PASSWORD
 	if (
 		process.env.AUTH_IMPORT_COPY_ONLY !== "yes" ||
 		encryptionSecret.length < 32 ||
+		((crateUsername !== undefined || cratePassword !== undefined) &&
+			(!crateUsername || !cratePassword || /[:\r\n]/.test(crateUsername))) ||
 		!["postgres:", "postgresql:"].includes(sourceUrl.protocol) ||
 		sourceUrl.hostname !== "127.0.0.1" ||
 		sourceUrl.port !== "15651" ||
@@ -61,7 +65,13 @@ try {
 		!["fake", "restored-copy"].includes(marker[0].kind)
 	)
 		throw new Error()
-	const sql = crateAuthTransport([targetUrl.origin])
+	const sql = crateAuthTransport(
+		[targetUrl.origin],
+		15_000,
+		crateUsername && cratePassword
+			? { username: crateUsername, password: cratePassword }
+			: undefined,
+	)
 	if (
 		(await sql("SELECT name FROM sys.cluster")).rows[0][0] !==
 		"goodwatch-local-importer-551"
