@@ -70,10 +70,22 @@ B5's pooled gain is not a copied account.
   side-list fix. Wording above corrected to it. Harness fixes queued after item 005: run a frozen, hash-checked copy
   of the predictor; show retained counts for "both"; put the same-member fold comparison in the table.
 
-**Where D1 stands:** no rung replaces today's taste yet; keeping it is what the evidence supports. Two leads for phase 1: B5's ordering with a fixed top
-(its standardization done as in T1, or the list-composition re-ranker of phase 2 with a relevance floor), and B3,
-which is cheap and better at the top but must be checked for its popularity tilt. A combination of the two (B5 to
-push down, B3 to choose the top) is a candidate to register, not something measured.
+**Item 005 (fix B5's top, `items/005-fix-the-top/`, Sol 6.1): null, nothing registered.** Three candidates fixed in
+advance: C1, B5 standardized over rated titles; C2, C1 with columns clipped to the rated range; C3, the average of C1's
+and B3's percentiles. The registration rule (best T2a separation among candidates whose first-50 share of loved titles
+reaches B3's 0.090) found none: C1 0.005, C2 0.014, C3 0.075. C1's list for the owner is nearly B5's (George Carlin
+specials, stand-up, documentaries), so the cause item 003 named, standardizing over the whole catalogue, is refuted:
+the pooled model itself scores these titles high, because it predicts the rating a title gets from those who watch
+it, not whether a member would choose it. C3 has the most balanced profile measured so far (T2a separation against B2
++0.049, +0.012 to +0.083; loved titles in the first 50 +0.056 over B2; T2b owner +0.200), but fails guards: animation
++0.252 and franchise repeats +0.672 over B2. All three keep B5's T1 error gain (−0.107 against B2) and lose part of
+its T2a separation (−0.043 to −0.084 against B5).
+
+**Where D1 stands:** no rung replaces today's taste yet; keeping it is what the evidence supports. B5 is best at
+pushing down what a member will dislike and cannot choose the top; B3 chooses a plausible top and separates no better
+than today's taste. Next (item 007): B3's order with B5 as a floor (titles B5 places low go after the rest), so the
+top stays B3's while B5 removes likely dislikes; then the list-composition re-ranker of phase 2 for the animation,
+franchise and popularity guards.
 
 **Caveat of the test itself:** T2a only sees titles members chose to watch. Popularity predicts that choice, so
 first-50 shares favour popular scorers for every band. The separation and the "equally well-rated" figure reduce

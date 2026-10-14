@@ -47,7 +47,10 @@ Read this first. Rewritten at the end of every session.
   - [x] T2b with sitting and entry-order splits (4 and 10 members incl. owner); T2a "equally popular" columns
   - [x] Sol 6.1's four fixes to item 003 (side-list leak, shuffled tolerance, owner band minimum, fold check)
   - [x] tables rebuild; 81 tests; B3 T2a run verified (1,472 values)
-- [ ] **005 Fix the top** (`items/005-fix-the-top/`): Sol 6.1 experimenter, candidates C1 to C3
+- [x] **005 Fix the top** (`items/005-fix-the-top/`), Sol 6.1: null, nothing registered; standardization was not the
+  cause of B5's top
+- [ ] **006 Harness fixes from Astra's review** (frozen predictor copy, retained counts for "both", fold table)
+- [ ] **007 B3 with a B5 floor**
 - [x] Issues filed: #525 exposure log; #526 one-tap reason on low ratings
 
 ## Next action
