@@ -35,11 +35,12 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 	const options = { ...authTestOptions, rateLimit: { storage: "database" as const } }
 	let updateStarted!: () => void
 	const started = new Promise<void>(resolve => { updateStarted = resolve })
-	let armed = false, observedRowcount: number | undefined
+	let armed = false, heldPaused = false, observedRowcount: number | undefined
 	const sql = async (statement: string, args?: unknown[]) => {
 		if (armed && statement.startsWith(`UPDATE doc.${tableName} `)) {
 			armed = false
 			compose("pause", held)
+			heldPaused = true
 			updateStarted()
 			const result = await transport(statement, args)
 			observedRowcount = result.rowcount
@@ -69,6 +70,7 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 		assert.equal(settled, false, "fault must interrupt a pending write")
 		compose("stop", "--timeout", "0", primary)
 		compose("unpause", held)
+		heldPaused = false
 		await until("surviving primary promoted", async () => (await transport("SELECT node['name'] FROM sys.shards WHERE table_name=? AND primary=true AND state='STARTED'", [tableName])).rows.some(row => row[0] !== primary))
 		const outcome = await pending
 		if (outcome.error) throw outcome.error
@@ -82,7 +84,7 @@ for (const kind of ["consume", "increment"] as const) test(`primary stops after 
 		}
 		console.log(JSON.stringify({ fault: kind, primary, coordinator, held, sqlRowcount: observedRowcount, recovered: true }))
 	} finally {
-		compose("unpause", held)
+		if (heldPaused) compose("unpause", held)
 		compose("start", primary)
 		await until("all copies restored", async () => (await transport("SELECT count(*) FROM sys.shards WHERE table_name=? AND state='STARTED'", [tableName])).rows[0][0] === 3)
 		await pending
