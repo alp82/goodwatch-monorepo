@@ -16,6 +16,7 @@ import {
 	getSocialStore,
 	isMissingTable,
 } from "./social-store.server"
+import { forgetTalkedAboutNow } from "./start-row.server"
 import type { Env } from "./flags.server"
 
 export type TitleMediaType = "movie" | "show"
@@ -136,6 +137,8 @@ export const afterReport: ((title: SocialTitle, postId: string) => Promise<void>
 		// An unconfirmed reset keeps retrying in this process, which reads around the cache meanwhile.
 		if (!confirmed) console.warn(`Talked about now: cache reset for ${title.mediaType}:${title.tmdbId} not confirmed yet`)
 	},
+	// The start page's row (#557) keeps one answer for every visitor in this process: the next request reads again.
+	async () => forgetTalkedAboutNow(),
 ]
 
 export type ReportOutcome = { status: "hidden"; reportId: string } | { status: "unknown-link" }

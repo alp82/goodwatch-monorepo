@@ -6,9 +6,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 const { talkedAboutNowEnabled, talkedAboutNowMode } = await import("./flags.server.ts")
-const { crateSocialStore, fixtureSocialStore, isMissingTable, readTitleSql, reportId, withMemoryReports } = await import(
-	"./social-store.server.ts"
-)
+const { CONTENT_QUALITY_VERSION, crateSocialStore, fixtureSocialStore, isMissingTable, readTitleSql, reportId, withMemoryReports } =
+	await import("./social-store.server.ts")
 const { readBuzzTop, readTitleItems, toItem } = await import("./title-social.server.ts")
 const { createRateLimit } = await import("./rate-limit.server.ts")
 const { handleWrongTitle } = await import("./wrong-title.server.ts")
@@ -43,6 +42,13 @@ function fixture(): SocialFixture {
 			{ media_type: "movie", media_tmdb_id: 1147572, post_id: hex(9), lane: "vector_context", content_hash: "a" },
 			{ media_type: "tv", media_tmdb_id: 1147572, post_id: hex(4), lane: "foreground_exact", content_hash: "a" },
 		],
+		// Every post passed the content-quality gate for its current content.
+		quality: Array.from({ length: 9 }, (_, i) => ({
+			post_id: hex(i + 1),
+			content_hash: i + 1 === 7 ? "new" : "a",
+			version: "content-quality-1",
+			status: "pass" as const,
+		})),
 	}
 }
 
@@ -71,6 +77,44 @@ test("the fixture store applies the read query's filters and keeps one post per 
 	assert.deepEqual(await read(store, ["vector_context"]), [hex(4), hex(3), hex(1)])
 	const rows = await store.readTitle(NARNIA, { limit: 2, disabledLanes: [] })
 	assert.equal(rows.length, 2)
+})
+
+test("only a passing content-quality verdict of the current version for the post's current content shows a link", async () => {
+	const verdict = (n: number, change: Record<string, unknown> = {}) => ({
+		post_id: hex(n),
+		content_hash: "a",
+		version: "content-quality-1",
+		status: "pass" as const,
+		...change,
+	})
+	const gated = (quality: SocialFixture["quality"]) => fixtureSocialStore({ ...fixture(), quality }, () => NOW)
+	// The posts that are otherwise visible: 4, 3, 1 (the trailer group's newest) and 9.
+	assert.deepEqual(await read(gated([verdict(4), verdict(3), verdict(1), verdict(9)])), [hex(4), hex(3), hex(1), hex(9)])
+	assert.deepEqual(
+		await read(
+			gated([
+				verdict(4, { status: "reject" }),
+				verdict(3, { version: "content-quality-0" }),
+				verdict(1, { content_hash: "before-an-edit" }),
+				verdict(9),
+			]),
+		),
+		[hex(9)],
+	)
+	// No verdict at all: nothing shows (fail closed).
+	assert.deepEqual(await read(gated(undefined)), [])
+	assert.deepEqual(await read(gated([])), [])
+})
+
+test("the Crate read joins the passing content-quality verdict of the post's current content", () => {
+	const sql = readTitleSql("doc", [])
+	assert.match(
+		sql,
+		/JOIN doc\.social_content_quality q ON q\.post_id = p\.post_id AND q\.content_hash = p\.content_hash\s+AND q\.version = 'content-quality-1' AND q\.status = 'pass'/,
+	)
+	// An inner join, not a left one: a post without a verdict has no row.
+	assert.doesNotMatch(sql, /LEFT JOIN doc\.social_content_quality/)
+	assert.equal(CONTENT_QUALITY_VERSION, "content-quality-1")
 })
 
 test("a fixture can be moved in time so that its newest post is recent", async () => {

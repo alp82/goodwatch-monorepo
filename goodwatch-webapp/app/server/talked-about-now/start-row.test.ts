@@ -1,11 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "node-crate"
+import "ioredis"
 import "../title-filter/test-alias.ts"
 import type { SocialRow } from "~/domain/talked-about-now"
 import type { TitleDisplay } from "../title-cards.server.ts"
 
-const { readTalkedAboutNow, socialQuery } = await import(
+const { getTalkedAboutNow, readTalkedAboutNow, socialQuery } = await import(
 	"./start-row.server.ts"
 )
 const { titleKey } = await import("~/utils/title-key")
@@ -198,6 +199,12 @@ test("the social read asks for exactly the board's titles, with social identitie
 		"duplicate_rank = 1",
 	])
 		assert.ok(sql.includes(filter), filter)
+	// The content-quality gate, as an inner join, the same as the title section's read.
+	assert.match(
+		sql,
+		/\n\s+JOIN doc\.social_content_quality q ON q\.post_id = p\.post_id AND q\.content_hash = p\.content_hash\s+AND q\.version = 'content-quality-1' AND q\.status = 'pass'/,
+	)
+	assert.ok(!sql.includes("LEFT JOIN doc.social_content_quality"))
 	assert.ok(!sql.includes("l.lane NOT IN"))
 	const lanes = socialQuery(
 		[{ mediaType: "movie", tmdbId: 1 }],
@@ -232,4 +239,70 @@ test("the row is the flag module's `row` surface, with the title section's previ
 		talkedAboutNowEnabled("row", null, { TALKED_ABOUT_NOW_ROW: "on" }),
 		true,
 	)
+})
+
+test("a wrong-title report drops the row's shared answer, so the next request reads again", async () => {
+	const { reportWrongTitle } = await import("./title-social.server.ts")
+	const { fixtureSocialStore } = await import("./social-store.server.ts")
+	const post = "a".repeat(64)
+	const store = fixtureSocialStore({
+		posts: [
+			{
+				post_id: post,
+				source: "rss",
+				url: "https://variety.com/a",
+				published_at: "2026-10-13T00:00:00Z",
+				text: "A",
+				content_hash: "h",
+			},
+		],
+		links: [
+			{
+				media_type: "movie",
+				media_tmdb_id: 1,
+				post_id: post,
+				lane: "foreground_exact",
+				content_hash: "h",
+			},
+		],
+	})
+	let readings = 0
+	const counted = reads()
+	const fake = {
+		...counted.reads,
+		snapshot: async (key: string) => {
+			if (key === "current") readings++
+			return counted.reads.snapshot(key)
+		},
+	}
+	const start = Date.now()
+	await getTalkedAboutNow(start, fake)
+	await getTalkedAboutNow(start + 1000, fake)
+	assert.equal(readings, 1)
+	// SOCIAL_FIXTURE keeps the title section's cache reset out of a test run (a development store).
+	const saved = process.env.SOCIAL_FIXTURE
+	process.env.SOCIAL_FIXTURE = "test"
+	try {
+		assert.deepEqual(
+			await reportWrongTitle(
+				store,
+				{ mediaType: "movie", tmdbId: 1 },
+				post,
+				"",
+			),
+			{
+				status: "hidden",
+				reportId: (await import("./social-store.server.ts")).reportId(
+					{ mediaType: "movie", tmdbId: 1 },
+					post,
+				),
+			},
+		)
+	} finally {
+		if (saved === undefined)
+			Reflect.deleteProperty(process.env, "SOCIAL_FIXTURE")
+		else process.env.SOCIAL_FIXTURE = saved
+	}
+	await getTalkedAboutNow(start + 2000, fake)
+	assert.equal(readings, 2)
 })

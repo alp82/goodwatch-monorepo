@@ -62,7 +62,10 @@ went into the shell chunk that every page loads (rule 3 in `vite.config.js`).
 2. The day before's dated snapshot (key = the ISO day), for each title's move (`▲3`, `NEW`). Missing: no moves.
 3. The titles' backdrops and years through `getDisplayFields`, as every card reads them.
 4. One read of the visible links of the eight titles to their posts, with the filters of social discovery's reference
-   read (`Store.read_title` of #556, `docs/implementation/talked-about-now/social.md` on its branch): no reported
+   read (`Store.read_title` of #556, `docs/implementation/talked-about-now/social.md`): a passing content-quality
+   verdict (`social_content_quality`, `status = 'pass'`, `version = 'content-quality-1'`, the post's current
+   `content_hash`), as an inner join from `contentQualityJoin` in `social-store.server.ts`, the same as the title
+   section's read; no reported
    (open or confirmed), hidden, deleted, outdated (content hash) or expired (30 days) link, no lane in
    `SOCIAL_DISABLED_LANES`, one of each duplicate group per title. If the tables are missing, empty or refuse the read,
    the titles show without what is said.
@@ -114,13 +117,17 @@ nothing reaches a third party before a press.
 `shots/` has the row at 1440 × 900 (`desktop.png`) and at 390 × 844 on a phone (`phone.png`), taken on 14 October
 2026 with production data, and the script's `report.json` from that run.
 
-Tests: `node --test app/domain/talked-about-now.test.ts app/server/talked-about-now/start-row.test.ts app/server/features.test.ts`.
+Tests: `node --test app/domain/talked-about-now.test.ts app/server/talked-about-now/start-row.test.ts`.
 
 ## After merge
 
 - Set `TALKED_ABOUT_NOW_ROW=preview` and the owner's id in `TALKED_ABOUT_NOW_PREVIEW_USERS` in Coolify, and restart.
   Then `on`.
-- A "wrong title?" report (#558's endpoint) should call `forgetTalkedAboutNow()`, so the next request reads again.
-  Without that call, a reported link can stay in the row for up to the 10 minutes the process keeps its answer. The
-  route asks for 5 minutes plus 5 stale in shared caches, but `applyCachePolicy` turns a guest's data request into
-  `private, max-age=0` unless a front cache named the cache identity. So the process's 10 minutes are the bound.
+
+## A "wrong title?" report
+
+`forgetTalkedAboutNow()` is one of the resets in `afterReport` (`title-social.server.ts`), which `reportWrongTitle`
+runs before it answers: the process that took the report reads the row again on its next request. Another process
+keeps its answer for up to its 10 minutes. The route asks for 5 minutes plus 5 stale in shared caches, but
+`applyCachePolicy` turns a guest's data request into `private, max-age=0` unless a front cache named the cache
+identity, so a browser asks again each time.

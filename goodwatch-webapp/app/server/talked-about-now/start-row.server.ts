@@ -5,9 +5,10 @@
 //   page, and one of the day before's dated snapshot for each title's move. No snapshot: no row.
 // - The catalog's fields (backdrop, year) for the board's titles, as every card reads them (getDisplayFields).
 // - What is said: one read of the visible links of the board's titles to their posts (`doc.social_title_link`,
-//   `doc.social_post`), with the filters of social discovery's reference read (`Store.read_title` of #556):
-//   no reported, hidden, deleted, outdated or expired link, no switched-off lane, one of each group of the same
-//   trailer. Missing or empty tables answer nothing, and the row shows its titles without what is said.
+//   `doc.social_post`), with the filters of social discovery's reference read (`Store.read_title` of #556): a
+//   passing content-quality verdict for the post's current content (`social_content_quality`, the same join as the
+//   title section's read), no reported, hidden, deleted, outdated or expired link, no switched-off lane, one of each
+//   group of the same trailer. Missing or empty tables answer nothing, and the row shows its titles without what is said.
 //
 // Nothing here writes: no Crate table, no Valkey key of its own.
 import {
@@ -24,6 +25,7 @@ import {
 import type { TitleDisplay } from "~/server/title-cards.server"
 import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
+import { contentQualityJoin } from "./social-store.server"
 
 /** How long one answer is shared: the score changes once a day, discovery runs hourly. */
 export const TALKED_TTL_MS = 10 * 60 * 1000
@@ -59,6 +61,7 @@ export function socialQuery(
     ROW_NUMBER() OVER (PARTITION BY l.media_type, l.media_tmdb_id, COALESCE(l.duplicate_group, p.post_id)
       ORDER BY p.published_at DESC, p.post_id DESC) AS duplicate_rank
   FROM doc.social_title_link l JOIN doc.social_post p ON p.post_id = l.post_id
+  ${contentQualityJoin("doc")}
   LEFT JOIN doc.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
     AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
   WHERE (${which}) AND l.hidden_at IS NULL AND p.deleted_at IS NULL
@@ -148,12 +151,15 @@ let kept: { at: number; ttl: number; row: Promise<TalkedRow | null> } | null =
 	null
 
 /** The shared answer: read at most once per TALKED_TTL_MS (a failure is asked again after a minute). */
-export function getTalkedAboutNow(now = Date.now()): Promise<TalkedRow | null> {
+export function getTalkedAboutNow(
+	now = Date.now(),
+	reads: Reads = crateReads,
+): Promise<TalkedRow | null> {
 	if (kept && now - kept.at < kept.ttl) return kept.row
 	const entry = {
 		at: now,
 		ttl: TALKED_TTL_MS,
-		row: readTalkedAboutNow().catch((error) => {
+		row: readTalkedAboutNow(reads).catch((error) => {
 			console.error("Talked about now: reading the ranking failed", error)
 			entry.ttl = FAILED_TTL_MS
 			return null
@@ -163,7 +169,7 @@ export function getTalkedAboutNow(now = Date.now()): Promise<TalkedRow | null> {
 	return entry.row
 }
 
-/** Drops the shared answer, so the next request reads again: a "wrong title?" report calls this (#558). */
+/** Drops the shared answer, so the next request reads again: a "wrong title?" report calls this (`afterReport`). */
 export function forgetTalkedAboutNow() {
 	kept = null
 }

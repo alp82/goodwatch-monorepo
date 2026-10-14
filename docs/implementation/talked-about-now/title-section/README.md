@@ -85,7 +85,8 @@ Two settings for development only (ignored when `NODE_ENV=production`):
   from a dev machine.
 - `SOCIAL_FIXTURE=<path>`: the rows come from a JSON file. `fixture.json` here holds real public posts about
   Resident Evil (movie 1423191) from the #542 prototype, including a Short and a Mastodon post; its times move so
-  that the newest post is two hours old.
+  that the newest post is two hours old. Its `quality` rows are the posts' passing content-quality verdicts: the fixture store
+  applies the same gate as the Crate read, so a post without one doesn't show.
 
 Neither reaches the data cache. A dev server for the real pages without Valkey and without `APP_ORIGIN`:
 
