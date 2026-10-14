@@ -1,0 +1,2923 @@
+{
+  "source": "https://github.com/better-auth/better-auth",
+  "tag": "v1.7.7",
+  "sha": "db02f233918ad1233bf0753e437e1c0da353273d",
+  "versions": {
+    "better-auth": "1.7.7",
+    "@better-auth/core": "1.7.7",
+    "@better-auth/oauth-provider": "1.7.7",
+    "@better-auth/mcp": "1.7.7",
+    "@better-auth/cimd": "1.7.7",
+    "@better-auth/redis-storage": "1.7.7"
+  },
+  "caveat": "Static call sites include optional and unreachable features. Resolve variables and hook/factory expansion using the accompanying inventory; this is not an executable allowlist.",
+  "calls": [
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 96,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "liveSessions",
+        "\"session\"",
+        "{ fn, executeMainFn }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 98,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "liveSessions",
+        "update": "{ expiresAt: new Date() }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 111,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`active-sessions-${user.id}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 121,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 128,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "token",
+        "JSON.stringify({ session: parsed.session, user, })",
+        "Math.floor(sessionTTL)"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 142,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`active-sessions-${userId}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 160,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 173,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "activeSessionsKey",
+        "JSON.stringify(remainingSessionReferences)",
+        "getTTLSeconds(furthestExpiration, now)"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 180,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "activeSessionsKey"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 235,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "{ createdAt, updatedAt, ..., email }",
+        "\"user\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 251,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "{ ..., userId, createdAt, updatedAt }",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 308,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "data",
+        "\"user\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 317,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "{ createdAt, updatedAt, ... }",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 334,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`active-sessions-${userId}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 350,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 375,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { field: \"userId\", value: userId, }, ...(options?.onlyActiveSessions ? [ { field: \"expiresAt\", value: new Date(), operator: \"gt\", } satisfies Where, ] : []), ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 408,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"user\"",
+        "limit": "limit",
+        "offset": "offset",
+        "sortBy": "sortBy",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 418,
+      "kind": "adapter",
+      "method": "count",
+      "arguments": {
+        "model": "\"user\"",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 430,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"userId\", value: userId, }, ]",
+        "\"session\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 441,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"userId\", value: userId, }, ]",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 452,
+      "kind": "hook",
+      "method": "deleteWithHooks",
+      "arguments": [
+        "[ { field: \"id\", value: userId, }, ]",
+        "\"user\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 522,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`active-sessions-${userId}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 544,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "`active-sessions-${userId}`",
+        "JSON.stringify(sorted)",
+        "furthestSessionTTL"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 551,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"user\"",
+        "where": "[{ field: \"id\", value: userId }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 557,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "data.token",
+        "JSON.stringify({ session: sessionData, user })",
+        "sessionTTL"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 565,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "data",
+        "\"session\"",
+        "secondaryStorage ? { fn: async (sessionData) => { return storageOptions?.deferSecondaryStorageWrites ? sessionData : mirrorSessionToSecondaryStorage(sessionData as Session); }, executeMainFn: storeInDb, } : undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 609,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 645,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { value: token, field: \"token\", }, ]",
+        "join": "{ user: true, }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 684,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "sessionToken"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 724,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { field: \"token\", value: sessionTokens, operator: \"in\", }, ...(options?.onlyActiveSessions ? [ { field: \"expiresAt\", value: new Date(), operator: \"gt\", } satisfies Where, ] : []), ]",
+        "join": "{ user: true, }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 764,
+      "kind": "hook",
+      "method": "updateWithHooks",
+      "arguments": [
+        "session",
+        "[{ field: \"token\", value: sessionToken }]",
+        "\"session\"",
+        "secondaryStorage ? { async fn(data) { const currentSession = await secondaryStorage.get(sessionToken); if (!currentSession) { return null; } const parsedSession = safeJSONParse<{ session: Session; user: User; }>(currentSession); if (!parsedSession) return null; const mergedSession = { ...parsedSession.session, ...data, expiresAt: new Date( data.expiresAt ?? parsedSession.session.expiresAt, ), createdAt: new Date(parsedSession.session.createdAt), updatedAt: new Date( data.updatedAt ?? parsedSession.session.updatedAt, ), }; const updatedSession = parseSessionOutput( ctx.options, mergedSession, ); const now = Date.now(); const expiresMs = new Date(updatedSession.expiresAt).getTime(); const sessionTTL = getTTLSeconds(expiresMs, now); if (sessionTTL > 0) { await secondaryStorage.set( sessionToken, JSON.stringify({ session: updatedSession, user: parsedSession.user, }), sessionTTL, ); const listKey = `active-sessions-${updatedSession.userId}`; const listRaw = await secondaryStorage.get(listKey); const list: { token: string; expiresAt: number }[] = listRaw ? safeJSONParse(listRaw) || [] : []; const filtered = list .filter( (s) => s.token !== sessionToken && s.expiresAt > now, ) .concat([{ token: sessionToken, expiresAt: expiresMs }]); const sorted = filtered.sort( (a, b) => a.expiresAt - b.expiresAt, ); const furthestSessionExp = sorted.at(-1)?.expiresAt; if (furthestSessionExp && furthestSessionExp > now) { await secondaryStorage.set( listKey, JSON.stringify(sorted), getTTLSeconds(furthestSessionExp, now), ); } else { await secondaryStorage.delete(listKey); } } return updatedSession; }, executeMainFn: options.session?.storeSessionInDatabase, } : undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 771,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "sessionToken"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 804,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "sessionToken",
+        "JSON.stringify({ session: updatedSession, user: parsedSession.user, })",
+        "sessionTTL"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 814,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "listKey"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 831,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "listKey",
+        "JSON.stringify(sorted)",
+        "getTTLSeconds(furthestSessionExp, now)"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 837,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "listKey"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 852,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 865,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`active-sessions-${userId}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 884,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "`active-sessions-${userId}`",
+        "JSON.stringify(filtered)",
+        "getTTLSeconds(furthestSessionExp, now)"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 890,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "`active-sessions-${userId}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 897,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 908,
+      "kind": "hook",
+      "method": "deleteWithHooks",
+      "arguments": [
+        "[{ field: \"token\", value: token }]",
+        "\"session\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 915,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"userId\", value: userId, }, ]",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 932,
+      "kind": "hook",
+      "method": "deleteWithHooks",
+      "arguments": [
+        "[ { field: \"id\", value: id, }, ]",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 960,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"userId\", value: userId, }, ]",
+        "\"session\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 977,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 990,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"token\", value: sessionTokens, operator: \"in\", }, ]",
+        "\"session\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1003,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"account\"",
+        "where": "[ { field: \"providerId\", value: providerId, }, { field: \"accountId\", value: accountId, }, ]",
+        "limit": "2",
+        "join": "{ user: true, }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1039,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"user\"",
+        "where": "[ { value: email.toLowerCase(), field: \"email\", }, ]",
+        "join": "{ ...(options?.includeAccounts ? { account: true } : {}), }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1062,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"user\"",
+        "where": "[ { field: \"id\", value: userId, }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1077,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "{ createdAt, updatedAt, ... }",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1093,
+      "kind": "hook",
+      "method": "updateWithHooks",
+      "arguments": [
+        "{ ..., ... }",
+        "[ { field: \"id\", value: userId, }, ]",
+        "\"user\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1121,
+      "kind": "hook",
+      "method": "updateWithHooks",
+      "arguments": [
+        "{ ..., ... }",
+        "[ { field: \"email\", value: email.toLowerCase(), }, ]",
+        "\"user\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1146,
+      "kind": "hook",
+      "method": "updateManyWithHooks",
+      "arguments": [
+        "{ password }",
+        "[ { field: \"userId\", value: userId, }, { field: \"providerId\", value: \"credential\", }, { field: \"accountId\", value: userId, }, ]",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1169,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"account\"",
+        "where": "[ { field: \"userId\", value: userId, }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1183,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"account\"",
+        "where": "[ { field: \"userId\", value: userId }, { field: \"providerId\", value: \"credential\" }, { field: \"accountId\", value: userId }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1193,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"account\"",
+        "limit": "2",
+        "where": "[ { field: \"providerId\", value: providerId, }, { field: \"accountId\", value: accountId, }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1217,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"account\"",
+        "where": "[ { field: \"userId\", value: userId, }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1231,
+      "kind": "hook",
+      "method": "updateWithHooks",
+      "arguments": [
+        "data",
+        "[{ field: \"id\", value: id }]",
+        "\"account\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1252,
+      "kind": "hook",
+      "method": "createWithHooks",
+      "arguments": [
+        "{ createdAt, updatedAt, ..., identifier }",
+        "\"verification\"",
+        "secondaryStorage ? { async fn(verificationData) { const ttl = getTTLSeconds(verificationData.expiresAt); if (ttl > 0) { await secondaryStorage.set( `verification:${storedIdentifier}`, JSON.stringify(verificationData), ttl, ); } return verificationData; }, executeMainFn: options.verification?.storeInDatabase, } : undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1266,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "`verification:${storedIdentifier}`",
+        "JSON.stringify(verificationData)",
+        "ttl"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1291,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`verification:${storedIdentifier}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1301,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`verification:${identifier}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1319,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"verification\"",
+        "where": "[{ field: \"identifier\", value: id }]",
+        "sortBy": "{ field: \"createdAt\", direction: \"desc\" }",
+        "limit": "1"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1334,
+      "kind": "hook",
+      "method": "deleteManyWithHooks",
+      "arguments": [
+        "[ { field: \"expiresAt\", value: new Date(), operator: \"lt\", }, ]",
+        "\"verification\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1360,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "`verification:${storedIdentifier}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1364,
+      "kind": "hook",
+      "method": "deleteWithHooks",
+      "arguments": [
+        "[{ field: \"identifier\", value: storedIdentifier }]",
+        "\"verification\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1427,
+      "kind": "secondary",
+      "method": "getAndDelete",
+      "arguments": [
+        "key"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1439,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "`verification:${candidate}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1453,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"verification\"",
+        "where": "where",
+        "sortBy": "{ field: \"createdAt\", direction: \"desc\" }",
+        "limit": "1"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1466,
+      "kind": "hook",
+      "method": "consumeOneWithHooks",
+      "arguments": [
+        "\"verification\"",
+        "[{ field: \"id\", value: latest.id }]",
+        "<callback>",
+        "latest"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1470,
+      "kind": "adapter",
+      "method": "consumeOne",
+      "arguments": {
+        "model": "\"verification\"",
+        "where": "[{ field: \"id\", value: latest.id }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1475,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "\"verification\"",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1494,
+      "kind": "secondary",
+      "method": "delete",
+      "arguments": [
+        "`verification:${stored}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1559,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"verification\"",
+        "data": "{ id: reservationId, identifier: storedIdentifier, value: data.value, expiresAt: data.expiresAt, createdAt: new Date(), updatedAt: new Date(), }",
+        "forceAllowId": "true"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1575,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"verification\"",
+        "where": "[{ field: \"id\", value: reservationId }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1586,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "`verification:${storedIdentifier}`",
+        "JSON.stringify({ id: reservationId, identifier: storedIdentifier, value: data.value, expiresAt: data.expiresAt, })",
+        "ttl"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1615,
+      "kind": "secondary",
+      "method": "get",
+      "arguments": [
+        "`verification:${storedIdentifier}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1627,
+      "kind": "secondary",
+      "method": "set",
+      "arguments": [
+        "`verification:${storedIdentifier}`",
+        "JSON.stringify(updated)",
+        "ttl"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/internal-adapter.ts",
+      "line": 1641,
+      "kind": "hook",
+      "method": "updateWithHooks",
+      "arguments": [
+        "data",
+        "[{ field: \"identifier\", value: storedIdentifier }]",
+        "\"verification\"",
+        "undefined"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 19,
+      "kind": "internal",
+      "method": "findVerificationValue",
+      "arguments": [
+        "identifier"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 22,
+      "kind": "internal",
+      "method": "deleteVerificationByIdentifier",
+      "arguments": [
+        "identifier"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 50,
+      "kind": "internal",
+      "method": "catch",
+      "arguments": [
+        "<callback>"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 50,
+      "kind": "internal",
+      "method": "reserveVerificationValue",
+      "arguments": [
+        "{ identifier, value, expiresAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 67,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 72,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 76,
+      "kind": "internal",
+      "method": "findAccounts",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 78,
+      "kind": "internal",
+      "method": "deleteAccount",
+      "arguments": [
+        "account.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 80,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 81,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "userId",
+        "{ emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 86,
+      "kind": "internal",
+      "method": "catch",
+      "arguments": [
+        "<callback>"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/revoke-unproven-account-access.ts",
+      "line": 86,
+      "kind": "internal",
+      "method": "deleteVerificationByIdentifier",
+      "arguments": [
+        "lockIdentifier"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 71,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "model",
+        "data": "actualData as any",
+        "forceAllowId": "true"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 150,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "model",
+        "update": "actualData",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 225,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "model",
+        "update": "actualData",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 268,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "model",
+        "where": "where",
+        "limit": "1"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 308,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "model",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 352,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "model",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 388,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "model",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/db/with-hooks.ts",
+      "line": 451,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "model",
+        "where": "hookWhere",
+        "limit": "1"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/middlewares/authorization.ts",
+      "line": 59,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "config.model",
+        "where": "[{ field: \"id\", value: resourceId }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/middlewares/authorization.ts",
+      "line": 129,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"member\"",
+        "where": "[ { field: \"userId\", value: session.user.id }, { field: \"organizationId\", value: organizationId }, ]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/rate-limiter/index.ts",
+      "line": 123,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "model",
+        "where": "[{ field: \"key\", value: key }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/rate-limiter/index.ts",
+      "line": 151,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "model",
+        "data": "{ key, count: 1, lastRequest: now }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/rate-limiter/index.ts",
+      "line": 174,
+      "kind": "adapter",
+      "method": "incrementOne",
+      "arguments": {
+        "model": "model",
+        "where": "[ { field: \"key\", value: key }, { field: \"lastRequest\", operator: \"lte\", value: data.lastRequest, }, ]",
+        "increment": "{}",
+        "set": "{ count: 1, lastRequest: now }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/rate-limiter/index.ts",
+      "line": 198,
+      "kind": "adapter",
+      "method": "incrementOne",
+      "arguments": {
+        "model": "model",
+        "where": "[ { field: \"key\", value: key }, { field: \"lastRequest\", operator: \"gt\", value: windowStart }, { field: \"count\", operator: \"lt\", value: rule.max }, ]",
+        "increment": "{ count: 1 }",
+        "set": "{ lastRequest: now }"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/rate-limiter/index.ts",
+      "line": 233,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "model",
+        "where": "[{ field: \"lastRequest\", operator: \"lt\", value: cutoff }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 111,
+      "kind": "internal",
+      "method": "findAccounts",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 329,
+      "kind": "internal",
+      "method": "findAccountByKey",
+      "arguments": [
+        "accountKey"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 346,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "linkedAccount.id",
+        "updateData"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 393,
+      "kind": "internal",
+      "method": "createAccount",
+      "arguments": [
+        "{ userId, ..., accessToken, idToken, refreshToken }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 488,
+      "kind": "internal",
+      "method": "findAccounts",
+      "arguments": [
+        "ctx.context.session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 504,
+      "kind": "internal",
+      "method": "deleteAccount",
+      "arguments": [
+        "accountExist.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 613,
+      "kind": "internal",
+      "method": "findAccounts",
+      "arguments": [
+        "resolvedUserId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 711,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "account.id",
+        "updatedData"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/account.ts",
+      "line": 918,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "account.id",
+        "updatedTokenData"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 184,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "email"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 324,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "parsed.email"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 374,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "user.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 389,
+      "kind": "internal",
+      "method": "updateUserByEmail",
+      "arguments": [
+        "parsed.email",
+        "{ email, emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 424,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "user.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 439,
+      "kind": "internal",
+      "method": "updateUserByEmail",
+      "arguments": [
+        "parsed.email",
+        "{ email, emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 495,
+      "kind": "internal",
+      "method": "updateUserByEmail",
+      "arguments": [
+        "parsed.email",
+        "{ emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/email-verification.ts",
+      "line": 510,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "user.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 105,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "email",
+        "{ includeAccounts }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 114,
+      "kind": "internal",
+      "method": "findVerificationValue",
+      "arguments": [
+        "\"dummy-verification-token\""
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 131,
+      "kind": "internal",
+      "method": "createVerificationValue",
+      "arguments": [
+        "{ value, identifier, expiresAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 220,
+      "kind": "internal",
+      "method": "findVerificationValue",
+      "arguments": [
+        "`reset-password:${token}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 295,
+      "kind": "internal",
+      "method": "consumeVerificationValue",
+      "arguments": [
+        "id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 300,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 306,
+      "kind": "internal",
+      "method": "findCredentialAccount",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 308,
+      "kind": "internal",
+      "method": "createAccount",
+      "arguments": [
+        "{ userId, providerId, accountId, password }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 315,
+      "kind": "internal",
+      "method": "updatePassword",
+      "arguments": [
+        "userId",
+        "hashedPassword"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/password.ts",
+      "line": 327,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 288,
+      "kind": "internal",
+      "method": "findSession",
+      "arguments": [
+        "sessionCookieToken"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 298,
+      "kind": "internal",
+      "method": "deleteSession",
+      "arguments": [
+        "session.session.token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 369,
+      "kind": "internal",
+      "method": "updateSession",
+      "arguments": [
+        "session.session.token",
+        "{ expiresAt, updatedAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 652,
+      "kind": "internal",
+      "method": "listSessions",
+      "arguments": [
+        "ctx.context.session.user.id",
+        "{ onlyActiveSessions }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 731,
+      "kind": "internal",
+      "method": "findSession",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 735,
+      "kind": "internal",
+      "method": "deleteSession",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 791,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "ctx.context.session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 853,
+      "kind": "internal",
+      "method": "listSessions",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/session.ts",
+      "line": 864,
+      "kind": "internal",
+      "method": "deleteSession",
+      "arguments": [
+        "session.token"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-in.ts",
+      "line": 529,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "email.toLowerCase()",
+        "{ includeAccounts }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-in.ts",
+      "line": 606,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "user.id",
+        "ctx.body.rememberMe === false"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-out.ts",
+      "line": 88,
+      "kind": "internal",
+      "method": "findSession",
+      "arguments": [
+        "sessionCookieToken"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-out.ts",
+      "line": 95,
+      "kind": "internal",
+      "method": "deleteSession",
+      "arguments": [
+        "sessionCookieToken"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-out.ts",
+      "line": 106,
+      "kind": "internal",
+      "method": "findAccounts",
+      "arguments": [
+        "currentSession.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-up.ts",
+      "line": 297,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "normalizedEmail"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-up.ts",
+      "line": 334,
+      "kind": "internal",
+      "method": "createUser",
+      "arguments": [
+        "{ email, name, image, ..., emailVerified }",
+        "{ method }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-up.ts",
+      "line": 375,
+      "kind": "internal",
+      "method": "linkAccount",
+      "arguments": [
+        "{ userId, providerId, accountId, password }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/sign-up.ts",
+      "line": 420,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "createdUser.id",
+        "rememberMe === false"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-session.ts",
+      "line": 76,
+      "kind": "internal",
+      "method": "updateSession",
+      "arguments": [
+        "session.session.token",
+        "{ ..., updatedAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 124,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "session.user.id",
+        "{ name, image, ... }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 262,
+      "kind": "internal",
+      "method": "findCredentialAccount",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 279,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "account.id",
+        "{ password }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 284,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 285,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 328,
+      "kind": "internal",
+      "method": "findCredentialAccount",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 333,
+      "kind": "internal",
+      "method": "linkAccount",
+      "arguments": [
+        "{ userId, providerId, accountId, password }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 344,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "account.id",
+        "{ password }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 460,
+      "kind": "internal",
+      "method": "findCredentialAccount",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 494,
+      "kind": "internal",
+      "method": "createVerificationValue",
+      "arguments": [
+        "{ value, identifier, expiresAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 537,
+      "kind": "internal",
+      "method": "deleteUser",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 538,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 624,
+      "kind": "internal",
+      "method": "consumeVerificationValue",
+      "arguments": [
+        "`delete-account-${ctx.query.token}`"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 634,
+      "kind": "internal",
+      "method": "deleteUser",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 635,
+      "kind": "internal",
+      "method": "deleteUserSessions",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 636,
+      "kind": "internal",
+      "method": "deleteAccounts",
+      "arguments": [
+        "session.user.id"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 752,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "newEmail"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/api/routes/update-user.ts",
+      "line": 771,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "ctx.context.session.user.id",
+        "{ email }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 115,
+      "kind": "internal",
+      "method": "findAccountByKey",
+      "arguments": [
+        "account"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 135,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "existingAccount.id",
+        "updateData"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 140,
+      "kind": "internal",
+      "method": "createAccount",
+      "arguments": [
+        "{ userId, ..., accessToken, refreshToken, scope }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 191,
+      "kind": "internal",
+      "method": "catch",
+      "arguments": [
+        "<callback>"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 191,
+      "kind": "internal",
+      "method": "findAccountOwnerByKey",
+      "arguments": [
+        "{ providerId, accountId }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 215,
+      "kind": "internal",
+      "method": "catch",
+      "arguments": [
+        "<callback>"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 233,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "opts.selectedUser.userId"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 249,
+      "kind": "internal",
+      "method": "findUserByEmail",
+      "arguments": [
+        "userInfo.email.toLowerCase()",
+        "{ includeAccounts }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 317,
+      "kind": "internal",
+      "method": "linkAccount",
+      "arguments": [
+        "{ providerId, accountId, userId, accessToken, refreshToken, idToken, accessTokenExpiresAt, refreshTokenExpiresAt, scope }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 371,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "dbUser.user.id",
+        "{ emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 424,
+      "kind": "internal",
+      "method": "updateAccount",
+      "arguments": [
+        "linkedAccount.id",
+        "freshTokens"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 456,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "dbUser.user.id",
+        "{ emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 480,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "dbUser.user.id",
+        "{ name, image, ..., email, emailVerified }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 545,
+      "kind": "internal",
+      "method": "createUser",
+      "arguments": [
+        "{ name, image, ..., email, emailVerified }",
+        "source"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 555,
+      "kind": "internal",
+      "method": "createAccount",
+      "arguments": [
+        "{ ..., userId }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 632,
+      "kind": "internal",
+      "method": "createSession",
+      "arguments": [
+        "user.id",
+        "undefined",
+        "undefined",
+        "undefined",
+        "{ deferSecondaryStorageWrites }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/oauth2/link-account.ts",
+      "line": 745,
+      "kind": "internal",
+      "method": "updateUser",
+      "arguments": [
+        "userId",
+        "{ name, image, ... }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/plugins/jwt/adapter.ts",
+      "line": 19,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"jwks\""
+      }
+    },
+    {
+      "file": "packages/better-auth/src/plugins/jwt/adapter.ts",
+      "line": 36,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"jwks\""
+      }
+    },
+    {
+      "file": "packages/better-auth/src/plugins/jwt/adapter.ts",
+      "line": 58,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"jwks\"",
+        "where": "[{ field: \"id\", value: id }]"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/plugins/jwt/adapter.ts",
+      "line": 85,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"jwks\""
+      }
+    },
+    {
+      "file": "packages/better-auth/src/plugins/jwt/adapter.ts",
+      "line": 101,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"jwks\"",
+        "data": "{ ...webKey, createdAt: new Date(), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/authorize.ts",
+      "line": 926,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"clientId\", value: client.clientId, }, { field: \"userId\", value: session.user.id, }, ...(referenceId ? [ { field: \"referenceId\", value: referenceId, }, ] : []), ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/authorize.ts",
+      "line": 1049,
+      "kind": "internal",
+      "method": "createVerificationValue",
+      "arguments": [
+        "{ ..., createdAt }"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/consent.ts",
+      "line": 112,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"clientId\", value: clientId, }, { field: \"userId\", value: session?.user.id!, }, ...(referenceId ? [ { field: \"referenceId\", value: referenceId, }, ] : []), ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/consent.ts",
+      "line": 148,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"id\", value: foundConsent.id, }, ]",
+        "update": "{ resources: consent.resources, scopes: consent.scopes, requestedUserInfoClaims: consent.requestedUserInfoClaims, updatedAt: new Date(iat * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/consent.ts",
+      "line": 163,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "data": "{ ...consent, scopes: consent.scopes, }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 232,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[{ field: \"id\", value: sessionId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 273,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[ { field: \"token\", value: await getStoredToken( opts.storeTokens, tokenValue, \"access_token\", ), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 331,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { field: \"id\", value: sessionId, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 347,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "accessToken?.userId"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 436,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"token\", value: await getStoredToken(opts.storeTokens, token, \"refresh_token\"), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 472,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { field: \"id\", value: sessionId, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/introspect.ts",
+      "line": 489,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "refreshToken?.userId"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 140,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 144,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 155,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[ { field: \"clientId\", operator: \"in\", value: Array.from(affectedClientIds), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 227,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[{ field: \"id\", operator: \"in\", value: plan.accessTokenIds }]",
+        "update": "{ revoked: revokedAt }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 234,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[{ field: \"id\", operator: \"in\", value: plan.refreshTokenIds }]",
+        "update": "{ revoked: revokedAt }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 567,
+      "kind": "internal",
+      "method": "findSession",
+      "arguments": [
+        "token"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 586,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[{ field: \"id\", value: sessionId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/logout.ts",
+      "line": 610,
+      "kind": "internal",
+      "method": "deleteSession",
+      "arguments": [
+        "session.token"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/oauth.ts",
+      "line": 686,
+      "kind": "internal",
+      "method": "findSession",
+      "arguments": [
+        "sessionToken"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthClient/endpoints.ts",
+      "line": 105,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[{ field: \"referenceId\", value: referenceId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthClient/endpoints.ts",
+      "line": 120,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[{ field: \"userId\", value: session.user.id }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthClient/endpoints.ts",
+      "line": 175,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[ { field: \"clientId\", value: clientId, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthClient/endpoints.ts",
+      "line": 349,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[ { field: \"clientId\", value: clientId, }, ]",
+        "update": "{ ...schemaUpdates, updatedAt: new Date(Math.floor(Date.now() / 1000) * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthClient/endpoints.ts",
+      "line": 431,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "\"oauthClient\"",
+        "where": "[ { field: \"clientId\", value: clientId, }, ]",
+        "update": "{ clientSecret: storedClientSecret, updatedAt: new Date(Math.floor(Date.now() / 1000) * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthConsent/endpoints.ts",
+      "line": 11,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"id\", value: id, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthConsent/endpoints.ts",
+      "line": 57,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"userId\", value: session.user.id, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthConsent/endpoints.ts",
+      "line": 92,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"id\", value: id, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthConsent/endpoints.ts",
+      "line": 149,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "\"oauthConsent\"",
+        "where": "[ { field: \"id\", value: id, }, ]",
+        "update": "{ ...updates, updatedAt: new Date(iat * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 140,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "data": "buildResourceRow(input, now)"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 173,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "resourceModel(opts)"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 186,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 210,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 242,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]",
+        "update": "update"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 251,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 276,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 287,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 318,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "resourceModel(opts)",
+        "where": "[{ field: \"identifier\", value: resourceId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 328,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "clientModel(opts)",
+        "where": "[{ field: \"clientId\", value: clientId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 341,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "linkModel(opts)",
+        "data": "{ clientId, resourceId, createdAt: new Date(), } as never"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/oauthResource/endpoints.ts",
+      "line": 376,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "linkModel(opts)",
+        "where": "[ { field: \"clientId\", value: clientId }, { field: \"resourceId\", value: resourceId }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 880,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "clientModel",
+        "where": "[ { field: \"clientId\", value: clientId }, { field: \"clientDiscoveryId\", value: clientDiscoveryId, }, ]",
+        "update": "{ ...schema, disabled: existingClient.disabled, skipConsent: existingClient.skipConsent, enableEndSession: existingClient.enableEndSession, createdAt: existingClient.createdAt, updatedAt: new Date(iat * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 907,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "clientModel",
+        "data": "{ ...schema, createdAt: new Date(iat * 1000), updatedAt: new Date(iat * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 935,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "clientResourceModel",
+        "where": "[{ field: \"clientId\", value: clientId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 946,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "clientResourceModel",
+        "data": "{ clientId, resourceId, createdAt: now, }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 1095,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "clientModel",
+        "where": "[{ field: \"clientId\", value: input.clientId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/register.ts",
+      "line": 1109,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "clientResourceModel",
+        "where": "[ { field: \"clientId\", value: error.clientId }, { field: \"resourceId\", value: error.resourceId }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 539,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "modelName",
+        "where": "[{ field: \"clientId\", value: clientId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 574,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "modelName",
+        "where": "[ { field: \"clientId\", value: clientId }, { field: \"resourceId\", operator: \"in\", value: resourceIdentifiers }, ]",
+        "limit": "1"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 603,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "opts.schema?.oauthResource?.modelName ?? \"oauthResource\"",
+        "where": "[ { field: \"identifier\", operator: \"in\", value: resourceIdentifiers }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 702,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "opts.schema?.oauthResource?.modelName ?? \"oauthResource\"",
+        "where": "[{ field: \"identifier\", value: identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 920,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "modelName",
+        "where": "[{ field: \"identifier\", value: input.identifier }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 938,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "modelName",
+        "data": "buildSeedRow(input, now)"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/resources.ts",
+      "line": 966,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "modelName",
+        "where": "[{ field: \"identifier\", value: input.identifier }]",
+        "update": "buildSeedUpdate(input, mode, now)"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 141,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[ { field: \"token\", value: await getStoredToken( opts.storeTokens, tokenValue, \"access_token\", ), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 167,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[{ field: \"id\", value: accessToken.id }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 171,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[{ field: \"token\", value: accessToken.token }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 186,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"token\", value: await getStoredToken(opts.storeTokens, token, \"refresh_token\"), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 218,
+      "kind": "adapter",
+      "method": "incrementOne",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"id\", value: refreshToken.id, }, { field: \"revoked\", operator: \"eq\", value: null, }, ]",
+        "increment": "{}",
+        "set": "{ revoked: new Date(iat * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/revoke.ts",
+      "line": 243,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[{ field: \"refreshId\", value: refreshToken.id }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 496,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "data": "{ token: await storeToken(opts.storeTokens, token, \"access_token\"), clientId: client.clientId, sessionId: payload?.sid, userId: user?.id, referenceId, authorizationCodeId, resources, refreshId, confirmation, requestedUserInfoClaims: requestedUserInfoClaims?.length ? requestedUserInfoClaims : undefined, scopes, createdAt: new Date(iat * 1000), expiresAt: new Date(exp * 1000), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 541,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"clientId\", value: clientId }, { field: \"userId\", value: userId }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 549,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "\"oauthAccessToken\"",
+        "where": "[ { field: \"refreshId\", operator: \"in\", value: refreshTokens.map((r) => r.id), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 560,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"clientId\", value: clientId }, { field: \"userId\", value: userId }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 577,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "model",
+        "where": "[{ field: \"authorizationCodeId\", value: authorizationCodeId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 639,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "data": "newRow"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 677,
+      "kind": "adapter",
+      "method": "incrementOne",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"id\", value: originalRefresh.id }, { field: \"revoked\", operator: \"eq\", value: null }, ]",
+        "increment": "{}",
+        "set": "rotationUpdate"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 694,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "data": "newRow"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1010,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[{ field: \"id\", value: refreshToken.id }]",
+        "update": "{ rotationReplayResponse: await encryptRefreshTokenRotationReplay(ctx, { request, response, }), }"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1378,
+      "kind": "internal",
+      "method": "consumeVerificationValue",
+      "arguments": [
+        "authorizationCodeId"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1637,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "verificationValue.userId"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1648,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"session\"",
+        "where": "[ { field: \"id\", value: verificationValue.sessionId, }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1825,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthRefreshToken\"",
+        "where": "[ { field: \"token\", value: await getStoredToken( opts.storeTokens, decodedRefresh.token, \"refresh_token\", ), }, ]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/token.ts",
+      "line": 1930,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "refreshToken.userId"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/userinfo.ts",
+      "line": 176,
+      "kind": "internal",
+      "method": "findUserById",
+      "arguments": [
+        "jwt.sub"
+      ]
+    },
+    {
+      "file": "packages/oauth-provider/src/utils/client-assertion.ts",
+      "line": 418,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "model": "\"oauthClientAssertion\"",
+        "data": "{ id: jtiId, expiresAt: new Date(payload.exp * 1000), }",
+        "forceAllowId": "true"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/utils/client-assertion.ts",
+      "line": 430,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "\"oauthClientAssertion\"",
+        "where": "[{ field: \"id\", value: jtiId }]"
+      }
+    },
+    {
+      "file": "packages/oauth-provider/src/utils/index.ts",
+      "line": 264,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "options.schema?.oauthClient?.modelName ?? \"oauthClient\"",
+        "where": "[{ field: \"clientId\", value: clientId }]"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/atomic-fallback.ts",
+      "line": 102,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/atomic-fallback.ts",
+      "line": 170,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "model",
+        "modelKey": "request.modelKey",
+        "where": "guard"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/atomic-fallback.ts",
+      "line": 230,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "model",
+        "modelKey": "request.modelKey",
+        "where": "guard",
+        "update": "update"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 799,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "modelName",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 817,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "modelName",
+        "modelKey": "modelKey",
+        "where": "where",
+        "limit": "limit"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 941,
+      "kind": "adapter",
+      "method": "create",
+      "arguments": {
+        "data": "data",
+        "model": "model",
+        "modelKey": "modelKey"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1016,
+      "kind": "adapter",
+      "method": "update",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where",
+        "update": "data"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1088,
+      "kind": "adapter",
+      "method": "updateMany",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where",
+        "update": "data"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1171,
+      "kind": "adapter",
+      "method": "findOne",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where",
+        "select": "select",
+        "join": "passJoinToAdapter ? join : undefined"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1262,
+      "kind": "adapter",
+      "method": "findMany",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where",
+        "limit": "limit",
+        "select": "select",
+        "sortBy": "sortBy",
+        "offset": "offset",
+        "join": "passJoinToAdapter ? join : undefined"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1326,
+      "kind": "adapter",
+      "method": "delete",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1368,
+      "kind": "adapter",
+      "method": "deleteMany",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1413,
+      "kind": "adapter",
+      "method": "consumeOne",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1514,
+      "kind": "adapter",
+      "method": "incrementOne",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where",
+        "increment": "increment",
+        "set": "set"
+      }
+    },
+    {
+      "file": "packages/core/src/db/adapter/factory.ts",
+      "line": 1585,
+      "kind": "adapter",
+      "method": "count",
+      "arguments": {
+        "model": "model",
+        "modelKey": "modelKey",
+        "where": "where"
+      }
+    },
+    {
+      "file": "packages/better-auth/src/state.ts",
+      "line": 142,
+      "kind": "internal",
+      "method": "createVerificationValue",
+      "arguments": [
+        "{ value, identifier, expiresAt }"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/state.ts",
+      "line": 230,
+      "kind": "internal",
+      "method": "findVerificationValue",
+      "arguments": [
+        "getAuthStateVerificationIdentifier(state)"
+      ]
+    },
+    {
+      "file": "packages/better-auth/src/state.ts",
+      "line": 291,
+      "kind": "internal",
+      "method": "deleteVerificationByIdentifier",
+      "arguments": [
+        "getAuthStateVerificationIdentifier(state)"
+      ]
+    }
+  ]
+}

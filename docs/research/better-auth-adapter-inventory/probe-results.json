@@ -1,0 +1,11 @@
+{
+  "packages": "1.7.7",
+  "verification": "In-process memory adapter and command recorder; no CrateDB, Valkey or external client",
+  "passed": [
+    "DB-backed session: missing key falls back; no cache warming; list/batch read misses remain empty; malformed key returns null; get error propagates",
+    "Missing active-session index: revoke-all deletes DB sessions but leaves a surviving cached token accepted",
+    "Preserved session: missing key does not fall back",
+    "MCP/OAuth provider rejects secondary storage without database sessions",
+    "Redis command recorder: required operations each use one prefixed key; increment rejects ttl=0 (no Redis server used)"
+  ]
+}
