@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto"
 import { execute, query, upsert } from "../utils/crate.ts"
 import {
 	parseLocalizationRecord,
-	normalizeCountry,
 	type LocalizationPair,
 	type LocalizationRecord,
 	type LocalizationWriter,
@@ -65,15 +64,6 @@ export async function readMediaPreferences(userId: string): Promise<{
 		seqNo: rows[0]?.seq_no ?? null,
 		primaryTerm: rows[0]?.primary_term ?? null,
 	}
-}
-
-/** Adoption must preserve the latest legacy country, including writes by an older role's cache namespace. */
-export async function readLegacyMediaCountry(userId: string) {
-	const rows = await query<{ value: string }>(
-		"SELECT value FROM user_setting WHERE user_id = ? AND key = ?",
-		[userId, "country_default"],
-	)
-	return normalizeCountry(rows[0]?.value)
 }
 
 /** Exactly one row, including Keep, Undo and first sign-in adoption. No legacy row is deleted. */

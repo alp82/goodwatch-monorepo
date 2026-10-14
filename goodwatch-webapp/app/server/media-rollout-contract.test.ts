@@ -9,6 +9,14 @@ const state = {
 	queries: [] as string[],
 	cache: new Map<string, unknown>(),
 	live: 0,
+	episodeRows: [] as {
+		show_id: number
+		tmdb_id: number
+		language_code: string
+		country_code: string
+		name: string
+		overview: string
+	}[],
 	canonical: {
 		mediaType: "show",
 		details: {
@@ -42,13 +50,14 @@ registerHooks({
 	load(url, context, next) {
 		let source: string | undefined
 		if (url.endsWith("/utils/cache.ts"))
-			source = `export const getRedisCluster=()=>null;export const cached=async({name,params,target})=>{const s=globalThis.__mediaRolloutTest;const key=name+':'+JSON.stringify(params);if(s.cache.has(key))return s.cache.get(key);const value=await target(params);s.cache.set(key,value);return value}`
+			source = `export const getRedisCluster=()=>null;export const withRedisDeadline=p=>p;export const cached=async({name,params,target})=>{const s=globalThis.__mediaRolloutTest;const key=name+':'+JSON.stringify(params);if(s.cache.has(key))return s.cache.get(key);const value=await target(params);s.cache.set(key,value);return value}`
 		if (url.endsWith("/utils/crate.ts"))
 			source = `export const query=async(sql,args=[])=>{
 	 const s=globalThis.__mediaRolloutTest;s.queries.push(sql);
 	 if(sql.includes('information_schema'))return [{table_name:'season_translation'},{table_name:'episode_translation'}];
 	 if(sql.includes('UNION ALL'))return [...args[0].map(id=>({media_type:'movie',tmdb_id:id,title:'Movie '+id,poster_path:'/en.jpg'})),...args[1].map(id=>({media_type:'show',tmdb_id:id,title:'Show '+id,poster_path:'/en.jpg'}))];
 	 if(sql.includes('FROM show WHERE tmdb_id = ?'))return [{...s.canonical.details,media_type:'show'}];
+	 if(sql.includes('FROM episode_translation'))return s.episodeRows;
 	 if(sql.includes('FROM media_image'))return [{media_type:'show',media_tmdb_id:1396,language_code:'en',url_path:'/english-localized.jpg',tmdb_vote_average:9,tmdb_vote_count:10,width:500,height:750}];
 	 return [];
 	}`
@@ -109,6 +118,7 @@ beforeEach(() => {
 	state.queries.length = 0
 	state.cache.clear()
 	state.live = 0
+	state.episodeRows = []
 })
 
 test("new API + legacy request is canonical despite a French cookie/browser; explicit URL opts in", async () => {
@@ -328,5 +338,45 @@ test("media-only preview separates canonical crawlers from English presentation 
 			(sql) => sql.includes("essence") || sql.includes("prose_translation"),
 		),
 		false,
+	)
+})
+
+test("a 2,100-episode show reuses one complete show source across page chunks and subsequent grids", async () => {
+	state.episodeRows = Array.from({ length: 2101 }, (_, i) => ({
+		show_id: 1396,
+		tmdb_id: i + 1,
+		language_code: "fr",
+		country_code: "FR",
+		name: `Épisode ${i + 1}`,
+		overview: "Résumé",
+	}))
+	const grid = {
+		showId: 1396,
+		seasons: [],
+		specials: Array.from({ length: 2100 }, (_, i) => ({
+			number: i + 1,
+			tmdbId: i + 1,
+			name: `Episode ${i + 1}`,
+			score: 8,
+			votes: 10,
+		})),
+		maxEpisodeNumber: 2100,
+		hasEpisodeZero: false,
+		providers: [],
+	}
+	const first = await overlayAlignedGrid(grid, "fr")
+	assert.equal(
+		first.specials.length,
+		2100,
+		"an unrequested translation cannot create an episode",
+	)
+	assert.equal(first.specials[2099].name, "Épisode 2100")
+	assert.equal(count().episodes, 1)
+	state.queries.length = 0
+	await overlayAlignedGrid(grid, "fr")
+	assert.equal(
+		count().total,
+		0,
+		"large shows do not cycle through an episode-key LRU",
 	)
 })

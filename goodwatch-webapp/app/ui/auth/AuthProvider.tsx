@@ -1,3 +1,4 @@
+import { clearMediaSession, establishMediaSession } from "~/utils/media-session"
 import { AuthCallbackError } from "~/ui/auth/AuthCallbackError"
 import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
 import type { User } from "@supabase/auth-js"
@@ -75,6 +76,7 @@ export function AuthProvider({
 						event === "SIGNED_OUT"
 					) {
 						setSessionUserId(session?.user.id ?? null)
+						if (!session) clearMediaSession()
 					}
 				}),
 			).data.subscription
@@ -127,22 +129,29 @@ export function AuthProvider({
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}
-		// An existing browser session also establishes preferences on a hard load; root GETs never adopt.
-		// Repeated SIGNED_IN events for the same user do not repeat this POST.
-		// The root loader holds the member and their data, and a navigation alone doesn't rerun it.
+		// The per-tab marker skips repeated hard-load adoption; only actual preference/auth changes reload pages.
 		const reconcile = async () => {
+			let changed = false
 			if (targetUserId) {
 				try {
-					await fetch("/api/media-preferences/session", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						signal: AbortSignal.timeout(5000),
+					changed = await establishMediaSession(targetUserId, userChanged, {
+						isCurrent: () =>
+							mounted.current && currentUserId.current === targetUserId,
 					})
 				} catch {
-					/* A failed adoption does not prevent sign-in or a later explicit Keep. */
+					/* A failed check cannot prevent sign-in or a later explicit Keep. */
 				}
-			}
-			if (mounted.current && currentUserId.current === targetUserId) {
+			} else clearMediaSession()
+			if (
+				(changed || userChanged) &&
+				mounted.current &&
+				currentUserId.current === targetUserId
+			) {
+				if (changed)
+					void queryClient.invalidateQueries({
+						queryKey: ["media-preferences", targetUserId],
+						exact: true,
+					})
 				requestRootRevalidation()
 				revalidate()
 			}

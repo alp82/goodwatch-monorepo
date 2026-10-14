@@ -1,7 +1,8 @@
 import {
-	apiDisplayLanguage,
+	liveMediaLanguage,
 	localizeTitlePayload,
 } from "~/server/media-payload.server"
+import { isbot } from "isbot"
 import { assetUrl } from "~/utils/asset-url"
 import {
 	type LoaderFunctionArgs,
@@ -43,8 +44,8 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 		// The first seconds after the server starts: the page loads the map itself once the snapshot is in.
 		if (!(error instanceof ExplorerUnavailable)) throw error
 	}
-	const language = apiDisplayLanguage(request)
-	if (language && world)
+	const language = await liveMediaLanguage(request, userId)
+	if (world && !isbot(request.headers.get("user-agent")))
 		world = await localizeTitlePayload(world, language, undefined, undefined, {
 			maxTitles: EXPLORER_OVERLAY_MAX_TITLES,
 		})

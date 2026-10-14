@@ -578,7 +578,7 @@ test("TMDB television name/original_name aliases retain localized values and can
 	assert.equal(payload[0].name, "Canonical")
 })
 
-test("500 titles × 100 posters are indexed once, comfortably below 100 ms", (t) => {
+test("500 titles × 100 posters scan each source once, independent of machine load", (t) => {
 	const canonical = Array.from({ length: 500 }, (_, i) => ({
 		...row,
 		tmdb_id: i + 1,
@@ -613,10 +613,25 @@ test("500 titles × 100 posters are indexed once, comfortably below 100 ms", (t)
 	t.diagnostic(
 		`500 unique titles, 1,000 references, 50,000 posters: median ${median.toFixed(2)} ms`,
 	)
-	assert.ok(
-		median < 75,
-		`Overlay CPU median ${median.toFixed(2)} ms must stay well below 100 ms`,
-	)
+	// Source visitation is a deterministic regression guard; wall time remains diagnostic only.
+	const visited = { canonical: 0, translations: 0, posters: 0 }
+	const counted = <T>(items: T[], kind: keyof typeof visited): T[] =>
+		new Proxy(items, {
+			get(target, key, receiver) {
+				if (typeof key === "string" && /^\d+$/.test(key)) visited[kind]++
+				return Reflect.get(target, key, receiver)
+			},
+		})
+	overlayMediaRows(references, "fr", {
+		canonical: counted(canonical, "canonical"),
+		translations: counted(translations, "translations"),
+		posters: counted(posters, "posters"),
+	})
+	assert.deepEqual(visited, {
+		canonical: 500,
+		translations: 500,
+		posters: 50000,
+	})
 })
 
 test("poster SQL restricts candidate languages or canonical paths, and overlapping batches reuse per-title sources", async () => {
@@ -781,4 +796,34 @@ test("English fast path does not mistake a prefilled original-language title for
 	assert.equal(queries, 3)
 	assert.equal(result.title, "原題")
 	assert.equal(result.presentation.title.language, "ja")
+})
+
+test("concurrent page overlays share each cold title's canonical, translation and poster reads", async () => {
+	const { createLocaleSourceCache } = await import(
+		"./locale-source-cache.server.ts"
+	)
+	const cache = createLocaleSourceCache<
+		import("../utils/media-overlay-core.ts").Sources
+	>(() => null, {
+		namespace: "overlay-flight",
+		deadline: (p) => p,
+		validate: (v): v is import("../utils/media-overlay-core.ts").Sources =>
+			!!v && typeof v === "object",
+	})
+	let queries = 0,
+		release!: () => void
+	const gate = new Promise<void>((resolve) => {
+		release = resolve
+	})
+	const overlay = createMediaOverlay(async <T extends {}>(sql: string) => {
+		queries++
+		await gate
+		return (sql.includes("UNION ALL") ? [row] : []) as unknown as T[]
+	}, cache)
+	const one = overlay([row], "fr"),
+		two = overlay([row], "fr")
+	release()
+	const [first, second] = await Promise.all([one, two])
+	assert.equal(queries, 3)
+	assert.equal(first[0].title, second[0].title)
 })

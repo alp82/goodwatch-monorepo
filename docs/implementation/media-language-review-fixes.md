@@ -1,6 +1,6 @@
 # Media-language review fixes — 2026-10-14
 
-Uncommitted follow-up to merge `7e4bb2a0` on `feat/media-language`. All changes were made in `/home/alper/projects/goodwatch-media-language`. No deployment, production mutation, paid request, commit or push was performed.
+First-review snapshot (subsequently committed as `e5bae09f` and merged in `4bb8b818`). The second-review follow-up below is uncommitted on `feat/media-language`. All changes were made in `/home/alper/projects/goodwatch-media-language`. No deployment, production mutation, paid request, commit or push was performed.
 
 ## Presentation and source caches
 
@@ -101,3 +101,57 @@ A machine/session restart cleared the earlier temporary logs; the Node/Python co
 - `goodwatch-webapp/app/utils/media-script.ts`
 - `goodwatch-webapp/app/utils/person-best.test.ts`
 - `goodwatch-webapp/app/utils/person-best.ts`
+
+
+## Second review — session establishment and source batching
+
+Base: `4bb8b818`. Protected media-preference UI remains untouched.
+
+- The per-tab sessionStorage marker `gw_media_session_v2` remembers an established user across document loads. Sign-out/anonymous session clears it; a real identity change forces reconciliation even if remembered. Unavailable storage degrades to one bounded POST with no loader reload when unchanged. Failed checks leave the marker unset. Responses belonging to a user that is no longer current cannot set it.
+- POST `/api/media-preferences/session` now returns `{changed:boolean}`. It emits Set-Cookie only when the parsed saved cookie differs; `changed` is true for a saved-row version change or cookie reconciliation. AuthProvider revalidates only for changed preferences or identity, and invalidates that user's private preference query only when adoption/reconciliation changed it. Origin follows `api.user-settings.set`'s public-origin policy (a supplied foreign Origin is rejected before authentication/database work).
+- `countryExplicit` was removed from the save API, cookie/record projection and adoption path. Only an explicit whole-pair Keep creates a guest-origin cookie; inferred browser preferences never create one. No account/legacy country row is deleted.
+- Explorer page SSR uses `liveMediaLanguage(request,userId)`, retains the 200-title cap and labels initialData with that language. API opt-in remains unchanged. Crawlers return unoverlaid canonical data.
+- Per-title source work coalesces before Redis/SQL reads, including overlapping batches. Pending ownership is bounded at 2,048 entries; rejected loads release ownership for retries. `media-overlay-title-v3` uses one MGET per batch with a namespace/locale hash tag so every batch is in one Valkey slot, plus one write pipeline. Both use the existing `withRedisDeadline`. Old v2 values expire normally.
+- Episode sources use `episode-text-show-v3`: complete per-show/locale entries, at most 4 MiB each, 16 MiB serialized memory / 128 LRU entries, 30-minute TTL. Source rows are filtered back to already-proved requested IDs. A 2,100-episode regression verifies one cold source query, zero warm queries, and no translation-only episode creation. Oversized values are intentionally uncached.
+- The 500-title/50,000-poster test now asserts exact source visits (500 canonical, 500 translations, 50,000 posters). Wall time remains diagnostic; machine scheduling cannot fail the regression test.
+
+Second-review validation so far:
+
+- Focused suite: **77/77 passed**; the typed Explorer loader test was then corrected to record the overlay invocation against a genuine world shape, and passed **3/3** separately. The cache overlap check additionally asserts that shared title 2 is fetched once (**4/4 cache tests**).
+- Final full suite: `node --test --test-concurrency=2 'app/**/*.test.ts'` — **2,478 tests, 2,477 passed, 1 skipped, 0 failed**, **197.88 seconds**. The configured cross-process Valkey test remains skipped. An earlier full run also passed all 2,477 active tests.
+- Local Lighthouse budget attempt remains **unverified**: Docker API socket permission denied, exit 2; no fixture server or production benchmark was started.
+
+- Final typecheck: branch **174 diagnostics**, frozen `origin/main` (`ad7e6d1905706a565ab0f2635da3b9af32e877a8`) **174**, **zero new or removed**. Branch command `NODE_OPTIONS=--max-old-space-size=2048 npm run typecheck -- --noEmit` completed in **294.60 seconds**, exit 2 for the existing diagnostics. The unchanged main baseline from the first review was reused after verifying its exact commit; dependency manifests/lockfile are unchanged. Comparison ignores file line/column shifts and quoted union-member ordering only.
+
+- Production build: `SENTRY_DISABLE_AUTO_UPLOAD=true NODE_OPTIONS=--max-old-space-size=2048 npm run build` — **passed**, exit 0, **284.03 seconds**, client/server bundles plus **703 precompressed files**. Upload was disabled; heavy jobs ran sequentially with a 2-GiB heap cap.
+- `git diff --check` is clean. The protected media-preference/media-text/details/WhereToWatch/settings UI, package manifests and lockfile are unchanged. HEAD remains `4bb8b818`; all 23 follow-up files are uncommitted/unstaged. No deployment, production write or paid request occurred.
+- Live browser hard-load/sign-in behavior and a real Valkey cluster were not exercised; unit/loader tests use injected storage/network/database seams. Lighthouse remains blocked by Docker permissions. No new decision is needed from this thread.
+
+The first-review counts and file inventory above are historical.
+
+
+### Second-review changed files
+
+- `docs/implementation/media-language-decisions.md`
+- `docs/implementation/media-language-review-fixes.md`
+- `docs/implementation/media-language-rollout.md`
+- `docs/implementation/media-language-surface-matrix.md`
+- `goodwatch-webapp/app/routes/api.media-preferences_.session.ts`
+- `goodwatch-webapp/app/routes/api.user-settings.set.tsx`
+- `goodwatch-webapp/app/routes/explorer.tsx`
+- `goodwatch-webapp/app/server/crawler-media-keys.test.ts`
+- `goodwatch-webapp/app/server/episode-text-overlay.server.ts`
+- `goodwatch-webapp/app/server/locale-source-cache.server.ts`
+- `goodwatch-webapp/app/server/locale-source-cache.test.ts`
+- `goodwatch-webapp/app/server/media-context.server.ts`
+- `goodwatch-webapp/app/server/media-context.test.ts`
+- `goodwatch-webapp/app/server/media-overlay.server.ts`
+- `goodwatch-webapp/app/server/media-overlay.test.ts`
+- `goodwatch-webapp/app/server/media-preferences-store.server.ts`
+- `goodwatch-webapp/app/server/media-rollout-contract.test.ts`
+- `goodwatch-webapp/app/ui/auth/AuthProvider.tsx`
+- `goodwatch-webapp/app/utils/cache.ts`
+- `goodwatch-webapp/app/utils/media-language.ts`
+- `goodwatch-webapp/app/utils/media-overlay-core.ts`
+- `goodwatch-webapp/app/utils/media-session.test.ts`
+- `goodwatch-webapp/app/utils/media-session.ts`

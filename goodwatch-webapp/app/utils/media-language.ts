@@ -32,7 +32,6 @@ export interface LocalizationRecord extends LocalizationPair {
 	writer?: LocalizationWriter
 	/** Cookie ownership: null proves a guest choice; absence is an older, unproved cookie. */
 	sourceUserId?: string | null
-	countryExplicit?: boolean
 }
 export type CountryProvenance =
 	| "url"
@@ -210,20 +209,12 @@ export function parseLocalizationRecord(
 			!/^[\w-]{1,128}$/.test(record.sourceUserId))
 	)
 		return null
-	if (
-		record.countryExplicit !== undefined &&
-		typeof record.countryExplicit !== "boolean"
-	)
-		return null
 	return {
 		...pair,
 		schemaVersion: 1,
 		version: record.version,
 		...(record.sourceUserId !== undefined
 			? { sourceUserId: record.sourceUserId as string | null }
-			: {}),
-		...(record.countryExplicit !== undefined
-			? { countryExplicit: record.countryExplicit as boolean }
 			: {}),
 		...(writer ? { writer } : {}),
 	}
@@ -301,17 +292,14 @@ export function resolveEffectiveMediaContext({
 	}
 }
 
-/** Only a guest-origin kept cookie can be adopted; inferred country never replaces legacy settings. */
+/** Only a guest-origin Keep (explicit confirmation of the whole pair) can be adopted. */
 export function signInAdoption(
 	account: LocalizationRecord | null,
 	cookie: LocalizationRecord | null,
-	legacyCountry?: string | null,
 ): LocalizationPair | null {
 	if (account || !cookie || cookie.sourceUserId !== null) return null
 	return {
-		country: cookie.countryExplicit
-			? cookie.country
-			: (normalizeCountry(legacyCountry) ?? cookie.country),
+		country: cookie.country,
 		language: cookie.language,
 	}
 }
@@ -326,7 +314,6 @@ export interface SaveLocalizationRequest {
 	/** A fresh UUID for each picker/page session; sequences are scoped to this client. */
 	clientId: string
 	pair: LocalizationPair
-	countryExplicit?: boolean
 	sequence: number
 	expectedVersion?: string | null
 }

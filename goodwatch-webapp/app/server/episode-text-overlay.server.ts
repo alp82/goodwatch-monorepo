@@ -4,7 +4,7 @@ import type {
 	EpisodeTextReader,
 	EpisodeTextTranslation,
 } from "../utils/episode-text-overlay.ts"
-import { cached, getRedisCluster } from "../utils/cache.ts"
+import { cached, getRedisCluster, withRedisDeadline } from "../utils/cache.ts"
 import { query } from "../utils/crate.ts"
 import {
 	overlayEpisodeText as overlayCore,
@@ -38,7 +38,11 @@ const availableTables = async () =>
 const textCache = createLocaleSourceCache<EpisodeTextTranslation[]>(
 	getRedisCluster,
 	{
-		namespace: "episode-text-title-v2",
+		namespace: "episode-text-show-v3",
+		deadline: withRedisDeadline,
+		maxValueBytes: 4 * 1024 * 1024,
+		memoryBytes: 16 * 1024 * 1024,
+		maxEntries: 128,
 		validate: (value): value is EpisodeTextTranslation[] =>
 			Array.isArray(value),
 	},
@@ -51,28 +55,27 @@ async function readTexts(
 	if (presentationLanguage(language) === "en" || !refs.length) return []
 	const table = `${kind}_translation`
 	if (!(await availableTables()).includes(table)) return []
-	const keyOf = (ref: { showId: number; id: number }) =>
-		`${kind}:${ref.showId}:${ref.id}`
-	const hits = await textCache.read(refs.map(keyOf), language)
-	const missing = refs.filter((ref) => !hits.has(keyOf(ref)))
-	if (missing.length) {
-		const rows = await query<EpisodeTextTranslation>(
-			`SELECT show_id, tmdb_id, language_code, country_code, name, overview FROM ${table} WHERE show_id = ANY(?) AND tmdb_id = ANY(?) AND language_code = ?`,
-			[
-				[...new Set(missing.map((r) => r.showId))] as never,
-				[...new Set(missing.map((r) => r.id))] as never,
-				language.split("-")[0],
-			],
-		)
-		const entries = new Map(
-			missing.map((ref) => [keyOf(ref), [] as EpisodeTextTranslation[]]),
-		)
-		for (const row of rows)
-			entries.get(`${kind}:${row.show_id}:${row.tmdb_id}`)?.push(row)
-		await textCache.write(entries, language)
-		for (const [key, value] of entries) hits.set(key, value)
-	}
-	return [...hits.values()].flat()
+	const showIds = [...new Set(refs.map((ref) => ref.showId))]
+	const hits = await textCache.load(
+		showIds.map((id) => `${kind}:${id}`),
+		language,
+		async (missing) => {
+			const ids = missing.map((key) => Number(key.split(":")[1]))
+			const rows = await query<EpisodeTextTranslation>(
+				`SELECT show_id, tmdb_id, language_code, country_code, name, overview FROM ${table} WHERE show_id = ANY(?) AND language_code = ?`,
+				[ids as never, language.split("-")[0]],
+			)
+			const entries = new Map(
+				missing.map((key) => [key, [] as EpisodeTextTranslation[]]),
+			)
+			for (const row of rows) entries.get(`${kind}:${row.show_id}`)?.push(row)
+			return entries
+		},
+	)
+	const wanted = new Set(refs.map((ref) => `${ref.showId}:${ref.id}`))
+	return [...hits.values()].flatMap((rows) =>
+		rows.filter((row) => wanted.has(`${row.show_id}:${row.tmdb_id}`)),
+	)
 }
 const readEpisodeText: EpisodeTextReader = (kind, showId, ids, language) =>
 	readTexts(

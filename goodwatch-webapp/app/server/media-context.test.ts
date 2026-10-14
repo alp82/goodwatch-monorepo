@@ -150,7 +150,6 @@ const saved = (
 	schemaVersion: 1,
 	version: "previous",
 	sourceUserId: null,
-	countryExplicit: true,
 })
 const request = (
 	cookie?: LocalizationRecord,
@@ -775,9 +774,9 @@ it("session adoption rejects another member's cookie and an unproved legacy cook
 		version: "old",
 	}
 	for (const cookie of [foreign, legacy]) {
-		assert.equal(
+		assert.deepEqual(
 			await adoptMediaPreferencesAtSignIn(request(cookie), "member"),
-			null,
+			{ changed: false, setCookie: null },
 		)
 		assert.equal(db.writes.length, 0)
 	}
@@ -793,14 +792,21 @@ it("session adoption rejects another member's cookie and an unproved legacy cook
 		"ja",
 	)
 })
-it("guest-origin adoption preserves legacy country unless country was explicit", async () => {
+it("an explicit guest Keep confirms the whole pair; session establishment reports changes only once", async () => {
 	db.rows.set("country_default", "US")
-	const cookie = { ...saved("fr"), countryExplicit: false }
-	const adopted = await adoptMediaPreferencesAtSignIn(request(cookie), "member")
-	assert.equal(parseLocalizationCookie(adopted)?.country, "US")
-	assert.equal(parseLocalizationCookie(adopted)?.language, "fr")
-	assert.equal(parseLocalizationCookie(adopted)?.sourceUserId, "member")
+	const first = await adoptMediaPreferencesAtSignIn(
+		request(saved("fr")),
+		"member",
+	)
+	assert.equal(first.changed, true)
+	assert.equal(parseLocalizationCookie(first.setCookie)?.country, "DE")
 	assert.equal(db.rows.get("country_default"), "US")
+	const repeated = await adoptMediaPreferencesAtSignIn(
+		request(parseLocalizationCookie(first.setCookie)!),
+		"member",
+	)
+	assert.deepEqual(repeated, { changed: false, setCookie: null })
+	assert.equal(db.writes.length, 1)
 })
 
 it("a newer owned cookie refreshes the short account memo instead of rewriting it from stale GET data", async () => {
@@ -816,5 +822,48 @@ it("a newer owned cookie refreshes the short account memo instead of rewriting i
 	const fresh = await resolveMediaContext(request(changed), "member")
 	assert.equal(fresh.effectiveContext.language, "fr")
 	assert.equal(fresh.setCookie, null)
+	assert.equal(db.writes.length, 0)
+})
+
+const { action: sessionAction } = await import(
+	"../routes/api.media-preferences_.session.ts"
+)
+it("session endpoint rejects foreign Origin before authentication or preferences reads", async () => {
+	const before = db.preferenceReads
+	const response = await sessionAction({
+		request: new Request(
+			"https://goodwatch.test/api/media-preferences/session",
+			{
+				method: "POST",
+				headers: { Origin: "https://other.test", "X-Test-User": "member" },
+			},
+		),
+		params: {},
+		context: {},
+	})
+	assert.equal(response.status, 403)
+	assert.equal(db.preferenceReads, before)
+	assert.equal(db.writes.length, 0)
+})
+it("unchanged session endpoint emits changed:false and no Set-Cookie", async () => {
+	const stored = { ...saved(), sourceUserId: "member" }
+	db.rows.set(MEDIA_PREFERENCES_KEY, JSON.stringify(stored))
+	const response = await sessionAction({
+		request: new Request(
+			"https://goodwatch.test/api/media-preferences/session",
+			{
+				method: "POST",
+				headers: {
+					Origin: "https://goodwatch.test",
+					"X-Test-User": "member",
+					Cookie: serializeLocalizationCookie(stored),
+				},
+			},
+		),
+		params: {},
+		context: {},
+	})
+	assert.deepEqual(await response.json(), { changed: false })
+	assert.equal(response.headers.get("Set-Cookie"), null)
 	assert.equal(db.writes.length, 0)
 })

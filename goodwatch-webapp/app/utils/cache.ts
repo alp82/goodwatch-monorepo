@@ -177,7 +177,7 @@ export class GuardedCluster extends Redis.Cluster {
 	}
 }
 
-function withRedisDeadline<T>(operation: Promise<T>): Promise<T> {
+export function withRedisDeadline<T>(operation: Promise<T>): Promise<T> {
 	return new Promise((resolve, reject) => {
 		const timer = setTimeout(
 			() => reject(new Error("Redis command timed out")),

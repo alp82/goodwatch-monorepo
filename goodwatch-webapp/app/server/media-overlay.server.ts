@@ -1,15 +1,16 @@
 import { query } from "../utils/crate.ts"
-import { getRedisCluster } from "../utils/cache.ts"
+import { getRedisCluster, withRedisDeadline } from "../utils/cache.ts"
 import {
 	createMediaOverlay,
 	type Sources,
 } from "../utils/media-overlay-core.ts"
 import { createLocaleSourceCache } from "./locale-source-cache.server.ts"
 export * from "../utils/media-overlay-core.ts"
-export const MEDIA_OVERLAY_VERSION = "media-overlay-title-v2"
+export const MEDIA_OVERLAY_VERSION = "media-overlay-title-v3"
 export const MEDIA_SOURCE_MAX_BYTES = 64 * 1024
 const sources = createLocaleSourceCache<Sources>(getRedisCluster, {
 	namespace: MEDIA_OVERLAY_VERSION,
+	deadline: withRedisDeadline,
 	maxValueBytes: MEDIA_SOURCE_MAX_BYTES,
 	validate: (value): value is Sources =>
 		!!value &&

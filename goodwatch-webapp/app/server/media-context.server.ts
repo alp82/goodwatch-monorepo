@@ -13,7 +13,6 @@ import { getUserSettings, resetUserSettingsCache } from "./user-settings.server"
 import {
 	readMediaPreferences,
 	readEffectiveMediaPreferences,
-	readLegacyMediaCountry,
 	invalidateMediaPreferencesRead,
 	writeMediaPreferences,
 } from "./media-preferences-store.server.ts"
@@ -118,19 +117,23 @@ export async function adoptMediaPreferencesAtSignIn(
 	const account = (await readMediaPreferences(userId)).record
 	invalidateMediaPreferencesRead(userId)
 	const cookie = parseLocalizationCookie(request.headers.get("Cookie"))
-	const legacyCountry =
-		!account && cookie?.sourceUserId === null && !cookie.countryExplicit
-			? await readLegacyMediaCountry(userId)
-			: null
-	const pair = signInAdoption(account, cookie, legacyCountry)
+	const pair = signInAdoption(account, cookie)
 	const record = pair
 		? await writeMediaPreferences(userId, pair, { adoptOnly: true })
 		: account
 	if (pair) await invalidateMediaSettings(userId)
 	const latest = record ? (await readMediaPreferences(userId)).record : null
-	return latest
+	const nextCookie = latest
 		? serializeLocalizationCookie(latest, mediaCookieIsSecure(request), userId)
 		: null
+	const cookieChanged =
+		!!nextCookie &&
+		JSON.stringify(cookie) !==
+			JSON.stringify(parseLocalizationCookie(nextCookie))
+	return {
+		changed: account?.version !== latest?.version || cookieChanged,
+		setCookie: cookieChanged ? nextCookie : null,
+	}
 }
 
 export async function saveMediaPreferences(
@@ -183,7 +186,6 @@ export async function saveMediaPreferences(
 							version: randomUUID(),
 							writer,
 							sourceUserId: null,
-							countryExplicit: input.countryExplicit ?? true,
 						}
 			remember(record)
 			if (userId) {

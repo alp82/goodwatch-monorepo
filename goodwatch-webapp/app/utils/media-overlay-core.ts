@@ -295,6 +295,11 @@ export function overlayMediaRow<T extends CanonicalMediaRow>(
 }
 
 export interface MediaSourceCache {
+	load?(
+		keys: readonly string[],
+		language: string,
+		loader: (missing: string[]) => Promise<ReadonlyMap<string, Sources>>,
+	): Promise<Map<string, Sources>>
 	read(keys: readonly string[], language: string): Promise<Map<string, Sources>>
 	write(entries: ReadonlyMap<string, Sources>, language: string): Promise<void>
 }
@@ -379,11 +384,10 @@ export function createMediaOverlay(
 		for (let i = 0; i < unique.length; i += OVERLAY_BATCH_SIZE) {
 			const batch = unique.slice(i, i + OVERLAY_BATCH_SIZE)
 			try {
-				const hits =
-					(await cache?.read(batch.map(keyOf), selected)) ??
-					new Map<string, Sources>()
-				const missing = batch.filter((row) => !hits.has(keyOf(row)))
-				if (missing.length) {
+				const keys = batch.map(keyOf)
+				const fetchMissing = async (missingKeys: string[]) => {
+					const wanted = new Set(missingKeys)
+					const missing = batch.filter((row) => wanted.has(keyOf(row)))
 					const loaded = await load(missing, selected)
 					const index = indexMediaSources(loaded, selected)
 					const entries = new Map<string, Sources>()
@@ -391,22 +395,30 @@ export function createMediaOverlay(
 						const key = keyOf(row),
 							base = index.canonical.get(key),
 							posters = index.posters.get(key)
-						// Only the winning locale poster and known canonical image belong in each reusable source value.
 						const kept = new Map<string, PosterRow>()
 						if (posters?.best) kept.set(posters.best.url_path, posters.best)
 						for (const path of [base?.poster_path, row.poster_path]) {
 							const image = path && posters?.paths.get(path)
 							if (image) kept.set(image.url_path, image)
 						}
-						const source: Sources = {
+						entries.set(key, {
 							canonical: base ? [base] : [],
 							translations: index.translations.get(key) ?? [],
 							posters: [...kept.values()],
-						}
-						entries.set(key, source)
-						hits.set(key, source)
+						})
 					}
-					await cache?.write(entries, selected)
+					return entries
+				}
+				let hits: Map<string, Sources>
+				if (cache?.load) hits = await cache.load(keys, selected, fetchMissing)
+				else {
+					hits = (await cache?.read(keys, selected)) ?? new Map()
+					const missing = keys.filter((key) => !hits.has(key))
+					if (missing.length) {
+						const entries = await fetchMissing(missing)
+						await cache?.write(entries, selected)
+						for (const [key, value] of entries) hits.set(key, value)
+					}
 				}
 				for (const source of hits.values()) {
 					all.canonical.push(...source.canonical)
