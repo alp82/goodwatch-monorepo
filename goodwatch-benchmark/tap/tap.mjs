@@ -34,7 +34,7 @@ const CONTROLS = {
   related_next: "Related row: next arrow (the first row)",
   related_step: "Related map: the first poster (a step onto that title)",
 };
-// Controls of the related titles carousel, which serves only while the related map is off (REC_RELATED_MAP=off).
+// Controls of the related titles carousel, which serves only for a title whose related map was not there in time.
 // They run only when TAP_CONTROLS names them.
 const OPT_IN = ["related_tab", "related_next"];
 const MODES = ["early", "scroll"];

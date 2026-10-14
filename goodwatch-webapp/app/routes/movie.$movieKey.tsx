@@ -12,7 +12,7 @@ import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import { prefetchRelatedSection, relatedSectionData } from "~/server/related-map.server"
+import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
@@ -71,11 +71,7 @@ export const loader: LoaderFunction = async ({
 	})
 	const parts = Promise.all([
 		details,
-		prefetchRelatedSection({
-			tmdbId: Number(movieId),
-			sourceMediaType: "movie",
-			budgetMs,
-		}),
+		relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs }),
 		// The header's genre links and the collection's movies, which the page requested after load before.
 		details.then(
 			(media) =>
@@ -104,13 +100,13 @@ export const loader: LoaderFunction = async ({
 	if (canonical) return redirect(canonical, 301)
 
 	const [media, relatedSection, extrasState] = await parts
-	// The related map's section, or with the map off the related titles carousel's first panel.
+	// The related map's section.
 	const related = relatedSectionData(
 		relatedSection,
 		media.details.title,
 		request,
 	)
-	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
+	const dehydratedState = mergeDehydratedStates(extrasState)
 
 	const data = {
 		media,

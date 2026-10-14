@@ -254,7 +254,7 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
 | `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
 
-`related_tab` and `related_next` belong to the related titles carousel, which serves only while the related map is off (`REC_RELATED_MAP=off`). A default run leaves them out.
+`related_tab` and `related_next` belong to the related titles carousel, which serves only for a title whose related map was not there in time. A default run leaves them out.
 
 The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 

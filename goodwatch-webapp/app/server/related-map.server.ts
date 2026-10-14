@@ -31,8 +31,6 @@ import {
 	tokenCondition,
 	tokensOf,
 } from "~/server/related-map-pack"
-import { relatedPanelEmbedded } from "~/server/related-prefetch"
-import { prefetchRelatedTitlesState } from "~/server/related.server"
 import { separateEntryUrl } from "~/server/separate-entry.server"
 import { buildBaseFilterConditions } from "~/server/utils/recommend"
 import type { RawPack, RawTitle } from "~/ui/related-map/engine"
@@ -48,23 +46,6 @@ import { MEDIA_COLLECTION, recommend, scroll } from "~/utils/qdrant"
 import { titleKey } from "~/utils/title-key"
 
 type MediaType = "movie" | "show"
-
-// --- The setting --------------------------------------------------------------------------------------------------
-
-let warned = ""
-/**
- * Whether title pages show the related map. REC_RELATED_MAP is read on every request, like the other feature
- * settings (features.server.ts), but this one is on unless it says `off`: then the related titles carousel serves.
- */
-export function relatedMapEnabled(): boolean {
-	const raw = (process.env.REC_RELATED_MAP ?? "").trim().toLowerCase()
-	if (raw === "off") return false
-	if (raw && raw !== "on" && raw !== warned) {
-		warned = raw
-		console.warn(`REC_RELATED_MAP="${raw}" is not off or on. Using on.`)
-	}
-	return true
-}
 
 // --- Packs --------------------------------------------------------------------------------------------------------
 
@@ -292,9 +273,8 @@ const outcomes = counter(
  * - a pack: the page draws the map.
  * - "none": the title has no fingerprint. The page is complete without the map.
  * - "late": the lookup ran out of its budget or failed. The page is incomplete (see incomplete-page.ts).
- * - "off": the setting says so.
  */
-export type RelatedMapLookup = RawPack | "none" | "late" | "off"
+export type RelatedMapLookup = RawPack | "none" | "late"
 
 /** A timed-out lookup keeps filling its data cache; only the document stops waiting. */
 export async function relatedMapLookup(params: {
@@ -303,7 +283,6 @@ export async function relatedMapLookup(params: {
 	/** How long the document waits for the lookup. */
 	budgetMs: number
 }): Promise<RelatedMapLookup> {
-	if (!relatedMapEnabled()) return "off"
 	let timer: ReturnType<typeof setTimeout> | undefined
 	const pending = (
 		Number.isSafeInteger(params.id)
@@ -374,50 +353,17 @@ export function relatedMapData(
 // --- The title page's loader --------------------------------------------------------------------------------------
 
 /**
- * The related titles of a title page, asked for while its details load: the map's pack, or with the map off the
- * first panel of the related titles carousel as dehydrated query state. With the map on the carousel only stands in
- * for a missing map, and then asks for its panel from the browser.
- */
-export async function prefetchRelatedSection(params: {
-	tmdbId: number
-	sourceMediaType: MediaType
-	/** How long the document waits for the lookup. */
-	budgetMs: number
-}) {
-	if (!relatedMapEnabled())
-		return {
-			lookup: "off" as const,
-			panelState: await prefetchRelatedTitlesState(params),
-		}
-	return {
-		lookup: await relatedMapLookup({
-			type: params.sourceMediaType,
-			id: params.tmdbId,
-			budgetMs: params.budgetMs,
-		}),
-		panelState: null,
-	}
-}
-
-/**
- * What the loader answers with for the related titles: the map's section, or the carousel's panel, and whether the
- * page has everything a complete document holds (see incomplete-page.ts).
+ * What the loader answers with for the related titles: the map's section, and whether the page has everything a
+ * complete document holds (see incomplete-page.ts). Without a pack the related titles carousel stands in for the map
+ * and asks for its panel from the browser.
  */
 export function relatedSectionData(
-	section: Awaited<ReturnType<typeof prefetchRelatedSection>>,
+	lookup: RelatedMapLookup,
 	title: string,
 	request: Request,
 ) {
-	const relatedMap = relatedMapData(
-		section.lookup,
-		title,
-		isDocumentRequest(request),
-	)
 	return {
-		relatedMap,
-		panelState: section.panelState,
-		complete: section.panelState
-			? relatedPanelEmbedded(section.panelState)
-			: section.lookup !== "late",
+		relatedMap: relatedMapData(lookup, title, isDocumentRequest(request)),
+		complete: lookup !== "late",
 	}
 }
