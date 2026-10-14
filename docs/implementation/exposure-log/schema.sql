@@ -21,5 +21,15 @@ CREATE TABLE IF NOT EXISTS doc.user_list_exposure (
     title_keys ARRAY(BIGINT),
     positions ARRAY(INTEGER),
     taste_matches ARRAY(INTEGER),
+    g1_flag_mode TEXT,
+    g1_fallback_reason TEXT,
+    g1_payload_build_time TIMESTAMP WITH TIME ZONE,
+    g1_model_hash TEXT,
+    g1_snapshot_version TEXT,
+    g1_groups ARRAY(INTEGER),
+    g1_mix_placed ARRAY(BOOLEAN),
+    watch_next_tiers ARRAY(TEXT),
+    today_first_100 ARRAY(BIGINT),
+    g1_first_100 ARRAY(BIGINT),
     PRIMARY KEY (user_id, list_id)
 ) CLUSTERED BY (user_id) INTO 6 SHARDS;

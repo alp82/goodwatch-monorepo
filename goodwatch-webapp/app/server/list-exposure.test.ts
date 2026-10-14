@@ -91,6 +91,16 @@ test("one deferred row holds the first 30 keys, one-based positions and shown ma
 		title_keys: data.titles.slice(0, 30).map((t) => t.key),
 		positions: Array.from({ length: 30 }, (_, i) => i + 1),
 		taste_matches: data.titles.slice(0, 30).map((t) => t.match),
+		g1_flag_mode: "off",
+		g1_fallback_reason: null,
+		g1_payload_build_time: null,
+		g1_model_hash: null,
+		g1_snapshot_version: null,
+		g1_groups: Array(30).fill(null),
+		g1_mix_placed: Array(30).fill(null),
+		watch_next_tiers: Array(30).fill(null),
+		today_first_100: null,
+		g1_first_100: null,
 	})
 	assert.ok(rows[0].created_at instanceof Date)
 })
@@ -186,4 +196,57 @@ test("an outage bounds pending writes, logs drops, and recovers once writes fini
 	await turn()
 	finishes[1000]()
 	await turn()
+})
+
+test("G1 exposure metadata stays aligned to returned cards, including unkeyed titles and tier batches", async () => {
+	const data = input()
+	const first = data.titles[0].key
+	const g1 = {
+		flag: { mode: "preview" as const, enabled: true, shadow: false },
+		fallbackReason: null,
+		payloadBuildTime: "2026-10-14T12:00:00.000Z",
+		modelHash: "model",
+		snapshotVersion: "snapshot",
+		todayFirst100: [first, data.titles[1].key],
+		g1First100: null,
+		titles: new Map([[first, { group: 2, mixPlaced: true }]]),
+	}
+	recordListExposure(ctx, {
+		...data,
+		surface: "watch-next",
+		ordering: "g1",
+		flags: { REC_G1_ORDER: true },
+		g1,
+		watchNextTiers: new Map([[first, "hero"]]),
+		batch: "cards",
+	})
+	await turn()
+	assert.equal(rows[0].g1_flag_mode, "preview")
+	assert.equal(rows[0].g1_model_hash, "model")
+	assert.equal(rows[0].g1_snapshot_version, "snapshot")
+	assert.equal(rows[0].g1_payload_build_time, g1.payloadBuildTime)
+	assert.equal(rows[0].g1_fallback_reason, null)
+	assert.deepEqual(rows[0].g1_groups, [2, ...Array(29).fill(null)])
+	assert.deepEqual(rows[0].g1_mix_placed, [true, ...Array(29).fill(null)])
+	assert.deepEqual(rows[0].watch_next_tiers, ["hero", ...Array(29).fill(null)])
+	assert.deepEqual(rows[0].today_first_100, g1.todayFirst100)
+	assert.equal(rows[0].g1_first_100, null)
+	recordListExposure(ctx, {
+		...data,
+		g1: {
+			...g1,
+			flag: { mode: "shadow", enabled: false, shadow: true },
+			todayFirst100: null,
+			g1First100: [first],
+		},
+	})
+	await turn()
+	assert.deepEqual(rows[1].g1_first_100, [first])
+	assert.equal(rows[1].today_first_100, null)
+	recordListExposure(ctx, {
+		...data,
+		g1: { ...g1, fallbackReason: "missing-payload", todayFirst100: null },
+	})
+	await turn()
+	assert.equal(rows[2].g1_fallback_reason, "missing-payload")
 })

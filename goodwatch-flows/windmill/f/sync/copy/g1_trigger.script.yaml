@@ -1,0 +1,8 @@
+summary: Enqueue G1 for the explicit preview list
+description: Reads the JSON array variable f/sync/g1_preview_members. Missing or empty means disabled. Called after title snapshot publication and by the existing nightly snapshot job even on a no-change night. The G1 script runs on a dedicated single-worker g1-order tag. No deployment performed.
+kind: script
+lock: '!inline f/sync/copy/g1_trigger.script.lock'
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}

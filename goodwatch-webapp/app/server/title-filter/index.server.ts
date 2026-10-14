@@ -54,7 +54,17 @@ import {
 	titleSet,
 } from "./passes.server"
 
+import { recG1Order } from "../features.server.ts"
+import {
+	loadG1,
+	g1Exposure,
+	orderG1,
+	logG1,
+	type G1Exposure,
+} from "../g1/reader.server.ts"
+
 export interface FilterResult {
+	g1?: G1Exposure
 	/** Passing titles in the order of `sortUsed` (For you applied). */
 	keys: TitleKey[]
 	/**
@@ -168,7 +178,9 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	)
 	// Remove pure hides before computing recoveries and counts: no filter can bring them back.
 	if (!input.includeNotInterested && viewer.hidden.size) {
-		const kept = Array.from(keys, (_, i) => i).filter((i) => !viewer.hidden.has(keys[i]))
+		const kept = Array.from(keys, (_, i) => i).filter(
+			(i) => !viewer.hidden.has(keys[i]),
+		)
 		rows = Int32Array.from(kept, (i) => rows[i])
 		keys = Float64Array.from(kept, (i) => keys[i])
 	}
@@ -185,7 +197,10 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	)
 	const ladder = viewerLadder(viewer)
 	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
-		list.map(({ option, keys }) => ({ option, keys: titleSet(keys, snapshot) }))
+		list.map(({ option, keys }) => ({
+			option,
+			keys: titleSet(keys, snapshot),
+		}))
 
 	const { passing, recoveries, optionCounts } = runPasses({
 		columns: snapshot.columns,
@@ -237,7 +252,28 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		sortUsed === "match" && universe
 			? byMatch(passing, universe.percentiles)
 			: passing
-	const ordered = Array.from(inOrder, (i) => keys[i])
+	let ordered = Array.from(inOrder, (i) => keys[i])
+	let g1: G1Exposure | undefined
+	if (input.universe === "catalog" && sortUsed === "match") {
+		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
+		const flag = recG1Order(member)
+		const read =
+			member && (flag.enabled || flag.shadow)
+				? await loadG1(member, snapshot)
+				: { data: null, fallbackReason: null }
+		g1 = g1Exposure(flag, read)
+		if (member && (flag.enabled || flag.shadow)) {
+			const next = read.data ? orderG1(ordered, read.data, snapshot) : null
+			logG1(member, "discover", g1, ordered, next?.keys)
+			if (next) {
+				g1.titles = next.titles
+				if (flag.enabled) {
+					g1.todayFirst100 = ordered.slice(0, 100)
+					ordered = next.keys
+				} else g1.g1First100 = next.keys.slice(0, 100)
+			}
+		}
+	}
 	let moved: FilterResult["moved"]
 	let movedUp: number | undefined
 	if (input.forYou && universe && sortUsed !== "match") {
@@ -274,6 +310,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 
 	return {
 		keys: ordered,
+		g1,
 		sortUsed,
 		hasTaste: taste !== null,
 		total: passing.length,

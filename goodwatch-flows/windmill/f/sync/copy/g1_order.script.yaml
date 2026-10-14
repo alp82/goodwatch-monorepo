@@ -1,6 +1,9 @@
 summary: Build G1 ordering components for explicit preview members
-description: Reads the reference pool and all members' ratings, Want to See, Skip and Not interested from Crate. Writes only g1:v1:<member> with a TTL. F3 and the first-100 mix are composed over the filtered list at request time. Preview ids must be supplied explicitly. Stage 1; scheduling and webapp integration follow separately.
+description: Reads the reference pool and all members' ratings, Want to See, Skip and Not interested from Crate. Writes only g1:v1:<member> with a TTL. F3 and the first-100 mix are composed over the filtered list at request time. Preview ids must be supplied explicitly. Stage 2 enqueues via g1_trigger after snapshot attempts and nightly. Route to a dedicated g1-order worker group with exactly one worker to serialize builds.
 kind: script
+tag: g1-order
+concurrent_limit: 1
+concurrency_time_window_s: 0
 lock: '!inline f/sync/copy/g1_order.script.lock'
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema

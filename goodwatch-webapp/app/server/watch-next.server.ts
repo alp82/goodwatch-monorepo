@@ -32,6 +32,16 @@ import type { ViewerContext } from "~/server/viewer.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
+import { recG1Order } from "./features.server.ts"
+import {
+	loadG1,
+	g1Exposure,
+	orderG1,
+	mixFitting,
+	logG1,
+	type G1Read,
+} from "./g1/reader.server.ts"
+
 export interface WatchNextOptions {
 	/** Null or unavailable (Best match without taste): the default sort. */
 	sort?: WatchNextSort | null
@@ -266,6 +276,7 @@ export function planWatchNext(
 	outside: ReadonlyMap<TitleKey, SortFacts | null> = new Map(),
 	/** Minutes per movie, for My movies with a time chosen (see movieRuntimes). */
 	runtimes: ReadonlyMap<TitleKey, number | null> = new Map(),
+	g1Read?: G1Read,
 ) {
 	const movies = options.kind === "movie"
 	const time = movies ? (options.time ?? null) : null
@@ -327,12 +338,69 @@ export function planWatchNext(
 	]
 	// Titles that fit come first, then those one condition short, then the rest; each in the sort's order. On My
 	// movies a movie that runs over the chosen time comes after every movie that doesn't, the least over first.
-	const ranked = [...order].sort(
+	let ranked = [...order].sort(
 		(a, b) =>
-			Math.sign(a.over) - Math.sign(b.over) ||
-			b.fit - a.fit ||
-			a.over - b.over,
+			Math.sign(a.over) - Math.sign(b.over) || b.fit - a.fit || a.over - b.over,
 	)
+	// The snapshot may reload while planFor awaits Valkey; never use mapping from another version.
+	if (g1Read?.data && g1Read.data.payload.snapshotVersion !== snapshot?.version)
+		g1Read = {
+			data: null,
+			fallbackReason: snapshot ? "snapshot-mismatch" : "snapshot-unavailable",
+		}
+	const flag = recG1Order(
+		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
+	)
+	const g1 = g1Exposure(flag, g1Read ?? { data: null, fallbackReason: null })
+	if (sort === "match" && g1Read && (flag.enabled || flag.shadow)) {
+		const today = ranked.map((e) => e.key)
+		if (g1Read.data && snapshot) {
+			const f3 = orderG1(
+				entries.map((e) => e.key),
+				g1Read.data,
+				snapshot,
+				false,
+			)
+			const byKey = new Map(entries.map((e) => [e.key, e]))
+			let next = f3.keys
+				.map((k) => byKey.get(k)!)
+				.sort(
+					(a, b) =>
+						Math.sign(a.over) - Math.sign(b.over) ||
+						b.fit - a.fit ||
+						a.over - b.over ||
+						Number(passed.has(a.key)) - Number(passed.has(b.key)),
+				)
+			const fittingKeys = next
+				.filter((e) => e.fit === need && !e.over && !passed.has(e.key))
+				.map((e) => e.key)
+			const mix = mixFitting(fittingKeys, g1Read.data, snapshot, f3.ranks)
+			const replace = new Set(fittingKeys)
+			let i = 0
+			next = next.map((e) =>
+				replace.has(e.key) ? byKey.get(mix.keys[i++])! : e,
+			)
+			g1.titles = f3.titles
+			for (const key of mix.placed) g1.titles.get(key)!.mixPlaced = true
+			logG1(
+				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
+				"watch-next",
+				g1,
+				today,
+				next.map((e) => e.key),
+			)
+			if (flag.enabled) {
+				g1.todayFirst100 = today.slice(0, 100)
+				ranked = next
+			} else g1.g1First100 = next.slice(0, 100).map((e) => e.key)
+		} else
+			logG1(
+				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
+				"watch-next",
+				g1,
+				today,
+			)
+	}
 	const fitting = ranked.filter((e) => e.fit === need && !e.over)
 	const heroFits = fitting.length > 0 || ranked.length === 0
 	const head = (heroFits ? fitting : ranked).slice(0, 1 + THEN)
@@ -412,6 +480,7 @@ export function planWatchNext(
 
 	return {
 		sort,
+		g1,
 		defaultSort,
 		moods,
 		onMyServices,
@@ -533,7 +602,12 @@ export function worthwhileSuggestions(
 		const key = keys[i]
 		if (moodMask && !(moodMasks[i] & moodMask)) continue
 		if (options.kind && parseTitleKey(key).mediaType !== options.kind) continue
-		if (ctx.hidden.has(key) || ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
+		if (
+			ctx.hidden.has(key) ||
+			ctx.wishlist.has(key) ||
+			ctx.seen.has(key) ||
+			ctx.skipped.has(key)
+		)
 			continue
 		// While the country's availability loads, services don't narrow.
 		if (onMyServices && isOnServices(ctx.country, ctx.services, key) === false)
@@ -592,8 +666,7 @@ function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 	const misfit = misfitOf({
 		over: entry.over,
 		inMood:
-			!plan.moods.length ||
-			Boolean(entry.moodMask & maskOfMoods(plan.moods)),
+			!plan.moods.length || Boolean(entry.moodMask & maskOfMoods(plan.moods)),
 		onServices: !plan.onMyServices || entry.onServices !== false,
 	})
 	return misfit ? { ...title, misfit } : title
@@ -610,7 +683,16 @@ async function planFor(
 		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
 		timed ? movieRuntimes(ctx.wishlist.keys()) : undefined,
 	])
-	return planWatchNext(ctx, taste, options, outside, runtimes)
+	const member = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
+	const flag = recG1Order(member)
+	const match =
+		(!options.sort || options.sort === "match") &&
+		bestMatchOf(ctx, taste).available
+	const g1Read =
+		member && match && (flag.enabled || flag.shadow)
+			? await loadG1(member, getTitleSnapshot())
+			: undefined
+	return planWatchNext(ctx, taste, options, outside, runtimes, g1Read)
 }
 
 /** Watch next for the viewer: the hero, its Then column, the tiers, mood counts and pictures, and suggestions. */
@@ -728,7 +810,10 @@ export async function getWatchNextCardsPage(
 	options: WatchNextOptions,
 ): Promise<{ titles: WatchNextTitle[]; listId: string | null }> {
 	const { plan, titles } = await readWatchNextTitles(ctx, keys, options)
-	return { titles, listId: watchNextExposure(ctx, options, plan, titles, "cards") }
+	return {
+		titles,
+		listId: watchNextExposure(ctx, options, plan, titles, "cards"),
+	}
 }
 
 async function readWatchNextTitles(
@@ -753,8 +838,13 @@ function watchNextExposure(
 ) {
 	return recordListExposure(ctx, {
 		surface: "watch-next",
-		ordering: "taste-v2",
-		flags: {},
+		ordering: plan.g1.todayFirst100 ? "g1" : "taste-v2",
+		flags: { REC_G1_ORDER: plan.g1.flag.enabled },
+		g1: plan.g1,
+		watchNextTiers: new Map([
+			...plan.head.map((e, i) => [e.key, i === 0 ? "hero" : "then"] as const),
+			...plan.tiers.flatMap((t) => t.keys.map((k) => [k, t.key] as const)),
+		]),
 		sort: plan.sort,
 		sortRequested: options.sort ?? null,
 		// Watch next has no For you switch: its Best match sort already orders by taste.

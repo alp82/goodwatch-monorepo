@@ -662,6 +662,15 @@ def main(force: bool = False, dry_run: bool = False):
             return crate.cur.fetchall()
 
         result = run(redis, select, force=force, dry_run=dry_run)
+        # Every successful snapshot attempt includes the nightly no-change path. Never enqueue
+        # from dry runs or when another publisher owns the lock. G1 failure cannot fail the snapshot.
+        if not dry_run and (result.get("published") or result.get("reason") == "no title analysis changed since the current version"):
+            try:
+                from f.sync.copy.g1_trigger import main as start_preview_g1
+                result["g1"] = start_preview_g1()
+            except Exception as error:
+                print(f"Could not enqueue preview G1: {error}", flush=True)
+                result["g1"] = {"started": False, "reason": str(error)}
         print(json.dumps(result), flush=True)
         return result
     finally:

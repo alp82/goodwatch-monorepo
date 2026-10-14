@@ -19,10 +19,14 @@ all filter state, country, expanded saved services, taste key version, and order
 For you switch, so both fields are false. Its `filters.type` distinguishes My movies. Discover has a page number;
 Watch next has a `batch` of `page` or `cards`. Empty pages also record their state.
 
-Today's ordering is explicitly `taste-v2`. There are currently no feature flags in these ordering paths, so
-`ordering_flags` is `{}`. When the owner's G1 flag is added, its resolved state must be passed with `ordering: "g1"`
-where G1 actually orders the list, retaining `taste-v2` and the false flag state for the control. Do not infer the
-ordering from the taste version: they are separate identities.
+Today's ordering is `taste-v2`; stage 2 can use `g1` for the flagged catalogue Best match and
+Watch next lists. `ordering_flags.REC_G1_ORDER` carries the resolved enabled state; `g1_flag_mode`
+carries off/shadow/preview/on. The nullable G1 fields record fallback reason, payload build time,
+model hash and snapshot version; `g1_groups`, `g1_mix_placed`, and `watch_next_tiers` align to the
+returned cards. Under G1, `today_first_100` records today's same-list control before paging;
+under shadow, `g1_first_100` records the candidate while cards retain today's order. See
+[stage 2](../g1-order-stage2.md) and apply [g1-migration.sql](g1-migration.sql) to an existing table.
+Ordering identity stays separate from the displayed card taste version.
 
 The server returns `listId` immediately and schedules the Crate write on the next event-loop turn, without waiting.
 Errors are logged. At 1,000 outstanding writes, further records are dropped and logged; the list still succeeds.
@@ -33,7 +37,7 @@ Follow-up: carry `listId` and page/batch position through title opens, Want to S
 persist that attribution. The shared card actions, Watch next's hero/suggestions, and subsequent title-page actions
 use different mutation paths today; this build leaves those paths for a separate change. For now,
 ratings are joinable by member and title/time, but a specific action cannot be attributed to a specific list id.
-Also follow up with the owner-only G1 flag and, after a month, the randomized slot and its probability from #525.
+After a month, follow up with the randomized slot and its probability from #525.
 
 Validation (October 14, 2026): the exposure writer/list builder tests, Discover filter cache, title filters,
 taste, My pages, Watch next, For you, filter state, and Crate insert rows tests pass (10 Node test files).
