@@ -21,7 +21,9 @@ export default function SettingsPair() {
 	const { state, saving, changed, browserLanguage } = p
 	const failed = state.status === "failed"
 	const next = intended(state)
-	const off = saving || !p.known
+	// Without the private read the lists wait for it; if it fails, the page's own pair stands in, and a save still
+	// checks against what is on record (a conflict adopts it).
+	const off = saving || (!p.known && !p.readFailed)
 
 	return (
 		<div data-settings-pair className="flex flex-col gap-4">
@@ -39,7 +41,7 @@ export default function SettingsPair() {
 						<span role="alert" className="text-red-300">
 							{state.conflict
 								? `Saved elsewhere meanwhile. Retry keeps ${describePair(next, browserLanguage, changed)}.`
-								: "Didn't save. Nothing changed."}
+								: "Couldn't confirm the save. It may have gone through; Retry to make sure."}
 						</span>
 						<button
 							type="button"
@@ -60,6 +62,20 @@ export default function SettingsPair() {
 					</>
 				) : saving ? (
 					<span className="text-gray-400">Saving {p.destination}…</span>
+				) : p.readFailed ? (
+					<>
+						<span className="text-gray-400">
+							Couldn't read what is saved. These are this page's.
+						</span>
+						<button
+							type="button"
+							data-retry-read
+							onClick={p.retryRead}
+							className="h-8 cursor-pointer rounded-full px-3 font-semibold text-gray-200 hover:bg-white/10"
+						>
+							Try again
+						</button>
+					</>
 				) : !p.known ? (
 					<span className="text-gray-500">Reading what is saved…</span>
 				) : null}

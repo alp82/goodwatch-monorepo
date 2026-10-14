@@ -26,7 +26,8 @@ export default function Details(props: DetailsProps) {
 	const { details } = props.media
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
-			<MediaPreferenceProvider country={props.country}>
+			{/* One per title: a preview and its question never carry over to the next title. */}
+			<MediaPreferenceProvider key={`${props.media.mediaType}-${details.tmdb_id}`} country={props.country}>
 				<DetailsPage {...props} />
 			</MediaPreferenceProvider>
 		</BelowFoldProvider>

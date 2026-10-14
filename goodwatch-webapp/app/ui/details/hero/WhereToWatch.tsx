@@ -272,14 +272,24 @@ export default function WhereToWatch({
 					<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
 				</button>
 			</div>
-			{preview && (
-				<p className="mt-2 text-xs text-gray-400" aria-live="polite">
-					{preview === "loading"
-						? `Loading the services in ${regionName(shownCountry)}…`
-						: `The services in ${regionName(shownCountry)} could not be loaded. These are ${regionName(country)}'s.`}
-				</p>
-			)}
-			<div className={preview === "loading" ? "opacity-40" : ""} aria-busy={preview === "loading" || undefined}>
+			{/* Over the services, not above them: a country's preview moves nothing on the page. The services under it are
+			    the loaded country's, dimmed until the picked one's are in. */}
+			<div className="relative">
+			<p
+				aria-live="polite"
+				className={
+					preview
+						? "pointer-events-none absolute inset-x-0 top-1 z-10 mx-auto w-fit max-w-full rounded-full bg-stone-900/95 px-3 py-1 text-center text-xs text-gray-200 shadow-lg shadow-black/50 ring-1 ring-white/10"
+						: "sr-only"
+				}
+			>
+				{preview === "loading"
+					? `Loading the services in ${regionName(shownCountry)}…`
+					: preview === "failed"
+						? `The services in ${regionName(shownCountry)} could not be loaded. These are ${regionName(country)}'s.`
+						: ""}
+			</p>
+			<div className={preview ? "opacity-40" : ""} aria-busy={preview === "loading" || undefined}>
 			{links.length === 0 ? (
 				<NotHere
 					others={others}
@@ -385,6 +395,7 @@ export default function WhereToWatch({
 					<ChevronRightIcon className="h-3 w-3" />
 				</button>
 			)}
+			</div>
 			</div>
 			{/* Which services are yours is a setting. As before, the way to it shows from md up while none of these is. */}
 			{!anyOwned && links.length > 0 && (

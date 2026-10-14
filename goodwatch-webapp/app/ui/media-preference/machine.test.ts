@@ -8,6 +8,7 @@ import {
 	initialState,
 	intended,
 	isPending,
+	onScreen,
 	reduce,
 } from "./machine.ts"
 
@@ -366,4 +367,57 @@ test("after a conflict, a value this save did not change follows the pair adopte
 	assert.deepEqual(intended(state), { country: "ES", language: "it" })
 	assert.deepEqual(changes(state), { country: false, language: true })
 	assert.deepEqual(reduce(state, { type: "keep" }).request?.pair, { country: "ES", language: "it" })
+})
+
+// A member with Germany saved opens /movie/1?country=FR: France is the page's view, never saved by a language Keep.
+const onFrance = () =>
+	run([
+		{
+			type: "syncSaved",
+			pair: { country: "DE", language: BROWSER },
+			recorded: true,
+			view: "FR",
+		},
+	], initialState({ country: "FR", language: BROWSER }))
+
+test("the address's country is shown, not saved: a language-only Keep keeps the saved country", () => {
+	const page = onFrance()
+	assert.deepEqual(onScreen(page), { country: "FR", language: BROWSER })
+	assert.equal(isPending(page), false)
+	const saving = run([{ type: "pickLanguage", language: "ja" }, { type: "keep" }], page)
+	assert.deepEqual(saving.request?.pair, { country: "DE", language: "ja" })
+	const kept = reduce(saving, {
+		type: "saveSucceeded",
+		seq: saving.seq,
+		pair: { country: "DE", language: "ja" },
+	})
+	assert.deepEqual(kept.saved, { country: "DE", language: "ja" })
+	assert.deepEqual(onScreen(kept), { country: "FR", language: "ja" }, "the page still shows its address's country")
+	assert.deepEqual(kept.undoTo, { country: "DE", language: BROWSER })
+})
+
+test("on the address's country, picking the saved one shows it without a question, and a kept country replaces the view", () => {
+	const page = onFrance()
+	const back = reduce(page, { type: "pickCountry", country: "DE" })
+	assert.equal(onScreen(back).country, "DE")
+	assert.equal(isPending(back), false)
+	assert.equal(onScreen(reduce(back, { type: "discard" })).country, "FR")
+	const saving = run([{ type: "pickCountry", country: "JP" }, { type: "keep" }], page)
+	assert.deepEqual(saving.request?.pair, { country: "JP", language: BROWSER })
+	const kept = reduce(saving, { type: "saveSucceeded", seq: saving.seq, pair: saving.request!.pair })
+	assert.equal(kept.view, null)
+	assert.equal(onScreen(kept).country, "JP")
+})
+
+test("the saved pair read during a save is taken, so the toast's Undo returns to it", () => {
+	const saving = run([{ type: "pickLanguage", language: "ja" }, { type: "keep" }])
+	const read = reduce(saving, {
+		type: "syncSaved",
+		pair: { country: "DE", language: "fr" },
+		recorded: true,
+	})
+	assert.equal(read.status, "saving")
+	assert.deepEqual(read.request, saving.request, "the save under way is not changed")
+	const kept = reduce(read, { type: "saveSucceeded", seq: read.seq, pair: { country: "DE", language: "ja" } })
+	assert.deepEqual(kept.undoTo, { country: "DE", language: "fr" })
 })

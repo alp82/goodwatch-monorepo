@@ -17,7 +17,12 @@ export function warmUndoToast() {
  * `say(text, undo)` shows the toast, without its Undo button when `undo` is left out; `node` goes anywhere in the surface's markup (it renders at the end of the page,
  * so no ancestor can clip or offset it).
  */
-export function useUndoToast(className?: string): { say: (text: string, undo?: () => void) => void; node: ReactNode } {
+export function useUndoToast(className?: string): {
+	say: (text: string, undo?: () => void) => void
+	/** Takes the toast away now, such as when its Undo no longer applies. */
+	dismiss: () => void
+	node: ReactNode
+} {
 	const [toast, setToast] = useState<(UndoToastMessage & { undo?: () => void }) | null>(null)
 	// Stays mounted after the first message, so a later one can animate out.
 	const [used, setUsed] = useState(false)
@@ -42,5 +47,5 @@ export function useUndoToast(className?: string): { say: (text: string, undo?: (
 				document.body,
 			)
 		: null
-	return { say, node }
+	return { say, dismiss, node }
 }

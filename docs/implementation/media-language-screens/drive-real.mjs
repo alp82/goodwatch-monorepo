@@ -10,8 +10,14 @@ import { fileURLToPath } from "node:url"
 const require = createRequire(`${process.env.PLAYWRIGHT ?? "."}/`)
 const { chromium } = require("playwright-core")
 const base = process.argv[2] ?? "http://localhost:3141"
-const here = path.dirname(fileURLToPath(import.meta.url))
+// Screenshots stay out of the repo (see README.md): SCREENS, or a folder beside the repository's checkout.
+const here =
+	process.env.SCREENS ??
+	path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../goodwatch-media-language-screens")
 const TITLE = "/movie/129"
+// HeadlessChrome's own user agent is a crawler to the app, which serves crawlers canonical English by policy.
+const userAgent =
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
 let failures = 0
 const check = (ok, what) => {
@@ -24,7 +30,7 @@ async function quiet(context) {
 	await context.route("**/api/e**", (r) => r.fulfill({ status: 200, body: "" }))
 }
 
-async function open(context) {
+async function open(context, url = TITLE) {
 	const p = await context.newPage()
 	p.saves = []
 	p.on("response", async (response) => {
@@ -32,7 +38,7 @@ async function open(context) {
 		const body = response.request().postDataJSON()
 		p.saves.push({ body, status: response.status(), answer: await response.json().catch(() => null) })
 	})
-	await p.goto(base + TITLE, { waitUntil: "load", timeout: 180_000 })
+	await p.goto(base + url, { waitUntil: "load", timeout: 180_000 })
 	await p.addStyleTag({ content: ".tsqd-open-btn-container{display:none!important}" })
 	await p.waitForSelector("[data-pair-chip]", { timeout: 120_000 })
 	await p.waitForTimeout(1500)
@@ -60,10 +66,10 @@ async function keep(p) {
 	await p.waitForTimeout(800)
 	return p.saves.at(-1)
 }
-async function firstPaint(browser, context) {
-	// The server's HTML alone: scripts off, the same cookies.
-	const plain = await browser.newContext({ javaScriptEnabled: false, locale: "de-DE" })
-	await plain.addCookies(await context.cookies())
+async function firstPaint(browser, context, cookies) {
+	// The server's HTML alone: scripts off, the same cookies (or the ones taken earlier).
+	const plain = await browser.newContext({ javaScriptEnabled: false, locale: "de-DE", userAgent })
+	await plain.addCookies(cookies ?? (await context.cookies()))
 	await quiet(plain)
 	const p = await plain.newPage()
 	await p.goto(base + TITLE, { waitUntil: "load", timeout: 180_000 })
@@ -74,7 +80,7 @@ async function firstPaint(browser, context) {
 
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium" })
 try {
-	const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "de-DE" })
+	const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "de-DE", userAgent })
 	await quiet(context)
 	const p = await open(context)
 	check((await cookie(context)) === null, "guest: no gw_loc cookie before a Keep")
@@ -97,8 +103,8 @@ try {
 	check(/^Saved on this device: Japan(Undo)?$/.test(toast ?? ""), `Keep: the toast names only the country (${toast})`)
 	await p.screenshot({ path: path.join(here, "real-1-kept.png") })
 
-	const painted = await firstPaint(browser, context)
-	check(/Country Japan/.test(painted), `reload: the server's first paint shows the kept Japan (${painted})`)
+	// The toast lasts 6 s, less than a dev server's page: the first paint with the kept cookie is read after the Undo.
+	const keptCookies = await context.cookies()
 
 	// The toast's Undo through the same endpoint and client.
 	await p.locator("[data-toast] button", { hasText: "Undo" }).click()
@@ -113,6 +119,8 @@ try {
 	c = await cookie(context)
 	check(c?.country === "DE" && c.language === "browser", "Undo: gw_loc back to Germany, following the browser")
 	check(/Restored on this device: Germany/.test((await p.locator("[data-toast]").last().textContent()) ?? ""), "Undo: a Restored toast")
+	const painted = await firstPaint(browser, context, keptCookies)
+	check(/Country Japan/.test(painted), `reload: the server's first paint shows the kept Japan (${painted})`)
 	check(/Country Germany/.test(await firstPaint(browser, context)), "Undo: the first paint shows Germany again")
 
 	// An explicit language, then Browser default.
@@ -157,6 +165,33 @@ try {
 	)
 	c = await cookie(context)
 	check(c?.language === "it" && c.country === "ES", "two tabs: gw_loc has Spain and the retried Italian")
+	await first.close()
+	await second.close()
+
+	// The address's country is a view of the page: a Keep of the language alone keeps the saved Spain.
+	const viewed = await open(context, `${TITLE}?country=FR`)
+	await viewed.locator("[data-pair-chip]").hover()
+	await viewed.waitForResponse((r) => r.url().endsWith("/api/media-preferences"), { timeout: 30_000 }).catch(() => {})
+	await viewed.waitForTimeout(800)
+	check(/Country France, for this page only/.test((await label(viewed)) ?? ""), `?country=FR: the pair says France is this page's only (${await label(viewed)})`)
+	await pick(viewed, "Titles", '[data-language="ja"]')
+	const languageOnly = await keep(viewed)
+	check(
+		languageOnly?.status === 200 && languageOnly.body.pair.country === "ES" && languageOnly.body.pair.language === "ja",
+		`?country=FR: a language-only Keep saves the saved Spain with Japanese (${JSON.stringify(languageOnly?.body?.pair)})`,
+	)
+	c = await cookie(context)
+	check(c?.country === "ES" && c.language === "ja", "?country=FR: gw_loc keeps Spain")
+	check(/Country France/.test((await label(viewed)) ?? ""), "?country=FR: the page still shows France")
+
+	// A preview stays with its title: the next title starts without it.
+	await pick(viewed, "Titles", '[data-language="de"]')
+	await viewed.evaluate(() => window.__remixRouter.navigate("/movie/603"))
+	await viewed.waitForURL(/\/movie\/603/, { timeout: 120_000 })
+	await viewed.waitForSelector("h1", { timeout: 120_000 })
+	await viewed.waitForTimeout(3000)
+	check((await viewed.locator("[data-preference-question]").count()) === 0, "next title: no question carried over")
+	check(!/not saved/.test((await label(viewed)) ?? ""), `next title: the pair shows what is saved (${await label(viewed)})`)
 	await context.close()
 } finally {
 	await browser.close()

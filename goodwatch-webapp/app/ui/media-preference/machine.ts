@@ -23,6 +23,11 @@ export interface PreferenceState {
 	 * picking the same value is still a change: Keep confirms it as an explicit choice.
 	 */
 	recorded: boolean
+	/**
+	 * A country the page shows that is not the saved one and was not picked: the address's `?country=`, a view of this
+	 * page only. It is never saved; a Keep of the language alone keeps the saved country.
+	 */
+	view: string | null
 	/** Values picked and not kept. A missing value is the saved one. */
 	preview: { country?: string; language?: LanguageChoice }
 	/** The languages the previewed country offers alongside it. None is ticked until the visitor ticks one. */
@@ -59,8 +64,17 @@ export type PreferenceEvent =
 			seq: number
 			conflict?: { current: PreferencePair | null }
 	  }
-	/** The saved pair became known (the private read after the first paint) or changed elsewhere. */
-	| { type: "syncSaved"; pair: PreferencePair; recorded: boolean }
+	/**
+	 * The saved pair became known (the private read after the first paint) or changed elsewhere. `view`: the country
+	 * the page shows when it is not the saved one (the address's), else null. During a save it is taken too: the
+	 * toast's Undo then returns to the pair really saved before.
+	 */
+	| {
+			type: "syncSaved"
+			pair: PreferencePair
+			recorded: boolean
+			view?: string | null
+	  }
 
 export function initialState(
 	saved: PreferencePair,
@@ -69,6 +83,7 @@ export function initialState(
 	return {
 		saved,
 		recorded,
+		view: null,
 		preview: {},
 		offers: [],
 		companion: null,
@@ -85,6 +100,14 @@ export function intended(state: PreferenceState): PreferencePair {
 	return {
 		country: state.preview.country ?? state.saved.country,
 		language: state.companion ?? state.preview.language ?? state.saved.language,
+	}
+}
+
+/** The pair the page shows: the preview over the address's country, over what is saved. */
+export function onScreen(state: PreferenceState): PreferencePair {
+	return {
+		country: state.preview.country ?? state.view ?? state.saved.country,
+		language: intended(state).language,
 	}
 }
 
@@ -124,6 +147,7 @@ export function reduce(
 	if (state.status === "saving") {
 		if (event.type === "saveSucceeded") return succeeded(state, event)
 		if (event.type === "saveFailed") return failed(state, event)
+		if (event.type === "syncSaved") return synced(state, event)
 		return state
 	}
 	switch (event.type) {
@@ -186,7 +210,7 @@ export function reduce(
 			}
 		}
 		case "syncSaved":
-			return settle({ ...state, saved: event.pair, recorded: event.recorded })
+			return settle(synced(state, event))
 		case "saveSucceeded":
 		case "saveFailed":
 			// Nothing is under way: an answer now belongs to a save that is over.
@@ -207,7 +231,22 @@ function succeeded(
 		offers: [],
 		companion: null,
 		status: "saved",
+		// A kept country replaces the address's on screen; a kept language leaves it.
+		view: state.preview.country !== undefined ? null : state.view,
 		undoTo: state.request.kind === "keep" ? state.saved : null,
+	}
+}
+
+function synced(
+	state: PreferenceState,
+	event: { pair: PreferencePair; recorded: boolean; view?: string | null },
+): PreferenceState {
+	const view = event.view === undefined ? state.view : event.view
+	return {
+		...state,
+		saved: event.pair,
+		recorded: event.recorded,
+		view: view === event.pair.country ? null : view,
 	}
 }
 
@@ -255,7 +294,8 @@ function failed(
 function settle(state: PreferenceState): PreferenceState {
 	const { country, ...rest } = state.preview
 	const preview: PreferenceState["preview"] =
-		country === undefined || (state.recorded && country === state.saved.country)
+		country === undefined ||
+		(state.recorded && country === state.saved.country && state.view === null)
 			? rest
 			: { ...rest, country }
 	const offers = preview.country === undefined ? [] : state.offers
