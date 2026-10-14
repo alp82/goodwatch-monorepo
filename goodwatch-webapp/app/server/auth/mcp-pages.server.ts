@@ -60,7 +60,9 @@ export function renderMcpConsent(data: {
 	unverified: boolean
 }): string {
 	const name = escapeHtml(data.clientName)
-	const scopes = data.scopes.map((scope) => `<li><code>${escapeHtml(scope)}</code></li>`).join("\n")
+	const scopes = data.scopes
+		.map((scope) => `<li><code>${escapeHtml(scope)}</code></li>`)
+		.join("\n")
 	const warning = data.unverified
 		? `<div class="warn" role="alert"><strong>Unverified app.</strong> GoodWatch has not checked this app. It registered itself and its name could be fake. Only allow it if you trust where it came from.</div>`
 		: ""

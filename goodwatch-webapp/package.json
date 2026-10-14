@@ -15,7 +15,9 @@
 		"test:auth": "bash scripts/auth-cratedb/run.sh",
 		"test:auth:integration": "node --test --test-concurrency=1 app/server/auth/adapter.integration.ts app/server/auth/failover.integration.ts",
 		"typecheck:auth": "tsc -p scripts/auth-cratedb/tsconfig.json",
-		"test:auth:wiring": "bash scripts/auth-wiring/run.sh"
+		"test:auth:wiring": "bash scripts/auth-wiring/run.sh",
+		"test:auth:mcp": "bash scripts/auth-mcp/run.sh",
+		"test:auth:mcp:clients": "bash scripts/auth-mcp/run.sh clients"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",

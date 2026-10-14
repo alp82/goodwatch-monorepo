@@ -1,22 +1,22 @@
-import { betterAuth, type BetterAuthOptions } from "@goodwatch/auth-stack"
-import { jwt } from "@goodwatch/auth-stack/plugins"
-import { mcp } from "@goodwatch/auth-stack/mcp"
-import { cimd } from "@goodwatch/auth-stack/cimd"
-import { fetchClientMetadataResource } from "@goodwatch/auth-stack/cimd-node"
-import { randomUUID, createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
+import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
 	APIError,
 	createAuthMiddleware,
 	createEmailVerificationToken,
 	getIP,
 } from "@goodwatch/auth-stack/api"
-import { jwtVerify, decodeJwt } from "jose"
-import { compare } from "bcryptjs"
-import { hashPassword, verifyPassword } from "@goodwatch/auth-stack/crypto"
+import { cimd } from "@goodwatch/auth-stack/cimd"
+import { fetchClientMetadataResource } from "@goodwatch/auth-stack/cimd-node"
 import { setSessionCookie } from "@goodwatch/auth-stack/cookies"
-import { crateAuthAdapter, type AuthSql } from "./crate-adapter.server.ts"
-import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
+import { hashPassword, verifyPassword } from "@goodwatch/auth-stack/crypto"
+import { mcp } from "@goodwatch/auth-stack/mcp"
+import { jwt } from "@goodwatch/auth-stack/plugins"
+import { compare } from "bcryptjs"
+import { decodeJwt, jwtVerify } from "jose"
+import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
+import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 export function createGoodwatchAuth(options: {
 	sql: AuthSql
@@ -31,7 +31,8 @@ export function createGoodwatchAuth(options: {
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
-	const tokenHash = (token: string) => createHash("sha256").update(token).digest("base64url")
+	const tokenHash = (token: string) =>
+		createHash("sha256").update(token).digest("base64url")
 	const core = betterAuth({
 		baseURL: options.baseURL,
 		secret: options.secret,
@@ -40,41 +41,99 @@ export function createGoodwatchAuth(options: {
 			sql: options.sql,
 			encryptionSecret: options.encryptionSecret,
 		}),
-		plugins: options.mcp ? [
-			jwt(),
-			mcp({
-				loginPage: "/auth/mcp/login",
-				consentPage: "/auth/mcp/consent",
-				resource: options.mcp.resource,
-				scopes: ["openid", "profile", "email", "mcp:read", "mcp:write", "offline_access"],
-				postLogin: {page: "/auth/mcp/consent", shouldRedirect: async () => false, consentReferenceId: async ({session}) => session?.id},
-				extensions: [{claims: {accessToken: async ({ctx, user, client, referenceId}) => {
-					if (!user) throw new APIError("BAD_REQUEST", {error: "invalid_grant"})
-					const consent = await ctx.context.adapter.findOne<{id: string; grantVersion: string}>({model: "oauthConsent", where: [
-						{field: "clientId", value: client.clientId}, {field: "userId", value: user.id},
-						...(referenceId ? [{field: "referenceId", value: referenceId}] : []),
-					]})
-					if (!consent?.grantVersion) throw new APIError("BAD_REQUEST", {error: "invalid_grant"})
-					return {gw_grant_id: consent.id, gw_grant_version: consent.grantVersion}
-				}}}],
-				storeTokens: {hash: async token => tokenHash(token)},
-				grantTypes: ["authorization_code", "refresh_token"],
-				clientPrivileges: async () => false,
-				resourcePrivileges: async () => false,
-				allowDynamicClientRegistration: true,
-				allowUnauthenticatedClientRegistration: true,
-				accessTokenExpiresIn: options.mcp.accessTokenExpiresIn ?? 300,
-				refreshTokenExpiresIn: 90 * 86400,
-			}),
-			cimd({metadataProfile: "mcp-2026-07-28", fetchClientMetadataResource}),
-			{
-				id: "goodwatch-mcp-grants",
-				schema: {oauthRefreshToken: {fields: {grantVersion: {type: "string", required: false, input: false}}}, oauthConsent: {fields: {
-					grantVersion: {type: "string", required: true, input: false, defaultValue: () => randomUUID()},
-					lastUsedAt: {type: "date", required: false, input: false},
-				}}},
-			},
-		] : [],
+		plugins: options.mcp
+			? [
+					jwt(),
+					mcp({
+						loginPage: "/auth/mcp/login",
+						consentPage: "/auth/mcp/consent",
+						resource: options.mcp.resource,
+						scopes: [
+							"openid",
+							"profile",
+							"email",
+							"mcp:read",
+							"mcp:write",
+							"offline_access",
+						],
+						postLogin: {
+							page: "/auth/mcp/consent",
+							shouldRedirect: async () => false,
+							consentReferenceId: async ({ session }) => session?.id,
+						},
+						extensions: [
+							{
+								claims: {
+									accessToken: async ({ ctx, user, client, referenceId }) => {
+										if (!user)
+											throw new APIError("BAD_REQUEST", {
+												error: "invalid_grant",
+											})
+										const consent = await ctx.context.adapter.findOne<{
+											id: string
+											grantVersion: string
+										}>({
+											model: "oauthConsent",
+											where: [
+												{ field: "clientId", value: client.clientId },
+												{ field: "userId", value: user.id },
+												...(referenceId
+													? [{ field: "referenceId", value: referenceId }]
+													: []),
+											],
+										})
+										if (!consent?.grantVersion)
+											throw new APIError("BAD_REQUEST", {
+												error: "invalid_grant",
+											})
+										return {
+											gw_grant_id: consent.id,
+											gw_grant_version: consent.grantVersion,
+										}
+									},
+								},
+							},
+						],
+						storeTokens: { hash: async (token) => tokenHash(token) },
+						grantTypes: ["authorization_code", "refresh_token"],
+						clientPrivileges: async () => false,
+						resourcePrivileges: async () => false,
+						allowDynamicClientRegistration: true,
+						allowUnauthenticatedClientRegistration: true,
+						accessTokenExpiresIn: options.mcp.accessTokenExpiresIn ?? 300,
+						refreshTokenExpiresIn: 90 * 86400,
+					}),
+					cimd({
+						metadataProfile: "mcp-2026-07-28",
+						fetchClientMetadataResource,
+					}),
+					{
+						id: "goodwatch-mcp-grants",
+						schema: {
+							oauthRefreshToken: {
+								fields: {
+									grantVersion: {
+										type: "string",
+										required: false,
+										input: false,
+									},
+								},
+							},
+							oauthConsent: {
+								fields: {
+									grantVersion: {
+										type: "string",
+										required: true,
+										input: false,
+										defaultValue: () => randomUUID(),
+									},
+									lastUsedAt: { type: "date", required: false, input: false },
+								},
+							},
+						},
+					},
+				]
+			: [],
 		secondaryStorage: {
 			get: async (key): Promise<string | null> => {
 				const cached = await options.storage.get(key)
@@ -203,22 +262,62 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
-				if (options.mcp && ctx.path === "/oauth2/token" && ctx.body?.grant_type === "refresh_token") {
-					const invalid = () => new APIError("BAD_REQUEST", {error: "invalid_grant", error_description: "App permission is no longer active"})
+				if (
+					options.mcp &&
+					ctx.path === "/oauth2/token" &&
+					ctx.body?.grant_type === "refresh_token"
+				) {
+					const invalid = () =>
+						new APIError("BAD_REQUEST", {
+							error: "invalid_grant",
+							error_description: "App permission is no longer active",
+						})
 					if (typeof ctx.body.refresh_token !== "string") throw invalid()
-					const token = await ctx.context.adapter.findOne<{clientId: string; userId: string; scopes: string[]; resources?: string[]; referenceId?: string; grantVersion?: string}>({
-						model: "oauthRefreshToken", where: [{field: "token", value: tokenHash(ctx.body.refresh_token)}],
+					const token = await ctx.context.adapter.findOne<{
+						clientId: string
+						userId: string
+						scopes: string[]
+						resources?: string[]
+						referenceId?: string
+						grantVersion?: string
+					}>({
+						model: "oauthRefreshToken",
+						where: [
+							{ field: "token", value: tokenHash(ctx.body.refresh_token) },
+						],
 					})
 					if (!token) throw invalid()
 					const [consent, user] = await Promise.all([
-						ctx.context.adapter.findOne<{scopes: string[]; resources?: string[]; grantVersion: string}>({model: "oauthConsent", where: [
-							{field: "clientId", value: token.clientId}, {field: "userId", value: token.userId},
-							...(token.referenceId ? [{field: "referenceId", value: token.referenceId}] : []),
-						]}),
-						ctx.context.adapter.findOne<{emailVerified: boolean}>({model: "user", where: [{field: "id", value: token.userId}]}),
+						ctx.context.adapter.findOne<{
+							scopes: string[]
+							resources?: string[]
+							grantVersion: string
+						}>({
+							model: "oauthConsent",
+							where: [
+								{ field: "clientId", value: token.clientId },
+								{ field: "userId", value: token.userId },
+								...(token.referenceId
+									? [{ field: "referenceId", value: token.referenceId }]
+									: []),
+							],
+						}),
+						ctx.context.adapter.findOne<{ emailVerified: boolean }>({
+							model: "user",
+							where: [{ field: "id", value: token.userId }],
+						}),
 					])
-					if (!user?.emailVerified || !consent || !token.grantVersion || token.grantVersion !== consent.grantVersion || !token.scopes.every(scope => consent.scopes.includes(scope)) ||
-						!token.resources?.every(resource => consent.resources?.includes(resource))) throw invalid()
+					if (
+						!user?.emailVerified ||
+						!consent ||
+						!token.grantVersion ||
+						token.grantVersion !== consent.grantVersion ||
+						!token.scopes.every((scope) => consent.scopes.includes(scope)) ||
+						!token.resources?.every((resource) =>
+							consent.resources?.includes(resource),
+						)
+					)
+						throw invalid()
 				}
 
 				if (
@@ -430,19 +529,48 @@ export function createGoodwatchAuth(options: {
 					const pair = await response.clone().json()
 					if (pair.refresh_token) {
 						const payload = decodeJwt(pair.access_token)
+						if (
+							typeof payload.gw_grant_id !== "string" ||
+							typeof payload.gw_grant_version !== "string"
+						)
+							throw new Error("Grant binding missing")
 						const context = await core.$context
-						const consent = await context.adapter.findOne<{grantVersion: string}>({model: "oauthConsent", where: [{field: "id", value: payload.gw_grant_id as string}]})
-						if (!consent || consent.grantVersion !== payload.gw_grant_version) throw new Error("Grant changed during issuance")
-						const token = await context.adapter.findOne<{id: string; grantVersion?: string}>({model: "oauthRefreshToken", where: [{field: "token", value: tokenHash(pair.refresh_token)}]})
+						const consent = await context.adapter.findOne<{
+							grantVersion: string
+						}>({
+							model: "oauthConsent",
+							where: [{ field: "id", value: payload.gw_grant_id }],
+						})
+						if (!consent || consent.grantVersion !== payload.gw_grant_version)
+							throw new Error("Grant changed during issuance")
+						const token = await context.adapter.findOne<{
+							id: string
+							grantVersion?: string
+						}>({
+							model: "oauthRefreshToken",
+							where: [{ field: "token", value: tokenHash(pair.refresh_token) }],
+						})
 						if (!token) throw new Error("Refresh issuance missing")
 						if (!token.grantVersion) {
-							const bound = await context.adapter.incrementOne({model: "oauthRefreshToken", where: [
-								{field: "id", value: token.id}, {field: "grantVersion", value: null},
-							], increment: {}, set: {grantVersion: consent.grantVersion}})
+							const bound = await context.adapter.incrementOne({
+								model: "oauthRefreshToken",
+								where: [
+									{ field: "id", value: token.id },
+									{ field: "grantVersion", value: null },
+								],
+								increment: {},
+								set: { grantVersion: consent.grantVersion },
+							})
 							if (!bound) throw new Error("Refresh binding conflicted")
-						} else if (token.grantVersion !== consent.grantVersion) throw new Error("Refresh binding changed")
+						} else if (token.grantVersion !== consent.grantVersion)
+							throw new Error("Refresh binding changed")
 					}
-				} catch {return Response.json({error: "temporarily_unavailable"}, {status: 503})}
+				} catch {
+					return Response.json(
+						{ error: "temporarily_unavailable" },
+						{ status: 503 },
+					)
+				}
 			}
 			if (response.status >= 500)
 				return Response.json(
