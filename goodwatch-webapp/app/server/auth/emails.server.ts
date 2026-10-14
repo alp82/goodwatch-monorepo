@@ -2,14 +2,8 @@
 // part with the same words and the full link, for mail apps that show no HTML.
 export type AuthEmail = { subject: string; text: string; html: string }
 
-const escape = (value: string) =>
-	value.replace(
-		/[&<>"']/g,
-		(c) =>
-			({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-				c
-			]!,
-	)
+const ENTITIES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (c) => ENTITIES[c] ?? c)
 
 function email(parts: {
 	subject: string
@@ -38,26 +32,26 @@ function email(parts: {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>${escape(subject)}</title>
+<title>${escapeHtml(subject)}</title>
 </head>
 <body style="margin:0;padding:0;background:#f3f4f6;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escape(preheader)}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
 <tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:448px;background:#ffffff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);">
 <tr><td style="padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2937;">
 <p style="margin:0 0 24px;font-size:20px;font-weight:900;letter-spacing:-0.025em;">Good<span style="color:#f59e0b;">Watch</span></p>
-<h1 style="margin:0 0 12px;font-size:24px;line-height:32px;font-weight:700;color:#111827;">${escape(title)}</h1>
-<p style="margin:0 0 24px;font-size:16px;line-height:26px;color:#374151;">${escape(body)}</p>
+<h1 style="margin:0 0 12px;font-size:24px;line-height:32px;font-weight:700;color:#111827;">${escapeHtml(title)}</h1>
+<p style="margin:0 0 24px;font-size:16px;line-height:26px;color:#374151;">${escapeHtml(body)}</p>
 ${
 	button
-		? `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#d97706;"><a href="${escape(button.url)}" style="display:inline-block;padding:12px 24px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${escape(button.label)}</a></td></tr></table>`
+		? `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#d97706;"><a href="${escapeHtml(button.url)}" style="display:inline-block;padding:12px 24px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${escapeHtml(button.label)}</a></td></tr></table>`
 		: ""
 }
-<p style="margin:24px 0 0;font-size:14px;line-height:22px;color:#6b7280;">${escape(footer)}</p>
+<p style="margin:24px 0 0;font-size:14px;line-height:22px;color:#6b7280;">${escapeHtml(footer)}</p>
 ${
 	button
-		? `<p style="margin:16px 0 0;font-size:12px;line-height:18px;color:#9ca3af;word-break:break-all;">Or paste this address: ${escape(button.url)}</p>`
+		? `<p style="margin:16px 0 0;font-size:12px;line-height:18px;color:#9ca3af;word-break:break-all;">Or paste this address: ${escapeHtml(button.url)}</p>`
 		: ""
 }
 </td></tr>

@@ -99,8 +99,8 @@ export default function ResetPassword() {
 	const token = params.get("token") ?? params.get("code")
 	const [state, setState] = useState<"form" | "done" | "expired">(token && !params.has("error") ? "form" : "expired")
 	if (state === "done") return <Saved />
-	if (state === "expired") return <Expired />
-	return <NewPassword token={token!} onDone={() => setState("done")} onExpired={() => setState("expired")} />
+	if (state === "expired" || !token) return <Expired />
+	return <NewPassword token={token} onDone={() => setState("done")} onExpired={() => setState("expired")} />
 }
 
 function NewPassword({ token, onDone, onExpired }: { token: string; onDone: () => void; onExpired: () => void }) {

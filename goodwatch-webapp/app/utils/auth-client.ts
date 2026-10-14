@@ -30,10 +30,13 @@ export function confirmedHref(returnTo: string) {
 	return `/verify-email?state=confirmed&returnTo=${encodeURIComponent(returnTo)}`
 }
 
+// What a Better Auth route answered: its status and its JSON, when it had any.
+type Answer = { status: number; data: { url?: unknown; code?: unknown } | unknown[] | null }
+
 async function call(
 	path: string,
 	body?: unknown,
-): Promise<{ status: number; data: any }> {
+): Promise<Answer> {
 	try {
 		const response = await fetch(`/api/auth${path}`, {
 			method: body === undefined ? "GET" : "POST",
@@ -41,7 +44,7 @@ async function call(
 			body: body === undefined ? undefined : JSON.stringify(body),
 			credentials: "same-origin",
 		})
-		let data: any = null
+		let data: Answer["data"] = null
 		try {
 			data = await response.json()
 		} catch {}
@@ -51,11 +54,11 @@ async function call(
 	}
 }
 
-function outcome({ status, data }: { status: number; data: any }): AuthResult {
+function outcome({ status, data }: Answer): AuthResult {
 	if (status >= 200 && status < 300) return OK
 	if (status === 429) return fail("throttled")
 	if (status === 0 || status >= 500) return fail("unavailable")
-	if (data?.code === "PASSWORD_TOO_SHORT") return fail("password")
+	if (data && !Array.isArray(data) && data.code === "PASSWORD_TOO_SHORT") return fail("password")
 	return fail("invalid")
 }
 
@@ -138,9 +141,10 @@ export function useAuthClient() {
 						callbackURL: back,
 						errorCallbackURL: "/sign-in?error=google",
 					})
-					if (typeof answer.data?.url !== "string") return outcome({ ...answer, status: answer.status === 200 ? 500 : answer.status })
+					const url = answer.data && !Array.isArray(answer.data) ? answer.data.url : undefined
+					if (typeof url !== "string") return outcome({ ...answer, status: answer.status === 200 ? 500 : answer.status })
 					forgetSupabaseSignIn()
-					window.location.assign(answer.data.url)
+					window.location.assign(url)
 					return OK
 				}
 				const client = await supabase()
@@ -209,7 +213,7 @@ export function useAuthClient() {
 				if (betterAuth) {
 					const { status, data } = await call("/list-accounts")
 					if (status !== 200 || !Array.isArray(data)) return null
-					return data.map((account: { providerId: string }) =>
+					return (data as { providerId: string }[]).map((account) =>
 						account.providerId === "credential" ? "email" : "google",
 					)
 				}
