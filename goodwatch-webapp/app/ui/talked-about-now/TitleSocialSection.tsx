@@ -8,7 +8,8 @@ import { type ReactNode, useMemo, useState } from "react"
 import { SocialEmbed, type SocialEmbedItem } from "~/ui/social-embed/SocialEmbed"
 import { ago, embedTarget, safeHref } from "~/ui/social-embed/target"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { type SocialTitleRef, type TitleBuzz, type TitleSocial, reportWrongTitle, titleSocialQuery } from "./query"
+import type { SocialTitleRef, TitleBuzz, TitleSocial, TitleSocialQuery } from "./query"
+import { reportWrongTitle } from "./report"
 
 const FEED_SHOWN = 6
 const HEADLINES_SHOWN = 4
@@ -100,9 +101,19 @@ function LeadStory({ item, backdrop, actions }: { item: SocialEmbedItem; backdro
 	)
 }
 
-export default function TitleSocialSection({ title, name, backdrop }: { title: SocialTitleRef; name: string; backdrop: string | null }) {
+export default function TitleSocialSection({
+	title,
+	query,
+	name,
+	backdrop,
+}: {
+	title: SocialTitleRef
+	/** The section's query, from the slot. */
+	query: TitleSocialQuery
+	name: string
+	backdrop: string | null
+}) {
 	const queryClient = useQueryClient()
-	const query = titleSocialQuery(title)
 	const { data } = useQuery(query)
 	const [pickedVideo, setPickedVideo] = useState<string | null>(null)
 	const [feedOpen, setFeedOpen] = useState(false)

@@ -30,13 +30,29 @@ Between the fingerprint and About: one large video and a feed beside it.
   YouTube from youtube-nocookie.com, Bluesky from embed.bsky.app, Mastodon from the post's server. Bluesky's and
   Mastodon's embed scripts only create that iframe and set its height from a message; the page does that itself,
   so no vendor script runs on GoodWatch's page.
-- `ui/details/YoutubePlayer.tsx` (trailer dialog, Media section) plays the same frame; `react-player` is gone.
+- `YouTubeFrame.tsx` is the YouTube player on its own; `ui/details/YoutubePlayer.tsx` (trailer dialog, Media
+  section) plays it, and `react-player` is gone.
 
 ## First view
 
 The page's first view holds only an empty element (`TalkedAboutNowSlot`). When a visitor comes within 800 px of it,
 the posts are requested (`GET /api/social/title`) and the section's chunk loads; the chunk is also fetched at the
 first interaction. A visitor who doesn't scroll, Lighthouse, and a crawler request neither.
+
+The facades are one late chunk, `social-embed` (rule 5 in `vite.config.js`), shared with the start page's row; the
+section is a second one. `YoutubePlayer` loads the YouTube frame from that chunk on its first render, after a click,
+as it loaded react-player before. Production builds of the branch base (`8aec6728`) and of this branch, the movie
+page's first-view scripts (entry, root, route and their imports, 18 files in both):
+
+| | raw | gzip | Brotli |
+| --- | --- | --- | --- |
+| Base | 815,728 | 270,264 | 233,516 |
+| This branch | 816,733 | 270,628 | 233,908 |
+| Difference | +1,005 | +364 | +392 |
+
+The difference is the slot, its query function and the loader's flag field, all in the title page's chunk; the shell
+is unchanged. The section's own chunks, loaded near the section: `TitleSocialSection` 2.7 KB and `social-embed`
+about 3.5 KB Brotli.
 
 ## Flag
 

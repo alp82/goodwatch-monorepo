@@ -1,5 +1,6 @@
 // The title section's data as the page asks for it: GET /api/social/title (routes/api.social.title.ts), and the
-// "wrong title?" report, POST /api/social/wrong-title.
+// "wrong title?" report (report.ts). Only the slot imports this module at run time, so that it stays in the title
+// page's chunk and out of the shell.
 import type { SocialEmbedItem } from "~/ui/social-embed/target"
 
 export interface TitleBuzz {
@@ -28,17 +29,9 @@ export async function fetchTitleSocial({ mediaType, tmdbId }: SocialTitleRef): P
 	return (await response.json()) as TitleSocial
 }
 
+export type TitleSocialQuery = ReturnType<typeof titleSocialQuery>
+
 export const titleSocialQuery = (title: SocialTitleRef) => ({
 	queryKey: titleSocialKey(title),
 	queryFn: () => fetchTitleSocial(title),
 })
-
-/** Reports that a post isn't about the title. Resolves once the server has hidden it. */
-export async function reportWrongTitle({ mediaType, tmdbId }: SocialTitleRef, postId: string): Promise<void> {
-	const response = await fetch("/api/social/wrong-title", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ media_type: mediaType === "show" ? "tv" : "movie", media_tmdb_id: tmdbId, post_id: postId }),
-	})
-	if (!response.ok) throw new Error(`Wrong-title report answered ${response.status}`)
-}

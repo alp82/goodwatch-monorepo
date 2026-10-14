@@ -44,7 +44,7 @@ export function TalkedAboutNowSlot({ media }: { media: TalkedAboutNowMedia }) {
 		<div ref={slot} data-talked-about-now-slot>
 			{near && (
 				<Suspense fallback={null}>
-					<TitleSocialSection title={title} name={media.details.title} backdrop={media.details.backdrop_path ?? null} />
+					<TitleSocialSection title={title} query={titleSocialQuery(title)} name={media.details.title} backdrop={media.details.backdrop_path ?? null} />
 				</Suspense>
 			)}
 		</div>
