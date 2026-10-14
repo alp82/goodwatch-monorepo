@@ -11,7 +11,9 @@
         "Netflix",
         "UCWOA1ZGywLbqmigxE4Qlvuw"
       ]
-    ]
+    ],
+    "ownership_evidence_url": "https://www.netflix.com/tudum/drop01",
+    "ownership_evidence": "Netflix publisher article explicitly calls all three linked profiles official YouTube channels; live canonical channel ID and title matched."
   },
   {
     "name": "Netflix Brasil",
@@ -25,7 +27,9 @@
         "Netflix Brasil",
         "UCc1l5mTmAv2GC_PXrBpqyKQ"
       ]
-    ]
+    ],
+    "ownership_evidence_url": "https://www.netflix.com/tudum/drop01",
+    "ownership_evidence": "Netflix publisher article explicitly calls all three linked profiles official YouTube channels; live canonical channel ID and title matched."
   },
   {
     "name": "Netflix India",
@@ -39,6 +43,8 @@
         "Netflix India",
         "UCZSNzBgFub_WWil6TOTYwAg"
       ]
-    ]
+    ],
+    "ownership_evidence_url": "https://www.netflix.com/tudum/drop01",
+    "ownership_evidence": "Netflix publisher article explicitly calls all three linked profiles official YouTube channels; live canonical channel ID and title matched."
   }
 ]

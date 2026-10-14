@@ -35,6 +35,7 @@ def foreground(item):
  body=re.split(r'(?im)^\s*(?:ABOUT A24|ABOUT NETFLIX|Follow (?:us|on)|Subscribe to A24|Universal Pictures|ABOUT UNIVERSAL|------|Experience more stories|Watch more|Our Social Media|Connect with Netflix|About Netflix)\b',body)[0]
  lines=[]
  for line in body.splitlines():
+  line=re.split(r'(?i)\s*\((?:Hulu|On Disney|Available (?:on|via)|With (?:a )?bundle)',line)[0]
   if re.search(r'(?i)(subscribe|subscription|subscribers|https?://|www\.|follow us|facebook|instagram|tiktok|twitter|terms apply|restrictions|all rights reserved|©|sign up for|newsletter|visit .*website)',line):continue
   lines.append(line)
  body='\n'.join(lines).strip()
@@ -194,7 +195,7 @@ def run():
   for item in batch:
    entities=[]
    for p in props[item['id']]:
-    entities.append({'entity_index':p['entity_index'],'extracted':p['entity'],'candidates':[catalog[c['key']]|{'retrieval':c['retrieval']} for c in p['candidates'] if c['key'] in catalog]})
+    entities.append({'entity_index':p['entity_index'],'extracted':p['entity'],'candidates':[catalog[c['key']]|{'directors':list(dict.fromkeys(catalog[c['key']].get('directors',[])))[:12],'cast':list(dict.fromkeys(catalog[c['key']].get('cast',[])))[:8],'retrieval':c['retrieval']} for c in p['candidates'] if c['key'] in catalog]})
    payload.append({'id':item['id'],'source':item['source'],'published_at':item['published_at'],'foreground':foreground(item),'entities':entities})
   results,cost=api_batch(GATE_PROMPT,payload);out=[]
   for result in results:
