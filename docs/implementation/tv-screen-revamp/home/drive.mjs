@@ -175,7 +175,6 @@ async function walk(who, url, size) {
 	const member = who === "member"
 	const phone = size[0] < 768
 	const apps = member ? [...APPS, "app:shows"] : APPS
-	const items = [...apps, ...BAR]
 	const home = member ? "?member=six" : ""
 	const at = (tv) => (member ? `?member=six${tv ? `&${tv}` : ""}` : tv ? `?${tv}` : "")
 	where = `${who} ${size.join("x")}`
@@ -186,6 +185,12 @@ async function walk(who, url, size) {
 
 	// ---- Arrival.
 	let s = await read(page)
+	// Slice 6b: after the apps, a tile for each of the person's two streaming services, which are the Remote's two
+	// keys (services/drive.mjs walks them).
+	const services = await page.evaluate(() => [...document.querySelectorAll('#room [aria-label="Remote control"] [data-service-key]')].map((el) => `service:${el.dataset.serviceKey}`))
+	const tiles = [...apps, ...services]
+	const items = [...tiles, ...BAR]
+	is(services.length, 2, "the Remote has two streaming keys")
 	is(s.items, items, "home's items are the machine's, in its order")
 	is(s.focus, ["app:tonight"], "the focus starts on the first app")
 	is(s.h1, [HEADLINE], "one H1, the home's headline")
@@ -202,8 +207,9 @@ async function walk(who, url, size) {
 		is(s.marked, 1, `exactly one item is marked as focused on ${app}`)
 	}
 	is(s.large, member ? "My shows" : "Taste", "the last app is shown large")
-	s = await key(page, "ArrowRight", apps.at(-1), "Right on the last tile stays")
-	if (member || phone) {
+	for (const tile of services) s = await key(page, "ArrowRight", tile)
+	s = await key(page, "ArrowRight", tiles.at(-1), "Right on the last tile stays")
+	{
 		// The row pages sideways: the focused tile is inside the picture.
 		const inside = await page.evaluate(() => {
 			const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect()
@@ -212,7 +218,7 @@ async function walk(who, url, size) {
 		})
 		check(inside, "the row paged the last tile into the picture")
 	}
-	for (const app of [...apps].reverse().slice(1)) s = await key(page, "ArrowLeft", app)
+	for (const tile of [...tiles].reverse().slice(1)) s = await key(page, "ArrowLeft", tile)
 	s = await key(page, "ArrowLeft", "app:tonight", "Left on the first tile stays")
 	s = await key(page, "ArrowDown", "app:tonight", "Down from the tiles stays")
 	if (!member) {
@@ -240,7 +246,8 @@ async function walk(who, url, size) {
 	s = await key(page, "ArrowLeft", "bar:search", "Left on the first key stays (home has no Back)")
 	await page.keyboard.press("ArrowDown")
 	s = await until(page, (x) => x.focus[0]?.startsWith("app:"), "Down from the bar returns to the tiles")
-	if (!phone) is(s.focus, ["app:taste"], "Down from the Search key reaches the tile under it")
+	// The Search key stands over Taste's tile and the first service's: the nearer of the two.
+	if (!phone) check(["app:taste", services[0]].includes(s.focus[0]), `Down from the Search key reaches the tile under it: ${s.focus}`)
 	is(s.search, home, "no focus move changed the address")
 	is(s.history, history, "no focus move added a history entry")
 
@@ -407,10 +414,13 @@ async function walk(who, url, size) {
 	s = await until(page, focusIs("menu:search"), "the Remote's Down moves in the menu")
 	await remote(page, "Back", phone)
 	s = await until(page, (x) => x.layers === 1, "the Remote's Back closes the menu")
-	await remote(page, "Only Netflix", phone)
-	await page.waitForTimeout(250)
-	s = await read(page)
-	is([s.search, s.focus, s.toast, s.layers], [home, ["app:tonight"], null, 1], "a streaming key does nothing yet: no toast, nothing narrowed")
+	// Slice 6b: a streaming key opens its service's screen, and the same key again leaves it.
+	const streaming = page.locator(`#room [aria-label="Remote control"] [data-service-key="${services[0].slice(8)}"]`)
+	await (phone ? streaming.tap() : streaming.click())
+	s = await until(page, (x) => x.search === at(`tv=service&service=${services[0].slice(8)}`) && x.layers === 1, "a streaming key opens its service's screen")
+	await (phone ? streaming.tap() : streaming.click())
+	s = await until(page, screenIs(home, "app:tonight"), "and the same key again returns to home")
+	is([s.toast, s.layers], [null, 1], "without a toast")
 	if (!phone) {
 		await remote(page, "Turn off", false)
 		s = await until(page, (x) => x.power === "off", "the Remote's power key turns the TV off")

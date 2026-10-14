@@ -5,8 +5,8 @@
 // the menu and power), and the effects the page must carry out (expand into a page, rate a title, sign in). It
 // never fetches, never measures and never touches the browser.
 //
-// Home is a row of apps: Tonight, Discover, Explorer, Taste and, for a member, My shows. Each opens on the TV,
-// and nothing on the TV leaves it but the Expand key (`destinationHref` says where it goes) and "Watch on
+// Home is a row of apps: Tonight, Discover, Explorer, Taste and, for a member, My shows, then a tile for each of
+// the person's two streaming services. Each opens on the TV, and nothing on the TV leaves it but the Expand key (`destinationHref` says where it goes) and "Watch on
 // <service>". Every screen ends with the Expand key, where it has a page, and the top bar: Back, Search, Menu.
 //
 // The screen lives in the URL search params (`/?tv=discover&mood=funny`); `readTvState` and `writeTvParams`
@@ -21,9 +21,8 @@
 //
 // The answers of the quiz and of the rating after Seen it are the rating strip: see "The rating strip" below.
 //
-// One part still does what the first prototype did: the Remote's streaming keys, which do nothing until their
-// screens are built (the plan's "On a service", slice 6b). It is kept in one place, under "The Remote's streaming
-// keys" below.
+// The Remote's two streaming keys stand for the person's own two services. Each opens "On <service>", a list of
+// titles to watch there, and home has a tile per service after the apps: see "On a service" below.
 import type { Score } from "~/server/scores.server"
 import { titlePath } from "../../../utils/helpers.ts"
 import { parseTitleKey } from "../../../utils/title-key.ts"
@@ -62,6 +61,8 @@ export const MAP_ISLANDS = 6
 export const ISLAND_HOPS = 2
 export const TASTE_SIDES = 4
 export const SHOWS_PER_GROUP = 3
+/** A service's row pages through this many titles. */
+export const SERVICE_TITLES = 12
 
 /** The search screen's ideas. Four show, three once what is typed has its own key. */
 export const SEARCH_IDEAS: readonly string[] = [
@@ -98,6 +99,8 @@ export type TvScreen =
 	| { name: "title"; title: string }
 	/** "How was it?" after Seen it. */
 	| { name: "rate"; title: string }
+	/** "On <service>": titles to watch on one streaming service, by its TMDB provider id. */
+	| { name: "service"; service: number }
 	/** The question line without a query, the results with one. */
 	| { name: "search"; query: string | null }
 	/** What is GoodWatch? */
@@ -152,6 +155,8 @@ export type TvContext = {
 	quizProgress: number
 	/** The rating strip shows the ten exact scores under its levels: on the desktop, not on the phone. */
 	exactScores: boolean
+	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
+	services: readonly number[]
 	// My shows (slice 9).
 	/**
 	 * The title on the title screen is a show the member is midway through, and its Next episode is known: Seen it
@@ -175,6 +180,7 @@ export const EMPTY_CONTEXT: TvContext = {
 	draft: "",
 	quizProgress: 0,
 	exactScores: false,
+	services: [],
 	nextEpisode: false,
 }
 
@@ -214,8 +220,8 @@ export type TvAction =
 	| { type: "submit-search"; query: string }
 	/** Something was typed into the search screen's line: the focus goes to the key that searches for it. */
 	| { type: "typed" }
-	/** A streaming key on the Remote, with the service's name. */
-	| { type: "service-key"; service: string }
+	/** A streaming key on the Remote, with the service's TMDB provider id. */
+	| { type: "service-key"; service: number }
 	| { type: "power"; on: boolean }
 	| { type: "boot-done" }
 
@@ -243,6 +249,12 @@ function readTitleKey(value: string | null): string | null {
 	if (!/^\d+$/.test(value)) return null
 	const { mediaType, tmdbId } = parseTitleKey(Number(value))
 	return tmdbId > 0 && tmdbId < 1e12 ? `${mediaType}-${tmdbId}` : null
+}
+
+/** A service's TMDB provider id from the URL, as Discover's `services` parameter takes one. Null for anything else. */
+function readServiceId(value: string | null): number | null {
+	if (!value || !/^[1-9]\d{0,8}$/.test(value)) return null
+	return Number(value)
 }
 
 function readInt(params: URLSearchParams, key: string) {
@@ -274,6 +286,10 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 		}
 		case "search":
 			return { name, query: params.get("q")?.trim() || null }
+		case "service": {
+			const service = readServiceId(params.get("service"))
+			return service ? { name, service } : HOME
+		}
 		// What the old TV wrote: its moods and its picks for a mood are Discover, its other picks and the two steps
 		// before them are Tonight.
 		case "moods":
@@ -359,6 +375,9 @@ export function writeTvParams(
 		case "search":
 			if (screen.query) out.set("q", screen.query)
 			break
+		case "service":
+			out.set("service", String(screen.service))
+			break
 	}
 	return out
 }
@@ -426,6 +445,9 @@ export function destinationHref(
 			return screen.query
 				? `/discover?q=${encodeURIComponent(screen.query)}`
 				: null
+		// Discover with that one service: its own parameter, which turns On my services off.
+		case "service":
+			return `/discover?services=${screen.service}`
 		default:
 			return null
 	}
@@ -467,9 +489,12 @@ const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home":
-			return TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
-				(app) => `app:${app}`,
-			)
+			return [
+				...TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
+					(app) => `app:${app}`,
+				),
+				...ctx.services.map((id) => `service:${id}`),
+			]
 		case "tonight": {
 			const { count } = tonightPick(screen, ctx)
 			return [...(count ? ["details"] : []), ...(count > 1 ? ["another"] : [])]
@@ -502,6 +527,8 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			]
 		case "title":
 			return ["watch", "want-to-see", "seen"]
+		case "service":
+			return titleItems(ctx.titles, SERVICE_TITLES)
 		case "search":
 			if (screen.query) return titleItems(ctx.titles)
 			return [
@@ -921,11 +948,22 @@ function chooseScore(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The Remote's streaming keys. Decided (the plan's "On a service"): a key opens a "watch on this service" screen.
-// Slice 6b builds it; until then a press does nothing: no narrowing, no toast, nothing in the URL.
+// On a service (the plan's "On a service"): a streaming key of the Remote, or a service's tile on home, opens "On
+// <service>", titles to watch on that one service. The screen is the service's TMDB provider id, so it works for
+// any service a link names; the keys and the tiles are the person's own two (`ctx.services`).
 
-function serviceKey(state: TvState, _service: string): TvTransition {
-	return none(state)
+/**
+ * A streaming key of the Remote. It opens its service's screen, from any screen. On its own screen it leaves, as
+ * Back does: one step back, and home on a deep link. On the other service's screen it takes that screen's place,
+ * so Back from either is one step.
+ */
+function serviceKey(state: TvState, service: number): TvTransition {
+	const s = state.screen
+	const screen: TvScreen = { name: "service", service }
+	if (s.name !== "service") return push(state, screen)
+	return s.service === service
+		? leave(closeMenu(state), HOME)
+		: replace(state, screen)
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1009,6 +1047,11 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			return push(state, { name: "taste", side: arg })
 		case "start-quiz":
 			return push(state, { name: "quiz" })
+		// A service's tile on home.
+		case "service": {
+			const service = readServiceId(arg)
+			return service ? push(state, { name: "service", service }) : none(state)
+		}
 		case "title":
 			return push(state, { name: "title", title: arg })
 		case "watch":

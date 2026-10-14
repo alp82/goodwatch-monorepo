@@ -46,6 +46,7 @@ const guest: TvHomeData = {
 	picture: "/first-picture.jpg",
 	tonight: [],
 	shows: null,
+	services: [],
 }
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {

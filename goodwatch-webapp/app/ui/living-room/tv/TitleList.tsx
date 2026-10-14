@@ -1,8 +1,9 @@
 // A handful of titles on the TV: the focused one's name and facts over a row of posters, its backdrop behind
 // everything, and the screen's own keys beside the row. One list for every app, as in the prototype: Discover's
 // titles of a choice (with Change), an island's titles (with the islands to sail to), a side's titles and the
-// quiz's picks (with Rate more), and a member's shows (My shows: a poster then says where a press leads, and a
-// show that is new is marked).
+// quiz's picks (with Rate more), a member's shows (My shows: a poster then says where a press leads, and a show
+// that is new is marked), and what to watch on a streaming service (under the service's mark, in a row that
+// pages).
 //
 // What an app says of itself is its props: the screen's name and what stands under it, the titles, the keys with
 // what they are called, the words while there is no title, and a picture for while no title has one.
@@ -12,7 +13,7 @@
 //
 // Several chunks share this file. It draws with kit.tsx, which is the TV's and on no other page, so the build keeps
 // it out of every page's shell (vite.config.js, rule 3).
-import { useRef } from "react"
+import { type ReactNode, useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { Frame, Img, Item, backdropSize, keySize, useTvView } from "./kit"
 import { TV_ROW_ATTR } from "./tv-dom"
@@ -62,6 +63,8 @@ export function TitleList({
 	actions = [],
 	actionsLabel,
 	art,
+	mark,
+	edge,
 }: {
 	/** The screen's name in the top bar, and what stands under it. */
 	name: string
@@ -76,6 +79,10 @@ export function TitleList({
 	actionsLabel?: string
 	/** A backdrop's TMDB path for while no title has one. */
 	art?: string | null
+	/** What stands before the screen's name in the top bar: a service's mark. */
+	mark?: ReactNode
+	/** A colour for a thin line along the picture's top edge: a service's own. */
+	edge?: string
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
@@ -93,6 +100,8 @@ export function TitleList({
 		crumb,
 		items,
 		art: behind ? tmdbImageUrl(behind, backdropSize(canvas)) : undefined,
+		mark,
+		edge,
 	}
 	const posters = on.map((title) => (
 		<Item

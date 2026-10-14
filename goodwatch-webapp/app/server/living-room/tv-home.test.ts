@@ -11,9 +11,14 @@ import type {
 } from "~/server/my-shows.server"
 import type { TitleCard } from "~/server/title-cards.server"
 
-const { guestHome, memberHome, tonightShowIds } = await import(
-	"./tv-home.server.ts"
-)
+const {
+	countryCatalog,
+	guestHome,
+	keepCountryServices,
+	memberHome,
+	tonightShowIds,
+	tvServices,
+} = await import("./tv-home.server.ts")
 
 const card = (media_type: "movie" | "show", tmdb_id: number): TitleCard => ({
 	key: tmdb_id * 2 + (media_type === "show" ? 1 : 0),
@@ -110,13 +115,18 @@ test("a guest's home holds the start titles and the first picture, and nothing p
 			poster_path: "/matrix.jpg",
 		},
 	]
-	assert.deepEqual(guestHome({ titles, picture: "/matrix-backdrop.jpg" }), {
-		member: false,
-		startTitles: titles,
-		picture: "/matrix-backdrop.jpg",
-		tonight: [],
-		shows: null,
-	})
+	const services = [{ id: 8, name: "Netflix", logo_path: "/netflix.jpg" }]
+	assert.deepEqual(
+		guestHome({ titles, picture: "/matrix-backdrop.jpg" }, services),
+		{
+			member: false,
+			startTitles: titles,
+			picture: "/matrix-backdrop.jpg",
+			tonight: [],
+			shows: null,
+			services,
+		},
+	)
 })
 
 test("Tonight's pick is the Next episode of the first show to continue, then the movies", () => {
@@ -249,4 +259,158 @@ test("without a show to continue, My shows lists the shows to pick up", () => {
 		memberHome(p, []).shows?.next.map((show) => show.id),
 		[30, 31],
 	)
+})
+
+// ---- The person's two streaming services: the Remote's keys and home's tiles after the apps.
+
+const NETFLIX = { id: 8, name: "Netflix", logo_path: "/netflix.jpg" }
+const PRIME = { id: 9, name: "Amazon Prime Video", logo_path: "/prime.jpg" }
+const DISNEY = { id: 337, name: "Disney Plus", logo_path: "/disney.jpg" }
+const HULU = { id: 15, name: "Hulu", logo_path: "/hulu.jpg" }
+const MAX = { id: 1899, name: "Max", logo_path: "/max.jpg" }
+/** The catalog as the data cache hands it over: every service with its place in each country that has it. */
+const PROVIDERS: (typeof NETFLIX & {
+	order_by_country?: Record<string, number>
+})[] = [
+	{ ...HULU, order_by_country: { US: 3 } },
+	{ ...DISNEY, order_by_country: { US: 2, DE: 2 } },
+	{ ...NETFLIX, order_by_country: { US: 0, DE: 1 } },
+	{ ...MAX, order_by_country: { US: 4 } },
+	{ ...PRIME, order_by_country: { US: 1, DE: 0 } },
+	{
+		id: 99,
+		name: "Elsewhere",
+		logo_path: "/e.jpg",
+		order_by_country: { JP: 0 },
+	},
+	{ id: 100, name: "Nowhere", logo_path: "/n.jpg" },
+]
+const ids = (services: { id: number }[]) => services.map(({ id }) => id)
+
+test("a country's catalog comes in the country's own order, without the services it does not have", () => {
+	assert.deepEqual(ids(countryCatalog(PROVIDERS, "US")), [8, 9, 337, 15, 1899])
+	assert.deepEqual(ids(countryCatalog(PROVIDERS, "DE")), [9, 8, 337])
+	assert.deepEqual(ids(countryCatalog(PROVIDERS, "JP")), [99])
+	assert.deepEqual(countryCatalog(PROVIDERS, "FR"), [])
+	// Services at the same place keep the order they came in.
+	assert.deepEqual(
+		ids(
+			countryCatalog(
+				[
+					{ ...HULU, order_by_country: { US: 1 } },
+					{ ...MAX, order_by_country: { US: 1 } },
+					{ ...NETFLIX, order_by_country: { US: 0 } },
+				],
+				"US",
+			),
+		),
+		[8, 15, 1899],
+	)
+})
+
+test("a guest's two services are the first two of their country's catalog, by the app's short names", () => {
+	assert.deepEqual(tvServices([], countryCatalog(PROVIDERS, "US")), [
+		{ id: 8, name: "Netflix", logo_path: "/netflix.jpg" },
+		{ id: 9, name: "Prime", logo_path: "/prime.jpg" },
+	])
+	assert.deepEqual(tvServices([], countryCatalog(PROVIDERS, "DE")), [
+		{ id: 9, name: "Prime", logo_path: "/prime.jpg" },
+		{ id: 8, name: "Netflix", logo_path: "/netflix.jpg" },
+	])
+})
+
+test("a member's two services are their first two saved ones, in the order they saved them", () => {
+	const catalog = countryCatalog(PROVIDERS, "US")
+	assert.deepEqual(tvServices([MAX, DISNEY, NETFLIX], catalog), [
+		{ id: 1899, name: "Max", logo_path: "/max.jpg" },
+		{ id: 337, name: "Disney+", logo_path: "/disney.jpg" },
+	])
+})
+
+test("a member with one saved service, or none, is filled up from their country's catalog", () => {
+	const catalog = countryCatalog(PROVIDERS, "US")
+	assert.deepEqual(ids(tvServices([HULU], catalog)), [15, 8])
+	// The country's first is the one they saved: the second key is the next one.
+	assert.deepEqual(ids(tvServices([NETFLIX], catalog)), [8, 9])
+	assert.deepEqual(ids(tvServices([], catalog)), [8, 9])
+})
+
+test("two plans or channels of one brand are one key", () => {
+	const ads = {
+		id: 1796,
+		name: "Netflix Standard with Ads",
+		logo_path: "/a.jpg",
+	}
+	const channel = { id: 1825, name: "Max Amazon Channel", logo_path: "/c.jpg" }
+	assert.deepEqual(
+		tvServices([NETFLIX, ads, MAX, channel, HULU], []).map(({ id }) => id),
+		[8, 1899],
+	)
+	assert.deepEqual(ids(tvServices([ads], [NETFLIX, MAX])), [1796, 1899])
+	// The key is named by the brand, whichever plan it stands for.
+	assert.equal(tvServices([ads], [])[0].name, "Netflix")
+})
+
+test("where the catalog has too few, the fixed pair fills up: Netflix and Prime Video", () => {
+	assert.deepEqual(tvServices([], []), [
+		{ id: 8, name: "Netflix", logo_path: null },
+		{ id: 9, name: "Prime", logo_path: null },
+	])
+	assert.deepEqual(
+		ids(tvServices([], countryCatalog(PROVIDERS, "JP"))),
+		[99, 8],
+	)
+	assert.deepEqual(ids(tvServices([PRIME], [])), [9, 8])
+	// A service without a logo in the catalog has none.
+	assert.equal(
+		tvServices([{ id: 5, name: "Plain", logo_path: "" }], [])[0].logo_path,
+		null,
+	)
+})
+
+test("a country's services are read once per country and day, and a request in between waits for that read", async () => {
+	let now = 1_000
+	const reads: string[] = []
+	const load = keepCountryServices(
+		async (country: string) => {
+			reads.push(country)
+			return PROVIDERS
+		},
+		() => now,
+	)
+	const [a, b] = await Promise.all([load("US"), load("US")])
+	assert.equal(a, b)
+	assert.deepEqual(ids(a), [8, 9, 337, 15])
+	assert.deepEqual(ids(await load("DE")), [9, 8, 337])
+	now += 23 * 60 * 60 * 1000
+	await load("US")
+	assert.deepEqual(reads, ["US", "DE"])
+	now += 2 * 60 * 60 * 1000
+	await load("US")
+	assert.deepEqual(reads, ["US", "DE", "US"])
+})
+
+test("a failed read answers no services and is tried again after a minute", async (t) => {
+	t.mock.method(console, "error", () => {})
+	let now = 0
+	let fails = true
+	let reads = 0
+	const load = keepCountryServices(
+		async () => {
+			reads++
+			if (fails) throw new Error("no catalog")
+			return PROVIDERS
+		},
+		() => now,
+	)
+	assert.deepEqual(await load("US"), [])
+	// The fixed pair fills up what the read could not give.
+	assert.deepEqual(ids(tvServices([], await load("US"))), [8, 9])
+	assert.equal(reads, 1)
+	fails = false
+	now += 59_000
+	assert.deepEqual(await load("US"), [])
+	now += 2_000
+	assert.deepEqual(ids(await load("US")), [8, 9, 337, 15])
+	assert.equal(reads, 2)
 })

@@ -120,11 +120,21 @@ export const EpisodeCode = screenCode(() => import("./screens/ShowEpisode"))
 /** The Next episode of a member's show on the title screen, and its mark. */
 export const EpisodeData = EpisodeCode.Screen
 
+// Slice 6b: "On <service>", which a streaming key of the Remote opens from any screen, with its titles' data.
+export const ServiceCode = screenCode(() => import("./screens/Service"))
+/** The titles to watch on the service on screen. */
+export const ServiceData = screenCode<
+	ComponentProps<typeof import("./screens/Service").ServiceData>
+>(() =>
+	import("./screens/Service").then((code) => ({ default: code.ServiceData })),
+).Screen
+
 /**
- * Asks for the screens any key can open, so they are there by the first press: the menu, What is GoodWatch? and
- * search, which the Remote's Search key and every top bar open. Called at the first interaction.
+ * Asks for the screens any key can open, so they are there by the first press: the menu, What is GoodWatch?,
+ * search, which the Remote's Search key and every top bar open, and the screen of a streaming key. Called at the
+ * first interaction.
  */
 export function loadFirstScreens() {
-	for (const code of [MenuCode, AboutCode, SearchCode])
+	for (const code of [MenuCode, AboutCode, SearchCode, ServiceCode])
 		code.load().catch(() => {})
 }
