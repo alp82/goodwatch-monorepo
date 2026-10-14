@@ -35,8 +35,7 @@ const tv: RoomTv = {
 	power: "on",
 	menuOpen: false,
 	searching: false,
-	activeService: null,
-	serviceName: (key) => key,
+	openService: null,
 	press: () => {},
 	point: () => {},
 }
@@ -47,6 +46,7 @@ const render = (power: RoomTv["power"]) =>
 			<TvRoom
 				tv={{ ...tv, power }}
 				startTitles={titles}
+				services={[]}
 				renderScreen={() => <div data-screen />}
 			/>
 		</MemoryRouter>,

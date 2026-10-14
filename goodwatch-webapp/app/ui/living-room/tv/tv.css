@@ -197,6 +197,25 @@ html[data-tv-transition] .tvr-bracket {
 	}
 }
 
+/* A streaming service's drawn mark (ServiceMark in Remote.tsx), on a key of the Remotes, on its tile on home and
+   at the head of its screen: the mark's shape masks its ink. The shape is here and not in a style attribute,
+   because home's service tiles are in the server's HTML, in both editions, and a small mark is inlined as a data
+   URL of 1.5 KB. The class is the service's TMDB provider id: Netflix 8, Prime Video 9. */
+.tv-mark {
+	-webkit-mask: center / contain no-repeat;
+	mask: center / contain no-repeat;
+}
+.tv-mark-8 {
+	background-color: #e50914;
+	-webkit-mask-image: url("../../../img/netflix-logo.svg");
+	mask-image: url("../../../img/netflix-logo.svg");
+}
+.tv-mark-9 {
+	background-color: #fff;
+	-webkit-mask-image: url("../../../img/primevideo-logo.svg");
+	mask-image: url("../../../img/primevideo-logo.svg");
+}
+
 /* The TV's screens, in the look "Cinema" (kit.tsx). In the components layer, so a utility on an item wins.
    Rendering budget (#190): transform, opacity, a shadow and a colour change once per focus move; nothing loops. */
 @layer components {

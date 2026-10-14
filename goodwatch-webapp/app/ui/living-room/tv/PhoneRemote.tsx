@@ -3,17 +3,22 @@
 // keys with their icons and words, its streaming keys (the `remote-*` classes of living-room.css). Every key is
 // 44 px or more in both directions.
 //
+// The two streaming keys stand for the person's own two services (`services`): each shows its service's mark,
+// opens the TV screen "On <service>", and is pressed while that screen shows.
+//
 // Two forms; the scene's height chooses (`layoutPhoneRoom`):
 //   hand    upright, held in the hand, rising from the bottom edge: the wheel with a round key in each of its
 //           corners (Search, Menu, Back, Home), the streaming keys under it, then the grip and the fingers
 //   table   lying in front of the TV: a wide, short body, the wheel in the middle and three keys on either side
 // Neither has the power key: "Turn off" is in the TV's menu, and a dark TV turns on with any key here.
 import type { ReactNode } from "react"
-import netflixMark from "~/img/netflix-logo.svg"
-import primeMark from "~/img/primevideo-logo.svg"
-import { assetUrl } from "~/utils/asset-url"
-import { ICON, Icon } from "../Remote"
-import { REMOTE_SERVICES, type RemoteServiceKey } from "../living-room-data"
+import {
+	ICON,
+	Icon,
+	type RemoteService,
+	ServiceMark,
+	hasServiceMark,
+} from "../Remote"
 import { PHONE_REMOTE, type PhoneRemoteForm } from "./room-layout"
 import type { RoomDirection, RoomKey, RoomTv } from "./room-tv"
 
@@ -40,17 +45,19 @@ const ARROW_AT: Record<RoomDirection, string> = {
 const WORD =
 	"pointer-events-none whitespace-nowrap text-[8px] font-semibold uppercase leading-[11px] tracking-[0.08em] text-white/60"
 
-/** A streaming key's logo: the mark, its ink, and its width in each form (hand, table). */
-const BRAND: Record<
-	RemoteServiceKey,
-	{ src: string; ink: string; w: Record<PhoneRemoteForm, number> }
-> = {
-	netflix: { src: netflixMark, ink: "#e50914", w: { hand: 58, table: 50 } },
-	prime: { src: primeMark, ink: "#ffffff", w: { hand: 60, table: 52 } },
+/**
+ * How large a streaming key's print is in each form: a drawn mark's width against the desktop Remote's key (58
+ * and 60 px in the hand, 50 and 52 on the table), and a catalog logo's side.
+ */
+const MARK: Record<PhoneRemoteForm, { drawn: number; logo: number }> = {
+	hand: { drawn: 0.85, logo: 30 },
+	table: { drawn: 0.735, logo: 30 },
 }
 
 export type PhoneRemoteProps = {
 	tv: RoomTv
+	/** The person's own two services, in the keys' order. */
+	services: readonly RemoteService[]
 	form: PhoneRemoteForm
 	/** Its box in the scene, at its scale `u` (`layoutPhoneRoom`). */
 	at: { left: number; top: number; u: number; width: number }
@@ -58,7 +65,13 @@ export type PhoneRemoteProps = {
 	bottom: number
 }
 
-export function PhoneRemote({ tv, form, at, bottom }: PhoneRemoteProps) {
+export function PhoneRemote({
+	tv,
+	services,
+	form,
+	at,
+	bottom,
+}: PhoneRemoteProps) {
 	// A dark TV: the first key only turns it on.
 	const press = (key: RoomKey) => () =>
 		tv.press(tv.power === "off" ? { type: "power", on: true } : key)
@@ -74,43 +87,35 @@ export function PhoneRemote({ tv, form, at, bottom }: PhoneRemoteProps) {
 			<Icon d={d} className="h-[19px] w-[19px]" />
 		</button>
 	)
-	const service = (key: RemoteServiceKey) => {
-		const name = tv.serviceName(key)
-		const brand = BRAND[key]
-		const logo = brand.w[form]
-		// Quoted: small SVGs are inlined as data URLs, which break an unquoted url().
-		const mask = `url("${assetUrl(brand.src)}") center / contain no-repeat`
-		return (
-			<button
-				key={key}
-				type="button"
-				aria-label={`Only ${name}`}
-				aria-pressed={tv.activeService === name}
-				onClick={press({ type: "service", service: name })}
-				className="remote-key remote-service flex w-full items-center justify-center rounded-full"
-				style={{ height: KEY }}
-			>
-				<span
-					aria-hidden
-					className="block"
-					style={{
-						width: logo,
-						height: logo * 0.42,
-						background: brand.ink,
-						WebkitMask: mask,
-						mask,
-					}}
-				/>
-			</button>
-		)
-	}
+	const service = (one: RemoteService) => (
+		<button
+			key={one.id}
+			type="button"
+			data-service-key={one.id}
+			aria-label={`On ${one.name}`}
+			aria-pressed={tv.openService === one.id}
+			onClick={press({ type: "service", service: one.id })}
+			className="remote-key remote-service flex w-full min-w-0 items-center justify-center rounded-full px-2"
+			style={{ height: KEY }}
+		>
+			<ServiceMark
+				service={one}
+				height={MARK[form].logo}
+				onKey={MARK[form].drawn}
+			/>
+			{!hasServiceMark(one) && (
+				<span className="truncate text-[11px] font-bold">{one.name}</span>
+			)}
+		</button>
+	)
 	const keys = {
 		back: round("Back", ICON.back, { type: "back" }),
 		home: round("Home", ICON.home, { type: "home" }),
 		search: round("Search", ICON.search, { type: "search" }, tv.searching),
 		menu: round("Menu", ICON.menu, { type: "menu" }, tv.menuOpen),
 	}
-	const [netflix, prime] = REMOTE_SERVICES.map(({ key }) => service(key))
+	// The first service's key is on the left, the second's on the right.
+	const [first = null, second = null] = services.map(service)
 	const wheel = (
 		<div
 			className="remote-wheel relative shrink-0 rounded-full"
@@ -191,8 +196,8 @@ export function PhoneRemote({ tv, form, at, bottom }: PhoneRemoteProps) {
 					)}
 				</div>
 				<div className="mt-2 grid grid-cols-2 gap-2">
-					{netflix}
-					{prime}
+					{first}
+					{second}
 				</div>
 			</div>
 		)
@@ -217,19 +222,28 @@ export function PhoneRemote({ tv, form, at, bottom }: PhoneRemoteProps) {
 				className="remote-body flex items-center justify-between"
 				style={{ width: R.w, height: R.keys, borderRadius: 40, padding: 10 }}
 			>
-				{column(keys.back, "Back", keys.search, "Search", netflix)}
+				{column(keys.back, "Back", keys.search, "Search", first)}
 				{wheel}
-				{column(keys.home, "Home", keys.menu, "Menu", prime)}
+				{column(keys.home, "Home", keys.menu, "Menu", second)}
 			</div>
 		)
 	}
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: only drops focus after pointer presses; keys need nothing
 		<section
 			data-remote
 			data-phone-remote={form}
 			aria-label="Remote control"
 			className="absolute select-none"
 			style={{ left: at.left, top: at.top, width: at.width }}
+			// As on the desktop Remote: a press by a finger or the pointer must not leave the key focused, or the
+			// next Enter of a keyboard repeats it instead of reaching the TV's focused item, and a streaming key
+			// pressed again would close the screen it just opened. Keyboard presses (detail 0) keep their focus.
+			onClick={(e) => {
+				if (e.detail === 0) return
+				const button = (e.target as HTMLElement).closest("button")
+				if (button === document.activeElement) button?.blur()
+			}}
 		>
 			<div
 				className="origin-top-left"

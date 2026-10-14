@@ -2,8 +2,6 @@
 // draws no TV screen and holds no TV state: it shows what `RoomTv` says and reports every key of the Remotes as a
 // `RoomKey`. use-tv.ts turns a `RoomKey` into the machine's action (a `move` needs the measured boxes of the
 // items, which the hook adds) and fills `RoomTv` from the machine's state.
-import type { RemoteServiceKey } from "../living-room-data"
-
 export type RoomDirection = "up" | "down" | "left" | "right"
 
 /** What a key of either Remote asks for. */
@@ -17,8 +15,8 @@ export type RoomKey =
 	| { type: "home" }
 	| { type: "search" }
 	| { type: "menu" }
-	/** A streaming key, with the service's name as the catalog spells it. */
-	| { type: "service"; service: string }
+	/** A streaming key, with its service's TMDB provider id. */
+	| { type: "service"; service: number }
 	/** The desktop Remote's power key, and any key of either Remote while the TV is dark (`on: true`). */
 	| { type: "power"; on: boolean }
 
@@ -30,10 +28,8 @@ export type RoomTv = {
 	menuOpen: boolean
 	/** The search screen is showing: the Remotes' Search key is lit. */
 	searching: boolean
-	/** The service the lists are narrowed to, if any: its streaming key is lit. */
-	activeService: string | null
-	/** The service a streaming key stands for, as the catalog spells it. */
-	serviceName: (key: RemoteServiceKey) => string
+	/** The service whose screen ("On <service>") is showing, by its TMDB provider id: its streaming key is lit. */
+	openService: number | null
 	press: (key: RoomKey) => void
 	/** Pointing at an item of the TV's screen gives it the focus (pointing.ts): a finger has no hover to do it. */
 	point: (item: string) => void

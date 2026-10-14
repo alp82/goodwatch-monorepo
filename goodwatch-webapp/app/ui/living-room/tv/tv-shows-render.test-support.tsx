@@ -60,6 +60,7 @@ const member: TvHomeData = {
 	picture: "/first-picture.jpg",
 	tonight: [],
 	shows,
+	services: [],
 }
 const signal: TvShowsSignal = {
 	words: {

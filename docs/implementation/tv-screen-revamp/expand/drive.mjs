@@ -456,6 +456,23 @@ function guestScreens(island) {
 			},
 		},
 		{
+			name: "On Netflix",
+			at: "?tv=service&service=8",
+			to: "/discover?services=8",
+			says: "Discover",
+			wait: (s) => s.items.some((id) => id.startsWith("title:")),
+			sign: async (page) => {
+				// The page's chip for chosen services names one that is the person's own, and counts any other (slice 6b).
+				const end = Date.now() + 60000
+				let d = await discoverPage(page)
+				while (!d.chips.length && Date.now() < end) {
+					await page.waitForTimeout(250)
+					d = await discoverPage(page)
+				}
+				check(d.chips.some((chip) => /^1 service$/.test(chip) || chip.includes("Netflix")), `the page shows the one service as chosen: ${d.chips.join(", ") || "nothing"}`)
+			},
+		},
+		{
 			name: "search results",
 			at: "?tv=search&q=heist",
 			to: "/discover?q=heist",
@@ -1248,6 +1265,7 @@ async function pictures() {
 		["side", pick("?tv=taste&side=side-1", true)],
 		["title", pick(`?tv=title&title=${MATRIX.key}`)],
 		["search-results", pick("?tv=search&q=heist")],
+		["service", pick("?tv=service&service=8")],
 	]
 	for (const [size, tag] of [
 		[DESKTOP, "desktop"],
@@ -1265,6 +1283,17 @@ async function pictures() {
 			}
 			await ctx.close()
 		}
+	}
+	// The Explorer page, opened inside an island by the key's address.
+	for (const [size, tag] of [
+		[DESKTOP, "desktop"],
+		[PHONE, "phone"],
+	]) {
+		const { ctx, page } = await open(`${ORIGIN}/explorer?grouping=mood&island=${island}`, size, { room: false })
+		await explorerAt(page, "inside the island", (v) => v.inside, 90000)
+		await page.waitForTimeout(2500)
+		await page.screenshot({ path: join(shots, `explorer-page-island-${tag}.png`) })
+		await ctx.close()
 	}
 	for (const size of [BESIDE, SHORT, LANDSCAPE]) {
 		const { ctx, page } = await openScreen(GUEST, RESULTS, size)

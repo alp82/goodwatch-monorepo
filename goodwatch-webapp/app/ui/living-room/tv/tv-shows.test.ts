@@ -58,6 +58,7 @@ const member: TvHomeData = {
 	picture: null,
 	tonight: [],
 	shows,
+	services: [],
 }
 
 const signal = (rest: Partial<TvShowsSignal>): TvShowsSignal => ({

@@ -34,6 +34,7 @@ const guest: TvHomeData = {
 	picture: "/first-picture.jpg",
 	tonight: [],
 	shows: null,
+	services: [],
 }
 const show = (id: number) => ({
 	id,
@@ -122,8 +123,7 @@ const roomTv: RoomTv = {
 	power: "on",
 	menuOpen: false,
 	searching: false,
-	activeService: null,
-	serviceName: (key) => key,
+	openService: null,
 	press: () => {},
 	point: () => {},
 }
@@ -133,6 +133,7 @@ const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 			<TvRoom
 				tv={{ ...roomTv, power }}
 				startTitles={data.startTitles}
+				services={data.services}
 				renderScreen={(canvas) => (
 					<TvScreen
 						tv={{

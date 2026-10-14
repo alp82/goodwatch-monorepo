@@ -22,7 +22,6 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { REMOTE_SERVICES } from "../living-room-data"
 import { focusKey, tabFocusMemory } from "./focus-memory"
 import type { RoomKey, RoomTv } from "./room-tv"
 import {
@@ -58,9 +57,6 @@ type HistoryEntryState = { tvDepth?: number } | null
 /** The effects that leave the page: the focus of the screen they leave is remembered for Back. */
 const leaves = (effect: TvEffect) =>
 	effect.type === "expand" || effect.type === "watch"
-
-const serviceName: RoomTv["serviceName"] = (key) =>
-	REMOTE_SERVICES.find((service) => service.key === key)?.name ?? key
 
 const reducedMotion = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -361,19 +357,28 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 
 	// The menu lies over the screen and its key; a dark or booting TV shows no screen.
 	const framed = power === "on" && !menu.open && focused === "expand"
+	const openService =
+		state.screen.name === "service" ? state.screen.service : null
 	const room: RoomTv = useMemo(
 		() => ({
 			power,
 			framed,
 			menuOpen: menu.open,
 			searching: state.screen.name === "search",
-			// SEAM: the streaming keys wait for their prototype; until then no key is lit.
-			activeService: null,
-			serviceName,
+			// A streaming key is lit while its service's screen shows.
+			openService,
 			press,
 			point: (item) => dispatch({ type: "focus", item }),
 		}),
-		[power, menu.open, state.screen.name, framed, press, dispatch],
+		[
+			power,
+			menu.open,
+			state.screen.name,
+			framed,
+			openService,
+			press,
+			dispatch,
+		],
 	)
 
 	return {

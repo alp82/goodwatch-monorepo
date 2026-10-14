@@ -2,6 +2,10 @@
 // the Menu key; the D-pad wheel with OK; Back, Search, and Home as round keys in an arc under the wheel, each with
 // its word printed on the body; and two streaming keys. It has no screen: the TV shows what is focused. Every
 // control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
+//
+// The streaming keys: the old TV on `/` has a fixed pair, Netflix and Prime Video, and a press narrows its picks.
+// The new TV (ui/living-room/tv) hands the Remote the person's own two services (`services`): a key then shows
+// that service's mark (`ServiceMark`), opens the TV screen "On <service>" and is pressed while that screen shows.
 import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
@@ -84,14 +88,108 @@ const BRAND: Record<RemoteServiceKey, { src: string; ink: string; w: number }> =
 		prime: { src: primeMark, ink: "#ffffff", w: 71 },
 	}
 
+/** A streaming service a key stands for on the new TV (`TvService`, ui/living-room/tv/tv-home.ts). */
+export type RemoteService = {
+	/** Its TMDB provider id. */
+	id: number
+	name: string
+	/** The catalog's logo, a TMDB path. */
+	logo_path: string | null
+}
+
+/**
+ * The services the Remote has a drawn mark for, by TMDB provider id: how wide the mark is for its height and on
+ * a key of this Remote (in Remote pixels, as on the old TV's keys), and the service's own colour. The mark's
+ * shape and ink are in tv.css (`tv-mark-<id>`).
+ */
+const DRAWN: Record<number, { ratio: number; key: number; color: string }> = {
+	8: { ratio: 3.7, key: 68, color: "#e50914" },
+	9: { ratio: 3.25, key: 71, color: "#1a98ff" },
+}
+
+/** A length to a tenth of a pixel: the server's HTML holds it. */
+const px = (length: number) => Math.round(length * 10) / 10
+
+/** Whether the Remote has a drawn mark for a service: the mark then says its name. */
+export const hasDrawnMark = (service: Pick<RemoteService, "id">) =>
+	service.id in DRAWN
+
+/** Whether a service has a mark at all: a drawn one, or a logo in the catalog. Without one its name is written. */
+export const hasServiceMark = (
+	service: Pick<RemoteService, "id" | "logo_path">,
+) => hasDrawnMark(service) || Boolean(service.logo_path)
+
+/** A service's own colour, for the services the Remote has a mark for; null for any other. */
+export const serviceColor = (service: Pick<RemoteService, "id">) =>
+	DRAWN[service.id]?.color ?? null
+
+/**
+ * A streaming service's mark: the Remote's own drawn mark where it has one (Netflix, Prime Video), else the
+ * service's logo from the catalog, `height` tall, else nothing (`hasServiceMark`: the caller then writes the
+ * name). On a key of the Remotes, on the service's tile on home and at the head of its screen.
+ */
+export function ServiceMark({
+	service,
+	height,
+	onKey,
+	className = "",
+}: {
+	service: RemoteService
+	height: number
+	/**
+	 * On a key of a Remote, a drawn mark is as wide as that key's print: this times its width on the desktop
+	 * Remote's key. `height` is then the logo's alone.
+	 */
+	onKey?: number
+	className?: string
+}) {
+	const drawn = DRAWN[service.id]
+	if (drawn) {
+		const width = onKey ? drawn.key * onKey : height * drawn.ratio
+		// The shape is a class and not a style: home's tiles are in the server's HTML, in both editions, and a small
+		// mark is a data URL of 1.5 KB.
+		return (
+			<span
+				aria-hidden
+				data-service-mark="drawn"
+				className={`tv-mark tv-mark-${service.id} block shrink-0 ${className}`}
+				style={{ width: px(width), height: px(width / drawn.ratio) }}
+			/>
+		)
+	}
+	if (!service.logo_path) return null
+	return (
+		<img
+			src={`https://image.tmdb.org/t/p/w92${service.logo_path}`}
+			alt=""
+			aria-hidden
+			data-service-mark="logo"
+			draggable={false}
+			decoding="async"
+			// Home's tiles are in the server's HTML in both editions, one of them not shown: its logo is not asked for.
+			loading="lazy"
+			className={`block shrink-0 object-cover ${className}`}
+			style={{ height, width: height, borderRadius: height * 0.22 }}
+		/>
+	)
+}
+
 export type RemoteProps = {
 	screen: TvScreen
 	power: "off" | "booting" | "on"
 	menuOpen: boolean
-	/** The service a streaming key stands for, as the catalog spells it. */
-	serviceName: (key: RemoteServiceKey) => string
-	/** The service the picks are narrowed to, if any. */
-	activeService: string | null
+	/** The old TV: the service a streaming key stands for, as the catalog spells it. */
+	serviceName?: (key: RemoteServiceKey) => string
+	/** The old TV: the service the picks are narrowed to, if any. */
+	activeService?: string | null
+	/**
+	 * The new TV: the person's own two services, in the keys' order. With them the keys show these services, a
+	 * press reports the service's id to `onService`, and the key of `openService` is pressed.
+	 */
+	services?: readonly RemoteService[]
+	/** The new TV: the service whose screen is showing, by its id, if any. */
+	openService?: number | null
+	onService?: (id: number) => void
 	dispatch: (action: TvAction) => void
 	/** OK: submits the search draft on the keyboard screen, otherwise opens the focused item. */
 	onOk: () => void
@@ -105,8 +203,11 @@ export function Remote({
 	screen,
 	power,
 	menuOpen,
-	serviceName,
-	activeService,
+	serviceName = (key) => key,
+	activeService = null,
+	services,
+	openService = null,
+	onService,
 	dispatch,
 	onOk,
 	onDirection,
@@ -197,36 +298,56 @@ export function Remote({
 				{/* Inset like the round keys, which are centered over their wider words. The keys end here
 				    (REMOTE_KEYS_END in room.ts). */}
 				<div className="mt-6 grid grid-cols-2 gap-3 px-[7px]">
-					{REMOTE_SERVICES.map(({ key }) => {
-						const name = serviceName(key)
-						const b = BRAND[key]
-						const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
-						return (
-							<button
-								key={key}
-								type="button"
-								aria-pressed={activeService === name}
-								aria-label={`Only ${name}`}
-								title={`Only ${name}`}
-								onClick={() =>
-									dispatch({ type: "service-key", service: name })
-								}
-								className="remote-key remote-service flex h-[52px] items-center justify-center rounded-full"
-							>
-								{/* Quoted: small SVGs are inlined as data URLs, which break an unquoted url(). */}
-								<span
-									aria-hidden
-									className="block h-7"
-									style={{
-										width: b.w,
-										background: b.ink,
-										WebkitMask: mask,
-										mask,
-									}}
-								/>
-							</button>
-						)
-					})}
+					{services?.map((service) => (
+						<button
+							key={service.id}
+							type="button"
+							data-service-key={service.id}
+							aria-pressed={openService === service.id}
+							aria-label={`On ${service.name}`}
+							title={`On ${service.name}`}
+							onClick={() => onService?.(service.id)}
+							className="remote-key remote-service flex h-[52px] min-w-0 items-center justify-center rounded-full px-3"
+						>
+							<ServiceMark service={service} height={32} onKey={1} />
+							{!hasServiceMark(service) && (
+								<span className="truncate text-[15px] font-bold">
+									{service.name}
+								</span>
+							)}
+						</button>
+					))}
+					{!services &&
+						REMOTE_SERVICES.map(({ key }) => {
+							const name = serviceName(key)
+							const b = BRAND[key]
+							const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
+							return (
+								<button
+									key={key}
+									type="button"
+									aria-pressed={activeService === name}
+									aria-label={`Only ${name}`}
+									title={`Only ${name}`}
+									onClick={() =>
+										dispatch({ type: "service-key", service: name })
+									}
+									className="remote-key remote-service flex h-[52px] items-center justify-center rounded-full"
+								>
+									{/* Quoted: small SVGs are inlined as data URLs, which break an unquoted url(). */}
+									<span
+										aria-hidden
+										className="block h-7"
+										style={{
+											width: b.w,
+											background: b.ink,
+											WebkitMask: mask,
+											mask,
+										}}
+									/>
+								</button>
+							)
+						})}
 				</div>
 				<div className="flex-1" />
 				<img

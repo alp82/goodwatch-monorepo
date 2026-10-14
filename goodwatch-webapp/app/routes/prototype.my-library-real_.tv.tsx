@@ -7,6 +7,9 @@
 //   REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on REC_NAVIGATION=on \
 //   REC_AGE_FILTER=on REC_TRACKING=on node_modules/.bin/remix vite:dev --port 3174
 //   /prototype/my-library-real/tv?member=six|one|many|none|empty|new&seen=30|1500|0&landed=...
+//   &services=337,15 gives the member those saved streaming services, by TMDB provider id (one, two or more;
+//   `none` for a member who saved none). Without it they saved Netflix and Prime Video. The Remote's two keys and
+//   home's two tiles are then chosen by the TV's own rule (`tvServices`) from a fixed table of real services.
 // What is made up here and not by the TV: the harness's catalog has posters that lead nowhere, so the pictures
 // are painted in from a fixed table of real TMDB paths, and the titles below the room are a fixed list. The site's
 // header above the room sees a guest. The pool answers 503 here (no title snapshot), so the home keeps what the
@@ -38,6 +41,7 @@ import {
 	useMemo,
 	useState,
 } from "react"
+import { tvServices } from "~/server/living-room/tv-home.server"
 import { loadMemberHome } from "~/server/living-room/tv-loader.server"
 import {
 	HARNESS_TASTE,
@@ -139,6 +143,39 @@ const START_TITLES: StartTitle[] = [
 	},
 ]
 
+/**
+ * The harness has no catalog of services: these are real ones, with the catalog's names and logos, in the order
+ * the United States' catalog lists them.
+ */
+const SERVICES = [
+	{ id: 8, name: "Netflix", logo_path: "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" },
+	{
+		id: 9,
+		name: "Amazon Prime Video",
+		logo_path: "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+	},
+	{
+		id: 337,
+		name: "Disney Plus",
+		logo_path: "/97yvRBw1GzX7fXprcF80er19ot.jpg",
+	},
+	{ id: 15, name: "Hulu", logo_path: "/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg" },
+	{
+		id: 350,
+		name: "Apple TV Plus",
+		logo_path: "/2E03IAZsX4ZaUqM7tXlctEPMGWS.jpg",
+	},
+]
+
+/** The sample member's saved services, from `&services=`: ids of the table above, `none`, or Netflix and Prime. */
+function savedServices(value: string | null) {
+	if (value === "none") return []
+	const ids = (value ?? "8,9").split(",").map(Number)
+	return ids.flatMap(
+		(id) => SERVICES.find((service) => service.id === id) ?? [],
+	)
+}
+
 export async function loader({ request }: LoaderFunctionArgs) {
 	const params = new URL(request.url).searchParams
 	const now = installHarnessMember(
@@ -162,6 +199,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			next: home.shows.next.map((show) => paint(show, show.id)),
 			start: home.shows.start.map((show) => paint(show, show.id)),
 		},
+		services: tvServices(savedServices(params.get("services")), SERVICES),
 		// The member's country and saved services, as the TV's own loader gives them to its search (slice 10).
 		scope: { country: viewer.country, services: viewer.services },
 	})
