@@ -1,0 +1,65 @@
+# Auth and MCP outside facts
+
+Research date: 2026-10-14. Resolves the research question in [#532](https://github.com/alp82/goodwatch-monorepo/issues/532), without closing it. Branch: `research/auth-mcp-outside-facts`. Official documentation and pinned first-party code only. Recommendations below are explicitly identified as design conclusions.
+
+## One-paragraph answer
+
+Purelymail permits transactional customer email and publishes approximate account limits of 3,000 external messages/day and 300 at once; it does not document 300 concurrent SMTP connections. [Homepage](https://purelymail.com/), [FAQ](https://purelymail.com/docs/faq), read 2026-10-14. ChatGPT supports CIMD and DCR, but callback URLs depend on issuer identification; its Help Center restricts full custom MCP writes to Business/Enterprise/Edu, contradicting the map's promise for every member. [Authentication](https://developers.openai.com/plugins/build/auth), [plan rules](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt), read 2026-10-14. SDK 2.3.1 exports a Remix-compatible `createMcpHandler` and resource-server auth helpers. Bundled `zod/v4` in Zod 3.25.76 works through its runtime fallback, but fails the direct `registerTool` TypeScript contract; prefer Zod 4.2.0+ or an explicit compatible schema wrapper. [SDK exports](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/index.ts), [schema implementation](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/core-internal/src/util/standardSchema.ts), read 2026-10-14; local probe below.
+
+## Baseline read
+
+Read #528 and #529, including comments, with `gh issue view --json title,body,comments,url`. Fetched `ccr-fe57dab2-zqtzlr` and read all three research notes at commit `ae7c482c00b205bb99848c56813c6087baffd855`: [member MCP](https://github.com/alp82/goodwatch-monorepo/blob/ae7c482c00b205bb99848c56813c6087baffd855/docs/research/mcp-member-profile.md), [self-hosted auth](https://github.com/alp82/goodwatch-monorepo/blob/ae7c482c00b205bb99848c56813c6087baffd855/docs/research/self-hosted-auth.md), [CrateDB auth](https://github.com/alp82/goodwatch-monorepo/blob/ae7c482c00b205bb99848c56813c6087baffd855/docs/research/auth-on-cratedb.md), read 2026-10-14. These establish the assumptions being checked, not independent evidence for outside facts.
+
+## Purelymail
+
+| Question | Found | Primary source, date read |
+| --- | --- | --- |
+| Automated auth messages allowed? | Its homepage permits transactional customer messages. Terms prohibit unsolicited mail, advertising, mailing lists, phishing, malware and reputation warming; no general prohibition on automated SMTP sending appears. User-requested verification/reset messages fit the transactional category (inference). | [Homepage](https://purelymail.com/), [Terms: Conduct](https://purelymail.com/termsofservice), 2026-10-14 |
+| Daily cap? | Approximate account limit: 3,000 messages to recipients outside the account per day. Support can adjust it for legitimate needs; trial limits are much lower. This is not a guaranteed fixed allowance. | [FAQ: rate limits and trial accounts](https://purelymail.com/docs/faq), 2026-10-14 |
+| Concurrency? | FAQ says 300 at once for external messages. It does not specify concurrent SMTP sessions, in-flight deliveries, recipients per message, replenishment period, or exact burst algorithm. A numeric connection limit remains unpublished in the sources read. | [FAQ](https://purelymail.com/docs/faq), 2026-10-14 |
+
+Design conclusion: keep Purelymail for requested auth mail, with a bounded delivery queue, resend/reset throttles and retry/backoff. Size the worker conservatively; do not set concurrency to 300 based on this wording. Keep promotions, mailing lists and warm-up traffic off this transport. The terms are now directly read, resolving #528's explicit uncertainty. [Terms](https://purelymail.com/termsofservice), [FAQ](https://purelymail.com/docs/faq), read 2026-10-14.
+
+## ChatGPT custom servers and Apps
+
+| Question | Found | Primary source, date read |
+| --- | --- | --- |
+| Which plans allow custom MCP writes? | Help Center says full read/write MCP is for Business, Enterprise and Edu on web; Pro is read/fetch only. It does not establish Plus/Free write access. Workspace admins govern access/publication; Enterprise/Edu also use RBAC. | [Developer mode and MCP apps](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt), 2026-10-14 |
+| Other surfaces? | That article excludes mobile, restricts deep research to read/fetch, and says agent mode does not use custom apps. Write confirmations depend on permissions/context. | [Same Help Center article](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt), 2026-10-14 |
+| Current setup terminology? | Developer connection docs describe Plugins → Add custom MCP server → Create as a plugin, subject to account/workspace policies, without a plan/write matrix or developer-mode prerequisite. The former Apps SDK auth URL redirects to Plugins auth. These docs differ from Help Center terminology; neither proves actual account entitlements. | [Connection guide](https://developers.openai.com/plugins/deploy/connect-chatgpt), [former Apps SDK auth](https://developers.openai.com/apps-sdk/build/auth), 2026-10-14 |
+
+OAuth facts: copy the exact redirect shown for the connection. Without issuer identification it is `https://chatgpt.com/connector/oauth/{callback_id}`; with it, `https://chatgpt.com/connector_platform_oauth_redirect`. Older published servers retain stable callbacks. Stable mode requires `authorization_response_iss_parameter_supported: true`, matching issuer metadata and exact `iss` in success/error responses; mismatches fail. [Authentication guide](https://developers.openai.com/plugins/build/auth), read 2026-10-14.
+
+CIMD is preferred when advertised/chosen (`client_id_metadata_document_supported: true`); DCR remains supported through `registration_endpoint`, and predefined clients are supported. CIMD IDs are `https://chatgpt.com/oauth/client.json` for stable mode or `https://chatgpt.com/oauth/{callback_id}/client.json` otherwise. The guide includes `none` and `private_key_jwt` authentication, S256 PKCE and resource-bound token audiences. [Authentication guide](https://developers.openai.com/plugins/build/auth), read 2026-10-14.
+
+Design conclusions: qualify #529's destination by ChatGPT plan/workspace eligibility. #528's self-hosted-auth assertion that ChatGPT supports CIMD and DCR is confirmed, but one universal callback/client ID is insufficient. Verify Better Auth's RFC 9207 behavior in the integration prototype before promising stable redirects; otherwise register exact per-connection redirects. These findings do not require directory publication, which #529 excludes. [Auth guide](https://developers.openai.com/plugins/build/auth), [Help Center](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt), read 2026-10-14.
+
+## MCP TypeScript SDK at v2.3.1
+
+Pinned checkout: tag `v2.3.1`, commit `fcef852f6cdafea07f36cf6fae69b37c8adf85be`. Findings apply to this release, not all future 2.3.x releases. [Pinned root](https://github.com/modelcontextprotocol/typescript-sdk/tree/fcef852f6cdafea07f36cf6fae69b37c8adf85be), read 2026-10-14.
+
+| Export / API | Exact role | Primary source, date read |
+| --- | --- | --- |
+| `createMcpHandler(factory, options?)` | Returns an object with `fetch(Request, { authInfo?, parsedBody? }?) → Promise<Response>` and `close()`. Fresh server factory per request; legacy stateless fallback is default, `legacy: 'reject'` disables it. Token/Origin/Host verification is external. | [createMcpHandler.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/server/createMcpHandler.ts), 2026-10-14 |
+| `WebStandardStreamableHTTPServerTransport` | Lower-level Request/Response Streamable HTTP transport, also exported from the server root. | [index.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/index.ts), 2026-10-14 |
+| `requireBearerAuth(options)` | Returns a web Request gate resolving to verified `AuthInfo` or a challenge `Response`. Pass accepted auth to `handler.fetch`. | [bearerAuth.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/server/middleware/bearerAuth.ts), 2026-10-14 |
+| `verifyBearerToken`, `bearerAuthChallengeResponse`, `OAuthTokenVerifier` | Core verification, error response, verifier contract. Supply `verifyAccessToken`; configure `expectedResource`, scopes and metadata URL. Expiration is required; audience comparison is optional unless configured. | [bearerAuth.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/server/middleware/bearerAuth.ts), 2026-10-14 |
+| `buildOAuthProtectedResourceMetadata`, `getOAuthProtectedResourceMetadataUrl`, `oauthMetadataResponse` | Build/serve discovery; `/mcp` maps to `/.well-known/oauth-protected-resource/mcp`. Caller supplies AS metadata; helper does not implement the authorization server. | [oauthMetadata.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/server/middleware/oauthMetadata.ts), 2026-10-14 |
+
+All named helpers above are server-root exports; `mcpAuthRouter`/`mcpAuthMetadataRouter` are framework adapter concepts, not the Remix entry. `requireMcpAuth` in #528 belongs to Better Auth, not this SDK. [SDK exports](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/index.ts), [base note](https://github.com/alp82/goodwatch-monorepo/blob/ae7c482c00b205bb99848c56813c6087baffd855/docs/research/self-hosted-auth.md), read 2026-10-14.
+
+### Zod: runtime works, direct typing does not
+
+The webapp declares `^3.25.76` and locks 3.25.76. Zod that version exports `zod/v4`; the SDK itself depends on Zod `^4.2.0`. [GoodWatch package](https://github.com/alp82/goodwatch-monorepo/blob/ae7c482c00b205bb99848c56813c6087baffd855/goodwatch-webapp/package.json), [Zod v3.25.76 package](https://github.com/colinhacks/zod/blob/v3.25.76/packages/zod/package.json), [SDK dependency catalog](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/pnpm-workspace.yaml), read 2026-10-14; local lockfile inspection.
+
+`registerTool` expects `StandardSchemaWithJSON`, including `~standard.validate` and `~standard.jsonSchema`. Older bundled v4 lacks the latter. Runtime conversion recognizes Zod v4's `_zod`, falls back to the SDK's `z.toJSONSchema()` and warns once. Ordinary Zod 3 schemas are explicitly rejected. Thus importing `zod/v4` is enough for the probed runtime path but insufficient for direct, type-safe registration. [Contract and fallback](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/core-internal/src/util/standardSchema.ts), [registerTool](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/server/src/server/mcp.ts), read 2026-10-14.
+
+Design conclusion: pin Zod 4.2.0+ for MCP schema authoring. Avoid upgrading all existing Zod 3 consumers without review: a separate package alias can preserve existing schemas. If retaining bundled v4, supply a real Standard JSON Schema wrapper or `fromJsonSchema` with appropriate validation; a type assertion alone hides the contract mismatch. [SDK fallback guidance](https://github.com/modelcontextprotocol/typescript-sdk/blob/v2.3.1/packages/core-internal/src/util/standardSchema.ts), read 2026-10-14. Exact dependency selection belongs to the build ticket.
+
+## Verification and remaining boundaries
+
+Executed `bash scripts/research/verify-auth-mcp-sdk.sh` on Node 26.8.1. It installs disposable exact SDK 2.3.1 / Zod 3.25.76 / TypeScript 5.6.3 packages outside the webapp and removes them afterwards. Passed: exported helper names, missing-token 401 with metadata challenge, accepted stub bearer auth, path-aware metadata URL, legacy `tools/list` JSON Schema generation using bundled v4, Zod 3 rejection, compiler rejection of direct bundled-v4 registration, and compiler acceptance with Zod 4.2.0. This is local observed evidence; the committed script reproduces it. SDK transitive dependencies retain their upstream semver ranges.
+
+No production mail or live ChatGPT/Better Auth OAuth linking was performed. The stub verifier proves helper wiring, not JWT/JWKS security. Actual SMTP connection limits remain undocumented; current OpenAI guides differ on UI/entitlement presentation. Node 20 and full Remix integration were not tested. Those are integration/operational follow-ups, not facts silently assumed here.
+
+Compared with #528: Purelymail policy and SDK helper availability are confirmed; the Zod question resolves to runtime compatibility with a TypeScript caveat; ChatGPT callbacks gain a previously missing RFC 9207 condition. The unrestricted every-member ChatGPT write promise in #529 must change. No conclusions about CrateDB atomicity or Better Auth storage were re-audited by this ticket.
