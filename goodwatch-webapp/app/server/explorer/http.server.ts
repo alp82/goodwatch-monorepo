@@ -1,9 +1,8 @@
 // The `/api/explorer/*` endpoints share this: members send GET and are read from the session; guests send POST with
 // the guest progress their browser holds ({ guest: { interactions, country, services } }), and a signed-in member's
-// POST ignores it. Served while REC_EXPLORER lets the viewer see Explorer; not found otherwise.
+// POST ignores it.
 import { json } from "@remix-run/node"
 import { z } from "zod"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
 import {
 	type GuestProgress,
 	type ViewerContext,
@@ -37,7 +36,6 @@ export async function explorerResponse(
 	answer: (ctx: ViewerContext, params: URLSearchParams) => Promise<unknown>,
 ): Promise<Response> {
 	const startedAt = performance.now()
-	if (getFeatureMode("explorer") === "off") return fail(404, "Not found")
 	let guest: GuestProgress | undefined
 	if (request.method === "POST") {
 		const text = await request.text()
@@ -59,8 +57,6 @@ export async function explorerResponse(
 
 	try {
 		const ctx = await getViewerContext(request, guest)
-		const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-		if (!isEnabled("explorer", { userId })) return fail(404, "Not found")
 		const viewerMs = performance.now() - startedAt
 		const result = await answer(ctx, new URL(request.url).searchParams)
 		if (result === null) return fail(404, "Not found")

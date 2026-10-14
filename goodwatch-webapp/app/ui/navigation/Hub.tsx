@@ -304,7 +304,7 @@ function HubContent() {
 				/>
 				<Tile
 					destination={d.explorer}
-					subtitle={d.explorer.available ? "Islands map" : "Coming soon"}
+					subtitle="Islands map"
 					here={here === "explorer"}
 				/>
 				{tracked && (

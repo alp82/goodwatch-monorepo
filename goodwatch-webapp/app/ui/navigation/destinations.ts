@@ -98,7 +98,7 @@ export function getDestinations(
 			short: "Explorer",
 			href: "/explorer",
 			icon: MapIcon,
-			available: features.explorer,
+			available: true,
 		},
 		movies: {
 			key: "movies",

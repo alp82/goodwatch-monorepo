@@ -18,7 +18,6 @@ const FEATURE_VARIABLES: Record<
 	filterBar: { name: "REC_FILTER_BAR", modes: ["off", "preview", "on"] },
 	watchNext: { name: "REC_WATCH_NEXT", modes: ["off", "preview", "on"] },
 	tastePage: { name: "REC_TASTE_PAGE", modes: ["off", "preview", "on"] },
-	explorer: { name: "REC_EXPLORER", modes: ["off", "preview", "on"] },
 	navigation: { name: "REC_NAVIGATION", modes: ["off", "preview", "on"] },
 	ageFilter: { name: "REC_AGE_FILTER", modes: ["off", "preview", "on"] },
 	tracking: { name: "REC_TRACKING", modes: ["off", "preview", "on"] },
