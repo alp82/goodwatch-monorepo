@@ -33,6 +33,22 @@ test("admission reads its limit on every entry", () => {
 	assert.ok(admission.enter())
 })
 
+test("concurrent searches observe only their own detached holds", async () => {
+	const admission = createSearchAdmission()
+	const seen: Promise<unknown>[][] = [[], []]
+	const gates = [Promise.withResolvers<void>(), Promise.withResolvers<void>()]
+	const work = [Promise.resolve("first"), Promise.resolve("second")]
+	const searches = gates.map((gate, index) => admission.track(held => seen[index].push(held), async () => {
+		await gate.promise
+		admission.hold(work[index])
+	}))
+	gates[1].resolve()
+	gates[0].resolve()
+	await Promise.all(searches)
+	assert.deepEqual(seen, [[work[0]], [work[1]]])
+	assert.equal(admission.inFlight(), 0)
+})
+
 for (const rejected of [false, true]) {
 	test(`hold counts work until it ${rejected ? "rejects" : "fulfills"}`, async () => {
 		const admission = createSearchAdmission({ limit: () => 1 })

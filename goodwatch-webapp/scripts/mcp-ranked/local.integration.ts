@@ -40,10 +40,14 @@ const { createRankedSearch } = await import(
 )
 const rankedSearch = createRankedSearch({ redis: () => redis, run })
 let id = 0
-async function call(args: Record<string, unknown>, who = member) {
+async function call(
+	args: Record<string, unknown>,
+	who = member,
+	search = rankedSearch,
+) {
 	const handle = createReadMcpHandler({
 		resource,
-		rankedSearch,
+		rankedSearch: search,
 		limiter: {
 			async take() {
 				return { allowed: true as const, store: "valkey" as const }
@@ -107,6 +111,55 @@ try {
 	assert.equal(calls, 1)
 	console.log(
 		"PASS: explicit ranked search reserves one member query; normalized cache hits and paging are free",
+	)
+	const { searchAdmission } = await import(
+		"../../app/server/search-runtime/admission.server"
+	)
+	const background = Promise.withResolvers<void>()
+	const held = createRankedSearch({
+		redis: () => redis,
+		run: async () => {
+			searchAdmission.hold(background.promise)
+			return run()
+		},
+	})
+	try {
+		assert.equal(
+			(
+				await call(
+					{ query: "background first", ranked: true },
+					`${member}-background`,
+					held,
+				)
+			).isError,
+			false,
+		)
+		const blocked = await call(
+			{ query: "background second", ranked: true },
+			`${member}-background`,
+			held,
+		)
+		assert.equal(
+			blocked.structuredContent.status,
+			"member_busy",
+			JSON.stringify(blocked),
+		)
+	} finally {
+		background.resolve()
+		await new Promise((resolve) => setTimeout(resolve, 30))
+	}
+	assert.equal(
+		(
+			await call(
+				{ query: "background second", ranked: true },
+				`${member}-background`,
+				held,
+			)
+		).isError,
+		false,
+	)
+	console.log(
+		"PASS: detached native search work retains the member's in-flight place after its response",
 	)
 } finally {
 	await redis.quit()

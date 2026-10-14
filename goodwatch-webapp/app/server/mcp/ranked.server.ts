@@ -169,6 +169,14 @@ export function createRankedSearch(
 		let release: (() => void) | null = null
 		let claimed = false
 		let heartbeat: NodeJS.Timeout | undefined
+		const background = new Set<Promise<unknown>>()
+		const track = (work: Promise<unknown>) => {
+			background.add(work)
+			void work.then(
+				() => background.delete(work),
+				() => background.delete(work),
+			)
+		}
 		const abort = new AbortController()
 		const stop = () => abort.abort()
 		signal?.addEventListener("abort", stop, { once: true })
@@ -220,7 +228,9 @@ export function createRankedSearch(
 				(await import("./ranked-engine.server.ts")).runRankedSearch
 			let batch: RankedBatch
 			try {
-				batch = await run(query, userId, abort.signal)
+				batch = await searchAdmission.track(track, () =>
+					run(query, userId, abort.signal),
+				)
 			} catch {
 				unknownCost.inc([])
 				return finish("failed", failure("search_failed", admitted))
@@ -245,18 +255,26 @@ export function createRankedSearch(
 		} catch {
 			return finish("unavailable", failure("ranked_unavailable"))
 		} finally {
-			if (heartbeat) clearInterval(heartbeat)
-			signal?.removeEventListener("abort", stop)
 			release?.()
-			if (claimed)
-				await redis
-					.eval(
-						"if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0",
-						1,
-						keys[1],
-						owner,
-					)
-					.catch(() => {})
+			const cleanup = async () => {
+				if (heartbeat) clearInterval(heartbeat)
+				signal?.removeEventListener("abort", stop)
+				if (claimed)
+					await redis
+						.eval(
+							"if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0",
+							1,
+							keys[1],
+							owner,
+						)
+						.catch(() => {})
+			}
+			if (background.size) {
+				void (async () => {
+					while (background.size) await Promise.allSettled([...background])
+					await cleanup()
+				})()
+			} else await cleanup()
 		}
 	}
 }
