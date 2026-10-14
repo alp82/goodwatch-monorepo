@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth"
+import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { randomUUID, createHash } from "node:crypto"
 import {
 	APIError,
@@ -22,6 +22,7 @@ export function createGoodwatchAuth(options: {
 	secret: string
 	encryptionSecret?: string
 	trustedIpHeader?: string
+	rateLimit?: BetterAuthOptions["rateLimit"]
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
@@ -86,6 +87,7 @@ export function createGoodwatchAuth(options: {
 			preserveSessionInDatabase: false,
 			cookieCache: { enabled: false },
 		},
+		rateLimit: options.rateLimit,
 		emailAndPassword: {
 			enabled: true,
 			minPasswordLength: 10,
@@ -331,7 +333,11 @@ export function createGoodwatchAuth(options: {
 		socialProviders: { google: options.google },
 		account: {
 			encryptOAuthTokens: true,
-			accountLinking: { enabled: true, trustedProviders: ["google"] },
+			accountLinking: {
+				enabled: true,
+				trustedProviders: [],
+				requireLocalEmailVerified: true,
+			},
 		},
 		databaseHooks: {
 			session: {

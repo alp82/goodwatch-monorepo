@@ -770,3 +770,108 @@ test("a legacy password upgrade cannot overwrite a password changed concurrently
 		200,
 	)
 })
+
+test("Google linking requires a verified provider address before joining an existing confirmed account", async () => {
+	const member = await confirmed()
+	const session = await (
+		await call("/get-session", undefined, member.cookies)
+	).json()
+	const { generateKeyPair, exportJWK, SignJWT } = await import("jose")
+	const { privateKey, publicKey } = await generateKeyPair("RS256")
+	const jwk = {
+		...(await exportJWK(publicKey)),
+		kid: "google-link-key",
+		alg: "RS256",
+	}
+	const subject = `google-${randomUUID()}`
+	const token = (verified: boolean) =>
+		new SignJWT({
+			sub: subject,
+			email: member.address,
+			email_verified: verified,
+			name: "Google member",
+		})
+			.setProtectedHeader({ alg: "RS256", kid: jwk.kid })
+			.setIssuedAt()
+			.setExpirationTime("1h")
+			.setIssuer("https://accounts.google.com")
+			.setAudience("local-google-client")
+			.sign(privateKey)
+	const originalFetch = globalThis.fetch
+	globalThis.fetch = async (input, init) => {
+		const url = new URL(input instanceof Request ? input.url : String(input))
+		if (url.href === "https://www.googleapis.com/oauth2/v3/certs")
+			return Response.json({ keys: [jwk] })
+		if (!["localhost", "127.0.0.1"].includes(url.hostname))
+			throw new Error("External auth network blocked in test")
+		return originalFetch(input, init)
+	}
+	try {
+		const unconfirmed = await call("/sign-in/social", {
+			provider: "google",
+			idToken: { token: await token(false) },
+		})
+		assert.equal(cookie(unconfirmed).includes("gw.session_token="), false)
+		assert.ok(
+			[401, 403].includes(unconfirmed.status),
+			await unconfirmed.clone().text(),
+		)
+		const confirmed = await call("/sign-in/social", {
+			provider: "google",
+			idToken: { token: await token(true) },
+		})
+		assert.equal(confirmed.status, 200, await confirmed.clone().text())
+		assert.equal(
+			(await (await call("/get-session", undefined, cookie(confirmed))).json())
+				.user.id,
+			session.user.id,
+		)
+	} finally {
+		globalThis.fetch = originalFetch
+	}
+})
+
+test("server session checks bypass HTTP throttling while the public session endpoint stays limited", async () => {
+	const member = await confirmed()
+	const limited = createGoodwatchAuth({
+		sql,
+		storage,
+		mail,
+		baseURL,
+		secret: "disposable-local-wiring-secret-at-least-32",
+		google: {
+			clientId: "local-google-client",
+			clientSecret: "local-google-secret",
+		},
+		rateLimit: {
+			enabled: true,
+			max: 1,
+			window: 3600,
+			storage: "secondary-storage",
+		},
+	})
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	const { resolveSession } = await import("../../utils/auth-session.ts")
+	const previous = process.env.BETTER_AUTH_ENABLED
+	setAuthForTest(limited)
+	process.env.BETTER_AUTH_ENABLED = "true"
+	try {
+		assert.equal(
+			(await resolveSession(member.cookies)).user?.email,
+			member.address,
+		)
+		assert.equal(
+			(await resolveSession(member.cookies)).user?.email,
+			member.address,
+		)
+		const request = new Request(`${baseURL}/api/auth/get-session`, {
+			headers: { cookie: member.cookies, "x-forwarded-for": "203.0.113.52" },
+		})
+		assert.equal((await limited.handler(request.clone())).status, 200)
+		assert.equal((await limited.handler(request.clone())).status, 429)
+	} finally {
+		if (previous === undefined) delete process.env.BETTER_AUTH_ENABLED
+		else process.env.BETTER_AUTH_ENABLED = previous
+		setAuthForTest(null)
+	}
+})

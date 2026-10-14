@@ -82,12 +82,11 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 }
 export async function resolveBetterAuthSession(cookieHeader: string | null) {
 	const auth = await getBetterAuth()
-	const response = await auth.handler(
-		new Request(
-			new URL("/api/auth/get-session", auth.options.baseURL as string),
-			{ headers: { cookie: cookieHeader ?? "" } },
-		),
-	)
+	// Server loaders bypass the HTTP router's missing-IP rate-limit bucket.
+	const response = await auth.api.getSession({
+		headers: new Headers({ cookie: cookieHeader ?? "" }),
+		asResponse: true,
+	})
 	if (!response.ok) throw new Error("Auth session check failed")
 	const data = await response.json()
 	const user: User | null = data?.user

@@ -23,6 +23,8 @@ ingress; never pass through client-supplied forwarding headers.
 
 Session lifetime is 90 days, renewed at most daily, stored in CrateDB and Valkey.
 Cookie caching and the Supabase memo are disabled on the Better Auth path.
+Server loaders call the session API directly so that they do not share the
+HTTP router's missing-IP rate-limit bucket. Public HTTP endpoints stay limited.
 The cookie family is `gw.session_token`; upstream adds the reserved `__Secure-`
 prefix on HTTPS. Both forms bypass shared-page caching. Every cached session
 read checks the current CrateDB session and user, so a missing Valkey session
@@ -113,6 +115,6 @@ and session issuance. Password updates and session sweeps are separate writes.
 The MCP build must preserve #534's connected-app policy when adding provider
 session-delete hooks, and must enforce its own JWT/client revocation policy.
 
-The full suite deliberately retains the Google callback regression until the
-adapter accepts core's OAuth-state `verification.delete` call. Do not bypass
-the strict adapter or remove that failure to enable Google.
+The wiring manifest adds core's OAuth-state `verification.delete(id)` call and
+its delete-hook pre-read. It uses the existing adapter deletion path; the callback
+regression covers state validation, PKCE, successful sign-in and replay rejection.
