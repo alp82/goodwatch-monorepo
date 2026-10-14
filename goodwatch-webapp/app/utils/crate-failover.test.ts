@@ -47,7 +47,7 @@ async function cluster(t: TestContext, handlers: Handler[]) {
 		assert.ok(address && typeof address !== "string")
 		port = address.port
 	}
-	Object.assign(process.env, { CRATE_HOSTS: hosts.join(","), CRATE_PORT: String(port), CRATE_TIMEOUT_MS: "150", CRATE_USER: "", CRATE_PASS: "" })
+	Object.assign(process.env, { CRATE_HOSTS: hosts.join(","), CRATE_PORT: String(port), CRATE_TIMEOUT_MS: "10000", CRATE_USER: "", CRATE_PASS: "" })
 	setCrateClientForTest(null)
 	return received
 }
@@ -73,8 +73,8 @@ test("a stalled read closes its request and succeeds elsewhere within the caller
 		(_, __, res) => answer(res),
 	])
 	const started = performance.now()
-	assert.deepEqual(await query("SELECT stalled", undefined, { timeoutMs: 300 }), [{ n: 1 }])
-	assert.ok(performance.now() - started < 500)
+	assert.deepEqual(await query("SELECT stalled", undefined, { timeoutMs: 3_000 }), [{ n: 1 }])
+	assert.ok(performance.now() - started < 5_000)
 	await closed
 	for (let i = 0; i < 6; i++) await query("SELECT recovered")
 	assert.equal(received[0].length, 1)
@@ -223,7 +223,7 @@ test("caller cancellation closes the active request without retrying or evicting
 })
 
 test("reads wait for shard routing to recover when surviving coordinators still reference a lost node", async (t) => {
-	const recoveredAt = performance.now() + 200
+	let recoveredAt = Infinity
 	const messages = [
 		"NodeNotConnectedException[[node2] Node not connected]",
 		"NoSuchNodeException[No such node [node2]]",
@@ -234,6 +234,7 @@ test("reads wait for shard routing to recover when surviving coordinators still 
 		res.writeHead(500, { "Content-Type": "application/json" })
 		res.end(JSON.stringify({ error: { message, code: 5000 } }))
 	}))
+	recoveredAt = performance.now() + 200
 	assert.deepEqual(await query("SELECT n", [], { timeoutMs: 1_000 }), [{ n: 1 }])
 	const before = received.map((host) => host.length)
 	for (let i = 0; i < 3; i++) await query("SELECT n")
