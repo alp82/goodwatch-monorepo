@@ -1,4 +1,4 @@
-import type { CleanedWhere } from "better-auth/adapters"
+import type { CleanedWhere } from "@goodwatch/auth-stack/adapters"
 
 // #531, Better Auth 1.7.7. Signatures use logical names, AND only. Every
 // delete hook's findMany pre-read is included below. Optional DB verification,

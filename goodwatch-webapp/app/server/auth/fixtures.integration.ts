@@ -1,4 +1,4 @@
-import type { BetterAuthOptions } from "better-auth"
+import type { BetterAuthOptions } from "@goodwatch/auth-stack"
 
 // Logical plugin schema for adapter-boundary tests, pinned to #531's 1.7.7
 // inventory. The auth/MCP wiring ticket supplies the actual plugins.

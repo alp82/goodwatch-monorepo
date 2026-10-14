@@ -20,6 +20,7 @@ FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY patches ./patches
+COPY packages/auth-stack ./packages/auth-stack
 RUN --mount=type=cache,id=goodwatch-webapp-npm,target=/root/.npm \
 	npm ci --include=dev --no-audit --no-fund
 
@@ -29,6 +30,7 @@ FROM ${NODE_IMAGE} AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY patches ./patches
+COPY packages/auth-stack ./packages/auth-stack
 RUN --mount=type=cache,id=goodwatch-webapp-npm,target=/root/.npm \
 	npm ci --omit=dev --no-audit --no-fund
 

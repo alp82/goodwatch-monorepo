@@ -44,7 +44,6 @@
 		"accept-language-parser": "^1.5.0",
 		"axios": "^1.8.4",
 		"bcryptjs": "3.0.3",
-		"better-auth": "1.7.7",
 		"framer-motion": "^11.11.11",
 		"ioredis": "^5.4.1",
 		"is-ip": "^5.0.1",
@@ -70,7 +69,8 @@
 		"undici": "6.21.3",
 		"use-dehydrated-state": "^0.1.0",
 		"zod": "^3.25.76",
-		"zod4": "npm:zod@4.6.7"
+		"zod4": "npm:zod@4.6.7",
+		"@goodwatch/auth-stack": "file:packages/auth-stack"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

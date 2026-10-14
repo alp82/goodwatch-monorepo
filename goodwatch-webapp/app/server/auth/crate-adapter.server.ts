@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomUUID } from "node:crypto"
-import { createAdapterFactory } from "better-auth/adapters"
-import type { CleanedWhere, CustomAdapter } from "better-auth/adapters"
+import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
+import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
 import { authPayloadCodec } from "./payload-codec.server.ts"
 

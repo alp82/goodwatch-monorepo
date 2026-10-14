@@ -1,15 +1,19 @@
-import { betterAuth, type BetterAuthOptions } from "better-auth"
+import { betterAuth, type BetterAuthOptions } from "@goodwatch/auth-stack"
+import { jwt } from "@goodwatch/auth-stack/plugins"
+import { mcp } from "@goodwatch/auth-stack/mcp"
+import { cimd } from "@goodwatch/auth-stack/cimd"
+import { fetchClientMetadataResource } from "@goodwatch/auth-stack/cimd-node"
 import { randomUUID, createHash } from "node:crypto"
 import {
 	APIError,
 	createAuthMiddleware,
 	createEmailVerificationToken,
 	getIP,
-} from "better-auth/api"
+} from "@goodwatch/auth-stack/api"
 import { jwtVerify } from "jose"
 import { compare } from "bcryptjs"
-import { hashPassword, verifyPassword } from "better-auth/crypto"
-import { setSessionCookie } from "better-auth/cookies"
+import { hashPassword, verifyPassword } from "@goodwatch/auth-stack/crypto"
+import { setSessionCookie } from "@goodwatch/auth-stack/cookies"
 import { crateAuthAdapter, type AuthSql } from "./crate-adapter.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
@@ -23,6 +27,7 @@ export function createGoodwatchAuth(options: {
 	encryptionSecret?: string
 	trustedIpHeader?: string
 	rateLimit?: BetterAuthOptions["rateLimit"]
+	mcp?: { resource: string; accessTokenExpiresIn?: number }
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
@@ -34,6 +39,26 @@ export function createGoodwatchAuth(options: {
 			sql: options.sql,
 			encryptionSecret: options.encryptionSecret,
 		}),
+		plugins: options.mcp ? [
+			jwt(),
+			mcp({
+				loginPage: "/auth/mcp/login",
+				consentPage: "/auth/mcp/consent",
+				resource: options.mcp.resource,
+				scopes: ["openid", "profile", "email", "mcp:read", "mcp:write", "offline_access"],
+				allowDynamicClientRegistration: true,
+				allowUnauthenticatedClientRegistration: true,
+				accessTokenExpiresIn: options.mcp.accessTokenExpiresIn ?? 300,
+				refreshTokenExpiresIn: 90 * 86400,
+			}),
+			cimd({metadataProfile: "mcp-2026-07-28", fetchClientMetadataResource}),
+			{
+				id: "goodwatch-mcp-grants",
+				schema: {oauthConsent: {fields: {
+					lastUsedAt: {type: "date", required: false, input: false},
+				}}},
+			},
+		] : [],
 		secondaryStorage: {
 			get: async (key): Promise<string | null> => {
 				const cached = await options.storage.get(key)
