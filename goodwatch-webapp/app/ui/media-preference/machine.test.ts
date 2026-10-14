@@ -421,3 +421,25 @@ test("the saved pair read during a save is taken, so the toast's Undo returns to
 	const kept = reduce(read, { type: "saveSucceeded", seq: read.seq, pair: { country: "DE", language: "ja" } })
 	assert.deepEqual(kept.undoTo, { country: "DE", language: "fr" })
 })
+
+test("the same title's address changing to another country shows it as the view, before and after the private read", () => {
+	// A guest guessed as US whose old saved country DE is moved into `?country=DE` on the same title.
+	const guessed = initialState({ country: "US", language: BROWSER })
+	const moved = reduce(guessed, { type: "pageCountry", country: "DE" })
+	assert.deepEqual(onScreen(moved), { country: "DE", language: BROWSER })
+	assert.equal(isPending(moved), false)
+	const read = reduce(moved, {
+		type: "syncSaved",
+		pair: { country: "US", language: BROWSER },
+		recorded: false,
+		view: "DE",
+	})
+	assert.equal(onScreen(read).country, "DE")
+	const picked = reduce(read, { type: "pickCountry", country: "JP" })
+	assert.equal(onScreen(picked).country, "JP", "a country picked here shows over the view")
+	assert.equal(onScreen(reduce(picked, { type: "discard" })).country, "DE")
+	const saving = run([{ type: "pickLanguage", language: "ja" }, { type: "keep" }], read)
+	assert.deepEqual(saving.request?.pair, { country: "US", language: "ja" }, "the view is never saved")
+	assert.equal(reduce(read, { type: "pageCountry", country: "US" }).view, null, "back on the saved country: no view")
+	assert.deepEqual(reduce(read, { type: "pageCountry", country: "DE" }), read, "the same country again changes nothing")
+})
