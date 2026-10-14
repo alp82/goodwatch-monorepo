@@ -148,7 +148,7 @@ class Store:
                 self.db.execute('UPDATE doc.social_post SET processed_hash=NULL WHERE post_id=? AND content_hash=?', [p['post_id'], p['content_hash']])
             if verdict['status'] != 'pass':
                 self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [p['post_id']])
-        self.refresh('social_content_quality', 'social_title_link')
+        self.refresh('social_content_quality', 'social_title_link', 'social_post')
         return decisions
 
     def pending(self, source, limit=400, disabled_lanes=()):

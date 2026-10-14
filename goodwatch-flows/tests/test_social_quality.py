@@ -132,3 +132,8 @@ class QualityTests(unittest.TestCase):
         self.assertEqual(evaluate(item)['status'], 'reject')
         item.update(author_id=CHANNELS['Universal Pictures'], url='https://www.youtube.com/watch?v=fixture')
         self.assertEqual(evaluate(item)['status'], 'pass')
+
+    def test_template_labels_do_not_turn_hashtag_only_posts_into_discussion(self):
+        from f.social.quality import evaluate
+        item = self.item('Movie: #Dune\nStarring: #TimotheeChalamet #Zendaya\nDirected By: #DenisVilleneuve\n#Film #Cinema https://variety.com/dune')
+        self.assertIn('no_substantive_text', evaluate(item)['reasons'])

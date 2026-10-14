@@ -127,7 +127,10 @@ def evaluate(item, *, at=None):
     # A publisher's short headline can rely on its editorial summary. Social
     # hashtags and link-card boilerplate cannot supply discussion.
     substance = text + '\n' + context if item['source'] == 'rss' else text
-    words = re.findall(r"[^\W\d_]+", re.sub(r'(?<!\w)#[\w]+', '', URL.sub('', substance)), re.UNICODE)
+    substance = re.sub(r'(?<!\w)#[\w]+', '', URL.sub('', substance))
+    if item['source'] != 'rss':
+        substance = re.sub(r'(?im)^\s*(?:movie|film|starring|directed by|read more|click here|link in bio)\s*:?\s*$', '', substance)
+    words = re.findall(r"[^\W\d_]+", substance, re.UNICODE)
     if len(words) < 3 or sum(map(len, words)) < 12:
         reasons.append('no_substantive_text')
     return {'status': 'reject' if reasons else 'pass', 'reasons': sorted(set(reasons))}
