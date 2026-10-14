@@ -13,8 +13,8 @@ export default defineConfig({
 				return defineRoutes((route) => {
 					route("mcp", "../../../app/routes/mcp.ts")
 					route("api/auth/*", "routes/api.auth.$.ts")
-					route("auth/mcp/login", "../../../app/routes/auth.mcp.login.ts")
-					route("auth/mcp/consent", "../../../app/routes/auth.mcp.consent.ts")
+					route("sign-in", "../../../app/routes/sign-in.tsx")
+					route("auth/mcp/consent", "../../../app/routes/auth.mcp.consent.tsx")
 					route(
 						".well-known/oauth-protected-resource/*",
 						"../../../app/routes/[.well-known].oauth-protected-resource.$.ts",

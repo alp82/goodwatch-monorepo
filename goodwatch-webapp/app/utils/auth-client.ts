@@ -151,7 +151,7 @@ export function useAuthClient() {
 				if (!result.ok) return result
 				forgetSupabaseSignIn()
 				const next = urlIn(answer)
-				return next ? { ok: true, next } : fail("unavailable")
+				return next ? { ok: true, next } : { ok: false, failure: "unavailable" }
 			},
 
 			async google(returnTo: string, oauthQuery?: string): Promise<AuthResult> {

@@ -31,10 +31,10 @@ export default function ConnectedApps() {
 					</p>
 				</div>
 				{removed && (
-					<p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-800 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
+					<output className="flex items-center gap-2 rounded-lg border border-emerald-800 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
 						<CheckIcon className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" /> {removed} is disconnected. To use it again, connect it
 						from {removed}.
-					</p>
+					</output>
 				)}
 				{apps === null ? (
 					<div className="rounded-xl border border-gray-700 bg-gray-800/40 p-6 text-center text-sm text-gray-400">

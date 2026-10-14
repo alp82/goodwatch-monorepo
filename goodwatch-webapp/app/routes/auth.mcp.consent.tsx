@@ -17,7 +17,7 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs, MetaFunct
 import { json } from "@remix-run/node"
 import { Form, useLoaderData, useLocation } from "@remix-run/react"
 import { type ComponentType, type ReactNode, type SVGProps, useState } from "react"
-import { STANDALONE } from "~/app"
+import { STANDALONE } from "~/utils/standalone"
 import { consentHeaders, mcpConsentAction, mcpConsentLoader } from "~/server/auth/mcp-flow.server"
 import type { ConsentApp, ConsentView } from "~/utils/mcp-connect"
 import { ConnectAppBadge, GoodWatchBadge } from "~/ui/auth/connect"
@@ -62,8 +62,9 @@ export default function Consent() {
 	const [leaving, setLeaving] = useState<"allow" | "deny" | null>(null)
 	// The signed query goes back with the answer; the action checks it again.
 	const { pathname, search } = useLocation()
+	// The body is a fixed-height flex column: without shrink-0 the background would stop at the first screen.
 	return (
-		<div className="min-h-screen bg-gray-950 text-gray-300">
+		<div className="min-h-screen shrink-0 bg-gray-950 text-gray-300">
 			<div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 px-5 py-8 sm:py-14">
 				<p className="text-center text-2xl font-black tracking-tight text-white">
 					Good<span className="text-amber-400">Watch</span>
@@ -217,16 +218,16 @@ function Cannot({ name }: { name: string }) {
 // After the choice the browser goes back to the app; this shows while it does.
 function Leaving({ app, allowed }: { app: ConsentApp; allowed: boolean }): ReactNode {
 	return (
-		<div role="status" className="flex flex-col items-center gap-4 py-8 text-center">
+		<div aria-live="polite" className="flex flex-col items-center gap-4 py-8 text-center">
 			{allowed ? (
 				<CheckIcon className="h-12 w-12 rounded-full bg-emerald-900 p-2.5 text-emerald-300" aria-hidden="true" />
 			) : (
 				<NoSymbolIcon className="h-12 w-12 text-gray-400" aria-hidden="true" />
 			)}
 			<h1 className="text-2xl font-bold text-white">{allowed ? `${app.name} is connected` : `${app.name} was not connected`}</h1>
-			<p className="flex items-center gap-2 text-gray-400">
+			<div className="flex items-center gap-2 text-gray-400">
 				<Spinner size="small" /> Taking you back to {app.host === "this computer" ? app.name : app.host}…
-			</p>
+			</div>
 			{allowed && (
 				<p className="text-sm text-gray-500">
 					You can disconnect it in <a href={CONNECTED_APPS_PATH} className="text-amber-500 hover:text-amber-400">Settings, Connected apps</a>.

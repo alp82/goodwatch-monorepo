@@ -14,6 +14,7 @@ import {
 import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
+import { STANDALONE } from "~/utils/standalone"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
@@ -48,9 +49,6 @@ export function loadShellCode({
 		new Promise((resolve) => setTimeout(resolve, SHELL_CODE_TIMEOUT_MS)),
 	])
 }
-
-/** A route's `handle` that leaves out the site's header, footer and dock: a page that belongs to another app's flow. */
-export const STANDALONE = { chrome: "none" } as const
 
 export default function App() {
 	const location = useLocation()
