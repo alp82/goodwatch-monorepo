@@ -183,6 +183,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 			const candidates = async (model: string, where: CleanedWhere[]): Promise<Stored[]> => {
 				const eq = Object.fromEntries(where.filter(p => p.operator === "eq").map(p => [p.field, p.value]))
 				let ids: string[] | undefined
+				let enumerating = false
 				if (testOnlyConformance && where.some(p => p.connector === "OR" || p.mode === "insensitive")) { /* Use refreshed enumeration in the generic test suite. */ }
 				else if (eq.id !== undefined) ids = [String(eq.id)]
 				else if (model === "user" && eq.email !== undefined) {
@@ -199,6 +200,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const batch = where.find(p => p.operator === "in" && (p.field === "id" || p.field === "token" && ["session", "oauthAccessToken", "oauthRefreshToken"].includes(model) || p.field === "clientId" && model === "oauthClient" || p.field === "identifier" && model === "oauthResource"))
 				if (!ids && batch && !testOnlyConformance) ids = (batch.value as string[]).map(value => batch.field === "token" ? digest(value) : String(value))
 				if (!ids) {
+					enumerating = true
 					await sql(`REFRESH TABLE ${authModelTable(model)}`)
 					const filters: string[] = [], args: unknown[] = []
 					if (!where.some(p => p.connector === "OR" || p.mode === "insensitive")) for (const p of where) {
@@ -228,7 +230,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const result: Stored[] = []
 				for (const id of new Set(ids)) {
 					const value = await stored(model, id)
-					if (value && !value.deleted && matches(value.row, where)) result.push(value)
+					if (value && !value.deleted && (!enumerating || !value.envelope.archived) && matches(value.row, where)) result.push(value)
 				}
 				return result
 			}
@@ -237,7 +239,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				// A refresh-family sweep is not atomic with child issuance. Close the
 				// authoritative grant first; a late child then fails both refresh and
 				// JWT checks. Normal rotation carries rotatedAt and keeps its grant.
-				if (enforceGrantRevocation && model === "oauthRefreshToken" && update.revoked instanceof Date && !("rotatedAt" in update) && original.row.grantVersion) {
+				if (enforceGrantRevocation && model === "oauthRefreshToken" && (deleting || update.revoked instanceof Date && !("rotatedAt" in update)) && original.row.grantVersion) {
 					const grantId = digest(original.row.clientId, original.row.userId, original.row.referenceId ?? null)
 					const grant = await stored("oauthConsent", grantId)
 					if (grant && !grant.deleted && grant.row.grantVersion === original.row.grantVersion) await assign("oauthConsent", grant, [{ field: "id", operator: "eq", value: grantId, connector: "AND", mode: "sensitive" }, { field: "grantVersion", operator: "eq", value: original.row.grantVersion, connector: "AND", mode: "sensitive" }], {}, true)
@@ -257,7 +259,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${authModelTable(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
@@ -383,6 +385,11 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					if (row) await requireCompleted(model, row, where, {}, true)
 				},
 				async deleteMany({ model, where }) {
+					// Provider reuse invalidation deletes by client/member, even when
+					// its earlier captured token set was empty. Fence the grants first.
+					if (enforceGrantRevocation && model === "oauthRefreshToken" && where.length === 2 && where.every(p => p.operator === "eq" && ["clientId", "userId"].includes(p.field))) {
+						for (const grant of await candidates("oauthConsent", where)) if (grant.row.grantVersion) await assign("oauthConsent", grant, [{ field: "id", operator: "eq", value: grant.row.id, connector: "AND", mode: "sensitive" }, { field: "grantVersion", operator: "eq", value: grant.row.grantVersion, connector: "AND", mode: "sensitive" }], {}, true)
+					}
 					let count = 0
 					for (const row of await candidates(model, where)) if (await requireCompleted(model, row, where, {}, true)) count++
 					return count

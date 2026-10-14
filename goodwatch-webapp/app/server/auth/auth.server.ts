@@ -40,6 +40,7 @@ export function createGoodwatchAuth(options: {
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
+	const refreshGrants = new WeakMap<Request, { id: string; version: string }>()
 	const credentialVersion = (password: string | null) =>
 		authCredentialVersion(
 			options.encryptionSecret ?? localAuthEncryptionSecret,
@@ -91,7 +92,13 @@ export function createGoodwatchAuth(options: {
 						extensions: [
 							{
 								claims: {
-									accessToken: async ({ ctx, user, client, referenceId }) => {
+									accessToken: async ({
+										ctx,
+										user,
+										client,
+										referenceId,
+										grantType,
+									}) => {
 										if (!user)
 											throw new APIError("BAD_REQUEST", {
 												error: "invalid_grant",
@@ -109,6 +116,18 @@ export function createGoodwatchAuth(options: {
 													: []),
 											],
 										})
+										const expected = ctx.request
+											? refreshGrants.get(ctx.request)
+											: undefined
+										if (
+											grantType === "refresh_token" &&
+											(!expected ||
+												expected.id !== consent?.id ||
+												expected.version !== consent?.grantVersion)
+										)
+											throw new APIError("BAD_REQUEST", {
+												error: "invalid_grant",
+											})
 										if (!consent?.grantVersion)
 											throw new APIError("BAD_REQUEST", {
 												error: "invalid_grant",
@@ -299,6 +318,44 @@ export function createGoodwatchAuth(options: {
 			before: createAuthMiddleware(async (ctx) => {
 				if (
 					options.mcp &&
+					ctx.path === "/oauth2/revoke" &&
+					typeof ctx.body?.token === "string"
+				) {
+					const token = await ctx.context.adapter.findOne<{ clientId: string }>(
+						{
+							model: "oauthRefreshToken",
+							where: [{ field: "token", value: tokenHash(ctx.body.token) }],
+						},
+					)
+					if (token) {
+						let clientId =
+							typeof ctx.body.client_id === "string"
+								? ctx.body.client_id
+								: undefined
+						const authorization = (ctx.request?.headers ?? ctx.headers)?.get(
+							"authorization",
+						)
+						if (authorization?.startsWith("Basic ")) {
+							let basicId: string | undefined
+							try {
+								basicId = decodeURIComponent(
+									Buffer.from(authorization.slice(6), "base64")
+										.toString("utf8")
+										.split(":")[0],
+								)
+							} catch {}
+							if (clientId && basicId !== clientId)
+								throw new APIError("BAD_REQUEST", { error: "invalid_request" })
+							clientId = basicId
+						}
+						// Upstream checks this after its revoked-token family branch.
+						// Reject mismatches before it can sweep another client's grants.
+						if (clientId !== token.clientId)
+							throw new APIError("BAD_REQUEST", { error: "invalid_request" })
+					}
+				}
+				if (
+					options.mcp &&
 					ctx.path === "/oauth2/token" &&
 					ctx.body?.grant_type === "refresh_token"
 				) {
@@ -324,6 +381,7 @@ export function createGoodwatchAuth(options: {
 					if (!token) throw invalid()
 					const [consent, user] = await Promise.all([
 						ctx.context.adapter.findOne<{
+							id: string
 							scopes: string[]
 							resources?: string[]
 							grantVersion: string
@@ -353,6 +411,11 @@ export function createGoodwatchAuth(options: {
 						)
 					)
 						throw invalid()
+					if (!ctx.request) throw invalid()
+					refreshGrants.set(ctx.request, {
+						id: consent.id,
+						version: consent.grantVersion,
+					})
 				}
 
 				if (

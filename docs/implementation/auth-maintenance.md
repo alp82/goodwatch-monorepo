@@ -30,8 +30,8 @@ within a minute.
 | --- | --- |
 | Email claims | Gives new reservations 15 minutes. Keeps a live owner's current address. Otherwise fences the user version, or inserts a permanent missing-user tombstone, before conditionally releasing the unchanged claim. |
 | Orphan reconciliation | Removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
-| Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; retires signing keys after verification grace; collects receipts after 24 hours; repairs deleted hints from authenticated state. |
-| Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing or deleted row's slot, writes a permanent admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. |
+| Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; archives rotated refresh parents after their retry window; retires signing keys after verification grace; collects receipts after 24 hours; repairs enumeration hints from authenticated state. |
+| Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing, deleted or archived row's slot, writes a permanent admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. |
 | Payload key rotation | Rewrites both encrypted columns under the active payload key with CAS, preserving logical data, indexes, claims, admission fences and receipt ownership. Competing changes are skipped and retried in later passes. |
 
 The worker emits `goodwatch_auth_maintenance_total{job,outcome}` and
@@ -66,6 +66,15 @@ or admission barriers**. Unadmitted reusable association/rate-limit tombstones
 can be physically removed after 24 hours. Retained barriers increase physical
 row count; maintenance streams them, while application bounds concern live and
 pending admitted rows.
+
+Rotated refresh parents enter an authenticated **archived** state after their
+30-second retry window. They leave active enumerations and admission capacity,
+and their encrypted retry response is erased. Primary-key token lookup still
+returns revoked protocol metadata so the provider can authenticate the client
+and detect replay. That metadata lasts through the original refresh expiry,
+then becomes the minimal tombstone. The plaintext `deleted` column nominates
+both deleted and archived records; maintenance derives it from authenticated
+state. Normal refresh traffic does not consume 90 days of live admission slots.
 
 Logical erasure does not erase old Lucene versions, database snapshots, backups
 or retained secret backups. Rollout must specify database snapshot and secret
@@ -154,7 +163,8 @@ Changing the permanent root needs a different, **offline re-key migration**:
 stop ingress and every writer/job, snapshot and restore an isolated copy,
 decrypt with the old root/key ring, validate unique normalized live emails,
 rebuild email claim HMAC primary keys with their current owner/generation,
-recompute verification lookup HMACs, and reencrypt legacy envelopes. Validate
+recompute verification lookup HMACs, invalidate/reissue browser credential
+version bindings, and reencrypt legacy envelopes. Validate
 all lookups/claims, receipts, login and OAuth flows before atomically switching
 all configuration and traffic. Keep rollback data/config together. There is
 no online root-rotation switch or implemented root re-key tool in this PR;
@@ -196,11 +206,16 @@ member, client, exact consent and grant version on every request. Disconnecting
 one computer deletes that grant; reconnect creates a new version, so old JWTs
 and refresh tokens cannot return. Already admitted requests can finish.
 
-Terminal refresh revocation (including a provider family/reuse sweep) now
-**conditionally deletes the matching grant version before token writes**.
+Terminal refresh revocation (including provider family deletion/reuse sweeps)
+now **conditionally deletes matching grant versions before token writes**.
+A client/member family sweep closes matching grants even if its captured token
+set is empty. The revocation endpoint validates token/client ownership before
+the provider's revoked-token family branch.
 A child inserted after the captured sweep is therefore unusable at JWT/refresh
 checks, and token-response binding rejects it. Normal rotation carries
-`rotatedAt` and keeps the grant and its 30-second retry window. Explicit refresh
+`rotatedAt` and keeps the grant and its 30-second retry window. Each refresh
+request pins the grant ID/version observed before issuance; signing cannot
+adopt a new version if disconnect/reconnect races that request. Explicit refresh
 revocation now disconnects that grant immediately for MCP JWTs as well. An opaque
 access-token-only revocation is not a general JWT denylist; use Connected apps
 disconnection for that contract. Upstream reuse sweeps can cover multiple
@@ -209,9 +224,8 @@ revocation guarantee for refresh-token replay.
 
 Minting, parent rotation, child insertion, response persistence and sweeps remain
 separate writes. Reconciliation catches missing parents, deleted/mismatched
-grants, terminal unfenced revocations and abandoned unbound children. Rotated
-refresh parents remain until expiry so the retry/reuse protocol still has its
-evidence. Sweep failure may require retry/reauthorization; it never proves an
+grants, terminal unfenced revocations and abandoned unbound children. Archived refresh parents retain authenticated protocol evidence until their
+original expiry without occupying the live enumeration/admission population. Sweep failure may require retry/reauthorization; it never proves an
 unseen child was deleted. Session/credential/grant checks, not eventual cleanup,
 provide the authorization decision.
 

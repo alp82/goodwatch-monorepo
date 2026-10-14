@@ -29,6 +29,7 @@ type Options = AuthMaintenanceOptions
 type Envelope = {
 	row: Record<string, unknown>
 	deleted: boolean
+	archived?: boolean
 	emailClaim?: string
 	deletedAt?: string
 	admission?: AuthAdmission
@@ -206,6 +207,7 @@ export async function collectAuthGarbage(
 	const report = {
 		scanned: 0,
 		expired: 0,
+		archived: 0,
 		compacted: 0,
 		repaired: 0,
 		purged: 0,
@@ -231,6 +233,15 @@ export async function collectAuthGarbage(
 			current[1],
 			`${name}:${id}:receipts`,
 		)
+		const archiveRefresh =
+			!envelope.deleted &&
+			model === "oauthRefreshToken" &&
+			Boolean(envelope.row.revoked) &&
+			typeof envelope.row.rotatedAt === "string" &&
+			typeof envelope.row.rotationReplayExpiresAt === "string" &&
+			new Date(envelope.row.rotationReplayExpiresAt).getTime() <=
+				now.getTime() &&
+			(!envelope.archived || envelope.row.rotationReplayResponse != null)
 		const expired =
 			!envelope.deleted &&
 			(expiringModels.has(model) || model === "jwks") &&
@@ -269,12 +280,20 @@ export async function collectAuthGarbage(
 					row: { id },
 					emailClaim: undefined,
 					deleted: true,
+					archived: false,
 					deletedAt: now.toISOString(),
 				}
-			: envelope.deleted && !envelope.deletedAt
-				? { ...envelope, deletedAt: now.toISOString() }
-				: envelope
-		const repaired = envelope.deleted !== current[5]
+			: archiveRefresh
+				? {
+						...envelope,
+						archived: true,
+						row: { ...envelope.row, rotationReplayResponse: null },
+					}
+				: envelope.deleted && !envelope.deletedAt
+					? { ...envelope, deletedAt: now.toISOString() }
+					: envelope
+		const repaired =
+			Boolean(envelope.deleted || envelope.archived) !== current[5]
 		if (
 			!expired &&
 			next === envelope &&
@@ -288,8 +307,8 @@ export async function collectAuthGarbage(
 			[
 				codec.encode(next, `${name}:${id}:payload`),
 				codec.encode(kept, `${name}:${id}:receipts`),
-				next.deleted,
-				next.deleted ? {} : current[4],
+				Boolean(next.deleted || next.archived),
+				next.deleted || next.archived ? {} : current[4],
 				next.deleted ? null : (envelope.row.createdAt ?? null),
 				next.deleted ? null : (envelope.row.expiresAt ?? null),
 				id,
@@ -299,6 +318,7 @@ export async function collectAuthGarbage(
 		)
 		if (result.rowcount === 1) {
 			if (expired) report.expired++
+			if (archiveRefresh && !expired) report.archived++
 			if (compacted) report.compacted++
 			if (repaired) report.repaired++
 		} else report.conflicted++
@@ -352,7 +372,7 @@ export async function reconcileAuthCapacity(options: Options) {
 				const envelope: Envelope = codec.decode(current[0], `${aad}:payload`)
 				if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
 					throw new Error("Invalid authenticated auth row")
-				if (!envelope.deleted) {
+				if (!envelope.deleted && !envelope.archived) {
 					report.retained++
 					continue
 				}
@@ -484,8 +504,9 @@ export async function auditAuthPopulation(
 		if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
 			throw new Error("Invalid authenticated auth row")
 		codec.decode(current[2], `${name}:${id}:receipts`)
-		if (envelope.deleted !== current[1]) report.inconsistent++
-		if (envelope.deleted) continue
+		if (Boolean(envelope.deleted || envelope.archived) !== current[1])
+			report.inconsistent++
+		if (envelope.deleted || envelope.archived) continue
 		report.live++
 		if (model === "user") continue // User lookups use physical ids or the unique email claim.
 		if (!envelope.admission) {

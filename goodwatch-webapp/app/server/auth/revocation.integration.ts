@@ -83,3 +83,31 @@ test("refresh revocation fences its grant before a child can escape the captured
 		null,
 	)
 })
+
+test("a refresh-family sweep closes its grant even when no token was present in the captured set", async () => {
+	const clientId = randomUUID(),
+		userId = randomUUID(),
+		referenceId = randomUUID(),
+		grantVersion = randomUUID()
+	const consent = await healthy.create({
+		model: "oauthConsent",
+		data: { clientId, userId, referenceId, grantVersion, scopes: ["mcp:read"] },
+	})
+	const revoker = crateAuthAdapter({ sql, enforceGrantRevocation: true })(
+		schema,
+	)
+	await revoker.deleteMany({
+		model: "oauthRefreshToken",
+		where: [
+			{ field: "clientId", value: clientId },
+			{ field: "userId", value: userId },
+		],
+	})
+	assert.equal(
+		await healthy.findOne({
+			model: "oauthConsent",
+			where: [{ field: "id", value: consent.id }],
+		}),
+		null,
+	)
+})

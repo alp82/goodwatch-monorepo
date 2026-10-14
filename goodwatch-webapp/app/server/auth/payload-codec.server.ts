@@ -25,7 +25,7 @@ function validateKeys(ring: AuthEncryptionKeys) {
 		typeof ring.active !== "string" ||
 		!ring.keys ||
 		Array.isArray(ring.keys) ||
-		!Object.hasOwn(ring.keys, ring.active) ||
+		!Object.prototype.hasOwnProperty.call(ring.keys, ring.active) ||
 		Object.keys(ring.keys).length > 16 ||
 		(ring.allowLegacy !== undefined && typeof ring.allowLegacy !== "boolean")
 	)
@@ -101,7 +101,11 @@ export function authPayloadCodec(secret: string, ring?: AuthEncryptionKeys) {
 				let aad = associatedData
 				if (version === "v3") {
 					const id = parts.shift()
-					if (!id || !ring || !Object.hasOwn(ring.keys, id))
+					if (
+						!id ||
+						!ring ||
+						!Object.prototype.hasOwnProperty.call(ring.keys, id)
+					)
 						throw new Error("Unknown auth payload key")
 					key = derive(ring.keys[id])
 					aad = `v3:${id}:${associatedData}`

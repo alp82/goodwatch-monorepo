@@ -45,7 +45,8 @@ email-claim schemas instead of silently reusing them.
 Legacy payload envelopes are **v2**; configured rotating keys write **v3** with
 an authenticated key ID. Both use AES-256-GCM binds `(table, physical id, purpose)` as
 associated data, and authenticates the deleted flag inside the ciphertext. The
-plaintext deleted column is an enumeration hint; each nominated row is reread by
+plaintext deleted column is an enumeration hint (including authenticated archived
+refresh parents after their retry window); each nominated row is reread by
 PK and its authenticated deleted state checked. Ciphertext swaps fail integrity
 verification; flipping the plaintext flag cannot resurrect a tombstone. Dates are
 restored using Better Auth's model schema. Adapter results expose no envelope,
