@@ -223,3 +223,14 @@ test("the launch audit reports rows imported without capacity admission", async 
 	assert.ok(report.unadmitted >= 1)
 	assert.equal(report.safe, false)
 })
+
+
+test("member and linked-account capacity has no site-wide ceiling", async () => {
+ await clean()
+ const adapter = crateAuthAdapter({sql,populationBounds:{buckets:1,limitPerBucket:2}})({})
+ for(let i=0;i<5;i++) {
+  const user = await adapter.create({model:"user",data:{email:`${randomUUID()}@example.test`,name:"Imported",emailVerified:true}})
+  const account = await adapter.create({model:"account",data:{userId:user.id,providerId:"credential",accountId:user.id,password:"synthetic"}})
+  assert.equal((await adapter.findOne<{id:string}>({model:"account",where:[{field:"userId",value:user.id},{field:"providerId",value:"credential"},{field:"accountId",value:user.id}]}))?.id,account.id)
+ }
+})

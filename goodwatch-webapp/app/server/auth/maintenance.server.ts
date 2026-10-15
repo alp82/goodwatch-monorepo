@@ -553,7 +553,7 @@ export async function auditAuthPopulation(
 			report.inconsistent++
 		if (envelope.deleted || envelope.archived) continue
 		report.live++
-		if (model === "user") continue // User lookups use physical ids or the unique email claim.
+		if (["user", "account"].includes(model)) continue // Member identities have no global admission ceiling.
 		if (!envelope.admission) {
 			report.unadmitted++
 			continue
