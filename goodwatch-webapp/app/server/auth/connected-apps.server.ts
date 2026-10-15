@@ -1,4 +1,5 @@
 import type { ConsentApp } from "../../utils/mcp-connect.ts"
+import { betterAuthEnabled, loadAuthRuntime } from "./boot.server.ts"
 import { describeApp } from "./mcp-flow.server.ts"
 
 // The apps that reach a member's GoodWatch through MCP (#570): one row per grant. Claude Code connects once per
@@ -26,10 +27,16 @@ const list = (value: string[] | string | null | undefined): string[] =>
 	Array.isArray(value) ? value : typeof value === "string" ? value.split(/[\s,]+/).filter(Boolean) : []
 const iso = (value: Date | string | null | undefined) => (value ? new Date(value).toISOString() : null)
 
+/** The Connected apps page: not found while Better Auth is off, since apps connect through it only (#570). */
+export async function connectedAppsPage(request: Request): Promise<ConnectedApp[] | null> {
+	if (!betterAuthEnabled()) throw new Response("Not found", { status: 404 })
+	return listConnectedApps(request)
+}
+
 /** The signed-in member's connected apps, newest use first. Null when Better Auth is off or nobody is signed in. */
 export async function listConnectedApps(request: Request): Promise<ConnectedApp[] | null> {
-	const { betterAuthEnabled, getBetterAuth } = await import("./runtime.server.ts")
 	if (!betterAuthEnabled()) return null
+	const { getBetterAuth } = await loadAuthRuntime()
 	const auth = await getBetterAuth()
 	const session = await auth.api.getSession({ headers: request.headers })
 	if (!session) return null

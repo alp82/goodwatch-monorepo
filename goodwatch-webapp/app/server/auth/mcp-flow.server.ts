@@ -1,6 +1,6 @@
-import { verifyOAuthQueryParams } from "@goodwatch/auth-stack/oauth-provider"
 import type { ConnectState, ConsentApp, ConsentView } from "../../utils/mcp-connect.ts"
-import { type createGoodwatchAuth, setCookiesOf } from "./auth.server.ts"
+import type { createGoodwatchAuth } from "./auth.server.ts"
+import { betterAuthEnabled, loadAuthRuntime } from "./boot.server.ts"
 
 export type { ConnectState, ConsentApp, ConsentView }
 
@@ -30,10 +30,17 @@ export function consentHeaders(request: Request): Headers {
 	return headers
 }
 
+// Better Auth's own code loads only when a connection request is checked: the sign-in page imports this module, and a
+// server with BETTER_AUTH_ENABLED off never loads Better Auth.
+async function verifyQuery(query: string, secret: string) {
+	const { verifyOAuthQueryParams } = await import("@goodwatch/auth-stack/oauth-provider")
+	return verifyOAuthQueryParams(query, secret)
+}
+
 async function checked(request: Request, auth: AuthService) {
 	const query = new URL(request.url).search.slice(1)
 	const context = await auth.$context
-	if (!(await verifyOAuthQueryParams(query, context.secret)))
+	if (!(await verifyQuery(query, context.secret)))
 		return new Response("Invalid or expired connection request", { status: 400 })
 	const canonicalOrigin = new URL(context.baseURL).origin
 	if (new URL(request.url).origin !== canonicalOrigin) return new Response("Origin rejected", { status: 403 })
@@ -94,6 +101,7 @@ export async function decideMcpConsent(request: Request, auth: AuthService): Pro
 	const data = await result.json()
 	if (typeof data.url !== "string") return new Response("Connection could not continue", { status: 503 })
 	const redirects = new Headers({ Location: data.url })
+	const { setCookiesOf } = await import("./auth.server.ts")
 	for (const cookie of setCookiesOf(result.headers)) redirects.append("Set-Cookie", cookie)
 	return new Response(null, { status: 302, headers: redirects })
 }
@@ -136,8 +144,8 @@ export function describeApp(input: {
 }
 
 async function service() {
-	const { betterAuthEnabled, getBetterAuth } = await import("./runtime.server.ts")
 	if (!betterAuthEnabled()) throw new Response(null, { status: 404 })
+	const { getBetterAuth } = await loadAuthRuntime()
 	try {
 		return await getBetterAuth()
 	} catch {
@@ -164,8 +172,8 @@ export async function connectingApp(request: Request): Promise<ConnectState | nu
 	const params = new URL(request.url).searchParams
 	const clientId = params.get("client_id")
 	if (!params.has("sig") || !clientId) return null
-	const { betterAuthEnabled, getBetterAuth } = await import("./runtime.server.ts")
 	if (!betterAuthEnabled()) return null
+	const { getBetterAuth } = await loadAuthRuntime()
 	try {
 		// Only what the signature covers: the provider lists those names in `ba_param`.
 		const signed = new Set(params.getAll("ba_param"))
@@ -173,7 +181,7 @@ export async function connectingApp(request: Request): Promise<ConnectState | nu
 			[...params].filter(([key]) => key === "sig" || key === "ba_param" || signed.has(key)),
 		).toString()
 		const context = await (await getBetterAuth()).$context
-		if (!(await verifyOAuthQueryParams(oauthQuery, context.secret))) return null
+		if (!(await verifyQuery(oauthQuery, context.secret))) return null
 		const client = await context.adapter.findOne<{ name?: string; clientDiscoveryId?: string; disabled?: boolean }>({
 			model: "oauthClient",
 			where: [{ field: "clientId", value: clientId }],

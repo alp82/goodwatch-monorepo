@@ -10,14 +10,14 @@ import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { startAuthMaintenance } from "./maintenance-worker.server.ts"
 import { parseAuthEncryptionKeys } from "./payload-codec.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
+import { authCluster, registerAuthCluster } from "./boot.server.ts"
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
 let instance: Promise<AuthService> | null = null
 let testAuth: AuthService | null = null
-let clusterProvider: () => Cluster | null = () => null
-export function registerAuthCluster(provider: () => Cluster | null) {
-	clusterProvider = provider
-}
+// The cluster registry lives in boot.server.ts, which the server entry loads without this module.
+const clusterProvider = authCluster
+export { registerAuthCluster }
 export const betterAuthEnabled = () =>
 	process.env.BETTER_AUTH_ENABLED === "true"
 export function setAuthForTest(auth: AuthService | null) {
