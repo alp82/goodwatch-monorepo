@@ -7,7 +7,14 @@ import type {
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { hasBrowserCookie, isCrawler } from "~/server/crawlers.server";
-import CustomAuthForm from "~/ui/auth/CustomAuthForm";
+import CustomAuthForm, { AuthPanel } from "~/ui/auth/CustomAuthForm";
+import { getSignInTitles } from "~/server/prototype-sign-in.server";
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher";
+import { VARIANTS } from "~/ui/prototype-sign-in/variants";
+import { FLIPS } from "~/ui/prototype-sign-in/Spotlight";
+import { BORDERS, SHARED_CSS } from "~/ui/prototype-sign-in/shared";
+import type { SignInTitle } from "~/ui/prototype-sign-in/types";
+import { useSearchParams } from "@remix-run/react";
 import { useUser } from "~/utils/auth";
 import { useEffect } from "react";
 import { useNavigate } from "@remix-run/react";
@@ -30,6 +37,8 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
 	redirectUri: string;
+	// PROTOTYPE - poster pool for the redesign variants; empty in production.
+	titles: SignInTitle[];
 };
 
 export const loader: LoaderFunction = async ({
@@ -49,11 +58,13 @@ export const loader: LoaderFunction = async ({
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || "";
 
-	return json({ redirectUri });
+	const titles = process.env.NODE_ENV === "production" ? [] : await getSignInTitles();
+	return json({ redirectUri, titles });
 };
 
 export default function SignInRedirectTo() {
-	const { redirectUri } = useLoaderData<LoaderData>();
+	const { redirectUri, titles } = useLoaderData<LoaderData>();
+	const [params] = useSearchParams();
 	const { user } = useUser();
 	const navigate = useNavigate();
 
@@ -63,5 +74,25 @@ export default function SignInRedirectTo() {
 		}
 	}, [user, navigate, redirectUri]);
 
-	return <CustomAuthForm mode="sign-in" redirectTo={redirectUri} />;
+	// PROTOTYPE - redesign variants (?variant=), dev only. Production keeps the current page.
+	const key = params.get("variant") ?? Object.keys(VARIANTS)[0];
+	const names = Object.fromEntries(Object.entries(VARIANTS).map(([k, v]) => [k, v.name]));
+	if (!titles.length || key === "current" || !VARIANTS[key]) {
+		return (
+			<>
+				<CustomAuthForm mode="sign-in" redirectTo={redirectUri} />
+				{titles.length > 0 && <PrototypeSwitcher variants={names} />}
+			</>
+		);
+	}
+	const { View } = VARIANTS[key];
+	return (
+		<>
+			<style dangerouslySetInnerHTML={{ __html: SHARED_CSS }} />
+			<View key={key} titles={titles} form={<AuthPanel mode="sign-in" redirectTo={redirectUri} glass hideHeading />} />
+			<PrototypeSwitcher variants={names} />
+			<PrototypeSwitcher variants={BORDERS} param="border" arrowKeys={["ArrowUp", "ArrowDown"]} position="bottom-6 left-6 scale-90 origin-bottom-left" />
+			<PrototypeSwitcher variants={FLIPS} param="flip" arrowKeys={[",", "."]} position="bottom-20 right-6 scale-90 origin-bottom-right" />
+		</>
+	);
 }

@@ -2,22 +2,33 @@
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
-export function PrototypeSwitcher({ variants, position = "bottom-6 left-1/2 -translate-x-1/2" }: { variants: Record<string, string>; position?: string }) {
+export function PrototypeSwitcher({
+	variants,
+	position = "bottom-6 left-1/2 -translate-x-1/2",
+	param = "variant",
+	arrowKeys = ["ArrowLeft", "ArrowRight"],
+}: { variants: Record<string, string>; position?: string; param?: string; arrowKeys?: [string, string] }) {
 	const [params, setParams] = useSearchParams()
 	const keys = Object.keys(variants)
-	const current = params.get("variant") ?? keys[0]
+	const current = params.get(param) ?? keys[0]
 	const go = (step: number) => {
 		const next = keys[(keys.indexOf(current) + step + keys.length) % keys.length]
 		const p = new URLSearchParams(params)
-		p.set("variant", next)
+		p.set(param, next)
 		setParams(p, { replace: true, preventScrollReset: true })
 	}
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			const t = e.target as HTMLElement
 			if (t.closest("input, textarea, [contenteditable]")) return
-			if (e.key === "ArrowLeft") go(-1)
-			if (e.key === "ArrowRight") go(1)
+			if (e.key === arrowKeys[0]) {
+				e.preventDefault()
+				go(-1)
+			}
+			if (e.key === arrowKeys[1]) {
+				e.preventDefault()
+				go(1)
+			}
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)

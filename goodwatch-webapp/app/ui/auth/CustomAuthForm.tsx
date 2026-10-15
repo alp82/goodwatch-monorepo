@@ -13,6 +13,34 @@ interface CustomAuthFormProps {
 }
 
 export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps) {
+	return (
+		<div className="min-h-screen flex bg-gray-900">
+			{/* Left side - Form */}
+			<div className="flex-1 flex items-center justify-center p-8 lg:p-16">
+				<AuthPanel mode={mode} redirectTo={redirectTo} />
+			</div>
+
+			{/* Right side - Imagery/Video */}
+			<div className="hidden lg:block lg:flex-1 relative shadow-xl overflow-hidden">
+				<div className="absolute inset-0 bg-gradient-to-br from-green-600/20 to-orange-600/20 z-10" />
+				<AuthHookImage />
+				<div className="absolute inset-0 flex items-center justify-center z-20">
+					<div className="text-center text-white p-8">
+						<h2 className="text-5xl font-bold mb-8">
+							Your Personal Movie Guide
+						</h2>
+						<p className="text-xl text-gray-200 max-w-md mx-auto">
+							Track, rate, and discover your next favorite movies and shows all in one place.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+// PROTOTYPE - the `glass` look is for the /sign-in redesign variants: translucent inputs that sit on imagery.
+export function AuthPanel({ mode, redirectTo, glass = false, hideHeading = false }: CustomAuthFormProps & { glass?: boolean; hideHeading?: boolean }) {
 	const { getSupabase } = useSupabase()
 	// This page is for signing in: start loading the client now, not at the first press of a button.
 	useEffect(() => {
@@ -138,12 +166,12 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 		}
 	}
 
+	const field = glass
+		? "w-full px-4 py-3 bg-white/[0.06] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-400/70 focus:border-transparent transition"
+		: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
 	return (
-		<div className="min-h-screen flex bg-gray-900">
-			{/* Left side - Form */}
-			<div className="flex-1 flex items-center justify-center p-8 lg:p-16">
-				<div className="flex flex-col gap-8 w-full max-w-md">
-					<div className="text-center">
+				<div className={`flex flex-col w-full max-w-md ${glass ? "gap-5" : "gap-8"}`}>
+					{!hideHeading && <div className="text-center">
 						<h1 className="text-4xl font-bold text-white mb-2">
 							{mode === "sign-up" ? "Create Account" : "Sign In"}
 						</h1>
@@ -152,12 +180,12 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								? "Join GoodWatch to find your next favorite movies and shows"
 								: "Welcome back to GoodWatch"}
 						</p>
-					</div>
+					</div>}
 
 					<button
 						onClick={handleGoogleSignIn}
 						disabled={oauthLoading}
-						className="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-300 border border-gray-700 text-lg text-black font-medium rounded-lg transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+						className={`w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-300 border ${glass ? "border-white/20 rounded-xl hover:scale-[1.01] active:scale-[0.99]" : "border-gray-700"} text-lg text-black font-medium rounded-lg transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
 					>
 						{oauthLoading ? (
 							<svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -177,13 +205,13 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						</span>
 					</button>
 					
-					<div className="my-2">
+					<div className={glass ? "" : "my-2"}>
 						<div className="relative">
 							<div className="absolute inset-0 flex items-center">
-								<div className="w-full border-t border-gray-700" />
+								<div className={glass ? "w-full border-t border-white/10 [mask-image:linear-gradient(90deg,#000_35%,transparent_42%,transparent_58%,#000_65%)]" : "w-full border-t border-gray-700"} />
 							</div>
 							<div className="relative flex justify-center text-sm">
-								<span className="px-2 bg-gray-900 text-gray-400">Or continue with</span>
+								<span className={glass ? "px-3 text-white/40" : "px-2 bg-gray-900 text-gray-400"}>Or continue with</span>
 							</div>
 						</div>
 					</div>
@@ -193,7 +221,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						<p className="mt-2">If you open the email on another device, return to this browser and sign in to finish transferring your progress.</p>
 						<button type="button" onClick={resendConfirmation} disabled={resending} className="mt-3 rounded-lg border border-emerald-500 px-3 py-2 font-semibold hover:bg-emerald-900 disabled:opacity-50">{resending ? "Sending…" : "Resend confirmation email"}</button>
 					</div>}
-					<form onSubmit={handleEmailAuth} className="space-y-6">
+					<form onSubmit={handleEmailAuth} className={glass ? "space-y-4" : "space-y-6"}>
 						<div>
 							<label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
 								Email address
@@ -206,7 +234,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								required
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
-								className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+								className={field}
 								placeholder="you@example.com"
 							/>
 						</div>
@@ -224,7 +252,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								minLength={10}
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+								className={field}
 								placeholder="••••••••"
 							/>
 							{mode === "sign-up" && password && password.length < 6 && (
@@ -251,7 +279,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						<button
 							type="submit"
 							disabled={loading || (mode === "sign-up" && password.length < 6)}
-							className="w-full flex justify-center items-center px-4 py-3 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition duration-200 disabled:cursor-not-allowed cursor-pointer"
+							className={`w-full flex justify-center items-center px-4 py-3 ${glass ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-900/40 rounded-xl" : "bg-amber-700 hover:bg-amber-600 rounded-lg"} disabled:bg-gray-700 text-white font-semibold transition duration-200 disabled:cursor-not-allowed cursor-pointer`}
 						>
 							{loading ? <Spinner size="small" /> : mode === "sign-up" ? "Sign Up" : "Sign In"}
 						</button>
@@ -282,23 +310,5 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						)}
 					</div>
 				</div>
-			</div>
-
-			{/* Right side - Imagery/Video */}
-			<div className="hidden lg:block lg:flex-1 relative shadow-xl overflow-hidden">
-				<div className="absolute inset-0 bg-gradient-to-br from-green-600/20 to-orange-600/20 z-10" />
-				<AuthHookImage />
-				<div className="absolute inset-0 flex items-center justify-center z-20">
-					<div className="text-center text-white p-8">
-						<h2 className="text-5xl font-bold mb-8">
-							Your Personal Movie Guide
-						</h2>
-						<p className="text-xl text-gray-200 max-w-md mx-auto">
-							Track, rate, and discover your next favorite movies and shows all in one place.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
 	)
 }
