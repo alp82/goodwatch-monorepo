@@ -1,34 +1,22 @@
 // The pieces of the account pages (#534, #550): the split layout with the picture, fields, buttons and notices.
 import { CheckCircleIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/24/solid"
 import { ArrowLeftIcon } from "@heroicons/react/24/outline"
-import { Link } from "@remix-run/react"
+import { Link, useMatches } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
-import { AuthHookImage } from "~/ui/auth/AuthHookImage"
+import { AuthScene } from "~/ui/auth/AuthScene"
+import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { Spinner } from "~/ui/wait/Spinner"
 import { type AuthFailure, PASSWORD_MIN } from "~/utils/auth-client"
 
-// The form on the left, the picture from lg up. On a phone the form starts at the top, under the header.
-// Forms on these pages post (`method="post"`): one sent before the page's scripts run must never put a password in the
-// address.
+// Keep main's poster scene around the Better Auth forms. Every credential form posts so that a submission
+// before hydration can never place a password in the address.
 export function AuthSplit({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+	const matches = useMatches()
+	const data = matches.at(-1)?.data as { posters?: AuthPoster[] } | undefined
 	return (
-		<div className="flex min-h-[calc(100vh-4rem)] bg-gray-900">
-			<div className="flex flex-1 items-start justify-center px-4 py-10 sm:px-8 lg:items-center lg:p-16">
-				<div className="flex w-full max-w-md flex-col gap-7">{children}</div>
-			</div>
-			<div className="relative hidden overflow-hidden shadow-xl lg:block lg:flex-1">
-				<div className="absolute inset-0 z-10 bg-gradient-to-br from-green-600/20 to-orange-600/20" />
-				<AuthHookImage />
-				<div className="absolute inset-0 z-20 flex items-center justify-center">
-					{aside ?? (
-						<div className="p-8 text-center text-white">
-							<h2 className="mb-8 text-5xl font-bold">Your Personal Movie Guide</h2>
-							<p className="mx-auto max-w-md text-xl text-gray-200">Track, rate, and discover your next favorite movies and shows all in one place.</p>
-						</div>
-					)}
-				</div>
-			</div>
-		</div>
+		<AuthScene posters={data?.posters ?? []}>
+			<div className="flex w-full flex-col gap-7">{aside}{children}</div>
+		</AuthScene>
 	)
 }
 
