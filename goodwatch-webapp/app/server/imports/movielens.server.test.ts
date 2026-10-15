@@ -89,31 +89,55 @@ test("MovieLens rejects wrong export formats and limits, and exposes invalid rat
 		),
 	)
 	assert.ok(parsed.observations.every((x) => x.problem?.outcome === "invalid"))
-	for (const csv of [
-		"",
-		"userId,movieId,rating,timestamp\n1,1,4,1234",
-		"movie_id,rating,title\n1,4,A",
-		`${header}1,0114709,862,4,4,"Unclosed`,
-		`${header}1,0114709,862,4,4,A\n1,0114709,862,5,4,A`,
-	]) {
-		await assert.rejects(
-			parseImportFile("movielens", Buffer.from(csv)),
-			/empty|column|quote|duplicate/i,
-		)
-	}
+	for (const [csv, message] of [
+		["", "That file is empty."],
+		[
+			"userId,movieId,rating,timestamp\n1,1,4,1234",
+			"MovieLens rating CSV is missing required columns: movie_id, imdb_id, tmdb_id, title, rating. Use your personal export from Settings, not a GroupLens dataset.",
+		],
+		[
+			"movie_id,rating,title\n1,4,A",
+			"MovieLens rating CSV is missing required columns: movie_id, imdb_id, tmdb_id, title, rating. Use your personal export from Settings, not a GroupLens dataset.",
+		],
+		[`${header}1,0114709,862,4,4,"Unclosed`, "The CSV has an unclosed quote."],
+		[
+			`${header}1,0114709,862,4,4,A\n1,0114709,862,5,4,A`,
+			"The MovieLens file contains a duplicate movie_id.",
+		],
+	])
+		await assert.rejects(parseImportFile("movielens", Buffer.from(csv)), {
+			message,
+		})
 	await assert.rejects(
 		parseImportFile(
 			"movielens",
 			Buffer.from(header),
 			Buffer.alloc(20 * 1024 * 1024),
 		),
-		/20 MB/,
+		{ message: "The combined export is larger than 20 MB." },
 	)
 	await assert.rejects(
 		parseImportFile(
 			"movielens",
 			Buffer.from(`${header}${"1,0114709,862,4,4,A\n".repeat(50001)}`),
 		),
-		/50,000/,
+		{ message: "That export has more than 50,000 rows." },
 	)
+})
+
+test("MovieLens keeps repeated invalid IDs as individual invalid rows", async () => {
+	const parsed = await parseImportFile(
+		"movielens",
+		Buffer.from(
+			"movie_id,imdb_id,tmdb_id,rating,title\n,114709,862,4,One\n,114709,862,3,Two\n0,114709,862,2,Three\n0,114709,862,1,Four\n",
+		),
+	)
+	assert.equal(parsed.observations.length, 4)
+	assert.ok(
+		parsed.observations.every(
+			(x) =>
+				x.problem?.reason === "MovieLens movie_id must be a positive integer.",
+		),
+	)
+	assert.equal(new Set(parsed.observations.map((x) => x.key)).size, 4)
 })

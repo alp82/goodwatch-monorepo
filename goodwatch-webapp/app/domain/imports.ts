@@ -11,6 +11,12 @@ export const IMPORT_SOURCE_NAMES = {
 	csv: "Generic CSV",
 	movielens: "MovieLens",
 } as const
+export const IMPORT_SOURCE_FILE = {
+	letterboxd: "zip",
+	trakt: "zip",
+	csv: "csv",
+	movielens: "csv",
+} as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_KINDS = [
 	"rating",

@@ -48,6 +48,8 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	const rendered = JSON.parse(
 		output.split("__SOURCE_IMPORT_RENDER__").at(-1) ?? "",
 	) as {
+		letterboxdUpload: string
+		traktUpload: string
 		csvUpload: string
 		movielensUpload: string
 		ratingOnly: string
@@ -55,6 +57,12 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	}
 
 	assert.match(rendered.csvUpload, /Letterboxd import format/)
+	assert.match(
+		rendered.csvUpload,
+		/Drop your CSV file here, or choose it from your device/,
+	)
+	assert.match(rendered.letterboxdUpload, /Choose Letterboxd export ZIP file/)
+	assert.match(rendered.traktUpload, /Choose Trakt export ZIP file/)
 	assert.match(rendered.movielensUpload, /MovieLens ratings CSV/)
 	assert.match(rendered.movielensUpload, /MovieLens wishlist CSV/)
 	assert.match(rendered.movielensUpload, /optional/i)
@@ -75,13 +83,15 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 test("buildSourceImportUpload rejects non-ZIP and oversized uploads before the request", () => {
 	assert.throws(
 		() => buildSourceImportUpload("trakt", new File(["csv"], "history.csv")),
-		/ZIP file/i,
+		{ message: "Choose the ZIP file you downloaded from Letterboxd or Trakt." },
 	)
 	const oversized = new File(
 		[new Uint8Array(IMPORT_MAX_BYTES + 1)],
 		"export.zip",
 	)
-	assert.throws(() => buildSourceImportUpload("trakt", oversized), /20 MB/i)
+	assert.throws(() => buildSourceImportUpload("trakt", oversized), {
+		message: `That file is larger than ${Math.round(IMPORT_MAX_BYTES / 1024 / 1024)} MB. Choose a smaller export ZIP file.`,
+	})
 })
 
 test("generic CSV upload uses the existing multipart endpoint and rejects archives", () => {
@@ -91,7 +101,7 @@ test("generic CSV upload uses the existing multipart endpoint and rejects archiv
 	assert.equal(body.get("file"), file)
 	assert.throws(
 		() => buildSourceImportUpload("csv", new File(["zip"], "export.zip")),
-		/CSV/,
+		{ message: "Choose a CSV export file." },
 	)
 })
 
@@ -113,7 +123,7 @@ test("MovieLens uploads ratings with an optional wishlist under one combined lim
 				ratings,
 				new File(["bad"], "archive.zip"),
 			),
-		/CSV/,
+		{ message: "Choose a CSV export file." },
 	)
 	assert.throws(
 		() =>
@@ -122,10 +132,19 @@ test("MovieLens uploads ratings with an optional wishlist under one combined lim
 				ratings,
 				new File([new Uint8Array(IMPORT_MAX_BYTES)], "wishlist.csv"),
 			),
-		/20 MB/,
+		{
+			message: `The combined export is larger than ${Math.round(IMPORT_MAX_BYTES / 1024 / 1024)} MB. Choose a smaller export.`,
+		},
 	)
-	assert.throws(
-		() => buildSourceImportUpload("csv", ratings, wishlist),
-		/MovieLens/,
-	)
+	assert.throws(() => buildSourceImportUpload("csv", ratings, wishlist), {
+		message: "Only MovieLens accepts an optional wishlist file.",
+	})
+})
+
+test("single ZIP uploads retain their original size error", () => {
+	const file = new File([new Uint8Array(IMPORT_MAX_BYTES + 1)], "export.zip")
+	for (const source of ["letterboxd", "trakt"] as const)
+		assert.throws(() => buildSourceImportUpload(source, file), {
+			message: `That file is larger than ${Math.round(IMPORT_MAX_BYTES / 1024 / 1024)} MB. Choose a smaller export ZIP file.`,
+		})
 })

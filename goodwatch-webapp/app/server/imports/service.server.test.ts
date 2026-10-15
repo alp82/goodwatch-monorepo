@@ -27,6 +27,7 @@ class ImportDb {
 	favorites: Row[] = []
 	wishlist: Row[] = []
 	catalog: Row[] = []
+	catalogQueries: { sql: string; params: Param[] }[] = []
 	scores: Row[] = []
 	failFavoriteOnce = false
 	failScoreOnce = false
@@ -102,6 +103,7 @@ class ImportDb {
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
 		if (s.includes("FROM movie WHERE")) {
+			this.catalogQueries.push({ sql: s, params: [...params] })
 			const rows = this.catalog.filter((row) =>
 				s.includes("tmdb_id IN")
 					? params.includes(Number(row.tmdb_id))
@@ -618,6 +620,28 @@ it("CSV preview matches IDs in priority order and only unique exact title/year, 
 			"tmdbID,imdbID,Title,Year,Rating10,Extra\n862,tt0087884,Wrong,1995,8,x\n999,tt0087884,Wrong,1984,5,x\n,,Toy Story,1995,8,x\n,,Ambiguous,2000,7,x\n,,Missing,2000,6,x\n",
 		),
 	)
+	assert.deepEqual(db.catalogQueries, [
+		{
+			sql: "SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE tmdb_id IN (?,?)",
+			params: [862, 999],
+		},
+		{
+			sql: "SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
+			params: ["tt0087884"],
+		},
+		{
+			sql: "SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
+			params: ["Toy Story", 1995],
+		},
+		{
+			sql: "SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
+			params: ["Ambiguous", 2000],
+		},
+		{
+			sql: "SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
+			params: ["Missing", 2000],
+		},
+	])
 	assert.equal(preview.counts.new, 3)
 	assert.equal(preview.counts.unmatched, 2)
 	const items = await getImportItems("member", preview.id, undefined, 0, 50)

@@ -30,7 +30,15 @@ function parseCsv(value: string, backslashQuotes = false): string[][] {
 	) {
 		const char = value[index]
 		if (quoted) {
-			if (backslashQuotes && char === "\\" && value[index + 1] === '"') {
+			if (backslashQuotes && char === "\\" && value[index + 1] === "\\") {
+				field += "\\"
+				index++
+			} else if (
+				backslashQuotes &&
+				char === "\\" &&
+				value[index + 1] === '"' &&
+				![undefined, ",", "\n", "\r"].includes(value[index + 2])
+			) {
 				field += '"'
 				index++
 			} else if (char === '"' && value[index + 1] === '"') {
@@ -50,7 +58,7 @@ function parseCsv(value: string, backslashQuotes = false): string[][] {
 			field = ""
 		} else field += char
 	}
-	if (quoted) fail("The CSV has an unclosed quote.")
+	if (backslashQuotes && quoted) fail("The CSV has an unclosed quote.")
 	row.push(field)
 	if (row.some((cell) => cell.trim())) rows.push(row)
 	return rows
@@ -656,27 +664,49 @@ export async function parseImportFile(
 	return source === "letterboxd" ? letterboxd(entries) : trakt(entries)
 }
 
-function genericCsv(bytes: Uint8Array): ParsedImport {
-	if (!bytes.byteLength) fail("That file is empty.")
-	if (bytes.byteLength > IMPORT_MAX_BYTES)
+function csvImdb(value: string): string | null {
+	const id = value.replace(/^tt/, "")
+	return /^\d+$/.test(id) ? `tt${id.padStart(7, "0")}` : null
+}
+
+function readCsvTable(
+	data: Uint8Array,
+	name: string,
+	remainingRows = IMPORT_MAX_ROWS,
+	compactHeaders = false,
+) {
+	if (!data.byteLength) fail("That file is empty.")
+	if (data.byteLength > IMPORT_MAX_BYTES)
 		fail("That export is larger than 20 MB.")
-	const table = parseCsv(text({ name: "CSV", data: bytes }), true)
+	const table = parseCsv(text({ name, data }), true)
 	if (!table.length) fail("That file is empty.")
-	if (table.length - 1 > IMPORT_MAX_ROWS)
+	const [originalHeaders, ...rows] = table
+	if (rows.length > remainingRows)
 		fail("That export has more than 50,000 rows.")
-	const headers = table[0].map((header) =>
-		header.trim().toLowerCase().replace(/ /g, ""),
-	)
+	const headers = originalHeaders.map((header) => {
+		const normalized = header.trim().toLowerCase()
+		return compactHeaders ? normalized.replace(/ /g, "") : normalized
+	})
 	if (new Set(headers).size !== headers.length)
 		fail("The CSV has duplicate columns.")
+	if (rows.some((row) => row.length !== headers.length))
+		fail("A CSV row has the wrong number of fields.")
+	return { headers, originalHeaders, rows }
+}
+
+function genericCsv(bytes: Uint8Array): ParsedImport {
+	const { headers, originalHeaders, rows } = readCsvTable(
+		bytes,
+		"CSV",
+		IMPORT_MAX_ROWS,
+		true,
+	)
 	if (
 		!headers.some((header) =>
 			["title", "name", "tmdbid", "imdbid", "letterboxduri"].includes(header),
 		)
 	)
 		fail("Include a Title, tmdbID, imdbID or LetterboxdURI column.")
-	if (table.slice(1).some((row) => row.length !== headers.length))
-		fail("A CSV row has the wrong number of fields.")
 	const known = new Set([
 		"letterboxduri",
 		"tmdbid",
@@ -692,7 +722,9 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 		"tags",
 		"review",
 	])
-	const unknown = table[0].filter((_, index) => !known.has(headers[index]))
+	const unknown = originalHeaders.filter(
+		(_, index) => !known.has(headers[index]),
+	)
 	const warnings = unknown.length
 		? [`Unknown columns ignored: ${unknown.join(", ")}.`]
 		: []
@@ -712,9 +744,9 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 		)
 	const dateColumn = headers.indexOf("watcheddate")
 	// Process dated rows newest first, so repeated titles use their latest supplied rating.
-	const sortedRows = table
-		.slice(1)
-		.sort((a, b) => (b[dateColumn] ?? "").localeCompare(a[dateColumn] ?? ""))
+	const sortedRows = rows.sort((a, b) =>
+		(b[dateColumn] ?? "").localeCompare(a[dateColumn] ?? ""),
+	)
 	for (const fields of sortedRows) {
 		const row = Object.fromEntries(
 			headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
@@ -724,7 +756,7 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 			title: clipped(row.title || row.name),
 			year: validYear(row.year),
 			tmdbId: validId(Number(row.tmdbid)),
-			imdbId: validImdb(row.imdbid),
+			imdbId: csvImdb(row.imdbid ?? ""),
 		}
 		const identity =
 			clipped(row.letterboxduri, 240) ||
@@ -753,14 +785,23 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 						}),
 			})
 		}
-		if (row.rating10 || row.rating || !row.watcheddate) {
-			const score = row.rating10
-				? Number(row.rating10)
-				: row.rating
-					? Number(row.rating) * 2
-					: null
-			const valid =
-				score !== null && Number.isInteger(score) && score >= 1 && score <= 10
+		if (!row.watcheddate && !row.rating10 && !row.rating && !row.review)
+			observations.push({
+				...base,
+				key: `${key}:empty`,
+				kind: "unsupported",
+				problem: {
+					outcome: "invalid",
+					reason: "This row has no rating or watched date.",
+				},
+			})
+		if (row.rating10 || row.rating) {
+			const rating10 = Number(row.rating10)
+			const rating = Number(row.rating) * 2
+			const validScore = (value: number) =>
+				Number.isInteger(value) && value >= 1 && value <= 10
+			const score = validScore(rating10) ? rating10 : rating
+			const valid = validScore(score)
 			observations.push({
 				...base,
 				key: `${key}:rating`,
@@ -782,7 +823,7 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 				...base,
 				key: `${key}:review`,
 				kind: "review",
-				review: row.review,
+				review: clipped(row.review, 20_000),
 			})
 	}
 	if (observations.length > IMPORT_MAX_ROWS)
@@ -802,14 +843,11 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 		["want", wishlist],
 	] as const) {
 		if (!data) continue
-		if (!data.byteLength) fail("That MovieLens file is empty.")
-		const table = parseCsv(text({ name: `MovieLens ${kind}`, data }))
-		if (!table.length) fail("That MovieLens file is empty.")
-		if (observations.length + table.length - 1 > IMPORT_MAX_ROWS)
-			fail("That export has more than 50,000 rows.")
-		const headers = table[0].map((header) => header.trim().toLowerCase())
-		if (new Set(headers).size !== headers.length)
-			fail("The MovieLens CSV has duplicate columns.")
+		const { headers, rows } = readCsvTable(
+			data,
+			`MovieLens ${kind}`,
+			IMPORT_MAX_ROWS - observations.length,
+		)
 		const required = [
 			"movie_id",
 			"imdb_id",
@@ -825,9 +863,7 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 			fail(
 				"Choose the wishlist CSV for the optional file, not the ratings columns.",
 			)
-		if (table.slice(1).some((row) => row.length !== headers.length))
-			fail("A MovieLens CSV row has the wrong number of fields.")
-		const identities = new Set<string>()
+		const identities = new Set<number>()
 		const known = new Set([
 			"movie_id",
 			"imdb_id",
@@ -841,36 +877,37 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 			warnings.push(
 				`Unknown MovieLens ${kind} columns ignored: ${unknown.join(", ")}.`,
 			)
-		for (const fields of table.slice(1)) {
+		for (const [index, fields] of rows.entries()) {
 			const row = Object.fromEntries(
 				headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
 			)
-			if (identities.has(row.movie_id))
+			const movieId = validId(Number(row.movie_id))
+			if (movieId !== null && identities.has(movieId))
 				fail("The MovieLens file contains a duplicate movie_id.")
-			identities.add(row.movie_id)
+			if (movieId !== null) identities.add(movieId)
 			const score = Number(row.rating) * 2
 			const validScore = Number.isInteger(score) && score >= 1 && score <= 10
-			const problem = !validId(Number(row.movie_id))
-				? {
-						outcome: "invalid" as const,
-						reason: "MovieLens movie_id must be a positive integer.",
-					}
-				: kind === "rating" && !validScore
+			const problem =
+				movieId === null
 					? {
 							outcome: "invalid" as const,
-							reason: "MovieLens rating must be 0.5–5 in half-star steps.",
+							reason: "MovieLens movie_id must be a positive integer.",
 						}
-					: undefined
+					: kind === "rating" && !validScore
+						? {
+								outcome: "invalid" as const,
+								reason: "MovieLens rating must be 0.5–5 in half-star steps.",
+							}
+						: undefined
 			const title = /^(.*) \((\d{4})\)$/.exec(row.title)
-			const imdb = row.imdb_id.replace(/^tt/, "")
 			observations.push({
-				key: `movielens:${kind}:${row.movie_id}`,
+				key: `movielens:${kind}:${movieId ?? `invalid-row:${index}`}`,
 				kind,
 				mediaType: "movie",
 				title: clipped(title?.[1] ?? row.title),
 				year: validYear(title?.[2]),
 				tmdbId: validId(Number(row.tmdb_id)),
-				imdbId: /^\d+$/.test(imdb) ? `tt${imdb.padStart(7, "0")}` : null,
+				imdbId: csvImdb(row.imdb_id),
 				...(kind === "rating" ? { score: validScore ? score : null } : {}),
 				...(problem ? { problem } : {}),
 			})

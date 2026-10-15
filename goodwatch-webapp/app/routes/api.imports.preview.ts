@@ -1,6 +1,10 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
-import { IMPORT_MAX_BYTES, IMPORT_SOURCES } from "~/domain/imports"
+import {
+	IMPORT_MAX_BYTES,
+	IMPORT_SOURCES,
+	IMPORT_SOURCE_FILE,
+} from "~/domain/imports"
 import { withMember } from "~/server/imports/http.server"
 import { previewImport } from "~/server/imports/service.server"
 import { NativeImportError } from "~/server/imports/store.server"
@@ -76,7 +80,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 						.replace(/\s+/g, " ")
 						.trim()
 						.slice(0, 200) ||
-						`${source.data}.${source.data === "csv" || source.data === "movielens" ? "csv" : "zip"}`,
+						`${source.data}.${IMPORT_SOURCE_FILE[source.data]}`,
 					bytes,
 					wishlist instanceof File
 						? new Uint8Array(await wishlist.arrayBuffer())

@@ -44,7 +44,7 @@ const render = (watch: number, confirming: boolean, error: string | null) =>
 		}),
 	)
 
-const upload = (source: "csv" | "movielens") =>
+const upload = (source: "csv" | "movielens" | "letterboxd" | "trakt") =>
 	renderToStaticMarkup(
 		createElement(
 			QueryClientProvider,
@@ -55,6 +55,8 @@ const upload = (source: "csv" | "movielens") =>
 
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
+		letterboxdUpload: upload("letterboxd"),
+		traktUpload: upload("trakt"),
 		csvUpload: upload("csv"),
 		movielensUpload: upload("movielens"),
 		ratingOnly: render(0, false, "Preview could not start."),

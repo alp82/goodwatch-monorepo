@@ -1,6 +1,7 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
 import {
+	IMPORT_SOURCE_FILE,
 	IMPORT_SOURCE_NAMES,
 	type ImportSource,
 	type ImportSummary,
@@ -15,6 +16,7 @@ function SingleFileUploadPanel({
 	source,
 	onPreview,
 }: { source: ImportSource; onPreview: (summary: ImportSummary) => void }) {
+	const fileType = IMPORT_SOURCE_FILE[source]
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
@@ -96,7 +98,9 @@ function SingleFileUploadPanel({
 				<p id="source-upload-hint" aria-live="polite">
 					{preview.isPending
 						? "Uploading and checking your export. This can take a moment."
-						: `Drop the ${source === "csv" ? "CSV" : "ZIP"} file from ${sourceName(source)} here, or choose it from your device.`}
+						: fileType === "csv"
+							? "Drop your CSV file here, or choose it from your device."
+							: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
 				</p>
 				<button
 					type="button"
@@ -105,14 +109,14 @@ function SingleFileUploadPanel({
 					aria-describedby="source-upload-hint"
 					onClick={() => inputRef.current?.click()}
 				>
-					Choose {source === "csv" ? "CSV" : "ZIP"} file
+					Choose {fileType.toUpperCase()} file
 				</button>
 				<input
 					ref={inputRef}
 					type="file"
-					aria-label={`Choose ${sourceName(source)} export file`}
+					aria-label={`Choose ${sourceName(source)} export ${fileType.toUpperCase()} file`}
 					accept={
-						source === "csv"
+						fileType === "csv"
 							? ".csv,text/csv"
 							: ".zip,application/zip,application/x-zip-compressed"
 					}
