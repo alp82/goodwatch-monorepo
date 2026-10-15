@@ -23,7 +23,7 @@ media names are in play, page prose stays English, and nothing is translated for
 
 TMDB's own search is the only path that can find a localized name today, because TMDB matches its aliases on its
 side. It covers well-known titles, but it is remote, has a 200 ms budget on later pages, and returns the English
-title. That last point matters for cost (see "Paid translation" below).
+title.
 
 Normalization is `normalized()` and `fold()` in `search-ranking/text-rules.server.ts`. A CJK run without spaces is
 one word, so CJK names only match from the start of the run.
@@ -61,7 +61,7 @@ Row counts are unknown. The research avoided aggregate scans on purpose, and the
 
 ## Which aliases
 
-**Phase 1: `translation.title` only, for the base languages of the 14 launch locales.** These are en, de, fr, es,
+**Phase 1: `translation.title` only, for the base languages of the 14 launch locales (owner decision 1).** These are en, de, fr, es,
 it, pt, ja, ko, zh, pl, ru and ar. They have a language, they're what the overlay already shows, and a visitor who
 sees a localized title can type it back and find it.
 
@@ -72,9 +72,10 @@ sees a localized title can type it back and find it.
   often agree.
 
 **Phase 2, after an evaluation: `alternative_title`.** Its quality varies, it has no language, and the sync drops
-all but one alias per country. Before using it, decide whether to keep every alias per country. That is a
-primary-key change to `(media_tmdb_id, media_type, country_code, title)`, which is an owner decision because it
-touches the sync schema. `f/social/matcher.py` and `f/social/deterministic.py` already read this table for name
+all but one alias per country. The sync keeps every alias per country (owner decision 3). That changes the primary
+key to `(media_tmdb_id, media_type, country_code, title)` and removes the first-per-country filter in
+`sync/copy/tmdb_details.py`. The table has to be migrated, because Crate can't change a primary key in place. The
+owner runs that migration, because the cloud can't reach Crate and must not delete data. `f/social/matcher.py` and `f/social/deterministic.py` already read this table for name
 matching, so check that a schema change works for them too.
 
 ## Build: a new `alias_table` file
@@ -108,11 +109,10 @@ Python tests cover folding, dedupe against title and original, the region merge 
 
 ### Paid translation
 
-`search.server.ts` skips the paid translation of the query when a looked-up result's title, original title or
-person name equals the query exactly (`exact-native-title-v1`). TMDB returns English titles, so today a typed German
-title doesn't count as exact and pays for translation. Once results carry `matchedAlias`, an exact alias match
-should also skip it. That saves money, but it changes which reading a query gets. Ship it as
-`exact-native-title-v2` behind the same `translationEnabled()` gate, and list it in the evaluation below.
+There is no paid translation in this work (owner decision 2). Paid query translation sits behind
+`SEARCH_TRANSLATION_ENABLED`, which is off by default (`search-runtime/runtime.server.ts`). Alias matching must not
+depend on that flag, read it or add another paid step. The `exact-native-title-v1` skip rule in `search.server.ts`
+stays unchanged. With the flag off, it never runs.
 
 ### CJK
 
@@ -133,8 +133,8 @@ which has 4 GB. Two steps before code:
 2. **Dry build.** Run the new builder step with the count log and without uploading, and record the gzipped file
    size and the resident memory of the role after loading in a test run.
 
-If the role grows by more than 100 MB, drop the fuzzy entries for aliases first, and keep exact, prefix and
-"like X".
+The ceiling is +100 MB per search role (owner decision 4). If the role grows by more than that, drop the fuzzy
+entries for aliases first, and keep exact, prefix and "like X".
 
 ## Evaluation
 
@@ -148,8 +148,7 @@ A fixed query set, checked into the repo as a test fixture, with the expected ti
   contract.
 - 10 ambiguous names, such as remakes and generic words, to check the vote tie-break.
 
-Measure top-1 and top-5 hit rate before and after, and the paid translation rate for the alias queries
-(before: paid, after: skipped). Run the measurement with the index loaded in a test process, not with POST searches
+Measure top-1 and top-5 hit rate before and after. Run the measurement with the index loaded in a test process, not with POST searches
 against production, because those write history and can spend money
 ([rollout](media-language-rollout.md)).
 
@@ -170,9 +169,9 @@ Rollback: deploy the earlier search commit. The alias file stays in place and is
 - No UI copy for "Also known as".
 - Person names and collection names.
 
-## Owner decisions needed before code
+## Owner decisions (2026-10-15)
 
-1. Phase 1 languages: the 12 launch base languages, or every language in `translation`?
-2. Should an exact alias match skip the paid translation (`exact-native-title-v2`)?
-3. Phase 2: keep all aliases per country in `alternative_title`? That is a sync schema change.
-4. The memory ceiling for each search role (proposed: at most 100 MB more).
+1. Phase 1 languages: only the 12 launch base languages for now.
+2. Paid translation: none. Alias matching adds no paid step, and the proposed `exact-native-title-v2` is dropped.
+3. `alternative_title`: keep every alias per country. This is phase 2, and the owner runs the table migration.
+4. Memory: up to +100 MB per search role is fine.
