@@ -24,7 +24,7 @@ test("search manifest and index blobs survive loss of crate-01 and log both coor
 			if (req.url?.startsWith("/_blobs")) {
 				res.statusCode = missing ? 404 : 200
 				res.end(missing ? "missing" : body)
-			} else res.end(JSON.stringify({ rows: [[{ version: "local" }]] }))
+			} else res.end(JSON.stringify({ rows: [[{ build_id: "local" }]] }))
 		}),
 	)
 	const events: Record<string, unknown>[] = []
@@ -55,7 +55,7 @@ test("search manifest and index blobs survive loss of crate-01 and log both coor
 		CRATE_HOSTS: "127.0.0.1,127.0.0.2",
 		CRATE_PORT: String(address.port),
 	})
-	assert.equal((await readManifest()).version, "local")
+	assert.equal((await readManifest()).build_id, "local")
 	assert.deepEqual(await readBlob(sha), body)
 	assert.deepEqual(counts, [2, 2])
 	assert.equal(

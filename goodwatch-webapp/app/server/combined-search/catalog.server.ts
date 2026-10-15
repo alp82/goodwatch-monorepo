@@ -10,7 +10,7 @@ export async function searchStatement(
 	stmt: string,
 	args: unknown[] = [],
 	signal = AbortSignal.timeout(8000),
-) {
+): Promise<{ cols: string[]; rows: unknown[][]; rowcount: number }> {
 	if (!process.env.CRATE_HOSTS) throw new Error("Catalog unavailable")
 	return getCrateClient().execute(stmt, undefined, {
 		timeoutMs: METADATA_TIMEOUT_MS, signal, source: "catalog",
@@ -35,7 +35,7 @@ export async function searchStatement(
 				return { ...data, json: [] }
 			} catch (error) {
 				// undici's TypeError hides the transport code in cause. The shared policy needs that original code.
-				const cause = (error as Error)?.cause
+				const cause = (error as { cause?: unknown })?.cause
 				throw cause instanceof Error && "code" in cause ? cause : error
 			}
 		},

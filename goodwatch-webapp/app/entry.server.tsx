@@ -40,8 +40,8 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 // search role never serves a page, so it never reaches the root loader, and its metrics port stayed closed. The log
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
-startCrateDiagnostics()
 logProcessRole()
+startCrateDiagnostics()
 startLifecycle()
 startMetrics()
 // The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
