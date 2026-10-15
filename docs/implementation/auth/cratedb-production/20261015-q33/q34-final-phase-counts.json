@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Q34 owner continuation",
+    "since": "2026-10-15T20:31:08.303547+00:00",
+    "queryOutcomes": {
+      "failed": 0,
+      "recovered": 653,
+      "cancelled": 0
+    },
+    "correlatedHttp5xx": 0
+  },
+  {
+    "name": "Target start",
+    "since": "2026-10-15T20:37:27.191817292Z",
+    "queryOutcomes": {
+      "failed": 0,
+      "recovered": 6,
+      "cancelled": 0
+    },
+    "correlatedHttp5xx": 0
+  },
+  {
+    "name": "First settled recovery",
+    "since": "2026-10-15T20:46:59.771732+00:00",
+    "queryOutcomes": {
+      "failed": 0,
+      "recovered": 0,
+      "cancelled": 0
+    },
+    "correlatedHttp5xx": 0
+  }
+]

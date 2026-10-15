@@ -1,12 +1,17 @@
 {
-  "at": "2026-10-15T20:41:34.549436+00:00",
+  "at": "2026-10-15T21:06:00.215817+00:00",
   "since": "2026-10-15T20:37:27Z",
-  "lineCount": 43,
+  "lineCount": 47,
   "loggerLevels": [
     {
       "level": "INFO",
       "logger": "i.c.a.HttpAuthUpstreamHandler",
       "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "i.c.b.v.BlobShard",
+      "count": 2
     },
     {
       "level": "INFO",
@@ -42,6 +47,11 @@
       "level": "INFO",
       "logger": "o.e.h.n.Netty4HttpServerTransport",
       "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.i.r.BlobRecoveryTarget",
+      "count": 2
     },
     {
       "level": "INFO",

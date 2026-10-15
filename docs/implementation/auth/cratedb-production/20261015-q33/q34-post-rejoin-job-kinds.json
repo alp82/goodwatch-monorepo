@@ -1,0 +1,12 @@
+{
+  "host": 12,
+  "stmt": "SELECT classification['type'], count(*) FROM sys.jobs GROUP BY classification['type']",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:41:35.483806+00:00",
+    "status": 404,
+    "error": "{\"error\":{\"message\":\"ColumnUnknownException[Column classification['type'] unknown]\",\"code\":4043}}",
+    "at": "2026-10-15T20:41:35.493205+00:00",
+    "elapsedSeconds": 0.009
+  }
+}

@@ -3,7 +3,7 @@
   "stmt": "SELECT table_schema, table_name, settings FROM information_schema.tables WHERE table_schema NOT IN ('sys', 'information_schema') ORDER BY table_schema, table_name",
   "args": [],
   "response": {
-    "startedAt": "2026-10-15T20:40:02.876465+00:00",
+    "startedAt": "2026-10-15T21:06:46.149452+00:00",
     "status": 200,
     "result": {
       "cols": [
@@ -4958,9 +4958,9 @@
         ]
       ],
       "rowcount": 124,
-      "duration": 16.144432
+      "duration": 4.488985
     },
-    "at": "2026-10-15T20:40:02.902685+00:00",
-    "elapsedSeconds": 0.026
+    "at": "2026-10-15T21:06:46.160610+00:00",
+    "elapsedSeconds": 0.011
   }
 }

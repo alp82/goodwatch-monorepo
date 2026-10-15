@@ -1,0 +1,25 @@
+{
+  "host": 12,
+  "stmt": "SELECT node['name'], count(*) FROM sys.operations WHERE started < '2026-10-15T19:11:00Z' GROUP BY node['name']",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:49:12.076799+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "node['name']",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "crate-02",
+          13
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 58.355446
+    },
+    "at": "2026-10-15T20:49:12.141742+00:00",
+    "elapsedSeconds": 0.065
+  }
+}

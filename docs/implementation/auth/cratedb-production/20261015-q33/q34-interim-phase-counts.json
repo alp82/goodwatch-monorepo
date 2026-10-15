@@ -1,0 +1,24 @@
+[
+  {
+    "name": "q33-drain",
+    "since": "2026-10-15T19:11:00Z",
+    "untilExclusive": "2026-10-15T20:30:00Z",
+    "outcomes": {
+      "recovered": 7396,
+      "failed": 2,
+      "cancelled": 1
+    },
+    "failedRoutesAndClasses": {
+      "/api/poster-impressions CrateTimeoutError": 2
+    }
+  },
+  {
+    "name": "q34-continuation",
+    "since": "2026-10-15T20:30:00Z",
+    "untilExclusive": "9999",
+    "outcomes": {
+      "recovered": 797
+    },
+    "failedRoutesAndClasses": {}
+  }
+]

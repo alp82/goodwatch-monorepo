@@ -1,0 +1,82 @@
+{
+  "host": 11,
+  "stmt": "SELECT schema_name, table_name, partition_ident, id, primary, node['name'], state, routing_state, recovery FROM sys.shards WHERE routing_state = 'RELOCATING' OR state <> 'STARTED'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:40:32.584201+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "partition_ident",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "doc",
+          "streaming_evidence",
+          "",
+          5,
+          false,
+          "crate-03",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 178,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "doc",
+          "movie",
+          "",
+          7,
+          true,
+          "crate-02",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 1234,
+              "used": 1234,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 12543,
+            "size": {
+              "recovered": 229788051,
+              "used": 229788051,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 37.15377
+    },
+    "at": "2026-10-15T20:40:32.628658+00:00",
+    "elapsedSeconds": 0.045
+  }
+}

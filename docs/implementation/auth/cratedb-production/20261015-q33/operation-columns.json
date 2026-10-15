@@ -1,0 +1,44 @@
+{
+  "host": 12,
+  "stmt": "SELECT column_name FROM information_schema.columns WHERE table_schema = 'sys' AND table_name = 'operations' ORDER BY ordinal_position",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:23:44.625830+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "column_name"
+      ],
+      "rows": [
+        [
+          "id"
+        ],
+        [
+          "job_id"
+        ],
+        [
+          "name"
+        ],
+        [
+          "node"
+        ],
+        [
+          "node['id']"
+        ],
+        [
+          "node['name']"
+        ],
+        [
+          "started"
+        ],
+        [
+          "used_bytes"
+        ]
+      ],
+      "rowcount": 8,
+      "duration": 14.982207
+    },
+    "at": "2026-10-15T19:23:44.648023+00:00",
+    "elapsedSeconds": 0.022
+  }
+}

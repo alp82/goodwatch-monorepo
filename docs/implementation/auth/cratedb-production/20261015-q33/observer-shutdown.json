@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-15T21:07:12.762781+00:00",
+  "readers": [
+    {
+      "host": 20,
+      "pid": 64466,
+      "signal": 15,
+      "ownedLogReaderOnly": true
+    },
+    {
+      "host": 21,
+      "pid": 2013635,
+      "signal": 15,
+      "ownedLogReaderOnly": true
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-15T20:47:46.523985+00:00",
+  "at": "2026-10-15T21:06:43.699240+00:00",
   "queries": {
     "nodes": {
       "cols": [
@@ -29,7 +29,7 @@
         ]
       ],
       "rowcount": 3,
-      "duration": 14.122232
+      "duration": 4.874962
     },
     "health": {
       "cols": [
@@ -74,16 +74,16 @@
           0
         ],
         [
-          "doc",
-          "media_image",
+          "backup_20260925_deleted_titles",
+          "show",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "show",
+          "doc",
+          "media_image",
           null,
           "GREEN",
           0,
@@ -122,14 +122,6 @@
           0
         ],
         [
-          "backup_20260925_stale_child_rows",
-          "streaming_availability",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
           "doc",
           "language",
           null,
@@ -146,8 +138,8 @@
           0
         ],
         [
-          "doc",
-          "social_content_quality",
+          "backup_20260925_stale_child_rows",
+          "streaming_availability",
           null,
           "GREEN",
           0,
@@ -155,7 +147,7 @@
         ],
         [
           "doc",
-          "search_spending",
+          "social_content_quality",
           null,
           "GREEN",
           0,
@@ -171,7 +163,7 @@
         ],
         [
           "doc",
-          "search_terms",
+          "search_spending",
           null,
           "GREEN",
           0,
@@ -180,6 +172,14 @@
         [
           "backup_20260925_stale_child_rows",
           "release_event",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "doc",
+          "search_terms",
           null,
           "GREEN",
           0,
@@ -203,7 +203,7 @@
         ],
         [
           "doc",
-          "season",
+          "media_video",
           null,
           "GREEN",
           0,
@@ -211,7 +211,7 @@
         ],
         [
           "doc",
-          "search_embedding_state",
+          "season",
           null,
           "GREEN",
           0,
@@ -227,7 +227,7 @@
         ],
         [
           "doc",
-          "media_video",
+          "search_embedding_state",
           null,
           "GREEN",
           0,
@@ -419,7 +419,7 @@
         ],
         [
           "doc",
-          "streaming_service",
+          "timezone",
           null,
           "GREEN",
           0,
@@ -427,7 +427,7 @@
         ],
         [
           "doc",
-          "timezone",
+          "streaming_service",
           null,
           "GREEN",
           0,
@@ -482,22 +482,6 @@
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "movie",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
-          "blob",
-          "search_index_files",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
           "doc",
           "network",
           null,
@@ -514,8 +498,24 @@
           0
         ],
         [
-          "doc",
-          "user_not_interested",
+          "backup_20260925_deleted_titles",
+          "movie",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "blob",
+          "search_index_files",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "backup_20260925_deleted_titles",
+          "translation",
           null,
           "GREEN",
           0,
@@ -530,8 +530,8 @@
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "translation",
+          "doc",
+          "user_not_interested",
           null,
           "GREEN",
           0,
@@ -579,7 +579,7 @@
         ],
         [
           "doc",
-          "streaming_evidence",
+          "streaming_availability",
           null,
           "GREEN",
           0,
@@ -595,7 +595,7 @@
         ],
         [
           "doc",
-          "streaming_availability",
+          "streaming_evidence",
           null,
           "GREEN",
           0,
@@ -604,6 +604,14 @@
         [
           "backup_20260925_deleted_titles",
           "streaming_availability",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "doc",
+          "genre",
           null,
           "GREEN",
           0,
@@ -619,7 +627,7 @@
         ],
         [
           "doc",
-          "genre",
+          "user_list_exposure",
           null,
           "GREEN",
           0,
@@ -628,14 +636,6 @@
         [
           "backup_20260925_deleted_titles",
           "alternative_title",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
-          "doc",
-          "user_list_exposure",
           null,
           "GREEN",
           0,
@@ -690,16 +690,16 @@
           0
         ],
         [
-          "doc",
-          "buzz_trending",
+          "backup_20260925_deleted_titles",
+          "trope",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "trope",
+          "doc",
+          "buzz_trending",
           null,
           "GREEN",
           0,
@@ -763,14 +763,6 @@
         ],
         [
           "doc",
-          "user_wishlist",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
-          "doc",
           "trope",
           null,
           "GREEN",
@@ -779,7 +771,7 @@
         ],
         [
           "doc",
-          "imdb_episode",
+          "user_wishlist",
           null,
           "GREEN",
           0,
@@ -792,10 +784,18 @@
           "GREEN",
           0,
           0
+        ],
+        [
+          "doc",
+          "imdb_episode",
+          null,
+          "GREEN",
+          0,
+          0
         ]
       ],
       "rowcount": 94,
-      "duration": 19.732416
+      "duration": 5.111764
     },
     "shards": {
       "cols": [
@@ -811,7 +811,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 60.394695
+      "duration": 60.766933
     },
     "checks": {
       "cols": [
@@ -949,7 +949,7 @@
         ]
       ],
       "rowcount": 21,
-      "duration": 4.230503
+      "duration": 5.668584
     },
     "settings": {
       "cols": [
@@ -969,7 +969,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 3.904667
+      "duration": 2.035103
     },
     "users": {
       "cols": [
@@ -977,7 +977,7 @@
       ],
       "rows": [],
       "rowcount": 0,
-      "duration": 2.485424
+      "duration": 1.654196
     }
   },
   "passed": true

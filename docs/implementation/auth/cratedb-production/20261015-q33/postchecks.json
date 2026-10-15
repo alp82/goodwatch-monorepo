@@ -2,7 +2,7 @@
   {
     "host": 11,
     "result": {
-      "at": "2026-10-15T20:38:11.035292+00:00",
+      "at": "2026-10-15T21:05:56.979794+00:00",
       "container": {
         "id": "014d01f2a52be4bed898be7dace832deec5247c7c8f971fc1897f1b198110308",
         "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
@@ -188,21 +188,21 @@
         ]
       },
       "composeGitStatus": "",
-      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   46G  243G  16% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
-      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856395776  4074119168 25525608448     1404928  3256668160 28193529856\nSwap:     2147479552     4194304  2143285248\n",
+      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   64G  225G  23% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856395776 15097790464   877637632     1404928 16880967680 17170321408\nSwap:     2147479552     4194304  2143285248\n",
       "mount": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
       "backupReadable": true,
       "firewallTimer": "active",
       "imageDigests": [
         "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
       ],
-      "backupLogTail": "2026-10-15T16:05:18Z Snapshot created successfully.\n2026-10-15T16:05:18Z Checking for expired snapshots...\n2026-10-15T16:05:36Z Deleting expired snapshot: hourly_20261015_130501\n2026-10-15T16:05:52Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T16:05:52Z Verifying the snapshots of this run...\n2026-10-15T16:06:11Z Verified: hourly_20261015_160501\n2026-10-15T16:06:11Z Backup run finished.\n2026-10-15T17:05:01Z Creating snapshot: hourly_20261015_170501...\n2026-10-15T17:05:23Z Snapshot created successfully.\n2026-10-15T17:05:23Z Checking for expired snapshots...\n2026-10-15T17:05:42Z Deleting expired snapshot: hourly_20261015_140501\n2026-10-15T17:05:57Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T17:05:57Z Verifying the snapshots of this run...\n2026-10-15T17:06:16Z Verified: hourly_20261015_170501\n2026-10-15T17:06:16Z Backup run finished.\n2026-10-15T18:05:01Z Creating snapshot: hourly_20261015_180501...\n2026-10-15T18:05:18Z Snapshot created successfully.\n2026-10-15T18:05:18Z Checking for expired snapshots...\n2026-10-15T18:05:49Z Deleting expired snapshot: hourly_20261015_150501\n2026-10-15T18:06:06Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T18:06:06Z Verifying the snapshots of this run...\n2026-10-15T18:06:25Z Verified: hourly_20261015_180501\n2026-10-15T18:06:25Z Backup run finished.\n2026-10-15T19:05:01Z Creating snapshot: hourly_20261015_190501...\n2026-10-15T19:05:21Z Snapshot created successfully.\n2026-10-15T19:05:21Z Checking for expired snapshots...\n2026-10-15T19:05:39Z Deleting expired snapshot: hourly_20261015_160501\n2026-10-15T19:06:00Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T19:06:00Z Verifying the snapshots of this run...\n2026-10-15T19:06:18Z Verified: hourly_20261015_190501\n2026-10-15T19:06:18Z Backup run finished.\n2026-10-15T20:05:01Z Creating snapshot: hourly_20261015_200501...\n2026-10-15T20:35:01Z Error executing SQL: CREATE SNAPSHOT \"goodwatch-db-backup-v2\".\"hourly_20261015_200501\" ALL WITH (wait_for_completion=true)\nHTTPConnectionPool(host='10.0.0.11', port=4200): Read timed out. (read timeout=1800)\n2026-10-15T20:35:01Z BACKUP FAILED: Snapshot creation failed: hourly_20261015_200501\n"
+      "backupLogTail": "2026-10-15T16:06:11Z Verified: hourly_20261015_160501\n2026-10-15T16:06:11Z Backup run finished.\n2026-10-15T17:05:01Z Creating snapshot: hourly_20261015_170501...\n2026-10-15T17:05:23Z Snapshot created successfully.\n2026-10-15T17:05:23Z Checking for expired snapshots...\n2026-10-15T17:05:42Z Deleting expired snapshot: hourly_20261015_140501\n2026-10-15T17:05:57Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T17:05:57Z Verifying the snapshots of this run...\n2026-10-15T17:06:16Z Verified: hourly_20261015_170501\n2026-10-15T17:06:16Z Backup run finished.\n2026-10-15T18:05:01Z Creating snapshot: hourly_20261015_180501...\n2026-10-15T18:05:18Z Snapshot created successfully.\n2026-10-15T18:05:18Z Checking for expired snapshots...\n2026-10-15T18:05:49Z Deleting expired snapshot: hourly_20261015_150501\n2026-10-15T18:06:06Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T18:06:06Z Verifying the snapshots of this run...\n2026-10-15T18:06:25Z Verified: hourly_20261015_180501\n2026-10-15T18:06:25Z Backup run finished.\n2026-10-15T19:05:01Z Creating snapshot: hourly_20261015_190501...\n2026-10-15T19:05:21Z Snapshot created successfully.\n2026-10-15T19:05:21Z Checking for expired snapshots...\n2026-10-15T19:05:39Z Deleting expired snapshot: hourly_20261015_160501\n2026-10-15T19:06:00Z Deleted 1 of 1 expired snapshot(s).\n2026-10-15T19:06:00Z Verifying the snapshots of this run...\n2026-10-15T19:06:18Z Verified: hourly_20261015_190501\n2026-10-15T19:06:18Z Backup run finished.\n2026-10-15T20:05:01Z Creating snapshot: hourly_20261015_200501...\n2026-10-15T20:35:01Z Error executing SQL: CREATE SNAPSHOT \"goodwatch-db-backup-v2\".\"hourly_20261015_200501\" ALL WITH (wait_for_completion=true)\nHTTPConnectionPool(host='10.0.0.11', port=4200): Read timed out. (read timeout=1800)\n2026-10-15T20:35:01Z BACKUP FAILED: Snapshot creation failed: hourly_20261015_200501\n2026-10-15T21:05:02Z Creating snapshot: hourly_20261015_210502...\n2026-10-15T21:05:13Z Snapshot created successfully.\n2026-10-15T21:05:13Z Checking for expired snapshots...\n2026-10-15T21:05:32Z Deleting expired snapshot: hourly_20261015_170501\n2026-10-15T21:05:52Z Deleting expired snapshot: hourly_20261015_180501\n"
     }
   },
   {
     "host": 12,
     "result": {
-      "at": "2026-10-15T20:38:10.816202+00:00",
+      "at": "2026-10-15T21:05:56.970733+00:00",
       "container": {
         "id": "1447adcdc3e7ae2e91696b3d6e550ef5a5b728dba1b23f885334e68c405e4e7f",
         "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
@@ -388,8 +388,8 @@
         ]
       },
       "composeGitStatus": "",
-      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   98G  191G  34% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
-      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856408064 19285020672   883286016     1454080 12688101376 12982693888\nSwap:     2147479552    21757952  2125721600\n",
+      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   88G  201G  31% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856408064 19224649728  1894797312     1449984 11736961024 13042647040\nSwap:     2147479552    22020096  2125459456\n",
       "mount": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
       "backupReadable": true,
       "firewallTimer": "active",
@@ -401,7 +401,7 @@
   {
     "host": 13,
     "result": {
-      "at": "2026-10-15T20:38:12.290213+00:00",
+      "at": "2026-10-15T21:05:57.871587+00:00",
       "container": {
         "id": "83922a1fecd1383013fb6fb341e218e131317298f1c4f6b5589e78e412697eaf",
         "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
@@ -434,14 +434,6 @@
         ],
         "mounts": [
           {
-            "Type": "bind",
-            "Source": "/mnt/backup-cratedb/snapshots",
-            "Destination": "/snapshots",
-            "Mode": "rw",
-            "RW": true,
-            "Propagation": "rprivate"
-          },
-          {
             "Type": "volume",
             "Name": "goodwatch-crate_crate_data",
             "Source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
@@ -450,6 +442,14 @@
             "Mode": "rw",
             "RW": true,
             "Propagation": ""
+          },
+          {
+            "Type": "bind",
+            "Source": "/mnt/backup-cratedb/snapshots",
+            "Destination": "/snapshots",
+            "Mode": "rw",
+            "RW": true,
+            "Propagation": "rprivate"
           }
         ],
         "state": {
@@ -587,8 +587,8 @@
         ]
       },
       "composeGitStatus": "",
-      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   56G  233G  20% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
-      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856383488 18604982272   906563584     5107712 13344837632 13655183360\nSwap:     2147479552     3932160  2143547392\n",
+      "disk": "Filesystem                                          Size  Used Avail Use% Mounted on\n/dev/sda1                                           301G   45G  243G  16% /\nu417661-sub4@u417661-sub4.your-storagebox.de:/home  5.0T  3.9T  1.2T  78% /mnt/backup-cratedb\n",
+      "memory": "               total        used        free      shared  buff/cache   available\nMem:     32856383488 18663202816  2365906944     5107712 11827273728 13597007872\nSwap:     2147479552     3932160  2143547392\n",
       "mount": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/mnt/backup-cratedb\",\n         \"source\": \"u417661-sub4@u417661-sub4.your-storagebox.de:/home\",\n         \"fstype\": \"fuse.sshfs\",\n         \"options\": \"rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other\"\n      }\n   ]\n}\n",
       "backupReadable": true,
       "firewallTimer": "active",

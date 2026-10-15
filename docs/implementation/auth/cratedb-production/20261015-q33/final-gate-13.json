@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-15T20:47:47.331820+00:00",
+  "at": "2026-10-15T21:06:43.951150+00:00",
   "queries": {
     "nodes": {
       "cols": [
@@ -29,7 +29,7 @@
         ]
       ],
       "rowcount": 3,
-      "duration": 3.145235
+      "duration": 3.834807
     },
     "health": {
       "cols": [
@@ -67,7 +67,7 @@
         ],
         [
           "doc",
-          "media_image",
+          "movie",
           null,
           "GREEN",
           0,
@@ -75,7 +75,7 @@
         ],
         [
           "doc",
-          "movie",
+          "media_image",
           null,
           "GREEN",
           0,
@@ -99,7 +99,7 @@
         ],
         [
           "doc",
-          "buzz_snapshot",
+          "episode_translation",
           null,
           "GREEN",
           0,
@@ -107,7 +107,7 @@
         ],
         [
           "doc",
-          "episode_translation",
+          "buzz_snapshot",
           null,
           "GREEN",
           0,
@@ -131,7 +131,7 @@
         ],
         [
           "doc",
-          "episode",
+          "language",
           null,
           "GREEN",
           0,
@@ -139,7 +139,7 @@
         ],
         [
           "doc",
-          "language",
+          "episode",
           null,
           "GREEN",
           0,
@@ -170,16 +170,16 @@
           0
         ],
         [
-          "backup_20260925_stale_child_rows",
-          "release_event",
+          "doc",
+          "search_terms",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "doc",
-          "search_terms",
+          "backup_20260925_stale_child_rows",
+          "release_event",
           null,
           "GREEN",
           0,
@@ -203,15 +203,7 @@
         ],
         [
           "doc",
-          "media_video",
-          null,
-          "GREEN",
-          0,
-          0
-        ],
-        [
-          "doc",
-          "season",
+          "search_embedding_state",
           null,
           "GREEN",
           0,
@@ -227,7 +219,15 @@
         ],
         [
           "doc",
-          "search_embedding_state",
+          "season",
+          null,
+          "GREEN",
+          0,
+          0
+        ],
+        [
+          "doc",
+          "media_video",
           null,
           "GREEN",
           0,
@@ -322,16 +322,16 @@
           0
         ],
         [
-          "backup_20260925_stale_child_rows",
-          "media_image",
+          "doc",
+          "search_control",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "doc",
-          "search_control",
+          "backup_20260925_stale_child_rows",
+          "media_image",
           null,
           "GREEN",
           0,
@@ -395,7 +395,7 @@
         ],
         [
           "doc",
-          "user_watch_state",
+          "search_shadow",
           null,
           "GREEN",
           0,
@@ -403,7 +403,7 @@
         ],
         [
           "doc",
-          "search_shadow",
+          "user_watch_state",
           null,
           "GREEN",
           0,
@@ -459,7 +459,7 @@
         ],
         [
           "doc",
-          "user_profile",
+          "imdb_season",
           null,
           "GREEN",
           0,
@@ -467,7 +467,7 @@
         ],
         [
           "doc",
-          "imdb_season",
+          "user_profile",
           null,
           "GREEN",
           0,
@@ -482,8 +482,8 @@
           0
         ],
         [
-          "doc",
-          "production_company",
+          "backup_20260925_deleted_titles",
+          "movie",
           null,
           "GREEN",
           0,
@@ -506,8 +506,8 @@
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "movie",
+          "doc",
+          "production_company",
           null,
           "GREEN",
           0,
@@ -522,16 +522,16 @@
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "translation",
+          "doc",
+          "user_not_interested",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "doc",
-          "user_not_interested",
+          "backup_20260925_deleted_titles",
+          "translation",
           null,
           "GREEN",
           0,
@@ -571,7 +571,7 @@
         ],
         [
           "doc",
-          "social_ingest_run",
+          "user_score",
           null,
           "GREEN",
           0,
@@ -587,7 +587,7 @@
         ],
         [
           "doc",
-          "user_score",
+          "social_ingest_run",
           null,
           "GREEN",
           0,
@@ -610,16 +610,16 @@
           0
         ],
         [
-          "backup_20260925_stale_child_rows",
-          "movie",
+          "doc",
+          "genre",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "doc",
-          "genre",
+          "backup_20260925_stale_child_rows",
+          "movie",
           null,
           "GREEN",
           0,
@@ -690,16 +690,16 @@
           0
         ],
         [
-          "doc",
-          "buzz_trending",
+          "backup_20260925_deleted_titles",
+          "trope",
           null,
           "GREEN",
           0,
           0
         ],
         [
-          "backup_20260925_deleted_titles",
-          "trope",
+          "doc",
+          "buzz_trending",
           null,
           "GREEN",
           0,
@@ -795,7 +795,7 @@
         ]
       ],
       "rowcount": 94,
-      "duration": 3.61647
+      "duration": 10.202142
     },
     "shards": {
       "cols": [
@@ -811,7 +811,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 62.00331
+      "duration": 62.30192
     },
     "checks": {
       "cols": [
@@ -949,7 +949,7 @@
         ]
       ],
       "rowcount": 21,
-      "duration": 6.763086
+      "duration": 4.263697
     },
     "settings": {
       "cols": [
@@ -969,7 +969,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 1.385417
+      "duration": 1.545988
     },
     "users": {
       "cols": [
@@ -977,7 +977,7 @@
       ],
       "rows": [],
       "rowcount": 0,
-      "duration": 0.956431
+      "duration": 1.424214
     }
   },
   "passed": true

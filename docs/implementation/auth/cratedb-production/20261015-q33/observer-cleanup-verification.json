@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-15T21:07:36.236599+00:00",
+  "localReaders": [],
+  "remoteReaders": [
+    {
+      "host": 20,
+      "processes": []
+    },
+    {
+      "host": 21,
+      "processes": []
+    }
+  ]
+}

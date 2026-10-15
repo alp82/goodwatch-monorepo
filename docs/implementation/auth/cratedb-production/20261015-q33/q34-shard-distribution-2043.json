@@ -1,0 +1,52 @@
+{
+  "host": 12,
+  "stmt": "SELECT node['name'], primary, count(*) FROM sys.shards GROUP BY node['name'], primary ORDER BY node['name'], primary",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:43:15.951215+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "node['name']",
+        "primary",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "crate-01",
+          false,
+          104
+        ],
+        [
+          "crate-01",
+          true,
+          95
+        ],
+        [
+          "crate-02",
+          false,
+          153
+        ],
+        [
+          "crate-02",
+          true,
+          226
+        ],
+        [
+          "crate-03",
+          false,
+          222
+        ],
+        [
+          "crate-03",
+          true,
+          158
+        ]
+      ],
+      "rowcount": 6,
+      "duration": 58.487774
+    },
+    "at": "2026-10-15T20:43:16.017274+00:00",
+    "elapsedSeconds": 0.066
+  }
+}

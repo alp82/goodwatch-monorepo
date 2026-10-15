@@ -1,0 +1,116 @@
+{
+  "at": "2026-10-15T21:07:45.164195+00:00",
+  "state": "UPGRADE_AND_BACKUP_VERIFIED_AUTH_USER_DEFERRED",
+  "versions": {
+    "crate-01": "5.10.16",
+    "crate-02": "5.10.16",
+    "crate-03": "5.10.16"
+  },
+  "healthRows": 94,
+  "allHealthGreen": true,
+  "shardStates": [
+    [
+      "STARTED",
+      "STARTED",
+      958
+    ]
+  ],
+  "nodeChecksPassed": 21,
+  "allocation": "all",
+  "originalNodeIdsPreserved": true,
+  "snapshot": "goodwatch-db-backup-v2.pre_auth_547_20261015190551",
+  "snapshotState": "SUCCESS",
+  "snapshotCreateSeconds": 13.659,
+  "individualKillRequests": 69,
+  "killContextCounts": {
+    "0": 69
+  },
+  "normalStop": {
+    "at": "2026-10-15T20:37:11.639752+00:00",
+    "elapsedSeconds": 2.777,
+    "exitCode": 143,
+    "signals": [
+      "15"
+    ]
+  },
+  "targetStartedAt": "2026-10-15T20:37:27.191817292Z",
+  "rejoinedAt": "2026-10-15T20:37:48.078472+00:00",
+  "allStartedAt": "2026-10-15T20:46:59.771732+00:00",
+  "scheduledBackup": {
+    "at": "2026-10-15T21:06:54.782100+00:00",
+    "snapshot": [
+      "hourly_20261015_210502",
+      "SUCCESS",
+      1792098302144,
+      1792098311950
+    ],
+    "verifiedRunFinished": true,
+    "configurationChanged": false
+  },
+  "queryOutcomesCapturedMinimum": {
+    "recovered": 8193,
+    "failed": 2,
+    "cancelled": 1
+  },
+  "http5xxCapturedMinimum": 2,
+  "ambiguousReadiness503": 46,
+  "public": {
+    "responses": 3858,
+    "statusCounts": {
+      "200": 3858
+    },
+    "non200": 0
+  },
+  "phaseCounts": [
+    {
+      "name": "Q34 owner continuation",
+      "since": "2026-10-15T20:31:08.303547+00:00",
+      "queryOutcomes": {
+        "failed": 0,
+        "recovered": 653,
+        "cancelled": 0
+      },
+      "correlatedHttp5xx": 0
+    },
+    {
+      "name": "Target start",
+      "since": "2026-10-15T20:37:27.191817292Z",
+      "queryOutcomes": {
+        "failed": 0,
+        "recovered": 6,
+        "cancelled": 0
+      },
+      "correlatedHttp5xx": 0
+    },
+    {
+      "name": "First settled recovery",
+      "since": "2026-10-15T20:46:59.771732+00:00",
+      "queryOutcomes": {
+        "failed": 0,
+        "recovered": 0,
+        "cancelled": 0
+      },
+      "correlatedHttp5xx": 0
+    }
+  ],
+  "coverage": "Captured minima. Concurrent automatic page replacements; original abio page events/counters after baseline unavailable because observer failed under older Python before container removal. Current logs recaptured and later replacements continuously followed. No complete-window zero/rate claim.",
+  "authUserRows": [],
+  "restoreValidation": "Owner waived for this patch upgrade only; not tested",
+  "remaining": [
+    "goodwatch_auth creation awaits #562 and separate authorization",
+    "Backup script pins crate-01 as sole coordinator; unchanged",
+    "13 pre-window sys.operations entries remain on crate-02, outside approved cleanup scope; no additional cancellation",
+    "Original removed ABIO page logs unavailable; counts are minima"
+  ],
+  "productionChanges": [
+    "Named pre-upgrade snapshot and protected BLOB/config copies",
+    "Crate-01 image pin, temporary restart suppression/allocation primaries, graceful decommission",
+    "69 exact individual KILL requests through crate-02, all returned 0 contexts",
+    "Owner-authorized normal SIGTERM stop with unlimited grace",
+    "Start pinned 5.10.16 on retained volume; restore restart always/allocation all"
+  ],
+  "excludedChanges": [
+    "No HBA/auth user/auth tables/manual firewall/app config/table-setting changes",
+    "No KILL ALL/SIGKILL/force flag or other-node restart"
+  ]
+}

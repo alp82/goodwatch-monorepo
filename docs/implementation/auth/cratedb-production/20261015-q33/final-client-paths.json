@@ -11,21 +11,21 @@
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 43
+            "elapsedMs": 35
           },
           {
             "host": 12,
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 14
+            "elapsedMs": 7
           },
           {
             "host": 13,
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 10
+            "elapsedMs": 8
           }
         ],
         "stderr": ""
@@ -44,7 +44,7 @@
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 54
+            "elapsedMs": 38
           },
           {
             "host": 12,
@@ -58,7 +58,7 @@
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 9
+            "elapsedMs": 6
           }
         ],
         "stderr": ""
@@ -77,21 +77,21 @@
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 51
+            "elapsedMs": 38
           },
           {
             "host": 12,
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 13
+            "elapsedMs": 7
           },
           {
             "host": 13,
             "status": 200,
             "rowcount": 1,
             "errorCode": null,
-            "elapsedMs": 5
+            "elapsedMs": 8
           }
         ],
         "stderr": ""
@@ -102,26 +102,26 @@
     "host": 20,
     "clients": [
       {
-        "name": "gk4owk8-20261015T194515",
+        "name": "gk4owk8-20261015T210028",
         "returncode": 0,
         "probes": [
           {
             "host": "10.0.0.11",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 134
+            "elapsedMs": 89
           },
           {
             "host": "10.0.0.12",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 13
+            "elapsedMs": 12
           },
           {
             "host": "10.0.0.13",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 12
+            "elapsedMs": 13
           }
         ],
         "stderr": ""
@@ -134,19 +134,19 @@
             "host": "10.0.0.11",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 107
+            "elapsedMs": 108
           },
           {
             "host": "10.0.0.12",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 13
+            "elapsedMs": 11
           },
           {
             "host": "10.0.0.13",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 17
+            "elapsedMs": 9
           }
         ],
         "stderr": ""
@@ -159,19 +159,19 @@
             "host": "10.0.0.11",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 122
+            "elapsedMs": 98
           },
           {
             "host": "10.0.0.12",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 15
+            "elapsedMs": 12
           },
           {
             "host": "10.0.0.13",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 11
+            "elapsedMs": 10
           }
         ],
         "stderr": ""
@@ -182,26 +182,26 @@
     "host": 21,
     "clients": [
       {
-        "name": "gk4owk8-20261015T194120",
+        "name": "gk4owk8-20261015T205822",
         "returncode": 0,
         "probes": [
           {
             "host": "10.0.0.11",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 120
+            "elapsedMs": 99
           },
           {
             "host": "10.0.0.12",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 15
+            "elapsedMs": 12
           },
           {
             "host": "10.0.0.13",
             "status": 200,
             "rowcount": 1,
-            "elapsedMs": 15
+            "elapsedMs": 11
           }
         ],
         "stderr": ""

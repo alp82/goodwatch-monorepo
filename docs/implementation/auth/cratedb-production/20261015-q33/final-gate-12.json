@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-15T20:47:46.265571+00:00",
+  "at": "2026-10-15T21:06:43.711328+00:00",
   "queries": {
     "nodes": {
       "cols": [
@@ -29,7 +29,7 @@
         ]
       ],
       "rowcount": 3,
-      "duration": 3.547338
+      "duration": 2.590579
     },
     "health": {
       "cols": [
@@ -795,7 +795,7 @@
         ]
       ],
       "rowcount": 94,
-      "duration": 2.087264
+      "duration": 1.960125
     },
     "shards": {
       "cols": [
@@ -811,7 +811,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 57.773495
+      "duration": 56.890724
     },
     "checks": {
       "cols": [
@@ -949,7 +949,7 @@
         ]
       ],
       "rowcount": 21,
-      "duration": 4.924273
+      "duration": 3.592526
     },
     "settings": {
       "cols": [
@@ -969,7 +969,7 @@
         ]
       ],
       "rowcount": 1,
-      "duration": 1.42025
+      "duration": 0.883783
     },
     "users": {
       "cols": [
@@ -977,7 +977,7 @@
       ],
       "rows": [],
       "rowcount": 0,
-      "duration": 1.26451
+      "duration": 0.876481
     }
   },
   "passed": true

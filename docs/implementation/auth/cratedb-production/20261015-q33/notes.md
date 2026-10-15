@@ -1,55 +1,85 @@
-# Q33 last-node production upgrade — in progress
+# Q33/Q34 final-node production upgrade — complete
 
-Owner Q33 authorized crate-01 to pinned 5.10.16, under the existing patch-only restore-validation waiver. No HBA, auth user/tables, app/config, manual firewall, table-setting or member-data probe changes. Known concurrent tables accepted; only genuine health/recovery/decommission failures abort. Q33 supersedes the previous deadline/maintenance holds.
+All three production nodes run **5.10.16** on the pinned manifest from the runbook. The upgrade and post-upgrade scheduled backup passed. **#547 remains open:** its original completion criterion includes `goodwatch_auth`, absent and explicitly excluded pending #562. No auth/HBA rollout occurred.
 
-Live baseline: 94 GREEN rows, 958 STARTED copies, all 21 checks; 479 logical shards each on two distinct hosts. Original IDs retained; master crate-01 last. PR #604/#607 code verified on all four bundles: original pages f4be666b are descendants of 02b3ca5b; search-a/search-b exact 02b3ca5b.
+## Authorization and scope
 
-Fresh named snapshot **goodwatch-db-backup-v2.pre_auth_547_20261015190551 SUCCESS**, CREATE **13.659s**, 2026-10-15T19:09:24.574674+00:00–2026-10-15T19:09:38.233692+00:00. Existing backup lock serialized creation. 18 unique BLOB artifacts / 126888186 bytes checksum-verified, retained under protected /root/cratedb-maintenance/547-20261015190551/blob-artifacts on crate-01. Env/rendered Compose/runtime before copies protected there; old images retained.
+Q33 authorized crate-01 as the last node after #604/#607, with the owner watching. Q34 option 1 authorized revalidation and individual KILL of exactly the fixed 69 IDs through crate-02, followed after about five minutes by a normal graceful container stop if native exit remained blocked. The patch-only restore-validation waiver remains recorded; restoration was not tested. Known concurrent tables were accepted. No HBA, auth user/tables, app/config, manual firewall or table-setting changes. No KILL ALL, force flag, SIGKILL or additional node restart.
 
-Before drain, 3-node GREEN/STARTED gates repeated and effective graceful settings verified PRIMARIES / force=false / timeout2h. Crate-01 staged with only image pin changed and restart temporarily suppressed. Allocation primaries; decommission exact ID xlclgwGeSHe18p5J4WvfFA through crate-02 with 7500s HTTP / 7530s outer SSH. Pending actual acknowledgement and normal process exit before target startup. Read-only health observer captures every current table without treating known/concurrent schema identities as failures.
+## Gates and actions (UTC)
 
-## Client collection and concurrent deployment
+| Gate | Evidence/result |
+| --- | --- |
+| Prechecks | 94 GREEN rows, 958 STARTED copies, 21 checks passed; original node IDs; PRIMARIES, force=false, timeout 2h; allocation all |
+| Safety snapshot | `goodwatch-db-backup-v2.pre_auth_547_20261015190551` SUCCESS; CREATE 13.659s, 19:09:24.575–19:09:38.234 |
+| BLOB protection | 18 unique files / 126,888,186 bytes, SHA1/size verified, privately retained on crate-01 under `/root/cratedb-maintenance/547-20261015190551/blob-artifacts`; snapshots exclude BLOBs |
+| Staging | Only pinned image changed; protected before copies of env/Compose/runtime; temporary Docker restart=no; allocation primaries |
+| Decommission | Exact original crate-01 ID through crate-02, HTTP7500s/SSH7530s; SQL success 19:20:39.690 after 542.780s; zero primaries |
+| Independent exit wait | Original daemon stayed live, logging active requests; read-only evidence found 206 old operation entries on crate-01 from about04:01 UTC, 13 on crate-02; sys.jobs had no candidate IDs. Internal-counter causality unproven |
+| Q34 revalidation | All 69 fixed IDs still represented by old crate-01 operations, absent from current jobs; zero primaries /94 GREEN /958 STARTED /21 checks |
+| Exact cancellation | 69 individual KILL requests, all HTTP200 / rowcount 0; completed 20:32:08.705. No operation entries cleared by these receipts |
+| Normal stop | Revalidated after at least 300s. `docker stop --timeout=-1 crate-01` at 20:37:11.640; completed in2.777s, exit 143, signal 15 only, no OOM/noSIGKILL |
+| Target start | Pinned5.10.16 process started20:37:27.192; all runtime fields except image preserved, restart always |
+| Rejoin | Original ID `xlclgwGeSHe18p5J4WvfFA` returned on5.10.16 at 20:37:48.078 |
+| Normal allocation | Restored allocation all after rejoin,20:37:49.240; no RESET of persistent settings |
+| Recovery | First complete94 GREEN /958 STARTED/STARTED /21 checks at 20:46:59.772; observed relocation progress throughout; independent coordinator gates passed20:47:46–47 and repeated after backup |
+| Postchecks | 94 current GREEN health rows, [['STARTED', 'STARTED', 958]] shard states, 21 checks passed. All21 actual page/search/worker reads pass across three coordinators |
+| Scheduled backup | `hourly_20261015_210502` SUCCESS, unchanged scheduled routine verified finished; see backup receipts |
 
-Public GET probes cover home, movie, show, person, related panel and palette. Full ranked search API writes history/may start paid work, so no synthetic full search was issued in upgrade-only scope. Real catalog events are recorded separately; palette success does not establish uncached catalog failover.
+The first post-rejoin readiness assertion sampled two relocating copies and did not pass; observation continued until fully STARTED. That was ongoing expected recovery, not a health abort. An optional operator diagnostic selected nonexistent sys.jobs.classification and returned ColumnUnknownException/404; it was a read-only operator error, not an application failure. New crate-01 logs have no exception/OOM/corruption/aborted-shutdown patterns. One startup warning is the existing disabled dangling-index autoimport notice.
 
-An external automatic deployment replaced both pages with a9aa22e8 during the drain. Search stayed on 02b3ca5b. This operation did not deploy or change clients. Vector1's original page was followed before removal, retaining its redacted events; both new page logs are recovered from window start. The ABIO host uses older Python without dict-union support: the first observer thread failed, corrected to dict.update and reattached. The old ABIO f4be container/logs had already been removed by the concurrent deployment, leaving a coverage gap between its baseline sample and removal. A bounded read-only local log-drain check attempts recovery without querying Axiom or retaining raw logs. **Full-window counts must be labeled captured/minima, not complete zeros**. Retained structured events deduplicate by Docker timestamp/line SHA256; no SQL params, member values or raw exceptions retained.
+## Final configuration and firewall
 
-Observed per-host timeouts are not automatically member failures: classify final crate.query failed/recovered/cancelled, link preceding attempt error classes by queryId, then examine guarded crate.recovery and crate.http outcomes per request/operation. Initial 503 crate.http events have hadCrateFailure=false; keep their attribution separate from database failures. Runtime replacement also prevents complete before/after HTTP counter deltas for removed pages; report retained structured HTTP failures plus exact deltas only where containers stayed the same.
+Versions: crate-01/02/03 **5.10.16 /5.10.16 /5.10.16**, original Crate IDs. Image ID `sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f`, manifest pin `sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307`.
 
-## #547 scope/closure
+[Configuration comparison](configuration-comparison.json) verifies original commands/environment/HBA, full sorted mounts, private 4200/4300/5432 bindings, memory/logging/restart always and rendered service except image. Baseline table settings unchanged; original node identities retained; crate-02/03 container IDs/starttimes unchanged. Final placement audit verifies479 logical shards, exactly two STARTED copies on distinct hosts and one primary each. Firewall reconcilers remainactive onall three.
 
-Original #547 completion requires goodwatch_auth, still absent in read-only prechecks; #562 is open and Q33 does not authorize creating it. Upgrade completion alone does not fulfill that criterion; keep #547 open unless it is independently fulfilled. SQL/runbook/firewall/local-rehearsal work is already prepared.
+The runbook's read-only firewall finding still applies: private destination bindings and matching Docker DNAT; active UFW with private SQL/worker allowances, but DOCKER-USER is not a blanket private-source allowlist. Docker forwarding bypasses a claim based on UFW INPUT alone. Existing legacy/generated comments do not uniformly satisfy the literal every-rule owner/purpose convention. No manual firewall changes. External Internet/provider ACL reachability remains untested.
 
-## SQL acknowledgement passed; independent exit still pending
+## Captured client outcomes
 
-Decommission acknowledged SUCCESS at **2026-10-15T19:20:39.690256+00:00**, **542.78s** after 19:11:36.910 UTC. Crate-01 reached zero primaries and all 958 copies were STARTED. Its original daemon still logs active requests delaying shutdown; SQL job sampling shows only current observer SELECT jobs. This does not expose all internal task contexts: tagged 5.10.9 source requires both JobsLogs.activeRequests==0 and TasksService.numActive==0, polling every five seconds, with a separate two-hour wait after SQL acknowledgement. **No target has started yet, no forced stop or job cancellation.** Wait for normal exit; if the server aborts/times out, restore original staged config/restart policy and allocation per runbook and report.
+Window begins19:11:00 UTC, through final observer shutdown at 21:07:12 UTC recorded in outcome/observer receipts. **{'recovered': 8193, 'failed': 2, 'cancelled': 1}** final `crate.query` outcomes. Captured request HTTP5xx minimum **2**. Both failed queries are POST `/api/poster-impressions`, CrateTimeoutError after one about 10s attempt to crate-01 (19:19:02 and19:56:22): additive demand increments left indeterminate and not replayed; both correlate to request HTTP 503/hadCrateFailure=true. No guarded recovery outcome followed. They were actual endpoint failures, not operator writes/auth-state changes. The cancelled catalog read is AbortError on `/api/combined-search`, kept separate. Search roles together captured 7 recovered / 0 failed / 1 cancelled SQL outcomes, no observed 5xx.
 
-One classified final failed SQL so far: **/api/poster-impressions POST**, CrateTimeoutError on first attempt to crate-01, about 10,003ms, additive INSERT/ON CONFLICT demand increment. Marked indeterminate and not replayed; correlated request HTTP503/hadCrateFailure=true. It is background poster demand telemetry, not an auth-state mutation by the operator. One cancelled read is recorded separately. Other captured SQL queries recover via surviving nodes; HTTP503 events with hadCrateFailure=false have separate attribution. Full-window totals remain minima due removed original ABIO logs.
+**46 generic-route503 diagnostics** have hadCrateFailure=false. Source inspection shows readiness is wrapped before lifecycle routing and can map `/health/ready` to `/:type/:category`. These remain ambiguous readiness responses, not proven member failures. HTTP metrics were also sampled; removed containers prevent complete full-window deltas.
 
-## Owner decision needed — 2026-10-15T19:52:42.095856+00:00
+Public probes: **{'responses': 3858, 'statusCounts': {'200': 3858}, 'non200': 0}**. They cover GET home/movie/show/person/related/palette. No signed-in mutation or synthetic full ranked search was issued; that API can write history/start paid work. Production query totals include the public probes and other traffic; they count SQL calls, not unique members or requests.
 
-Native exit has not progressed for over 30 minutes after SQL success. All 94 health rows remain GREEN and 958 copies STARTED. No 5.10.16 target started. The bounded remediation proposal contains **69 exact old job IDs observed on crate-01**, excluding IDs seen solely on crate-02, and none intersects the freshly sampled sys.jobs. These are candidates for orphaned contexts, not proven active work; exact internal counter causality remains unverified. **No KILL has executed.** Read [orphan-cancellation-proposal.sql](orphan-cancellation-proposal.sql) and its JSON preconditions. The approved runbook explicitly requires a separate decision before terminating production jobs. Owner review can authorize only these exact stale candidates, after immediate revalidation, then continuation of the already-authorized upgrade if normal exit occurs.
+| Outcome | Route | Source | Error class of failed attempt(s) | Count |
+| --- | --- | --- | --- | --- |
+| cancelled | /api/combined-search | catalog | AbortError | 1 |
+| failed | /api/poster-impressions | crate | CrateTimeoutError | 2 |
+| recovered | /:type/:category/:page | crate | CrateTimeoutError | 1 |
+| recovered | /api/combined-search | catalog | CrateTimeoutError | 1 |
+| recovered | /api/combined-search | crate | CrateTimeoutError | 1 |
+| recovered | /api/command-palette | crate | CrateTimeoutError | 5 |
+| recovered | /api/poster-impressions | crate | CrateTimeoutError | 1 |
+| recovered | /api/related | crate | CrateTimeoutError | 1 |
+| recovered | /api/related-map | crate | CrateTimeoutError | 1 |
+| recovered | /movie/:movieKey | crate | CrateTimeoutError | 1397 |
+| recovered | /movie/:movieKey | crate | Error | 1 |
+| recovered | /movie/:movieKey | crate | NoSuchNodeException | 1 |
+| recovered | /movie/:movieKey | crate | NodeNotConnectedException | 2 |
+| recovered | /person/:personKey | crate | CrateTimeoutError | 4346 |
+| recovered | /person/:personKey | crate | Error | 5 |
+| recovered | /person/:personKey | crate | Error,NodeNotConnectedException | 2 |
+| recovered | /person/:personKey | crate | NodeNotConnectedException | 1 |
+| recovered | /show/:showKey | crate | CrateTimeoutError | 2410 |
+| recovered | background | crate | CrateTimeoutError | 17 |
 
-**This is a paused decision checkpoint, not a completed/cleanly aborted upgrade.** .env remains staged at the pinned target; the original 5.10.9 daemon is running with Docker restart=no and allocation=primaries. Native SQL operations on crate-01 remain disabled while it waits; both surviving coordinators serve/recover client reads. Native force=false can abort around 21:20:40 UTC. Public probes and read-only observers remain active. No automated target startup or job cancellation is queued. The owner/operator must remain available to complete or cleanly abort this maintenance; cloud cannot reach the private network.
+| Phase (captured events since boundary) | Since | Final query outcomes | Correlated Crate HTTP5xx |
+| --- | --- | --- | --- |
+| Q34 owner continuation | 2026-10-15T20:31:08.303547+00:00 | {'failed': 0, 'recovered': 653, 'cancelled': 0} | 0 |
+| Target start | 2026-10-15T20:37:27.191817292Z | {'failed': 0, 'recovered': 6, 'cancelled': 0} | 0 |
+| First settled recovery | 2026-10-15T20:46:59.771732+00:00 | {'failed': 0, 'recovered': 0, 'cancelled': 0} | 0 |
 
-Captured decision-window outcomes: {'recovered': 3664, 'failed': 1, 'cancelled': 1}. Confirmed HTTP503 request minimum **1** (poster-impression additive demand increment, indeterminate/no replay). **28** generic-route HTTP503 events are ambiguous readiness checks: source page-cache wrapper wraps health before lifecycle handling, so generic /:type/:category is not sufficient to count them as member failures; keep them separate. Source/route/error grouping and exact failed trace are in client-impact-decision-checkpoint.json; redacted full events archived in events-decision-checkpoint.json.gz. Original ABIO replacement gap prevents complete full-window zero/rate claims. Public: {'responses': 1350, 'statusCounts': {'200': 1350}, 'non200': 0}.
+### Coverage limits
 
-## Q34 owner option 1 — continuation authorized
+Independent automatic page deployments replaced containers throughout the earlier drain. Initial pages f4be666b descend from 02b3ca5b; search roles retain exact 02b3ca5b. Final sampled pages run 67660993, independently verified as descendants of 02b3ca5b, with runtime diagnostic/recovery markers present. Original ABIO page collection failed on older Python's dict-union support, corrected to dict.update; its old container/logs had already been removed. A bounded read-only log-drain/open-FD recovery check found no recoverable copy. Current/later replacement logs were recaptured/continuously followed, original vector1 logs retained, with SHA256 deduplication. **Counts are captured minima; no complete full-window zero/rate or zero-impact guarantee.** Raw SQL values/params, credentials and raw exceptions are not retained. Redacted full events/streams and health history are gzip archived with byte-for-byte decompression checks. Axiom ingestion/read access remains unverified under the earlier Q30 skip.
 
-Revalidated the fixed 69 old candidate IDs against current operations and jobs; all still represented on crate-01 and no active-job intersection. Zero primaries, 94 GREEN rows, 958 STARTED copies, 21 checks passed. Individually executed exactly 69 KILL statements through crate-02; all succeeded, all rowcount 0, complete at 20:32:08.705 UTC. No KILL ALL or broader cancellation. Original daemon remains live, so permit approximately five minutes for exit before the newly authorized normal stop. Normal stop will use Docker timeout=-1 (unlimited SIGTERM grace, no automatic SIGKILL), with independent observation. The target may start only after verified old-process exit; SIGTERM exit143 is accepted only against the explicit Q34 stop receipt.
+## Backup and follow-ups
 
-Read-only backup inspection at20:32 found the20:05 scheduled run waiting on crate-01, near its30-minute CREATE HTTP bound. No backup config/cron changed. Verify actual repository state after rejoin before any retry; an HTTP timeout does not cancel a server statement.
+The 20:05 scheduled run blocked against its only coordinator, crate-01, then logged READTIMEOUT/FAILED20:35:01. Repository inspection confirmed hourly_20261015_200501 absent; the pre-upgrade snapshot remainedSUCCESS. The unchanged21:05 scheduled routine subsequently created/verified `hourly_20261015_210502` asSUCCESS and finished. No backup config/cron/coordinator changes or manual backup retry. Its single coordinator is a follow-up.
 
-The grace choice follows [Docker stop documentation](https://docs.docker.com/reference/cli/docker/container/stop/): timeout=-1 waits for normal SIGTERM exit without an automatic SIGKILL. Exact cancellation syntax/row counts follow [CrateDB job management](https://cratedb.com/docs/crate/reference/en/latest/admin/jobs-management.html).
+Thirteen old operation entries remain on crate-02; those outside the 69 exact IDs were deliberately not broadened into further cancellation. No real health issue observed. Internal-counter causality is still unproven; future drain diagnostics deserve follow-up.
 
-## Q34 normal stop / target rejoin checkpoint
-
-At20:37:11.640UTC, after at least300s since final KILL and fresh94GREEN/958STARTED/21checks/zero-primary verification, normal `docker stop --timeout=-1 crate-01` completed in2.777s; exit143, signal15only, noSIGKILL/noOOM. Owner Q34 explicitly authorized this fallback. The guarded start helper admits143 only with the matching Q34 stop receipt, preserving the original-image/container-ID gate; no generic force/137 exception. Target began20:37:27.192, originalCrateID rejoined20:37:48.078, allocationall restored20:37:49.240. All runtime/rendered fields exceptimage unchanged; other nodes untouched. The first post-rejoin readiness assertion was sampled while2copies were stillRELOCATING, so it did not pass and did not advance the final gate; expected recovery continues under observation.
-
-20:05 scheduledbackup logged READTIMEOUT/FAILED at20:35:01; subsequent repositoryread shows hourly_20261015_200501 absent, no ongoingbackupscript. Fresh preupgrade snapshot remainsSUCCESS. Waiting for the unchanged21:05 scheduledjob afterrejoin, with observers/probes running, rather than modifyingbackupcoordinator/config/cron. Backupcoordinator remains onlycrate01; followup required.
-
-## Q34 all-node version/recovery checks passed
-
-First full GREEN/STARTED gate20:46:59.772UTC, independent11/12/13gates20:47:46–47:94GREENrows,958STARTED/STARTEDcopies,21checkspass, allthree5.10.16/originalIDs. Exactly479logicalshards withoneprimary andtwocopies on distincthosts. Allocationall; gracefulPRIMARIES/forcefalse/2h; restartalways. Physicalrecovery took549.620s after targetprocessstart. Baseline table settings unchanged, no new/removedtables; fullruntime/renderedconfig exceptimage preserved, privatebindingsunchanged, firewalltimersactive. Othernodes not restarted. Actual21client/workerreadpaths pass. No writeprobe/membermutation.
-
-All upgradegates passed; wait for successful unchanged21:05scheduledbackup as finalrunbookgate. Observers/probes continue. One optionaloperator diagnostic selected nonexistent sys.jobs.classification and returnedColumnUnknownException/404; it was read-only, not an application failure or healthproblem. No settings changed to compensate. Newnode logs have no exceptions/OOM/corruption/abort; theone startupwarning is existing disabled dangling-index autoimportnotice.
+#547 stays open for dedicated auth-user preparation after #562, then adapter-specific table grants/settings under separate authorization. No remaining node upgrade is needed. Restoration/BLOB recovery exercise, external-source firewall verification and production password migration were not performed. No changes pushed to main, no merge/PR. Remote branch `auth/cratedb-prereqs`; final issue comment records exact commit.

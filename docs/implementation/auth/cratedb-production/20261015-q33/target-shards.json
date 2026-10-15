@@ -1,0 +1,25 @@
+{
+  "host": 12,
+  "stmt": "SELECT primary, count(*) FROM sys.shards WHERE node['name'] = 'crate-01' GROUP BY primary",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:20:59.149235+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "primary",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          false,
+          13
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 57.348267
+    },
+    "at": "2026-10-15T19:20:59.213971+00:00",
+    "elapsedSeconds": 0.065
+  }
+}

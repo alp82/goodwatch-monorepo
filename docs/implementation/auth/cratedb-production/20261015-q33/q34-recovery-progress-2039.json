@@ -1,0 +1,73 @@
+{
+  "host": 12,
+  "stmt": "SELECT table_name, id, node['name'], state, routing_state, recovery FROM sys.shards WHERE routing_state = 'RELOCATING' OR state <> 'STARTED'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:38:58.396819+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "node['name']",
+        "state",
+        "routing_state",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "movie",
+          9,
+          "crate-02",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 841,
+              "used": 841,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 7601,
+            "size": {
+              "recovered": 213572731,
+              "used": 213572731,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          "crate-02",
+          "STARTED",
+          "RELOCATING",
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 426,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 22.48278
+    },
+    "at": "2026-10-15T20:38:58.425258+00:00",
+    "elapsedSeconds": 0.029
+  }
+}

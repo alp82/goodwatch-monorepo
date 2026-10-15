@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-15T21:08:36.453488+00:00",
+  "archives": [
+    {
+      "path": "clients-after-rejoin.json.gz",
+      "originalBytes": 23109067,
+      "compressedBytes": 1866959,
+      "originalSha256": "9c0bdf3f8e70545af9c5adc65d1b26b3b0667bfa463988dad0918957e2e7da72",
+      "compressedSha256": "ecbbef9b609ce35fb9e47224d1f409ed95f4c6120179dee93f4397360b53a518",
+      "decompressionVerified": true
+    },
+    {
+      "path": "clients-during.json.gz",
+      "originalBytes": 3754982,
+      "compressedBytes": 300740,
+      "originalSha256": "57daedf5bf106adf5969f91daacae9718ade2512babb0254f8df82a753bed8c0",
+      "compressedSha256": "814e1402d254459da109e42094566e89e5c1c48af266da304dab01d0da7ea2f2",
+      "decompressionVerified": true
+    },
+    {
+      "path": "public.json.gz",
+      "originalBytes": 551647,
+      "compressedBytes": 35122,
+      "originalSha256": "9a40d1038d81be3503a18cd8f44bed80aeffc0a67dd398a36f3084da3e773639",
+      "compressedSha256": "aa57123ba1fce6c65172a08bfa781faabb87e4ef5083ec4b816fff47930ce380",
+      "decompressionVerified": true
+    },
+    {
+      "path": "q34-recovery-history.json.gz",
+      "originalBytes": 612920,
+      "compressedBytes": 10332,
+      "originalSha256": "9509fb69f990d30487445e83b13eefc5d8894983e99ca98da54eef9e8c2362e8",
+      "compressedSha256": "985a72f2b3f9e2fa34884981e8a5854d880f41b1df6ba97aa73f6cf872e46067",
+      "decompressionVerified": true
+    },
+    {
+      "path": "stream-20.json.gz",
+      "originalBytes": 15905019,
+      "compressedBytes": 1361059,
+      "originalSha256": "f91a09c8a6bee6e613d4eea4b14489f7b279a96cdd8db7e271f56eb2ef957d4a",
+      "compressedSha256": "9bd2de30d910eb04550f688f4845906f18d5cd53ce58e1b6d228a5576ed81146",
+      "decompressionVerified": true
+    },
+    {
+      "path": "stream-21.json.gz",
+      "originalBytes": 16386873,
+      "compressedBytes": 1440556,
+      "originalSha256": "5f025eff829229b0d1f62838d81820b14974d458e24300370da548a1d59f3d80",
+      "compressedSha256": "fc289090d14a5c918ba5a69302709d14367828ee4be55af48c81bbdfec8d0926",
+      "decompressionVerified": true
+    },
+    {
+      "path": "structured-events.json.gz",
+      "originalBytes": 32073828,
+      "compressedBytes": 2800933,
+      "originalSha256": "e23d94e02c806e8bbac4d032984bd7fee4eb2a086c435b61f69cc42caa0bfff2",
+      "compressedSha256": "16f683947886845d0ca3800338f42c0c13b7690808b22a880507caf206dd7193",
+      "decompressionVerified": true
+    },
+    {
+      "path": "watch.json.gz",
+      "originalBytes": 5925396,
+      "compressedBytes": 88855,
+      "originalSha256": "236b693cd746d55556c4c2bcb4492fec7204034c5fc50c39fc3919aa9082d554",
+      "compressedSha256": "25c07017a7879acb4317ea7526199b317e6411f76c8ca02b07ef66739a318dd0",
+      "decompressionVerified": true
+    }
+  ]
+}

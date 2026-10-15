@@ -1,0 +1,352 @@
+{
+  "host": 12,
+  "stmt": "SELECT table_name, id, primary, node['name'], state, routing_state, num_docs, size, recovery FROM sys.shards WHERE table_name IN ('movie','show') AND id=9 ORDER BY table_name, node['name']",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:40:00.499029+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "node['name']",
+        "state",
+        "routing_state",
+        "num_docs",
+        "size",
+        "recovery"
+      ],
+      "rows": [
+        [
+          "movie",
+          9,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          20,
+          109184,
+          {
+            "files": {
+              "recovered": 7,
+              "used": 7,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 644,
+            "size": {
+              "recovered": 109184,
+              "used": 109184,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "movie",
+          9,
+          false,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          34,
+          333938,
+          {
+            "files": {
+              "recovered": 19,
+              "used": 19,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 671,
+            "size": {
+              "recovered": 333938,
+              "used": 333938,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "movie",
+          9,
+          false,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          104936,
+          250446773,
+          {
+            "files": {
+              "recovered": 1619,
+              "used": 1619,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 11762,
+            "size": {
+              "recovered": 245867286,
+              "used": 245867286,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "movie",
+          9,
+          true,
+          "crate-02",
+          "STARTED",
+          "STARTED",
+          34,
+          333938,
+          {
+            "files": {
+              "recovered": 19,
+              "used": 19,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 655,
+            "size": {
+              "recovered": 333938,
+              "used": 333938,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "movie",
+          9,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          20,
+          109184,
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 549,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "movie",
+          9,
+          true,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          104936,
+          251796354,
+          {
+            "files": {
+              "recovered": 859,
+              "used": 859,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 13995,
+            "size": {
+              "recovered": 221293592,
+              "used": 221293592,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          33,
+          450952,
+          {
+            "files": {
+              "recovered": 13,
+              "used": 13,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 695,
+            "size": {
+              "recovered": 450952,
+              "used": 450952,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          true,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          42,
+          627883,
+          {
+            "files": {
+              "recovered": 28,
+              "used": 28,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 736,
+            "size": {
+              "recovered": 627883,
+              "used": 627883,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          false,
+          "crate-01",
+          "STARTED",
+          "STARTED",
+          19608,
+          46619787,
+          {
+            "files": {
+              "recovered": 432,
+              "used": 432,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 4288,
+            "size": {
+              "recovered": 43560463,
+              "used": 43560463,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          33,
+          450952,
+          {
+            "files": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 562,
+            "size": {
+              "recovered": 0,
+              "used": 0,
+              "percent": 0.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          false,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          42,
+          627883,
+          {
+            "files": {
+              "recovered": 28,
+              "used": 28,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 787,
+            "size": {
+              "recovered": 627883,
+              "used": 627883,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ],
+        [
+          "show",
+          9,
+          true,
+          "crate-03",
+          "STARTED",
+          "STARTED",
+          19608,
+          47765990,
+          {
+            "files": {
+              "recovered": 441,
+              "used": 441,
+              "percent": 100.0,
+              "reused": 0
+            },
+            "stage": "DONE",
+            "type": "PEER",
+            "total_time": 3475,
+            "size": {
+              "recovered": 48904508,
+              "used": 48904508,
+              "percent": 100.0,
+              "reused": 0
+            }
+          }
+        ]
+      ],
+      "rowcount": 12,
+      "duration": 63.060528
+    },
+    "at": "2026-10-15T20:40:00.569578+00:00",
+    "elapsedSeconds": 0.071
+  }
+}

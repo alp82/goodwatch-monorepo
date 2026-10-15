@@ -1,0 +1,9 @@
+{
+  "sha256": "bf1d11a9c928c450b18671a746c6c9d9a2925b499c9680b806cadf6d533dcf1d",
+  "allowlistedConfiguration": {
+    "CRATE_HOST": "http://10.0.0.11:4200",
+    "CONNECT_TIMEOUT": 10
+  },
+  "nextScheduledRun": "2026-10-15T20:05:01Z",
+  "noConfigurationChanged": true
+}
