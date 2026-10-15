@@ -14,8 +14,8 @@ export function AuthSplit({ children, aside }: { children: ReactNode; aside?: Re
 	const matches = useMatches()
 	const data = matches.at(-1)?.data as { posters?: AuthPoster[] } | undefined
 	return (
-		<AuthScene posters={data?.posters ?? []}>
-			<div className="flex w-full flex-col gap-7">{aside}{children}</div>
+		<AuthScene posters={data?.posters ?? []} aside={aside}>
+			<div className="flex w-full flex-col gap-7">{children}</div>
 		</AuthScene>
 	)
 }

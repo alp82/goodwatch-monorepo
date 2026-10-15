@@ -66,7 +66,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 export type SentState = { email: string; returnTo: string }
 
 export default function SignUpRoute() {
-	const { redirectUri, posters } = useLoaderData<LoaderData>()
+	const { redirectUri } = useLoaderData<LoaderData>()
 	const { user } = useUser()
 	const navigate = useNavigate()
 	const auth = useAuthClient()
