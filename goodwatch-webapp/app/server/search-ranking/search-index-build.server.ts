@@ -1,7 +1,8 @@
 // Downloads, checks, decodes, and derives a search build in a per-load worker or inline in development.
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { BackendTimeoutError } from "../../utils/backend-timeout.ts"
 import http from "node:http"
+import { crateEvent, crateErrorFields, redactedSqlShape } from "../../utils/crate-diagnostics.ts"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
 import type {
@@ -98,57 +99,62 @@ function request(
 	})
 }
 
-export async function readManifest(): Promise<Manifest> {
+// Index loading runs in a worker as well as the web process. It has its own bounded transport;
+// keep its failures/failover diagnosable even before an HTTP request exists.
+async function indexRead<T>(sqlShape: string, read: (url: URL, auth: string) => Promise<T>): Promise<T> {
 	const { hosts, port, auth } = crateConfig()
+	const queryId = randomUUID()
 	let lastError: unknown
-	for (const host of hosts) {
+	for (const [index, host] of hosts.entries()) {
+		const url = new URL(`http://${host}:${port}`)
+		const fields = { queryId, source: "search_index", sqlShape, host: url.host, attempt: index + 1 }
+		if (index > 0) crateEvent("crate.failover_attempt", { ...fields, outcome: "started" })
 		try {
-			const res = await request(
-				new URL(`http://${host}:${port}/_sql`),
-				"POST",
-				{ "Content-Type": "application/json", Authorization: auth },
-				JSON.stringify({
-					stmt: "SELECT manifest FROM search_index_builds WHERE build_id = 'current'",
-				}),
-			)
-			if (res.status !== 200)
-				throw new Error(`Crate answered HTTP ${res.status}`)
-			const rows = (
-				JSON.parse(res.body.toString("utf8")) as { rows: unknown[][] }
-			).rows
-			if (!rows.length) throw new Error("No current search index build")
-			const raw = rows[0][0]
-			return (typeof raw === "string" ? JSON.parse(raw) : raw) as Manifest
+			const result = await read(url, auth)
+			if (index > 0) crateEvent("crate.query", { ...fields, outcome: "recovered" })
+			return result
 		} catch (error) {
 			lastError = error
+			crateEvent("crate.attempt_failed", { ...fields, ...crateErrorFields(error), outcome: "failed" })
+			if (index === hosts.length - 1) crateEvent("crate.query", { ...fields, ...crateErrorFields(error), outcome: "failed" })
 		}
 	}
 	throw lastError
 }
 
-/** One blob, following the redirect of a node that doesn't hold it, checked against its SHA-1. */
-async function readBlob(sha1: string): Promise<Buffer> {
-	const { hosts, port, auth } = crateConfig()
-	let url = new URL(
-		`http://${hosts[0]}:${port}/_blobs/search_index_files/${sha1}`,
-	)
-	for (let hop = 0; hop < 4; hop++) {
-		const res = await request(url, "GET", { Authorization: auth })
-		if (res.status === 307 || res.status === 301 || res.status === 302) {
-			const location = res.headers.location
-			if (!location) throw new Error("Crate redirect without a location")
-			url = new URL(location, url)
-			continue
+export async function readManifest(): Promise<Manifest> {
+	const stmt = "SELECT manifest FROM search_index_builds WHERE build_id = 'current'"
+	return indexRead(redactedSqlShape(stmt), async (url, auth) => {
+		url.pathname = "/_sql"
+		const res = await request(url, "POST", { "Content-Type": "application/json", Authorization: auth }, JSON.stringify({ stmt }))
+		if (res.status !== 200) throw Object.assign(new Error("Crate manifest unavailable"), { statusCode: res.status })
+		const rows = (JSON.parse(res.body.toString("utf8")) as { rows: unknown[][] }).rows
+		if (!rows.length) throw new Error("No current search index build")
+		const raw = rows[0][0]
+		return (typeof raw === "string" ? JSON.parse(raw) : raw) as Manifest
+	})
+}
+
+/** One blob, trying another coordinator on failure and following shard redirects, checked against its SHA-1. */
+export async function readBlob(sha1: string): Promise<Buffer> {
+	return indexRead("GET /_blobs/search_index_files/:sha1", async (url, auth) => {
+		url.pathname = `/_blobs/search_index_files/${sha1}`
+		for (let hop = 0; hop < 4; hop++) {
+			const res = await request(url, "GET", { Authorization: auth })
+			if (res.status === 307 || res.status === 301 || res.status === 302) {
+				const location = res.headers.location
+				if (!location) throw new Error("Crate redirect without a location")
+				url = new URL(location, url)
+				continue
+			}
+			if (res.status === 404) throw new BlobMissing(`Index file ${sha1} is gone`)
+			if (res.status !== 200) throw Object.assign(new Error("Crate index file unavailable"), { statusCode: res.status })
+			const digest = createHash("sha1").update(res.body).digest("hex")
+			if (digest !== sha1) throw new Error(`Index file ${sha1} has the wrong SHA-1 ${digest}`)
+			return res.body
 		}
-		if (res.status === 404) throw new BlobMissing(`Index file ${sha1} is gone`)
-		if (res.status !== 200)
-			throw new Error(`Crate blob ${sha1} answered HTTP ${res.status}`)
-		const digest = createHash("sha1").update(res.body).digest("hex")
-		if (digest !== sha1)
-			throw new Error(`Index file ${sha1} has the wrong SHA-1 ${digest}`)
-		return res.body
-	}
-	throw new Error(`Too many redirects for index file ${sha1}`)
+		throw new Error(`Too many redirects for index file ${sha1}`)
+	})
 }
 
 // --- Decoding -----------------------------------------------------------------------------------------------------

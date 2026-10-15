@@ -37,6 +37,7 @@ import { isbot } from "isbot"
 //   counted, or waited for.
 // - Off switch: PAGE_CACHE=off.
 import { AsyncLocalStorage } from "node:async_hooks"
+import { withCrateHttpRequest, withCrateRequest } from "../utils/crate-diagnostics.ts"
 import { createHash } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
@@ -905,7 +906,11 @@ export const pageCache = createPageCache({
 			: PAGE_CACHE_LIMITS.MAX_FRESH_MS,
 	},
 })
-export const configurePageCache = pageCache.configure
+let crateRouteLabel: (pathname: string, status: number) => string = () => "unmatched"
+export const configurePageCache = (next: Parameters<typeof pageCache.configure>[0]) => {
+	if (next.routeLabel) crateRouteLabel = next.routeLabel
+	pageCache.configure(next)
+}
 export const pageCacheWants = pageCache.wants
 export const resetPageCache = pageCache.reset
 const wrapped = new WeakSet<Server>()
@@ -918,12 +923,12 @@ export function putPageCacheFirst(
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		cache.handle(request, response, () => {
+		withCrateHttpRequest(request, response, crateRouteLabel, () => cache.handle(request, response, () => {
 			withMediaRequestHealth(() => {
 				for (const listener of listeners)
 					Reflect.apply(listener, server, [request, response])
 			})
-		}),
+		})),
 	)
 }
 const healthWrapped = new WeakSet<Server>()
@@ -933,10 +938,10 @@ export function putMediaHealthFirst(server: Server) {
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		withMediaRequestHealth(() => {
+		withCrateHttpRequest(request, response, crateRouteLabel, () => withMediaRequestHealth(() => {
 			for (const listener of listeners)
 				Reflect.apply(listener, server, [request, response])
-		}),
+		})),
 	)
 }
 let started = false
@@ -951,7 +956,8 @@ async function render(request: Request) {
 			"production",
 		)
 	}
-	const response = await withMediaRequestHealth(() => handler!(request))
+	const response = await withCrateRequest(crateRouteLabel(new URL(request.url).pathname, 200), request.method,
+		() => withMediaRequestHealth(() => handler!(request)))
 	await response.arrayBuffer()
 	return { status: response.status }
 }

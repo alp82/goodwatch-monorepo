@@ -269,3 +269,39 @@ test("an upsert helper without every fixed key returns the original lost respons
 	await assert.rejects(upsert({ table: "saved", data: [{ n: 1 }], conflictColumns: ["id"] }), { code: "ECONNRESET" })
 	assert.equal(received.flat().length, 1)
 })
+
+test("failed attempts and recovery log redacted SQL, coordinator, request, operation and final outcome", async (t) => {
+ await cluster(t, [
+  (_, req) => req.socket.destroy(),
+  (_, __, res) => answer(res),
+  (_, __, res) => answer(res),
+ ])
+ const { withCrateRequest } = await import("./crate-diagnostics.ts")
+ const events: Record<string, unknown>[] = []
+ t.mock.method(console,"warn",(line: string)=>{if(line.startsWith('{'))events.push(JSON.parse(line))})
+ await withCrateRequest("/api/watch-log", "POST",()=>upsert({table:"saved",data:[{id:"private-member-key",n:1}],conflictColumns:["id"]}))
+ const failure=events.find(e=>e.event==="crate.attempt_failed")!
+ assert.equal(failure.route,"/api/watch-log")
+ assert.equal(failure.attempt,1)
+ assert.equal(failure.errorClass,"Error")
+ assert.equal(failure.errorCode,"ECONNRESET")
+ assert.match(String(failure.host),/^127\.0\.0\.1:/)
+ assert.ok(failure.requestId)
+ assert.ok(failure.queryId)
+ assert.ok(failure.operationId)
+ assert.equal(failure.outcome,"indeterminate")
+ assert.ok(events.some(e=>e.event==="crate.query"&&e.outcome==="failed"))
+ assert.ok(events.some(e=>e.event==="crate.readback"&&e.outcome==="confirmed"))
+ const final=events.find(e=>e.event==="crate.recovery")!
+ assert.equal(final.outcome,"succeeded")
+ assert.equal(final.operationId,failure.operationId)
+ assert.doesNotMatch(JSON.stringify(events),/private-member-key/)
+ // A read's failed host and successful failover share one query id.
+ setCrateClientForTest(null)
+ events.length=0
+ assert.deepEqual(await withCrateRequest("/movie/:movieKey","GET",()=>query("SELECT 'private-query-text' AS n")),[{n:1}])
+ assert.deepEqual(events.map(e=>e.event),["crate.attempt_failed","crate.failover_attempt","crate.query"])
+ assert.equal(new Set(events.map(e=>e.queryId)).size,1)
+ assert.equal(events.at(-1)?.outcome,"recovered")
+ assert.doesNotMatch(JSON.stringify(events),/private-query-text/)
+})
