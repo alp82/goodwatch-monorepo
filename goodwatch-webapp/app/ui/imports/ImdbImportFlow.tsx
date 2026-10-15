@@ -11,6 +11,7 @@ import type {
 import { ImdbExportSteps } from "./ImdbExportSteps"
 import { ImdbImportCurrent } from "./ImdbImportCurrent"
 import { ImdbUpload } from "./ImdbUpload"
+import type { ImportHandoff } from "./ImportFileRouting"
 import { useImdbImports } from "./api"
 import {
 	card,
@@ -33,12 +34,21 @@ const importHeading = (summary: ImdbImportSummary) => {
 	return `Imported on ${date}`
 }
 
-export function ImdbImportFlow({ initial }: { initial?: ImdbImportListResponse }) {
+export function ImdbImportFlow({
+	initial,
+	handoff,
+}: {
+	initial?: ImdbImportListResponse
+	/** A file the page recognized as an IMDb ratings export: the upload opens and sends it. */
+	handoff?: ImportHandoff
+}) {
 	const list = useImdbImports(initial)
 	const [openId, setOpenId] = useState<string | null>(null)
-	const [uploadOpen, setUploadOpen] = useState(false)
+	const [uploadOpen, setUploadOpen] = useState(!!handoff)
 	// Once the person has done something here, a step that appears takes focus. Not on arrival.
-	const [acted, setActed] = useState(false)
+	const [acted, setActed] = useState(!!handoff)
+	// Used once: going back to the upload later doesn't send it again.
+	const [pending, setPending] = useState(handoff)
 
 	// A preview is not an import yet, so it has no place in the history.
 	const history = (list.data?.imports ?? []).filter(
@@ -54,11 +64,13 @@ export function ImdbImportFlow({ initial }: { initial?: ImdbImportListResponse }
 
 	const open = (id: string) => {
 		setActed(true)
+		setPending(undefined)
 		setUploadOpen(false)
 		setOpenId(id)
 	}
 	const openUpload = () => {
 		setActed(true)
+		setPending(undefined)
 		setOpenId(null)
 		setUploadOpen(true)
 	}
@@ -121,7 +133,10 @@ export function ImdbImportFlow({ initial }: { initial?: ImdbImportListResponse }
 					)}
 					{(!latest || uploadOpen) && (
 						<>
-							<ImdbUpload onPreview={(summary) => open(summary.id)} />
+							<ImdbUpload
+								onPreview={(summary) => open(summary.id)}
+								handoff={pending}
+							/>
 							<ImdbExportSteps focus={acted && uploadOpen} />
 						</>
 					)}

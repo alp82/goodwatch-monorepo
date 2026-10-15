@@ -5,6 +5,7 @@ import {
 	type ImportSummary,
 	isFileImportSource,
 } from "~/domain/imports"
+import type { ImportHandoff } from "./ImportFileRouting"
 import { PlexConnectPanel } from "./PlexConnectPanel"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
@@ -36,11 +37,14 @@ export function SourceImportFlow({
 	initial,
 	connectState,
 	initialId,
+	handoff,
 }: {
 	source: ImportSource
 	initial: ImportListResponse
 	connectState?: string
 	initialId?: string
+	/** A file the page recognized as this source's: the upload opens and sends it. */
+	handoff?: ImportHandoff
 }) {
 	const query = useSourceImports(initial)
 	const history = (query.data?.imports ?? []).filter(
@@ -48,8 +52,11 @@ export function SourceImportFlow({
 	)
 	const latest = history[0]
 	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
-	const [uploadOpen, setUploadOpen] = useState(!latest)
-	const [acted, setActed] = useState(false)
+	const [uploadOpen, setUploadOpen] = useState(!latest || !!handoff)
+	// A handed-off file is the member's act, so its preview takes focus when it opens.
+	const [acted, setActed] = useState(!!handoff)
+	// Used once: going back to the upload later doesn't send it again.
+	const [pending, setPending] = useState(handoff)
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
 	useEffect(() => {
@@ -57,11 +64,13 @@ export function SourceImportFlow({
 	}, [openId, shownId])
 	const open = (id: string) => {
 		setActed(true)
+		setPending(undefined)
 		setUploadOpen(false)
 		setOpenId(id)
 	}
 	const upload = () => {
 		setActed(true)
+		setPending(undefined)
 		setOpenId(null)
 		setUploadOpen(true)
 	}
@@ -120,6 +129,7 @@ export function SourceImportFlow({
 							<SourceImportUploadPanel
 								source={source}
 								onPreview={(summary) => open(summary.id)}
+								handoff={pending}
 							/>
 						))}
 				</>

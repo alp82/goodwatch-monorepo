@@ -6,6 +6,8 @@ import { useEffect, useState } from "react"
 import { useAuthHref } from "~/utils/auth-href"
 import { IMPORTS_PATH } from "./shared"
 
+const IMDB_IMPORT_PATH = `${IMPORTS_PATH}?source=imdb`
+
 const DISMISSED_KEY = "goodwatch_imdb_import_entry_dismissed"
 
 export function ImdbImportEntry({
@@ -37,7 +39,7 @@ export function ImdbImportEntry({
 				Already rate on IMDb?{" "}
 				<Link
 					rel={member ? undefined : "nofollow"}
-					to={member ? IMPORTS_PATH : authHref("sign-up", IMPORTS_PATH)}
+					to={member ? IMDB_IMPORT_PATH : authHref("sign-up", IMDB_IMPORT_PATH)}
 					className="inline-flex min-h-11 items-center font-semibold text-amber-300 underline-offset-2 hover:text-amber-200 hover:underline md:min-h-9"
 				>
 					{member

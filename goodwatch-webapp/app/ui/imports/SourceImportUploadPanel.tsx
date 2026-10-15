@@ -1,5 +1,5 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
-import { type DragEvent, useRef, useState } from "react"
+import { type DragEvent, useEffect, useRef, useState } from "react"
 import {
 	type FileImportSource,
 	IMPORT_SOURCE_NAMES,
@@ -7,27 +7,45 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
+import {
+	type ImportHandoff,
+	RecognizedLine,
+	useWrongSourceCatch,
+} from "./ImportFileRouting"
 import { usePreviewSourceImport } from "./SourceImportHooks"
 import { errorBox, primaryButton, stepHeading } from "./shared"
 
 const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
-function SingleFileUploadPanel({
-	source,
-	onPreview,
-}: { source: FileImportSource; onPreview: (summary: ImportSummary) => void }) {
+type PanelProps = {
+	source: FileImportSource
+	onPreview: (summary: ImportSummary) => void
+	/** A file the page recognized as this source's; it is sent at once. */
+	handoff?: ImportHandoff
+}
+
+function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
 	const descriptor = IMPORT_SOURCE_UPLOAD[source]
 	const fileLabel = descriptor.label
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
-	const send = (file?: File) => {
-		if (!file || preview.isPending) return
+	const wrongSource = useWrongSourceCatch(source)
+	const upload = (file: File) =>
 		preview.mutate(
 			{ source, file },
 			{ onSuccess: (response) => onPreview(response.import) },
 		)
+	const send = async (file?: File) => {
+		if (!file || preview.isPending) return
+		if (await wrongSource.check(file)) upload(file)
 	}
+	const handedOff = useRef<File | null>(null)
+	useEffect(() => {
+		if (!handoff || handedOff.current === handoff.file) return
+		handedOff.current = handoff.file
+		upload(handoff.file)
+	})
 	const drop = (event: DragEvent<HTMLDivElement>) => {
 		event.preventDefault()
 		setDragging(false)
@@ -42,6 +60,7 @@ function SingleFileUploadPanel({
 				Upload your {sourceName(source)} export
 			</h3>
 			<UploadInstructions source={source} />
+			{handoff && <RecognizedLine handoff={handoff} />}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -82,6 +101,7 @@ function SingleFileUploadPanel({
 					}}
 				/>
 			</div>
+			{wrongSource.note}
 			<p className="text-sm text-gray-400">
 				You will review everything before GoodWatch changes your library.
 			</p>
@@ -119,23 +139,26 @@ function UploadInstructions({ source }: { source: FileImportSource }) {
 	)
 }
 
-export function SourceImportUploadPanel(props: {
-	source: FileImportSource
-	onPreview: (summary: ImportSummary) => void
-}) {
+export function SourceImportUploadPanel(props: PanelProps) {
 	return IMPORT_SOURCE_UPLOAD[props.source].optionalWishlist ? (
-		<MovieLensUploadPanel onPreview={props.onPreview} />
+		<MovieLensUploadPanel {...props} />
 	) : (
 		<SingleFileUploadPanel {...props} />
 	)
 }
 
-function MovieLensUploadPanel({
-	onPreview,
-}: { onPreview: (summary: ImportSummary) => void }) {
-	const [ratings, setRatings] = useState<File>()
-	const [wishlist, setWishlist] = useState<File>()
+/** MovieLens takes two files, so a handed-off file waits in its place for the other one. */
+function MovieLensUploadPanel({ onPreview, handoff }: PanelProps) {
+	const handedWishlist =
+		handoff?.recognition.source === "movielens" && handoff.recognition.wishlist
+	const [ratings, setRatings] = useState<File | undefined>(
+		handoff && !handedWishlist ? handoff.file : undefined,
+	)
+	const [wishlist, setWishlist] = useState<File | undefined>(
+		handedWishlist ? handoff.file : undefined,
+	)
 	const preview = usePreviewSourceImport()
+	const wrongSource = useWrongSourceCatch("movielens")
 	return (
 		<section
 			aria-labelledby="source-upload-heading"
@@ -145,15 +168,35 @@ function MovieLensUploadPanel({
 				Upload your MovieLens export
 			</h3>
 			<UploadInstructions source="movielens" />
+			{handoff && (
+				<p className="text-sm text-emerald-200">
+					Recognized {handoff.recognition.label}:{" "}
+					<span className="break-all">{handoff.file.name}</span>.{" "}
+					{handedWishlist
+						? "Choose your ratings file too, then preview."
+						: "Add your wishlist file if you have one, then preview."}
+				</p>
+			)}
 			<label className="flex flex-col gap-2">
 				MovieLens ratings CSV
 				<input
 					type="file"
 					accept={IMPORT_SOURCE_UPLOAD.movielens.accept}
 					disabled={preview.isPending}
-					onChange={(event) => setRatings(event.target.files?.[0])}
+					onChange={async (event) => {
+						const file = event.target.files?.[0]
+						setRatings(
+							file && (await wrongSource.check(file)) ? file : undefined,
+						)
+					}}
 				/>
+				{ratings && ratings === handoff?.file && (
+					<span className="break-all text-sm text-gray-400">
+						Chosen: {ratings.name}
+					</span>
+				)}
 			</label>
+			{wrongSource.note}
 			<label className="flex flex-col gap-2">
 				MovieLens wishlist CSV (optional)
 				<input
@@ -162,6 +205,11 @@ function MovieLensUploadPanel({
 					disabled={preview.isPending}
 					onChange={(event) => setWishlist(event.target.files?.[0])}
 				/>
+				{wishlist && wishlist === handoff?.file && (
+					<span className="break-all text-sm text-gray-400">
+						Chosen: {wishlist.name}
+					</span>
+				)}
 			</label>
 
 			<button
