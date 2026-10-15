@@ -14,9 +14,14 @@ export function buildSourceImportUpload(
 	if (wishlist && source !== "movielens")
 		throw new Error("Only MovieLens accepts an optional wishlist file.")
 	for (const upload of wishlist ? [file, wishlist] : [file]) {
+		if (source === "kodi" && !/\.(xml|zip)$/i.test(upload.name))
+			throw new Error(
+				"Choose videodb.xml or a ZIP from Kodi’s Single file export, not separate .nfo files.",
+			)
 		if (csv && !/\.csv$/i.test(upload.name))
 			throw new Error("Choose a CSV export file.")
 		if (
+			source !== "kodi" &&
 			!csv &&
 			!/\.zip$/i.test(upload.name) &&
 			!["application/zip", "application/x-zip-compressed"].includes(upload.type)

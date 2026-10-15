@@ -52,10 +52,19 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		traktUpload: string
 		csvUpload: string
 		movielensUpload: string
+		kodiUpload: string
 		ratingOnly: string
 		withWatches: string
 	}
 
+	assert.match(rendered.kodiUpload, /Advanced/)
+	assert.match(
+		rendered.kodiUpload,
+		/Settings → Media → Library → Export library → Single file/,
+	)
+	assert.match(rendered.kodiUpload, /videodb.xml/)
+	assert.match(rendered.kodiUpload, /accept="[^"]*\.xml[^"]*\.zip/)
+	assert.doesNotMatch(rendered.kodiUpload, /Sign in to Trakt/)
 	assert.match(rendered.csvUpload, /Letterboxd import format/)
 	assert.match(
 		rendered.csvUpload,
@@ -147,4 +156,17 @@ test("single ZIP uploads retain their original size error", () => {
 		assert.throws(() => buildSourceImportUpload(source, file), {
 			message: `That file is larger than ${Math.round(IMPORT_MAX_BYTES / 1024 / 1024)} MB. Choose a smaller export ZIP file.`,
 		})
+})
+
+test("Kodi upload sends XML or ZIP unchanged and rejects separate NFO files", () => {
+	for (const name of ["videodb.xml", "kodi.zip"]) {
+		const file = new File(["export"], name)
+		const body = buildSourceImportUpload("kodi", file)
+		assert.equal(body.get("source"), "kodi")
+		assert.equal(body.get("file"), file)
+	}
+	assert.throws(
+		() => buildSourceImportUpload("kodi", new File(["nfo"], "movie.nfo")),
+		/Single file/,
+	)
 })

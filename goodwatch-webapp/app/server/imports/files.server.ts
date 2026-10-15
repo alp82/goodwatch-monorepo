@@ -1,4 +1,5 @@
 import { inflateRawSync } from "node:zlib"
+import { SaxesParser } from "saxes"
 import {
 	IMPORT_MAX_BYTES,
 	IMPORT_MAX_ROWS,
@@ -659,6 +660,7 @@ export async function parseImportFile(
 	bytes: Uint8Array,
 	wishlist?: Uint8Array,
 ): Promise<ParsedImport> {
+	if (source === "kodi") return kodi(bytes)
 	if (source === "movielens") return movielens(bytes, wishlist)
 	if (source === "csv") return genericCsv(bytes)
 	const entries = zipEntries(bytes)
@@ -915,4 +917,211 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 		}
 	}
 	return { source: "movielens", observations, warnings }
+}
+
+interface KodiElement {
+	name: string
+	attributes: Record<string, string>
+	value: string
+	children: KodiElement[]
+}
+
+/** Saxes never fetches entities. Reject DTDs entirely, and bound tree allocation. */
+function kodiXml(value: string): KodiElement {
+	const parser = new SaxesParser()
+	const stack: KodiElement[] = []
+	let root: KodiElement | undefined
+	let nodes = 0
+	let rows = 0
+	parser.on("doctype", () =>
+		fail("Kodi XML must not contain a DOCTYPE or entity declarations."),
+	)
+	parser.on("error", () => fail("That Kodi file isn't valid XML."))
+	parser.on("opentag", (tag) => {
+		if (
+			["movie", "tvshow", "episodedetails", "musicvideo"].includes(tag.name) &&
+			++rows > IMPORT_MAX_ROWS
+		)
+			fail("That export has more than 50,000 rows.")
+		if (++nodes > 1_000_000 || stack.length >= 64)
+			fail("That Kodi XML is too complex.")
+		const element: KodiElement = {
+			name: tag.name,
+			attributes: tag.attributes,
+			value: "",
+			children: [],
+		}
+		if (stack.length) stack[stack.length - 1].children.push(element)
+		else root = element
+		stack.push(element)
+	})
+	const append = (value: string) => {
+		const current = stack.at(-1)
+		if (current) current.value += value
+	}
+	parser.on("text", append)
+	parser.on("cdata", append)
+	parser.on("closetag", () => {
+		stack.pop()
+	})
+	parser.write(value).close()
+	if (!root || root.name !== "videodb")
+		fail(
+			"Choose Kodi's Single file export (videodb.xml), not separate .nfo files.",
+		)
+	return root
+}
+
+function kodi(bytes: Uint8Array): ParsedImport {
+	if (!bytes.byteLength) fail("That file is empty.")
+	if (bytes.byteLength > IMPORT_MAX_BYTES)
+		fail("That export is larger than 20 MB.")
+	let data = bytes
+	if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
+		const libraries = zipEntries(bytes).filter(
+			(entry) => entry.name.split("/").at(-1)?.toLowerCase() === "videodb.xml",
+		)
+		if (libraries.length !== 1)
+			fail(
+				"Choose a ZIP containing exactly one videodb.xml from Kodi's Single file export.",
+			)
+		data = libraries[0].data
+	}
+	const root = kodiXml(text({ name: "videodb.xml", data }))
+	const observations: ImportObservation[] = []
+	const warnings = [
+		"Kodi play counts produce one watch per movie or episode, not a play history. Show play counts, partial plays and library dates are ignored.",
+	]
+	const value = (node: KodiElement, name: string) =>
+		node.children.find((child) => child.name === name)?.value.trim() ?? ""
+	const id = (node: KodiElement, type: string) =>
+		node.children
+			.find(
+				(child) => child.name === "uniqueid" && child.attributes.type === type,
+			)
+			?.value.trim() ?? ""
+	const baseFor = (node: KodiElement, mediaType: "movie" | "show") => ({
+		mediaType,
+		title: clipped(value(node, "title")),
+		year: validYear(
+			value(node, "year") || value(node, "premiered").slice(0, 4),
+		),
+		tmdbId: validId(Number(id(node, "tmdb"))),
+		imdbId: validImdb(id(node, "imdb")) ?? validImdb(value(node, "id")),
+	})
+	const reference = (base: ReturnType<typeof baseFor>) =>
+		base.tmdbId
+			? `tmdb:${base.tmdbId}`
+			: (base.imdbId ?? `${base.title.toLowerCase()}:${base.year}`)
+	const emit = (
+		node: KodiElement,
+		base: ReturnType<typeof baseFor>,
+		ref: string,
+		episode = false,
+	) => {
+		const score = Number(value(node, "userrating"))
+		const validScore = Number.isInteger(score) && score >= 1 && score <= 10
+		if (value(node, "userrating") && score !== 0)
+			observations.push({
+				...base,
+				key: `kodi:rating:${base.mediaType}:${ref}`,
+				kind: episode ? "unsupported" : "rating",
+				...(episode
+					? {
+							problem: {
+								outcome: "unsupported" as const,
+								reason:
+									"GoodWatch doesn't import season or episode ratings yet.",
+							},
+						}
+					: validScore
+						? { score }
+						: {
+								score: null,
+								problem: {
+									outcome: "invalid" as const,
+									reason:
+										"The Kodi rating must be a whole number from 1 to 10.",
+								},
+							}),
+			})
+		if (node.name !== "tvshow" && Number(value(node, "playcount")) > 0) {
+			const watchedAt = day(value(node, "lastplayed"))
+			if (!watchedAt && value(node, "lastplayed"))
+				warnings.push(
+					"An invalid Kodi last-played date was imported without a date.",
+				)
+			const season = value(node, "season")
+			observations.push({
+				...base,
+				key: `kodi:watch:${base.mediaType}:${ref}`,
+				kind: "watch",
+				watchedAt,
+				precision: watchedAt ? "day" : "unknown",
+				pass: 1,
+				...(episode
+					? {
+							episodeTmdbId: validId(Number(id(node, "tmdb"))),
+							episodeTvdbId: validId(Number(id(node, "tvdb"))),
+							episodeName: clipped(value(node, "title")),
+							episodeNumbering: "unknown" as const,
+							season: season === "0" ? 0 : validId(Number(season)),
+							episode: validId(Number(value(node, "episode"))),
+						}
+					: {}),
+			})
+		}
+	}
+	for (const node of root.children) {
+		if (node.name === "movie" || node.name === "tvshow") {
+			const base = baseFor(node, node.name === "movie" ? "movie" : "show")
+			const ref = reference(base)
+			emit(node, base, ref)
+			for (const episode of node.children.filter(
+				(child) => child.name === "episodedetails",
+			)) {
+				const episodeRef = id(episode, "tmdb")
+					? `tmdb:${id(episode, "tmdb")}`
+					: id(episode, "tvdb")
+						? `tvdb:${id(episode, "tvdb")}`
+						: `${value(episode, "season")}:${value(episode, "episode")}`
+				emit(episode, base, `${ref}:episode:${episodeRef}`, true)
+			}
+		} else if (node.name === "musicvideo")
+			observations.push({
+				...baseFor(node, "movie"),
+				key: `kodi:unsupported:musicvideo:${observations.length}`,
+				kind: "unsupported",
+				problem: {
+					outcome: "unsupported",
+					reason: "GoodWatch doesn't import music videos.",
+				},
+			})
+	}
+	if (observations.length > IMPORT_MAX_ROWS)
+		fail("That export produces more than 50,000 import items.")
+	const unique = new Map<string, ImportObservation>()
+	for (const observation of observations) {
+		const previous = unique.get(observation.key)
+		if (
+			!previous ||
+			(observation.kind === "watch" &&
+				(observation.watchedAt ?? "") > (previous.watchedAt ?? ""))
+		)
+			unique.set(observation.key, observation)
+	}
+	const days = new Map<string, number>()
+	for (const row of unique.values())
+		if (row.kind === "watch" && row.watchedAt)
+			days.set(row.watchedAt, (days.get(row.watchedAt) ?? 0) + 1)
+	const largest = Math.max(0, ...days.values())
+	if (largest >= 100)
+		warnings.push(
+			`${largest} Kodi watches share one day. This may be a mark-as-watched date; you can import without dates.`,
+		)
+	return {
+		source: "kodi",
+		observations: [...unique.values()],
+		warnings: [...new Set(warnings)],
+	}
 }

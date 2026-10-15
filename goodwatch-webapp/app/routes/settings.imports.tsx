@@ -58,6 +58,7 @@ const TABS: { id: ImportTab; label: string }[] = [
 	{ id: "trakt", label: "Trakt" },
 	{ id: "csv", label: "Generic CSV" },
 	{ id: "movielens", label: "MovieLens" },
+	{ id: "kodi", label: "Kodi" },
 ]
 
 export default function SettingsImports() {

@@ -40,7 +40,16 @@ function SingleFileUploadPanel({
 			<h3 id="source-upload-heading" className={stepHeading}>
 				Upload your {sourceName(source)} export
 			</h3>
-			{source === "csv" ? (
+			{source === "kodi" ? (
+				<p className="text-gray-400">
+					In Kodi, switch the settings level to Advanced, then open Settings →
+					Media → Library → Export library → Single file. Upload videodb.xml
+					from the kodi_videodb_YYYY-MM-DD folder, alone or zipped. Artwork
+					folders are not needed; separate .nfo files are not supported.
+					GoodWatch imports movie and show ratings and one watch per played
+					movie or episode. Maximum size: 20 MB.
+				</p>
+			) : source === "csv" ? (
 				<p className="text-gray-400">
 					Upload a CSV in Letterboxd import format. Include tmdbID, imdbID, or
 					Title and Year. Rating uses 0.5–5; Rating10 uses 1–10 and takes
@@ -98,9 +107,11 @@ function SingleFileUploadPanel({
 				<p id="source-upload-hint" aria-live="polite">
 					{preview.isPending
 						? "Uploading and checking your export. This can take a moment."
-						: fileType === "csv"
-							? "Drop your CSV file here, or choose it from your device."
-							: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
+						: source === "kodi"
+							? "Drop videodb.xml or its ZIP here, or choose it from your device."
+							: fileType === "csv"
+								? "Drop your CSV file here, or choose it from your device."
+								: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
 				</p>
 				<button
 					type="button"
@@ -116,9 +127,11 @@ function SingleFileUploadPanel({
 					type="file"
 					aria-label={`Choose ${sourceName(source)} export ${fileType.toUpperCase()} file`}
 					accept={
-						fileType === "csv"
-							? ".csv,text/csv"
-							: ".zip,application/zip,application/x-zip-compressed"
+						source === "kodi"
+							? ".xml,application/xml,text/xml,.zip,application/zip,application/x-zip-compressed"
+							: fileType === "csv"
+								? ".csv,text/csv"
+								: ".zip,application/zip,application/x-zip-compressed"
 					}
 					className="sr-only"
 					onChange={(event) => {

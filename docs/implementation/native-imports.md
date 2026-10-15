@@ -1,6 +1,6 @@
 # Native and CSV imports
 
-The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside generic CSV, MovieLens ratings/wishlist CSV and the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
+The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside generic CSV, MovieLens ratings/wishlist CSV, Kodi library XML/ZIP and the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
 
 ## Member flow
 
@@ -29,7 +29,7 @@ Rating-only imports preserve existing intention lists, following the existing IM
 
 ## Shared episode resolver
 
-`app/server/imports/episode-resolver.server.ts` resolves evidence within an already matched show. `episode-resolver-data.server.ts` connects it to the existing import database helpers and TMDB; `preview.server.ts` uses it for every episode observation. Trakt keeps TMDB IDs first and retains canonical positions for successful ID matches. A stale ID can now fall through to the remaining evidence. No additional upload adapter is enabled.
+`app/server/imports/episode-resolver.server.ts` resolves evidence within an already matched show. `episode-resolver-data.server.ts` connects it to the existing import database helpers and TMDB; `preview.server.ts` uses it for every episode observation. Trakt keeps TMDB IDs first and retains canonical positions for successful ID matches. A stale ID can now fall through to the remaining evidence. Kodi also supplies episode evidence to this resolver.
 
 Evidence order:
 
@@ -92,3 +92,18 @@ Ratings use `movie_id,imdb_id,tmdb_id,rating,average_rating,title`; wishlist use
 Preview and receipt always explain that tags and activity logs are not applied: activity times describe ratings, not viewings. The shared import journal owns both files' observations and keeps the existing selection, conflict, resume and undo behavior. No migration is needed beyond the shipped native import schema.
 
 MovieLens fixtures are synthetic, based on the research note on `research/criticker-movielens-sofa-exports`; they are not represented as a current member export. Parser, service and rendered upload tests cover the two CSV adapters alongside the existing imports. These changes affect only the Imports settings route and server modules, not a landing surface or app shell, so the landing render-budget trigger does not apply.
+
+
+## Kodi
+
+Choose **Kodi** on Imports. Switch Kodi's settings level to Advanced, then open Settings → Media → Library → Export library → Single file. Upload `videodb.xml` from the `kodi_videodb_YYYY-MM-DD/` folder, alone or in a ZIP containing exactly one such file. Artwork is unnecessary; separate `.nfo` exports are not supported. ZIPs retain the shared 200-entry, 32 MB per-entry and 64 MB expanded limits; upload just the XML if artwork exceeds those limits.
+
+Movie and show ratings use `userrating` 1–10 unchanged; 0 is unset. Episode ratings and music videos remain visible as unsupported items. Movie/show matches use TMDB then IMDb, including recognizable legacy IMDb `<id>` values, with no title-only match. Missing IDs remain unmatched. A positive movie/episode `playcount` creates one watch, with `lastplayed` at day precision; higher counts do not invent rewatches. Show play counts, partial plays, resume positions and library dates are ignored. Missing or invalid dates produce undated watches; invalid supplied dates are explained in preview warnings. The existing explicit date choice can discard all source dates. Clusters of 100 or more watches on one day produce a warning.
+
+Repeated movie versions with the same source identity collapse to one rating and one watch, retaining the latest valid viewing date. The first supplied rating wins if versions disagree. Source identities exclude dates and archive paths, so repeated uploads and date edits use the same watch identity.
+
+Episode rows carry the parent's title IDs, their own TMDB and TVDB episode IDs, name, season and number. Numbering is `unknown`: Kodi supports different scrapers and user-selected episode orders, so coordinates alone do not establish TMDB numbering. The shared resolver matches episode IDs and returns canonical coordinates; the adapter contains no matching logic. TVDB-only show identities without a TMDB/IMDb parent remain unmatched.
+
+The XML reader uses Saxes, rejects all DTDs (including external entity declarations), does not fetch external resources, and rejects malformed XML. It enforces the existing 20 MB upload and 50,000 row/observation limits, plus a 64-element nesting limit and one million XML elements. ZIP integrity and expansion checks are shared with the other sources. No migration is needed. Kodi's current Imports controls use the existing layout; no landing surface or app-shell assets changed.
+
+Fixtures are synthetic from the Kodi source research for #612/#628. Parser, rendered upload controls, and service preview/apply/receipt/re-upload/undo tests cover Kodi, including both watch-date choices and canonical episode resolution. Validation against real Kodi 21/22 exports remains deferred until a member export is available; no live CrateDB or browser session was used by these tests.

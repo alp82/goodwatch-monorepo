@@ -4,18 +4,21 @@ export const IMPORT_SOURCES = [
 	"trakt",
 	"csv",
 	"movielens",
+	"kodi",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
 	trakt: "Trakt",
 	csv: "Generic CSV",
 	movielens: "MovieLens",
+	kodi: "Kodi",
 } as const
 export const IMPORT_SOURCE_FILE = {
 	letterboxd: "zip",
 	trakt: "zip",
 	csv: "csv",
 	movielens: "csv",
+	kodi: "xml or zip",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_KINDS = [

@@ -44,7 +44,9 @@ const render = (watch: number, confirming: boolean, error: string | null) =>
 		}),
 	)
 
-const upload = (source: "csv" | "movielens" | "letterboxd" | "trakt") =>
+const upload = (
+	source: "csv" | "movielens" | "letterboxd" | "trakt" | "kodi",
+) =>
 	renderToStaticMarkup(
 		createElement(
 			QueryClientProvider,
@@ -59,6 +61,7 @@ process.stdout.write(
 		traktUpload: upload("trakt"),
 		csvUpload: upload("csv"),
 		movielensUpload: upload("movielens"),
+		kodiUpload: upload("kodi"),
 		ratingOnly: render(0, false, "Preview could not start."),
 		withWatches: render(2, true, null),
 	})}`,

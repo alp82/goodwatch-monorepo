@@ -1,10 +1,59 @@
 import "node-crate"
+import "ioredis"
+import "react"
+import "@remix-run/node"
+import "zod"
+import { readFileSync } from "node:fs"
+import * as nodeModule from "node:module"
+import ts from "typescript"
+import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
 import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { afterEach, describe, it } from "node:test"
 import type { ImportOptions } from "../../domain/imports.ts"
 import type { Param } from "./store.server.ts"
 
+// The same Node-only auth/snapshot shims as tracking.test.ts. The resolver,
+// parser, preview, journal reads and tracking planner all run their real code.
+const { registerHooks } = nodeModule as unknown as {
+	registerHooks(hooks: {
+		load(
+			url: string,
+			context: unknown,
+			next: (url: string, context: unknown) => unknown,
+		): unknown
+	}): void
+}
+registerHooks({
+	load(url, context, next) {
+		let source: string | undefined
+		if (url.endsWith("/utils/auth.ts"))
+			source =
+				'export const getUserIdFromRequest = () => { throw new Error("Unexpected auth") }; export const getAuthFromRequest = getUserIdFromRequest'
+		else if (url.endsWith("/title-snapshot/format.server.ts"))
+			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => null`
+		if (source === undefined) return next(url, context)
+		return {
+			format: "module",
+			source: ts.transpileModule(source, {
+				compilerOptions: {
+					module: ts.ModuleKind.ESNext,
+					target: ts.ScriptTarget.ESNext,
+				},
+			}).outputText,
+			shortCircuit: true,
+		}
+	},
+})
+process.env.REDIS_HOST = ""
+process.env.TASTE_REDIS_URL = ""
+const { setCrateClientForTest } = await import("../../utils/crate.ts")
+
+const { holdTasteRebuildsForTest } = await import("../taste/member.server.ts")
+holdTasteRebuildsForTest()
+const { getMovieTracking, getShowTracking } = await import(
+	"../tracking.server.ts"
+)
 const { previewImport, getImportItems, confirmImport, getImport, undoImport } =
 	await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
@@ -27,6 +76,7 @@ class ImportDb {
 	favorites: Row[] = []
 	wishlist: Row[] = []
 	catalog: Row[] = []
+	episodes: Row[] = []
 	catalogQueries: { sql: string; params: Param[] }[] = []
 	scores: Row[] = []
 	failFavoriteOnce = false
@@ -102,7 +152,9 @@ class ImportDb {
 
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
-		if (s.includes("FROM movie WHERE")) {
+		if (s.includes("FROM episode WHERE"))
+			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
+		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
 			this.catalogQueries.push({ sql: s, params: [...params] })
 			const rows = this.catalog.filter((row) =>
 				s.includes("tmdb_id IN")
@@ -200,6 +252,24 @@ class ImportDb {
 			})
 			return { rowcount: 1 }
 		}
+		if (
+			s.startsWith("INSERT INTO doc.user_import_item (") &&
+			s.includes("'state'")
+		) {
+			this.items.push({
+				import_id: params[0],
+				row_index: params[1],
+				user_id: params[2],
+				kind: "state",
+				source_key: params[3],
+				payload: params[4],
+				outcome: "new",
+				tmdb_id: params[5],
+				media_type: params[6],
+				apply_state: null,
+			})
+			return { rowcount: 1 }
+		}
 		if (s.startsWith("INSERT INTO doc.user_import_item (")) {
 			const columns = s.slice(s.indexOf("(") + 1, s.indexOf(")")).split(",")
 			for (let i = 0; i < params.length; i += columns.length)
@@ -210,6 +280,7 @@ class ImportDb {
 				)
 			return { rowcount: params.length / columns.length }
 		}
+		if (s.startsWith("UPDATE episode SET")) return { rowcount: 0 }
 		if (s.startsWith("REFRESH TABLE")) return { rowcount: 1 }
 		if (s.startsWith("UPDATE doc.user_import SET")) {
 			if (s.includes("_seq_no = ?")) {
@@ -258,6 +329,28 @@ class ImportDb {
 				),
 			)
 			row.payload = params[0]
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = 'added'")) {
+			const row = requiredRow(
+				this.items.find(
+					(x) => x.import_id === params[0] && x.row_index === params[1],
+				),
+			)
+			row.apply_state = "added"
+			return { rowcount: 1 }
+		}
+		if (
+			s.startsWith("UPDATE doc.user_import_item SET apply_state = ?") &&
+			s.includes("watch_id = ?")
+		) {
+			const row = requiredRow(
+				this.items.find(
+					(x) => x.import_id === params[2] && x.row_index === params[3],
+				),
+			)
+			row.apply_state = params[0]
+			row.watch_id = params[1]
 			return { rowcount: 1 }
 		}
 		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = ?")) {
@@ -400,10 +493,11 @@ async function waitFor(db: ImportDb, status: string) {
 		if (db.imports[0].status === status) return
 		await new Promise((resolve) => setTimeout(resolve, 5))
 	}
-	assert.fail(`import stayed ${db.imports[0].status}`)
+	assert.fail(`import stayed ${db.imports[0].status}: ${db.imports[0].error}`)
 }
 
 afterEach(() => {
+	setCrateClientForTest(null)
 	setImportDbForTest()
 	setImportEffectsForTest()
 })
@@ -723,4 +817,174 @@ it("MovieLens combined upload matches only IDs and applies and undoes ratings an
 		),
 	)
 	assert.equal(again.counts.new, 1)
+})
+
+it("Kodi preview, apply, repeat receipt and undo preserve one watch and respect the date choice", async () => {
+	for (const watchDates of ["preserve", "unknown"] as const) {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 862,
+				imdb_id: "tt0114709",
+				title: "Toy Story",
+				release_year: 1995,
+			},
+		]
+		const trackingDb = new FakeTrackingCrate()
+		setCrateClientForTest(trackingDb)
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const file = Buffer.from(
+			`<videodb><movie><title>Toy Story</title><uniqueid type="tmdb">862</uniqueid><playcount>5</playcount><lastplayed>2026-10-12</lastplayed></movie></videodb>`,
+		)
+		const preview = await previewImport("member", "kodi", "videodb.xml", file)
+		assert.equal(preview.kinds.watch, 1)
+		assert.equal((await getMovieTracking("member", 862)).log.length, 0)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["watch"],
+			watchDates,
+		})
+		await waitFor(db, "done")
+		const receipt = await getImport("member", preview.id)
+		assert.equal(receipt.applied.added, 1)
+		const tracking = await getMovieTracking("member", 862)
+		assert.equal(tracking.log.length, 1)
+		assert.equal(
+			tracking.log[0].watched_at,
+			watchDates === "preserve" ? Date.parse("2026-10-12") : null,
+		)
+		const repeated = await previewImport("member", "kodi", "videodb.xml", file)
+		assert.equal(repeated.counts.unchanged, 1)
+		await undoImport("member", preview.id)
+		assert.equal((await getImport("member", preview.id)).status, "undone")
+		assert.equal((await getMovieTracking("member", 862)).log.length, 0)
+	}
+})
+
+it("Kodi episodes resolve through TMDB and TVDB evidence, leave untrusted coordinates unmatched, and apply canonical watches", async (t) => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 1668,
+			imdb_id: "tt0108778",
+			title: "Friends",
+			release_year: 1994,
+		},
+	]
+	db.episodes = [
+		{
+			show_id: 1668,
+			tmdb_id: 101,
+			season_number: 4,
+			episode_number: 23,
+			name: "Finale",
+			tvdb_id: null,
+			removed_at: null,
+			air_date: Date.UTC(1998, 4, 7),
+		},
+		{
+			show_id: 1668,
+			tmdb_id: 102,
+			season_number: 4,
+			episode_number: 22,
+			name: "Before",
+			tvdb_id: 9002,
+			removed_at: null,
+			air_date: Date.UTC(1998, 4, 1),
+		},
+	]
+	const trackingDb = new FakeTrackingCrate()
+	trackingDb.seed("episode", db.episodes)
+	setCrateClientForTest(trackingDb)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async () =>
+			new Response(
+				JSON.stringify({ tv_episode_results: [{ id: 102, show_id: 1668 }] }),
+				{ status: 200 },
+			),
+	)
+	const episode = (ids: string, number: number) =>
+		`<episodedetails>${ids}<season>4</season><episode>${number}</episode><playcount>3</playcount><lastplayed>2026-10-12</lastplayed></episodedetails>`
+	const file = Buffer.from(
+		`<videodb><tvshow><title>Friends</title><uniqueid type="tmdb">1668</uniqueid><playcount>100</playcount>${episode('<uniqueid type="tmdb">101</uniqueid>', 24)}${episode('<uniqueid type="tmdb">999</uniqueid><uniqueid type="tvdb">9002</uniqueid>', 23)}${episode("", 22)}</tvshow></videodb>`,
+	)
+	const preview = await previewImport("member", "kodi", "videodb.xml", file)
+	const receipt = await getImportItems("member", preview.id, undefined, 0, 50)
+	assert.deepEqual(
+		receipt.items.map((x) => [x.outcome, x.episodeTmdbId, x.episode]),
+		[
+			["new", 101, 23],
+			["new", 102, 22],
+			["unmatched", null, 22],
+		],
+	)
+	assert.ok(receipt.items[2].reason)
+	await confirmImport("member", preview.id, { ...options, kinds: ["watch"] })
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 2)
+	assert.deepEqual(
+		(await getShowTracking("member", 1668)).log
+			.map((x) => x.episode_tmdb_id)
+			.sort(),
+		[101, 102],
+	)
+	await undoImport("member", preview.id)
+	assert.equal((await getShowTracking("member", 1668)).log.length, 0)
+})
+
+it("Kodi ratings prefer TMDB then IMDb, keep missing IDs unmatched, and apply and undo their receipt", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+		{
+			tmdb_id: 655,
+			imdb_id: "tt0087884",
+			title: "Paris, Texas",
+			release_year: 1984,
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const file = Buffer.from(
+		`<videodb><movie><uniqueid type="tmdb">862</uniqueid><uniqueid type="imdb">tt0087884</uniqueid><userrating>9</userrating></movie><movie><uniqueid type="tmdb">999</uniqueid><id>tt0087884</id><userrating>8</userrating></movie><movie><title>Toy Story</title><year>1995</year><userrating>7</userrating></movie></videodb>`,
+	)
+	const preview = await previewImport("member", "kodi", "videodb.xml", file)
+	assert.deepEqual(
+		(await getImportItems("member", preview.id, undefined, 0, 50)).items.map(
+			(x) => [x.outcome, x.tmdbId],
+		),
+		[
+			["new", 862],
+			["new", 655],
+			["unmatched", null],
+		],
+	)
+	await confirmImport("member", preview.id, { ...options, kinds: ["rating"] })
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 2)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+	assert.equal(
+		(await previewImport("member", "kodi", "videodb.xml", file)).counts.new,
+		2,
+	)
 })
