@@ -26,7 +26,7 @@ const AUTH_RUNTIME =
 	/better-auth|@goodwatch\/auth-stack|nodemailer|bcryptjs|\/server\/auth\/(runtime|auth|mail|crate-adapter)\.server\.ts/
 const authModules = () => resolved.filter((url) => AUTH_RUNTIME.test(url))
 
-test("with Better Auth off, the boot wiring and /api/auth/* load nothing of Better Auth", async () => {
+test("with Better Auth off, the boot wiring, /api/auth/* and the OAuth metadata load nothing of Better Auth", async () => {
 	delete process.env.BETTER_AUTH_ENABLED
 	const boot = await import("./boot.server.ts")
 	boot.registerAuthCluster(() => null)
@@ -38,7 +38,14 @@ test("with Better Auth off, the boot wiring and /api/auth/* load nothing of Bett
 			params: {},
 			context: {},
 		}) as never
-	for (const response of [await route.loader(args("GET")), await route.action(args("POST"))]) {
+	const wellKnown = await Promise.all([
+		import("../../routes/[.well-known].oauth-authorization-server.$.ts"),
+		import("../../routes/[.well-known].oauth-protected-resource.$.ts"),
+		import("../../routes/[.well-known].openid-configuration.$.ts"),
+	])
+	const answers = [await route.loader(args("GET")), await route.action(args("POST"))]
+	for (const metadata of wellKnown) answers.push(await metadata.loader(args("GET")))
+	for (const response of answers) {
 		assert.equal(response.status, 404)
 		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 	}
