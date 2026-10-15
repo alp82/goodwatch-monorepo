@@ -1,50 +1,10 @@
-import "node-crate"
-import "ioredis"
-import "react"
-import "@remix-run/node"
-import "zod"
-import { readFileSync } from "node:fs"
-import * as nodeModule from "node:module"
-import ts from "typescript"
-import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
-import "../title-filter/test-alias.ts"
+import "../tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
 import { afterEach, describe, it } from "node:test"
 import type { ImportOptions } from "../../domain/imports.ts"
+import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
 import type { Param } from "./store.server.ts"
 
-// The same Node-only auth/snapshot shims as tracking.test.ts. The resolver,
-// parser, preview, journal reads and tracking planner all run their real code.
-const { registerHooks } = nodeModule as unknown as {
-	registerHooks(hooks: {
-		load(
-			url: string,
-			context: unknown,
-			next: (url: string, context: unknown) => unknown,
-		): unknown
-	}): void
-}
-registerHooks({
-	load(url, context, next) {
-		let source: string | undefined
-		if (url.endsWith("/utils/auth.ts"))
-			source =
-				'export const getUserIdFromRequest = () => { throw new Error("Unexpected auth") }; export const getAuthFromRequest = getUserIdFromRequest'
-		else if (url.endsWith("/title-snapshot/format.server.ts"))
-			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => null`
-		if (source === undefined) return next(url, context)
-		return {
-			format: "module",
-			source: ts.transpileModule(source, {
-				compilerOptions: {
-					module: ts.ModuleKind.ESNext,
-					target: ts.ScriptTarget.ESNext,
-				},
-			}).outputText,
-			shortCircuit: true,
-		}
-	},
-})
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
 const { setCrateClientForTest } = await import("../../utils/crate.ts")
@@ -68,6 +28,70 @@ const options: ImportOptions = {
 	kinds: ["favorite"],
 	conflictChoice: "source",
 	watchDates: "preserve",
+}
+
+// The fake implements only these statement shapes. Reject changed predicates or columns
+// instead of silently returning empty rows/success. Placeholder lists may vary in length.
+const supportedImportSql = new Set([
+	"DELETE FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+	"DELETE FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+	"DELETE FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+	"INSERT INTO doc.user_import (id,user_id,source,status,file_name,counts,processed,total,added,updated,kept,failed,error,created_at,updated_at,warnings,kinds,file_hash) VALUES (?,'preview',?,0,?,0,0,0,0,NULL,?)",
+	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,imdb_id,title,year,outcome,reason,tmdb_id,media_type,current_score,season_number,episode_number,episode_tmdb_id,watched_at,watched_at_precision,pass) VALUES (?)",
+	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome,reason,tmdb_id,media_type) VALUES (?, ?, ?, 'state', ?, ?, 'new', NULL, ?, ?) ON CONFLICT (import_id,row_index) DO NOTHING",
+	"INSERT INTO user_favorite (user_id,tmdb_id,media_type,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
+	"INSERT INTO user_score (user_id,tmdb_id,media_type,score,review,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
+	"INSERT INTO user_wishlist (user_id,tmdb_id,media_type,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
+	"REFRESH TABLE doc.user_import",
+	"REFRESH TABLE doc.user_import_item",
+	"REFRESH TABLE user_favorite",
+	"REFRESH TABLE user_not_interested",
+	"REFRESH TABLE user_score",
+	"REFRESH TABLE user_score, user_wishlist, user_favorite, user_watch_log, user_watch_state",
+	"REFRESH TABLE user_wishlist",
+	"REFRESH TABLE user_wishlist, user_watch_log",
+	"SELECT DISTINCT tmdb_id, media_type FROM user_watch_log WHERE user_id = ? LIMIT 100000",
+	"SELECT _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' GROUP BY apply_state",
+	"SELECT created_at, updated_at FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
+	"SELECT row_index, source_key, payload, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
+	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, media_type FROM user_favorite WHERE user_id = ? LIMIT 100000",
+	"SELECT tmdb_id, media_type FROM user_wishlist WHERE user_id = ? LIMIT 100000",
+	"SELECT tmdb_id, media_type, score, review, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? LIMIT 100000",
+	"SELECT tmdb_id, show_id, season_number, episode_number, name, tvdb_id FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
+	"SELECT watch_id FROM user_watch_log WHERE user_id = ? AND tmdb_id = ? AND media_type = ? LIMIT 1",
+	"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+	"UPDATE doc.user_import SET status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE doc.user_import SET status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE doc.user_import SET status = 'undone', updated_at = CURRENT_TIMESTAMP, finished_at = CURRENT_TIMESTAMP WHERE id = ?",
+	"UPDATE doc.user_import SET status = ?, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?",
+	"UPDATE doc.user_import_item SET apply_state = 'added', applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state IS NULL",
+	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
+	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
+	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
+	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
+	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
+	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id = ?",
+	"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+])
+function assertSupportedImportSql(sql: string) {
+	const shape = sql
+		.replace(/\?(?:,\?)+/g, "?")
+		.replace(/\(\?\)(?:,\(\?\))+/g, "(?)")
+	if (!supportedImportSql.has(shape))
+		throw new Error(`Unexpected import SQL: ${sql}`)
 }
 
 class ImportDb {
@@ -152,6 +176,7 @@ class ImportDb {
 
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
+		assertSupportedImportSql(s)
 		if (s.includes("FROM episode WHERE"))
 			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
 		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
@@ -227,6 +252,7 @@ class ImportDb {
 
 	async run(sql: string, params: Param[]) {
 		const s = sql.replace(/\s+/g, " ").trim()
+		assertSupportedImportSql(s)
 		if (s.startsWith("INSERT INTO doc.user_import (")) {
 			this.imports.push({
 				id: params[0],
@@ -318,6 +344,11 @@ class ImportDb {
 				Object.assign(row, { status: "undone", finished_at: new Date() })
 			else if (s.includes("status = 'failed'"))
 				Object.assign(row, { status: "failed", error: params[0] })
+			else if (
+				s !==
+				"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+			)
+				throw new Error(`Unexpected import update: ${s}`)
 			row.updated_at = new Date()
 			row._seq_no = ++this.version
 			return { rowcount: 1 }
@@ -483,7 +514,7 @@ class ImportDb {
 			)
 			return { rowcount: before - this.scores.length }
 		}
-		if (s.includes("kind IN ('watch','state')")) return { rowcount: 0 }
+
 		throw new Error(`Unexpected run: ${s}`)
 	}
 }

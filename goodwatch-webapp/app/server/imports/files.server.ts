@@ -9,6 +9,7 @@ import {
 } from "../../domain/imports.ts"
 
 const MAX_ARCHIVE_FILES = 200
+const MAX_FILTERED_ARCHIVE_FILES = 50_000
 const MAX_ENTRY_BYTES = 32 * 1024 * 1024
 const MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024
 
@@ -79,10 +80,24 @@ function crc32(bytes: Uint8Array): number {
 	return (crc ^ 0xffffffff) >>> 0
 }
 
-function zipEntries(input: Uint8Array): ArchiveEntry[] {
-	if (input.byteLength === 0) fail("That file is empty.")
-	if (input.byteLength > IMPORT_MAX_BYTES)
-		fail("That ZIP file is too large. GoodWatch accepts files up to 20 MB.")
+const uploadSizeLabel = `${IMPORT_MAX_BYTES / 1024 / 1024} MB`
+const rowLimitLabel = IMPORT_MAX_ROWS.toLocaleString("en-US")
+function checkUploadSize(
+	bytes: Uint8Array,
+	message = `That export is larger than ${uploadSizeLabel}.`,
+) {
+	if (!bytes.byteLength) fail("That file is empty.")
+	if (bytes.byteLength > IMPORT_MAX_BYTES) fail(message)
+}
+
+function zipEntries(
+	input: Uint8Array,
+	include?: (name: string) => boolean,
+): ArchiveEntry[] {
+	checkUploadSize(
+		input,
+		`That ZIP file is too large. GoodWatch accepts files up to ${uploadSizeLabel}.`,
+	)
 	const bytes = Buffer.from(input.buffer, input.byteOffset, input.byteLength)
 	let eocd = -1
 	const firstPossible = Math.max(0, bytes.length - 65_557)
@@ -102,9 +117,10 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 	if (count !== bytes.readUInt16LE(eocd + 8))
 		fail("That ZIP archive is incomplete.")
 	if (count === 0xffff) fail("ZIP64 archives aren't supported.")
-	if (count > MAX_ARCHIVE_FILES)
+	const maxFiles = include ? MAX_FILTERED_ARCHIVE_FILES : MAX_ARCHIVE_FILES
+	if (count > maxFiles)
 		fail(
-			`That ZIP archive has too many files. GoodWatch accepts up to ${MAX_ARCHIVE_FILES}.`,
+			`That ZIP archive has too many files. GoodWatch accepts up to ${maxFiles}.`,
 		)
 	const directorySize = bytes.readUInt32LE(eocd + 12)
 	const directoryOffset = bytes.readUInt32LE(eocd + 16)
@@ -143,11 +159,6 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 			localOffset === 0xffffffff
 		)
 			fail("ZIP64 archives aren't supported.")
-		if (size > MAX_ENTRY_BYTES)
-			fail("A file inside that ZIP archive is too large.")
-		totalSize += size
-		if (totalSize > MAX_UNCOMPRESSED_BYTES)
-			fail("That ZIP archive expands to too much data.")
 		const rawName = bytes.subarray(cursor + 46, cursor + 46 + nameLength)
 		let name: string
 		try {
@@ -204,9 +215,18 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 				.equals(rawName)
 		)
 			fail("That ZIP archive has inconsistent file names.")
-		if (ranges.some(([from, to]) => localOffset < to && dataEnd > from))
-			fail("That ZIP archive contains overlapping files.")
 		ranges.push([localOffset, dataEnd])
+		if (directory && size)
+			fail("That ZIP archive has a malformed directory entry.")
+		if (include && !include(name)) {
+			cursor = next
+			continue
+		}
+		if (size > MAX_ENTRY_BYTES)
+			fail("A file inside that ZIP archive is too large.")
+		totalSize += size
+		if (totalSize > MAX_UNCOMPRESSED_BYTES)
+			fail("That ZIP archive expands to too much data.")
 		const compressed = bytes.subarray(dataOffset, dataEnd)
 		let data: Buffer
 		try {
@@ -227,6 +247,10 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 		cursor = next
 	}
 	if (cursor !== eocd) fail("That ZIP archive has a malformed directory.")
+	ranges.sort((a, b) => a[0] - b[0])
+	for (let i = 1; i < ranges.length; i++)
+		if (ranges[i][0] < ranges[i - 1][1])
+			fail("That ZIP archive contains overlapping files.")
 	return result.sort((a, b) => a.name.localeCompare(b.name, "en"))
 }
 
@@ -678,14 +702,12 @@ function readCsvTable(
 	remainingRows = IMPORT_MAX_ROWS,
 	compactHeaders = false,
 ) {
-	if (!data.byteLength) fail("That file is empty.")
-	if (data.byteLength > IMPORT_MAX_BYTES)
-		fail("That export is larger than 20 MB.")
+	checkUploadSize(data)
 	const table = parseCsv(text({ name, data }), true)
 	if (!table.length) fail("That file is empty.")
 	const [originalHeaders, ...rows] = table
 	if (rows.length > remainingRows)
-		fail("That export has more than 50,000 rows.")
+		fail(`That export has more than ${rowLimitLabel} rows.`)
 	const headers = originalHeaders.map((header) => {
 		const normalized = header.trim().toLowerCase()
 		return compactHeaders ? normalized.replace(/ /g, "") : normalized
@@ -830,13 +852,13 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 			})
 	}
 	if (observations.length > IMPORT_MAX_ROWS)
-		fail("That export produces more than 50,000 import items.")
+		fail(`That export produces more than ${rowLimitLabel} import items.`)
 	return { source: "csv", observations, warnings }
 }
 
 function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 	if (bytes.byteLength + (wishlist?.byteLength ?? 0) > IMPORT_MAX_BYTES)
-		fail("The combined export is larger than 20 MB.")
+		fail(`The combined export is larger than ${uploadSizeLabel}.`)
 	const warnings = [
 		"MovieLens tags and activity logs are not applied. Activity logs record rating times, not watch times. Ratings and wishlist entries have no viewing dates.",
 	]
@@ -919,6 +941,21 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 	return { source: "movielens", observations, warnings }
 }
 
+const MAX_KODI_XML_ELEMENTS = 1_000_000
+const MAX_KODI_XML_DEPTH = 64
+const KODI_FIELDS = new Set([
+	"title",
+	"year",
+	"premiered",
+	"uniqueid",
+	"id",
+	"userrating",
+	"playcount",
+	"lastplayed",
+	"season",
+	"episode",
+])
+
 interface KodiElement {
 	name: string
 	attributes: Record<string, string>
@@ -929,7 +966,7 @@ interface KodiElement {
 /** Saxes never fetches entities. Reject DTDs entirely, and bound tree allocation. */
 function kodiXml(value: string): KodiElement {
 	const parser = new SaxesParser()
-	const stack: KodiElement[] = []
+	const stack: Array<KodiElement | null> = []
 	let root: KodiElement | undefined
 	let nodes = 0
 	let rows = 0
@@ -942,22 +979,39 @@ function kodiXml(value: string): KodiElement {
 			["movie", "tvshow", "episodedetails", "musicvideo"].includes(tag.name) &&
 			++rows > IMPORT_MAX_ROWS
 		)
-			fail("That export has more than 50,000 rows.")
-		if (++nodes > 1_000_000 || stack.length >= 64)
+			fail(`That export has more than ${rowLimitLabel} rows.`)
+		if (++nodes > MAX_KODI_XML_ELEMENTS || stack.length >= MAX_KODI_XML_DEPTH)
 			fail("That Kodi XML is too complex.")
+		const parent = stack.at(-1)
+		const keep =
+			stack.length === 0 ||
+			(parent &&
+				((stack.length === 1 &&
+					["movie", "tvshow", "musicvideo"].includes(tag.name)) ||
+					(parent.name === "tvshow" && tag.name === "episodedetails") ||
+					(["movie", "tvshow", "musicvideo", "episodedetails"].includes(
+						parent.name,
+					) &&
+						KODI_FIELDS.has(tag.name))))
+		// Keep a depth marker but no object or text for artwork, actors and other unused subtrees.
+		if (!keep) {
+			stack.push(null)
+			return
+		}
 		const element: KodiElement = {
 			name: tag.name,
-			attributes: tag.attributes,
+			attributes:
+				tag.name === "uniqueid" ? { type: tag.attributes.type ?? "" } : {},
 			value: "",
 			children: [],
 		}
-		if (stack.length) stack[stack.length - 1].children.push(element)
+		if (parent) parent.children.push(element)
 		else root = element
 		stack.push(element)
 	})
 	const append = (value: string) => {
 		const current = stack.at(-1)
-		if (current) current.value += value
+		if (current && KODI_FIELDS.has(current.name)) current.value += value
 	}
 	parser.on("text", append)
 	parser.on("cdata", append)
@@ -972,14 +1026,21 @@ function kodiXml(value: string): KodiElement {
 	return root
 }
 
+type KodiTitle = Pick<
+	ImportObservation,
+	"mediaType" | "title" | "year" | "tmdbId" | "imdbId"
+>
+
 function kodi(bytes: Uint8Array): ParsedImport {
-	if (!bytes.byteLength) fail("That file is empty.")
-	if (bytes.byteLength > IMPORT_MAX_BYTES)
-		fail("That export is larger than 20 MB.")
+	checkUploadSize(
+		bytes,
+		`That export is larger than ${uploadSizeLabel}. Upload videodb.xml by itself.`,
+	)
 	let data = bytes
 	if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
-		const libraries = zipEntries(bytes).filter(
-			(entry) => entry.name.split("/").at(-1)?.toLowerCase() === "videodb.xml",
+		const libraries = zipEntries(
+			bytes,
+			(name) => name.split("/").at(-1)?.toLowerCase() === "videodb.xml",
 		)
 		if (libraries.length !== 1)
 			fail(
@@ -1000,7 +1061,10 @@ function kodi(bytes: Uint8Array): ParsedImport {
 				(child) => child.name === "uniqueid" && child.attributes.type === type,
 			)
 			?.value.trim() ?? ""
-	const baseFor = (node: KodiElement, mediaType: "movie" | "show") => ({
+	const baseFor = (
+		node: KodiElement,
+		mediaType: "movie" | "show",
+	): KodiTitle => ({
 		mediaType,
 		title: clipped(value(node, "title")),
 		year: validYear(
@@ -1009,13 +1073,13 @@ function kodi(bytes: Uint8Array): ParsedImport {
 		tmdbId: validId(Number(id(node, "tmdb"))),
 		imdbId: validImdb(id(node, "imdb")) ?? validImdb(value(node, "id")),
 	})
-	const reference = (base: ReturnType<typeof baseFor>) =>
+	const reference = (base: KodiTitle) =>
 		base.tmdbId
 			? `tmdb:${base.tmdbId}`
 			: (base.imdbId ?? `${base.title.toLowerCase()}:${base.year}`)
 	const emit = (
 		node: KodiElement,
-		base: ReturnType<typeof baseFor>,
+		base: KodiTitle,
 		ref: string,
 		episode = false,
 	) => {
@@ -1072,9 +1136,24 @@ function kodi(bytes: Uint8Array): ParsedImport {
 			})
 		}
 	}
+	// Kodi versions can omit one of the IDs. Only unambiguous pairs from this export unify identities.
+	const movieIds = new Map<string, number | null>()
+	for (const node of root.children) {
+		if (node.name !== "movie") continue
+		const { tmdbId, imdbId } = baseFor(node, "movie")
+		if (tmdbId && imdbId)
+			movieIds.set(
+				imdbId,
+				!movieIds.has(imdbId) || movieIds.get(imdbId) === tmdbId
+					? tmdbId
+					: null,
+			)
+	}
 	for (const node of root.children) {
 		if (node.name === "movie" || node.name === "tvshow") {
 			const base = baseFor(node, node.name === "movie" ? "movie" : "show")
+			if (node.name === "movie" && !base.tmdbId && base.imdbId)
+				base.tmdbId = movieIds.get(base.imdbId) ?? null
 			const ref = reference(base)
 			emit(node, base, ref)
 			for (const episode of node.children.filter(
@@ -1099,7 +1178,20 @@ function kodi(bytes: Uint8Array): ParsedImport {
 			})
 	}
 	if (observations.length > IMPORT_MAX_ROWS)
-		fail("That export produces more than 50,000 import items.")
+		fail(`That export produces more than ${rowLimitLabel} import items.`)
+	const unique = deduplicateKodi(observations)
+	const clusterWarning = kodiSameDayWarning(unique)
+	if (clusterWarning) warnings.push(clusterWarning)
+	return {
+		source: "kodi",
+		observations: unique,
+		warnings: [...new Set(warnings)],
+	}
+}
+
+function deduplicateKodi(
+	observations: ImportObservation[],
+): ImportObservation[] {
 	const unique = new Map<string, ImportObservation>()
 	for (const observation of observations) {
 		const previous = unique.get(observation.key)
@@ -1110,18 +1202,16 @@ function kodi(bytes: Uint8Array): ParsedImport {
 		)
 			unique.set(observation.key, observation)
 	}
+	return [...unique.values()]
+}
+
+function kodiSameDayWarning(observations: ImportObservation[]): string | null {
 	const days = new Map<string, number>()
-	for (const row of unique.values())
+	for (const row of observations)
 		if (row.kind === "watch" && row.watchedAt)
 			days.set(row.watchedAt, (days.get(row.watchedAt) ?? 0) + 1)
 	const largest = Math.max(0, ...days.values())
-	if (largest >= 100)
-		warnings.push(
-			`${largest} Kodi watches share one day. This may be a mark-as-watched date; you can import without dates.`,
-		)
-	return {
-		source: "kodi",
-		observations: [...unique.values()],
-		warnings: [...new Set(warnings)],
-	}
+	return largest >= 100
+		? `${largest} Kodi watches share one day. This may be a mark-as-watched date; you can import without dates.`
+		: null
 }

@@ -17,6 +17,7 @@ function SingleFileUploadPanel({
 	onPreview,
 }: { source: ImportSource; onPreview: (summary: ImportSummary) => void }) {
 	const fileType = IMPORT_SOURCE_FILE[source]
+	const fileLabel = source === "kodi" ? "XML or ZIP" : fileType.toUpperCase()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
@@ -120,12 +121,12 @@ function SingleFileUploadPanel({
 					aria-describedby="source-upload-hint"
 					onClick={() => inputRef.current?.click()}
 				>
-					Choose {fileType.toUpperCase()} file
+					Choose {fileLabel} file
 				</button>
 				<input
 					ref={inputRef}
 					type="file"
-					aria-label={`Choose ${sourceName(source)} export ${fileType.toUpperCase()} file`}
+					aria-label={`Choose ${sourceName(source)} export ${fileLabel} file`}
 					accept={
 						source === "kodi"
 							? ".xml,application/xml,text/xml,.zip,application/zip,application/x-zip-compressed"

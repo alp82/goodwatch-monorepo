@@ -58,11 +58,13 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	}
 
 	assert.match(rendered.kodiUpload, /Advanced/)
+	assert.match(rendered.kodiUpload, /Choose Kodi export XML or ZIP file/)
+	assert.match(rendered.kodiUpload, /Choose XML or ZIP file/)
 	assert.match(
 		rendered.kodiUpload,
 		/Settings → Media → Library → Export library → Single file/,
 	)
-	assert.match(rendered.kodiUpload, /videodb.xml/)
+	assert.match(rendered.kodiUpload, /videodb\.xml/)
 	assert.match(rendered.kodiUpload, /accept="[^"]*\.xml[^"]*\.zip/)
 	assert.doesNotMatch(rendered.kodiUpload, /Sign in to Trakt/)
 	assert.match(rendered.csvUpload, /Letterboxd import format/)
@@ -168,5 +170,16 @@ test("Kodi upload sends XML or ZIP unchanged and rejects separate NFO files", ()
 	assert.throws(
 		() => buildSourceImportUpload("kodi", new File(["nfo"], "movie.nfo")),
 		/Single file/,
+	)
+})
+
+test("oversized Kodi uploads explain how to omit artwork", () => {
+	assert.throws(
+		() =>
+			buildSourceImportUpload(
+				"kodi",
+				new File([new Uint8Array(IMPORT_MAX_BYTES + 1)], "kodi.zip"),
+			),
+		/Upload videodb\.xml by itself/,
 	)
 })

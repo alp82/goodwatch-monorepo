@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { spawnSync } from "node:child_process"
 import { test } from "node:test"
 import { parseImportFile } from "./files.server.ts"
 
@@ -111,18 +112,24 @@ test("Kodi rejects untrusted XML, separate NFOs, ambiguous archives and oversize
 	const { IMPORT_MAX_BYTES, IMPORT_MAX_ROWS } = await import(
 		"../../domain/imports.ts"
 	)
-	for (const xml of [
-		'<!DOCTYPE videodb SYSTEM "file:///etc/passwd"><videodb/>',
-		'<!DOCTYPE videodb [<!ENTITY a "expanded">]><videodb>&a;</videodb>',
-		"<videodb>&unknown;</videodb>",
-		"<videodb><movie></videodb>",
-		"<movie><title>NFO</title></movie>",
-		`<videodb>${"<nested>".repeat(65)}${"</nested>".repeat(65)}</videodb>`,
-	])
-		await assert.rejects(parseImportFile("kodi", Buffer.from(xml)))
+	for (const [xml, error] of [
+		['<!DOCTYPE videodb SYSTEM "file:///etc/passwd"><videodb/>', /DOCTYPE/],
+		[
+			'<!DOCTYPE videodb [<!ENTITY a "expanded">]><videodb>&a;</videodb>',
+			/DOCTYPE/,
+		],
+		["<videodb>&unknown;</videodb>", /valid XML/],
+		["<videodb><movie></videodb>", /valid XML/],
+		["<movie><title>NFO</title></movie>", /Single file/],
+		[
+			`<videodb>${"<nested>".repeat(65)}${"</nested>".repeat(65)}</videodb>`,
+			/too complex/,
+		],
+	] as const)
+		await assert.rejects(parseImportFile("kodi", Buffer.from(xml)), error)
 	await assert.rejects(
 		parseImportFile("kodi", zipFixture({ "movie.nfo": movie })),
-		/videodb.xml/,
+		/videodb\.xml/,
 	)
 	await assert.rejects(
 		parseImportFile(
@@ -173,4 +180,124 @@ test("Kodi keeps malformed scores and dates visible and warns about mass mark-as
 		),
 	)
 	assert.match(clustered.warnings.join(" "), /100.*day/)
+})
+
+test("Kodi reads a full export ZIP with hundreds of artwork files without expanding artwork", async () => {
+	const { zipFixture } = await import("./zip-fixture.test-support.ts")
+	const xml = `<videodb>${movie}</videodb>`
+	const files: Array<[string, string]> = [
+		["export/videodb.xml", xml],
+		...Array.from({ length: 201 }, (_, i): [string, string] => [
+			`export/actors/${i}.jpg`,
+			"art",
+		]),
+	]
+	// Declared artwork sizes exceed expansion limits; unused payloads are never inflated.
+	const zip = Buffer.from(zipFixture(files))
+	for (let i = 0; i < zip.length - 46; i++)
+		if (zip.readUInt32LE(i) === 0x02014b50 && zip.readUInt32LE(i + 24) === 3)
+			zip.writeUInt32LE(40 * 1024 * 1024, i + 24)
+	assert.deepEqual(
+		await parseImportFile("kodi", zip),
+		await parseImportFile("kodi", Buffer.from(xml)),
+	)
+	await assert.rejects(
+		parseImportFile("kodi", zipFixture([...files, ["../art.jpg", "art"]])),
+		/unsafe file path/,
+	)
+	await assert.rejects(
+		parseImportFile("kodi", Buffer.alloc(20 * 1024 * 1024 + 1)),
+		/Upload videodb\.xml by itself/,
+	)
+})
+
+test("Kodi parses actor-heavy XML within a bounded heap without treating nested metadata as title fields", () => {
+	const result = spawnSync(
+		process.execPath,
+		[
+			"--max-old-space-size=64",
+			"--input-type=module",
+			"-e",
+			`
+ import assert from "node:assert/strict";
+ import { parseImportFile } from ${JSON.stringify(new URL("./files.server.ts", import.meta.url).href)};
+ const bytes = Buffer.from('<videodb><movie><title>Movie</title><uniqueid type="tmdb">862</uniqueid><playcount>1</playcount>' + '<actor><name>Actor</name><role>Role</role><title>Not the movie</title></actor>'.repeat(180000) + '</movie></videodb>');
+ const result = await parseImportFile("kodi",bytes);
+ assert.equal(result.observations.length,1);
+ assert.equal(result.observations[0].title,"Movie");
+ `,
+		],
+		{ encoding: "utf8", maxBuffer: 1024 * 1024 },
+	)
+	assert.equal(result.status, 0, result.stderr.slice(-2000))
+})
+
+test("Kodi bounds total XML elements even when their metadata is ignored", async () => {
+	await assert.rejects(
+		parseImportFile(
+			"kodi",
+			Buffer.from(`<videodb>${"<ignored/>".repeat(1_000_000)}</videodb>`),
+		),
+		/too complex/,
+	)
+})
+
+test("Kodi merges IMDb-only video versions with their paired TMDB identity regardless of export order", async () => {
+	const imdbOnly = movie
+		.replace('<uniqueid type="tmdb">862</uniqueid>', "")
+		.replace("2026-10-12", "2026-10-14")
+	for (const entries of [
+		[movie, imdbOnly],
+		[imdbOnly, movie],
+	]) {
+		const parsed = await parseImportFile(
+			"kodi",
+			Buffer.from(`<videodb>${entries.join("")}</videodb>`),
+		)
+		assert.equal(parsed.observations.length, 2)
+		assert.deepEqual(
+			parsed.observations.map((x) => x.key),
+			["kodi:rating:movie:tmdb:862", "kodi:watch:movie:tmdb:862"],
+		)
+		assert.equal(
+			parsed.observations.find((x) => x.kind === "watch")?.watchedAt,
+			"2026-10-14",
+		)
+		assert.ok(parsed.observations.every((x) => x.tmdbId === 862))
+	}
+	const ambiguous = await parseImportFile(
+		"kodi",
+		Buffer.from(
+			`<videodb>${movie}${movie.replace(">862<", ">999<")}${imdbOnly}</videodb>`,
+		),
+	)
+	assert.equal(ambiguous.observations.length, 6)
+})
+
+test("Kodi filtered archives still bound entry count and XML expansion and verify XML integrity", async () => {
+	const { zipFixture } = await import("./zip-fixture.test-support.ts")
+	await assert.rejects(
+		parseImportFile(
+			"kodi",
+			zipFixture(
+				Array.from(
+					{ length: 50_001 },
+					(_, i) => [`art/${i}.jpg`, ""] as [string, string],
+				),
+			),
+		),
+		/too many files/,
+	)
+	const oversized = Buffer.from(zipFixture({ "videodb.xml": "<videodb/>" }))
+	for (let i = 0; i < oversized.length - 46; i++)
+		if (oversized.readUInt32LE(i) === 0x02014b50)
+			oversized.writeUInt32LE(32 * 1024 * 1024 + 1, i + 24)
+	await assert.rejects(
+		parseImportFile("kodi", oversized),
+		/file inside.*too large/,
+	)
+	const corrupt = Buffer.from(zipFixture({ "videodb.xml": "<videodb/>" }))
+	for (let i = 0; i < corrupt.length - 46; i++)
+		if (corrupt.readUInt32LE(i) === 0x02014b50) corrupt.writeUInt32LE(0, i + 16)
+	await assert.rejects(parseImportFile("kodi", corrupt), /corrupt/)
 })

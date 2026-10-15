@@ -18,7 +18,7 @@ export const IMPORT_SOURCE_FILE = {
 	trakt: "zip",
 	csv: "csv",
 	movielens: "csv",
-	kodi: "xml or zip",
+	kodi: "xml",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_KINDS = [

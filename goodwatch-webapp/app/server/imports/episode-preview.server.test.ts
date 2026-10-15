@@ -1,51 +1,11 @@
-import "node-crate"
-import "ioredis"
-import "react"
-import "@remix-run/node"
-import "zod"
-import "../title-filter/test-alias.ts"
+import "../tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import * as nodeModule from "node:module"
 import { test } from "node:test"
-import ts from "typescript"
 import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
 import { friends, moneyHeist, office } from "./episode-fixtures.test-support.ts"
 import type { Param } from "./store.server.ts"
 import { zipFixture } from "./zip-fixture.test-support.ts"
 
-// The same Node-only auth/snapshot shims as tracking.test.ts. The resolver,
-// parser, preview, journal reads and tracking planner all run their real code.
-const { registerHooks } = nodeModule as unknown as {
-	registerHooks(hooks: {
-		load(
-			url: string,
-			context: unknown,
-			next: (url: string, context: unknown) => unknown,
-		): unknown
-	}): void
-}
-registerHooks({
-	load(url, context, next) {
-		let source: string | undefined
-		if (url.endsWith("/utils/auth.ts"))
-			source =
-				'export const getUserIdFromRequest = () => { throw new Error("Unexpected auth") }; export const getAuthFromRequest = getUserIdFromRequest'
-		else if (url.endsWith("/title-snapshot/format.server.ts"))
-			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => null`
-		if (source === undefined) return next(url, context)
-		return {
-			format: "module",
-			source: ts.transpileModule(source, {
-				compilerOptions: {
-					module: ts.ModuleKind.ESNext,
-					target: ts.ScriptTarget.ESNext,
-				},
-			}).outputText,
-			shortCircuit: true,
-		}
-	},
-})
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
 const { setCrateClientForTest } = await import("../../utils/crate.ts")

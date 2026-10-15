@@ -10,13 +10,14 @@ import { previewImport } from "~/server/imports/service.server"
 import { NativeImportError } from "~/server/imports/store.server"
 const sourceSchema = z.enum(IMPORT_SOURCES)
 const MAX_MULTIPART_BYTES = IMPORT_MAX_BYTES + 1024 * 1024
+const oversizedMessage = `That export is larger than ${IMPORT_MAX_BYTES / 1024 / 1024} MB. For Kodi, upload videodb.xml by itself.`
 export const action = ({ request }: ActionFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
 		if (request.method !== "POST")
 			return json({ error: "Method not allowed" }, { status: 405, headers })
 		const length = Number(request.headers.get("Content-Length"))
 		if (Number.isFinite(length) && length > MAX_MULTIPART_BYTES)
-			throw new NativeImportError(413, "That export is larger than 20 MB.")
+			throw new NativeImportError(413, oversizedMessage)
 		const reader = request.body?.getReader()
 		const parts: Uint8Array[] = []
 		let total = 0
@@ -31,7 +32,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 			total += value.byteLength
 			if (total > MAX_MULTIPART_BYTES) {
 				await reader.cancel()
-				throw new NativeImportError(413, "That export is larger than 20 MB.")
+				throw new NativeImportError(413, oversizedMessage)
 			}
 			parts.push(value)
 		}
@@ -68,7 +69,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 			file.size + (wishlist instanceof File ? wishlist.size : 0) >
 			IMPORT_MAX_BYTES
 		)
-			throw new NativeImportError(413, "That export is larger than 20 MB.")
+			throw new NativeImportError(413, oversizedMessage)
 		const bytes = new Uint8Array(await file.arrayBuffer())
 		return json(
 			{

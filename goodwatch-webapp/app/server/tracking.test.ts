@@ -1,14 +1,5 @@
-// CommonJS packages are loaded before the alias hook, which would otherwise resolve their own relative requires.
-import "node-crate"
-import "ioredis"
-import "react"
-import "@remix-run/node"
-import "zod"
-import ts from "typescript"
-import "./title-filter/test-alias.ts"
+import "./tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
 import {
 	PLAIN_DATES,
@@ -18,40 +9,6 @@ import {
 import { seasonRestore, seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
-
-// The writer reaches the taste store through `markTasteChanged`, whose module pulls in the viewer and with it auth,
-// and reads the title snapshot, whose index the alias hook replaces by the format module without
-// `getTitleSnapshot`. The same stubs as userData.test.ts.
-const { registerHooks } = nodeModule as unknown as {
-	registerHooks(hooks: {
-		load(
-			url: string,
-			context: unknown,
-			next: (url: string, context: unknown) => unknown,
-		): unknown
-	}): void
-}
-registerHooks({
-	load(url, context, next) {
-		let source: string | undefined
-		if (url.endsWith("/utils/auth.ts"))
-			source =
-				'export const getUserIdFromRequest = () => { throw new Error("Unexpected auth") }; export const getAuthFromRequest = getUserIdFromRequest'
-		else if (url.endsWith("/title-snapshot/format.server.ts"))
-			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => null`
-		if (source === undefined) return next(url, context)
-		return {
-			format: "module",
-			source: ts.transpileModule(source, {
-				compilerOptions: {
-					module: ts.ModuleKind.ESNext,
-					target: ts.ScriptTarget.ESNext,
-				},
-			}).outputText,
-			shortCircuit: true,
-		}
-	},
-})
 
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
@@ -3318,9 +3275,7 @@ test("an import that makes a show Watching is not the member's move, and resumin
 	await act({ type: "hold" }, newId(), short)
 	const before = Date.now()
 	await act({ type: "resume" }, newId(), short)
-	assert.ok(
-		((await entryOf(short))?.watchingSince?.getTime() ?? 0) >= before,
-	)
+	assert.ok(((await entryOf(short))?.watchingSince?.getTime() ?? 0) >= before)
 })
 
 test("undoing the import that made a show Seen leaves it Watching by the import that remains, not by the member", async () => {
@@ -3352,34 +3307,48 @@ test("undoing the import that made a show Seen leaves it Watching by the import 
 	assert.equal(entry?.watchingSince, null)
 })
 
-for (const mutation of ["update", "delete"] as const) for (const outcome of ["applied", "not-applied", "pending"] as const) {
- test(`a tracking CAS ${mutation} with a ${outcome} lost response converges without applying its state twice`, async () => {
-  await tick(1,1,"initial-watch")
-  const original = db.execute.bind(db)
-  let calls=0
-  db.execute=async (sql,params=[])=>{
-   if(/(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
-    calls++
-    if(calls===1) {
-     if(outcome==="applied") await original(sql,params)
-     throw Object.assign(new Error("fixture response lost"),{code:"ECONNRESET"})
-    }
-    if(calls===2 && outcome==="pending") await original(sql,params)
-   }
-   return original(sql,params)
-  }
-  setCrateClientForTest(db)
-  const result=await act(mutation==="update"?{type:"drop"}:{type:"unwatch",season:1,number:1})
-  assert.equal(result.status,"applied")
-  assert.deepEqual(ticks(),mutation==="update"?["1.1"]:[])
-  assert.equal(stateOf()?.state,mutation==="update"?"dropped":undefined)
-  assert.equal(calls,outcome==="applied"?1:2)
- })
-}
+for (const mutation of ["update", "delete"] as const)
+	for (const outcome of ["applied", "not-applied", "pending"] as const) {
+		test(`a tracking CAS ${mutation} with a ${outcome} lost response converges without applying its state twice`, async () => {
+			await tick(1, 1, "initial-watch")
+			const original = db.execute.bind(db)
+			let calls = 0
+			db.execute = async (sql, params = []) => {
+				if (/(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+					calls++
+					if (calls === 1) {
+						if (outcome === "applied") await original(sql, params)
+						throw Object.assign(new Error("fixture response lost"), {
+							code: "ECONNRESET",
+						})
+					}
+					if (calls === 2 && outcome === "pending") await original(sql, params)
+				}
+				return original(sql, params)
+			}
+			setCrateClientForTest(db)
+			const result = await act(
+				mutation === "update"
+					? { type: "drop" }
+					: { type: "unwatch", season: 1, number: 1 },
+			)
+			assert.equal(result.status, "applied")
+			assert.deepEqual(ticks(), mutation === "update" ? ["1.1"] : [])
+			assert.equal(
+				stateOf()?.state,
+				mutation === "update" ? "dropped" : undefined,
+			)
+			assert.equal(calls, outcome === "applied" ? 1 : 2)
+		})
+	}
 
 for (const [mutation, first, second] of [
 	["update", { type: "drop" }, { type: "resume" }],
-	["delete", { type: "unwatch", season: 1, number: 1 }, { type: "watch", season: 1, number: 1 }],
+	[
+		"delete",
+		{ type: "unwatch", season: 1, number: 1 },
+		{ type: "watch", season: 1, number: 1 },
+	],
 ] as const) {
 	test(`a lost CAS ${mutation} response superseded by the next action fails rather than applying again over it`, async () => {
 		await tick(1, 1, "initial-watch")
@@ -3392,7 +3361,9 @@ for (const [mutation, first, second] of [
 				lost = true
 				await original(sql, params)
 				assert.equal((await act(second)).status, "applied")
-				throw Object.assign(new Error("fixture response lost"), { code: "ECONNRESET" })
+				throw Object.assign(new Error("fixture response lost"), {
+					code: "ECONNRESET",
+				})
 			}
 			return original(sql, params)
 		}
