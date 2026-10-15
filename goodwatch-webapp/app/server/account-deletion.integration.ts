@@ -13,7 +13,7 @@ import ts from "typescript"
 import "./title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { createHash, randomUUID } from "node:crypto"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync, statSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { after, before, test } from "node:test"
 import {
@@ -49,8 +49,21 @@ const transpile = (source: string, url: string) =>
 			jsx: ts.JsxEmit.ReactJSX,
 		},
 	}).outputText
+// On Node 24 these hooks also see CommonJS requires, and the alias hook hands a package's relative require on as a
+// file URL, which require can't load. A relative import inside node_modules is resolved here instead, as Node would.
+const insidePackage = (specifier: string, parent?: string) => {
+	if (!specifier.startsWith(".") || !parent?.includes("/node_modules/")) return null
+	const base = new URL(specifier, parent)
+	for (const ending of ["", ".js", ".cjs", ".json", "/index.js"]) {
+		const candidate = new URL(base.href + ending)
+		if (existsSync(candidate) && statSync(candidate).isFile()) return candidate.href
+	}
+	return null
+}
 registerHooks({
 	resolve(specifier, context, next) {
+		const packaged = insidePackage(specifier, (context as { parentURL?: string }).parentURL)
+		if (packaged) return { url: packaged, shortCircuit: true }
 		if (specifier.endsWith(".svg?raw"))
 			return {
 				url: new URL(`../${specifier.slice(2)}`, import.meta.url).href,
