@@ -1,0 +1,156 @@
+{
+  "startedAt": "2026-10-15T03:56:04.648932+00:00",
+  "backupDirectory": "/root/cratedb-maintenance/547-20261015035349",
+  "blobFiles": [
+    {
+      "sha1": "b9aba3fa255e9bce38fd3884e98b9f720037785f",
+      "bytes": 1532786,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/b9aba3fa255e9bce38fd3884e98b9f720037785f",
+      "verified": true
+    },
+    {
+      "sha1": "98267fb924d98a0686b7c64aa3bfc6de4fd00299",
+      "bytes": 5061121,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/98267fb924d98a0686b7c64aa3bfc6de4fd00299",
+      "verified": true
+    },
+    {
+      "sha1": "2aa26f17b6b8f6b9e60e3511a790e2a0e0fff498",
+      "bytes": 258751,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/2aa26f17b6b8f6b9e60e3511a790e2a0e0fff498",
+      "verified": true
+    },
+    {
+      "sha1": "d4cc36cefa4e4d2bfd29a9e112093a90f74b9ce2",
+      "bytes": 603103,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/d4cc36cefa4e4d2bfd29a9e112093a90f74b9ce2",
+      "verified": true
+    },
+    {
+      "sha1": "a9206a07d20b732f4646b37b007554b259f5d8d4",
+      "bytes": 1790239,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/a9206a07d20b732f4646b37b007554b259f5d8d4",
+      "verified": true
+    },
+    {
+      "sha1": "9565657c10ee5e33962f9fe781e8460eed4a1f8f",
+      "bytes": 797458,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/9565657c10ee5e33962f9fe781e8460eed4a1f8f",
+      "verified": true
+    },
+    {
+      "sha1": "b7044b14256439d936d255cd6998cd99a49170d2",
+      "bytes": 3567462,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/b7044b14256439d936d255cd6998cd99a49170d2",
+      "verified": true
+    },
+    {
+      "sha1": "b064ec055a2a67731f2467d4d58873b227b541b8",
+      "bytes": 893,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/b064ec055a2a67731f2467d4d58873b227b541b8",
+      "verified": true
+    },
+    {
+      "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+      "bytes": 60395,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/b207b1d10fdd684e8b85570b473c68744d16e2d9",
+      "verified": true
+    },
+    {
+      "sha1": "811d8220c4d811af4f203c0f6d676c79e40672e8",
+      "bytes": 49642139,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/811d8220c4d811af4f203c0f6d676c79e40672e8",
+      "verified": true
+    },
+    {
+      "sha1": "7eef817198615e93351fe35cfb4c4c0224fa76b8",
+      "bytes": 1534571,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/7eef817198615e93351fe35cfb4c4c0224fa76b8",
+      "verified": true
+    },
+    {
+      "sha1": "173b21043fbe2123f6744c969f093edf3cf1653d",
+      "bytes": 5078658,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/173b21043fbe2123f6744c969f093edf3cf1653d",
+      "verified": true
+    },
+    {
+      "sha1": "324f6c47bfface2a61d571ff1cbf0b9e72c94140",
+      "bytes": 259125,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/324f6c47bfface2a61d571ff1cbf0b9e72c94140",
+      "verified": true
+    },
+    {
+      "sha1": "0788ad935727ae5e7a589a2cb276b63f1183d7b1",
+      "bytes": 603997,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/0788ad935727ae5e7a589a2cb276b63f1183d7b1",
+      "verified": true
+    },
+    {
+      "sha1": "c49827c1b1421ab236350ac6cc5592888b42d67d",
+      "bytes": 1790875,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/c49827c1b1421ab236350ac6cc5592888b42d67d",
+      "verified": true
+    },
+    {
+      "sha1": "34371984b4440f85d5f9ccc914d5cd0b4eece17f",
+      "bytes": 797122,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/34371984b4440f85d5f9ccc914d5cd0b4eece17f",
+      "verified": true
+    },
+    {
+      "sha1": "dcd5905eec5c56687ea0bad2e5a348b71ac67f14",
+      "bytes": 3577985,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/dcd5905eec5c56687ea0bad2e5a348b71ac67f14",
+      "verified": true
+    },
+    {
+      "sha1": "6fd03b133b11e42c86456a31a21cf144b2d782ed",
+      "bytes": 49720610,
+      "path": "/root/cratedb-maintenance/547-20261015035349/blob-artifacts/6fd03b133b11e42c86456a31a21cf144b2d782ed",
+      "verified": true
+    }
+  ],
+  "snapshotName": "pre_auth_547_20261015035349",
+  "repository": "goodwatch-db-backup-v2",
+  "blobRetentionFinishedAt": "2026-10-15T03:56:05.389429+00:00",
+  "lockAcquiredAt": "2026-10-15T03:56:05.389592+00:00",
+  "snapshotStartedAt": "2026-10-15T03:56:05.389601+00:00",
+  "create": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 16294.842
+    },
+    "elapsedSeconds": 16.298
+  },
+  "snapshotCreateFinishedAt": "2026-10-15T03:56:21.687299+00:00",
+  "verification": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "state",
+        "finished"
+      ],
+      "rows": [
+        [
+          "pre_auth_547_20261015035349",
+          "SUCCESS",
+          1792036580263
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 18474.057
+    },
+    "elapsedSeconds": 18.477
+  },
+  "passed": true,
+  "finishedAt": "2026-10-15T03:56:40.164754+00:00",
+  "sshReturncode": 0,
+  "stderr": ""
+}

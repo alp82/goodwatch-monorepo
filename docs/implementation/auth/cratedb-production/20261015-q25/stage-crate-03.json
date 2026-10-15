@@ -1,0 +1,55 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "operation": "stage",
+    "node": "crate-03",
+    "startedAt": "2026-10-15T03:57:20.670255+00:00",
+    "restartSuppression": "crate-03\n",
+    "backupDirectory": "/root/cratedb-maintenance/547-20261015035349",
+    "oldImageId": "sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad",
+    "oldImage": "crate:5.10.9",
+    "envMode": "0o644",
+    "renderedConfigOnlyImageChanged": true,
+    "container": {
+      "name": "/crate-03",
+      "image": "crate:5.10.9",
+      "imageId": "sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad",
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "Restarting": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-10-14T22:28:25.317290799Z",
+        "FinishedAt": "2026-10-14T22:28:22.752818219Z"
+      },
+      "restartPolicy": {
+        "Name": "no",
+        "MaximumRetryCount": 0
+      },
+      "ports": {
+        "4200/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "4200"
+          }
+        ],
+        "4300/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "4300"
+          }
+        ],
+        "5432/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "5432"
+          }
+        ]
+      }
+    },
+    "finishedAt": "2026-10-15T03:57:21.262354+00:00"
+  },
+  "failureOutput": null
+}

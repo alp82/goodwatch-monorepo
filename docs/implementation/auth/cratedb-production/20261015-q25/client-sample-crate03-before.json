@@ -1,0 +1,243 @@
+[
+  {
+    "host": 20,
+    "result": {
+      "at": "2026-10-15T03:57:15.603050+00:00",
+      "since": "2026-10-15T03:58:00Z",
+      "until": null,
+      "clients": [
+        {
+          "name": "goodwatch-search-b",
+          "id": "1530f91b5e86f6b8d3f6f4d4a8c27edd88f25dd4554c08273fc68ff52191eceb",
+          "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "restarts": 0,
+          "health": "healthy",
+          "logReturncode": 0,
+          "counts": {
+            "failedQuery": 0,
+            "crateTimeout": 0,
+            "crateDatabaseError": 0,
+            "nodeLossError": 0,
+            "connectionError": 0,
+            "logged5xx": 0
+          },
+          "events": {
+            "failedQuery": [],
+            "crateTimeout": [],
+            "crateDatabaseError": [],
+            "nodeLossError": [],
+            "connectionError": [],
+            "logged5xx": []
+          },
+          "successfulCrateLogLines": 0,
+          "metrics": {
+            "status": 200,
+            "lines": [
+              "goodwatch_http_responses_total{route=\"/api/command-palette\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 52",
+              "goodwatch_http_responses_total{route=\"/api/combined-search\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_build_info{commit=\"ebe8581f\"} 1"
+            ]
+          }
+        },
+        {
+          "name": "goodwatch-search-a",
+          "id": "2494b5fb6b783959b51adb0bcd4c72dbf18872d35e3c251c2048a2e4d9fac4a3",
+          "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "restarts": 0,
+          "health": "healthy",
+          "logReturncode": 0,
+          "counts": {
+            "failedQuery": 0,
+            "crateTimeout": 0,
+            "crateDatabaseError": 0,
+            "nodeLossError": 0,
+            "connectionError": 0,
+            "logged5xx": 0
+          },
+          "events": {
+            "failedQuery": [],
+            "crateTimeout": [],
+            "crateDatabaseError": [],
+            "nodeLossError": [],
+            "connectionError": [],
+            "logged5xx": []
+          },
+          "successfulCrateLogLines": 0,
+          "metrics": {
+            "status": 200,
+            "lines": [
+              "goodwatch_http_responses_total{route=\"/api/command-palette\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 58",
+              "goodwatch_http_responses_total{route=\"/api/combined-search\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_build_info{commit=\"ebe8581f\"} 1"
+            ]
+          }
+        },
+        {
+          "name": "gk4owk8-20261015T034301",
+          "id": "296294c072764b2b9c17aa7ed8db14c146735fdd5b9cbb390382592fe1e0fbe2",
+          "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "restarts": 0,
+          "health": "healthy",
+          "logReturncode": 0,
+          "counts": {
+            "failedQuery": 0,
+            "crateTimeout": 0,
+            "crateDatabaseError": 0,
+            "nodeLossError": 0,
+            "connectionError": 0,
+            "logged5xx": 0
+          },
+          "events": {
+            "failedQuery": [],
+            "crateTimeout": [],
+            "crateDatabaseError": [],
+            "nodeLossError": [],
+            "connectionError": [],
+            "logged5xx": []
+          },
+          "successfulCrateLogLines": 0,
+          "metrics": {
+            "status": 200,
+            "lines": [
+              "goodwatch_http_responses_total{route=\"static\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 175",
+              "goodwatch_http_responses_total{route=\"/sign-in\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1050",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1595",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 3819",
+              "goodwatch_http_responses_total{route=\"/sign-in\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 141",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 583",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 447",
+              "goodwatch_http_responses_total{route=\"/api/search-config\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 62",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 73",
+              "goodwatch_http_responses_total{route=\"/\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 85",
+              "goodwatch_http_responses_total{route=\"/sign-in\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 141",
+              "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+              "goodwatch_http_responses_total{route=\"/api/poster-impressions\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 55",
+              "goodwatch_http_responses_total{route=\"/api/e\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 7",
+              "goodwatch_http_responses_total{route=\"/api/e\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 9",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 3",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_http_responses_total{route=\"/og/:first/:second\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 13",
+              "goodwatch_http_responses_total{route=\"/:type\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 4",
+              "goodwatch_http_responses_total{route=\"/:type/:category\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"/:type\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+              "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+              "goodwatch_http_responses_total{route=\"/tv-shows\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/tv-shows/:category/:page\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/sitemaps/:file\",status_class=\"4xx\",audience=\"anon\",cache_control=\"shared\"} 2",
+              "goodwatch_http_responses_total{route=\"/api/related\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 2",
+              "goodwatch_http_responses_total{route=\"/api/living-room/picks\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+              "goodwatch_http_responses_total{route=\"/api/related-map\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_http_responses_total{route=\"/api/poster-impressions\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 6",
+              "goodwatch_http_responses_total{route=\"/api/related-map\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 2",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 3",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/tv/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/api/discover/results\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"static\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 5",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_http_responses_total{route=\"/sign-up\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+              "goodwatch_build_info{commit=\"ebe8581f\"} 1"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "host": 21,
+    "result": {
+      "at": "2026-10-15T03:57:14.785250+00:00",
+      "since": "2026-10-15T03:58:00Z",
+      "until": null,
+      "clients": [
+        {
+          "name": "gk4owk8-20261015T034054",
+          "id": "4ed8640491b5922bcae007f20aa4477be36aac657ecac4897427e1449ec9fc5b",
+          "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+          "restarts": 0,
+          "health": "healthy",
+          "logReturncode": 0,
+          "counts": {
+            "failedQuery": 0,
+            "crateTimeout": 0,
+            "crateDatabaseError": 0,
+            "nodeLossError": 0,
+            "connectionError": 0,
+            "logged5xx": 0
+          },
+          "events": {
+            "failedQuery": [],
+            "crateTimeout": [],
+            "crateDatabaseError": [],
+            "nodeLossError": [],
+            "connectionError": [],
+            "logged5xx": []
+          },
+          "successfulCrateLogLines": 0,
+          "metrics": {
+            "status": 200,
+            "lines": [
+              "goodwatch_http_responses_total{route=\"static\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 595",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 616",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1141",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 3722",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1636",
+              "goodwatch_http_responses_total{route=\"/\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 91",
+              "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 489",
+              "goodwatch_http_responses_total{route=\"/sign-in\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 170",
+              "goodwatch_http_responses_total{route=\"/api/search-config\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 79",
+              "goodwatch_http_responses_total{route=\"/sign-in\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 173",
+              "goodwatch_http_responses_total{route=\"static\",status_class=\"3xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 80",
+              "goodwatch_http_responses_total{route=\"/api/poster-impressions\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 66",
+              "goodwatch_http_responses_total{route=\"/api/poster-impressions\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 16",
+              "goodwatch_http_responses_total{route=\"/api/discover/results\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 8",
+              "goodwatch_http_responses_total{route=\"/api/e\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 17",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"/og/:first/:second\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 5",
+              "goodwatch_http_responses_total{route=\"/:type\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"/:type/:category\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 4",
+              "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/:type\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+              "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+              "goodwatch_http_responses_total{route=\"/tv-shows\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/tv-shows/:category/:page\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 2",
+              "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 1",
+              "goodwatch_http_responses_total{route=\"/sitemaps/:file\",status_class=\"4xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+              "goodwatch_http_responses_total{route=\"/api/related\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+              "goodwatch_http_responses_total{route=\"/api/living-room/picks\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+              "goodwatch_http_responses_total{route=\"/\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_http_responses_total{route=\"/api/e\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 12",
+              "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 5",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 6",
+              "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 3",
+              "goodwatch_http_responses_total{route=\"/api/related-map\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 4",
+              "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 6",
+              "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/api/related-map\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 2",
+              "goodwatch_http_responses_total{route=\"static\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+              "goodwatch_http_responses_total{route=\"/sign-up\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+              "goodwatch_build_info{commit=\"ebe8581f\"} 1"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]
