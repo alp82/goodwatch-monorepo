@@ -5,6 +5,7 @@
 // - The abort timer is cleared when the response is done. The default entry leaves it running, so every request keeps
 //   its render and loader data alive for 5 seconds.
 import { protectMediaResponse } from "~/server/media-read-health.server"
+import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
 import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
@@ -40,6 +41,7 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
 logProcessRole()
+startCrateDiagnostics()
 startLifecycle()
 startMetrics()
 // The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
