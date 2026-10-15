@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-15T20:41:34.549436+00:00",
+  "since": "2026-10-15T20:37:27Z",
+  "lineCount": 43,
+  "loggerLevels": [
+    {
+      "level": "INFO",
+      "logger": "i.c.a.HttpAuthUpstreamHandler",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.b.BootstrapChecks",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.c.c.Coordinator",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.c.s.ClusterApplierService",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.c.s.ClusterSettings",
+      "count": 4
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.d.DiscoveryModule",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.e.NodeEnvironment",
+      "count": 2
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.h.n.Netty4HttpServerTransport",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.n.Node",
+      "count": 5
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.p.PluginsService",
+      "count": 14
+    },
+    {
+      "level": "INFO",
+      "logger": "o.e.t.TransportService",
+      "count": 1
+    },
+    {
+      "level": "INFO",
+      "logger": "psql",
+      "count": 2
+    },
+    {
+      "level": "WARN",
+      "logger": "o.e.g.DanglingIndicesState",
+      "count": 1
+    }
+  ],
+  "exceptionClassOccurrences": {},
+  "fatalPatterns": {
+    "OutOfMemoryError": 0,
+    "CorruptIndexException": 0,
+    "Aborting graceful shutdown": 0,
+    "fatal error": 0
+  },
+  "rawLogMessagesRetained": false
+}

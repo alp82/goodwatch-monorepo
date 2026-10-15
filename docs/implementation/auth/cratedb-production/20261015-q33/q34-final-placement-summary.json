@@ -1,0 +1,7 @@
+{
+  "logicalShards": 479,
+  "copies": 958,
+  "everyShardTwoCopiesOnDistinctHosts": true,
+  "everyShardOnePrimary": true,
+  "allStarted": true
+}

@@ -1,0 +1,51 @@
+{
+  "hosts": [
+    {
+      "host": 11,
+      "unchanged": {
+        "composeSha256": true,
+        "composeGitStatus": true,
+        "runtime.env": true,
+        "runtime.command": true,
+        "runtime.hostConfig": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptImage": true
+      },
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "otherNodesNotRestarted": false
+    },
+    {
+      "host": 12,
+      "unchanged": {
+        "composeSha256": true,
+        "composeGitStatus": true,
+        "runtime.env": true,
+        "runtime.command": true,
+        "runtime.hostConfig": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptImage": true
+      },
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "otherNodesNotRestarted": true
+    },
+    {
+      "host": 13,
+      "unchanged": {
+        "composeSha256": true,
+        "composeGitStatus": true,
+        "runtime.env": true,
+        "runtime.command": true,
+        "runtime.hostConfig": true,
+        "runtime.mounts": true,
+        "renderedServiceExceptImage": true
+      },
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "otherNodesNotRestarted": true
+    }
+  ],
+  "authUserRows": [],
+  "baselineTableRows": 124,
+  "newExternalTables": [],
+  "removedTables": [],
+  "changedTableSettings": []
+}

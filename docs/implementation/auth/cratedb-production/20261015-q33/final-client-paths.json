@@ -1,0 +1,211 @@
+[
+  {
+    "host": 11,
+    "clients": [
+      {
+        "name": "windmill-default_worker-1",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": 11,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 43
+          },
+          {
+            "host": 12,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 14
+          },
+          {
+            "host": 13,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 10
+          }
+        ],
+        "stderr": ""
+      }
+    ]
+  },
+  {
+    "host": 12,
+    "clients": [
+      {
+        "name": "windmill-default_worker-1",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": 11,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 54
+          },
+          {
+            "host": 12,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 8
+          },
+          {
+            "host": 13,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 9
+          }
+        ],
+        "stderr": ""
+      }
+    ]
+  },
+  {
+    "host": 13,
+    "clients": [
+      {
+        "name": "windmill-default_worker-1",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": 11,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 51
+          },
+          {
+            "host": 12,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 13
+          },
+          {
+            "host": 13,
+            "status": 200,
+            "rowcount": 1,
+            "errorCode": null,
+            "elapsedMs": 5
+          }
+        ],
+        "stderr": ""
+      }
+    ]
+  },
+  {
+    "host": 20,
+    "clients": [
+      {
+        "name": "gk4owk8-20261015T194515",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": "10.0.0.11",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 134
+          },
+          {
+            "host": "10.0.0.12",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 13
+          },
+          {
+            "host": "10.0.0.13",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 12
+          }
+        ],
+        "stderr": ""
+      },
+      {
+        "name": "goodwatch-search-b",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": "10.0.0.11",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 107
+          },
+          {
+            "host": "10.0.0.12",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 13
+          },
+          {
+            "host": "10.0.0.13",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 17
+          }
+        ],
+        "stderr": ""
+      },
+      {
+        "name": "goodwatch-search-a",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": "10.0.0.11",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 122
+          },
+          {
+            "host": "10.0.0.12",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 15
+          },
+          {
+            "host": "10.0.0.13",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 11
+          }
+        ],
+        "stderr": ""
+      }
+    ]
+  },
+  {
+    "host": 21,
+    "clients": [
+      {
+        "name": "gk4owk8-20261015T194120",
+        "returncode": 0,
+        "probes": [
+          {
+            "host": "10.0.0.11",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 120
+          },
+          {
+            "host": "10.0.0.12",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 15
+          },
+          {
+            "host": "10.0.0.13",
+            "status": 200,
+            "rowcount": 1,
+            "elapsedMs": 15
+          }
+        ],
+        "stderr": ""
+      }
+    ]
+  }
+]
