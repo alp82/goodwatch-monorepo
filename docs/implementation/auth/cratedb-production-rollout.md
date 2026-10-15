@@ -6,7 +6,30 @@ Prepared from direct, read-only SSH inspection beginning **2026-10-15 22:14 UTC*
 [#547 execution record](https://github.com/alp82/goodwatch-monorepo/blob/098a6d431376cdcad99d9a5d0a63ff6b52e33816/docs/implementation/auth/cratedb-prereqs.md).
 This supersedes the old document's production inventory/order and its statement that crate-01 still needs upgrading.
 
-## Current outcome — 2026-10-15 23:14 UTC
+## Approved continuation — 2026-10-15, after Q37 stop
+
+The owner explicitly approved the #547 normal-stop precedent for **this rollout**. No more KILLs.
+Order is **crate-02 → crate-03 → crate-01**, even though crate-02 is initially master.
+Keep `force=false`, `min_availability=PRIMARIES` and the existing 2h graceful setting. Decommission through
+another coordinator, require **zero primaries on the target**, then if its daemon remains alive use
+`docker stop --timeout=-1 NODE`: normal configured SIGTERM, unlimited grace, no SIGKILL or shortened timeout.
+Check the container StopSignal is unset/SIGTERM/15 first. The owner approval replaces only the prior stale-context
+clearance/normal-stop/order restrictions below; historical receipts remain unchanged.
+
+Before any drain, verify the installed backup code has all three coordinators and test it with crate-01 excluded.
+Keep a checked `docker exec NODE ... http://127.0.0.1:4200/_sql` admin route on both a surviving node and the target
+when it rejoins. Use only the existing image/volume/settings; the sole runtime change is the reviewed HBA command.
+Between nodes require all three members, GREEN, all shard copies STARTED/STARTED, allocation all and every node check.
+
+**First-node hard gate:** directly against **10.0.0.12 only**, test admin from both actual page containers,
+search-a/b, Windmill's stored credential from a worker, installed backup helper, Kuma's configured Basic credential,
+and installed script profile. Correct credentials must return the expected identity/access; missing/wrong passwords
+must return 401. Also verify PostgreSQL password enforcement and trusted local administration. HBA-off nodes cannot
+satisfy this gate. If any client fails, **revert HBA on crate-02 using the same zero-primary/unlimited-grace procedure,
+restore GREEN and stop**. This rollback is expressly authorized; do not change Coolify or attempt credential repairs.
+No next node before the complete first-node gate passes. Post progress and outcome to #562.
+
+## Historical stop — 2026-10-15 23:14 UTC (superseded by continuation above)
 
 **Stopped after the first Q37-authorized individual KILL did not clear its stale contexts.** Crate-02 job ID
 `073377a6-6825-8e6c-49db-ded701488ab3` had no matching `sys.jobs` row immediately before KILL at **23:13:03 UTC**.
@@ -63,7 +86,7 @@ Merging #599 to main is authorized only **after a successful rollout and passing
    dedicated role is optional. Any Coolify change is still owner-UI-only. The original read-only preparation made no
    production changes; later staging and recovery are recorded above.
 
-## Observed cluster and restart gates
+## Original observed cluster and restart gates (see continuation above)
 
 All three retain the pinned `crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307` image.
 All endpoints report **96 GREEN health rows, 962 STARTED/STARTED shard copies, 21 passing node checks**, allocation `all`,
@@ -284,126 +307,103 @@ backup helper (read only, never call backup.main as a probe). Review active `adm
 `admin` identity. Let older worker jobs finish or establish that their retained credentials remain valid; never kill them. **HBA off accepts wrong passwords**: these checks establish identity/grants and credential
 plumbing, not enforcement. The first enforcing node must immediately pass both positive and negative checks.
 
-## Rolling switch: crate-01, crate-03, crate-02 (master last)
+## Rolling switch: crate-02, crate-03, crate-01
 
-Re-evaluate the elected master before starting; if changed, stop and update the order. Preflight stale-context clearance
-is required on **all** nodes before starting, including the last node. Keep observers on independent sessions and retain
-sanitized logs across app container replacements. One node only; no next node until full GREEN/STARTED and client gates.
+Use this order exactly. One node at a time; no second drain until GREEN/STARTED/all checks and client gates pass.
+The fresh safety snapshot `pre_hba_562_20261015232836` is independently SUCCESS. All 18 current BLOB artifacts
+(126,888,186 bytes) are protected with SHA1 verification under
+`/root/cratedb-maintenance/562-enforce-20261015/blob-artifacts` on .11. #563 records successful SQL/BLOB restoration.
+Before-config/runtime copies are protected in `/root/cratedb-maintenance/562-enforce-20261015/` on each target.
+The staged reviewed compose SHA256 is `5fd424fe031a4f89ab269de7ffca1904b50ad293c2e9ca1fb13a48a1f6d08ccd`.
 
-1. Take a fresh named safety snapshot, serialized with `/var/lock/backup_crate.lock` on .11, using the admin route and
-   a 1,800-second HTTP timeout. Use `pre_hba_562_YYYYMMDDHHMMSS`, outside automated retention prefixes. Example on .11:
+| Target | Observer/admin coordinator | Revalidated original ID |
+| --- | --- | --- |
+| .12 / crate-02 | .11 / crate-01 | r0IgCe17SPOgudkQIGsRQA |
+| .13 / crate-03 | .11 / crate-01 | ch8EXZwrQVmCls79_T_vUg |
+| .11 / crate-01 | .12 / crate-02 | xlclgwGeSHe18p5J4WvfFA |
+
+For each target:
+
+1. Re-run live admin, health, nodes, shard states and checks; verify the ID and `force=false`, PRIMARIES, 2h.
+   Require GREEN before changing allocation. Confirm no active backup/snapshot conflicts. Verify the backed-up files
+   and running container ID still match; otherwise stop. For .11, recheck backup reads with .11 excluded.
+2. Atomically install the reviewed compose file and set `CRATE_HBA_ENABLED=true` only in this target's `.env`.
+   Preserve ownership/mode. Protected render must differ only in HBA argv, preserving image digest, volume, mounts,
+   private ports, heap, limits and logging. Current runtime still has HBA off until recreation.
+3. Suppress only target restart, then decommission through the observer. First-node exact commands:
 
    ```bash
-   stamp=$(date -u +%Y%m%d%H%M%S)
-   python3 -c 'import json,sys; print(json.dumps({"stmt":"CREATE SNAPSHOT \"goodwatch-db-backup-v2\".\"pre_hba_562_"+sys.argv[1]+"\" ALL WITH (wait_for_completion=true)"}))' "$stamp" |
-     flock -w 1800 /var/lock/backup_crate.lock docker exec -i crate-01 \
-       curl -fsS --max-time 1800 -H 'Content-Type:application/json' --data-binary @- http://127.0.0.1:4200/_sql
+   ssh root@10.0.0.12 docker update --restart=no crate-02
+   crate_sql 10.0.0.11 crate-01 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'primaries'"
+   crate_sql 10.0.0.11 crate-01 "ALTER CLUSTER DECOMMISSION 'r0IgCe17SPOgudkQIGsRQA'" 7500
    ```
 
-   Verify named snapshot SUCCESS independently before continuing. Timeout is an uncertain outcome, **not permission to
-   retry**. Preserve current BLOB artifacts separately and verify SHA1 against the current search manifests; snapshot
-   excludes BLOBs. Retain secret/config backups protected on each host, never in git.
+   Keep the request alive; a client timeout does not cancel the drain. Independent observers must show no missing
+   primaries. Expected temporary underreplication while one node is absent is allowed; new unexpected failures stop advancement.
+4. Require successful decommission acknowledgement and **zero target primaries** through the observer:
 
-2. On the selected host, back up `.env`, compose, runtime and image IDs securely. Stage only the reviewed Compose file,
-   then set `CRATE_HBA_ENABLED=true` in this node's `.env` (never all three at once). Preserve file ownership/mode and
-   pinned `CRATE_VERSION`. Example for first node, using already-staged reviewed `docker-compose.yml.reviewed`:
-
-   ```bash
-   cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate
-   umask 077
-   record=/root/cratedb-maintenance/562-$(date -u +%Y%m%dT%H%M%SZ)
-   mkdir -p "$record"
-   cp -p .env docker-compose.yml "$record/"
-   docker inspect crate-01 > "$record/runtime.json"
-   install -m 644 docker-compose.yml.reviewed docker-compose.yml
-   python3 - <<'PY'
-   from pathlib import Path
-   p=Path('.env'); lines=p.read_text().splitlines()
-   assert sum(x.startswith('CRATE_HBA_ENABLED=') for x in lines)<=1
-   lines=[x for x in lines if not x.startswith('CRATE_HBA_ENABLED=')]
-   p.write_text('\n'.join(lines+['CRATE_HBA_ENABLED=true'])+'\n')
-   PY
-   docker compose -f docker-compose.yml -p goodwatch-crate config --format json > "$record/rendered.json"
+   ```sql
+   SELECT count(*) FROM sys.shards WHERE primary = true AND node['id'] = 'r0IgCe17SPOgudkQIGsRQA';
+   SELECT sum(missing_shards) FROM sys.health;
+   SELECT settings['cluster']['graceful_stop']['force'] FROM sys.cluster;
    ```
 
-   Compare protected render to baseline: only removing comment argv and explicitly enabling HBA may change command;
-   validate loopback crate trust followed by password rule, image digest, private binds, existing named volume, snapshot
-   mount, heap/limits/logging and restart always unchanged. Never print full env/render. Wrong diff = STOP.
-
-3. Suppress restart on **only the target**: `docker update --restart=no crate-01` (substitute the selected node).
-   From a different healthy coordinator, issue these individually; first target .11 uses .12:
+   Results must be 0, 0, false. Check target StopSignal is unset/SIGTERM/15. If still running:
 
    ```bash
-   crate_sql 10.0.0.12 crate-02 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'primaries'"
-   crate_sql 10.0.0.12 crate-02 "ALTER CLUSTER DECOMMISSION 'xlclgwGeSHe18p5J4WvfFA'" 7500
+   ssh root@10.0.0.12 docker stop --timeout=-1 crate-02
+   ssh root@10.0.0.12 docker inspect crate-02 --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}'
    ```
 
-   For .13 use its recorded/revalidated ID through .11; for .12 use its ID through .11. Revalidate IDs from sys.nodes
-   immediately before issuing. Allow outer SSH at least 7,530 seconds; do not use an app/30-second HTTP timeout.
-   Independently watch node membership, missing primaries, operations, checks and client errors. Expected transient
-   underreplication during one absent node is allowed; missing primaries, authentication failures, stuck contexts,
-   stalled/unexpected health or failed drain means STOP/report. Do not interpret a timeout as cancellation.
-
-4. Require the original process to **actually exit normally**, independently of decommission SQL acknowledgement:
+   Require exited, exit 0 or 143, no OOM/SIGKILL. Never wrap this stop in a finite grace/kill timeout. If it does not
+   exit, stop and report; no further KILLs or forced stop. Original orphan-context rows alone are covered by this approval.
+5. Only after exit, recreate on the same volume/image:
 
    ```bash
-   ssh root@10.0.0.11 docker inspect crate-01 --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}'
+   ssh root@10.0.0.12 'cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && docker compose -f docker-compose.yml -p goodwatch-crate up -d --no-deps --force-recreate cratedb'
    ```
 
-   If it remains running, stop and ask; no KILL or Docker-stop fallback is authorized here. Only after exit:
+   Require original ID/version rejoin, exact expected HBA command, private bindings/mounts/image unchanged and
+   restart always. Check container-loopback `SELECT current_user` returns crate. Initial startup readiness may
+   need several seconds; begin the hard client gate only after users/metadata are available.
+6. Restore allocation through the observer immediately after rejoin:
 
    ```bash
-   ssh root@10.0.0.11 'cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && docker compose -f docker-compose.yml -p goodwatch-crate up -d --no-deps --force-recreate cratedb'
+   crate_sql 10.0.0.11 crate-01 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'"
    ```
 
-   Verify original node ID rejoined on the same version, admin loopback `SELECT current_user=crate` works, actual runtime
-   command includes `-Cauth.host_based.enabled=true` before rules, private bindings/mounts unchanged, restart always.
-   Keep readiness probes until users/metadata have arrived (the lab observed roughly two seconds of initial HBA refusal).
-   A client auth failure after readiness is unexpected: stop/report; do not advance.
-
-5. Restore recorded effective allocation after rejoin:
-
-   ```bash
-   crate_sql 10.0.0.12 crate-02 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'"
-   ```
-
-   Use .11 for later targets. Require **three nodes, all current health rows GREEN, every copy STARTED/STARTED,
-   zero missing/underreplicated copies, all checks passed**, then repeat from every endpoint. No fixed table-count gate.
-
-6. Probe the newly enforced node from each real client host with correct, wrong and missing credentials. The Node
-   verifier defaults to enforcement mode; restrict it to the newly enabled node during the mixed phase:
+   Wait for progressing shard recovery; require three nodes, every health row GREEN, all copies STARTED/STARTED,
+   zero missing/underreplicated copies, all 21 checks passed. Recheck independently through all three local admin routes.
+7. Direct first-node gate **only to .12** from both actual page containers (`admin`), search-a/b, actual Windmill
+   worker using API-read workspace values, backup helper with installed cron credential, Kuma's stored Basic credential,
+   and readonly script profiles. Correct password must return expected identity; missing/wrong must return 401.
+   Example for search:
 
    ```bash
-   ssh root@10.0.0.20 docker exec -i -e CRATE_VERIFY_HOSTS=10.0.0.11 goodwatch-search-a \
+   ssh root@10.0.0.20 docker exec -i -e CRATE_VERIFY_HOSTS=10.0.0.12 goodwatch-search-a \
      node --input-type=module < docs/implementation/auth/verify_crate_endpoints.mjs
-   # Repeat for search-b and both page containers, then .13 and .12 after their respective steps.
    ```
 
-   Python verifier accepts host:port lists for workers and `CRATE_PASSWORD_FILE` for host scripts. Resolve workspace
-   variables in-process; never print/export their values in tool output. Positive SELECT returns the dedicated identity;
-   missing, wrong-client and wrong-crate passwords must all return HTTP 401 on the enforcing node. Repeat via PostgreSQL
-   protocol 5432 using a password prompt/client-library argument (no password argv), since it is also published. A trusted
-   container-loopback crate probe must still pass. Do not run negative checks against unenforced nodes as though they were
-   a passing enforcement test. Exercise representative catalog, monitoring and authorized writes; never mutate real member
-   rows as a maintenance canary. Observe organic traffic and approved disposable canaries with cleanup receipts.
-
-7. Proceed only after all gates; final verification selects all three endpoints from all client hosts, waits for a new
-   successful scheduled backup and ordinary Windmill jobs, confirms page/search readiness and no new terminal Crate/auth
-   failures. Record versions, runtime SHA, grants, snapshots, timings and evidence. Post #562 outcome. Merge #599 only after
-   successful rollout, passing tests and required adversarial review; leave #562 open if any criterion is unmet.
+   Repeat for search-b and both current `gk4owk8-*` page containers. Test the new role files too, including optional
+   webapp. Verify PostgreSQL 5432 with client-library password parameters held only in memory. Trusted local crate
+   administration must still pass. Do not accept fallback success on an unenforced node. **Any client failure means
+   roll back HBA on this node and stop**, not changing the client's credentials or advancing to another node.
+8. Repeat only after full gates for .13 then .11, substituting observer/target/ID from the table. After all three,
+   verify every endpoint, page/search readiness, Kuma UP, representative Windmill work and scheduled backup success.
+   Post #562 outcome. Merge #599 only after successful enforcement and tests on current main; no merge while stopped.
 
 ## Rollback / abort
 
 At the first unexpected result **stop advancing and report**. Record whether a drain is still in progress; no automated
-retries. Q35 does not authorize improvising KILLs or normal-stop fallbacks. Keep the owner informed if restart=no or
+retries. The continuation explicitly authorizes zero-primary `docker stop --timeout=-1`, but no additional KILL or forced-stop fallback. Keep the owner informed if restart=no or
 allocation=primaries remains while awaiting a decision.
 
 - **Before drain:** restore this host's saved `.env` and Compose file using `cp -p`, validate its protected render, and
   restore original restart policy if changed. No service recreation is needed when the original container still serves.
 - **Drain submitted but daemon alive:** no new node and no force. Observe through another coordinator; a timed-out HTTP
-  call may still be running. Get an explicit recovery decision if it will not exit. Prior Q34 SIGTERM was node-specific.
+  call may still be running. The new continuation permits normal SIGTERM with unlimited grace only after zero primaries; if that does not finish, stop and request a decision. Never escalate to SIGKILL.
 - **HBA node started but clients fail:** keep its container-loopback admin route. Repair client config only within approved
-  scope; Coolify remains owner-UI-only. If rollback is approved, set this node's HBA false (or restore its saved files),
+  scope; Coolify remains owner-UI-only. The first-node client failure rollback is already approved: set this node's HBA false (or restore its saved files),
   use the same decommission/actual-exit/same-volume recreation procedure, then restore allocation all and full health.
   Keep the 5.10.16 image: **no binary downgrade, volume deletion or snapshot restore** for an HBA rollback.
 - **Mixed cluster:** revert only already-changed nodes, one at a time, GREEN between; never disable all at once. Retain
