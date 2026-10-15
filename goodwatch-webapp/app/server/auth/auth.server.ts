@@ -14,7 +14,11 @@ import { mcp } from "@goodwatch/auth-stack/mcp"
 import { jwt } from "@goodwatch/auth-stack/plugins"
 import { compare } from "bcryptjs"
 import { decodeJwt, jwtVerify } from "jose"
-import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
+import {
+	type AuthSql,
+	crateAuthAdapter,
+	localAuthEncryptionSecret,
+} from "./crate-adapter.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
 import {
 	type AuthEmail,
@@ -24,7 +28,11 @@ import {
 	passwordChangedEmail,
 	resetPasswordEmail,
 } from "./emails.server.ts"
-
+import {
+	type AuthEncryptionKeys,
+	authCredentialVersion,
+} from "./payload-codec.server.ts"
+import { maxMemberSessions } from "./population.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 // Not Response.json: remix-serve's polyfilled Response (no v3_singleFetch) has no static json().
@@ -48,6 +56,7 @@ export function createGoodwatchAuth(options: {
 	baseURL: string
 	secret: string
 	encryptionSecret?: string
+	encryptionKeys?: AuthEncryptionKeys
 	trustedIpHeader?: string
 	rateLimit?: BetterAuthOptions["rateLimit"]
 	mcp?: { resource: string; accessTokenExpiresIn?: number }
@@ -57,6 +66,21 @@ export function createGoodwatchAuth(options: {
 	const origin = new URL(options.baseURL).origin
 	const send = (to: string, message: AuthEmail) =>
 		mail.enqueue(to, message.subject, message.text, message.html)
+	const refreshGrants = new WeakMap<Request, { id: string; version: string }>()
+	const credentialVersion = (password: string | null) =>
+		authCredentialVersion(
+			options.encryptionSecret ?? localAuthEncryptionSecret,
+			password,
+		)
+	const verifyCurrentPassword = async (hash: string, password: string) => {
+		try {
+			return hash.startsWith("$2")
+				? await compare(password, hash.replace(/^\$2y\$/, "$2b$"))
+				: await verifyPassword({ hash, password })
+		} catch {
+			return false
+		}
+	}
 	const tokenHash = (token: string) =>
 		createHash("sha256").update(token).digest("base64url")
 	const core = betterAuth({
@@ -66,10 +90,15 @@ export function createGoodwatchAuth(options: {
 		database: crateAuthAdapter({
 			sql: options.sql,
 			encryptionSecret: options.encryptionSecret,
+			encryptionKeys: options.encryptionKeys,
+			populationBounds: true,
+			enforceGrantRevocation: true,
+			validateSessionCredentials: true,
+			onSessionRevoked: (token) => options.storage.delete(token),
 		}),
 		plugins: options.mcp
 			? [
-					jwt(),
+					jwt({ jwks: { rotationInterval: 30 * 86400, gracePeriod: 86400 } }),
 					mcp({
 						loginPage: "/auth/mcp/login",
 						consentPage: "/auth/mcp/consent",
@@ -90,7 +119,13 @@ export function createGoodwatchAuth(options: {
 						extensions: [
 							{
 								claims: {
-									accessToken: async ({ ctx, user, client, referenceId }) => {
+									accessToken: async ({
+										ctx,
+										user,
+										client,
+										referenceId,
+										grantType,
+									}) => {
 										if (!user)
 											throw new APIError("BAD_REQUEST", {
 												error: "invalid_grant",
@@ -108,6 +143,18 @@ export function createGoodwatchAuth(options: {
 													: []),
 											],
 										})
+										const expected = ctx.request
+											? refreshGrants.get(ctx.request)
+											: undefined
+										if (
+											grantType === "refresh_token" &&
+											(!expected ||
+												expected.id !== consent?.id ||
+												expected.version !== consent?.grantVersion)
+										)
+											throw new APIError("BAD_REQUEST", {
+												error: "invalid_grant",
+											})
 										if (!consent?.grantVersion)
 											throw new APIError("BAD_REQUEST", {
 												error: "invalid_grant",
@@ -128,6 +175,7 @@ export function createGoodwatchAuth(options: {
 						allowUnauthenticatedClientRegistration: true,
 						accessTokenExpiresIn: options.mcp.accessTokenExpiresIn ?? 300,
 						refreshTokenExpiresIn: 90 * 86400,
+						refreshTokenReuseInterval: 30,
 					}),
 					cimd({
 						metadataProfile: "mcp-2026-07-28",
@@ -182,12 +230,26 @@ export function createGoodwatchAuth(options: {
 				})
 				return user ? JSON.stringify({ session, user }) : null
 			},
-			set: (key, value, ttl) => options.storage.set(key, value, ttl),
+			set: (key, value, ttl) => {
+				let storedValue = value
+				if (key.startsWith("active-sessions-")) {
+					const references = JSON.parse(value)
+					if (!Array.isArray(references))
+						throw new Error("Invalid auth session index")
+					storedValue = JSON.stringify(references.slice(-maxMemberSessions))
+				}
+				return options.storage.set(key, storedValue, ttl)
+			},
 			delete: (key) => options.storage.delete(key),
 			getAndDelete: (key) => options.storage.getAndDelete(key),
 			increment: (key, ttl) => options.storage.increment(key, ttl),
 		},
-		verification: { storeInDatabase: true, storeIdentifier: "hashed" },
+		// Expiry cleanup is paged by maintenance, never by a login/reset request.
+		verification: {
+			storeInDatabase: true,
+			storeIdentifier: "hashed",
+			disableCleanup: true,
+		},
 		user: {
 			additionalFields: {
 				confirmationDigest: {
@@ -212,6 +274,14 @@ export function createGoodwatchAuth(options: {
 			storeSessionInDatabase: true,
 			preserveSessionInDatabase: false,
 			cookieCache: { enabled: false },
+			additionalFields: {
+				credentialVersion: {
+					type: "string",
+					required: false,
+					input: false,
+					returned: false,
+				},
+			},
 		},
 		rateLimit: options.rateLimit,
 		emailAndPassword: {
@@ -272,6 +342,58 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
+				if (options.mcp && ctx.path === "/oauth2/register") {
+					const ip = createHash("sha256")
+						.update(
+							getIP(
+								ctx.request ?? ctx.headers ?? new Headers(),
+								ctx.context.options,
+							) ?? "unknown",
+						)
+						.digest("hex")
+					if ((await options.storage.increment(`dcr-ip:${ip}`, 3600)) > 30)
+						throw new APIError("TOO_MANY_REQUESTS", {
+							message: "Please wait before registering another client.",
+						})
+				}
+				if (
+					options.mcp &&
+					ctx.path === "/oauth2/revoke" &&
+					typeof ctx.body?.token === "string"
+				) {
+					const token = await ctx.context.adapter.findOne<{ clientId: string }>(
+						{
+							model: "oauthRefreshToken",
+							where: [{ field: "token", value: tokenHash(ctx.body.token) }],
+						},
+					)
+					if (token) {
+						let clientId =
+							typeof ctx.body.client_id === "string"
+								? ctx.body.client_id
+								: undefined
+						const authorization = (ctx.request?.headers ?? ctx.headers)?.get(
+							"authorization",
+						)
+						if (authorization?.startsWith("Basic ")) {
+							let basicId: string | undefined
+							try {
+								basicId = decodeURIComponent(
+									Buffer.from(authorization.slice(6), "base64")
+										.toString("utf8")
+										.split(":")[0],
+								)
+							} catch {}
+							if (clientId && basicId !== clientId)
+								throw new APIError("BAD_REQUEST", { error: "invalid_request" })
+							clientId = basicId
+						}
+						// Upstream checks this after its revoked-token family branch.
+						// Reject mismatches before it can sweep another client's grants.
+						if (clientId !== token.clientId)
+							throw new APIError("BAD_REQUEST", { error: "invalid_request" })
+					}
+				}
 				if (
 					options.mcp &&
 					ctx.path === "/oauth2/token" &&
@@ -299,6 +421,7 @@ export function createGoodwatchAuth(options: {
 					if (!token) throw invalid()
 					const [consent, user] = await Promise.all([
 						ctx.context.adapter.findOne<{
+							id: string
 							scopes: string[]
 							resources?: string[]
 							grantVersion: string
@@ -328,6 +451,11 @@ export function createGoodwatchAuth(options: {
 						)
 					)
 						throw invalid()
+					if (!ctx.request) throw invalid()
+					refreshGrants.set(ctx.request, {
+						id: consent.id,
+						version: consent.grantVersion,
+					})
 				}
 
 				if (
@@ -487,6 +615,26 @@ export function createGoodwatchAuth(options: {
 							})
 						}
 					}
+					const current =
+						await ctx.context.internalAdapter.findCredentialAccount(userId)
+					if (
+						!current?.password ||
+						!(await verifyCurrentPassword(current.password, ctx.body.password))
+					)
+						throw new APIError("UNAUTHORIZED", {
+							message: "Sign-in credential changed",
+						})
+					const stamped = await ctx.context.adapter.update({
+						model: "session",
+						where: [
+							{ field: "token", value: ctx.context.newSession.session.token },
+						],
+						update: { credentialVersion: credentialVersion(current.password) },
+					})
+					if (!stamped)
+						throw new APIError("UNAUTHORIZED", {
+							message: "Sign-in session changed",
+						})
 				}
 			}),
 		},
@@ -514,7 +662,31 @@ export function createGoodwatchAuth(options: {
 							throw new APIError("FORBIDDEN", {
 								message: "Confirm your email before signing in.",
 							})
-						return { data: session }
+						const credential =
+							await context.context.internalAdapter.findCredentialAccount(
+								session.userId,
+							)
+						const password =
+							typeof credential?.password === "string"
+								? credential.password
+								: null
+						// Core verified the password before reaching this hook. Verify the
+						// current credential too, then bind the session to that exact version.
+						if (
+							context.path === "/sign-in/email" &&
+							(!password ||
+								typeof context.body?.password !== "string" ||
+								!(await verifyCurrentPassword(password, context.body.password)))
+						)
+							throw new APIError("UNAUTHORIZED", {
+								message: "Sign-in credential changed",
+							})
+						return {
+							data: {
+								...session,
+								credentialVersion: credentialVersion(password),
+							},
+						}
 					},
 				},
 			},
@@ -538,6 +710,28 @@ export function createGoodwatchAuth(options: {
 					status: 302,
 					headers: { Location: `${origin}/verify-email?state=expired` },
 				})
+			if (path === "/api/auth/sign-in/email" && response.ok) {
+				const pair = await response.clone().json()
+				const context = await core.$context
+				const current =
+					typeof pair.token === "string"
+						? await context.adapter.findOne({
+								model: "session",
+								where: [{ field: "token", value: pair.token }],
+							})
+						: null
+				if (!current) {
+					if (typeof pair.token === "string")
+						await context.internalAdapter.deleteSession(pair.token)
+					return jsonResponse(
+						{
+							message:
+								"Unable to sign in. Check your details and confirmation email.",
+						},
+						{ status: 401 },
+					)
+				}
+			}
 			if (options.mcp && path === "/api/auth/oauth2/token" && response.ok) {
 				try {
 					const pair = await response.clone().json()

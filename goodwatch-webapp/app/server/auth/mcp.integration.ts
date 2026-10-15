@@ -8,14 +8,21 @@ import {
 } from "./crate-adapter.server.ts"
 import { AuthMailQueue } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
+import {
+	authTestCrateOrigins,
+	authTestValkeyPort,
+} from "./store-fixtures.integration.ts"
 
 const origin = "http://127.0.0.1:3356"
 const resource = `${origin}/mcp`
-const sql = localCrateTransport(["http://127.0.0.1:15548"])
-const redis = new Redis.Cluster([{ host: "127.0.0.1", port: 15601 }], {
-	natMap: JSON.parse(process.env.AUTH_TEST_VALKEY_NAT ?? "{}"),
-	redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
-})
+const sql = localCrateTransport(authTestCrateOrigins)
+const redis = new Redis.Cluster(
+	[{ host: "127.0.0.1", port: authTestValkeyPort }],
+	{
+		natMap: JSON.parse(process.env.AUTH_TEST_VALKEY_NAT ?? "{}"),
+		redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
+	},
+)
 const mail = new AuthMailQueue({ sendMail: async () => {} })
 const auth = createGoodwatchAuth({
 	sql,
@@ -84,24 +91,30 @@ async function post(path: string, body: unknown, cookie = "") {
 		}),
 	)
 }
-async function grant(scope = "mcp:read mcp:write offline_access") {
-	const email = `mcp-${crypto.randomUUID()}@example.test`
-	assert.equal(
-		(
-			await post("/sign-up/email", {
-				email,
-				password: "temporary local password",
-				name: "Local member",
-			})
-		).status,
-		200,
-	)
-	await capturedMail.drain()
-	const confirmation = deliveries.at(-1)?.match(/http:\/\/\S+/)?.[0]
-	assert.ok(confirmation)
-	const verified = await memberAuth.handler(new Request(confirmation))
-	assert.ok([200, 302].includes(verified.status))
-	const cookie = cookies(verified)
+async function grant(
+	scope = "mcp:read mcp:write offline_access",
+	existing?: { email: string; cookie: string },
+) {
+	let cookie = existing?.cookie ?? ""
+	const email = existing?.email ?? `mcp-${crypto.randomUUID()}@example.test`
+	if (!existing) {
+		assert.equal(
+			(
+				await post("/sign-up/email", {
+					email,
+					password: "temporary local password",
+					name: "Local member",
+				})
+			).status,
+			200,
+		)
+		await capturedMail.drain()
+		const confirmation = deliveries.at(-1)?.match(/http:\/\/\S+/)?.[0]
+		assert.ok(confirmation)
+		const verified = await memberAuth.handler(new Request(confirmation))
+		assert.ok([200, 302].includes(verified.status))
+		cookie = cookies(verified)
+	}
 	const registration = await post("/oauth2/register", {
 		client_name: "Local test app",
 		application_type: "native",
@@ -519,4 +532,266 @@ test("the same OAuth client has independent grants and Last used for two compute
 		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
 		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
 	}
+})
+
+test("revoking a refresh token disconnects that grant immediately for MCP JWTs as well", async () => {
+	const issued = await grant()
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")
+	process.env.BETTER_AUTH_ENABLED = "true"
+	process.env.MCP_RESOURCE_URL = resource
+	setAuthForTest(memberAuth)
+	try {
+		await mcpAuthorization.verifyAccessToken(issued.token.access_token)
+		const revoked = await memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/revoke`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					client_id: issued.client.client_id,
+					token: issued.token.refresh_token,
+					token_type_hint: "refresh_token",
+				}),
+			}),
+		)
+		assert.equal(revoked.status, 200)
+		await assert.rejects(
+			mcpAuthorization.verifyAccessToken(issued.token.access_token),
+		)
+	} finally {
+		setAuthForTest(null)
+		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
+	}
+})
+
+test("durable signing keys rotate after thirty days and retire only after their verification grace", async (t) => {
+	const { decodeProtectedHeader } = await import("jose")
+	const { collectAuthGarbage } = await import("./maintenance.server.ts")
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	const issued = await grant()
+	const oldKid = decodeProtectedHeader(issued.token.access_token).kid
+	t.mock.timers.tick(30 * 86400000 + 1000)
+	const refresh = async (token: string) => {
+		const response = await memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/token`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "refresh_token",
+					refresh_token: token,
+					client_id: issued.client.client_id,
+					resource,
+				}),
+			}),
+		)
+		assert.equal(response.status, 200)
+		return response.json()
+	}
+	const rotated = await refresh(issued.token.refresh_token)
+	const newKid = decodeProtectedHeader(rotated.access_token).kid
+	assert.notEqual(newKid, oldKid)
+	assert.ok(
+		(await memberAuth.api.getJwks()).keys.some((key) => key.kid === oldKid),
+	)
+	t.mock.timers.tick(86400000 + 1000)
+	const collected = await collectAuthGarbage({
+		sql,
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		model: "jwks",
+	})
+	assert.ok(collected.expired >= 1)
+	const keys = (await memberAuth.api.getJwks()).keys
+	assert.equal(
+		keys.some((key) => key.kid === oldKid),
+		false,
+	)
+	assert.ok(keys.some((key) => key.kid === newKid))
+	await refresh(rotated.refresh_token)
+})
+
+test("a different OAuth client cannot revoke a member's grant through a rotated token", async () => {
+	const issued = await grant()
+	const other = await grant(undefined, issued)
+	const rotated = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				grant_type: "refresh_token",
+				refresh_token: issued.token.refresh_token,
+				client_id: issued.client.client_id,
+				resource,
+			}),
+		}),
+	)
+	assert.equal(rotated.status, 200)
+	await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/revoke`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				token: issued.token.refresh_token,
+				token_type_hint: "refresh_token",
+				client_id: other.client.client_id,
+			}),
+		}),
+	)
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")
+	process.env.BETTER_AUTH_ENABLED = "true"
+	process.env.MCP_RESOURCE_URL = resource
+	setAuthForTest(memberAuth)
+	try {
+		await mcpAuthorization.verifyAccessToken(other.token.access_token)
+	} finally {
+		setAuthForTest(null)
+		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
+	}
+})
+
+test("collected refresh rotation parents release live capacity while preserving replay revocation", async (t) => {
+	const { createHash } = await import("node:crypto")
+	const { collectAuthGarbage } = await import("./maintenance.server.ts")
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	const issued = await grant()
+	const refresh = (token: string) =>
+		memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/token`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "refresh_token",
+					refresh_token: token,
+					client_id: issued.client.client_id,
+					resource,
+				}),
+			}),
+		)
+	const rotation = await refresh(issued.token.refresh_token)
+	assert.equal(rotation.status, 200)
+	const child = await rotation.json()
+	t.mock.timers.tick(31000)
+	await collectAuthGarbage({
+		sql,
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		model: "oauthRefreshToken",
+	})
+	const context = await memberAuth.$context
+	const parentHash = createHash("sha256")
+		.update(issued.token.refresh_token)
+		.digest("base64url")
+	const parent = await context.adapter.findOne<{
+		rotatedAt: Date
+		rotationReplayExpiresAt: Date
+	}>({
+		model: "oauthRefreshToken",
+		where: [{ field: "token", value: parentHash }],
+	})
+	assert.ok(parent)
+	assert.equal(
+		new Date(parent.rotationReplayExpiresAt).getTime() -
+			new Date(parent.rotatedAt).getTime(),
+		30000,
+	)
+	const currentMember = await memberAuth.api.getSession({
+		headers: new Headers({ cookie: issued.cookie }),
+	})
+	assert.ok(currentMember)
+	const active = await context.adapter.findMany<{ token: string }>({
+		model: "oauthRefreshToken",
+		where: [
+			{ field: "clientId", value: issued.client.client_id },
+			{
+				field: "userId",
+				value: currentMember.user.id,
+			},
+		],
+	})
+	assert.equal(
+		active.some((row) => row.token === parentHash),
+		false,
+	)
+	const { reconcileAuthCapacity } = await import("./maintenance.server.ts")
+	assert.equal(
+		(
+			await reconcileAuthCapacity({
+				sql,
+				encryptionSecret: "disposable-local-auth-integration-key-548",
+			})
+		).released,
+		0,
+	)
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")
+	process.env.BETTER_AUTH_ENABLED = "true"
+	process.env.MCP_RESOURCE_URL = resource
+	setAuthForTest(memberAuth)
+	try {
+		await mcpAuthorization.verifyAccessToken(child.access_token)
+		assert.equal((await refresh(issued.token.refresh_token)).status, 400)
+		await assert.rejects(mcpAuthorization.verifyAccessToken(child.access_token))
+	} finally {
+		setAuthForTest(null)
+		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
+	}
+})
+
+test("a refresh paused before signing cannot adopt a reconnected grant version", async () => {
+	const issued = await grant()
+	const { decodeJwt } = await import("jose")
+	const payload = decodeJwt(issued.token.access_token)
+	const context = await memberAuth.$context
+	const original = await context.adapter.findOne<Record<string, unknown>>({
+		model: "oauthConsent",
+		where: [{ field: "id", value: String(payload.gw_grant_id) }],
+	})
+	assert.ok(original)
+	let reads = 0
+	let reconnected = false
+	const delayed = createGoodwatchAuth({
+		sql: async (statement, args) => {
+			if (
+				statement.startsWith(
+					"SELECT payload,_seq_no,_primary_term,deleted,receipts FROM doc.auth_oauth_consent WHERE id = ?",
+				) &&
+				args?.[0] === original.id &&
+				++reads === 2
+			) {
+				reconnected = true
+				await context.adapter.update({
+					model: "oauthConsent",
+					where: [{ field: "id", value: String(original.id) }],
+					update: { grantVersion: crypto.randomUUID() },
+				})
+			}
+			return sql(statement, args)
+		},
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		storage: new ValkeyAuthStorage(() => redis),
+		mail: capturedMail,
+		baseURL: origin,
+		secret: "local-mcp-secret-at-least-32-characters",
+		google: { clientId: "local", clientSecret: "local" },
+		mcp: { resource, accessTokenExpiresIn: 60 },
+	})
+	const response = await delayed.handler(
+		new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				grant_type: "refresh_token",
+				refresh_token: issued.token.refresh_token,
+				client_id: issued.client.client_id,
+				resource,
+			}),
+		}),
+	)
+	assert.ok(reconnected)
+	assert.ok(
+		[400, 503].includes(response.status),
+		`Old refresh must not become a new grant (status ${response.status})`,
+	)
 })

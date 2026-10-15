@@ -16,7 +16,9 @@ splat route returns private, no-store responses. The MCP, CIMD and JWT plugins a
 
 `.env.example` lists the required configuration. CrateDB uses its own username
 and password, private HTTP origins and payload encryption secret. Better Auth's
-secret is independent and both secrets must survive redeploys. Google and
+secret is independent and both secrets must survive redeploys. #565 additionally requires the durable JSON
+`AUTH_CRATEDB_ENCRYPTION_KEYS` payload key ring; the original encryption secret
+remains the permanent lookup-index root. Google and
 Purelymail credentials are required only when the flag is on.
 `AUTH_TRUSTED_IP_HEADER` must name a single-IP header overwritten by trusted
 ingress; never pass through client-supplied forwarding headers.
@@ -30,7 +32,18 @@ prefix on HTTPS. Both forms bypass shared-page caching. Every cached session
 read checks the current CrateDB session and user, so a missing Valkey session
 index cannot undo revocation. Missing cache keys fall back to the DB; storage
 errors and malformed entries fail closed. Complete enumeration is configured
-at the adapter's 10,000-row population bound.
+at the adapter's 10,000-row enumeration bound. #565 scopes issuance allowances
+to each member/client, keeps the 20 newest browser sessions per member, removes evicted Valkey entries,
+bounds the cache index to 20 references, and has
+no global user/account cap. DCR is limited to 30 attempts per trusted IP per hour.
+Unused clients expire after 24 hours. Only new-system signups receive private
+insertion provenance and qualify for unconfirmed collection after 48 hours from
+insertion/latest confirmation issuance. Imported and unmarked members never qualify;
+logical `createdAt` is ignored. Confirmation permanently retires signup provenance
+in the user CAS, so later email reverification cannot make the member collectable.
+Older prerelease global ledgers need a coordinated rebuild/reimport. Browser sessions also carry a private credential
+version checked against the current password hash, including DB fallback.
+A password change cannot admit a login paused before session insertion.
 
 ## Account HTTP contract
 
@@ -50,7 +63,9 @@ at the adapter's 10,000-row population bound.
   be overwritten by the rehash; a stale sign-in is revoked and rejected.
 - `request-password-reset`: Known and unknown addresses share the response.
   Google-only members receive Google sign-in guidance, with no reset link.
-  DB verification identifiers are hashed.
+  DB verification identifiers are hashed. Better Auth request-time verification
+  cleanup is disabled; bounded maintenance owns expiry cleanup, so an expired
+  backlog cannot make login/reset requests enumerate unrelated rows.
 - `reset-password`: Minimum ten characters, one-use token, password-changed
   notice, other-device sign-out and direct sign-in.
 - `change-password`: Other-device sign-out is forced even when the caller
@@ -127,8 +142,8 @@ cases run through HTTP with real stores.
 
 ## Launch boundaries
 
-Importer/rehearsal, production grants, orphan cleanup
-and coordinated cut-over belong to the other map #529 tickets. The adapter's
+Importer/rehearsal, production grants and coordinated cut-over belong to the other map #529 tickets. #565 implements orphan cleanup and
+maintenance; see [the runbook](../../../../docs/implementation/auth-maintenance.md). The adapter's
 maintenance and multi-row protocol limitations remain. A consumed confirmation
 followed by a later failure needs a resend; no transaction spans confirmation
 and session issuance. Password updates and session sweeps are separate writes.
@@ -138,3 +153,8 @@ session-delete hooks, and must enforce its own JWT/client revocation policy.
 The wiring manifest adds core's OAuth-state `verification.delete(identifier)` call and
 its delete-hook pre-read. It uses the existing adapter deletion path; the callback
 regression covers state validation, PKCE, successful sign-in and replay rejection.
+
+#565 starts an idempotent maintenance worker only in the enabled auth runtime.
+It runs one bounded-page pass at a time, with a 60-second delay between passes,
+and stops on process shutdown. Failed work is reported generically and retried;
+no schema migration runs at startup. Payload rotation preserves keyed lookups.
