@@ -1,0 +1,48 @@
+{
+  "mode": "start",
+  "startedAt": "2026-10-15T20:37:26.376046+00:00",
+  "allRuntimeFieldsExceptImagePreserved": true,
+  "container": {
+    "id": "014d01f2a52be4bed898be7dace832deec5247c7c8f971fc1897f1b198110308",
+    "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "imageId": "sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f",
+    "state": {
+      "Status": "running",
+      "Running": true,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 2451807,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-15T20:37:27.191817292Z",
+      "FinishedAt": "0001-01-01T00:00:00Z"
+    },
+    "restartPolicy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "ports": {
+      "4200/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "4200"
+        }
+      ],
+      "4300/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "4300"
+        }
+      ],
+      "5432/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "5432"
+        }
+      ]
+    }
+  },
+  "finishedAt": "2026-10-15T20:37:27.756132+00:00"
+}
