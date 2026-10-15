@@ -1,0 +1,173 @@
+{
+  "owner_approved_on": "2026-10-15",
+  "implementation_commit": "7a2123fae9d646b5ec18f2e816817f20435ea0ae",
+  "windmill_sync": {
+    "url": "https://github.com/alp82/goodwatch-monorepo/actions/runs/38808513011",
+    "conclusion": "success",
+    "scripts": {
+      "ingest_episode_translations": {
+        "hash": "a8907f8f3aa4142f",
+        "created_at": "2026-10-15T21:16:21.621333Z",
+        "matches_local_main": true
+      },
+      "episode_translations": {
+        "hash": "e0270295aa95acc8",
+        "created_at": "2026-10-15T21:16:16.243483Z",
+        "matches_local_main": true
+      },
+      "nightly_episode_translations": {
+        "hash": "93b51a57358c5e32",
+        "created_at": "2026-10-15T21:16:16.887927Z",
+        "matches_local_main": true
+      },
+      "episode_translation_seed": {
+        "hash": "a49d1f7903f1bea1",
+        "created_at": "2026-10-15T21:16:15.934984Z",
+        "matches_local_main": true
+      }
+    }
+  },
+  "schedule": {
+    "path": "f/media_language/ingest_episode_translations",
+    "schedule": "0 0 0 * * *",
+    "timezone": "UTC",
+    "enabled": true,
+    "args": {
+      "dry_run": false,
+      "nightly": true,
+      "max_seconds": 10800
+    }
+  },
+  "next_run_utc": "2026-10-16T00:00:00Z",
+  "next_job_id": "01a14175-fa2f-d107-0f71-3633beacba59",
+  "supervised_run": {
+    "verified_at": "2026-10-15T21:26:40.829476+00:00",
+    "job_id": "01a1416c-a14d-a375-560f-ddc316272fc3",
+    "job_success": true,
+    "duration_ms": 562169,
+    "summary": {
+      "requests": 2714,
+      "rows_added": {
+        "season_translation": 0,
+        "episode_translation": 5935
+      },
+      "started_at": "2026-10-15T21:16:41.310263",
+      "finished_at": "2026-10-15T21:26:02.381431",
+      "stop_reason": "budget",
+      "failed_requests": 0,
+      "pages_completed": 65,
+      "shows_completed": 2,
+      "preserve_existing": true,
+      "counts_may_exclude_uncertain_write": false
+    },
+    "rows_added_reconciled": {
+      "season_translation": 0,
+      "episode_translation": 5935
+    },
+    "preserved_nonempty_fields_verified": 2296,
+    "touched_show_ids": [
+      32415,
+      112470,
+      65733
+    ],
+    "row_counts": [
+      {
+        "show_id": 32415,
+        "table": "season_translation",
+        "before": 2,
+        "after": 2,
+        "added": 0
+      },
+      {
+        "show_id": 32415,
+        "table": "episode_translation",
+        "before": 1100,
+        "after": 1530,
+        "added": 430
+      },
+      {
+        "show_id": 112470,
+        "table": "season_translation",
+        "before": 2,
+        "after": 2,
+        "added": 0
+      },
+      {
+        "show_id": 112470,
+        "table": "episode_translation",
+        "before": 100,
+        "after": 1556,
+        "added": 1456
+      },
+      {
+        "show_id": 65733,
+        "table": "season_translation",
+        "before": 3,
+        "after": 3,
+        "added": 0
+      },
+      {
+        "show_id": 65733,
+        "table": "episode_translation",
+        "before": 220,
+        "after": 4269,
+        "added": 4049
+      }
+    ],
+    "durable_cursor": {
+      "tmdb_id": 65733,
+      "resume": {
+        "tmdb_id": 65733,
+        "season_number": 1,
+        "episode_number": 634
+      },
+      "old_episodes": 100,
+      "old_seasons": 2
+    },
+    "durable_run_summary_matches_job": true,
+    "lease_released": true
+  },
+  "tests": {
+    "nightly_unit_tests": 21,
+    "flows_suite_excluding_reproduced_baseline_failures": {
+      "run": 1419,
+      "skipped": 64,
+      "failures": 0,
+      "errors": 0
+    },
+    "baseline_failures": [
+      "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered",
+      "test_crate_backup_health.CheckTests.test_incident_message_names_the_cause_and_the_snapshot"
+    ],
+    "baseline_reproduction": {
+      "tests_run": 29,
+      "failures": 2,
+      "errors": 0,
+      "source_commit": "6766099330f0f0f6b7a282815964f89741c69466"
+    }
+  },
+  "capacity_estimate": {
+    "observed_requests_per_second": 4.828,
+    "requests_per_three_hour_night": 52139,
+    "paging_overhead_allowance": 0.05,
+    "estimated_remaining_nights": {
+      "capped_cohort": 4,
+      "known_847_show_cohort": 13
+    },
+    "planning_range_nights_for_known_cohort": [
+      13,
+      15
+    ],
+    "assumptions": "Comparable throughput; no extended safety stops. Canonical additions have priority. The wider untranslated catalog is not included."
+  },
+  "write_tables": [
+    "season_translation",
+    "episode_translation"
+  ],
+  "state_collection": "tmdb_episode_catalog_state",
+  "state_document": "episode_translations_nightly_v1",
+  "schema_changes": false,
+  "infrastructure_changes": false,
+  "existing_schedules_unchanged": true,
+  "private_evidence_directory": "/home/alper/projects/goodwatch-media-language-evidence/episode-translation-nightly"
+}

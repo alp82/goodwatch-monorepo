@@ -109,3 +109,10 @@ Historical phase-5 [verification artifact](media-language-rollout-verification.j
 - Script checks normalize locale case and disregard modifier-only evidence such as tatweel. Preview server/browser namespaces are versioned, and persisted browser display values are rejected when their language claims contradict their text. Highest-rated person stats retain field presentation and canonical title identity.
 
 Current verification and exact commands are recorded in [review-fix verification](media-language-review-fixes.md). The earlier JSON/counts describe historical snapshots only.
+
+## Daily episode translation ingestion (2026-10-15)
+
+The owner subsequently approved a daily production run with a three-hour budget.
+See [nightly season/episode translations](media-language-nightly-episodes.md) for
+the independent schedule, durable state, safety stops, and production proof.
+This adds no canonical membership writes or schema changes.

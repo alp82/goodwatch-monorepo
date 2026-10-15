@@ -89,3 +89,44 @@ cohort and twelve for both cohorts together. HTTP/database overhead, page replay
 new canonical additions, and safety stops increase that; use the supervised
 run's observed throughput for an operational estimate. The wider untranslated
 catalog is open-ended and is not included in that 847-show estimate.
+
+## Production proof, 2026-10-15
+
+Implementation commit `7a2123fae9d646b5ec18f2e816817f20435ea0ae` reached main by
+non-force fast-forward push. [Windmill workspace sync](https://github.com/alp82/goodwatch-monorepo/actions/runs/38808513011)
+passed, and all four deployed script contents matched the committed files.
+
+Windmill job `01a1416c-a14d-a375-560f-ddc316272fc3`, submitted through the synced
+entry point with a 600-second budget, ran for 562.169 seconds (9 minutes 22 seconds)
+and stopped cleanly with `budget`. It made 2,714 TMDB requests with zero failures,
+completed 65 pages and two shows, and added 5,935 episode translation rows.
+No season translation rows were added. Database counts reconciled exactly with
+the run summary. Every one of 2,296 pre-existing non-empty fields across the three
+touched shows remained identical, and no pre-existing translation row disappeared.
+
+The majority-acknowledged state retained show 65733, season 1, episode 634 as the
+next cursor. Its durable run summary matched the Windmill result, and its lease
+was released. Progress was also read directly from Mongo during the run.
+
+The schedule was then created and enabled in Windmill with the arguments above.
+Windmill reported `enabled: true` and queued job
+`01a14175-fa2f-d107-0f71-3633beacba59` for **2026-10-16T00:00:00Z**.
+All 49 existing schedules retained their original definitions and enabled states.
+
+The 21 nightly unit tests pass. The flows suite passes 1,419 tests with 64 skipped
+after excluding two failures reproduced on untouched main: the known
+deletion-coverage assertion and an additional existing backup-notification text
+assertion. The isolated baseline reproduction ran 29 tests with those same two
+failures and no errors. Neither unrelated implementation was changed.
+
+Observed throughput was about 4.83 requests/second. Allowing 5% for smaller-page
+overhead yields approximately **four more nights for the capped cohort** and
+**13 nights for the full known cohort**, including the 800 untouched shows.
+Plan for 13–15 nights at comparable throughput; canonical additions and safety
+stops can extend that. Two of the original 47 capped shows are now complete.
+
+Machine-readable proof is in
+[`media-language-nightly-episodes-production.json`](media-language-nightly-episodes-production.json).
+Full test logs, before/after field snapshots, deployment checks, the enabled
+schedule, and its queued job are retained under
+`/home/alper/projects/goodwatch-media-language-evidence/episode-translation-nightly/`.
