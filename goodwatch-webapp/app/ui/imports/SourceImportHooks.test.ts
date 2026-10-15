@@ -76,3 +76,14 @@ test("buildSourceImportUpload rejects non-ZIP and oversized uploads before the r
 	)
 	assert.throws(() => buildSourceImportUpload("trakt", oversized), /20 MB/i)
 })
+
+test("generic CSV upload uses the existing multipart endpoint and rejects archives", () => {
+	const file = new File(["Title,Rating\nExample,4"], "export.csv")
+	const body = buildSourceImportUpload("csv", file)
+	assert.equal(body.get("source"), "csv")
+	assert.equal(body.get("file"), file)
+	assert.throws(
+		() => buildSourceImportUpload("csv", new File(["zip"], "export.zip")),
+		/CSV/,
+	)
+})

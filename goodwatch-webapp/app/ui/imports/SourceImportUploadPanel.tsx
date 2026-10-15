@@ -1,12 +1,15 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
-import type { ImportSource, ImportSummary } from "~/domain/imports"
+import {
+	IMPORT_SOURCE_NAMES,
+	type ImportSource,
+	type ImportSummary,
+} from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { usePreviewSourceImport } from "./SourceImportHooks"
 import { errorBox, primaryButton, stepHeading } from "./shared"
 
-const sourceName = (source: ImportSource) =>
-	source === "letterboxd" ? "Letterboxd" : "Trakt"
+const sourceName = (source: ImportSource) => IMPORT_SOURCE_NAMES[source]
 
 export function SourceImportUploadPanel({
 	source,
@@ -35,35 +38,47 @@ export function SourceImportUploadPanel({
 			<h3 id="source-upload-heading" className={stepHeading}>
 				Upload your {sourceName(source)} export
 			</h3>
-			<p className="text-gray-400">
-				{source === "letterboxd" ? (
-					<>
-						Sign in to Letterboxd, open Settings → Data, and choose Export Data.
-					</>
-				) : (
-					<>
-						Sign in to Trakt, open Profile → Settings → Data, and choose Export
-						now. This export is available to free and VIP members.
-					</>
-				)}{" "}
-				Wait for the download, then upload the ZIP without extracting it.
-			</p>
-			<a
-				href={
-					source === "letterboxd"
-						? "https://letterboxd.com/user/exportdata/"
-						: "https://app.trakt.tv/settings/data"
-				}
-				target="_blank"
-				rel="noopener noreferrer"
-				className="text-indigo-300 underline hover:text-indigo-200"
-			>
-				Open {sourceName(source)} export settings (new tab)
-			</a>
-			<p className="text-sm text-gray-400">
-				GoodWatch reads ratings, watches, your watchlist, favorites, and reviews
-				when present. Maximum ZIP size: 20 MB.
-			</p>
+			{source === "csv" ? (
+				<p className="text-gray-400">
+					Upload a CSV in Letterboxd import format. Include tmdbID, imdbID, or
+					Title and Year. Rating uses 0.5–5; Rating10 uses 1–10 and takes
+					priority. Only WatchedDate (or Watched Date) creates a dated watch.
+					Maximum size: 20 MB.
+				</p>
+			) : (
+				<>
+					<p className="text-gray-400">
+						{source === "letterboxd" ? (
+							<>
+								Sign in to Letterboxd, open Settings → Data, and choose Export
+								Data.
+							</>
+						) : (
+							<>
+								Sign in to Trakt, open Profile → Settings → Data, and choose
+								Export now. This export is available to free and VIP members.
+							</>
+						)}{" "}
+						Wait for the download, then upload the ZIP without extracting it.
+					</p>
+					<a
+						href={
+							source === "letterboxd"
+								? "https://letterboxd.com/user/exportdata/"
+								: "https://app.trakt.tv/settings/data"
+						}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-indigo-300 underline hover:text-indigo-200"
+					>
+						Open {sourceName(source)} export settings (new tab)
+					</a>
+					<p className="text-sm text-gray-400">
+						GoodWatch reads ratings, watches, your watchlist, favorites, and
+						reviews when present. Maximum ZIP size: 20 MB.
+					</p>
+				</>
+			)}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -81,7 +96,7 @@ export function SourceImportUploadPanel({
 				<p id="source-upload-hint" aria-live="polite">
 					{preview.isPending
 						? "Uploading and checking your export. This can take a moment."
-						: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
+						: `Drop the ${source === "csv" ? "CSV" : "ZIP"} file from ${sourceName(source)} here, or choose it from your device.`}
 				</p>
 				<button
 					type="button"
@@ -90,13 +105,17 @@ export function SourceImportUploadPanel({
 					aria-describedby="source-upload-hint"
 					onClick={() => inputRef.current?.click()}
 				>
-					Choose ZIP file
+					Choose {source === "csv" ? "CSV" : "ZIP"} file
 				</button>
 				<input
 					ref={inputRef}
 					type="file"
-					aria-label={`Choose ${sourceName(source)} export ZIP file`}
-					accept=".zip,application/zip,application/x-zip-compressed"
+					aria-label={`Choose ${sourceName(source)} export file`}
+					accept={
+						source === "csv"
+							? ".csv,text/csv"
+							: ".zip,application/zip,application/x-zip-compressed"
+					}
 					className="sr-only"
 					onChange={(event) => {
 						send(event.target.files?.[0])

@@ -55,3 +55,11 @@ node --test app/server/imports/*.test.ts app/server/tracking.test.ts app/server/
 The service tests inject the database boundary; they do not replace a live CrateDB rollout check. The supplied private archives were read directly outside the repository; their contents are not committed. These establish real export shapes, not complete coverage of every export variant.
 
 Source watch identity is strongest for Trakt history IDs and Letterboxd diary-entry URLs. Older Letterboxd rows without distinct entry URLs cannot identify every historical edit unambiguously. Unknown and ambiguous data must remain visible rather than being silently guessed.
+
+## Generic CSV
+
+Choose **Generic CSV** on Imports and upload a UTF-8 CSV in [Letterboxd import format](https://letterboxd.com/about/importing-data/). Matching uses TMDB ID, then IMDb ID, then an exact title and year only when unique. Letterboxd URLs are source identities, not catalog IDs. `Name` and `Watched Date` are accepted as export aliases. Unknown columns are listed in preview and receipt notes.
+
+`Rating10` takes priority over `Rating` regardless of column order. Ratings without a watched date do not invent a viewing date. Each dated row supplies a day-precision watch; invalid dates and scores remain visible as invalid items. Reviews use the existing review importer. Tags, Directors and Rewatch metadata are not applied; Rewatch does not invent extra viewings. The normal kind selection, conflict policy, date choice, receipts, resume and undo apply.
+
+CSV supports both backslash-escaped and doubled quotes. Limits are 20 MB, 50,000 rows and 50,000 observations. Generic files without stable entry URLs use per-title occurrence identities; historical edits or adding/removing repeated viewings may change those identities, as with older Letterboxd exports. Matching review improvements remain deferred to #374.

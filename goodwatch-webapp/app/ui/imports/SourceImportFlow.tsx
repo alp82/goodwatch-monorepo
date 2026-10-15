@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react"
-import type { ImportSource, ImportSummary } from "~/domain/imports"
+import {
+	IMPORT_SOURCE_NAMES,
+	type ImportSource,
+	type ImportSummary,
+} from "~/domain/imports"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
@@ -13,8 +17,7 @@ import {
 	textLink,
 } from "./shared"
 
-const sourceName = (source: ImportSource) =>
-	source === "letterboxd" ? "Letterboxd" : "Trakt"
+const sourceName = (source: ImportSource) => IMPORT_SOURCE_NAMES[source]
 const outcome = (item: ImportSummary) =>
 	item.status === "undone"
 		? "Undone"

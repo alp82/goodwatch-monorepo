@@ -1,9 +1,10 @@
-import type {
-	ImportItem,
-	ImportKind,
-	ImportOutcome,
-	ImportSource,
-	ImportSummary,
+import {
+	IMPORT_SOURCES,
+	type ImportItem,
+	type ImportKind,
+	type ImportOutcome,
+	type ImportSource,
+	type ImportSummary,
 } from "~/domain/imports"
 import { execute, query } from "~/utils/crate"
 import { csvLine } from "../import-csv.ts"
@@ -74,7 +75,7 @@ export interface ImportRow {
 const COLUMNS =
 	"id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 const native = (source: string): source is ImportSource =>
-	source === "letterboxd" || source === "trakt"
+	IMPORT_SOURCES.some((value) => value === source)
 const parse = <T>(value: string | null, fallback: T): T => {
 	try {
 		return value ? (JSON.parse(value) as T) : fallback
@@ -159,8 +160,8 @@ export async function getImportRow(
 }
 export const listImportRows = (userId: string) =>
 	select<ImportRow>(
-		`SELECT ${COLUMNS} FROM doc.user_import WHERE user_id = ? AND source IN ('letterboxd','trakt') AND status <> 'preview' ORDER BY created_at DESC LIMIT 100`,
-		[userId],
+		`SELECT ${COLUMNS} FROM doc.user_import WHERE user_id = ? AND source IN (${marks(IMPORT_SOURCES.length)}) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100`,
+		[userId, ...IMPORT_SOURCES],
 	)
 export async function claim(row: ImportRow, set: string, params: Param[]) {
 	const result = await run(

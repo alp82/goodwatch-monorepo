@@ -18,7 +18,7 @@ interface ArchiveEntry {
 	data: Uint8Array
 }
 
-function parseCsv(value: string): string[][] {
+function parseCsv(value: string, backslashQuotes = false): string[][] {
 	const rows: string[][] = []
 	let row: string[] = []
 	let field = ""
@@ -30,7 +30,10 @@ function parseCsv(value: string): string[][] {
 	) {
 		const char = value[index]
 		if (quoted) {
-			if (char === '"' && value[index + 1] === '"') {
+			if (backslashQuotes && char === "\\" && value[index + 1] === '"') {
+				field += '"'
+				index++
+			} else if (char === '"' && value[index + 1] === '"') {
 				field += '"'
 				index++
 			} else if (char === '"') quoted = false
@@ -47,6 +50,7 @@ function parseCsv(value: string): string[][] {
 			field = ""
 		} else field += char
 	}
+	if (quoted) fail("The CSV has an unclosed quote.")
 	row.push(field)
 	if (row.some((cell) => cell.trim())) rows.push(row)
 	return rows
@@ -645,6 +649,141 @@ export async function parseImportFile(
 	source: ImportSource,
 	bytes: Uint8Array,
 ): Promise<ParsedImport> {
+	if (source === "csv") return genericCsv(bytes)
 	const entries = zipEntries(bytes)
 	return source === "letterboxd" ? letterboxd(entries) : trakt(entries)
+}
+
+function genericCsv(bytes: Uint8Array): ParsedImport {
+	if (!bytes.byteLength) fail("That file is empty.")
+	if (bytes.byteLength > IMPORT_MAX_BYTES)
+		fail("That export is larger than 20 MB.")
+	const table = parseCsv(text({ name: "CSV", data: bytes }), true)
+	if (!table.length) fail("That file is empty.")
+	if (table.length - 1 > IMPORT_MAX_ROWS)
+		fail("That export has more than 50,000 rows.")
+	const headers = table[0].map((header) =>
+		header.trim().toLowerCase().replace(/ /g, ""),
+	)
+	if (new Set(headers).size !== headers.length)
+		fail("The CSV has duplicate columns.")
+	if (
+		!headers.some((header) =>
+			["title", "name", "tmdbid", "imdbid", "letterboxduri"].includes(header),
+		)
+	)
+		fail("Include a Title, tmdbID, imdbID or LetterboxdURI column.")
+	if (table.slice(1).some((row) => row.length !== headers.length))
+		fail("A CSV row has the wrong number of fields.")
+	const known = new Set([
+		"letterboxduri",
+		"tmdbid",
+		"imdbid",
+		"title",
+		"name",
+		"year",
+		"directors",
+		"rating",
+		"rating10",
+		"watcheddate",
+		"rewatch",
+		"tags",
+		"review",
+	])
+	const unknown = table[0].filter((_, index) => !known.has(headers[index]))
+	const warnings = unknown.length
+		? [`Unknown columns ignored: ${unknown.join(", ")}.`]
+		: []
+	const observations: ImportObservation[] = []
+	const occurrences = new Map<string, number>()
+	if (
+		headers.includes("tags") ||
+		headers.includes("directors") ||
+		headers.includes("rewatch")
+	)
+		warnings.push(
+			"Tags, Directors and Rewatch metadata are not applied. Each dated row represents one watch; a rewatch flag does not create extra watches.",
+		)
+	if (headers.includes("letterboxduri"))
+		warnings.push(
+			"LetterboxdURI identifies source entries but is not used for catalog matching; include TMDB/IMDb IDs or an exact Title and Year.",
+		)
+	const dateColumn = headers.indexOf("watcheddate")
+	// Process dated rows newest first, so repeated titles use their latest supplied rating.
+	const sortedRows = table
+		.slice(1)
+		.sort((a, b) => (b[dateColumn] ?? "").localeCompare(a[dateColumn] ?? ""))
+	for (const fields of sortedRows) {
+		const row = Object.fromEntries(
+			headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
+		)
+		const base = {
+			mediaType: "movie" as const,
+			title: clipped(row.title || row.name),
+			year: validYear(row.year),
+			tmdbId: validId(Number(row.tmdbid)),
+			imdbId: validImdb(row.imdbid),
+		}
+		const identity =
+			clipped(row.letterboxduri, 240) ||
+			(base.tmdbId
+				? `tmdb:${base.tmdbId}`
+				: base.imdbId || `${base.title.toLowerCase()}:${base.year ?? ""}`)
+		const occurrence = (occurrences.get(identity) ?? 0) + 1
+		occurrences.set(identity, occurrence)
+		const key = `csv:${identity}:${occurrence}`
+		if (row.watcheddate) {
+			const watchedAt = day(row.watcheddate)
+			observations.push({
+				...base,
+				key: `${key}:watch`,
+				kind: "watch",
+				watchedAt,
+				precision: "day",
+				pass: 1,
+				...(watchedAt
+					? {}
+					: {
+							problem: {
+								outcome: "invalid" as const,
+								reason: "WatchedDate must be a calendar date (YYYY-MM-DD).",
+							},
+						}),
+			})
+		}
+		if (row.rating10 || row.rating || !row.watcheddate) {
+			const score = row.rating10
+				? Number(row.rating10)
+				: row.rating
+					? Number(row.rating) * 2
+					: null
+			const valid =
+				score !== null && Number.isInteger(score) && score >= 1 && score <= 10
+			observations.push({
+				...base,
+				key: `${key}:rating`,
+				kind: "rating",
+				score: valid ? score : null,
+				...(valid
+					? {}
+					: {
+							problem: {
+								outcome: "invalid" as const,
+								reason:
+									"A rating must be 0.5–5 in half steps, or Rating10 a whole number from 1 to 10.",
+							},
+						}),
+			})
+		}
+		if (row.review)
+			observations.push({
+				...base,
+				key: `${key}:review`,
+				kind: "review",
+				review: row.review,
+			})
+	}
+	if (observations.length > IMPORT_MAX_ROWS)
+		fail("That export produces more than 50,000 import items.")
+	return { source: "csv", observations, warnings }
 }

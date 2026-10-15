@@ -21,7 +21,6 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
-import { prepareImportTrackingPlan } from "./tracking.server.ts"
 
 const key = (type: "movie" | "show", id: number) => `${type}:${id}`
 type CatalogRow = {
@@ -86,7 +85,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		}
 		// Letterboxd has no stable ID in some CSVs. Exact title and year is the sole safe fallback.
 		const titleMatches = new Map<string, CatalogRow[]>()
-		if (source === "letterboxd")
+		if (source === "letterboxd" || source === "csv")
 			for (const x of typed) {
 				if (found.has(x.index) || x.row.year === null || !x.row.title.trim())
 					continue
@@ -227,6 +226,8 @@ async function classifyWatchDuplicates(
 		const ref = `${item.mediaType}:${item.tmdbId}`
 		groups.set(ref, [...(groups.get(ref) ?? []), item])
 	}
+	if (!groups.size) return
+	const { prepareImportTrackingPlan } = await import("./tracking.server.ts")
 	for (const group of groups.values()) {
 		const first = group[0]
 		if (!first || first.tmdbId === null) continue

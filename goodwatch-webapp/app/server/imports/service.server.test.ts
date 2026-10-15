@@ -5,9 +5,8 @@ import { afterEach, describe, it } from "node:test"
 import type { ImportOptions } from "../../domain/imports.ts"
 import type { Param } from "./store.server.ts"
 
-const { confirmImport, getImport, undoImport } = await import(
-	"./service.server.ts"
-)
+const { previewImport, getImportItems, confirmImport, getImport, undoImport } =
+	await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
 
@@ -26,6 +25,7 @@ class ImportDb {
 	imports: Row[] = []
 	items: Row[] = []
 	favorites: Row[] = []
+	catalog: Row[] = []
 	scores: Row[] = []
 	failFavoriteOnce = false
 	failScoreOnce = false
@@ -100,6 +100,19 @@ class ImportDb {
 
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
+		if (s.includes("FROM movie WHERE")) {
+			const rows = this.catalog.filter((row) =>
+				s.includes("tmdb_id IN")
+					? params.includes(Number(row.tmdb_id))
+					: s.includes("imdb_id IN")
+						? params.includes(String(row.imdb_id))
+						: String(row.title).toLowerCase() ===
+								String(params[0]).toLowerCase() &&
+							row.release_year === params[1],
+			)
+			return rows as T[]
+		}
+		if (s.includes("FROM user_watch_log")) return []
 		if (s.includes("FROM doc.user_import WHERE id = ?")) {
 			const row = this.imports.find((x) => x.id === params[0])
 			return (row ? [{ ...row, read_at: new Date() }] : []) as unknown as T[]
@@ -156,6 +169,41 @@ class ImportDb {
 
 	async run(sql: string, params: Param[]) {
 		const s = sql.replace(/\s+/g, " ").trim()
+		if (s.startsWith("INSERT INTO doc.user_import (")) {
+			this.imports.push({
+				id: params[0],
+				user_id: params[1],
+				source: params[2],
+				status: "preview",
+				file_name: params[3],
+				counts: params[4],
+				total: params[5],
+				created_at: params[6],
+				updated_at: params[7],
+				warnings: params[8],
+				kinds: params[9],
+				processed: 0,
+				added: 0,
+				updated: 0,
+				kept: 0,
+				failed: 0,
+				finished_at: null,
+				options: null,
+				_seq_no: 1,
+				_primary_term: 1,
+			})
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("INSERT INTO doc.user_import_item (")) {
+			const columns = s.slice(s.indexOf("(") + 1, s.indexOf(")")).split(",")
+			for (let i = 0; i < params.length; i += columns.length)
+				this.items.push(
+					Object.fromEntries(
+						columns.map((column, j) => [column, params[i + j]]),
+					),
+				)
+			return { rowcount: params.length / columns.length }
+		}
 		if (s.startsWith("REFRESH TABLE")) return { rowcount: 1 }
 		if (s.startsWith("UPDATE doc.user_import SET")) {
 			if (s.includes("_seq_no = ?")) {
@@ -521,4 +569,53 @@ describe("native import service", () => {
 		)
 		assert.equal(db.items[1].apply_state, null)
 	})
+})
+
+it("CSV preview matches IDs in priority order and only unique exact title/year, then applies and undoes its receipt", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+		{
+			tmdb_id: 655,
+			imdb_id: "tt0087884",
+			title: "Paris, Texas",
+			release_year: 1984,
+		},
+		{ tmdb_id: 10, imdb_id: "tt10", title: "Ambiguous", release_year: 2000 },
+		{ tmdb_id: 11, imdb_id: "tt11", title: "Ambiguous", release_year: 2000 },
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = await previewImport(
+		"member",
+		"csv",
+		"export.csv",
+		Buffer.from(
+			"tmdbID,imdbID,Title,Year,Rating10,Extra\n862,tt0087884,Wrong,1995,8,x\n999,tt0087884,Wrong,1984,5,x\n,,Toy Story,1995,8,x\n,,Ambiguous,2000,7,x\n,,Missing,2000,6,x\n",
+		),
+	)
+	assert.equal(preview.counts.new, 3)
+	assert.equal(preview.counts.unmatched, 2)
+	const items = await getImportItems("member", preview.id, undefined, 0, 50)
+	assert.deepEqual(
+		items.items.map((x) => x.tmdbId),
+		[862, 655, 862, null, null],
+	)
+	assert.ok(items.items.slice(3).every((x) => x.reason))
+	await confirmImport("member", preview.id, { ...options, kinds: ["rating"] })
+	await waitFor(db, "done")
+	const receipt = await getImport("member", preview.id)
+	assert.equal(receipt.status, "done")
+	assert.equal(receipt.applied.added, 2)
+	assert.match(receipt.warnings.join(" "), /Extra/)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
 })

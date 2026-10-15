@@ -1,5 +1,10 @@
-/** Shared contract for native Letterboxd and Trakt exports. IMDb keeps its existing API. */
-export const IMPORT_SOURCES = ["letterboxd", "trakt"] as const
+/** Shared import contract. IMDb keeps its existing API. */
+export const IMPORT_SOURCES = ["letterboxd", "trakt", "csv"] as const
+export const IMPORT_SOURCE_NAMES = {
+	letterboxd: "Letterboxd",
+	trakt: "Trakt",
+	csv: "Generic CSV",
+} as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_KINDS = [
 	"rating",

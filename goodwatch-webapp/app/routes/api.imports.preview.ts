@@ -19,7 +19,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 		if (!reader)
 			throw new NativeImportError(
 				400,
-				"Choose a Letterboxd or Trakt export file.",
+				"Choose an import source and export file.",
 			)
 		while (true) {
 			const { done, value } = await reader.read()
@@ -41,7 +41,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 		} catch {
 			throw new NativeImportError(
 				400,
-				"We couldn't read that upload. Choose the ZIP you downloaded from Letterboxd or Trakt.",
+				"We couldn't read that upload. Choose the export file for your selected source.",
 			)
 		}
 		const source = sourceSchema.safeParse(form.get("source"))
@@ -49,7 +49,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 		if (!source.success || !(file instanceof File))
 			throw new NativeImportError(
 				400,
-				"Choose a Letterboxd or Trakt export file.",
+				"Choose an import source and export file.",
 			)
 		if (file.size > IMPORT_MAX_BYTES)
 			throw new NativeImportError(413, "That export is larger than 20 MB.")
@@ -60,7 +60,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 					userId,
 					source.data,
 					file.name.replace(/\s+/g, " ").trim().slice(0, 200) ||
-						`${source.data}.zip`,
+						`${source.data}.${source.data === "csv" ? "csv" : "zip"}`,
 					bytes,
 				),
 			},

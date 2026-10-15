@@ -20,7 +20,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"Import ratings, watches and lists from IMDb, Letterboxd or Trakt into GoodWatch.",
+			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt or CSV into GoodWatch.",
 	},
 	{ name: "robots", content: "noindex, nofollow" },
 ]
@@ -56,6 +56,7 @@ const TABS: { id: ImportTab; label: string }[] = [
 	{ id: "imdb", label: "IMDb" },
 	{ id: "letterboxd", label: "Letterboxd" },
 	{ id: "trakt", label: "Trakt" },
+	{ id: "csv", label: "Generic CSV" },
 ]
 
 export default function SettingsImports() {
