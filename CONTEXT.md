@@ -176,6 +176,10 @@ _Avoid_: Personalized sort, Recommended sort
 The sort that orders titles by taste match, highest first, on Discover and Watch next. It needs taste.
 _Avoid_: Recommended sort, Sort by match
 
+**Personal order**:
+The order Best match uses for a member once it is on for them: titles ranked by how well the member's own ratings and everyone's ratings predict they will like them, with no franchise crowding the top, and the first places mixed toward the member's own share of shows and animation. Taste match is still shown on each title; personal order only decides the order.
+_Avoid_: G1, Smart order
+
 **Taste match filter**:
 The filter that keeps only titles with a taste match of at least 70, 80, or 90 percent.
 
