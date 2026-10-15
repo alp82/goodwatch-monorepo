@@ -1,6 +1,16 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
-import { createReadMcpHandler } from "~/server/mcp/endpoint.server"
 
-const handle = createReadMcpHandler()
+// The MCP SDK and the tools load on the first request to /mcp, not at server start.
+let handler: Promise<(request: Request) => Promise<Response>> | undefined
+function handle(request: Request) {
+	handler ??= import("../server/mcp/endpoint.server.ts").then(
+		({ createReadMcpHandler }) => createReadMcpHandler(),
+		(error) => {
+			handler = undefined
+			throw error
+		},
+	)
+	return handler.then((answer) => answer(request))
+}
 export const loader = ({ request }: LoaderFunctionArgs) => handle(request)
 export const action = ({ request }: ActionFunctionArgs) => handle(request)
