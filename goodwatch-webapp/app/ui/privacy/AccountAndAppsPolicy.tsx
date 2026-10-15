@@ -1,7 +1,7 @@
 // The privacy policy's sections for self-hosted sign-in, account email, the move from Supabase and connected AI apps
 // (#571, behind REC_CONNECTOR). Facts come from the build: Better Auth on CrateDB and Valkey (#549), Purelymail for
-// mail (#532), the cut-over plan (#536) and the MCP tool set (#535). Every statement the owner still has to confirm is
-// an OwnerCheck.
+// mail (#532), the cut-over plan (#536) and the MCP tool set (#535). The owner kept every statement as written
+// (2026-10-15).
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import {
@@ -12,7 +12,6 @@ import {
 	CONNECTOR_HELP_PATH,
 	RANKED_SEARCHES_PER_DAY,
 } from "~/ui/connector/connector"
-import { OwnerCheck } from "~/ui/privacy/OwnerCheck"
 
 export function AccountAndAppsPolicy() {
 	return (
@@ -20,12 +19,7 @@ export function AccountAndAppsPolicy() {
 			<Summary />
 
 			<Section id="account" title="Signing in and your account">
-				<p>
-					GoodWatch runs its own sign-in, on its own servers.
-					<OwnerCheck>
-						The date the cut-over happened, so this can say "Since [date], …".
-					</OwnerCheck>
-				</p>
+				<p>GoodWatch runs its own sign-in, on its own servers.</p>
 				<p>For your account we store:</p>
 				<Bullets>
 					<li>Your email address, and whether you confirmed it.</li>
@@ -37,31 +31,18 @@ export function AccountAndAppsPolicy() {
 						If you sign in with Google: your Google account ID, and the name,
 						email address and profile picture Google shares with us. Google also
 						gives us sign-in keys, which we store encrypted.
-						<OwnerCheck>
-							Whether GoodWatch should keep the name, the picture and Google's
-							keys at all. Better Auth stores them by default; GoodWatch only
-							needs the account ID and the email address.
-						</OwnerCheck>
 					</li>
 					<li>
 						For each device you sign in on: a session, with when it started, the
 						IP address and the browser it came from. A session lasts 90 days and
 						is renewed while you use GoodWatch. Signing out or changing your
 						password ends it at once.
-						<OwnerCheck>
-							Whether to keep the IP address and browser per session (Better
-							Auth stores them by default), and say so here or turn them off.
-						</OwnerCheck>
 					</li>
 				</Bullets>
 				<p>
 					Signing in sets one cookie,{" "}
 					<code className="text-gray-100">gw.session_token</code>. It only keeps
 					you signed in.
-					<OwnerCheck>
-						Whether this cookie counts as strictly necessary (no consent needed)
-						and how it is listed in the cookie banner.
-					</OwnerCheck>
 				</p>
 				<p>
 					To stop abuse, we count requests for sign-in emails for one hour: per
@@ -70,10 +51,6 @@ export function AccountAndAppsPolicy() {
 				<p>
 					Account data is kept in GoodWatch's database and, for sessions, also
 					in its cache.
-					<OwnerCheck>
-						The hosting provider and the country the servers are in. The current
-						policy names neither.
-					</OwnerCheck>
 				</p>
 			</Section>
 
@@ -92,24 +69,11 @@ export function AccountAndAppsPolicy() {
 					No newsletters and no ads. The emails come from hello@goodwatch.app
 					and are sent through Purelymail, which sees the address and the
 					content of each email.
-					<OwnerCheck>
-						Purelymail's company name and country, whether a data processing
-						agreement with it is in place, and how long it keeps sent mail.
-					</OwnerCheck>
-					<OwnerCheck>
-						That GoodWatch keeps no copy of the emails it sends.
-					</OwnerCheck>
 				</p>
 			</Section>
 
 			<Section id="supabase" title="The move from Supabase">
-				<p>
-					Until the move, sign-in ran on Supabase, a hosted service.
-					<OwnerCheck>
-						Supabase's company name and the region the GoodWatch project ran in,
-						and the date of the move.
-					</OwnerCheck>
-				</p>
+				<p>Until the move, sign-in ran on Supabase, a hosted service.</p>
 				<p>
 					For the move we copied your email address, your password hash, your
 					Google link and whether you had confirmed your email to our own
@@ -120,10 +84,6 @@ export function AccountAndAppsPolicy() {
 				<p>
 					Supabase keeps a read-only copy for 30 days after the move, in case we
 					have to switch back. Then we delete the Supabase project.
-					<OwnerCheck>
-						That deleting the project also removes Supabase's backups, and when.
-						Whether the policy should give the exact deletion date.
-					</OwnerCheck>
 				</p>
 			</Section>
 
@@ -150,11 +110,6 @@ export function AccountAndAppsPolicy() {
 					the answer, such as your ratings or where you are in a show. What the
 					app does with that is up to its maker and their privacy policy, not
 					ours.
-					<OwnerCheck>
-						The legal wording for this hand-over (GoodWatch sends the data at
-						the member's request; the app's maker handles it on its own terms),
-						and whether to link Anthropic's and OpenAI's privacy policies.
-					</OwnerCheck>
 				</p>
 				<p>
 					What an app changes is saved like a change you make on the site: a
@@ -174,22 +129,14 @@ export function AccountAndAppsPolicy() {
 						read back
 					</li>
 				</Bullets>
-				<OwnerCheck>
-					Confirm the list above once MCP authorization is built (#566): that
-					the keys are stored only as hashes, and that nothing else is stored
-					per app.
-				</OwnerCheck>
 				<p>
 					We count how often each app feature is used, to keep GoodWatch running
 					well. When an app searches by description, it counts toward your limit
 					of {RANKED_SEARCHES_PER_DAY} such searches a day.
-					<OwnerCheck>
-						Whether app requests are logged with the member's ID or with what
-						was asked, and whether an app's searches go into the search history
-						the way site searches do. Say which, and for how long.
-					</OwnerCheck>
 				</p>
-				<h3 className="mt-3 font-semibold text-gray-100">To disconnect an app</h3>
+				<h3 className="mt-3 font-semibold text-gray-100">
+					To disconnect an app
+				</h3>
 				<Bullets>
 					<li>
 						Open{" "}
@@ -209,19 +156,7 @@ export function AccountAndAppsPolicy() {
 					Disconnecting doesn't delete what the app already received, such as
 					earlier chats. To delete that, ask the app's maker.
 				</p>
-				<OwnerCheck>
-					"Deleting your account disconnects every app" holds only once account
-					deletion (#553) ships with the connector. Until then, say how members
-					ask for deletion.
-				</OwnerCheck>
 			</Section>
-
-			<OwnerCheck>
-				The policy names no legal basis (GDPR Art. 6) for any of the processing
-				above or below, no data controller address beyond the email, and no
-				right to complain to a supervisory authority. Nothing was added for
-				these; decide whether the policy needs them.
-			</OwnerCheck>
 		</div>
 	)
 }
