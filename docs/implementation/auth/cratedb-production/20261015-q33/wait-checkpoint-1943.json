@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-15T19:43:15.502048+00:00",
+  "phase": "WAITING_FOR_NORMAL_OLD_PROCESS_EXIT",
+  "sqlDecommissionSucceeded": true,
+  "targetStarted": false,
+  "versions": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.16",
+    "crate-03": "5.10.16"
+  },
+  "healthRows": 94,
+  "allGreen": true,
+  "shards": [
+    [
+      "STARTED",
+      "STARTED",
+      958
+    ]
+  ],
+  "stopRequired": [],
+  "serverActiveContextWaitBoundApproximately": "2026-10-15T21:20:40Z",
+  "force": false,
+  "noJobsCancelled": true,
+  "diagnosticArchive": "events-checkpoint-1943.json.gz",
+  "uncompressedSha256": "b5c0683bb884bdaeee60b199a309981441e38d9fa08a913a2b2ff7480abf1af1",
+  "classification": "crate.http wraps readiness; generic route 503 without Crate failure is ambiguous, not a proven member failure. Confirmed poster-impression HTTP503 remains separate.",
+  "continuation": "Start target only after normal exit code0 and healthy survivors; otherwise follow pre-target abort on real failure/server timeout. No manual kill/forced exit."
+}
