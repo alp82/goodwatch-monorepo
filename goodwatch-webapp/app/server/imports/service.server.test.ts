@@ -1565,3 +1565,515 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 	)
 	assert.equal(afterUndo.counts.new, 6)
 })
+
+it("MAL file preview retains season scores and applies On hold with only mapped cour watches, supports repeat receipts and undo", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 120089,
+			title: "Spy x Family",
+			imdb_id: null,
+			release_year: 2022,
+		},
+	]
+	db.episodes = Array.from({ length: 25 }, (_, i) => ({
+		show_id: 120089,
+		tmdb_id: 10001 + i,
+		season_number: 1,
+		episode_number: i + 1,
+		name: null,
+		tvdb_id: null,
+		removed_at: null,
+		air_date: Date.UTC(2022, 0, 1),
+	}))
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 17061,
+				showId: 120089,
+				season: 1,
+				offset: 12,
+				ranges: [],
+				ids: { myanimelist: [50602], anilist: [], kitsu: [] },
+			},
+		],
+	}
+	const trackingDb = new FakeTrackingCrate()
+	trackingDb.seed("episode", db.episodes)
+	setCrateClientForTest(trackingDb)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const file = Buffer.from(
+		"<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo><anime><series_animedb_id>50602</series_animedb_id><series_title>Spy x Family Part 2</series_title><series_episodes>13</series_episodes><my_watched_episodes>2</my_watched_episodes><my_status>On-Hold</my_status><my_score>8</my_score><my_times_watched>3</my_times_watched></anime></myanimelist>",
+	)
+	const preview = await previewImport(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		file,
+	)
+	assert.equal(preview.counts.new, 3)
+	assert.equal((await getShowTracking("member", 120089)).log.length, 0)
+	const rows = (await getImportItems("member", preview.id, undefined, 0, 50))
+		.items
+	assert.deepEqual(
+		rows.filter((x) => x.kind === "watch").map((x) => x.episode),
+		[13, 14],
+	)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["watch", "rating", "show_status"],
+	})
+	await waitFor(db, "done")
+	const tracked = await getShowTracking("member", 120089)
+	assert.equal(tracked.state?.state, "on_hold")
+	assert.equal(tracked.log.length, 2)
+	assert.ok(tracked.log.every((x) => x.watched_at === null))
+	const receipt = await getImport("member", preview.id)
+	assert.equal(receipt.applied.added, 3)
+	assert.match(receipt.warnings.join(" "), /comments and tags/i)
+	const repeated = await previewImport(
+		"member",
+		"myanimelist",
+		"kitsu-member-anime.xml",
+		file,
+	)
+	assert.equal(repeated.counts.new, 0)
+	const repeatedRows = (
+		await getImportItems("member", repeated.id, undefined, 0, 50)
+	).items
+	assert.equal(repeatedRows.find((x) => x.score != null)?.score, 8)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+	const undone = await getShowTracking("member", 120089)
+	assert.equal(undone.log.length, 0)
+	assert.ok(!undone.state || undone.state.state === "not_started")
+	const restored = await previewImport(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		file,
+	)
+	assert.equal(restored.counts.new, 3)
+})
+
+it("completed MAL cours date watches only when both complete dates establish one viewing day, and never fill the rest of a show", async () => {
+	for (const [
+		start,
+		finish,
+		watchDates,
+		expected,
+		fileName = "animelist.xml.gz",
+	] of [
+		["2022-12-24", "2022-12-24", "preserve", "2022-12-24"],
+		["2022-12-24", "2022-12-24", "unknown", null],
+		["2022-10-01", "2022-12-24", "preserve", null],
+		["0000-00-00", "2022-12-24", "preserve", null],
+		["2022-02-30", "2022-02-30", "preserve", null],
+		["2022-12-24", "2022-12-24", "preserve", null, "kitsu-member-anime.xml"],
+	] as const) {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 120089,
+				title: "Spy x Family",
+				imdb_id: null,
+				release_year: 2022,
+			},
+		]
+		db.episodes = Array.from({ length: 25 }, (_, i) => ({
+			show_id: 120089,
+			tmdb_id: 10001 + i,
+			season_number: 1,
+			episode_number: i + 1,
+			name: null,
+			tvdb_id: null,
+			removed_at: null,
+			air_date: Date.UTC(2022, 0, 1),
+		}))
+		db.animeSnapshot = {
+			schemaVersion: 1,
+			entries: [
+				{
+					anidbId: 17061,
+					showId: 120089,
+					season: 1,
+					offset: 12,
+					ranges: [],
+					ids: { myanimelist: [50602], anilist: [], kitsu: [] },
+				},
+			],
+		}
+		const trackingDb = new FakeTrackingCrate()
+		trackingDb.seed("episode", db.episodes)
+		setCrateClientForTest(trackingDb)
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const file = Buffer.from(
+			`<myanimelist><myinfo><user_export_type>1</user_export_type><user_name>synthetic</user_name></myinfo><anime><series_animedb_id>50602</series_animedb_id><series_episodes>13</series_episodes><my_watched_episodes>13</my_watched_episodes><my_status>Completed</my_status><my_score>0</my_score><my_start_date>${start}</my_start_date><my_finish_date>${finish}</my_finish_date></anime></myanimelist>`,
+		)
+		const preview = await previewImport("member", "myanimelist", fileName, file)
+		assert.equal(preview.counts.new, 13)
+		assert.equal(preview.counts.unsupported, 1)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["watch", "show_status"],
+			watchDates,
+		})
+		await waitFor(db, "done")
+		const tracked = await getShowTracking("member", 120089)
+		assert.equal(tracked.log.length, 13)
+		assert.equal(tracked.state?.state, "watching")
+		assert.ok(
+			tracked.log.every(
+				(x) => x.watched_at === (expected ? Date.parse(expected) : null),
+			),
+		)
+		await undoImport("member", preview.id)
+		assert.equal((await getShowTracking("member", 120089)).log.length, 0)
+	}
+})
+
+it("different anime entry scores and statuses for one show stay unapplied instead of depending on XML order", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 120089,
+			title: "Spy x Family",
+			imdb_id: null,
+			release_year: 2022,
+		},
+	]
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 17061,
+				showId: 120089,
+				season: 1,
+				offset: 0,
+				ranges: [],
+				ids: { myanimelist: [50265, 50602], anilist: [], kitsu: [] },
+			},
+		],
+	}
+	setCrateClientForTest(new FakeTrackingCrate())
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const file = Buffer.from(
+		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${[50265, 50602].map((id, i) => `<anime><series_animedb_id>${id}</series_animedb_id><my_status>${i ? "Dropped" : "Watching"}</my_status><my_score>${i ? 9 : 8}</my_score></anime>`).join("")}</myanimelist>`,
+	)
+	const preview = await previewImport(
+		"member",
+		"myanimelist",
+		"kitsu-member-anime.xml",
+		file,
+	)
+	assert.equal(preview.counts.invalid, 2)
+	const items = (await getImportItems("member", preview.id, undefined, 0, 50))
+		.items
+	assert.ok(
+		items
+			.filter((x) => x.score != null)
+			.every((x) => /season score.*kept for later/i.test(x.reason || "")),
+	)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["rating", "show_status"],
+	})
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 0)
+	assert.equal((await getShowTracking("member", 120089)).log.length, 0)
+})
+
+function setupCourStatuses() {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 120089,
+			title: "Spy x Family",
+			imdb_id: null,
+			release_year: 2022,
+		},
+	]
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 17061,
+				showId: 120089,
+				season: 1,
+				offset: 0,
+				ranges: [],
+				ids: { myanimelist: [50265, 50602], anilist: [], kitsu: [] },
+			},
+		],
+	}
+	setCrateClientForTest(new FakeTrackingCrate())
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	return db
+}
+const courStatuses = (first: string, second: string) =>
+	Buffer.from(
+		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo><anime><series_animedb_id>50265</series_animedb_id><my_status>${first}</my_status></anime><anime><series_animedb_id>50602</series_animedb_id><my_status>${second}</my_status></anime></myanimelist>`,
+	)
+
+it("identical cour statuses make one show change, keep duplicate rows on the receipt, and undo together", async () => {
+	for (const status of [
+		"Plan to Watch",
+		"Watching",
+		"On-Hold",
+		"Dropped",
+		"Completed",
+	]) {
+		const db = setupCourStatuses()
+		const file = courStatuses(status, status)
+		const preview = await previewImport(
+			"member",
+			"myanimelist",
+			"animelist.xml",
+			file,
+		)
+		assert.equal(preview.counts.invalid, 0, status)
+		assert.equal(preview.counts.unchanged, 1, status)
+		assert.equal(preview.counts.new, status === "Completed" ? 0 : 1, status)
+		assert.equal(
+			preview.counts.unsupported,
+			status === "Completed" ? 1 : 0,
+			status,
+		)
+		const rows = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items
+		assert.match(
+			rows.find((x) => x.outcome === "unchanged")?.reason ?? "",
+			/same status.*once/i,
+		)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["show_status"],
+		})
+		await waitFor(db, "done")
+		assert.equal(
+			(await getImport("member", preview.id)).applied.added,
+			status === "Completed" ? 0 : 1,
+		)
+		const repeated = await previewImport(
+			"member",
+			"myanimelist",
+			"animelist.xml",
+			file,
+		)
+		assert.equal(repeated.counts.new, 0)
+		await undoImport("member", preview.id)
+		const restored = await previewImport(
+			"member",
+			"myanimelist",
+			"animelist.xml",
+			file,
+		)
+		assert.equal(restored.counts.new, status === "Completed" ? 0 : 1)
+	}
+})
+
+it("different cour statuses name every conflicting status, including Completed, regardless of file order", async () => {
+	for (const pair of [
+		["Completed", "Watching"],
+		["Plan to Watch", "Dropped"],
+	]) {
+		for (const statuses of [pair, [...pair].reverse()]) {
+			const db = setupCourStatuses()
+			const preview = await previewImport(
+				"member",
+				"myanimelist",
+				"animelist.xml",
+				courStatuses(statuses[0], statuses[1]),
+			)
+			assert.equal(preview.counts.invalid, 2)
+			const rows = (
+				await getImportItems("member", preview.id, undefined, 0, 50)
+			).items
+			for (const row of rows) {
+				assert.match(row.reason || "", /MyAnimeList.*different statuses/)
+				for (const status of pair)
+					assert.ok(row.reason?.toLowerCase().includes(status.toLowerCase()))
+			}
+			await confirmImport("member", preview.id, {
+				...options,
+				kinds: ["show_status"],
+			})
+			await waitFor(db, "done")
+			assert.equal((await getImport("member", preview.id)).applied.added, 0)
+		}
+	}
+})
+
+it("cour scores retain each entry's full pinned placement through apply and undo without rating or marking the show Seen", async () => {
+	const db = setupCourStatuses()
+	db.episodes = Array.from({ length: 25 }, (_, i) => ({
+		show_id: 120089,
+		tmdb_id: 10001 + i,
+		season_number: 1,
+		episode_number: i + 1,
+		name: null,
+		tvdb_id: null,
+		removed_at: null,
+		air_date: Date.UTC(2022, 0, 1),
+	}))
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 17060,
+				showId: 120089,
+				season: 1,
+				offset: 0,
+				ranges: [],
+				ids: { myanimelist: [50265], anilist: [], kitsu: [] },
+			},
+			{
+				anidbId: 17061,
+				showId: 120089,
+				season: 1,
+				offset: 12,
+				ranges: [],
+				ids: { myanimelist: [50602], anilist: [], kitsu: [] },
+			},
+		],
+	}
+	const file = Buffer.from(
+		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${[50265, 50602].map((id, i) => `<anime><series_animedb_id>${id}</series_animedb_id><series_episodes>${i ? 13 : 12}</series_episodes><my_status>Plan to Watch</my_status><my_score>${i ? 9 : 8}</my_score></anime>`).join("")}</myanimelist>`,
+	)
+	const preview = await previewImport(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		file,
+	)
+	assert.equal(preview.counts.new, 1)
+	assert.equal(preview.counts.unsupported, 2)
+	const scoreRows = async () =>
+		(await getImportItems("member", preview.id, undefined, 0, 50)).items.filter(
+			(row) => row.score != null,
+		)
+	const scores = await scoreRows()
+	assert.deepEqual(
+		scores.map((row) => [
+			row.score,
+			row.animeEntry?.id,
+			row.tmdbId,
+			row.animeScorePlacement?.ranges,
+		]),
+		[
+			[8, 50265, 120089, [{ season: 1, firstEpisode: 1, lastEpisode: 12 }]],
+			[9, 50602, 120089, [{ season: 1, firstEpisode: 13, lastEpisode: 25 }]],
+		],
+	)
+	assert.deepEqual(
+		scores.map((row) => row.animeScorePlacement?.mapping?.offset),
+		[0, 12],
+	)
+	assert.ok(
+		scores.every(
+			(row) =>
+				row.kind === "unsupported" &&
+				/season score.*kept for later.*not applied/i.test(row.reason ?? ""),
+		),
+	)
+	// Changing the live snapshot must not rewrite receipt evidence.
+	db.animeSnapshot = null
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["rating", "show_status"],
+	})
+	await waitFor(db, "done")
+	const receipt = await getImport("member", preview.id)
+	assert.equal(receipt.applied.added, 1)
+	assert.match(
+		receipt.warnings.join(" "),
+		/season scores.*kept for later.*not applied/i,
+	)
+	assert.deepEqual(
+		(await scoreRows()).map(({ applyState, ...row }) => row),
+		scores.map(({ applyState, ...row }) => row),
+	)
+	const tracking = await getShowTracking("member", 120089)
+	assert.equal(tracking.state, null)
+	assert.equal(tracking.log.length, 0)
+	// A subsequent show-rating preview must still see no existing score.
+	const check = await previewParsedImport("member", "score.csv", {
+		source: "csv",
+		observations: [
+			{
+				key: "show-score",
+				kind: "rating",
+				mediaType: "show",
+				title: "Spy x Family",
+				year: 2022,
+				tmdbId: 120089,
+				imdbId: null,
+				score: 7,
+			},
+		],
+		warnings: [],
+	})
+	assert.equal(check.counts.new, 1)
+	assert.equal(
+		(await getImportItems("member", check.id, undefined, 0, 50)).items[0]
+			.currentScore,
+		null,
+	)
+	await undoImport("member", preview.id)
+	assert.deepEqual(
+		(await scoreRows()).map(({ applyState, ...row }) => row),
+		scores.map(({ applyState, ...row }) => row),
+	)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+})
+
+it("unresolved cour scores keep their facts and a reason without inventing episode ranges", async () => {
+	for (const situation of [
+		"unknown-total",
+		"missing-catalog",
+		"missing-snapshot",
+	] as const) {
+		const db = setupCourStatuses()
+		if (situation === "missing-snapshot") db.animeSnapshot = null
+		const file = Buffer.from(
+			`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo><anime><series_animedb_id>50265</series_animedb_id><series_episodes>${situation === "unknown-total" ? 0 : 12}</series_episodes><my_status>Plan to Watch</my_status><my_score>8</my_score></anime></myanimelist>`,
+		)
+		const preview = await previewImport(
+			"member",
+			"myanimelist",
+			"animelist.xml",
+			file,
+		)
+		const score = (
+			await getImportItems("member", preview.id, undefined, 0, 50)
+		).items.find((row) => row.score === 8)
+		assert.ok(score)
+		assert.equal(score.animeEntry?.id, 50265)
+		assert.equal(score.outcome, "unsupported")
+		assert.equal(score.animeScorePlacement?.ranges, null)
+		assert.ok(score.animeScorePlacement?.reason)
+		assert.equal(score.tmdbId, situation === "missing-snapshot" ? null : 120089)
+		assert.equal(
+			score.animeScorePlacement?.mapping?.showId,
+			situation === "missing-snapshot" ? undefined : 120089,
+		)
+		assert.match(score.reason ?? "", /kept for later.*not applied/)
+	}
+})
