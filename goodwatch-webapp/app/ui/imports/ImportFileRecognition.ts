@@ -1,15 +1,24 @@
 // Names the source of an export file before it is uploaded, by looking inside it in the browser. Each rule mirrors
 // what that source's import already accepts (app/server/imports/files.server.ts, app/server/imdb-import/file.server.ts),
 // so a recognized file is one its import can read. A file no live import reads stays unrecognized.
-import type { FileImportSource } from "~/domain/imports"
+//
+// Reading is bounded: a file larger than any import takes is refused unread, a ZIP's directory is read only when its
+// end record is sound and the directory is small, and a gzip file is unpacked only as far as its first 64 KB.
+import { IMDB_IMPORT_MAX_BYTES } from "~/domain/imdb-import"
+import { type FileImportSource, IMPORT_MAX_BYTES } from "~/domain/imports"
 
 /** A source on the Imports page that takes a file. IMDb has its own import. */
 export type ImportFileTarget = "imdb" | FileImportSource
 
 export type ImportFileRecognition =
-	| { source: Exclude<ImportFileTarget, "movielens">; label: string }
+	| {
+			source: Exclude<ImportFileTarget, "movielens" | "myanimelist">
+			label: string
+	  }
 	/** MovieLens takes a ratings file and an optional wishlist file together. */
 	| { source: "movielens"; label: string; wishlist: boolean }
+	/** One import reads both; the file name tells a Kitsu library apart. */
+	| { source: "myanimelist"; label: string; kitsu: boolean }
 	| { source: null; label: string; hint: string }
 
 export type RecognizedImportFile = Exclude<
@@ -21,9 +30,29 @@ export type RecognizedImportFile = Exclude<
 type Peek =
 	| { kind: "zip"; entries: string[] }
 	| { kind: "xml"; root: string; gzip: boolean }
-	| { kind: "csv"; header: string[] }
+	| { kind: "csv"; header: string[]; gzip: boolean }
+	| { kind: "unreadable-zip" }
 	| { kind: "other" }
 
+const MB = 1024 * 1024
+/** Each import's size limit. */
+const SIZE_LIMIT: Record<ImportFileTarget, number> = {
+	imdb: IMDB_IMPORT_MAX_BYTES,
+	letterboxd: IMPORT_MAX_BYTES,
+	trakt: IMPORT_MAX_BYTES,
+	csv: IMPORT_MAX_BYTES,
+	movielens: IMPORT_MAX_BYTES,
+	kodi: IMPORT_MAX_BYTES,
+	myanimelist: IMPORT_MAX_BYTES,
+}
+const LARGEST_IMPORT = Math.max(...Object.values(SIZE_LIMIT))
+const tooLarge = (limit: number): ImportFileRecognition => ({
+	source: null,
+	label: "file",
+	hint: `That file is larger than ${limit / MB} MB, more than an export GoodWatch reads.`,
+})
+
+// Confirmed against the owner's real Letterboxd export of 2026-10-09.
 const LETTERBOXD_FILES = new Set([
 	"diary.csv",
 	"watched.csv",
@@ -33,17 +62,24 @@ const LETTERBOXD_FILES = new Set([
 	"likes/films.csv",
 ])
 
-export async function recognizeImportFile(
-	file: File,
-): Promise<ImportFileRecognition> {
-	return recognize(await peek(file), file.name.toLowerCase())
-}
-
-/** The JSON files the Trakt import reads; it reads them from the top of the ZIP only. */
+/**
+ * The JSON files the Trakt import reads; it reads them from the top of the ZIP only.
+ * Confirmed against the owner's real Trakt export of 2026-10-09.
+ */
 const isTraktFile = (entry: string) =>
 	/^watched-history(?:-\d+)?\.json$/.test(entry) ||
 	/^ratings-(movies|shows|seasons|episodes)\.json$/.test(entry) ||
 	/^lists-(?!collaborations\.json$).+\.json$/.test(entry)
+
+export async function recognizeImportFile(
+	file: File,
+): Promise<ImportFileRecognition> {
+	if (file.size > LARGEST_IMPORT) return tooLarge(LARGEST_IMPORT)
+	const result = recognize(await peek(file), file.name.toLowerCase())
+	return result.source && file.size > SIZE_LIMIT[result.source]
+		? tooLarge(SIZE_LIMIT[result.source])
+		: result
+}
 
 function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 	if (peek.kind === "zip") {
@@ -51,6 +87,8 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			return { source: "letterboxd", label: "Letterboxd export" }
 		if (peek.entries.some((entry) => isTraktFile(entry.toLowerCase())))
 			return { source: "trakt", label: "Trakt export" }
+		// UNCONFIRMED: built from synthetic fixtures; no real Kodi export seen yet.
+		// See docs/research/imports/kodi-tautulli-exports.md on branch research/kodi-tautulli-exports.
 		if (
 			peek.entries.filter(
 				(entry) => entry.split("/").at(-1)?.toLowerCase() === "videodb.xml",
@@ -62,20 +100,32 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 		// The Kodi import reads plain XML only; the MyAnimeList import also unpacks gzip.
 		if (peek.root === "videodb" && !peek.gzip)
 			return { source: "kodi", label: "Kodi library export" }
-		if (peek.root === "myanimelist")
+		if (peek.root === "myanimelist") {
+			// UNCONFIRMED: the root element and Kitsu's `kitsu-<slug>-anime.xml` name come from the research notes, not
+			// a real file. See docs/research/imports/anime-tracker-exports.md on branch research/anime-tracker-exports.
+			const kitsu = fileName.startsWith("kitsu-")
 			return {
 				source: "myanimelist",
-				label: fileName.startsWith("kitsu-")
-					? "Kitsu anime library"
-					: "MyAnimeList export",
+				label: kitsu ? "Kitsu anime library" : "MyAnimeList export",
+				kitsu,
 			}
+		}
 	}
 	if (peek.kind === "csv") {
+		// Only the MyAnimeList import unpacks gzip; every CSV import reads plain text.
+		if (peek.gzip)
+			return {
+				source: null,
+				label: "gzip file",
+				hint: "GoodWatch reads CSV files as they are, not inside gzip. Unpack it and upload the CSV inside.",
+			}
 		// Each import finds its columns by name, trimmed and in any case.
 		const header = new Set(peek.header.map((name) => name.trim().toLowerCase()))
 		const has = (...names: string[]) => names.every((name) => header.has(name))
 		if (has("const", "your rating", "title type"))
 			return { source: "imdb", label: "IMDb ratings export" }
+		// UNCONFIRMED: built from synthetic fixtures; no real MovieLens export seen yet. See
+		// docs/research/imports/criticker-movielens-sofa-exports.md on branch research/criticker-movielens-sofa-exports.
 		if (has("movie_id", "imdb_id", "tmdb_id", "title"))
 			return header.has("rating")
 				? { source: "movielens", label: "MovieLens ratings", wishlist: false }
@@ -106,6 +156,12 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			label: "ZIP file",
 			hint: "Nothing in this ZIP matches an export GoodWatch reads. Upload the ZIP as the site gave it to you, without unpacking or repacking it.",
 		}
+	if (peek.kind === "unreadable-zip")
+		return {
+			source: null,
+			label: "ZIP file",
+			hint: "That ZIP file is damaged or in a form GoodWatch can't read. Download the export again.",
+		}
 	if (peek.kind === "xml")
 		return {
 			source: null,
@@ -121,8 +177,10 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 
 async function peek(file: File): Promise<Peek> {
 	const head = new Uint8Array(await file.slice(0, 4).arrayBuffer())
-	if (head[0] === 0x50 && head[1] === 0x4b)
-		return { kind: "zip", entries: await zipEntries(file) }
+	if (head[0] === 0x50 && head[1] === 0x4b) {
+		const entries = await zipEntries(file)
+		return entries ? { kind: "zip", entries } : { kind: "unreadable-zip" }
+	}
 	if (head[0] === 0x1f && head[1] === 0x8b)
 		return peekText(await gunzipHead(file), true)
 	return peekText(await file.slice(0, TEXT_HEAD_BYTES).text())
@@ -133,38 +191,55 @@ const TEXT_HEAD_BYTES = 64 * 1024
 
 function peekText(text: string, gzip = false): Peek {
 	const start = text
-		.replace(/^\ufeff/, "")
+		.replace(/^﻿/, "")
 		.replace(/^(\s*(<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>]*>))*/i, "")
 		.trimStart()
 	const root = /^<([A-Za-z_][\w.:-]*)/.exec(start)?.[1]
 	if (root) return { kind: "xml", root, gzip }
-	const header = csvHeader(start)
-	if (header.length > 1) return { kind: "csv", header }
+	const header = csvHeader(text.replace(/^﻿/, ""))
+	if (header.length > 1) return { kind: "csv", header, gzip }
 	return { kind: "other" }
 }
 
-/** The first row of comma-separated text. Quoted names may hold commas and doubled quotes. */
+/**
+ * The first non-blank row of comma-separated text, read as the generic import reads it: a quote opens only at the
+ * start of a field, and doubled or backslash-escaped quotes stay in the field.
+ */
 function csvHeader(text: string): string[] {
-	const fields: string[] = []
+	let fields: string[] = []
 	let field = ""
 	let quoted = false
 	for (let at = 0; at < text.length; at++) {
 		const char = text[at]
 		if (quoted) {
-			if (char === '"' && text[at + 1] === '"') {
+			if (char === "\\" && text[at + 1] === "\\") {
+				field += "\\"
+				at++
+			} else if (
+				char === "\\" &&
+				text[at + 1] === '"' &&
+				![undefined, ",", "\n", "\r"].includes(text[at + 2])
+			) {
+				field += '"'
+				at++
+			} else if (char === '"' && text[at + 1] === '"') {
 				field += '"'
 				at++
 			} else if (char === '"') quoted = false
 			else field += char
-		} else if (char === '"') quoted = true
+		} else if (char === '"' && field === "") quoted = true
 		else if (char === ",") {
 			fields.push(field)
 			field = ""
-		} else if (char === "\n" || char === "\r") break
-		else field += char
+		} else if (char === "\n" || char === "\r") {
+			fields.push(field)
+			if (fields.some((cell) => cell.trim())) return fields
+			fields = []
+			field = ""
+		} else field += char
 	}
 	fields.push(field)
-	return fields
+	return fields.some((cell) => cell.trim()) ? fields : []
 }
 
 /** The start of a gzip file's content, without unpacking the rest. */
@@ -196,21 +271,45 @@ async function gunzipHead(file: File): Promise<string> {
 	return new TextDecoder().decode(bytes.subarray(0, TEXT_HEAD_BYTES))
 }
 
-// The central directory at the end of a ZIP lists every file name, so nothing needs unpacking.
-async function zipEntries(file: File): Promise<string[]> {
-	const tailSize = Math.min(file.size, 65_557)
+/** The end record can carry a comment of up to 64 KB, so it is within this many bytes of the end. */
+const END_RECORD_SEARCH = 22 + 0xffff
+/** A directory this size lists far more files than any import reads (the most is 50,000). */
+const MAX_DIRECTORY_BYTES = 4 * MB
+const MAX_ENTRIES = 50_000
+
+/**
+ * The file names in a ZIP's central directory, so nothing needs unpacking. Null when the ZIP is one the server's
+ * reader refuses: an end record that doesn't close the file, a multi-part or ZIP64 archive, or a directory that
+ * doesn't end where the end record starts. A directory too large to be an export is refused unread.
+ */
+async function zipEntries(file: File): Promise<string[] | null> {
+	const tailSize = Math.min(file.size, END_RECORD_SEARCH)
 	const tail = new DataView(
 		await file.slice(file.size - tailSize).arrayBuffer(),
 	)
 	let end = -1
 	for (let at = tail.byteLength - 22; at >= 0; at--)
-		if (tail.getUint32(at, true) === 0x06054b50) {
+		if (
+			tail.getUint32(at, true) === 0x06054b50 &&
+			at + 22 + tail.getUint16(at + 20, true) === tail.byteLength
+		) {
 			end = at
 			break
 		}
-	if (end < 0) return []
+	if (end < 0) return null
+	const count = tail.getUint16(end + 10, true)
 	const size = tail.getUint32(end + 12, true)
 	const offset = tail.getUint32(end + 16, true)
+	if (
+		tail.getUint16(end + 4, true) !== 0 ||
+		tail.getUint16(end + 6, true) !== 0 ||
+		count !== tail.getUint16(end + 8, true) ||
+		count === 0xffff ||
+		count > MAX_ENTRIES ||
+		size > MAX_DIRECTORY_BYTES ||
+		offset + size !== file.size - tailSize + end
+	)
+		return null
 	const directory = new DataView(
 		await file.slice(offset, offset + size).arrayBuffer(),
 	)
@@ -218,10 +317,12 @@ async function zipEntries(file: File): Promise<string[]> {
 	const names: string[] = []
 	let at = 0
 	while (
+		names.length < count &&
 		at + 46 <= directory.byteLength &&
 		directory.getUint32(at, true) === 0x02014b50
 	) {
 		const nameLength = directory.getUint16(at + 28, true)
+		if (at + 46 + nameLength > directory.byteLength) return null
 		names.push(
 			decoder.decode(
 				new Uint8Array(
@@ -237,5 +338,5 @@ async function zipEntries(file: File): Promise<string[]> {
 			directory.getUint16(at + 30, true) +
 			directory.getUint16(at + 32, true)
 	}
-	return names
+	return names.length === count ? names : null
 }

@@ -72,9 +72,12 @@ test("a MyAnimeList-format anime list is recognized plain or gzipped, and named 
 	assert.equal(gzipped.source, "myanimelist")
 	assert.equal(gzipped.label, "MyAnimeList export")
 
+	assert.ok(gzipped.source === "myanimelist" && !gzipped.kitsu)
+
 	const kitsu = await recognizeImportFile(file("kitsu-alp82-anime.xml", xml))
 	assert.equal(kitsu.source, "myanimelist")
 	assert.equal(kitsu.label, "Kitsu anime library")
+	assert.ok(kitsu.source === "myanimelist" && kitsu.kitsu)
 })
 
 const IMDB_RATINGS_HEADER =
@@ -157,4 +160,88 @@ test("a ZIP no live import reads stays unrecognized, including a Letterboxd expo
 		)
 		assert.equal(result.source, null)
 	}
+})
+
+/** A File that records how many bytes recognition reads from it. */
+class CountingFile extends File {
+	read = 0
+	slice(start = 0, end = this.size, type?: string) {
+		const from = start < 0 ? Math.max(0, this.size + start) : start
+		const to = Math.min(end < 0 ? this.size + end : end, this.size)
+		this.read += Math.max(0, to - from)
+		return super.slice(start, end, type)
+	}
+}
+const MB = 1024 * 1024
+
+/** A ZIP with its end record's directory size, offset, or comment length rewritten. */
+function patchEndRecord(
+	zip: Uint8Array,
+	patch: { size?: number; offset?: number; comment?: number },
+) {
+	const bytes = new Uint8Array(zip)
+	const view = new DataView(bytes.buffer)
+	const end = bytes.length - 22
+	assert.equal(view.getUint32(end, true), 0x06054b50)
+	if (patch.size !== undefined) view.setUint32(end + 12, patch.size, true)
+	if (patch.offset !== undefined) view.setUint32(end + 16, patch.offset, true)
+	if (patch.comment !== undefined) view.setUint16(end + 20, patch.comment, true)
+	return bytes
+}
+
+test("a hostile ZIP whose end record claims an oversized central directory is refused without reading it", async () => {
+	// The directory claims to start at 0 and fill the 6 MB before the end record: consistent, but too large.
+	const padding = new Uint8Array(6 * MB)
+	const zip = zipFixture({ "watched-history-1.json": "[]" })
+	const tail = patchEndRecord(zip.subarray(zip.length - 22), {
+		size: padding.length,
+		offset: 0,
+	})
+	const hostile = new CountingFile([padding, tail], "export.zip")
+	const result = await recognizeImportFile(hostile)
+	assert.equal(result.source, null)
+	assert.ok(hostile.read < 128 * 1024, `read ${hostile.read} bytes`)
+
+	// A directory that claims more than the file holds.
+	const lying = new CountingFile(
+		[patchEndRecord(zip, { size: 0x7fffffff })],
+		"export.zip",
+	)
+	assert.equal((await recognizeImportFile(lying)).source, null)
+	assert.ok(lying.read < 128 * 1024, `read ${lying.read} bytes`)
+})
+
+test("a ZIP whose end record doesn't reach the end of the file is refused, as the server refuses it", async () => {
+	const zip = zipFixture({ "watched-history-1.json": "[]" })
+	const result = await recognizeImportFile(
+		file("trakt-export.zip", patchEndRecord(zip, { comment: 40 })),
+	)
+	assert.equal(result.source, null)
+})
+
+test("a file larger than any import accepts is refused before anything inside it is read", async () => {
+	const big = new CountingFile([new Uint8Array(21 * MB)], "letterboxd.zip")
+	const result = await recognizeImportFile(big)
+	assert.equal(result.source, null)
+	assert.ok(result.source === null && /larger than 20 MB/.test(result.hint))
+	assert.equal(big.read, 0)
+})
+
+test("a gzipped CSV stays unrecognized: only the MyAnimeList import unpacks gzip", async () => {
+	const result = await recognizeImportFile(
+		file(
+			"ratings.csv.gz",
+			gzipSync(`${IMDB_RATINGS_HEADER}\ntt0133093,9,,The Matrix,,,Movie\n`),
+		),
+	)
+	assert.equal(result.source, null)
+	assert.ok(result.source === null && /gzip/i.test(result.hint))
+})
+
+test("a CSV header is read the way the generic import reads it: blank lines skipped, backslash-escaped quotes kept", async () => {
+	const result = await recognizeImportFile(
+		// The first column holds an escaped quote and a comma; a naive reader loses Title and Rating in it.
+		file("films.csv", '\n\n"Note \\",x",Title,Rating\nhi,Arrival,4\n'),
+	)
+	assert.equal(result.source, "csv")
 })
