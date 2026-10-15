@@ -92,4 +92,4 @@ Fable accepted with fixes (REVIEW-fable.md). All eight fixes are adopted; they r
 
 ## Closing step: rename (owner, October 15, 2026)
 
-After the rollout decision, every shipped name loses the research label: flag `REC_G1_ORDER`, `app/server/g1/`, keys `g1:v2:*` and `g1:dirty`, Windmill `g1_order`, `g1_trigger`, `f/sync/g1_members`, and the `g1_*` columns of `user_list_exposure`. Research labels stay only in taste-loop docs.
+After the rollout decision, every shipped name loses the research label (owner: keep the flag `REC_G1_ORDER`, it is removed soon after `on`): `app/server/g1/`, keys `g1:v2:*` and `g1:dirty`, Windmill `g1_order`, `g1_trigger`, `f/sync/g1_members`, and the `g1_*` columns of `user_list_exposure`. Research labels stay only in taste-loop docs. Names are built on "personal order" (e.g. `personal-order:*`); keys and columns switch with a dual-read period.
