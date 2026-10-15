@@ -11,9 +11,9 @@ import type { ViewerContext } from "../viewer.server.ts"
 import type { Taste } from "../taste/taste.server.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import {
-	createG1Reader,
-	G1_MODEL_HASH,
-	type G1Payload,
+	createPersonalOrderReader,
+	PERSONAL_ORDER_MODEL_HASH,
+	type PersonalOrderPayload,
 } from "./reader.server.ts"
 
 const state = {
@@ -24,7 +24,9 @@ const state = {
 	exposures: [] as ListExposureInput[],
 	taste: null as Taste | null,
 }
-;(globalThis as unknown as { g1Test: typeof state }).g1Test = state
+;(
+	globalThis as unknown as { personalOrderTest: typeof state }
+).personalOrderTest = state
 const clock = mock.method(Date, "now", () => state.now)
 after(() => clock.mock.restore())
 const { registerHooks } = nodeModule as unknown as {
@@ -40,13 +42,13 @@ registerHooks({
 	load(url, context, next) {
 		let source: string | undefined
 		if (url.endsWith("/title-snapshot/format.server.ts"))
-			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => globalThis.g1Test.snapshot;`
+			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => globalThis.personalOrderTest.snapshot;`
 		else if (url.endsWith("/utils/cache.ts"))
-			source = `import { gzipSync } from "node:zlib"; export const getRedisCluster = () => ({ getBuffer: async key => { if (key !== "g1:v2:owner") throw Error("Unexpected key"); globalThis.g1Test.reads++; return globalThis.g1Test.raw === null ? null : gzipSync(globalThis.g1Test.raw) } });`
+			source = `import { gzipSync } from "node:zlib"; export const getRedisCluster = () => ({ getBuffer: async key => { if (key !== "personal-order:v1:owner") throw Error("Unexpected key"); globalThis.personalOrderTest.reads++; return globalThis.personalOrderTest.raw === null ? null : gzipSync(globalThis.personalOrderTest.raw) } });`
 		else if (url.endsWith("/utils/crate.ts"))
 			source = `export const query = () => { throw Error('Unexpected database read') };`
 		else if (url.endsWith("/list-exposure.server.ts"))
-			source = `export const recordListExposure = (_ctx, input) => { globalThis.g1Test.exposures.push(input); return "list-1" };`
+			source = `export const recordListExposure = (_ctx, input) => { globalThis.personalOrderTest.exposures.push(input); return "list-1" };`
 		else if (url.endsWith("/availability-index.server.ts"))
 			source = `export const countryServices = () => null; export const isOnServices = (_c, _s, k) => k !== 1e12 + 4;`
 		else if (url.endsWith("/title-filter/id-sets.server.ts"))
@@ -54,7 +56,7 @@ registerHooks({
 		else if (url.endsWith("/title-filter/matches.server.ts"))
 			source = `export const universeTaste = (_s, taste, _rows, keys) => ({ matches: Uint8Array.from(taste.match([...keys])), percentiles: Float32Array.from(taste.percentile([...keys])) });`
 		else if (url.endsWith("/taste/index.server.ts"))
-			source = `export const loadTaste = () => globalThis.g1Test.taste;`
+			source = `export const loadTaste = () => globalThis.personalOrderTest.taste;`
 		else if (url.endsWith("/movie-runtimes.server.ts"))
 			source = `export const movieRuntimes = () => { throw Error('Unexpected runtime read') };`
 		else if (url.endsWith("/title-cards.server.ts"))
@@ -80,7 +82,7 @@ const { defaultFilterState } = await import("../../domain/filter-state.ts")
 const { MOOD_KEYS } = await import("../../domain/moods.ts")
 const keys = [1e12 + 1, 1e12 + 2, 1e12 + 3, 1e12 + 4, 2e12 + 5, 2e12 + 6]
 const snapshot = {
-	version: "g1-test",
+	version: "personalOrder-test",
 	count: keys.length,
 	rowOf: (k: number) => keys.indexOf(k),
 	has: (k: number) => keys.includes(k),
@@ -127,14 +129,14 @@ const ctx = (): ViewerContext => ({
 	wishlist: new Map(keys.map((k) => [k, new Date(1)])),
 	forYou: true,
 })
-const payload = (): G1Payload => ({
+const payload = (): PersonalOrderPayload => ({
 	format: 1,
-	modelHash: G1_MODEL_HASH,
+	modelHash: PERSONAL_ORDER_MODEL_HASH,
 	snapshotVersion: snapshot.version,
 	builtAt: new Date(state.now).toISOString(),
 	pointIds: keys,
-	b3Rank: [0.1, 0.9, 0.8, 0.99, 0.7, 0.6],
-	b5TopHalf: [true, true, true, true, true, true],
+	ownTasteRank: [0.1, 0.9, 0.8, 0.99, 0.7, 0.6],
+	pooledRatingTopHalf: [true, true, true, true, true, true],
 	movieSeriesId: [1, 1, -1, -1, -1, -1],
 	show: [false, false, false, false, true, true],
 	animation: [false, false, false, false, false, false],
@@ -165,11 +167,11 @@ afterEach(() => {
 	delete process.env.REC_PREVIEW_USERS
 })
 
-test("flag off leaves today's Discover and Watch next order unchanged and never reads G1", async () => {
+test("flag off leaves today's Discover and Watch next order unchanged and never reads Personal order", async () => {
 	reset("off")
 	assert.deepEqual((await filterTitles(input())).keys, keys)
 	const control = planWatchNext(ctx(), taste, { sort: "match" })
-	const read = await createG1Reader(async () =>
+	const read = await createPersonalOrderReader(async () =>
 		state.raw === null ? null : gzipSync(state.raw),
 	)("owner", snapshot)
 	const withPayload = planWatchNext(
@@ -184,14 +186,14 @@ test("flag off leaves today's Discover and Watch next order unchanged and never 
 	assert.deepEqual(withPayload.tiers, control.tiers)
 	assert.equal(state.reads, 0)
 })
-test("Discover catalogue match uses G1 with filter-local franchise promotion, preserving card match", async () => {
+test("Discover catalogue match uses Personal order with filter-local franchise promotion, preserving card match", async () => {
 	reset("preview")
 	const i = input()
 	i.viewer = { ...i.viewer, hidden: new Set([keys[1]]) }
 	const result = await filterTitles(i)
 	assert.deepEqual(result.keys, [keys[3], keys[2], keys[4], keys[5], keys[0]])
-	assert.equal(result.g1!.titles.get(keys[0])!.group, 2)
-	assert.deepEqual(result.g1!.todayFirst100, [
+	assert.equal(result.personalOrder!.titles.get(keys[0])!.group, 2)
+	assert.deepEqual(result.personalOrder!.todayFirst100, [
 		keys[0],
 		keys[2],
 		keys[3],
@@ -207,7 +209,7 @@ test("ranked search, Explorer lists, other sorts and unlisted members keep today
 	reset("preview")
 	const ranked = await filterTitles({ ...input(), universe: keys })
 	assert.deepEqual(ranked.keys, keys)
-	assert.equal(ranked.g1, undefined)
+	assert.equal(ranked.personalOrder, undefined)
 	assert.deepEqual(
 		(await filterTitles({ ...input(), universe: [keys[5], keys[0]] })).keys,
 		[keys[0], keys[5]],
@@ -231,13 +233,13 @@ test("missing payload keeps today's order and exposes its reason without warning
 	try {
 		const result = await filterTitles(input())
 		assert.deepEqual(result.keys, keys)
-		assert.equal(result.g1!.fallbackReason, "missing-payload")
+		assert.equal(result.personalOrder!.fallbackReason, "missing-payload")
 		assert.equal(logs.length, 0)
 	} finally {
 		console.warn = warn
 	}
 })
-test("shadow preserves today's Discover order and records G1 and first-30 overlap", async () => {
+test("shadow preserves today's Discover order and records Personal order and first-30 overlap", async () => {
 	reset("shadow")
 	const logs: unknown[][] = [],
 		info = console.info
@@ -245,7 +247,7 @@ test("shadow preserves today's Discover order and records G1 and first-30 overla
 	try {
 		const result = await filterTitles(input())
 		assert.deepEqual(result.keys, keys)
-		assert.deepEqual(result.g1!.g1First100, [
+		assert.deepEqual(result.personalOrder!.personalOrderFirst100, [
 			keys[3],
 			keys[1],
 			keys[2],
@@ -253,26 +255,25 @@ test("shadow preserves today's Discover order and records G1 and first-30 overla
 			keys[5],
 			keys[0],
 		])
-		assert.equal(result.g1!.todayFirst100, null)
+		assert.equal(result.personalOrder!.todayFirst100, null)
 		assert.deepEqual(logs[0][1], {
 			member: "owner",
 			surface: "discover",
 			overlap30: 6,
 			compared: 6,
-			builtAt: result.g1!.payloadBuildTime,
+			builtAt: result.personalOrder!.payloadBuildTime,
 		})
 	} finally {
 		console.info = info
 	}
 })
-test("Watch next F3 precedes fit grouping and mix stays inside fitting; Not tonight stays at its end", async () => {
+test("Watch next franchise grouping precedes fit grouping and mix stays inside fitting; Not tonight stays at its end", async () => {
 	reset("preview")
 	const p = payload()
 	p.ownShares = [1, 0]
-	const read = await createG1Reader(async () => gzipSync(JSON.stringify(p)))(
-		"owner",
-		snapshot,
-	)
+	const read = await createPersonalOrderReader(async () =>
+		gzipSync(JSON.stringify(p)),
+	)("owner", snapshot)
 	const plan = planWatchNext(
 		ctx(),
 		taste,
@@ -293,10 +294,10 @@ test("Watch next F3 precedes fit grouping and mix stays inside fitting; Not toni
 		keys[5],
 		keys[3],
 	])
-	assert.equal(plan.g1.titles.get(keys[3])!.mixPlaced, false)
-	assert.equal(plan.g1.titles.get(keys[5])!.mixPlaced, false)
-	assert.equal(plan.g1.titles.get(keys[4])!.mixPlaced, true)
-	assert.deepEqual(plan.g1.todayFirst100, [
+	assert.equal(plan.personalOrder.titles.get(keys[3])!.mixPlaced, false)
+	assert.equal(plan.personalOrder.titles.get(keys[5])!.mixPlaced, false)
+	assert.equal(plan.personalOrder.titles.get(keys[4])!.mixPlaced, true)
+	assert.deepEqual(plan.personalOrder.todayFirst100, [
 		keys[0],
 		keys[1],
 		keys[2],
@@ -312,11 +313,11 @@ test("Watch next F3 precedes fit grouping and mix stays inside fitting; Not toni
 		undefined,
 		read,
 	)
-	assert.equal(top.g1.todayFirst100, null)
+	assert.equal(top.personalOrder.todayFirst100, null)
 })
 test("Watch next shadow retains the grouped control and logs the grouped candidate", async () => {
 	reset("shadow")
-	const read = await createG1Reader(async () =>
+	const read = await createPersonalOrderReader(async () =>
 		state.raw === null ? null : gzipSync(state.raw),
 	)("owner", snapshot)
 	const control = planWatchNext(ctx(), taste, {
@@ -336,21 +337,21 @@ test("Watch next shadow retains the grouped control and logs the grouped candida
 		)
 		assert.deepEqual(shadow.head, control.head)
 		assert.deepEqual(shadow.tiers, control.tiers)
-		assert.equal(shadow.g1.g1First100!.at(-1), keys[3])
+		assert.equal(shadow.personalOrder.personalOrderFirst100!.at(-1), keys[3])
 	} finally {
 		console.info = info
 	}
 })
 
-test("Watch next page and later batches use the reader and log actual G1 tiers", async () => {
+test("Watch next page and later batches use the reader and log actual Personal order tiers", async () => {
 	reset("preview")
 	const result = await getWatchNext(ctx(), { sort: "match" }, taste)
 	assert.equal(state.reads, 1)
 	assert.equal(result.hero!.key, keys[3])
 	assert.equal(result.listId, "list-1")
-	assert.equal(state.exposures[0].ordering, "g1")
+	assert.equal(state.exposures[0].ordering, "personal-order")
 	assert.equal(state.exposures[0].watchNextTiers!.get(keys[3]), "hero")
-	assert.deepEqual(state.exposures[0].g1!.todayFirst100, keys)
+	assert.deepEqual(state.exposures[0].personalOrder!.todayFirst100, keys)
 	// The later-batch helper normally loads taste; supply it via the test stub here.
 	const batch = await getWatchNextCardsPage(
 		ctx(),
@@ -381,9 +382,9 @@ for (const change of ["publish", "delete"] as const) {
 				? null
 				: JSON.stringify({
 						...payload(),
-						b3Rank: [0.99, 0.1, 0.2, 0.3, 0.4, 0.5],
+						ownTasteRank: [0.99, 0.1, 0.2, 0.3, 0.4, 0.5],
 						builtAt: new Date(
-							Date.parse(original.g1!.payloadBuildTime!) - 1_000,
+							Date.parse(original.personalOrder!.payloadBuildTime!) - 1_000,
 						).toISOString(),
 					})
 		// After revalidation a new list sees the change; old lazy batches retain their plan.
@@ -394,11 +395,11 @@ for (const change of ["publish", "delete"] as const) {
 			await getWatchNext(ctx(), options, taste)
 			const latest = state.exposures[1]
 			if (change === "delete")
-				assert.equal(latest.g1!.fallbackReason, "missing-payload")
+				assert.equal(latest.personalOrder!.fallbackReason, "missing-payload")
 			else
 				assert.notEqual(
-					latest.g1!.payloadBuildTime,
-					original.g1!.payloadBuildTime,
+					latest.personalOrder!.payloadBuildTime,
+					original.personalOrder!.payloadBuildTime,
 				)
 			const batch = await getWatchNextCardsPage(
 				ctx(),
@@ -407,7 +408,7 @@ for (const change of ["publish", "delete"] as const) {
 				initial.planId,
 			)
 			assert.equal(batch.refreshRequired, false)
-			assert.equal(state.exposures[2].g1, original.g1)
+			assert.equal(state.exposures[2].personalOrder, original.personalOrder)
 			assert.deepEqual(
 				state.exposures[2].watchNextTiers,
 				original.watchNextTiers,
@@ -457,18 +458,18 @@ for (const change of ["publish", "delete"] as const) {
 test("Watch next fitting metadata cannot mutate the shared composed order", async () => {
 	reset("preview")
 	state.raw = JSON.stringify({ ...payload(), ownShares: [1, 0] })
-	const read = await createG1Reader(async () =>
+	const read = await createPersonalOrderReader(async () =>
 		state.raw === null ? null : gzipSync(state.raw),
 	)("owner", snapshot)
-	const { orderG1 } = await import("./reader.server.ts")
-	const composed = orderG1(keys, read.data!, snapshot, false)
+	const { orderPersonalOrder } = await import("./reader.server.ts")
+	const composed = orderPersonalOrder(keys, read.data!, snapshot, false)
 	planWatchNext(ctx(), taste, { sort: "match" }, undefined, undefined, read)
 	assert.ok([...composed.titles.values()].every((t) => !t.mixPlaced))
 })
 
-test("a snapshot reload while reading G1 falls back safely", async () => {
+test("a snapshot reload while reading Personal order falls back safely", async () => {
 	reset("preview")
-	const read = await createG1Reader(async () =>
+	const read = await createPersonalOrderReader(async () =>
 		state.raw === null ? null : gzipSync(state.raw),
 	)("owner", snapshot)
 	state.snapshot = { ...snapshot, version: "replacement" }
@@ -483,7 +484,7 @@ test("a snapshot reload while reading G1 falls back safely", async () => {
 			undefined,
 			read,
 		)
-		assert.equal(plan.g1.fallbackReason, "snapshot-mismatch")
+		assert.equal(plan.personalOrder.fallbackReason, "snapshot-mismatch")
 		assert.deepEqual(
 			plan.head.map((e) => e.key),
 			keys.slice(0, 4),

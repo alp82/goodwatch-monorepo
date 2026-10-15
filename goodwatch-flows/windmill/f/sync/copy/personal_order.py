@@ -1,13 +1,13 @@
-"""Offline G1 components for selected eligible members; request composition is pure.
+"""Offline Personal order components for selected eligible members; request composition is pure.
 
-Only main() opens connectors. run() publishes gzip JSON to g1:v2:<member>, with an expiry.
-Research B3/B5 below are copied verbatim; clear their pool cache for each new title dataset.
+Only main() opens connectors. run() publishes gzip JSON to personal-order:v1:<member>, with an expiry.
+Predictor math below has only the documented label substitutions; clear their pool cache for each new title dataset.
 """
 # extra_requirements:
 # numpy==2.5.3
 # redis==5.2.1
 
-# Source: docs/research/taste-loop/lab/candidates/009/g1_mix.py (taste-loop worktree)
+# Source and reversible label mapping: docs/research/personal-order-source-mapping.json
 # Source SHA-256: e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1
 MODEL_HASH = "e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1"
 
@@ -16,19 +16,19 @@ import os
 for _thread_env in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
     os.environ[_thread_env] = "2"
 
-# BEGIN COPIED B5
-"""B5: the pooled predictor. The frozen leader of the first loop.
+# BEGIN COPIED POOLED RATING
+"""Pooled rating predictor: the pooled predictor. The frozen leader of the first loop.
 
 A port of `pool.pooled_predict` from docs/research/taste-prediction/lab/agents/pooled/pool.py as the first loop's
-`preds.pooled` called it: k=0 (no taste axes), personal weights on (own=300), no trees. It is B4 plus one step: what
+`preds.pooled` called it: k=0 (no taste axes), personal weights on (own=300), no trees. It is pooled consensus plus one step: what
 the consensus, the member's offset and the member's slope leave unexplained is fitted by the member's own weights
-on every title column, shrunk to zero (ridge penalty 300), from 3 ratings on. Logic unchanged; see b4_consensus.py
+on every title column, shrunk to zero (ridge penalty 300), from 3 ratings on. Logic unchanged; see the research consensus source
 for the model, the columns and the declared differences. tests/test_ladder.py runs the original and this file on
 the same data and requires the same numbers.
 
 Fallback, declared: when no other member has rated anything in the view (with `--others before`, every block of
 the first member to rate), or when the others are too few for the fit to give finite numbers, the answer is rung
-B1's: the GoodWatch score plus the member's shrunk offset.
+public score with member offset's: the GoodWatch score plus the member's shrunk offset.
 
 score   the prediction clipped to 1..10, as the original returns it
 rank    the prediction before clipping
@@ -37,7 +37,7 @@ import numpy as np
 
 OWN = 300.0
 
-# ---- the lines below are the same in b4_consensus.py and b5_pooled.py ----
+# ---- the lines below are the same in the research consensus source and the research pooled rating predictor ----
 FACTS = ('goodwatch_overall_score_normalized_percent', 'imdb_user_score_normalized_percent',
          'metacritic_meta_score_normalized_percent', 'rotten_tomatoes_tomato_score_normalized_percent',
          'rotten_tomatoes_audience_score_normalized_percent', 'tmdb_user_score_normalized_percent', 'release_year')
@@ -134,7 +134,7 @@ def fit_pool(x, ou, oi, oy):
 
 
 def public(view):
-    """Rung B1's behaviour, for a view in which the others hold nothing to learn from: the GoodWatch score plus the
+    """Rung public score with member offset's behaviour, for a view in which the others hold nothing to learn from: the GoodWatch score plus the
     member's offset shrunk toward the population's (3 pseudo-ratings), the member's median without such a score."""
     g = view['titles']['num']['goodwatch_overall_score_normalized_percent'] / 10.0
     mine, others = view['me']['ratings'], view['others']['ratings']
@@ -149,7 +149,7 @@ def public(view):
     return {'rank': score, 'score': score, 'p_low': None}
 
 
-def b5_predict(view):
+def pooled_rating_predict(view):
     others, mine = view['others']['ratings'], view['me']['ratings']
     if len(others['score']) == 0:                            # no other member has rated yet (--others before)
         return public(view)
@@ -177,22 +177,22 @@ def b5_predict(view):
         return public(view)
     return {'rank': p, 'score': np.clip(p, 1, 10), 'p_low': None}
 
-# END COPIED B5
+# END COPIED POOLED RATING
 
-# BEGIN COPIED B3
-"""B3: today's taste on fingerprints standardized against the reference pool. The first challenger.
+# BEGIN COPIED OWN TASTE
+"""Standardized own taste: today's taste on fingerprints standardized against the reference pool. The first challenger.
 
 Each of the 74 attributes is standardized against its mean and standard deviation over the reference pool (titles
 with a poster, a GoodWatch score, 1,000 or more votes and a fingerprint); a missing score counts as the pool mean.
-Then the formula of B2, unchanged: unit-length vectors, P and N, 2P - N, at least 5 liked titles, the cosine, and as
+Then the formula of unstandardized own taste, unchanged: unit-length vectors, P and N, 2P - N, at least 5 liked titles, the cosine, and as
 rank the percentile of that cosine among the reference pool's (0..1, the same scale in every view of a member).
-The same declared fallbacks as B2. No score: the harness calibrates one from the member's history.
+The same declared fallbacks as unstandardized own taste. No score: the harness calibrates one from the member's history.
 """
 import numpy as np
 
 STANDARDIZE = True
 
-# ---- the lines below are the same in b2_taste_today.py and b3_taste_standardized.py ----
+# ---- the lines below are the same in the research unstandardized taste model and the research standardized own taste model ----
 MIN_LIKED = 5
 LIKED_FROM = 6
 WANT_TO_SEE_WEIGHT = 0.5
@@ -294,7 +294,7 @@ def pool_percentile(view, cosine, taste):
     return (below + upto) / (2.0 * len(pool))
 
 
-def b3_predict(view):
+def own_taste_predict(view):
     rows = view['targets']['title']
     taste = taste_vector(view)
     if taste is None:
@@ -304,10 +304,10 @@ def b3_predict(view):
     rank[~usable] = np.median(rank[usable]) if usable.any() else NO_ORDER
     return {'rank': rank, 'score': None, 'p_low': None}
 
-# END COPIED B3
+# END COPIED OWN TASTE
 
 
-# ---- Product adapters (the copied maths above stays unchanged) --------------
+# ---- Product adapters (the copied calculations above stay unchanged) --------------
 
 import gzip
 import json
@@ -329,7 +329,7 @@ def build_titles(records, fingerprint_keys, touched_keys=()):
 
     Records use the research pull's names and values, with has_poster from IS NOT NULL.
     Fingerprint conversion deliberately uses int(), as pull.py does, without rounding.
-    Only columns read by G1 are built, with the harness's dtypes and missing sentinels.
+    Only columns read by Personal order are built, with the harness's dtypes and missing sentinels.
     """
     store = {int(r["key"]): r for r in records}
     keys = np.array(sorted(set(store) | set(touched_keys)), np.int64)
@@ -364,7 +364,7 @@ def build_titles(records, fingerprint_keys, touched_keys=()):
 
 
 def build_view(titles, tables, member, candidates=None):
-    """The arrays G1 reads: every own rating visible, every unrated pool title a target.
+    """The arrays Personal order reads: every own rating visible, every unrated pool title a target.
 
     Tables are column arrays in entry order: member (int32), title_key (int64), and
     ratings.score (int8). Side rows naming no title are dropped as views._tables does.
@@ -401,46 +401,46 @@ def build_view(titles, tables, member, candidates=None):
 
 
 def components(view):
-    """B3 stored as float32; B5's top half is the inclusive candidate median."""
+    """Own taste rank stored as float32; pooled rating top half uses the inclusive candidate median."""
     _POOL.clear()  # Research cache is dataset-global; a worker can load a new dataset.
     rows = view["targets"]["title"]
-    b3 = b3_predict(view)["rank"].astype(np.float32)
-    b5 = b5_predict(view)["rank"] if len(rows) else np.zeros(0)
+    own_taste_rank = own_taste_predict(view)["rank"].astype(np.float32)
+    pooled_rating_rank = pooled_rating_predict(view)["rank"] if len(rows) else np.zeros(0)
     titles = view["titles"]
     names = titles["production_method_names"]
     animation = names.index("Animation") if "Animation" in names else -2
     facts = np.column_stack((titles["media_type"] == 1, titles["production_method"] == animation))
     rated = view["me"]["ratings"]["title"]
     own = facts[rated].mean(0).tolist() if len(rated) else None
-    return {"pointIds": titles["key"][rows], "b3Rank": b3,
-            "b5TopHalf": b5 >= np.median(b5) if len(rows) else np.zeros(0, bool),
+    return {"pointIds": titles["key"][rows], "ownTasteRank": own_taste_rank,
+            "pooledRatingTopHalf": pooled_rating_rank >= np.median(pooled_rating_rank) if len(rows) else np.zeros(0, bool),
             "movieSeriesId": titles["num"]["movie_series_id"][rows],
             "show": facts[rows, 0], "animation": facts[rows, 1], "ownShares": own}
 
 
-def request_order(b3_rank, top_half, movie_series_id, show, animation, own_shares):
-    """Pure F3 and mix over a filtered list, preserving that list's order for ties.
+def request_order(own_taste_rank, top_half, movie_series_id, show, animation, own_shares):
+    """Pure franchise grouping and mix over a filtered list, preserving that list's order for ties.
 
-    Returns indices into the input list, F3 groups aligned to it, and the number
-    of prefix placements. The B5 bits remain global; franchise picks are local.
+    Returns indices into the input list, franchise groups aligned to it, and the number
+    of prefix placements. The pooled rating predictor bits remain global; franchise picks are local.
     All columns must describe the same unique titles, in the caller's tie order.
     """
-    b3 = np.asarray(b3_rank, np.float64)
+    own_taste_rank = np.asarray(own_taste_rank, np.float64)
     above = np.asarray(top_half, bool)
     series = np.asarray(movie_series_id, np.int64)
     kinds = np.column_stack((show, animation)).astype(np.int64)
-    if any(len(c) != len(b3) for c in (above, series, kinds)):
+    if any(len(c) != len(own_taste_rank) for c in (above, series, kinds)):
         raise ValueError("Component columns have different lengths")
     group = above.astype(np.int64)
-    franchise = np.where(series > 0, series, -1 - np.arange(len(b3)))
+    franchise = np.where(series > 0, series, -1 - np.arange(len(own_taste_rank)))
     seen = set()
-    for i in np.argsort(-b3, kind="stable"):
+    for i in np.argsort(-own_taste_rank, kind="stable"):
         if above[i] and franchise[i] not in seen:
             group[i] = 2
             seen.add(franchise[i])
-    rank = 2.0 * group + b3
+    rank = 2.0 * group + own_taste_rank
     order = np.argsort(-rank, kind="stable")
-    if own_shares is None or len(b3) == 0:
+    if own_shares is None or len(own_taste_rank) == 0:
         return {"order": order, "groups": group, "mixCount": 0}
     own = np.asarray(own_shares, np.float64)
     codes = 2 * kinds[:, 0] + kinds[:, 1]
@@ -448,7 +448,7 @@ def request_order(b3_rank, top_half, movie_series_id, show, animation, own_share
     heads = [0] * 4
     counts = np.zeros(2, dtype=np.int64)
     placed = []
-    for position in range(min(100, len(b3))):
+    for position in range(min(100, len(own_taste_rank))):
         eligible, available = [], []
         for code, queue in enumerate(queues):
             if heads[code] == len(queue):
@@ -467,7 +467,7 @@ def request_order(b3_rank, top_half, movie_series_id, show, animation, own_share
         heads[int(codes[i])] += 1
         placed.append(i)
         counts += kinds[i]
-    used = np.zeros(len(b3), dtype=bool)
+    used = np.zeros(len(own_taste_rank), dtype=bool)
     used[placed] = True
     final = np.concatenate((np.asarray(placed, dtype=np.int64), order[~used[order]]))
     return {"order": final, "groups": group, "mixCount": len(placed)}
@@ -485,7 +485,7 @@ def payload(view, snapshot_version, built_at):
 
 
 def read_members(select):
-    """Read only the four G1 member tables, paging by their primary key."""
+    """Read only the four Personal order member tables, paging by their primary key."""
     raw = {}
     for name, table in TABLES.items():
         records, last = [], None
@@ -566,7 +566,7 @@ def main_defaults(ttl_seconds, dry_run):
 
 
 def validate_members(member_ids):
-    from f.sync.copy.g1_trigger import validate_members as validate
+    from f.sync.copy.personal_order_trigger import validate_members as validate
     if member_ids != "all":
         validate(member_ids)
 
@@ -577,7 +577,7 @@ class SnapshotChanged(RuntimeError):
 
 def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
         dry_run=True, dirty_only=False, now=None):
-    from f.sync.copy.g1_trigger import DIRTY_KEY
+    from f.sync.copy.personal_order_trigger import DIRTY_KEY
     ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
     validate_members(member_ids)
     if not isinstance(ttl_seconds, int) or ttl_seconds <= 0:
@@ -601,15 +601,15 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
         if not manifest or not manifest.get("version"):
             raise ValueError("A current title snapshot is required")
         if manifest.get("keyOrder") != list(fingerprint_keys):
-            raise ValueError("Snapshot fingerprint order differs from the G1 input")
+            raise ValueError("Snapshot fingerprint order differs from the Personal order input")
         tables, member_at = read_members(select)
         titles = read_titles(select, tables, fingerprint_keys)
         _POOL.clear()  # Eligibility must use statistics from this dataset, even in a reused worker.
         if selected == "all":
             # Include orphaned payloads after a member removes their last interaction.
             existing = [k.decode() if isinstance(k, bytes) else k
-                        for k in redis.scan_iter(match="g1:v2:*")]
-            selected = sorted(set(member_at) | {k.removeprefix("g1:v2:") for k in existing})
+                        for k in redis.scan_iter(match="personal-order:v1:*")]
+            selected = sorted(set(member_at) | {k.removeprefix("personal-order:v1:") for k in existing})
         summaries = []
         for member in selected:
             member_started = time.monotonic()
@@ -620,15 +620,15 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
                 data = payload(view, manifest["version"], now() if now else datetime.now(timezone.utc)) if eligible else None
                 current = json.loads(redis.get("title-snapshot:current") or "null")
                 if not current or current.get("version") != manifest["version"]:
-                    raise SnapshotChanged("Title snapshot changed during G1 build; retry against its new version")
+                    raise SnapshotChanged("Title snapshot changed during Personal order build; retry against its new version")
                 if data is None:
                     if not dry_run:
-                        redis.delete(f"g1:v2:{member}")
+                        redis.delete(f"personal-order:v1:{member}")
                     summary.update(status="ineligible", deleted=not dry_run, bytes=0)
                 else:
                     encoded = gzip.compress(json.dumps(data, separators=(",", ":"), allow_nan=False).encode(), mtime=0)
                     if not dry_run:
-                        redis.set(f"g1:v2:{member}", encoded, ex=ttl_seconds)
+                        redis.set(f"personal-order:v1:{member}", encoded, ex=ttl_seconds)
                     summary.update(status="built", candidates=len(data["pointIds"]), bytes=len(encoded),
                                    others_count=data["othersCount"], built_at=data["builtAt"])
             except SnapshotChanged:
@@ -639,10 +639,10 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
                     redis.sadd(DIRTY_KEY, member)
             summary["seconds"] = round(time.monotonic() - member_started, 3)
             summaries.append(summary)
-            print("G1 member " + json.dumps(summary), flush=True)
+            print("Personal order member " + json.dumps(summary), flush=True)
         result = {"published": not dry_run, "members": summaries, "model_hash": MODEL_HASH,
                   "snapshot_version": manifest["version"], "seconds": round(time.monotonic() - started, 3)}
-        print("G1 summary " + json.dumps({"built": sum(s["status"] == "built" for s in summaries),
+        print("Personal order summary " + json.dumps({"built": sum(s["status"] == "built" for s in summaries),
                                          "ineligible": sum(s["status"] == "ineligible" for s in summaries),
                                          "failed": sum(s["status"] == "failed" for s in summaries),
                                          "dry_run": dry_run, "seconds": result["seconds"]}), flush=True)
@@ -658,12 +658,12 @@ def main(member_ids: list[str] | str | None = None, ttl_seconds: int = TTL_SECON
     """Windmill only: the rollout variable authorizes all callers, including dry runs."""
     ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
     import wmill
-    from f.sync.copy.g1_trigger import MEMBERS_VARIABLE, rollout_members
+    from f.sync.copy.personal_order_trigger import MEMBERS_VARIABLE, rollout_members
     configured = rollout_members(wmill.get_variable(MEMBERS_VARIABLE))
     member_ids = configured if member_ids is None else member_ids
     validate_members(member_ids)
     if configured != "all" and (member_ids == "all" or not set(member_ids).issubset(configured)):
-        raise ValueError("G1 members must belong to the configured rollout list")
+        raise ValueError("Personal order members must belong to the configured rollout list")
     if member_ids == []:
         return {"published": False, "members": []}
     from f.db.cratedb import CrateConnector

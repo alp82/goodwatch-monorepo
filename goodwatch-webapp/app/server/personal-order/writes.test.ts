@@ -11,7 +11,9 @@ const state = {
 	committed: [] as string[],
 	dirty: [] as string[],
 }
-;(globalThis as unknown as { g1Writes: typeof state }).g1Writes = state
+;(
+	globalThis as unknown as { personalOrderWrites: typeof state }
+).personalOrderWrites = state
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
 		load(
@@ -26,16 +28,16 @@ registerHooks({
 		let source: string | undefined
 		if (url.endsWith("/utils/cache.ts"))
 			source = `export const getRedisCluster = () => ({ sadd: async (key, member) => {
-				if (key !== 'g1:dirty') throw Error('Unexpected key');
-				if (!globalThis.g1Writes.committed.length) throw Error('Uncommitted write');
-				globalThis.g1Writes.dirty.push(member);
+				if (key !== 'personal-order:dirty') throw Error('Unexpected key');
+				if (!globalThis.personalOrderWrites.committed.length) throw Error('Uncommitted write');
+				globalThis.personalOrderWrites.dirty.push(member);
 			} });`
 		else if (url.endsWith("/utils/crate.ts"))
 			source = `
 		export const execute = async sql => {
-			if (globalThis.g1Writes.fail) throw Error('uncommitted');
-			globalThis.g1Writes.committed.push(sql);
-			return { rowcount: globalThis.g1Writes.rowcount };
+			if (globalThis.personalOrderWrites.fail) throw Error('uncommitted');
+			globalThis.personalOrderWrites.committed.push(sql);
+			return { rowcount: globalThis.personalOrderWrites.rowcount };
 		};
 		export const upsert = async ({ table }) => execute(table);
 		export const query = () => { throw Error('Unexpected storage read') };`

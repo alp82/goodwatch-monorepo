@@ -1,5 +1,7 @@
 -- Issue #525. Owner applies this DDL to production before deploying the exposure writer.
 -- The schema initializer holds the same definition for fresh installs.
+-- No table-level column_policy override: CrateDB 5.10 defaults to STRICT.
+-- ordering_flags OBJECT(DYNAMIC) below permits nested flag keys only.
 CREATE TABLE IF NOT EXISTS doc.user_list_exposure (
     user_id TEXT,
     list_id TEXT,
@@ -21,15 +23,15 @@ CREATE TABLE IF NOT EXISTS doc.user_list_exposure (
     title_keys ARRAY(BIGINT),
     positions ARRAY(INTEGER),
     taste_matches ARRAY(INTEGER),
-    g1_flag_mode TEXT,
-    g1_fallback_reason TEXT,
-    g1_payload_build_time TIMESTAMP WITH TIME ZONE,
-    g1_model_hash TEXT,
-    g1_snapshot_version TEXT,
-    g1_groups ARRAY(INTEGER),
-    g1_mix_placed ARRAY(BOOLEAN),
+    personal_order_flag_mode TEXT,
+    personal_order_fallback_reason TEXT,
+    personal_order_payload_build_time TIMESTAMP WITH TIME ZONE,
+    personal_order_model_hash TEXT,
+    personal_order_snapshot_version TEXT,
+    personal_order_groups ARRAY(INTEGER),
+    personal_order_mix_placed ARRAY(BOOLEAN),
     watch_next_tiers ARRAY(TEXT),
     today_first_100 ARRAY(BIGINT),
-    g1_first_100 ARRAY(BIGINT),
+    personal_order_first_100 ARRAY(BIGINT),
     PRIMARY KEY (user_id, list_id)
 ) CLUSTERED BY (user_id) INTO 6 SHARDS;

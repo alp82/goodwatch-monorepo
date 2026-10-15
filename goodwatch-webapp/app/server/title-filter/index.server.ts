@@ -54,17 +54,17 @@ import {
 	titleSet,
 } from "./passes.server"
 
-import { recG1Order } from "../features.server.ts"
+import { recPersonalOrder } from "../features.server.ts"
 import {
-	loadG1,
-	g1Exposure,
-	orderG1,
-	logG1,
-	type G1Exposure,
-} from "../g1/reader.server.ts"
+	loadPersonalOrder,
+	personalOrderExposure,
+	orderPersonalOrder,
+	logPersonalOrder,
+	type PersonalOrderExposure,
+} from "../personal-order/reader.server.ts"
 
 export interface FilterResult {
-	g1?: G1Exposure
+	personalOrder?: PersonalOrderExposure
 	/** Passing titles in the order of `sortUsed` (For you applied). */
 	keys: TitleKey[]
 	/**
@@ -253,24 +253,26 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			? byMatch(passing, universe.percentiles)
 			: passing
 	let ordered = Array.from(inOrder, (i) => keys[i])
-	let g1: G1Exposure | undefined
+	let personalOrder: PersonalOrderExposure | undefined
 	if (input.universe === "catalog" && sortUsed === "match") {
 		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
-		const flag = recG1Order(member)
+		const flag = recPersonalOrder(member)
 		const read =
 			member && (flag.enabled || flag.shadow)
-				? await loadG1(member, snapshot)
+				? await loadPersonalOrder(member, snapshot)
 				: { data: null, fallbackReason: null }
-		g1 = g1Exposure(flag, read)
+		personalOrder = personalOrderExposure(flag, read)
 		if (member && (flag.enabled || flag.shadow)) {
-			const next = read.data ? orderG1(ordered, read.data, snapshot) : null
-			logG1(member, "discover", g1, ordered, next?.keys)
+			const next = read.data
+				? orderPersonalOrder(ordered, read.data, snapshot)
+				: null
+			logPersonalOrder(member, "discover", personalOrder, ordered, next?.keys)
 			if (next) {
-				g1.titles = next.titles
+				personalOrder.titles = next.titles
 				if (flag.enabled) {
-					g1.todayFirst100 = ordered.slice(0, 100)
+					personalOrder.todayFirst100 = ordered.slice(0, 100)
 					ordered = next.keys
-				} else g1.g1First100 = next.keys.slice(0, 100)
+				} else personalOrder.personalOrderFirst100 = next.keys.slice(0, 100)
 			}
 		}
 	}
@@ -310,7 +312,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 
 	return {
 		keys: ordered,
-		g1,
+		personalOrder,
 		sortUsed,
 		hasTaste: taste !== null,
 		total: passing.length,

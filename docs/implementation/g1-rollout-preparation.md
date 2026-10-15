@@ -1,5 +1,9 @@
 # G1 rollout preparation — October 15, 2026
 
+> Naming note (2026-10-15): G1 ships as **personal order**; B3 = own taste rank,
+> B5 = pooled rating predictor, F3 = franchise grouping. Historical names below are retained.
+> See [the mapping and current deploy order](personal-order-rename.md).
+
 Implemented items 1–8 under “Adopted after review” in the supplied research PLAN.md,
 using REVIEW-fable.md for references. This is repository preparation only: no production
 Crate, Valkey or Windmill calls, deployment, variable changes, schedule changes or commit.

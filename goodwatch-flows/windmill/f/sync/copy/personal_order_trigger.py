@@ -1,9 +1,9 @@
-"""Queue one serialized G1 build after snapshots/nightly, or for the dirty schedule."""
+"""Queue one serialized personal order build after snapshots/nightly, or for the dirty schedule."""
 import json
 
-MEMBERS_VARIABLE = "f/sync/g1_members"
-G1_SCRIPT = "f/sync/copy/g1_order"
-DIRTY_KEY = "g1:dirty"
+MEMBERS_VARIABLE = "f/sync/personal_order_members"
+PERSONAL_ORDER_SCRIPT = "f/sync/copy/personal_order"
+DIRTY_KEY = "personal-order:dirty"
 
 
 def validate_members(members):
@@ -22,7 +22,7 @@ def rollout_members(raw):
     return members
 
 
-def start_g1(get_variable, enqueue, *, dirty_only=False):
+def start_personal_order(get_variable, enqueue, *, dirty_only=False):
     try:
         members = rollout_members(get_variable(MEMBERS_VARIABLE))
         if members == []:
@@ -30,14 +30,14 @@ def start_g1(get_variable, enqueue, *, dirty_only=False):
         args = {"member_ids": members, "dry_run": False}
         if dirty_only:
             args["dirty_only"] = True
-        job = enqueue(path=G1_SCRIPT, args=args)
+        job = enqueue(path=PERSONAL_ORDER_SCRIPT, args=args)
         return {"started": True, "job": job}
     except Exception as error:
-        print(f"G1 trigger failed: {error}", flush=True)
+        print(f"Personal order trigger failed: {error}", flush=True)
         return {"started": False, "reason": str(error)}
 
 
 def main(dirty_only: bool = False):
     import wmill
-    return start_g1(wmill.get_variable, wmill.run_script_by_path_async,
+    return start_personal_order(wmill.get_variable, wmill.run_script_by_path_async,
                     dirty_only=False if dirty_only is None else dirty_only)

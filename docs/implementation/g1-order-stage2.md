@@ -1,5 +1,9 @@
 # G1 webapp ordering, stage 2
 
+> Naming note (2026-10-15): G1 ships as **personal order**; B3 = own taste rank,
+> B5 = pooled rating predictor, F3 = franchise grouping. Historical names below are retained.
+> See [the mapping and current deploy order](personal-order-rename.md).
+
 Stage 2 consumes stage 1's `g1:v1:<member>` payload. It never fits B3/B5 in a request.
 The pinned model hash is `e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1`.
 The six public Python fixtures pass exact TypeScript parity for order, groups and mix prefix length.

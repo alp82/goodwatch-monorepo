@@ -19,13 +19,14 @@ all filter state, country, expanded saved services, taste key version, and order
 For you switch, so both fields are false. Its `filters.type` distinguishes My movies. Discover has a page number;
 Watch next has a `batch` of `page` or `cards`. Empty pages also record their state.
 
-Today's ordering is `taste-v2`; stage 2 can use `g1` for the flagged catalogue Best match and
-Watch next lists. `ordering_flags.REC_G1_ORDER` carries the resolved enabled state; `g1_flag_mode`
-carries off/shadow/preview/on. The nullable G1 fields record fallback reason, payload build time,
-model hash and snapshot version; `g1_groups`, `g1_mix_placed`, and `watch_next_tiers` align to the
-returned cards. Under G1, `today_first_100` records today's same-list control before paging;
-under shadow, `g1_first_100` records the candidate while cards retain today's order. See
-[stage 2](../g1-order-stage2.md) and apply [g1-migration.sql](g1-migration.sql) to an existing table.
+Today's ordering is `taste-v2`; stage 2 can use `personal-order` for the flagged catalogue Best match and
+Watch next lists. `ordering_flags.REC_G1_ORDER` carries the resolved enabled state; `personal_order_flag_mode`
+carries off/shadow/preview/on. The nullable personal order fields record fallback reason, payload build time,
+model hash and snapshot version; `personal_order_groups`, `personal_order_mix_placed`, and `watch_next_tiers` align to the
+returned cards. Under personal order, `today_first_100` records today's same-list control before paging;
+under shadow, `personal_order_first_100` records the candidate while cards retain today's order. See
+[rename and deploy order](../personal-order-rename.md) and apply
+[personal-order-rename.sql](personal-order-rename.sql) to the existing table while writers are stopped.
 Ordering identity stays separate from the displayed card taste version.
 
 The server returns `listId` immediately and schedules the Crate write on the next event-loop turn, without waiting.

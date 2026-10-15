@@ -4,16 +4,20 @@ import { test } from "node:test"
 import { gzipSync } from "node:zlib"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import {
-	createG1Reader,
-	createG1OrderCache,
-	G1_MODEL_HASH,
+	createPersonalOrderReader,
+	createPersonalOrderCache,
+	PERSONAL_ORDER_MODEL_HASH,
 } from "./reader.server.ts"
-import { requestOrder, type G1Components, type OwnShares } from "./order.ts"
+import {
+	requestOrder,
+	type PersonalOrderComponents,
+	type OwnShares,
+} from "./order.ts"
 
 const fixture = JSON.parse(
 	readFileSync(
 		new URL(
-			"../../../../goodwatch-flows/tests/fixtures/g1_order.json",
+			"../../../../goodwatch-flows/tests/fixtures/personal_order.json",
 			import.meta.url,
 		),
 		"utf8",
@@ -22,7 +26,7 @@ const fixture = JSON.parse(
 	modelHash: string
 	cases: {
 		name: string
-		components: G1Components
+		components: PersonalOrderComponents
 		ownShares: OwnShares
 		groups: number[]
 		order: number[]
@@ -30,7 +34,7 @@ const fixture = JSON.parse(
 	}[]
 }
 test("fixture and reader pin the same model", () =>
-	assert.equal(fixture.modelHash, G1_MODEL_HASH))
+	assert.equal(fixture.modelHash, PERSONAL_ORDER_MODEL_HASH))
 for (const c of fixture.cases)
 	test(`Python fixture exact parity: ${c.name}`, () => {
 		const actual = requestOrder(c.components, c.ownShares)
@@ -46,8 +50,8 @@ test("request rejects misaligned components", () => {
 		requestOrder(
 			{
 				pointIds: [],
-				b3Rank: [1],
-				b5TopHalf: [],
+				ownTasteRank: [1],
+				pooledRatingTopHalf: [],
 				movieSeriesId: [],
 				show: [],
 				animation: [],
@@ -80,7 +84,7 @@ for (const c of fixture.cases)
 			JSON.stringify({
 				...columns,
 				format: 1,
-				modelHash: G1_MODEL_HASH,
+				modelHash: PERSONAL_ORDER_MODEL_HASH,
 				snapshotVersion: snapshot.version,
 				builtAt: new Date(now).toISOString(),
 				ownShares: c.ownShares,
@@ -88,12 +92,12 @@ for (const c of fixture.cases)
 				othersRatingsCount: 0,
 			}),
 		)
-		const read = await createG1Reader(
+		const read = await createPersonalOrderReader(
 			async () => wire,
 			() => now,
 		)("parity", snapshot)
 		assert.equal(read.fallbackReason, null)
-		const result = createG1OrderCache()(
+		const result = createPersonalOrderCache()(
 			c.components.pointIds,
 			read.data!,
 			snapshot,

@@ -3,18 +3,18 @@ import { gunzipSync } from "node:zlib"
 import {
 	requestOrder,
 	refill,
-	type G1Components,
+	type PersonalOrderComponents,
 	type OwnShares,
 } from "./order.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
-import type { recG1Order } from "../features.server.ts"
+import type { recPersonalOrder } from "../features.server.ts"
 
-export const G1_MODEL_HASH =
+export const PERSONAL_ORDER_MODEL_HASH =
 	"e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1"
-export const G1_REVALIDATE_MS = 45_000
-export const G1_CACHE_MS = 10 * 60_000
-export const G1_MAX_AGE_MS = 36 * 60 * 60_000
-export interface G1Payload extends G1Components {
+export const PERSONAL_ORDER_REVALIDATE_MS = 45_000
+export const PERSONAL_ORDER_CACHE_MS = 10 * 60_000
+export const PERSONAL_ORDER_MAX_AGE_MS = 36 * 60 * 60_000
+export interface PersonalOrderPayload extends PersonalOrderComponents {
 	format: 1
 	modelHash: string
 	snapshotVersion: string
@@ -23,44 +23,49 @@ export interface G1Payload extends G1Components {
 	othersCount: number
 	othersRatingsCount: number
 }
-export interface G1PreparedPayload extends Omit<G1Payload, keyof G1Components> {
+export interface PersonalOrderPreparedPayload
+	extends Omit<PersonalOrderPayload, keyof PersonalOrderComponents> {
 	pointIds: Float64Array
-	b3Rank: Float32Array
-	b5TopHalf: Uint8Array
+	ownTasteRank: Float32Array
+	pooledRatingTopHalf: Uint8Array
 	// Preserve format-1 negative sentinels and safe integer franchise ids exactly.
 	movieSeriesId: Float64Array
 	show: Uint8Array
 	animation: Uint8Array
 }
-export interface G1Prepared {
+export interface PersonalOrderPrepared {
 	member: string
-	payload: G1PreparedPayload
+	payload: PersonalOrderPreparedPayload
 	/** Payload index per snapshot row; -1 for unrated candidates outside the offline pool. */
 	indices: Int32Array
 }
-export interface G1Read {
-	data: G1Prepared | null
+export interface PersonalOrderRead {
+	data: PersonalOrderPrepared | null
 	fallbackReason: string | null
 }
-export interface G1Exposure {
-	flag: ReturnType<typeof recG1Order>
+export interface PersonalOrderExposure {
+	flag: ReturnType<typeof recPersonalOrder>
 	fallbackReason: string | null
 	payloadBuildTime: string | null
 	modelHash: string | null
 	snapshotVersion: string | null
 	todayFirst100: number[] | null
-	g1First100: number[] | null
+	personalOrderFirst100: number[] | null
 	titles: Map<number, { group: number; mixPlaced: boolean }>
 }
 
-function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
+function decode(
+	raw: Buffer,
+	snapshot: TitleSnapshot,
+	now: number,
+): PersonalOrderRead {
 	let json: string
 	try {
 		json = gunzipSync(raw).toString("utf8")
 	} catch {
 		return { data: null, fallbackReason: "malformed-gzip" }
 	}
-	let p: G1Payload
+	let p: PersonalOrderPayload
 	try {
 		p = JSON.parse(json)
 	} catch {
@@ -68,24 +73,28 @@ function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
 	}
 	if (!p || p.format !== 1)
 		return { data: null, fallbackReason: "malformed-shape" }
-	if (p.modelHash !== G1_MODEL_HASH)
+	if (p.modelHash !== PERSONAL_ORDER_MODEL_HASH)
 		return { data: null, fallbackReason: "model-mismatch" }
 	if (p.snapshotVersion !== snapshot.version)
 		return { data: null, fallbackReason: "snapshot-mismatch" }
 	const built = typeof p.builtAt === "string" ? Date.parse(p.builtAt) : NaN
 	if (!Number.isFinite(built) || built > now)
 		return { data: null, fallbackReason: "invalid-build-time" }
-	if (now - built > G1_MAX_AGE_MS)
+	if (now - built > PERSONAL_ORDER_MAX_AGE_MS)
 		return { data: null, fallbackReason: "stale-payload" }
 	const unit = (n: unknown) =>
 		typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1
 	if (
 		!Array.isArray(p.pointIds) ||
-		![p.b3Rank, p.b5TopHalf, p.movieSeriesId, p.show, p.animation].every(
-			(a) => Array.isArray(a) && a.length === p.pointIds.length,
-		) ||
-		!p.b3Rank.every(unit) ||
-		![p.b5TopHalf, p.show, p.animation].every((a) =>
+		![
+			p.ownTasteRank,
+			p.pooledRatingTopHalf,
+			p.movieSeriesId,
+			p.show,
+			p.animation,
+		].every((a) => Array.isArray(a) && a.length === p.pointIds.length) ||
+		!p.ownTasteRank.every(unit) ||
+		![p.pooledRatingTopHalf, p.show, p.animation].every((a) =>
 			a.every((v) => typeof v === "boolean"),
 		) ||
 		!p.movieSeriesId.every(Number.isSafeInteger) ||
@@ -116,7 +125,7 @@ function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
 			return { data: null, fallbackReason: "malformed-shape" }
 		indices[row] = i
 	}
-	const prepared: G1PreparedPayload = {
+	const prepared: PersonalOrderPreparedPayload = {
 		format: p.format,
 		modelHash: p.modelHash,
 		snapshotVersion: p.snapshotVersion,
@@ -125,8 +134,8 @@ function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
 		othersCount: p.othersCount,
 		othersRatingsCount: p.othersRatingsCount,
 		pointIds: Float64Array.from(p.pointIds),
-		b3Rank: Float32Array.from(p.b3Rank),
-		b5TopHalf: Uint8Array.from(p.b5TopHalf, Number),
+		ownTasteRank: Float32Array.from(p.ownTasteRank),
+		pooledRatingTopHalf: Uint8Array.from(p.pooledRatingTopHalf, Number),
 		movieSeriesId: Float64Array.from(p.movieSeriesId),
 		show: Uint8Array.from(p.show, Number),
 		animation: Uint8Array.from(p.animation, Number),
@@ -139,16 +148,19 @@ function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
 
 // Cache prepared values and fallbacks, never compressed bytes, JSON strings or parsed arrays.
 // Coalesce concurrent loads and revalidate at most once per 45 seconds per resident member.
-export function createG1Reader(
+export function createPersonalOrderReader(
 	get: (key: string) => Promise<Buffer | null>,
 	now = () => Date.now(),
 ) {
 	const cache = new Map<
 		string,
-		{ checked: number; expires: number; result: G1Read }
+		{ checked: number; expires: number; result: PersonalOrderRead }
 	>()
-	const pending = new Map<string, Promise<G1Read>>()
-	const usable = (result: G1Read, snapshot: TitleSnapshot): G1Read => {
+	const pending = new Map<string, Promise<PersonalOrderRead>>()
+	const usable = (
+		result: PersonalOrderRead,
+		snapshot: TitleSnapshot,
+	): PersonalOrderRead => {
 		const p = result.data?.payload
 		if (!p) return result
 		if (p.snapshotVersion !== snapshot.version)
@@ -156,16 +168,19 @@ export function createG1Reader(
 		const built = Date.parse(p.builtAt)
 		if (built > now())
 			return { data: null, fallbackReason: "invalid-build-time" }
-		if (now() - built > G1_MAX_AGE_MS)
+		if (now() - built > PERSONAL_ORDER_MAX_AGE_MS)
 			return { data: null, fallbackReason: "stale-payload" }
 		return result
 	}
-	return async (member: string, snapshot: TitleSnapshot): Promise<G1Read> => {
+	return async (
+		member: string,
+		snapshot: TitleSnapshot,
+	): Promise<PersonalOrderRead> => {
 		const cached = cache.get(member)
 		if (
 			cached &&
 			cached.expires > now() &&
-			now() - cached.checked < G1_REVALIDATE_MS
+			now() - cached.checked < PERSONAL_ORDER_REVALIDATE_MS
 		) {
 			cache.delete(member)
 			cache.set(member, cached)
@@ -173,10 +188,10 @@ export function createG1Reader(
 		}
 		const active = pending.get(member)
 		if (active) return usable(await active, snapshot)
-		const load = async (): Promise<G1Read> => {
-			let result: G1Read
+		const load = async (): Promise<PersonalOrderRead> => {
+			let result: PersonalOrderRead
 			try {
-				const raw = await get(`g1:v2:${member}`)
+				const raw = await get(`personal-order:v1:${member}`)
 				result = raw
 					? decode(raw, snapshot, now())
 					: { data: null, fallbackReason: "missing-payload" }
@@ -190,7 +205,7 @@ export function createG1Reader(
 			if (cache.size >= 50) cache.delete(cache.keys().next().value!)
 			cache.set(member, {
 				checked: now(),
-				expires: now() + G1_CACHE_MS,
+				expires: now() + PERSONAL_ORDER_CACHE_MS,
 				result,
 			})
 			return result
@@ -204,22 +219,25 @@ export function createG1Reader(
 		}
 	}
 }
-const read = createG1Reader(async (key) => {
+const read = createPersonalOrderReader(async (key) => {
 	const { getRedisCluster } = await import("../../utils/cache")
 	const redis = getRedisCluster()
 	if (!redis) throw new Error("Valkey unavailable")
 	return redis.getBuffer(key)
 })
-export async function loadG1(
+export async function loadPersonalOrder(
 	member: string,
 	snapshot: TitleSnapshot | null,
-): Promise<G1Read> {
+): Promise<PersonalOrderRead> {
 	return snapshot
 		? read(member, snapshot)
 		: { data: null, fallbackReason: "snapshot-unavailable" }
 }
 
-export function g1Exposure(flag: G1Exposure["flag"], read: G1Read): G1Exposure {
+export function personalOrderExposure(
+	flag: PersonalOrderExposure["flag"],
+	read: PersonalOrderRead,
+): PersonalOrderExposure {
 	const p = read.data?.payload
 	return {
 		flag,
@@ -228,13 +246,13 @@ export function g1Exposure(flag: G1Exposure["flag"], read: G1Read): G1Exposure {
 		modelHash: p?.modelHash ?? null,
 		snapshotVersion: p?.snapshotVersion ?? null,
 		todayFirst100: null,
-		g1First100: null,
+		personalOrderFirst100: null,
 		titles: new Map(),
 	}
 }
-function composeG1(
+function composePersonalOrder(
 	keys: number[],
-	data: G1Prepared,
+	data: PersonalOrderPrepared,
 	snapshot: TitleSnapshot,
 	mix = true,
 ) {
@@ -251,10 +269,10 @@ function composeG1(
 		}
 	}
 	const p = data.payload
-	const c: G1Components = {
+	const c: PersonalOrderComponents = {
 		pointIds: known,
-		b3Rank: at.map((i) => p.b3Rank[i]),
-		b5TopHalf: at.map((i) => Boolean(p.b5TopHalf[i])),
+		ownTasteRank: at.map((i) => p.ownTasteRank[i]),
+		pooledRatingTopHalf: at.map((i) => Boolean(p.pooledRatingTopHalf[i])),
 		movieSeriesId: at.map((i) => p.movieSeriesId[i]),
 		show: at.map((i) => Boolean(p.show[i])),
 		animation: at.map((i) => Boolean(p.animation[i])),
@@ -274,17 +292,17 @@ function composeG1(
 
 // Bound both the number of filter variants and total retained title metadata. Payload object identity
 // changes on publish (including identical build times), expiry, or revalidation by the reader.
-export function createG1OrderCache({
+export function createPersonalOrderCache({
 	maxTitles = 200_000,
 	maxEntries = 40,
 	maxPerMember = 4,
 	now = () => Date.now(),
 } = {}) {
-	type Result = ReturnType<typeof composeG1>
+	type Result = ReturnType<typeof composePersonalOrder>
 	const cache = new Map<
 		string,
 		{
-			data: G1Prepared
+			data: PersonalOrderPrepared
 			result: Result
 			expires: number
 			size: number
@@ -297,11 +315,11 @@ export function createG1OrderCache({
 	}
 	return (
 		keys: number[],
-		data: G1Prepared,
+		data: PersonalOrderPrepared,
 		snapshot: TitleSnapshot,
 		mix = true,
 	): Result => {
-		// Include order: F3 ties and the unknown suffix retain the input's relative order.
+		// Include order: franchise grouping ties and the unknown suffix retain the input's relative order.
 		const bytes = Float64Array.from(keys)
 		const hash = createHash("sha256")
 			.update(new Uint8Array(bytes.buffer))
@@ -320,7 +338,7 @@ export function createG1OrderCache({
 			return cached.result
 		}
 		if (cached) remove(key)
-		const result = composeG1(keys, data, snapshot, mix)
+		const result = composePersonalOrder(keys, data, snapshot, mix)
 		if (keys.length > maxTitles) return result
 		for (const [id, item] of cache)
 			if (
@@ -337,19 +355,19 @@ export function createG1OrderCache({
 		cache.set(key, {
 			data,
 			result,
-			expires: now() + G1_CACHE_MS,
+			expires: now() + PERSONAL_ORDER_CACHE_MS,
 			size: keys.length,
 		})
 		titles += keys.length
 		return result
 	}
 }
-export const orderG1 = createG1OrderCache()
+export const orderPersonalOrder = createPersonalOrderCache()
 
 // Preserve Watch next's fit/time/Not tonight groups. Only fitting, non-passed titles receive the mix.
-export function mixFitting(
+export function mixPersonalOrderFitting(
 	keys: number[],
-	data: G1Prepared,
+	data: PersonalOrderPrepared,
 	snapshot: TitleSnapshot,
 	ranks: Map<number, number>,
 ) {
@@ -369,25 +387,25 @@ export function mixFitting(
 		placed: result.order.slice(0, result.mixCount).map((i) => known[i]),
 	}
 }
-export function logG1(
+export function logPersonalOrder(
 	member: string,
 	surface: string,
-	exposure: G1Exposure,
+	exposure: PersonalOrderExposure,
 	today: number[],
-	g1?: number[],
+	personalOrder?: number[],
 ) {
 	if (exposure.fallbackReason && exposure.fallbackReason !== "missing-payload")
-		console.warn("G1 fallback", {
+		console.warn("Personal order fallback", {
 			member,
 			surface,
 			reason: exposure.fallbackReason,
 		})
-	if (exposure.flag.shadow && g1) {
+	if (exposure.flag.shadow && personalOrder) {
 		const first = new Set(today.slice(0, 30))
-		console.info("G1 shadow", {
+		console.info("Personal order shadow", {
 			member,
 			surface,
-			overlap30: g1.slice(0, 30).filter((k) => first.has(k)).length,
+			overlap30: personalOrder.slice(0, 30).filter((k) => first.has(k)).length,
 			compared: Math.min(30, today.length),
 			builtAt: exposure.payloadBuildTime,
 		})
