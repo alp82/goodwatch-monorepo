@@ -79,15 +79,17 @@ async function run(command, args, options = {}) {
 					login.stderr.on("data", (c) => {
 						errors += c
 					})
-					login.on("exit", (code) =>
-						code === 0
+					login.on("exit", (code) => {
+						// The whole account of a failed browser step, beside the other ignored evidence.
+						if (code !== 0) writeFileSync(`${state}browser-login.log`, errors)
+						return code === 0
 							? res()
 							: rej(
 									new Error(
 										`Browser login failed (${code}): ${errors.split("\n")[0]}`,
 									),
-								),
-					)
+								)
+					})
 				})
 				browser.catch(() => child.kill("SIGTERM"))
 			}
