@@ -63,7 +63,7 @@ export type TalkedTitle = {
 	reason: TalkedReason | null
 	/** Places up since the day before (down is negative), "new" for a title that wasn't in the top 20; null unknown. */
 	move: number | "new" | null
-	/** At most three, the video first: what the featured title shows, and the row's preview line. */
+	/** At most three, best-ranked first, at most one video; none when nothing said is relevant enough. */
 	items: TalkedItem[]
 }
 
@@ -215,7 +215,7 @@ function safeJson(text: string): unknown {
 // The social items
 // ---------------------------------------------------------------------------------------------------------
 
-/** A row of the social read: a visible link of a title to a post (see server/talked-about-now/start-row.server.ts). */
+/** A row of the social read: a relevant visible link of a title to a post (see server/talked-about-now/start-row.server.ts). */
 export type SocialRow = {
 	media_type: string
 	media_tmdb_id: number
@@ -226,6 +226,10 @@ export type SocialRow = {
 	author: string | null
 	published_at: Date | number | string | null
 	text: string | null
+	/** The relevance verdict's rank (`doc.social_relevance`): higher shows first. */
+	score?: number | null
+	/** The same story from several sources: a title shows one of each. */
+	dup_group?: string | null
 }
 
 const SOURCES = new Set<string>(["youtube", "rss", "bluesky", "mastodon"])
@@ -331,52 +335,47 @@ export function isEnglish(text: string, url = ""): boolean {
 }
 
 /**
- * A title's best few pieces, from its visible rows newest first: the newest video (one: the official channels post
- * the same trailer more than once), then a voice (a Bluesky or Mastodon post), then a headline, then whatever is
- * newest. The video comes first, as the featured title shows it on top.
+ * A title's best few pieces, from its relevant rows: by the relevance score, quality over quantity. No source has a
+ * place of its own and nothing fills a gap, so a title whose rows were all judged not worth showing shows none. At
+ * most one video (the official channels post the same trailer more than once) and one piece of each duplicate group.
+ * The start page is in English, so between equal scores an English piece comes first, then the newer.
  */
 export function pickItems(
 	rows: SocialRow[],
 	limit = ITEMS_PER_TITLE,
 ): TalkedItem[] {
-	const items = rows.flatMap((row) => itemOf(row) ?? [])
-	// The start page is in English: a piece in another language comes after every English one.
-	const ordered = [
-		...items.filter((item) => item.english),
-		...items.filter((item) => !item.english),
-	]
+	const score = (row: SocialRow) =>
+		typeof row.score === "number" && Number.isFinite(row.score)
+			? row.score
+			: Number.NEGATIVE_INFINITY
+	const ranked = rows
+		.flatMap((row) => {
+			const item = itemOf(row)
+			return item ? [{ row, item }] : []
+		})
+		.sort(
+			(a, b) =>
+				(score(b.row) === score(a.row) ? 0 : score(b.row) - score(a.row)) ||
+				Number(b.item.english) - Number(a.item.english) ||
+				b.item.at.localeCompare(a.item.at) ||
+				b.item.id.localeCompare(a.item.id),
+		)
 	const picked: TalkedItem[] = []
-	const take = (item: TalkedItem | undefined) => {
-		if (item && !picked.includes(item) && picked.length < limit)
-			picked.push(item)
+	const groups = new Set<string>()
+	for (const { row, item } of ranked) {
+		if (picked.length >= limit) break
+		const group = row.dup_group || row.post_id
+		if (groups.has(group)) continue
+		if (item.video && picked.some((other) => other.video)) continue
+		groups.add(group)
+		picked.push(item)
 	}
-	take(ordered.find((item) => item.source === "youtube"))
-	take(
-		ordered.find(
-			(item) => item.source === "bluesky" || item.source === "mastodon",
-		),
-	)
-	take(ordered.find((item) => item.source === "rss"))
-	for (const item of ordered)
-		if (item.source !== "youtube" || !picked.some((p) => p.video)) take(item)
-	return picked.sort(
-		(a, b) => Number(b.source === "youtube") - Number(a.source === "youtube"),
-	)
+	return picked
 }
 
-/** The board row's one line: an English post, else an English headline, else a post or a headline in any language, else the video. */
+/** The board row's one line: the best-ranked piece, whatever its kind. */
 export function previewOf(items: TalkedItem[]): TalkedItem | null {
-	const voice = (item: TalkedItem) =>
-		item.source === "bluesky" || item.source === "mastodon"
-	const headline = (item: TalkedItem) => item.source === "rss"
-	return (
-		items.find((item) => voice(item) && item.english) ??
-		items.find((item) => headline(item) && item.english) ??
-		items.find(voice) ??
-		items.find(headline) ??
-		items[0] ??
-		null
-	)
+	return items[0] ?? null
 }
 
 // ---------------------------------------------------------------------------------------------------------

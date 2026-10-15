@@ -1,5 +1,6 @@
 // "Talked about now" on a title page (#558), the featured layout settled in #542: one large video and a feed beside
-// it. A title without a video leads with its newest headline over its backdrop. Hidden when the title has no posts.
+// it. A title without a video leads with its best-ranked headline over its backdrop: the items come best-ranked first,
+// all judged relevant (social-store.server.ts). Hidden when the title has none.
 //
 // Every item has a "wrong title?" control: the item goes at once, and the report hides it for everyone
 // (POST /api/social/wrong-title). Loaded lazily by TalkedAboutNowSlot, once a visitor comes near.

@@ -1,11 +1,11 @@
 // Reads the posts linked to a title and writes "wrong title?" reports, over the tables of the social discovery build
 // (#556, docs/implementation/talked-about-now/social.md): doc.social_post, doc.social_title_link,
-// doc.social_content_quality and doc.social_link_report. The read is that ticket's reference query (`Store.read_title`),
-// including its content-quality gate; the report is its reference write (`Store.report`). Report rows are the only thing
-// the webapp writes.
+// doc.social_content_quality, doc.social_relevance and doc.social_link_report. The read is that ticket's reference query
+// (`Store.read_title`), including its content-quality gate, plus the relevance gate (#537: relevant buzz only); the
+// report is its reference write (`Store.report`). Report rows are the only thing the webapp writes.
 //
 // Until discovery has run, the tables are missing or empty: the read then returns no rows and the section stays
-// hidden. Locally, SOCIAL_FIXTURE names a JSON file of the same rows (see fixtureSocialStore), so the page can be
+// hidden. That includes doc.social_relevance: without it no piece shows, never one that wasn't judged relevant. Locally, SOCIAL_FIXTURE names a JSON file of the same rows (see fixtureSocialStore), so the page can be
 // built and driven without touching the production tables.
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
@@ -21,7 +21,7 @@ export interface SocialTitle {
 	tmdbId: number
 }
 
-/** One visible post of a title, newest first. Times are ISO strings in UTC. */
+/** One visible post of a title, best-ranked first. Times are ISO strings in UTC. */
 export interface SocialPostRow {
 	post_id: string
 	source: SocialPostSource
@@ -31,6 +31,8 @@ export interface SocialPostRow {
 	published_at: string
 	text: string | null
 	lane: string
+	/** The relevance verdict's rank: higher shows first. */
+	score: number | null
 }
 
 export interface ReadOptions {
@@ -64,6 +66,24 @@ export const CONTENT_QUALITY_VERSION = "content-quality-1"
 export const contentQualityJoin = (schema: string) =>
 	`JOIN ${schema}.social_content_quality q ON q.post_id = p.post_id AND q.content_hash = p.content_hash
     AND q.version = '${CONTENT_QUALITY_VERSION}' AND q.status = 'pass'`
+
+/**
+ * The relevance verdicts a read accepts (doc.social_relevance, written by social discovery): a link is shown only when
+ * it has a `keep` of this version for the post's current content hash. A new version is judged again before its rows
+ * can appear, so this changes with it.
+ */
+export const RELEVANCE_VERSION = "relevance-1"
+
+/**
+ * The second read rule every read of links copies: an inner join to the link's `keep` verdict for the post's current
+ * content. A link without one (not judged yet, dropped, judged by an older version or before an edit) isn't shown.
+ * The verdict also ranks (`rel.score`) and groups the same story told by several sources (`rel.dup_group`).
+ */
+export const relevanceJoin = (schema: string) =>
+	`JOIN ${schema}.social_relevance rel ON rel.media_type = l.media_type AND rel.media_tmdb_id = l.media_tmdb_id
+    AND rel.post_id = l.post_id AND rel.content_hash = p.content_hash
+    AND rel.version = '${RELEVANCE_VERSION}' AND rel.status = 'keep'`
+
 export const MAX_REASON = 500
 
 /** The report's id and idempotency key: SHA256 of `media_type:tmdb_id:post_id`, as #556's store computes it. */
@@ -77,22 +97,26 @@ export function isMissingTable(error: unknown): boolean {
 	return code === 4041 || code === 4045 || (typeof message === "string" && /^(RelationUnknown|SchemaUnknown)/.test(message))
 }
 
+const scoreOf = (value: unknown): number | null => (value === null || value === undefined || !Number.isFinite(Number(value)) ? null : Number(value))
+
 const iso = (value: unknown): string => new Date(value instanceof Date ? value.getTime() : (value as number | string)).toISOString()
 
-/** The read: visible links of one title, one per duplicate group (the newest), newest first. */
+/** The read: relevant visible links of one title, one per duplicate group (the best-ranked), best-ranked first. */
 export function readTitleSql(schema: string, disabledLanes: readonly string[]): string {
 	const lanes = disabledLanes.length ? ` AND l.lane NOT IN (${disabledLanes.map(() => "?").join(", ")})` : ""
-	return `SELECT post_id, source, source_id, url, author, published_at, text, lane FROM (
-  SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, l.lane,
-    ROW_NUMBER() OVER (PARTITION BY COALESCE(l.duplicate_group, l.post_id) ORDER BY p.published_at DESC, p.post_id DESC) AS duplicate_rank
+	return `SELECT post_id, source, source_id, url, author, published_at, text, lane, score FROM (
+  SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, l.lane, rel.score,
+    ROW_NUMBER() OVER (PARTITION BY COALESCE(rel.dup_group, l.duplicate_group, l.post_id)
+      ORDER BY rel.score DESC NULLS LAST, p.published_at DESC, p.post_id DESC) AS duplicate_rank
   FROM ${schema}.social_title_link l JOIN ${schema}.social_post p ON p.post_id = l.post_id
   ${contentQualityJoin(schema)}
+  ${relevanceJoin(schema)}
   LEFT JOIN ${schema}.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
     AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
   WHERE l.media_type = ? AND l.media_tmdb_id = ? AND l.hidden_at IS NULL AND p.deleted_at IS NULL
     AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
     AND l.content_hash = p.content_hash AND r.report_id IS NULL${lanes}
-) visible WHERE duplicate_rank = 1 ORDER BY published_at DESC, post_id DESC LIMIT ?`
+) visible WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT ?`
 }
 
 type Select = <T extends {}>(sql: string, params: (string | number)[]) => Promise<T[]>
@@ -127,6 +151,7 @@ export function crateSocialStore({
 					published_at: iso(row.published_at),
 					text: (row.text as string | null) ?? null,
 					lane: String(row.lane ?? ""),
+					score: scoreOf(row.score),
 				}))
 			} catch (error) {
 				if (isMissingTable(error)) return []
@@ -202,6 +227,20 @@ export interface FixtureQuality {
 	status: "pass" | "reject"
 }
 
+/** A row of doc.social_relevance: the verdict on one title–post link. */
+export interface FixtureRelevance {
+	media_type: SocialMediaType
+	media_tmdb_id: number
+	post_id: string
+	version: string
+	content_hash?: string | null
+	status: "keep" | "drop"
+	kind?: "official_video" | "review" | "news" | "interview" | "social"
+	score?: number | null
+	dup_group?: string | null
+	reasons?: string[]
+}
+
 export interface SocialFixture {
 	/** What the fixture is and where it came from. */
 	note?: string
@@ -211,13 +250,16 @@ export interface SocialFixture {
 	links: FixtureLink[]
 	/** The posts' content-quality verdicts. A post without a passing one is never shown, as in the Crate read. */
 	quality?: FixtureQuality[]
+	/** The links' relevance verdicts. A link without a `keep` one is never shown, as in the Crate read. */
+	relevance?: FixtureRelevance[]
 	reports?: FixtureReport[]
 }
 
 /**
  * The fixture as a store. Reports are kept in memory for the life of the process; nothing is written anywhere.
- * The filters are the read query's: no passing content-quality verdict for the post's content, deleted, hidden, out of
- * the 30 days, changed content, reported, disabled lane, and one post per duplicate group.
+ * The filters are the read query's: no passing content-quality verdict for the post's content, no `keep` relevance
+ * verdict for the link and the post's content, deleted, hidden, out of the 30 days, changed content, reported, disabled
+ * lane. Then one post per duplicate group, best-ranked first, as the read orders them.
  */
 export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () => new Date()): SocialStore {
 	let shift = 0
@@ -235,6 +277,16 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 				verdict.version === CONTENT_QUALITY_VERSION &&
 				(verdict.content_hash ?? null) === (post.content_hash ?? null),
 		)
+	const kept = (link: FixtureLink, post: FixturePost) =>
+		(fixture.relevance ?? []).find(
+			(verdict) =>
+				verdict.media_type === link.media_type &&
+				verdict.media_tmdb_id === link.media_tmdb_id &&
+				verdict.post_id === link.post_id &&
+				verdict.status === "keep" &&
+				verdict.version === RELEVANCE_VERSION &&
+				(verdict.content_hash ?? null) === (post.content_hash ?? null),
+		)
 	const linked = (title: SocialTitle) =>
 		fixture.links.filter((link) => link.media_type === title.mediaType && link.media_tmdb_id === title.tmdbId)
 	return {
@@ -249,7 +301,8 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 			const visible = linked(title)
 				.flatMap((link) => {
 					const post = posts.get(link.post_id)
-					return post ? [{ link, post }] : []
+					const verdict = post && kept(link, post)
+					return post && verdict ? [{ link, post, verdict }] : []
 				})
 				.filter(({ link, post }) => {
 					if (!passed(post)) return false
@@ -258,11 +311,16 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 					if ((link.content_hash ?? null) !== (post.content_hash ?? null)) return false
 					return !reported.has(link.post_id) && !disabledLanes.includes(link.lane)
 				})
-				.sort((a, b) => b.post.published_at.localeCompare(a.post.published_at) || b.link.post_id.localeCompare(a.link.post_id))
+				.sort(
+					(a, b) =>
+						(b.verdict.score ?? Number.NEGATIVE_INFINITY) - (a.verdict.score ?? Number.NEGATIVE_INFINITY) ||
+						b.post.published_at.localeCompare(a.post.published_at) ||
+						b.link.post_id.localeCompare(a.link.post_id),
+				)
 			const groups = new Set<string>()
 			const rows: SocialPostRow[] = []
-			for (const { link, post } of visible) {
-				const group = link.duplicate_group ?? link.post_id
+			for (const { link, post, verdict } of visible) {
+				const group = verdict.dup_group ?? link.duplicate_group ?? link.post_id
 				if (groups.has(group)) continue
 				groups.add(group)
 				rows.push({
@@ -274,6 +332,7 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 					published_at: post.published_at,
 					text: post.text ?? null,
 					lane: link.lane,
+					score: verdict.score ?? null,
 				})
 			}
 			return rows.slice(0, Math.min(Math.max(Math.trunc(limit), 1), 100))

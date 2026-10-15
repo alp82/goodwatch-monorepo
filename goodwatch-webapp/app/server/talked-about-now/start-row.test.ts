@@ -6,9 +6,8 @@ import "../title-filter/test-alias.ts"
 import type { SocialRow } from "~/domain/talked-about-now"
 import type { TitleDisplay } from "../title-cards.server.ts"
 
-const { getTalkedAboutNow, readTalkedAboutNow, socialQuery } = await import(
-	"./start-row.server.ts"
-)
+const { fixtureRows, getTalkedAboutNow, readTalkedAboutNow, socialQuery } =
+	await import("./start-row.server.ts")
 const { titleKey } = await import("~/utils/title-key")
 
 const entry = (kind: "movie" | "tv", tmdbId: number, score: number) => ({
@@ -43,6 +42,7 @@ const post = (
 	tmdbId: number,
 	id: string,
 	source = "rss",
+	score = 0.5,
 ): SocialRow => ({
 	media_type: kind,
 	media_tmdb_id: tmdbId,
@@ -53,6 +53,8 @@ const post = (
 	author: "Writer",
 	published_at: new Date("2026-10-13T10:00:00Z"),
 	text: `Headline ${id}`,
+	score,
+	dup_group: id,
 })
 
 const ten = Array.from({ length: 10 }, (_, i) =>
@@ -101,7 +103,11 @@ test("the board: the first eight, with their fields, moves and pieces", async ()
 	const { reads: fake, asked } = reads({
 		social: async (titles: unknown[]) => {
 			assert.equal(titles.length, 8)
-			return [post("movie", 1, "a"), post("tv", 2, "b"), post("movie", 1, "c")]
+			return [
+				post("movie", 1, "c", "rss", 0.4),
+				post("tv", 2, "b"),
+				post("movie", 1, "a", "rss", 0.9),
+			]
 		},
 	})
 	const row = await readTalkedAboutNow(fake)
@@ -145,22 +151,27 @@ test("no snapshot, or one without an eligible title, is no row", async () => {
 })
 
 test("missing social tables leave the titles without pieces", async () => {
-	const missing = Object.assign(
-		new Error("RelationUnknown[Relation 'doc.social_post' unknown]"),
-		{
-			code: 4041,
-		},
-	)
-	const row = await readTalkedAboutNow(
-		reads({
-			social: async () => {
-				throw missing
-			},
-		}).reads,
-	)
-	assert.ok(row)
-	assert.equal(row.titles.length, 8)
-	assert.ok(row.titles.every((title) => title.items.length === 0))
+	// The relevance table among them: before it exists, no piece shows, never one without a verdict.
+	for (const table of ["social_post", "social_relevance"]) {
+		const missing = Object.assign(
+			new Error(`RelationUnknown[Relation 'doc.${table}' unknown]`),
+			{ code: 4041 },
+		)
+		const warn = console.warn
+		console.warn = () => {}
+		const row = await readTalkedAboutNow(
+			reads({
+				social: async () => {
+					throw missing
+				},
+			}).reads,
+		).finally(() => {
+			console.warn = warn
+		})
+		assert.ok(row)
+		assert.equal(row.titles.length, 8)
+		assert.ok(row.titles.every((title) => title.items.length === 0))
+	}
 })
 
 test("without the day before, the fields or the catalog, the row still stands", async () => {
@@ -205,6 +216,18 @@ test("the social read asks for exactly the board's titles, with social identitie
 		/\n\s+JOIN doc\.social_content_quality q ON q\.post_id = p\.post_id AND q\.content_hash = p\.content_hash\s+AND q\.version = 'content-quality-1' AND q\.status = 'pass'/,
 	)
 	assert.ok(!sql.includes("LEFT JOIN doc.social_content_quality"))
+	// The relevance gate, the same join as the title section's read: a link's `keep` for the post's current content.
+	assert.match(
+		sql,
+		/\n\s+JOIN doc\.social_relevance rel ON rel\.media_type = l\.media_type AND rel\.media_tmdb_id = l\.media_tmdb_id\s+AND rel\.post_id = l\.post_id AND rel\.content_hash = p\.content_hash\s+AND rel\.version = 'relevance-1' AND rel\.status = 'keep'/,
+	)
+	assert.ok(!sql.includes("LEFT JOIN doc.social_relevance"))
+	// One of each duplicate group per title, the best-ranked, and the rows best-ranked first.
+	assert.match(
+		sql,
+		/PARTITION BY l\.media_type, l\.media_tmdb_id, COALESCE\(rel\.dup_group, l\.duplicate_group, p\.post_id\)\s+ORDER BY rel\.score DESC NULLS LAST/,
+	)
+	assert.match(sql, /ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT 400$/)
 	assert.ok(!sql.includes("l.lane NOT IN"))
 	const lanes = socialQuery(
 		[{ mediaType: "movie", tmdbId: 1 }],
@@ -212,6 +235,72 @@ test("the social read asks for exactly the board's titles, with social identitie
 	)
 	assert.deepEqual(lanes.params, ["movie", 1, "vector_context", "fuzzy"])
 	assert.ok(lanes.sql.includes("l.lane NOT IN (?, ?)"))
+})
+
+test("with SOCIAL_FIXTURE, the board's pieces come from the fixture, through the same relevance gate", async () => {
+	const { mkdtempSync, writeFileSync } = await import("node:fs")
+	const { join } = await import("node:path")
+	const { tmpdir } = await import("node:os")
+	const hex = (n: number) => n.toString(16).padStart(64, "0")
+	const at = new Date(Date.now() - 3_600_000).toISOString()
+	const posts = [1, 2, 3].map((n) => ({
+		post_id: hex(n),
+		source: "rss",
+		url: `https://variety.com/${n}`,
+		published_at: at,
+		text: `Headline ${n}`,
+		content_hash: "a",
+	}))
+	const link = (n: number, media_type = "movie", media_tmdb_id = 1) => ({
+		media_type,
+		media_tmdb_id,
+		post_id: hex(n),
+		lane: "foreground_exact",
+		content_hash: "a",
+	})
+	const verdict = (n: number, status: string, score: number) => ({
+		media_type: "movie",
+		media_tmdb_id: 1,
+		post_id: hex(n),
+		version: "relevance-1",
+		content_hash: "a",
+		status,
+		score,
+	})
+	const path = join(mkdtempSync(join(tmpdir(), "talked-")), "fixture.json")
+	writeFileSync(
+		path,
+		JSON.stringify({
+			posts,
+			links: [link(1), link(2), link(3), link(1, "tv", 2)],
+			quality: [1, 2, 3].map((n) => ({
+				post_id: hex(n),
+				content_hash: "a",
+				version: "content-quality-1",
+				status: "pass",
+			})),
+			// Post 3 was dropped, and the show's link to post 1 was never judged.
+			relevance: [verdict(1, "keep", 0.2), verdict(2, "keep", 0.8), verdict(3, "drop", 0.9)],
+		}),
+	)
+	const saved = process.env.SOCIAL_FIXTURE
+	process.env.SOCIAL_FIXTURE = path
+	try {
+		const rows = await fixtureRows([
+			{ mediaType: "movie", tmdbId: 1 },
+			{ mediaType: "show", tmdbId: 2 },
+		] as never)
+		assert.deepEqual(
+			rows.map((row) => [row.media_type, row.media_tmdb_id, row.post_id, row.score]),
+			[
+				["movie", 1, hex(2), 0.8],
+				["movie", 1, hex(1), 0.2],
+			],
+		)
+	} finally {
+		if (saved === undefined) Reflect.deleteProperty(process.env, "SOCIAL_FIXTURE")
+		else process.env.SOCIAL_FIXTURE = saved
+	}
 })
 
 test("the row is the flag module's `row` surface, with the title section's preview list", async () => {
