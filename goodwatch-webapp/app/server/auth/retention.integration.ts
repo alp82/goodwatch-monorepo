@@ -183,3 +183,30 @@ test("maintenance repairs a tampered owner lookup so sign-out-everywhere sees th
  await collectAuthGarbage({sql, encryptionSecret, model: "session"})
  assert.equal(await adapter.deleteMany({model: "session", where: [{field: "userId", value: userId}]}), 1)
 })
+
+
+test("a deleted session returns its slot before the maintenance page or pass finishes", async () => {
+ const bounded = crateAuthAdapter({sql,populationBounds:{buckets:1,limitPerBucket:1}})({})
+ const userId = randomUUID()
+ const session = await bounded.create({model:"session",data:{userId,token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
+ await collectAuthGarbage({sql,encryptionSecret,model:"session",batchSize:1,cursor:undefined})
+ // Collect every page, without running capacity reconciliation.
+ let cursor: string | undefined
+ for(;;) {
+  const page = await collectAuthGarbage({sql,encryptionSecret,model:"session",batchSize:1,cursor})
+  if(page.complete) break
+  cursor = page.cursor ?? undefined
+ }
+ assert.equal(await bounded.findOne({model:"session",where:[{field:"token",value:session.token}]}),null)
+ const replacement = await bounded.create({model:"session",data:{userId,token:randomUUID(),expiresAt:new Date(Date.now()+86400000)}})
+ assert.ok(replacement)
+})
+
+
+test("thirty-day tombstone retention physically removes session history", async () => {
+ const bounded = crateAuthAdapter({sql,populationBounds:true})({})
+ const session = await bounded.create({model:"session",data:{userId:randomUUID(),token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
+ await collectAuthGarbage({sql,encryptionSecret,model:"session"})
+ await collectAuthGarbage({sql,encryptionSecret,model:"session",now:new Date(Date.now()+31*86400000)})
+ assert.equal((await sql("SELECT id FROM doc.auth_session WHERE id=?",[session.id])).rows.length,0)
+})

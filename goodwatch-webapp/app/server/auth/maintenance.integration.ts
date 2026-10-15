@@ -191,3 +191,25 @@ test("a crashed forced-ID import can retry the same Supabase identity after clai
  assert.equal(imported.id,id)
  assert.equal((await adapter.findOne<{id:string}>({model:"user",where:[{field:"email",value:email}]}))?.id,id)
 })
+
+
+test("a delayed create cannot resurrect a user after its thirty-day barrier is purged", async (t) => {
+ const realNow = Date.now()
+ const id = randomUUID()
+ const email = `${id}@example.test`
+ t.mock.timers.enable({apis:["Date"],now:realNow-31*86400000})
+ let intercepted = false
+ const delayed = crateAuthAdapter({encryptionSecret,sql:async(statement,args)=>{
+  if(!intercepted && statement.startsWith("INSERT INTO doc.auth_user (")) {
+   intercepted = true
+   await recoverEmailClaims({sql,encryptionSecret,now:new Date(realNow)})
+   const {collectAuthGarbage} = await import("./maintenance.server.ts")
+   assert.equal((await collectAuthGarbage({sql,encryptionSecret,model:"user",now:new Date(realNow)})).purged,1)
+   t.mock.timers.reset()
+  }
+  return sql(statement,args)
+ }})({})
+ await assert.rejects(delayed.create({model:"user",data:{id,email,name:"Delayed"},forceAllowId:true}))
+ assert.equal(await adapter.findOne({model:"user",where:[{field:"id",value:id}]}),null)
+ assert.equal((await adapter.create({model:"user",data:{id,email,name:"Fresh import"},forceAllowId:true})).id,id)
+})

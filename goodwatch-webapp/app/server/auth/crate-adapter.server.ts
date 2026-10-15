@@ -296,6 +296,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 			const requireCompleted = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false) => Boolean(await assign(model, row, where, update, deleting))
 			const adapter: CustomAdapter = {
 				async create({ model, data }) {
+					const writeDeadline = Date.now() + 15 * 60000
 					const row: Row = { ...data, id: data.id ?? randomUUID() }
 					let emailClaim: string | undefined
 					if (model === "user") {
@@ -314,8 +315,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
                             } : undefined) : undefined
 					const operation = randomUUID()
 					try {
-						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
-							[row.id, codec.encode({ row, deleted: false, emailClaim, admission }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
+						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE NULL END,?,?,?,?)`,
+							[row.id, writeDeadline, codec.encode({ row, deleted: false, emailClaim, admission }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {
@@ -327,7 +328,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						try { existing = await stored(model, row.id) } catch { throw new IndeterminateAuthWriteError() }
 						const receipt = existing?.receipts.find(r => r.operation === operation)
 						if (receipt) return row as typeof data
-						if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
+						if (Date.now() >= writeDeadline) throw new IndeterminateAuthWriteError()
+                        if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
 						if ((error as {code?: number}).code === 4091 && model === "user" && existing?.deleted && existing.envelope.abandonedClaim && existing.envelope.abandonedClaim !== emailClaim) {
                             const claim = (await sql("SELECT user_id,operation_id FROM doc.auth_user_email WHERE email_norm=?", [emailKey(row.email)])).rows[0]
                             if (claim?.[0] === row.id && claim[1] === emailClaim) {

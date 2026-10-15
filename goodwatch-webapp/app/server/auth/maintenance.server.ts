@@ -18,6 +18,7 @@ import {
 } from "./payload-codec.server.ts"
 import {
 	type AuthAdmission,
+	releaseAuthAdmission,
 	authPopulationActor,
 	authActorBounds,
 	authCapacityBucket,
@@ -202,13 +203,7 @@ const expiringModels = new Set([
 	"oauthRefreshToken",
 	"oauthClientAssertion",
 ])
-const reusableModels = new Set([
-	"account",
-	"oauthConsent",
-	"oauthClientResource",
-	"oauthResource",
-	"rateLimit",
-])
+
 
 /** Each page is bounded independently of table size; all decisions use authenticated PK reads. */
 export async function collectAuthGarbage(
@@ -281,11 +276,11 @@ export async function collectAuthGarbage(
 		if (
 			envelope.deleted &&
 			envelope.deletedAt &&
-			now.getTime() - new Date(envelope.deletedAt).getTime() >= retentionMs &&
-			reusableModels.has(model) &&
-			!envelope.admission &&
-			!envelope.admissionFence
+			now.getTime() - new Date(envelope.deletedAt).getTime() >= 30 * 86400000
 		) {
+            // Thirty days exceeds the database-enforced fifteen-minute insert lease.
+            // CAS deletion cannot remove a concurrently recreated logical record.
+            await releaseAuthAdmission(sql,codec,id,envelope.admission)
 			const result = await sql(
 				`DELETE FROM ${name} WHERE id=? AND _seq_no=? AND _primary_term=?`,
 				[id, current[2], current[3]],
@@ -303,7 +298,7 @@ export async function collectAuthGarbage(
 			.map((receipt) =>
 				receipt.at ? receipt : { ...receipt, at: now.toISOString() },
 			)
-		const next: Envelope = expired
+		let next: Envelope = expired
 			? {
 					...envelope,
 					row: { id },
@@ -321,6 +316,8 @@ export async function collectAuthGarbage(
 				: envelope.deleted && !envelope.deletedAt
 					? { ...envelope, deletedAt: now.toISOString() }
 					: envelope
+        if ((next.deleted || next.archived) && next.admission && (next.admissionFence ?? 0) < next.admission.generation)
+            next = {...next, admissionFence:next.admission.generation}
 		const hints = next.deleted || next.archived ? {} : authLookupHints(model, next.row, options.encryptionSecret)
 		const repaired =
 			Boolean(envelope.deleted || envelope.archived) !== current[5] || !isDeepStrictEqual(hints, current[4])
@@ -329,8 +326,10 @@ export async function collectAuthGarbage(
 			next === envelope &&
 			JSON.stringify(kept) === JSON.stringify(receipts) &&
 			!repaired
-		)
-			continue
+		) {
+            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission)
+            continue
+        }
 		const compacted = kept.length < receipts.length
 		const result = await sql(
 			`UPDATE ${name} SET payload=?,receipts=?,deleted=?,lookup=?,created_at=?,expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
@@ -347,6 +346,7 @@ export async function collectAuthGarbage(
 			],
 		)
 		if (result.rowcount === 1) {
+            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission)
 			if (expired) report.expired++
 			if (archiveRefresh && !expired) report.archived++
 			if (compacted) report.compacted++
@@ -709,6 +709,7 @@ export async function reconcileAuthRows(
 			...stored.envelope,
 			row: { id },
 			deleted: true,
+            admissionFence: Math.max(stored.envelope.admissionFence ?? 0, stored.envelope.admission?.generation ?? 0),
 			deletedAt: now.toISOString(),
 			emailClaim: undefined,
 		}
@@ -720,7 +721,7 @@ export async function reconcileAuthRows(
 				at: now.toISOString(),
 			},
 		].slice(-256)
-		return (
+		const removed = (
 			(
 				await sql(
 					`UPDATE ${name} SET payload=?,receipts=?,deleted=true,lookup=?,created_at=NULL,expires_at=NULL WHERE id=? AND _seq_no=? AND _primary_term=?`,
@@ -735,6 +736,8 @@ export async function reconcileAuthRows(
 				)
 			).rowcount === 1
 		)
+        if(removed) await releaseAuthAdmission(sql,codec,id,envelope.admission)
+        return removed
 	}
 	const name = authModelTable(model)
 	await sql(`REFRESH TABLE ${name}`)
