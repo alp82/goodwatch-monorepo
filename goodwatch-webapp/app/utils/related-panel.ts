@@ -1,3 +1,4 @@
+import type { PresentedMedia } from "./media-presentation"
 // The related titles section of a title page shows one panel at a time: "overall", or one of the
 // title's fingerprint highlight keys. A panel is one query in the browser and one request to
 // /api/related. The server prefetch in related.server uses the same key, so the default panel
@@ -8,7 +9,7 @@ export const OVERALL_PANEL = "overall"
 type MediaType = "movie" | "show"
 
 /** What a related title card shows. Nothing else is embedded in the HTML or sent by the endpoint. */
-export interface RelatedCard {
+export interface RelatedCard extends PresentedMedia {
 	tmdb_id: number
 	title: string
 	release_year: string
@@ -22,6 +23,7 @@ export interface RelatedPanel {
 }
 
 export interface RelatedPanelParams {
+	language?: string
 	tmdbId: number
 	sourceMediaType: MediaType
 	/** Missing for the overall panel. The server looks up the source title's score for the key. */
@@ -30,7 +32,7 @@ export interface RelatedPanelParams {
 
 export interface RelatedPanelSource {
 	mediaType: MediaType
-	details: { tmdb_id: number }
+	details: { tmdb_id: number } & PresentedMedia
 	fingerprint?: {
 		highlightKeys?: string[]
 	} | null
@@ -54,6 +56,7 @@ export const relatedPanelParams = (
 	const params: RelatedPanelParams = {
 		tmdbId: media.details.tmdb_id,
 		sourceMediaType: media.mediaType,
+		...(media.details.presentation ? { language: media.details.presentation.language } : {}),
 	}
 	if (panelKey === OVERALL_PANEL) return params
 	return { ...params, fingerprintKey: panelKey }
@@ -65,11 +68,13 @@ export const getQueryKeyRelatedPanel = ({
 	tmdbId,
 	sourceMediaType,
 	fingerprintKey,
+	language,
 }: RelatedPanelParams) =>
 	queryKeyRelatedPanel.concat([
 		tmdbId.toString(),
 		sourceMediaType,
 		fingerprintKey ?? OVERALL_PANEL,
+		...(language ? [language] : []),
 	])
 
 // One request per panel: /api/related answers with the movies and the shows. The URL holds only
@@ -78,11 +83,13 @@ export const relatedPanelUrl = ({
 	tmdbId,
 	sourceMediaType,
 	fingerprintKey,
+	language,
 }: RelatedPanelParams): string => {
 	const search = new URLSearchParams({
 		tmdbId: tmdbId.toString(),
 		sourceMediaType,
 	})
+	if (language) search.set("displayLanguage", language)
 	if (fingerprintKey) search.set("fingerprintKey", fingerprintKey)
 	return `/api/related?${search}`
 }

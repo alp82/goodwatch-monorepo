@@ -80,7 +80,7 @@ function Lightbox({ item, rank, w, h, frame, accent, editing, glow }: { item?: C
 				<img src={item.poster} width={w} height={h} style={{ display: "flex", width: w, height: h, objectFit: "cover" }} />
 			) : (
 				<div style={col({ width: w, height: h, justifyContent: "flex-end", padding: w * 0.08, backgroundImage: `linear-gradient(180deg, #1c1c20 0%, ${alpha(accent, 0.55)} 100%)`, color: "#fff", fontFamily: "Anton", fontSize: w * 0.14, lineHeight: 1.02, textTransform: "uppercase" })}>
-					<div style={{ display: "flex" }}>{item.title}</div>
+					<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 				</div>
 			)}
 			{/* glass sheen across the case */}
@@ -207,7 +207,7 @@ function MarqueeCard({ title, items, name, theme, date, editing }: CardProps) {
 					{shown.map((item, i) => (
 						<div key={item.key} style={flex({ gap: 10 })}>
 							<div style={{ display: "flex", color: t.accent, fontWeight: 700 }}>{`${i + 1}`}</div>
-							<div style={{ display: "flex" }}>{item.title}</div>
+							<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 							<div style={{ display: "flex", color: alpha("#ffffff", 0.4) }}>{[item.year, kind(item)].filter(Boolean).join(" ")}</div>
 						</div>
 					))}

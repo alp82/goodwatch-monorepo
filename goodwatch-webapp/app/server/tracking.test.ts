@@ -1,14 +1,5 @@
-// CommonJS packages are loaded before the alias hook, which would otherwise resolve their own relative requires.
-import "node-crate"
-import "ioredis"
-import "react"
-import "@remix-run/node"
-import "zod"
-import ts from "typescript"
-import "./title-filter/test-alias.ts"
+import "./tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
 import {
 	PLAIN_DATES,
@@ -18,40 +9,6 @@ import {
 import { seasonRestore, seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
-
-// The writer reaches the taste store through `markTasteChanged`, whose module pulls in the viewer and with it auth,
-// and reads the title snapshot, whose index the alias hook replaces by the format module without
-// `getTitleSnapshot`. The same stubs as userData.test.ts.
-const { registerHooks } = nodeModule as unknown as {
-	registerHooks(hooks: {
-		load(
-			url: string,
-			context: unknown,
-			next: (url: string, context: unknown) => unknown,
-		): unknown
-	}): void
-}
-registerHooks({
-	load(url, context, next) {
-		let source: string | undefined
-		if (url.endsWith("/utils/auth.ts"))
-			source =
-				'export const getUserIdFromRequest = () => { throw new Error("Unexpected auth") }; export const getAuthFromRequest = getUserIdFromRequest'
-		else if (url.endsWith("/title-snapshot/format.server.ts"))
-			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => null`
-		if (source === undefined) return next(url, context)
-		return {
-			format: "module",
-			source: ts.transpileModule(source, {
-				compilerOptions: {
-					module: ts.ModuleKind.ESNext,
-					target: ts.ScriptTarget.ESNext,
-				},
-			}).outputText,
-			shortCircuit: true,
-		}
-	},
-})
 
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
@@ -251,7 +208,7 @@ function stored() {
 		states: db
 			.table("user_watch_state")
 			.map(
-				({ _seq_no, _primary_term, ...r }): Row => ({
+				({ _seq_no, _primary_term, insert_token, ...r }): Row => ({
 					...r,
 					state_changed_at: "set",
 					rate_prompt_dismissed_at: set(r.rate_prompt_dismissed_at),
@@ -517,7 +474,7 @@ test("Unwatch an episode: deletes the episode's rows of the current pass by thei
 	)
 	assert.deepEqual(writes(onlySent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual(
 		[only.row, only.state, stateOf(), logOf()],
@@ -692,7 +649,7 @@ test("Unmark a season and Undo of a group mark: one delete, and the state as if 
 	])
 	assert.deepEqual(writes(unmarkSent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual([unmark.row, stateOf(), logOf()], ["8", null, []])
 })
@@ -776,7 +733,7 @@ test("Press Seen again (rows 14 to 17): the group's rows go and the state return
 	const [none, sent] = await sentBy(() => act({ type: "undoSeen" }))
 	assert.deepEqual(writes(sent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.equal(
 		db.statements.find((s) => s.sql.startsWith("DELETE FROM user_watch_log"))
@@ -969,7 +926,7 @@ test("Undo of taking a migrated press back: the rows of 2024 again, with the day
 	const [put, sent] = await sentBy(() => act(restore, undefined))
 	assert.deepEqual(writes(sent), [
 		"INSERT user_watch_log",
-		"INSERT user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual([put.status, put.row], ["applied", "30"])
 	assert.deepEqual(storedExactly(), before)
@@ -1123,7 +1080,7 @@ test("Unmark the only watched season (row 8) and its Undo (row 33): Not started 
 	const [put, sent] = await sentBy(() => act(restore, undefined))
 	assert.deepEqual(writes(sent), [
 		"INSERT user_watch_log",
-		"INSERT user_watch_state",
+		"UPDATE user_watch_state",
 		"DELETE user_wishlist",
 		"DELETE user_not_interested",
 	])
@@ -2210,7 +2167,7 @@ test("a Seen press on a 327-episode show is one insert statement, and its undo o
 	)
 	assert.deepEqual(writes(undoSent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual([undo.deleted.length, logOf(long).length], [327, 0])
 	// 1,200 episodes are three statements of 500, 500 and 200 rows.
@@ -3318,9 +3275,7 @@ test("an import that makes a show Watching is not the member's move, and resumin
 	await act({ type: "hold" }, newId(), short)
 	const before = Date.now()
 	await act({ type: "resume" }, newId(), short)
-	assert.ok(
-		((await entryOf(short))?.watchingSince?.getTime() ?? 0) >= before,
-	)
+	assert.ok(((await entryOf(short))?.watchingSince?.getTime() ?? 0) >= before)
 })
 
 test("undoing the import that made a show Seen leaves it Watching by the import that remains, not by the member", async () => {
@@ -3351,3 +3306,669 @@ test("undoing the import that made a show Seen leaves it Watching by the import 
 	assert.deepEqual([entry?.state, entry?.count], ["watching", 1])
 	assert.equal(entry?.watchingSince, null)
 })
+
+for (const mutation of ["update", "delete"] as const)
+	for (const outcome of ["applied", "not-applied", "pending"] as const) {
+		test(`a tracking CAS ${mutation} with a ${outcome} lost response converges without applying its state twice`, async () => {
+			await tick(1, 1, "initial-watch")
+			const original = db.execute.bind(db)
+			let calls = 0
+			db.execute = async (sql, params = []) => {
+				if (/(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+					calls++
+					if (calls === 1) {
+						if (outcome === "applied") await original(sql, params)
+						throw Object.assign(new Error("fixture response lost"), {
+							code: "ECONNRESET",
+						})
+					}
+					if (calls === 2 && outcome === "pending") await original(sql, params)
+				}
+				return original(sql, params)
+			}
+			setCrateClientForTest(db)
+			const result = await act(
+				mutation === "update"
+					? { type: "drop" }
+					: { type: "unwatch", season: 1, number: 1 },
+			)
+			assert.equal(result.status, "applied")
+			assert.deepEqual(ticks(), mutation === "update" ? ["1.1"] : [])
+			assert.equal(
+				stateOf()?.state,
+				mutation === "update" ? "dropped" : undefined,
+			)
+			assert.equal(calls, outcome === "applied" ? 1 : 2)
+		})
+	}
+
+for (const [mutation, first, second] of [
+	["update", { type: "drop" }, { type: "resume" }],
+	[
+		"delete",
+		{ type: "unwatch", season: 1, number: 1 },
+		{ type: "watch", season: 1, number: 1 },
+	],
+] as const) {
+	test(`a lost CAS ${mutation} response superseded by the next action fails rather than applying again over it`, async () => {
+		await tick(1, 1, "initial-watch")
+		const original = db.execute.bind(db)
+		let lost = false
+		db.execute = async (sql, params = []) => {
+			if (!lost && /^\s*(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+				// The first action lands and its response is lost. The member's next action reads that result and
+				// applies before the readback.
+				lost = true
+				await original(sql, params)
+				assert.equal((await act(second)).status, "applied")
+				throw Object.assign(new Error("fixture response lost"), {
+					code: "ECONNRESET",
+				})
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await assert.rejects(act(first), /fixture response lost/)
+		assert.equal(stateOf()?.state, "watching")
+		assert.deepEqual(ticks(), ["1.1"])
+	})
+}
+
+for (const afterInsert of [
+	"unchanged",
+	"unwatch",
+	"unwatch-and-rewatch",
+] as const) {
+	test(`first state INSERT response lost: ${afterInsert} never replays over the next action`, async () => {
+		const original = db.execute.bind(db)
+		let intercepted = false
+		let inserts = 0
+		db.execute = async (sql, params = []) => {
+			if (/^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+				inserts++
+				if (!intercepted) {
+					intercepted = true
+					await original(sql, params)
+					if (afterInsert !== "unchanged")
+						assert.equal(
+							(await act({ type: "unwatch", season: 1, number: 1 })).status,
+							"applied",
+						)
+					if (afterInsert === "unwatch-and-rewatch")
+						assert.equal((await tick(1, 2, "later-watch")).status, "applied")
+					throw Object.assign(new Error("fixture first INSERT response lost"), {
+						code: "ECONNRESET",
+					})
+				}
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		assert.equal((await tick(1, 1, "first-watch")).status, "applied")
+		const tracking = await getShowTracking(user, SHOW)
+		assert.deepEqual(
+			ticks(),
+			afterInsert === "unwatch"
+				? []
+				: afterInsert === "unwatch-and-rewatch"
+					? ["1.2"]
+					: ["1.1"],
+		)
+		assert.equal(
+			tracking.state?.state,
+			afterInsert === "unwatch" ? undefined : "watching",
+		)
+		assert.equal(inserts, 1, "Confirmed first INSERT is never submitted again")
+	})
+}
+
+for (const code of ["ECONNRESET", "ETIMEDOUT"] as const) {
+	for (const disposition of [
+		"not-applied",
+		"pending",
+		"second-response-lost",
+	] as const) {
+		test(`first state INSERT ${code}, ${disposition}: bounded recovery creates one state without a member error`, async () => {
+			const original = db.execute.bind(db)
+			let sends = 0
+			let pending: (() => Promise<unknown>) | undefined
+			let appliedVersion: unknown
+			db.execute = async (sql, params = []) => {
+				if (/^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+					sends++
+					if (sends === 1) {
+						if (disposition === "pending") pending = () => original(sql, params)
+						throw Object.assign(
+							new Error("fixture first INSERT response lost"),
+							{ code },
+						)
+					}
+					if (pending) {
+						await pending()
+						appliedVersion = db.table("user_watch_state")[0]._seq_no
+					}
+					const result = await original(sql, params)
+					if (disposition === "second-response-lost")
+						throw Object.assign(
+							new Error("fixture second INSERT response lost"),
+							{ code },
+						)
+					return result
+				}
+				return original(sql, params)
+			}
+			setCrateClientForTest(db)
+			assert.equal((await tick(1, 1, "first-watch")).status, "applied")
+			assert.equal(sends, 2)
+			assert.equal(db.table("user_watch_state").length, 1)
+			assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+			assert.deepEqual(ticks(), ["1.1"])
+			if (pending)
+				assert.equal(db.table("user_watch_state")[0]._seq_no, appliedVersion)
+		})
+	}
+}
+
+for (const duplicate of [false, true]) {
+	test(`first INSERT lands after absent readback, then unwatch wins${duplicate ? "; delayed duplicate also cannot recreate it" : ""}`, async () => {
+		const original = db.execute.bind(db)
+		let pending: (() => Promise<unknown>) | undefined
+		let sends = 0
+		let later = false
+		let removedVersion: unknown
+		db.execute = async (sql, params = []) => {
+			if (/^\s*INSERT INTO user_watch_state\b/.test(sql) && !later) {
+				sends++
+				if (sends === 1) {
+					pending = () => original(sql, params)
+					throw Object.assign(new Error("fixture first INSERT response lost"), {
+						code: "ECONNRESET",
+					})
+				}
+				// Readback said absent; the original lands and is then unwatched before the resend arrives.
+				later = true
+				await pending?.()
+				assert.equal(
+					(await act({ type: "unwatch", season: 1, number: 1 })).status,
+					"applied",
+				)
+				removedVersion = db.table("user_watch_state")[0]?._seq_no
+				const result = await original(sql, params)
+				if (duplicate) await pending?.()
+				return result
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		assert.equal((await tick(1, 1, "first-watch")).status, "applied")
+		assert.equal(sends, 2)
+		assert.deepEqual(ticks(), [])
+		assert.equal((await getShowTracking(user, SHOW)).state, null)
+		assert.equal(db.table("user_watch_state").length, 1)
+		assert.equal(db.table("user_watch_state")[0]._seq_no, removedVersion)
+	})
+}
+
+test("show-state receipts survive unwatch and later valid watches; legacy rows need no backfill", async () => {
+	await tick(1, 1)
+	const physical = db.table("user_watch_state")[0]
+	const token = physical.insert_token
+	assert.equal(typeof token, "string")
+	await act({ type: "unwatch", season: 1, number: 1 })
+	assert.equal(physical.insert_token, token)
+	assert.equal(physical.state, "not_started")
+	assert.equal((await getShowTracking(user, SHOW)).state, null)
+	assert.deepEqual(await getWatchState(user), {})
+	await tick(1, 2)
+	assert.equal(physical.insert_token, token)
+	assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+	// A pre-migration row has no receipt. Its versioned transitions and logical deletion still work.
+	physical.insert_token = null
+	await act({ type: "unwatch", season: 1, number: 2 })
+	assert.equal((await getShowTracking(user, SHOW)).state, null)
+	await tick(1, 3)
+	assert.equal(physical.insert_token, null)
+	assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+})
+
+test("an indeterminate first INSERT never reruns its event over a different creator's newer choice", async () => {
+	const original = db.execute.bind(db)
+	let intercepted = false
+	db.execute = async (sql, params = []) => {
+		if (!intercepted && /^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+			intercepted = true
+			// Our state INSERT did not land. A concurrent first tick wins the key and the member drops it.
+			await tick(1, 2, "concurrent-watch")
+			await act({ type: "drop" })
+			throw Object.assign(new Error("fixture first INSERT response lost"), {
+				code: "ECONNRESET",
+			})
+		}
+		return original(sql, params)
+	}
+	setCrateClientForTest(db)
+	await assert.rejects(
+		tick(1, 1, "first-watch"),
+		/fixture first INSERT response lost/,
+	)
+	assert.equal((await getShowTracking(user, SHOW)).state?.state, "dropped")
+	assert.deepEqual(ticks(), ["1.1", "1.2"])
+})
+
+// Q32 for movies, out of this fix's scope (first-insert-recovery.md): `settleMovie` resends its state INSERT
+// through the generic helper, and a movie's state row is physically deleted. A delayed original alone can also
+// land after the delete, so a resend policy cannot close it; the next settle of the movie removes the row.
+test("a lost movie state INSERT never leaves Seen without a watch once the member deleted the watch", {
+	todo: "movie state rows have no retained key yet",
+}, async () => {
+	const original = db.execute.bind(db)
+	let intercepted = false
+	db.execute = async (sql, params = []) => {
+		if (!intercepted && /^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+			intercepted = true
+			await original(sql, params)
+			assert.equal(
+				(await act({ type: "deleteWatch", watchId: "movie-watch" }, newId(), movie)).status,
+				"applied",
+			)
+			throw Object.assign(new Error("fixture movie INSERT response lost"), { code: "ECONNRESET" })
+		}
+		return original(sql, params)
+	}
+	setCrateClientForTest(db)
+	await act({ type: "watch" }, "movie-watch", movie).catch(() => null)
+	assert.deepEqual(logOf(movie), [])
+	assert.equal(stateOf(movie), null, "a movie without a log row has no state row")
+})
+
+// No lost response: another device reads this device's new tick and the member unticks it there, all before this
+// device's state write arrives. The known conflict must not run the tick again over that later choice.
+for (const write of ["INSERT", "UPDATE"] as const) {
+	test(`a ${write} state conflict never restores a tick the member removed on another device`, async () => {
+		if (write === "UPDATE") assert.equal((await tick(2, 1, "earlier-watch")).status, "applied")
+		const original = db.execute.bind(db)
+		let intercepted = false
+		db.execute = async (sql, params = []) => {
+			if (!intercepted && new RegExp(`^\\s*${write} (INTO )?user_watch_state\\b`).test(sql)) {
+				intercepted = true
+				if (write === "INSERT") assert.equal((await tick(1, 2, "device-b")).status, "applied")
+				assert.equal((await act({ type: "unwatch", season: 1, number: 1 })).status, "applied")
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await assert.rejects(tick(1, 1, "device-a"), TrackingConflictError)
+		assert.deepEqual(ticks(), write === "INSERT" ? ["1.2"] : ["2.1"])
+		assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+	})
+}
+
+test("a status-only import is not recent activity and undo restores an earlier Watching status without watches", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "status",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "watching" as const,
+	}
+	const start = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "start",
+		source: "trakt",
+		...short,
+		items: [item],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, start)
+	assert.deepEqual(
+		[
+			(await entryOf(short))?.watchingSince,
+			(await entryOf(short))?.lastActivityAt,
+		],
+		[null, null],
+	)
+	const drop = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "drop",
+		source: "trakt",
+		...short,
+		items: [{ ...item, showStatus: "dropped" }],
+		watchDates: "unknown",
+		now: Date.now(),
+	})
+	await imports.applyImportTrackingPlan(user, drop)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "dropped")
+	await imports.undoImportTrackingPlan(user, drop)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "watching")
+	await imports.undoImportTrackingPlan(user, start)
+	assert.equal((await getShowTracking(user, SHORT)).state, null)
+})
+
+test("imported Dropped clears intentions without watches; a later member move survives undo", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	db.seed("user_wishlist", [
+		{
+			user_id: user,
+			tmdb_id: SHORT,
+			media_type: "show",
+			created_at: LONG_AGO,
+			updated_at: LONG_AGO,
+		},
+	])
+	db.seed("user_not_interested", [
+		{
+			user_id: user,
+			tmdb_id: SHORT,
+			media_type: "show",
+			created_at: LONG_AGO,
+			updated_at: LONG_AGO,
+		},
+	])
+	const item = {
+		key: "dropped",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "dropped" as const,
+	}
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "drop",
+		source: "trakt",
+		...short,
+		items: [item],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	const dropped = await getShowTracking(user, SHORT)
+	assert.equal(dropped.state?.state, "dropped")
+	assert.deepEqual(dropped.log, [])
+	const watched = await act(
+		{ type: "watch", season: 1, number: 1 },
+		newId(),
+		short,
+	)
+	assert.deepEqual(watched.cleared, {
+		wantToSeeAddedAt: null,
+		notInterested: false,
+	})
+	await imports.undoImportTrackingPlan(user, plan)
+	const later = await getShowTracking(user, SHORT)
+	assert.equal(later.state?.state, "watching")
+	assert.equal(later.log.length, 1)
+})
+
+test("a source status follows the imported watches in one plan and keeps their pass", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "held",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 2,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "on_hold" as const,
+	}
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "held",
+		source: "trakt",
+		...short,
+		items: [{ ...nativeWatch("one", 1), pass: 2 }, item],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	const held = await getShowTracking(user, SHORT)
+	assert.equal(held.state?.state, "on_hold")
+	assert.equal(held.state?.pass, 2)
+	assert.equal(held.log.length, 1)
+	await imports.undoImportTrackingPlan(user, plan)
+	assert.equal((await getShowTracking(user, SHORT)).state, null)
+	assert.deepEqual((await getShowTracking(user, SHORT)).log, [])
+})
+
+test("whole-show completion fills the current pass without reusing the prior pass's imported watches", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "completed",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "completed" as const,
+		completionScope: "show" as const,
+	}
+	const input = {
+		userId: user,
+		source: "trakt" as const,
+		...short,
+		items: [item],
+		watchDates: "unknown" as const,
+	}
+	const first = await imports.prepareImportTrackingPlan({
+		...input,
+		importId: "first",
+		now: Date.now() - 2000,
+	})
+	await imports.applyImportTrackingPlan(user, first)
+	await act({ type: "watchAgain" }, newId(), short)
+	const second = await imports.prepareImportTrackingPlan({
+		...input,
+		importId: "second",
+		now: Date.now() + 1,
+	})
+	await imports.applyImportTrackingPlan(user, second)
+	const completed = await getShowTracking(user, SHORT)
+	assert.equal(completed.state?.pass, 2)
+	assert.equal(completed.state?.state, "seen")
+	assert.equal(completed.log.filter((w) => w.pass === 2).length, 2)
+	await imports.undoImportTrackingPlan(user, second)
+	const restored = await getShowTracking(user, SHORT)
+	assert.equal(restored.state?.state, "watching")
+	assert.equal(restored.state?.pass, 2)
+	assert.equal(restored.log.length, 2)
+})
+
+for (const showStatus of ["watching", "on_hold", "dropped"] as const) {
+	test(`a source ${showStatus} cannot replace Seen produced by the same import's watches`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		const status = {
+			...nativeWatch("status", 1),
+			kind: "show_status" as const,
+			showStatus,
+		}
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "complete",
+			source: "trakt",
+			...short,
+			items: [nativeWatch("one", 1), nativeWatch("two", 2), status],
+			watchDates: "unknown",
+			now: Date.now(),
+		})
+		const applied = await imports.applyImportTrackingPlan(user, plan)
+		assert.equal((await getShowTracking(user, SHORT)).state?.state, "seen")
+		assert.deepEqual(applied.statusKeys, [])
+		await imports.undoImportTrackingPlan(user, plan)
+		assert.equal((await getShowTracking(user, SHORT)).state, null)
+	})
+}
+
+test("the first member tick after imported Watching dates activity and allows Undo of Unmark season", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "watching",
+		source: "trakt",
+		...show,
+		items: [
+			{
+				...nativeWatch("status", 1),
+				tmdbId: SHOW,
+				kind: "show_status",
+				showStatus: "watching",
+			},
+		],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	await act({ type: "markSeason", season: 1 }, "first-season")
+	const before = await getShowTracking(user, SHOW)
+	assert.equal(before.state?.state, "watching")
+	assert.ok((before.state?.state_changed_at ?? 0) > 0)
+	const { restore } = await unmark(1)
+	await act(restore, "restore-first-season")
+	assert.deepEqual(await getShowTracking(user, SHOW), before)
+})
+
+for (const scenario of ["normal", "interrupted", "later intention"] as const)
+	test(`Undo of a status-only import restores cleared intentions (${scenario})`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		for (const table of ["user_wishlist", "user_not_interested"])
+			db.seed(table, [
+				{
+					user_id: user,
+					tmdb_id: SHORT,
+					media_type: "show",
+					created_at: LONG_AGO,
+					updated_at: LONG_AGO,
+				},
+			])
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "drop",
+			source: "trakt",
+			...short,
+			items: [
+				{
+					...nativeWatch("status", 1),
+					kind: "show_status",
+					showStatus: "dropped",
+				},
+			],
+			watchDates: "unknown",
+			now: Date.now() - 1000,
+		})
+		await imports.applyImportTrackingPlan(user, plan)
+		if (scenario === "interrupted") {
+			let fail = true
+			db.before = ({ sql }) => {
+				if (fail && sql.startsWith("INSERT INTO user_not_interested")) {
+					fail = false
+					throw new Error("interrupted intention restore")
+				}
+			}
+			await assert.rejects(
+				imports.undoImportTrackingPlan(user, plan),
+				/interrupted intention restore/,
+			)
+			assert.equal((await getShowTracking(user, SHORT)).state?.state, "dropped")
+		}
+		if (scenario === "later intention")
+			db.seed("user_wishlist", [
+				{
+					user_id: user,
+					tmdb_id: SHORT,
+					media_type: "show",
+					created_at: LONG_AGO + 1000,
+					updated_at: LONG_AGO + 1000,
+				},
+			])
+		await imports.undoImportTrackingPlan(user, plan)
+		await imports.undoImportTrackingPlan(user, plan)
+		const watched = await act(
+			{ type: "watch", season: 1, number: 1 },
+			newId(),
+			short,
+		)
+		assert.deepEqual(watched.cleared, {
+			wantToSeeAddedAt: new Date(
+				LONG_AGO + (scenario === "later intention" ? 1000 : 0),
+			).toISOString(),
+			notInterested: true,
+		})
+	})
+
+for (const event of [
+	{ type: "rate", score: 8 },
+	{ type: "dismissRatePrompt" },
+	{ type: "answerSeenQuestion", answer: "just_rating" },
+] satisfies TrackingAction[]) {
+	test(`${event.type} keeps imported Watching undated without watches`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "undated-watching",
+			source: "trakt",
+			...short,
+			items: [
+				{
+					...nativeWatch("status", 1),
+					kind: "show_status",
+					showStatus: "watching",
+				},
+			],
+			watchDates: "unknown",
+			now: Date.now() - 1000,
+		})
+		await imports.applyImportTrackingPlan(user, plan)
+		const result = await act(event, undefined, short)
+		assert.equal(result.status, "applied")
+		const tracked = await getShowTracking(user, SHORT)
+		assert.equal(tracked.state?.state, "watching")
+		assert.equal(tracked.state?.state_changed_at, 0)
+		assert.deepEqual(tracked.log, [])
+		const entry = await entryOf(short)
+		assert.equal(entry?.watchingSince, null)
+		assert.equal(entry?.lastActivityAt, null)
+		if (event.type === "dismissRatePrompt")
+			assert.ok(tracked.state?.rate_prompt_dismissed_at)
+		if (event.type === "answerSeenQuestion")
+			assert.equal(tracked.state?.seen_question, "answered")
+		// A later watch-only import and its Undo retain the undated Watching choice.
+		const watches = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "later-watches",
+			source: "trakt",
+			...short,
+			items: [nativeWatch("one", 1), nativeWatch("two", 2)],
+			watchDates: "unknown",
+			now: Date.now(),
+		})
+		await imports.applyImportTrackingPlan(user, watches)
+		await imports.undoImportTrackingPlan(user, watches)
+		assert.deepEqual(await getShowTracking(user, SHORT), tracked)
+		// A state change still receives its own date even when no watch exists.
+		await act({ type: "hold" }, undefined, short)
+		const held = await getShowTracking(user, SHORT)
+		assert.equal(held.state?.state, "on_hold")
+		assert.ok((held.state?.state_changed_at ?? 0) > 0)
+		assert.deepEqual(held.log, [])
+	})
+}

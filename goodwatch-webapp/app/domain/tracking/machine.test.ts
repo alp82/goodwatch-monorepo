@@ -73,7 +73,7 @@ test("the table is well formed", () => {
 	assert.equal(new Set(TABLE.map((row) => row.id)).size, TABLE.length)
 	assert.deepEqual(
 		TABLE.map((row) => Number(row.id)).sort((a, b) => a - b),
-		Array.from({ length: 34 }, (_, index) => index + 1),
+		Array.from({ length: 39 }, (_, index) => index + 1),
 	)
 	for (const row of TABLE) {
 		assert.ok(row.from.length > 0, row.id)
@@ -1483,7 +1483,10 @@ test("no change of the catalog changes what is stored for a member", () => {
 	let changes = 0
 	for (let seed = 1; seed <= 400; seed++) {
 		const next = mulberry32(seed)
-		let world: World = { show: SHOWS[seed % SHOWS.length], record: newRecord() }
+		let world: World = {
+			show: SHOWS[seed % SHOWS.length],
+			record: newRecord(),
+		}
 		let made = 0
 		for (let round = 0; round < 6; round++) {
 			// The member acts a few times...
@@ -1520,7 +1523,10 @@ test("no change of the catalog changes what is stored for a member", () => {
 test("every event ends in a state the table names, and the record's invariants hold", () => {
 	for (let seed = 1; seed <= 400; seed++) {
 		const next = mulberry32(seed * 7)
-		let world: World = { show: SHOWS[seed % SHOWS.length], record: newRecord() }
+		let world: World = {
+			show: SHOWS[seed % SHOWS.length],
+			record: newRecord(),
+		}
 		// The last press that was taken back: its Undo can come at any later time, and is then taken or refused.
 		let back: TrackingEvent | null = null
 		for (let i = 0; i < 40; i++) {
@@ -1590,6 +1596,93 @@ test("every preset plays without a refused step", () => {
 			[],
 			preset.id,
 		)
+	}
+})
+
+test("an import can start Watching, put On hold or Drop a show without inventing watches", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	for (const status of ["watching", "on_hold", "dropped"] as const) {
+		const world = {
+			show: { running: true, episodes: [] },
+			record: { ...newRecord(), wantToSee: true },
+		}
+		const result = importShowStatus(world, status)
+		assert.equal(result.refused, null)
+		assert.equal(result.world.record.state, status)
+		assert.ok(result.row)
+		used.add(result.row.id)
+		assert.deepEqual(result.world.record.watches, [])
+		assert.equal(result.world.record.wantToSee, false)
+		assert.equal(
+			derive(result.world).hiddenFromRecommendations,
+			status === "dropped",
+		)
+	}
+})
+
+test("import statuses preserve On hold, Dropped and Seen decisions", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	for (const state of ["on_hold", "dropped", "seen"] as const) {
+		const world = {
+			show: { running: true, episodes: [] },
+			record: { ...newRecord(), state },
+		}
+		const result = importShowStatus(world, "watching")
+		assert.ok(result.refused)
+		assert.equal(result.world, world)
+	}
+})
+
+test("Completed requires whole-show evidence and uses only aired regular episodes with no standing Seen press", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	const world = {
+		show: {
+			running: true,
+			episodes: [
+				{ id: 1, season: 1, number: 1, aired: true },
+				{ id: 2, season: 1, number: 2, aired: false },
+				{ id: 3, season: 0, number: 1, aired: true },
+			],
+		},
+		record: newRecord(),
+	}
+	for (const scope of [undefined, "part"] as const) {
+		const result = importShowStatus(world, "completed", scope)
+		assert.ok(result.refused)
+		assert.equal(result.world, world)
+	}
+	const completed = importShowStatus(world, "completed", "show")
+	assert.equal(completed.refused, null)
+	assert.equal(completed.world.record.state, "watching")
+	assert.equal(completed.row?.id, "38")
+	used.add(completed.row.id)
+	assert.equal(completed.world.record.seenPress, null)
+	assert.deepEqual(
+		completed.world.record.watches.map((w) => [w.episodeId, w.origin]),
+		[[1, "import"]],
+	)
+})
+
+test("whole-show completion between seasons becomes Seen through the import table", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	for (const running of [true, false]) {
+		const result = importShowStatus(
+			{
+				show: {
+					running,
+					episodes: [
+						{ id: 1, season: 1, number: 1, aired: true },
+						{ id: 2, season: 2, number: 1, aired: false },
+					],
+				},
+				record: newRecord(),
+			},
+			"completed",
+			"show",
+		)
+		assert.equal(result.world.record.state, "seen")
+		assert.equal(result.row?.id, "39")
+		used.add(result.row.id)
 	}
 })
 

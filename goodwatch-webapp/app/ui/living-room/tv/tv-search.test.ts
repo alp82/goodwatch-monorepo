@@ -83,6 +83,13 @@ describe("what the search screen says", () => {
 			}),
 			"Search is busy right now. Try again in a moment.",
 		)
+		assert.equal(
+			searchEmptyLine({
+				waiting: false,
+				failed: "Too many searches right now. Try again in a moment.",
+			}),
+			"Too many searches right now. Try again in a moment.",
+		)
 	})
 
 	it("writes a found title's facts as mini Discover's list does", () => {
@@ -238,6 +245,23 @@ describe("the ranking's eligibility, as the Discover page sends it", () => {
 })
 
 describe("the answer's key, the Discover page's", () => {
+	it("shares Discover's full display-language key while keeping ranking eligibility independent", () => {
+		const filters = tvSearchFilters({ country: "DE", services: [337, 8] })
+		assert.deepEqual(tvSearchKey("heist", filters, "ja"), [
+			"discover-search",
+			`ja:heist|${searchFiltersKey(filters)}|0`,
+		])
+		assert.notDeepEqual(
+			tvSearchKey("heist", filters, "ja"),
+			tvSearchKey("heist", filters, "ar"),
+		)
+		assert.deepEqual(tvSearchBody("heist", filters), {
+			q: "heist",
+			filters,
+			allTitles: false,
+			discover: true,
+		})
+	})
 	it("is the key `useDiscoverSearch` keeps a search under, so the page behind Expand draws from it", () => {
 		for (const scope of [
 			null,

@@ -3,6 +3,9 @@ import datetime
 import os
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
+
+import gsc_sample
 
 from gsc_sample import (
     INDEX_COLUMNS,
@@ -175,6 +178,30 @@ class RecordFileTest(unittest.TestCase):
 class Failure(Exception):
     def __init__(self, status):
         self.response = type("Response", (), {"status_code": status})()
+
+
+class MainExitTest(unittest.TestCase):
+    def test_duplicate_date_has_distinct_exit_status_and_never_calls_api(self):
+        client = Mock()
+        with patch.dict("sys.modules", {"gsc": client}), patch("sys.argv", ["gsc_sample.py"]), \
+                patch.object(gsc_sample, "already_recorded", return_value=["index-record.csv"]), \
+                patch.object(gsc_sample, "append_rows") as append:
+            with self.assertRaises(SystemExit) as error:
+                gsc_sample.main()
+            self.assertEqual(error.exception.code, 3)
+            client.request.assert_not_called()
+            append.assert_not_called()
+
+    def test_api_failure_propagates_without_writing_records(self):
+        client = Mock()
+        client.SITE = "sc-domain:goodwatch.app"
+        client.request.side_effect = Failure(403)
+        with patch.dict("sys.modules", {"gsc": client}), patch("sys.argv", ["gsc_sample.py"]), \
+                patch.object(gsc_sample, "already_recorded", return_value=[]), \
+                patch.object(gsc_sample, "append_rows") as append:
+            with self.assertRaises(Failure):
+                gsc_sample.main()
+            append.assert_not_called()
 
 
 class RetryTest(unittest.TestCase):

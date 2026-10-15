@@ -1,0 +1,12 @@
+{
+  "summary": "Social matcher",
+  "description": "Production round-two chain: extraction -> retrieval -> identity rejection gate.",
+  "lock": "!inline f/social/matcher.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

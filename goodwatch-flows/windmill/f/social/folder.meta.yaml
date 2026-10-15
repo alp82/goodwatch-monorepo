@@ -1,0 +1,6 @@
+summary: Social discovery and title matching
+display_name: social
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

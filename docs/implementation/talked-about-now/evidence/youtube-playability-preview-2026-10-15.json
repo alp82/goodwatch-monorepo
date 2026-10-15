@@ -1,0 +1,1630 @@
+{
+  "apply": false,
+  "counts": {
+    "rss": {
+      "drop": 180,
+      "keep": 267
+    },
+    "bluesky": {
+      "drop": 133,
+      "keep": 4
+    },
+    "youtube": {
+      "drop": 82,
+      "keep": 0
+    },
+    "mastodon": {
+      "drop": 0,
+      "keep": 0
+    }
+  },
+  "judged": 666,
+  "reasons": {
+    "missing_metrics": 1,
+    "peripheral_title": 151,
+    "insufficient_reach": 124,
+    "no_editorial_angle": 33,
+    "generic_social_prompt": 2,
+    "countdown_or_activation": 2,
+    "fewer_than_12_own_words": 25,
+    "new_version_of_old_title": 2,
+    "routine_or_personal_news": 55,
+    "youtube_region_blocked_DE": 3,
+    "outside_publication_window": 10,
+    "social_revalidation_failed": 1,
+    "no_substantive_video_format": 43,
+    "archive_without_current_hook": 19,
+    "no_concrete_official_announcement": 3,
+    "youtube_playability_unknown:bot_or_login_required": 78
+  },
+  "version": "relevance-1",
+  "judged_at": "2026-10-15T19:21:19.698192+00:00",
+  "hydration_errors": [],
+  "narnia_decisions": [
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+      "reasons": [
+        "duplicate_of:1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f"
+      ],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"pDvjN6h-mRo\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "9a104d2d56206fcb02102a51478efbd3010d1b8f0edfaf3fef35a77db66ae221",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 3.41847653,
+      "status": "keep",
+      "post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+      "reasons": [],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+      "reasons": [
+        "duplicate_of:1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f"
+      ],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+      "reasons": [
+        "youtube_region_blocked_DE",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":false},\"method\":\"watch\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"O8hR2dQGv0k\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f044d3f2653d15bb9ed3a4f60aec0110e5e2e526ebc973e04c3170153911a648",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+      "reasons": [
+        "duplicate_of:1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f"
+      ],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "version": "relevance-1",
+      "dup_group": "95a22e066429c99327afd6d60a9884c2d4836bcc61ea6707ccf4d57efdfc4214",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "version": "relevance-1",
+      "dup_group": "5eb6836825de6dc07e1322c911269d9f12e2bba89d4a5b52ceb8933a391166c5",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"gDJ-ini7fF0\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "social",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "c20c4d2b69d1b04fe05da24a3f67fbc9ac41d429c62e55ad4894c03d800bde1d",
+      "reasons": [
+        "insufficient_reach",
+        "peripheral_title",
+        "metrics:{\"card_text\":\" \",\"followers\":172,\"likes\":1,\"observed_at\":\"2026-10-15T19:21:21.760006+00:00\",\"quotes\":0,\"replies\":1,\"reposts\":0}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "a108580612c0e00ae128b642b9b4f3d4fef57199b17958d7de39f55bf18b9d1e",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "0a68d4920e09caf2e86a6aedf71dfdde7611ebe060359f279238d21b03e1040b",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+      "reasons": [
+        "duplicate_of:1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f"
+      ],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "news",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+      "reasons": [
+        "duplicate_of:1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f"
+      ],
+      "version": "relevance-1",
+      "dup_group": "6151ed91f627968add6512bea57c7a6cd8132591abc2da7a07891690d43fcfa2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"3g28OdIj6cY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "610b8f9c7020476047259103b7e45ffa0b50339b4ffa89a1da8d03cb7db33b4b",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+      "media_tmdb_id": 1147572
+    }
+  ],
+  "youtube_decisions": [
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "ee36a9879b539d1c91f97c197a9a18c6ccbc48b2c8544b6986d5fe52e6a15967",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_region_blocked_DE",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":false},\"method\":\"watch\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"E0k1PXeJcNY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "febb1ad391c057ff9ce98567879af89e153a073fcdae59c7f91437649d99fcb1",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "26ead04ee91111dc3f46c87a106ba8d967b2d28dd40f1682ab40fa89848c57fa",
+      "media_tmdb_id": 597
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "4bdad0d62b325948ee71687946fb2dca2b1f4e5922bf4fddac61772ac34a1bd5",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"dT7r9i73hZk\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "751ad05b86a6f92691f3afaf3f574e95e403774413697eb635c55465fae514dd",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "9e4998014dcd8b649aa9ccf0189f81ec820a3bce34e740164d3a885619316f4b",
+      "media_tmdb_id": 9090
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "348046c36a4e44fe6f4b8f6293f3f95c489a53ab30c3b213049894bc4a10e856",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"wW-f4VLim9s\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "40f90bd6867f0cb7d793736664210d536a4d5039f85d3239c6e32bb671f3f9e4",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "7990e18555dcbdaeb27495aab29db532d20ccc27235673c1f3739200eca34332",
+      "media_tmdb_id": 9374
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "b537645e1543ae12766305da387c74bbffc34a9e80330cb808319210c256214e",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"vwAB8fD8l9A\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "73d787fdd9696973065b66f1ccd00b183db79fb7e7d3e818f949c3211b78d3b0",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "6b088d44ccb52debd27c0dce718db81bf3c6581f9d22aee2ad6d6138683603b8",
+      "media_tmdb_id": 10588
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "0ac02c88832bf0a66fa8342316e8aae2c0297a6dba96f287030949a63c14feed",
+      "reasons": [
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"EZjgEtkWPZM\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f3653da4046b821ec1a321ab3ff4a1607f9222c979e9c6b17bd16ae9a028d239",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "4fa43d7b384eef2f8d159d209e6b3c500a06ce7e37e23b683a32fe37451774e5",
+      "media_tmdb_id": 111083
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "00fec9f3b51ea452fd9ab8602f3979d033a638a8470dddf9f73323e64a76490b",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"Hp_H02XXj10\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "78cfbc6242883d96b4f71f2a430400f0f88983507de9422bb5ab7d29186e82a5",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "78a8e0075affaf01dc8d88fb1032c7b9b63af2344d8059e6ad2c4daf82ecb1ac",
+      "media_tmdb_id": 132232
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "5a52eb843da7ce09029a8a3bda537976e69fad38adc6e9e958fd19f103c0267c",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"CMadgXV-TzI\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "2b233be37ddeced4c0d8874a27534907405e201c68efd8ab35fdbc51bcaf1a9d",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "9451fc1d09f2c727e74c33aaf3d0050069fe8b8a2e584723c93ef23bd33d5369",
+      "media_tmdb_id": 132232
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "69831c0e515e7bc2ec2305a812d2c5884e13f77507d2534520308165b92719a2",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"_LAZ6ixjuGA\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "dd2e4b688837e52fba4199c828a8df2d05b63a342920d61833900c7f028fc582",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "3f990dcb1451764d944252e95c55ae235797840eb307fd2bd3791d70ec16c92d",
+      "media_tmdb_id": 136799
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "16d5679320cb589a617390cb4d50eab938d9aeae6e9ffd9fa6fb00cb09592603",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"prvcur6wQhE\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "dbd3399132ec1071d515fda4e1d091f0ff3001b7faa84edef68c37de96b53e55",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "7af0f8bd4c05cce06b81b521e2816853f4a29e354e6103ad9f87660fff60a84b",
+      "media_tmdb_id": 315162
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "f00f934ab7d44c83d4278d7065e5c0008691733aeba9ea335608bbf3d5bb8242",
+      "reasons": [
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"EWsWeaDVP8c\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "81686ca57479c9758a730016e3b308e42b3a71c82782a26487aea686bb6d6b40",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "612f15ad7b4366eecee6ada7c1954a4bebc4ebe0d2228ad8decdf270e72b357a",
+      "media_tmdb_id": 315635
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "d484d230aaee11f16d272a027ef92209510b950606649f1c8654a4617e4a99c8",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"H0Zbjd140oY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f8b1892eb4e89b4047ef80785724f4d709c5411dcaacc24682a105300ca03193",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "ee7ffb10e04e2867d8d0771cb147762d29051b54fc3f0ce7aad6024798b61f9a",
+      "media_tmdb_id": 360814
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "46dbd8ff9dd32a8c53bbd0d4b7afdc1e12125c19ba5ac760fe675218ea98c9c2",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"eDoCI0WWJfU\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "20689da5b5889efc12e0079b286941cad28d392a14e8358f88d8ed6a733f96d9",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "ee22b61bdae5a1f874c19425941cb2ac70871d88d5a625527dfc8d77b6c60b41",
+      "media_tmdb_id": 419430
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "315d46d9b8775bf8c509101f15038eb7d288cefde4a335874bbc67f48c8aaea4",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"bijB8klh9KQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "7cdc4f0aec953cf5728a77c9ea5d71256d84c0d6583ccbea5bbaac6ea22c91a0",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "19c56d5626d9fa7df0454ceb3ae80b3b3cc83da72aeaf6be6a5878130fc8ad16",
+      "media_tmdb_id": 425909
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "954ed1371dee55ab1e9b62ef5ccd79ee3de10212275dbaa2f33eb795bc07fca2",
+      "reasons": [
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"wl7uj7n7DoY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "88ab924344cebdbb16a167aadfc7650a588419b4a9fc3a87165c26a86f850dba",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "dd569d87121dd7ef886012dd5348cce9b71568c06cfb4bb9dcf04b241e620450",
+      "media_tmdb_id": 550148
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "0f2b463ac7f68e4e2230249442c1fcf6d5093f37c3967d2b475ec597296a319e",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"t11ls8FFo9A\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "72c888307abc227d249a00f34bace4c65003348f8decbba965bf5a93e15e0709",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "15d92def0d7a41aa63643d6e854fb07d2612554abaa502cbeaed89e9338741f9",
+      "media_tmdb_id": 570670
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "8aecca7df9f133079ad80cbd540aa19e0426c6b3fec4a222f9ec1b6cb56aa278",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"I3wy0uxmHEc\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "99c820b6a1c0762b4247bdc018ec090589d7323dcf9f28df801adef743e77929",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "27f989df60f257aa11c914023c99ca583a3ee37ab640fb1a218d5beca2673f2d",
+      "media_tmdb_id": 570670
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "2c15828a4a8bc024a720ef5143f18816d89cc5906a8df5f588080eaa8f6bc127",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"AYkPRN874m8\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f4c689617d959f4b76b02a4e2baef7f908d422d864bf022a9a7fb5c1c9ba0071",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "6e61b9ae8e76b45084981c2d1a14cc29fa3660c0779ae6ca8ba5c3aee605b011",
+      "media_tmdb_id": 656908
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "6bb3be1539967647ad3b52292998046fc8365221c26cf7e63d7d88b2972dcb10",
+      "reasons": [
+        "countdown_or_activation",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"I6WuD0p7XVU\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "38ee5e74cfe7942b193bebff0bb1d6263a7a90944e266f384176624ca426ffb8",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "1dbc0b868f9f029337fa20ca914f68b5572039a8a5ad76392d45990cdde77d0e",
+      "media_tmdb_id": 656908
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "7c6fed63fdcdded6ff3fbe25ae0e29a3788ea36fea3bdf60036edb6e59c09cc6",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"CPzqXzpH-p8\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "34856dfb7e51f94b55aed3ca124f66406c57fdd1fdfa9993e85147773ca6e433",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "909b6212dc955cf1f4638270cf44878e031b1055cd615c3e6e4d43270b88e0b3",
+      "media_tmdb_id": 969681
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "6b6c2923f4d1c9c6a49a5047758d5da613bf2a5c7e39ac4ff85513d57130355e",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"AbBbmzKrsgQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "cb0b46368c8736cb90db400da4ea2706574dcd809b95ac418f470e9e0f385d30",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "6a09c31d43cdf86108459fd1c5c8cb88dc39b6ed0daf516aebf02597e7d16b62",
+      "media_tmdb_id": 1117898
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "a1ce3e6911546c9e647a37fd8077ea48894f01bd5fa4d8c1d1a6c583fb60d2d4",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"DR0qJLWneUA\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "b1c5db87343499cf33ab89b43cf9bef73913c98ec2d25da0b5f8628b8fa6e52a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "21340b8fb651124043151b5646e964bfe0941627b71e82b859172f36afc9c670",
+      "media_tmdb_id": 1117898
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "bb0d6fcb45b10fb203cbf897d78e3c1f5dc5b79dc06d133a12828bc9b2131093",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"1Dz590tdmhY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "dcbe1a4ad426ec6fdc85d6c611bdb088c487aeb3e903b40fb2cc7bafa3a6605b",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "5860e5da5a530c6a7c5ee1382a76757a9f10493fb9c231aa174ffe099718ceea",
+      "media_tmdb_id": 1117898
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "db17642d10ceb6fbd8047fef472e6f23c81bf3123e6d65949f05627c067e99f4",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"RO4ndLFfD5k\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "5d723d8ef0cf702579dcd954f71ad2b9d4124ac2e1010c3df00038518ac62413",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "244161399d49b24e96e8cca1f60774deafb5668bf00765ef3eb44f7023aa9a4b",
+      "media_tmdb_id": 1117898
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"pDvjN6h-mRo\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "9a104d2d56206fcb02102a51478efbd3010d1b8f0edfaf3fef35a77db66ae221",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+      "reasons": [
+        "youtube_region_blocked_DE",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":false},\"method\":\"watch\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"O8hR2dQGv0k\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f044d3f2653d15bb9ed3a4f60aec0110e5e2e526ebc973e04c3170153911a648",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"gDJ-ini7fF0\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"3g28OdIj6cY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "610b8f9c7020476047259103b7e45ffa0b50339b4ffa89a1da8d03cb7db33b4b",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+      "media_tmdb_id": 1147572
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "6bb6b2034a1e0a6e000fbd1488128fe5ef21b1a8824e31e985b44c1d92bbba78",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"DrrXehRcgYw\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "95a1b6f0301ec1136ee47a05b267b19024f471af31c170fa8f1f687140aac038",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "5a779d66a8700c21181ccf0b09cd4bca74701df31372b64b75e05b22568c63d9",
+      "media_tmdb_id": 1248832
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "dbf296e8b029cba385663da450aee96f2b906a3e5cd1bea4782bf0219accc12b",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"wXXTfAnAH_E\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "c5f4785aa70e6a0e34967b443a39b399b93520e6f0166dfea77b2c80f40b8df5",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "34ccfad9e576d4a6fcd8ed6d92aafd29ae2377f64b6f6b405d0882bb9827c56f",
+      "media_tmdb_id": 1248832
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "5eda6388859c881ddebcf67be2375551e297228800f25996a17e4bea3c85244d",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_region_blocked_DE",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":true},\"method\":\"watch\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"KmzCZdpjWRk\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "632eb5dc086ad33ffff01efdb3bc7ac518860ac0c09c4e866fa3c9e04ec79acb",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "c2ab77ab2c6baacf23606c7fc6fbbd6592b6319a29c6f1c9cc1825af95a5296f",
+      "media_tmdb_id": 1284186
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "eec29df5e7d6bdd84b503b7f77d7c6f88ecc83b60975e8e15e4d5e30c41f77d9",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"MRuKWpb1h8Q\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "4c8003f1f9595418b5e49008ee799abb87ec2dfd2d0d0f11a4d3cfa49cf00687",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "c39069ad3f853bfa2f28aed62f9eff57b04cb555da49132a9521b3a8cc385bf0",
+      "media_tmdb_id": 1284186
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "5d6b09bb6f2eea678d9297bb3e94bc07bedf0d8364e093fa4bb61c3cc98692c3",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"iIEYfH-jg1Y\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "10563da9f31df9e80fb239cda421ba9f9f2f23ce47420a641ca091f9a2e2926f",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "50634abbae4131becc50d62b3202cbd5418ee7d110cc48d8fdb7bf6eac9ac8e9",
+      "media_tmdb_id": 1297467
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "6ccf14bede491422b8da5f2fe404c7a9b43c815b2ac62b666d86f80cb1e37ef2",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"5ljbXRW2OgI\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "ee4ff0d7ab15a3519d62cbbd8ca8bf28c2a101acae75196c4ad03f4003bafdce",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "56d029a83926e3b195375c5fe8e527f9802dcf45cee35e16b1621228521cddda",
+      "media_tmdb_id": 1375441
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "b7fb85aa160066181b38e26d2dcaf008278eca91a82c77bc4b8ea4b4710cc66a",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"kVOLubAG9-A\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "e03197b8f56ca7a7cb6b44c4456432540625e035ea0b2ac5a504146125365387",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "f714abfa5c50a5ab6ba11634a061d39bcfb8d3c008a581b967dd29eee3eae592",
+      "media_tmdb_id": 1375441
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "fddb21e308486cebad9fc6d0c7ed410d8667408b01616130bdeb254e9a4f8433",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"MDVbMWKY3pw\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "ca41b1986afe1e7b32bdc807f49c9f97e6bf6f16cf0ba56f14e3a334e9390a83",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "651fe4f464245ed8b266d4b7813941fce1653be868a5a7ad80f484e867338bdd",
+      "media_tmdb_id": 1375441
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "cc33484a3e10b762ccdbb2d8e0c1948ab992d85fb4c98700bf02d96b88fa5dab",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"mkJVHTBuv9Y\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "3103d27b6d04ba2820bae971721851f1b527a09e5e0fcae6733a5bbb5a4101a1",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "29bfab287a4a724412992bd0b99c97a445db7b35d3d2b0bfa668dfdcabe4e19f",
+      "media_tmdb_id": 1381221
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "312557c1944303bb78e03554c40076aba49d48a2c822b9adeeae15ae28090207",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"cT4PltL58Ts\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "bc15f71a9188856d608c2cf56a017545a0883d47935af890683ec978ac0a54cd",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "5b74bc02a365105054a3dfbcd84070a568865388cac4c82e6ac94398289a23d0",
+      "media_tmdb_id": 1400837
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "7bf51cb35f255002507fca275c9a38d50bb5bd22886d41aff8c4174254976a25",
+      "reasons": [
+        "no_substantive_video_format",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"idkLYLw284Y\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "72efa354a804c416dc09ebdaff7e8a299ff008b48160c32f60072523afa3798d",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "2eb6d62f8ce9c714953d693477af389fd4c1237eb43fee4822e30c6f6ca7c880",
+      "media_tmdb_id": 1400837
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "0524b037ef87faf2b93326409115a98e8dbf61eadabef50bcbcce93f0c0372ce",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"gk_yGpCGrk4\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "64034dfcf6d41a4cf078bd627ceaea7bfd9bb583154538f61d794560cee2b0f4",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "a4a366b119c81655cfb9766c7c86aac7539420fefda0e81ee71284e65015028b",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "09599d286b88ad91f61fd1322954ec6918cecf69dacf576996c062aff092a1d7",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"SWBRai4YgqE\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "603d2aa2b40b217d66e230d5ddc60868663da2f1fdbefbc7d78c483ea6a0b483",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "469343e0ca1687299fd56317d606380ea1493c12461d2b9115a9abee379ec91f",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "10e35fe782178dba889344890c8f6e836669d4103cbcf6aa746cd55c774eb2c0",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"L6hnv8H2ndc\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "36375e1a0b1ca556002d03efa0be5e471edae4ec1b3841f9de93342dc0f0bf46",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "01b3b4a2bf756e096ef1bf5007496dbe247e7151218598462cf89769ea9142df",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "868be367a83ba0ff94a170ac47e9e2293aaab2975c1b40bfea4d080fffa4d817",
+      "reasons": [
+        "countdown_or_activation",
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"t_AoBO2wGDE\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "32be50e563ece171dd666735552a79174497ef85411f14ded2b1deb6b4dbd14c",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "b739935470629fed7ff24fabce80b68a4dd5c1a6a70a1278a867a1fba8378bd3",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "92b67254c3cce24dd16f0b893bbef33fe0e00e11b680f3d3583e9511f3aad5e2",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"sEkH64NFfbY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "2292e752e13a0bbc1e9e9cc22e9d2564840951c64285b398181d7f1970c21884",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "761da9ba4ea398788b89e74779379fa1dbb274c1d431b605c17043f662ffb75c",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "ba93f11e30cc5b1a1a20d07ba5e82c6b41721104a98754a52680b385fa498b1f",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"uuCOw-TxATg\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "78a23e0796f4b71bb934f33731cbae7bc3ee66fee36f43b30b6c1853e73c0c61",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "103891bfbb4203bf7b017f67b11803536afc0d9ff5d2bd50bc4ed5595313f554",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "e3d85792c283a8c1ae796fe0be08052e4bba52c622ddbd58ee4fb2a5800dc354",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"LSga_I4hroo\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "49e93108aaf03d0cbd69946c2ecc61bc38e244d89d0f0d47b057b0fb77c80fae",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "e2bf8a7f14d7f19703d3255ede3d4d36a83eba627600545f7f404b3bcf2bcb86",
+      "media_tmdb_id": 1400940
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "fc6b7a110cc7d0a051d58e8bec16a9b4de3b5c2e8158439280bf7c317e047f12",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"CfT9GNAlS_E\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "a80b9301c81e984b0ce50f7fa9848e43faf69d444cd8db9e69e144c36974950a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "e51fa81b3a2589022b70518aec9099e7e2dbd3e5feaa15bc8fa5cce1fcd23405",
+      "media_tmdb_id": 1407432
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "cd89029b5e04de7d64d5a66757ea3a015fd299a8f30434bf571b6b55bae2dd17",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"PWN3UW3dmYI\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "d28ac1886b9e9671b3484164dc42ddda708d8a8be7d248fe5793c0259f1f7c71",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "eaa9aa92789f5d9b6dca7d15184a067568cba9d470bf64c3136aa3612e7216c7",
+      "media_tmdb_id": 1423191
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "fa9bc2da88e5e090c672afcda2520f233678ad0835c4c1176bb7d0b1df2ff00f",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"QAr5OVldf7k\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "0f2a6f401cee73ee87bae5f20d9548ec3c86a9d34ab0a4dc6710f6f4c75727e2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "7c423bf0dacbb264f4923b4b49b656cd7f56bc5f774edc9b473737b0ebadd11c",
+      "media_tmdb_id": 1423191
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "682e33de1f29ca84cedf3a7660de703f70d12091fe81ede3067050896a983271",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"CPFkLjHfKoc\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "67c97f192bd9a72cad7166a5b4dd108bc6584631d096799591e24c9de9846703",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "0eb1d31eeb66aa946e93f121372773a32fd1a6a82396a0b7594dce7bb0c851b1",
+      "media_tmdb_id": 1458300
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "98012953ad9ace4b50158f79b476280792694a8577c3d791d19ac5cad952975f",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"rFMyHeRy3i4\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "e459604ae291e7bd64bccbbffb2bea69acc13635b3c3ad92b8d972223d2c9a60",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "171a9609524ce5ea499d106d01eed4aadc527211e6929962f55eb21c4e5db024",
+      "media_tmdb_id": 1458300
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "f6365390276cb3baa6503279f49843fe8f62b6eff335726f2631a42a3724d894",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"vsXs3Km6UDw\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "580aced2d4eefa418cbcdeb1ddeb987b1656612c468528deef42e4d2aa79154e",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "3b1dc9fced0707f128335a6cabf1621975420416f7f6eca93ab62c3cb9d71e44",
+      "media_tmdb_id": 1506401
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "58f681bf4c2e1ede35624532f3c02c32b9c76797c42e91dd27ad5fe531c35bd8",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"ox8lEnsxDag\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "4e77ebb30db374fbebec2d05f36d2d537abb592aeaad73aaae4cdcd5365f6b0a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "673ef98bf8f1afbc07c86715f9448831ffc04a4bfdbfa8d67f49dc76c90abd65",
+      "media_tmdb_id": 1520592
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "52bb384caf4d4e009c37f24d12790d7767c6a92430dc711a70a645c30426fe56",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"H9KZ8dIJHCI\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "ba88d995418ad642f19827d56715b4d08569e417d3b5583550313cff009dfa56",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "f5234b4640d51680cf31c5d3bc2c35aaf6f9a37bb56cc7d8fbf8fd02b76f2b59",
+      "media_tmdb_id": 1525072
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "7d05f64ff869b9ce9871de84331c6bf64ab386a61727b8f23ad0dc2392063f93",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"ZmjWHS6o5t0\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "d13519336fd5723d55213dcadb3819b2b4166ea9becf06100fdff1625a3aa3e1",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "5828d469bf88989949714fd319ae7f55b561304618cbace20d47efb7d4ce3140",
+      "media_tmdb_id": 1525072
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "c92b30e9110f3258cb44a8c0308d7d64be80f3ef375933f4e203576d41e29680",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"jfUUKdYd6js\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "c4d8f701e274e61af90970e39951cc2540ffa9d0da43811cad1ba5585fd8c5ab",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "501f0526e13333d2fa6367250112236b327ff2a79902b1ce8d183cf1c905921b",
+      "media_tmdb_id": 1544847
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "40a0783f67b6f93b887a2fc7253773d3d6d8d6226375312eda75e6793290d0e0",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"mFvtVPMa5ak\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "70964df4471a16bcafe75b4d533e5f8535d0ef769b2c149cf4e790851521f3df",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "29f94c0164f19db173dd95a49ce1d608c67063a4acd6d749e69b5ac90a88ccf7",
+      "media_tmdb_id": 1551025
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "4b7f791c55937e29e631a9496821aee796c4f0f52af38531b95908318f30e9bf",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"UKaWzMf9Ybc\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "c9b33087638be5ada668474470e0185d1fd8509b7a913bccc2ae32ef44d57d02",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "6e9c70735af2a518f83f1dcffd50bcaeaa7217c0b164d59fefbf272224a75198",
+      "media_tmdb_id": 1562642
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "8a2ed56c786f6a08d0a30a5511d9198367c61e8a5119928f2cb1d75cc447f742",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"5l-5favSmfQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "d02baceebbaacdc27d4ffda9ccbeaf8253821d40e526522fb56883e445ab1f48",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "97fff6e380b81721873c5e107bbff8eadc0e2a84aacd0346590b5fabb0a4754f",
+      "media_tmdb_id": 1570488
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "cf3592f182d885e3b42a0cbd163719869cd9cea2efd30bc664f6a8854fdbffd6",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"L18ih13Bf-U\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "60ea5dbdb8bed1d7d3f881d39b0c700c90c69247246c0190db488dfce57901c0",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "f20ce53dce455b4242c4591945fb948804b1c0a96ce3f52ab1e1eaadd1fc8d03",
+      "media_tmdb_id": 1570488
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "163c4545b262653219ba371fb0cb90881570ece476801818d126651ad7d30eae",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"5f1H5Rk9l4o\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "8e0decdadde98b62ac1ff66e8c2de5d47ddfbdeca5c89bcab35216218e631a7a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "8806fdc5d13861a229df7334c5c3a8db1fb10cb096a47d3e50003ceb73d350f5",
+      "media_tmdb_id": 1588626
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "5e4bff894eb84bf8ed05ecf5909e690e0bfb666446ec3c70f1fdc4d769496220",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"pgXUkeU1BS8\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "d2eb251293629f6e2c3172dadf0bcca27fab1fc0e213797a0dd32b2fa8bb073b",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "9d9dc026f21ffc7f560852c04f2260f52a24115bc05099198f75af2f54393775",
+      "media_tmdb_id": 1596285
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "f9daa969edf2d4cba2b20ac40fe193f94e2d84dc5ac3c00a6b02044747b547a9",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"0mATG9k_1cQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "fcf37ea6530ea37903ee0ea519d7faf69ae3025e3e2dc351c48beb9fa5bffac2",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "97d5b9e02df79f96e0b55f01a5f2541311de79787fa1682fbdf0e2666877cf71",
+      "media_tmdb_id": 1685882
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "0c2128205c717ba640348272338c89e56f72ac7332ebd2cc27c877a2893fb612",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"wl4mqPQCBnU\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "aea9a7432a9c29f706201789872eb431579254efa616b1786e3f476009a26a1e",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "cee2e5d91ee4a8a6bcfe09a58544f5a2c1eb812d3c7d34b11ed246722f21a405",
+      "media_tmdb_id": 1686999
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "273a5dfb9a4facb863212d104451e33cbe50a96bfea32214687f10d435edc7b9",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"dBxrOZsMsrI\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "59877753bc87f6d5c9b86a3711c87d7e361daf9e18378aa0e5ffae34b717689c",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "52876220eeaa1c1cdeed9a9ce832d2eb983a1ffe28623c218c6f175ec612bf1b",
+      "media_tmdb_id": 1757174
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "4fcb547952c51012af26ae5e83044ca89cfea0bef54f8b6a66c8307d8950f6b0",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"yjMLk6F-ZLA\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "1ec9f12421831d642b003a0b4dc09438e737f6cd39c919cba45b787a0e3eca3a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "25253f23772ce7b0660d17cca85d1af396594ae0a8bbbde723229d44dbcecc1e",
+      "media_tmdb_id": 1760576
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "e88b8f07812e6b88e1e52458bce01273b03011856fb0c25f04594ebda3c9142d",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"-G8FapnfXPs\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "0124fd0bfa412bd72cec3be3592cbe6ce85dec9f8f3935fd517284dce4a4a175",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "e14d5f849c63700b57a0d20f292754d0be993f000c4a8aab909ddc82a046c594",
+      "media_tmdb_id": 1784360
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "589c3fe91ca4f1e986641a2c4d842f4eb4836b94794f0e6386e0fc7322e4b9e0",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"G2bQHdPU0r0\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "85d1896c485e24003e9a81f3644e72abef5ec664de5529d27f837a875eeecc43",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "d484ca8100d21991b94f3215bb7c153580c4990879b65ee0e5e9fb441c3cf284",
+      "media_tmdb_id": 1792739
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "c1d866a481528e3e10cb2f53ce552ed86b0c678f48f4257cc313686544469320",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"r0H-oWUFJbk\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "e099bc0d38520e85b94fff09fdf1c9c7264563c2f927fd0c264af1cc5967712a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "movie",
+      "content_hash": "0094bceb3022681a9a9f40ae20d756e4281e3157a392df60532809ae6d3e6d3c",
+      "media_tmdb_id": 1795934
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "01bb9105b20625c88cc59adf88ca6fa99a96c9b3d43cf5cebd71e8a9c4f08473",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"DK__Vktf_ng\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "c102ba90345412ac69e00dbbb8a0b3812857611fd2662793032a76ad07cba097",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "1662e012f5ac1e1969470148af52b43e211e1eefc0c061d6b14dc4c92303b36b",
+      "media_tmdb_id": 99353
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "1bda031b2d309a0075b6cec26751235e93748f3de5916e4c08238ecd8b612d5a",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"Ki-iCi_6UTg\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "dbae5654b41666d54828d1bce31756f1500cd1ae57dec26bb40217d67b61fb77",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "f468091cab878589605b32466297b22e082da452f4524255c2ae389226db0682",
+      "media_tmdb_id": 103540
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "25b86bea3ece81e1cdc636f0d8d1530ce96d7522b9d55964fbfc669641ea0835",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"4S0CR75nLxw\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "86eeb2a9264921ab37fe935ad52a1ed595db2c95d7a2202e087a83c02e0d79c0",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "bd0994ee56e7bfd79e6b9f93b962876a4104346baba6542c033355ac15836528",
+      "media_tmdb_id": 114461
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "9895bb07fff4be4f9d09f14fe6c1c843f8d139ad5473aecdd96c61bcef063fc4",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"jCUWuGdBNvU\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "2deeed281eb2212c9e90cfca7e172ad6754eb80f76740aabea110d66303b97ff",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "64895ad60debb4928616d18cdee5e48e47d22c387a3b1d676c70cb3cf0fcbd1a",
+      "media_tmdb_id": 247769
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "acc690fddecb26cac54efbf2c5de7bf6217f40f2533498498f40a474170346c1",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"BMp0uLX_0sQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "011a3077ebe41afbccc73022220edced43b7673900a4c92c6667583f462762a9",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "2842d7572f8f752bbb5e07a5af6ecbd8d8ab6d414dcb3a53439dd457dd70c0ba",
+      "media_tmdb_id": 247769
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "eb5db5e11997edb474ce326fd7c9dd0b05a92987604a388bf9b4aea60a4b2f2f",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"aqGYA4OxTLY\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "fcfd7b1efb93f33ed608ca9773c495819d6292a6809494f0173f5787b48298e0",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "280a1a2a36f61b75e9ba0e14128410d1007e859b7339c1d49c765d72d4607a75",
+      "media_tmdb_id": 286183
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "780fcc5e8681babe6f797190eaaf5c0ed0ba3163efc417cb4306e62701859c46",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"3mzvhpHuv_8\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "0446cba43273b2f23997accebb7f009731cd2582df0b8297591f7979fa96d532",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "2f79427d707b6bc8a58ee6e6d10dc26b290ae441ec701726addcc498dc9335d1",
+      "media_tmdb_id": 293607
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "b5e7fe3818f9e93a84714da5b50c4fd3c70773896246f703ca2302d197fdab08",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"AmKx3oP2nBA\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "1e51bf770cc94dc55183921d6cf69ef35563acec1b4714ef81a64c597c9d5631",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "b39cd4d3676188d72fc63c3ef4dfed215f7721ebda270dbf12a4a27d4b325029",
+      "media_tmdb_id": 293610
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "56c5b3eafe7b4a88f63ac914b19d893ef19a25c4f8b8bf4596a8e78417976356",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"4WZO9lHgiI4\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "f0cd761761e7fef68dddcd656d3becc46f08b02139cded23b854592e98cea97a",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "454be8280c2ea2e7e8ff2bbbf2ae0f629f34378526b04ead5294d7aae346196c",
+      "media_tmdb_id": 298505
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "cc6a24c7cb82266155116ad185fc2613bff8d0da7e36b68911b2281eb79afff5",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"MCGTWRen488\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "127f1d5dfd749cad3be2f778bb8e5618d53d01400177fc6c0ee5672aeed94eda",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "3fa347b72e5d2325da8ecbc380176915a08c4230c365526ad79ba10b2d9da20a",
+      "media_tmdb_id": 312359
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "d52b425b468a003f15981920e793da4653732624f81ecc4094ca57915707fa1c",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"SO4CU9P8--8\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "b12e925a632c136e7ebb9c7a920e3ff4c5f252106915d07a48ba7158db4a5cc5",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "45d6697e8ecbac45207bdc3f3cc17b5c3ca80cd03bfb0faf1bb19f602596abfa",
+      "media_tmdb_id": 321221
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "4f2606813cc3c8e1bd89a74dc7fa1d5494368f8c31540e5df49cb8181dab32f1",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"urV5GzXcXsQ\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "84c6a5352342b597a2ea24fdac693f485bbbc22edb4e234006b47db4d59f7be8",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "af315e84b1ad4cc65cd394e340b4448e3c73d45753c1f3bc7328c50efca1dbe4",
+      "media_tmdb_id": 326788
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "013005ab5d54751ca7ef6e5da982d6acd695fb4b2e44771e3d453e57a25ce3a5",
+      "reasons": [
+        "no_substantive_video_format",
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"7vuLDgOPatw\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "0fde5c1ecd06659b6b7e9f7bac117731bb5b0ff601198021a82dbc14d93c480e",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "b13207a656fc719d19352d46b27dbca2115e403fc819c69d1c24ad5207d87996",
+      "media_tmdb_id": 337367
+    },
+    {
+      "kind": "official_video",
+      "score": 0.0,
+      "status": "drop",
+      "post_id": "75c8eea193e3949dd4a64ce4a4ee6014b3f090c2594297c8c9c0580bb57c6d11",
+      "reasons": [
+        "youtube_playability_unknown:bot_or_login_required",
+        "playability:{\"checked_at\":\"2026-10-15T19:21:19.698192+00:00\",\"countries\":{\"DE\":null,\"GB\":null,\"US\":null},\"method\":\"watch\",\"reason\":\"bot_or_login_required\",\"status\":\"unknown\",\"video_id\":\"2CbtUlW4Smk\"}"
+      ],
+      "version": "relevance-1",
+      "dup_group": "464e5137fe694fb3d6607c4fb39169a51abc189f2f00ffe2419f0ab9207cbf8b",
+      "judged_at": "2026-10-15T19:21:19.698192+00:00",
+      "media_type": "tv",
+      "content_hash": "e675b553d5e8bf8cdc49569dde83d09c6dcaa56a96ded4c4405dd62a7e0b90c9",
+      "media_tmdb_id": 337806
+    }
+  ],
+  "youtube_playability": {
+    "cached": 0,
+    "checked": 82,
+    "statuses": {
+      "blocked": 3,
+      "unknown": 78,
+      "playable": 1
+    }
+  }
+}

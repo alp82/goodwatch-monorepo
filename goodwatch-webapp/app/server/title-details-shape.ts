@@ -250,9 +250,10 @@ export function trimTitleDetails(
 				mediaType,
 				details,
 				seasons: (raw.seasons ?? []).map(
-					({ season_number, episode_count }) => ({
+					({ season_number, episode_count, tmdb_id, name, overview }) => ({
 						season_number,
 						episode_count,
+						...(tmdb_id ? { tmdb_id, name, overview } : {}),
 					}),
 				),
 			}

@@ -306,3 +306,21 @@ tabs updating each other, the statechart's legibility on a phone by a person (it
 Screenshots in this folder, `-desktop` (1280) and `-phone` (390): `top`, `statechart`, `show-and-world`, `table`,
 `full-page`, `seen-pressed-again`, `world-seen-new-episodes`, `m1-caught-up`, `m6-stays-seen`, `m6-returns-by-itself`,
 `rated-never-started-question`, `rate-prompt`, `rewatch-pass-2`, `no-episode-list`, `decisions`, `hub-machine-items`.
+
+## Shipped import transitions (#645)
+
+The shipped specification is `goodwatch-webapp/app/domain/tracking/machine.ts`. Its import-only events are
+not member actions or menu buttons. They follow imported watches, so a show those watches finish is already Seen
+and refuses a conflicting source status. On hold, Dropped and Seen are protected.
+
+| Row | From | Import event | When | To |
+| --- | --- | --- | --- | --- |
+| 35 | Not started, Watching | Watching | Always | Watching, without invented watches |
+| 36 | Not started, Watching | On hold | Always | On hold, without invented watches |
+| 37 | Not started, Watching | Dropped | Always | Dropped, without invented watches |
+| 38 | Not started, Watching | Whole-show Completed | A started regular season still has unaired episodes | Watching |
+| 39 | Not started, Watching | Whole-show Completed | No started regular season has unaired episodes | Seen |
+
+Rows 38–39 mark only missing aired regular episodes, with unknown dates and import ownership. They leave no standing
+Seen press. A wholly future season does not count as still airing. No catalog change triggers a stored transition.
+The shipped “every row walked” test includes all five import rows.

@@ -8,6 +8,8 @@
     "goodwatch-webapp/app/server/command-palette.server.ts",
     "goodwatch-webapp/app/server/search.server.ts",
     "goodwatch-webapp/app/server/role.server.ts",
+    "goodwatch-webapp/app/server/site-origin.server.ts",
+    "goodwatch-webapp/app/server/rate-limit.server.ts",
     "goodwatch-webapp/app/server/lifecycle.server.ts",
     "goodwatch-webapp/app/routes/api.combined-search.ts",
     "goodwatch-webapp/app/routes/api.command-palette.ts",
@@ -22,6 +24,8 @@
   "guards": {
     "goodwatch-webapp/app/server/search-ranking": "The query encoder, the search index, and the ranking.",
     "goodwatch-webapp/app/server/search.server.ts": "The TMDB title search that the command palette answers from while the index loads.",
+    "goodwatch-webapp/app/server/site-origin.server.ts": "Which requests the search route answers: only the site's own pages.",
+    "goodwatch-webapp/app/server/rate-limit.server.ts": "The per-visitor search limit's shared count in Valkey (search-runtime/rate-limit.server.ts holds the limits).",
     "goodwatch-webapp/app/server/lifecycle.server.ts": "Readiness and the drain on SIGTERM, which the proxy's health check and deploy.sh rely on.",
     "goodwatch-webapp/app/ui/search/search-model.tsx": "The shape of the search response, which the browser's script from a page instance reads.",
     "goodwatch-webapp/vite.config.js": "It names the worker files of the encoder and the index for the server bundle."

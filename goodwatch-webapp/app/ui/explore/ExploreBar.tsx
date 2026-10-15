@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { useEffect, useState } from "react"
@@ -14,14 +15,15 @@ import {
 
 type CurrentTitle = Pick<ScoringMedia, "tmdb_id" | "media_type" | "title">
 export default function ExploreBar({ current }: { current: CurrentTitle }) {
+	const { locale } = useLocale()
 	const [origin, setOrigin] = useState<TasteExploration | null>(null)
 	const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters)
 	const [expanded, setExpanded] = useState(false)
 	useEffect(() => {
-		const saved = readExploration()
+		const saved = readExploration(locale.language)
 		setOrigin(saved)
 		setFilters(saved.filters || defaultExploreFilters)
-	}, [])
+	}, [locale.language])
 	// Only the taste quiz stores titles to explore, and only a title from that list shows the bar, so a
 	// title page reached any other way (the living room's TV, search) never offers "Start exploring".
 	const pool = uniqueTitles(origin?.titles ?? [])

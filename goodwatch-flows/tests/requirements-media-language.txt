@@ -1,0 +1,4 @@
+# Season/episode translation ingestion uses the existing HTTP/Crate/Windmill adapters.
+requests==2.34.2
+crate==2.3.0
+wmill==1.811.1

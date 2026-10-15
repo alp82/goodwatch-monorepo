@@ -1,0 +1,266 @@
+import { randomUUID } from "node:crypto"
+import { createCookie } from "@remix-run/node"
+import { IMPORT_ID_PATTERN, type ParsedImport } from "../../domain/imports.ts"
+import { type TmdbClient, TmdbError } from "./tmdb-client.server.ts"
+
+export const CONNECTION_WINDOW_MS = 10 * 60_000
+
+export interface Connection {
+	id: string
+	userId: string
+	requestToken: string
+	expiresAt: number
+	accessToken?: string
+	accountId?: string
+	canceled?: boolean
+	cleanupAttempts?: number
+}
+export interface ConnectionStore {
+	create(value: Connection, available: number): Promise<boolean>
+	/** Atomic lease, enforcing ownership when requested. A lease lasts ten minutes. */
+	claim(
+		id: string,
+		userId: string | undefined,
+		now: number,
+	): Promise<Connection | null>
+	/** Omitted: retain the lease. A time releases for retry; null pauses for operator recovery. */
+	save(value: Connection, available?: number | null): Promise<void>
+	pause(id: string): Promise<void>
+	remove(id: string): Promise<void>
+	due(now: number): Promise<string[]>
+}
+const cookie = createCookie("tmdb-connect", {
+	httpOnly: true,
+	sameSite: "lax",
+	path: "/api/imports/tmdb",
+	maxAge: 15 * 60,
+})
+const invalid = () =>
+	new TmdbError(
+		"Connection expired, start again from Imports, or wait for the current connection to finish.",
+		404,
+	)
+
+export function createTmdbConnect(deps: {
+	store: ConnectionStore
+	client: TmdbClient
+	member: (
+		request: Request,
+	) => Promise<{ userId: string | null; headers: Headers }>
+	origin: () => string | null
+	now?: () => number
+	alert?: (connectionId: string) => void
+}) {
+	const { store, client } = deps
+	const now = deps.now ?? Date.now
+	const alert =
+		deps.alert ??
+		((connectionId: string) =>
+			console.error("TMDB Connect cleanup paused; operator action required.", {
+				connectionId,
+			}))
+	const retryAt = (error: unknown) =>
+		now() +
+		Math.max(60_000, error instanceof TmdbError ? (error.retryAfterMs ?? 0) : 0)
+	async function disconnect(connection: Connection) {
+		if (connection.accessToken)
+			await client.revoke(connection.accessToken, connection.accountId)
+		await store.remove(connection.id)
+	}
+	return {
+		/** Cleanup needs no browser. Expired leases recover work interrupted by a process restart. */
+		async sweep(): Promise<void> {
+			for (const id of await store.due(now())) {
+				try {
+					const connection = await store.claim(id, undefined, now())
+					if (!connection) continue
+					connection.canceled = true
+					if (!connection.requestToken && !connection.accessToken) {
+						await store.remove(id)
+						continue
+					}
+					try {
+						if (!connection.accessToken) {
+							Object.assign(
+								connection,
+								await client.exchange(connection.requestToken),
+							)
+							try {
+								await store.save(connection)
+							} catch {
+								// Even without a durable write, revoke the token we just received.
+								await disconnect(connection)
+								continue
+							}
+						}
+						await disconnect(connection)
+					} catch (error) {
+						// Unapproved request tokens expire on TMDB after 15 min. Retry until then,
+						// including late approval after Cancel; never discard a known access token.
+						if (
+							!connection.accessToken &&
+							now() >= connection.expiresAt + 5 * 60_000 &&
+							error instanceof TmdbError &&
+							[401, 403, 422].includes(error.status)
+						)
+							await store.remove(connection.id)
+						else {
+							const pendingApproval =
+								!connection.accessToken &&
+								error instanceof TmdbError &&
+								[401, 403, 422].includes(error.status)
+							if (!pendingApproval)
+								connection.cleanupAttempts =
+									(connection.cleanupAttempts ?? 0) + 1
+							if ((connection.cleanupAttempts ?? 0) >= 8) {
+								await store.save(connection, null)
+								alert(id)
+							} else await store.save(connection, retryAt(error))
+						}
+					}
+				} catch {
+					// One bad row must not hold up other members. Keep credentials for operator recovery.
+					await store.pause(id).catch(() => {})
+					alert(id)
+				}
+			}
+		},
+		async handle(request: Request, step: string): Promise<Response> {
+			const { userId, headers } = await deps.member(request)
+			headers.set("Cache-Control", "private, no-store")
+			headers.set("Referrer-Policy", "no-referrer")
+			const fail = (message: string, status: number) =>
+				Response.json({ error: message }, { status, headers })
+			if (!userId) return fail("Sign in to connect your TMDB account.", 401)
+			if (request.method !== "POST") return fail("Method not allowed", 405)
+			const origin = deps.origin()
+			if (!origin || request.headers.get("Origin") !== origin)
+				return fail("Open Imports on GoodWatch to connect TMDB.", 403)
+			const redirect = (location: string) => {
+				headers.set("Location", location)
+				return new Response(null, { status: 303, headers })
+			}
+			try {
+				if (step === "start") {
+					const id = randomUUID()
+					const connection: Connection = {
+						id,
+						userId,
+						requestToken: "",
+						expiresAt: now() + CONNECTION_WINDOW_MS,
+					}
+					if (!(await store.create(connection, connection.expiresAt)))
+						return fail(
+							"You have three open connections. Finish or cancel one, or wait for disconnection before starting again.",
+							429,
+						)
+					try {
+						connection.requestToken = await client.createRequest(
+							`${origin}/settings/imports?source=tmdb&connect=${id}`,
+						)
+						await store.save(connection, connection.expiresAt)
+					} catch (error) {
+						// No approval URL has left this server; no member access token can have been granted.
+						await store.remove(id)
+						throw error
+					}
+					headers.append(
+						"Set-Cookie",
+						await cookie.serialize(id, { secure: origin.startsWith("https:") }),
+					)
+					return redirect(
+						`https://www.themoviedb.org/auth/access?request_token=${encodeURIComponent(connection.requestToken)}`,
+					)
+				}
+				if (step !== "return" && step !== "abandon")
+					return fail("Not found", 404)
+				const form = await request.formData()
+				const id = form.get("state")
+				if (
+					typeof id !== "string" ||
+					!IMPORT_ID_PATTERN.test(id) ||
+					(await cookie.parse(request.headers.get("Cookie"))) !== id
+				)
+					throw invalid()
+				const connection = await store.claim(id, userId, now())
+				if (!connection) throw invalid()
+				let failure: Error | undefined
+				let retryTime = now() + 60_000
+				let parsed: ParsedImport | undefined
+				try {
+					if (connection.canceled || connection.accessToken) throw invalid()
+					const credentials = await client.exchange(connection.requestToken)
+					Object.assign(connection, credentials)
+					await store.save(connection)
+					if (step === "return" && connection.expiresAt <= now())
+						throw new TmdbError("Connection expired, start again.", 410)
+					if (!credentials.accountId) throw new TmdbError()
+					if (step === "return" && connection.expiresAt > now())
+						parsed = await client.readAccount(
+							credentials.accountId,
+							credentials.accessToken,
+						)
+				} catch (error) {
+					retryTime = retryAt(error)
+					if (
+						!(
+							step === "abandon" &&
+							!connection.accessToken &&
+							error instanceof TmdbError &&
+							[401, 403, 422].includes(error.status)
+						)
+					)
+						failure =
+							error instanceof TmdbError
+								? error
+								: new TmdbError(
+										"The import could not be prepared. Please try again.",
+									)
+				} finally {
+					connection.canceled = true
+					headers.append(
+						"Set-Cookie",
+						await cookie.serialize("", {
+							maxAge: 0,
+							secure: origin.startsWith("https:"),
+						}),
+					)
+					if (failure instanceof TmdbError && failure.status === 429) {
+						await store.save(connection, retryTime)
+					} else if (connection.accessToken) {
+						try {
+							await disconnect(connection)
+						} catch (error) {
+							await store.save(connection, retryAt(error))
+							failure = new TmdbError(
+								"TMDB has not confirmed disconnection. GoodWatch will retry automatically. If this continues, ask TMDB support to revoke GoodWatch’s access.",
+							)
+						}
+					} else await store.save(connection, retryTime)
+				}
+				if (failure) throw failure
+				if (!parsed) return redirect("/settings/imports?source=tmdb")
+				try {
+					const { previewFetchedImport } = await import("./service.server.ts")
+					const summary = await previewFetchedImport(
+						userId,
+						"TMDB account",
+						parsed,
+					)
+					return redirect(`/settings/imports?source=tmdb&import=${summary.id}`)
+				} catch {
+					throw new TmdbError(
+						"The import could not be prepared. Please try again.",
+					)
+				}
+			} catch (error) {
+				return fail(
+					error instanceof TmdbError
+						? error.message
+						: "TMDB Connect is temporarily unavailable. Please try again.",
+					error instanceof TmdbError ? error.status : 503,
+				)
+			}
+		},
+	}
+}

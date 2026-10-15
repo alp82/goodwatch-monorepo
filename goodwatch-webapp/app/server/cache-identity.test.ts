@@ -71,8 +71,8 @@ test("locale uses quality order, independent language and region, and US/en fall
 		["de-DE,de;q=0.9,en;q=0.8", "DE", "de"],
 		["en,de-AT;q=0.8", "AT", "en"],
 		["de-DE;q=0.3,fr-CA;q=0.9,en-US;q=0.5", "CA", "fr"],
-		["zh-Hant-TW,en;q=0.8", "TW", "zh"],
-		["fil-PH", "PH", "fil"],
+		["zh-Hant-TW,en;q=0.8", "TW", "zh-Hant"],
+		["fil-PH", "PH", "en"],
 		["1234 !@#", "US", "en"],
 		["garbage", "US", "en"],
 		["*", "US", "en"],
@@ -374,4 +374,37 @@ test("route lifetimes shorten the public policy without weakening private respon
 		)
 		assert.equal(headers.get("Cache-Control"), expected)
 	}
+})
+
+
+test("language is an independent bounded cache dimension, including regions and scripts", () => {
+	for (const language of ["en", "de", "pt-BR", "pt-PT", "zh-Hans", "zh-Hant"]) {
+		const identity = cacheIdentity(request({ [CACHE_IDENTITY_HEADER]: `anon;US;${language}` }))
+		assert.equal(identity.country, "US")
+		assert.equal(identity.language, language)
+		assert.equal(identity.key, `anon;US;${language}`)
+		assert.equal(identity.keyFromCache, true)
+	}
+	assert.equal(cacheIdentity(request({ [CACHE_IDENTITY_HEADER]: "anon;US;xx" })).keyFromCache, false)
+})
+
+test("saved guest cookie resolves before cache lookup and remains cacheable", async () => {
+	const { serializeLocalizationCookie } = await import("../utils/media-language.ts")
+	const cookie = serializeLocalizationCookie({ schemaVersion: 1, version: "v1", country: "DE", language: "zh-Hant" })
+	const req = request({ Cookie: cookie, "Accept-Language": "en-US", [CACHE_IDENTITY_HEADER]: "anon;US;en" })
+	assert.deepEqual(cacheIdentity(req), { audience: "anon", country: "DE", language: "zh-Hant", key: "anon;DE;zh-Hant", keyFromCache: false, cacheable: true })
+	const headers = new Headers({ "Cache-Control": SHARED_PAGE_CACHE_CONTROL })
+	assert.equal(applyCachePolicy(req, 200, headers), "keyed")
+})
+
+
+test("a matching front-cache header works for a saved guest and conflicting headers do not", async () => {
+	const { serializeLocalizationCookie } = await import("../utils/media-language.ts")
+	const cookie = serializeLocalizationCookie({ schemaVersion: 1, version: "unique-visitor-revision", country: "DE", language: "zh-Hant" })
+	const req = request({ Cookie: cookie, "Accept-Language": "en-US", [CACHE_IDENTITY_HEADER]: "anon;DE;zh-Hant" })
+	assert.equal(cacheIdentity(req).keyFromCache, true)
+	const headers = new Headers({ "Cache-Control": SHARED_PAGE_CACHE_CONTROL })
+	assert.equal(applyCachePolicy(req, 200, headers), "shared")
+	assert.equal(headers.get(CACHE_IDENTITY_HEADER), "anon;DE;zh-Hant")
+	assert.equal(headers.get("Vary"), CACHE_IDENTITY_HEADER)
 })

@@ -23,7 +23,8 @@ export const genreLinksQueryKey = (names: readonly string[]) =>
 export const movieCollectionQueryKey = (
 	collectionId: string,
 	movieIds: string,
-) => ["movie-collection", collectionId, movieIds] as const
+	language?: string,
+) => ["movie-collection", collectionId, movieIds, ...(language ? [language] : [])] as const
 
 // Genre names and a collection's movies don't depend on the viewer, and the server keeps both for a day. Data that
 // came with the document is never requested again: not on window focus, and not when the document itself came from

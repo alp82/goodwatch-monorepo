@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-14T21:06:39.096944+00:00",
+  "version": "content-quality-1",
+  "applied": false,
+  "before": {
+    "youtube": {
+      "posts": 94,
+      "links": 68
+    },
+    "rss": {
+      "posts": 523,
+      "links": 317
+    },
+    "bluesky": {
+      "posts": 864,
+      "links": 69
+    },
+    "mastodon": {
+      "posts": 77,
+      "links": 0
+    }
+  },
+  "predicted_after": {
+    "youtube": {
+      "posts": 94,
+      "links": 68
+    },
+    "rss": {
+      "posts": 523,
+      "links": 317
+    },
+    "bluesky": {
+      "posts": 864,
+      "links": 69
+    },
+    "mastodon": {
+      "posts": 77,
+      "links": 0
+    }
+  },
+  "hydration_errors": [],
+  "post_decisions": {
+    "rss:pass": 523,
+    "bluesky:reject": 554,
+    "bluesky:pass": 310,
+    "youtube:pass": 94,
+    "mastodon:reject": 77
+  },
+  "reasons": {
+    "unapproved_link_domain": 459,
+    "high_post_rate": 132,
+    "declared_bot": 38,
+    "no_substantive_text": 68,
+    "new_account": 43,
+    "repetitive_author": 66,
+    "stream_promotion": 41,
+    "missing_link_evidence": 77,
+    "automated_frame_post": 10,
+    "link_shortener": 51,
+    "no_profile": 1
+  },
+  "rejected_examples": [],
+  "rejected_published_posts": 0
+}

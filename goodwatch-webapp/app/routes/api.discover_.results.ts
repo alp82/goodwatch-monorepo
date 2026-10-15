@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -97,7 +100,7 @@ async function respond(request: Request, guest?: GuestProgress) {
 	})
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	return respond(request)
 }
 
@@ -129,7 +132,8 @@ export function useDiscoverResults({
 	const params = new URLSearchParams(query)
 	params.set("page", String(page))
 	if (forYou !== undefined) params.set("foryou", forYou ? "1" : "0")
-	const url = `/api/discover/results?${params}`
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl(`/api/discover/results?${params}`, locale.language)
 	return useQuery<DiscoverResultsResponse>({
 		queryKey: ["discover-results", url, guest ? "guest" : "member"],
 		queryFn: async () => {
@@ -147,12 +151,14 @@ export function useDiscoverResults({
 				throw new Error(`Discover results failed: ${response.status}`)
 			return response.json()
 		},
-		placeholderData: (previous) => previous,
+		placeholderData: (previous, previousQuery) =>
+			typeof previousQuery?.queryKey[1] === "string" &&
+			new URL(previousQuery.queryKey[1], "https://goodwatch.invalid").searchParams.get("displayLanguage") === locale.language ? previous : undefined,
 		enabled,
 	})
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+async function canonicalAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const text = await request.text()
@@ -169,3 +175,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		services: body.guest?.services ?? null,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+export const action = presentCatalogLoader(canonicalAction, { live: true })

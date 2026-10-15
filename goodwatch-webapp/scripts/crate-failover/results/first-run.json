@@ -1,0 +1,196 @@
+{
+  "startedAt": "2026-10-14T23:20:57.200Z",
+  "client": "../../app/utils/crate.ts",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "phase": "reads",
+      "id": 2,
+      "atMs": 4030,
+      "message": "JobKilledException[Job killed. Participating node KkzIul0PR1m4Ts4ObrDILA disconnected]",
+      "code": 5030
+    },
+    {
+      "phase": "reads",
+      "id": 1,
+      "atMs": 4040,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 0,
+      "atMs": 4041,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 0,
+      "atMs": 4132,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 2,
+      "atMs": 4179,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 3,
+      "atMs": 4308,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 2,
+      "atMs": 4316,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 3,
+      "atMs": 4411,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 3,
+      "atMs": 4481,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 1,
+      "atMs": 4509,
+      "message": "NodeNotConnectedException[[node2][172.19.0.3:4300] Node not connected]",
+      "code": 5000
+    }
+  ],
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-14T23:21:12.269Z",
+    "elapsedMs": 3006,
+    "command": "docker compose -p goodwatch-client-588 kill --signal SIGKILL node2",
+    "completedAt": "2026-10-14T23:21:14.003Z"
+  },
+  "passed": false,
+  "error": {
+    "message": "Unexpected non-whitespace character after JSON at position 2011 (line 2 column 1)",
+    "stack": "SyntaxError: Unexpected non-whitespace character after JSON at position 2011 (line 2 column 1)\n    at JSON.parse (<anonymous>)\n    at snapshot (file:///home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/verify.mjs:27:35)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/verify.mjs:186:29"
+  },
+  "finishedAt": "2026-10-14T23:21:14.212Z"
+}

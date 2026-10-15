@@ -1,3 +1,4 @@
+import { isbot } from "isbot"
 // Which stored response may a request get? One answer for every cache: the in-process page cache and a cache in front
 // of the app.
 // - The identity of a request is its audience (anonymous or member), its country, and its language. With the URL it is
@@ -10,6 +11,7 @@
 // - Errors, redirects, member responses, and responses that set a cookie are never stored.
 // The rule, the decision per cookie and parameter, and what each cache must do: docs/cache-identity.md.
 import acceptLanguage from "accept-language-parser"
+import { MEDIA_LANGUAGES, negotiateMediaLanguage, parseLocalizationCookie } from "../utils/media-language.ts"
 import {
 	PRIVATE_CACHE_CONTROL,
 	SHARED_PAGE_CACHE_CONTROL,
@@ -31,12 +33,13 @@ export const CACHE_IDENTITY_HEADER = "GW-Cache-Identity"
 export const FALLBACK_COUNTRY = "US"
 export const FALLBACK_LANGUAGE = "en"
 export const KEYED_PAGE_CACHE_CONTROL = "private, max-age=0"
-const identityPattern = /^anon;[A-Z]{2};[a-z]{2,3}$/
+const identityPattern = /^anon;[A-Z]{2};[a-z]{2,3}(?:-(?:[A-Z]{2}|[A-Z][a-z]{3}))?$/
+const validIdentity = (header: string) => identityPattern.test(header) && MEDIA_LANGUAGES.includes(header.split(";")[2] as (typeof MEDIA_LANGUAGES)[number])
 
 export interface RequestLocale {
 	country: string
 	language: string
-	source: "identity-header" | "accept-language"
+	source: "identity-header" | "accept-language" | "cookie"
 }
 
 /**
@@ -48,7 +51,7 @@ export function requestLocale(request: Request): RequestLocale {
 	return {
 		country,
 		language,
-		source: keyFromCache ? "identity-header" : "accept-language",
+		source: parseLocalizationCookie(request.headers.get("Cookie")) ? "cookie" : keyFromCache ? "identity-header" : "accept-language",
 	}
 }
 
@@ -57,20 +60,17 @@ function readLocale(
 	languageHeader: string | null | undefined,
 	useIdentity: boolean,
 ): RequestLocale {
-	if (useIdentity && header && identityPattern.test(header)) {
+	if (useIdentity && header && validIdentity(header)) {
 		const [, country, language] = header.split(";")
 		return { country, language, source: "identity-header" }
 	}
 	const entries = acceptLanguage.parse(languageHeader ?? "")
-	const preferred = entries[0]?.code ?? ""
 	const region = entries.find((entry) =>
 		/^[a-z]{2}$/i.test(entry.region ?? ""),
 	)?.region
 	return {
 		country: region?.toUpperCase() ?? FALLBACK_COUNTRY,
-		language: /^[a-z]{2,3}$/i.test(preferred)
-			? preferred.toLowerCase()
-			: FALLBACK_LANGUAGE,
+		language: negotiateMediaLanguage(languageHeader).language,
 		source: "accept-language",
 	}
 }
@@ -118,20 +118,38 @@ export function cacheIdentityOf({
 	identityHeader?: string | null
 }): CacheIdentity {
 	const member = hasAuthCookie(cookie)
-	const { country, language, source } = readLocale(
+	const saved = parseLocalizationCookie(cookie)
+	const fallback = readLocale(
 		identityHeader,
 		acceptLanguage,
-		!member,
+		!member && !saved,
 	)
+	const country = saved?.country ?? fallback.country
+	const language = saved && saved.language !== "browser" ? saved.language : fallback.language
+	const headerMatches = !member && !!identityHeader && validIdentity(identityHeader) && identityHeader === `anon;${country};${language}`
+	const source = saved ? "cookie" : fallback.source
 	const identity: CacheIdentity = {
 		audience: member ? "member" : "anon",
 		country,
 		language,
 		key: member ? null : `anon;${country};${language}`,
-		keyFromCache: !member && source === "identity-header",
+		keyFromCache: headerMatches || (!member && source === "identity-header"),
+		// Only the effective pair is in shared root data; saved revisions/provenance use a no-store endpoint.
 		cacheable: !member && (method === "GET" || method === "HEAD"),
 	}
 	return identity
+}
+
+/** Internal resolver provenance, returned only by the uncached preferences API. Not an HTML key dimension. */
+export function cacheContextState(identity: CacheIdentity, languageHeader?: string | null): {
+	countryProvenance: "identity-header" | "browser" | "default"
+	languageProvenance: "browser" | "default"
+} {
+	if (identity.keyFromCache) return { countryProvenance: "identity-header", languageProvenance: "browser" }
+	return {
+		countryProvenance: acceptLanguage.parse(languageHeader ?? "").some(entry => /^[a-z]{2}$/i.test(entry.region ?? "")) ? "browser" : "default",
+		languageProvenance: negotiateMediaLanguage(languageHeader).languageProvenance,
+	}
 }
 
 // Routes can shorten either lifetime, but cannot exceed the shared defaults.
@@ -184,6 +202,8 @@ export function applyCachePolicy(
 		return "private"
 	}
 	if (policy === null) return "unset"
+	// Canonical crawlers use the origin cache policy dimension; future edge caches must bypass them.
+	const keyFromCache = identity.keyFromCache && !isbot(request.headers.get("user-agent"))
 	const lifetime = pageLifetime(policy)
 	const sharedPolicy =
 		lifetime.fresh < pageLifetime().fresh
@@ -191,12 +211,12 @@ export function applyCachePolicy(
 			: SHARED_PAGE_CACHE_CONTROL
 	headers.set(
 		"Cache-Control",
-		identity.keyFromCache ? sharedPolicy : KEYED_PAGE_CACHE_CONTROL,
+		keyFromCache ? sharedPolicy : KEYED_PAGE_CACHE_CONTROL,
 	)
 	headers.set(
 		"Vary",
-		identity.keyFromCache ? CACHE_IDENTITY_HEADER : "Accept-Language",
+		keyFromCache ? CACHE_IDENTITY_HEADER : "Accept-Language",
 	)
 	headers.set(CACHE_IDENTITY_HEADER, identity.key)
-	return identity.keyFromCache ? "shared" : "keyed"
+	return keyFromCache ? "shared" : "keyed"
 }

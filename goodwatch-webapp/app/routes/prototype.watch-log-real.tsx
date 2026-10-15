@@ -14,6 +14,7 @@ import type { MovieResult } from "~/server/types/details-types"
 import type { WatchNextTitle } from "~/server/watch-next.server"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
+import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import ListActions from "~/ui/details/hero/ListActions"
 import OwnScore from "~/ui/details/hero/OwnScore"
 import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
@@ -244,7 +245,9 @@ function RealHero() {
 	return (
 		<BelowFoldProvider titleKey={`movie-${sample.tmdbId}`}>
 			<div className="-mx-4 mt-4 sm:-mx-6 lg:-mx-8" data-real-hero>
-				<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} />
+				<MediaPreferenceProvider country="DE">
+					<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} />
+				</MediaPreferenceProvider>
 			</div>
 		</BelowFoldProvider>
 	)
