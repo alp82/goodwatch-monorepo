@@ -221,39 +221,82 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 	}
 })
 
-test("tools/list and the rate-limit answer work under remix-serve's fetch polyfill", { timeout: 15_000 }, async () => {
-	// remix-serve installs @remix-run/web-fetch (the app has no v3_singleFetch): its Response has no static json(),
-	// which the MCP SDK calls while it answers. Without the server entry's fill, tools/list never settled.
-	const { installGlobals } = await import("@remix-run/node")
-	const { fillWebFetchGaps } = await import("../web-fetch-gaps.server.ts")
-	const names = ["fetch", "Request", "Response", "Headers", "FormData"] as const
-	const original = Object.fromEntries(names.map((name) => [name, globalThis[name]]))
-	// The server's order: remix-serve installs the polyfill, then the server entry fills its gaps.
-	installGlobals()
-	fillWebFetchGaps()
-	try {
-		const listed = await createReadMcpHandler({
-			resource,
-			authorization: verifier,
-			limiter: unlimited,
-		})(rpc("tools/list"))
-		assert.equal(listed.status, 200, await listed.clone().text())
-		assert.ok((await result(listed)).result.tools.length > 0)
-		const limited = await createReadMcpHandler({
-			resource,
-			authorization: verifier,
-			limiter: {
-				async take() {
-					return { allowed: false, store: "valkey", retryAfterSeconds: 17 }
+test(
+	"read/write tools, ranked search and error answers work under remix-serve's fetch polyfill",
+	{ timeout: 15_000 },
+	async () => {
+		// remix-serve installs @remix-run/web-fetch (the app has no v3_singleFetch): its Response has no static json(),
+		// which the MCP SDK calls while it answers. Without the server entry's fill, tools/list never settled.
+		const { installGlobals } = await import("@remix-run/node")
+		const { fillWebFetchGaps } = await import("../web-fetch-gaps.server.ts")
+		const names = [
+			"fetch",
+			"Request",
+			"Response",
+			"Headers",
+			"FormData",
+		] as const
+		const original = Object.fromEntries(
+			names.map((name) => [name, globalThis[name]]),
+		)
+		// The server's order: remix-serve installs the polyfill, then the server entry fills its gaps.
+		installGlobals()
+		fillWebFetchGaps()
+		try {
+			const cookies = new Headers()
+			cookies.append("Set-Cookie", "gw.session_token=local; Path=/; HttpOnly")
+			cookies.append(
+				"Set-Cookie",
+				"other=local; Expires=Thu, 15 Oct 2026 03:00:00 GMT",
+			)
+			assert.equal(cookies.getSetCookie().length, 2)
+			const listed = await createReadMcpHandler({
+				resource,
+				authorization: verifier,
+				limiter: unlimited,
+			})(rpc("tools/list"))
+			assert.equal(listed.status, 200, await listed.clone().text())
+			assert.ok((await result(listed)).result.tools.length > 0)
+			const handle = createReadMcpHandler({
+				resource,
+				authorization: writer,
+				limiter: unlimited,
+			})
+			const tools = (await result(await handle(rpc("tools/list")))).result.tools
+			assert.equal(tools.length, 14)
+			assert.equal(
+				tools.find((tool: { name: string }) => tool.name === "search_titles")
+					.inputSchema.properties.ranked.default,
+				false,
+			)
+			const oversized = rpc("tools/list")
+			oversized.headers.set("Content-Length", String(4 * 1024 * 1024 + 1))
+			assert.equal((await handle(oversized)).status, 413)
+			const malformed = new Request(resource, {
+				method: "POST",
+				headers: {
+					Authorization: "Bearer local",
+					"Content-Type": "application/json",
 				},
-			},
-		})(rpc("tools/list"))
-		assert.equal(limited.status, 429)
-		assert.deepEqual(await limited.json(), { error: "rate_limited" })
-	} finally {
-		Object.assign(globalThis, original)
-	}
-})
+				body: "{",
+			})
+			assert.equal((await handle(malformed)).status, 400)
+			const limited = await createReadMcpHandler({
+				resource,
+				authorization: verifier,
+				limiter: {
+					async take() {
+						return { allowed: false, store: "valkey", retryAfterSeconds: 17 }
+					},
+				},
+			})(rpc("tools/list"))
+			assert.equal(limited.status, 429)
+			assert.deepEqual(await limited.json(), { error: "rate_limited" })
+		} finally {
+			Object.assign(globalThis, original)
+		}
+	},
+)
 
 test("Ranked catalog search is an explicit opt-in and documents its member quota", async () => {
 	const handle = createReadMcpHandler({
