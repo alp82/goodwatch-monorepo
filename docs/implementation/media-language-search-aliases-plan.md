@@ -203,13 +203,24 @@ One owner decision after the first evaluation: **"like X" takes a 2-character ke
 Korean** ("like 教父", "like 대부" find The Godfather). Every other key still needs 3 characters, so "like up" and
 "like pa" resolve nothing.
 
+Fixes after review, all on the side of the titles and of a build that always loads:
+
+- **"Like X" asks the localized names only when no title matched over any span**, so "like Dracula: A Love Tale"
+  finds the title Dracula before the longer English alias of Dracula (2025). A localized name that is also some
+  title's name (also below the vote floor) is never a reference.
+- **In the title blend, an alias match stays below every title row of its kind after the ranked list is mixed in**:
+  its blended score is capped just below the lowest title row of the same lexical kind.
+- **A broken `alias_table` (missing blob, gunzip or JSON error, columns of different lengths, rows that don't fit
+  the title table) loads the build without aliases**, and a failed `translation` read writes an empty table of
+  version 0 instead of failing the nightly build.
+
 **Evaluation**, `scripts/search-alias-eval.ts` with `app/server/search-ranking/alias-eval.fixture.json`, top-1 / top-5
-before → after, rerun with the 2-character CJK keys. The palette is its 8 rows; the title lookup + blend is the palette's 20 rows through
-`title-blend.server.ts`, without TMDB and without the ranked list.
+before → after, rerun after the review fixes. The palette is its 8 rows; the title lookup + blend is the palette's 20
+rows through `title-blend.server.ts`, without TMDB and without the ranked list.
 
 | queries | n | palette | title lookup + blend | "like X" top-1 |
 |---|---|---|---|---|
-| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 92% |
+| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% |
 | localized, first word | 52 | 0% / 2% → 37% / 56% | 0% / 2% → 21% / 56% | |
 | localized, first 3 characters | 51 | 0% / 0% → 20% / 35% | 0% / 2% → 10% / 37% | |
 | canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% |
@@ -217,17 +228,38 @@ before → after, rerun with the 2-character CJK keys. The palette is its 8 rows
 | canonical, first 3 characters | 19 | 74% / 95% → 74% / 95% | 32% / 74% → 32% / 74% | |
 | ambiguous names | 10 | 80% / 90% → 90% / 100% | 60% / 90% → 70% / 100% | |
 
-Every canonical hit rate is unchanged. Canonical top-5 lists change only where aliases fill places after the titles,
-and in the blend for "Dune", where exact aliases (1.99) pass canonical rows the blend scores 0. The canonical and
-ambiguous misses are the same before and after (the palette orders by votes, the blend by TMDB popularity). The
-shared German name "Das Ding aus einer anderen Welt" resolves to The Thing (1982) by votes. With the 2-character CJK
-keys, "like X" finds every Chinese and Korean name (80% → 100% each; 88% → 92% over the localized set). The 7
-remaining "like X" misses come from existing rules: two titles below 10,000 votes ("Cranberry Sorbet", "The Blood
-Lands"), the 2-letter Latin key "up", and names that resolve to a person or team first: "Krieg der Sterne" (Jim
-Krieg), "Der Pate" (Jonas and Josh Pate), "Il Trono di Spade" (David Spade) and, before aliases too, "Forrest Gump"
-(Frederic Forrest). Prefixes of localized names miss mostly on their first word
-("Le", "El", "Der", "Il"), which many titles share. The set types names from their start; its CJK names
-and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
+The same blend with a ranked list mixed in. The ranker (encoder and Qdrant) doesn't run in the script, so it uses two
+stand-ins over the lookup's rows: by votes, and an adversarial one that ranks the rows found by a localized name first.
+
+| queries | n | ranked by votes | aliases ranked first |
+|---|---|---|---|
+| localized, full name | 60 | 0% / 0% → 100% / 100% | 0% / 0% → 100% / 100% |
+| localized, first word | 52 | 0% / 2% → 37% / 60% | 0% / 2% → 37% / 60% |
+| localized, first 3 characters | 51 | 0% / 0% → 27% / 41% | 0% / 0% → 27% / 41% |
+| canonical, full name | 20 | 100% / 100% → 100% / 100% | 100% / 100% → 100% / 100% |
+| canonical, first word | 12 | 33% / 92% → 33% / 92% | 33% / 92% → 33% / 83% |
+| canonical, first 3 characters | 19 | 58% / 89% → 58% / 89% | 58% / 89% → 53% / 89% |
+| ambiguous names | 10 | 90% / 90% → 100% / 100% | 90% / 90% → 100% / 100% |
+
+Every canonical hit rate is unchanged without a ranked list and with the vote ranking. The adversarial ranking moves
+"pulp" and "Pul": Over the Hedge, found by its Portuguese name "Pular a Cerca", passes Pulp Fiction. Neither name
+matches those prefixes by the blend's rules (lexical 0 for both), so the cap doesn't apply and the ranked list alone
+orders them. The real ranker never sees the title lookup (`rank-search.server.ts` uses it only in the final reblend),
+so it can't rank a row higher because an alias found it; that ranking is only possible in the stand-in.
+
+Canonical top-5 lists change only where aliases fill places after the titles, and in the blend for "Dune", where exact
+aliases (1.99) pass canonical rows the blend scores 0. The canonical and ambiguous misses are the same before and after
+(the palette orders by votes, the blend by TMDB popularity). The shared German name "Das Ding aus einer anderen Welt"
+resolves to The Thing (1982) by votes.
+
+"Like X" finds every Chinese and Korean name with the 2-character keys (80% → 100% each). Over the localized set it
+is 88%, as before the CJK keys: titles now win over longer localized names, so "Dracula: A Love Tale" finds Dracula
+(1931) and "Love Doesn't Understand Words" the film Love (2015), by their first word. The other misses come from existing rules:
+two titles below 10,000 votes ("Cranberry Sorbet", "The Blood Lands"), the 2-letter Latin key "up", and names that
+resolve to a person or team first: "Krieg der Sterne" (Jim Krieg), "Der Pate" (Jonas and Josh Pate), "Il Trono di
+Spade" (David Spade) and, before aliases too, "Forrest Gump" (Frederic Forrest). Prefixes of localized names miss
+mostly on their first word ("Le", "El", "Der", "Il"), which many titles share. The set types names from their start;
+its CJK names and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
 
 ## Owner decisions (2026-10-15)
 
