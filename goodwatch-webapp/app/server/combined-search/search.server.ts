@@ -2,8 +2,10 @@ import { createHash } from "node:crypto";
 import { fetch } from "undici";
 import { withBackendTimeout } from "../../utils/backend-timeout.ts";
 import {
+	aliasMatch,
 	blend,
 	titleMatch,
+	type MatchedAlias,
 	type Title,
 	type Row,
 } from "~/ui/search/search-model";
@@ -64,6 +66,7 @@ import {
 } from "../search-people/people.server";
 import { runsSearch } from "../role.server";
 import { paletteLookupTitles } from "../command-palette.server";
+import { loadedAliasVersion } from "../search-ranking/search-index.server";
 
 // A page instance loads none of it (see role.server.ts).
 if (runsSearch()) {
@@ -99,9 +102,10 @@ export interface SearchBatch {
  * closed), anything else when it did. A callback that returns nothing delivered its batch.
  */
 export type BatchDelivery = void | boolean;
-// Title lookups depend only on the text and the adult policy, never on filter chips,
-// so filter-only refetches reuse them. Search text is private: entries stay in this
-// process, keyed by a digest, and are never written to a shared store or logged.
+// Title lookups depend only on the text, the adult policy, and the alias rules version of the
+// loaded index (localized names), never on filter chips, so filter-only refetches reuse them.
+// Search text is private: entries stay in this process, keyed by a digest, and are never
+// written to a shared store or logged.
 const TITLE_TTL_MS = 10 * 60 * 1000;
 const TITLE_ENTRIES = 200;
 interface TitleLookup {
@@ -117,7 +121,9 @@ function titles(
 	signal: AbortSignal,
 ): Promise<TitleLookup> {
 	const key = createHash("sha256")
-		.update(`${policy.includeAdult ? 1 : 0}:${q.trim().toLowerCase()}`)
+		.update(
+			`${loadedAliasVersion()}:${policy.includeAdult ? 1 : 0}:${q.trim().toLowerCase()}`,
+		)
 		.digest("hex");
 	const hit = titleCache.get(key);
 	if (hit && Date.now() - hit.at < TITLE_TTL_MS) {
@@ -168,11 +174,21 @@ const PALETTE_LOOKUP_TITLES = 20;
 /**
  * TMDB's titles, then the command palette's that TMDB missed. TMDB ranks "lord of" by its own relevance, people
  * included, and its later pages may time out, so titles the palette showed could be missing; the palette's prefix
- * lookup runs over the search index in memory, at no network cost. People stay TMDB's alone.
+ * lookup runs over the search index in memory, at no network cost. A TMDB title the palette found by a localized name
+ * keeps that name (TMDB answers in English). People stay TMDB's alone.
  */
 function withPaletteTitles(tmdb: Title[], palette: Title[]): Title[] {
+	const aliases = new Map(
+		palette.filter((t) => t.matchedAlias).map((t) => [titleKey(t), t]),
+	);
 	const known = new Set(tmdb.map(titleKey));
-	return [...tmdb, ...palette.filter((t) => !known.has(titleKey(t)))];
+	return [
+		...tmdb.map((t) => {
+			const matchedAlias = aliases.get(titleKey(t))?.matchedAlias;
+			return matchedAlias ? { ...t, matchedAlias } : t;
+		}),
+		...palette.filter((t) => !known.has(titleKey(t))),
+	];
 }
 
 /** The title with the catalog's poster when the lookup had none (the palette's titles come without one). */
@@ -547,13 +563,20 @@ async function rankedList(
 		const identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : key;
 		if (identities.has(identity)) continue;
 		identities.add(identity);
-		let match = titleMatch(found?.title ?? blended.title, q);
+		let match: { lexical: number; match: string; matchedAlias?: MatchedAlias } =
+			titleMatch(found?.title ?? blended.title, q);
 		const original = titleMatch(found?.original ?? "", q);
 		if (original.lexical > match.lexical)
 			match = {
 				lexical: original.lexical,
 				match: `${original.match} (original name)`,
 			};
+		match =
+			aliasMatch(
+				found?.matchedAlias ?? blended.matchedAlias,
+				q,
+				match.lexical,
+			) ?? match;
 		rows.push({
 			key,
 			title: found?.title ?? shown?.title ?? blended.title,

@@ -1,6 +1,7 @@
 // Finds what a query refers to: people, teams and studios by name, or a "like X" title. A reference brings its own
 // titles (weighted by credit), the seed titles its profile is built from, an intent, and the residual query: the
 // words that remain once the names and filler words are removed ("funny" in "funny brad pitt shows").
+import { aliasReference } from "./aliases.server.ts"
 import { looksForeign, spell, splitNegation } from "./query-parsing.server.ts"
 import type { NameEntity, SearchIndex } from "./search-index.server.ts"
 import {
@@ -267,7 +268,8 @@ function findReference(
 				(end !== null && s + k !== end)
 			)
 				continue
-			const row = index.referenceTitles.get(key)
+			// A title first, then a localized name of the same length (aliases.server.ts).
+			const row = index.referenceTitles.get(key) ?? aliasReference(index, key)
 			if (row !== undefined) {
 				const used = new Set<number>()
 				for (let p = markerStart; p < s + k; p++) used.add(p)

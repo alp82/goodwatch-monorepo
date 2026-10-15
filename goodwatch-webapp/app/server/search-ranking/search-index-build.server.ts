@@ -15,6 +15,7 @@ import type {
 	QuantizedVectors,
 	SearchIndex,
 } from "./search-index.server.ts"
+import { REFERENCE_TITLE_VOTES, buildAliasTable } from "./aliases.server.ts"
 import { normalized, singular } from "./text-rules.server.ts"
 
 const gunzip = promisify(gunzipCallback)
@@ -32,10 +33,10 @@ const INDEX_FILES = [
 	"intent_examples",
 	"mix_vectors",
 ] as const
-type IndexFile = (typeof INDEX_FILES)[number]
+// Loaded when the manifest lists it: a build without it has no aliases, and roles before it ignore it.
+const OPTIONAL_FILES = ["alias_table"] as const
+type IndexFile = (typeof INDEX_FILES)[number] | (typeof OPTIONAL_FILES)[number]
 
-// Votes a title needs to be a "like X" reference.
-const REFERENCE_TITLE_VOTES = 10_000
 // Votes a title needs to belong to a franchise ("like X" pulls in the titles containing X's title).
 const FRANCHISE_VOTES = 2000
 
@@ -318,7 +319,10 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 	const timings: Record<string, number> = {}
 	const docs = {} as Record<IndexFile, Json>
 	await Promise.all(
-		INDEX_FILES.map(async (name) => {
+		[
+			...INDEX_FILES,
+			...OPTIONAL_FILES.filter((name) => manifest.files[name]),
+		].map(async (name) => {
 			const file = manifest.files[name]
 			if (!file)
 				throw new Error(`Search index build ${manifest.build_id} lacks ${name}`)
@@ -368,6 +372,7 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 			english: quantized(mix.text_en_v1),
 		},
 		...derivedTitles(title),
+		aliases: buildAliasTable(docs.alias_table, title.size, manifest.build_id),
 		timings,
 	}
 	timings.total = performance.now() - started

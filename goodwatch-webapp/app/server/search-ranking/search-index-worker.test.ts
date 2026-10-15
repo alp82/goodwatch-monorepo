@@ -63,6 +63,12 @@ test("worker matches inline loading and terminates after success and missing blo
 			text_multi_v1: quantized,
 			text_en_v1: quantized,
 		},
+		alias_table: {
+			version: 1,
+			rows: [0, 0],
+			names: ["Das A", "エー"],
+			languages: ["de", "ja"],
+		},
 	}
 	const manifest: Manifest = {
 		format: 1,
@@ -122,6 +128,11 @@ test("worker matches inline loading and terminates after success and missing blo
 	const actual = await loadIndexBuild(fromManifest, source)
 	const comparable = ({ loadedAt, timings, ...index }: typeof expected) => index
 	assert.deepStrictEqual(comparable(actual), comparable(expected))
+	assert.equal(
+		actual.aliases.size,
+		2,
+		"the optional alias_table loads when listed",
+	)
 	missing = true
 	await assert.rejects(loadIndexBuild(fromManifest, source), BlobMissing)
 	assert.equal(workers.length, 2)

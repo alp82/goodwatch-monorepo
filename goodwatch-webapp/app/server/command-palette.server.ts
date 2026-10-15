@@ -1,19 +1,17 @@
+import { matchedAlias } from "~/server/search-ranking/aliases.server"
+import { matchingRows } from "~/server/search-ranking/name-prefix.server"
 import {
 	type SearchIndex,
 	getSearchIndex,
+	loadedAliasVersion,
 	loadedSearchIndexBuild,
 	startSearchIndex,
 } from "~/server/search-ranking/search-index.server"
 import { fold } from "~/server/search-ranking/text-rules.server"
-import {
-	type Squashed,
-	nameTier,
-	squash,
-} from "~/server/search-ranking/title-prefix.server"
-// The command palette's matching titles: a prefix lookup over the titles of the search index the search ranking keeps
-// in memory (search-ranking/search-index.server.ts), with posters from the title cards' display fields. Each prefix's
-// answer is cached in Redis for six hours. The palette normalizes the text first, so every spelling of a prefix
-// ("Rea", "rea ") shares one entry. Until the index has loaded, the TMDB title search the old header used serves.
+// The command palette's matching titles: a prefix lookup over the titles, original titles, and localized names of the
+// search index the search ranking keeps in memory (search-ranking/name-prefix.server.ts), with posters from the title
+// cards' display fields. Each prefix's answer is cached in Redis for six hours, per alias rules version. The palette
+// normalizes the text first, so every spelling of a prefix ("Rea", "rea ") shares one entry. Until the index has loaded, the TMDB title search the old header used serves.
 import { getSearchResults } from "~/server/search.server"
 import { getDisplayFields } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -35,7 +33,8 @@ const NONE: PaletteTitles = { titles: [], more: 0 }
 
 /**
  * Up to eight movies and shows whose title or original title starts with the text, then ones with a word that starts
- * with it, each group by votes, and about how many more match; none for text shorter than two characters.
+ * with it, then the same for their localized names, each group by votes, and about how many more match; none for text
+ * shorter than two characters.
  */
 export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 	const prefix = normalizePrefix(text)
@@ -48,8 +47,8 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 		return tmdbTitles(prefix)
 	}
 	return cached({
-		name: "command-palette-titles-v4",
-		params: { prefix },
+		name: "command-palette-titles-v5",
+		params: { prefix, aliases: loadedAliasVersion() },
 		ttlMinutes: CACHE_MINUTES,
 		target: () => indexTitles(prefix),
 	})
@@ -59,11 +58,11 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 
 async function indexTitles(prefix: string): Promise<PaletteTitles> {
 	const index = await getSearchIndex()
-	const { rows, total } = matchingRows(index, fold(prefix), CANDIDATES)
+	const { rows, total, aliases } = matchingRows(index, fold(prefix), CANDIDATES)
 	const keys = rows.map((row) => index.titleTable.pointIds[row])
 	const displays = await getDisplayFields(keys)
 	const titles: PaletteTitle[] = []
-	for (const key of keys) {
+	for (const [at, key] of keys.entries()) {
 		// Titles Crate lacks and ones that aren't presentable are left out; the spare candidates fill in.
 		const display = displays.get(key)
 		if (
@@ -77,6 +76,7 @@ async function indexTitles(prefix: string): Promise<PaletteTitles> {
 			title: display.title,
 			year: display.release_year ? String(display.release_year) : "",
 			posterPath: display.poster_path,
+			...withAlias(index, aliases.get(rows[at])),
 		})
 		if (titles.length === PALETTE_TITLES) break
 	}
@@ -86,58 +86,11 @@ async function indexTitles(prefix: string): Promise<PaletteTitles> {
 
 const CANDIDATES = PALETTE_TITLES + 3
 
-/** Folded titles and original titles (see fold: "Amélie" matches "amel"), without spaces, with their rows. */
-type FoldedNames = { name: Squashed; row: number }[]
-
-const foldedByIndex = new WeakMap<SearchIndex, FoldedNames>()
-
-/** The index's names folded once per build, without adult titles. */
-function foldedNames(index: SearchIndex): FoldedNames {
-	let found = foldedByIndex.get(index)
-	if (!found) {
-		const { titleTable } = index
-		const adult = titleTable.flagNames.indexOf("adult")
-		const names: FoldedNames = []
-		for (let row = 0; row < titleTable.size; row++) {
-			if (adult >= 0 && (titleTable.flags[row] >> adult) & 1) continue
-			const title = fold(titleTable.titles[row])
-			const original = fold(titleTable.originalTitles[row])
-			if (title) names.push({ name: squash(title), row })
-			if (original && original !== title)
-				names.push({ name: squash(original), row })
-		}
-		found = names
-		foldedByIndex.set(index, found)
-	}
-	return found
-}
-
-/**
- * The first `limit` rows whose names match, best first: a name that starts with the prefix, then a word that does; more
- * votes first. Spaces don't count, so "spiderman" matches "Spider-Man" (see title-prefix.server.ts). With how many match.
- */
-function matchingRows(
-	index: SearchIndex,
-	prefix: string,
-	limit: number,
-): { rows: number[]; total: number } {
-	const query = squash(prefix).text
-	if (!query) return { rows: [], total: 0 }
-	const { votes } = index.titleTable
-	// The best tier each row reached: 0 starts with the prefix, 1 has a word that does.
-	const tiers = new Map<number, number>()
-	for (const { name, row } of foldedNames(index)) {
-		const tier = nameTier(name, query)
-		if (tier < 0) continue
-		const best = tiers.get(row)
-		if (best === undefined || tier < best) tiers.set(row, tier)
-	}
-	const rows = [...tiers]
-		.sort(([a, tierA], [b, tierB]) => tierA - tierB || votes[b] - votes[a])
-		.slice(0, limit)
-		.map(([row]) => row)
-	return { rows, total: tiers.size }
-}
+/** The alias a row matched by, when its best match was a localized name. */
+const withAlias = (index: SearchIndex, alias: number | undefined) =>
+	alias === undefined
+		? {}
+		: { matchedAlias: matchedAlias(index.aliases, alias) }
 
 const SHOW_POINT_IDS = 2_000_000_000_000
 const TMDB_ID_RANGE = 1_000_000_000_000
@@ -157,7 +110,8 @@ export async function paletteLookupTitles(
 	try {
 		const index = await getSearchIndex()
 		const t = index.titleTable
-		return matchingRows(index, fold(prefix), limit).rows.map((row) => {
+		const { rows, aliases } = matchingRows(index, fold(prefix), limit)
+		return rows.map((row) => {
 			const id = t.pointIds[row]
 			return {
 				id: id % TMDB_ID_RANGE,
@@ -167,6 +121,7 @@ export async function paletteLookupTitles(
 				year: t.years[row] ? String(t.years[row]) : "",
 				poster: null,
 				popularity: t.popularity[row] || 0,
+				...withAlias(index, aliases.get(row)),
 			}
 		})
 	} catch {

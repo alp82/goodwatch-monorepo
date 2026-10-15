@@ -4,6 +4,21 @@
 // title ("Incepton"). Titles that share an IMDb id appear once. One change makes it looser: a query of two or more
 // words that a title starts with is the start of that title, as the command palette's preview reads it ("lord of"),
 // and spaces don't count ("spiderman" is the exact title "Spider-Man"; see title-prefix.server.ts).
+//
+// Localized names (aliases.server.ts) add recall one step below the title: a lookup row the palette found by an alias
+// scores its alias match ALIAS_STEP below a title match of the same kind, and the fuzzy match tries the aliases only
+// when no title or original title is close enough.
+import {
+	ALIAS_BUCKETS,
+	ALIAS_STEP,
+	BUCKETS,
+	type MatchedAlias,
+	aliasCharCounts,
+	charCounts,
+	exactAliases,
+	matchedAlias,
+	squashedFold,
+} from "./aliases.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
 import { normalized, words } from "./text-rules.server.ts"
 import { sameName, startsTitle } from "./title-prefix.server.ts"
@@ -26,6 +41,8 @@ export interface TitleLookupRow {
 	type: string
 	year: string
 	popularity: number
+	/** The localized name the lookup matched, when it matched by one. */
+	matchedAlias?: MatchedAlias
 }
 
 /** What the ranker knows of a title outside the title table (a lesser-known title), in the table's conventions. */
@@ -47,6 +64,8 @@ export interface BlendedTitle {
 	year: string
 	mediaType: "movie" | "show"
 	score: number
+	/** The localized name the title matched by, when that beat its title and original title. */
+	matchedAlias?: MatchedAlias
 }
 
 export const pointId = (mediaType: string, tmdbId: number) =>
@@ -95,21 +114,8 @@ export function similarity(a: string, b: string): number {
 	return (2 * prev[y.length]) / total
 }
 
-// Character counts of each title name, for a cheap upper bound of similarity() before the full comparison: a, ..., z,
-// 0, ..., 9, space, and one bucket for every other character. Computed once per index build (76 bytes a name).
-const BUCKETS = 38
-function bucket(code: number): number {
-	if (code >= 97 && code <= 122) return code - 97
-	if (code >= 48 && code <= 57) return code - 22
-	return code === 32 ? 36 : 37
-}
-function charCounts(text: string, into = new Uint16Array(BUCKETS), at = 0) {
-	for (const c of text) {
-		const b = at + bucket(c.codePointAt(0) as number)
-		if (into[b] < 65535) into[b]++
-	}
-	return into
-}
+// Character counts of each title name (aliases.server.ts charCounts), for a cheap upper bound of similarity() before
+// the full comparison. Computed once per index build (76 bytes a name). The aliases carry theirs in the table.
 const countsByNames = new WeakMap<
 	SearchIndex["titleNames"],
 	{ counts: Uint16Array; lengths: Uint32Array }
@@ -136,13 +142,14 @@ export function prepareTitleBlend(index: SearchIndex): void {
 
 /**
  * A query with a word unknown to the catalog: the row of the most similar eligible title (similarity >= STRICT), unless
- * it is the exact title (the title lookup finds those) or the filter excludes it.
+ * it is the exact title (the title lookup finds those) or the filter excludes it. Only when no title or original title
+ * is that similar, the most similar localized name, with its alias index.
  */
 function fuzzyTitle(
 	index: SearchIndex,
 	query: string,
 	rows: Uint8Array,
-): number | null {
+): { row: number; alias?: number } | null {
 	const q = normalized(query)
 	if (!q || q.split(" ").every((w) => index.words.df.has(w))) return null
 	const qLength = [...q].length
@@ -164,8 +171,48 @@ function fuzzyTitle(
 		const score = similarity(q, name)
 		if (score >= STRICT && (!best || score > best.score)) best = { row, score }
 	}
-	if (!best || best.score >= 1 || !rows[best.row]) return null
-	return best.row
+	if (best) return best.score >= 1 || !rows[best.row] ? null : { row: best.row }
+	return fuzzyAlias(index, query, rows)
+}
+
+/** fuzzyTitle over the localized names, folded and without spaces on both sides. */
+function fuzzyAlias(
+	index: SearchIndex,
+	query: string,
+	rows: Uint8Array,
+): { row: number; alias: number } | null {
+	const table = index.aliases
+	const q = squashedFold(query)
+	// An exact localized name is the title lookup's to find (through the palette), as an exact title is.
+	if (!q || !table.size || exactAliases(table, q).length) return null
+	const qLength = [...q].length
+	const wanted = aliasCharCounts(q)
+	const used: number[] = []
+	for (let b = 0; b < ALIAS_BUCKETS; b++) if (wanted[b]) used.push(b)
+	let best: { alias: number; score: number } | null = null
+	// The ratio can't reach STRICT outside this length window.
+	const shortest = Math.ceil((qLength * STRICT) / (2 - STRICT) - 1e-9)
+	const longest = Math.min(
+		table.lengthStart.length - 2,
+		Math.floor((qLength * (2 - STRICT)) / STRICT + 1e-9),
+	)
+	if (shortest > longest) return null
+	const from = table.lengthStart[shortest]
+	const to = table.lengthStart[longest + 1]
+	for (let k = from; k < to; k++) {
+		const i = table.byLength[k]
+		const n = table.lengths[i]
+		let shared = 0
+		const base = i * ALIAS_BUCKETS
+		for (const b of used) shared += Math.min(wanted[b], table.counts[base + b])
+		if ((2 * shared) / (n + qLength) < STRICT - 1e-9) continue
+		const score = similarity(q, table.squashed[i])
+		if (score >= STRICT && (!best || score > best.score))
+			best = { alias: i, score }
+	}
+	if (!best || best.score >= 1) return null
+	const row = table.rows[best.alias]
+	return rows[row] ? { row, alias: best.alias } : null
 }
 
 interface Row {
@@ -175,6 +222,9 @@ interface Row {
 	year: string
 	popularity: number
 	lexical: number
+	matchedAlias?: MatchedAlias
+	/** Matched or found by a localized name only: after the titles of the same score. */
+	byAlias: boolean
 	rank: number | null
 	score: number
 }
@@ -218,7 +268,7 @@ export function blend(
 		}
 		return lex
 	}
-	const lexical = (title: string, original: string | undefined) => {
+	const canonical = (title: string, original: string | undefined) => {
 		const names = [normalized(title), normalized(original ?? "")]
 		if (names.some((name) => sameName(name, q))) return 2
 		const strict = strictLexical(title, original)
@@ -226,13 +276,33 @@ export function blend(
 			? Math.max(strict, PREFIX)
 			: strict
 	}
-	const fromTable = (row: number, popularity: number, lex: number): Row => ({
+	// The title's match, or its localized name's one step below when that is better (with the alias). A row the lookup
+	// found by a localized name that neither name matches here ranks after the titles of its score.
+	const lexical = (
+		title: string,
+		original: string | undefined,
+		alias?: MatchedAlias,
+	): { lex: number; alias?: MatchedAlias; byAlias?: boolean } => {
+		const lex = canonical(title, original)
+		if (!alias) return { lex }
+		const byAlias = canonical(alias.text, undefined) - ALIAS_STEP
+		return byAlias > lex
+			? { lex: byAlias, alias, byAlias: true }
+			: { lex, byAlias: lex === 0 }
+	}
+	const fromTable = (
+		row: number,
+		popularity: number,
+		{ lex, alias }: { lex: number; alias?: MatchedAlias },
+	): Row => ({
 		id: t.pointIds[row],
 		title: t.titles[row],
 		mediaType: t.pointIds[row] >= SHOW_POINT_IDS ? "show" : "movie",
 		year: t.years[row] ? String(t.years[row]) : "",
 		popularity,
 		lexical: lex,
+		matchedAlias: alias,
+		byAlias: Boolean(alias),
 		rank: null,
 		score: 0,
 	})
@@ -240,23 +310,37 @@ export function blend(
 	for (const title of titleLookup) {
 		if (title.type !== "movie" && title.type !== "tv") continue
 		const id = pointId(title.type, title.id)
+		const { lex, alias, byAlias } = lexical(
+			title.title,
+			title.original,
+			title.matchedAlias,
+		)
 		rows.set(id, {
 			id,
 			title: title.title,
 			mediaType: title.type === "tv" ? "show" : "movie",
 			year: title.year || "",
 			popularity: title.popularity || 0,
-			lexical: lexical(title.title, title.original),
+			lexical: lex,
+			matchedAlias: alias,
+			byAlias: Boolean(byAlias),
 			rank: null,
 			score: 0,
 		})
 	}
 	const fuzzy = fuzzyTitle(index, query, filterRows)
 	if (fuzzy !== null) {
-		const id = t.pointIds[fuzzy]
+		const id = t.pointIds[fuzzy.row]
 		const existing = rows.get(id)
-		if (!existing || existing.lexical < 1.05)
-			rows.set(id, fromTable(fuzzy, t.popularity[fuzzy], 1.05))
+		const match =
+			fuzzy.alias === undefined
+				? { lex: 1.05 }
+				: {
+						lex: 1.05 - ALIAS_STEP,
+						alias: matchedAlias(index.aliases, fuzzy.alias),
+					}
+		if (!existing || existing.lexical < match.lex)
+			rows.set(id, fromTable(fuzzy.row, t.popularity[fuzzy.row], match))
 	}
 	ranked.forEach((id, i) => {
 		let row = rows.get(id)
@@ -272,7 +356,8 @@ export function blend(
 					mediaType: id >= SHOW_POINT_IDS ? "show" : "movie",
 					year: facts.year ? String(facts.year) : "",
 					popularity: 0,
-					lexical: lexical(facts.title, facts.originalTitle),
+					lexical: lexical(facts.title, facts.originalTitle).lex,
+					byAlias: false,
 					rank: null,
 					score: 0,
 				}
@@ -294,6 +379,7 @@ export function blend(
 		.sort(
 			(a, b) =>
 				b.score - a.score ||
+				Number(a.byAlias) - Number(b.byAlias) ||
 				b.popularity - a.popularity ||
 				(key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0),
 		)
@@ -312,6 +398,7 @@ export function blend(
 			year: row.year,
 			mediaType: row.mediaType,
 			score: Math.round(row.score * 1e4) / 1e4,
+			...(row.matchedAlias ? { matchedAlias: row.matchedAlias } : {}),
 		})
 	}
 	return out
