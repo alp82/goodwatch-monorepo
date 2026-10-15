@@ -48,6 +48,7 @@ const titles = [
 	["Sternchen", "Sternchen", 50_000],
 	["The Thing", "The Thing", 500_000],
 	["The Thing from Another World", "The Thing from Another World", 30_000],
+	["The Godfather", "The Godfather", 2_400_000],
 ] as const
 const aliasDoc = {
 	version: 1,
@@ -251,4 +252,27 @@ test("the evaluation set holds five localized names per launch language, 20 titl
 	assert.equal(set.ambiguous.length, 10)
 	for (const c of [...set.localized, ...set.canonical, ...set.ambiguous])
 		assert.match(c.expect, /^(movie|show):\d+$/, c.query)
+})
+
+test("like X takes a two-character Chinese, Japanese or Korean name, and still no two-letter Latin key", () => {
+	const index = fixture(
+		aliasTable(
+			{
+				version: 1,
+				rows: [7, 7, 7],
+				names: ["教父", "대부", "Pa"],
+				languages: ["zh", "ko", "it"],
+			},
+			titles.length,
+		),
+	)
+	const seeds = (q: string) => {
+		const text = `like ${q}`
+		const ref = resolveReference(index, text, text, true)
+		return ref?.kind === "title" ? ref.seeds : null
+	}
+	assert.deepEqual(seeds("教父"), [7])
+	assert.deepEqual(seeds("대부"), [7])
+	assert.equal(seeds("pa"), null)
+	assert.equal(aliasReference(index, "pa"), 7, "the alias itself is there")
 })

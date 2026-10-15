@@ -238,6 +238,14 @@ const NOT_LIKE = new Set(
 )
 const NOT_AFTER_BUT = new Set("not no without never less".split(" "))
 const TITLE_MAX_WORDS = 8
+// The shortest "like X" key: 3 characters, 2 for a Chinese, Japanese or Korean name ("教父", "대부"), where two
+// characters are a whole title.
+const MIN_KEY_LENGTH = 3
+const MIN_CJK_KEY_LENGTH = 2
+const CJK =
+	/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+const keyTooShort = (key: string) =>
+	key.length < (CJK.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH)
 
 /**
  * The longest title (up to 8 words) right after a like-marker, or at the start of the query running up to "but"
@@ -263,7 +271,7 @@ function findReference(
 		for (let k = Math.min(toks.length - s, TITLE_MAX_WORDS); k >= 1; k--) {
 			const key = toks.slice(s, s + k).join(" ")
 			if (
-				key.length < 3 ||
+				keyTooShort(key) ||
 				STOPWORDS.has(key) ||
 				(end !== null && s + k !== end)
 			)
