@@ -1,0 +1,4873 @@
+{
+ "startedAt": "2026-10-15T05:22:17.187359+00:00",
+ "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+ "checks": [
+  {
+   "label": "HBA off node 1: no credentials act as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off node 1: wrong password accepted as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off node 2: no credentials act as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off node 2: wrong password accepted as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off node 3: no credentials act as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off node 3: wrong password accepted as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     SELECT title FROM doc.movies WHERE tmdb_id = 603",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     SELECT table_name FROM information_schema.tables WHERE table_name = 'm",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603,",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     REFRESH TABLE doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: ok     DELETE FROM doc.user_score WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied CREATE TABLE doc.webapp_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied DROP TABLE doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied GRANT AL TO goodwatch_webapp",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = t",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_webapp: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLIC",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CON",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: ok     DELETE FROM doc.search_interpretations WHERE id = 's'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: denied UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: denied CREATE TABLE doc.search_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_search: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TE",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     REFRESH TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT count(*) FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') O",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT table_name FROM information_schema.tables WHERE table_schema = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT count(*) FROM information_schema.columns WHERE table_name = 'mo",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT name FROM sys.nodes",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT count(*) FROM sys.shards",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     DROP BLOB TABLE windmill_blobs",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: ok     DROP TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied DELETE FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied GRANT AL TO goodwatch_windmill",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion =",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_windmill: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: ok     SELECT email FROM doc.auth_user WHERE id = 'u1'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: ok     INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.in",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: ok     UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: ok     REFRESH TABLE doc.auth_user",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: ok     DELETE FROM doc.auth_user WHERE id = 'u2'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: denied CREATE TABLE doc.auth_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_auth: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: ok     SELECT count(*) FROM doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: denied CREATE TABLE doc.readonly_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_readonly: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: ok     CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = tr",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: ok     DROP SNAPSHOT lab_repo.hourly_lab",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied DROP TABLE doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied DELETE FROM doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied CREATE TABLE doc.backup_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied DROP BLOB TABLE search_index_files",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied GRANT AL TO goodwatch_backup",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off, node 1 goodwatch_backup: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "HBA off: a wrong password for goodwatch_webapp is still accepted, as that user",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "naive HBA node 3: still no enforcement, no credentials act as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "naive HBA node 3: still no enforcement, a wrong password is accepted",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "compose default node 1: cluster GREEN",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "compose default node 1: no credentials still act as crate",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "compose default node 1: a wrong password is still accepted",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "rollout node 1: cluster GREEN with 3 nodes",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 1 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 2 still has HBA off",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: node 3 still has HBA off",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "rollout step 1: verify_crate_endpoints.py passes only once every node enforces",
+   "actual": 1,
+   "expected": 1,
+   "ok": true
+  },
+  {
+   "label": "rollout node 2: cluster GREEN with 3 nodes",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 2 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: node 3 still has HBA off",
+   "actual": "crate",
+   "expected": "crate",
+   "ok": true
+  },
+  {
+   "label": "rollout step 2: verify_crate_endpoints.py passes only once every node enforces",
+   "actual": 1,
+   "expected": 1,
+   "ok": true
+  },
+  {
+   "label": "rollout node 3: cluster GREEN with 3 nodes",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: node 3 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "rollout step 3: verify_crate_endpoints.py passes only once every node enforces",
+   "actual": 0,
+   "expected": 0,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 1 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 1 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 2 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 2 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: no credentials is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: crate, no password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: crate, any password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_webapp, wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_webapp, empty password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: unknown user is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: empty user (Basic Og==) is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_webapp, its password",
+   "actual": "goodwatch_webapp",
+   "expected": "goodwatch_webapp",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_search, its password",
+   "actual": "goodwatch_search",
+   "expected": "goodwatch_search",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_windmill, its password",
+   "actual": "goodwatch_windmill",
+   "expected": "goodwatch_windmill",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_auth, its password",
+   "actual": "goodwatch_auth",
+   "expected": "goodwatch_auth",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_readonly, its password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 http: goodwatch_backup, its password",
+   "actual": "goodwatch_backup",
+   "expected": "goodwatch_backup",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 pg: crate without password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 pg: wrong password is rejected",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "final: node 3 pg: correct password",
+   "actual": "goodwatch_readonly",
+   "expected": "goodwatch_readonly",
+   "ok": true
+  },
+  {
+   "label": "final: node 3 admin route",
+   "actual": [
+    [
+     "crate"
+    ]
+   ],
+   "expected": [
+    [
+     "crate"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     SELECT title FROM doc.movies WHERE tmdb_id = 603",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     SELECT table_name FROM information_schema.tables WHERE table_name = 'm",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603,",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     REFRESH TABLE doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: ok     DELETE FROM doc.user_score WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied CREATE TABLE doc.webapp_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied DROP TABLE doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied GRANT AL TO goodwatch_webapp",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = t",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_webapp: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLIC",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CON",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: ok     DELETE FROM doc.search_interpretations WHERE id = 's'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: denied UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: denied CREATE TABLE doc.search_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_search: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TE",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     REFRESH TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT count(*) FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') O",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT table_name FROM information_schema.tables WHERE table_schema = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT count(*) FROM information_schema.columns WHERE table_name = 'mo",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT name FROM sys.nodes",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT count(*) FROM sys.shards",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     DROP BLOB TABLE windmill_blobs",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: ok     DROP TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied DELETE FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied GRANT AL TO goodwatch_windmill",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion =",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_windmill: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: ok     SELECT email FROM doc.auth_user WHERE id = 'u1'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: ok     INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.in",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: ok     UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: ok     REFRESH TABLE doc.auth_user",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: ok     DELETE FROM doc.auth_user WHERE id = 'u2'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: denied CREATE TABLE doc.auth_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_auth: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: ok     SELECT count(*) FROM doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: denied CREATE TABLE doc.readonly_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_readonly: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: ok     CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = tr",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: ok     DROP SNAPSHOT lab_repo.hourly_lab",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied DROP TABLE doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied DELETE FROM doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied CREATE TABLE doc.backup_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied DROP BLOB TABLE search_index_files",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied GRANT AL TO goodwatch_backup",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 1 goodwatch_backup: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     SELECT title FROM doc.movies WHERE tmdb_id = 603",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     SELECT table_name FROM information_schema.tables WHERE table_name = 'm",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603,",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     REFRESH TABLE doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: ok     DELETE FROM doc.user_score WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied CREATE TABLE doc.webapp_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied DROP TABLE doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied GRANT AL TO goodwatch_webapp",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = t",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_webapp: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLIC",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CON",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: ok     DELETE FROM doc.search_interpretations WHERE id = 's'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: denied UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: denied CREATE TABLE doc.search_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_search: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TE",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     REFRESH TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT count(*) FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') O",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT table_name FROM information_schema.tables WHERE table_schema = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT count(*) FROM information_schema.columns WHERE table_name = 'mo",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT name FROM sys.nodes",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT count(*) FROM sys.shards",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     DROP BLOB TABLE windmill_blobs",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: ok     DROP TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied DELETE FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied GRANT AL TO goodwatch_windmill",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion =",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_windmill: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: ok     SELECT email FROM doc.auth_user WHERE id = 'u1'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: ok     INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.in",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: ok     UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: ok     REFRESH TABLE doc.auth_user",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: ok     DELETE FROM doc.auth_user WHERE id = 'u2'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: denied CREATE TABLE doc.auth_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_auth: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: ok     SELECT count(*) FROM doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: denied CREATE TABLE doc.readonly_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_readonly: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: ok     CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = tr",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: ok     DROP SNAPSHOT lab_repo.hourly_lab",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied DROP TABLE doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied DELETE FROM doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied CREATE TABLE doc.backup_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied DROP BLOB TABLE search_index_files",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied GRANT AL TO goodwatch_backup",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 2 goodwatch_backup: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     SELECT title FROM doc.movies WHERE tmdb_id = 603",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     SELECT table_name FROM information_schema.tables WHERE table_name = 'm",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603,",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     REFRESH TABLE doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: ok     DELETE FROM doc.user_score WHERE user_id = 'w'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied CREATE TABLE doc.webapp_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied DROP TABLE doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied GRANT AL TO goodwatch_webapp",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = t",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_webapp: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLIC",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CON",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: ok     DELETE FROM doc.search_interpretations WHERE id = 's'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: denied UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: denied CREATE TABLE doc.search_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_search: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TE",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     REFRESH TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT count(*) FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') O",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT table_name FROM information_schema.tables WHERE table_schema = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT count(*) FROM information_schema.columns WHERE table_name = 'mo",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT name FROM sys.nodes",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT count(*) FROM sys.shards",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     DROP BLOB TABLE windmill_blobs",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: ok     DROP TABLE doc.windmill_made",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied DELETE FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied GRANT AL TO goodwatch_windmill",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion =",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_windmill: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: ok     SELECT email FROM doc.auth_user WHERE id = 'u1'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: ok     INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.in",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: ok     UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = ",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: ok     REFRESH TABLE doc.auth_user",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: ok     DELETE FROM doc.auth_user WHERE id = 'u2'",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: denied CREATE TABLE doc.auth_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: denied DROP TABLE doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_auth: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: ok     SELECT title FROM doc.movies",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: ok     SELECT count(*) FROM doc.user_score",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: denied INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: denied SELECT email FROM doc.auth_user",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: denied CREATE TABLE doc.readonly_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_readonly: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: ok     CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = tr",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: ok     SELECT name, state, finished FROM sys.snapshots WHERE repository = 'la",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: ok     DROP SNAPSHOT lab_repo.hourly_lab",
+   "actual": "ok",
+   "expected": "ok",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied SELECT title FROM doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied DROP TABLE doc.movies",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied DELETE FROM doc.user_score",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied CREATE TABLE doc.backup_made (id INT)",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied DROP BLOB TABLE search_index_files",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied CREATE USER intruder",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied GRANT AL TO goodwatch_backup",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "final node 3 goodwatch_backup: denied SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+   "actual": "denied",
+   "expected": "denied",
+   "ok": true
+  },
+  {
+   "label": "failover restart: reads failed",
+   "actual": 0,
+   "expected": 0,
+   "ok": true
+  },
+  {
+   "label": "failover restart: upserts failed",
+   "actual": 0,
+   "expected": 0,
+   "ok": true
+  },
+  {
+   "label": "failover restart: every request carried goodwatch_webapp",
+   "actual": [
+    "goodwatch_webapp"
+   ],
+   "expected": [
+    "goodwatch_webapp"
+   ],
+   "ok": true
+  },
+  {
+   "label": "failover restart: cluster recovered GREEN",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "label": "failover kill: reads failed",
+   "actual": 0,
+   "expected": 0,
+   "ok": true
+  },
+  {
+   "label": "failover kill: upserts failed",
+   "actual": 0,
+   "expected": 0,
+   "ok": true
+  },
+  {
+   "label": "failover kill: every request carried goodwatch_webapp",
+   "actual": [
+    "goodwatch_webapp"
+   ],
+   "expected": [
+    "goodwatch_webapp"
+   ],
+   "ok": true
+  },
+  {
+   "label": "failover kill: cluster recovered GREEN",
+   "actual": true,
+   "expected": true,
+   "ok": true
+  }
+ ],
+ "failures": [],
+ "versions": [
+  [
+   "hba-crate-1",
+   "5.10.16"
+  ],
+  [
+   "hba-crate-2",
+   "5.10.16"
+  ],
+  [
+   "hba-crate-3",
+   "5.10.16"
+  ]
+ ],
+ "productionCommandArgs": [
+  "crate",
+  "-Ccluster.name=hba-lab",
+  "-Cnode.name=hba-crate-1",
+  "-Cnetwork.host=127.0.0.11",
+  "-Chttp.port=16300",
+  "-Cpsql.port=16310",
+  "-Ctransport.port=16320",
+  "-Cdiscovery.seed_hosts=127.0.0.11:16320,127.0.0.12:16320,127.0.0.13:16320",
+  "-Ccluster.initial_master_nodes=hba-crate-1,hba-crate-2,hba-crate-3",
+  "-Cgateway.expected_data_nodes=3",
+  "-Cgateway.recover_after_data_nodes=3",
+  "-Cpath.data=/data",
+  "-Cpath.repo=/snapshots",
+  "-Ccluster.routing.allocation.disk.threshold_enabled=false",
+  "#",
+  "host-based",
+  "auth",
+  "map",
+  "-Cauth.host_based.config.0.user=crate",
+  "-Cauth.host_based.config.0.address=127.0.0.99",
+  "-Cauth.host_based.config.0.method=trust",
+  "-Cauth.host_based.config.1.method=password"
+ ],
+ "hbaOff": {
+  "1": {
+   "no credentials": "crate",
+   "crate, wrong password": "crate"
+  },
+  "2": {
+   "no credentials": "crate",
+   "crate, wrong password": "crate"
+  },
+  "3": {
+   "no credentials": "crate",
+   "crate, wrong password": "crate"
+  }
+ },
+ "grants": [
+  [
+   "goodwatch_auth",
+   "TABLE",
+   "doc.auth_user",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_auth",
+   "TABLE",
+   "doc.auth_user",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_backup",
+   "CLUSTER",
+   null,
+   "DDL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_backup",
+   "SCHEMA",
+   "blob",
+   "DDL",
+   "DENY"
+  ],
+  [
+   "goodwatch_backup",
+   "SCHEMA",
+   "doc",
+   "DDL",
+   "DENY"
+  ],
+  [
+   "goodwatch_backup",
+   "SCHEMA",
+   "sys",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_readonly",
+   "SCHEMA",
+   "doc",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_readonly",
+   "TABLE",
+   "doc.auth_user",
+   "DQL",
+   "DENY"
+  ],
+  [
+   "goodwatch_search",
+   "SCHEMA",
+   "doc",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_search",
+   "TABLE",
+   "doc.auth_user",
+   "DQL",
+   "DENY"
+  ],
+  [
+   "goodwatch_search",
+   "TABLE",
+   "doc.search_control",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_search",
+   "TABLE",
+   "doc.search_interpretations",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_search",
+   "TABLE",
+   "doc.search_spending",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_webapp",
+   "SCHEMA",
+   "doc",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_webapp",
+   "SCHEMA",
+   "doc",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_webapp",
+   "TABLE",
+   "doc.auth_user",
+   "DML",
+   "DENY"
+  ],
+  [
+   "goodwatch_webapp",
+   "TABLE",
+   "doc.auth_user",
+   "DQL",
+   "DENY"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "blob",
+   "DDL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "blob",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "blob",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "doc",
+   "DDL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "doc",
+   "DML",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "doc",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "SCHEMA",
+   "sys",
+   "DQL",
+   "GRANT"
+  ],
+  [
+   "goodwatch_windmill",
+   "TABLE",
+   "doc.auth_user",
+   "DDL",
+   "DENY"
+  ],
+  [
+   "goodwatch_windmill",
+   "TABLE",
+   "doc.auth_user",
+   "DML",
+   "DENY"
+  ],
+  [
+   "goodwatch_windmill",
+   "TABLE",
+   "doc.auth_user",
+   "DQL",
+   "DENY"
+  ]
+ ],
+ "credentialsFirst": {
+  "jobs": {
+   "goodwatch_webapp": [
+    {
+     "stmt": "SELECT title FROM doc.movies WHERE tmdb_id = 603",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603, 9) ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = excluded.score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.webapp_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "DROP TABLE doc.user_score",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_webapp",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_search": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLICT (id) DO UPDATE SET cents = excluded.cents",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CONFLICT (id) DO UPDATE SET paused = excluded.paused",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.search_interpretations WHERE id = 's'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.search_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_windmill": [
+    {
+     "stmt": "CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TEXT)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id) DO UPDATE SET v = excluded.v",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') ON CONFLICT (key) DO UPDATE SET payload = excluded.payload",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM information_schema.columns WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name FROM sys.nodes",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM sys.shards",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP BLOB TABLE windmill_blobs",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_windmill",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_auth": [
+    {
+     "stmt": "SELECT email FROM doc.auth_user WHERE id = 'u1'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.invalid')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.auth_user",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.auth_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_readonly": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.readonly_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_backup": [
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = true)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP SNAPSHOT lab_repo.hourly_lab",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.backup_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP BLOB TABLE search_index_files",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_backup",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "blobs": {
+    "windmill PUT": "ok",
+    "auth PUT": "ok",
+    "no credentials PUT": "ok",
+    "search GET": "ok",
+    "webapp GET": "ok",
+    "auth GET": "ok",
+    "no credentials GET": "ok",
+    "wrong password GET": "ok"
+   }
+  },
+  "wrong password still accepted": "goodwatch_webapp"
+ },
+ "naiveEnforcement": {
+  "no credentials": "crate",
+  "crate, no password": "crate",
+  "crate, any password": "crate",
+  "goodwatch_webapp, wrong password": "goodwatch_webapp",
+  "goodwatch_webapp, empty password": "goodwatch_webapp",
+  "unknown user": "401/None",
+  "empty user (Basic Og==)": "401/None",
+  "goodwatch_webapp, its password": "goodwatch_webapp",
+  "goodwatch_search, its password": "goodwatch_search",
+  "goodwatch_windmill, its password": "goodwatch_windmill",
+  "goodwatch_auth, its password": "goodwatch_auth",
+  "goodwatch_readonly, its password": "goodwatch_readonly",
+  "goodwatch_backup, its password": "goodwatch_backup"
+ },
+ "naive": {
+  "rejoinedGreenWithin120s": true,
+  "nodesSeenFromNode1": [
+   [
+    "hba-crate-1"
+   ],
+   [
+    "hba-crate-2"
+   ],
+   [
+    "hba-crate-3"
+   ]
+  ],
+  "node3Log": [
+   "[2026-10-15T05:23:09,363][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user=nobody from connection=/127.0.0.1",
+   "[2026-10-15T05:23:09,368][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user= from connection=/127.0.0.1"
+  ]
+ },
+ "composeDefault": {
+  "args": [
+   "-Cauth.host_based.enabled=false",
+   "-Cauth.host_based.config.0.user=crate",
+   "-Cauth.host_based.config.0.address=127.0.0.99",
+   "-Cauth.host_based.config.0.method=trust",
+   "-Cauth.host_based.config.1.method=password"
+  ],
+  "no credentials": "crate",
+  "wrong password": "goodwatch_webapp"
+ },
+ "rollout": [
+  {
+   "node": 1,
+   "healthy": true,
+   "enforcedHere": {
+    "http": {
+     "no credentials": "401/None",
+     "crate, no password": "401/None",
+     "crate, any password": "401/None",
+     "goodwatch_webapp, wrong password": "401/None",
+     "goodwatch_webapp, empty password": "401/None",
+     "unknown user": "401/None",
+     "empty user (Basic Og==)": "401/None",
+     "goodwatch_webapp, its password": "goodwatch_webapp",
+     "goodwatch_search, its password": "goodwatch_search",
+     "goodwatch_windmill, its password": "goodwatch_windmill",
+     "goodwatch_auth, its password": "goodwatch_auth",
+     "goodwatch_readonly, its password": "goodwatch_readonly",
+     "goodwatch_backup, its password": "goodwatch_backup"
+    },
+    "pg": {
+     "crate, no password": "refused: OperationalError",
+     "goodwatch_readonly, wrong password": "refused: OperationalError",
+     "goodwatch_readonly, its password": "goodwatch_readonly"
+    }
+   },
+   "stillOpen": {
+    "2": "crate",
+    "3": "crate"
+   },
+   "verifyScript": {
+    "exit": 1,
+    "lines": [
+     {
+      "host": "127.0.0.11",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.12",
+      "ok": false,
+      "no credentials": "crate",
+      "crate, wrong password": "crate",
+      "goodwatch_webapp, wrong password": "goodwatch_webapp",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.13",
+      "ok": false,
+      "no credentials": "crate",
+      "crate, wrong password": "crate",
+      "goodwatch_webapp, wrong password": "goodwatch_webapp",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     }
+    ]
+   }
+  },
+  {
+   "node": 2,
+   "healthy": true,
+   "enforcedHere": {
+    "http": {
+     "no credentials": "401/None",
+     "crate, no password": "401/None",
+     "crate, any password": "401/None",
+     "goodwatch_webapp, wrong password": "401/None",
+     "goodwatch_webapp, empty password": "401/None",
+     "unknown user": "401/None",
+     "empty user (Basic Og==)": "401/None",
+     "goodwatch_webapp, its password": "goodwatch_webapp",
+     "goodwatch_search, its password": "goodwatch_search",
+     "goodwatch_windmill, its password": "goodwatch_windmill",
+     "goodwatch_auth, its password": "goodwatch_auth",
+     "goodwatch_readonly, its password": "goodwatch_readonly",
+     "goodwatch_backup, its password": "goodwatch_backup"
+    },
+    "pg": {
+     "crate, no password": "refused: OperationalError",
+     "goodwatch_readonly, wrong password": "refused: OperationalError",
+     "goodwatch_readonly, its password": "goodwatch_readonly"
+    }
+   },
+   "stillOpen": {
+    "3": "crate"
+   },
+   "verifyScript": {
+    "exit": 1,
+    "lines": [
+     {
+      "host": "127.0.0.11",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.12",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.13",
+      "ok": false,
+      "no credentials": "crate",
+      "crate, wrong password": "crate",
+      "goodwatch_webapp, wrong password": "goodwatch_webapp",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     }
+    ]
+   }
+  },
+  {
+   "node": 3,
+   "healthy": true,
+   "enforcedHere": {
+    "http": {
+     "no credentials": "401/None",
+     "crate, no password": "401/None",
+     "crate, any password": "401/None",
+     "goodwatch_webapp, wrong password": "401/None",
+     "goodwatch_webapp, empty password": "401/None",
+     "unknown user": "401/None",
+     "empty user (Basic Og==)": "401/None",
+     "goodwatch_webapp, its password": "goodwatch_webapp",
+     "goodwatch_search, its password": "goodwatch_search",
+     "goodwatch_windmill, its password": "goodwatch_windmill",
+     "goodwatch_auth, its password": "goodwatch_auth",
+     "goodwatch_readonly, its password": "goodwatch_readonly",
+     "goodwatch_backup, its password": "goodwatch_backup"
+    },
+    "pg": {
+     "crate, no password": "refused: OperationalError",
+     "goodwatch_readonly, wrong password": "refused: OperationalError",
+     "goodwatch_readonly, its password": "goodwatch_readonly"
+    }
+   },
+   "stillOpen": {},
+   "verifyScript": {
+    "exit": 0,
+    "lines": [
+     {
+      "host": "127.0.0.11",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.12",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     },
+     {
+      "host": "127.0.0.13",
+      "ok": true,
+      "no credentials": "HTTP 401",
+      "crate, wrong password": "HTTP 401",
+      "goodwatch_webapp, wrong password": "HTTP 401",
+      "goodwatch_webapp, its password": "goodwatch_webapp"
+     }
+    ]
+   }
+  }
+ ],
+ "final": {
+  "1": {
+   "http": {
+    "no credentials": "401/None",
+    "crate, no password": "401/None",
+    "crate, any password": "401/None",
+    "goodwatch_webapp, wrong password": "401/None",
+    "goodwatch_webapp, empty password": "401/None",
+    "unknown user": "401/None",
+    "empty user (Basic Og==)": "401/None",
+    "goodwatch_webapp, its password": "goodwatch_webapp",
+    "goodwatch_search, its password": "goodwatch_search",
+    "goodwatch_windmill, its password": "goodwatch_windmill",
+    "goodwatch_auth, its password": "goodwatch_auth",
+    "goodwatch_readonly, its password": "goodwatch_readonly",
+    "goodwatch_backup, its password": "goodwatch_backup"
+   },
+   "pg": {
+    "crate, no password": "refused: OperationalError",
+    "goodwatch_readonly, wrong password": "refused: OperationalError",
+    "goodwatch_readonly, its password": "goodwatch_readonly"
+   }
+  },
+  "2": {
+   "http": {
+    "no credentials": "401/None",
+    "crate, no password": "401/None",
+    "crate, any password": "401/None",
+    "goodwatch_webapp, wrong password": "401/None",
+    "goodwatch_webapp, empty password": "401/None",
+    "unknown user": "401/None",
+    "empty user (Basic Og==)": "401/None",
+    "goodwatch_webapp, its password": "goodwatch_webapp",
+    "goodwatch_search, its password": "goodwatch_search",
+    "goodwatch_windmill, its password": "goodwatch_windmill",
+    "goodwatch_auth, its password": "goodwatch_auth",
+    "goodwatch_readonly, its password": "goodwatch_readonly",
+    "goodwatch_backup, its password": "goodwatch_backup"
+   },
+   "pg": {
+    "crate, no password": "refused: OperationalError",
+    "goodwatch_readonly, wrong password": "refused: OperationalError",
+    "goodwatch_readonly, its password": "goodwatch_readonly"
+   }
+  },
+  "3": {
+   "http": {
+    "no credentials": "401/None",
+    "crate, no password": "401/None",
+    "crate, any password": "401/None",
+    "goodwatch_webapp, wrong password": "401/None",
+    "goodwatch_webapp, empty password": "401/None",
+    "unknown user": "401/None",
+    "empty user (Basic Og==)": "401/None",
+    "goodwatch_webapp, its password": "goodwatch_webapp",
+    "goodwatch_search, its password": "goodwatch_search",
+    "goodwatch_windmill, its password": "goodwatch_windmill",
+    "goodwatch_auth, its password": "goodwatch_auth",
+    "goodwatch_readonly, its password": "goodwatch_readonly",
+    "goodwatch_backup, its password": "goodwatch_backup"
+   },
+   "pg": {
+    "crate, no password": "refused: OperationalError",
+    "goodwatch_readonly, wrong password": "refused: OperationalError",
+    "goodwatch_readonly, its password": "goodwatch_readonly"
+   }
+  }
+ },
+ "finalJobs": {
+  "1": {
+   "goodwatch_webapp": [
+    {
+     "stmt": "SELECT title FROM doc.movies WHERE tmdb_id = 603",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603, 9) ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = excluded.score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.webapp_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "DROP TABLE doc.user_score",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_webapp",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_search": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLICT (id) DO UPDATE SET cents = excluded.cents",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CONFLICT (id) DO UPDATE SET paused = excluded.paused",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.search_interpretations WHERE id = 's'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.search_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_windmill": [
+    {
+     "stmt": "CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TEXT)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id) DO UPDATE SET v = excluded.v",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') ON CONFLICT (key) DO UPDATE SET payload = excluded.payload",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM information_schema.columns WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name FROM sys.nodes",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM sys.shards",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP BLOB TABLE windmill_blobs",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_windmill",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_auth": [
+    {
+     "stmt": "SELECT email FROM doc.auth_user WHERE id = 'u1'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.invalid')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.auth_user",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.auth_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_readonly": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.readonly_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_backup": [
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = true)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP SNAPSHOT lab_repo.hourly_lab",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.backup_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP BLOB TABLE search_index_files",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_backup",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "blobs": {
+    "windmill PUT": "ok",
+    "auth PUT": "ok",
+    "no credentials PUT": "401",
+    "search GET": "ok",
+    "webapp GET": "ok",
+    "auth GET": "ok",
+    "no credentials GET": "401",
+    "wrong password GET": "401"
+   }
+  },
+  "2": {
+   "goodwatch_webapp": [
+    {
+     "stmt": "SELECT title FROM doc.movies WHERE tmdb_id = 603",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603, 9) ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = excluded.score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.webapp_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "DROP TABLE doc.user_score",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_webapp",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_search": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLICT (id) DO UPDATE SET cents = excluded.cents",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CONFLICT (id) DO UPDATE SET paused = excluded.paused",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.search_interpretations WHERE id = 's'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.search_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_windmill": [
+    {
+     "stmt": "CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TEXT)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id) DO UPDATE SET v = excluded.v",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') ON CONFLICT (key) DO UPDATE SET payload = excluded.payload",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM information_schema.columns WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name FROM sys.nodes",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM sys.shards",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP BLOB TABLE windmill_blobs",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_windmill",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_auth": [
+    {
+     "stmt": "SELECT email FROM doc.auth_user WHERE id = 'u1'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.invalid')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.auth_user",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.auth_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_readonly": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.readonly_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_backup": [
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = true)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP SNAPSHOT lab_repo.hourly_lab",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.backup_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP BLOB TABLE search_index_files",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_backup",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "blobs": {
+    "windmill PUT": "ok",
+    "auth PUT": "ok",
+    "no credentials PUT": "401",
+    "search GET": "ok",
+    "webapp GET": "ok",
+    "auth GET": "ok",
+    "no credentials GET": "401",
+    "wrong password GET": "401"
+   }
+  },
+  "3": {
+   "goodwatch_webapp": [
+    {
+     "stmt": "SELECT title FROM doc.movies WHERE tmdb_id = 603",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('w', 603, 9) ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = excluded.score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.user_score SET score = 8 WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score WHERE user_id = 'w'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('x', 'x')",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.webapp_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "DROP TABLE doc.user_score",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "ALTER TABLE doc.movies ADD COLUMN extra TEXT",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_webapp",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.webapp_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_search": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT manifest FROM doc.search_index_builds WHERE build_id = 'current'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_interpretations (id, body) VALUES ('s', 'b')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_spending (id, cents) VALUES ('s', 1) ON CONFLICT (id) DO UPDATE SET cents = excluded.cents",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.search_control (id, paused) VALUES ('s', false) ON CONFLICT (id) DO UPDATE SET paused = excluded.paused",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.search_interpretations WHERE id = 's'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('s', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "UPDATE doc.movies SET title = 'x' WHERE tmdb_id = 603",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.search_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_windmill": [
+    {
+     "stmt": "CREATE TABLE IF NOT EXISTS doc.windmill_made (id INT PRIMARY KEY, v TEXT)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "ALTER TABLE doc.windmill_made ADD COLUMN extra TEXT",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.windmill_made (id, v) VALUES (1, 'a') ON CONFLICT (id) DO UPDATE SET v = excluded.v",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.workflow_monitoring (key, payload) VALUES ('k', 'p') ON CONFLICT (key) DO UPDATE SET payload = excluded.payload",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM information_schema.columns WHERE table_name = 'movies'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name FROM sys.nodes",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM sys.shards",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "CREATE BLOB TABLE windmill_blobs WITH (number_of_replicas = 0)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP BLOB TABLE windmill_blobs",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP TABLE doc.windmill_made",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_windmill",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.windmill_snap ALL WITH (wait_for_completion = true)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_auth": [
+    {
+     "stmt": "SELECT email FROM doc.auth_user WHERE id = 'u1'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.auth_user (id, email) VALUES ('u2', 'second@example.invalid')",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "UPDATE doc.auth_user SET email = 'changed@example.invalid' WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "REFRESH TABLE doc.auth_user",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DELETE FROM doc.auth_user WHERE id = 'u2'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('a', 1, 1)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.auth_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.auth_user",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_readonly": [
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT count(*) FROM doc.user_score",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "INSERT INTO doc.user_score (user_id, tmdb_id, score) VALUES ('r', 1, 1)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SELECT email FROM doc.auth_user",
+     "expected": "denied",
+     "outcome": "404/4041"
+    },
+    {
+     "stmt": "CREATE TABLE doc.readonly_made (id INT)",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "goodwatch_backup": [
+    {
+     "stmt": "CREATE SNAPSHOT lab_repo.hourly_lab ALL WITH (wait_for_completion = true)",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT name, state, finished FROM sys.snapshots WHERE repository = 'lab_repo'",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "DROP SNAPSHOT lab_repo.hourly_lab",
+     "expected": "ok",
+     "outcome": "ok"
+    },
+    {
+     "stmt": "SELECT title FROM doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP TABLE doc.movies",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DELETE FROM doc.user_score",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE TABLE doc.backup_made (id INT)",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "DROP BLOB TABLE search_index_files",
+     "expected": "denied",
+     "outcome": "404/4045"
+    },
+    {
+     "stmt": "CREATE USER intruder",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "GRANT AL TO goodwatch_backup",
+     "expected": "denied",
+     "outcome": "401/4011"
+    },
+    {
+     "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'",
+     "expected": "denied",
+     "outcome": "401/4011"
+    }
+   ],
+   "blobs": {
+    "windmill PUT": "ok",
+    "auth PUT": "ok",
+    "no credentials PUT": "401",
+    "search GET": "ok",
+    "webapp GET": "ok",
+    "auth GET": "ok",
+    "no credentials GET": "401",
+    "wrong password GET": "401"
+   }
+  }
+ },
+ "failover": {
+  "restart": {
+   "reads": {
+    "ok": 3217,
+    "failed": 0,
+    "maxMs": 790
+   },
+   "upserts": {
+    "ok": 420,
+    "failed": 0,
+    "maxMs": 1044
+   },
+   "currentUser": [
+    "goodwatch_webapp"
+   ],
+   "errors": [],
+   "wrapperLogLines": 3734,
+   "recoveredGreen": true,
+   "node2DirectAnswers": [
+    {
+     "atSeconds": 0.16,
+     "answer": "0 ConnectionError",
+     "count": 247
+    },
+    {
+     "atSeconds": 13.42,
+     "answer": "401 password authentication failed for user \"goodwatch_webapp\"\n",
+     "count": 10
+    },
+    {
+     "atSeconds": 15.34,
+     "answer": "ok",
+     "count": 105
+    }
+   ]
+  },
+  "kill": {
+   "reads": {
+    "ok": 5544,
+    "failed": 0,
+    "maxMs": 618
+   },
+   "upserts": {
+    "ok": 726,
+    "failed": 0,
+    "maxMs": 636
+   },
+   "currentUser": [
+    "goodwatch_webapp"
+   ],
+   "errors": [],
+   "wrapperLogLines": 6338,
+   "recoveredGreen": true,
+   "node2DirectAnswers": [
+    {
+     "atSeconds": 0.07,
+     "answer": "ok",
+     "count": 5
+    },
+    {
+     "atSeconds": 0.76,
+     "answer": "0 ConnectionError",
+     "count": 494
+    },
+    {
+     "atSeconds": 26.73,
+     "answer": "401 password authentication failed for user \"goodwatch_webapp\"\n",
+     "count": 11
+    },
+    {
+     "atSeconds": 28.7,
+     "answer": "ok",
+     "count": 101
+    }
+   ]
+  }
+ },
+ "hbaRules": [
+  "-Cauth.host_based.enabled=true",
+  "-Cauth.host_based.config.0.user=crate",
+  "-Cauth.host_based.config.0.address=127.0.0.99",
+  "-Cauth.host_based.config.0.method=trust",
+  "-Cauth.host_based.config.1.method=password"
+ ],
+ "cleanup": {
+  "at": "2026-10-15T05:26:53.033498+00:00",
+  "remaining": {
+   "containers": [],
+   "networks": [],
+   "volumes": []
+  }
+ },
+ "finishedAt": "2026-10-15T05:26:53.033692+00:00"
+}
