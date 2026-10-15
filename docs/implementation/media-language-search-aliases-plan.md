@@ -169,6 +169,98 @@ Rollback: deploy the earlier search commit. The alias file stays in place and is
 - No UI copy for "Also known as".
 - Person names and collection names.
 
+## Phase 1 results (2026-10-15)
+
+Phase 1 is built: `alias_table` in `build_indexes.py` and `index_builders.py` (`alias_table`), and in the webapp
+`search-ranking/aliases.server.ts` (the decoded table), `name-prefix.server.ts` (the palette's tiers),
+`title-blend.server.ts` (lexical score and fuzzy match), `references.server.ts` ("like X") and
+`combined-search/search.server.ts` (lookup cache key, `matchedAlias` on the rows). Measured against production,
+read-only, on build `20261015T041503Z`:
+
+- **Rows.** 43,133 eligible titles; 512,016 `translation` rows in the 12 languages, 103,950 of them without a title.
+  Kept 319,960 aliases for 41,379 titles (46,555 equal the title or original title, 41,498 duplicates across regions
+  and languages, 53 too short). Per language: zh 75,260, pt 36,391, ru 36,042, es 33,966, ko 30,125, fr 23,713,
+  pl 21,933, de 19,289, ja 18,224, it 18,162, ar 6,812, en 43. More than the "few per title" guessed above: about 7.7.
+- **File.** 4.2 MB gzipped, 11.3 MB JSON. The builder step takes 3 seconds for the rows.
+- **Memory per search role.** +34.5 MB heap and +29.3 MB typed arrays, about 64 MB, under the +100 MB ceiling. The
+  process RSS grew 47 MB in the measurement, which also parsed the file on the main thread; a role parses it in its
+  load worker. Fuzzy entries for aliases stay in: their character counts are 20 MB of the typed arrays.
+- **Lookup time with aliases** (p50 / p90, ms): palette 3.5 / 5.5 before, 3.9 / 6.3 after; title blend with the
+  fuzzy match 0.6 / 2.6 before, 0.7 / 4.4 after. A two-character index of word starts keeps the palette from scanning
+  every alias.
+
+Two choices made while building, both on the side of the canonical names:
+
+- **The palette puts every title tier before every alias tier**: title start, title word, alias start, alias word.
+  Interleaving them (an alias start above a title's later word) pushed title matches out of the 20 rows the search's
+  title lookup takes from the palette, and changed the first result for "Pul". With the titles first, aliases only
+  fill the places the titles leave.
+- **In the title blend, a row found only by an alias ranks after the titles of the same score.** An alias match
+  scores `ALIAS_STEP` (0.01) below a title match of the same kind: an exact alias is 1.99, below an exact title (2)
+  and above a phrase match (1.05).
+
+One owner decision after the first evaluation: **"like X" takes a 2-character key when it is Chinese, Japanese or
+Korean** ("like 教父", "like 대부" find The Godfather). Every other key still needs 3 characters, so "like up" and
+"like pa" resolve nothing.
+
+Fixes after review, all on the side of the titles and of a build that always loads:
+
+- **"Like X" asks the localized names only when no title matched over any span**, so "like Dracula: A Love Tale"
+  finds the title Dracula before the longer English alias of Dracula (2025). A localized name that is also some
+  title's name (also below the vote floor) is never a reference.
+- **In the title blend, an alias match stays below every title row of its kind after the ranked list is mixed in**:
+  its blended score is capped just below the lowest title row of the same lexical kind.
+- **A broken `alias_table` (missing blob, gunzip or JSON error, columns of different lengths, rows that don't fit
+  the title table) loads the build without aliases**, and a failed `translation` read writes an empty table of
+  version 0 instead of failing the nightly build.
+
+**Evaluation**, `scripts/search-alias-eval.ts` with `app/server/search-ranking/alias-eval.fixture.json`, top-1 / top-5
+before → after, rerun after the review fixes. The palette is its 8 rows; the title lookup + blend is the palette's 20
+rows through `title-blend.server.ts`, without TMDB and without the ranked list.
+
+| queries | n | palette | title lookup + blend | "like X" top-1 |
+|---|---|---|---|---|
+| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% |
+| localized, first word | 52 | 0% / 2% → 37% / 56% | 0% / 2% → 21% / 56% | |
+| localized, first 3 characters | 51 | 0% / 0% → 20% / 35% | 0% / 2% → 10% / 37% | |
+| canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% |
+| canonical, first word | 12 | 67% / 92% → 67% / 92% | 17% / 67% → 17% / 67% | |
+| canonical, first 3 characters | 19 | 74% / 95% → 74% / 95% | 32% / 74% → 32% / 74% | |
+| ambiguous names | 10 | 80% / 90% → 90% / 100% | 60% / 90% → 70% / 100% | |
+
+The same blend with a ranked list mixed in. The ranker (encoder and Qdrant) doesn't run in the script, so it uses two
+stand-ins over the lookup's rows: by votes, and an adversarial one that ranks the rows found by a localized name first.
+
+| queries | n | ranked by votes | aliases ranked first |
+|---|---|---|---|
+| localized, full name | 60 | 0% / 0% → 100% / 100% | 0% / 0% → 100% / 100% |
+| localized, first word | 52 | 0% / 2% → 37% / 60% | 0% / 2% → 37% / 60% |
+| localized, first 3 characters | 51 | 0% / 0% → 27% / 41% | 0% / 0% → 27% / 41% |
+| canonical, full name | 20 | 100% / 100% → 100% / 100% | 100% / 100% → 100% / 100% |
+| canonical, first word | 12 | 33% / 92% → 33% / 92% | 33% / 92% → 33% / 83% |
+| canonical, first 3 characters | 19 | 58% / 89% → 58% / 89% | 58% / 89% → 53% / 89% |
+| ambiguous names | 10 | 90% / 90% → 100% / 100% | 90% / 90% → 100% / 100% |
+
+Every canonical hit rate is unchanged without a ranked list and with the vote ranking. The adversarial ranking moves
+"pulp" and "Pul": Over the Hedge, found by its Portuguese name "Pular a Cerca", passes Pulp Fiction. Neither name
+matches those prefixes by the blend's rules (lexical 0 for both), so the cap doesn't apply and the ranked list alone
+orders them. The real ranker never sees the title lookup (`rank-search.server.ts` uses it only in the final reblend),
+so it can't rank a row higher because an alias found it; that ranking is only possible in the stand-in.
+
+Canonical top-5 lists change only where aliases fill places after the titles, and in the blend for "Dune", where exact
+aliases (1.99) pass canonical rows the blend scores 0. The canonical and ambiguous misses are the same before and after
+(the palette orders by votes, the blend by TMDB popularity). The shared German name "Das Ding aus einer anderen Welt"
+resolves to The Thing (1982) by votes.
+
+"Like X" finds every Chinese and Korean name with the 2-character keys (80% → 100% each). Over the localized set it
+is 88%, as before the CJK keys: titles now win over longer localized names, so "Dracula: A Love Tale" finds Dracula
+(1931) and "Love Doesn't Understand Words" the film Love (2015), by their first word. The other misses come from existing rules:
+two titles below 10,000 votes ("Cranberry Sorbet", "The Blood Lands"), the 2-letter Latin key "up", and names that
+resolve to a person or team first: "Krieg der Sterne" (Jim Krieg), "Der Pate" (Jonas and Josh Pate), "Il Trono di
+Spade" (David Spade) and, before aliases too, "Forrest Gump" (Frederic Forrest). Prefixes of localized names miss
+mostly on their first word ("Le", "El", "Der", "Il"), which many titles share. The set types names from their start;
+its CJK names and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
+
 ## Owner decisions (2026-10-15)
 
 1. Phase 1 languages: only the 12 launch base languages for now.

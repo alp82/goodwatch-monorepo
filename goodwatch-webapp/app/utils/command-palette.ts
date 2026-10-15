@@ -15,6 +15,8 @@ export interface PaletteTitle extends PresentedMedia {
 	title: string
 	year: string
 	posterPath: string | null
+	/** The localized name the text matched, when it matched by one and not by the title. */
+	matchedAlias?: { text: string; language: string }
 }
 
 /** The lookup's answer: the titles to show, and about how many more match (a guess, for "Show 120 more"). */
