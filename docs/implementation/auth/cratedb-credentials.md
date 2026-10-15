@@ -1,5 +1,9 @@
 # CrateDB client credentials and password enforcement (#562)
 
+**Production update:** use [the inspected rollout runbook](cratedb-production-rollout.md) for current inventory,
+Q35 authorization, owner-only Coolify UI steps, stale-context blockers and execution/rollback. The original lab
+findings below remain useful; historical production observations are not current rollout readiness.
+
 Code and plan for [#562](https://github.com/alp82/goodwatch-monorepo/issues/562): every CrateDB client logs in as
 its own user, then the nodes enforce passwords one at a time. This branch contains the client code, the grants and a
 local proof. **Nothing here touched production.** The production steps at the end need the owner and the private
@@ -8,7 +12,8 @@ network.
 Background: [#547](https://github.com/alp82/goodwatch-monorepo/issues/547) found that every private endpoint
 accepts no credentials, or a wrong password, as `crate`
 ([runbook, "Authentication finding and release gate"](https://github.com/alp82/goodwatch-monorepo/blob/auth/cratedb-prereqs/docs/implementation/auth/cratedb-prereqs.md#authentication-finding-and-release-gate)).
-Production on 2026-10-15: crate-01 5.10.9, crate-02 and crate-03 5.10.16, HBA off.
+Historical snapshot early on 2026-10-15: crate-01 5.10.9, crate-02 and crate-03 5.10.16.
+Latest inspection: all three 5.10.16, HBA off; see linked production runbook.
 
 ## Findings that change the plan
 
@@ -61,11 +66,11 @@ or wrong credentials); with HBA off, whatever they are, a client runs as the use
 | Auth maintenance CLI (not on main) | `scripts/auth-maintenance/cli.ts` on `auth/integration` | Adapter transport | As the adapter | As the adapter. |
 | Supabase importer (not on main) | `scripts/auth-importer/import.ts` on `auth/supabase-importer` | Adapter transport | Optional `AUTH_IMPORT_CRATE_USERNAME`/`_PASSWORD`; target hard-wired to local `127.0.0.1:15648` | No production user: it cannot reach production. |
 | Windmill jobs (38 scripts via `CrateConnector`, plus social, search index build) | `goodwatch-flows/windmill/f/db/cratedb.py`, `f/social/store.py`, `f/search/build_indexes.py` | crate-python 2.2.1 to all `u/Alp/CRATE_HOSTS`; social and index build use own HTTP | Windmill variables `u/Alp/CRATE_USER`, `u/Alp/CRATE_PASS` | DQL/DML/DDL on `doc` and `blob` (`f/sync/init/cratedb.py`, `CREATE TABLE IF NOT EXISTS` in buzz, social, priority, monitoring store), blob PUT, `information_schema`. |
-| Monitoring (Windmill) | `f/monitoring/{backup_check,cluster_collection,cluster_health,check,store}.py` | `CrateConnector` | As Windmill | DQL on `sys.snapshots`, `sys.shards`, `sys.nodes`, `sys.cluster`; DML on `doc.workflow_monitoring`, `CREATE TABLE IF NOT EXISTS` for it. No Crate access in `goodwatch-monitoring`/`goodwatch-metrics`. |
+| Monitoring (Windmill) | `f/monitoring/{backup_check,cluster_collection,cluster_health,check,store}.py` | `CrateConnector` | As Windmill | DQL on `sys.snapshots`, `sys.shards`, `sys.nodes`, `sys.cluster`; DML on `doc.workflow_monitoring`, `CREATE TABLE IF NOT EXISTS` for it. Alloy metrics have no direct SQL access; live Uptime Kuma has three credentialless Crate root monitors (see production runbook). |
 | `backup.py`, `cleanup_legacy.py` (root cron on `.11`, `goodwatch-hq/ansible/cron.yml`) | `goodwatch-crate/` | `requests` to `http://10.0.0.11:4200` only | **None.** Fixed: `CRATE_BACKUP_USER` + `CRATE_BACKUP_PASSWORD_FILE` | `CREATE`/`DROP SNAPSHOT`, `sys.snapshots`. |
 | Sitemap script (by hand, weekly) | `goodwatch-webapp/scripts/create_sitemaps.py` | crate-python 2.0.0, first host | URL userinfo from `CRATE_USER`/`CRATE_PASS`; broke on URL characters. Fixed: separate arguments | DQL on `doc`. |
 | Operator scripts | `goodwatch-flows/scripts/*.py`, `tools/run_buzz.py`, `goodwatch-webapp/scripts/measure-*.mjs`, `benchmark-user-data.mjs`, `prototype-crate-evidence/*.py`, `goodwatch-search/acceptance/history.mjs`, `goodwatch-qdrant/diagnostics/*` | Mixed | All read `CRATE_USER`/`CRATE_PASS` (or `PROVIDER_REPAIR_CRATE_USER`). The node-crate ones put them in a URL (avoid URL characters, or use a hex password). | Reads: `goodwatch_readonly`. Writers (backfills, migrations) run as `goodwatch_windmill`. |
-| `goodwatch-flows/tools/bench_buzz.py` | Piped over SSH to `.21` | `http.client` to `10.0.0.11:4200` | **None**, by design ("no credentials"). Unchanged. | One read. Stops working under HBA; add a header when it is next needed. |
+| `goodwatch-flows/tools/bench_buzz.py` | Piped over SSH to `.21` | `http.client` to `10.0.0.11:4200` | Previously none; now supports `CRATE_USER` and `CRATE_PASSWORD_FILE`/`CRATE_PASS`. | Read-only benchmark; configure the readonly identity before using it with HBA. |
 | Owner / administration | Admin UI, `crash` | Today: anything as `crate` | None | Superuser. After HBA: `docker exec crate-0N curl … http://127.0.0.1:4200/_sql` (trusted `crate`). |
 
 Not CrateDB clients: the firewall reconciler (`goodwatch-remote/firewall`) only opens worker paths to 4200; Caddy
@@ -82,7 +87,7 @@ Every change keeps today's behaviour when the new variables are unset.
   records the header).
 - `goodwatch-webapp/app/utils/crate.ts`:
   - The credentials go to node-crate as the request's `auth` option, not as URL userinfo. A password with `#`, `/`
-    or `?` threw `Invalid URL` on the first query; now any password works. No `CRATE_USER`: no header, as today.
+    or `?` threw `Invalid URL` on the first query; now any password works. Unset/empty `CRATE_USER`: `crate` with an empty password, preserving current main after #607.
   - `CrateAuthenticationError`: a plain-text HTTP 401 (an HBA refusal, sent before any statement runs) cools that
     coordinator down for 5 s and tries the next one, **for writes too**, because a refused request never ran. Once
     every coordinator has refused (a wrong password), the error reaches the caller after one attempt each. A missing
@@ -96,9 +101,11 @@ Every change keeps today's behaviour when the new variables are unset.
   `goodwatch-crate/test_compose.py` renders the file with `docker compose config`.
 - `docs/implementation/auth/verify_crate_endpoints.py`: the production check (stdlib only, prints no password).
 
-Not changed: Windmill and the search paths already send `CRATE_USER`/`CRATE_PASS`; the auth adapter and importer
-already require credentials; `goodwatch-hq/ansible/cron.yml` (setting the variables before the password file and the
-user exist would stop backups; the line is in step 3 below).
+Windmill and the search paths already send `CRATE_USER`/`CRATE_PASS`; the auth adapter and importer
+already require credentials; `goodwatch-hq/ansible/cron.yml` now supports optional `crate_backup_user` and `crate_backup_password_file`
+inventory values, both or neither (set only after provisioning). Backup now fails over to .12/.13 for reads and
+provably unsent writes, never ambiguous CREATE/DROP. Catalog transport now receives the explicit Basic header after
+merging #604/#607. Scheduled sitemap source downloads include the new helper. `bench_buzz.py` accepts credentials.
 
 ## Users and grants
 

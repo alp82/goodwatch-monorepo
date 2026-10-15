@@ -22,6 +22,7 @@ import secrets
 import sys
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 
 def current_user(url, credentials):
@@ -40,7 +41,7 @@ def current_user(url, credentials):
 
 
 def main(environ):
-    hosts = [h.strip() for h in environ.get("CRATE_HOSTS", "").split(",") if h.strip()]
+    hosts = [h.strip() for h in (environ.get("CRATE_VERIFY_HOSTS") or environ.get("CRATE_HOSTS", "")).split(",") if h.strip()]
     user = environ.get("CRATE_USER", "")
     password = environ.get("CRATE_PASS", "")
     if environ.get("CRATE_PASSWORD_FILE"):
@@ -52,7 +53,11 @@ def main(environ):
     wrong = "wrong-" + secrets.token_hex(8)
     passed = True
     for host in hosts:
-        url = f"http://{host}:{environ.get('CRATE_PORT') or '4200'}/_sql"
+        parsed = urlsplit(host if "://" in host else "http://" + host)
+        if parsed.scheme != "http" or parsed.username or parsed.password or parsed.path not in ("", "/") or parsed.query or parsed.fragment:
+            print("Invalid coordinator: use an HTTP host without credentials or a path.", file=sys.stderr)
+            return 2
+        url = f"http://{parsed.hostname}:{parsed.port or environ.get('CRATE_PORT') or '4200'}/_sql"
         answers = {
             "no credentials": current_user(url, None),
             "crate, wrong password": current_user(url, ("crate", wrong)),

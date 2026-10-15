@@ -15,12 +15,20 @@
   hosts: db1
   become: yes
   tasks:
+    # Set both in the db1 inventory only after the dedicated user and protected
+    # password file exist. Unset keeps the existing credentialless cron unchanged.
+    - name: Validate optional CrateDB backup credentials
+      assert:
+        that:
+          - (crate_backup_user | default('') | length > 0) == (crate_backup_password_file | default('') | length > 0)
+        fail_msg: "Set crate_backup_user and crate_backup_password_file together"
+
     - name: "Cron: CrateDB Backup (Hourly at :05)"
       cron:
         name: "CrateDB Backup"
         minute: "5"
         hour: "*"
-        job: "/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
+        job: "{{ ('CRATE_BACKUP_USER=' ~ (crate_backup_user | quote) ~ ' CRATE_BACKUP_PASSWORD_FILE=' ~ (crate_backup_password_file | quote) ~ ' ') if (crate_backup_user | default('') | length > 0) else '' }}/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
 
 - name: Configure Backup Cron Job for Qdrant
   hosts: vector1

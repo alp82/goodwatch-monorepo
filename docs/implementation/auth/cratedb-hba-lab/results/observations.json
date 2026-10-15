@@ -1,5 +1,5 @@
 {
- "startedAt": "2026-10-15T05:22:17.187359+00:00",
+ "startedAt": "2026-10-15T22:21:54.457553+00:00",
  "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
  "checks": [
   {
@@ -3320,8 +3320,8 @@
    ]
   ],
   "node3Log": [
-   "[2026-10-15T05:23:09,363][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user=nobody from connection=/127.0.0.1",
-   "[2026-10-15T05:23:09,368][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user= from connection=/127.0.0.1"
+   "[2026-10-15T22:22:17,956][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user=nobody from connection=/127.0.0.1",
+   "[2026-10-15T22:22:17,958][INFO ][i.c.a.HttpAuthUpstreamHandler] [hba-crate-3] trust authentication failed for user= from connection=/127.0.0.1"
   ]
  },
  "composeDefault": {
@@ -4780,76 +4780,76 @@
  "failover": {
   "restart": {
    "reads": {
-    "ok": 3217,
+    "ok": 2432,
     "failed": 0,
-    "maxMs": 790
+    "maxMs": 116
    },
    "upserts": {
-    "ok": 420,
+    "ok": 395,
     "failed": 0,
-    "maxMs": 1044
+    "maxMs": 130
    },
    "currentUser": [
     "goodwatch_webapp"
    ],
    "errors": [],
-   "wrapperLogLines": 3734,
+   "wrapperLogLines": 2854,
    "recoveredGreen": true,
    "node2DirectAnswers": [
     {
-     "atSeconds": 0.16,
+     "atSeconds": 0.03,
      "answer": "0 ConnectionError",
-     "count": 247
+     "count": 44
     },
     {
-     "atSeconds": 13.42,
+     "atSeconds": 2.35,
      "answer": "401 password authentication failed for user \"goodwatch_webapp\"\n",
-     "count": 10
+     "count": 2
     },
     {
-     "atSeconds": 15.34,
+     "atSeconds": 2.68,
      "answer": "ok",
-     "count": 105
+     "count": 121
     }
    ]
   },
   "kill": {
    "reads": {
-    "ok": 5544,
+    "ok": 3639,
     "failed": 0,
-    "maxMs": 618
+    "maxMs": 206
    },
    "upserts": {
-    "ok": 726,
+    "ok": 599,
     "failed": 0,
-    "maxMs": 636
+    "maxMs": 191
    },
    "currentUser": [
     "goodwatch_webapp"
    ],
    "errors": [],
-   "wrapperLogLines": 6338,
+   "wrapperLogLines": 4269,
    "recoveredGreen": true,
    "node2DirectAnswers": [
     {
-     "atSeconds": 0.07,
+     "atSeconds": 0.05,
      "answer": "ok",
-     "count": 5
+     "count": 1
     },
     {
-     "atSeconds": 0.76,
+     "atSeconds": 0.16,
      "answer": "0 ConnectionError",
-     "count": 494
+     "count": 245
     },
     {
-     "atSeconds": 26.73,
+     "atSeconds": 12.89,
      "answer": "401 password authentication failed for user \"goodwatch_webapp\"\n",
-     "count": 11
+     "count": 2
     },
     {
-     "atSeconds": 28.7,
+     "atSeconds": 13.17,
      "answer": "ok",
-     "count": 101
+     "count": 89
     }
    ]
   }
@@ -4862,12 +4862,12 @@
   "-Cauth.host_based.config.1.method=password"
  ],
  "cleanup": {
-  "at": "2026-10-15T05:26:53.033498+00:00",
+  "at": "2026-10-15T22:23:40.072456+00:00",
   "remaining": {
    "containers": [],
    "networks": [],
    "volumes": []
   }
  },
- "finishedAt": "2026-10-15T05:26:53.033692+00:00"
+ "finishedAt": "2026-10-15T22:23:40.072495+00:00"
 }

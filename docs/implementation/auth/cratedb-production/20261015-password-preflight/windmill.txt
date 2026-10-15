@@ -1,0 +1,142 @@
+BEGIN
+ workspace_id |       path        | is_secret |   safe_value   
+--------------+-------------------+-----------+----------------
+ goodwatch    | u/Alp/CRATE_USER  | f         | admin
+ goodwatch    | u/Alp/CRATE_PASS  | t         | [present=true]
+ goodwatch    | u/Alp/CRATE_HOSTS | t         | [present=true]
+(3 rows)
+
+ workspace_id | path | resource_type | keys 
+--------------+------+---------------+------
+(0 rows)
+
+ workspace_id |                       path                       |          created_at           | uses_user | uses_password | connector 
+--------------+--------------------------------------------------+-------------------------------+-----------+---------------+-----------
+ goodwatch    | f/anime_mapping/refresh                          | 2026-10-15 21:40:48.502022+00 | f         | f             | t
+ goodwatch    | f/buzz/daily                                     | 2026-10-14 16:37:22.090446+00 | f         | f             | t
+ goodwatch    | f/buzz/store                                     | 2026-10-14 16:37:06.984468+00 | f         | f             | f
+ goodwatch    | f/critic_sites/crawl                             | 2026-09-26 08:12:07.914998+00 | f         | f             | t
+ goodwatch    | f/critic_sites/directory                         | 2026-09-26 00:08:17.724416+00 | f         | f             | f
+ goodwatch    | f/critic_sites/polite_http                       | 2026-09-26 08:29:56.822213+00 | f         | f             | f
+ goodwatch    | f/critic_sites/publish                           | 2026-10-08 01:08:44.003476+00 | f         | f             | t
+ goodwatch    | f/critic_sites/repair_urls                       | 2026-09-26 00:08:18.105731+00 | f         | f             | f
+ goodwatch    | f/db/cratedb                                     | 2026-09-26 21:48:58.648142+00 | t         | t             | t
+ goodwatch    | f/dna/generate/fetch                             | 2026-10-14 16:37:07.417224+00 | f         | f             | f
+ goodwatch    | f/external_ids/wikidata_backfill                 | 2026-09-26 10:19:31.723482+00 | f         | f             | t
+ goodwatch    | f/imdb_datasets/diff                             | 2026-09-25 12:24:22.409631+00 | f         | f             | f
+ goodwatch    | f/imdb_datasets/ingest                           | 2026-10-15 22:15:05.995736+00 | f         | f             | t
+ goodwatch    | f/media_language/ingest_episode_translations     | 2026-10-15 22:14:52.751056+00 | f         | f             | t
+ goodwatch    | f/media_language/nightly_episode_translations    | 2026-10-15 22:14:52.781754+00 | t         | t             | f
+ goodwatch    | f/metacritic_web/metacritic_crawl_ratings/fetch  | 2026-09-26 08:12:23.16795+00  | f         | f             | f
+ goodwatch    | f/monitoring/backup_check                        | 2026-10-15 17:55:03.502106+00 | f         | f             | t
+ goodwatch    | f/monitoring/backup_health                       | 2026-10-15 17:54:58.40413+00  | f         | f             | f
+ goodwatch    | f/monitoring/check                               | 2026-10-15 17:54:59.162758+00 | f         | f             | f
+ goodwatch    | f/monitoring/cluster_collection                  | 2026-10-15 17:54:58.470671+00 | f         | f             | f
+ goodwatch    | f/monitoring/cluster_health                      | 2026-10-15 17:54:53.302302+00 | f         | f             | f
+ goodwatch    | f/monitoring/incidents                           | 2026-10-15 17:54:54.04986+00  | f         | f             | f
+ goodwatch    | f/monitoring/notifications                       | 2026-10-15 17:54:38.957402+00 | f         | f             | f
+ goodwatch    | f/monitoring/store                               | 2026-09-26 21:49:14.322245+00 | f         | f             | t
+ goodwatch    | f/priority/init                                  | 2026-10-15 22:15:06.007945+00 | f         | f             | t
+ goodwatch    | f/priority/next                                  | 2026-09-26 22:17:55.656925+00 | f         | f             | t
+ goodwatch    | f/priority/publish                               | 2026-10-15 22:15:17.160494+00 | f         | f             | t
+ goodwatch    | f/priority/queue                                 | 2026-09-15 10:12:46.506128+00 | f         | f             | f
+ goodwatch    | f/priority/reset                                 | 2026-09-26 21:49:14.023221+00 | f         | f             | t
+ goodwatch    | f/rotten_web/rotten_tomatoes_crawl_ratings/fetch | 2026-09-26 08:12:23.198154+00 | f         | f             | f
+ goodwatch    | f/search/build_indexes                           | 2026-10-15 17:46:18.441685+00 | t         | t             | t
+ goodwatch    | f/search/embed_titles                            | 2026-09-26 22:17:56.942746+00 | f         | f             | t
+ goodwatch    | f/search/index_builders                          | 2026-10-15 17:46:18.82046+00  | f         | f             | f
+ goodwatch    | f/search/title_text                              | 2026-09-24 21:40:07.299065+00 | f         | f             | f
+ goodwatch    | f/seo/regenerate_sitemaps                        | 2026-10-15 20:41:39.684591+00 | t         | t             | f
+ goodwatch    | f/social/ingest                                  | 2026-10-15 20:44:22.480044+00 | f         | t             | f
+ goodwatch    | f/social/maintenance                             | 2026-10-15 17:46:34.381796+00 | f         | f             | f
+ goodwatch    | f/social/rejudge                                 | 2026-10-15 20:44:16.992003+00 | f         | f             | f
+ goodwatch    | f/social/schema                                  | 2026-10-15 17:04:06.062228+00 | f         | f             | f
+ goodwatch    | f/social/settings                                | 2026-10-15 06:32:59.178371+00 | t         | t             | f
+ goodwatch    | f/social/store                                   | 2026-10-15 17:46:19.246136+00 | t         | t             | f
+ goodwatch    | f/sync/copy/all_ratings                          | 2026-10-15 22:15:11.848495+00 | f         | f             | t
+ goodwatch    | f/sync/copy/deleted_titles                       | 2026-09-26 21:32:00.660034+00 | f         | f             | f
+ goodwatch    | f/sync/copy/dna_data                             | 2026-10-15 22:15:06.052014+00 | f         | f             | t
+ goodwatch    | f/sync/copy/orphaned_titles                      | 2026-09-26 22:17:58.150614+00 | f         | f             | t
+ goodwatch    | f/sync/copy/personal_order                       | 2026-10-15 21:15:13.657617+00 | f         | f             | t
+ goodwatch    | f/sync/copy/stale_child_rows                     | 2026-09-26 21:32:15.93989+00  | f         | f             | f
+ goodwatch    | f/sync/copy/title_snapshot                       | 2026-10-15 21:15:14.15924+00  | f         | f             | t
+ goodwatch    | f/sync/copy/tmdb_daily                           | 2026-10-05 22:20:23.50073+00  | f         | f             | t
+ goodwatch    | f/sync/copy/tmdb_details                         | 2026-10-15 22:15:06.109659+00 | f         | f             | t
+ goodwatch    | f/sync/copy/tmdb_episodes                        | 2026-10-15 22:15:06.142779+00 | f         | f             | t
+ goodwatch    | f/sync/copy/tmdb_streaming                       | 2026-10-15 22:15:06.13146+00  | f         | f             | t
+ goodwatch    | f/sync/copy/tvtropes                             | 2026-10-15 22:15:06.184293+00 | f         | f             | t
+ goodwatch    | f/sync/copy/vector_data                          | 2026-10-15 22:15:11.770687+00 | f         | f             | t
+ goodwatch    | f/sync/init/cratedb                              | 2026-10-15 22:15:06.185551+00 | f         | f             | t
+ goodwatch    | f/sync/models/crate_schemas                      | 2026-10-15 22:14:50.920719+00 | f         | f             | f
+ goodwatch    | f/sync/models/qdrant_models                      | 2026-09-25 13:21:11.88936+00  | f         | f             | f
+ goodwatch    | f/sync/populate/tmdb_age_certifications          | 2026-10-08 07:12:49.216936+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_countries                   | 2026-10-08 07:12:49.594674+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_genres                      | 2026-10-08 07:12:49.988663+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_jobs                        | 2026-10-08 07:12:50.370461+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_languages                   | 2026-10-08 07:12:50.743712+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_providers                   | 2026-10-08 07:12:51.130616+00 | f         | f             | t
+ goodwatch    | f/sync/populate/tmdb_timezones                   | 2026-10-08 07:12:51.520029+00 | f         | f             | t
+ goodwatch    | f/sync/tracking/fill_seen_groups                 | 2026-10-08 01:08:50.339759+00 | f         | f             | t
+ goodwatch    | f/sync/tracking/migrate_watch_history            | 2026-10-08 07:12:51.897796+00 | f         | f             | t
+ goodwatch    | f/sync/tracking/rules                            | 2026-10-08 01:08:45.223701+00 | f         | f             | f
+ goodwatch    | f/tmdb_api/awaited_titles                        | 2026-10-12 09:15:33.38899+00  | f         | f             | f
+ goodwatch    | f/tmdb_api/episode_catalog                       | 2026-10-08 01:08:29.612737+00 | f         | f             | f
+ goodwatch    | f/tmdb_api/models                                | 2026-10-07 20:40:43.14038+00  | f         | f             | f
+ goodwatch    | f/tmdb_api/tmdb_fetch_details_from_api/awaited   | 2026-10-12 18:41:53.490378+00 | f         | f             | t
+ goodwatch    | f/tmdb_api/tmdb_fetch_episodes_from_api/fetch    | 2026-10-14 20:10:06.096856+00 | f         | f             | f
+ goodwatch    | f/vector/test_crate_centroid                     | 2026-09-26 21:49:14.652618+00 | f         | f             | t
+(73 rows)
+
+ workspace_id |                      path                       |                   script_path                   | enabled 
+--------------+-------------------------------------------------+-------------------------------------------------+---------
+ goodwatch    | f/anime_mapping/weekly                          | f/anime_mapping/weekly                          | t
+ goodwatch    | f/buzz/daily                                    | f/buzz/daily                                    | t
+ goodwatch    | f/critic_sites/crawl_metacritic                 | f/critic_sites/crawl                            | t
+ goodwatch    | f/critic_sites/crawl_rotten_tomatoes            | f/critic_sites/crawl                            | t
+ goodwatch    | f/critic_sites/directory_metacritic             | f/critic_sites/directory                        | t
+ goodwatch    | f/critic_sites/directory_rotten_tomatoes        | f/critic_sites/directory                        | t
+ goodwatch    | f/dna/generate_dna                              | f/dna/generate_dna                              | t
+ goodwatch    | f/dna/initialize_dna                            | f/dna/initialize_dna                            | t
+ goodwatch    | f/external_ids/wikidata_backfill                | f/external_ids/wikidata_backfill                | t
+ goodwatch    | f/imdb_datasets/ingest                          | f/imdb_datasets/ingest                          | t
+ goodwatch    | f/media_language/ingest_episode_translations    | f/media_language/ingest_episode_translations    | t
+ goodwatch    | f/metacritic_web/metacritic_init_ratings        | f/metacritic_web/metacritic_init_ratings        | t
+ goodwatch    | f/monitoring/backup_check                       | f/monitoring/backup_check                       | t
+ goodwatch    | f/monitoring/check                              | f/monitoring/check                              | t
+ goodwatch    | f/priority/crawl_all                            | f/priority/crawl_all                            | t
+ goodwatch    | f/rotten_web/rotten_tomatoes_init_ratings       | f/rotten_web/rotten_tomatoes_init_ratings       | t
+ goodwatch    | f/search/build_indexes                          | f/search/build_indexes                          | t
+ goodwatch    | f/search/embed_titles                           | f/search/embed_titles                           | t
+ goodwatch    | f/seo/regenerate_sitemaps                       | f/seo/regenerate_sitemaps                       | t
+ goodwatch    | f/social/deletion_sync                          | f/social/deletion_sync                          | t
+ goodwatch    | f/social/discover_bluesky                       | f/social/discover                               | t
+ goodwatch    | f/social/discover_mastodon                      | f/social/discover                               | t
+ goodwatch    | f/social/discover_rss                           | f/social/discover                               | t
+ goodwatch    | f/social/discover_youtube                       | f/social/discover                               | t
+ goodwatch    | f/sync/copy/all_ratings                         | f/sync/copy/all_ratings                         | t
+ goodwatch    | f/sync/copy/dna_data                            | f/sync/copy/dna_data                            | t
+ goodwatch    | f/sync/copy/orphaned_titles                     | f/sync/copy/orphaned_titles                     | t
+ goodwatch    | f/sync/copy/personal_order_dirty                | f/sync/copy/personal_order_trigger              | t
+ goodwatch    | f/sync/copy/title_snapshot                      | f/sync/copy/title_snapshot                      | t
+ goodwatch    | f/sync/copy/tmdb_daily                          | f/sync/copy/tmdb_daily                          | t
+ goodwatch    | f/sync/copy/tmdb_details                        | f/sync/copy/tmdb_details                        | t
+ goodwatch    | f/sync/copy/tmdb_episodes                       | f/sync/copy/tmdb_episodes                       | t
+ goodwatch    | f/sync/copy/tmdb_streaming                      | f/sync/copy/tmdb_streaming                      | t
+ goodwatch    | f/sync/copy/tvtropes                            | f/sync/copy/tvtropes                            | t
+ goodwatch    | f/sync/copy/vector_data                         | f/sync/copy/vector_data                         | t
+ goodwatch    | f/sync/populate_crate                           | f/sync/populate_crate                           | t
+ goodwatch    | f/sync/tracking/fill_seen_groups                | f/sync/tracking/fill_seen_groups                | t
+ goodwatch    | f/tmdb_api/tmdb_fetch_details_from_api          | f/tmdb_api/tmdb_fetch_details_from_api          | t
+ goodwatch    | f/tmdb_api/tmdb_fetch_details_from_api/awaited  | f/tmdb_api/tmdb_fetch_details_from_api/awaited  | t
+ goodwatch    | f/tmdb_api/tmdb_fetch_episodes_from_api         | f/tmdb_api/tmdb_fetch_episodes_from_api         | t
+ goodwatch    | f/tmdb_api/tmdb_fetch_episodes_from_api/changes | f/tmdb_api/tmdb_fetch_episodes_from_api/changes | t
+ goodwatch    | f/tmdb_api/tmdb_init_details                    | f/tmdb_api/tmdb_init_details                    | t
+ goodwatch    | f/tmdb_daily/tmdb_check_daily_dump_availability | f/tmdb_daily/tmdb_check_daily_dump_availability | t
+ goodwatch    | f/tmdb_daily/tmdb_extract_daily_dump_data       | f/tmdb_daily/tmdb_extract_daily_dump_data       | t
+ goodwatch    | f/tmdb_web/tmdb_crawl_providers                 | f/tmdb_web/tmdb_crawl_providers                 | t
+ goodwatch    | f/tmdb_web/tmdb_init_providers                  | f/tmdb_web/tmdb_init_providers                  | t
+ goodwatch    | f/tvtropes_web/tvtropes_init_ratings            | f/tvtropes_web/tvtropes_init_ratings            | t
+ goodwatch    | f/utils/visit_goodwatch_schedule                | f/utils/visit_goodwatch_and_populate_cache      | t
+(48 rows)
+
+COMMIT

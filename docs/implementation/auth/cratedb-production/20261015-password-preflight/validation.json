@@ -1,0 +1,51 @@
+{
+  "merge": "02f508bf",
+  "main": "6082cadcbed75c0d792d778b431ba8ece4389e9b",
+  "node": "v24.15.0",
+  "lab": {
+    "passed": 431,
+    "failed": 0,
+    "cleanup": "verified"
+  },
+  "targeted_crate_catalog": {
+    "passed": 50,
+    "failed": 0
+  },
+  "backup_compose": {
+    "passed": 33,
+    "failed": 0
+  },
+  "sitemap_helper": {
+    "passed": 4,
+    "failed": 0
+  },
+  "windmill_sitemap": {
+    "passed": 14,
+    "subtests": 5
+  },
+  "endpoint_verifiers": "passed",
+  "webapp": {
+    "passed": 2883,
+    "failed": 1,
+    "skipped": 1,
+    "todo": 1,
+    "failure": "qdrant-session-listeners.test.ts broken connection timing; reproduced on exact main"
+  },
+  "typecheck": {
+    "branch": 174,
+    "main": 174,
+    "added": 0
+  },
+  "build": {
+    "passed": true,
+    "precompressed": 817
+  },
+  "ansible_syntax": "passed",
+  "production_mutations": false,
+  "rollout_started": false,
+  "blockers": [
+    "persistent contexts on crate-02 and crate-03",
+    "owner Coolify UI credential step",
+    "full suite existing failure; no green merge gate"
+  ]
+}

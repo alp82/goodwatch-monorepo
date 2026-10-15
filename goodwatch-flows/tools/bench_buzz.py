@@ -2,20 +2,30 @@
 """Read-only snapshot benchmark for the production private network.
 
 ssh root@10.0.0.21 python3 - < goodwatch-flows/tools/bench_buzz.py
-No application server, cookies, credentials or Valkey access.
+Set CRATE_USER and CRATE_PASSWORD_FILE (or CRATE_PASS) for password enforcement.
+No application server, cookies or Valkey access.
 """
+import base64
+import os
+from pathlib import Path
 import http.client
 import json
 import socket
 import statistics
 import time
 
+headers = {'Content-Type': 'application/json'}
+user = os.environ.get('CRATE_USER', '')
+password = (Path(os.environ['CRATE_PASSWORD_FILE']).read_text().removesuffix('\n')
+            if os.environ.get('CRATE_PASSWORD_FILE') else os.environ.get('CRATE_PASS', ''))
+if user:
+    headers['Authorization'] = 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
 connection = http.client.HTTPConnection('10.0.0.11', 4200, timeout=30)
 body = json.dumps({'stmt': "SELECT day, generated_at, payload FROM doc.buzz_snapshot WHERE snapshot_key = 'current'", 'args': []})
 roundtrips, executions, sizes = [], [], []
 for _ in range(50):
     started = time.perf_counter()
-    connection.request('POST', '/_sql', body=body, headers={'Content-Type': 'application/json'})
+    connection.request('POST', '/_sql', body=body, headers=headers)
     response = connection.getresponse()
     envelope = json.loads(response.read())
     if response.status != 200 or not envelope.get('rows'):

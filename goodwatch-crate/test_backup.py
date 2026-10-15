@@ -299,7 +299,7 @@ class CredentialTests(unittest.TestCase):
         self.crate = SqlServer()
         self.addCleanup(self.crate.close)
         for name, value in (
-            ("SQL_URL", self.crate.url),
+            ("SQL_URLS", [self.crate.url]),
             ("LOCK_FILE", str(Path(self.directory.name) / "backup.lock")),
             ("AUTH", None),
         ):

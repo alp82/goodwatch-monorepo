@@ -14,6 +14,7 @@ import sys
 import time
 
 import requests
+from urllib3.exceptions import NewConnectionError
 
 # --- CONFIGURATION ---
 CRATE_HOST = "http://10.0.0.11:4200"
@@ -52,6 +53,7 @@ EXIT_LOCKED = 75
 # ---------------------
 
 SQL_URL = f"{CRATE_HOST}/_sql"
+SQL_URLS = [SQL_URL, "http://10.0.0.12:4200/_sql", "http://10.0.0.13:4200/_sql"]
 
 # The backup user (#562). Set both, or neither: without them the run sends no
 # credentials, which works only while the cluster does not enforce passwords.
@@ -101,21 +103,53 @@ def configure_auth(environ=None):
     AUTH = read_auth(os.environ if environ is None else environ)
 
 
+def not_dispatched(error):
+    """Only connection establishment failures prove a snapshot statement never ran."""
+    pending, seen = [error], set()
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, (NewConnectionError, requests.ConnectTimeout)):
+            return True
+        pending.extend(e for e in (
+            getattr(current, "__cause__", None), getattr(current, "__context__", None),
+            getattr(current, "reason", None), *getattr(current, "args", ()),
+        ) if isinstance(e, BaseException))
+    return False
+
+
 def run_sql(stmt, timeout=DROP_TIMEOUT):
-    """Executes a SQL statement via HTTP API. Returns None on any error."""
-    try:
-        response = requests.post(
-            SQL_URL, json={"stmt": stmt}, auth=AUTH, timeout=(CONNECT_TIMEOUT, timeout)
-        )
-        response.raise_for_status()
-        return response.json()
-    except requests.HTTPError as e:
-        body = e.response.text if e.response is not None else ""
-        log(f"Error executing SQL: {stmt}\n{e}\n{body}")
-        return None
-    except Exception as e:
-        log(f"Error executing SQL: {stmt}\n{e}")
-        return None
+    """Fail over reads and unsent writes; never replay an ambiguous CREATE/DROP."""
+    # Keep a single budget across coordinators, including connect time.
+    deadline = time.monotonic() + CONNECT_TIMEOUT + timeout
+    for url in SQL_URLS:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            response = requests.post(
+                url, json={"stmt": stmt}, auth=AUTH,
+                timeout=(min(CONNECT_TIMEOUT, remaining), min(timeout, remaining)),
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            # HTTP 401 HBA refusal occurs before dispatch; SQL privilege errors are
+            # JSON and must propagate. Do not log bodies, headers or credentials.
+            response = getattr(error, "response", None)
+            hba_refusal = (response is not None and response.status_code == 401
+                           and response.headers.get("Content-Type", "").startswith("text/plain"))
+            read = stmt.lstrip().upper().startswith("SELECT ")
+            unavailable = isinstance(error, (requests.ConnectionError, requests.Timeout)) or (
+                response is not None and response.status_code in (502, 503, 504))
+            retry = not_dispatched(error) or hba_refusal or (read and unavailable)
+            log(f"SQL {stmt.split()[0]} failed at {url}: {type(error).__name__}; "
+                f"{'trying next coordinator' if retry else 'not replayed; inspect server outcome'}")
+            if not retry:
+                return None
+    return None
 
 
 def acquire_lock():
