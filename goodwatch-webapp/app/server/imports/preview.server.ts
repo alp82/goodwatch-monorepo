@@ -11,6 +11,8 @@ import type {
 import { canonicalTitleId } from "~/utils/title-identity"
 import {
 	IMPORT_MAX_ROWS,
+	IMPORT_SHOW_STATUS_LABELS,
+	IMPORT_SOURCE_NAMES,
 	canImportWantToSee,
 	isApplicableStatus,
 } from "../../domain/imports.ts"
@@ -47,8 +49,21 @@ type CatalogRow = {
 
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
+	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
+		if (
+			row.animeEntry &&
+			row.kind === "unsupported" &&
+			row.score != null &&
+			row.problem?.outcome === "unsupported"
+		) {
+			const placement = await resolveEpisode.animeEntryPlacement(row.animeEntry)
+			row.animeScorePlacement = placement
+			row.tmdbId = placement.mapping?.showId ?? null
+			if (placement.reason) row.problem.reason += ` ${placement.reason}`
+			continue
+		}
 		if (row.animeEntry && (row.kind === "rating" || row.kind === "review")) {
 			row.problem = {
 				outcome: "unsupported",
@@ -142,7 +157,6 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					})
 			}
 	}
-	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
 	for (const [index, title] of found) {
 		const row = rows[index]
 		if (
@@ -165,9 +179,9 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			found.delete(index)
 			row.problem = { outcome: "unmatched", reason: result.reason }
 		} else {
-			if (result.datePolicy === "unknown" && row.kind === "watch") {
-				row.watchedAt = null
-				row.precision = "unknown"
+			if (result.datePolicy && row.kind === "watch") {
+				row.watchedAt = result.watchedAt ?? null
+				row.precision = result.datePolicy
 			}
 			row.episodeTmdbId = result.episodeTmdbId
 			row.season = result.season
@@ -443,7 +457,12 @@ export async function createPreview(
 	bytes: Uint8Array,
 	wishlist?: Uint8Array,
 ): Promise<ImportSummary> {
-	const parsed: ParsedImport = await parseImportFile(source, bytes, wishlist)
+	const parsed: ParsedImport = await parseImportFile(
+		source,
+		bytes,
+		wishlist,
+		fileName,
+	)
 	const fileHash = createHash("sha256").update(bytes)
 	if (wishlist)
 		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
@@ -490,12 +509,6 @@ export async function createParsedPreview(
 				outcome: "invalid",
 				reason: "This show status has no supported value.",
 			}
-		else if (row.showStatus === "completed" && row.completionScope !== "show")
-			row.problem = {
-				outcome: "unsupported",
-				reason:
-					"Completed does not establish completion of the whole TMDB show. A part or cour never marks the whole show Seen.",
-			}
 	}
 	const source = parsed.source
 	const [matched, current] = await Promise.all([
@@ -510,7 +523,7 @@ export async function createParsedPreview(
 		)
 	const id = randomUUID()
 	const watchPlans = await classifyWatchDuplicates(userId, source, id, items)
-	await classifyShowStatuses(userId, items, watchPlans)
+	await classifyShowStatuses(userId, source, items, watchPlans)
 	const countRecord = {
 		rows: items.length,
 		new: 0,
@@ -563,28 +576,63 @@ export async function createParsedPreview(
 
 async function classifyShowStatuses(
 	userId: string,
+	source: ImportSource,
 	items: ImportItem[],
 	watchPlans: Map<string, ImportTrackingPlan>,
 ) {
-	const statuses: ImportStatusItem[] = items.filter(
-		(x) => x.kind === "show_status" && x.outcome === "new" && x.tmdbId !== null,
-	)
-	if (!statuses.length) return
-	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
 	const byShow = new Map<number, ImportStatusItem[]>()
-	for (const item of statuses) {
-		if (item.tmdbId !== null)
-			byShow.set(item.tmdbId, [...(byShow.get(item.tmdbId) ?? []), item])
+	for (const item of items) {
+		if (
+			item.kind !== "show_status" ||
+			item.tmdbId === null ||
+			!["new", "unchanged"].includes(item.outcome)
+		)
+			continue
+		const group = byShow.get(item.tmdbId) ?? []
+		group.push(item)
+		byShow.set(item.tmdbId, group)
 	}
-	const snapshots = await getImportStatusSnapshots(userId, [...byShow.keys()])
-	for (const item of statuses) {
-		if (item.tmdbId === null) continue
-		if ((byShow.get(item.tmdbId)?.length ?? 0) > 1) {
-			item.outcome = "invalid"
-			item.reason =
-				"Multiple show statuses resolve to this show. The source must supply one status per TMDB show."
+	for (const group of byShow.values()) {
+		const values = [...new Set(group.map((item) => item.showStatus))]
+		if (values.length > 1) {
+			const names = values
+				.map((value) =>
+					value ? IMPORT_SHOW_STATUS_LABELS[value].split(" → ")[0] : "Unknown",
+				)
+				.sort()
+				.join(", ")
+			for (const item of group) {
+				item.outcome = "invalid"
+				item.reason = `Multiple ${IMPORT_SOURCE_NAMES[source]} entries for this show have different statuses: ${names}. No show status was chosen.`
+			}
 			continue
 		}
+		const [first, ...duplicates] = group
+		for (const duplicate of duplicates) {
+			duplicate.outcome = "unchanged"
+			duplicate.reason =
+				"Another entry for this show has the same status; it is imported only once."
+		}
+		if (
+			first.showStatus === "completed" &&
+			group.some((item) => item.completionScope !== "show")
+		) {
+			first.outcome = "unsupported"
+			first.reason =
+				"Completed does not establish completion of the whole TMDB show. A part or cour never marks the whole show Seen."
+		}
+	}
+	const statuses = [...byShow.values()]
+		.map((group) => group[0])
+		.filter((item) => item.outcome === "new")
+	if (!statuses.length) return
+	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
+	const snapshots = await getImportStatusSnapshots(
+		userId,
+		statuses.flatMap((item) => (item.tmdbId === null ? [] : [item.tmdbId])),
+	)
+	for (const item of statuses) {
+		if (item.tmdbId === null) continue
 		const snapshot = snapshots.get(item.tmdbId)
 		const plan = watchPlans.get(`show:${item.tmdbId}`)
 		const before = snapshot?.state ?? null
