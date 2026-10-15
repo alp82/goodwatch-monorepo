@@ -38,12 +38,14 @@ lists each open item and its state. Keep that issue current.
 - **Cannot:** reach production Crate, Valkey, Windmill or Coolify. Do not try, and do not run
   ingestion.
 - **Must not:**
-  - Push to `main`. Pushes to main deploy production and sync the Windmill workspace.
-  - Force-push.
+  - Push straight to `main` or force-push.
   - Change infrastructure, proxy or firewall config.
   - Delete data.
-  - Work on one change, push to a `cloud/media-language-<slug>` branch and open a PR against `main`.
-    The owner merges.
+- **Merging (owner decision, 2026-10-15):** work on one change, push it to a
+  `cloud/media-language-<slug>` branch and open a PR against `main`. Once the build, tsc (at most
+  174) and the tests pass, squash-merge the PR yourself and delete the branch. The only failure
+  allowed is the Qdrant timing test that already fails on main in the sandbox. A merge deploys
+  production, and flow changes sync to Windmill, so keep every change small.
 - **Baseline:** tsc reports 174 diagnostics on main. A change must not raise that count. The full
   webapp suite was 2634 pass / 0 fail at ship.
 
