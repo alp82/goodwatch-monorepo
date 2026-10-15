@@ -426,7 +426,7 @@ export function buildTighter(person: Person): Built {
 	}
 	const sideCenters = sides.map((s) => s.center)
 	sides.forEach((side, i) => {
-		side.edges = placeEdges(person, side, sideCenters, i)
+		side.edges = withSteps(person, side, sideCenters, i, placeEdges(person, side, sideCenters, i))
 	})
 	return {
 		sides: sides.map(({ center, members, ...side }) => side),
@@ -537,6 +537,15 @@ export function buildAnchored(person: Person): Built {
 		centers: sideCenters,
 		memberKeys: sides.map((s) => s.members.map((m) => m.key)),
 	}
+}
+
+/** Fewer than two edges: add steps ("this side, but darkly funny"), headlined with the side's name. */
+function withSteps(person: Person, side: { id: string; name: string; members: RatedTitle[]; center: Vec }, centers: Vec[], index: number, edges: ProtoEdge[]) {
+	if (edges.length >= 2) return edges
+	const steps = stepEdges(person, side, centers, index)
+		.slice(0, 2 - edges.length)
+		.map((e) => ({ ...e, line: `${side.name}, ${e.line}` }))
+	return [...edges, ...steps]
 }
 
 /** "This side, but darkly funny": attributes the person rates up when they get them, rare in this side. */
@@ -676,7 +685,7 @@ export function buildMoods(person: Person): Built {
 	})
 	sides.forEach((side, i) => {
 		const moodEdges = addMoodEdges(person, side, has)
-		side.edges = [...moodEdges, ...placeEdges(person, side, centers, i, 3 - moodEdges.length)]
+		side.edges = withSteps(person, side, centers, i, [...moodEdges, ...placeEdges(person, side, centers, i, 3 - moodEdges.length)])
 	})
 	return {
 		sides: sides.map(({ center, members, ...side }) => side),
