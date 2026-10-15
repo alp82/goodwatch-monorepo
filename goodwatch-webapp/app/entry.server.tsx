@@ -6,7 +6,6 @@
 //   its render and loader data alive for 5 seconds.
 // First: fill remix-serve fetch gaps before other server modules need them.
 import "~/server/web-fetch-gaps.server"
-import { protectMediaResponse } from "~/server/media-read-health.server"
 
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
 import { createReadableStreamFromReadable } from "@remix-run/node"
