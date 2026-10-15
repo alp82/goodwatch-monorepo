@@ -86,8 +86,10 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "plex",
+		// Plex's kit has only a wide wordmark, and its guidelines forbid icons derived from its marks, so the tile
+		// stays neutral: no gold-and-black and no play shapes.
 		logo: null,
-		tile: { text: "Px", className: "bg-amber-500 text-black" },
+		tile: { text: "Px", className: "bg-zinc-600 text-white" },
 		// Each play from the member's own server, and Want to See from the personal watchlist feed.
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
 		wait: "About a minute",
