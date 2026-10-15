@@ -1,10 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { gzipSync } from "node:zlib"
 import {
 	createG1Reader,
 	createG1OrderCache,
 	G1_MODEL_HASH,
 	G1_CACHE_MS,
+	G1_REVALIDATE_MS,
+	logG1,
+	g1Exposure,
 	G1_MAX_AGE_MS,
 	orderG1,
 	type G1Payload,
@@ -37,7 +41,7 @@ const payload = (): G1Payload => ({
 test("a warm reader cannot keep a payload beyond the 36-hour freshness limit", async () => {
 	let now = NOW + G1_MAX_AGE_MS - 1_000
 	const read = createG1Reader(
-		async () => JSON.stringify(payload()),
+		async () => gzipSync(JSON.stringify(payload())),
 		() => now,
 	)
 	assert.ok((await read("owner", snapshot)).data)
@@ -49,7 +53,7 @@ test("composed orders reuse metadata and isolate candidate order, mix, member, s
 	let raw = JSON.stringify(payload()),
 		now = NOW
 	const read = createG1Reader(
-		async () => raw,
+		async () => gzipSync(raw),
 		() => now,
 	)
 	const a = (await read("owner", snapshot)).data!
@@ -65,6 +69,7 @@ test("composed orders reuse metadata and isolate candidate order, mix, member, s
 	)
 	assert.notEqual(order(keys, a, { ...snapshot, version: "other" }), first)
 	raw = JSON.stringify({ ...payload(), b3Rank: [0.9, 0.1, 0.2] })
+	now += G1_REVALIDATE_MS
 	assert.notEqual(
 		order(keys, (await read("owner", snapshot)).data!, snapshot),
 		first,
@@ -79,7 +84,7 @@ test("composed orders reuse metadata and isolate candidate order, mix, member, s
 test("composed cache bounds total titles, variants and entries", async () => {
 	const a = (
 		await createG1Reader(
-			async () => JSON.stringify(payload()),
+			async () => gzipSync(JSON.stringify(payload())),
 			() => NOW,
 		)("owner", snapshot)
 	).data!
@@ -111,13 +116,13 @@ test("modes are closed by default; preview and shadow only resolve for listed me
 	assert.equal(resolveRecG1("on", "", "stranger").enabled, true)
 	assert.equal(resolveRecG1("on", "owner", null).enabled, false)
 })
-test("validated mapping is cached per member/build for 10 minutes; publishes, snapshots and deletes are visible", async () => {
+test("gzip decode uses typed arrays; revalidation bounds GETs and observes publishes and deletion", async () => {
 	let now = NOW,
-		raw: string | null = JSON.stringify(payload()),
+		raw: Buffer | null = gzipSync(JSON.stringify(payload())),
 		gets = 0
 	const read = createG1Reader(
 		async (key) => {
-			assert.match(key, /^g1:v1:/)
+			assert.equal(key, "g1:v2:owner")
 			gets++
 			return raw
 		},
@@ -125,23 +130,116 @@ test("validated mapping is cached per member/build for 10 minutes; publishes, sn
 	)
 	const a = await read("owner", snapshot)
 	assert.deepEqual(Array.from(a.data!.indices), [0, 1, 2])
+	const p = a.data!.payload
+	assert.ok(p.pointIds instanceof Float64Array)
+	assert.ok(p.b3Rank instanceof Float32Array)
+	assert.ok(p.b5TopHalf instanceof Uint8Array)
+	assert.ok(p.movieSeriesId instanceof Float64Array)
+	assert.ok(p.show instanceof Uint8Array)
+	assert.ok(p.animation instanceof Uint8Array)
+	assert.deepEqual(Array.from(p.movieSeriesId), [-1, -1, -1])
+	assert.equal("raw" in a.data!, false)
+	raw = gzipSync(JSON.stringify({ ...payload(), b3Rank: [0.9, 0.1, 0.2] }))
+	now += G1_REVALIDATE_MS - 1
 	assert.equal((await read("owner", snapshot)).data, a.data)
-	assert.notEqual((await read("other", snapshot)).data, a.data)
-	now += G1_CACHE_MS
-	assert.notEqual((await read("owner", snapshot)).data, a.data)
-	raw = JSON.stringify({ ...payload(), builtAt: new Date(now).toISOString() })
-	const b = await read("owner", snapshot)
-	assert.notEqual(b.data, a.data)
+	assert.equal(gets, 1)
+	// A snapshot switch fails closed even inside the revalidation window.
 	assert.equal(
 		(await read("owner", { ...snapshot, version: "snap-2" })).fallbackReason,
 		"snapshot-mismatch",
 	)
+	assert.equal(gets, 1)
+	now++
+	const b = await read("owner", snapshot)
+	assert.notEqual(b.data, a.data)
+	assert.equal(gets, 2)
 	raw = null
+	assert.equal((await read("owner", snapshot)).data, b.data)
+	now += G1_REVALIDATE_MS
 	assert.equal(
 		(await read("owner", snapshot)).fallbackReason,
 		"missing-payload",
 	)
-	assert.equal(gets, 7)
+	assert.equal(gets, 3)
+	await read("owner", snapshot)
+	assert.equal(gets, 3) // Missing values are negatively cached too.
+	raw = gzipSync(JSON.stringify(payload()))
+	now += G1_REVALIDATE_MS
+	assert.ok((await read("owner", snapshot)).data)
+	assert.equal(gets, 4)
+})
+
+test("concurrent cold and revalidation reads coalesce", async () => {
+	let gets = 0,
+		now = NOW
+	const read = createG1Reader(
+		async () => {
+			gets++
+			await new Promise((resolve) => setImmediate(resolve))
+			return gzipSync(JSON.stringify(payload()))
+		},
+		() => now,
+	)
+	for (let round = 0; round < 2; round++) {
+		const results = await Promise.all(
+			Array.from({ length: 10 }, () => read("owner", snapshot)),
+		)
+		assert.ok(results[0].data)
+		assert.ok(results.every((r) => r.data === results[0].data))
+		assert.equal(gets, round + 1)
+		now += G1_REVALIDATE_MS
+	}
+})
+
+test("prepared cache evicts the least recently used member at 50 entries", async () => {
+	const calls: string[] = []
+	const read = createG1Reader(
+		async (key) => {
+			calls.push(key)
+			return gzipSync(JSON.stringify(payload()))
+		},
+		() => NOW,
+	)
+	const first = (await read("0", snapshot)).data
+	for (let i = 1; i < 50; i++) await read(String(i), snapshot)
+	await read("0", snapshot)
+	await read("50", snapshot)
+	assert.equal((await read("0", snapshot)).data, first)
+	await read("1", snapshot)
+	assert.equal(calls.length, 52)
+	assert.equal(calls.at(-1), "g1:v2:1")
+})
+
+test("uncompressed v1 JSON and corrupt gzip fail closed; missing payload does not warn", async (t) => {
+	for (const raw of [
+		Buffer.from(JSON.stringify(payload())),
+		Buffer.from("bad gzip"),
+	]) {
+		const read = createG1Reader(
+			async () => raw,
+			() => NOW,
+		)
+		assert.equal(
+			(await read("owner", snapshot)).fallbackReason,
+			"malformed-gzip",
+		)
+	}
+	const warn = t.mock.method(console, "warn", () => {})
+	const flag = resolveRecG1("on", "", "owner")
+	logG1(
+		"owner",
+		"discover",
+		g1Exposure(flag, { data: null, fallbackReason: "missing-payload" }),
+		[],
+	)
+	assert.equal(warn.mock.callCount(), 0)
+	logG1(
+		"owner",
+		"discover",
+		g1Exposure(flag, { data: null, fallbackReason: "model-mismatch" }),
+		[],
+	)
+	assert.equal(warn.mock.callCount(), 1)
 })
 test("bad shape/model/snapshot/age/id mapping and backend failure fall back", async () => {
 	const cases: [unknown, string][] = [
@@ -176,7 +274,7 @@ test("bad shape/model/snapshot/age/id mapping and backend failure fall back", as
 	]
 	for (const [p, reason] of cases) {
 		const read = createG1Reader(
-			async () => (typeof p === "string" ? p : JSON.stringify(p)),
+			async () => gzipSync(typeof p === "string" ? p : JSON.stringify(p)),
 			() => NOW,
 		)
 		assert.deepEqual(await read("owner", snapshot), {
@@ -202,7 +300,7 @@ test("titles outside the payload follow the keyed titles in today's relative ord
 	p.show = [false]
 	p.animation = [false]
 	const read = await createG1Reader(
-		async () => JSON.stringify(p),
+		async () => gzipSync(JSON.stringify(p)),
 		() => NOW,
 	)("owner", snapshot)
 	assert.deepEqual(

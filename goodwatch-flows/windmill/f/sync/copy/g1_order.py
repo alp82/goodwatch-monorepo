@@ -1,6 +1,6 @@
-"""Offline G1 components for explicitly named preview members; request composition is pure.
+"""Offline G1 components for selected eligible members; request composition is pure.
 
-Only main() opens connectors. run() writes only g1:v1:<member>, with an expiry.
+Only main() opens connectors. run() publishes gzip JSON to g1:v2:<member>, with an expiry.
 Research B3/B5 below are copied verbatim; clear their pool cache for each new title dataset.
 """
 # extra_requirements:
@@ -309,6 +309,7 @@ def b3_predict(view):
 
 # ---- Product adapters (the copied maths above stays unchanged) --------------
 
+import gzip
 import json
 import time
 from datetime import datetime, timezone
@@ -565,55 +566,106 @@ def main_defaults(ttl_seconds, dry_run):
 
 
 def validate_members(member_ids):
-    if (not isinstance(member_ids, list) or not member_ids
-            or any(not isinstance(m, str) or not m.strip() or m != m.strip()
-                   or m.lower() == "all" or ":" in m or "*" in m for m in member_ids)
-            or len(set(member_ids)) != len(member_ids)):
-        raise ValueError("Pass a nonempty, distinct list of explicit preview member ids")
+    from f.sync.copy.g1_trigger import validate_members as validate
+    if member_ids != "all":
+        validate(member_ids)
 
 
-def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS, dry_run=False, now=None):
+class SnapshotChanged(RuntimeError):
+    pass
+
+
+def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
+        dry_run=True, dirty_only=False, now=None):
+    from f.sync.copy.g1_trigger import DIRTY_KEY
+    ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
     validate_members(member_ids)
     if not isinstance(ttl_seconds, int) or ttl_seconds <= 0:
         raise ValueError("TTL must be a positive number of seconds")
     started = time.monotonic()
-    manifest = json.loads(redis.get("title-snapshot:current") or "null")
-    if not manifest or not manifest.get("version"):
-        raise ValueError("A current title snapshot is required")
-    if manifest.get("keyOrder") != list(fingerprint_keys):
-        raise ValueError("Snapshot fingerprint order differs from the G1 input")
-    tables, member_at = read_members(select)
-    titles = read_titles(select, tables, fingerprint_keys)
-    summaries = []
-    for member in member_ids:
-        # No history is valid: use a new group number absent from all input tables.
-        view = build_view(titles, tables, member_at.get(member, len(member_at)))
-        built_at = now() if now else datetime.now(timezone.utc)
-        data = payload(view, manifest["version"], built_at)
-        current = json.loads(redis.get("title-snapshot:current") or "null")
-        if not current or current.get("version") != manifest["version"]:
-            raise RuntimeError("Title snapshot changed during G1 build; retry against its new version")
-        encoded = json.dumps(data, separators=(",", ":"), allow_nan=False)
-        if not dry_run:
-            redis.set(f"g1:v1:{member}", encoded, ex=ttl_seconds)
-        summaries.append({"candidates": len(data["pointIds"]), "bytes": len(encoded.encode()),
-                          "others_count": data["othersCount"], "built_at": data["builtAt"]})
-    return {"published": not dry_run, "members": summaries, "model_hash": MODEL_HASH,
-            "snapshot_version": manifest["version"], "seconds": round(time.monotonic() - started, 3)}
+    claimed = []
+    try:
+        selected = member_ids
+        if dirty_only:
+            # Retain the full raw claim so even decoding or excluded-member restoration can fail safely.
+            count = redis.scard(DIRTY_KEY)
+            claimed = (redis.smembers(DIRTY_KEY) if dry_run else redis.spop(DIRTY_KEY, count)) if count else []
+            members = sorted(m.decode() if isinstance(m, bytes) else m for m in claimed)
+            selected = members if member_ids == "all" else [m for m in members if m in member_ids]
+            excluded = set(members) - set(selected)
+            if excluded and not dry_run:
+                redis.sadd(DIRTY_KEY, *sorted(excluded))
+        if selected == []:
+            return {"published": False, "members": [], "seconds": round(time.monotonic() - started, 3)}
+        manifest = json.loads(redis.get("title-snapshot:current") or "null")
+        if not manifest or not manifest.get("version"):
+            raise ValueError("A current title snapshot is required")
+        if manifest.get("keyOrder") != list(fingerprint_keys):
+            raise ValueError("Snapshot fingerprint order differs from the G1 input")
+        tables, member_at = read_members(select)
+        titles = read_titles(select, tables, fingerprint_keys)
+        _POOL.clear()  # Eligibility must use statistics from this dataset, even in a reused worker.
+        if selected == "all":
+            # Include orphaned payloads after a member removes their last interaction.
+            existing = [k.decode() if isinstance(k, bytes) else k
+                        for k in redis.scan_iter(match="g1:v2:*")]
+            selected = sorted(set(member_at) | {k.removeprefix("g1:v2:") for k in existing})
+        summaries = []
+        for member in selected:
+            member_started = time.monotonic()
+            summary = {"member": member}
+            try:
+                view = build_view(titles, tables, member_at.get(member, len(member_at)))
+                eligible = taste_vector(view) is not None
+                data = payload(view, manifest["version"], now() if now else datetime.now(timezone.utc)) if eligible else None
+                current = json.loads(redis.get("title-snapshot:current") or "null")
+                if not current or current.get("version") != manifest["version"]:
+                    raise SnapshotChanged("Title snapshot changed during G1 build; retry against its new version")
+                if data is None:
+                    if not dry_run:
+                        redis.delete(f"g1:v2:{member}")
+                    summary.update(status="ineligible", deleted=not dry_run, bytes=0)
+                else:
+                    encoded = gzip.compress(json.dumps(data, separators=(",", ":"), allow_nan=False).encode(), mtime=0)
+                    if not dry_run:
+                        redis.set(f"g1:v2:{member}", encoded, ex=ttl_seconds)
+                    summary.update(status="built", candidates=len(data["pointIds"]), bytes=len(encoded),
+                                   others_count=data["othersCount"], built_at=data["builtAt"])
+            except SnapshotChanged:
+                raise
+            except Exception as error:
+                summary.update(status="failed", error=str(error))
+                if not dry_run:
+                    redis.sadd(DIRTY_KEY, member)
+            summary["seconds"] = round(time.monotonic() - member_started, 3)
+            summaries.append(summary)
+            print("G1 member " + json.dumps(summary), flush=True)
+        result = {"published": not dry_run, "members": summaries, "model_hash": MODEL_HASH,
+                  "snapshot_version": manifest["version"], "seconds": round(time.monotonic() - started, 3)}
+        print("G1 summary " + json.dumps({"built": sum(s["status"] == "built" for s in summaries),
+                                         "ineligible": sum(s["status"] == "ineligible" for s in summaries),
+                                         "failed": sum(s["status"] == "failed" for s in summaries),
+                                         "dry_run": dry_run, "seconds": result["seconds"]}), flush=True)
+        return result
+    except Exception:
+        if claimed and not dry_run:
+            redis.sadd(DIRTY_KEY, *claimed)
+        raise
 
 
-def main(member_ids: list[str], ttl_seconds: int = TTL_SECONDS, dry_run: bool = True):
-    """Windmill only: explicitly supplied preview ids; dry-run is the default."""
-    # Windmill passes None for an argument the caller leaves out, so the defaults above do not apply by themselves.
+def main(member_ids: list[str] | str | None = None, ttl_seconds: int = TTL_SECONDS,
+         dry_run: bool = True, dirty_only: bool = False):
+    """Windmill only: the rollout variable authorizes all callers, including dry runs."""
     ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
-    validate_members(member_ids)
-    # Check before importing/constructing database connectors, including for manual dry runs.
     import wmill
-    from f.sync.copy.g1_trigger import MEMBERS_VARIABLE
-    configured = json.loads(wmill.get_variable(MEMBERS_VARIABLE) or "[]")
-    validate_members(configured)
-    if not set(member_ids).issubset(configured):
-        raise ValueError("G1 members must belong to the configured preview list")
+    from f.sync.copy.g1_trigger import MEMBERS_VARIABLE, rollout_members
+    configured = rollout_members(wmill.get_variable(MEMBERS_VARIABLE))
+    member_ids = configured if member_ids is None else member_ids
+    validate_members(member_ids)
+    if configured != "all" and (member_ids == "all" or not set(member_ids).issubset(configured)):
+        raise ValueError("G1 members must belong to the configured rollout list")
+    if member_ids == []:
+        return {"published": False, "members": []}
     from f.db.cratedb import CrateConnector
     from f.db.redis import RedisConnector
     from f.dna.models import CoreScores
@@ -628,7 +680,8 @@ def main(member_ids: list[str], ttl_seconds: int = TTL_SECONDS, dry_run: bool = 
             return crate.cur.fetchall()
 
         return run(redis, select, member_ids, list(CoreScores.model_fields),
-                   ttl_seconds=ttl_seconds, dry_run=dry_run)
+                   ttl_seconds=ttl_seconds, dry_run=dry_run,
+                   dirty_only=False if dirty_only is None else dirty_only)
     finally:
         crate.disconnect()
         if redis is not None:

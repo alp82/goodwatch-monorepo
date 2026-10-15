@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { gunzipSync } from "node:zlib"
 import {
 	requestOrder,
 	refill,
@@ -10,6 +11,7 @@ import type { recG1Order } from "../features.server.ts"
 
 export const G1_MODEL_HASH =
 	"e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1"
+export const G1_REVALIDATE_MS = 45_000
 export const G1_CACHE_MS = 10 * 60_000
 export const G1_MAX_AGE_MS = 36 * 60 * 60_000
 export interface G1Payload extends G1Components {
@@ -21,9 +23,18 @@ export interface G1Payload extends G1Components {
 	othersCount: number
 	othersRatingsCount: number
 }
+export interface G1PreparedPayload extends Omit<G1Payload, keyof G1Components> {
+	pointIds: Float64Array
+	b3Rank: Float32Array
+	b5TopHalf: Uint8Array
+	// Preserve format-1 negative sentinels and safe integer franchise ids exactly.
+	movieSeriesId: Float64Array
+	show: Uint8Array
+	animation: Uint8Array
+}
 export interface G1Prepared {
 	member: string
-	payload: G1Payload
+	payload: G1PreparedPayload
 	/** Payload index per snapshot row; -1 for unrated candidates outside the offline pool. */
 	indices: Int32Array
 }
@@ -42,10 +53,16 @@ export interface G1Exposure {
 	titles: Map<number, { group: number; mixPlaced: boolean }>
 }
 
-function decode(raw: string, snapshot: TitleSnapshot, now: number): G1Read {
+function decode(raw: Buffer, snapshot: TitleSnapshot, now: number): G1Read {
+	let json: string
+	try {
+		json = gunzipSync(raw).toString("utf8")
+	} catch {
+		return { data: null, fallbackReason: "malformed-gzip" }
+	}
 	let p: G1Payload
 	try {
-		p = JSON.parse(raw)
+		p = JSON.parse(json)
 	} catch {
 		return { data: null, fallbackReason: "malformed-json" }
 	}
@@ -99,51 +116,91 @@ function decode(raw: string, snapshot: TitleSnapshot, now: number): G1Read {
 			return { data: null, fallbackReason: "malformed-shape" }
 		indices[row] = i
 	}
-	return { data: { member: "", payload: p, indices }, fallbackReason: null }
+	const prepared: G1PreparedPayload = {
+		format: p.format,
+		modelHash: p.modelHash,
+		snapshotVersion: p.snapshotVersion,
+		builtAt: p.builtAt,
+		ownShares: p.ownShares,
+		othersCount: p.othersCount,
+		othersRatingsCount: p.othersRatingsCount,
+		pointIds: Float64Array.from(p.pointIds),
+		b3Rank: Float32Array.from(p.b3Rank),
+		b5TopHalf: Uint8Array.from(p.b5TopHalf, Number),
+		movieSeriesId: Float64Array.from(p.movieSeriesId),
+		show: Uint8Array.from(p.show, Number),
+		animation: Uint8Array.from(p.animation, Number),
+	}
+	return {
+		data: { member: "", payload: prepared, indices },
+		fallbackReason: null,
+	}
 }
 
-// Read on each request so a publish/deletion is visible immediately. Reuse validated row mapping by member,
-// build time and snapshot for ten minutes. A small bound keeps preview data from growing without limit.
+// Cache prepared values and fallbacks, never compressed bytes, JSON strings or parsed arrays.
+// Coalesce concurrent loads and revalidate at most once per 45 seconds per resident member.
 export function createG1Reader(
-	get: (key: string) => Promise<string | null>,
-	now = Date.now,
+	get: (key: string) => Promise<Buffer | null>,
+	now = () => Date.now(),
 ) {
 	const cache = new Map<
 		string,
-		{ raw: string; expires: number; data: G1Prepared }
+		{ checked: number; expires: number; result: G1Read }
 	>()
+	const pending = new Map<string, Promise<G1Read>>()
+	const usable = (result: G1Read, snapshot: TitleSnapshot): G1Read => {
+		const p = result.data?.payload
+		if (!p) return result
+		if (p.snapshotVersion !== snapshot.version)
+			return { data: null, fallbackReason: "snapshot-mismatch" }
+		const built = Date.parse(p.builtAt)
+		if (built > now())
+			return { data: null, fallbackReason: "invalid-build-time" }
+		if (now() - built > G1_MAX_AGE_MS)
+			return { data: null, fallbackReason: "stale-payload" }
+		return result
+	}
 	return async (member: string, snapshot: TitleSnapshot): Promise<G1Read> => {
-		try {
-			const raw = await get(`g1:v1:${member}`)
-			const cached = cache.get(member)
-			if (!raw) {
-				cache.delete(member)
-				return { data: null, fallbackReason: "missing-payload" }
-			}
-			if (
-				cached &&
-				cached.raw === raw &&
-				cached.expires > now() &&
-				cached.data.payload.snapshotVersion === snapshot.version &&
-				now() >= Date.parse(cached.data.payload.builtAt) &&
-				now() - Date.parse(cached.data.payload.builtAt) <= G1_MAX_AGE_MS
-			)
-				return { data: cached.data, fallbackReason: null }
+		const cached = cache.get(member)
+		if (
+			cached &&
+			cached.expires > now() &&
+			now() - cached.checked < G1_REVALIDATE_MS
+		) {
 			cache.delete(member)
-			const result = decode(raw, snapshot, now())
-			if (result.data) {
-				result.data.member = member
-				if (cache.size >= 20) cache.delete(cache.keys().next().value!)
-				cache.set(member, {
-					raw,
-					expires: now() + G1_CACHE_MS,
-					data: result.data,
-				})
+			cache.set(member, cached)
+			return usable(cached.result, snapshot)
+		}
+		const active = pending.get(member)
+		if (active) return usable(await active, snapshot)
+		const load = async (): Promise<G1Read> => {
+			let result: G1Read
+			try {
+				const raw = await get(`g1:v2:${member}`)
+				result = raw
+					? decode(raw, snapshot, now())
+					: { data: null, fallbackReason: "missing-payload" }
+				if (result.data) result.data.member = member
+			} catch {
+				result = { data: null, fallbackReason: "valkey-read-failed" }
 			}
+			cache.delete(member)
+			for (const [id, entry] of cache)
+				if (entry.expires <= now()) cache.delete(id)
+			if (cache.size >= 50) cache.delete(cache.keys().next().value!)
+			cache.set(member, {
+				checked: now(),
+				expires: now() + G1_CACHE_MS,
+				result,
+			})
 			return result
-		} catch {
-			cache.delete(member)
-			return { data: null, fallbackReason: "valkey-read-failed" }
+		}
+		const promise = load()
+		pending.set(member, promise)
+		try {
+			return usable(await promise, snapshot)
+		} finally {
+			pending.delete(member)
 		}
 	}
 }
@@ -151,7 +208,7 @@ const read = createG1Reader(async (key) => {
 	const { getRedisCluster } = await import("../../utils/cache")
 	const redis = getRedisCluster()
 	if (!redis) throw new Error("Valkey unavailable")
-	return redis.get(key)
+	return redis.getBuffer(key)
 })
 export async function loadG1(
 	member: string,
@@ -197,10 +254,10 @@ function composeG1(
 	const c: G1Components = {
 		pointIds: known,
 		b3Rank: at.map((i) => p.b3Rank[i]),
-		b5TopHalf: at.map((i) => p.b5TopHalf[i]),
+		b5TopHalf: at.map((i) => Boolean(p.b5TopHalf[i])),
 		movieSeriesId: at.map((i) => p.movieSeriesId[i]),
-		show: at.map((i) => p.show[i]),
-		animation: at.map((i) => p.animation[i]),
+		show: at.map((i) => Boolean(p.show[i])),
+		animation: at.map((i) => Boolean(p.animation[i])),
 	}
 	const result = requestOrder(c, mix ? p.ownShares : null)
 	const titles = new Map(
@@ -221,7 +278,7 @@ export function createG1OrderCache({
 	maxTitles = 200_000,
 	maxEntries = 40,
 	maxPerMember = 4,
-	now = Date.now,
+	now = () => Date.now(),
 } = {}) {
 	type Result = ReturnType<typeof composeG1>
 	const cache = new Map<
@@ -303,8 +360,8 @@ export function mixFitting(
 	const result = refill(
 		known.map((_, i) => i),
 		known.map((k) => ranks.get(k)!),
-		at.map((i) => p.show[i]),
-		at.map((i) => p.animation[i]),
+		at.map((i) => Boolean(p.show[i])),
+		at.map((i) => Boolean(p.animation[i])),
 		p.ownShares,
 	)
 	return {
@@ -319,7 +376,7 @@ export function logG1(
 	today: number[],
 	g1?: number[],
 ) {
-	if (exposure.fallbackReason)
+	if (exposure.fallbackReason && exposure.fallbackReason !== "missing-payload")
 		console.warn("G1 fallback", {
 			member,
 			surface,
