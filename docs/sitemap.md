@@ -9,11 +9,11 @@ cd goodwatch-webapp/scripts
 make sitemaps-checked
 ```
 
-After deployment, Windmill runs `f/seo/regenerate_sitemaps` automatically every Saturday at **03:00 UTC**. Its schedule is tracked in `goodwatch-flows/windmill/f/seo/regenerate_sitemaps.schedule.yaml` and deployed from `main` by the Windmill workspace workflow. The command above remains the manual fallback.
+Windmill runs `f/seo/regenerate_sitemaps` automatically every Saturday at **03:00 UTC** with `dry_run: false`. The schedule lives in Windmill only, like the other schedules, and is not deployed from git; change it in the Windmill UI. The command above remains the manual fallback.
 
 The job downloads the existing generator, its helpers, category definitions, and URL checker from one pinned `main` revision. It uses the existing `u/Alp/CRATE_HOSTS`, `u/Alp/CRATE_USER`, and `u/Alp/CRATE_PASS` workspace variables; it does not keep a second copy of the generation or checking rules.
 
-Before merging this schedule into `main` (which deploys it enabled), the owner must create **`u/Alp/SITEMAP_GITHUB_TOKEN`** as a secret Windmill workspace variable accessible to the schedule's execution identity. Use a fine-grained GitHub personal access token restricted to **alp82/goodwatch-monorepo**, with **Contents: read and write** (and GitHub's required Metadata read access). No workflow or administration permissions are needed. The token's identity must be allowed to commit to `main`; repository rules can reject that operation. Keep the value out of git and renew it before expiry.
+The job reads the GitHub token from the secret Windmill workspace variable **`u/Alp/GITHUB_SITEMAP_TOKEN`**, which the schedule's execution identity must be able to read. Use a fine-grained GitHub personal access token restricted to **alp82/goodwatch-monorepo**, with **Contents: read and write** (and GitHub's required Metadata read access). No workflow or administration permissions are needed. The token's identity must be allowed to commit to `main`; repository rules can reject that operation. Keep the value out of git and renew it before expiry.
 
 The scheduled invocation sets `dry_run: false`. Preview/manual invocations default to `dry_run: true`: they generate and run the full live check, report the URL count and changed paths, and never retrieve the GitHub token or write to GitHub. Allow about 50 minutes; the job timeout is four hours.
 
@@ -33,7 +33,7 @@ The command takes about 50 minutes and does three things:
 
 The files are tracked in git, and every update to `main` deploys the webapp through the existing Coolify integration.
 
-On a passing scheduled run, Windmill uses the GitHub Git API to create a single commit containing only changed `public/sitemaps/sitemap*.xml` files (including removal of obsolete generated files). The message is `chore(seo): regenerate the sitemap on <UTC date> (#351)`. Unchanged output produces no commit. A failed check fails the job visibly and publishes nothing. A concurrent change to `main` makes publication fail safely; rerun with fresh sources. Review failures in the Windmill job log. The schedule is not deployed or enabled by running a preview.
+On a passing scheduled run, Windmill uses the GitHub Git API to create a single commit containing only changed `public/sitemaps/sitemap*.xml` files (including removal of obsolete generated files). The message is `chore(seo): regenerate the sitemap on <UTC date> (#351)`. Unchanged output produces no commit. A failed check fails the job visibly and publishes nothing. A concurrent change to `main` makes publication fail safely; rerun with fresh sources. Review failures in the Windmill job log.
 
 For the manual fallback:
 

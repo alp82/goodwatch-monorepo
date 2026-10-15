@@ -58,7 +58,6 @@ jobs:
           npx --yes "windmill-cli@${WMILL_CLI_VERSION}" sync push \
             --yes \
             --keep-deleted \
-            --include-schedules \
             --skip-variables \
             --skip-secrets \
             --skip-resources \

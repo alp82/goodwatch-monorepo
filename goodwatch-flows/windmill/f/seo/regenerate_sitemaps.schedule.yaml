@@ -1,8 +1,0 @@
-summary: Weekly checked sitemap regeneration
-schedule: '0 0 3 * * 6'
-timezone: UTC
-script_path: f/seo/regenerate_sitemaps
-is_flow: false
-args:
-  dry_run: false
-enabled: true

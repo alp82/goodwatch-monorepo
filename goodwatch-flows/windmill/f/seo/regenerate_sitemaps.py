@@ -23,7 +23,7 @@ API = f"https://api.github.com/repos/{REPOSITORY}"
 OUTPUT = "goodwatch-webapp/public/sitemaps/"
 SCRIPTS = "goodwatch-webapp/scripts/"
 CATEGORIES = "goodwatch-webapp/app/ui/explore/category/"
-TOKEN_VARIABLE = "u/Alp/SITEMAP_GITHUB_TOKEN"
+TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
     "create_sitemaps.py", "check_sitemap_urls.py", "sitemap_query.py",
     "sitemap_lastmod.py", "utils.py",
