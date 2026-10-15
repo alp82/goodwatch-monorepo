@@ -62,6 +62,8 @@ await build({
 						process.env.CRATE_PROOF_BASELINE === "1"
 					)
 						return { path: r.path, namespace: "proof-baseline" }
+					if (name === "server/tracking.server.ts" && process.env.CRATE_PROOF_TRACKING_BASELINE_COMMIT)
+						return { path: r.path, namespace: "proof-tracking-baseline" }
 					if (name === "utils/crate.ts")
 						return {
 							path:
@@ -73,6 +75,10 @@ await build({
 					if (name === "utils/crate-diagnostics.ts")
 						return { path: r.path, external: true }
 				})
+				b.onLoad({ filter: /.*/, namespace: "proof-tracking-baseline" }, (args) => ({
+					contents: execFileSync("git", ["show", `${process.env.CRATE_PROOF_TRACKING_BASELINE_COMMIT}:goodwatch-webapp/app/server/tracking.server.ts`], { encoding: "utf8" }),
+					resolveDir: dirname(args.path), loader: "ts",
+				}))
 				b.onLoad({ filter: /.*/, namespace: "proof-baseline" }, (args) => ({
 					contents: execFileSync(
 						"git",

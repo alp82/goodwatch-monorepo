@@ -25,8 +25,12 @@ const report = { startedAt: new Date().toISOString(), client: clientPath,
 	baselineCommit: process.env.CRATE_PROOF_BASELINE === "1" ? process.env.CRATE_PROOF_BASELINE_COMMIT : null,
 	nodeVersion: process.version, endpointScope: endpoints, assertions: [], failures: [] }
 report.sourceSha256 = {}
-for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
+for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./first-insert-proof.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
  report.sourceSha256[path] = createHash("sha256").update(await readFile(new URL(path, import.meta.url))).digest("hex")
+report.trackingBaselineCommit = process.env.CRATE_PROOF_TRACKING_BASELINE_COMMIT ?? null
+report.trackingRuntimeSha256 = report.trackingBaselineCommit
+ ? createHash("sha256").update((await exec("git", ["show", `${report.trackingBaselineCommit}:goodwatch-webapp/app/server/tracking.server.ts`])).stdout).digest("hex")
+ : report.sourceSha256["../../app/server/tracking.server.ts"]
 const log = []
 const progress = console.log.bind(console)
 for (const method of ["log", "warn", "error", "trace"]) console[method] = (...args) => log.push(format(...args))
@@ -160,6 +164,7 @@ try {
 		const { preparePageProof } = await import("./page-proof.mjs")
 		pageProof = await preparePageProof(sql)
 		report.pageTables = pageProof.tables
+		report.trackingMigration = pageProof.migration
 		report.pageRoutes = pageProof.stats
 		await pageProof.warm()
 		await waitFor("all fixture shards GREEN", async () => (await rows("SELECT count(*) FROM sys.health WHERE health <> 'GREEN'"))[0][0] === 0)
@@ -283,6 +288,10 @@ try {
 		for (const timeout of [false, true]) report.lostResponses.push(await lostResponseProof(kind, timeout))
 	}
 	if (pageProof) for (const timeout of [false, true]) report.lostResponses.push(await lostResponseProof("tracking-cas", timeout))
+	if (pageProof && process.env.CRATE_PROOF_FIRST_INSERT === "1") {
+		const { firstInsertProof } = await import("./first-insert-proof.mjs")
+		report.firstInserts = await firstInsertProof({ pageProof, sql, endpoints, setCrateClientForTest, check })
+	}
 	check("No proxy errors", report.failures.filter(({ phase }) => phase === "proxy"), [])
 	report.passed = true
 	progress(`Proof passed: ${stats.reads.succeeded} reads, ${stats.keyed.succeeded + stats.upsert.succeeded} safe writes; ${stats.generic.failed} generic writes returned errors without replay`)

@@ -816,8 +816,8 @@ SCHEMAS = {
     # Where a member stands with a title (docs/implementation/tracking/data-model.md, ADR 0009).
     # Only what can't be computed from user_watch_log: no counts and no dates of watches. A show's
     # state is the state machine's. A movie has a row while it has a log row, with state 'seen'
-    # and pass 1. A row with state 'not_started' exists only to remember a prompt, and every
-    # reader filters on state.
+    # and pass 1. A show's empty Not started row also retains its first-insert receipt after
+    # logical deletion, fencing delayed INSERTs. List readers filter on state; tracking reads hide empty receipts.
     # seen_press_group and seen_press_from: the Seen press that one more press takes back, and
     # the state it was pressed from. Both NULL when no press stands. seen_question: NULL (not
     # asked), 'open', 'answered'.
@@ -826,6 +826,7 @@ SCHEMAS = {
             "user_id": "TEXT",
             "tmdb_id": "INTEGER",
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "insert_token": "TEXT",  # immutable first-insert receipt; retained through logical show-state removal
             "state": "TEXT NOT NULL CHECK (state IN ('not_started','watching','on_hold','dropped','seen'))",
             "state_changed_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
             "pass": "INTEGER NOT NULL",
