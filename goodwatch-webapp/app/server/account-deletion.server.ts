@@ -1,4 +1,3 @@
-import { deleteMcpActions } from "~/server/mcp/actions.server"
 // What deleting an account removes from the webapp's own storage. There is no account-deletion flow yet and nothing
 // calls this: it is the one place such a flow calls, so that a table added later is added here.
 //
@@ -9,10 +8,9 @@ import { deleteTrackingData } from "~/server/tracking.server"
 
 /**
  * Soft-deletes the member's share lists, profile and handle, and hard-deletes their watch log, watch states and
- * imports and MCP action receipts. Each part can be run again after a failure.
+ * imports. Each part can be run again after a failure.
  */
 export async function deleteMemberData(userId: string): Promise<void> {
 	await deleteAccountData(userId)
 	await deleteTrackingData(userId)
-	await deleteMcpActions(userId)
 }

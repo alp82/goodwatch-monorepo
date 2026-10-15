@@ -27,6 +27,12 @@ for name, schema in module.SCHEMAS.items():
     definitions += [f"PRIMARY KEY ({','.join(schema['primary_key'])})"]
     routing = f"BY ({schema['clustered_by']}) " if schema.get('clustered_by') else ''
     sql(f"CREATE TABLE IF NOT EXISTS {name} ({','.join(definitions)}) CLUSTERED {routing}INTO 1 SHARDS WITH (number_of_replicas=0)")
+# The MCP receipt table is created by hand in production (cut-over step 1.4), so it isn't in SCHEMAS.
+import re
+receipts = (Path(__file__).resolve().parents[3] / 'docs/implementation/mcp-write-tools-schema.sql').read_text()
+receipts = '\n'.join(line for line in receipts.splitlines() if not line.startswith('--')).strip().rstrip(';')
+receipts = re.sub(r'INTO \d+ SHARDS$', 'INTO 1 SHARDS WITH (number_of_replicas=0)', receipts.replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', 1))
+sql(receipts)
 
 def insert(table, **row):
     sql(f"INSERT INTO {table} ({','.join(row)}) VALUES ({','.join('?' for _ in row)}) ON CONFLICT DO NOTHING", list(row.values()))
@@ -51,6 +57,6 @@ insert('user_score', user_id=member, media_type='movie', tmdb_id=2000, score=8, 
 insert('user_setting', user_id=member, key='country_default', value='DE')
 insert('user_setting', user_id=member, key='streaming_providers_default', value='')
 insert('user_wishlist', user_id='mcp-member-B', media_type='movie', tmdb_id=2001, created_at=now, updated_at=now)
-for table in module.SCHEMAS:
+for table in [*module.SCHEMAS, 'user_mcp_action']:
     sql(f'REFRESH TABLE {table}')
 print('Seeded dedicated local MCP cluster with 29 catalog titles and two isolated members')
