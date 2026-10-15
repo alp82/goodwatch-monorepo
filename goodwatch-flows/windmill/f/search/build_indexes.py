@@ -7,8 +7,8 @@ Runs nightly and by hand after a full `f/search/embed_titles` run. One run:
 
 1. Reads the eligible titles (`goodwatch_overall_score_voting_count >= 2000`, not adult)
    from Qdrant (payload, `fingerprint_v1`, `text_en_v1`, `text_multi_v1`) and Crate (text
-   fields, companies), plus their credits, people and studios from Crate and their term ids
-   from `search_terms`.
+   fields, companies), plus their credits, people and studios from Crate, their term ids
+   from `search_terms`, and their localized names from `translation` (the alias table).
 2. Builds every index with `f/search/index_builders` and encodes the intent examples with
    multilingual-e5-small.
 3. Records the build in `search_index_builds` (status `building`, with its file list), then
@@ -188,6 +188,22 @@ def read_term_ids(crate, terms: set[str]) -> dict[str, int]:
     return out
 
 
+def read_translations(crate, titles: list[ib.Title]) -> list[tuple]:
+    """The localized names of the titles in the alias languages: (media_type, tmdb_id,
+    language_code, country_code, title) rows of `translation`."""
+    out = []
+    for media_type in ("movie", "show"):
+        tmdb_ids = [t.tmdb_id for t in titles if t.media_type == media_type]
+        for batch in _chunks(tmdb_ids, CRATE_ID_CHUNK):
+            for r in crate.select(
+                "SELECT media_tmdb_id, language_code, country_code, title FROM translation "
+                "WHERE media_type = ? AND language_code = ANY(?) AND media_tmdb_id = ANY(?)",
+                (media_type, list(ib.ALIAS_LANGUAGES), batch),
+            ):
+                out.append((media_type, r["media_tmdb_id"], r["language_code"], r["country_code"], r["title"]))
+    return out
+
+
 def read_sources(crate, client: QdrantClient, stats: dict) -> ib.Sources:
     started = time.monotonic()
     payloads, vectors = read_points(client, stats)
@@ -210,13 +226,15 @@ def read_sources(crate, client: QdrantClient, stats: dict) -> ib.Sources:
     for t in titles:
         terms |= ib.title_terms(t)
     term_ids = read_term_ids(crate, terms)
+    translations = read_translations(crate, titles)
     stats |= {"eligible_points": len(payloads), "crew_rows": len(crew), "cast_rows": len(cast), "people": len(people),
+              "translation_rows": len(translations),
               "read_seconds": round(time.monotonic() - started, 1)}
     keep = np.array(keep, np.int64)
     return ib.Sources(
         titles=titles, fingerprints=vectors[FINGERPRINT_VECTOR][keep], text_en=vectors[TEXT_EN_VECTOR][keep],
         text_multi=vectors[TEXT_MULTI_VECTOR][keep], crew=crew, cast=cast, people=people, media_companies=media,
-        company_names=companies, network_names=networks, term_ids=term_ids,
+        company_names=companies, network_names=networks, term_ids=term_ids, translations=translations,
     )
 
 
@@ -450,6 +468,7 @@ def run(crate, blobs, client: QdrantClient, *, dry_run: bool, now: datetime | No
         "created_at": now.isoformat(),
         "previous_build_id": previous,
         "files": entries,
+        "alias_version": ib.ALIAS_VERSION,
         "profiles": {"collection": REFERENCE_PROFILES_COLLECTION, "points": len(build.profiles)},
         "stats": build.stats,
     }

@@ -172,6 +172,91 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(labels["stems"], [["dark"], ["loop", "time"]])
 
 
+class AliasTests(unittest.TestCase):
+    TITLES = [title(MOVIE + 129, title="Spirited Away", original_title="千と千尋の神隠し"),
+              title(MOVIE + 155, title="The Dark Knight", original_title="The Dark Knight"),
+              title(SHOW + 1396, media_type="show", title="Breaking Bad", original_title="Breaking Bad")]
+
+    def test_names_are_folded_deduplicated_and_kept_once_per_title(self) -> None:
+        rows = [
+            ("movie", 129, "de", "DE", "Chihiros Reise ins Zauberland"),
+            ("movie", 129, "fr", "FR", "Le Voyage de Chihiro"),
+            ("movie", 129, "pt", "BR", "A Viagem de Chihiro"),
+            ("movie", 129, "pt", "PT", "A Viagem de Chihiro"),        # the same name in another region
+            ("movie", 129, "es", "ES", "El viaje de Chihiro"),
+            ("movie", 129, "es", "MX", "El Viaje de Chihiro"),        # the same fold
+            ("movie", 129, "ja", "JP", "千と千尋の神隠し"),               # the original title
+            ("movie", 129, "en", "US", "Spirited Away"),              # the title
+            ("movie", 129, "it", "IT", ""),
+            ("movie", 129, "it", "IT", None),
+            ("movie", 129, "nl", "NL", "De reis van Chihiro"),        # not a launch language
+            ("movie", 155, "zh", "CN", "蝙蝠侠：黑暗骑士"),
+            ("movie", 155, "zh", "TW", "黑暗騎士"),
+            ("movie", 155, "pl", "PL", "x"),                           # too short
+            ("movie", 155, "zh", "HK", "侠"),                           # one CJK character is kept
+            ("movie", 155, "de", "DE", "The Dark Knight"),
+            ("show", 1396, "ru", "RU", "Во все тяжкие"),
+            ("show", 1396, "es", "ES", "Breaking Bad"),
+            ("movie", 1396, "de", "DE", "Not an eligible title"),     # a movie, not the show
+        ]
+        doc, stats = ib.alias_table(self.TITLES, rows)
+        named = list(zip(doc["rows"], doc["names"], doc["languages"]))
+        self.assertEqual(named, [
+            (0, "Chihiros Reise ins Zauberland", "de"),
+            (0, "Le Voyage de Chihiro", "fr"),
+            (0, "El viaje de Chihiro", "es"),                     # the first region's spelling
+            (0, "A Viagem de Chihiro", "pt"),
+            (1, "侠", "zh"),
+            (1, "蝙蝠侠：黑暗骑士", "zh"),
+            (1, "黑暗騎士", "zh"),
+            (2, "Во все тяжкие", "ru"),
+        ])
+        self.assertEqual(doc["version"], ib.ALIAS_VERSION)
+        self.assertEqual(stats["aliases_read"], 17)
+        self.assertEqual(stats["aliases_empty"], 2)
+        self.assertEqual(stats["aliases_same_as_title"], 4)
+        self.assertEqual(stats["aliases_duplicate"], 2)
+        self.assertEqual(stats["aliases_too_short"], 1)
+        self.assertEqual(stats["aliases_kept"], 8)
+        self.assertEqual(stats["aliases_titles"], 3)
+        self.assertEqual(stats["aliases_per_language"]["zh"], 3)
+        self.assertEqual(list(stats["aliases_per_language"]), list(ib.ALIAS_LANGUAGES))
+
+    def test_a_name_two_languages_share_takes_the_first_language(self) -> None:
+        rows = [("movie", 129, "pl", "PL", "Chihiro"), ("movie", 129, "de", "AT", "chihiro")]
+        doc, _ = ib.alias_table(self.TITLES, rows)
+        self.assertEqual((doc["names"], doc["languages"]), (["chihiro"], ["de"]))
+
+    def test_no_translations_give_an_empty_table(self) -> None:
+        doc, stats = ib.alias_table(self.TITLES, [])
+        self.assertEqual(doc, {"version": ib.ALIAS_VERSION, "rows": [], "names": [], "languages": []})
+        self.assertEqual(stats["aliases_kept"], 0)
+
+    def test_the_build_writes_the_alias_table(self) -> None:
+        src = sources(self.TITLES)
+        src.translations = [("movie", 155, "pl", "PL", "Mroczny Rycerz")]
+        build = ib.build_indexes(src)
+        self.assertEqual(build.files["alias_table"]["names"], ["Mroczny Rycerz"])
+        self.assertEqual(build.files["alias_table"]["rows"], [1])
+        self.assertEqual(build.stats["aliases_kept"], 1)
+        self.assertEqual(ib.build_indexes(sources(self.TITLES)).files["alias_table"]["rows"], [])
+
+    def test_translations_are_read_per_media_type_in_the_alias_languages(self) -> None:
+        calls = []
+
+        class Crate:
+            def select(self, sql, params):
+                calls.append((sql, params))
+                media_type, languages, ids = params
+                return [{"media_tmdb_id": i, "language_code": "de", "country_code": "DE", "title": f"N{i}"}
+                        for i in ids]
+        rows = flow.read_translations(Crate(), self.TITLES)
+        self.assertEqual(rows, [("movie", 129, "de", "DE", "N129"), ("movie", 155, "de", "DE", "N155"),
+                                ("show", 1396, "de", "DE", "N1396")])
+        self.assertTrue(all("FROM translation" in sql and params[1] == list(ib.ALIAS_LANGUAGES)
+                            for sql, params in calls))
+
+
 # ---- storage -------------------------------------------------------------------------------------
 
 

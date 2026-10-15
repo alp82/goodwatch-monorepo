@@ -68,6 +68,13 @@ COLLOCATION_RATIO = 0.3   # a bigram is a collocation when its df >= this x the 
 # --- spell correction -------------------------------------------------------------------------
 SPELL_MIN_DF = 20
 
+# --- localized names (search by localized title) ---------------------------------------------------
+# The base languages of the launch locales, in the order that picks the language of a name two
+# languages share. Docs: docs/implementation/media-language-search-aliases-plan.md.
+ALIAS_LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "ja", "ko", "zh", "pl", "ru", "ar")
+# The rules version of `alias_table`; the webapp keys its cached name lookups by it.
+ALIAS_VERSION = 1
+
 # Point ids of search_reference_profiles are UUIDv5 of the entity key in this namespace.
 PROFILE_NAMESPACE = uuid.UUID("6f1c2d8e-5b0a-4f7e-9a51-3c2e8d4b7a10")
 
@@ -104,6 +111,8 @@ _CUT = re.compile(
     r"memorial\s+edition)\s*\)?\s*$", re.IGNORECASE)
 
 _WORD = re.compile(r"[^\W_]+", re.UNICODE)
+# Han, kana, and Hangul (also as the jamo NFKD folds syllables into).
+_CJK = re.compile(r"[ᄀ-ᇿ぀-ヿ㐀-䶿一-鿿가-힯豈-﫿]")
 
 
 # === text helpers (the webapp implements the same rules) =====================================
@@ -178,6 +187,8 @@ class Sources:
     company_names: dict             # company id -> name
     network_names: dict             # network id -> name
     term_ids: dict                  # term -> id in search_terms
+    # (media_type, tmdb_id, language_code, country_code, title) rows of `translation`, the localized names
+    translations: list = field(default_factory=list)
 
 
 # === credits ===================================================================================
@@ -666,6 +677,61 @@ def cut_edges(titles: list[Title], directors: list[set[int]]) -> list[tuple[int,
     return sorted(out)
 
 
+# === localized names (aliases) ===================================================================
+
+def _cjk(s: str) -> bool:
+    return bool(_CJK.search(s))
+
+
+def alias_table(titles: list[Title], translations: list) -> tuple[dict, dict]:
+    """The localized names of the eligible titles, from `translation` rows
+    (media_type, tmdb_id, language_code, country_code, title), as the `alias_table` file and its
+    counts. A name is kept once per title (by its fold, whatever the region or language, the
+    first in ALIAS_LANGUAGES order) and only when it differs from the title and the original
+    title. A Latin-script name needs 2 characters after folding; a CJK name may be one."""
+    row_of = {(t.media_type, t.tmdb_id): r for r, t in enumerate(titles)}
+    order = {lang: i for i, lang in enumerate(ALIAS_LANGUAGES)}
+    stats = Counter()
+    candidates = []
+    for media_type, tmdb_id, language, country, name in translations:
+        row = row_of.get((media_type, tmdb_id))
+        if row is None or language not in order:
+            continue
+        stats["read"] += 1
+        name = (name or "").strip()
+        if not name:
+            stats["empty"] += 1
+            continue
+        candidates.append((row, order[language], country or "", name))
+    kept = {}
+    canonical = {}
+    for row, lang, country, name in sorted(candidates):
+        key = fold(name)
+        if row not in canonical:
+            canonical[row] = {fold(titles[row].title), fold(titles[row].original_title)}
+        if not key or (len(key) < 2 and not _cjk(key)):
+            stats["too_short"] += 1
+        elif key in canonical[row]:
+            stats["same_as_title"] += 1
+        elif (row, key) in kept:
+            stats["duplicate"] += 1
+        else:
+            kept[(row, key)] = (lang, name)
+    out = sorted((row, lang, name) for (row, _), (lang, name) in kept.items())
+    per_language = Counter(ALIAS_LANGUAGES[lang] for _, lang, _ in out)
+    stats = {"aliases_" + k: v for k, v in stats.items()} | {
+        "aliases_kept": len(out), "aliases_titles": len({r for r, _, _ in out}),
+        "aliases_per_language": {lang: per_language[lang] for lang in ALIAS_LANGUAGES},
+    }
+    doc = {
+        "version": ALIAS_VERSION,
+        "rows": [r for r, _, _ in out],
+        "names": [n for _, _, n in out],
+        "languages": [ALIAS_LANGUAGES[lang] for _, lang, _ in out],
+    }
+    return doc, stats
+
+
 # === encoding helpers ================================================================================
 
 def f32(a: np.ndarray) -> dict:
@@ -738,6 +804,8 @@ def build_indexes(src: Sources, encode_intents=None) -> Build:
         "flags": [sum(1 << i for i, f in enumerate(BOOL_FLAGS) if t.flags.get(f)) for t in titles],
         "production_methods": [t.production_method for t in titles],
     }
+    files["alias_table"], alias_stats = alias_table(titles, src.translations)
+    stats |= alias_stats
     files["term_statistics"] = {
         "n": ti.n,
         "terms": ti.terms,
