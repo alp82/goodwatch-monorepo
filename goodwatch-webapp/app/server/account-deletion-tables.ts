@@ -1,7 +1,8 @@
 /**
  * Every CrateDB table that holds a member's rows, keyed or filtered by `user_id` (#553). Account deletion empties each
- * of them for the member. A `user_*` table declared in goodwatch-flows/windmill/f/sync/models/crate_schemas.py and
- * missing here fails account-deletion-tables.test.ts.
+ * of them for the member. A `user_*` table declared in goodwatch-flows/windmill/f/sync/models/crate_schemas.py, or
+ * created by hand at the cut-over (docs/implementation/mcp-write-tools-schema.sql), and missing here fails
+ * account-deletion-tables.test.ts.
  */
 export const MEMBER_TABLES = [
 	"user_score",
