@@ -19,7 +19,9 @@ try {
 	const encryptionSecret = process.env.AUTH_IMPORT_PAYLOAD_SECRET ?? ""
 	const crateUsername = process.env.AUTH_IMPORT_CRATE_USERNAME
 	const cratePassword = process.env.AUTH_IMPORT_CRATE_PASSWORD
+	const targetProfile = process.env.AUTH_IMPORT_TARGET_PROFILE ?? "fake-551"
 	if (
+		!["fake-551", "restored-563"].includes(targetProfile) ||
 		process.env.AUTH_IMPORT_COPY_ONLY !== "yes" ||
 		encryptionSecret.length < 32 ||
 		((crateUsername !== undefined || cratePassword !== undefined) &&
@@ -72,17 +74,22 @@ try {
 			? { username: crateUsername, password: cratePassword }
 			: undefined,
 	)
+	const expectedCluster =
+		targetProfile === "restored-563"
+			? "goodwatch-restore-563-551"
+			: "goodwatch-local-importer-551"
 	if (
-		(await sql("SELECT name FROM sys.cluster")).rows[0][0] !==
-		"goodwatch-local-importer-551"
+		(await sql("SELECT name FROM sys.cluster")).rows[0][0] !== expectedCluster
 	)
 		throw new Error()
 	const nodes = (await sql("SELECT name,version['number'] FROM sys.nodes")).rows
-	if (
-		nodes.length !== 1 ||
-		nodes[0][0] !== "importer-551" ||
-		nodes[0][1] !== "5.10.12"
-	)
+	const expectedNodes =
+		targetProfile === "restored-563"
+			? [1, 2, 3].map((i) => [`restore-563-${i}`, "5.10.16"])
+			: [["importer-551", "5.10.12"]]
+	if (JSON.stringify([...nodes].sort()) !== JSON.stringify(expectedNodes))
+		throw new Error()
+	if (targetProfile === "restored-563" && marker[0].kind !== "restored-copy")
 		throw new Error()
 	failureCode = "import_failed"
 	const report = await importSupabaseAuth({

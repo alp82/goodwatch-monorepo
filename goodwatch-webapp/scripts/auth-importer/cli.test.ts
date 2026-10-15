@@ -34,6 +34,7 @@ for (const [name, env, args] of [
 		[],
 	],
 	["unknown arguments", {}, ["--force"]],
+	["unknown target profile", { AUTH_IMPORT_TARGET_PROFILE: "production" }, []],
 ] as const)
 	test(`CLI refuses ${name} before connecting and never prints connection secrets`, () => {
 		const result = spawnSync(
