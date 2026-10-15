@@ -110,3 +110,10 @@ list plausible.
 Plan, Fable review and adopted fixes in items/014-g1-rollout/. Built by Sol, Astra review (2 × P2) fixed and passed; merged as PR #632 (`a9aa22e8`). Waiting for the owner's word on the production steps: create `f/sync/g1_members` = [owner], deploy the scripts, owner redeploys the webapp, backfill the owner's `g1:v2`, add the 3-minute dirty schedule. Then the 5–10 member cohort (second owner decision), then `on`, then the rename.
 
 October 15, 21:20 UTC: renamed to "personal order" (PR #648, `13038e85`; flag `REC_G1_ORDER` kept). Production: exposure columns renamed (64 rows), `f/sync/personal_order_members` = [owner], owner payload `personal-order:v1:<owner>` published (737 KB), schedule `f/sync/copy/personal_order_dirty` every 3 minutes (empty runs take 1 ms), old `g1_order`/`g1_trigger` archived. Merges to main deploy Windmill scripts automatically. Waiting: owner redeploys the webapp; old variable `f/sync/g1_preview_members` still to delete.
+
+## Handover, October 16, 2026 (continued on the owner's other machine)
+
+- Map: [Map: personal order and Sides of you across GoodWatch](https://github.com/alp82/goodwatch-monorepo/issues/652) (#652), tickets #653–#662 and #526. "Personal order" is in CONTEXT.md (#663).
+- Item 015 (T5, ticket #656, claimed): Sol's plan in items/015-t5-whose-taste/PLAN.md, not yet reviewed. Limitation: at most 21 matched non-owner cases, weak power for a 10-point gain.
+- Open check: no `user_list_exposure` rows from anyone since the redeploy at about 21:20 UTC on October 15 (checked 00:10 UTC). Either nobody visited or the renamed writer fails; first thing to verify.
+- Local-only data (not in git, machine-bound): ~/goodwatch-research/taste/ (packs 514 MB, work 436 MB, gate 45 MB, results, out, ops/wm.py). The lab cannot run elsewhere without it.
