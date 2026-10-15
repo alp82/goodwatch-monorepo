@@ -145,8 +145,13 @@ function group(loved: RatedTitle[], person: Person) {
 	const weights = loved.map(
 		(r) => 1 + Math.max(0, (r.score - person.mu) / person.sigma),
 	)
-	const maxK = Math.min(MAX_SIDES, n < 20 ? 2 : n < 50 ? 3 : n < 120 ? 4 : 5)
-	const minSize = Math.max(3, Math.ceil(0.07 * n))
+	// Small histories: up to one side per 2.5 loved titles, three at most, and two titles make a side (as the sample
+	// taste guests see needs: 14 loved titles, mostly one strand).
+	const maxK = Math.min(
+		MAX_SIDES,
+		n < 50 ? Math.min(3, Math.floor(n / 2.5)) : n < 120 ? 4 : 5,
+	)
+	const minSize = n < 30 ? 2 : Math.max(3, Math.ceil(0.07 * n))
 	let best: { centers: Vec[]; assigned: number[]; closeness: number } | null =
 		null
 	for (let k = 2; k <= maxK; k++) {
@@ -197,9 +202,14 @@ function group(loved: RatedTitle[], person: Person) {
 
 // ---------- naming ----------
 
-/** Attribute keys by how much the center stands out from the other sides' centers, most first. */
+/**
+ * Attribute keys by how much the center stands out from the other sides' centers, most first. Half the others' mean,
+ * so what the side itself is strongest in still leads when another side is small or close.
+ */
 function standout(center: Vec, others: Vec[]) {
-	const base = others.length ? meanOf(others) : new Float64Array(K)
+	const base = others.length
+		? meanOf(others).map((x) => 0.5 * x)
+		: new Float64Array(K)
 	return NON_CRAFT.filter((k) => !UNNAMED.has(KEYS[k]))
 		.map((k) => ({ key: KEYS[k], weight: center[k] - base[k] }))
 		.sort((a, b) => b.weight - a.weight || a.key.localeCompare(b.key))

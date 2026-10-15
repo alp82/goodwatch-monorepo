@@ -311,6 +311,17 @@ describe("buildSides", () => {
 		assert.ok(shown.length <= 1)
 	})
 
+	it("gives a small history mostly in one strand two sides, as the sample taste guests see", () => {
+		const titles = [
+			...Array.from({ length: 12 }, () => rated(CRIME, 9)),
+			...Array.from({ length: 2 }, () => rated(COMEDY, 9)),
+			...Array.from({ length: 20 }, () => rated({}, 5)),
+		]
+		const view = buildSides(person(titles, []))
+		assert.equal(view.status, "ready")
+		assert.equal(view.sides.length, 2)
+	})
+
 	it("has no sides with too few loved titles", () => {
 		const titles = [rated(CRIME, 9), rated(COMEDY, 9), rated({}, 5)]
 		assert.equal(buildSides(person(titles, [])).status, "empty")
