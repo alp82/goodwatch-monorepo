@@ -39,6 +39,7 @@ type Envelope = {
 	row: Record<string, unknown>
 	deleted: boolean
 	archived?: boolean
+	authorizedAt?: string
 	emailClaim?: string
 	deletedAt?: string
 	admission?: AuthAdmission
@@ -797,6 +798,8 @@ export async function reconcileAuthRows(
         if(model === "user") orphan = row.emailVerified === false && typeof row.createdAt === "string" && now.getTime()-new Date(row.createdAt).getTime() >= 48*3600000
 		if (model === "oauthClient" && typeof row.userId === "string")
 			orphan = !user || user.envelope.deleted
+        if(model === "oauthClient" && !current.envelope.authorizedAt && typeof row.createdAt === "string" && now.getTime()-new Date(row.createdAt).getTime() >= 24*3600000)
+            orphan = true
 		if (
 			[
 				"oauthConsent",

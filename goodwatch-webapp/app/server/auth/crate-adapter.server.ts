@@ -428,6 +428,22 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				if (input.sortBy) normalized.sortBy = { ...input.sortBy, field: context.getDefaultFieldName({ model, field: input.sortBy.field }) }
 				if (!testOnlyConformance) assertAuthMutation(model, action, normalized)
 				const output = await fn(normalized)
+                // Persist authorization history in the authenticated client envelope.
+                // A collector races this CAS: either the marker wins, or issuance fails closed.
+                if(model === "oauthConsent" && action === "create" && output) {
+                    let marked = false
+                    for(let attempt=0;attempt<64;attempt++) {
+                        const clientId = String(normalized.data.clientId)
+                        const client = await stored("oauthClient",clientId)
+                        if(!client) { if(enforceGrantRevocation) throw new Error("OAuth client no longer exists"); marked=true; break }
+                        if(client.deleted || client.row.disabled) throw new Error("OAuth client no longer exists")
+                        if(client.envelope.authorizedAt) { marked=true; break }
+                        const aad = `${authModelTable("oauthClient")}:${clientId}:payload`
+                        const result = await sql("UPDATE doc.auth_oauth_client SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[codec.encode({...client.envelope,authorizedAt:new Date().toISOString()},aad),clientId,client.seq,client.term])
+                        if(result.rowcount===1) {marked=true;break}
+                    }
+                    if(!marked) throw new AuthMutationConflictError()
+                }
 				const selected = input.select?.map((field: string) => context.getDefaultFieldName({ model, field }))
 				const mapped = (row: Row) => Object.fromEntries(Object.entries(row).filter(([field]) => !selected || selected.includes(field)).map(([field, value]) =>
 					[context.getFieldName({ model, field }), value != null && context.schema[model]?.fields[field]?.type === "date" ? new Date(value) : value]))
