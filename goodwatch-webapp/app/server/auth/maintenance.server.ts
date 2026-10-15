@@ -653,6 +653,7 @@ export async function rotateAuthEncryption(
 }
 
 export const reconcilableAuthModels = [
+	"user",
 	"account",
 	"session",
 	"oauthClient",
@@ -736,6 +737,12 @@ export async function reconcileAuthRows(
 				)
 			).rowcount === 1
 		)
+        if(removed && targetModel === "user" && typeof stored.envelope.row.email === "string" && stored.envelope.emailClaim) {
+            const email = createHmac("sha256",options.encryptionSecret).update(JSON.stringify(["email-claim",stored.envelope.row.email.trim().toLowerCase()])).digest("hex")
+            const claim = (await sql("SELECT user_id,operation_id,_seq_no,_primary_term FROM doc.auth_user_email WHERE email_norm=?",[email])).rows[0]
+            if(claim?.[0] === id && claim[1] === stored.envelope.emailClaim)
+                await sql("DELETE FROM doc.auth_user_email WHERE email_norm=? AND _seq_no=? AND _primary_term=?",[email,claim[2],claim[3]])
+        }
         if(removed) await releaseAuthAdmission(sql,codec,id,envelope.admission)
         return removed
 	}
@@ -787,6 +794,7 @@ export async function reconcileAuthRows(
 				row.credentialVersion !==
 				authCredentialVersion(options.encryptionSecret, password)
 		}
+        if(model === "user") orphan = row.emailVerified === false && typeof row.createdAt === "string" && now.getTime()-new Date(row.createdAt).getTime() >= 48*3600000
 		if (model === "oauthClient" && typeof row.userId === "string")
 			orphan = !user || user.envelope.deleted
 		if (
