@@ -1,8 +1,12 @@
-summary: Enqueue G1 for the explicit preview list
-description: Reads the JSON array variable f/sync/g1_preview_members. Missing or empty means disabled. Called after title snapshot publication and by the existing nightly snapshot job even on a no-change night. The G1 script runs on the default Python workers.
+summary: Enqueue one G1 rollout or dirty build
+description: Uses f/sync/g1_members (a JSON list or all). Snapshot/nightly calls reconcile the rollout. Create a separate schedule every three minutes with dirty_only true; both paths enqueue the serialized g1_order script. Missing or empty rollout disables triggers.
 kind: script
 lock: '!inline f/sync/copy/g1_trigger.script.lock'
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema
   type: object
-  properties: {}
+  properties:
+    dirty_only:
+      type: boolean
+      default: false
+      description: Enqueue one dirty-set run instead of a full rollout reconciliation.

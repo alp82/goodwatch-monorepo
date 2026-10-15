@@ -1,38 +1,43 @@
-"""Enqueue only explicitly configured preview members; imports no database connector.
-
-Called after snapshot publication and by the snapshot publisher's existing nightly
-schedule (even if no snapshot changed). An absent/empty config disables the trigger.
-"""
+"""Queue one serialized G1 build after snapshots/nightly, or for the dirty schedule."""
 import json
 
-MEMBERS_VARIABLE = "f/sync/g1_preview_members"
+MEMBERS_VARIABLE = "f/sync/g1_members"
 G1_SCRIPT = "f/sync/copy/g1_order"
+DIRTY_KEY = "g1:dirty"
 
 
-def start_preview_g1(get_variable, enqueue):
+def validate_members(members):
+    if (not isinstance(members, list)
+            or any(not isinstance(m, str) or not m.strip() or m != m.strip()
+                   or m.lower() == "all" or ":" in m or "*" in m for m in members)
+            or len(set(members)) != len(members)):
+        raise ValueError("Expected distinct explicit member ids, or the rollout string all")
+
+
+def rollout_members(raw):
+    # Windmill string variables may contain literal all or its JSON encoding.
+    members = "all" if raw == "all" else json.loads(raw or "[]")
+    if members != "all":
+        validate_members(members)
+    return members
+
+
+def start_g1(get_variable, enqueue, *, dirty_only=False):
     try:
-        raw = get_variable(MEMBERS_VARIABLE)
-    except Exception as error:
-        print(f"G1 trigger disabled: preview variable unavailable: {error}", flush=True)
-        return {"started": False, "reason": "preview variable unavailable"}
-    if not raw:
-        return {"started": False, "reason": "no preview members"}
-    try:
-        members = json.loads(raw)
+        members = rollout_members(get_variable(MEMBERS_VARIABLE))
         if members == []:
-            return {"started": False, "reason": "no preview members"}
-        if (not isinstance(members, list) or not members
-                or any(not isinstance(m, str) or not m.strip() or m != m.strip()
-                       or m.lower() == "all" or ":" in m or "*" in m for m in members)
-                or len(set(members)) != len(members)):
-            raise ValueError("Expected distinct explicit preview member ids")
-        job = enqueue(path=G1_SCRIPT, args={"member_ids": members, "dry_run": False})
+            return {"started": False, "reason": "no rollout members"}
+        args = {"member_ids": members, "dry_run": False}
+        if dirty_only:
+            args["dirty_only"] = True
+        job = enqueue(path=G1_SCRIPT, args=args)
         return {"started": True, "job": job}
     except Exception as error:
         print(f"G1 trigger failed: {error}", flush=True)
         return {"started": False, "reason": str(error)}
 
 
-def main():
+def main(dirty_only: bool = False):
     import wmill
-    return start_preview_g1(wmill.get_variable, wmill.run_script_by_path_async)
+    return start_g1(wmill.get_variable, wmill.run_script_by_path_async,
+                    dirty_only=False if dirty_only is None else dirty_only)

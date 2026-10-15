@@ -14,7 +14,7 @@
 // TASTE_REDIS_URL points the store at a single Redis (for development and scripts); without it, it uses the webapp's
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
-import { markG1Changed, stopG1Rebuilds } from "../g1/rebuild.server.ts"
+import { markG1Changed } from "../g1/rebuild.server.ts"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -220,7 +220,6 @@ export async function markTasteChanged(
 
 /** Closes the development Redis connection (for scripts). */
 export function stopTasteStore(): void {
-	stopG1Rebuilds()
 	for (const timer of scheduled.values()) clearTimeout(timer)
 	scheduled.clear()
 	singleRedis?.disconnect()

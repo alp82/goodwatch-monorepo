@@ -1,12 +1,13 @@
-// Synthetic only: imports the pure reader/order module, never a backend connector.
+// Synthetic only: imports the reader/order module, never a backend connector.
 import { performance } from "node:perf_hooks"
-import { pathToFileURL } from "node:url"
+import { gzipSync } from "node:zlib"
+import {
+	createG1Reader,
+	createG1OrderCache,
+	G1_MODEL_HASH,
+} from "../app/server/g1/reader.server.ts"
 import type { TitleSnapshot } from "../app/server/title-snapshot/snapshot.server.ts"
-const { createG1Reader, orderG1, G1_MODEL_HASH } = await import(
-	process.argv[2]
-		? pathToFileURL(process.argv[2]).href
-		: "../app/server/g1/reader.server.ts"
-)
+
 const count = 60_000
 const keys = Array.from(
 	{ length: count },
@@ -24,7 +25,7 @@ const raw = JSON.stringify({
 	snapshotVersion: snapshot.version,
 	builtAt: new Date().toISOString(),
 	pointIds: keys,
-	b3Rank: keys.map((_, i) => ((i * 7919) % count) / count),
+	b3Rank: keys.map((_, i) => Math.fround(((i * 7919) % count) / count)),
 	b5TopHalf: keys.map((_, i) => i % 2 === 0),
 	movieSeriesId: keys.map((_, i) => (i < count / 2 ? Math.floor(i / 3) : -1)),
 	show: keys.map((k) => k >= 2e12),
@@ -33,27 +34,62 @@ const raw = JSON.stringify({
 	othersCount: 10,
 	othersRatingsCount: 100,
 })
-const read = createG1Reader(async () => raw)
-for (let i = 0; i < 3; i++)
-	orderG1(keys, (await read("synthetic", snapshot)).data!, snapshot)
-const times: number[] = []
+const compressed = gzipSync(raw)
+let gets = 0
+const read = createG1Reader(async () => {
+	gets++
+	return compressed
+})
+const order = createG1OrderCache() // Default 200,000-title bound: three full 60k compositions fit.
+const stats = (values: number[]) => {
+	values.sort((a, b) => a - b)
+	return {
+		requests: values.length,
+		minMs: values[0],
+		medianMs: values[Math.floor(values.length / 2)],
+		maxMs: values.at(-1),
+	}
+}
+const decode: number[] = [],
+	cold: number[] = [],
+	warm: number[] = [],
+	rotating: number[] = []
+for (let i = 0; i < 12; i++) {
+	const start = performance.now()
+	const data = (await read(`cold-${i}`, snapshot)).data!
+	decode.push(performance.now() - start)
+	const composeStart = performance.now()
+	if (order(keys, data, snapshot).keys.length !== count)
+		throw Error("Incomplete order")
+	cold.push(performance.now() - composeStart)
+}
 for (let i = 0; i < 20; i++) {
 	const start = performance.now()
-	const result = orderG1(
-		keys,
-		(await read("synthetic", snapshot)).data!,
-		snapshot,
-	)
-	if (result.keys.length !== count) throw Error("Incomplete order")
-	times.push(performance.now() - start)
+	order(keys, (await read("cold-11", snapshot)).data!, snapshot)
+	warm.push(performance.now() - start)
 }
-times.sort((a, b) => a - b)
+let maxRss = process.memoryUsage().rss
+for (let i = 0; i < 170; i++) {
+	const start = performance.now()
+	order(keys, (await read(`member-${i}`, snapshot)).data!, snapshot)
+	rotating.push(performance.now() - start)
+	maxRss = Math.max(maxRss, process.memoryUsage().rss)
+}
 console.log(
-	JSON.stringify({
-		titles: count,
-		requests: times.length,
-		minMs: times[0],
-		medianMs: times[10],
-		maxMs: times.at(-1),
-	}),
+	JSON.stringify(
+		{
+			titles: count,
+			jsonBytes: Buffer.byteLength(raw),
+			gzipBytes: compressed.length,
+			preparedBytes: count * (8 + 4 + 1 + 8 + 1 + 1 + 4),
+			coldDecode: stats(decode),
+			coldCompositionAtCacheBound: stats(cold),
+			warm: stats(warm),
+			rotating170: stats(rotating),
+			gets,
+			maxSampledRssMiB: maxRss / 1024 ** 2,
+		},
+		null,
+		2,
+	),
 )

@@ -5,7 +5,12 @@ import assert from "node:assert/strict"
 import * as nodeModule from "node:module"
 import { test } from "node:test"
 
-const state = { fail: false, rowcount: 1, committed: [] as string[] }
+const state = {
+	fail: false,
+	rowcount: 1,
+	committed: [] as string[],
+	dirty: [] as string[],
+}
 ;(globalThis as unknown as { g1Writes: typeof state }).g1Writes = state
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
@@ -19,7 +24,13 @@ const { registerHooks } = nodeModule as unknown as {
 registerHooks({
 	load(url, context, next) {
 		let source: string | undefined
-		if (url.endsWith("/utils/crate.ts"))
+		if (url.endsWith("/utils/cache.ts"))
+			source = `export const getRedisCluster = () => ({ sadd: async (key, member) => {
+				if (key !== 'g1:dirty') throw Error('Unexpected key');
+				if (!globalThis.g1Writes.committed.length) throw Error('Uncommitted write');
+				globalThis.g1Writes.dirty.push(member);
+			} });`
+		else if (url.endsWith("/utils/crate.ts"))
 			source = `
 		export const execute = async sql => {
 			if (globalThis.g1Writes.fail) throw Error('uncommitted');
@@ -53,27 +64,19 @@ const { updateScores } = await import("../scores.server.ts")
 const { updateWishList } = await import("../wishList.server.ts")
 const { updateSkipped } = await import("../skipped.server.ts")
 const { updateNotInterested } = await import("../not-interested.server.ts")
-const { stopG1Rebuilds } = await import("./rebuild.server.ts")
 
-test("committed scores, Want to See, Skip and Not interested enqueue only preview members, including removals", async (t) => {
-	t.mock.timers.enable({ apis: ["setTimeout"] })
-	process.env.REC_PREVIEW_USERS = "owner"
-	process.env.REC_G1_ORDER = "on" // Broad ordering does not authorize broader builds.
-	process.env.G1_WINDMILL_URL = "https://windmill.example"
-	process.env.G1_WINDMILL_TOKEN = "fake-test-token"
-	const calls: string[] = []
-	t.mock.method(
-		globalThis,
-		"fetch",
-		async (_url: RequestInfo | URL, options: RequestInit) => {
-			assert.ok(state.committed.length)
-			calls.push(JSON.parse(options.body as string).member_ids[0])
-			return new Response("fake-job")
-		},
-	)
+test("committed interactions mark every member dirty, including removals", async (t) => {
+	const calls = state.dirty
+	t.mock.method(globalThis, "fetch", async () => {
+		throw Error("Unexpected HTTP")
+	})
 	try {
 		for (const member of ["owner", "stranger"]) {
-			const args = { user_id: member, tmdb_id: 1, media_type: "movie" as const }
+			const args = {
+				user_id: member,
+				tmdb_id: 1,
+				media_type: "movie" as const,
+			}
 			const writes = [
 				() => updateScores({ ...args, score: 8 }),
 				() => updateScores({ ...args, score: null }),
@@ -87,12 +90,13 @@ test("committed scores, Want to See, Skip and Not interested enqueue only previe
 			for (const write of writes) {
 				const before = calls.length
 				await write()
-				t.mock.timers.tick(1_500)
-				await Promise.resolve()
-				assert.equal(calls.length - before, member === "owner" ? 1 : 0)
+				await new Promise((resolve) => setImmediate(resolve))
+				assert.ok(calls.length > before)
+				assert.ok(calls.slice(before).every((id) => id === member))
 			}
 		}
 		// Rejected writes and no-op deletes do not schedule anything.
+		const committedCalls = calls.length
 		state.fail = true
 		const args = { user_id: "owner", tmdb_id: 1, media_type: "movie" as const }
 		await assert.rejects(updateScores({ ...args, score: 8 }))
@@ -110,17 +114,10 @@ test("committed scores, Want to See, Skip and Not interested enqueue only previe
 		await updateWishList({ ...args, action: "remove" })
 		await updateSkipped({ ...args, action: "remove" })
 		await updateNotInterested({ ...args, action: "remove" })
-		t.mock.timers.tick(1_500)
-		await Promise.resolve()
-		assert.equal(calls.length, 8)
+		await new Promise((resolve) => setImmediate(resolve))
+		assert.equal(calls.length, committedCalls)
 	} finally {
-		stopG1Rebuilds()
-		for (const key of [
-			"REC_PREVIEW_USERS",
-			"REC_G1_ORDER",
-			"G1_WINDMILL_URL",
-			"G1_WINDMILL_TOKEN",
-		])
-			delete process.env[key]
+		state.fail = false
+		state.rowcount = 1
 	}
 })

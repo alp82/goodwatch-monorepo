@@ -7,14 +7,14 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
-from f.sync.copy.g1_trigger import start_preview_g1, MEMBERS_VARIABLE, G1_SCRIPT
+from f.sync.copy.g1_trigger import start_g1, MEMBERS_VARIABLE, G1_SCRIPT
 
 
 class G1TriggerTests(unittest.TestCase):
     def test_only_explicit_members_are_queued(self):
         get = Mock(return_value='["owner"]')
         enqueue = Mock(return_value="job-1")
-        self.assertEqual(start_preview_g1(get, enqueue), {"started": True, "job": "job-1"})
+        self.assertEqual(start_g1(get, enqueue), {"started": True, "job": "job-1"})
         get.assert_called_once_with(MEMBERS_VARIABLE)
         enqueue.assert_called_once_with(path=G1_SCRIPT, args={"member_ids": ["owner"], "dry_run": False})
 
@@ -22,14 +22,22 @@ class G1TriggerTests(unittest.TestCase):
         for raw in [None, "", "[]", '["all"]', '["*"]', '["a","a"]', '[" owner "]', '"owner"', "not json"]:
             with self.subTest(raw=raw):
                 enqueue = Mock()
-                self.assertFalse(start_preview_g1(lambda _: raw, enqueue)["started"])
+                self.assertFalse(start_g1(lambda _: raw, enqueue)["started"])
                 enqueue.assert_not_called()
         enqueue = Mock()
-        self.assertFalse(start_preview_g1(Mock(side_effect=KeyError("missing")), enqueue)["started"])
+        self.assertFalse(start_g1(Mock(side_effect=KeyError("missing")), enqueue)["started"])
         enqueue.assert_not_called()
 
+    def test_all_rollout_and_dirty_schedule_share_the_serialized_builder(self):
+        self.assertEqual(MEMBERS_VARIABLE, "f/sync/g1_members")
+        for raw in ["all", '\"all\"']:
+            enqueue = Mock(return_value="job-all")
+            self.assertTrue(start_g1(lambda _: raw, enqueue, dirty_only=True)["started"])
+            enqueue.assert_called_once_with(path=G1_SCRIPT,
+                                            args={"member_ids": "all", "dry_run": False, "dirty_only": True})
+
     def test_enqueue_failure_is_contained(self):
-        self.assertFalse(start_preview_g1(lambda _: '["owner"]', Mock(side_effect=RuntimeError("offline")))["started"])
+        self.assertFalse(start_g1(lambda _: '["owner"]', Mock(side_effect=RuntimeError("offline")))["started"])
 
 
 def load_snapshot_without_connectors():

@@ -4,7 +4,8 @@ import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
-import { afterEach, test } from "node:test"
+import { after, afterEach, mock, test } from "node:test"
+import { gzipSync } from "node:zlib"
 import type { ListExposureInput } from "../list-exposure.server.ts"
 import type { ViewerContext } from "../viewer.server.ts"
 import type { Taste } from "../taste/taste.server.ts"
@@ -16,6 +17,7 @@ import {
 } from "./reader.server.ts"
 
 const state = {
+	now: Date.now(),
 	snapshot: null as TitleSnapshot | null,
 	raw: null as string | null,
 	reads: 0,
@@ -23,6 +25,8 @@ const state = {
 	taste: null as Taste | null,
 }
 ;(globalThis as unknown as { g1Test: typeof state }).g1Test = state
+const clock = mock.method(Date, "now", () => state.now)
+after(() => clock.mock.restore())
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
 		load(
@@ -38,7 +42,7 @@ registerHooks({
 		if (url.endsWith("/title-snapshot/format.server.ts"))
 			source = `${readFileSync(new URL(url), "utf8")}\nexport const getTitleSnapshot = () => globalThis.g1Test.snapshot;`
 		else if (url.endsWith("/utils/cache.ts"))
-			source = `export const getRedisCluster = () => ({ get: async () => { globalThis.g1Test.reads++; return globalThis.g1Test.raw } });`
+			source = `import { gzipSync } from "node:zlib"; export const getRedisCluster = () => ({ getBuffer: async key => { if (key !== "g1:v2:owner") throw Error("Unexpected key"); globalThis.g1Test.reads++; return globalThis.g1Test.raw === null ? null : gzipSync(globalThis.g1Test.raw) } });`
 		else if (url.endsWith("/utils/crate.ts"))
 			source = `export const query = () => { throw Error('Unexpected database read') };`
 		else if (url.endsWith("/list-exposure.server.ts"))
@@ -127,7 +131,7 @@ const payload = (): G1Payload => ({
 	format: 1,
 	modelHash: G1_MODEL_HASH,
 	snapshotVersion: snapshot.version,
-	builtAt: new Date().toISOString(),
+	builtAt: new Date(state.now).toISOString(),
 	pointIds: keys,
 	b3Rank: [0.1, 0.9, 0.8, 0.99, 0.7, 0.6],
 	b5TopHalf: [true, true, true, true, true, true],
@@ -147,6 +151,7 @@ const input = () => ({
 	viewer: ctx(),
 })
 function reset(mode: string) {
+	state.now += 45_000
 	process.env.REC_G1_ORDER = mode
 	process.env.REC_PREVIEW_USERS = "owner"
 	state.snapshot = snapshot
@@ -164,7 +169,9 @@ test("flag off leaves today's Discover and Watch next order unchanged and never 
 	reset("off")
 	assert.deepEqual((await filterTitles(input())).keys, keys)
 	const control = planWatchNext(ctx(), taste, { sort: "match" })
-	const read = await createG1Reader(async () => state.raw)("owner", snapshot)
+	const read = await createG1Reader(async () =>
+		state.raw === null ? null : gzipSync(state.raw),
+	)("owner", snapshot)
 	const withPayload = planWatchNext(
 		ctx(),
 		taste,
@@ -215,7 +222,7 @@ test("ranked search, Explorer lists, other sorts and unlisted members keep today
 	assert.deepEqual((await filterTitles(i)).keys, keys)
 	assert.equal(state.reads, 0)
 })
-test("missing payload keeps today's order and logs its reason", async () => {
+test("missing payload keeps today's order and exposes its reason without warning", async () => {
 	reset("preview")
 	state.raw = null
 	const logs: unknown[][] = [],
@@ -225,7 +232,7 @@ test("missing payload keeps today's order and logs its reason", async () => {
 		const result = await filterTitles(input())
 		assert.deepEqual(result.keys, keys)
 		assert.equal(result.g1!.fallbackReason, "missing-payload")
-		assert.equal(logs[0][0], "G1 fallback")
+		assert.equal(logs.length, 0)
 	} finally {
 		console.warn = warn
 	}
@@ -262,7 +269,7 @@ test("Watch next F3 precedes fit grouping and mix stays inside fitting; Not toni
 	reset("preview")
 	const p = payload()
 	p.ownShares = [1, 0]
-	const read = await createG1Reader(async () => JSON.stringify(p))(
+	const read = await createG1Reader(async () => gzipSync(JSON.stringify(p)))(
 		"owner",
 		snapshot,
 	)
@@ -309,7 +316,9 @@ test("Watch next F3 precedes fit grouping and mix stays inside fitting; Not toni
 })
 test("Watch next shadow retains the grouped control and logs the grouped candidate", async () => {
 	reset("shadow")
-	const read = await createG1Reader(async () => state.raw)("owner", snapshot)
+	const read = await createG1Reader(async () =>
+		state.raw === null ? null : gzipSync(state.raw),
+	)("owner", snapshot)
 	const control = planWatchNext(ctx(), taste, {
 		sort: "match",
 		moods: [MOOD_KEYS[0]],
@@ -377,7 +386,8 @@ for (const change of ["publish", "delete"] as const) {
 							Date.parse(original.g1!.payloadBuildTime!) - 1_000,
 						).toISOString(),
 					})
-		// A separate new list sees the publish/deletion, but old lazy batches keep their plan.
+		// After revalidation a new list sees the change; old lazy batches retain their plan.
+		state.now += 45_000
 		const warn = console.warn
 		console.warn = () => {}
 		try {
@@ -447,7 +457,9 @@ for (const change of ["publish", "delete"] as const) {
 test("Watch next fitting metadata cannot mutate the shared composed order", async () => {
 	reset("preview")
 	state.raw = JSON.stringify({ ...payload(), ownShares: [1, 0] })
-	const read = await createG1Reader(async () => state.raw)("owner", snapshot)
+	const read = await createG1Reader(async () =>
+		state.raw === null ? null : gzipSync(state.raw),
+	)("owner", snapshot)
 	const { orderG1 } = await import("./reader.server.ts")
 	const composed = orderG1(keys, read.data!, snapshot, false)
 	planWatchNext(ctx(), taste, { sort: "match" }, undefined, undefined, read)
@@ -456,7 +468,9 @@ test("Watch next fitting metadata cannot mutate the shared composed order", asyn
 
 test("a snapshot reload while reading G1 falls back safely", async () => {
 	reset("preview")
-	const read = await createG1Reader(async () => state.raw)("owner", snapshot)
+	const read = await createG1Reader(async () =>
+		state.raw === null ? null : gzipSync(state.raw),
+	)("owner", snapshot)
 	state.snapshot = { ...snapshot, version: "replacement" }
 	const warn = console.warn
 	console.warn = () => {}
