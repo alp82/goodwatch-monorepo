@@ -18,8 +18,24 @@ export type CapacityLedger = {
 	slots: Record<string, { generation: number; createdAt: string }>
 }
 export const launchPopulationBounds: AuthPopulationBounds = {
-	buckets: 64,
+	buckets: 1,
 	limitPerBucket: 128,
+}
+
+/** No ledger is shared between unrelated members or anonymous registrations. */
+export function authPopulationActor(model: string, row: Record<string, unknown>): string | undefined {
+ if (["user", "account", "jwks", "oauthResource", "rateLimit"].includes(model)) return undefined
+ if (model === "verification") return typeof row.identifier === "string" ? row.identifier : undefined
+ if (model === "oauthClient") return typeof row.userId === "string" ? row.userId : undefined
+ if (["oauthClientResource", "oauthClientAssertion"].includes(model)) return typeof row.clientId === "string" ? row.clientId : undefined
+ return typeof row.userId === "string" ? row.userId : undefined
+}
+export function authActorBounds(model: string): AuthPopulationBounds {
+ return {buckets: 1, limitPerBucket: model === "session" ? 20 : ["oauthAccessToken","oauthRefreshToken"].includes(model) ? 1024 : 128}
+}
+export function authCapacityBucket(model: string, id: string, bounds: AuthPopulationBounds, actor: string) {
+ const digest = (value: string) => createHash("sha256").update(value).digest("hex")
+ return `${model}:actor:${digest(actor)}:${Number.parseInt(digest(id).slice(0,8),16)%bounds.buckets}`
 }
 
 export function validatePopulationBounds(
@@ -68,8 +84,9 @@ export async function admitAuthRow(
 	model: string,
 	id: string,
 	bounds: AuthPopulationBounds,
+	actor: string,
 ): Promise<AuthAdmission> {
-	const bucket = `${model}:${Number.parseInt(createHash("sha256").update(id).digest("hex").slice(0, 8), 16) % bounds.buckets}`
+	const bucket = authCapacityBucket(model, id, bounds, actor)
 	const aad = `doc.auth_capacity:${bucket}`
 	for (let attempt = 0; attempt < 64; attempt++) {
 		const current = await readCapacity(sql, codec, bucket)

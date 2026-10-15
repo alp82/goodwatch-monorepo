@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { test } from "node:test"
 import { crateAuthAdapter } from "./crate-adapter.server.ts"
+import { authTestOptions } from "./fixtures.integration.ts"
 import { maintenanceDatabase } from "./maintenance-fixtures.integration.ts"
 
 const sql = maintenanceDatabase()
@@ -208,17 +209,17 @@ test("the launch audit reports rows imported without capacity admission", async 
 	const { auditAuthPopulation } = await import("./maintenance.server.ts")
 	const legacy = crateAuthAdapter({ sql })(authTestOptions)
 	await legacy.create({
-		model: "jwks",
+		model: "session",
 		data: {
-			publicKey: "public fixture",
-			privateKey: "private fixture",
-			createdAt: new Date(),
+			userId: randomUUID(),
+			token: randomUUID(),
+			expiresAt: new Date(Date.now()+86400000),
 		},
 	})
 	const report = await auditAuthPopulation({
 		sql,
 		encryptionSecret: "disposable-local-auth-integration-key-548",
-		model: "jwks",
+		model: "session",
 	})
 	assert.ok(report.unadmitted >= 1)
 	assert.equal(report.safe, false)
@@ -233,4 +234,14 @@ test("member and linked-account capacity has no site-wide ceiling", async () => 
   const account = await adapter.create({model:"account",data:{userId:user.id,providerId:"credential",accountId:user.id,password:"synthetic"}})
   assert.equal((await adapter.findOne<{id:string}>({model:"account",where:[{field:"userId",value:user.id},{field:"providerId",value:"credential"},{field:"accountId",value:user.id}]}))?.id,account.id)
  }
+})
+
+
+test("one member cannot consume another member's OAuth issuance allowance", async () => {
+ await clean()
+ const adapter = crateAuthAdapter({sql,populationBounds:{buckets:1,limitPerBucket:2}})(authTestOptions)
+ for(const userId of ["first-member","second-member"]) {
+  for(let i=0;i<2;i++) await adapter.create({model:"oauthConsent",data:{clientId:randomUUID(),userId,referenceId:null,scopes:["mcp:read"],grantVersion:randomUUID()}})
+ }
+ await assert.rejects(adapter.create({model:"oauthConsent",data:{clientId:randomUUID(),userId:"first-member",scopes:["mcp:read"],grantVersion:randomUUID()}}),/capacity/)
 })

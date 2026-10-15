@@ -2,7 +2,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto"
 import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
-import { admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
+import { authPopulationActor, authActorBounds, admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec, authCredentialVersion, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
@@ -168,7 +168,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const [payload, seq, term, , receipts] = result.rows[0]
 				const envelope = codec.decode(payload, `${authModelTable(model)}:${id}:payload`)
 				if (typeof envelope.deleted !== "boolean" || envelope.row?.id !== id) throw new Error("Invalid authenticated auth row")
-				if (bounds && !["user", "account"].includes(model) && !envelope.deleted && !envelope.admission) throw new Error("Unadmitted prerelease auth row; offline rebuild/import required")
+				if (bounds && authPopulationActor(model, envelope.row) !== undefined && !envelope.deleted && !envelope.admission) throw new Error("Unadmitted prerelease auth row; offline rebuild/import required")
 				return { envelope, row: decodeRow(model, envelope.row), seq: Number(seq), term: Number(term), deleted: envelope.deleted, receipts: codec.decode(receipts, `${authModelTable(model)}:${id}:receipts`), emailClaim: envelope.emailClaim }
 			}
 			const key = (model: string, row: Row): string => {
@@ -303,7 +303,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						emailClaim = await reserveEmail(row.email, row.id, randomUUID(), -1, true)
 					}
 					row.id = key(model, row)
-					const admission = bounds && !["user", "account"].includes(model) && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, bounds) : undefined
+					const actor = authPopulationActor(model, row)
+					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor) : undefined
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,

@@ -18,7 +18,9 @@ import {
 } from "./payload-codec.server.ts"
 import {
 	type AuthAdmission,
-	launchPopulationBounds,
+	authPopulationActor,
+	authActorBounds,
+	authCapacityBucket,
 	readCapacity,
 } from "./population.server.ts"
 
@@ -553,7 +555,8 @@ export async function auditAuthPopulation(
 			report.inconsistent++
 		if (envelope.deleted || envelope.archived) continue
 		report.live++
-		if (["user", "account"].includes(model)) continue // Member identities have no global admission ceiling.
+		const actor = authPopulationActor(model, envelope.row)
+		if (actor === undefined) continue // No site-wide member or anonymous-registration ceiling.
 		if (!envelope.admission) {
 			report.unadmitted++
 			continue
@@ -562,11 +565,11 @@ export async function auditAuthPopulation(
 		if (
 			capacity?.ledger.slots[id]?.generation !==
 				envelope.admission.generation ||
-			capacity.ledger.bounds.buckets !== launchPopulationBounds.buckets ||
+			capacity.ledger.bounds.buckets !== authActorBounds(model).buckets ||
 			capacity.ledger.bounds.limitPerBucket !==
-				launchPopulationBounds.limitPerBucket ||
-			Object.keys(capacity.ledger.slots).length >
-				launchPopulationBounds.limitPerBucket
+				authActorBounds(model).limitPerBucket ||
+			envelope.admission.bucket !== authCapacityBucket(model, id, capacity.ledger.bounds, actor) ||
+			Object.keys(capacity.ledger.slots).length > capacity.ledger.bounds.limitPerBucket
 		)
 			report.inconsistent++
         } catch(error) {
