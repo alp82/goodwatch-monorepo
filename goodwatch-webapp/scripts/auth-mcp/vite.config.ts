@@ -2,6 +2,8 @@ import { fileURLToPath } from "node:url"
 import { vitePlugin as remix } from "@remix-run/dev"
 import { defineConfig } from "vite"
 export default defineConfig({
+	// The full-app browser drive runs from the same root with a different dependency graph.
+	cacheDir: "node_modules/.vite-auth-mcp",
 	envDir: "/tmp/goodwatch-auth-mcp-no-dotenv",
 	resolve: {
 		alias: { "~": fileURLToPath(new URL("../../app", import.meta.url)) },

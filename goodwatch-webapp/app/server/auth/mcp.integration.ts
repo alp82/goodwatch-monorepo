@@ -179,6 +179,55 @@ async function grant(
 	}
 }
 
+test("signed OAuth email sign-in keeps its tokenless consent redirect and a valid session", async () => {
+	const issued = await grant()
+	const registration = await post("/oauth2/register", {
+		client_name: "Signed login regression",
+		application_type: "native",
+		redirect_uris: ["http://127.0.0.1:6280/callback"],
+		token_endpoint_auth_method: "none",
+		grant_types: ["authorization_code", "refresh_token"],
+		response_types: ["code"],
+		scope: "mcp:read mcp:write offline_access",
+	})
+	assert.equal(registration.status, 201)
+	const client = await registration.json()
+	const { createHash } = await import("node:crypto")
+	const query = new URLSearchParams({
+		client_id: client.client_id,
+		redirect_uri: client.redirect_uris[0],
+		response_type: "code",
+		scope: "mcp:read mcp:write offline_access",
+		resource,
+		state: "signed-login-regression",
+		code_challenge_method: "S256",
+		code_challenge: createHash("sha256")
+			.update("a".repeat(64))
+			.digest("base64url"),
+	})
+	const authorization = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/authorize?${query}`, {
+			headers: { accept: "application/json" },
+		}),
+	)
+	assert.equal(authorization.status, 200)
+	const login = new URL((await authorization.json()).url, origin)
+	const response = await post("/sign-in/email", {
+		email: issued.email,
+		password: "temporary local password",
+		oauth_query: login.search.slice(1),
+	})
+	assert.equal(response.status, 200, await response.clone().text())
+	const continuation = await response.json()
+	assert.equal(continuation.redirect, true)
+	assert.equal(continuation.token, undefined)
+	assert.equal(new URL(continuation.url, origin).pathname, "/auth/mcp/consent")
+	const session = await memberAuth.api.getSession({
+		headers: new Headers({ cookie: cookies(response) }),
+	})
+	assert.equal(session?.user.email, issued.email)
+})
+
 test("a resource-bound Better Auth JWKS token reaches the MCP verifier with its member and client", async () => {
 	const issued = await grant()
 	const { setAuthForTest } = await import("./runtime.server.ts")

@@ -45,7 +45,9 @@ export function jsonResponse(body: unknown, init: ResponseInit = {}) {
 // remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
 export function setCookiesOf(headers: Headers): string[] {
 	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
-	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
+	const raw = (
+		headers as Headers & { raw?: () => Record<string, string[]> }
+	).raw?.()
 	return raw?.["set-cookie"] ?? []
 }
 
@@ -714,16 +716,31 @@ export function createGoodwatchAuth(options: {
 			if (path === "/api/auth/sign-in/email" && response.ok) {
 				const pair = await response.clone().json()
 				const context = await core.$context
-				const current =
+				// OAuth's after hook replaces the token JSON with a consent redirect.
+				// Validate only the newly issued response cookie when that happens;
+				// an existing request session must never stand in for this sign-in.
+				const token =
 					typeof pair.token === "string"
+						? pair.token
+						: (
+								await core.api.getSession({
+									headers: new Headers({
+										cookie: setCookiesOf(response.headers)
+											.map((cookie) => cookie.split(";")[0])
+											.join("; "),
+									}),
+								})
+							)?.session.token
+				const current =
+					typeof token === "string"
 						? await context.adapter.findOne({
 								model: "session",
-								where: [{ field: "token", value: pair.token }],
+								where: [{ field: "token", value: token }],
 							})
 						: null
 				if (!current) {
-					if (typeof pair.token === "string")
-						await context.internalAdapter.deleteSession(pair.token)
+					if (typeof token === "string")
+						await context.internalAdapter.deleteSession(token)
 					return jsonResponse(
 						{
 							message:
