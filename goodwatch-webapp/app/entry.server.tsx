@@ -13,7 +13,7 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
-import { registerAuthCluster } from "./server/auth/runtime.server.ts"
+import { registerAuthCluster, registerLazyAuthResolver } from "./server/auth/boot.server.ts"
 import { getRedisCluster } from "./utils/cache"
 import {
 	currentAssetBase,
@@ -40,7 +40,9 @@ import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 
+// Better Auth itself loads on its first use with BETTER_AUTH_ENABLED on (boot.server.ts).
 registerAuthCluster(getRedisCluster)
+registerLazyAuthResolver()
 
 // While the server build loads, before `remix-serve` registers its signal listeners and before the first request:
 // readiness and the shutdown sequence (see lifecycle.server.ts), and the title snapshot's first load, which readiness

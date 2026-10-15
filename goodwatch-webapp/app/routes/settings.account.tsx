@@ -162,7 +162,9 @@ export default function SettingsAccount() {
 							/>
 
 							<p className="text-sm text-gray-400">
-								Other devices are signed out. Connected apps keep working.
+								Other devices are signed out.
+								{/* Apps connect through the new sign-in only (#570). */}
+								{betterAuth && " Connected apps keep working."}
 							</p>
 
 							<SubmitButton
