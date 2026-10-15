@@ -9,6 +9,7 @@ import {
 	noteCreatedAccount,
 } from "~/utils/account-transfer"
 import { useSupabase } from "~/utils/auth"
+import { adoptServerSession, routeOutcome } from "~/utils/auth-answers"
 import { forgetSupabaseSignIn } from "~/utils/auth-cookie"
 
 export const PASSWORD_MIN = 10
@@ -20,7 +21,8 @@ export type AuthFailure =
 	| "unavailable"
 	/** The password is too short. */
 	| "password"
-export type AuthResult = { ok: true } | { ok: false; failure: AuthFailure }
+/** `message` is the sign-in service's own reason, when it gave one the member can act on. */
+export type AuthResult = { ok: true } | { ok: false; failure: AuthFailure; message?: string }
 /** A sign-in for an app that is waiting: where the provider sends the member next (its consent page). */
 export type ConnectResult = { ok: true; next: string } | { ok: false; failure: AuthFailure }
 
@@ -173,6 +175,8 @@ export function useAuthClient() {
 				}
 				const client = await supabase()
 				if (!client) return fail("unavailable")
+				// No access_type=offline or prompt=consent: they only make Google hand out its own refresh token, which
+				// Supabase neither stores nor uses and the site never reads. The Supabase session refreshes on its own.
 				const { error } = await client.auth.signInWithOAuth({
 					provider: "google",
 					options: { redirectTo: `${window.location.origin}${back}` },
@@ -212,7 +216,11 @@ export function useAuthClient() {
 			/** `token` is Better Auth's reset token, or Supabase's one-time code. Better Auth signs the member in. */
 			async resetPassword(token: string, password: string): Promise<AuthResult> {
 				if (betterAuth) return signedIn(outcome(await call("/reset-password", { token, newPassword: password })))
-				return routeAction("/reset-password", { code: token, password })
+				const result = await routeAction("/reset-password", { code: token, password })
+				// The action set the session cookies, also with a rejected password. The browser's client takes them up
+				// as a sign-in, so the page and the header show the member without a reload.
+				if (result.ok || result.failure === "password") await adoptServerSession(await supabase())
+				return result
 			},
 
 			/** Other devices are signed out; this one stays signed in. Better Auth asks for the current password. */
@@ -279,13 +287,17 @@ async function routeAction(path: string, fields: Record<string, string>): Promis
 			body: new URLSearchParams(fields),
 			credentials: "same-origin",
 		})
-		if (response.status === 429) return fail("throttled")
-		if (response.status >= 500) return fail("unavailable")
-		return response.ok ? OK : fail("invalid")
+		let data: unknown = null
+		try {
+			data = await response.json()
+		} catch {}
+		return routeOutcome(response.status, data)
 	} catch {
 		return fail("unavailable")
 	}
 }
+
+export { whenAuthFails } from "~/utils/auth-answers"
 
 /** The one-press save: Continue with Google, then back to `returnTo`. The guest's ratings move to the account once the sign-in lands. */
 export function useContinueWithGoogle() {

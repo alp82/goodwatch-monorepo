@@ -5,7 +5,7 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData, useRevalidator } from "@remix-run/react"
 import { useState } from "react"
-import { type ConnectedApp, listConnectedApps } from "~/server/auth/connected-apps.server"
+import { type ConnectedApp, connectedAppsPage } from "~/server/auth/connected-apps.server"
 import { ConnectAppBadge } from "~/ui/auth/connect"
 import { ConnectorAddressCard } from "~/ui/connector/ConnectorAddressCard"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -13,7 +13,7 @@ import { Spinner } from "~/ui/wait/Spinner"
 export const meta: MetaFunction = () => [{ title: "Connected apps | GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const apps = await listConnectedApps(request)
+	const apps = await connectedAppsPage(request)
 	// "Last used 2 hours ago" is counted from the server's clock, so the browser renders the same words.
 	return json({ apps, now: Date.now() }, { headers: { "Cache-Control": "private, no-store" } })
 }
