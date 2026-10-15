@@ -230,7 +230,15 @@ local Docker command are in [auth-maintenance.md](../../../../docs/implementatio
 The original adapter-only evidence above remains historical; #565 additionally
 verifies live local Valkey and the combined auth/MCP HTTP flows.
 
-The #565 final code (`7c0c4ee3`) passed 25 adapter integration/failover cases and
+The initial #565 code (`7c0c4ee3`, before the adversarial follow-up) passed 25 adapter integration/failover cases and
 262 conformance/core cases, plus 53 maintenance/auth/MCP HTTP cases. Both Node 24
 CI runs are linked in the maintenance runbook; full-app types remain at the same
 174 baseline diagnostics, with no additions.
+
+
+The follow-up product head `3a549edb` passed **72** local/CI maintenance/auth/MCP
+cases and **287** adapter CI cases. It removes global member/account caps,
+scopes issuance budgets per actor, collects unused registrations/unconfirmed
+signups, isolates unreadable rows, and purges 30-day barriers using bounded
+insert leases. The runbook links the final CI evidence and supersedes earlier
+global-cap/permanent-tombstone guidance.

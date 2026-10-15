@@ -313,3 +313,30 @@ The operator CLI's `audit`, `run-once` and subsequent audit with legacy decrypti
 disabled also succeeded against the disposable local store. Owned containers,
 volumes and networks were removed after verification. No production operation,
 merge, hosted-client relinking, root re-key execution or backup restore was run.
+
+
+## Follow-up verification — October 15, 2026
+
+Product-code commit `3a549edb` replaces the initial global caps and permanent
+barriers with the actor/retention policies above. A clean disposable local Docker
+run passed **72/72** maintenance/auth/MCP cases, including 19 additional cases and
+strengthened existing assertions. Node 24 CI passed the same
+[72 cases](https://github.com/alp82/goodwatch-monorepo/actions/runs/38661220849)
+and the [287-case adapter suite](https://github.com/alp82/goodwatch-monorepo/actions/runs/38661226026)
+(25 integration/failover plus 262 conformance/core). Both primary-loss schedules
+returned rowcount zero and recovered the invocation's own outcome.
+
+Repros cover account lifetime limits, isolation between actors, oldest-session
+revocation and Valkey cleanup/index size, DCR's trusted-IP budget, unused and
+partial registrations, metadata URL reuse, unconfirmed signup/claim collection,
+quarantine continuation and CLI exit status, incremental slot return, physical
+row/ledger purge, delayed insertion after purge, forced-ID import retry, account
+unlink races, keyed verification actor identities, lookup repair and the exact
+30-second refresh replay window.
+
+Endpoint/cache/metrics regressions passed **63** cases. Focused auth types,
+focused Biome, shell syntax and the production build passed with Sentry upload
+disabled. Whole-app types still match all **174** normalized baseline diagnostics
+from #581 / `b91ae3b0`, with zero additions or removals. Local Node was 26.8.1;
+CI used Node 24. Owned fixture containers, volumes and network were removed.
+No production operation, deployment or merge was performed.
