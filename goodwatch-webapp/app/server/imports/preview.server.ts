@@ -13,7 +13,12 @@ import {
 	createCatalogAnimeLookup,
 	resolveAnimeParent,
 } from "./anime-mapping-data.server.ts"
-import type { ImportStatusItem } from "../tracking.server.ts"
+import { canImportWantToSee, isApplicableStatus } from "../../domain/imports.ts"
+import { PROTECTED_STATES } from "../../domain/tracking/machine.ts"
+import type {
+	ImportStatusItem,
+	ImportTrackingPlan,
+} from "../tracking.server.ts"
 import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
 import { parseImportFile } from "./files.server.ts"
 import {
@@ -234,7 +239,8 @@ async function classifyWatchDuplicates(
 		const ref = `${item.mediaType}:${item.tmdbId}`
 		groups.set(ref, [...(groups.get(ref) ?? []), item])
 	}
-	if (!groups.size) return
+	const plans = new Map<string, ImportTrackingPlan>()
+	if (!groups.size) return plans
 	const { prepareImportTrackingPlan } = await import("./tracking.server.ts")
 	for (const group of groups.values()) {
 		const first = group[0]
@@ -249,6 +255,7 @@ async function classifyWatchDuplicates(
 			watchDates: "preserve",
 			now: Date.now(),
 		})
+		plans.set(`${first.mediaType}:${first.tmdbId}`, plan)
 		const kept = new Set(plan.keptKeys)
 		for (const item of group)
 			if (kept.has(item.key)) {
@@ -261,6 +268,7 @@ async function classifyWatchDuplicates(
 					.join(" ")
 			}
 	}
+	return plans
 }
 
 function classify(
@@ -467,13 +475,8 @@ export async function createParsedPreview(
 					"A show status must describe the matched show, not an episode, season or part.",
 			}
 		else if (
-			![
-				"watching",
-				"on_hold",
-				"dropped",
-				"plan_to_watch",
-				"completed",
-			].includes(row.showStatus ?? "")
+			!isApplicableStatus(row.showStatus) &&
+			row.showStatus !== "plan_to_watch"
 		)
 			row.problem = {
 				outcome: "invalid",
@@ -498,8 +501,8 @@ export async function createParsedPreview(
 			`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
 		)
 	const id = randomUUID()
-	await classifyWatchDuplicates(userId, source, id, items)
-	await classifyShowStatuses(userId, source, id, items)
+	const watchPlans = await classifyWatchDuplicates(userId, source, id, items)
+	await classifyShowStatuses(userId, items, watchPlans)
 	const countRecord = {
 		rows: items.length,
 		new: 0,
@@ -552,33 +555,20 @@ export async function createParsedPreview(
 
 async function classifyShowStatuses(
 	userId: string,
-	source: ImportSource,
-	id: string,
 	items: ImportItem[],
+	watchPlans: Map<string, ImportTrackingPlan>,
 ) {
 	const statuses: ImportStatusItem[] = items.filter(
 		(x) => x.kind === "show_status" && x.outcome === "new" && x.tmdbId !== null,
 	)
 	if (!statuses.length) return
-	const { prepareImportTrackingPlan } = await import("./tracking.server.ts")
-	const watchesByShow = new Map<number, ImportItem[]>()
-	for (const item of items) {
-		if (
-			item.mediaType === "show" &&
-			item.kind === "watch" &&
-			item.outcome === "new" &&
-			item.tmdbId !== null
-		)
-			watchesByShow.set(item.tmdbId, [
-				...(watchesByShow.get(item.tmdbId) ?? []),
-				item,
-			])
-	}
+	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
 	const byShow = new Map<number, ImportStatusItem[]>()
 	for (const item of statuses) {
 		if (item.tmdbId !== null)
 			byShow.set(item.tmdbId, [...(byShow.get(item.tmdbId) ?? []), item])
 	}
+	const snapshots = await getImportStatusSnapshots(userId, [...byShow.keys()])
 	for (const item of statuses) {
 		if (item.tmdbId === null) continue
 		if ((byShow.get(item.tmdbId)?.length ?? 0) > 1) {
@@ -587,12 +577,16 @@ async function classifyShowStatuses(
 				"Multiple show statuses resolve to this show. The source must supply one status per TMDB show."
 			continue
 		}
+		const snapshot = snapshots.get(item.tmdbId)
+		const plan = watchPlans.get(`show:${item.tmdbId}`)
+		const before = snapshot?.state ?? null
+		const after = plan?.afterState ?? before
 		if (item.showStatus === "plan_to_watch") {
-			const { getShowTracking } = await import("../tracking.server.ts")
-			const copy = await getShowTracking(userId, item.tmdbId)
 			if (
-				(copy.state && copy.state.state !== "not_started") ||
-				copy.log.length
+				!canImportWantToSee(
+					after?.state,
+					!!snapshot?.hasWatches || !!plan?.watches.length,
+				)
 			) {
 				item.outcome = "unchanged"
 				item.reason =
@@ -600,23 +594,20 @@ async function classifyShowStatuses(
 			} else item.reason = "Plan to watch becomes Want to See."
 			continue
 		}
-		const plan = await prepareImportTrackingPlan({
-			userId,
-			source,
-			importId: id,
-			tmdbId: item.tmdbId,
-			mediaType: item.mediaType,
-			items: [...(watchesByShow.get(item.tmdbId) ?? []), item],
-			watchDates: "unknown",
-			now: Date.now(),
-		})
-		item._previewStatus = plan.beforeState
-			? {
-					_seq_no: plan.beforeState._seq_no,
-					_primary_term: plan.beforeState._primary_term,
-				}
+		if (before?.state === "watching" && item.showStatus === "dropped")
+			item.reason =
+				"The file sets this Watching show to Dropped, even if you resumed it after an earlier import."
+		else if (item.showStatus === "completed")
+			item.reason =
+				"Whole-show Completed marks aired regular episodes as watched. The show stays Watching while a season is still airing; otherwise it becomes Seen."
+		item._previewStatus = before
+			? { _seq_no: before._seq_no, _primary_term: before._primary_term }
 			: null
-		if (plan.keptKeys.includes(item.key)) {
+		if (
+			after &&
+			(PROTECTED_STATES.includes(after.state) ||
+				(after.state === item.showStatus && !plan?.watches.length))
+		) {
 			item.outcome = "unchanged"
 			item.reason = "Your GoodWatch show status is kept."
 		}

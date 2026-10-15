@@ -37,7 +37,7 @@ export const IMPORT_SHOW_STATUS_LABELS = {
 	on_hold: "On hold",
 	dropped: "Dropped",
 	plan_to_watch: "Plan to watch → Want to See",
-	completed: "Completed",
+	completed: "Completed → Seen",
 } as const
 export type ImportShowStatus =
 	| "watching"
@@ -45,6 +45,23 @@ export type ImportShowStatus =
 	| "dropped"
 	| "plan_to_watch"
 	| "completed"
+export function isApplicableStatus(
+	status: unknown,
+): status is Exclude<ImportShowStatus, "plan_to_watch"> {
+	return (
+		status === "watching" ||
+		status === "on_hold" ||
+		status === "dropped" ||
+		status === "completed"
+	)
+}
+
+/** Plan to watch is an intention, and must never replace tracking or existing watches. */
+export const canImportWantToSee = (
+	state: string | null | undefined,
+	hasWatches: boolean,
+) => (!state || state === "not_started") && !hasWatches
+
 export type ImportMediaType = "movie" | "show"
 export type ImportOutcome =
 	| "new"

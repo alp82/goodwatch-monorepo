@@ -119,7 +119,7 @@ The member's stored state for a show: Not started, Watching, On hold, Dropped, o
 The show status of a show the member has not begun. Every show is in it until the member watches a regular episode, presses Seen, or an import brings another status.
 
 **Watching**:
-The show status of a show the person has started and intends to continue. The first watched episode sets it, unless that was the last aired one, which makes the show Seen.
+The show status of a show the person has started and intends to continue. The first watched episode sets it, unless that was the last aired one, which makes the show Seen. An import can also supply Watching without watches; whole-show completion stays Watching while a season is still airing.
 _Avoid_: In progress, Currently watching, Continue watching
 
 **Caught up**:

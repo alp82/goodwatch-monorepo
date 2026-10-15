@@ -145,7 +145,7 @@ export async function undoAppliedImportWatches(
 	for (const row of stored.reverse())
 		await undoImportTrackingPlan(userId, row.plan)
 	await run(
-		"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','show_status','state') AND apply_state IN ('added','kept')",
+		"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
 		[importId, userId],
 	)
 }

@@ -115,7 +115,9 @@ export function stateRowOf(
 	return {
 		state: record.state,
 		state_changed_at:
-			before && before.state === record.state ? before.state_changed_at : now,
+			before && before.state === record.state && before.state_changed_at > 0
+				? before.state_changed_at
+				: now,
 		pass: record.pass,
 		seen_press_group: record.seenPress?.group ?? null,
 		seen_press_from: record.seenPress?.from ?? null,

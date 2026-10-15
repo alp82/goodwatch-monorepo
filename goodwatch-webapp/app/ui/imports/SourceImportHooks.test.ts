@@ -2,7 +2,10 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import test from "node:test"
 import "../../server/title-filter/test-alias.ts"
-import { IMPORT_MAX_BYTES } from "../../domain/imports.ts"
+import {
+	IMPORT_MAX_BYTES,
+	IMPORT_SHOW_STATUS_LABELS,
+} from "../../domain/imports.ts"
 
 const { buildSourceImportUpload } = await import("./SourceImportUpload.ts")
 const { sourceImportRequirements } = await import(
@@ -60,7 +63,11 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 
 	assert.match(rendered.statusOnly, /Show statuses/)
 	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)
-	assert.match(rendered.statusOnly, /does not restore those earlier choices/)
+	assert.match(
+		rendered.statusOnly,
+		/Without added watches, Undo restores those choices/,
+	)
+	assert.equal(IMPORT_SHOW_STATUS_LABELS.completed, "Completed → Seen")
 	assert.match(rendered.kodiUpload, /Advanced/)
 	assert.match(rendered.kodiUpload, /Choose Kodi export XML or ZIP file/)
 	assert.match(rendered.kodiUpload, /Choose XML or ZIP file/)
@@ -90,7 +97,10 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	)
 	assert.match(rendered.ratingOnly, /Preview could not start/)
 	assert.match(rendered.withWatches, /How should watch dates be handled/)
-	assert.match(rendered.withWatches, /does not restore those earlier choices/)
+	assert.match(
+		rendered.withWatches,
+		/Undo of added watches does not restore those choices/,
+	)
 	assert.match(rendered.withWatches, /Starting import/)
 	assert.match(rendered.withWatches, /disabled=""/)
 })

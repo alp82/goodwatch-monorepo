@@ -1,4 +1,5 @@
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
+import { canImportWantToSee } from "../../domain/imports.ts"
 import {
 	HEARTBEAT_MS,
 	NativeImportError,
@@ -241,7 +242,7 @@ async function applySet(
 	if (item.kind === "show_status" && item.tmdbId !== null) {
 		const { getShowTracking } = await import("../tracking.server.ts")
 		const copy = await getShowTracking(userId, item.tmdbId)
-		if ((copy.state && copy.state.state !== "not_started") || copy.log.length)
+		if (!canImportWantToSee(copy.state?.state, copy.log.length > 0))
 			return "kept" as const
 	}
 	if (!journal) {

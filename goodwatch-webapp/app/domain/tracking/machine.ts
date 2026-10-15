@@ -26,6 +26,9 @@ export const STATES = [
 ] as const
 export type State = (typeof STATES)[number]
 
+/** Existing decisions an import must keep, including Seen produced by its own watches. */
+export const PROTECTED_STATES: readonly State[] = ["on_hold", "dropped", "seen"]
+
 export const STATE_LABEL: Record<State, string> = {
 	not_started: "Not started",
 	watching: "Watching",
@@ -109,9 +112,24 @@ export function importShowStatus(
 	status: "watching" | "on_hold" | "dropped" | "completed",
 	completionScope?: "show" | "part",
 	identity = "import-status",
-): { world: World; refused: string | null } {
-	if (["on_hold", "dropped", "seen"].includes(world.record.state))
+): { world: World; refused: string | null; row?: Row } {
+	if (PROTECTED_STATES.includes(world.record.state))
 		return { world, refused: "Your GoodWatch show status is kept." }
+	const progress = facts(world.show, world.record)
+	const startedSeasons = new Set(
+		airedRegular(world.show).map((episode) => episode.season),
+	)
+	const seasonAiring = world.show.episodes.some(
+		(episode) => !episode.aired && startedSeasons.has(episode.season),
+	)
+	const row = findRow(world.record.state, `import_${status}`, {
+		before: world.record,
+		facts: progress,
+		factsBefore: progress,
+		episode: null,
+		seasonAiring,
+	})
+	if (!row) return { world, refused: "Your GoodWatch show status is kept." }
 	if (status === "completed") {
 		if (completionScope !== "show")
 			return {
@@ -120,13 +138,15 @@ export function importShowStatus(
 					"Completed does not establish completion of the whole TMDB show.",
 			}
 		const completed = step(world, { type: "pressSeen" }, identity)
-		if (completed.refused) return completed
+		if (completed.refused)
+			return { world: completed.world, refused: completed.refused }
 		const existing = new Set(world.record.watches.map((w) => w.id))
 		return {
 			world: {
 				...world,
 				record: {
 					...completed.world.record,
+					state: row.to === "same" ? world.record.state : row.to,
 					seenPress: null,
 					watches: completed.world.record.watches.map((w) =>
 						existing.has(w.id) ? w : { ...w, origin: "import", group: null },
@@ -134,6 +154,7 @@ export function importShowStatus(
 				},
 			},
 			refused: null,
+			row,
 		}
 	}
 	return {
@@ -141,13 +162,14 @@ export function importShowStatus(
 			...world,
 			record: {
 				...world.record,
-				state: status,
+				state: row.to === "same" ? world.record.state : row.to,
 				wantToSee: false,
 				notInterested: false,
 				seenPress: null,
 			},
 		},
 		refused: null,
+		row,
 	}
 }
 
@@ -271,6 +293,10 @@ export type TableEvent =
 	| "notInterested"
 	| "watchAgain"
 	| "catalog"
+	| "import_watching"
+	| "import_on_hold"
+	| "import_dropped"
+	| "import_completed"
 
 type TableMemberEvent = Extract<
 	TrackingEvent,
@@ -292,6 +318,10 @@ export const EVENT_LABEL: Record<TableEvent, string> = {
 	notInterested: "Not interested",
 	watchAgain: "watch again",
 	catalog: "the catalog changes",
+	import_watching: "import Watching",
+	import_on_hold: "import On hold",
+	import_dropped: "import Dropped",
+	import_completed: "import whole-show Completed",
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -393,9 +423,18 @@ interface GuardInput {
 	episode: { season: number } | null
 	/** The state a season was unmarked from, for the event that puts it back. */
 	unmarkedFrom?: State
+	seasonAiring?: boolean
 }
 
 export const GUARDS = {
+	seasonAiring: {
+		says: "a started season still has unaired episodes",
+		test: (g: GuardInput) => !!g.seasonAiring,
+	},
+	noSeasonAiring: {
+		says: "no started season has unaired episodes",
+		test: (g: GuardInput) => !g.seasonAiring,
+	},
 	special: {
 		says: "the episode is a special",
 		test: (g: GuardInput) => !!g.episode && isSpecial(g.episode),
@@ -471,6 +510,46 @@ const BEFORE_SEEN: readonly State[] = [
 ]
 
 export const TABLE: readonly Row[] = [
+	{
+		id: "35",
+		from: ["not_started", "watching"],
+		event: "import_watching",
+		guard: null,
+		to: "watching",
+		says: "The source starts Watching without inventing watches.",
+	},
+	{
+		id: "36",
+		from: ["not_started", "watching"],
+		event: "import_on_hold",
+		guard: null,
+		to: "on_hold",
+		says: "The source puts the show On hold without inventing watches.",
+	},
+	{
+		id: "37",
+		from: ["not_started", "watching"],
+		event: "import_dropped",
+		guard: null,
+		to: "dropped",
+		says: "The source drops the show without inventing watches.",
+	},
+	{
+		id: "38",
+		from: ["not_started", "watching"],
+		event: "import_completed",
+		guard: "seasonAiring",
+		to: "watching",
+		says: "Whole-show completion marks aired regular episodes and stays Watching mid-season.",
+	},
+	{
+		id: "39",
+		from: ["not_started", "watching"],
+		event: "import_completed",
+		guard: "noSeasonAiring",
+		to: "seen",
+		says: "Whole-show completion marks aired regular episodes and becomes Seen.",
+	},
 	// watch
 	{
 		id: "1",

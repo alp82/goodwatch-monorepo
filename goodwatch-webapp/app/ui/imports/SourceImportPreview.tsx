@@ -184,16 +184,17 @@ export function SourceImportPreview({
 			{(importsWatches || kinds.includes("show_status")) && (
 				<p className="text-sm text-gray-400">
 					Importing watches or show statuses can remove titles from Want to See
-					or Not interested. Undoing the import later does not restore those
-					earlier choices.
+					or Not interested. Without added watches, Undo restores those choices
+					when it restores the earlier status. Undo of added watches does not
+					restore those choices.
 				</p>
 			)}
 			{kinds.includes("show_status") && (
 				<p className="text-sm text-gray-400">
 					Your On hold, Dropped and Seen decisions are kept. Plan to watch
 					becomes Want to See. Whole-show completion marks aired regular
-					episodes with unknown dates; completion of a part does not mark the
-					whole show Seen.
+					episodes with unknown dates and stays Watching while a season is still
+					airing. Completion of a part does not mark the whole show Seen.
 				</p>
 			)}
 			{!canImport && (

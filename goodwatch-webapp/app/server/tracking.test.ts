@@ -3733,11 +3733,7 @@ test("a source status follows the imported watches in one plan and keeps their p
 		importId: "held",
 		source: "trakt",
 		...short,
-		items: [
-			{ ...nativeWatch("one", 1), pass: 2 },
-			{ ...nativeWatch("two", 2), pass: 2 },
-			item,
-		],
+		items: [{ ...nativeWatch("one", 1), pass: 2 }, item],
 		watchDates: "unknown",
 		now: Date.now() - 1000,
 	})
@@ -3745,7 +3741,7 @@ test("a source status follows the imported watches in one plan and keeps their p
 	const held = await getShowTracking(user, SHORT)
 	assert.equal(held.state?.state, "on_hold")
 	assert.equal(held.state?.pass, 2)
-	assert.equal(held.log.length, 2)
+	assert.equal(held.log.length, 1)
 	await imports.undoImportTrackingPlan(user, plan)
 	assert.equal((await getShowTracking(user, SHORT)).state, null)
 	assert.deepEqual((await getShowTracking(user, SHORT)).log, [])
@@ -3797,3 +3793,124 @@ test("whole-show completion fills the current pass without reusing the prior pas
 	assert.equal(restored.state?.pass, 2)
 	assert.equal(restored.log.length, 2)
 })
+
+for (const showStatus of ["watching", "on_hold", "dropped"] as const) {
+	test(`a source ${showStatus} cannot replace Seen produced by the same import's watches`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		const status = {
+			...nativeWatch("status", 1),
+			kind: "show_status" as const,
+			showStatus,
+		}
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "complete",
+			source: "trakt",
+			...short,
+			items: [nativeWatch("one", 1), nativeWatch("two", 2), status],
+			watchDates: "unknown",
+			now: Date.now(),
+		})
+		const applied = await imports.applyImportTrackingPlan(user, plan)
+		assert.equal((await getShowTracking(user, SHORT)).state?.state, "seen")
+		assert.deepEqual(applied.statusKeys, [])
+		await imports.undoImportTrackingPlan(user, plan)
+		assert.equal((await getShowTracking(user, SHORT)).state, null)
+	})
+}
+
+test("the first member tick after imported Watching dates activity and allows Undo of Unmark season", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "watching",
+		source: "trakt",
+		...show,
+		items: [
+			{
+				...nativeWatch("status", 1),
+				tmdbId: SHOW,
+				kind: "show_status",
+				showStatus: "watching",
+			},
+		],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	await act({ type: "markSeason", season: 1 }, "first-season")
+	const before = await getShowTracking(user, SHOW)
+	assert.equal(before.state?.state, "watching")
+	assert.ok((before.state?.state_changed_at ?? 0) > 0)
+	const { restore } = await unmark(1)
+	await act(restore, "restore-first-season")
+	assert.deepEqual(await getShowTracking(user, SHOW), before)
+})
+
+for (const scenario of ["normal", "interrupted", "later intention"] as const)
+	test(`Undo of a status-only import restores cleared intentions (${scenario})`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		for (const table of ["user_wishlist", "user_not_interested"])
+			db.seed(table, [
+				{
+					user_id: user,
+					tmdb_id: SHORT,
+					media_type: "show",
+					created_at: LONG_AGO,
+					updated_at: LONG_AGO,
+				},
+			])
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "drop",
+			source: "trakt",
+			...short,
+			items: [
+				{
+					...nativeWatch("status", 1),
+					kind: "show_status",
+					showStatus: "dropped",
+				},
+			],
+			watchDates: "unknown",
+			now: Date.now() - 1000,
+		})
+		await imports.applyImportTrackingPlan(user, plan)
+		if (scenario === "interrupted") {
+			let fail = true
+			db.before = ({ sql }) => {
+				if (fail && sql.startsWith("INSERT INTO user_not_interested")) {
+					fail = false
+					throw new Error("interrupted intention restore")
+				}
+			}
+			await assert.rejects(
+				imports.undoImportTrackingPlan(user, plan),
+				/interrupted intention restore/,
+			)
+			assert.equal((await getShowTracking(user, SHORT)).state?.state, "dropped")
+		}
+		if (scenario === "later intention")
+			db.seed("user_wishlist", [
+				{
+					user_id: user,
+					tmdb_id: SHORT,
+					media_type: "show",
+					created_at: LONG_AGO + 1000,
+					updated_at: LONG_AGO + 1000,
+				},
+			])
+		await imports.undoImportTrackingPlan(user, plan)
+		await imports.undoImportTrackingPlan(user, plan)
+		const watched = await act(
+			{ type: "watch", season: 1, number: 1 },
+			newId(),
+			short,
+		)
+		assert.deepEqual(watched.cleared, {
+			wantToSeeAddedAt: new Date(
+				LONG_AGO + (scenario === "later intention" ? 1000 : 0),
+			).toISOString(),
+			notInterested: true,
+		})
+	})

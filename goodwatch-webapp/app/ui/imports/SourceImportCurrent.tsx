@@ -271,8 +271,9 @@ function Receipt({
 							Undo this import? GoodWatch removes watches this import added,
 							even if you edited their dates later, and restores earlier show
 							statuses. Later status, rating and list changes stay protected.
-							Want to See or Not interested choices that the import cleared are
-							not restored.
+							Without added watches, restoring a status also restores its
+							cleared Want to See or Not interested choices. Undo of added
+							watches does not restore those choices.
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button

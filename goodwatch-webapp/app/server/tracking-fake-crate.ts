@@ -423,6 +423,12 @@ export class FakeTrackingCrate {
 					groupedQuery(matched as unknown as LogRow[]) as unknown as Row[],
 				)
 			}
+			if (columnList === "DISTINCT tmdb_id")
+				return done(
+					[...new Set(matched.map((row) => row.tmdb_id))].map((tmdb_id) => ({
+						tmdb_id,
+					})),
+				)
 			// A column, or "column AS name".
 			const columns = columnList.split(", ").map((text) => {
 				const [column, name = column] = text.split(" AS ")

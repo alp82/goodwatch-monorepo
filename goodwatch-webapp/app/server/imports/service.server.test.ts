@@ -86,7 +86,7 @@ const supportedImportSql = new Set([
 	"UPDATE doc.user_import SET status = ?, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?",
 	"UPDATE doc.user_import_item SET apply_state = 'added', applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state IS NULL",
 	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
-	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','show_status','state') AND apply_state IN ('added','kept')",
+	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
 	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
 	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
 	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
@@ -112,6 +112,7 @@ class ImportDb {
 	episodes: Row[] = []
 	catalogQueries: { sql: string; params: Param[] }[] = []
 	scores: Row[] = []
+	failWishlistDeleteOnce = false
 	failFavoriteOnce = false
 	failScoreOnce = false
 	private version = 10
@@ -417,7 +418,12 @@ class ImportDb {
 			for (const row of this.items)
 				if (
 					row.import_id === params[0] &&
-					["added", "updated"].includes(String(row.apply_state))
+					["added", "updated", "kept"].includes(String(row.apply_state)) &&
+					(!s.includes("kind IN") ||
+						(s.includes("'show_status'")
+							? ["watch", "show_status", "state"]
+							: ["watch", "state"]
+						).includes(String(row.kind)))
 				)
 					row.apply_state = "undone"
 			return { rowcount: 1 }
@@ -459,6 +465,10 @@ class ImportDb {
 			const name = s.startsWith("DELETE FROM user_wishlist")
 				? "wishlist"
 				: "favorites"
+			if (this.failWishlistDeleteOnce && name === "wishlist") {
+				this.failWishlistDeleteOnce = false
+				throw new Error("injected interruption")
+			}
 			const before = this[name].length
 			this[name] = this[name].filter(
 				(x) =>
@@ -1252,139 +1262,169 @@ it("show status observations preview, apply without watches, appear in the recei
 
 it("Completed without whole-show scope stays unapplied; whole-show completion marks aired regular episodes and undo removes them", async () => {
 	const { previewParsedImport } = await import("./service.server.ts")
-	for (const completionScope of [undefined, "part", "show"] as const) {
+	for (const seasonAiring of [false, true])
+		for (const completionScope of [undefined, "part", "show"] as const) {
+			const db = new ImportDb()
+			db.catalog = [
+				{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
+			]
+			const trackingDb = new FakeTrackingCrate()
+			trackingDb.seed("episode", [
+				...(seasonAiring
+					? [
+							{
+								show_id: 1668,
+								tmdb_id: 102,
+								season_number: 1,
+								episode_number: 2,
+								air_date: Date.now() + 86400000,
+								removed_at: null,
+							},
+						]
+					: []),
+				{
+					show_id: 1668,
+					tmdb_id: 101,
+					season_number: 1,
+					episode_number: 1,
+					air_date: Date.UTC(1994, 0, 1),
+					removed_at: null,
+				},
+			])
+			setImportDbForTest(db)
+			setCrateClientForTest(trackingDb)
+			setImportEffectsForTest(
+				async () => {},
+				async () => {},
+			)
+			const preview = await previewParsedImport(
+				"member",
+				"statuses.json",
+				{
+					source: "trakt",
+					warnings: [],
+					observations: [
+						{
+							key: "status:1668",
+							kind: "show_status",
+							mediaType: "show",
+							title: "Friends",
+							year: 1994,
+							tmdbId: 1668,
+							imdbId: null,
+							showStatus: "completed",
+							completionScope,
+						},
+					],
+				},
+				"synthetic",
+			)
+			assert.equal(
+				preview.counts.unsupported,
+				completionScope === "show" ? 0 : 1,
+			)
+			await confirmImport("member", preview.id, {
+				...options,
+				kinds: ["show_status"],
+			})
+			await waitFor(db, "done")
+			const show = await getShowTracking("member", 1668)
+			if (completionScope === "show") {
+				assert.equal(show.state?.state, seasonAiring ? "watching" : "seen")
+				assert.equal(show.state?.seen_press_group, null)
+				assert.deepEqual(
+					show.log.map((w) => [w.episode_tmdb_id, w.watched_at, w.origin]),
+					[[101, null, "import"]],
+				)
+				assert.equal((await getImport("member", preview.id)).applied.added, 1)
+			} else {
+				assert.equal(show.state, null)
+				assert.deepEqual(show.log, [])
+				const receipt = await getImportItems(
+					"member",
+					preview.id,
+					undefined,
+					0,
+					50,
+				)
+				assert.match(receipt.items[0].reason ?? "", /whole.*show/i)
+			}
+			await undoImport("member", preview.id)
+			assert.equal((await getShowTracking("member", 1668)).state, null)
+			assert.deepEqual((await getShowTracking("member", 1668)).log, [])
+		}
+})
+
+for (const interrupted of [false, true])
+	it(`Plan to watch adds only Want to See, with receipt and ${interrupted ? "resumed" : "normal"} undo`, async () => {
+		const { previewParsedImport } = await import("./service.server.ts")
 		const db = new ImportDb()
 		db.catalog = [
 			{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
 		]
-		const trackingDb = new FakeTrackingCrate()
-		trackingDb.seed("episode", [
-			{
-				show_id: 1668,
-				tmdb_id: 101,
-				season_number: 1,
-				episode_number: 1,
-				air_date: Date.UTC(1994, 0, 1),
-				removed_at: null,
-			},
-		])
 		setImportDbForTest(db)
-		setCrateClientForTest(trackingDb)
+		setCrateClientForTest(new FakeTrackingCrate())
 		setImportEffectsForTest(
 			async () => {},
 			async () => {},
 		)
+		const parsed = {
+			source: "trakt" as const,
+			warnings: [],
+			observations: [
+				{
+					key: "status:1668",
+					kind: "show_status" as const,
+					mediaType: "show" as const,
+					title: "Friends",
+					year: 1994,
+					tmdbId: 1668,
+					imdbId: null,
+					showStatus: "plan_to_watch" as const,
+				},
+			],
+		}
 		const preview = await previewParsedImport(
 			"member",
 			"statuses.json",
-			{
-				source: "trakt",
-				warnings: [],
-				observations: [
-					{
-						key: "status:1668",
-						kind: "show_status",
-						mediaType: "show",
-						title: "Friends",
-						year: 1994,
-						tmdbId: 1668,
-						imdbId: null,
-						showStatus: "completed",
-						completionScope,
-					},
-				],
-			},
+			parsed,
 			"synthetic",
 		)
-		assert.equal(preview.counts.unsupported, completionScope === "show" ? 0 : 1)
 		await confirmImport("member", preview.id, {
 			...options,
 			kinds: ["show_status"],
 		})
 		await waitFor(db, "done")
-		const show = await getShowTracking("member", 1668)
-		if (completionScope === "show") {
-			assert.equal(show.state?.state, "seen")
-			assert.equal(show.state?.seen_press_group, null)
-			assert.deepEqual(
-				show.log.map((w) => [w.episode_tmdb_id, w.watched_at, w.origin]),
-				[[101, null, "import"]],
+		assert.equal((await getImport("member", preview.id)).applied.added, 1)
+		assert.equal((await getShowTracking("member", 1668)).state, null)
+		const again = await previewParsedImport(
+			"member",
+			"statuses.json",
+			parsed,
+			"synthetic",
+		)
+		assert.equal(again.counts.unchanged, 1)
+		if (interrupted) {
+			db.failWishlistDeleteOnce = true
+			await assert.rejects(
+				undoImport("member", preview.id),
+				/injected interruption/,
 			)
-			assert.equal((await getImport("member", preview.id)).applied.added, 1)
-		} else {
-			assert.equal(show.state, null)
-			assert.deepEqual(show.log, [])
-			const receipt = await getImportItems(
-				"member",
-				preview.id,
-				undefined,
-				0,
-				50,
-			)
-			assert.match(receipt.items[0].reason ?? "", /whole.*show/i)
 		}
 		await undoImport("member", preview.id)
-		assert.equal((await getShowTracking("member", 1668)).state, null)
-		assert.deepEqual((await getShowTracking("member", 1668)).log, [])
-	}
-})
-
-it("Plan to watch is selectable as a show status and adds only Want to See, with receipt and undo", async () => {
-	const { previewParsedImport } = await import("./service.server.ts")
-	const db = new ImportDb()
-	db.catalog = [
-		{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
-	]
-	setImportDbForTest(db)
-	setCrateClientForTest(new FakeTrackingCrate())
-	setImportEffectsForTest(
-		async () => {},
-		async () => {},
-	)
-	const parsed = {
-		source: "trakt" as const,
-		warnings: [],
-		observations: [
-			{
-				key: "status:1668",
-				kind: "show_status" as const,
-				mediaType: "show" as const,
-				title: "Friends",
-				year: 1994,
-				tmdbId: 1668,
-				imdbId: null,
-				showStatus: "plan_to_watch" as const,
-			},
-		],
-	}
-	const preview = await previewParsedImport(
-		"member",
-		"statuses.json",
-		parsed,
-		"synthetic",
-	)
-	await confirmImport("member", preview.id, {
-		...options,
-		kinds: ["show_status"],
+		assert.equal((await getImport("member", preview.id)).status, "undone")
+		assert.equal(
+			(
+				await previewParsedImport(
+					"member",
+					"statuses.json",
+					parsed,
+					"synthetic",
+				)
+			).counts.new,
+			1,
+		)
 	})
-	await waitFor(db, "done")
-	assert.equal((await getImport("member", preview.id)).applied.added, 1)
-	assert.equal((await getShowTracking("member", 1668)).state, null)
-	const again = await previewParsedImport(
-		"member",
-		"statuses.json",
-		parsed,
-		"synthetic",
-	)
-	assert.equal(again.counts.unchanged, 1)
-	await undoImport("member", preview.id)
-	assert.equal((await getImport("member", preview.id)).status, "undone")
-	assert.equal(
-		(await previewParsedImport("member", "statuses.json", parsed, "synthetic"))
-			.counts.new,
-		1,
-	)
-})
 
 it("a member's move after preview wins over a source status, even when the new state is Watching", async () => {
 	const { previewParsedImport } = await import("./service.server.ts")
@@ -1682,7 +1722,7 @@ it("existing On hold, Dropped and Seen decisions remain protected regardless of 
 	}
 })
 
-it("an explicit Watching status follows newly imported watches even when the show was already Watching", async () => {
+it("a status is kept when its imported watches finish an already Watching show", async () => {
 	const { previewParsedImport } = await import("./service.server.ts")
 	const db = new ImportDb()
 	db.catalog = [
@@ -1750,17 +1790,160 @@ it("an explicit Watching status follows newly imported watches even when the sho
 		},
 		"synthetic",
 	)
-	assert.equal(preview.counts.new, 2)
+	assert.equal(preview.counts.new, 1)
+	assert.equal(preview.counts.unchanged, 1)
 	await confirmImport("member", preview.id, {
 		...options,
 		kinds: ["watch", "show_status"],
 	})
 	await waitFor(db, "done")
 	const watched = await getShowTracking("member", 1668)
-	assert.equal(watched.state?.state, "watching")
+	assert.equal(watched.state?.state, "seen")
 	assert.equal(watched.log.length, 1)
-	assert.equal((await getImport("member", preview.id)).applied.added, 2)
+	assert.equal((await getImport("member", preview.id)).applied.added, 1)
 	await undoImport("member", preview.id)
 	assert.equal((await getShowTracking("member", 1668)).state?.state, "watching")
 	assert.deepEqual((await getShowTracking("member", 1668)).log, [])
+})
+
+it("previews a thousand show statuses with bounded tracking reads and no episode reads", async () => {
+	const { previewParsedImport } = await import("./service.server.ts")
+	const db = new ImportDb()
+	const trackingDb = new FakeTrackingCrate()
+	db.catalog = Array.from({ length: 1000 }, (_, i) => ({
+		tmdb_id: 10000 + i,
+		imdb_id: null,
+		title: `Show ${i}`,
+		release_year: 2020,
+	}))
+	setImportDbForTest(db)
+	setCrateClientForTest(trackingDb)
+	const result = await previewParsedImport(
+		"member",
+		"statuses.json",
+		{
+			source: "trakt",
+			warnings: [],
+			observations: db.catalog.map((show, i) => ({
+				key: `status:${show.tmdb_id}`,
+				kind: "show_status",
+				mediaType: "show",
+				title: String(show.title),
+				year: 2020,
+				tmdbId: Number(show.tmdb_id),
+				imdbId: null,
+				showStatus: (
+					[
+						"watching",
+						"on_hold",
+						"dropped",
+						"plan_to_watch",
+						"completed",
+					] as const
+				)[i % 5],
+				completionScope: "show",
+			})),
+		},
+		"synthetic",
+	)
+	assert.equal(result.counts.new, 1000)
+	assert.ok(
+		trackingDb.statements.length <= 5,
+		`${trackingDb.statements.length} tracking statements`,
+	)
+	assert.equal(
+		trackingDb.statements.filter(({ sql }) => sql.includes("FROM episode"))
+			.length,
+		0,
+	)
+})
+
+it("re-importing Dropped after Resume explains the replacement in this show's preview and receipt", async () => {
+	const { previewParsedImport } = await import("./service.server.ts")
+	const { applyTrackingEvent } = await import("../tracking.server.ts")
+	const db = new ImportDb()
+	db.catalog = [
+		{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
+	]
+	setImportDbForTest(db)
+	const trackingDb = new FakeTrackingCrate()
+	trackingDb.seed(
+		"episode",
+		[1, 2].map((id) => ({
+			show_id: 1668,
+			tmdb_id: id,
+			season_number: 1,
+			episode_number: id,
+			air_date: Date.UTC(1994, 0, 1),
+			removed_at: null,
+		})),
+	)
+	setCrateClientForTest(trackingDb)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const parsed = {
+		source: "trakt" as const,
+		warnings: [],
+		observations: [
+			{
+				key: "drop",
+				kind: "show_status" as const,
+				mediaType: "show" as const,
+				tmdbId: 1668,
+				imdbId: null,
+				title: "Friends",
+				year: 1994,
+				showStatus: "dropped" as const,
+			},
+		],
+	}
+	await applyTrackingEvent(
+		"member",
+		{ mediaType: "show", tmdbId: 1668 },
+		{ type: "watch", season: 1, number: 1 },
+		"first-watch",
+	)
+	const first = await previewParsedImport(
+		"member",
+		"statuses.json",
+		parsed,
+		"same-file",
+	)
+	await confirmImport("member", first.id, {
+		...options,
+		kinds: ["show_status"],
+	})
+	await waitFor(db, "done")
+	await applyTrackingEvent(
+		"member",
+		{ mediaType: "show", tmdbId: 1668 },
+		{ type: "resume" },
+		"resume-show",
+	)
+	const again = await previewParsedImport(
+		"member",
+		"statuses.json",
+		parsed,
+		"same-file",
+	)
+	const before = await getImportItems("member", again.id, undefined, 0, 50)
+	assert.match(before.items[0].reason ?? "", /Watching.*Dropped/)
+	assert.match(before.items[0].reason ?? "", /resumed.*earlier import/)
+	await confirmImport("member", again.id, {
+		...options,
+		kinds: ["show_status"],
+	})
+	// Wait for this upload, rather than the first receipt that is already done.
+	for (
+		let i = 0;
+		i < 100 && (await getImport("member", again.id)).status === "running";
+		i++
+	)
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	assert.equal((await getShowTracking("member", 1668)).state?.state, "dropped")
+	const receipt = await getImportItems("member", again.id, undefined, 0, 50)
+	assert.equal(receipt.items[0].applyState, "added")
+	assert.equal(receipt.items[0].reason, before.items[0].reason)
 })

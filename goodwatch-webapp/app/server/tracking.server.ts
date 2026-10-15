@@ -7,25 +7,31 @@
 // the check that keeps two actions on one show from overwriting each other, and what a request that is sent twice
 // does.
 //
-// The writer does not write `user_score`, and it only ever deletes from `user_wishlist` and `user_not_interested`.
+// The writer does not write `user_score`. It clears intentions, and status-only import Undo restores those rows.
 // Setting a score, adding to the Wishlist and marking Not interested stay with their own writers. The score's
 // writers call in here with `rate` after their write (scores.server.ts, the guest transfer) or settle their movies
 // (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import { createHash, randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
-import type { ImportItem, ImportSource } from "~/domain/imports"
+import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
+import {
+	type ImportItem,
+	type ImportSource,
+	isApplicableStatus,
+} from "~/domain/imports"
 import {
 	type ListedEpisode,
+	PROTECTED_STATES,
 	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
-	facts,
 	groupWatchId,
 	importShowStatus,
+	facts,
+	showAiredBy,
 	isDay,
 	serverShow,
-	showAiredBy,
 	utcDay,
 } from "~/domain/tracking/machine"
 import {
@@ -41,9 +47,9 @@ import {
 	movieLogRow,
 	movieStateRow,
 	recordFromRows,
+	stateRowOf,
 	scoreWatchId,
 	settleMovieRows,
-	stateRowOf,
 	titleTotals,
 	watchStateOf,
 	watchedAt,
@@ -67,12 +73,11 @@ import { cached } from "~/utils/cache"
 import {
 	type CrateValue,
 	execute,
-	insertRows,
 	isCrateRecoveryError,
+	insertRows,
 	query,
 	timestampsAsMillis,
 } from "~/utils/crate"
-import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -224,6 +229,12 @@ async function readState(
 		title.tmdbId,
 		title.mediaType,
 	])
+	return storedState(row)
+}
+
+function storedState(
+	row: Record<string, unknown> | undefined,
+): StoredState | null {
 	if (!row) return null
 	return {
 		state: row.state as StateRow["state"],
@@ -1488,6 +1499,46 @@ export type ImportStatusItem = ImportItem & {
 	_previewStatus?: { _seq_no: number; _primary_term: number } | null
 }
 
+/** Preview snapshots in bounded batches; status-only rows need no episode catalog. */
+export async function getImportStatusSnapshots(
+	userId: string,
+	showIds: number[],
+) {
+	const result = new Map<
+		number,
+		{ state: StoredState | null; hasWatches: boolean }
+	>()
+	await run("REFRESH TABLE user_watch_state, user_watch_log")
+	for (let start = 0; start < showIds.length; start += 800) {
+		const ids = showIds.slice(start, start + 800)
+		const placeholders = ids.map(() => "?").join(", ")
+		const [states, watches] = await Promise.all([
+			read<Record<string, unknown>>(
+				`SELECT tmdb_id, state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question, insert_token, updated_at, _seq_no, _primary_term FROM user_watch_state WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (${placeholders}) LIMIT 800`,
+				[userId, ...ids],
+			),
+			read<{ tmdb_id: number }>(
+				`SELECT DISTINCT tmdb_id FROM user_watch_log WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (${placeholders}) LIMIT 800`,
+				[userId, ...ids],
+			),
+		])
+		const byId = new Map(
+			states.map((row) => [Number(row.tmdb_id), storedState(row)]),
+		)
+		const watched = new Set(watches.map((row) => Number(row.tmdb_id)))
+		for (const id of ids)
+			result.set(id, {
+				state: byId.get(id) ?? null,
+				hasWatches: watched.has(id),
+			})
+	}
+	return result
+}
+
+type Version = { _seq_no: number; _primary_term: number } | null
+const sameVersion = (a: Version, b: Version) =>
+	a?._seq_no === b?._seq_no && a?._primary_term === b?._primary_term
+
 export interface ImportTrackingPlan {
 	userId: string
 	importId: string
@@ -1503,6 +1554,8 @@ export interface ImportTrackingPlan {
 		table: "user_wishlist" | "user_not_interested"
 		seq: number
 		term: number
+		createdAt?: number | null
+		updatedAt?: number | null
 	}[]
 }
 
@@ -1662,27 +1715,23 @@ export async function prepareImportTrackingPlan(input: {
 	if (
 		statusItem &&
 		title.mediaType === "show" &&
-		["watching", "on_hold", "dropped", "completed"].includes(
-			statusItem.showStatus ?? "",
-		)
+		isApplicableStatus(statusItem.showStatus)
 	) {
 		const preview = statusItem._previewStatus
-		const changed =
-			preview !== undefined &&
-			(preview?._seq_no !== beforeState?._seq_no ||
-				preview?._primary_term !== beforeState?._primary_term)
+		const changed = preview !== undefined && !sameVersion(preview, beforeState)
 		if (
 			changed ||
 			(beforeState &&
 				((beforeState.state === statusItem.showStatus &&
 					!plan.watches.length) ||
-					["seen", "on_hold", "dropped"].includes(beforeState.state)))
+					PROTECTED_STATES.includes(beforeState.state)))
 		)
 			plan.keptKeys.push(statusItem.key)
 		else plan.statusItem = statusItem
 	}
 	if (!plan.watches.length && !plan.statusItem) return plan
 	if (
+		plan.watches.length > 0 &&
 		title.mediaType === "show" &&
 		(!beforeState ||
 			beforeState.state === "not_started" ||
@@ -1709,19 +1758,14 @@ export async function prepareImportTrackingPlan(input: {
 
 	if (plan.statusItem) {
 		const record = recordFromRows(
-			stateOnly(beforeState),
+			plan.afterState,
 			[...existing, ...plan.watches],
 			{ score: null, wantToSee: false, notInterested: false },
 		)
 		if (!beforeState)
 			record.pass = Math.max(1, ...plan.watches.map((row) => row.pass))
 		const status = plan.statusItem.showStatus
-		if (
-			status === "watching" ||
-			status === "on_hold" ||
-			status === "dropped" ||
-			status === "completed"
-		) {
+		if (isApplicableStatus(status)) {
 			const show = showAiredBy(
 				listed(await getEpisodeList(title.tmdbId)),
 				utcDay(input.now),
@@ -1755,7 +1799,7 @@ export async function prepareImportTrackingPlan(input: {
 					plan.watches.push({
 						watch_id: importWatchId(
 							input.source,
-							`${statusItem?.key}:pass:${watch.pass}:episode:${watch.episodeId}`,
+							`${plan.statusItem.key}:pass:${watch.pass}:episode:${watch.episodeId}`,
 						),
 						media_type: "show",
 						tmdb_id: title.tmdbId,
@@ -1782,8 +1826,13 @@ export async function prepareImportTrackingPlan(input: {
 	) {
 		for (const table of ["user_wishlist", "user_not_interested"] as const) {
 			try {
-				const [row] = await read<{ _seq_no: number; _primary_term: number }>(
-					`SELECT _seq_no, _primary_term FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
+				const [row] = await read<{
+					_seq_no: number
+					_primary_term: number
+					created_at: number | null
+					updated_at: number | null
+				}>(
+					`SELECT created_at, updated_at, _seq_no, _primary_term FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
 					[input.userId, title.tmdbId, title.mediaType],
 				)
 				if (row)
@@ -1791,6 +1840,8 @@ export async function prepareImportTrackingPlan(input: {
 						table,
 						seq: Number(row._seq_no),
 						term: Number(row._primary_term),
+						createdAt: ms(row.created_at),
+						updatedAt: ms(row.updated_at),
 					})
 			} catch (error) {
 				if (
@@ -1849,11 +1900,7 @@ export async function applyImportTrackingPlan(
 			}
 			if (plan.statusItem) {
 				// Any edit since planning wins, including another move to Watching.
-				if (
-					current?._seq_no !== plan.beforeState?._seq_no ||
-					current?._primary_term !== plan.beforeState?._primary_term
-				)
-					break
+				if (!sameVersion(current, plan.beforeState)) break
 				if (
 					await writeState(
 						userId,
@@ -1870,8 +1917,7 @@ export async function applyImportTrackingPlan(
 				if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
 				continue
 			}
-			if (current && ["seen", "on_hold", "dropped"].includes(current.state))
-				break
+			if (current && PROTECTED_STATES.includes(current.state)) break
 			await run("REFRESH TABLE user_watch_log")
 			const combined = await readImportLog(userId, plan.title)
 			const record = recordFromRows(stateOnly(current), combined, {
@@ -1891,10 +1937,7 @@ export async function applyImportTrackingPlan(
 			if (!progress.watchRemains) break
 			record.state = progress.upToDate ? "seen" : "watching"
 			record.seenQuestion = "answered"
-			if (
-				current?._seq_no !== plan.beforeState?._seq_no ||
-				current?._primary_term !== plan.beforeState?._primary_term
-			) {
+			if (!sameVersion(current, plan.beforeState)) {
 				plan.beforeState = current
 				plan.now = Math.max(
 					Date.now(),
@@ -1971,6 +2014,7 @@ export async function undoImportTrackingPlan(
 			// Restore the earlier choice only where it still satisfies the watch/state invariant.
 			if (
 				!plan.statusItem &&
+				!(restored?.state === "watching" && restored.state_changed_at === 0) &&
 				!hasRegular &&
 				restored &&
 				["watching", "seen"].includes(restored.state)
@@ -2006,6 +2050,22 @@ export async function undoImportTrackingPlan(
 					Math.max(...remaining.map((row) => row.created_at)),
 				)
 			}
+			// Restore before releasing state ownership, so an interrupted undo can retry the inserts.
+			// DO NOTHING preserves any intention the member has since added.
+			if (plan.statusItem && !plan.watches.length)
+				for (const clear of plan.clear) {
+					if (clear.updatedAt == null) continue // Older journals did not retain intentions.
+					await run(
+						`INSERT INTO ${clear.table} (user_id, tmdb_id, media_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (user_id, tmdb_id, media_type) DO NOTHING`,
+						[
+							userId,
+							plan.title.tmdbId,
+							plan.title.mediaType,
+							clear.createdAt == null ? null : new Date(clear.createdAt),
+							new Date(clear.updatedAt),
+						],
+					)
+				}
 			await writeState(
 				userId,
 				plan.title,
