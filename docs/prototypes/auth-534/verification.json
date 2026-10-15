@@ -1,0 +1,33 @@
+{
+  "checks": [
+    "Show password",
+    "Email sign-in succeeds locally",
+    "Bad sign-in copy",
+    "Forgot password navigation",
+    "Reset request acknowledgement",
+    "Password mismatch",
+    "Password update completion",
+    "Reset completion returns to sign-in",
+    "Expired reset recovery",
+    "Sign-up opens verification",
+    "Verification resend acknowledgement",
+    "Visible resend cooldown",
+    "Verification completion returns to sign-in",
+    "Cut-over continues to sign-in",
+    "Cut-over shown once within demo session",
+    "Google sign-in is simulated locally",
+    "Consent account switch resumes through sign-in",
+    "Sign-in returns to pending consent",
+    "Consent cancellation",
+    "Consent approval",
+    "Disconnect asks for confirmation",
+    "Cancel disconnect retains app",
+    "Disconnect removes app in memory",
+    "Disconnect final app gives empty list",
+    "Variant changes structure and URL",
+    "Arrow keys leave input editing alone",
+    "Keyboard variant switching"
+  ],
+  "mutations": [],
+  "errors": []
+}

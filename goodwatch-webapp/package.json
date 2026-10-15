@@ -6,6 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "remix vite:dev",
+		"prototype:auth": "node scripts/prototype-auth-dev.mjs",
 		"start": "remix-serve ./build/server/index.js",
 		"build": "patch-package && remix vite:build && node scripts/precompress.mjs",
 		"typecheck": "tsc",
