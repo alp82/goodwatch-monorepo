@@ -2,10 +2,14 @@ import urllib.error
 import json, os, sys, base64, urllib.request
 def env():
     e={}
-    for l in open('/home/alp/dev/projects/goodwatch/goodwatch-monorepo/.claude/worktrees/search-arena/goodwatch-webapp/.env'):
-        l=l.strip()
-        if l and not l.startswith('#') and '=' in l:
-            k,v=l.split('=',1); e[k]=v.strip().strip('"').strip("'")
+    path=os.environ.get('CRATE_ENV_FILE','goodwatch-webapp/.env')
+    if os.path.isfile(path):
+        with open(path) as source:
+            for l in source:
+                l=l.strip()
+                if l and not l.startswith('#') and '=' in l:
+                    k,v=l.split('=',1); e[k]=v.strip().strip('"').strip("'")
+    e.update(os.environ)
     return e
 E=env()
 def sql(stmt,args=None):
