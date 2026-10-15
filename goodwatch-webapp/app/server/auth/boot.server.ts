@@ -15,6 +15,7 @@ export function authCluster(): Cluster | null {
 	return clusterProvider()
 }
 
+export const betterAuthEnabled = () => process.env.BETTER_AUTH_ENABLED === "true"
 export const loadAuthRuntime = () => import("./runtime.server.ts")
 
 /** Signed-in requests with Better Auth on resolve their member through the runtime, loaded on the first one. */
@@ -26,7 +27,7 @@ export function registerLazyAuthResolver() {
 
 /** The routes under `/api/auth/*`: not found while Better Auth is off, without loading the runtime. */
 export async function handleAuthRequest(request: Request): Promise<Response> {
-	if (process.env.BETTER_AUTH_ENABLED !== "true")
+	if (!betterAuthEnabled())
 		return new Response(null, {
 			status: 404,
 			headers: { "Cache-Control": "private, no-store" },
