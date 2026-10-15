@@ -1,5 +1,5 @@
 // What an import changed, or what its Undo changed back: a success message with a one-line summary, then one list
-// per kind of change, each title linked to its page (variation A of #651). Every source draws its result with this.
+// per kind of change, each title linked to its page. Every source draws its result with this.
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid"
 import { CheckCircleIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -8,14 +8,15 @@ import type {
 	ImportResult,
 	ImportResultChange,
 	ImportResultKind,
+	ImportResultList,
 	ImportResultRow,
 	ImportResultSection,
 	ImportResultSectionKey,
-	ImportResultShowState,
 	ImportResultStatusChange,
 	ImportResultTitle,
 	ImportResultWatches,
 } from "~/domain/import-result"
+import { STATE_LABEL, type State } from "~/domain/tracking/machine"
 import { titlePath } from "~/utils/helpers"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { FocusHeading } from "./FocusHeading"
@@ -24,7 +25,13 @@ import { formatCount } from "./shared"
 /** A list choice the import took away and Undo could not put back, for a put-back button. */
 export interface PutBack {
 	title: ImportResultTitle
-	list: "Want to See" | "Not interested"
+	list: "want_to_see" | "not_interested"
+}
+
+export const LIST_LABEL: Record<ImportResultList, string> = {
+	want_to_see: "Want to See",
+	not_interested: "Not interested",
+	favorites: "favorites",
 }
 
 const HEADINGS: Record<ImportResultSectionKey, string> = {
@@ -69,13 +76,6 @@ const LEFT: Record<ImportResultKind, string> = {
 	show_status: "Your show status",
 	unsupported: "Your data",
 }
-const STATES: Record<ImportResultShowState, string> = {
-	not_started: "Not started",
-	watching: "Watching",
-	on_hold: "On hold",
-	dropped: "Dropped",
-	seen: "Seen",
-}
 const BECAUSE = {
 	watched: "you watched it",
 	status: "of its new show status",
@@ -84,8 +84,7 @@ const BECAUSE = {
 
 export const plural = (n: number, one: string, many = `${one}s`) =>
 	`${formatCount(n)} ${n === 1 ? one : many}`
-const state = (value: ImportResultShowState | null) =>
-	STATES[value ?? "not_started"]
+const state = (value: State | null) => STATE_LABEL[value ?? "not_started"]
 // Days are UTC calendar days; noon keeps them on their day in every time zone's formatting.
 // formatRange is in every supported browser; the project's TypeScript lib predates it.
 const DAYS = new Intl.DateTimeFormat("en-US", {
@@ -173,9 +172,9 @@ function changeLine(change: ImportResultChange): ReactNode {
 				? `Now ${state(change.status.to)} (was ${state(change.status.from)})`
 				: `Now ${state(change.status.to)}`
 		case "list-added":
-			return `Added to ${change.list === "Favorites" ? "favorites" : change.list}`
+			return `Added to ${LIST_LABEL[change.list]}`
 		case "list-cleared":
-			return `Off ${change.list}, because ${BECAUSE[change.because]}. ${change.undoRestores ? "Undo puts it back." : "Undo won't put it back."}`
+			return `Off ${LIST_LABEL[change.list]}, because ${BECAUSE[change.because]}. ${change.undoRestores ? "Undo puts it back." : "Undo won't put it back."}`
 		case "kept":
 			return `${KINDS[change.kind]}: ${change.reason}`
 		case "skipped":
@@ -202,11 +201,13 @@ function changeLine(change: ImportResultChange): ReactNode {
 		case "status-restored":
 			return `Back to ${state(change.status.to)} (was ${state(change.status.from)})`
 		case "list-removed":
-			return `Removed from ${change.list === "Favorites" ? "favorites" : change.list}`
+			return `Removed from ${LIST_LABEL[change.list]}`
 		case "list-restored":
-			return `Back on ${change.list}`
+			return `Back on ${LIST_LABEL[change.list]}`
 		case "not-restored":
-			return `Was on ${change.list} before the import`
+			return `Was on ${LIST_LABEL[change.list]} before the import`
+		case "not-reverted":
+			return `Undo couldn't put your earlier ${KINDS[change.kind].toLowerCase()} back, so the import's stays.`
 		case "left":
 			return `${LEFT[change.kind]} stays: you changed it after the import.`
 	}
@@ -334,50 +335,40 @@ function Section({
 	)
 }
 
-const count = (result: ImportResult, key: ImportResultSectionKey) =>
-	result.sections.find((section) => section.key === key)?.count ?? 0
+/** How the one-line summary names a section's count; null for the sections it leaves to their lists. */
+const SUMMARY: Record<ImportResultSectionKey, ((n: number) => string) | null> =
+	{
+		ratings_added: (n) => `${plural(n, "rating")} added`,
+		ratings_replaced: (n) => `${plural(n, "rating")} replaced`,
+		reviews: (n) => `${plural(n, "review")} added or replaced`,
+		watches_added: (n) => `${plural(n, "watch", "watches")} added`,
+		statuses_set: (n) => `${plural(n, "show status", "show statuses")} set`,
+		want_added: (n) => `${formatCount(n)} added to Want to See`,
+		favorites_added: (n) => `${formatCount(n)} added to favorites`,
+		lists_cleared: (n) => `${plural(n, "title")} taken off a list`,
+		kept: null,
+		skipped: null,
+		not_restored: null,
+		ratings_removed: (n) => `${plural(n, "rating")} removed`,
+		ratings_restored: (n) => `${plural(n, "rating")} put back`,
+		reviews_reverted: (n) => `${plural(n, "review")} taken back`,
+		watches_removed: (n) => `${plural(n, "watch", "watches")} removed`,
+		statuses_restored: (n) =>
+			`${plural(n, "show status", "show statuses")} put back`,
+		want_removed: (n) => `${formatCount(n)} removed from Want to See`,
+		favorites_removed: (n) => `${formatCount(n)} removed from favorites`,
+		lists_restored: (n) => `${plural(n, "title")} back on a list`,
+		left: (n) => `${plural(n, "title")} left as you changed it`,
+	}
 
-/** "2 ratings added, 1 rating replaced, 5 watches added". */
-function summary(result: ImportResult) {
-	const n = (key: ImportResultSectionKey) => count(result, key)
-	const parts =
-		result.operation === "import"
-			? [
-					n("ratings_added") && `${plural(n("ratings_added"), "rating")} added`,
-					n("ratings_replaced") &&
-						`${plural(n("ratings_replaced"), "rating")} replaced`,
-					n("reviews") && `${plural(n("reviews"), "review")} added or replaced`,
-					n("watches_added") &&
-						`${plural(n("watches_added"), "watch", "watches")} added`,
-					n("statuses_set") &&
-						`${plural(n("statuses_set"), "show status", "show statuses")} set`,
-					n("want_added") &&
-						`${formatCount(n("want_added"))} added to Want to See`,
-					n("favorites_added") &&
-						`${formatCount(n("favorites_added"))} added to favorites`,
-					n("lists_cleared") &&
-						`${plural(n("lists_cleared"), "title")} taken off a list`,
-				]
-			: [
-					n("ratings_removed") &&
-						`${plural(n("ratings_removed"), "rating")} removed`,
-					n("ratings_restored") &&
-						`${plural(n("ratings_restored"), "rating")} put back`,
-					n("reviews_reverted") &&
-						`${plural(n("reviews_reverted"), "review")} taken back`,
-					n("watches_removed") &&
-						`${plural(n("watches_removed"), "watch", "watches")} removed`,
-					n("statuses_restored") &&
-						`${plural(n("statuses_restored"), "show status", "show statuses")} put back`,
-					n("want_removed") &&
-						`${formatCount(n("want_removed"))} removed from Want to See`,
-					n("favorites_removed") &&
-						`${formatCount(n("favorites_removed"))} removed from favorites`,
-					n("lists_restored") &&
-						`${plural(n("lists_restored"), "title")} back on a list`,
-				]
-	return parts.filter(Boolean).join(", ")
-}
+/** "2 ratings added, 1 rating replaced, 5 watches added", in the order of the sections. */
+const summary = (result: ImportResult) =>
+	result.sections
+		.flatMap((section) => {
+			const phrase = SUMMARY[section.key]
+			return phrase ? [phrase(section.count)] : []
+		})
+		.join(", ")
 
 export function ImportResultView({
 	result,
@@ -400,7 +391,12 @@ export function ImportResultView({
 }) {
 	const undo = result.operation === "undo"
 	const line = summary(result)
-	const notRestored = count(result, "not_restored")
+	const notRestored = result.sections.find(
+		(section) => section.key === "not_restored",
+	)
+	const listsOnly = notRestored?.rows.every((row) =>
+		row.changes.every((change) => change.type === "not-restored"),
+	)
 	return (
 		<section className="flex flex-col gap-5">
 			<FocusHeading focus={focus}>
@@ -431,15 +427,17 @@ export function ImportResultView({
 					</p>
 				</div>
 			</output>
-			{notRestored > 0 && (
+			{notRestored && (
 				<div className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100">
 					<p className="flex items-center gap-2 font-semibold">
 						<ExclamationTriangleIcon className="size-5 shrink-0" aria-hidden />
-						{plural(notRestored, "list choice")} could not be put back
+						{plural(notRestored.count, listsOnly ? "list choice" : "change")}{" "}
+						could not be put back
 					</p>
 					<p className="mt-1 text-sm">
-						The import took these titles off a list. Put them back here, or
-						leave them.
+						{listsOnly
+							? "The import took these titles off a list. Put them back here, or leave them."
+							: "Undo couldn't take these back. Put list choices back here, or leave them."}
 					</p>
 				</div>
 			)}

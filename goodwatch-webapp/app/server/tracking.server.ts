@@ -14,6 +14,7 @@
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import { createHash, randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
+import type { UndoOutcome } from "~/domain/import-result"
 import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import {
 	type ImportItem,
@@ -1985,11 +1986,13 @@ export async function applyImportTrackingPlan(
 export async function undoImportTrackingPlan(
 	userId: string,
 	plan: ImportTrackingPlan,
-): Promise<"reverted" | "left"> {
+	/** An earlier, interrupted Undo of this plan began: a status as before the import is its own work. */
+	resumed = false,
+): Promise<UndoOutcome> {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
 	if (!plan.watches.length && !plan.statusItem) return "reverted"
-	let outcome: "reverted" | "left" = "reverted"
+	let outcome: UndoOutcome = "reverted"
 	await run("REFRESH TABLE user_watch_log")
 	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
 	const log = await readImportLog(userId, plan.title)
@@ -2011,11 +2014,15 @@ export async function undoImportTrackingPlan(
 			current.updated_at === plan.now &&
 			current.state === plan.afterState?.state
 		const before = plan.beforeState?.state ?? null
-		// An earlier, interrupted Undo may already have put it back.
+		// Changed since the import, unless an earlier, interrupted Undo already put it back.
 		if (
 			!owned &&
 			(plan.afterState?.state ?? null) !== before &&
-			(current?.state ?? null) !== before
+			// A show with no status reads as Not started, as its empty receipt row does.
+			!(
+				resumed &&
+				(current?.state ?? "not_started") === (before ?? "not_started")
+			)
 		)
 			outcome = "left"
 		if (owned) {

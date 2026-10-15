@@ -1,14 +1,21 @@
 // The result of a native import and of its Undo, per title, from the journal its rows keep in `payload` and the
 // watch plan each title keeps in its `state` row.
 import {
+	FAILED_REASON,
 	type ImportResult,
 	type ImportResultEntry,
 	type ImportResultKind,
-	type ImportResultSectionKey,
-	type ImportResultShowState,
+	type ImportResultOperation,
 	type ImportResultTitle,
 	type ImportResultWatches,
+	type StoredUndoOutcome,
+	exportLabel,
 	groupImportResult,
+	keptReason,
+	ratingEntry,
+	resultTitleKey,
+	skippedEntry,
+	undoneEntry,
 } from "~/domain/import-result"
 import type {
 	ImportItem,
@@ -16,7 +23,7 @@ import type {
 	ImportOptions,
 	ImportSource,
 } from "~/domain/imports"
-import { firstRows, sectionPage } from "./result-catalog.server.ts"
+import { resultApi } from "./result-catalog.server.ts"
 import { getImportRow, select, summarize } from "./store.server.ts"
 import { type ImportTrackingPlan, importWatchId } from "./tracking.server.ts"
 
@@ -25,7 +32,6 @@ type Snapshot = {
 	score?: number | null
 	review?: string | null
 }
-type Operation = ImportResult["operation"]
 type Journal = {
 	before: Snapshot
 	after: Snapshot
@@ -43,7 +49,7 @@ interface ResultRow {
 	media_type: "movie" | "show" | null
 	apply_state: ImportItem["applyState"]
 	watch_id: string | null
-	undo_outcome: "reverted" | "left" | null
+	undo_outcome: StoredUndoOutcome | null
 }
 
 const parse = <T>(value: string | null, fallback: T): T => {
@@ -55,17 +61,10 @@ const parse = <T>(value: string | null, fallback: T): T => {
 }
 const written = (state: ImportItem["applyState"]) =>
 	state === "added" || state === "updated" || state === "undone"
-const KEPT: Record<ImportResultKind, string> = {
-	rating: "You changed it in GoodWatch after the preview.",
-	review: "You changed it in GoodWatch after the preview.",
-	watch: "Already in your watch log.",
-	want: "Already on Want to See, or already watched.",
-	favorite: "Already a favorite.",
-	show_status: "Your show status in GoodWatch stays.",
-	unsupported: "GoodWatch can't import this.",
-}
 const SKIPPED = ["unmatched", "unsupported", "invalid"]
 const day = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+const list = (table: string) =>
+	table === "user_wishlist" ? "want_to_see" : "not_interested"
 
 function watchesOf(
 	watches: ImportTrackingPlan["watches"],
@@ -99,14 +98,14 @@ function watchesOf(
  * what Undo did with them, by the outcome it recorded on the plan's row.
  */
 function planEntries(
-	operation: Operation,
+	operation: ImportResultOperation,
 	source: ImportSource,
 	plan: ImportTrackingPlan,
 	planRow: ResultRow,
 	rows: ResultRow[],
 	title: ImportResultTitle,
 ) {
-	const key = `${title.mediaType}:${title.tmdbId}`
+	const key = resultTitleKey(title)
 	const titleRows = rows.filter(
 		(row) =>
 			row.kind !== "state" &&
@@ -127,14 +126,12 @@ function planEntries(
 		fromRows.has(watch.watch_id) ? landed.has(watch.watch_id) : statusApplied,
 	)
 	if (!watches.length && !statusApplied) return []
-	const from = (plan.beforeState?.state ?? null) as ImportResultShowState | null
-	const to = (plan.afterState?.state ?? null) as ImportResultShowState | null
+	const from = plan.beforeState?.state ?? null
+	const to = plan.afterState?.state ?? null
 	const status = title.mediaType === "show" && from !== to ? { from, to } : null
 	const entries: ImportResultEntry[] = []
 	// Undo puts back what a status without watches cleared (tracking model section 7), and nothing else.
 	const undoRestores = !!plan.statusItem && !plan.watches.length
-	const list = (table: string) =>
-		table === "user_wishlist" ? "Want to See" : "Not interested"
 	if (operation === "undo") {
 		const left = planRow.undo_outcome === "left"
 		const back = status && !left ? { from: status.to, to: status.from } : null
@@ -193,7 +190,10 @@ function planEntries(
 	return entries
 }
 
-/** What stayed as it was, and the rows that weren't imported, for the kinds the member chose. */
+/**
+ * A row that changed nothing: not imported (with its reason), not saved, or kept as GoodWatch had it, for the kinds
+ * the member chose. Null for a row that changed something, or of a kind the member left out.
+ */
 function unchangedEntry(
 	row: ResultRow,
 	options: ImportOptions | null,
@@ -201,43 +201,40 @@ function unchangedEntry(
 ): ImportResultEntry | null {
 	if (row.kind === "state") return null
 	const kind = row.kind as ImportResultKind
-	if (SKIPPED.includes(row.outcome)) {
-		const payload = parse<Partial<ImportItem>>(row.payload, {})
-		const label = payload.year
-			? `${payload.title ?? ""} (${payload.year})`
-			: (payload.title ?? "")
-		return {
-			key: `row:${row.row_index}`,
-			title: null,
-			change: {
-				type: "skipped",
-				kind,
-				label,
-				row: Number(row.row_index) + 1,
-				reason: row.reason ?? "GoodWatch can't import this row.",
-			},
-		}
-	}
+	const payload = () => parse<Partial<ImportItem>>(row.payload, {})
+	if (SKIPPED.includes(row.outcome))
+		return skippedEntry(
+			Number(row.row_index),
+			kind,
+			exportLabel(payload().title ?? "", payload().year),
+			row.reason ?? "GoodWatch can't import this row.",
+		)
 	if (!options?.kinds.includes(kind as ImportKind) || row.tmdb_id === null)
 		return null
-	const reason =
-		row.outcome === "unchanged"
-			? "Already the same in GoodWatch."
-			: row.outcome === "conflict" && options.conflictChoice === "keep"
-				? "You chose to keep what GoodWatch has."
-				: row.apply_state === "kept"
-					? (row.reason ?? KEPT[kind])
-					: null
+	if (row.apply_state === "failed")
+		return skippedEntry(
+			Number(row.row_index),
+			kind,
+			exportLabel(payload().title ?? "", payload().year),
+			FAILED_REASON,
+		)
+	const reason = keptReason({
+		outcome: row.outcome,
+		applyState: row.apply_state,
+		keepConflicts: options.conflictChoice === "keep",
+		kind,
+		reason: row.reason,
+	})
 	if (!reason) return null
 	const kept = title()
 	return {
-		key: `${kept.mediaType}:${kept.tmdbId}`,
+		key: resultTitleKey(kept),
 		title: kept,
 		change: { type: "kept", kind, reason },
 	}
 }
 
-/** What Undo did with one rating, review, Want to See or favorite row. */
+/** What Undo did with one review, Want to See or favorite row, or a row it could not take back. */
 function undoEntries(
 	row: ResultRow,
 	journal: Journal | undefined,
@@ -252,23 +249,12 @@ function undoEntries(
 			entries.push({
 				key,
 				title,
-				change: { type: "not-restored", list: "Not interested" },
+				change: { type: "not-restored", list: "not_interested" },
 			})
-	if (!journal) return entries
-	// Imports undone before Undo recorded its outcomes count as taken back.
-	if (row.undo_outcome === "left")
-		entries.push({ key, title, change: { type: "left", kind } })
-	else if (row.kind === "rating" && typeof journal.after.score === "number") {
-		const before = journal.before.exists ? journal.before.score : null
-		entries.push({
-			key,
-			title,
-			change:
-				typeof before === "number"
-					? { type: "rating-restored", from: journal.after.score, to: before }
-					: { type: "rating-removed", score: journal.after.score },
-		})
-	} else if (row.kind === "review")
+	const undone = undoneEntry(key, title, kind, row.undo_outcome)
+	if (undone) entries.push(undone)
+	else if (!journal) return entries
+	else if (row.kind === "review")
 		entries.push({
 			key,
 			title,
@@ -285,14 +271,14 @@ function undoEntries(
 			title,
 			change: {
 				type: "list-removed",
-				list: want ? "Want to See" : "Favorites",
+				list: want ? "want_to_see" : "favorites",
 			},
 		})
 	return entries
 }
 
 function entriesOf(
-	operation: Operation,
+	operation: ImportResultOperation,
 	source: ImportSource,
 	options: ImportOptions | null,
 	rows: ResultRow[],
@@ -301,7 +287,10 @@ function entriesOf(
 	const titles = new Map<string, ImportResultTitle>()
 	const order = new Map<string, number>()
 	const titleOf = (row: ResultRow): ImportResultTitle => {
-		const key = `${row.media_type}:${Number(row.tmdb_id)}`
+		const key = resultTitleKey({
+			mediaType: String(row.media_type),
+			tmdbId: Number(row.tmdb_id),
+		})
 		const known = titles.get(key)
 		if (known) return known
 		const payload =
@@ -350,26 +339,29 @@ function entriesOf(
 			{},
 		)
 		const title = titleOf(row)
-		const key = `${title.mediaType}:${title.tmdbId}`
+		const key = resultTitleKey(title)
 		const journal = payload.journal
-		if (operation === "undo") {
-			entries.push(...undoEntries(row, journal, key, title))
-			continue
-		}
 		if (
 			row.kind === "rating" &&
 			journal &&
 			typeof journal.after.score === "number"
 		) {
 			const before = journal.before.exists ? journal.before.score : null
-			entries.push({
-				key,
-				title,
-				change:
-					typeof before === "number"
-						? { type: "rating-replaced", from: before, to: journal.after.score }
-						: { type: "rating-added", score: journal.after.score },
-			})
+			entries.push(
+				ratingEntry(
+					operation,
+					key,
+					title,
+					typeof before === "number" ? before : null,
+					journal.after.score,
+					row.undo_outcome,
+				),
+			)
+			continue
+		}
+		if (operation === "undo") {
+			entries.push(...undoEntries(row, journal, key, title))
+			continue
 		}
 		if (row.kind === "review" && journal)
 			entries.push({
@@ -391,7 +383,7 @@ function entriesOf(
 				title,
 				change: {
 					type: "list-added",
-					list: want ? "Want to See" : "Favorites",
+					list: want ? "want_to_see" : "favorites",
 				},
 			})
 		for (const cleared of journal?.cleared ?? [])
@@ -401,7 +393,7 @@ function entriesOf(
 					title,
 					change: {
 						type: "list-cleared",
-						list: "Not interested",
+						list: "not_interested",
 						because: "want",
 						undoRestores: false,
 					},
@@ -418,33 +410,28 @@ function entriesOf(
 		.map(({ entry }) => entry)
 }
 
-async function groupedResult(
-	userId: string,
-	id: string,
-): Promise<ImportResult> {
+const api = resultApi(select, async (userId, id) => {
 	const importRow = await getImportRow(userId, id)
-	const rows = await select<ResultRow>(
-		"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT 100001",
-		[id, userId],
-	)
 	const summary = summarize(importRow)
 	const operation = summary.status === "undone" ? "undo" : "import"
-	return groupImportResult(
-		operation,
-		entriesOf(operation, importRow.source, summary.options, rows),
-	)
-}
+	return {
+		version: ["done", "undone"].includes(summary.status)
+			? `${summary.status}:${new Date(importRow.updated_at).getTime()}`
+			: null,
+		build: async (): Promise<ImportResult> => {
+			const rows = await select<ResultRow>(
+				"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT 100001",
+				[id, userId],
+			)
+			return groupImportResult(
+				operation,
+				entriesOf(operation, importRow.source, summary.options, rows),
+			)
+		},
+	}
+})
 
 /** The result with the first titles of each section. */
-export const importResult = async (userId: string, id: string) =>
-	firstRows(select, await groupedResult(userId, id))
-
+export const importResult = api.first
 /** More titles of one section. */
-export const importResultPage = async (
-	userId: string,
-	id: string,
-	section: ImportResultSectionKey,
-	offset: number,
-	limit: number,
-) =>
-	sectionPage(select, await groupedResult(userId, id), section, offset, limit)
+export const importResultPage = api.page

@@ -1,59 +1,15 @@
 // The IMDb import's result and Undo result: its own rows mapped to the shared sections.
-// node-crate loads before the alias hook, which can't resolve the requires inside a CommonJS package.
-import "node-crate"
-import "../title-filter/test-alias.ts"
+import "./loader.test-support.ts"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
-import ts from "typescript"
 import { setCrateClientForTest } from "../../utils/crate.ts"
-
-const STUBS: Record<string, string> = {
-	"/server/onboarding-media.server.ts":
-		"export const resetOnboardingMediaCache = async () => {}",
-	"/server/taste/index.server.ts":
-		"export const markTasteChanged = async () => {}",
-	"/server/userData.server.ts":
-		"export const resetUserDataCache = async () => {}",
-	"/server/title-snapshot/format.server.ts":
-		"export const getTitleSnapshot = () => null",
-	// The movie rule has its own tests; here it would pull in the cache and Redis.
-	"/server/tracking.server.ts": "export const settleMovies = async () => {}",
-}
-const { registerHooks } = nodeModule as unknown as {
-	registerHooks(hooks: {
-		load(
-			url: string,
-			context: unknown,
-			next: (url: string, context: unknown) => unknown,
-		): unknown
-	}): void
-}
-registerHooks({
-	load(url, context, next) {
-		const stub = Object.keys(STUBS).find((path) => url.endsWith(path))
-		if (stub)
-			return { format: "module", source: STUBS[stub], shortCircuit: true }
-		// The error class declares a field in its constructor, which Node can't run by stripping the types.
-		if (!url.includes("/imdb-import/file.server.ts")) return next(url, context)
-		const source = readFileSync(new URL(url), "utf8")
-		return {
-			format: "module",
-			source: ts.transpileModule(source, {
-				compilerOptions: {
-					module: ts.ModuleKind.ESNext,
-					target: ts.ScriptTarget.ESNext,
-				},
-			}).outputText,
-			shortCircuit: true,
-		}
-	},
-})
 
 const { undoImport } = await import("./apply.server.ts")
 const { imdbImportResult, imdbImportResultPage } = await import(
 	"./result.server.ts"
+)
+const { clearResultCacheForTest } = await import(
+	"../imports/result-catalog.server.ts"
 )
 
 const USER = "member-1"
@@ -78,7 +34,7 @@ class FakeCrate {
 		const tail = (from: number) => params.slice(from).map(Number)
 		if (
 			s.startsWith(
-				"SELECT row_index, tmdb_id, media_type, prior_score, applied_score FROM doc.user_import_item WHERE import_id = ? AND apply_state IN ('added', 'updated')",
+				"SELECT row_index, tmdb_id, media_type, prior_score, applied_score, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND apply_state IN ('added', 'updated')",
 			)
 		)
 			return done(
@@ -356,7 +312,10 @@ beforeEach(() => {
 		},
 	]
 })
-afterEach(() => setCrateClientForTest(null))
+afterEach(() => {
+	clearResultCacheForTest()
+	setCrateClientForTest(null)
+})
 
 const view = (result: {
 	sections: {
@@ -462,4 +421,71 @@ test("IMDb Undo records per rating whether it took it back or left the member's 
 		],
 		["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
 	])
+})
+
+test("IMDb Undo reads a rating the member removed after the import as left, and keeps outcomes it recorded before", async () => {
+	crate.scores = crate.scores.filter((x) => x.tmdb_id !== 693134)
+	// An earlier Undo that broke off already recorded Arrival as left.
+	Object.assign(crate.items.find((x) => x.tmdb_id === 329865) ?? {}, {
+		undo_outcome: "left",
+	})
+	await undoImport(USER, IMPORT)
+	assert.equal(crate.scores.find((x) => x.tmdb_id === 329865)?.score, 9)
+	assert.deepEqual(view(await imdbImportResult(USER, IMPORT)), [
+		[
+			"left",
+			[
+				["Dune: Part Two", [{ type: "left", kind: "rating" }]],
+				["Arrival", [{ type: "left", kind: "rating" }]],
+				["Shōgun", [{ type: "left", kind: "rating" }]],
+			],
+		],
+	])
+})
+
+test("IMDb Undo reads a rating it had started removing as taken back", async () => {
+	crate.scores = crate.scores.filter((x) => x.tmdb_id !== 693134)
+	Object.assign(crate.items.find((x) => x.tmdb_id === 693134) ?? {}, {
+		undo_outcome: "reverting",
+	})
+	await undoImport(USER, IMPORT)
+	const result = await imdbImportResult(USER, IMPORT)
+	assert.deepEqual(view(result)[0], [
+		"ratings_removed",
+		[["Dune: Part Two", [{ type: "rating-removed", score: 9 }]]],
+	])
+})
+
+test("an IMDb rating that couldn't be saved is listed with how to retry it", async () => {
+	Object.assign(crate.items.find((x) => x.tmdb_id === 949) ?? {}, {
+		outcome: "new",
+		current_score: null,
+		apply_state: "failed",
+	})
+	const skipped = (await imdbImportResult(USER, IMPORT)).sections.find(
+		(s) => s.key === "skipped",
+	)
+	assert.deepEqual(
+		skipped?.rows.map((row) => row.changes),
+		[
+			[
+				{
+					type: "skipped",
+					kind: "rating",
+					label: "Heat (1995)",
+					row: 5,
+					reason: "Couldn't be saved. Import the file again to retry.",
+				},
+			],
+			[
+				{
+					type: "skipped",
+					kind: "rating",
+					label: "Kurzfilmnacht (2021)",
+					row: 6,
+					reason: "This IMDb title isn't in the GoodWatch catalog yet.",
+				},
+			],
+		],
+	)
 })

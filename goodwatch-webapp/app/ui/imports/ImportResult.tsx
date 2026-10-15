@@ -11,38 +11,24 @@ import {
 	useNotInterestedMutation,
 	useWishlistMutation,
 } from "~/hooks/useUserDataMutations"
+import { useUserData } from "~/routes/api.user-data"
+import { createMediaKey } from "~/types/user-data"
 import { Spinner } from "~/ui/wait/Spinner"
 import {
 	ImportResultView,
+	LIST_LABEL,
 	type PutBack,
 	ResultRows,
 	plural,
 	resultList,
 } from "./ImportResultView"
+import { request } from "./api"
 import { errorBox, secondaryButton, textLink } from "./shared"
 
 /** The import routes whose items API serves `?by=title`. */
 export type ImportResultApi = "/api/imports" | "/api/imdb-import"
 const PAGE = 100
 
-async function request<T>(url: string): Promise<T> {
-	let response: Response
-	try {
-		response = await fetch(url)
-	} catch {
-		throw new Error(
-			"We couldn't reach GoodWatch. Check your connection and try again.",
-		)
-	}
-	const body = await response.json().catch(() => null)
-	if (!response.ok || body === null)
-		throw new Error(
-			typeof body?.error === "string" && body.error
-				? body.error
-				: "Something went wrong on our side. Please try again.",
-		)
-	return body as T
-}
 const itemsUrl = (api: ImportResultApi, id: string) =>
 	`${api}/${encodeURIComponent(id)}/items?by=title`
 
@@ -108,15 +94,31 @@ function MoreRows({
 	)
 }
 
-/** Puts a title back on Want to See or Not interested, now, without the date it had before the import. */
+/**
+ * Puts a title back on Want to See or Not interested, now, without the date it had before the import. A title the
+ * member's data already has on that list, put back from here before or elsewhere, needs no button.
+ */
 function PutBackButton({ title, list }: PutBack) {
 	const wishlist = useWishlistMutation()
 	const notInterested = useNotInterestedMutation()
-	const mutation = list === "Want to See" ? wishlist : notInterested
-	const done = mutation.isSuccess && mutation.data?.status === "success"
+	const { data } = useUserData()
+	const mutation = list === "want_to_see" ? wishlist : notInterested
+	const key = createMediaKey(title.mediaType, title.tmdbId)
+	const onList = Boolean(
+		(list === "want_to_see" ? data?.wishlist : data?.notInterested)?.[key],
+	)
+	const done =
+		(mutation.isSuccess && mutation.data?.status === "success") ||
+		(mutation.isIdle && onList)
 	const failed =
 		mutation.isError ||
 		(mutation.isSuccess && mutation.data?.status !== "success")
+	if (done && mutation.isIdle)
+		return (
+			<p className="text-sm font-semibold text-emerald-200">
+				Back on {LIST_LABEL[list]}
+			</p>
+		)
 	return (
 		<div className="flex flex-col items-start gap-1">
 			<button
@@ -133,8 +135,8 @@ function PutBackButton({ title, list }: PutBack) {
 			>
 				{mutation.isPending && <Spinner size="small" />}
 				{done
-					? `Back on ${list}`
-					: list === "Want to See"
+					? `Back on ${LIST_LABEL[list]}`
+					: list === "want_to_see"
 						? "Add back to Want to See"
 						: "Mark Not interested again"}
 			</button>

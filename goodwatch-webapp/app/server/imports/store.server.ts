@@ -1,3 +1,4 @@
+import type { StoredUndoOutcome } from "~/domain/import-result"
 import {
 	IMPORT_SOURCES,
 	type ImportItem,
@@ -183,7 +184,7 @@ export const refreshItems = () => run("REFRESH TABLE doc.user_import_item")
 export const recordUndo = (
 	importId: string,
 	rowIndex: number,
-	outcome: UndoOutcome,
+	outcome: StoredUndoOutcome,
 ) =>
 	run(
 		"UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index = ?",
@@ -203,7 +204,6 @@ interface ItemRow {
 	apply_state: ImportItem["applyState"]
 }
 /** What Undo did with a row it had to take back. */
-export type UndoOutcome = "reverted" | "left"
 export async function itemRows(
 	userId: string,
 	id: string,
@@ -211,11 +211,13 @@ export async function itemRows(
 ): Promise<
 	(ImportItem & {
 		payload: Record<string, unknown>
-		undoOutcome: UndoOutcome | null
+		undoOutcome: StoredUndoOutcome | null
 	})[]
 > {
 	await getImportRow(userId, id)
-	const rows = await select<ItemRow & { undo_outcome: UndoOutcome | null }>(
+	const rows = await select<
+		ItemRow & { undo_outcome: StoredUndoOutcome | null }
+	>(
 		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
 		[id, userId],
 	)

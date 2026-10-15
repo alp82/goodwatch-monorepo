@@ -86,11 +86,11 @@ test("after Undo: what could not be put back comes first with its put-back butto
 	assert.match(page, /^Import undone GoodWatch changed back 4 titles/)
 	assert.match(
 		page,
-		/1 rating removed, 1 rating put back, 3 watches removed, 1 removed from Want to See\./,
+		/1 rating removed, 1 rating put back, 3 watches removed, 1 removed from Want to See, 1 title left as you changed it\./,
 	)
-	assert.match(page, /2 list choices could not be put back/)
+	assert.match(page, /3 changes could not be put back/)
 	assert.deepEqual(headings(rendered.undone), [
-		"Not put back 2",
+		"Not put back 3",
 		"Ratings removed 1",
 		"Ratings put back 1",
 		"Watches removed 3",
@@ -99,12 +99,17 @@ test("after Undo: what could not be put back comes first with its put-back butto
 	])
 	assert.match(
 		page,
-		/Dune: Part Two · 2024 Was on Want to See before the import put back Dune: Part Two on Want to See/,
+		/Dune: Part Two · 2024 Was on Want to See before the import put back Dune: Part Two on want_to_see/,
 	)
 	assert.match(
 		page,
-		/Anora · 2024 Was on Not interested before the import put back Anora on Not interested/,
+		/Anora · 2024 Was on Not interested before the import put back Anora on not_interested/,
 	)
+	assert.match(
+		page,
+		/Past Lives · 2023 Undo couldn't put your earlier rating back, so the import's stays\./,
+	)
+	assert.doesNotMatch(page, /put back Past Lives/)
 	assert.match(page, /Dune: Part Two · 2024 Your 9 is gone/)
 	assert.match(page, /Arrival · 2016 Back to 7 \(the import set 9\)/)
 	assert.match(
@@ -116,4 +121,40 @@ test("after Undo: what could not be put back comes first with its put-back butto
 		/Shōgun · 2024 · Show Your rating stays: you changed it after the import\./,
 	)
 	assert.ok(page.indexOf("Not put back") < page.indexOf("Ratings removed"))
+})
+
+test("put-back buttons write to the list and say so; a title back on its list has none; Show all loads the rest", () => {
+	const run = JSON.parse(
+		execFileSync(
+			"node_modules/.bin/vite-node",
+			[
+				"--config",
+				"app/ui/imports/source-import-test-vite.config.ts",
+				"app/ui/imports/import-result-interaction.test-support.tsx",
+			],
+			{ encoding: "utf8" },
+		)
+			.split("__IMPORT_RESULT_INTERACTION__")
+			.at(-1) ?? "",
+	) as {
+		sent: { url: string; body: unknown }[]
+		buttons: string[]
+		afterPutBack: string
+		afterMore: string
+	}
+	assert.deepEqual(run.buttons, ["Add back to Want to See"])
+	assert.deepEqual(
+		run.sent.find((call) => call.url === "/api/update-wishlist")?.body,
+		{ tmdb_id: 693134, media_type: "movie", action: "add" },
+	)
+	assert.match(run.afterPutBack, /Back on Want to See/)
+	assert.ok(
+		run.sent.some(
+			(call) =>
+				call.url ===
+				"/api/imports/kept-id/items?by=title&section=kept&offset=25&limit=100",
+		),
+	)
+	assert.match(run.afterMore, /Interstellar/)
+	assert.doesNotMatch(run.afterMore, /Show all/)
 })

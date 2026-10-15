@@ -90,6 +90,8 @@ export class ImportDb {
 	failWishlistDeleteOnce = false
 	failFavoriteOnce = false
 	failScoreOnce = false
+	/** Throws once when Undo records this outcome, as a crash right after its write would. */
+	failUndoOutcomeOnce: string | null = null
 	private version = 10
 
 	seed(userId = "member") {
@@ -380,6 +382,10 @@ export class ImportDb {
 			return { rowcount: 1 }
 		}
 		if (s.startsWith("UPDATE doc.user_import_item SET undo_outcome = ?")) {
+			if (this.failUndoOutcomeOnce === params[0]) {
+				this.failUndoOutcomeOnce = null
+				throw new Error("injected interruption")
+			}
 			const row = requiredRow(
 				this.items.find(
 					(x) => x.import_id === params[1] && x.row_index === params[2],

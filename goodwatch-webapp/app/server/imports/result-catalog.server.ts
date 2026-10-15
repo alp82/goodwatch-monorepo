@@ -1,5 +1,6 @@
-// The catalog side of an import result, shared by the native and the IMDb imports: the title, year and poster of
-// the titles on the rows a page shows, and the paging of the sections.
+// What the native and the IMDb imports share to serve a result: the title, year and poster of the titles on the rows
+// a page shows, the paging of the sections, and a short-lived cache of finished results, so that paging through a
+// long section doesn't map every row of the import again for each page.
 import {
 	IMPORT_RESULT_FIRST_ROWS,
 	type ImportResult,
@@ -62,7 +63,9 @@ export async function firstRows(
 ): Promise<ImportResult> {
 	const sections = result.sections.map((section) => ({
 		...section,
-		rows: section.rows.slice(0, IMPORT_RESULT_FIRST_ROWS),
+		rows: section.rows
+			.slice(0, IMPORT_RESULT_FIRST_ROWS)
+			.map((row) => ({ ...row })),
 	}))
 	await withCatalog(
 		read,
@@ -82,7 +85,58 @@ export async function sectionPage(
 	const rows =
 		result.sections.find((found) => found.key === section)?.rows ?? []
 	return {
-		rows: await withCatalog(read, rows.slice(offset, offset + limit)),
+		rows: await withCatalog(
+			read,
+			rows.slice(offset, offset + limit).map((row) => ({ ...row })),
+		),
 		total: rows.length,
+	}
+}
+
+const CACHED = 10
+const CACHE_MS = 5 * 60_000
+const cache = new Map<string, { at: number; result: Promise<ImportResult> }>()
+/** Test-only: forgets the cached results. */
+export const clearResultCacheForTest = () => cache.clear()
+
+/**
+ * The result API of one source. `load` checks that the import is the member's and names its version, null while it
+ * can still change; the rows are mapped once per version and kept for a few minutes.
+ */
+export function resultApi(
+	read: Read,
+	load: (
+		userId: string,
+		id: string,
+	) => Promise<{ version: string | null; build: () => Promise<ImportResult> }>,
+) {
+	const grouped = async (userId: string, id: string) => {
+		const { version, build } = await load(userId, id)
+		if (!version) return build()
+		const key = `${id}:${version}`
+		const hit = cache.get(key)
+		if (hit && Date.now() - hit.at < CACHE_MS) return hit.result
+		const result = build()
+		cache.delete(key)
+		cache.set(key, { at: Date.now(), result })
+		result.catch(() => cache.delete(key))
+		for (const old of cache.keys()) {
+			if (cache.size <= CACHED) break
+			cache.delete(old)
+		}
+		return result
+	}
+	return {
+		/** The result with the first titles of each section. */
+		first: async (userId: string, id: string) =>
+			firstRows(read, await grouped(userId, id)),
+		/** More titles of one section. */
+		page: async (
+			userId: string,
+			id: string,
+			section: ImportResultSectionKey,
+			offset: number,
+			limit: number,
+		) => sectionPage(read, await grouped(userId, id), section, offset, limit),
 	}
 }

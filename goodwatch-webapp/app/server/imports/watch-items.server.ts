@@ -1,7 +1,7 @@
+import type { StoredUndoOutcome } from "~/domain/import-result"
 import type { ImportItem, ImportOptions, ImportSource } from "~/domain/imports"
 import { recount } from "./apply.server.ts"
 import {
-	type UndoOutcome,
 	getImportRow,
 	itemRows,
 	recordUndo,
@@ -22,7 +22,7 @@ type PlanRow = {
 	source_key: string
 	payload: string
 	apply_state: string | null
-	undo_outcome: UndoOutcome | null
+	undo_outcome: StoredUndoOutcome | null
 }
 const planKey = (item: ImportItem) => `state:${item.mediaType}:${item.tmdbId}`
 
@@ -143,14 +143,19 @@ export async function undoAppliedImportWatches(
 ) {
 	await getImportRow(userId, importId)
 	const stored = [...(await plans(importId, userId)).values()].filter(
-		(row) => row.apply_state === "added" && !row.undo_outcome,
+		(row) =>
+			row.apply_state === "added" &&
+			(!row.undo_outcome || row.undo_outcome === "reverting"),
 	)
-	for (const row of stored.reverse())
+	for (const row of stored.reverse()) {
+		const resumed = row.undo_outcome === "reverting"
+		await recordUndo(importId, Number(row.row_index), "reverting")
 		await recordUndo(
 			importId,
 			Number(row.row_index),
-			await undoImportTrackingPlan(userId, row.plan),
+			await undoImportTrackingPlan(userId, row.plan, resumed),
 		)
+	}
 	await run(
 		"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
 		[importId, userId],

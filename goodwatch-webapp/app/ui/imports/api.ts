@@ -38,7 +38,8 @@ export const skippedDownloadUrl = (id: string) =>
 
 const GENERIC_ERROR = "Something went wrong on our side. Please try again."
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+/** Fetches JSON, and turns a network failure or an `{ error }` answer into an error for the member. */
+export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	let response: Response
 	try {
 		response = await fetch(url, init)

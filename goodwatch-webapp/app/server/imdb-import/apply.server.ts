@@ -16,6 +16,7 @@
 //   the score's watch is written where a movie now has a score and no watch, and removed where the score went.
 //   A watch the member logged is never touched. Settling again writes nothing, so it runs before the items are
 //   marked and a run that broke off settles them again.
+import type { StoredUndoOutcome } from "~/domain/import-result"
 import type { ImdbConflictChoice, ImdbImportCounts, ImdbImportSummary } from "~/domain/imdb-import"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
@@ -347,32 +348,36 @@ export async function confirmImport(userId: string, importId: string, choice: Im
 	return summarize(await getImportRow(userId, importId))
 }
 
-/**
- * Records per row what Undo did, as the ratings are now: taken back where the rating is the one from before the
- * import (or gone, where there was none), left where the member changed it since or wrote a review for it.
- */
-async function recordUndoOutcomes(
-	userId: string,
-	importId: string,
-	written: { row_index: number; tmdb_id: number; media_type: ImportMediaType; prior_score: number | null }[],
-) {
+type Written = {
+	row_index: number
+	tmdb_id: number
+	media_type: ImportMediaType
+	prior_score: number | null
+	applied_score: number
+	undo_outcome: StoredUndoOutcome | null
+}
+
+/** The ratings of the rows as they are now: a score, or undefined where there is no rating. */
+async function scoresNow(userId: string, rows: Written[]) {
 	await refreshScores()
-	const outcomes = new Map<number, "reverted" | "left">()
-	for (const group of groupBy(written, (item) => item.media_type))
+	const now = new Map<string, number | null>()
+	for (const group of groupBy(rows, (item) => item.media_type))
 		for (const batch of chunks(group, UNDO_BATCH)) {
-			const rows = await select<{ tmdb_id: number; score: number | null }>(
+			const found = await select<{ tmdb_id: number; score: number | null }>(
 				`SELECT tmdb_id, score FROM user_score WHERE user_id = ? AND media_type = ? AND tmdb_id IN (${marks(batch.length)})`,
 				[userId, batch[0].media_type, ...batch.map((item) => Number(item.tmdb_id))],
 			)
-			const now = new Map(rows.map((row) => [Number(row.tmdb_id), row.score === null ? null : Number(row.score)]))
-			for (const item of batch) {
-				const prior = item.prior_score === null ? null : Number(item.prior_score)
-				const score = now.get(Number(item.tmdb_id))
-				const reverted = prior === null ? score === undefined : score === prior
-				outcomes.set(Number(item.row_index), reverted ? "reverted" : "left")
-			}
+			for (const row of found) now.set(titleRef(batch[0].media_type, Number(row.tmdb_id)), row.score === null ? null : Number(row.score))
 		}
-	for (const group of groupBy([...outcomes], ([, outcome]) => outcome))
+	return (item: Written) => now.get(titleRef(item.media_type, Number(item.tmdb_id)))
+}
+
+/** Whether the rating is as it was before the import: the earlier score, or no rating. */
+const asBefore = (item: Written, score: number | null | undefined) =>
+	item.prior_score === null ? score === undefined : score === Number(item.prior_score)
+
+async function recordUndoOutcomes(importId: string, outcomes: [number, StoredUndoOutcome][]) {
+	for (const group of groupBy(outcomes, ([, outcome]) => outcome))
 		for (const batch of chunks(group, UNDO_BATCH))
 			await run(`UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index IN (${marks(batch.length)})`, [
 				batch[0][1],
@@ -395,19 +400,26 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 	undoing.add(importId)
 	try {
 		await Promise.all([refreshItems(), refreshScores()])
-		const written = await select<{
-			row_index: number
-			tmdb_id: number
-			media_type: ImportMediaType
-			prior_score: number | null
-			applied_score: number
-		}>(
-			`SELECT row_index, tmdb_id, media_type, prior_score, applied_score FROM doc.user_import_item
+		const written = await select<Written>(
+			`SELECT row_index, tmdb_id, media_type, prior_score, applied_score, undo_outcome FROM doc.user_import_item
 			 WHERE import_id = ? AND apply_state IN ('added', 'updated') LIMIT ${MAX_ROWS}`,
 			[importId],
 		)
+		// Rows an earlier, interrupted Undo already settled keep their outcome. Before writing, a rating that isn't the
+		// imported one any more was changed or removed by the member; one already as before is this Undo's own work
+		// only where an earlier run marked it.
+		const open = written.filter((item) => !item.undo_outcome || item.undo_outcome === "reverting")
+		const before = await scoresNow(userId, open)
+		const settled: [number, StoredUndoOutcome][] = []
+		const todo: Written[] = []
+		for (const item of open) {
+			const score = before(item)
+			if (score === Number(item.applied_score)) todo.push(item)
+			else settled.push([Number(item.row_index), item.undo_outcome === "reverting" && asBefore(item, score) ? "reverted" : "left"])
+		}
+		await recordUndoOutcomes(importId, [...settled, ...todo.map((item): [number, StoredUndoOutcome] => [Number(item.row_index), "reverting"])])
 		const now = new Date()
-		for (const group of groupBy(written, (item) => `${item.media_type}:${item.applied_score}:${item.prior_score}`)) {
+		for (const group of groupBy(todo, (item) => `${item.media_type}:${item.applied_score}:${item.prior_score}`)) {
 			const { media_type, applied_score, prior_score } = group[0]
 			for (const batch of chunks(group, UNDO_BATCH)) {
 				const ids = batch.map((item) => Number(item.tmdb_id))
@@ -427,7 +439,12 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 		}
 		// A movie whose score went loses the watch that score owned; one that got its earlier score back keeps it.
 		await settleImportedMovies(userId, written)
-		await recordUndoOutcomes(userId, importId, written)
+		// A rating the write didn't take back (one with a review, or changed in between) stays as the member has it.
+		const after = await scoresNow(userId, todo)
+		await recordUndoOutcomes(
+			importId,
+			todo.map((item): [number, StoredUndoOutcome] => [Number(item.row_index), asBefore(item, after(item)) ? "reverted" : "left"]),
+		)
 		// Every statement above is a no-op the second time, so an undo that broke off here can simply run again.
 		await run("UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')", [
 			importId,

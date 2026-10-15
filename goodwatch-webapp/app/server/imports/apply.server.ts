@@ -1,10 +1,10 @@
+import type { UndoOutcome } from "~/domain/import-result"
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
 import { canImportWantToSee } from "../../domain/imports.ts"
 import {
 	HEARTBEAT_MS,
 	NativeImportError,
 	type Param,
-	type UndoOutcome,
 	activeRuns,
 	claim,
 	getImportRow,
@@ -562,15 +562,19 @@ export async function confirmImport(
 	return summarize(await getImportRow(userId, id))
 }
 
+type UndoItem = Awaited<ReturnType<typeof itemRows>>[number]
+
 /** Takes back one rating or review row. It is left as it is when the member changed it after the import. */
 async function undoScore(
 	userId: string,
-	item: ImportItem & { payload: Record<string, unknown> },
+	importId: string,
+	item: UndoItem,
 ): Promise<UndoOutcome> {
 	const journal = item.payload.journal as Journal | undefined
+	if (!journal) return "not_restored"
 	const current = await scoreSnapshot(userId, item)
-	if (!journal) return "left"
-	// Already as it was before the import: an earlier, interrupted Undo got this far.
+	// As before the import already: an earlier, interrupted Undo got this far if it marked the row; otherwise
+	// the member changed it back, or removed it.
 	if (
 		journal.before.exists
 			? current.exists &&
@@ -578,9 +582,16 @@ async function undoScore(
 				current.review === (journal.before.review ?? null)
 			: !current.exists
 	)
-		return "reverted"
+		return item.undoOutcome === "reverting" ? "reverted" : "left"
 	if (!sameScore(current, journal.after)) return "left"
 	if (current.seq === undefined || current.term === undefined) return "left"
+	// An older journal without the earlier dates can't put the earlier rating back exactly.
+	if (
+		journal.before.exists &&
+		(!journal.before.createdAt || !journal.before.updatedAt)
+	)
+		return "not_restored"
+	await recordUndo(importId, item.index, "reverting")
 	let result: { rowcount?: number }
 	if (!journal.before.exists)
 		result = await run(
@@ -588,9 +599,8 @@ async function undoScore(
 			[userId, item.tmdbId, item.mediaType, current.seq, current.term],
 		)
 	else {
-		const createdAt = journal.before.createdAt
-		const updatedAt = journal.before.updatedAt
-		if (!createdAt || !updatedAt) return "left"
+		const createdAt = journal.before.createdAt ?? ""
+		const updatedAt = journal.before.updatedAt ?? ""
 		result = await run(
 			"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 			[
@@ -612,11 +622,12 @@ async function undoScore(
 /** Takes back one Want to See or favorite row, unless the member changed it after the import. */
 async function undoSet(
 	userId: string,
-	item: ImportItem & { payload: Record<string, unknown> },
+	importId: string,
+	item: UndoItem,
 	table: "user_wishlist" | "user_favorite",
 ): Promise<UndoOutcome> {
 	const journal = item.payload.journal as Journal | undefined
-	if (!journal) return "left"
+	if (!journal) return "not_restored"
 	await run(`REFRESH TABLE ${table}`)
 	const current = (
 		await select<{
@@ -629,13 +640,14 @@ async function undoSet(
 			[userId, item.tmdbId, item.mediaType],
 		)
 	)[0]
-	// Gone already: the member took it off, or an earlier, interrupted Undo did.
-	if (!current) return "reverted"
+	// Gone already: an earlier, interrupted Undo took it off if it marked the row; otherwise the member did.
+	if (!current) return item.undoOutcome === "reverting" ? "reverted" : "left"
 	if (
 		new Date(current.created_at).toISOString() !== journal.after.createdAt ||
 		new Date(current.updated_at).toISOString() !== journal.stamp
 	)
 		return "left"
+	await recordUndo(importId, item.index, "reverting")
 	const result = await run(
 		`DELETE FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
 		[
@@ -714,15 +726,16 @@ export async function undoImport(
 			if (
 				!item.applyState ||
 				!["added", "updated"].includes(item.applyState) ||
-				item.undoOutcome
+				(item.undoOutcome && item.undoOutcome !== "reverting")
 			)
 				continue
 			let outcome: UndoOutcome | null = null
 			if (item.kind === "rating" || item.kind === "review")
-				outcome = await undoScore(userId, item)
+				outcome = await undoScore(userId, id, item)
 			else if (isWant(item) || item.kind === "favorite")
 				outcome = await undoSet(
 					userId,
+					id,
 					item,
 					isWant(item) ? "user_wishlist" : "user_favorite",
 				)

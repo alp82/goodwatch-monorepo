@@ -26,6 +26,7 @@ const {
 } = await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
+const { clearResultCacheForTest } = await import("./result-catalog.server.ts")
 
 type Row = Record<string, unknown>
 function requiredRow(row: Row | undefined): Row {
@@ -47,6 +48,7 @@ async function waitFor(db: ImportDb, status: string) {
 }
 
 afterEach(() => {
+	clearResultCacheForTest()
 	setCrateClientForTest(null)
 	setImportDbForTest()
 	setImportEffectsForTest()
@@ -433,8 +435,8 @@ describe("import and Undo result", () => {
 				row.changes,
 			]),
 			[
-				["Anora", [{ type: "list-added", list: "Want to See" }]],
-				["Conclave", [{ type: "list-added", list: "Want to See" }]],
+				["Anora", [{ type: "list-added", list: "want_to_see" }]],
+				["Conclave", [{ type: "list-added", list: "want_to_see" }]],
 			],
 		)
 		assert.deepEqual(
@@ -448,7 +450,7 @@ describe("import and Undo result", () => {
 					[
 						{
 							type: "list-cleared",
-							list: "Not interested",
+							list: "not_interested",
 							because: "want",
 							undoRestores: false,
 						},
@@ -641,7 +643,7 @@ describe("import and Undo result", () => {
 					[
 						{
 							type: "list-cleared",
-							list: "Want to See",
+							list: "want_to_see",
 							because: "watched",
 							undoRestores: false,
 						},
@@ -652,7 +654,7 @@ describe("import and Undo result", () => {
 					[
 						{
 							type: "list-cleared",
-							list: "Not interested",
+							list: "not_interested",
 							because: "watched",
 							undoRestores: false,
 						},
@@ -932,6 +934,13 @@ describe("import and Undo result", () => {
 
 	it("serves the first titles of each section, and the rest a page at a time", async () => {
 		const db = new ImportDb()
+		const select = db.select.bind(db)
+		let reads = 0
+		db.select = (sql, params) => {
+			if (sql.includes("apply_state, watch_id, undo_outcome FROM")) reads++
+			return select(sql, params)
+		}
+		const resultReads = () => reads
 		const id = seedImport(
 			db,
 			Array.from({ length: 30 }, (_, i) => ({
@@ -976,6 +985,11 @@ describe("import and Undo result", () => {
 				["Film 28", null],
 			],
 		)
+		assert.equal(
+			resultReads(),
+			1,
+			"pages of a finished import reuse its result instead of reading every row again",
+		)
 		const last = await getImportResultPage(
 			"member",
 			id,
@@ -1010,7 +1024,7 @@ describe("import and Undo result", () => {
 		assert.deepEqual(undoResult(result), [
 			[
 				"not_restored",
-				[["Anora", [{ type: "not-restored", list: "Not interested" }]]],
+				[["Anora", [{ type: "not-restored", list: "not_interested" }]]],
 			],
 			[
 				"ratings_removed",
@@ -1022,7 +1036,7 @@ describe("import and Undo result", () => {
 			],
 			[
 				"want_removed",
-				[["Anora", [{ type: "list-removed", list: "Want to See" }]]],
+				[["Anora", [{ type: "list-removed", list: "want_to_see" }]]],
 			],
 			["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
 		])
@@ -1076,8 +1090,8 @@ describe("import and Undo result", () => {
 				row.changes,
 			]),
 			[
-				["Dune: Part Two", [{ type: "not-restored", list: "Want to See" }]],
-				["The Bear", [{ type: "not-restored", list: "Not interested" }]],
+				["Dune: Part Two", [{ type: "not-restored", list: "want_to_see" }]],
+				["The Bear", [{ type: "not-restored", list: "not_interested" }]],
 			],
 		)
 		assert.deepEqual(
@@ -1090,7 +1104,8 @@ describe("import and Undo result", () => {
 		assert.equal(result.titles, 3)
 	})
 
-	it("after Undo of a show status without watches lists the status and the Want to See it put back", async () => {
+	/** Friends imported as Dropped, without watches, taking it off Want to See. */
+	async function importDroppedStatus() {
 		const db = new ImportDb()
 		db.catalog = [
 			{
@@ -1143,6 +1158,12 @@ describe("import and Undo result", () => {
 			kinds: ["show_status"],
 		})
 		await waitFor(db, "done")
+		return { db, trackingDb, id: preview.id }
+	}
+
+	it("after Undo of a show status without watches lists the status and the Want to See it put back", async () => {
+		const { id } = await importDroppedStatus()
+		const preview = { id }
 		const imported = await getImportResult("member", preview.id)
 		assert.deepEqual(
 			imported.sections.map((s) => [s.key, s.rows.map((row) => row.changes)]),
@@ -1157,7 +1178,7 @@ describe("import and Undo result", () => {
 						[
 							{
 								type: "list-cleared",
-								list: "Want to See",
+								list: "want_to_see",
 								because: "status",
 								undoRestores: true,
 							},
@@ -1183,7 +1204,7 @@ describe("import and Undo result", () => {
 						],
 					],
 				],
-				["lists_restored", [[{ type: "list-restored", list: "Want to See" }]]],
+				["lists_restored", [[{ type: "list-restored", list: "want_to_see" }]]],
 			],
 		)
 		assert.equal(undone.titles, 1)
@@ -1203,7 +1224,7 @@ describe("import and Undo result", () => {
 		assert.deepEqual(undoResult(await getImportResult("member", id)), [
 			[
 				"not_restored",
-				[["Anora", [{ type: "not-restored", list: "Not interested" }]]],
+				[["Anora", [{ type: "not-restored", list: "not_interested" }]]],
 			],
 			[
 				"ratings_removed",
@@ -1215,10 +1236,179 @@ describe("import and Undo result", () => {
 			],
 			[
 				"want_removed",
-				[["Anora", [{ type: "list-removed", list: "Want to See" }]]],
+				[["Anora", [{ type: "list-removed", list: "want_to_see" }]]],
 			],
 			["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
 		])
+	})
+
+	it("reads a rating and a Want to See the member removed after the import as left, not taken back", async () => {
+		const db = new ImportDb()
+		const id = await importForUndo(db)
+		// The member removes Dune's imported rating and takes Anora off Want to See.
+		db.scores = db.scores.filter((x) => x.tmdb_id !== 693134)
+		db.wishlist = db.wishlist.filter((x) => x.tmdb_id !== 1064213)
+		await undoImport("member", id)
+		const result = await getImportResult("member", id)
+		assert.deepEqual(
+			section(result, "left").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				["Anora", [{ type: "left", kind: "want" }]],
+				["Dune: Part Two", [{ type: "left", kind: "rating" }]],
+				["Shōgun", [{ type: "left", kind: "rating" }]],
+			],
+		)
+		assert.equal(
+			result.sections.some(
+				(s) => s.key === "ratings_removed" || s.key === "want_removed",
+			),
+			false,
+		)
+	})
+
+	it("lists a row that couldn't be saved, with how to retry it", async () => {
+		const db = new ImportDb()
+		const id = seedImport(db, [
+			{
+				kind: "rating",
+				tmdbId: 693134,
+				title: "Dune: Part Two",
+				score: 9,
+				_preview: null,
+			},
+		])
+		db.failScoreOnce = true
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, { ...options, kinds: ["rating"] })
+		await waitFor(db, "failed")
+		assert.deepEqual(
+			section(await getImportResult("member", id), "skipped").rows.map(
+				(row) => row.changes,
+			),
+			[
+				[
+					{
+						type: "skipped",
+						kind: "rating",
+						label: "Dune: Part Two (2024)",
+						row: 1,
+						reason: "Couldn't be saved. Import the file again to retry.",
+					},
+				],
+			],
+		)
+	})
+
+	it("lists a rating Undo could not put back under Not put back, not as left", async () => {
+		const db = new ImportDb()
+		const id = await importForUndo(db)
+		// An older journal kept the earlier rating without its dates.
+		const arrival = requiredRow(db.items.find((x) => x.tmdb_id === 329865))
+		const payload = JSON.parse(String(arrival.payload))
+		payload.journal.before.createdAt = undefined
+		arrival.payload = JSON.stringify(payload)
+		await undoImport("member", id)
+		const result = await getImportResult("member", id)
+		assert.deepEqual(
+			section(result, "not_restored").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				["Anora", [{ type: "not-restored", list: "not_interested" }]],
+				["Arrival", [{ type: "not-reverted", kind: "rating" }]],
+			],
+		)
+		assert.deepEqual(
+			section(result, "left").rows.map((row) => row.title?.title),
+			["Shōgun"],
+		)
+	})
+
+	it("reads a row as taken back when Undo stopped right after writing it", async () => {
+		const db = new ImportDb()
+		const id = await importForUndo(db)
+		// Undo puts Arrival's 7 back, then stops before it records that.
+		db.failUndoOutcomeOnce = "reverted"
+		await assert.rejects(
+			() => undoImport("member", id),
+			/injected interruption/,
+		)
+		await undoImport("member", id)
+		assert.deepEqual(undoResult(await getImportResult("member", id)), [
+			[
+				"not_restored",
+				[["Anora", [{ type: "not-restored", list: "not_interested" }]]],
+			],
+			[
+				"ratings_removed",
+				[["Dune: Part Two", [{ type: "rating-removed", score: 9 }]]],
+			],
+			[
+				"ratings_restored",
+				[["Arrival", [{ type: "rating-restored", from: 9, to: 7 }]]],
+			],
+			[
+				"want_removed",
+				[["Anora", [{ type: "list-removed", list: "want_to_see" }]]],
+			],
+			["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
+		])
+	})
+
+	it("reads a show status as put back when Undo stopped right after restoring it", async () => {
+		const { db, id } = await importDroppedStatus()
+		db.failUndoOutcomeOnce = "reverted"
+		await assert.rejects(
+			() => undoImport("member", id),
+			/injected interruption/,
+		)
+		await undoImport("member", id)
+		const undone = await getImportResult("member", id)
+		assert.deepEqual(
+			undone.sections.map((s) => [s.key, s.rows.map((row) => row.changes)]),
+			[
+				[
+					"statuses_restored",
+					[
+						[
+							{
+								type: "status-restored",
+								status: { from: "dropped", to: null },
+							},
+						],
+					],
+				],
+				["lists_restored", [[{ type: "list-restored", list: "want_to_see" }]]],
+			],
+		)
+	})
+
+	it("reads a show status the member removed after the import as left", async () => {
+		const { db, trackingDb, id } = await importDroppedStatus()
+		trackingDb.rows.set(
+			"user_watch_state",
+			trackingDb
+				.table("user_watch_state")
+				.filter((row) => row.tmdb_id !== 1668),
+		)
+		await undoImport("member", id)
+		const undone = await getImportResult("member", id)
+		assert.deepEqual(
+			undone.sections.map((s) => [s.key, s.rows.map((row) => row.changes)]),
+			[
+				["not_restored", [[{ type: "not-restored", list: "want_to_see" }]]],
+				["left", [[{ type: "left", kind: "show_status" }]]],
+			],
+		)
+		assert.equal(db.imports[0].status, "undone")
 	})
 })
 
