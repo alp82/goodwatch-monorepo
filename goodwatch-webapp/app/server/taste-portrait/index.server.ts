@@ -9,6 +9,11 @@
 // - Too few ratings for a tab: that tab's empty state, never an error.
 import { createHash } from "node:crypto"
 import { isOnServices } from "~/server/availability-index.server"
+import { recPersonalOrder } from "~/server/features.server"
+import {
+	loadPersonalOrder,
+	orderPersonalOrder,
+} from "~/server/personal-order/reader.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import { getCardServices, getServiceList } from "~/server/title-cards.server"
 import {
@@ -31,7 +36,7 @@ import { FAMILIES } from "./families.server"
 import { buildFingerprint } from "./fingerprint.server"
 import { type PortraitInput, readPerson, round1 } from "./person.server"
 import { SAMPLE_RATINGS, SAMPLE_WANT_TO_SEE } from "./sample-ratings"
-import { buildSides } from "./sides.server"
+import { type OrderTitles, buildSides, franchiseOf } from "./sides.server"
 import {
 	GUEST_MIN_RATINGS,
 	type PortraitSubject,
@@ -46,6 +51,8 @@ export * from "./view"
 
 /** Reasons per suggestion, as title cards show them. */
 const CARD_REASONS = 2
+/** "You're here": four titles. */
+const HERE = 4
 const GUEST_KEEP_MS = 10 * 60_000
 const SAMPLE_KEEP_MS = 6 * 60 * 60_000
 const MAX_KEPT = 500
@@ -104,7 +111,12 @@ async function memberPortrait(
 	if (cached) return cached
 	const taste = await loadTaste(who.viewer)
 	const input = inputOf("member", ctx, taste)
-	const view = await buildView(snapshot, input, tab)
+	const view = await buildView(
+		snapshot,
+		input,
+		tab,
+		tab === "sides" ? await personalOrderOf(userId, snapshot) : undefined,
+	)
 	// While the person's country loads into the availability index, On my services can't be told yet: keep that view
 	// for a minute only.
 	writeCachedPortrait(
@@ -115,6 +127,22 @@ async function memberPortrait(
 		hiddenKey,
 	)
 	return view
+}
+
+/**
+ * The member's personal order for the lists inside a side, when it is on for them and its payload loads (sides
+ * group, personal order ranks). Without the mix of shows and animation, which is for whole lists.
+ */
+async function personalOrderOf(
+	userId: string,
+	snapshot: TitleSnapshot,
+): Promise<OrderTitles | undefined> {
+	if (!recPersonalOrder(userId).enabled) return undefined
+	const read = await loadPersonalOrder(userId, snapshot).catch(() => null)
+	const data = read?.data
+	if (!data) return undefined
+	return (keys) =>
+		keys.length ? orderPersonalOrder(keys, data, snapshot, false).keys : keys
 }
 
 // ---------- guests ----------
@@ -251,6 +279,7 @@ async function buildView(
 	snapshot: TitleSnapshot,
 	input: PortraitInput,
 	tab: PortraitTab,
+	order?: OrderTitles,
 ): Promise<PortraitView> {
 	const startedAt = performance.now()
 	const person = readPerson(snapshot, input)
@@ -261,7 +290,7 @@ async function buildView(
 	}
 	const built =
 		tab === "sides"
-			? buildSides(person)
+			? buildSides(person, order)
 			: tab === "everyone"
 				? buildEveryone(person)
 				: buildFingerprint(person)
@@ -309,6 +338,7 @@ async function buildView(
 			? { ...built, subject, titles, services }
 			: { ...built, subject, titles }) as PortraitView,
 		(key) => titles[key] !== undefined,
+		(key) => franchiseOf(titles[key]?.title ?? ""),
 	)
 	console.info(
 		`Taste portrait ${tab} for a ${input.kind}: ${person.rated.length} rated, ${keys.size} titles, computed in ${Math.round(computedMs)} ms, ${Math.round(performance.now() - startedAt)} ms in all`,
@@ -344,25 +374,38 @@ function viewKeys(view: Built): Set<TitleKey> {
 	return keys
 }
 
-/** Leaves out the keys of titles without display fields. */
+/** Leaves out the keys of titles without display fields, and in a side's rows a franchise's second title. */
 function prune(
 	view: PortraitView,
 	has: (key: TitleKey) => boolean,
+	franchise: (key: TitleKey) => string = String,
 ): PortraitView {
 	const list = (keys: TitleKey[]) => keys.filter(has)
 	const one = (key: TitleKey | null) => (key !== null && has(key) ? key : null)
+	// Unseen titles are kept once per franchise on the person's services and once elsewhere, so On my services still
+	// finds the franchise's title it carries.
+	const onePer = (keys: TitleKey[], services?: (key: TitleKey) => unknown) => {
+		const seen = new Set<string>()
+		return list(keys).filter((key) => {
+			const name = `${franchise(key)}|${services?.(key) === true}`
+			if (seen.has(name)) return false
+			seen.add(name)
+			return true
+		})
+	}
+	const onServices = (key: TitleKey) => view.titles[key]?.onMyServices
 	if (view.tab === "sides")
 		return {
 			...view,
 			sides: view.sides.map((side) => ({
 				...side,
-				here: list(side.here),
+				here: onePer(side.here).slice(0, HERE),
 				image: one(side.image),
-				moreOfThis: list(side.moreOfThis),
+				moreOfThis: onePer(side.moreOfThis, onServices),
 				edges: side.edges.map((edge) => ({
 					...edge,
-					rated: list(edge.rated),
-					suggestions: list(edge.suggestions),
+					rated: onePer(edge.rated),
+					suggestions: onePer(edge.suggestions, onServices),
 					image: one(edge.image),
 				})),
 			})),

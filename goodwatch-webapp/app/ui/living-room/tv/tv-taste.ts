@@ -5,7 +5,7 @@ import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 //
 // Taste has three states (the plan's "Mini Taste"):
 // - start: the person has fewer than five scores. "Rate 5 titles you've seen." and the way into the quiz.
-// - sides: their taste has sides, two to four of them (`/api/taste/portrait?tab=sides`, `status: "ready"`). Each
+// - sides: their taste has sides, two to five of them (`/api/taste/portrait?tab=sides`, `status: "ready"`). Each
 //   is a tile; a side's screen lists the titles of it they rated.
 // - picks: five scores or more and no sides yet. The quiz's picks as a list, "Made for you", with Rate more.
 // A taste is not "five ratings": sides need about five loved titles, so the person's own score count only decides
@@ -166,9 +166,9 @@ export function tvSides(view: Pick<SidesView, "sides" | "titles">): TvSide[] {
 	}))
 }
 
-const COUNT = ["No", "One", "Two", "Three", "Four"]
+const COUNT = ["No", "One", "Two", "Three", "Four", "Five"]
 
-/** "Three sides of you": there are two to four, not always three. */
+/** "Three sides of you": there are two to five, not always three. */
 export const sidesCrumb = (count: number) =>
 	`${COUNT[count] ?? count} ${count === 1 ? "side" : "sides"} of you`
 

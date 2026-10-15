@@ -22,6 +22,7 @@ import {
 } from "~/server/asset-address.server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
+import { startPlexConnectionCleanup } from "~/server/imports/plex-connect-runtime.server"
 import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtime.server"
 import { startLifecycle } from "~/server/lifecycle.server"
 import { capLogLines } from "~/server/log-cap.server"
@@ -55,6 +56,7 @@ logProcessRole()
 startCrateDiagnostics()
 startLifecycle()
 startTmdbConnectionCleanup()
+startPlexConnectionCleanup()
 startMetrics()
 // The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
 // roles keep the root loader's start, so they log what they did before roles.

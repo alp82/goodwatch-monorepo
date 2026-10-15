@@ -130,6 +130,9 @@ class Publication(unittest.TestCase):
         self.redis.get.return_value = json.dumps({"version": "snapshot-test", "keyOrder": ["a", "b"]})
         self.select = Mock()
         self.t = job.build_titles(records(), ["a", "b"])
+        snapshot_ids = patch.object(job, "read_snapshot_point_ids", return_value=self.t["key"])
+        snapshot_ids.start()
+        self.addCleanup(snapshot_ids.stop)
         self.now = lambda: datetime(2026, 10, 14, tzinfo=timezone.utc)
 
     def run_job(self, **kwargs):
@@ -183,6 +186,9 @@ class Rollout(unittest.TestCase):
         self.redis.get.return_value = json.dumps({"version": "snapshot-test", "keyOrder": ["a", "b"]})
         self.redis.scan_iter.return_value = [b"personal-order:v1:orphan"]
         self.t = job.build_titles(records(), ["a", "b"])
+        snapshot_ids = patch.object(job, "read_snapshot_point_ids", return_value=self.t["key"])
+        snapshot_ids.start()
+        self.addCleanup(snapshot_ids.stop)
 
     def run_job(self, members="all", **kwargs):
         with patch.object(job, "read_members", return_value=(tables(), {"eligible": 0, "ineligible": 1})) as read_members, \

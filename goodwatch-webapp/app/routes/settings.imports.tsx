@@ -1,7 +1,7 @@
 import type { MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { type KeyboardEvent, useId, useState } from "react"
-import { type ImportSource, isFileImportSource } from "~/domain/imports"
+import type { ImportSource } from "~/domain/imports"
 import { ImdbImportFlow } from "~/ui/imports/ImdbImportFlow"
 import { SourceImportFlow } from "~/ui/imports/SourceImportFlow"
 
@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, TMDB, Kodi, MovieLens, MyAnimeList, Kitsu or CSV into GoodWatch.",
+			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, TMDB, Plex, Kodi, MovieLens, MyAnimeList, Kitsu or CSV into GoodWatch.",
 	},
 	{ name: "robots", content: "noindex, nofollow" },
 ]
@@ -29,6 +29,7 @@ const TABS: { id: ImportTab; label: string }[] = [
 	{ id: "movielens", label: "MovieLens" },
 	{ id: "kodi", label: "Kodi" },
 	{ id: "tmdb", label: "TMDB" },
+	{ id: "plex", label: "Plex" },
 	{ id: "myanimelist", label: "MyAnimeList / Kitsu" },
 ]
 
@@ -100,10 +101,10 @@ export default function SettingsImports() {
 							source={source}
 							initial={{ imports: data.sourceImports }}
 							connectState={
-								!isFileImportSource(source) ? data.connectState : undefined
+								source === data.initialSource ? data.connectState : undefined
 							}
 							initialId={
-								!isFileImportSource(source) ? data.openImport : undefined
+								source === data.initialSource ? data.openImport : undefined
 							}
 						/>
 					)}

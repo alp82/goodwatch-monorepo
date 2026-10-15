@@ -5,6 +5,7 @@ import {
 	type ImportSummary,
 	isFileImportSource,
 } from "~/domain/imports"
+import { PlexConnectPanel } from "./PlexConnectPanel"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
@@ -110,7 +111,11 @@ export function SourceImportFlow({
 					)}
 					{(!latest || uploadOpen || connectState) &&
 						(!isFileImportSource(source) ? (
-							<TmdbConnectPanel state={connectState} />
+							source === "plex" ? (
+								<PlexConnectPanel state={connectState} />
+							) : (
+								<TmdbConnectPanel state={connectState} />
+							)
 						) : (
 							<SourceImportUploadPanel
 								source={source}

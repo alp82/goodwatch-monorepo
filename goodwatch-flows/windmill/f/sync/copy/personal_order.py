@@ -313,6 +313,7 @@ import gzip
 import json
 import time
 from datetime import datetime, timezone
+from hashlib import sha256
 
 PAGE_SIZE = 2000
 TTL_SECONDS = 48 * 3600
@@ -473,9 +474,13 @@ def request_order(own_taste_rank, top_half, movie_series_id, show, animation, ow
     return {"order": final, "groups": group, "mixCount": len(placed)}
 
 
-def payload(view, snapshot_version, built_at):
+def payload(view, snapshot_version, built_at, snapshot_point_ids=None):
     data = components(view)
     order = np.argsort(data["pointIds"], kind="stable")
+    if snapshot_point_ids is not None:
+        # Crate can gain analyzed titles before the next snapshot publish. Keep the full
+        # model inputs/median/mix, but never publish candidates the named snapshot cannot map.
+        order = order[np.isin(data["pointIds"][order], snapshot_point_ids, assume_unique=True)]
     result = {name: values[order].tolist() for name, values in data.items() if name != "ownShares"}
     others = np.concatenate([view["others"][name]["member"] for name in TABLES])
     return {**result, "ownShares": data["ownShares"], "format": 1,
@@ -575,6 +580,34 @@ class SnapshotChanged(RuntimeError):
     pass
 
 
+def read_snapshot_point_ids(redis, manifest):
+    """Read format 1's point-ID column, verifying the immutable chunks without retaining them all."""
+    count, chunks = manifest.get("count"), manifest.get("chunks")
+    if (manifest.get("format") != 1 or type(count) is not int or count < 0
+            or type(chunks) is not int or chunks < 1):
+        raise ValueError("Invalid title snapshot manifest")
+    digest = sha256()
+    point_bytes = bytearray()
+    size = 0
+    for i in range(chunks):
+        chunk = redis.get(f"title-snapshot:{manifest['version']}:{i}")
+        if not isinstance(chunk, bytes):
+            raise ValueError("Missing title snapshot chunk")
+        digest.update(chunk)
+        size += len(chunk)
+        remaining = count * 8 - len(point_bytes)
+        if remaining > 0:
+            point_bytes.extend(chunk[:remaining])
+    # Format 1: 24 fixed numeric bytes, one byte per fingerprint key, and three flags/score bytes.
+    if size != count * (27 + len(manifest["keyOrder"])) or digest.hexdigest() != manifest.get("sha256"):
+        raise ValueError("Title snapshot chunk integrity mismatch")
+    ids = np.frombuffer(point_bytes, dtype="<f8")
+    valid = ((ids > 10**12) & (ids < 2 * 10**12)) | ((ids > 2 * 10**12) & (ids < 3 * 10**12))
+    if not np.all(valid & (ids == np.floor(ids))) or np.any(ids[1:] <= ids[:-1]):
+        raise ValueError("Invalid title snapshot point IDs")
+    return ids.astype(np.int64)
+
+
 def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
         dry_run=True, dirty_only=False, now=None):
     from f.sync.copy.personal_order_trigger import DIRTY_KEY
@@ -602,6 +635,7 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
             raise ValueError("A current title snapshot is required")
         if manifest.get("keyOrder") != list(fingerprint_keys):
             raise ValueError("Snapshot fingerprint order differs from the Personal order input")
+        snapshot_point_ids = read_snapshot_point_ids(redis, manifest)
         tables, member_at = read_members(select)
         titles = read_titles(select, tables, fingerprint_keys)
         _POOL.clear()  # Eligibility must use statistics from this dataset, even in a reused worker.
@@ -617,7 +651,8 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
             try:
                 view = build_view(titles, tables, member_at.get(member, len(member_at)))
                 eligible = taste_vector(view) is not None
-                data = payload(view, manifest["version"], now() if now else datetime.now(timezone.utc)) if eligible else None
+                data = payload(view, manifest["version"], now() if now else datetime.now(timezone.utc),
+                               snapshot_point_ids=snapshot_point_ids) if eligible else None
                 current = json.loads(redis.get("title-snapshot:current") or "null")
                 if not current or current.get("version") != manifest["version"]:
                     raise SnapshotChanged("Title snapshot changed during Personal order build; retry against its new version")
