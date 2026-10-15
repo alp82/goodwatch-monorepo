@@ -94,7 +94,7 @@ Phase 2, D1 route chosen by the owner (October 14, 2026):
 
 ## What the owner owes
 
-Now: two settings in Coolify (step 2 above); then a day of shadow, then the owner tries G1 on their own lists. Nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
+Now: a day of shadow (live since October 15, 2026, 03:15 UTC), then the owner sets `REC_G1_ORDER=preview` and tries G1 on their own lists. First shadow rows: no fallback; G1 would keep 4 of the first 30 Discover Best match titles and 8 of 20 Watch next titles. A 500 seen during the shadow redeploy did not recur and was not traced. Nothing reaches another member before that. Earlier: Checkpoint done October 14, 2026: shown the T1 and T2a tables and the first-20 lists; the owner found B3's
 list plausible.
 
 ## What the census changed
