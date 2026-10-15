@@ -704,13 +704,14 @@ test("collected refresh rotation parents release live capacity while preserving 
 		false,
 	)
 	const { reconcileAuthCapacity } = await import("./maintenance.server.ts")
-	assert.ok(
+	assert.equal(
 		(
 			await reconcileAuthCapacity({
 				sql,
 				encryptionSecret: "disposable-local-auth-integration-key-548",
 			})
-		).released >= 1,
+		).released,
+        0,
 	)
 	const { setAuthForTest } = await import("./runtime.server.ts")
 	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")

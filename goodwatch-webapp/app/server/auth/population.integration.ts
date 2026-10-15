@@ -121,7 +121,7 @@ test("reconciliation reclaims deleted session capacity without admitting a pause
 				encryptionSecret: "disposable-local-auth-integration-key-548",
 			})
 		).released,
-		1,
+		0,
 	)
 	await healthy.create({
 		model: "session",
@@ -181,7 +181,7 @@ test("an old consent insertion stays fenced across a later reconnect and capacit
 							encryptionSecret: "disposable-local-auth-integration-key-548",
 						})
 					).released,
-					1,
+					0,
 				)
 				await healthy.create({
 					model: "oauthConsent",

@@ -190,6 +190,9 @@ test("a crashed forced-ID import can retry the same Supabase identity after clai
  const imported = await adapter.create({model:"user", data:{id,email,name:"Imported"}, forceAllowId:true})
  assert.equal(imported.id,id)
  assert.equal((await adapter.findOne<{id:string}>({model:"user",where:[{field:"email",value:email}]}))?.id,id)
+ await adapter.delete({model:"user",where:[{field:"id",value:id}]})
+ await assert.rejects(adapter.create({model:"user",data:{id,email:`deleted-${email}`,name:"Cannot adopt a real deletion"},forceAllowId:true}),/duplicate key/)
+
 })
 
 

@@ -51,9 +51,9 @@ test("the scheduled worker runs a full bounded maintenance pass and stops cleanl
 
 
 test("an undecryptable verification row is logged while later jobs reclaim session capacity", async () => {
- const adapter = crateAuthAdapter({sql, populationBounds:true})({})
- const session = await adapter.create({model:"session",data:{userId:randomUUID(),token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
- await adapter.delete({model:"session",where:[{field:"token",value:session.token}]})
+ const adapter = crateAuthAdapter({sql, populationBounds:{buckets:1,limitPerBucket:1}})({})
+ const user = await adapter.create({model:"user",data:{email:`${randomUUID()}@example.test`,name:"Confirmed",emailVerified:true}})
+ await adapter.create({model:"session",data:{userId:user.id,token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
  const id = randomUUID()
  await sql("INSERT INTO doc.auth_verification (id,payload,receipts) VALUES (?,?,?)",[id,"v3.retired.bad.bad.bad","bad"])
  const errors: {table:string;id:string}[] = []
@@ -61,5 +61,6 @@ test("an undecryptable verification row is logged while later jobs reclaim sessi
  const pass = await runAuthMaintenancePass({sql,encryptionSecret:"disposable-local-auth-integration-key-548",onRowError: row => errors.push(row)})
  assert.ok(errors.some(row=>row.table === "doc.auth_verification" && row.id === id))
  assert.ok(pass.jobs.some(job=>Number(job.skipped)>0))
- assert.ok(pass.jobs.some(job=>job.job === "capacity" && Number(job.released)>0))
+ assert.ok(pass.jobs.some(job=>job.job === "garbage" && job.model === "session" && Number(job.expired)>0))
+ assert.ok(await adapter.create({model:"session",data:{userId:user.id,token:randomUUID(),expiresAt:new Date(Date.now()+86400000)}}))
 })

@@ -262,16 +262,18 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${authModelTable(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, unusedClient: replacing ? undefined : original.envelope.unusedClient, authorizedAt: replacing ? undefined : original.envelope.authorizedAt, admissionFence: deleting ? Math.max(original.envelope.admissionFence ?? 0, original.envelope.admission?.generation ?? 0) : original.envelope.admissionFence, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, abandonedClaim: replacing ? undefined : original.envelope.abandonedClaim, unusedClient: replacing ? undefined : original.envelope.unusedClient, authorizedAt: replacing ? undefined : original.envelope.authorizedAt, admissionFence: deleting ? Math.max(original.envelope.admissionFence ?? 0, original.envelope.admission?.generation ?? 0) : original.envelope.admissionFence, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
+                    if(deleting) await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
 					return result
 				}
 				let current: Stored | null
 				try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
 				const receipt = current?.receipts.find(r => r.operation === operation)
 				if (receipt) {
+                    if(deleting) await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
 					return result
 				}
