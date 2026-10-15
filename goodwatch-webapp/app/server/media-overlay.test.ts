@@ -712,6 +712,82 @@ test("payload adapters skip completed overlays and cap Explorer source work with
 	assert.ok(!("presentation" in result.movies[200]))
 })
 
+test("an Explorer world as large as production's localizes every grouping in four batches at the 800 cap", async () => {
+	// About the size of the production world for a guest with ten ratings: seven maps, 1,166 title cards, 704 unique
+	// titles.
+	const unique = 704
+	const world = {
+		maps: Array.from({ length: 7 }, (_, m) => ({
+			grouping: `g${m}`,
+			islands: Array.from({ length: 10 }, (_, j) => ({
+				id: `i${j}`,
+				titles: Array.from({ length: 17 }, (_, k) => {
+					const id = ((m * 10 + j) * 17 + k) % unique
+					return {
+						key: 1000000000000 + id + 1,
+						mediaType: "movie",
+						tmdbId: id + 1,
+						title: `Title ${id + 1}`,
+						poster: "/en.jpg",
+					}
+				}),
+			})),
+		})),
+	}
+	const statements = (cap: number) => {
+		const calls: string[] = []
+		const read: OverlayQuery = async <T extends {}>(
+			sql: string,
+			params: (string | number | Date)[] = [],
+		) => {
+			calls.push(sql)
+			if (!sql.includes("FROM translation")) return [] as T[]
+			return (params[0] as unknown as number[]).map((id) => ({
+				media_tmdb_id: id,
+				media_type: "movie",
+				language_code: "de",
+				country_code: "DE",
+				title: `Titel ${id}`,
+				overview: null,
+				tagline: null,
+			})) as unknown as T[]
+		}
+		return {
+			calls,
+			result: localizeTitlePayload(
+				world,
+				"de",
+				undefined,
+				createMediaOverlay(read),
+				{ maxTitles: cap },
+			),
+		}
+	}
+	const titlesOf = (value: typeof world) =>
+		value.maps.flatMap((map) => map.islands.flatMap((island) => island.titles))
+	assert.equal(titlesOf(world).length, 1190)
+	assert.equal(new Set(titlesOf(world).map((t) => t.tmdbId)).size, unique)
+
+	const before = statements(200)
+	const old = titlesOf(await before.result)
+	assert.equal(before.calls.length, 3)
+	assert.equal(
+		new Set(old.filter((t) => t.title.startsWith("Titel")).map((t) => t.tmdbId))
+			.size,
+		200,
+	)
+
+	const after = statements(800)
+	const all = titlesOf(await after.result)
+	assert.equal(
+		after.calls.length,
+		12,
+		"four batches of 200, three statements each",
+	)
+	assert.ok(all.every((t) => t.title === `Titel ${t.tmdbId}`))
+	assert.equal(all.length, 1190)
+})
+
 test("English season, episode and grouped text return canonical provenance without a source read", async () => {
 	const { overlayEpisodeTextGroups } = await import(
 		"../utils/episode-text-overlay.ts"
