@@ -76,6 +76,9 @@ export async function runAuthMaintenancePass(
 				auditAuthPopulation({ ...shared, model, cursor }),
 			)
 	} else {
+		await run("capacity", undefined, (cursor) =>
+			reconcileAuthCapacity({ ...shared, cursor }),
+		)
 		await run("claims", undefined, (cursor) =>
 			recoverEmailClaims({ ...shared, cursor }),
 		)
@@ -87,9 +90,6 @@ export async function runAuthMaintenancePass(
 			await run("garbage", model, (cursor) =>
 				collectAuthGarbage({ ...shared, model, cursor }),
 			)
-		await run("capacity", undefined, (cursor) =>
-			reconcileAuthCapacity({ ...shared, cursor }),
-		)
 		if (options.encryptionKeys)
 			for (const model of [...authModels, "capacity"])
 				await run("encryption", model, (cursor) =>

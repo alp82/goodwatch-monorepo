@@ -1,3 +1,5 @@
+import { captureMessage } from "@sentry/remix"
+import { counter } from "../metrics/registry.server.ts"
 import { isDeepStrictEqual } from "node:util"
 import { createHash, createHmac, randomUUID } from "node:crypto"
 import {
@@ -10,6 +12,7 @@ import {
 } from "./crate-adapter.server.ts"
 import {
 	type AuthEncryptionKeys,
+	AuthPayloadAuthenticationError,
 	authCredentialVersion,
 	authPayloadCodec,
 } from "./payload-codec.server.ts"
@@ -26,6 +29,7 @@ export type AuthMaintenanceOptions = {
 	cursor?: string
 	batchSize?: number
 	now?: Date
+	onRowError?: (row: {table: string; id: string}) => void
 }
 type Options = AuthMaintenanceOptions
 type Envelope = {
@@ -38,6 +42,18 @@ type Envelope = {
 	admissionFence?: number
 }
 type Receipt = { operation: string; baseSeq: number; at?: string }
+
+const quarantined = counter("goodwatch_auth_maintenance_quarantined_total", "Unreadable auth rows skipped by maintenance.", ["table"], 16)
+function skipRow(error: unknown, options: Options) {
+ if (!(error instanceof AuthPayloadAuthenticationError)) throw error
+ const row = {table:error.table,id:error.id}
+ quarantined.inc([row.table])
+ if(options.onRowError) options.onRowError(row)
+ else {
+  console.error("Auth maintenance skipped unreadable row", row)
+  captureMessage("Auth maintenance skipped unreadable row", {level:"error", extra:row})
+ }
+}
 
 function batchSize(value = 1000) {
 	if (!Number.isSafeInteger(value) || value < 1 || value > 10000)
@@ -59,6 +75,7 @@ export async function recoverEmailClaims(options: Options) {
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		released: 0,
 		retained: 0,
@@ -67,6 +84,7 @@ export async function recoverEmailClaims(options: Options) {
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const email = String(value)
 		report.cursor = email
 		report.scanned++
@@ -92,7 +110,7 @@ export async function recoverEmailClaims(options: Options) {
 		if (current) {
 			const envelope: Envelope = codec.decode(current[0], `${aad}:payload`)
 			if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-				throw new Error("Invalid authenticated auth row")
+				throw new AuthPayloadAuthenticationError(`${aad}:payload`)
 			const key = createHmac("sha256", encryptionSecret)
 				.update(
 					JSON.stringify([
@@ -166,6 +184,10 @@ export async function recoverEmailClaims(options: Options) {
 		)
 		if (released.rowcount === 1) report.released++
 		else report.conflicted++
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
 	return report
 }
@@ -208,6 +230,7 @@ export async function collectAuthGarbage(
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		expired: 0,
 		archived: 0,
@@ -219,6 +242,7 @@ export async function collectAuthGarbage(
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const id = String(value)
 		report.cursor = id
 		report.scanned++
@@ -231,7 +255,7 @@ export async function collectAuthGarbage(
 		if (!current) continue
 		const envelope: Envelope = codec.decode(current[0], `${name}:${id}:payload`)
 		if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-			throw new Error("Invalid authenticated auth row")
+			throw new AuthPayloadAuthenticationError(`${name}:${id}:payload`)
 		const receipts: Receipt[] = codec.decode(
 			current[1],
 			`${name}:${id}:receipts`,
@@ -326,6 +350,10 @@ export async function collectAuthGarbage(
 			if (compacted) report.compacted++
 			if (repaired) report.repaired++
 		} else report.conflicted++
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
 	return report
 }
@@ -347,6 +375,7 @@ export async function reconcileAuthCapacity(options: Options) {
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		released: 0,
 		retained: 0,
@@ -355,6 +384,7 @@ export async function reconcileAuthCapacity(options: Options) {
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const bucket = String(value)
 		report.cursor = bucket
 		const model = bucket.split(":")[0]
@@ -364,6 +394,7 @@ export async function reconcileAuthCapacity(options: Options) {
 		const capacity = await readCapacity(sql, codec, bucket)
 		if (!capacity) continue
 		for (const [id, slot] of Object.entries(capacity.ledger.slots)) {
+            try {
 			report.scanned++
 			const aad = `${name}:${id}`
 			const current = (
@@ -375,7 +406,7 @@ export async function reconcileAuthCapacity(options: Options) {
 			if (current) {
 				const envelope: Envelope = codec.decode(current[0], `${aad}:payload`)
 				if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-					throw new Error("Invalid authenticated auth row")
+					throw new AuthPayloadAuthenticationError(`${name}:${id}:payload`)
 				if (!envelope.deleted && !envelope.archived) {
 					report.retained++
 					continue
@@ -464,7 +495,15 @@ export async function reconcileAuthCapacity(options: Options) {
 			}
 			if (released) report.released++
 			else report.conflicted++
+            } catch(error) {
+                skipRow(error, options)
+                report.skipped++
+            }
 		}
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
 	return report
 }
@@ -488,6 +527,7 @@ export async function auditAuthPopulation(
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		live: 0,
 		unadmitted: 0,
@@ -497,6 +537,7 @@ export async function auditAuthPopulation(
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const id = String(value)
 		report.scanned++
 		report.cursor = id
@@ -506,7 +547,7 @@ export async function auditAuthPopulation(
 		if (!current) continue
 		const envelope: Envelope = codec.decode(current[0], `${name}:${id}:payload`)
 		if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-			throw new Error("Invalid authenticated auth row")
+			throw new AuthPayloadAuthenticationError(`${name}:${id}:payload`)
 		codec.decode(current[2], `${name}:${id}:receipts`)
 		if (Boolean(envelope.deleted || envelope.archived) !== current[1])
 			report.inconsistent++
@@ -528,8 +569,12 @@ export async function auditAuthPopulation(
 				launchPopulationBounds.limitPerBucket
 		)
 			report.inconsistent++
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
-	report.safe = report.unadmitted === 0 && report.inconsistent === 0
+	report.safe = report.skipped === 0 && report.unadmitted === 0 && report.inconsistent === 0
 	return report
 }
 
@@ -556,6 +601,7 @@ export async function rotateAuthEncryption(
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		rotated: 0,
 		conflicted: 0,
@@ -563,6 +609,7 @@ export async function rotateAuthEncryption(
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const id = String(value)
 		report.scanned++
 		report.cursor = id
@@ -578,7 +625,7 @@ export async function rotateAuthEncryption(
 		// certify a forged key id or leave an undecryptable receipt behind.
 		const envelope: Envelope = codec.decode(current[0], `${aad}:payload`)
 		if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-			throw new Error("Invalid authenticated auth row")
+			throw new AuthPayloadAuthenticationError(`${name}:${id}:payload`)
 		const receipts = codec.decode(current[1], `${aad}:receipts`)
 		if (codec.usesActiveKey(current[0]) && codec.usesActiveKey(current[1]))
 			continue
@@ -594,6 +641,10 @@ export async function rotateAuthEncryption(
 		)
 		if (result.rowcount === 1) report.rotated++
 		else report.conflicted++
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
 	return report
 }
@@ -637,7 +688,7 @@ export async function reconcileAuthRows(
 		if (!stored) return null
 		const envelope: Envelope = codec.decode(stored[0], `${name}:${id}:payload`)
 		if (envelope.row.id !== id || typeof envelope.deleted !== "boolean")
-			throw new Error("Invalid authenticated auth row")
+			throw new AuthPayloadAuthenticationError(`${name}:${id}:payload`)
 		return {
 			envelope,
 			receipts: codec.decode(stored[1], `${name}:${id}:receipts`) as Receipt[],
@@ -689,6 +740,7 @@ export async function reconcileAuthRows(
 		cursor === undefined ? [] : [cursor],
 	)
 	const report = {
+		skipped: 0,
 		scanned: 0,
 		removed: 0,
 		conflicted: 0,
@@ -696,6 +748,7 @@ export async function reconcileAuthRows(
 		complete: page.rows.length <= size,
 	}
 	for (const [value] of page.rows.slice(0, size)) {
+        try {
 		const id = String(value)
 		report.scanned++
 		report.cursor = id
@@ -817,6 +870,10 @@ export async function reconcileAuthRows(
 			if (model === "session" && typeof row.token === "string")
 				await options.storage?.delete(row.token)
 		} else report.conflicted++
+        } catch(error) {
+            skipRow(error, options)
+            report.skipped++
+        }
 	}
 	return report
 }

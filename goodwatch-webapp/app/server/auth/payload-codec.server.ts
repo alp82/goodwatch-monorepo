@@ -6,6 +6,17 @@ import {
 	randomBytes,
 } from "node:crypto"
 
+export class AuthPayloadAuthenticationError extends Error {
+ readonly table: string
+ readonly id: string
+ constructor(aad: string) {
+  super("Could not decrypt and authenticate auth payload")
+  const boundary = aad.indexOf(":")
+  this.table = aad.slice(0,boundary)
+  this.id = aad.slice(boundary+1,aad.lastIndexOf(":"))
+ }
+}
+
 export function authCredentialVersion(secret: string, password: string | null) {
 	return createHmac("sha256", secret)
 		.update(JSON.stringify(["session-credential", password]))
@@ -127,7 +138,7 @@ export function authPayloadCodec(secret: string, ring?: AuthEncryptionKeys) {
 				])
 				return JSON.parse(plaintext.toString("utf8"))
 			} catch {
-				throw new Error("Could not decrypt and authenticate auth payload")
+				throw new AuthPayloadAuthenticationError(associatedData)
 			}
 		},
 	}

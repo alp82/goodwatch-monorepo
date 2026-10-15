@@ -48,3 +48,18 @@ test("the scheduled worker runs a full bounded maintenance pass and stops cleanl
 		await worker.stop()
 	}
 })
+
+
+test("an undecryptable verification row is logged while later jobs reclaim session capacity", async () => {
+ const adapter = crateAuthAdapter({sql, populationBounds:true})({})
+ const session = await adapter.create({model:"session",data:{userId:randomUUID(),token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
+ await adapter.delete({model:"session",where:[{field:"token",value:session.token}]})
+ const id = randomUUID()
+ await sql("INSERT INTO doc.auth_verification (id,payload,receipts) VALUES (?,?,?)",[id,"v3.retired.bad.bad.bad","bad"])
+ const errors: {table:string;id:string}[] = []
+ const {runAuthMaintenancePass} = await import("./maintenance-worker.server.ts")
+ const pass = await runAuthMaintenancePass({sql,encryptionSecret:"disposable-local-auth-integration-key-548",onRowError: row => errors.push(row)})
+ assert.ok(errors.some(row=>row.table === "doc.auth_verification" && row.id === id))
+ assert.ok(pass.jobs.some(job=>Number(job.skipped)>0))
+ assert.ok(pass.jobs.some(job=>job.job === "capacity" && Number(job.released)>0))
+})

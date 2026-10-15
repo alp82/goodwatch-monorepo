@@ -5,6 +5,7 @@ import {
 	IndeterminateAuthWriteError,
 	type SqlResult,
 } from "./crate-adapter.server.ts"
+import { AuthPayloadAuthenticationError } from "./payload-codec.server.ts"
 import type { authPayloadCodec } from "./payload-codec.server.ts"
 
 type Codec = ReturnType<typeof authPayloadCodec>
@@ -56,7 +57,7 @@ export async function readCapacity(sql: AuthSql, codec: Codec, bucket: string) {
 		!ledger.slots ||
 		Array.isArray(ledger.slots)
 	)
-		throw new Error("Invalid authenticated auth capacity ledger")
+		throw new AuthPayloadAuthenticationError(`doc.auth_capacity:${bucket}:payload`)
 	return { ledger, seq: result[1], term: result[2] }
 }
 
