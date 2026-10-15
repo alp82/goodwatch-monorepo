@@ -27,7 +27,7 @@ export function createAuthCookieMatcher(
 		`(?:^|;)[ \\t]*${name ? name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "sb-[^=;\\s]+-auth-token"}(?:\\.[0-9]+)?=`,
 	)
 	return (cookieHeader: string | null | undefined): boolean =>
-		pattern.test(cookieHeader ?? "")
+		pattern.test(cookieHeader ?? "") || /(?:^|;)[ \t]*(?:__Secure-)?gw\.session_token=/.test(cookieHeader ?? "")
 }
 
 let configuredUrl: string | undefined
