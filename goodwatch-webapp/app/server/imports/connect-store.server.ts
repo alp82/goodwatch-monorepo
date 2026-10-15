@@ -15,6 +15,7 @@ import {
 export function createConnectionStore(
 	secret: () => string,
 	previousSecret: () => string = () => "",
+	source: "tmdb" | "plex" = "tmdb",
 ): ConnectionStore {
 	const key = (value: string) => {
 		if (!/^[a-f0-9]{64}$/i.test(value))
@@ -99,7 +100,9 @@ export function createConnectionStore(
 			)
 				return null
 			// A replayed browser request must not steal cleanup-only work or bypass Retry-After.
-			const interactive = userId === undefined ? null : open(id, row.payload)
+			const value = open(id, row.payload)
+			if ((value.source ?? "tmdb") !== source) return null
+			const interactive = userId === undefined ? null : value
 			if (interactive?.canceled || interactive?.accessToken) return null
 			const result = await run(
 				"UPDATE doc.user_import_connection SET lease_until = ? WHERE user_id = ? AND slot = ? AND _seq_no = ? AND _primary_term = ?",
@@ -111,9 +114,7 @@ export function createConnectionStore(
 					row._primary_term,
 				],
 			)
-			return result.rowcount === 1
-				? (interactive ?? open(id, row.payload))
-				: null
+			return result.rowcount === 1 ? value : null
 		},
 		async save(value, available) {
 			if (available === undefined)

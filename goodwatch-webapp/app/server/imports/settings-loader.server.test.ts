@@ -36,3 +36,25 @@ test("the return destination opens an owned TMDB preview absent from history, bu
 	assert.equal((await load(csv.id)).openImport, undefined)
 	assert.equal((await load("missing")).openImport, undefined)
 })
+
+test("Plex return opens its owned fetched preview and does not cross sources", async () => {
+	setImportDbForTest(new ImportDb())
+	const preview = await previewFetchedImport("member", "Plex", {
+		source: "plex",
+		observations: [],
+		warnings: [],
+	})
+	const load = (source: string) =>
+		loader({
+			request: new Request(
+				`https://goodwatch.test/settings/imports?source=${source}&import=${preview.id}&connect=${preview.id}`,
+				{ headers: { Member: "member" } },
+			),
+			params: {},
+			context: {},
+		} as LoaderFunctionArgs).then((r) => r.json())
+	const data = await load("plex")
+	assert.equal(data.initialSource, "plex")
+	assert.equal(data.openImport, preview.id)
+	assert.equal((await load("tmdb")).openImport, undefined)
+})

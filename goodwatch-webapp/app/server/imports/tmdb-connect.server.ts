@@ -6,6 +6,7 @@ import { type TmdbClient, TmdbError } from "./tmdb-client.server.ts"
 export const CONNECTION_WINDOW_MS = 10 * 60_000
 
 export interface Connection {
+	source?: "tmdb" | "plex"
 	id: string
 	userId: string
 	requestToken: string

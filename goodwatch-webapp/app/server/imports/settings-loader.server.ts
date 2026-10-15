@@ -11,7 +11,7 @@ interface LoaderData extends ImdbImportListResponse {
 	sourceImports: ImportSummary[]
 	connectState?: string
 	openImport?: string
-	initialSource?: "tmdb"
+	initialSource?: "tmdb" | "plex"
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -32,6 +32,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		}),
 	])
 	const url = new URL(request.url)
+	const source = url.searchParams.get("source")
+	const initialSource =
+		source === "tmdb" || source === "plex" ? source : undefined
 	const connectState = url.searchParams.get("connect") ?? ""
 	const openImport = url.searchParams.get("import") ?? ""
 	const selected = IMPORT_ID_PATTERN.test(openImport)
@@ -41,12 +44,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		{
 			imports: imdb,
 			sourceImports: native,
-			initialSource:
-				url.searchParams.get("source") === "tmdb" ? "tmdb" : undefined,
+			initialSource,
 			connectState: IMPORT_ID_PATTERN.test(connectState)
 				? connectState
 				: undefined,
-			openImport: selected?.source === "tmdb" ? openImport : undefined,
+			openImport:
+				initialSource && selected?.source === initialSource
+					? openImport
+					: undefined,
 		},
 		{ headers },
 	)
