@@ -1,6 +1,9 @@
+import { useQuery } from "@tanstack/react-query"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The share list being edited: title, titles in rank order, design, color theme, and list prompt. The card is signed
 // with the owner's handle, which isn't part of the draft.
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
 	type CardTitle,
 	LIST_SIZE,
@@ -19,10 +22,10 @@ export interface ListDraft {
 }
 
 // Titles picked from search lack a score and genre; fetch them so the card shows them.
-async function fetchCardTitle(key: string): Promise<CardTitle | null> {
+async function fetchCardTitle(key: string, language: string): Promise<CardTitle | null> {
 	try {
 		const response = await fetch(
-			`/api/share-lists/titles?keys=${encodeURIComponent(key)}`,
+			mediaLanguageUrl(`/api/share-lists/titles?keys=${encodeURIComponent(key)}`, language),
 		)
 		if (!response.ok) return null
 		const { titles } = (await response.json()) as { titles: CardTitle[] }
@@ -33,9 +36,25 @@ async function fetchCardTitle(key: string): Promise<CardTitle | null> {
 }
 
 export function useListState(initial: ListDraft) {
+	const { locale } = useLocale()
 	const [draft, setDraft] = useState(initial)
 	// Bumped on every change the person makes, so autosave can tell edits from the first render.
 	const version = useRef(0)
+	const keys = draft.items.map(item => item.key).join(",")
+	const display = useQuery({
+		queryKey: ["share-list-draft-display", keys, locale.language],
+		enabled: Boolean(keys),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(mediaLanguageUrl(`/api/share-lists/titles?keys=${encodeURIComponent(keys)}`, locale.language), { signal })
+			if (!response.ok) throw new Error("Could not refresh draft titles")
+			return (await response.json() as { titles: CardTitle[] }).titles
+		},
+	})
+	useEffect(() => {
+		if (!display.data) return
+		const titles = new Map(display.data.map(title => [title.key, title]))
+		setDraft(current => current.items.map(item => item.key).join(",") === keys ? { ...current, items: current.items.map(item => titles.get(item.key) ?? item) } : current)
+	}, [display.data, keys])
 
 	const set = (patch: Partial<ListDraft>) => {
 		version.current++
@@ -44,7 +63,7 @@ export function useListState(initial: ListDraft) {
 	const setItems = (items: CardTitle[], added?: CardTitle) => {
 		set({ items })
 		if (added && added.score == null) {
-			fetchCardTitle(added.key).then((full) => {
+			fetchCardTitle(added.key, locale.language).then((full) => {
 				if (full)
 					setDraft((prev) => ({
 						...prev,

@@ -1,3 +1,4 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 // Explorer: the islands map. A grouping (Mood, Theme, Style, Occasion, Decade, Country, Your taste) splits the
 // Explorer's pool of titles into islands; islands can be combined into bridges. These are the shapes the server's
 // `/api/explorer/*` endpoints return and the browser draws. Pure and shared by the server and the browser.
@@ -72,7 +73,7 @@ export interface ExplorerService {
 }
 
 /** A title as the map, trees, bridges, and cards show it, with the viewer's personal part. */
-export interface ExplorerTitle {
+export interface ExplorerTitle extends PresentedMedia {
 	key: TitleKey
 	mediaType: "movie" | "show"
 	anime: boolean

@@ -1,3 +1,5 @@
+import { parseLocalizationRecord } from "../utils/media-language.ts";
+import { MEDIA_PREFERENCES_KEY, readMediaPreferences, writeMediaPreferences } from "./media-preferences-store.server.ts";
 import {
 	getQueryKeyUserSettings,
 	type GetUserSettingsResult,
@@ -9,16 +11,20 @@ import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
 import { cached, declareResettableCache, resetCache } from "~/utils/cache";
 import { execute, query, upsert } from "~/utils/crate";
 
+export const USER_SETTINGS_CACHE_NAME = "user-settings-media-v1";
+export const LEGACY_USER_SETTINGS_CACHE_NAME = "user-settings";
 const SETTINGS_CACHE = {
-	name: "user-settings",
+	name: USER_SETTINGS_CACHE_NAME,
 	// Writes refresh Crate and reset; five minutes bounds changes a reset cannot reach.
 	ttlMinutes: 5,
 	staleMinutes: 0,
 } as const;
 declareResettableCache(SETTINGS_CACHE);
+// New writes still invalidate older roles' ordinary settings; old roles never fill the new projection.
+declareResettableCache({ ...SETTINGS_CACHE, name: LEGACY_USER_SETTINGS_CACHE_NAME });
 
 interface UserSettingRow {
-	key: keyof UserSettingsMap;
+	key: string;
 	value: string;
 }
 
@@ -57,11 +63,14 @@ async function _getUserSettings({
 
 	const settings: GetUserSettingsResult = {};
 	for (const row of result) {
-		const convertedSettingValue = _convertSettingValue(row.key, row.value);
+		const convertedSettingValue = _convertSettingValue(row.key as keyof UserSettingsMap, row.value);
 		if (convertedSettingValue !== null) {
 			(settings as any)[row.key] = convertedSettingValue;
 		}
 	}
+	// The atomic pair owns country; keep the historical settings API shape for all existing readers.
+	const pair = parseLocalizationRecord(result.find(row => row.key === MEDIA_PREFERENCES_KEY)?.value);
+	if (pair) settings.country_default = pair.country;
 	return settings;
 }
 
@@ -107,19 +116,34 @@ export async function setUserSettings({
 		}
 	}
 
-	// Prepare data for upsert
-	const data = Object.entries(settings).map(([key, value]) => ({
+	// Old country-only setters preserve the language once an atomic pair exists.
+	let remaining = settings;
+	if (settings.country_default !== undefined) {
+		const { record } = await readMediaPreferences(user_id);
+		if (record) {
+			if (!options.ignoreUpdate) {
+				const country = settings.country_default.trim().toUpperCase();
+				if (!/^[A-Z]{2}$/.test(country)) return null;
+				await writeMediaPreferences(user_id, { country, language: record.language }, { expectedVersion: record.version });
+			}
+			remaining = { ...settings };
+			delete remaining.country_default;
+		}
+	}
+
+	// Other settings retain their existing write semantics.
+	const data = Object.entries(remaining).map(([key, value]) => ({
 		user_id,
 		key,
 		value: String(value),
 	}));
 
-	const result = await upsert({
+	const result = data.length ? await upsert({
 		table: "user_setting",
 		data,
 		conflictColumns: ["user_id", "key"],
 		ignoreUpdate: options.ignoreUpdate,
-	});
+	}) : { rowcount: 1 };
 
 	await resetUserSettingsCache({ user_id });
 	return result;
@@ -158,17 +182,18 @@ export const resetUserSettingsCache = async (
 		return 0;
 	}
 
-	const key = { name: SETTINGS_CACHE.name, params: { userId: params.user_id } };
+	const keys = [USER_SETTINGS_CACHE_NAME, LEGACY_USER_SETTINGS_CACHE_NAME].map(name => ({ name, params: { userId: params.user_id } }));
 	try {
 		await execute("REFRESH TABLE user_setting");
 	} catch (error) {
 		console.error("Refreshing member settings before cache reset failed:", error);
 		// Drop any old settings cached before Crate's periodic refresh catches up.
 		setTimeout(() => {
-			void resetCache(key);
+			void Promise.all(keys.map(key => resetCache(key)));
 		}, 2000).unref();
 	}
-	return await resetCache(key);
+	const [current] = await Promise.all(keys.map(key => resetCache(key)));
+	return current;
 };
 
 // loader prefetch

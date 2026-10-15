@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { useRevalidator } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
@@ -21,16 +23,17 @@ export function useTasteView<T extends PortraitTab>(
 	tab: T,
 	memberView: PortraitViewOf<T> | null,
 ): TasteViewState<T> {
+	const { locale } = useLocale()
 	const revalidator = useRevalidator()
 	const interactions = useGuestInteractions()
 	const guest = useQuery({
-		queryKey: ["taste-portrait", tab, interactions],
+		queryKey: ["taste-portrait", tab, interactions, locale.language],
 		enabled: memberView === null,
 		// Keep showing the last view while a new rating recomputes it.
 		placeholderData: (previous) => previous,
 		queryFn: async () => {
 			const { interactions, country, services } = snapshotGuestProgress()
-			const response = await fetch(`/api/taste/portrait?tab=${tab}`, {
+			const response = await fetch(mediaLanguageUrl(`/api/taste/portrait?tab=${tab}`, locale.language), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ guest: { interactions, country, services } }),

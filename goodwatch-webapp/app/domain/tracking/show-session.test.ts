@@ -7,7 +7,13 @@ import {
 	type ShowCopy,
 	applyLocally,
 } from "./show-page.ts"
-import { FAILED, type SentAction, ShowSession } from "./show-session.ts"
+import {
+	ActionConflict,
+	CONFLICT,
+	FAILED,
+	type SentAction,
+	ShowSession,
+} from "./show-session.ts"
 
 const SHOW = 1399
 const TODAY = "2026-10-08"
@@ -32,7 +38,7 @@ function server(start: ShowCopy = EMPTY) {
 	let stored = start
 	const requests: {
 		sent: SentAction
-		answer: (how?: "fail" | "refuse" | ActionAnswer) => void
+		answer: (how?: "fail" | "refuse" | "conflict" | ActionAnswer) => void
 	}[] = []
 	let open = 0
 	let most = 0
@@ -45,6 +51,7 @@ function server(start: ShowCopy = EMPTY) {
 				answer: (how) => {
 					open -= 1
 					if (how === "fail") return reject(new Error("offline"))
+					if (how === "conflict") return reject(new ActionConflict())
 					if (how && typeof how !== "string") return resolve(how)
 					const before = stored
 					const applied =
@@ -242,6 +249,31 @@ test("a failed action is taken back with everything made after it, and the page 
 	session.act(watch(2), { ...options, actionId: "watch-000004" })
 	await settled()
 	assert.equal(at.requests[2].sent.actionId, "watch-000004")
+})
+
+test("an action another one got in between is taken back with everything after it, said as a conflict and not sent again", async () => {
+	const { session, at, errors, stale } = open()
+	const first = session.act(watch(1), { ...options, actionId: "watch-000001" })
+	await settled()
+	at.requests[0].answer()
+	await first.done
+	const second = session.act(watch(2), { ...options, actionId: "watch-000002" })
+	const third = session.act(watch(3), { ...options, actionId: "watch-000003" })
+	await settled()
+	at.requests[1].answer("conflict")
+	assert.deepEqual([await second.done, await third.done], [null, null])
+	assert.deepEqual(
+		ticks(session.shown),
+		[1],
+		"back to what the server last confirmed",
+	)
+	assert.deepEqual(errors, [CONFLICT])
+	await settled()
+	assert.deepEqual(
+		[at.requests.length, session.busy, stale.count],
+		[2, false, 0],
+		"nothing is sent again; onError, not onStale, has the store read the show again",
+	)
 })
 
 test("an action the server refuses is taken back with the server's reason and its state", async () => {

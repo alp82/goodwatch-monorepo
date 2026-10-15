@@ -64,6 +64,7 @@ const TABLES: Record<string, Table> = {
 			"user_id",
 			"tmdb_id",
 			"media_type",
+			"insert_token",
 			"state",
 			"state_changed_at",
 			"pass",
@@ -259,7 +260,7 @@ export class FakeTrackingCrate {
 			.map(({ _seq_no, _primary_term, ...row }) => row as LogRow & Row)
 	}
 
-	/** The state row of a member's title, without the system columns. */
+	/** The logical state row of a member's title, hiding empty receipts and storage metadata. */
 	state(userId: string, mediaType: string, tmdbId: number): Row | null {
 		const found = this.table("user_watch_state").find(
 			(r) =>
@@ -267,8 +268,10 @@ export class FakeTrackingCrate {
 				r.media_type === mediaType &&
 				r.tmdb_id === tmdbId,
 		)
-		if (!found) return null
-		const { _seq_no, _primary_term, ...row } = found
+		if (!found || (found.state === "not_started" && found.pass === 1 &&
+			found.rate_prompt_dismissed_at == null && found.seen_question == null))
+			return null
+		const { _seq_no, _primary_term, insert_token, ...row } = found
 		return row
 	}
 
@@ -420,6 +423,12 @@ export class FakeTrackingCrate {
 					groupedQuery(matched as unknown as LogRow[]) as unknown as Row[],
 				)
 			}
+			if (columnList === "DISTINCT tmdb_id")
+				return done(
+					[...new Set(matched.map((row) => row.tmdb_id))].map((tmdb_id) => ({
+						tmdb_id,
+					})),
+				)
 			// A column, or "column AS name".
 			const columns = columnList.split(", ").map((text) => {
 				const [column, name = column] = text.split(" AS ")

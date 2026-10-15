@@ -1,3 +1,4 @@
+import { localizeTitlePayload } from "./media-payload.server.ts"
 // The title page's extras from the data cache and Crate. See title-extras-prefetch.ts for what they are.
 import { getMoviesInCollection } from "~/server/collection.server"
 import { getGenresUnique } from "~/server/genres.server"
@@ -32,6 +33,9 @@ export const prefetchTitleExtrasState = (
 		...params,
 		lookups: {
 			genres: () => allGenres(Date.now()),
-			collection: getMoviesInCollection,
+			collection: async (collection) => {
+				const data = await getMoviesInCollection(collection)
+				return params.language ? localizeTitlePayload(data, params.language) : data
+			},
 		},
 	})

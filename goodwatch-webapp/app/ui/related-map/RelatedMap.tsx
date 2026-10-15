@@ -119,12 +119,12 @@ export function useRelatedMap(): RelatedMapData | undefined {
  * The markup of a document's section. The loader's data of a document doesn't carry it (see
  * server/related-map.server.ts): the server reads what the loader drew, and the browser what the document holds.
  */
-function documentMarkup(rootKey: string): string {
+function documentMarkup(rootKey: string, language?: string): string {
 	if (typeof document === "undefined")
 		return (
 			(
 				globalThis as { __gwRelatedMapMarkup?: Map<string, string> }
-			).__gwRelatedMapMarkup?.get(rootKey) ?? ""
+			).__gwRelatedMapMarkup?.get(`${rootKey}:${language ?? "canonical"}`) ?? ""
 		)
 	return (
 		document.querySelector(`[data-related-map][data-pl-root="${rootKey}"]`)
@@ -147,8 +147,9 @@ export default function RelatedMap({
 	// One markup per title, for as long as the section shows that title: a later answer of the loader for the same
 	// title (a revalidation) doesn't draw over a walk.
 	const held = useRef<{ key: string; html: string }>()
-	if (map && held.current?.key !== rootKey)
-		held.current = { key: rootKey, html: map.html ?? documentMarkup(rootKey) }
+	const localizedKey = `${rootKey}:${map?.language ?? "canonical"}`
+	if (map && held.current?.key !== localizedKey)
+		held.current = { key: localizedKey, html: map.html ?? documentMarkup(rootKey, map.language) }
 	const engineTag = useRef<HTMLScriptElement>(null)
 	const css = assetUrl(cssPath)
 	const script = map?.script ?? null
@@ -169,7 +170,7 @@ export default function RelatedMap({
 			stop()
 			if (w.__gwRelatedMap) w.__gwRelatedMap.nav = null
 		}
-	}, [shown, script, navigate, rootKey])
+	}, [shown, script, navigate, localizedKey])
 	if (!map) return null
 	return (
 		<>
@@ -178,8 +179,11 @@ export default function RelatedMap({
 				// there the content is hidden, and the style's first rule shows it.
 				className="pl pl-map h-[602px] overflow-hidden lg:h-[576px] [&>*]:invisible"
 				data-related-map=""
+				data-media-language={map.language ?? "en"}
 				data-pl-root={rootKey}
 				data-pl-title={media.details.title}
+				data-title-language={media.details.presentation?.title.language}
+				data-canonical-title={media.details.canonical_title}
 				tabIndex={-1}
 				aria-label={`Titles like ${media.details.title}`}
 				suppressHydrationWarning={true}

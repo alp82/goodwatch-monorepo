@@ -69,7 +69,7 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		)
 		assert.ok(
 			[...store.keys()].some((key) =>
-				key.startsWith("cached-details-show-v2:"),
+				key.startsWith("cached-details-show-v3:"),
 			),
 		)
 		assert.ok(

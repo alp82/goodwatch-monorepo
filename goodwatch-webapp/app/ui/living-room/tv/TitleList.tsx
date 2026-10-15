@@ -1,3 +1,7 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
+import { MediaFact } from "./MediaFact"
 // A handful of titles on the TV: the focused one's name and facts over a row of posters, its backdrop behind
 // everything, and the screen's own keys beside the row. One list for every app, as in the prototype: Discover's
 // titles of a choice (with Change), an island's titles (with the islands to sail to), a side's titles and the
@@ -19,7 +23,7 @@ import { Frame, Img, Item, backdropSize, keySize, useTvView } from "./kit"
 import { TV_ROW_ATTR } from "./tv-dom"
 
 /** A title as a list shows it. */
-export type TvListTitle = {
+export type TvListTitle = PresentedMedia & {
 	/** `movie-603`, as in the TV's URL: its item is `title:movie-603`. */
 	key: string
 	title: string
@@ -27,6 +31,7 @@ export type TvListTitle = {
 	poster: string | null
 	backdrop: string | null
 	/** "2019 · Movie · 87 score · 93% match". */
+	factMedia?: { text: string; lang: string; at?: number }
 	facts: string
 	/** Words on the poster itself, on the desktop: where a press leads ("S2 E4 · 50 min", "Start"). My shows'. */
 	label?: string
@@ -144,11 +149,14 @@ export function TitleList({
 				<div className="flex h-full flex-col">
 					{shown ? (
 						<div key={shown.key} className="tvc-fade shrink-0">
-							<div className="truncate text-[30px] font-bold leading-none tracking-tight">
+							<div
+								{...mediaTextAttributes(mediaFieldLanguage(shown))}
+								className="truncate text-[30px] font-bold leading-none tracking-tight"
+							>
 								{shown.title}
 							</div>
 							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
-								{shown.facts}
+								<MediaFact text={shown.facts} media={shown.factMedia} />
 							</div>
 						</div>
 					) : (
@@ -190,13 +198,14 @@ export function TitleList({
 					{shown ? (
 						<div key={shown.key} className="tvc-fade">
 							<div
+								{...mediaTextAttributes(mediaFieldLanguage(shown))}
 								className="line-clamp-2 font-bold leading-none tracking-tight"
 								style={{ fontSize: nameSize(shown.title) }}
 							>
 								{shown.title}
 							</div>
 							<div className="mt-3 truncate text-[26px] text-white/75">
-								{shown.facts}
+								<MediaFact text={shown.facts} media={shown.factMedia} />
 							</div>
 						</div>
 					) : (

@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { pillarLine, summary } from "~/ui/fingerprint/fingerprintText"
 import { titlePath } from "~/utils/helpers"
@@ -23,7 +24,7 @@ export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 	return {
 		title: `${name}: Where to Stream and Ratings | GoodWatch`,
 		description: `${name}: ${lead} See where to stream it legally and how critics and audiences rate it.`.replace(/\s+/g, " ").trim(),
-		url: `https://goodwatch.app${titlePath(mediaType, details.tmdb_id, details.title)}`,
+		url: `https://goodwatch.app${titlePath(mediaType, details.tmdb_id, canonicalMediaTitle(details))}`,
 		image: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop}` : `https://image.tmdb.org/t/p/w780${details.poster_path}`,
 		alt: cardParts.length ? `${name} on GoodWatch: ${cardParts.join(" and ")}` : `${name} on GoodWatch`,
 	}

@@ -95,7 +95,7 @@ function separateEntryFiles() {
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*"],
+	routes: ["prototype.media-language-ui*", "prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*"],
 	// Directories in app/ui that only those routes import.
 	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-tracking-hub", "prototype-my-library"],
 }
@@ -204,6 +204,13 @@ const FEATURE_CHUNKS = [
 		"title-actions",
 		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction)\.tsx?$/,
 	],
+	// Two icons on the first view of every title page that Rollup gave a file each (0.5 and 1.1 KB), because other
+	// pages share them too: the fingerprint's back arrow and the questions' sparkles. As two files they put the title
+	// page one script over its budget of 20.
+	[
+		"title-icons",
+		/\/node_modules\/@heroicons\/react\/24\/outline\/esm\/(ChevronLeftIcon|SparklesIcon)\.js$/,
+	],
 ]
 
 // Rule 5: small modules that several late parts share and that must not ride with every page. Rule 3 would put them
@@ -214,6 +221,9 @@ const LATE_CHUNKS = [
 		"newly-available",
 		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedRow)\.tsx?$/,
 	],
+	// The click-to-load facades of "Talked about now" (#558), shared by the title page's section and the start page's
+	// row, and the YouTube frame the trailer dialog loads on its click. None is on a first view.
+	["social-embed", /\/app\/ui\/social-embed\/[^/]+\.tsx?$/],
 ]
 
 function clientChunks() {

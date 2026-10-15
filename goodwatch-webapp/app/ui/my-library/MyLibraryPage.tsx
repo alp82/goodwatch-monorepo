@@ -1,3 +1,7 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // My library (#385): every title a member has marked, one status at a time.
 //
 // The status choice is what the owner asked for after round 3 of the prototypes ("use the library but everything
@@ -68,10 +72,11 @@ const RateBar = lazy(loadRateBar)
 async function fetchLibrary(
 	choice: LibraryChoice,
 	offset: number,
+	language = "en",
 ): Promise<LibraryPage> {
 	const params = libraryParams(choice)
 	if (offset) params.set("offset", String(offset))
-	const response = await fetch(`/api/my-library?${params}`)
+	const response = await fetch(mediaLanguageUrl(`/api/my-library?${params}`, language))
 	if (!response.ok) throw new Error(`My library answered ${response.status}`)
 	return (await response.json()) as LibraryPage
 }
@@ -80,7 +85,7 @@ export const libraryQueryKey = ["my-library"] as const
 
 const count = (n: number) => n.toLocaleString("en-US")
 const titleHref = (item: LibraryItem) =>
-	`/${item.mediaType}/${item.tmdbId}-${titleToDashed(item.title)}`
+	`/${item.mediaType}/${item.tmdbId}-${titleToDashed(canonicalMediaTitle(item))}`
 
 const MORE_HINT: Partial<Record<LibraryStatus, string>> = {
 	unrated: "Seen, without a score",
@@ -515,7 +520,7 @@ function Row({
 				/>
 				<span className="min-w-0 flex-1">
 					<b className="block truncate text-sm text-white group-hover:text-amber-200 md:text-base">
-						{item.title}
+						<span lang={mediaFieldLanguage(item)}>{item.title}</span>
 					</b>
 					<span className="block truncate text-xs text-gray-500">
 						{inProgress && episodes ? `${kind} · ${episodes}` : kind}
@@ -587,6 +592,7 @@ export function MyLibraryPage({
 }) {
 	const [params, setParams] = useSearchParams()
 	const choice = useMemo(() => libraryChoiceOf(params), [params])
+	const { locale } = useLocale()
 	const query = libraryParams(choice).toString()
 	const initialQuery = useRef(
 		libraryParams({
@@ -599,12 +605,12 @@ export function MyLibraryPage({
 	const client = useQueryClient()
 
 	const result = useInfiniteQuery({
-		queryKey: [...libraryQueryKey, viewer, query],
-		queryFn: ({ pageParam }) => fetchLibrary(choice, pageParam),
+		queryKey: [...libraryQueryKey, viewer, query, locale.language],
+		queryFn: ({ pageParam }) => fetchLibrary(choice, pageParam, locale.language),
 		initialPageParam: 0,
 		getNextPageParam: (last) => last.next ?? undefined,
 		initialData:
-			query === initialQuery
+			query === initialQuery && (!initial.items[0]?.presentation || initial.items[0].presentation.language === locale.language)
 				? { pages: [initial], pageParams: [0] }
 				: undefined,
 		placeholderData: keepPreviousData,

@@ -1,0 +1,439 @@
+{
+	"about": "The evaluation set of search by localized names (docs/implementation/media-language-search-aliases-plan.md, Evaluation). Run by scripts/search-alias-eval.ts against the current search index build with a dry-built alias_table. Expected keys are media_type:tmdb_id. Each localized and canonical query is also run as prefixes: its first word, then its first 3 characters.",
+	"localized": [
+		{
+			"query": "Daydreamer",
+			"language": "en",
+			"expect": "show:80411"
+		},
+		{
+			"query": "Love Doesn't Understand Words",
+			"language": "en",
+			"expect": "show:67570"
+		},
+		{
+			"query": "Dracula: A Love Tale",
+			"language": "en",
+			"expect": "movie:1246049"
+		},
+		{
+			"query": "Cranberry Sorbet",
+			"language": "en",
+			"expect": "show:213194"
+		},
+		{
+			"query": "The Blood Lands",
+			"language": "en",
+			"expect": "movie:279968"
+		},
+		{
+			"query": "Chihiros Reise ins Zauberland",
+			"language": "de",
+			"expect": "movie:129"
+		},
+		{
+			"query": "Krieg der Sterne",
+			"language": "de",
+			"expect": "movie:11"
+		},
+		{
+			"query": "Der Pate",
+			"language": "de",
+			"expect": "movie:238"
+		},
+		{
+			"query": "Zurück in die Zukunft",
+			"language": "de",
+			"expect": "movie:105"
+		},
+		{
+			"query": "Haus des Geldes",
+			"language": "de",
+			"expect": "show:71446"
+		},
+		{
+			"query": "Le voyage de Chihiro",
+			"language": "fr",
+			"expect": "movie:129"
+		},
+		{
+			"query": "Le Parrain",
+			"language": "fr",
+			"expect": "movie:238"
+		},
+		{
+			"query": "Retour vers le futur",
+			"language": "fr",
+			"expect": "movie:105"
+		},
+		{
+			"query": "Les Évadés",
+			"language": "fr",
+			"expect": "movie:278"
+		},
+		{
+			"query": "Le trône de fer",
+			"language": "fr",
+			"expect": "show:1399"
+		},
+		{
+			"query": "El viaje de Chihiro",
+			"language": "es",
+			"expect": "movie:129"
+		},
+		{
+			"query": "La guerra de las galaxias",
+			"language": "es",
+			"expect": "movie:11"
+		},
+		{
+			"query": "Buscando a Nemo",
+			"language": "es",
+			"expect": "movie:12"
+		},
+		{
+			"query": "El padrino",
+			"language": "es",
+			"expect": "movie:238"
+		},
+		{
+			"query": "Regreso al futuro",
+			"language": "es",
+			"expect": "movie:105"
+		},
+		{
+			"query": "Il favoloso mondo di Amélie",
+			"language": "it",
+			"expect": "movie:194"
+		},
+		{
+			"query": "Le ali della libertà",
+			"language": "it",
+			"expect": "movie:278"
+		},
+		{
+			"query": "Il cavaliere oscuro",
+			"language": "it",
+			"expect": "movie:155"
+		},
+		{
+			"query": "Il miglio verde",
+			"language": "it",
+			"expect": "movie:497"
+		},
+		{
+			"query": "Il Trono di Spade",
+			"language": "it",
+			"expect": "show:1399"
+		},
+		{
+			"query": "O Poderoso Chefão",
+			"language": "pt",
+			"expect": "movie:238"
+		},
+		{
+			"query": "De Volta para o Futuro",
+			"language": "pt",
+			"expect": "movie:105"
+		},
+		{
+			"query": "Procurando Nemo",
+			"language": "pt",
+			"expect": "movie:12"
+		},
+		{
+			"query": "O Cavaleiro das Trevas",
+			"language": "pt",
+			"expect": "movie:155"
+		},
+		{
+			"query": "A Viagem de Chihiro",
+			"language": "pt",
+			"expect": "movie:129"
+		},
+		{
+			"query": "ショーシャンクの空に",
+			"language": "ja",
+			"expect": "movie:278"
+		},
+		{
+			"query": "ファイト・クラブ",
+			"language": "ja",
+			"expect": "movie:550"
+		},
+		{
+			"query": "ダークナイト",
+			"language": "ja",
+			"expect": "movie:155"
+		},
+		{
+			"query": "ハリー・ポッターと賢者の石",
+			"language": "ja",
+			"expect": "movie:671"
+		},
+		{
+			"query": "ゲーム・オブ・スローンズ",
+			"language": "ja",
+			"expect": "show:1399"
+		},
+		{
+			"query": "센과 치히로의 행방불명",
+			"language": "ko",
+			"expect": "movie:129"
+		},
+		{
+			"query": "반지의 제왕: 반지 원정대",
+			"language": "ko",
+			"expect": "movie:120"
+		},
+		{
+			"query": "대부",
+			"language": "ko",
+			"expect": "movie:238"
+		},
+		{
+			"query": "기묘한 이야기",
+			"language": "ko",
+			"expect": "show:66732"
+		},
+		{
+			"query": "쇼생크 탈출",
+			"language": "ko",
+			"expect": "movie:278"
+		},
+		{
+			"query": "千与千寻",
+			"language": "zh",
+			"expect": "movie:129"
+		},
+		{
+			"query": "阿甘正传",
+			"language": "zh",
+			"expect": "movie:13"
+		},
+		{
+			"query": "蝙蝠侠：黑暗骑士",
+			"language": "zh",
+			"expect": "movie:155"
+		},
+		{
+			"query": "教父",
+			"language": "zh",
+			"expect": "movie:238"
+		},
+		{
+			"query": "海底总动员",
+			"language": "zh",
+			"expect": "movie:12"
+		},
+		{
+			"query": "Gwiezdne wojny",
+			"language": "pl",
+			"expect": "movie:11"
+		},
+		{
+			"query": "Mroczny Rycerz",
+			"language": "pl",
+			"expect": "movie:155"
+		},
+		{
+			"query": "Podziemny krąg",
+			"language": "pl",
+			"expect": "movie:550"
+		},
+		{
+			"query": "Skazani na Shawshank",
+			"language": "pl",
+			"expect": "movie:278"
+		},
+		{
+			"query": "Gra o tron",
+			"language": "pl",
+			"expect": "show:1399"
+		},
+		{
+			"query": "Бойцовский клуб",
+			"language": "ru",
+			"expect": "movie:550"
+		},
+		{
+			"query": "Унесённые призраками",
+			"language": "ru",
+			"expect": "movie:129"
+		},
+		{
+			"query": "Крёстный отец",
+			"language": "ru",
+			"expect": "movie:238"
+		},
+		{
+			"query": "Во все тяжкие",
+			"language": "ru",
+			"expect": "show:1396"
+		},
+		{
+			"query": "Побег из Шоушенка",
+			"language": "ru",
+			"expect": "movie:278"
+		},
+		{
+			"query": "حرب النجوم",
+			"language": "ar",
+			"expect": "movie:11"
+		},
+		{
+			"query": "نادي القتال",
+			"language": "ar",
+			"expect": "movie:550"
+		},
+		{
+			"query": "صراع العروش",
+			"language": "ar",
+			"expect": "show:1399"
+		},
+		{
+			"query": "قائمة شندلر",
+			"language": "ar",
+			"expect": "movie:424"
+		},
+		{
+			"query": "الأسد الملك",
+			"language": "ar",
+			"expect": "movie:8587"
+		}
+	],
+	"canonical": [
+		{
+			"query": "The Dark Knight",
+			"expect": "movie:155"
+		},
+		{
+			"query": "Inception",
+			"expect": "movie:27205"
+		},
+		{
+			"query": "Fight Club",
+			"expect": "movie:550"
+		},
+		{
+			"query": "The Matrix",
+			"expect": "movie:603"
+		},
+		{
+			"query": "Pulp Fiction",
+			"expect": "movie:680"
+		},
+		{
+			"query": "Forrest Gump",
+			"expect": "movie:13"
+		},
+		{
+			"query": "Breaking Bad",
+			"expect": "show:1396"
+		},
+		{
+			"query": "Game of Thrones",
+			"expect": "show:1399"
+		},
+		{
+			"query": "Interstellar",
+			"expect": "movie:157336"
+		},
+		{
+			"query": "The Godfather",
+			"expect": "movie:238"
+		},
+		{
+			"query": "Titanic",
+			"expect": "movie:597"
+		},
+		{
+			"query": "Parasite",
+			"expect": "movie:496243"
+		},
+		{
+			"query": "Spider-Man",
+			"expect": "movie:557"
+		},
+		{
+			"query": "Toy Story",
+			"expect": "movie:862"
+		},
+		{
+			"query": "Friends",
+			"expect": "show:1668"
+		},
+		{
+			"query": "The Office",
+			"expect": "show:2316"
+		},
+		{
+			"query": "Stranger Things",
+			"expect": "show:66732"
+		},
+		{
+			"query": "Amélie",
+			"expect": "movie:194"
+		},
+		{
+			"query": "Up",
+			"expect": "movie:14160"
+		},
+		{
+			"query": "千と千尋の神隠し",
+			"expect": "movie:129"
+		}
+	],
+	"ambiguous": [
+		{
+			"query": "Dune",
+			"expect": "movie:438631",
+			"why": "2021 over 1984"
+		},
+		{
+			"query": "The Thing",
+			"expect": "movie:1091",
+			"why": "1982 over 2011"
+		},
+		{
+			"query": "Scarface",
+			"expect": "movie:111",
+			"why": "1983 over 1932"
+		},
+		{
+			"query": "Psycho",
+			"expect": "movie:539",
+			"why": "1960 over 1998"
+		},
+		{
+			"query": "Total Recall",
+			"expect": "movie:861",
+			"why": "1990 over 2012"
+		},
+		{
+			"query": "RoboCop",
+			"expect": "movie:5548",
+			"why": "1987 over 2014 and an alias of RoboCop: The Series"
+		},
+		{
+			"query": "Halloween",
+			"expect": "movie:948",
+			"why": "1978 over 2018, 2007 and a German alias of The Body"
+		},
+		{
+			"query": "Dracula",
+			"expect": "movie:138",
+			"why": "the 1931 title over the French alias of Bram Stoker's Dracula, which has more votes"
+		},
+		{
+			"query": "Nikita",
+			"expect": "movie:9322",
+			"why": "1990 over the 2010 show and a German alias of La Femme Nikita"
+		},
+		{
+			"query": "Das Ding aus einer anderen Welt",
+			"expect": "movie:1091",
+			"why": "a German name The Thing (1982) and The Thing from Another World (1951) share"
+		}
+	]
+}

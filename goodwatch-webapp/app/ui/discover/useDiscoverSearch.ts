@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Discover's search: the combined search's ranked list for the query and the ranking's eligibility, read from its
 // newline-delimited stream. The "Read as" chips arrive first, then the batch. The results endpoint filters the ranked
 // list in memory, so a change of Not seen yet, moods, the sort, or For you never searches again; only the query and the
@@ -34,7 +36,8 @@ export function useDiscoverSearch({
 	const [provisional, setProvisional] = useState<{ key: string; result: DiscoverSearchResult } | null>(null)
 	const generation = useRef(0)
 	const liveKey = useRef("")
-	const key = `${q ?? ""}|${searchFiltersKey(filters)}|${allTitles ? 1 : 0}`
+	const { locale } = useLocale()
+	const key = `${locale.language}:${q ?? ""}|${searchFiltersKey(filters)}|${allTitles ? 1 : 0}`
 	liveKey.current = enabled && q !== null ? key : ""
 	const result = useQuery({
 		queryKey: ["discover-search", key],
@@ -48,7 +51,7 @@ export function useDiscoverSearch({
 				if (current()) setStreamed({ key, chips })
 			}, (answer) => {
 				if (current()) setProvisional({ key, result: answer })
-			})
+			}, locale.language)
 			// The completed answer replaces its partial list for good.
 			if (generation.current === attempt)
 				setProvisional((old) => (old?.key === key ? null : old))

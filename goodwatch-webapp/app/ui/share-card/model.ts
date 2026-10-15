@@ -1,10 +1,11 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 // Types, color themes, and list prompts for share cards. Keys here are stored in user_list and are
 // part of card image cache keys: never rename one after it ships.
 
 export type MediaType = "movie" | "show"
 
 // One title as a share card shows it.
-export interface CardTitle {
+export interface CardTitle extends PresentedMedia {
 	key: string // "movie:603"
 	type: MediaType
 	title: string

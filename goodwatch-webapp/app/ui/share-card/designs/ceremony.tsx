@@ -73,7 +73,7 @@ const Framed = ({ item, w, slot, t, style }: { item: CardTitle; w: number; slot:
 				<img src={item.poster} width={w} height={h} style={{ display: "flex", width: w, height: h, objectFit: "cover" }} />
 			) : (
 				<div style={col({ width: w, height: h, padding: 22, justifyContent: "flex-end", backgroundImage: `linear-gradient(170deg, #1d1d21, ${alpha(t.accent, 0.5)})`, color: CREAM, fontFamily: "Instrument Serif", fontSize: Math.round(w * 0.15), lineHeight: 1 })}>
-					<div style={{ display: "flex" }}>{item.title}</div>
+					<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 				</div>
 			)}
 		</div>
@@ -176,7 +176,7 @@ export function CeremonyCard({ title, items, name, theme, date, editing }: CardP
 										)}
 										<div style={col({ flex: 1, gap: 6 })}>
 											<div style={{ display: "flex", fontFamily: "Playfair Display", fontWeight: 900, fontSize: 30, lineHeight: 1, color: alpha(CREAM, 0.55) }}>{ROMAN[3 + i]}</div>
-											<div style={{ display: "flex", fontFamily: "Instrument Serif", fontSize: fit(item.title, [[16, 34], [28, 28], [999, 23]]), lineHeight: 1.02 }}>{item.title}</div>
+											<div style={{ display: "flex", fontFamily: "Instrument Serif", fontSize: fit(item.title, [[16, 34], [28, 28], [999, 23]]), lineHeight: 1.02 }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 											{item.year && <div style={{ display: "flex", fontSize: 15, fontWeight: 700, letterSpacing: 3, color: MUTED }}>{item.year}</div>}
 										</div>
 									</div>

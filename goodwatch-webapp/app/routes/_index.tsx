@@ -13,6 +13,7 @@ import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
 import { assetUrl } from "~/utils/asset-url"
+import useLocale from "~/utils/locale"
 
 export { tvHomeLoader as loader } from "~/server/living-room/tv-loader.server"
 export { pageHeaders as headers } from "~/utils/headers"
@@ -52,9 +53,6 @@ export const meta: MetaFunction = () => [
 			alt: "GoodWatch - find your next movie or TV show",
 		},
 	}).filter((tag) => !("script:ld+json" in tag)),
-	// The living room is in English worldwide; there are no translated URL variants.
-	{ tagName: "link", rel: "alternate", hrefLang: "en", href: HOME_URL },
-	{ tagName: "link", rel: "alternate", hrefLang: "x-default", href: HOME_URL },
 	{
 		"script:ld+json": {
 			"@context": "https://schema.org",
@@ -92,5 +90,7 @@ export const meta: MetaFunction = () => [
 
 export default function Index() {
 	const data = useLoaderData<typeof tvHomeLoader>()
-	return <TvLivingRoom data={data} />
+	const { locale } = useLocale()
+	// The TV keeps previously visited titles in local state as well as the query cache.
+	return <TvLivingRoom key={locale.language} data={data} />
 }

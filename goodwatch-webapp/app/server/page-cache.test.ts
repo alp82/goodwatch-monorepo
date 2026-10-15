@@ -1,3 +1,8 @@
+import {
+	noteMediaReadFailure,
+	mediaReadFailed,
+	protectMediaResponse,
+} from "./media-read-health.server.ts"
 import assert from "node:assert/strict"
 import { channel } from "node:diagnostics_channel"
 import {
@@ -78,6 +83,8 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 		policy: SHARED_PAGE_CACHE_CONTROL,
 		cookie: false,
 		errored: false,
+		mediaFailed: false,
+		mediaFailedAfterOffer: false,
 		body: "<html>complete</html>",
 		delay: undefined as Promise<void> | undefined,
 		urls: [] as string[],
@@ -106,6 +113,8 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 		})
 		if (app.cookie) outgoing.set("Set-Cookie", "foo=bar")
 		if (app.location) response.setHeader("Location", app.location)
+		if (app.mediaFailed) noteMediaReadFailure()
+		protectMediaResponse(outgoing)
 		const decision = applyCachePolicy(request, app.status, outgoing)
 		const offer = cache.wants(
 			request,
@@ -114,6 +123,10 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 			decision,
 			app.policy,
 		)
+		if (app.mediaFailedAfterOffer) {
+			noteMediaReadFailure()
+			protectMediaResponse(outgoing)
+		}
 		if (!app.errored) offer?.(body)
 		response.writeHead(app.status, Object.fromEntries(outgoing))
 		response.end(incoming.method === "HEAD" ? undefined : body)
@@ -828,7 +841,7 @@ test("stop releases waiters and further requests miss without growing state", as
 	})
 })
 
-test("off switch disables offers and automatic wrapping", async (t) => {
+test("off switch disables page-cache offers but preserves request media-health isolation", async (t) => {
 	const previous = { node: process.env.NODE_ENV, cache: process.env.PAGE_CACHE }
 	t.after(() => {
 		if (previous.node === undefined)
@@ -842,13 +855,22 @@ test("off switch disables offers and automatic wrapping", async (t) => {
 	for (const off of ["off", "OFF", "0", "false", "FALSE"]) {
 		process.env.PAGE_CACHE = off
 		startPageCache()
-		const app = () => {}
+		let called = false
+		const app = () => {
+			called = true
+			assert.equal(mediaReadFailed(), false)
+			noteMediaReadFailure()
+			assert.equal(mediaReadFailed(), true)
+		}
 		const server = createServer(app)
 		channel("http.server.request.start").publish({
 			server,
 			request: { socket: { localPort: Number(process.env.PORT) || 3000 } },
 		})
-		assert.deepEqual(server.listeners("request"), [app])
+		assert.equal(server.listeners("request").length, 1)
+		server.emit("request", {}, new ServerResponse({ method: "GET" } as IncomingMessage))
+		assert.equal(called, true)
+		assert.equal(mediaReadFailed(), false)
 		assert.equal(
 			pageCacheWants(new Request("http://x/page"), 200, new Headers(), "keyed"),
 			null,
@@ -1465,4 +1487,101 @@ test("a render offered after an asset switch finds no flight and is not stored",
 	await pending
 	await until(() => f.cache.stats().flights === 0)
 	assert.equal(f.cache.stats().entries, 0)
+})
+
+test("root country/language is shareable regardless of default/browser provenance", () => {
+	const defaults = pageCacheKey({ url: "/page" })
+	assert.deepEqual(
+		defaults,
+		pageCacheKey({ url: "/page", acceptLanguage: "en" }),
+	)
+	assert.deepEqual(
+		defaults,
+		pageCacheKey({ url: "/page", acceptLanguage: "en-US" }),
+	)
+})
+
+test("saved guests share an HTML key across revisions, writer sequences and explicit/browser mode", async () => {
+	const { serializeLocalizationCookie } = await import(
+		"../utils/media-language.ts"
+	)
+	const key = (version: string, language: "de" | "browser", sequence: number) =>
+		pageCacheKey({
+			url: "/page",
+			acceptLanguage: "de-DE",
+			cookie: serializeLocalizationCookie({
+				country: "DE",
+				language,
+				schemaVersion: 1,
+				version,
+				writer: { clientId: "different-visitor", sequence },
+			}),
+		})
+	assert.deepEqual(
+		key("first-device", "de", 1),
+		key("second-device", "de", 200),
+	)
+	assert.deepEqual(
+		key("first-device", "de", 1),
+		key("third-device", "browser", 30),
+	)
+	assert.deepEqual(
+		key("first-device", "de", 1),
+		pageCacheKey({ url: "/page", acceptLanguage: "de-DE" }),
+	)
+})
+
+test("a saved guest's warmed HTML is a cache hit for another revision of the same pair", async (t) => {
+	const { serializeLocalizationCookie } = await import(
+		"../utils/media-language.ts"
+	)
+	const f = await fixture(t)
+	const cookie = (version: string) =>
+		serializeLocalizationCookie({
+			country: "DE",
+			language: "de",
+			schemaVersion: 1,
+			version,
+		})
+	await f.warm("/page", { cookie: cookie("visitor-one") })
+	const calls = f.app.calls
+	const response = await f.get("/page", { cookie: cookie("visitor-two") })
+	assert.equal(response.headers["gw-page-cache"], "hit")
+	assert.equal(f.app.calls, calls)
+})
+
+test("canonical crawler HTML never shares a live English overlay entry", () => {
+	const human = pageCacheKey({
+		url: "/movie/42-title",
+		userAgent:
+			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+		acceptLanguage: "en-US",
+	})
+	const crawler = pageCacheKey({
+		url: "/movie/42-title",
+		userAgent: "Googlebot",
+		acceptLanguage: "en-US",
+	})
+	assert.notDeepEqual(human, crawler)
+})
+
+test("media read errors are private and cannot enter the page cache, including after an offer", async (t) => {
+	const f = await fixture(t)
+	for (const late of [false, true]) {
+		f.app.mediaFailed = !late
+		f.app.mediaFailedAfterOffer = late
+		for (let i = 0; i < 3; i++) {
+			const answer = await f.get(late ? "/late-media-error" : "/media-error")
+			assert.equal(answer.headers["cache-control"], "private, no-store")
+			await until(() => f.cache.stats().flights === 0)
+		}
+		assert.equal(f.cache.stats().entries, 0)
+	}
+	f.app.mediaFailed = false
+	f.app.mediaFailedAfterOffer = false
+	await f.get("/healthy-media")
+	await until(() => f.cache.stats().flights === 0)
+	await f.get("/healthy-media")
+	await until(() => f.cache.stats().flights === 0)
+	assert.equal((await f.get("/healthy-media")).headers["gw-page-cache"], "hit")
 })

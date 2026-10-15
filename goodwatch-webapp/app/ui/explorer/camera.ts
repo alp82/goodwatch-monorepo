@@ -34,6 +34,23 @@ export function nextStop(
 	return null
 }
 
+/**
+ * A step from the world frames the region under the pointer. The combination's frame can be wider than a region:
+ * once it is reached, return null so normal zoom stops take over instead of framing the same view again.
+ */
+export function overviewStep(
+	base: number,
+	regionScale: number,
+	dir: 1 | -1,
+	home: () => Cam,
+	frame: () => Cam,
+): Cam | null {
+	if (base >= regionScale * 0.9) return null
+	if (dir < 0) return home()
+	const target = frame()
+	return base < target.s * 0.9 ? target : null
+}
+
 /** A free zoom settles on a stop only from this close (in log scale, about 10%), and from half that against its way. */
 export const SETTLE_REACH = 0.1
 

@@ -1,0 +1,575 @@
+{
+  "recordedAt": "2026-10-15T16:14:40.604421+00:00",
+  "status": "Blocked on original page logs; no incident fix or extended Docker proof claimed",
+  "branch": "fix/crate-restart-errors",
+  "branchBase": "d3867c107388e7370be9e25fcbf42203e4400b0b",
+  "productionCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+  "references": [
+    "https://github.com/alp82/goodwatch-monorepo/issues/547#issuecomment-6184183348",
+    "https://github.com/alp82/goodwatch-monorepo/issues/588"
+  ],
+  "sourceEvidence": {
+    "commit": "bd65c540ab00623c6225820c2311dd34da4ccb37",
+    "path": "docs/implementation/auth/cratedb-production/20261015-q25/",
+    "files": [
+      "client-impact-crate03.json",
+      "client-sample-crate03-after.json",
+      "notes.md"
+    ],
+    "limitations": "Saved evidence has timestamps and hashes, but deliberately omits SQL text/parameters, exceptions and stacks. Counts overlap and are not unique requests."
+  },
+  "incidentCounts": {
+    "node": "crate03",
+    "recordedAt": "2026-10-15T04:07:21.132144+00:00",
+    "clients": [
+      {
+        "host": 20,
+        "name": "goodwatch-search-b",
+        "id": "1530f91b5e86f6b8d3f6f4d4a8c27edd88f25dd4554c08273fc68ff52191eceb",
+        "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+        "health": "healthy",
+        "logCounts": {
+          "failedQuery": 0,
+          "crateTimeout": 0,
+          "crateDatabaseError": 0,
+          "crateError": 0,
+          "nodeLossError": 0,
+          "connectionError": 0,
+          "nativeConnectionError": 0,
+          "logged5xx": 0
+        },
+        "successfulCrateLogLines": 0,
+        "httpResponseDelta": 53.0,
+        "http5xxDelta": 0,
+        "http5xxByLabels": {},
+        "counterReset": false
+      },
+      {
+        "host": 20,
+        "name": "goodwatch-search-a",
+        "id": "2494b5fb6b783959b51adb0bcd4c72dbf18872d35e3c251c2048a2e4d9fac4a3",
+        "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+        "health": "healthy",
+        "logCounts": {
+          "failedQuery": 0,
+          "crateTimeout": 0,
+          "crateDatabaseError": 0,
+          "crateError": 0,
+          "nodeLossError": 0,
+          "connectionError": 0,
+          "nativeConnectionError": 0,
+          "logged5xx": 0
+        },
+        "successfulCrateLogLines": 0,
+        "httpResponseDelta": 53.0,
+        "http5xxDelta": 0,
+        "http5xxByLabels": {},
+        "counterReset": false
+      },
+      {
+        "host": 20,
+        "name": "gk4owk8-20261015T034301",
+        "id": "296294c072764b2b9c17aa7ed8db14c146735fdd5b9cbb390382592fe1e0fbe2",
+        "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+        "health": "healthy",
+        "logCounts": {
+          "failedQuery": 24,
+          "crateTimeout": 166,
+          "crateDatabaseError": 0,
+          "crateError": 0,
+          "nodeLossError": 0,
+          "connectionError": 16,
+          "nativeConnectionError": 174,
+          "logged5xx": 6
+        },
+        "successfulCrateLogLines": 12533,
+        "httpResponseDelta": 5057.0,
+        "http5xxDelta": 6.0,
+        "http5xxByLabels": {
+          "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 1.0,
+          "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 2.0,
+          "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 3.0
+        },
+        "counterReset": false
+      },
+      {
+        "host": 21,
+        "name": "gk4owk8-20261015T034054",
+        "id": "4ed8640491b5922bcae007f20aa4477be36aac657ecac4897427e1449ec9fc5b",
+        "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+        "health": "healthy",
+        "logCounts": {
+          "failedQuery": 3,
+          "crateTimeout": 240,
+          "crateDatabaseError": 0,
+          "crateError": 4,
+          "nodeLossError": 0,
+          "connectionError": 66,
+          "nativeConnectionError": 273,
+          "logged5xx": 3
+        },
+        "successfulCrateLogLines": 15286,
+        "httpResponseDelta": 5914.0,
+        "http5xxDelta": 3.0,
+        "http5xxByLabels": {
+          "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 3.0
+        },
+        "counterReset": false
+      }
+    ],
+    "limitation": "Observed terminal log occurrences and HTTP response counter deltas, not unique member requests; public synthetic checks do not exercise a signed-in session.",
+    "totals": {
+      "httpResponseDelta": 11077.0,
+      "http5xxDelta": 9.0,
+      "successfulCrateLogLines": 27819,
+      "logCounts": {
+        "failedQuery": 27,
+        "crateTimeout": 406,
+        "crateDatabaseError": 0,
+        "crateError": 4,
+        "nodeLossError": 0,
+        "connectionError": 82,
+        "nativeConnectionError": 447,
+        "logged5xx": 9
+      }
+    },
+    "public": {
+      "responses": 214,
+      "statusCounts": {
+        "200": 214
+      },
+      "transportErrors": 0,
+      "http5xx": 0,
+      "firstAt": "2026-10-15T03:57:12.754421+00:00",
+      "lastAt": "2026-10-15T04:06:57.868497+00:00"
+    }
+  },
+  "clients": [
+    {
+      "host": "10.0.0.20",
+      "container": "goodwatch-search-b",
+      "containerId": "1530f91b5e86f6b8d3f6f4d4a8c27edd88f25dd4554c08273fc68ff52191eceb",
+      "counts": {
+        "failedQuery": 0,
+        "crateTimeout": 0,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 0,
+        "nativeConnectionError": 0,
+        "logged5xx": 0
+      },
+      "successfulCrateLogLines": 0
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "goodwatch-search-a",
+      "containerId": "2494b5fb6b783959b51adb0bcd4c72dbf18872d35e3c251c2048a2e4d9fac4a3",
+      "counts": {
+        "failedQuery": 0,
+        "crateTimeout": 0,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 0,
+        "nativeConnectionError": 0,
+        "logged5xx": 0
+      },
+      "successfulCrateLogLines": 0
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "containerId": "296294c072764b2b9c17aa7ed8db14c146735fdd5b9cbb390382592fe1e0fbe2",
+      "counts": {
+        "failedQuery": 24,
+        "crateTimeout": 166,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 16,
+        "nativeConnectionError": 174,
+        "logged5xx": 6
+      },
+      "successfulCrateLogLines": 12533
+    },
+    {
+      "host": "10.0.0.21",
+      "container": "gk4owk8-20261015T034054",
+      "containerId": "4ed8640491b5922bcae007f20aa4477be36aac657ecac4897427e1449ec9fc5b",
+      "counts": {
+        "failedQuery": 3,
+        "crateTimeout": 240,
+        "crateDatabaseError": 0,
+        "crateError": 4,
+        "nodeLossError": 0,
+        "connectionError": 66,
+        "nativeConnectionError": 273,
+        "logged5xx": 3
+      },
+      "successfulCrateLogLines": 15286
+    }
+  ],
+  "terminalQueries": [
+    {
+      "host": "10.0.0.21",
+      "container": "gk4owk8-20261015T034054",
+      "at": "2026-10-15T03:59:45.954453428Z",
+      "lineSha256": "1193689ae19f922ea16a8180a6250ea7cb82d2d2755d3a1a73d3e48a9f75f032",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.029598053Z",
+      "lineSha256": "d135101eba92fe0e0db62da051eba18b40e3978c84b60f702bc4a3bd1fbf13e0",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.036260417Z",
+      "lineSha256": "3d67d966fe48b8208709aadc339f43393eeb7902cc59955de217214ebad5522b",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.039591361Z",
+      "lineSha256": "371e00a951f63ed48820e5a55cf2dd81e62c82fca7978151d7e9508f380e3078",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.043157921Z",
+      "lineSha256": "4a32931f086fb10b3f3f1bb46eb6845aa555d0022b165bae821f618858244f5b",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.045583242Z",
+      "lineSha256": "7d09a770c2e27babc826ccc408fb2c8fdd34683552f6cb7f390dab088ea878c6",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.048112981Z",
+      "lineSha256": "eae64fe0ddaa12fb7ae8add630b664ba5f4bf031af0e0e3257d4fcfcef3c852f",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.051818226Z",
+      "lineSha256": "c53be5d32e0426170cd030ce42306c3d47ac3bc8f908a167875c7c159f300fe6",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.053260070Z",
+      "lineSha256": "76d641b01d885d5b26227e08b23f431d5d0f120c1661e35c7d0b18ca2aaa284c",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.054793813Z",
+      "lineSha256": "39c8d93be42cfb46a6e13b5f2681dea7fa0605faa7b81994a2c8e1d81d49729a",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.21",
+      "container": "gk4owk8-20261015T034054",
+      "at": "2026-10-15T04:02:01.090734332Z",
+      "lineSha256": "a0ff152a490c5c7310c5b49b85de05c118ff2afd2c83c194d683a9347ddfa12b",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.234184623Z",
+      "lineSha256": "564b63da6e9f8a375a0cf8dc9c4e82111d939e2800629daca836999b04bec84d",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.242732599Z",
+      "lineSha256": "1208d376940f804783507c6663a406e12576e28c8a16f6ecced5cf37b275ac98",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.262301036Z",
+      "lineSha256": "c0c3887d4839fef932eb3858600466a40bbbce0966e23eebd2f0f38d97192ece",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.265536574Z",
+      "lineSha256": "c8c962b64347c652e7529b3816303f6732d0611216b4774bbd1e21a4cc04fc64",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.442193813Z",
+      "lineSha256": "8eba3689a0de7ccb309f8abfb7e2d290b9bcbbd0bf731f3f1666710e2b877645",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.446535513Z",
+      "lineSha256": "304e19ef67d0a6fab8052bb95e5cb6f02612107c5b7f03266250bcd8327f92e3",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.449554586Z",
+      "lineSha256": "423290ffaa7967b1367269d14ce0d7ca4195dbcbeef1db33084bc35eb8a7c61c",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.546244539Z",
+      "lineSha256": "68d6bf6319f106c13d7a80ec1abc53ebf84f1a71fa3976e5a8b2545084de8903",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.548935507Z",
+      "lineSha256": "561d2497a5339166e19ea8f59d600d2c1848a9b72814201b16759b2baaa490e9",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.593122710Z",
+      "lineSha256": "b27e506922b18f41dc5ab5b269e9c49d32304d1794c1cccb0691d59b8955b859",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.689252637Z",
+      "lineSha256": "27d15785fbedeb2e0eb83594f892e66f2d09972be6c8cf1d51e8f4f9691aeef9",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.691658891Z",
+      "lineSha256": "4880639b801d2a9674c24b6c1cc3ea2509149caaf2d15551811f78355f4eeab9",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.767385863Z",
+      "lineSha256": "31c211dcc96991f39cc369159f96cdcf2e29e6093b8fd2baf9a453efa236b713",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.769925084Z",
+      "lineSha256": "7f651ef5e3fd83ec47b3dbf3d2432ddb0a9eb37eee1a2118aaadd37469beb239",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.20",
+      "container": "gk4owk8-20261015T034301",
+      "at": "2026-10-15T04:02:01.830806957Z",
+      "lineSha256": "d1d51aa7d33eb896cb53c7e797ae9a28b5d0bb9b5758134ea82177eba4ad0546",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    },
+    {
+      "host": "10.0.0.21",
+      "container": "gk4owk8-20261015T034054",
+      "at": "2026-10-15T04:03:30.166446830Z",
+      "lineSha256": "aadd2b6f39fc3b1237a343aa4fb6c2e52a573196dd50ccedd4512b2996fce164",
+      "queryPath": null,
+      "exception": null,
+      "classification": "Unclassified: original query/error text unavailable",
+      "helperRecoveryOutcome": null
+    }
+  ],
+  "readOnlyAccessFindings": {
+    "incidentPageContainers": "Docker reports No such container on the original IDs on both hosts; matching /var/lib/docker/containers directories absent",
+    "replacementPages": "Both page hosts now run d3867c107388e7370be9e25fcbf42203e4400b0b, after the incident",
+    "journals": "No entries for either incident page CONTAINER_NAME within 03:55\u201304:08 UTC",
+    "archive": "Abio Fluent Bit config forwards to Axiom. A read-only APL query with its configured credential returns HTTP 403: token does not have access to resource: query with action: read. No credential copied or printed. Vector1 has no current Coolify log-drain container. Historical archive coverage not established.",
+    "alternateCaptures": "No matching capture found under remote /tmp, /root/goodwatch or /data/coolify to depth 4. The earlier maintenance transcript did not retain query/error text.",
+    "productionChanges": false
+  },
+  "searchLogObservations": [
+    {
+      "container": "goodwatch-search-a",
+      "windowStart": "2026-10-15T03:55:00Z",
+      "windowEndExclusive": "2026-10-15T04:08:00Z",
+      "rawLogSha256": "2ba96eb962a2c3ba5f4ed635eaa4689b3d911198406709c7fce5d512358d5c31",
+      "lineCount": 66,
+      "crateMentionLines": 0,
+      "requests": [
+        {
+          "path": "/api/command-palette?q=mat",
+          "status": 200,
+          "count": 53
+        }
+      ],
+      "processMinuteLines": 13,
+      "otherLines": []
+    },
+    {
+      "container": "goodwatch-search-b",
+      "windowStart": "2026-10-15T03:55:00Z",
+      "windowEndExclusive": "2026-10-15T04:08:00Z",
+      "rawLogSha256": "83d3a6725af2b70cd77f54797dc17676138780a49d56a43e4aa1789bb1491ffe",
+      "lineCount": 67,
+      "crateMentionLines": 0,
+      "requests": [
+        {
+          "path": "/api/command-palette?q=mat",
+          "status": 200,
+          "count": 54
+        }
+      ],
+      "processMinuteLines": 13,
+      "otherLines": []
+    }
+  ],
+  "searchExplanation": {
+    "observed": "Only repeated /api/command-palette?q=mat HTTP 200 requests plus minute process logs appear in both retained logs in 03:55\u201304:08 UTC. Prior same-window metrics: 53 responses each and zero Crate query log lines.",
+    "inference": "Repeated palette requests are consistent with six-hour Redis caching over an already loaded in-memory search index; cache hits were not instrumented per request. No full ranked-search or signed-in workload is established.",
+    "deployedCodePaths": {
+      "palette": "goodwatch-webapp/app/server/command-palette.server.ts: getPaletteTitles uses cached(command-palette-titles-v4, ttlMinutes=360), then indexTitles over the in-memory index and getDisplayFields on miss.",
+      "catalog": "goodwatch-webapp/app/server/combined-search/catalog.server.ts: searchStatement sends undici POST /_sql to CRATE_HOSTS.split(\",\")[0], outside crate.ts.",
+      "indexManifest": "goodwatch-webapp/app/server/search-ranking/search-index-build.server.ts: readManifest has its own per-host loop."
+    },
+    "runtimeConfigVerified": {
+      "WEBAPP_ROLE": "search",
+      "CRATE_HOSTS": "10.0.0.11,10.0.0.12,10.0.0.13",
+      "CRATE_PORT": "4200",
+      "SOURCE_COMMIT": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9"
+    },
+    "implication": "The previous blanket statement that all current search reads use crate.ts is incorrect. Catalog reads use crate-01 as the only coordinator. Clean crate-03 palette traffic does not validate restarting crate-01."
+  },
+  "diagnosisBoundary": {
+    "known": "All 27 FAILED log occurrences came from crate.ts logging. vector1 has 24 tightly clustered at 04:02:01; abio has one at 03:59:45.954, one at 04:02:01.090 and one at 04:03:30.166. This identifies a logging path, not the query/caller or root cause.",
+    "unknown": [
+      "Query tables and loader/helper paths for each FAILED event",
+      "Which coordinator each failed request used",
+      "Whether terminal errors were timeouts, drain refusal, reset, unsupported SQL node-loss errors or another condition",
+      "Whether an upsert/insert helper subsequently recovered any FAILED execute calls",
+      "Whether Valkey errors independently contributed to HTTP 5xx",
+      "Mapping of each failed query to the nine HTTP responses"
+    ],
+    "notAConclusion": "406 timeout-name occurrences are not 406 terminal timeouts; native attempt logging, wrapper logging and Remix reporting can repeat an error. Four CrateError lines are not four unique SQL failures."
+  },
+  "nextRequiredInput": {
+    "artifact": "Original page-container stdout/stderr for 2026-10-15 03:55\u201304:08 UTC from both incident IDs, including multi-line Query/Error/Stack context and HTTP lines; redact credentials, cookies, authorization headers and personal parameters while preserving SQL shape and errors.",
+    "alternative": "Read-only Axiom query access if it retains these containers, plus another archive/export for vector1 if it was not drained. Do not grant access by changing production configuration.",
+    "afterInput": [
+      "Classify all 27 terminal events and correlate the HTTP failures without inventing missing request IDs",
+      "Build and run a failing regression at the actual caller seam",
+      "Fix only the demonstrated failure class",
+      "Extend the existing three-node Docker fault proof to that observed class, run a failing baseline and passing fixed proof",
+      "Push implementation/tests/evidence to this branch and update the draft PR"
+    ]
+  },
+  "crate01Recommendation": "Defer until page failures are classified, fixed, locally proved and deployed under separate authorization; additionally cover search catalog first-host dependency. No evidence supports a zero-member-impact restart before then.",
+  "verification": {
+    "newAppTestsRun": false,
+    "extendedDockerProofRun": false,
+    "reason": "No demonstrated failure class from the missing page logs; running the previous SIGKILL proof would not validate this incident. Diagnosing-bugs skill requires a red-capable feedback loop before hypotheses/fix.",
+    "evidenceValidation": "27 timestamp/hash terminal event records agree with source counts; search route/log counts generated from retained production logs."
+  }
+}

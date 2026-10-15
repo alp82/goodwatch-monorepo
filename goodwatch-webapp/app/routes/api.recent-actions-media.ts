@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { query } from "~/utils/crate"
@@ -14,7 +15,7 @@ interface MediaMetadata {
 	poster_path: string | null
 }
 
-export const loader: LoaderFunction = async ({ request }) => {
+const canonicalLoader: LoaderFunction = async ({ request }) => {
 	const url = new URL(request.url)
 	const itemsParam = url.searchParams.get("items")
 
@@ -29,7 +30,8 @@ export const loader: LoaderFunction = async ({ request }) => {
 		return json({ error: "Invalid items parameter" }, { status: 400 })
 	}
 
-	if (!Array.isArray(items) || items.length === 0) {
+	if (!Array.isArray(items) || items.length > 100 || items.some(i => !i || !["movie", "show"].includes(i.media_type) || !Number.isSafeInteger(i.tmdb_id) || i.tmdb_id <= 0)) return json({ error: "Pass up to 100 movie/show IDs" }, { status: 400 })
+	if (items.length === 0) {
 		return json({ media: [] })
 	}
 
@@ -76,3 +78,5 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 	return json({ media: results })
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

@@ -1,3 +1,4 @@
+import { clearMediaSession, establishMediaSession } from "~/utils/media-session"
 import { AuthCallbackError } from "~/ui/auth/AuthCallbackError"
 import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
 import type { User } from "@supabase/auth-js"
@@ -39,6 +40,10 @@ export function AuthProvider({
 }) {
 	const [user, setUser] = useState(initialUser)
 	const [supabase, setSupabase] = useState<SupabaseClient>()
+	const [sessionUserId, setSessionUserId] = useState<string | null>()
+	const establishedUserId = useRef<string>()
+	const currentUserId = useRef(user?.id)
+	currentUserId.current = user?.id
 	const previousUserId = useRef(initialUser?.id)
 	const queryClient = useQueryClient()
 	const { revalidate } = useRevalidator()
@@ -66,8 +71,18 @@ export function AuthProvider({
 		if (betterAuth) throw new Error("Supabase sign-in is off")
 		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
 		if (mounted.current && !subscription.current) {
-			subscription.current = client.auth.onAuthStateChange((_event, session) =>
-				startTransition(() => setUser(session?.user ?? null)),
+			subscription.current = client.auth.onAuthStateChange((event, session) =>
+				startTransition(() => {
+					setUser(session?.user ?? null)
+					if (
+						event === "INITIAL_SESSION" ||
+						event === "SIGNED_IN" ||
+						event === "SIGNED_OUT"
+					) {
+						setSessionUserId(session?.user.id ?? null)
+						if (!session) clearMediaSession()
+					}
+				}),
 			).data.subscription
 			startTransition(() => setSupabase(client))
 		}
@@ -97,11 +112,19 @@ export function AuthProvider({
 	}, [getSupabase, betterAuth])
 
 	useEffect(() => {
-		if (previousUserId.current === user?.id) return
+		const targetUserId = user?.id
+		const userChanged = previousUserId.current !== targetUserId
+		const establishSession = Boolean(
+			targetUserId &&
+				(betterAuth || sessionUserId === targetUserId) &&
+				establishedUserId.current !== targetUserId,
+		)
+		if (!userChanged && !establishSession) return
 		const oldUserId = previousUserId.current
-		previousUserId.current = user?.id
+		previousUserId.current = targetUserId
+		establishedUserId.current = targetUserId
 		// Reconcile server-rendered pages on login/logout, including other tabs.
-		if (oldUserId) {
+		if (userChanged && oldUserId) {
 			try {
 				cleanupCompletedTransferOnLogout(oldUserId)
 			} catch {}
@@ -111,12 +134,35 @@ export function AuthProvider({
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}
-		// The root loader holds the member and their data, and a navigation alone doesn't rerun it. With Better Auth
-		// the change came from that loader already.
-		if (betterAuth) return
-		requestRootRevalidation()
-		revalidate()
-	}, [user?.id, queryClient, revalidate, betterAuth])
+		// The per-tab marker skips repeated hard-load adoption; only actual preference/auth changes reload pages.
+		const reconcile = async () => {
+			let changed = false
+			if (targetUserId) {
+				try {
+					changed = await establishMediaSession(targetUserId, userChanged, {
+						isCurrent: () =>
+							mounted.current && currentUserId.current === targetUserId,
+					})
+				} catch {
+					/* A failed check cannot prevent sign-in or a later explicit Keep. */
+				}
+			} else clearMediaSession()
+			if (
+				(changed || (userChanged && !betterAuth)) &&
+				mounted.current &&
+				currentUserId.current === targetUserId
+			) {
+				if (changed)
+					void queryClient.invalidateQueries({
+						queryKey: ["media-preferences", targetUserId],
+						exact: true,
+					})
+				requestRootRevalidation()
+				revalidate()
+			}
+		}
+		void reconcile()
+	}, [user?.id, sessionUserId, queryClient, revalidate, betterAuth])
 
 	const refreshUser = useCallback(() => {
 		requestRootRevalidation()

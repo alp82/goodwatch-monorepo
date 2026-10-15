@@ -1,3 +1,5 @@
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
+import { MediaFact } from "./MediaFact"
 // The TV's rating strip, and the screen that asks for a score with it: the taste quiz (screens/Quiz.tsx) and "How
 // was it?" after Seen it (screens/Rate.tsx) are both this one screen.
 //
@@ -138,6 +140,8 @@ export function RatingScreen({
 	backdrop,
 	kicker,
 	question,
+	questionLanguage,
+	questionMedia,
 	line,
 	value,
 	children,
@@ -148,6 +152,8 @@ export function RatingScreen({
 	backdrop?: string | null
 	/** What stands over the question: "Seen it", "Taste · 2 of 5 rated". */
 	kicker: string
+	questionLanguage?: string
+	questionMedia?: { text: string; lang: string; at?: number }
 	question: string
 	/** What stands under the question while the focus is not on the strip. */
 	line?: string | null
@@ -176,9 +182,10 @@ export function RatingScreen({
 						</div>
 						<div
 							className="mt-1 line-clamp-2 font-bold leading-[1.05] tracking-tight"
+							{...mediaTextAttributes(questionLanguage ?? "en")}
 							style={{ fontSize: questionSize(question, 32, 26) }}
 						>
-							{question}
+							<MediaFact text={question} media={questionMedia} />
 						</div>
 						<div className="mt-1.5 h-[24px] truncate text-[20px] leading-tight text-white/85">
 							{says ?? line}
@@ -196,9 +203,10 @@ export function RatingScreen({
 					</div>
 					<div
 						className="mt-2 line-clamp-2 font-bold leading-[1.02] tracking-tight"
+						{...mediaTextAttributes(questionLanguage ?? "en")}
 						style={{ fontSize: questionSize(question, 72, 54) }}
 					>
-						{question}
+						<MediaFact text={question} media={questionMedia} />
 					</div>
 					<div className="mt-3 h-[40px] truncate text-[30px] text-white/85">
 						{says ?? line}

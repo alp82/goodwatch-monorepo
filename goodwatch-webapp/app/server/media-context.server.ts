@@ -1,0 +1,258 @@
+import {
+	orderedMediaSave,
+	currentMediaSaveRecord,
+} from "./media-save-order.server.ts"
+import { MediaPreferencesConflict } from "./media-preferences-store.server.ts"
+import { randomUUID } from "node:crypto"
+import {
+	cacheContextState,
+	cacheIdentity,
+	requestLocale,
+} from "./cache-identity.server.ts"
+import { getUserSettings, resetUserSettingsCache } from "./user-settings.server"
+import {
+	readMediaPreferences,
+	readEffectiveMediaPreferences,
+	invalidateMediaPreferencesRead,
+	writeMediaPreferences,
+} from "./media-preferences-store.server.ts"
+import {
+	parseLocalizationCookie,
+	resolveEffectiveMediaContext,
+	serializeLocalizationCookie,
+	signInAdoption,
+	type LocalizationRecord,
+	type SaveLocalizationRequest,
+	type SaveLocalizationResponse,
+} from "../utils/media-language.ts"
+
+/** Members bypass shared page caches; guests use the same pure cookie/header rule before cache lookup. */
+const contexts = new WeakMap<
+	Request,
+	Map<string, Promise<Awaited<ReturnType<typeof resolveOnce>>>>
+>()
+export function resolveMediaContext(request: Request, userId?: string | null) {
+	let byUser = contexts.get(request)
+	if (!byUser) {
+		byUser = new Map()
+		contexts.set(request, byUser)
+	}
+	const key = userId ?? ""
+	const remembered = byUser.get(key)
+	if (remembered) return remembered
+	const result = resolveOnce(request, userId)
+	byUser.set(key, result)
+	return result
+}
+
+async function resolveOnce(request: Request, userId?: string | null) {
+	const rawCookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const cookie =
+		!userId ||
+		rawCookie?.sourceUserId === null ||
+		rawCookie?.sourceUserId === userId
+			? rawCookie
+			: null
+	let account: LocalizationRecord | null = userId
+		? (await readEffectiveMediaPreferences(userId)).record
+		: null
+	if (
+		userId &&
+		cookie?.sourceUserId === userId &&
+		account?.version !== cookie?.version
+	) {
+		invalidateMediaPreferencesRead(userId)
+		account = (await readEffectiveMediaPreferences(userId)).record
+	}
+	const settings = userId ? await getUserSettings({ userId }) : null
+	const fallback = requestLocale(
+		userId && rawCookie && !cookie
+			? new Request(request.url, {
+					headers: {
+						"Accept-Language": request.headers.get("Accept-Language") ?? "",
+					},
+				})
+			: request,
+	)
+	const fallbackState = cacheContextState(
+		cacheIdentity(request),
+		request.headers.get("Accept-Language"),
+	)
+	const effectiveContext = resolveEffectiveMediaContext({
+		account,
+		cookie,
+		browserLanguages:
+			!account && !cookie && fallback.source === "identity-header"
+				? fallback.language
+				: request.headers.get("Accept-Language"),
+		urlCountry: new URL(request.url).searchParams.get("country"),
+		legacyCountry: settings?.country_default,
+		fallbackCountry: fallback.country,
+		fallbackCountryProvenance: fallbackState.countryProvenance,
+	})
+	const record = account ?? cookie
+	return {
+		effectiveContext,
+		record,
+		setCookie:
+			account &&
+			(account.version !== cookie?.version ||
+				account.country !== cookie?.country ||
+				account.language !== cookie?.language ||
+				cookie?.sourceUserId !== userId)
+				? serializeLocalizationCookie(
+						account,
+						mediaCookieIsSecure(request),
+						userId ?? null,
+					)
+				: null,
+	}
+}
+
+/** Called only from the POST session-establishment boundary, never by a root/page GET. */
+export async function adoptMediaPreferencesAtSignIn(
+	request: Request,
+	userId: string,
+) {
+	const account = (await readMediaPreferences(userId)).record
+	invalidateMediaPreferencesRead(userId)
+	const cookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const pair = signInAdoption(account, cookie)
+	const record = pair
+		? await writeMediaPreferences(userId, pair, { adoptOnly: true })
+		: account
+	if (pair) await invalidateMediaSettings(userId)
+	const latest = record ? (await readMediaPreferences(userId)).record : null
+	const nextCookie = latest
+		? serializeLocalizationCookie(latest, mediaCookieIsSecure(request), userId)
+		: null
+	const cookieChanged =
+		!!nextCookie &&
+		JSON.stringify(cookie) !==
+			JSON.stringify(parseLocalizationCookie(nextCookie))
+	return {
+		changed: account?.version !== latest?.version || cookieChanged,
+		setCookie: cookieChanged ? nextCookie : null,
+	}
+}
+
+export async function saveMediaPreferences(
+	request: Request,
+	userId: string | null | undefined,
+	input: SaveLocalizationRequest,
+): Promise<{
+	response: SaveLocalizationResponse
+	setCookie: string
+}> {
+	return orderedMediaSave(
+		userId ? `member:${userId}` : "guest",
+		input.clientId,
+		input.sequence,
+		async (isLatest, remember) => {
+			const writer = { clientId: input.clientId, sequence: input.sequence }
+			const cookie = await currentSavedMediaPreferences(
+				request,
+				null,
+				input.clientId,
+			)
+			if (
+				!userId &&
+				input.expectedVersion !== undefined &&
+				input.expectedVersion !== (cookie?.version ?? null) &&
+				cookie?.writer?.clientId !== input.clientId
+			)
+				throw new MediaPreferencesConflict()
+			if (!userId && cookie?.writer?.clientId === input.clientId) {
+				if (
+					input.sequence < cookie.writer.sequence ||
+					(input.sequence === cookie.writer.sequence &&
+						(input.pair.country !== cookie.country ||
+							input.pair.language !== cookie.language))
+				)
+					throw new MediaPreferencesConflict()
+			}
+			if (!isLatest()) throw new MediaPreferencesConflict()
+			const record = userId
+				? await writeMediaPreferences(userId, input.pair, {
+						expectedVersion: input.expectedVersion,
+						writer,
+					})
+				: cookie?.writer?.clientId === input.clientId &&
+						cookie.writer.sequence === input.sequence
+					? cookie
+					: {
+							...input.pair,
+							schemaVersion: 1 as const,
+							version: randomUUID(),
+							writer,
+							sourceUserId: null,
+						}
+			remember(record)
+			if (userId) {
+				await invalidateMediaSettings(userId)
+				// Another instance can supersede the row while cache invalidation is in flight.
+				if (
+					(await readMediaPreferences(userId)).record?.version !==
+					record.version
+				)
+					throw new MediaPreferencesConflict()
+			}
+			const { country, language, version } = record
+			return {
+				response: {
+					pair: { country, language },
+					version,
+					sequence: input.sequence,
+					destination: userId ? "account" : "device",
+					effectiveContext: resolveEffectiveMediaContext({
+						...(userId ? { account: record } : { cookie: record }),
+						browserLanguages: request.headers.get("Accept-Language"),
+					}),
+				},
+				setCookie: serializeLocalizationCookie(
+					record,
+					mediaCookieIsSecure(request),
+					userId ?? null,
+				),
+			}
+		},
+	)
+}
+
+// A cache failure after a confirmed atomic write must not turn success into a misleading save failure.
+async function invalidateMediaSettings(userId: string) {
+	try {
+		await resetUserSettingsCache({ user_id: userId })
+	} catch (error) {
+		console.error(
+			"Saved media preferences; settings cache invalidation failed:",
+			error,
+		)
+	}
+}
+
+export async function currentSavedMediaPreferences(
+	request: Request,
+	userId: string | null | undefined,
+	clientId: string,
+) {
+	if (userId) return (await readMediaPreferences(userId)).record
+	const cookie = parseLocalizationCookie(request.headers.get("Cookie"))
+	const remembered = currentMediaSaveRecord("guest", clientId)
+	if (!remembered || (cookie?.writer && cookie.writer.clientId !== clientId))
+		return cookie
+	if (
+		cookie?.writer?.clientId === clientId &&
+		cookie.writer.sequence > (remembered.writer?.sequence ?? 0)
+	)
+		return cookie
+	return remembered
+}
+
+// The public request is HTTPS in production even when Coolify forwards HTTP to Remix.
+function mediaCookieIsSecure(request: Request): boolean {
+	return (
+		process.env.NODE_ENV === "production" ||
+		/^https:/i.test(process.env.APP_ORIGIN || request.url)
+	)
+}

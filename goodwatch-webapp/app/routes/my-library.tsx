@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // My library (#385): every title a member has marked, one status at a time. A guest is asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
 import {
@@ -41,7 +42,7 @@ const headers = { "Cache-Control": "private, no-store" }
 
 type Loaded = { page: LibraryPage; now: number; viewer: string } | null
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!userId) return json<Loaded>(null, { headers })
 	const choice = libraryChoiceOf(new URL(request.url).searchParams)
@@ -76,3 +77,5 @@ export default function MyLibraryRoute() {
 		/>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

@@ -1,0 +1,372 @@
+{
+  "date": "2026-10-14",
+  "branch": "feat/media-language",
+  "head": "b5b5f7e2829f3fed23b10dea216226da1f7ac2ea",
+  "scope": "Phase 5 prep and owner Q1-Q3 revision; uncommitted; no deployment/publication",
+  "typecheck": {
+    "baseline_commit": "b5b5f7e2",
+    "baseline": 212,
+    "current": 212,
+    "new": [],
+    "removed": [],
+    "status": "212 existing diagnostics, zero additional or removed vs clean merged HEAD; tsc exits 2 at repository baseline"
+  },
+  "typecheck_commands": [
+    "npm run typecheck -- --incremental --tsBuildInfoFile /tmp/gw-rollout-final.tsbuildinfo",
+    "npm run typecheck (clean git archive b5b5f7e2; same installed node_modules)"
+  ],
+  "python_full": {
+    "command": "/tmp/gw-media-text-tests/bin/python -m unittest discover -s tests",
+    "cwd": "goodwatch-flows",
+    "tests": 1220,
+    "failures": 0,
+    "skipped": 51,
+    "elapsed_seconds": 52.258
+  },
+  "ingestion_fixture": {
+    "dry_run": true,
+    "requests": 8,
+    "seasons": 2,
+    "episodes": 2,
+    "rows": 4,
+    "failures": [],
+    "truncated": false,
+    "command": "/tmp/gw-media-text-tests/bin/python goodwatch-flows/scripts/backfill_episode_translations.py --titles 1396,1399 --fixture goodwatch-flows/tests/fixtures/media-language-tmdb.json"
+  },
+  "node_first_full": {
+    "command": "node --test --test-concurrency=1 'app/**/*.test.ts'",
+    "cwd": "goodwatch-webapp",
+    "tests": 1887,
+    "passed": 1884,
+    "failed": 2,
+    "skipped": 1,
+    "elapsed_ms": 430129.029757,
+    "failures": [
+      "unchanged combined-search/title-lookup.test.ts: ended.round1Elapsed vs deadline.round1Elapsed + 50",
+      "unchanged search-ranking/qdrant-http.test.ts: held HTTP phase >= 25 ms"
+    ],
+    "log": "/tmp/gw-rollout-node-full.txt"
+  },
+  "node_final_full": {
+    "command": "node --test --test-concurrency=1 'app/**/*.test.ts'",
+    "cwd": "goodwatch-webapp",
+    "tests": 1888,
+    "passed": 1884,
+    "failed": 3,
+    "skipped": 1,
+    "elapsed_ms": 396707.381716,
+    "log": "/tmp/gw-rollout-node-final.txt",
+    "failures": [
+      "unchanged combined-search/title-lookup.test.ts: first-results timer bound in built late final case",
+      "unchanged utils/auth-session.test.ts: HS256 memo-sharing assertion (2 HTTP reads, expected 1); passed isolated recheck",
+      "unchanged utils/redis-guard.test.ts: immediate rejection elapsed 71.6 ms exceeds fast bound"
+    ],
+    "note": "The two initial full-suite failing tests passed the full rerun; the three different full-rerun failures and both initial failures passed the isolated recheck. All changed media suites passed. Full suite is not green."
+  },
+  "node_focused": {
+    "command": "node --test --test-concurrency=1 app/server/media-rollout-contract.test.ts app/server/episode-grid-identity.test.ts app/server/media-overlay.test.ts app/utils/media-script.test.ts app/server/userData.test.ts app/server/combined-search/api-route.test.ts",
+    "cwd": "goodwatch-webapp",
+    "tests": 52,
+    "passed": 52,
+    "failed": 0,
+    "elapsed_ms": 3310.492871,
+    "log": "/tmp/gw-rollout-owner-final-focused.txt",
+    "note": "Run after all final code changes."
+  },
+  "query_counts": {
+    "show_details_related_40_season_1_episodes_62": {
+      "cold": 9,
+      "warm": 2
+    },
+    "search_provisional_20_final_100": {
+      "cold": 6,
+      "warm_final": 0
+    },
+    "discover_60": {
+      "cold": 3,
+      "warm": 0
+    },
+    "media_401": {
+      "cold": 9
+    },
+    "legacy_api_no_opt_in": 0,
+    "ordinary_cold_episode_grid": 6,
+    "note": "Overlay counts exclude baseline canonical SQL/auth/ranking; ordinary grid count includes five provider reads plus one canonical identity read."
+  },
+  "owner_checkpoint": "Only after main, owner coordinates additive season/episode schema then bounded ingestion; no prose job/copy/spend checkpoint remains.",
+  "not_run": [
+    "production migration/publication/deploy",
+    "paid/model translation",
+    "real TMDB reads",
+    "live production probes",
+    "browser RTL/layout/landing budget",
+    "production build or additional dev server"
+  ],
+  "production_writes": 0,
+  "paid_translation_calls": 0,
+  "commits_created": 0,
+  "files_changed": [
+    {
+      "status": "M",
+      "path": "docs/cache-identity.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/implementation/media-language-decisions.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/implementation/media-language-handover.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/implementation/media-language-surface-matrix.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/implementation/media-language-text-production.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/implementation/media-language-text-schema.sql"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/scripts/estimate_media_prose_cost.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/scripts/export_media_prose.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/scripts/import_media_template_translations.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/scripts/translate_media_prose.py"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-flows/tests/requirements-media-language.txt"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-flows/tests/test_media_language_text.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/windmill/f/media_language/prose_jobs.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-flows/windmill/f/media_language/prose_jobs.script.yaml"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-flows/windmill/f/sync/models/crate_schemas.py"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/locales/media/templates.json"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/$type.$category.$page.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.combined-search.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.media-title.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.movie.collection.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.new-episodes.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.related-map.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.related.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/api.tracking.show.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/movie.$movieKey.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/routes/show.$showKey.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/combined-search/api-route.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/details.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/episode-grid.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/episode-text-overlay.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/media-overlay.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/media-payload.server.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/server/media-templates.server.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/server/media-templates.test.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/server/prose-overlay.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/user-settings.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/userData.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/server/viewer.server.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/details/About.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/details/DetailsFingerprint.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/details/DetailsQuestions.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/details/titleQuestions.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/explore/FAQ.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/fingerprint/Badges.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/fingerprint/fingerprintText.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/scoring/ClickScorer.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/taste/tabs/SidesOfYou.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/ui/taste/tabs/YouVsEveryone.tsx"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/utils/episode-grid-wire.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/utils/episode-text-overlay.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/utils/media-overlay-core.ts"
+    },
+    {
+      "status": "M",
+      "path": "goodwatch-webapp/app/utils/media-presentation.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/utils/media-template-types.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/utils/prose-overlay-core.test.ts"
+    },
+    {
+      "status": "D",
+      "path": "goodwatch-webapp/app/utils/prose-overlay-core.ts"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "docs/implementation/media-language-rollout-verification.json"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "docs/implementation/media-language-rollout.md"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "goodwatch-webapp/app/domain/tracking/episode-grid-identity.ts"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "goodwatch-webapp/app/server/episode-grid-identity.test.ts"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "goodwatch-webapp/app/server/media-rollout-contract.test.ts"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "goodwatch-webapp/app/utils/media-script.test.ts"
+    },
+    {
+      "status": "A (untracked)",
+      "path": "goodwatch-webapp/app/utils/media-script.ts"
+    }
+  ],
+  "timing_recheck": {
+    "command": "node --test --test-concurrency=1 --test-name-pattern=\"late completion's history|built late final clears|real HTTP phase evidence|HS256 concurrent|stopped owner rejects once\" app/server/combined-search/title-lookup.test.ts app/server/search-ranking/qdrant-http.test.ts app/utils/auth-session.test.ts app/utils/redis-guard.test.ts",
+    "tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "elapsed_ms": 2964.838761,
+    "log": "/tmp/gw-rollout-timing-recheck.txt",
+    "note": "Every failure across the two full runs passed in isolation, without edits to those suites or their implementation. Full-run failures are retained above rather than claiming a green full suite."
+  },
+  "protected_paths": "No edits to app/ui/media-preference, app/ui/media-text or DetailsHeader. Retained merged MediaText changes in About/fingerprint/FAQ title references while removing prose wiring."
+}

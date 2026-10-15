@@ -1,3 +1,5 @@
+import { getAuthPosters } from "~/server/auth-posters.server"
+import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { discoveryReturnTo } from "~/utils/account-transfer"
 import type { LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
@@ -39,6 +41,7 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
 	redirectUri: string
+	posters: AuthPoster[]
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
@@ -56,14 +59,14 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || ""
 
-	return json({ redirectUri })
+	return json({ redirectUri, posters: await getAuthPosters() })
 }
 
 /** What the "Check your inbox" page knows from here: the address, and where a confirmed account goes. */
 export type SentState = { email: string; returnTo: string }
 
 export default function SignUpRoute() {
-	const { redirectUri } = useLoaderData<LoaderData>()
+	const { redirectUri, posters } = useLoaderData<LoaderData>()
 	const { user } = useUser()
 	const navigate = useNavigate()
 	const auth = useAuthClient()
