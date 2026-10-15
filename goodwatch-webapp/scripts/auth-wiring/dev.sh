@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # A dev server with Better Auth on, against the wiring's disposable Docker services: three-node CrateDB, three-master
 # Valkey and the Mailpit catcher (http://127.0.0.1:15980 shows every email). Every production setting is blanked, so
-# nothing reaches the site's own Crate, Valkey or Supabase; pages that need title data show their error state.
+# nothing reaches the site's own Crate, Valkey or Supabase. Native member/media preferences use local fixtures too.
 #   bash scripts/auth-wiring/dev.sh [port]   start the services if needed, then the dev server (default port 3550)
 #   bash scripts/auth-wiring/dev.sh down     remove the containers and their data
 set -euo pipefail
@@ -37,6 +37,9 @@ while (Date.now() < deadline) {
 if (!ready) throw new Error('Local CrateDB cluster did not become ready')
 await migrateAuthTables(localCrateTransport(['http://127.0.0.1:15848'], 15000))
 JS
+# Current main resolves saved media preferences in the root loader. Give those native reads the same guarded
+# disposable database as the auth service, with repository schemas and local catalog/member fixtures.
+MCP_LOCAL_CRATE_PORT=15848 python3 scripts/mcp-read/seed-local.py
 AUTH_LOCAL_VALKEY_NAT=$(node --input-type=module <<'JS'
 import { execFileSync } from 'node:child_process'
 const map = {}
@@ -51,6 +54,9 @@ JS
 blank=()
 for key in $(grep -o '^[A-Z_]*=' .env.example | tr -d =) SUPABASE_URL SUPABASE_ANON_KEY REDIS_HOST2 REDIS_HOST3; do blank+=("$key="); done
 exec env "${blank[@]}" \
+ CRATE_HOSTS=127.0.0.1 CRATE_PORT=15848 CRATE_USER=crate CRATE_PASS= \
+ WEBAPP_ROLE=page \
+ TASTE_REDIS_URL= TITLE_SNAPSHOT_REDIS_URL= TITLE_CARDS_REDIS_URL= \
  BETTER_AUTH_ENABLED=true \
  AUTH_LOCAL_SERVICES=true \
  AUTH_LOCAL_VALKEY_NAT="$AUTH_LOCAL_VALKEY_NAT" \

@@ -103,7 +103,10 @@ async function run(command, args, options = {}) {
 		child.on("exit", async (code) => {
 			try {
 				await browser
-				if (code !== 0) throw new Error(`${command} failed (${code})`)
+				if (code !== 0) {
+					writeFileSync(`${state}client-command-failure.log`, output, { mode: 0o600 })
+					throw new Error(`${command} failed (${code}); see ${state}client-command-failure.log`)
+				}
 				resolve(stdout)
 			} catch (error) {
 				reject(error)
