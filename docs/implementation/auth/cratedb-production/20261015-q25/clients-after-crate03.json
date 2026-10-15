@@ -1,0 +1,245 @@
+{
+  "label": "after-crate03",
+  "at": "2026-10-15T04:06:47.817318+00:00",
+  "sources": [
+    {
+      "host": 11,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 39.202,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 8.328,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 9.003,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 12,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 38.366,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 8.598,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 28.247,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 13,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "windmill-default_worker-1",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 37.081,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 8.389,
+              "rowcount": 1,
+              "error": null
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 8.168,
+              "rowcount": 1,
+              "error": null
+            }
+          ],
+          "stderr": ""
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 20,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "goodwatch-search-b",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 103,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 13,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 9,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 0,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        },
+        {
+          "container": "goodwatch-search-a",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 122,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 12,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 13,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 0,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        },
+        {
+          "container": "gk4owk8-20261015T034301",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 97,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 10,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 55,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 166,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "host": 21,
+      "returncode": 0,
+      "clients": [
+        {
+          "container": "gk4owk8-20261015T034054",
+          "returncode": 0,
+          "probes": [
+            {
+              "host": "10.0.0.11",
+              "status": 200,
+              "elapsedMs": 99,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.12",
+              "status": 200,
+              "elapsedMs": 14,
+              "rowcount": 1
+            },
+            {
+              "host": "10.0.0.13",
+              "status": 200,
+              "elapsedMs": 12,
+              "rowcount": 1
+            }
+          ],
+          "stderr": "",
+          "crateLogErrorCounts": {
+            "CrateTimeoutError": 240,
+            "CrateDatabaseError": 0,
+            "NoShardAvailableActionException": 0
+          }
+        }
+      ],
+      "stderr": "** WARNING: connection is not using a post-quantum key exchange algorithm.\n** This session may be vulnerable to \"store now, decrypt later\" attacks.\n** The server may need to be upgraded. See https://openssh.com/pq.html\n"
+    }
+  ]
+}

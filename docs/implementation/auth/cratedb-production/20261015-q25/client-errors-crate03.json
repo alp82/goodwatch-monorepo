@@ -1,0 +1,28 @@
+{
+  "since": "2026-10-15T03:57:00Z",
+  "through": "2026-10-15T04:06:34.760375+00:00",
+  "clients": {
+    "goodwatch-search-b": {
+      "failedQueryLogLines": 0,
+      "firstFailureAt": null,
+      "lastFailureAt": null,
+      "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "logReadFailures": 0
+    },
+    "goodwatch-search-a": {
+      "failedQueryLogLines": 0,
+      "firstFailureAt": null,
+      "lastFailureAt": null,
+      "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "logReadFailures": 0
+    },
+    "gk4owk8-20261015T034301": {
+      "failedQueryLogLines": 24,
+      "firstFailureAt": "2026-10-15T04:02:01.029598053Z",
+      "lastFailureAt": "2026-10-15T04:02:01.830806957Z",
+      "image": "ghcr.io/alp82/goodwatch-webapp:ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "logReadFailures": 0
+    }
+  },
+  "limitation": "Incremental live Docker log sampling; removed containers may leave a gap. FAILED line hashes deduplicate overlapping cursors; no SQL text/parameters retained."
+}

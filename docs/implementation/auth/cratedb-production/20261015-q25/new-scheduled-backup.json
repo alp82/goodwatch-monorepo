@@ -1,0 +1,33 @@
+{
+  "label": "new-scheduled-backup",
+  "host": 12,
+  "stmt": "SELECT name, state, started, finished, failures FROM sys.snapshots WHERE repository = 'goodwatch-db-backup-v2' AND name LIKE 'hourly_%' ORDER BY started DESC LIMIT 1",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "state",
+        "started",
+        "finished",
+        "failures"
+      ],
+      "rows": [
+        [
+          "hourly_20261015_040501",
+          "SUCCESS",
+          1792037101314,
+          1792037112722,
+          []
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 18900.486
+    },
+    "elapsedSeconds": 18.906,
+    "at": "2026-10-15T04:06:41.442577+00:00"
+  }
+}

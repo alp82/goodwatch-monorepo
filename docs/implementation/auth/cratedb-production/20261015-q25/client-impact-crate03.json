@@ -1,0 +1,126 @@
+{
+  "node": "crate03",
+  "recordedAt": "2026-10-15T04:07:21.132144+00:00",
+  "clients": [
+    {
+      "host": 20,
+      "name": "goodwatch-search-b",
+      "id": "1530f91b5e86f6b8d3f6f4d4a8c27edd88f25dd4554c08273fc68ff52191eceb",
+      "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "health": "healthy",
+      "logCounts": {
+        "failedQuery": 0,
+        "crateTimeout": 0,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 0,
+        "nativeConnectionError": 0,
+        "logged5xx": 0
+      },
+      "successfulCrateLogLines": 0,
+      "httpResponseDelta": 53.0,
+      "http5xxDelta": 0,
+      "http5xxByLabels": {},
+      "counterReset": false
+    },
+    {
+      "host": 20,
+      "name": "goodwatch-search-a",
+      "id": "2494b5fb6b783959b51adb0bcd4c72dbf18872d35e3c251c2048a2e4d9fac4a3",
+      "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "health": "healthy",
+      "logCounts": {
+        "failedQuery": 0,
+        "crateTimeout": 0,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 0,
+        "nativeConnectionError": 0,
+        "logged5xx": 0
+      },
+      "successfulCrateLogLines": 0,
+      "httpResponseDelta": 53.0,
+      "http5xxDelta": 0,
+      "http5xxByLabels": {},
+      "counterReset": false
+    },
+    {
+      "host": 20,
+      "name": "gk4owk8-20261015T034301",
+      "id": "296294c072764b2b9c17aa7ed8db14c146735fdd5b9cbb390382592fe1e0fbe2",
+      "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "health": "healthy",
+      "logCounts": {
+        "failedQuery": 24,
+        "crateTimeout": 166,
+        "crateDatabaseError": 0,
+        "crateError": 0,
+        "nodeLossError": 0,
+        "connectionError": 16,
+        "nativeConnectionError": 174,
+        "logged5xx": 6
+      },
+      "successfulCrateLogLines": 12533,
+      "httpResponseDelta": 5057.0,
+      "http5xxDelta": 6.0,
+      "http5xxByLabels": {
+        "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 1.0,
+        "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 2.0,
+        "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 3.0
+      },
+      "counterReset": false
+    },
+    {
+      "host": 21,
+      "name": "gk4owk8-20261015T034054",
+      "id": "4ed8640491b5922bcae007f20aa4477be36aac657ecac4897427e1449ec9fc5b",
+      "sourceCommit": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+      "health": "healthy",
+      "logCounts": {
+        "failedQuery": 3,
+        "crateTimeout": 240,
+        "crateDatabaseError": 0,
+        "crateError": 4,
+        "nodeLossError": 0,
+        "connectionError": 66,
+        "nativeConnectionError": 273,
+        "logged5xx": 3
+      },
+      "successfulCrateLogLines": 15286,
+      "httpResponseDelta": 5914.0,
+      "http5xxDelta": 3.0,
+      "http5xxByLabels": {
+        "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"5xx\",audience=\"anon\",cache_control=\"private\"}": 3.0
+      },
+      "counterReset": false
+    }
+  ],
+  "limitation": "Observed terminal log occurrences and HTTP response counter deltas, not unique member requests; public synthetic checks do not exercise a signed-in session.",
+  "totals": {
+    "httpResponseDelta": 11077.0,
+    "http5xxDelta": 9.0,
+    "successfulCrateLogLines": 27819,
+    "logCounts": {
+      "failedQuery": 27,
+      "crateTimeout": 406,
+      "crateDatabaseError": 0,
+      "crateError": 4,
+      "nodeLossError": 0,
+      "connectionError": 82,
+      "nativeConnectionError": 447,
+      "logged5xx": 9
+    }
+  },
+  "public": {
+    "responses": 214,
+    "statusCounts": {
+      "200": 214
+    },
+    "transportErrors": 0,
+    "http5xx": 0,
+    "firstAt": "2026-10-15T03:57:12.754421+00:00",
+    "lastAt": "2026-10-15T04:06:57.868497+00:00"
+  }
+}

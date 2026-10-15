@@ -1,0 +1,1286 @@
+[
+  {
+    "at": "2026-10-15T03:57:12.754421+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 428
+  },
+  {
+    "at": "2026-10-15T03:57:12.755397+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 360
+  },
+  {
+    "at": "2026-10-15T03:57:18.182826+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 460
+  },
+  {
+    "at": "2026-10-15T03:57:18.183068+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 278
+  },
+  {
+    "at": "2026-10-15T03:57:23.644204+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 454
+  },
+  {
+    "at": "2026-10-15T03:57:23.645363+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 290
+  },
+  {
+    "at": "2026-10-15T03:57:29.100146+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 400
+  },
+  {
+    "at": "2026-10-15T03:57:29.100372+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 301
+  },
+  {
+    "at": "2026-10-15T03:57:34.501888+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 503
+  },
+  {
+    "at": "2026-10-15T03:57:34.505573+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 297
+  },
+  {
+    "at": "2026-10-15T03:57:40.009099+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 371
+  },
+  {
+    "at": "2026-10-15T03:57:40.009497+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 265
+  },
+  {
+    "at": "2026-10-15T03:57:45.381379+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 370
+  },
+  {
+    "at": "2026-10-15T03:57:45.381779+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 291
+  },
+  {
+    "at": "2026-10-15T03:57:50.752477+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 455
+  },
+  {
+    "at": "2026-10-15T03:57:50.752697+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 310
+  },
+  {
+    "at": "2026-10-15T03:57:56.208657+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 435
+  },
+  {
+    "at": "2026-10-15T03:57:56.208925+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 315
+  },
+  {
+    "at": "2026-10-15T03:58:01.644085+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 421
+  },
+  {
+    "at": "2026-10-15T03:58:01.644438+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 273
+  },
+  {
+    "at": "2026-10-15T03:58:07.066605+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 393
+  },
+  {
+    "at": "2026-10-15T03:58:07.066807+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 314
+  },
+  {
+    "at": "2026-10-15T03:58:12.460422+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 449
+  },
+  {
+    "at": "2026-10-15T03:58:12.460755+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 269
+  },
+  {
+    "at": "2026-10-15T03:58:17.910210+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 359
+  },
+  {
+    "at": "2026-10-15T03:58:17.910738+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 252
+  },
+  {
+    "at": "2026-10-15T03:58:23.269859+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 401
+  },
+  {
+    "at": "2026-10-15T03:58:23.270218+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 265
+  },
+  {
+    "at": "2026-10-15T03:58:28.672490+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 576
+  },
+  {
+    "at": "2026-10-15T03:58:28.673709+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 271
+  },
+  {
+    "at": "2026-10-15T03:58:34.250586+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 424
+  },
+  {
+    "at": "2026-10-15T03:58:34.250941+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 387
+  },
+  {
+    "at": "2026-10-15T03:58:39.676260+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 538
+  },
+  {
+    "at": "2026-10-15T03:58:39.677789+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 275
+  },
+  {
+    "at": "2026-10-15T03:58:45.216761+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 440
+  },
+  {
+    "at": "2026-10-15T03:58:45.216959+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 332
+  },
+  {
+    "at": "2026-10-15T03:58:50.658514+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 417
+  },
+  {
+    "at": "2026-10-15T03:58:50.660109+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 330
+  },
+  {
+    "at": "2026-10-15T03:58:56.076429+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 383
+  },
+  {
+    "at": "2026-10-15T03:58:56.076681+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 298
+  },
+  {
+    "at": "2026-10-15T03:59:01.460542+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 404
+  },
+  {
+    "at": "2026-10-15T03:59:01.460951+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 254
+  },
+  {
+    "at": "2026-10-15T03:59:06.865492+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 544
+  },
+  {
+    "at": "2026-10-15T03:59:06.865742+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 426
+  },
+  {
+    "at": "2026-10-15T03:59:12.410448+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 394
+  },
+  {
+    "at": "2026-10-15T03:59:12.410665+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 276
+  },
+  {
+    "at": "2026-10-15T03:59:17.805561+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 364
+  },
+  {
+    "at": "2026-10-15T03:59:17.805933+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 272
+  },
+  {
+    "at": "2026-10-15T03:59:23.170601+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 369
+  },
+  {
+    "at": "2026-10-15T03:59:23.170858+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 268
+  },
+  {
+    "at": "2026-10-15T03:59:28.539960+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 409
+  },
+  {
+    "at": "2026-10-15T03:59:28.540152+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 273
+  },
+  {
+    "at": "2026-10-15T03:59:33.950043+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 388
+  },
+  {
+    "at": "2026-10-15T03:59:33.950324+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 270
+  },
+  {
+    "at": "2026-10-15T03:59:39.339232+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 394
+  },
+  {
+    "at": "2026-10-15T03:59:39.339907+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 278
+  },
+  {
+    "at": "2026-10-15T03:59:44.734576+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 1440
+  },
+  {
+    "at": "2026-10-15T03:59:44.734848+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 374
+  },
+  {
+    "at": "2026-10-15T03:59:51.176066+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 508
+  },
+  {
+    "at": "2026-10-15T03:59:51.177452+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 293
+  },
+  {
+    "at": "2026-10-15T03:59:56.692930+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 452
+  },
+  {
+    "at": "2026-10-15T03:59:56.693254+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 375
+  },
+  {
+    "at": "2026-10-15T04:00:02.146379+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 422
+  },
+  {
+    "at": "2026-10-15T04:00:02.170745+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 333
+  },
+  {
+    "at": "2026-10-15T04:00:07.571370+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 405
+  },
+  {
+    "at": "2026-10-15T04:00:07.571612+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 310
+  },
+  {
+    "at": "2026-10-15T04:00:12.977308+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 438
+  },
+  {
+    "at": "2026-10-15T04:00:12.977749+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 259
+  },
+  {
+    "at": "2026-10-15T04:00:18.416433+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 478
+  },
+  {
+    "at": "2026-10-15T04:00:18.416652+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 355
+  },
+  {
+    "at": "2026-10-15T04:00:23.900747+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 474
+  },
+  {
+    "at": "2026-10-15T04:00:23.901737+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 268
+  },
+  {
+    "at": "2026-10-15T04:00:29.375848+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 475
+  },
+  {
+    "at": "2026-10-15T04:00:29.376233+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 274
+  },
+  {
+    "at": "2026-10-15T04:00:34.851613+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 599
+  },
+  {
+    "at": "2026-10-15T04:00:34.851914+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 502
+  },
+  {
+    "at": "2026-10-15T04:00:40.453257+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 414
+  },
+  {
+    "at": "2026-10-15T04:00:40.454785+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 273
+  },
+  {
+    "at": "2026-10-15T04:00:45.870684+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 387
+  },
+  {
+    "at": "2026-10-15T04:00:45.871006+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 330
+  },
+  {
+    "at": "2026-10-15T04:00:51.259529+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 483
+  },
+  {
+    "at": "2026-10-15T04:00:51.261697+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 277
+  },
+  {
+    "at": "2026-10-15T04:00:56.747243+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 357
+  },
+  {
+    "at": "2026-10-15T04:00:56.747513+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 271
+  },
+  {
+    "at": "2026-10-15T04:01:02.106083+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 468
+  },
+  {
+    "at": "2026-10-15T04:01:02.107390+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 301
+  },
+  {
+    "at": "2026-10-15T04:01:07.577150+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 444
+  },
+  {
+    "at": "2026-10-15T04:01:07.577473+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 314
+  },
+  {
+    "at": "2026-10-15T04:01:13.023182+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 429
+  },
+  {
+    "at": "2026-10-15T04:01:13.024102+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 331
+  },
+  {
+    "at": "2026-10-15T04:01:18.455108+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 419
+  },
+  {
+    "at": "2026-10-15T04:01:18.455433+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 329
+  },
+  {
+    "at": "2026-10-15T04:01:23.876229+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 436
+  },
+  {
+    "at": "2026-10-15T04:01:23.877510+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 262
+  },
+  {
+    "at": "2026-10-15T04:01:29.315199+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 424
+  },
+  {
+    "at": "2026-10-15T04:01:29.315387+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 262
+  },
+  {
+    "at": "2026-10-15T04:01:34.740633+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 382
+  },
+  {
+    "at": "2026-10-15T04:01:34.741349+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 299
+  },
+  {
+    "at": "2026-10-15T04:01:40.124360+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 419
+  },
+  {
+    "at": "2026-10-15T04:01:40.124691+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 295
+  },
+  {
+    "at": "2026-10-15T04:01:45.545711+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 383
+  },
+  {
+    "at": "2026-10-15T04:01:45.547216+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 324
+  },
+  {
+    "at": "2026-10-15T04:01:50.930018+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 494
+  },
+  {
+    "at": "2026-10-15T04:01:50.930203+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 309
+  },
+  {
+    "at": "2026-10-15T04:01:56.425244+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 441
+  },
+  {
+    "at": "2026-10-15T04:01:56.425457+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 303
+  },
+  {
+    "at": "2026-10-15T04:02:01.867699+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 446
+  },
+  {
+    "at": "2026-10-15T04:02:01.868272+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 293
+  },
+  {
+    "at": "2026-10-15T04:02:07.315858+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 453
+  },
+  {
+    "at": "2026-10-15T04:02:07.316118+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 281
+  },
+  {
+    "at": "2026-10-15T04:02:12.769292+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 362
+  },
+  {
+    "at": "2026-10-15T04:02:12.769551+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 281
+  },
+  {
+    "at": "2026-10-15T04:02:18.132271+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 484
+  },
+  {
+    "at": "2026-10-15T04:02:18.132464+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 373
+  },
+  {
+    "at": "2026-10-15T04:02:23.617762+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 514
+  },
+  {
+    "at": "2026-10-15T04:02:23.618138+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 296
+  },
+  {
+    "at": "2026-10-15T04:02:29.133757+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 371
+  },
+  {
+    "at": "2026-10-15T04:02:29.134385+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 271
+  },
+  {
+    "at": "2026-10-15T04:02:34.506834+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 408
+  },
+  {
+    "at": "2026-10-15T04:02:34.507629+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 257
+  },
+  {
+    "at": "2026-10-15T04:02:39.916080+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 484
+  },
+  {
+    "at": "2026-10-15T04:02:39.916568+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 268
+  },
+  {
+    "at": "2026-10-15T04:02:45.401472+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 435
+  },
+  {
+    "at": "2026-10-15T04:02:45.401963+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 257
+  },
+  {
+    "at": "2026-10-15T04:02:50.838476+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 389
+  },
+  {
+    "at": "2026-10-15T04:02:50.838830+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 262
+  },
+  {
+    "at": "2026-10-15T04:02:56.228209+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 1069
+  },
+  {
+    "at": "2026-10-15T04:02:56.228587+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 881
+  },
+  {
+    "at": "2026-10-15T04:03:02.301322+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 419
+  },
+  {
+    "at": "2026-10-15T04:03:02.301799+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 264
+  },
+  {
+    "at": "2026-10-15T04:03:07.721959+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 455
+  },
+  {
+    "at": "2026-10-15T04:03:07.722379+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 264
+  },
+  {
+    "at": "2026-10-15T04:03:13.178539+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 431
+  },
+  {
+    "at": "2026-10-15T04:03:13.178884+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 274
+  },
+  {
+    "at": "2026-10-15T04:03:18.611348+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 429
+  },
+  {
+    "at": "2026-10-15T04:03:18.611603+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 345
+  },
+  {
+    "at": "2026-10-15T04:03:24.041357+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 372
+  },
+  {
+    "at": "2026-10-15T04:03:24.041757+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 418
+  },
+  {
+    "at": "2026-10-15T04:03:29.463642+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 434
+  },
+  {
+    "at": "2026-10-15T04:03:29.466018+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 283
+  },
+  {
+    "at": "2026-10-15T04:03:34.900050+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 444
+  },
+  {
+    "at": "2026-10-15T04:03:34.900556+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 280
+  },
+  {
+    "at": "2026-10-15T04:03:40.345722+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 386
+  },
+  {
+    "at": "2026-10-15T04:03:40.346015+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 275
+  },
+  {
+    "at": "2026-10-15T04:03:45.732872+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 468
+  },
+  {
+    "at": "2026-10-15T04:03:45.733362+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 275
+  },
+  {
+    "at": "2026-10-15T04:03:51.202778+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 427
+  },
+  {
+    "at": "2026-10-15T04:03:51.203182+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 292
+  },
+  {
+    "at": "2026-10-15T04:03:56.632549+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 415
+  },
+  {
+    "at": "2026-10-15T04:03:56.634199+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 297
+  },
+  {
+    "at": "2026-10-15T04:04:02.053678+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 434
+  },
+  {
+    "at": "2026-10-15T04:04:02.055552+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 272
+  },
+  {
+    "at": "2026-10-15T04:04:07.489096+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 455
+  },
+  {
+    "at": "2026-10-15T04:04:07.489493+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 348
+  },
+  {
+    "at": "2026-10-15T04:04:12.944881+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 441
+  },
+  {
+    "at": "2026-10-15T04:04:12.945235+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 291
+  },
+  {
+    "at": "2026-10-15T04:04:18.387692+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 478
+  },
+  {
+    "at": "2026-10-15T04:04:18.388091+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 303
+  },
+  {
+    "at": "2026-10-15T04:04:23.872519+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 587
+  },
+  {
+    "at": "2026-10-15T04:04:23.875442+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 471
+  },
+  {
+    "at": "2026-10-15T04:04:29.465720+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 489
+  },
+  {
+    "at": "2026-10-15T04:04:29.468285+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 324
+  },
+  {
+    "at": "2026-10-15T04:04:34.959088+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 385
+  },
+  {
+    "at": "2026-10-15T04:04:34.959418+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 327
+  },
+  {
+    "at": "2026-10-15T04:04:40.345728+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 462
+  },
+  {
+    "at": "2026-10-15T04:04:40.346171+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 311
+  },
+  {
+    "at": "2026-10-15T04:04:45.809608+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 420
+  },
+  {
+    "at": "2026-10-15T04:04:45.810080+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 333
+  },
+  {
+    "at": "2026-10-15T04:04:51.231507+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 1550
+  },
+  {
+    "at": "2026-10-15T04:04:51.233829+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 1591
+  },
+  {
+    "at": "2026-10-15T04:04:57.831529+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 491
+  },
+  {
+    "at": "2026-10-15T04:04:57.833264+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 298
+  },
+  {
+    "at": "2026-10-15T04:05:03.328604+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 717
+  },
+  {
+    "at": "2026-10-15T04:05:03.328962+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 498
+  },
+  {
+    "at": "2026-10-15T04:05:09.046615+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 415
+  },
+  {
+    "at": "2026-10-15T04:05:09.047023+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 290
+  },
+  {
+    "at": "2026-10-15T04:05:14.462711+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 472
+  },
+  {
+    "at": "2026-10-15T04:05:14.463119+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 293
+  },
+  {
+    "at": "2026-10-15T04:05:19.936504+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 401
+  },
+  {
+    "at": "2026-10-15T04:05:19.936840+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 356
+  },
+  {
+    "at": "2026-10-15T04:05:25.339528+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 439
+  },
+  {
+    "at": "2026-10-15T04:05:25.339847+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 269
+  },
+  {
+    "at": "2026-10-15T04:05:30.780819+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 449
+  },
+  {
+    "at": "2026-10-15T04:05:30.782828+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 281
+  },
+  {
+    "at": "2026-10-15T04:05:36.234625+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 480
+  },
+  {
+    "at": "2026-10-15T04:05:36.234965+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 313
+  },
+  {
+    "at": "2026-10-15T04:05:41.715792+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 400
+  },
+  {
+    "at": "2026-10-15T04:05:41.716102+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 337
+  },
+  {
+    "at": "2026-10-15T04:05:47.117132+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 450
+  },
+  {
+    "at": "2026-10-15T04:05:47.117436+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 270
+  },
+  {
+    "at": "2026-10-15T04:05:52.569096+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 560
+  },
+  {
+    "at": "2026-10-15T04:05:52.571071+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 394
+  },
+  {
+    "at": "2026-10-15T04:05:58.132836+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 433
+  },
+  {
+    "at": "2026-10-15T04:05:58.133132+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 379
+  },
+  {
+    "at": "2026-10-15T04:06:03.567329+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 657
+  },
+  {
+    "at": "2026-10-15T04:06:03.568306+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 281
+  },
+  {
+    "at": "2026-10-15T04:06:09.230322+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 555
+  },
+  {
+    "at": "2026-10-15T04:06:09.231105+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 408
+  },
+  {
+    "at": "2026-10-15T04:06:14.786654+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 421
+  },
+  {
+    "at": "2026-10-15T04:06:14.787026+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 341
+  },
+  {
+    "at": "2026-10-15T04:06:20.209318+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 413
+  },
+  {
+    "at": "2026-10-15T04:06:20.209875+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 353
+  },
+  {
+    "at": "2026-10-15T04:06:25.623904+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 411
+  },
+  {
+    "at": "2026-10-15T04:06:25.624301+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 274
+  },
+  {
+    "at": "2026-10-15T04:06:31.037371+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 5533
+  },
+  {
+    "at": "2026-10-15T04:06:31.041789+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 556
+  },
+  {
+    "at": "2026-10-15T04:06:41.577213+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 466
+  },
+  {
+    "at": "2026-10-15T04:06:41.579352+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 332
+  },
+  {
+    "at": "2026-10-15T04:06:47.049460+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 421
+  },
+  {
+    "at": "2026-10-15T04:06:47.049859+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 309
+  },
+  {
+    "at": "2026-10-15T04:06:52.471308+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 395
+  },
+  {
+    "at": "2026-10-15T04:06:52.471551+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 295
+  },
+  {
+    "at": "2026-10-15T04:06:57.868087+00:00",
+    "path": "/",
+    "status": 200,
+    "elapsedMs": 397
+  },
+  {
+    "at": "2026-10-15T04:06:57.868497+00:00",
+    "path": "/api/command-palette?q=mat",
+    "status": 200,
+    "elapsedMs": 279
+  }
+]

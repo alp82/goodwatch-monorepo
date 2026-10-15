@@ -1,0 +1,29 @@
+{
+  "label": "progress-crate03",
+  "host": 12,
+  "stmt": "SELECT state, routing_state, count(*) FROM sys.shards GROUP BY state, routing_state",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "state",
+        "routing_state",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "STARTED",
+          "STARTED",
+          956
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 60.43312
+    },
+    "elapsedSeconds": 0.066,
+    "at": "2026-10-15T04:05:18.731651+00:00"
+  }
+}
