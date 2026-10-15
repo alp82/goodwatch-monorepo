@@ -163,3 +163,27 @@ export function AuthProvider({
 		}
 		void reconcile()
 	}, [user?.id, sessionUserId, queryClient, revalidate, betterAuth])
+
+	const refreshUser = useCallback(() => {
+		requestRootRevalidation()
+		revalidate()
+	}, [revalidate])
+
+	const value = useMemo(
+		() => ({
+			supabase,
+			getSupabase,
+			user,
+			loading: false,
+			betterAuth,
+			refreshUser,
+		}),
+		[supabase, getSupabase, user, betterAuth, refreshUser],
+	)
+	return (
+		<AuthContext.Provider value={value}>
+			<AuthCallbackError />
+			{children}
+		</AuthContext.Provider>
+	)
+}
