@@ -1,0 +1,67 @@
+2026-10-15T03:55:34.973598352Z Process: rss 1915 MB, heap 278 of 282 MB, external 145 MB, longest event loop stall 26 ms, query encoder ready with 0 waiting, up 10 min
+2026-10-15T03:56:34.974295619Z Process: rss 1915 MB, heap 278 of 281 MB, external 145 MB, longest event loop stall 29 ms, query encoder ready with 0 waiting, up 11 min
+2026-10-15T03:57:13.064845624Z GET /api/command-palette?q=mat 200 - - 8.882 ms
+2026-10-15T03:57:23.905527148Z GET /api/command-palette?q=mat 200 - - 6.576 ms
+2026-10-15T03:57:34.771430209Z GET /api/command-palette?q=mat 200 - - 8.644 ms
+2026-10-15T03:57:34.973728189Z Process: rss 1915 MB, heap 278 of 281 MB, external 145 MB, longest event loop stall 24 ms, query encoder ready with 0 waiting, up 12 min
+2026-10-15T03:57:45.643391298Z GET /api/command-palette?q=mat 200 - - 7.351 ms
+2026-10-15T03:57:56.493931847Z GET /api/command-palette?q=mat 200 - - 5.464 ms
+2026-10-15T03:58:07.341953386Z GET /api/command-palette?q=mat 200 - - 6.587 ms
+2026-10-15T03:58:18.134043920Z GET /api/command-palette?q=mat 200 - - 5.215 ms
+2026-10-15T03:58:28.914291082Z GET /api/command-palette?q=mat 200 - - 6.011 ms
+2026-10-15T03:58:34.974177434Z Process: rss 1916 MB, heap 278 of 281 MB, external 145 MB, longest event loop stall 24 ms, query encoder ready with 0 waiting, up 13 min
+2026-10-15T03:58:39.922405070Z GET /api/command-palette?q=mat 200 - - 5.748 ms
+2026-10-15T03:58:50.958631801Z GET /api/command-palette?q=mat 200 - - 9.126 ms
+2026-10-15T03:59:01.685937819Z GET /api/command-palette?q=mat 200 - - 4.791 ms
+2026-10-15T03:59:12.657912655Z GET /api/command-palette?q=mat 200 - - 4.784 ms
+2026-10-15T03:59:23.410039594Z GET /api/command-palette?q=mat 200 - - 5.363 ms
+2026-10-15T03:59:34.187088533Z GET /api/command-palette?q=mat 200 - - 4.505 ms
+2026-10-15T03:59:34.973712584Z Process: rss 1916 MB, heap 279 of 282 MB, external 145 MB, longest event loop stall 27 ms, query encoder ready with 0 waiting, up 14 min
+2026-10-15T03:59:45.080616495Z GET /api/command-palette?q=mat 200 - - 4.854 ms
+2026-10-15T03:59:57.037830069Z GET /api/command-palette?q=mat 200 - - 5.491 ms
+2026-10-15T04:00:07.850531961Z GET /api/command-palette?q=mat 200 - - 9.199 ms
+2026-10-15T04:00:18.741985592Z GET /api/command-palette?q=mat 200 - - 4.819 ms
+2026-10-15T04:00:29.619219059Z GET /api/command-palette?q=mat 200 - - 4.378 ms
+2026-10-15T04:00:34.973596444Z Process: rss 1916 MB, heap 279 of 282 MB, external 145 MB, longest event loop stall 33 ms, query encoder ready with 0 waiting, up 15 min
+2026-10-15T04:00:40.697228088Z GET /api/command-palette?q=mat 200 - - 7.822 ms
+2026-10-15T04:00:51.505501045Z GET /api/command-palette?q=mat 200 - - 6.298 ms
+2026-10-15T04:01:02.378254419Z GET /api/command-palette?q=mat 200 - - 5.392 ms
+2026-10-15T04:01:13.324920480Z GET /api/command-palette?q=mat 200 - - 5.829 ms
+2026-10-15T04:01:24.109362762Z GET /api/command-palette?q=mat 200 - - 4.924 ms
+2026-10-15T04:01:34.973994954Z Process: rss 1916 MB, heap 279 of 283 MB, external 145 MB, longest event loop stall 25 ms, query encoder ready with 0 waiting, up 16 min
+2026-10-15T04:01:35.010427402Z GET /api/command-palette?q=mat 200 - - 4.407 ms
+2026-10-15T04:01:45.840943035Z GET /api/command-palette?q=mat 200 - - 6.240 ms
+2026-10-15T04:01:56.697441852Z GET /api/command-palette?q=mat 200 - - 4.148 ms
+2026-10-15T04:02:07.563320303Z GET /api/command-palette?q=mat 200 - - 5.834 ms
+2026-10-15T04:02:18.475769369Z GET /api/command-palette?q=mat 200 - - 5.218 ms
+2026-10-15T04:02:29.376147617Z GET /api/command-palette?q=mat 200 - - 2.991 ms
+2026-10-15T04:02:34.973548524Z Process: rss 1917 MB, heap 280 of 283 MB, external 145 MB, longest event loop stall 25 ms, query encoder ready with 0 waiting, up 17 min
+2026-10-15T04:02:40.153504133Z GET /api/command-palette?q=mat 200 - - 5.390 ms
+2026-10-15T04:02:51.071117224Z GET /api/command-palette?q=mat 200 - - 5.447 ms
+2026-10-15T04:03:02.535554086Z GET /api/command-palette?q=mat 200 - - 7.131 ms
+2026-10-15T04:03:13.422882376Z GET /api/command-palette?q=mat 200 - - 4.685 ms
+2026-10-15T04:03:24.429015269Z GET /api/command-palette?q=mat 200 - - 6.409 ms
+2026-10-15T04:03:34.973731074Z Process: rss 1917 MB, heap 280 of 283 MB, external 145 MB, longest event loop stall 28 ms, query encoder ready with 0 waiting, up 18 min
+2026-10-15T04:03:35.148881376Z GET /api/command-palette?q=mat 200 - - 6.176 ms
+2026-10-15T04:03:45.978303246Z GET /api/command-palette?q=mat 200 - - 7.445 ms
+2026-10-15T04:03:56.898945980Z GET /api/command-palette?q=mat 200 - - 6.796 ms
+2026-10-15T04:04:07.807641429Z GET /api/command-palette?q=mat 200 - - 6.207 ms
+2026-10-15T04:04:18.656309657Z GET /api/command-palette?q=mat 200 - - 9.183 ms
+2026-10-15T04:04:29.761359842Z GET /api/command-palette?q=mat 200 - - 5.167 ms
+2026-10-15T04:04:34.973377028Z Process: rss 1917 MB, heap 280 of 284 MB, external 145 MB, longest event loop stall 27 ms, query encoder ready with 0 waiting, up 19 min
+2026-10-15T04:04:40.626157666Z GET /api/command-palette?q=mat 200 - - 4.842 ms
+2026-10-15T04:04:52.793557196Z GET /api/command-palette?q=mat 200 - - 6.380 ms
+2026-10-15T04:05:03.796334513Z GET /api/command-palette?q=mat 200 - - 9.519 ms
+2026-10-15T04:05:14.730657008Z GET /api/command-palette?q=mat 200 - - 4.081 ms
+2026-10-15T04:05:25.578968220Z GET /api/command-palette?q=mat 200 - - 5.241 ms
+2026-10-15T04:05:34.973336434Z Process: rss 1917 MB, heap 280 of 284 MB, external 145 MB, longest event loop stall 45 ms, query encoder ready with 0 waiting, up 20 min
+2026-10-15T04:05:36.518779405Z GET /api/command-palette?q=mat 200 - - 5.314 ms
+2026-10-15T04:05:47.357758285Z GET /api/command-palette?q=mat 200 - - 6.565 ms
+2026-10-15T04:05:58.482162556Z GET /api/command-palette?q=mat 200 - - 6.244 ms
+2026-10-15T04:06:09.610224743Z GET /api/command-palette?q=mat 200 - - 5.166 ms
+2026-10-15T04:06:20.530136233Z GET /api/command-palette?q=mat 200 - - 6.645 ms
+2026-10-15T04:06:31.566199356Z GET /api/command-palette?q=mat 200 - - 4.253 ms
+2026-10-15T04:06:34.974082375Z Process: rss 1918 MB, heap 280 of 284 MB, external 145 MB, longest event loop stall 28 ms, query encoder ready with 0 waiting, up 21 min
+2026-10-15T04:06:47.328411289Z GET /api/command-palette?q=mat 200 - - 6.162 ms
+2026-10-15T04:06:58.112090699Z GET /api/command-palette?q=mat 200 - - 7.783 ms
+2026-10-15T04:07:34.975275670Z Process: rss 1918 MB, heap 281 of 284 MB, external 145 MB, longest event loop stall 23 ms, query encoder ready with 0 waiting, up 22 min
