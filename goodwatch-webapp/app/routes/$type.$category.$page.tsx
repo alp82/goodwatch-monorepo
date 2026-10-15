@@ -21,6 +21,7 @@ import {
 	navLabel,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
+import { explorePageCopy } from "~/ui/explore/page-copy"
 import { DidntWatchCheckbox } from "~/ui/filter/explore/DidntWatchCheckbox"
 import { MyStreamingCheckbox } from "~/ui/filter/explore/MyStreamingCheckbox"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
@@ -120,6 +121,11 @@ export default function MoviesCategoryPage() {
 		useLoaderData<LoaderData>()
 
 	const discoverType = type === "movies" ? "movies" : "shows"
+	const copy = explorePageCopy(
+		type,
+		category as keyof typeof mainHierarchy,
+		pageData,
+	)
 
 	const { currentParams, updateQueryParams } =
 		useNav<
@@ -157,16 +163,13 @@ export default function MoviesCategoryPage() {
 					}}
 				>
 					<div className="relative m-auto ow-full max-w-7xl z-20">
-						<h2 className="mb-4 text-6xl font-extrabold text-gray-300">
-							{pageData.label}{" "}
-							<span className="text-4xl text-gray-500">
-								{convertHyphensToWords(type)}
-							</span>
-						</h2>
-						<div className="text-3xl font-bold text-gray-100">
+						<h1 className="mb-4 text-4xl md:text-6xl font-extrabold text-gray-300">
+							{copy.heading}
+						</h1>
+						<div className="text-2xl md:text-3xl font-bold text-gray-100">
 							{pageData.subtitle}
 						</div>
-						<div className="text-lg text-gray-300">{pageData.description}</div>
+						<p className="text-lg text-gray-300">{copy.intro}</p>
 						<div className="mt-8 flex items-center justify-between gap-8 flex-wrap">
 							<div className="flex gap-2 flex-wrap">
 								<MyStreamingCheckbox
