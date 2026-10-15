@@ -332,7 +332,6 @@ try {
 		await oldSignIn(p)
 		await go(p, "/privacy")
 		check("the banner shows with an old Supabase sign-in", (await p.textContent("body")).includes("GoodWatch has a new sign-in, so you were signed out once."))
-		await p.click("text=Sign in >> nth=0").catch(() => {})
 		await p.click('a[href*="reason=new-sign-in"]')
 		await p.waitForURL(/reason=new-sign-in/)
 		await p.waitForTimeout(1000)
@@ -361,7 +360,7 @@ try {
 		const p = await newPage("desktop")
 		await p.addInitScript(() => sessionStorage.setItem("gw_media_session_v2", "earlier-member-id"))
 		await go(p, "/sign-in")
-		check("the stale-marker sign-in page loads as a guest",(await signedInAs(p)) === null)
+		check("the stale-marker sign-in page loads as a guest", (await signedInAs(p)) === null)
 		check("a guest page load clears a stale media-session marker", (await p.evaluate(() => sessionStorage.getItem("gw_media_session_v2"))) === null)
 		await p.context().close()
 	}
