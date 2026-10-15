@@ -3,7 +3,7 @@
 import { useLocation, useRevalidator } from "@remix-run/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
-import { useContinueWithGoogle } from "~/utils/auth-client"
+import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
@@ -336,7 +336,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 					return
 				// Continue with Google, back to the same TV screen.
 				case "sign-in":
-					google(`${here.current.pathname}${here.current.search}`).catch(() =>
+					whenAuthFails(google(`${here.current.pathname}${here.current.search}`), () =>
 						say("Sign in isn't working right now"),
 					)
 					return

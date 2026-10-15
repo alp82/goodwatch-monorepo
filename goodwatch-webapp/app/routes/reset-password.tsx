@@ -1,5 +1,6 @@
 import { getAuthPosters } from "~/server/auth-posters.server"
 import { authFetch } from "~/utils/auth-session"
+import { resetSupabasePassword } from "~/server/auth/supabase-reset.server"
 import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { KeyIcon, LinkSlashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
@@ -20,6 +21,7 @@ import {
 	ServiceNotice,
 } from "~/ui/auth/kit"
 import { discoveryReturnTo } from "~/utils/account-transfer"
+import { useSupabase, useUser } from "~/utils/auth"
 import { type AuthFailure, PASSWORD_MIN, useAuthClient } from "~/utils/auth-client"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -40,16 +42,8 @@ export const meta: MetaFunction = () => {
 export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) => {
 	if (process.env.BETTER_AUTH_ENABLED === "true") throw new Response(null, { status: 404 })
 	const formData = await request.formData()
-	const password = formData.get("password") as string
-	const code = formData.get("code") as string
-
-	if (!password || !code) {
-		return json({ error: "Password and reset code are required" }, { status: 400 })
-	}
-
-	if (password.length < 10) {
-		return json({ error: "Password must be at least 10 characters" }, { status: 400 })
-	}
+	const password = String(formData.get("password") ?? "")
+	const code = String(formData.get("code") ?? "")
 
 	const cookies = parse(request.headers.get("Cookie") ?? "")
 	const headers = new Headers()
@@ -72,26 +66,9 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 		},
 	)
 
-	const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-	if (error) {
-		return json({ error: "Invalid or expired reset code" }, { status: 400 })
-	}
-
-	const { error: updateError } = await supabase.auth.updateUser({
-		password,
-	})
-
-	if (updateError) {
-		return json({ error: updateError.message }, { status: 400 })
-	}
-
-	return json(
-		{ success: true },
-		{
-			headers,
-		}
-	)
+	const { status, body } = await resetSupabasePassword(supabase.auth, code, password)
+	// The session cookies go along with a rejected password too: a second try saves under that session.
+	return json(body, { status, headers })
 }
 
 // Better Auth's link arrives with `?token=`, or `?error=INVALID_TOKEN` when it no longer works; Supabase's with `?code=`.
@@ -108,27 +85,35 @@ function NewPassword({ token, onDone, onExpired }: { token: string; onDone: () =
 	const auth = useAuthClient()
 	const [password, setPassword] = useState("")
 	const [busy, setBusy] = useState(false)
+	const { betterAuth } = useSupabase()
 	const [failure, setFailure] = useState<AuthFailure | null>(null)
+	const [reason, setReason] = useState<string>()
 	const submit = async (event: FormEvent) => {
 		event.preventDefault()
 		if (busy) return
 		setBusy(true)
 		setFailure(null)
+		setReason(undefined)
 		const result = await auth.resetPassword(token, password)
 		setBusy(false)
 		if (result.ok) return onDone()
 		if (result.failure === "invalid") return onExpired()
 		setFailure(result.failure)
+		setReason(result.message)
 	}
 	return (
 		<AuthSplit>
 			<Heading icon={<KeyIcon className="h-7 w-7 text-amber-400" />} title="Set a new password" sub="Choose the password you'll sign in with from now on." />
-			{failure === "password" && <Notice tone="error">Choose a password with at least {PASSWORD_MIN} characters.</Notice>}
+			{failure === "password" && (
+				<Notice tone="error">{reason ?? `Choose a password with at least ${PASSWORD_MIN} characters.`}</Notice>
+			)}
 			<ServiceNotice failure={failure} />
 			<form method="post" onSubmit={submit} className="space-y-5">
 				<PasswordField label="New password" value={password} onChange={setPassword} isNew autoFocus hint={<PasswordRule password={password} />} />
 				<p className="text-sm text-gray-400">
-					Saving signs you out on all other devices. Connected apps like Claude keep working.
+					Saving signs you out on all other devices.
+					{/* Apps connect through the new sign-in only (#570). */}
+					{betterAuth && " Connected apps like Claude keep working."}
 				</p>
 				<PrimaryButton busy={busy} disabled={password.length < PASSWORD_MIN}>
 					Save password
@@ -138,14 +123,26 @@ function NewPassword({ token, onDone, onExpired }: { token: string; onDone: () =
 	)
 }
 
+// Follows the site's member: the reset signs in, and the page changes to "signed in" once the auth provider hears it.
 function Saved() {
 	const navigate = useNavigate()
+	const { user } = useUser()
 	return (
 		<AuthSplit>
-			<Heading icon={<ShieldCheckIcon className="h-7 w-7 text-emerald-400" />} title="Password saved" sub="You're signed in on this device." />
-			<PrimaryButton type="button" onClick={() => navigate(discoveryReturnTo())}>
-				Continue
-			</PrimaryButton>
+			<Heading
+				icon={<ShieldCheckIcon className="h-7 w-7 text-emerald-400" />}
+				title="Password saved"
+				sub={user ? "You're signed in on this device." : "Sign in with your new password."}
+			/>
+			{user ? (
+				<PrimaryButton type="button" onClick={() => navigate(discoveryReturnTo())}>
+					Continue
+				</PrimaryButton>
+			) : (
+				<PrimaryButton type="button" onClick={() => navigate("/sign-in")}>
+					Sign in
+				</PrimaryButton>
+			)}
 		</AuthSplit>
 	)
 }
