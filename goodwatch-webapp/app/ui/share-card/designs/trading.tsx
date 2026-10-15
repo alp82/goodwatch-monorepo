@@ -95,7 +95,7 @@ function Collectible({ item, rank, total, t, w, name, date }: { item: CardTitle;
 							textOverflow: "ellipsis",
 						}}
 					>
-						{item.title}
+						<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 					</div>
 					{item.score != null && (
 						<div style={flex({ alignItems: "center", gap: 6 * k, flexShrink: 0 })}>
@@ -131,7 +131,7 @@ function Collectible({ item, rank, total, t, w, name, date }: { item: CardTitle;
 								textTransform: "uppercase",
 							})}
 						>
-							{item.title}
+							<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 						</div>
 					)}
 					{hero && (
@@ -254,7 +254,7 @@ export function TradingCard({ title, items, name, theme, date, editing }: CardPr
 							<div key={item.key} style={flex({ alignItems: "center", gap: 10, fontSize: 24, fontWeight: 700 })}>
 								<div style={{ display: "flex", width: 20, height: 20, borderRadius: 4, border: `2px solid ${t.accent}`, backgroundColor: t.accent }} />
 								<div style={{ display: "flex", fontFamily: "Space Mono", fontSize: 18, color: alpha("#ffffff", 0.5) }}>{String(i + 1).padStart(3, "0")}</div>
-								<div style={{ display: "flex" }}>{item.title}</div>
+								<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 							</div>
 						))}
 					</div>

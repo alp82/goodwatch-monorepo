@@ -1,3 +1,8 @@
+import {
+	withMediaRequestHealth,
+	mediaReadHealthProbe,
+} from "./media-read-health.server.ts"
+import { isbot } from "isbot"
 // Keeps complete anonymous HTML pages in this Node process and answers repeated requests for them before Express and
 // Remix: no loader, no React, no compression. A viral spike asks for one or a few URLs over and over, and a render
 // costs 14 to 60 ms of the one main thread. The rules, the numbers, and what a cache in front must still do:
@@ -32,6 +37,7 @@
 //   counted, or waited for.
 // - Off switch: PAGE_CACHE=off.
 import { AsyncLocalStorage } from "node:async_hooks"
+import { withCrateHttpRequest, withCrateRequest } from "../utils/crate-diagnostics.ts"
 import { createHash } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
@@ -161,9 +167,13 @@ export function pageCacheKey(
 	)
 		return { bypass: "gate", path }
 	const identity = cacheIdentityOf({ ...input, method })
-	if (!identity.cacheable) return { bypass: "member", path }
+	if (!identity.cacheable)
+		return {
+			bypass: identity.audience === "member" ? "member" : "preferences",
+			path,
+		}
 	return {
-		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
+		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${isbot(input.userAgent) ? "canonical" : "localized"}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
 		path,
 	}
 }
@@ -719,6 +729,8 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			(context.getStore() && context.getStore() !== flight)
 		)
 			return null
+		const unhealthyMedia = mediaReadHealthProbe()
+		if (unhealthyMedia()) return null
 		const snapshot = new Headers(headers)
 		return (html: Buffer) => {
 			if (!alive(flight) || flight.offered || draining()) return
@@ -732,6 +744,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					)
 				else end(flight)
 			}
+			if (unhealthyMedia()) return refuse("media_read_error")
 			if (flight.kind !== "refresh" && !admitted(page.key))
 				return refuse("not_admitted")
 			if (html.length > limits.MAX_HTML_BYTES) return refuse("too_large")
@@ -746,6 +759,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				.then(
 					(compressed) => {
 						if (!alive(flight) || draining()) return
+						if (unhealthyMedia()) return refuse("media_read_error")
 						const size = compressed.br.length + compressed.gzip.length + 1024
 						if (size > limits.MAX_ENTRY_BYTES) return refuse("too_large")
 						const storedAt = flight.startedAt
@@ -893,7 +907,11 @@ export const pageCache = createPageCache({
 			: PAGE_CACHE_LIMITS.MAX_FRESH_MS,
 	},
 })
-export const configurePageCache = pageCache.configure
+let crateRouteLabel: (pathname: string, status: number) => string = () => "unmatched"
+export const configurePageCache = (next: Parameters<typeof pageCache.configure>[0]) => {
+	if (next.routeLabel) crateRouteLabel = next.routeLabel
+	pageCache.configure(next)
+}
 export const pageCacheWants = pageCache.wants
 export const resetPageCache = pageCache.reset
 const wrapped = new WeakSet<Server>()
@@ -906,10 +924,25 @@ export function putPageCacheFirst(
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		cache.handle(request, response, () => {
+		withCrateHttpRequest(request, response, crateRouteLabel, () => cache.handle(request, response, () => {
+			withMediaRequestHealth(() => {
+				for (const listener of listeners)
+					Reflect.apply(listener, server, [request, response])
+			})
+		})),
+	)
+}
+const healthWrapped = new WeakSet<Server>()
+export function putMediaHealthFirst(server: Server) {
+	if (healthWrapped.has(server)) return
+	healthWrapped.add(server)
+	const listeners = server.listeners("request")
+	server.removeAllListeners("request")
+	server.on("request", (request, response) =>
+		withCrateHttpRequest(request, response, crateRouteLabel, () => withMediaRequestHealth(() => {
 			for (const listener of listeners)
 				Reflect.apply(listener, server, [request, response])
-		}),
+		})),
 	)
 }
 let started = false
@@ -924,13 +957,25 @@ async function render(request: Request) {
 			"production",
 		)
 	}
-	const response = await handler(request)
+	const response = await withCrateRequest(crateRouteLabel(new URL(request.url).pathname, 200), request.method,
+		() => withMediaRequestHealth(() => handler!(request)))
 	await response.arrayBuffer()
 	return { status: response.status }
 }
 export function startPageCache() {
-	if (started || !pageCacheEnabled()) return
+	if (started) return
 	started = true
+	subscribe("http.server.request.start", (message) => {
+		const { server, request } = message as {
+			server: Server
+			request: IncomingMessage
+		}
+		if (request.socket.localPort === (Number(process.env.PORT) || 3000))
+			pageCacheEnabled()
+				? putPageCacheFirst(server)
+				: putMediaHealthFirst(server)
+	})
+	if (!pageCacheEnabled()) return
 	configurePageCache({ render })
 	console.info(
 		`Page cache: ${pageCache.limits.MAX_ENTRIES} entries, ${pageCache.limits.MAX_BYTES} bytes, ${PAGE_CACHE_LIMITS.MAX_ENTRY_BYTES} bytes per entry`,
@@ -950,13 +995,5 @@ export function startPageCache() {
 	onShutdown("page cache", () => {
 		clearInterval(timer)
 		pageCache.stop()
-	})
-	subscribe("http.server.request.start", (message) => {
-		const { server, request } = message as {
-			server: Server
-			request: IncomingMessage
-		}
-		if (request.socket.localPort === (Number(process.env.PORT) || 3000))
-			putPageCacheFirst(server)
 	})
 }

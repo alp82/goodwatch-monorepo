@@ -54,7 +54,17 @@ import {
 	titleSet,
 } from "./passes.server"
 
+import { recPersonalOrder } from "../features.server.ts"
+import {
+	loadPersonalOrder,
+	personalOrderExposure,
+	orderPersonalOrder,
+	logPersonalOrder,
+	type PersonalOrderExposure,
+} from "../personal-order/reader.server.ts"
+
 export interface FilterResult {
+	personalOrder?: PersonalOrderExposure
 	/** Passing titles in the order of `sortUsed` (For you applied). */
 	keys: TitleKey[]
 	/**
@@ -168,7 +178,9 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	)
 	// Remove pure hides before computing recoveries and counts: no filter can bring them back.
 	if (!input.includeNotInterested && viewer.hidden.size) {
-		const kept = Array.from(keys, (_, i) => i).filter((i) => !viewer.hidden.has(keys[i]))
+		const kept = Array.from(keys, (_, i) => i).filter(
+			(i) => !viewer.hidden.has(keys[i]),
+		)
 		rows = Int32Array.from(kept, (i) => rows[i])
 		keys = Float64Array.from(kept, (i) => keys[i])
 	}
@@ -185,7 +197,10 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	)
 	const ladder = viewerLadder(viewer)
 	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
-		list.map(({ option, keys }) => ({ option, keys: titleSet(keys, snapshot) }))
+		list.map(({ option, keys }) => ({
+			option,
+			keys: titleSet(keys, snapshot),
+		}))
 
 	const { passing, recoveries, optionCounts } = runPasses({
 		columns: snapshot.columns,
@@ -237,7 +252,30 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		sortUsed === "match" && universe
 			? byMatch(passing, universe.percentiles)
 			: passing
-	const ordered = Array.from(inOrder, (i) => keys[i])
+	let ordered = Array.from(inOrder, (i) => keys[i])
+	let personalOrder: PersonalOrderExposure | undefined
+	if (input.universe === "catalog" && sortUsed === "match") {
+		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
+		const flag = recPersonalOrder(member)
+		const read =
+			member && (flag.enabled || flag.shadow)
+				? await loadPersonalOrder(member, snapshot)
+				: { data: null, fallbackReason: null }
+		personalOrder = personalOrderExposure(flag, read)
+		if (member && (flag.enabled || flag.shadow)) {
+			const next = read.data
+				? orderPersonalOrder(ordered, read.data, snapshot)
+				: null
+			logPersonalOrder(member, "discover", personalOrder, ordered, next?.keys)
+			if (next) {
+				personalOrder.titles = next.titles
+				if (flag.enabled) {
+					personalOrder.todayFirst100 = ordered.slice(0, 100)
+					ordered = next.keys
+				} else personalOrder.personalOrderFirst100 = next.keys.slice(0, 100)
+			}
+		}
+	}
 	let moved: FilterResult["moved"]
 	let movedUp: number | undefined
 	if (input.forYou && universe && sortUsed !== "match") {
@@ -274,6 +312,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 
 	return {
 		keys: ordered,
+		personalOrder,
 		sortUsed,
 		hasTaste: taste !== null,
 		total: passing.length,

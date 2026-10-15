@@ -44,7 +44,7 @@ test("the state holds the header's genre links and the collection under the hook
 	})
 	assert.deepEqual(keysOf(state), [
 		[...genreLinksQueryKey(["Action", "Science Fiction"])],
-		[...movieCollectionQueryKey("2344", "603,604")],
+		[...movieCollectionQueryKey("2344", "603,604", "en")],
 	])
 	assert.deepEqual(state.queries[0].state.data, [
 		{ id: 28, name: "Action" },

@@ -412,6 +412,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			<TvRoom
 				tv={tv.room}
 				startTitles={data.startTitles}
+				talked={data.talked}
 				services={data.services}
 				renderScreen={(canvas) => (
 					<>

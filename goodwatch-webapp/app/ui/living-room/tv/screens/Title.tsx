@@ -1,3 +1,5 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
 // One title, large: its backdrop is the picture, its name and facts stand at the bottom left over its keys. The
 // title screen draws it with Watch, Want to See and Seen it; Tonight draws it with Details and Another one
 // (Tonight.tsx). A chunk the TV asks for on first use (screen-code.tsx).
@@ -64,6 +66,7 @@ export function TitleView({
 	kicker,
 	where,
 	line,
+	lineLanguage,
 	keys,
 }: {
 	/** The screen's name in the top bar, and what stands under it. */
@@ -77,6 +80,7 @@ export function TitleView({
 	kicker?: string
 	/** "On Netflix", or nothing while nobody knows. */
 	where?: string | null
+	lineLanguage?: string
 	line?: string | null
 	keys: readonly TitleKey[]
 }) {
@@ -103,6 +107,7 @@ export function TitleView({
 					</div>
 				)}
 				<div
+					{...mediaTextAttributes(title ? mediaFieldLanguage(title) : "en")}
 					className="mt-2 line-clamp-2 font-bold leading-[0.95] tracking-tight"
 					style={{
 						fontSize: P ? nameSize(shown, 44, 32) : nameSize(shown, 96, 66),
@@ -127,7 +132,7 @@ export function TitleView({
 					{where && <span className="text-white/80">{where}</span>}
 				</div>
 				{!P && line && (
-					<div className="mt-3 line-clamp-2 max-w-[760px] text-[28px] leading-snug text-white/90">
+					<div {...mediaTextAttributes(lineLanguage ?? mediaFieldLanguage(title, "tagline"))} className="mt-3 line-clamp-2 max-w-[760px] text-[28px] leading-snug text-white/90">
 						{line}
 					</div>
 				)}

@@ -8,6 +8,8 @@ const TOAST_MS = 6000
 export interface UndoToastMessage {
 	id: number
 	text: string
+	/** False for a note without an Undo button. */
+	undoable?: boolean
 	/** A second button before Undo, such as "Change date" after a watch was recorded for now. */
 	action?: string
 }
@@ -48,7 +50,7 @@ export function UndoToast({
 						initial={{ y: 12, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 12, opacity: 0 }}
-						className={`pointer-events-auto flex max-w-full items-center rounded-2xl border border-white/10 bg-stone-900/95 py-2 pl-4 pr-2 text-sm text-white shadow-2xl shadow-black/60 backdrop-blur ${toast.action ? "gap-2" : "gap-3"}`}
+						className={`pointer-events-auto flex max-w-full items-center rounded-2xl border border-white/10 bg-stone-900/95 py-2 pl-4 text-sm text-white shadow-2xl shadow-black/60 backdrop-blur ${toast.action ? "gap-2" : "gap-3"} ${toast.undoable === false ? "pr-4" : "pr-2"}`}
 						data-toast
 					>
 						<span className="min-w-0">{toast.text}</span>
@@ -61,13 +63,15 @@ export function UndoToast({
 								{toast.action}
 							</button>
 						)}
-						<button
-							type="button"
-							onClick={onUndo}
-							className={`${BUTTON} text-amber-300`}
-						>
-							Undo
-						</button>
+						{toast.undoable !== false && (
+							<button
+								type="button"
+								onClick={onUndo}
+								className={`${BUTTON} text-amber-300`}
+							>
+								Undo
+							</button>
+						)}
 					</motion.div>
 				)}
 			</AnimatePresence>

@@ -1,3 +1,4 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // Pieces the Taste page's three tabs share: title pictures and links, the person's own score, the poster with that
 // score, the suggestion card, and the On my services switch.
 import { Link } from "@remix-run/react"
@@ -24,7 +25,7 @@ export const backdropUrl = (
 ) => (t?.backdrop ? `${TMDB_IMAGES}/${size}${t.backdrop}` : undefined)
 
 export const titleHref = (t: PortraitTitle) =>
-	`/${t.mediaType}/${t.tmdbId}-${titleToDashed(t.title)}`
+	`/${t.mediaType}/${t.tmdbId}-${titleToDashed(canonicalMediaTitle(t))}`
 
 export type Titles = Record<string, PortraitTitle>
 

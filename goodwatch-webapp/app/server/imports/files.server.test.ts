@@ -172,6 +172,7 @@ describe("native import files", () => {
 				tmdbId: 66,
 				imdbId: "tt2345678",
 				episodeTmdbId: 77,
+				episodeNumbering: "tmdb",
 				season: 2,
 				episode: 3,
 				watchedAt: null,
@@ -298,4 +299,16 @@ describe("native import files", () => {
 		assert.equal(parsed.observations[0].watchedAt, null)
 		assert.equal(parsed.observations[0].precision, "unknown")
 	})
+})
+
+it("preserves main's Letterboxd behavior for an unclosed quoted field", async () => {
+	const parsed = await parseImportFile(
+		"letterboxd",
+		zipFixture({
+			"ratings.csv": 'Date,Name,Year,Rating\n2026-01-01,Example,2024,"4',
+		}),
+	)
+	assert.equal(parsed.observations.length, 1)
+	assert.equal(parsed.observations[0].title, "Example")
+	assert.equal(parsed.observations[0].score, 8)
 })

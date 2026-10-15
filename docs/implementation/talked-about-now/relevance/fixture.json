@@ -1,0 +1,1438 @@
+{
+	"note": "The start page's board of 2026-10-14 (VisionQuest, Love of Your Life, Narnia: The Magician's Nephew, Helluva Boss, Crystal Lake, Street Fighter, Take Charge of My Heart, NCIS: Origins) with its real visible links, read from production Crate on 2026-10-15. Relevance rows stand in for doc.social_relevance until it exists: status is the editorial verdict of the 2026-10-15 relevance audit (Relevant keep, Not relevant drop; a link the audit didn't see has no row and doesn't show); score is a stand-in (authority of the kind times a 7-day freshness decay), not the backend's formula. The 7 Bluesky posts of private accounts, all judged not relevant, are left out of this public file.",
+	"shiftToHoursAgo": 1,
+	"posts": [
+		{
+			"post_id": "640887a4e000d52de17b8b150dfe87e792dc4558231fb3af0b4ba5da05364d0d",
+			"source": "rss",
+			"source_id": "https://www.hollywoodreporter.com/movies/movie-reviews/street-fighter-review-noah-centineo-1236730035/",
+			"url": "https://www.hollywoodreporter.com/movies/movie-reviews/street-fighter-review-noah-centineo-1236730035/",
+			"author": "Frank Scheck",
+			"text": "‘Street Fighter’ Review: Noah Centineo Stars in a Video Game Adaptation That Pummels You With Fan Service and (Too Few) New Moves",
+			"content_hash": "b96402da8f9c45ae55349a7d095cad2bf559d9fecec38aa23741d6966ef43961",
+			"published_at": "2026-10-15T16:00:00Z"
+		},
+		{
+			"post_id": "b1a88a7c15eaa7178fdb9e13c704ab3573fc12309ebfed594efe561e91cc5e70",
+			"source": "rss",
+			"source_id": "https://www.indiewire.com/criticism/movies/street-fighter-movie-review-2026-1235221981/",
+			"url": "https://www.indiewire.com/criticism/movies/street-fighter-movie-review-2026-1235221981/",
+			"author": "Christian Zilko",
+			"text": "‘Street Fighter’ Review: An Arcade Classic Gets a Messy, Maximalist Reboot Destined for Cult Status",
+			"content_hash": "50bb90d2331369ebf24b1971aec3008a9c96a7e9bb69b3038bc058ecba5ad601",
+			"published_at": "2026-10-15T16:00:00Z"
+		},
+		{
+			"post_id": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"source": "rss",
+			"source_id": "https://www.film-rezensionen.de/2026/10/crystal-lake-staffel-1/",
+			"url": "https://www.film-rezensionen.de/2026/10/crystal-lake-staffel-1/",
+			"author": "Rouven Linnarz",
+			"text": "Crystal Lake – Staffel 1",
+			"content_hash": "432e0db16931e4f859088862d2187d757049b02bdfc7b61ab0d7452f683fbb82",
+			"published_at": "2026-10-15T15:12:52Z"
+		},
+		{
+			"post_id": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"source": "rss",
+			"source_id": "https://deadline.com/2026/10/crystal-lake-pays-tribute-snake-killed-friday-the-13th-1237157674/",
+			"url": "https://deadline.com/2026/10/crystal-lake-pays-tribute-snake-killed-friday-the-13th-1237157674/",
+			"author": "Glenn Garner",
+			"text": "‘Crystal Lake’ Pays Tribute To Snake Killed In Making Of ‘Friday the 13th’: “A Direct Nod”",
+			"content_hash": "8a34aaf365f9191c449ecc1a0303398a1e70d6fd849576c325dcbaaa1bfd4957",
+			"published_at": "2026-10-14T23:03:10Z"
+		},
+		{
+			"post_id": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"source": "rss",
+			"source_id": "https://deadline.com/2026/10/box-office-street-fighter-paramount-warner-bros-1237157060/",
+			"url": "https://deadline.com/2026/10/box-office-street-fighter-paramount-warner-bros-1237157060/",
+			"author": "Anthonypauldalessandro",
+			"text": "‘Street Fighter’ With $70M Global Start & ‘The Devils’ Are First Paramount & Warner Bros Pics Opening Post-Merger – Preview",
+			"content_hash": "439d778d8eea2822632a0814b8b1cc71621109ed3a2b3646464d3679ef83188d",
+			"published_at": "2026-10-14T19:39:29Z"
+		},
+		{
+			"post_id": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"source": "rss",
+			"source_id": "https://www.film-rezensionen.de/2026/10/love-of-your-life-amazon-prime-video/",
+			"url": "https://www.film-rezensionen.de/2026/10/love-of-your-life-amazon-prime-video/",
+			"author": "Oliver Armknecht",
+			"text": "Love of Your Life",
+			"content_hash": "d1b04b8fbbd5c6b5d620034958896de129abf92b684deed12f63dab9dc0d20ff",
+			"published_at": "2026-10-14T19:09:25Z"
+		},
+		{
+			"post_id": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"source": "rss",
+			"source_id": "https://variety.com/2026/film/box-office/street-fighter-box-office-opening-weekend-projections-1236910614/",
+			"url": "https://variety.com/2026/film/box-office/street-fighter-box-office-opening-weekend-projections-1236910614/",
+			"author": "Rebecca Rubin",
+			"text": "Box Office: ‘Street Fighter’ Aims for $30 Million Opening, ‘You Can See Everything’ Could Score $8 Million Start",
+			"content_hash": "4dd373afb720a6b7e8747b66e205315928faa16a153e70ad8ee14a2ba8eedcd0",
+			"published_at": "2026-10-14T18:45:14Z"
+		},
+		{
+			"post_id": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2285932/paladin-marvel-visionquest-actor-todd-stashwick/",
+			"url": "https://www.slashfilm.com/2285932/paladin-marvel-visionquest-actor-todd-stashwick/",
+			"author": "www.slashfilm.com",
+			"text": "Who Plays Paladin On Marvel's VisionQuest?",
+			"content_hash": "d6050eef31c07432548ba951ec60aae6322227d24cb00fec39178681e4b0504e",
+			"published_at": "2026-10-14T18:00:00Z"
+		},
+		{
+			"post_id": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2285723/visionquest-ai-characters-mcu-origins-explained/",
+			"url": "https://www.slashfilm.com/2285723/visionquest-ai-characters-mcu-origins-explained/",
+			"author": "www.slashfilm.com",
+			"text": "VisionQuest: All 6 AI Characters And Their MCU Origins Explained",
+			"content_hash": "bef560afae70e83f88356136017f36768af8812a0ac455482f46a499f0ddc312",
+			"published_at": "2026-10-14T17:00:00Z"
+		},
+		{
+			"post_id": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"source": "rss",
+			"source_id": "https://www.denofgeek.com/tv/visionquest-tommy-maximoff-story-even-weirder-comics/",
+			"url": "https://www.denofgeek.com/tv/visionquest-tommy-maximoff-story-even-weirder-comics/",
+			"author": "Joe George",
+			"text": "VisionQuest: Tommy Maximoff’s Story Is Even Weirder in the Comics",
+			"content_hash": "f0c91aafae36af69bfd00e9f68ed228e4cd135f7137feb31fcb7d6c08f0b355f",
+			"published_at": "2026-10-14T17:00:00Z"
+		},
+		{
+			"post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"source": "rss",
+			"source_id": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+			"url": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+			"author": "Patrick Reinbott",
+			"text": "Neuer Netflix-Film schafft, was großen Hollywood-Studios in 55 Jahren Filmgeschichte nicht gelungen ist",
+			"content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+			"published_at": "2026-10-14T16:30:00Z"
+		},
+		{
+			"post_id": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"source": "rss",
+			"source_id": "https://www.moviepilot.de/news/visionquest-folge-3-disney+-termin-1165041",
+			"url": "https://www.moviepilot.de/news/visionquest-folge-3-disney+-termin-1165041",
+			"author": "Matthias Hopf",
+			"text": "Wann kommt VisionQuest Folge 3 zu Disney+? Die verwirrende Veröffentlichung der Marvel-Serie erklärt",
+			"content_hash": "a2825dc400557974c08ee9e5e3acbc19b06f6c655a88b34e5e2a11c8431f3f5b",
+			"published_at": "2026-10-14T16:00:00Z"
+		},
+		{
+			"post_id": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"source": "rss",
+			"source_id": "https://www.denofgeek.com/tv/visionquest-doesnt-address-mcu-ai-problem/",
+			"url": "https://www.denofgeek.com/tv/visionquest-doesnt-address-mcu-ai-problem/",
+			"author": "Joe George",
+			"text": "VisionQuest Doesn’t Address the MCU’s AI Problem",
+			"content_hash": "12c12a900eb29c26bef9f05cdf84699713cb177ae74e9ad5d3b9c337a85faeb8",
+			"published_at": "2026-10-14T16:00:00Z"
+		},
+		{
+			"post_id": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"source": "rss",
+			"source_id": "https://www.film-rezensionen.de/2026/10/street-fighter-2026/",
+			"url": "https://www.film-rezensionen.de/2026/10/street-fighter-2026/",
+			"author": "Oliver Armknecht",
+			"text": "Street Fighter (2026)",
+			"content_hash": "2a4039eea8de5ac932ba29a347e02d207dc55080749ec5f7227250c299667b0b",
+			"published_at": "2026-10-14T14:46:46Z"
+		},
+		{
+			"post_id": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"source": "rss",
+			"source_id": "https://www.moviepilot.de/news/ich-habe-nichts-von-street-fighter-erwartet-jetzt-freue-ich-mich-auf-teil-2-er-liefert-erstklassige-action-und-humor-1165014",
+			"url": "https://www.moviepilot.de/news/ich-habe-nichts-von-street-fighter-erwartet-jetzt-freue-ich-mich-auf-teil-2-er-liefert-erstklassige-action-und-humor-1165014",
+			"author": "Jan Felix Wuttig",
+			"text": "Ich habe nichts von Street Fighter erwartet, jetzt will ich sofort Nachschub: Er liefert erstklassige Action und Humor",
+			"content_hash": "95fff110a5aac4c01f9e007b7a103eb502ca68abf854b2a271a70faf8dd68404",
+			"published_at": "2026-10-14T13:00:00Z"
+		},
+		{
+			"post_id": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2286315/street-fighter-2026-movie-reactions/",
+			"url": "https://www.slashfilm.com/2286315/street-fighter-2026-movie-reactions/",
+			"author": "www.slashfilm.com",
+			"text": "First Street Fighter (2026) Reactions Are Here, And Critics Have A Lot To Say",
+			"content_hash": "87d43b8ec05a74b915aaecef303ad363d90f0c13e87cbea5f9a36388f9cf78cf",
+			"published_at": "2026-10-14T11:13:48Z"
+		},
+		{
+			"post_id": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"source": "rss",
+			"source_id": "https://www.hollywoodreporter.com/movies/movie-news/street-fighter-2026-movie-first-reactions-1236729666/",
+			"url": "https://www.hollywoodreporter.com/movies/movie-news/street-fighter-2026-movie-first-reactions-1236729666/",
+			"author": "Abid Rahman",
+			"text": "Noah Centineo, Andrew Koji’s ‘Street Fighter’: First Reactions",
+			"content_hash": "4023442a9339ef6673abaa38cfc098869247e48993a9aa62dfe494ec1c1c9ed8",
+			"published_at": "2026-10-14T07:36:39Z"
+		},
+		{
+			"post_id": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"source": "rss",
+			"source_id": "https://www.moviepilot.de/news/heute-startet-eine-der-grossten-sci-fi-serien-des-jahres-sie-vollendet-eine-gefeierte-trilogie-1165036",
+			"url": "https://www.moviepilot.de/news/heute-startet-eine-der-grossten-sci-fi-serien-des-jahres-sie-vollendet-eine-gefeierte-trilogie-1165036",
+			"author": "Matthias Hopf",
+			"text": "Heute startet eine der größten Sci-Fi-Serien des Jahres: Sie vollendet eine gefeierte Trilogie",
+			"content_hash": "7e44f7fa6aa825798365d36d8ceb46ae0c7632699935f49c0c56be723cac3c79",
+			"published_at": "2026-10-14T07:15:00Z"
+		},
+		{
+			"post_id": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"source": "rss",
+			"source_id": "https://www.filmstarts.de/nachrichten/1000227107.html",
+			"url": "https://www.filmstarts.de/nachrichten/1000227107.html",
+			"author": "www.filmstarts.de",
+			"text": "Neu auf Disney+: Die Fortsetzung der vielleicht besten Marvel-Serie",
+			"content_hash": "2838c607fdbe6d2eb9d8a0946d6a54a1b54ee604d34d9004810ae2c4ab1cf4ee",
+			"published_at": "2026-10-14T06:00:00Z"
+		},
+		{
+			"post_id": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2285543/visionquest-marvel-timeline-explained/",
+			"url": "https://www.slashfilm.com/2285543/visionquest-marvel-timeline-explained/",
+			"author": "www.slashfilm.com",
+			"text": "When Does VisionQuest Take Place In The Marvel Timeline?",
+			"content_hash": "497cf432fa401eca40efb5372e4ec1d1526495e7aaf8f6d15bdcac1fe5c34bfa",
+			"published_at": "2026-10-14T02:00:00Z"
+		},
+		{
+			"post_id": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2284996/how-ultron-alive-marvel-visionquest-avengers-retcon-explained/",
+			"url": "https://www.slashfilm.com/2284996/how-ultron-alive-marvel-visionquest-avengers-retcon-explained/",
+			"author": "www.slashfilm.com",
+			"text": "How Is Ultron Alive In Marvel's VisionQuest? The Avengers Retcon Explained",
+			"content_hash": "fb917cdeda70687ba6a45935a58490ca4d3b5dbe55f3e869d43decb39a907db2",
+			"published_at": "2026-10-14T01:30:00Z"
+		},
+		{
+			"post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"source": "rss",
+			"source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+			"url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+			"author": "James Hibberd",
+			"text": "Narnia Fans Split Over Greta Gerwig’s ‘Magicians Nephew’ Trailer: “Best in Years” to “Lost Its Soul to CGI”",
+			"content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+			"published_at": "2026-10-13T20:36:43Z"
+		},
+		{
+			"post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"source": "rss",
+			"source_id": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+			"url": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+			"author": "Dessi Gomez",
+			"text": "First Trailer For Greta Gerwig’s ‘Narnia: The Magician’s Nephew’ Teases Punk Rock Multiverse & Cosmic Creation Of Aslan",
+			"content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+			"published_at": "2026-10-13T18:30:27Z"
+		},
+		{
+			"post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"source": "rss",
+			"source_id": "https://www.filmstarts.de/nachrichten/1000227177.html",
+			"url": "https://www.filmstarts.de/nachrichten/1000227177.html",
+			"author": "www.filmstarts.de",
+			"text": "Der erste Trailer zu \"Das Wunder von Narnia\" ist da: Für dieses Fantasy-Epos hat Netflix mehr als 200 Millionen Dollar ausgegeben!",
+			"content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+			"published_at": "2026-10-13T18:15:00Z"
+		},
+		{
+			"post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"source": "rss",
+			"source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+			"url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+			"author": "Hilary Lewis",
+			"text": "Greta Gerwig Debuts ‘Narnia’ Trailer, Opens Up About Telling an Intimate Story on “the Biggest Screen You Can Imagine”",
+			"content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+			"published_at": "2026-10-13T18:09:27Z"
+		},
+		{
+			"post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"source": "rss",
+			"source_id": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+			"url": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+			"author": "Sarah Shachat",
+			"text": "‘The Magician’s Nephew’ Trailer: A Stairway to Narnia as Only Greta Gerwig Could Build It",
+			"content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+			"published_at": "2026-10-13T18:03:50Z"
+		},
+		{
+			"post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"source": "rss",
+			"source_id": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+			"url": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+			"author": "Rebecca Rubin",
+			"text": "‘Narnia: The Magician’s Nephew’ Trailer: Greta Gerwig’s Fantasy Epic Unveils Aslan, the White Witch and More in Dazzling Footage",
+			"content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+			"published_at": "2026-10-13T18:02:53Z"
+		},
+		{
+			"post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+			"url": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+			"author": "www.slashfilm.com",
+			"text": "Narnia: The Magician's Nephew Trailer: Greta Gerwig Takes The Fantasy Classic To Netflix",
+			"content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+			"published_at": "2026-10-13T18:02:31Z"
+		},
+		{
+			"post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+			"source": "youtube",
+			"source_id": "3g28OdIj6cY",
+			"url": "https://www.youtube.com/watch?v=3g28OdIj6cY",
+			"author": "Netflix India",
+			"text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+			"content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+			"published_at": "2026-10-13T18:00:07Z"
+		},
+		{
+			"post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+			"source": "youtube",
+			"source_id": "O8hR2dQGv0k",
+			"url": "https://www.youtube.com/watch?v=O8hR2dQGv0k",
+			"author": "Netflix",
+			"text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+			"content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+			"published_at": "2026-10-13T18:00:03Z"
+		},
+		{
+			"post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"source": "youtube",
+			"source_id": "pDvjN6h-mRo",
+			"url": "https://www.youtube.com/watch?v=pDvjN6h-mRo",
+			"author": "Netflix Brasil",
+			"text": "Nárnia: O Sobrinho do Mago | Trailer oficial | Netflix",
+			"content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+			"published_at": "2026-10-13T18:00:00Z"
+		},
+		{
+			"post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+			"source": "youtube",
+			"source_id": "gDJ-ini7fF0",
+			"url": "https://www.youtube.com/watch?v=gDJ-ini7fF0",
+			"author": "Netflix",
+			"text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+			"content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+			"published_at": "2026-10-13T18:00:00Z"
+		},
+		{
+			"post_id": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"source": "rss",
+			"source_id": "https://deadline.com/2026/10/mark-harmon-michael-weatherly-ncis-origins-reunion-1237155702/",
+			"url": "https://deadline.com/2026/10/mark-harmon-michael-weatherly-ncis-origins-reunion-1237155702/",
+			"author": "Rosy Cordero",
+			"text": "Mark Harmon & Michael Weatherly To Reunite On ‘NCIS: Origins’",
+			"content_hash": "ee5d5f54dd89fa20d369c90c0a0457c7cee13cce0ebf419340d4512bcd1d006c",
+			"published_at": "2026-10-13T17:00:00Z"
+		},
+		{
+			"post_id": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"source": "rss",
+			"source_id": "https://www.indiewire.com/criticism/shows/crystal-lake-review-watch-last-two-episodes-only-1235221420/",
+			"url": "https://www.indiewire.com/criticism/shows/crystal-lake-review-watch-last-two-episodes-only-1235221420/",
+			"author": "Ben Travers",
+			"text": "‘Crystal Lake’ Review: Over-the-Top Kills Succumb to an Underbaked Story in A24’s ‘Friday the 13th’ Prequel",
+			"content_hash": "514936911f338835f32e4f626ba71178167e3ec0b9be6aabf895bd7af2c21ffe",
+			"published_at": "2026-10-13T15:30:00Z"
+		},
+		{
+			"post_id": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"source": "rss",
+			"source_id": "https://www.slashfilm.com/2281267/crystal-lake-review-peacock-friday-the-13th-prequel-series/",
+			"url": "https://www.slashfilm.com/2281267/crystal-lake-review-peacock-friday-the-13th-prequel-series/",
+			"author": "www.slashfilm.com",
+			"text": "Crystal Lake Review: A Thrilling Friday The 13th Origin Series",
+			"content_hash": "5efaa364aa71f038396e753e179fd19c3ceb69c4a26a63ea8fae9449cd2b4b8e",
+			"published_at": "2026-10-13T15:30:00Z"
+		},
+		{
+			"post_id": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"source": "rss",
+			"source_id": "https://www.indiewire.com/features/interviews/terry-matalas-king-of-sci-fi-tv-visionquest-1235220300/",
+			"url": "https://www.indiewire.com/features/interviews/terry-matalas-king-of-sci-fi-tv-visionquest-1235220300/",
+			"author": "Kate Erbland",
+			"text": "Meet Terry Matalas, the New King of Sci-Fi TV",
+			"content_hash": "4c8964d359965b6e94a88a5a094b7682ebaf714af98483f9596ab93541bfd318",
+			"published_at": "2026-10-13T15:00:00Z"
+		},
+		{
+			"post_id": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"source": "rss",
+			"source_id": "https://www.indiewire.com/criticism/shows/visionquest-review-marvel-mcu-tv-ends-bad-1235221169/",
+			"url": "https://www.indiewire.com/criticism/shows/visionquest-review-marvel-mcu-tv-ends-bad-1235221169/",
+			"author": "Ben Travers",
+			"text": "‘VisionQuest’ Review: Marvel’s Tedious Bad-Dad Drama Series Ends a Shortsighted Era of MCU TV",
+			"content_hash": "5fe925053a49b50bd85246615be3a21f0c89344b5c5d851d936aef680cc25d17",
+			"published_at": "2026-10-12T19:00:00Z"
+		},
+		{
+			"post_id": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"source": "rss",
+			"source_id": "https://www.filmstarts.de/nachrichten/1000226986.html",
+			"url": "https://www.filmstarts.de/nachrichten/1000226986.html",
+			"author": "www.filmstarts.de",
+			"text": "Lohnt sich \"VisionQuest\"? So gut ist die neue Marvel-Serie auf Disney+",
+			"content_hash": "e925f872cc09e48b402a5d9274e8067bb88b1ba05add0dada47f46cb36aa4743",
+			"published_at": "2026-10-12T19:00:00Z"
+		},
+		{
+			"post_id": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"source": "rss",
+			"source_id": "https://deadline.com/2026/10/noah-centineo-street-fighter-stunt-coordinator-fighting-style-1237154431/",
+			"url": "https://deadline.com/2026/10/noah-centineo-street-fighter-stunt-coordinator-fighting-style-1237154431/",
+			"author": "Glenn Garner",
+			"text": "Noah Centineo Credits ‘Street Fighter’ Stunt Coordinator With Bringing Game’s “Specific Fighting Style” To Screen: “Insane Fights”",
+			"content_hash": "b908cb33fff8e84b488728f93c977c1d5cb2d3e981335711607e27b0c75f8a8c",
+			"published_at": "2026-10-11T21:21:33Z"
+		}
+	],
+	"links": [
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "640887a4e000d52de17b8b150dfe87e792dc4558231fb3af0b4ba5da05364d0d",
+			"lane": "deterministic_quoted",
+			"duplicate_group": "640887a4e000d52de17b8b150dfe87e792dc4558231fb3af0b4ba5da05364d0d",
+			"content_hash": "b96402da8f9c45ae55349a7d095cad2bf559d9fecec38aa23741d6966ef43961"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "b1a88a7c15eaa7178fdb9e13c704ab3573fc12309ebfed594efe561e91cc5e70",
+			"lane": "deterministic_quoted",
+			"duplicate_group": "b1a88a7c15eaa7178fdb9e13c704ab3573fc12309ebfed594efe561e91cc5e70",
+			"content_hash": "50bb90d2331369ebf24b1971aec3008a9c96a7e9bb69b3038bc058ecba5ad601"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"lane": "deterministic_segment",
+			"duplicate_group": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"content_hash": "432e0db16931e4f859088862d2187d757049b02bdfc7b61ab0d7452f683fbb82"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"lane": "deterministic_quoted",
+			"duplicate_group": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"content_hash": "8a34aaf365f9191c449ecc1a0303398a1e70d6fd849576c325dcbaaa1bfd4957"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"lane": "foreground_exact",
+			"duplicate_group": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"content_hash": "439d778d8eea2822632a0814b8b1cc71621109ed3a2b3646464d3679ef83188d"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1381078,
+			"post_id": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"lane": "foreground_exact",
+			"duplicate_group": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"content_hash": "d1b04b8fbbd5c6b5d620034958896de129abf92b684deed12f63dab9dc0d20ff"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"lane": "foreground_exact",
+			"duplicate_group": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"content_hash": "4dd373afb720a6b7e8747b66e205315928faa16a153e70ad8ee14a2ba8eedcd0"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"lane": "vector_context",
+			"duplicate_group": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"content_hash": "d6050eef31c07432548ba951ec60aae6322227d24cb00fec39178681e4b0504e"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"lane": "foreground_exact",
+			"duplicate_group": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"content_hash": "bef560afae70e83f88356136017f36768af8812a0ac455482f46a499f0ddc312"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"lane": "foreground_exact",
+			"duplicate_group": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"content_hash": "f0c91aafae36af69bfd00e9f68ed228e4cd135f7137feb31fcb7d6c08f0b355f"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"lane": "alt_title_context",
+			"duplicate_group": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"lane": "foreground_exact",
+			"duplicate_group": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"content_hash": "a2825dc400557974c08ee9e5e3acbc19b06f6c655a88b34e5e2a11c8431f3f5b"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"lane": "foreground_exact",
+			"duplicate_group": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"content_hash": "12c12a900eb29c26bef9f05cdf84699713cb177ae74e9ad5d3b9c337a85faeb8"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"lane": "foreground_exact",
+			"duplicate_group": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"content_hash": "2a4039eea8de5ac932ba29a347e02d207dc55080749ec5f7227250c299667b0b"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"lane": "foreground_exact",
+			"duplicate_group": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"content_hash": "95fff110a5aac4c01f9e007b7a103eb502ca68abf854b2a271a70faf8dd68404"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"lane": "foreground_exact",
+			"duplicate_group": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"content_hash": "87d43b8ec05a74b915aaecef303ad363d90f0c13e87cbea5f9a36388f9cf78cf"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"lane": "foreground_exact",
+			"duplicate_group": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"content_hash": "4023442a9339ef6673abaa38cfc098869247e48993a9aa62dfe494ec1c1c9ed8"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"lane": "foreground_exact",
+			"duplicate_group": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"content_hash": "7e44f7fa6aa825798365d36d8ceb46ae0c7632699935f49c0c56be723cac3c79"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"lane": "foreground_exact",
+			"duplicate_group": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"content_hash": "2838c607fdbe6d2eb9d8a0946d6a54a1b54ee604d34d9004810ae2c4ab1cf4ee"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"lane": "foreground_exact",
+			"duplicate_group": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"content_hash": "497cf432fa401eca40efb5372e4ec1d1526495e7aaf8f6d15bdcac1fe5c34bfa"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"lane": "vector_context",
+			"duplicate_group": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"content_hash": "fb917cdeda70687ba6a45935a58490ca4d3b5dbe55f3e869d43decb39a907db2"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"lane": "vector_context",
+			"duplicate_group": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"lane": "foreground_fuzzy",
+			"duplicate_group": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"lane": "alt_title_context",
+			"duplicate_group": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"lane": "alt_title_context",
+			"duplicate_group": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"lane": "foreground_fuzzy",
+			"duplicate_group": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"lane": "foreground_fuzzy",
+			"duplicate_group": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"lane": "foreground_exact",
+			"duplicate_group": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+			"lane": "foreground_exact",
+			"duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+			"content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+			"lane": "foreground_exact",
+			"duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+			"content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"lane": "foreground_exact",
+			"duplicate_group": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+			"lane": "foreground_exact",
+			"duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+			"content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 243006,
+			"post_id": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"lane": "foreground_exact",
+			"duplicate_group": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"content_hash": "ee5d5f54dd89fa20d369c90c0a0457c7cee13cce0ebf419340d4512bcd1d006c"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"lane": "foreground_exact",
+			"duplicate_group": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"content_hash": "514936911f338835f32e4f626ba71178167e3ec0b9be6aabf895bd7af2c21ffe"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"lane": "foreground_exact",
+			"duplicate_group": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"content_hash": "5efaa364aa71f038396e753e179fd19c3ceb69c4a26a63ea8fae9449cd2b4b8e"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"lane": "foreground_exact",
+			"duplicate_group": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"content_hash": "4c8964d359965b6e94a88a5a094b7682ebaf714af98483f9596ab93541bfd318"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"lane": "foreground_exact",
+			"duplicate_group": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"content_hash": "5fe925053a49b50bd85246615be3a21f0c89344b5c5d851d936aef680cc25d17"
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"lane": "foreground_exact",
+			"duplicate_group": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"content_hash": "e925f872cc09e48b402a5d9274e8067bb88b1ba05add0dada47f46cb36aa4743"
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"lane": "foreground_exact",
+			"duplicate_group": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"content_hash": "b908cb33fff8e84b488728f93c977c1d5cb2d3e981335711607e27b0c75f8a8c"
+		}
+	],
+	"quality": [
+		{
+			"post_id": "640887a4e000d52de17b8b150dfe87e792dc4558231fb3af0b4ba5da05364d0d",
+			"content_hash": "b96402da8f9c45ae55349a7d095cad2bf559d9fecec38aa23741d6966ef43961",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "b1a88a7c15eaa7178fdb9e13c704ab3573fc12309ebfed594efe561e91cc5e70",
+			"content_hash": "50bb90d2331369ebf24b1971aec3008a9c96a7e9bb69b3038bc058ecba5ad601",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"content_hash": "432e0db16931e4f859088862d2187d757049b02bdfc7b61ab0d7452f683fbb82",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"content_hash": "8a34aaf365f9191c449ecc1a0303398a1e70d6fd849576c325dcbaaa1bfd4957",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"content_hash": "439d778d8eea2822632a0814b8b1cc71621109ed3a2b3646464d3679ef83188d",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"content_hash": "d1b04b8fbbd5c6b5d620034958896de129abf92b684deed12f63dab9dc0d20ff",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"content_hash": "4dd373afb720a6b7e8747b66e205315928faa16a153e70ad8ee14a2ba8eedcd0",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"content_hash": "d6050eef31c07432548ba951ec60aae6322227d24cb00fec39178681e4b0504e",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"content_hash": "bef560afae70e83f88356136017f36768af8812a0ac455482f46a499f0ddc312",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"content_hash": "f0c91aafae36af69bfd00e9f68ed228e4cd135f7137feb31fcb7d6c08f0b355f",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"content_hash": "a2825dc400557974c08ee9e5e3acbc19b06f6c655a88b34e5e2a11c8431f3f5b",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"content_hash": "12c12a900eb29c26bef9f05cdf84699713cb177ae74e9ad5d3b9c337a85faeb8",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"content_hash": "2a4039eea8de5ac932ba29a347e02d207dc55080749ec5f7227250c299667b0b",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"content_hash": "95fff110a5aac4c01f9e007b7a103eb502ca68abf854b2a271a70faf8dd68404",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"content_hash": "87d43b8ec05a74b915aaecef303ad363d90f0c13e87cbea5f9a36388f9cf78cf",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"content_hash": "4023442a9339ef6673abaa38cfc098869247e48993a9aa62dfe494ec1c1c9ed8",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"content_hash": "7e44f7fa6aa825798365d36d8ceb46ae0c7632699935f49c0c56be723cac3c79",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"content_hash": "2838c607fdbe6d2eb9d8a0946d6a54a1b54ee604d34d9004810ae2c4ab1cf4ee",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"content_hash": "497cf432fa401eca40efb5372e4ec1d1526495e7aaf8f6d15bdcac1fe5c34bfa",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"content_hash": "fb917cdeda70687ba6a45935a58490ca4d3b5dbe55f3e869d43decb39a907db2",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+			"content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+			"content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+			"content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"content_hash": "ee5d5f54dd89fa20d369c90c0a0457c7cee13cce0ebf419340d4512bcd1d006c",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"content_hash": "514936911f338835f32e4f626ba71178167e3ec0b9be6aabf895bd7af2c21ffe",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"content_hash": "5efaa364aa71f038396e753e179fd19c3ceb69c4a26a63ea8fae9449cd2b4b8e",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"content_hash": "4c8964d359965b6e94a88a5a094b7682ebaf714af98483f9596ab93541bfd318",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"content_hash": "5fe925053a49b50bd85246615be3a21f0c89344b5c5d851d936aef680cc25d17",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"content_hash": "e925f872cc09e48b402a5d9274e8067bb88b1ba05add0dada47f46cb36aa4743",
+			"version": "content-quality-1",
+			"status": "pass"
+		},
+		{
+			"post_id": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"content_hash": "b908cb33fff8e84b488728f93c977c1d5cb2d3e981335711607e27b0c75f8a8c",
+			"version": "content-quality-1",
+			"status": "pass"
+		}
+	],
+	"relevance": [
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"version": "relevance-1",
+			"content_hash": "432e0db16931e4f859088862d2187d757049b02bdfc7b61ab0d7452f683fbb82",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.8958,
+			"dup_group": "eafa4e23c1c3bd1546669e4bb47dccfd7374cb4650c4afa633546fe72497a9cb",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"version": "relevance-1",
+			"content_hash": "8a34aaf365f9191c449ecc1a0303398a1e70d6fd849576c325dcbaaa1bfd4957",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.7232,
+			"dup_group": "2b98457159143e0e0796d76722c96628bac7ce0a4aef3406f8f3b3810566f9aa",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"version": "relevance-1",
+			"content_hash": "439d778d8eea2822632a0814b8b1cc71621109ed3a2b3646464d3679ef83188d",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.7974,
+			"dup_group": "59656f391206bb339f1658ae6299361cd2aac3e018874019914e879fa675823a",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1381078,
+			"post_id": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"version": "relevance-1",
+			"content_hash": "d1b04b8fbbd5c6b5d620034958896de129abf92b684deed12f63dab9dc0d20ff",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.795,
+			"dup_group": "c749022612a2b3a3544106ed03bacfecfddad29bf21679101ec557d613e35e7f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"version": "relevance-1",
+			"content_hash": "4dd373afb720a6b7e8747b66e205315928faa16a153e70ad8ee14a2ba8eedcd0",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.705,
+			"dup_group": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"version": "relevance-1",
+			"content_hash": "d6050eef31c07432548ba951ec60aae6322227d24cb00fec39178681e4b0504e",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.7018,
+			"dup_group": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"version": "relevance-1",
+			"content_hash": "bef560afae70e83f88356136017f36768af8812a0ac455482f46a499f0ddc312",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6976,
+			"dup_group": "0705db3c735793692babdc0d7e0d71e859f078176102ab42452f1bfda516c8d4",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"version": "relevance-1",
+			"content_hash": "f0c91aafae36af69bfd00e9f68ed228e4cd135f7137feb31fcb7d6c08f0b355f",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6976,
+			"dup_group": "207f2fc89eb9514638588814c11c7d105b0c381b23199a09bbbf33037657466b",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"version": "relevance-1",
+			"content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6956,
+			"dup_group": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"version": "relevance-1",
+			"content_hash": "a2825dc400557974c08ee9e5e3acbc19b06f6c655a88b34e5e2a11c8431f3f5b",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6935,
+			"dup_group": "9cd586763fc44a5c23652d69651be0ecfbc1cf7f1b867c50755fa32a7712b62f",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"version": "relevance-1",
+			"content_hash": "12c12a900eb29c26bef9f05cdf84699713cb177ae74e9ad5d3b9c337a85faeb8",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6935,
+			"dup_group": "9e0b86b8fbd0858bdcf6d42a001744c09e7ae8d2b3f8854283e040b467436d6f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"version": "relevance-1",
+			"content_hash": "2a4039eea8de5ac932ba29a347e02d207dc55080749ec5f7227250c299667b0b",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.7745,
+			"dup_group": "dc1dcd3ea165970dcad8dffa2f0e9f695984d1043b22c95407e269aa4b5ccb44",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"version": "relevance-1",
+			"content_hash": "95fff110a5aac4c01f9e007b7a103eb502ca68abf854b2a271a70faf8dd68404",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6812,
+			"dup_group": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"version": "relevance-1",
+			"content_hash": "87d43b8ec05a74b915aaecef303ad363d90f0c13e87cbea5f9a36388f9cf78cf",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6741,
+			"dup_group": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"version": "relevance-1",
+			"content_hash": "4023442a9339ef6673abaa38cfc098869247e48993a9aa62dfe494ec1c1c9ed8",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6597,
+			"dup_group": "2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"version": "relevance-1",
+			"content_hash": "7e44f7fa6aa825798365d36d8ceb46ae0c7632699935f49c0c56be723cac3c79",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6583,
+			"dup_group": "febaa0e2675553c1b3b141e50c9f9dc9bbe2fb9392084460fd4a77aecb0f5c7f",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"version": "relevance-1",
+			"content_hash": "2838c607fdbe6d2eb9d8a0946d6a54a1b54ee604d34d9004810ae2c4ab1cf4ee",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6534,
+			"dup_group": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"version": "relevance-1",
+			"content_hash": "497cf432fa401eca40efb5372e4ec1d1526495e7aaf8f6d15bdcac1fe5c34bfa",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6381,
+			"dup_group": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"version": "relevance-1",
+			"content_hash": "fb917cdeda70687ba6a45935a58490ca4d3b5dbe55f3e869d43decb39a907db2",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6362,
+			"dup_group": "434b4e6b23f495c11834e488202d6cccade98233420dc64613e56c27ad5715c8",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"version": "relevance-1",
+			"content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6179,
+			"dup_group": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"version": "relevance-1",
+			"content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6102,
+			"dup_group": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"version": "relevance-1",
+			"content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6093,
+			"dup_group": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"version": "relevance-1",
+			"content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.609,
+			"dup_group": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"version": "relevance-1",
+			"content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6086,
+			"dup_group": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"version": "relevance-1",
+			"content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6086,
+			"dup_group": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"version": "relevance-1",
+			"content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+			"status": "drop",
+			"kind": "news",
+			"score": 0.6085,
+			"dup_group": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+			"version": "relevance-1",
+			"content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+			"status": "keep",
+			"kind": "official_video",
+			"score": 0.7605,
+			"dup_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1147572,
+			"post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"version": "relevance-1",
+			"content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+			"status": "drop",
+			"kind": "official_video",
+			"score": 0.7605,
+			"dup_group": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+			"reasons": [
+				"audit-2026-10-15: not relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 243006,
+			"post_id": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"version": "relevance-1",
+			"content_hash": "ee5d5f54dd89fa20d369c90c0a0457c7cee13cce0ebf419340d4512bcd1d006c",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.6048,
+			"dup_group": "630b6479eb78273bd736b0735c6b07c721d0ef62bdb5a997bd4632e256dc388f",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"version": "relevance-1",
+			"content_hash": "514936911f338835f32e4f626ba71178167e3ec0b9be6aabf895bd7af2c21ffe",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.6743,
+			"dup_group": "7455781bf4f5801b345676999cc291ba92763fe114ec3b9b4c32d80ae644007d",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213562,
+			"post_id": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"version": "relevance-1",
+			"content_hash": "5efaa364aa71f038396e753e179fd19c3ceb69c4a26a63ea8fae9449cd2b4b8e",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.6743,
+			"dup_group": "aafa022ef196ff456ed1d8dbcdec51146d6aac43483087a309b2044e62c626dd",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"version": "relevance-1",
+			"content_hash": "4c8964d359965b6e94a88a5a094b7682ebaf714af98483f9596ab93541bfd318",
+			"status": "keep",
+			"kind": "interview",
+			"score": 0.635,
+			"dup_group": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"version": "relevance-1",
+			"content_hash": "5fe925053a49b50bd85246615be3a21f0c89344b5c5d851d936aef680cc25d17",
+			"status": "keep",
+			"kind": "review",
+			"score": 0.5969,
+			"dup_group": "039c89678682e7e3ca5410d4e769046ff719de97a0b2595e8c0cd325bfa241df",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "tv",
+			"media_tmdb_id": 213375,
+			"post_id": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"version": "relevance-1",
+			"content_hash": "e925f872cc09e48b402a5d9274e8067bb88b1ba05add0dada47f46cb36aa4743",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.5305,
+			"dup_group": "4ef295a231072580fdf4a366b29e3bd392b30f83b8a34d45f7b3ac1772572dbf",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		},
+		{
+			"media_type": "movie",
+			"media_tmdb_id": 1153576,
+			"post_id": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"version": "relevance-1",
+			"content_hash": "b908cb33fff8e84b488728f93c977c1d5cb2d3e981335711607e27b0c75f8a8c",
+			"status": "keep",
+			"kind": "news",
+			"score": 0.4664,
+			"dup_group": "b3b05473e13005849fd27edb175e1b7272deabd4af454d1639e269fb7f396c52",
+			"reasons": [
+				"audit-2026-10-15: relevant"
+			]
+		}
+	]
+}

@@ -1,0 +1,98 @@
+{
+  "start": "2026-10-15T17:09:43Z",
+  "end": "2026-10-15T17:14:59.422095+00:00",
+  "clients": [
+    {
+      "host": 20,
+      "name": "gk4owk8-20261015T170810",
+      "commit": "f1c9f61dfdaede0f583a6b4ae1ca1d560f6f30ac",
+      "sameId": true,
+      "health": "healthy",
+      "restarts": 0,
+      "live": 200,
+      "ready": 200,
+      "responses": 2243,
+      "http5xx": 0,
+      "logs": {
+        "failedQueries": 0,
+        "timeouts": 2,
+        "nativeConnection": 1,
+        "attemptFailures": 1,
+        "terminalFailures": 0,
+        "logged5xx": 0
+      },
+      "startupRedacted": true
+    },
+    {
+      "host": 20,
+      "name": "goodwatch-search-b",
+      "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+      "sameId": true,
+      "health": "healthy",
+      "restarts": 0,
+      "live": 200,
+      "ready": 200,
+      "responses": 32,
+      "http5xx": 0,
+      "logs": {
+        "failedQueries": 0,
+        "timeouts": 0,
+        "nativeConnection": 0,
+        "attemptFailures": 0,
+        "terminalFailures": 0,
+        "logged5xx": 0
+      },
+      "startupRedacted": true
+    },
+    {
+      "host": 20,
+      "name": "goodwatch-search-a",
+      "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+      "sameId": true,
+      "health": "healthy",
+      "restarts": 0,
+      "live": 200,
+      "ready": 200,
+      "responses": 31,
+      "http5xx": 0,
+      "logs": {
+        "failedQueries": 0,
+        "timeouts": 0,
+        "nativeConnection": 0,
+        "attemptFailures": 0,
+        "terminalFailures": 0,
+        "logged5xx": 0
+      },
+      "startupRedacted": true
+    },
+    {
+      "host": 21,
+      "name": "gk4owk8-20261015T170604",
+      "commit": "f1c9f61dfdaede0f583a6b4ae1ca1d560f6f30ac",
+      "sameId": true,
+      "health": "healthy",
+      "restarts": 0,
+      "live": 200,
+      "ready": 200,
+      "responses": 1467,
+      "http5xx": 0,
+      "logs": {
+        "failedQueries": 0,
+        "timeouts": 0,
+        "nativeConnection": 0,
+        "attemptFailures": 0,
+        "terminalFailures": 0,
+        "logged5xx": 0
+      },
+      "startupRedacted": true
+    }
+  ],
+  "public": {
+    "responses": 319,
+    "http5xx": 0,
+    "transportErrors": 0,
+    "statuses": {
+      "200": 319
+    }
+  }
+}

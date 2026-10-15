@@ -1,0 +1,10 @@
+summary: YouTube playability observations
+description: Free API or watch-page checks; explicit Germany availability
+  required, unknown fails closed.
+lock: '!inline f/social/youtube_playability.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

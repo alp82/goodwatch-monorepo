@@ -1,9 +1,12 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { getUserRecommendations, type UserRecommendation } from "~/server/user-recommendations.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	
 	if (!userId) {
@@ -44,10 +47,11 @@ export const useUserRecommendations = ({
 		mediaType,
 		limit: limit.toString(),
 	})
-	const url = `/api/user-recommendations?${params}`
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl(`/api/user-recommendations?${params}`, locale.language)
 
 	return useQuery<GetUserRecommendations>({
-		queryKey: [...queryKeyUserRecommendations, mediaType, limit],
+		queryKey: [...queryKeyUserRecommendations, mediaType, limit, locale.language],
 		queryFn: async () => {
 			const response = await fetch(url)
 			if (!response.ok) {
@@ -58,3 +62,5 @@ export const useUserRecommendations = ({
 		enabled,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

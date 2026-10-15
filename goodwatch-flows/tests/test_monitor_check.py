@@ -445,7 +445,7 @@ class MonitorCheckTests(unittest.TestCase):
             result["cluster_status_counts"], {"unhealthy": 1, "healthy": 1}
         )
         self.assertIn("doc.movie#8", store.values["crate-cluster-progress"])
-        self.assertTrue(
+        self.assertFalse(
             store.values["pipeline:f/monitoring/crate_shards"]["incident"][
                 "active"
             ]

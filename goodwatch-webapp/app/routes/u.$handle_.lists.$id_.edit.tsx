@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // The editor for a saved share list: /u/:handle/lists/:id/edit. Only the owner can open it; everyone else goes to
 // the list page. A wrong or differently cased handle redirects to the canonical URL, and deleted lists answer 404.
 // The trailing underscores keep this route out of the profile and list page layouts.
@@ -30,7 +31,7 @@ const notFound = () => new Response("Not found", { status: 404, headers: { "Cach
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-export async function loader({ params, request }: LoaderFunctionArgs) {
+async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const list = await getList(params.id ?? "")
 	if (!list) throw notFound()
 	const owner = await getCachedProfileByUserId(list.userId)
@@ -99,3 +100,5 @@ export default function EditShareList() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

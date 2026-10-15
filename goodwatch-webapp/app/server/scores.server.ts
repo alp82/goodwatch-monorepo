@@ -5,6 +5,7 @@ import { markTasteChanged } from "~/server/taste/index.server"
 import { applyTrackingEvent } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, upsert } from "~/utils/crate"
+import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 export type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 
@@ -81,6 +82,7 @@ export const updateScores = async ({
 		result = await execute(sql, params)
 	}
 
+	if (result.rowcount) markPersonalOrderChanged(user_id)
 	if (score != null) await clearNotInterested(user_id, tmdb_id, media_type)
 
 	let wasReset = false
@@ -95,7 +97,7 @@ export const updateScores = async ({
 	} finally {
 		// Also when tracking refused or failed: the score itself is stored.
 		if (!wasReset) await resetUserDataCache({ user_id })
-		await markTasteChanged(user_id)
+		if (result.rowcount) await markTasteChanged(user_id)
 		await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 	}
 

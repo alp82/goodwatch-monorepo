@@ -1,0 +1,52 @@
+{
+  "firstView": {
+    "requests": 229,
+    "rowRequests": [],
+    "slotInHtml": false,
+    "locked": null
+  },
+  "desktop": {
+    "lead": 765,
+    "board": 765,
+    "page": 1425,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hostsBeforePress": [
+      "image.tmdb.org",
+      "www.googletagmanager.com"
+    ]
+  },
+  "afterPress": {
+    "iframe": "https://www.youtube-nocookie.com/embed/3g28OdIj6cY?autoplay=1&rel=0&playsinline=1",
+    "hosts": [
+      "fonts.gstatic.com",
+      "image.tmdb.org",
+      "www.google.com",
+      "www.googletagmanager.com",
+      "www.youtube-nocookie.com"
+    ]
+  },
+  "desktop-second": {
+    "lead": 676,
+    "board": 676
+  },
+  "phone": {
+    "lead": 538,
+    "board": 1224,
+    "page": 390,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "hostsBeforePress": [
+      "image.tmdb.org",
+      "www.googletagmanager.com"
+    ]
+  },
+  "phone-second": {
+    "lead": 496,
+    "board": 1182
+  }
+}

@@ -1,3 +1,7 @@
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { assetUrl } from "~/utils/asset-url"
 import {
 	ArrowDownIcon,
@@ -69,7 +73,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 const PER_GROUP = 12
 
-export async function loader({ params, request }: LoaderFunctionArgs) {
+async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const id = Number((params.personKey ?? "").split("-")[0])
 	if (!Number.isSafeInteger(id) || id <= 0)
 		throw new Response("Not found", { status: 404 })
@@ -212,7 +216,7 @@ const traitLabel = (key: string) =>
 	FINGERPRINT_META[key]?.label ?? key.replace(/_/g, " ")
 const traitEmoji = (key: string) => FINGERPRINT_META[key]?.emoji ?? ""
 const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
-	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(c.title)}`
+	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(canonicalMediaTitle(c))}`
 const HERO_BACKDROP_SIZES: SizeRule[] = [[null, "100vw"]]
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
@@ -591,7 +595,9 @@ function Facts({ data }: { data: Data }) {
 						)}
 						<div className="min-w-0">
 							<div className="truncate text-sm font-semibold">
-								{s.best.title}
+								<MediaText
+									value={presentedText(s.best, "title", s.best.title)}
+								/>
 							</div>
 							<GoodWatchScore score={s.best.score} size="sm" />
 						</div>
@@ -1172,3 +1178,5 @@ function Titles({ data }: { data: Data }) {
 		</section>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

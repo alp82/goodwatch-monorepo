@@ -7,19 +7,27 @@
 // the check that keeps two actions on one show from overwriting each other, and what a request that is sent twice
 // does.
 //
-// The writer does not write `user_score`, and it only ever deletes from `user_wishlist` and `user_not_interested`.
+// The writer does not write `user_score`. It clears intentions, and status-only import Undo restores those rows.
 // Setting a score, adding to the Wishlist and marking Not interested stay with their own writers. The score's
 // writers call in here with `rate` after their write (scores.server.ts, the guest transfer) or settle their movies
 // (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
-import { createHash } from "node:crypto"
-import type { ImportItem, ImportSource } from "~/domain/imports"
+import { createHash, randomUUID } from "node:crypto"
+import { isDeepStrictEqual } from "node:util"
+import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
+import {
+	type ImportItem,
+	type ImportSource,
+	isApplicableStatus,
+} from "~/domain/imports"
 import {
 	type ListedEpisode,
+	PROTECTED_STATES,
 	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
 	groupWatchId,
+	importShowStatus,
 	facts,
 	showAiredBy,
 	isDay,
@@ -65,6 +73,7 @@ import { cached } from "~/utils/cache"
 import {
 	type CrateValue,
 	execute,
+	isCrateRecoveryError,
 	insertRows,
 	query,
 	timestampsAsMillis,
@@ -204,6 +213,8 @@ const STATE_KEY = ["user_id", "tmdb_id", "media_type"]
 const DELETE_CHUNK = 500
 
 type StoredState = StateRow & {
+	/** Immutable receipt for the first physical show-state insert, retained through logical deletion. */
+	insert_token: string | null
 	_seq_no: number
 	_primary_term: number
 	updated_at: number
@@ -218,6 +229,12 @@ async function readState(
 		title.tmdbId,
 		title.mediaType,
 	])
+	return storedState(row)
+}
+
+function storedState(
+	row: Record<string, unknown> | undefined,
+): StoredState | null {
 	if (!row) return null
 	return {
 		state: row.state as StateRow["state"],
@@ -228,6 +245,7 @@ async function readState(
 			(row.seen_press_from as StateRow["seen_press_from"]) ?? null,
 		rate_prompt_dismissed_at: ms(row.rate_prompt_dismissed_at),
 		seen_question: (row.seen_question as StateRow["seen_question"]) ?? null,
+		insert_token: (row.insert_token as string | null) ?? null,
 		_seq_no: Number(row._seq_no),
 		_primary_term: Number(row._primary_term),
 		updated_at: ms(row.updated_at) ?? 0,
@@ -236,7 +254,15 @@ async function readState(
 
 const stateOnly = (row: StoredState | null): StateRow | null => {
 	if (!row) return null
-	const { _seq_no, _primary_term, updated_at, ...state } = row
+	const { _seq_no, _primary_term, updated_at, insert_token, ...state } = row
+	// The empty Not started row is a physical fence/receipt, not a member state or a remembered prompt.
+	if (
+		state.state === "not_started" &&
+		state.pass === 1 &&
+		state.rate_prompt_dismissed_at === null &&
+		state.seen_question === null
+	)
+		return null
 	return state
 }
 
@@ -316,22 +342,68 @@ async function insertState(
 	row: StateRow,
 	now: number,
 ): Promise<boolean> {
-	const { rowcount } = await insertRows(
-		"user_watch_state",
-		STATE_COLUMNS,
-		[
+	if (title.mediaType === "movie") {
+		const { rowcount } = await insertRows(
+			"user_watch_state",
+			STATE_COLUMNS,
 			[
-				userId,
-				title.tmdbId,
-				title.mediaType,
-				...stateValues(row),
-				new Date(now),
-				new Date(now),
+				[
+					userId,
+					title.tmdbId,
+					title.mediaType,
+					...stateValues(row),
+					new Date(now),
+					new Date(now),
+				],
 			],
-		],
-		{ conflict: STATE_KEY },
-	)
-	return rowcount === 1
+			{ conflict: STATE_KEY },
+		)
+		return rowcount === 1
+	}
+	// A show key is never removed by a tracking action. This token identifies our first insert even after
+	// a later action replaces its values with an empty receipt. An identical delayed insert cannot recreate it.
+	const token = randomUUID()
+	const columns = [...STATE_COLUMNS, "insert_token"]
+	const params: CrateValue[] = [
+		userId,
+		title.tmdbId,
+		title.mediaType,
+		...stateValues(row),
+		new Date(now),
+		new Date(now),
+		token,
+	]
+	const statement = `INSERT INTO user_watch_state (${columns.map((c) => `"${c}"`).join(", ")}) VALUES (${marks(columns.length)}) ON CONFLICT (${STATE_KEY.map((c) => `"${c}"`).join(", ")}) DO NOTHING`
+	return withCrateOperation("tracking.insertState", async () => {
+		let lost: unknown
+		for (let attempt = 1; attempt <= 2; attempt++) {
+			try {
+				const result = await run(statement, params)
+				if ((result.rowcount || 0) === 1) return true
+				if (!lost) return false // A known conflict: the original was not applied.
+			} catch (error) {
+				if (!isCrateRecoveryError(error)) throw error
+				lost = error
+			}
+			const current = await readState(userId, title)
+			const ours = current?.insert_token === token
+			crateEvent("crate.readback", {
+				attempt,
+				outcome: ours ? "applied" : current ? "conflict" : "absent",
+				guard: "insert_token",
+			})
+			if (ours) return true
+			// A different creator is ambiguous to the domain event: its log effects may already have been observed
+			// and undone. Never restart that event over a newer action after an indeterminate first insert.
+			if (current || attempt === 2) throw lost
+			crateEvent("crate.replay", {
+				attempt: 2,
+				outcome: "started",
+				guard: "retained_title_key",
+			})
+		}
+		throw lost
+	})
 }
 
 /**
@@ -347,8 +419,19 @@ async function writeState(
 	now: number,
 ): Promise<boolean> {
 	if (write === "none") return true
-	if (write === "insert")
+	if (write === "insert" && !before)
 		return row ? insertState(userId, title, row, now) : true
+	// Logical removal retains the physical key and its immutable receipt. Even a still-running original INSERT
+	// loses ON CONFLICT after an unwatch. A later real watch updates this key by its original CAS version.
+	const storedRow: StateRow = row ?? {
+		state: "not_started",
+		state_changed_at: now,
+		pass: 1,
+		seen_press_group: null,
+		seen_press_from: null,
+		rate_prompt_dismissed_at: null,
+		seen_question: null,
+	}
 	if (!before) return false
 	const key: CrateValue[] = [
 		userId,
@@ -359,17 +442,60 @@ async function writeState(
 	]
 	const unchanged =
 		"WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?"
-	const result =
-		write === "update" && row
-			? await run(
-					`UPDATE user_watch_state
+	// Keep this statement, its values, timestamp and version unchanged through recovery. The version predicate
+	// permits at most one application, including when the first response is lost while its request still runs.
+	const submit = () =>
+		run(
+			`UPDATE user_watch_state
 					 SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?,
 					     rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ?
 					 ${unchanged}`,
-					[...stateValues(row), new Date(now), ...key],
-				)
-			: await run(`DELETE FROM user_watch_state ${unchanged}`, key)
-	return (result.rowcount || 0) >= 1
+			[...stateValues(storedRow), new Date(now), ...key],
+		)
+	return withCrateOperation("tracking.writeState", async () => {
+		const inspect = async () => {
+			const current = await readState(userId, title)
+			const applied = Boolean(
+				current &&
+					current._seq_no !== before._seq_no &&
+					current.updated_at === now &&
+					isDeepStrictEqual(stateOnly(current), row),
+			)
+			const stillBefore =
+				current?._seq_no === before._seq_no &&
+				current?._primary_term === before._primary_term
+			crateEvent("crate.readback", {
+				outcome: applied ? "applied" : stillBefore ? "unchanged" : "conflict",
+			})
+			return { applied, stillBefore }
+		}
+		try {
+			return ((await submit()).rowcount || 0) >= 1
+		} catch (error) {
+			if (!isCrateRecoveryError(error)) throw error
+			const checked = await inspect()
+			if (checked.applied) return true
+			// Another version without ours is ambiguous: ours may have landed and then been superseded by that
+			// writer. False would make the caller apply this event again over the newer state, so fail instead.
+			if (!checked.stillBefore) throw error
+			crateEvent("crate.replay", {
+				attempt: 2,
+				outcome: "started",
+				guard: "original_version",
+			})
+			try {
+				if (((await submit()).rowcount || 0) >= 1) return true
+			} catch (retryError) {
+				if (!isCrateRecoveryError(retryError)) throw retryError
+				if ((await inspect()).applied) return true
+				throw retryError
+			}
+			// The version moved after the readback: the original landed in between, or another writer did, possibly
+			// after ours. Only our own row proves the outcome. Anything else is indeterminate, not a conflict.
+			if ((await inspect()).applied) return true
+			throw error
+		}
+	})
 }
 
 /**
@@ -794,18 +920,25 @@ async function applyShowEventStored(
 	// Log rows an earlier round of this call inserted. They were worked out from a state that has changed since.
 	let stale: string[] = []
 	for (let round = 0; round <= STATE_RETRIES; round++) {
-		if (stale.length) {
-			await deleteLog(userId, stale)
-			stale = []
-		}
 		// 1. So that the read below sees the rows of the member's previous action.
 		await run("REFRESH TABLE user_watch_log")
 		// 2. The state row (real-time), the show's log rows, the cached episode list.
-		const [before, log, episodes] = await Promise.all([
+		const [before, stored, episodes] = await Promise.all([
 			readState(userId, title),
 			readLog(userId, title),
 			getEpisodeList(title.tmdbId),
 		])
+		// An action that took away a row of the last round had read it: the member undid this event, and running it
+		// again would put that watch back over their later choice. Rows still there are taken out and written again.
+		if (stale.some((id) => !stored.some((r) => r.watch_id === id))) {
+			await finish(userId)
+			throw new TrackingConflictError()
+		}
+		const log = stored.filter((r) => !stale.includes(r.watch_id))
+		if (stale.length) {
+			await deleteLog(userId, stale)
+			stale = []
+		}
 		// 3. The machine, in memory. The server can't tell a first request from one sent again, so it always runs
 		// with `resend`. Which lists the title is on is not read: the event says which ones it clears.
 		const now = Date.now()
@@ -1362,6 +1495,50 @@ export async function getMovieTracking(
 export const importWatchId = (source: ImportSource, key: string) =>
 	`i-${createHash("sha1").update(`${source}:${key}`).digest("hex").slice(0, 32)}`
 
+export type ImportStatusItem = ImportItem & {
+	_previewStatus?: { _seq_no: number; _primary_term: number } | null
+}
+
+/** Preview snapshots in bounded batches; status-only rows need no episode catalog. */
+export async function getImportStatusSnapshots(
+	userId: string,
+	showIds: number[],
+) {
+	const result = new Map<
+		number,
+		{ state: StoredState | null; hasWatches: boolean }
+	>()
+	await run("REFRESH TABLE user_watch_state, user_watch_log")
+	for (let start = 0; start < showIds.length; start += 800) {
+		const ids = showIds.slice(start, start + 800)
+		const placeholders = ids.map(() => "?").join(", ")
+		const [states, watches] = await Promise.all([
+			read<Record<string, unknown>>(
+				`SELECT tmdb_id, state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question, insert_token, updated_at, _seq_no, _primary_term FROM user_watch_state WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (${placeholders}) LIMIT 800`,
+				[userId, ...ids],
+			),
+			read<{ tmdb_id: number }>(
+				`SELECT DISTINCT tmdb_id FROM user_watch_log WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (${placeholders}) LIMIT 800`,
+				[userId, ...ids],
+			),
+		])
+		const byId = new Map(
+			states.map((row) => [Number(row.tmdb_id), storedState(row)]),
+		)
+		const watched = new Set(watches.map((row) => Number(row.tmdb_id)))
+		for (const id of ids)
+			result.set(id, {
+				state: byId.get(id) ?? null,
+				hasWatches: watched.has(id),
+			})
+	}
+	return result
+}
+
+type Version = { _seq_no: number; _primary_term: number } | null
+const sameVersion = (a: Version, b: Version) =>
+	a?._seq_no === b?._seq_no && a?._primary_term === b?._primary_term
+
 export interface ImportTrackingPlan {
 	userId: string
 	importId: string
@@ -1369,6 +1546,7 @@ export interface ImportTrackingPlan {
 	now: number
 	beforeState: StoredState | null
 	afterState: StateRow | null
+	statusItem?: ImportItem
 	watches: LogRow[]
 	addedKeys: string[]
 	keptKeys: string[]
@@ -1376,6 +1554,8 @@ export interface ImportTrackingPlan {
 		table: "user_wishlist" | "user_not_interested"
 		seq: number
 		term: number
+		createdAt?: number | null
+		updatedAt?: number | null
 	}[]
 }
 
@@ -1475,7 +1655,7 @@ export async function prepareImportTrackingPlan(input: {
 	)
 	for (const row of candidates)
 		if (exact.has(row.watch_id)) used.add(row.watch_id)
-	for (const item of input.items) {
+	for (const item of input.items.filter((item) => item.kind === "watch")) {
 		const watchId = importWatchId(input.source, item.key)
 		if (
 			existing.some((row) => row.watch_id === watchId) ||
@@ -1528,8 +1708,30 @@ export async function prepareImportTrackingPlan(input: {
 		plan.watches.push(row)
 		plan.addedKeys.push(item.key)
 	}
-	if (!plan.watches.length) return plan
+
+	const statusItem: ImportStatusItem | undefined = input.items.find(
+		(item) => item.kind === "show_status",
+	)
 	if (
+		statusItem &&
+		title.mediaType === "show" &&
+		isApplicableStatus(statusItem.showStatus)
+	) {
+		const preview = statusItem._previewStatus
+		const changed = preview !== undefined && !sameVersion(preview, beforeState)
+		if (
+			changed ||
+			(beforeState &&
+				((beforeState.state === statusItem.showStatus &&
+					!plan.watches.length) ||
+					PROTECTED_STATES.includes(beforeState.state)))
+		)
+			plan.keptKeys.push(statusItem.key)
+		else plan.statusItem = statusItem
+	}
+	if (!plan.watches.length && !plan.statusItem) return plan
+	if (
+		plan.watches.length > 0 &&
 		title.mediaType === "show" &&
 		(!beforeState ||
 			beforeState.state === "not_started" ||
@@ -1553,15 +1755,84 @@ export async function prepareImportTrackingPlan(input: {
 			plan.afterState = stateRowOf(current, stateOnly(beforeState), input.now)
 		}
 	}
+
+	if (plan.statusItem) {
+		const record = recordFromRows(
+			plan.afterState,
+			[...existing, ...plan.watches],
+			{ score: null, wantToSee: false, notInterested: false },
+		)
+		if (!beforeState)
+			record.pass = Math.max(1, ...plan.watches.map((row) => row.pass))
+		const status = plan.statusItem.showStatus
+		if (isApplicableStatus(status)) {
+			const show = showAiredBy(
+				listed(await getEpisodeList(title.tmdbId)),
+				utcDay(input.now),
+			)
+			const result = importShowStatus(
+				{ show, record },
+				status,
+				plan.statusItem.completionScope,
+				importWatchId(input.source, plan.statusItem.key),
+			)
+			if (result.refused) {
+				plan.keptKeys.push(plan.statusItem.key)
+				plan.statusItem = undefined
+			} else {
+				plan.afterState = stateRowOf(
+					result.world.record,
+					stateOnly(beforeState),
+					input.now,
+				)
+				// Zero denotes no member move for a source-only Watching status. No watch exists to carry
+				// the import provenance used by the activity readers; updated_at still owns the undo.
+				if (
+					plan.afterState?.state === "watching" &&
+					beforeState?.state !== "watching"
+				)
+					plan.afterState.state_changed_at = 0
+				const known = new Set(record.watches.map((w) => w.id))
+				for (const watch of result.world.record.watches.filter(
+					(w) => !known.has(w.id),
+				)) {
+					plan.watches.push({
+						watch_id: importWatchId(
+							input.source,
+							`${plan.statusItem.key}:pass:${watch.pass}:episode:${watch.episodeId}`,
+						),
+						media_type: "show",
+						tmdb_id: title.tmdbId,
+						episode_tmdb_id: watch.episodeId,
+						season_number: watch.season,
+						episode_number: watch.number,
+						watched_at: null,
+						watched_at_precision: "unknown",
+						origin: "import",
+						group_id: null,
+						import_id: input.importId,
+						pass: watch.pass,
+						created_at: input.now,
+					})
+				}
+			}
+		}
+	}
 	// Only clear the intentions observed while preparing this plan. A later edit gets a new version.
 	if (
 		title.mediaType === "movie" ||
+		plan.statusItem !== undefined ||
 		plan.watches.some((row) => (row.season_number ?? 0) > 0)
 	) {
 		for (const table of ["user_wishlist", "user_not_interested"] as const) {
 			try {
-				const [row] = await read<{ _seq_no: number; _primary_term: number }>(
-					`SELECT _seq_no, _primary_term FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
+				const [row] = await read<{
+					_seq_no: number
+					_primary_term: number
+					created_at: number | null
+					updated_at: number | null
+				}>(
+					`SELECT created_at, updated_at, _seq_no, _primary_term FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
 					[input.userId, title.tmdbId, title.mediaType],
 				)
 				if (row)
@@ -1569,6 +1840,8 @@ export async function prepareImportTrackingPlan(input: {
 						table,
 						seq: Number(row._seq_no),
 						term: Number(row._primary_term),
+						createdAt: ms(row.created_at),
+						updatedAt: ms(row.updated_at),
 					})
 			} catch (error) {
 				if (
@@ -1589,8 +1862,13 @@ export async function applyImportTrackingPlan(
 ) {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length)
-		return { added: 0, kept: plan.keptKeys.length, watchIds: [] }
+	if (!plan.watches.length && !plan.statusItem)
+		return {
+			added: 0,
+			kept: plan.keptKeys.length,
+			watchIds: [],
+			statusKeys: [],
+		}
 	await insertLog(userId, plan.watches, plan.now)
 	await run("REFRESH TABLE user_watch_log")
 	const log = await readImportLog(userId, plan.title)
@@ -1599,12 +1877,14 @@ export async function applyImportTrackingPlan(
 		(row) => row.import_id === plan.importId && plannedIds.has(row.watch_id),
 	)
 	// A simultaneous upload can have won every insert. It owns the state transition as well as the watches.
-	if (!ours.length)
+	if (!ours.length && !plan.statusItem)
 		return {
 			added: 0,
 			kept: plan.keptKeys.length + plan.watches.length,
 			watchIds: [],
+			statusKeys: [],
 		}
+	let statusApplied = false
 	if (plan.title.mediaType === "movie")
 		await settleMovie(userId, plan.title.tmdbId)
 	else {
@@ -1614,10 +1894,30 @@ export async function applyImportTrackingPlan(
 			if (
 				current?.updated_at === plan.now &&
 				current.state === plan.afterState?.state
-			)
+			) {
+				statusApplied = !!plan.statusItem
 				break
-			if (current && ["seen", "on_hold", "dropped"].includes(current.state))
-				break
+			}
+			if (plan.statusItem) {
+				// Any edit since planning wins, including another move to Watching.
+				if (!sameVersion(current, plan.beforeState)) break
+				if (
+					await writeState(
+						userId,
+						plan.title,
+						current ? "update" : "insert",
+						plan.afterState,
+						current,
+						plan.now,
+					)
+				) {
+					statusApplied = true
+					break
+				}
+				if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
+				continue
+			}
+			if (current && PROTECTED_STATES.includes(current.state)) break
 			await run("REFRESH TABLE user_watch_log")
 			const combined = await readImportLog(userId, plan.title)
 			const record = recordFromRows(stateOnly(current), combined, {
@@ -1637,10 +1937,7 @@ export async function applyImportTrackingPlan(
 			if (!progress.watchRemains) break
 			record.state = progress.upToDate ? "seen" : "watching"
 			record.seenQuestion = "answered"
-			if (
-				current?._seq_no !== plan.beforeState?._seq_no ||
-				current?._primary_term !== plan.beforeState?._primary_term
-			) {
+			if (!sameVersion(current, plan.beforeState)) {
 				plan.beforeState = current
 				plan.now = Math.max(
 					Date.now(),
@@ -1665,7 +1962,7 @@ export async function applyImportTrackingPlan(
 			if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
 		}
 	}
-	for (const clear of plan.clear)
+	for (const clear of statusApplied || ours.length ? plan.clear : [])
 		await run(
 			`DELETE FROM ${clear.table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
 			[userId, plan.title.tmdbId, plan.title.mediaType, clear.seq, clear.term],
@@ -1677,6 +1974,7 @@ export async function applyImportTrackingPlan(
 		added: ours.length,
 		kept: plan.keptKeys.length + plan.watches.length - ours.length,
 		watchIds: ours.map((row) => row.watch_id),
+		statusKeys: statusApplied && plan.statusItem ? [plan.statusItem.key] : [],
 	}
 }
 
@@ -1686,7 +1984,7 @@ export async function undoImportTrackingPlan(
 ): Promise<void> {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length) return
+	if (!plan.watches.length && !plan.statusItem) return
 	await run("REFRESH TABLE user_watch_log")
 	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
 	const log = await readImportLog(userId, plan.title)
@@ -1715,6 +2013,8 @@ export async function undoImportTrackingPlan(
 			// Another import may already have been undone, or may have added watches while this show was Seen.
 			// Restore the earlier choice only where it still satisfies the watch/state invariant.
 			if (
+				!plan.statusItem &&
+				!(restored?.state === "watching" && restored.state_changed_at === 0) &&
 				!hasRegular &&
 				restored &&
 				["watching", "seen"].includes(restored.state)
@@ -1750,6 +2050,22 @@ export async function undoImportTrackingPlan(
 					Math.max(...remaining.map((row) => row.created_at)),
 				)
 			}
+			// Restore before releasing state ownership, so an interrupted undo can retry the inserts.
+			// DO NOTHING preserves any intention the member has since added.
+			if (plan.statusItem && !plan.watches.length)
+				for (const clear of plan.clear) {
+					if (clear.updatedAt == null) continue // Older journals did not retain intentions.
+					await run(
+						`INSERT INTO ${clear.table} (user_id, tmdb_id, media_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (user_id, tmdb_id, media_type) DO NOTHING`,
+						[
+							userId,
+							plan.title.tmdbId,
+							plan.title.mediaType,
+							clear.createdAt == null ? null : new Date(clear.createdAt),
+							new Date(clear.updatedAt),
+						],
+					)
+				}
 			await writeState(
 				userId,
 				plan.title,

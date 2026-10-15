@@ -23,6 +23,7 @@ console.info = (line: string) => {
 after(() => { console.info = info })
 ;(globalThis as any).__routeSearchTest = state
 const stubs: Record<string, string> = {
+	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeApiTitlePayload=async(batch,request)=>new URL(request.url).searchParams.has("displayLanguage")?({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:new URL(request.url).searchParams.get("displayLanguage")}))}):batch;`,
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
 	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
 	"/combined-search/search.server.ts": `export const combinedSearch=(...args)=>globalThis.__routeSearchTest.run(...args);`,
@@ -62,7 +63,7 @@ const reset = () => {
 process.env.SEARCH_TRUSTED_IP_HEADER = "X-Real-Ip"
 // The route answers only the site's own pages (site-origin.server.ts); a development process has no origin by default.
 process.env.APP_ORIGIN = "http://localhost:3107"
-const request = (headers: Record<string, string> = { Origin: "http://localhost:3107" }) => new Request("http://localhost:3107/api/combined-search", {
+const request = (headers: Record<string, string> = { Origin: "http://localhost:3107" }) => new Request("http://localhost:3107/api/combined-search?displayLanguage=fr", {
 	method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify({ q: "fixture", forYou: true }),
 })
 const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(r => { resolve = r }); return { promise, resolve } }
@@ -92,6 +93,8 @@ test("route applies the same member taste to provisional and final packets and h
 	const packets = text.trim().split("\n").map(line => JSON.parse(line))
 	assert.deepEqual(packets.map(packet => packet.kind), ["reading", "provisional", "batch"])
 	assert.equal(packets[2].batch.rows[0].tasteMatch, 87)
+	assert.equal(packets[1].batch.rows[0].displayLanguage, "fr")
+	assert.equal(packets[2].batch.rows[0].displayLanguage, "fr")
 	assert.equal(state.release, 1)
 	assert.deepEqual(events.map(event => event.phase), ["accepted", "finished"])
 	assert.equal(events[1].status, "completed")
@@ -222,4 +225,15 @@ test("without the trusted header the search runs uncounted, in the paid step's s
 	await response.text()
 	assert.equal(network, "shared-unverified-ingress")
 	assert.equal(state.rateClients.length, 0)
+})
+
+
+test("legacy search request against a new role retains the canonical NDJSON row contract", async () => {
+	reset()
+	state.run=async(_q,_policy,_viewer,_signal,_reading,options)=>{const batch={rows:[{key:"movie:42",title:"Canonical English"}]};await options.onComplete(batch);return batch}
+	const response=await action({request:new Request("http://localhost:3107/api/combined-search",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":"fr","Origin":"http://localhost:3107"},body:JSON.stringify({q:"fixture"})})} as any)
+	const packet=JSON.parse((await response.text()).trim())
+	assert.equal(packet.kind,"batch")
+	assert.equal(packet.batch.rows[0].title,"Canonical English")
+	assert.equal(packet.batch.rows[0].displayLanguage,undefined)
 })

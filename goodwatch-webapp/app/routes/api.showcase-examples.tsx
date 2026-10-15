@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunction, type LoaderFunctionArgs } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -8,7 +11,7 @@ import {
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const userId = await getUserIdFromRequest({ request })
@@ -22,12 +25,15 @@ export const loader: LoaderFunction = async ({
 export const queryKeyShowcaseExamples = ["showcase-examples"]
 
 export const useShowcaseExamples = (options?: { initialData?: any[] }) => {
-	const url = "/api/showcase-examples"
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl("/api/showcase-examples", locale.language)
 	return useQuery<ShowcaseExamplesResult>({
-		queryKey: queryKeyShowcaseExamples,
+		queryKey: [...queryKeyShowcaseExamples, locale.language],
 		queryFn: async () => await (await fetch(url)).json(),
 		initialData: options?.initialData,
 	})
 }
 
 export type { ShowcaseExample, ShowcaseExamplesResult }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

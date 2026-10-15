@@ -27,6 +27,8 @@ export const shouldRevalidateRoot: ShouldRevalidateFunction = ({
 	defaultShouldRevalidate,
 }) => {
 	if (requested) return true
+	// The effective availability country includes a view URL override.
+	if (currentUrl.searchParams.get("country") !== nextUrl.searchParams.get("country")) return true
 	if (
 		!formMethod &&
 		(currentUrl.pathname !== nextUrl.pathname ||

@@ -1,0 +1,12 @@
+{
+  "summary": "Social schema",
+  "description": "Social-owned tables, also registered in the repository's central Crate schema.",
+  "lock": "!inline f/social/schema.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

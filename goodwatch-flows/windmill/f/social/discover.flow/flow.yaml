@@ -1,0 +1,83 @@
+{
+  "summary": "Discover and match social posts",
+  "description": "Schedules are enabled after merge; see docs/implementation/talked-about-now/social.md.",
+  "value": {
+    "modules": [
+      {
+        "id": "run",
+        "value": {
+          "type": "script",
+          "path": "f/social/ingest",
+          "input_transforms": {
+            "source": {
+              "type": "javascript",
+              "expr": "flow_input.source"
+            },
+            "days": {
+              "type": "javascript",
+              "expr": "flow_input.days"
+            },
+            "pages": {
+              "type": "javascript",
+              "expr": "flow_input.pages"
+            },
+            "max_posts": {
+              "type": "javascript",
+              "expr": "flow_input.max_posts"
+            },
+            "vector_enabled": {
+              "type": "javascript",
+              "expr": "flow_input.vector_enabled"
+            }
+          }
+        },
+        "timeout": {
+          "type": "static",
+          "value": 7200
+        }
+      }
+    ],
+    "concurrent_limit": 1,
+    "concurrency_time_window_s": 0
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string",
+        "enum": [
+          "all",
+          "youtube",
+          "rss",
+          "bluesky",
+          "mastodon"
+        ],
+        "default": "all"
+      },
+      "days": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30,
+        "default": 2
+      },
+      "pages": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 18,
+        "default": 2
+      },
+      "max_posts": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10000,
+        "default": 400
+      },
+      "vector_enabled": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}
