@@ -1,10 +1,11 @@
 # Supabase auth import: copy rehearsal for #551
 
 This branch builds on [PR #564](https://github.com/alp82/goodwatch-monorepo/pull/564).
-It delivers importer code and a fake-data rehearsal. No real Supabase, member data,
-production database, Google account, deployment or cutover was accessed. Issue #551's
-real-copy rehearsal and real-account sign-in acceptance remain for a later authorized
-run. Keep #551 open until that evidence exists. Map: #529.
+The October 14 code delivery used fake data. On October 15, the owner authorized
+a production-snapshot restore and a read-only Supabase export rehearsal. See
+[the restore and import evidence](implementation/auth/cratedb-restore-rehearsal-20261015.md)
+for the actual run and its acceptance limits. No production writes, deployment or
+main merge are authorized by this rehearsal. Map: #529.
 
 ## Mapping and contract
 
@@ -72,7 +73,7 @@ stopped**. Different source copies sharing a target are not coordinated by this 
 Requirements: Node 24+, npm, Docker Compose on a local Unix socket, free loopback
 ports 15648 and 15651, `vm.max_map_count >= 262144`, and about 1.3 GiB container RAM.
 Use the existing host bootstrap setting; the fake harness needs no production
-secrets. Do not run any real-copy procedure tonight.
+secrets. Keep fake setup scripts away from restored real copies.
 
 ```bash
 cd goodwatch-webapp
@@ -115,9 +116,10 @@ Only fake-data summaries belong in the repository or a public issue.
 
 These steps are a runbook, not authorization to read production. The owner must
 authorize access to backups and a real-data copy, and separately authorize cutover.
-Use already approved encrypted backups supplied to the operator; do not run a dump
-from production as part of this code thread. Record backup provenance and snapshot
-time privately. Auth and member-data copies must come from a consistent point;
+Use approved backups or an explicitly authorized read-only export. The October 15
+owner go authorizes reading Supabase auth users and identities only; the export
+must remain outside the repository on the private machine and be deleted afterward.
+Record backup provenance and snapshot time privately. Auth and member-data copies must come from a consistent point;
 ongoing Supabase signups/identity/password changes require a final frozen snapshot
 or an explicitly designed delta procedure, not repeated stale imports.
 
@@ -126,7 +128,15 @@ or an explicitly designed delta procedure, not repeated stale imports.
    CrateDB data into a separate local CrateDB 5.10.12 cluster bound to
    `127.0.0.1:15648`, named `goodwatch-local-importer-551` with node `importer-551`.
    Check the actual restored database and cluster identity before adding markers.
-   Use local restores, never SSH tunnels or port forwards to a live database.
+   The default `fake-551` target profile checks this exact one-node identity.
+   For the October 15 three-node restore, set
+   `AUTH_IMPORT_TARGET_PROFILE=restored-563`: it checks cluster
+   `goodwatch-restore-563-551`, exactly nodes `restore-563-1` through
+   `restore-563-3`, and version `5.10.16` on all three. This profile requires
+   the source marker to be `restored-copy`, never `fake`. The loopback source
+   and target URL restrictions remain. A loopback SSH forward may point only
+   to that independently verified throwaway cluster on its internal Docker
+   network. Never forward the importer to a live database.
    Do not run `prepare-fake.ts`, `fixtures.ts`, `run.sh`, or integration tests on
    restored real copies: those deliberately reset fake data.
 2. **Prepare target storage.** With all auth/member writers stopped, explicitly

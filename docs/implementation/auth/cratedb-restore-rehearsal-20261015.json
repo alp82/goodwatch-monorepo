@@ -1,0 +1,1722 @@
+{
+  "date": "2026-10-15",
+  "issues": [
+    563,
+    551
+  ],
+  "snapshot": {
+    "name": "hourly_20261015_160501",
+    "state": "SUCCESS",
+    "started": 1792080301435,
+    "finished": 1792080317045,
+    "version": "5.10.9",
+    "tables": [
+      "doc.timezone",
+      "doc.streaming_availability",
+      "doc.person_worked_on",
+      "backup_20260925_stale_child_rows.streaming_evidence",
+      "doc.user_list",
+      "doc.social_content_quality",
+      "backup_20260925_deleted_titles.alternative_title",
+      "doc.movie",
+      "backup_20260925_stale_child_rows.release_event",
+      "doc.streaming_evidence",
+      "backup_20260925_deleted_titles.person_appeared_in",
+      "doc.buzz_score",
+      "backup_20260925_deleted_titles.streaming_availability",
+      "doc.search_index_builds",
+      "doc.country",
+      "doc.user_skipped",
+      "doc.movie_series",
+      "backup_20260925_stale_child_rows.trope",
+      "backup_20260925_stale_child_rows.media_image",
+      "doc.search_embedding_inputs",
+      "doc.genre",
+      "doc.user_handle",
+      "backup_20260925_stale_child_rows.translation",
+      "doc.buzz_title",
+      "doc.search_history",
+      "backup_20260925_deleted_titles.show",
+      "doc.user_profile",
+      "backup_20260925_deleted_titles.person_worked_on",
+      "doc.show",
+      "doc.metacritic_season",
+      "doc.season",
+      "doc.user_watch_state",
+      "backup_20260925_stale_child_rows.alternative_title",
+      "backup_20260925_stale_child_rows.person_appeared_in",
+      "doc.search_embedding_state",
+      "backup_20260925_stale_child_rows.media_video",
+      "doc.crawl_priority",
+      "doc.media_video",
+      "doc.social_link_report",
+      "doc.user_import",
+      "backup_20260925_deleted_titles.trope",
+      "doc.user_watch_log",
+      "backup_20260925_deleted_titles.media_image",
+      "doc.user_setting",
+      "backup_20260925_deleted_titles.streaming_evidence",
+      "doc.social_post",
+      "backup_20260925_stale_child_rows.person_worked_on",
+      "doc.user_import_item",
+      "doc.alternative_title",
+      "doc.user_list_exposure",
+      "doc.season_translation",
+      "doc.job",
+      "backup_20260925_deleted_titles.translation",
+      "doc.imdb_season",
+      "doc.translation",
+      "doc.user_favorite",
+      "doc.search_terms",
+      "doc.episode",
+      "doc.social_ingest_run",
+      "doc.buzz_trending",
+      "doc.production_company",
+      "backup_20260925_deleted_titles.movie",
+      "backup_20260925_stale_child_rows.streaming_availability",
+      "doc.rotten_tomatoes_season",
+      "doc.social_title_link",
+      "doc.trope",
+      "doc.streaming_service",
+      "doc.episode_translation",
+      "doc.search_control",
+      "doc.search_interpretations",
+      "backup_20260925_stale_child_rows.season",
+      "backup_20260925_stale_child_rows.movie",
+      "doc.search_spending",
+      "doc.age_certification",
+      "doc.language",
+      "backup_20260925_deleted_titles.media_video",
+      "doc.release_event",
+      "backup_20260925_deleted_titles.season",
+      "doc.imdb_episode",
+      "backup_20260925_deleted_titles.release_event",
+      "doc.user_wishlist",
+      "doc.buzz_snapshot",
+      "doc.buzz_pageview",
+      "doc.network",
+      "doc.media_image",
+      "doc.person_appeared_in",
+      "doc.user_not_interested",
+      "doc.user_score",
+      "doc.workflow_monitoring",
+      "backup_20260925_stale_child_rows.show",
+      "doc.search_shadow",
+      "doc.person"
+    ]
+  },
+  "sourceExport": {
+    "readOnly": true,
+    "tlsVerified": true,
+    "elapsedMs": 717,
+    "counts": {
+      "users": 718,
+      "identities": 721,
+      "credential": 381,
+      "google": 340,
+      "verified": 493,
+      "unverified": 225
+    }
+  },
+  "target": {
+    "cluster": "goodwatch-restore-563-551",
+    "nodeNames": [
+      "restore-563-1",
+      "restore-563-2",
+      "restore-563-3"
+    ],
+    "version": "5.10.16",
+    "imageDigest": "sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "repositoryRegisteredReadOnly": true,
+    "allRepositoryMountsReadOnly": true
+  },
+  "restore": {
+    "started": 1792081150.8906188,
+    "finished": 1792082029.6887248,
+    "seconds": 878.7981069087982,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 878789.94
+    }
+  },
+  "verification": {
+    "tables": 92,
+    "rows": 82738215,
+    "matchingCounts": 88,
+    "differences": [
+      {
+        "table": "doc.media_image",
+        "production": 5580453,
+        "copy": 5580452
+      },
+      {
+        "table": "doc.streaming_availability",
+        "production": 18935194,
+        "copy": 18935228
+      },
+      {
+        "table": "doc.translation",
+        "production": 3958483,
+        "copy": 3958481
+      },
+      {
+        "table": "doc.workflow_monitoring",
+        "production": 110908,
+        "copy": 110898
+      }
+    ],
+    "spotChecks": [
+      {
+        "table": "doc.country",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.genre",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.movie",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.user_wishlist",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.user_score",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.user_setting",
+        "rows": 5,
+        "match": true
+      },
+      {
+        "table": "doc.user_profile",
+        "rows": 5,
+        "match": true
+      }
+    ],
+    "health": [
+      [
+        "YELLOW",
+        87
+      ],
+      [
+        "GREEN",
+        6
+      ]
+    ]
+  },
+  "tableCounts": [
+    {
+      "table": "backup_20260925_deleted_titles.alternative_title",
+      "count": 328
+    },
+    {
+      "table": "backup_20260925_deleted_titles.media_image",
+      "count": 1961
+    },
+    {
+      "table": "backup_20260925_deleted_titles.media_video",
+      "count": 147
+    },
+    {
+      "table": "backup_20260925_deleted_titles.movie",
+      "count": 279
+    },
+    {
+      "table": "backup_20260925_deleted_titles.person_appeared_in",
+      "count": 9252
+    },
+    {
+      "table": "backup_20260925_deleted_titles.person_worked_on",
+      "count": 3473
+    },
+    {
+      "table": "backup_20260925_deleted_titles.release_event",
+      "count": 112
+    },
+    {
+      "table": "backup_20260925_deleted_titles.season",
+      "count": 1428
+    },
+    {
+      "table": "backup_20260925_deleted_titles.show",
+      "count": 446
+    },
+    {
+      "table": "backup_20260925_deleted_titles.streaming_availability",
+      "count": 3628
+    },
+    {
+      "table": "backup_20260925_deleted_titles.streaming_evidence",
+      "count": 312
+    },
+    {
+      "table": "backup_20260925_deleted_titles.translation",
+      "count": 1254
+    },
+    {
+      "table": "backup_20260925_deleted_titles.trope",
+      "count": 11883
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.alternative_title",
+      "count": 4786
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.media_image",
+      "count": 86076
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.media_video",
+      "count": 2881
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.movie",
+      "count": 458
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.person_appeared_in",
+      "count": 45721
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.person_worked_on",
+      "count": 24520
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.release_event",
+      "count": 10487
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.season",
+      "count": 1142
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.show",
+      "count": 461
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.streaming_availability",
+      "count": 5182
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.streaming_evidence",
+      "count": 229
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.translation",
+      "count": 1456
+    },
+    {
+      "table": "backup_20260925_stale_child_rows.trope",
+      "count": 6175
+    },
+    {
+      "table": "doc.age_certification",
+      "count": 596
+    },
+    {
+      "table": "doc.alternative_title",
+      "count": 619503
+    },
+    {
+      "table": "doc.buzz_pageview",
+      "count": 33557
+    },
+    {
+      "table": "doc.buzz_score",
+      "count": 16348
+    },
+    {
+      "table": "doc.buzz_snapshot",
+      "count": 34
+    },
+    {
+      "table": "doc.buzz_title",
+      "count": 682
+    },
+    {
+      "table": "doc.buzz_trending",
+      "count": 377
+    },
+    {
+      "table": "doc.country",
+      "count": 251
+    },
+    {
+      "table": "doc.crawl_priority",
+      "count": 1194248
+    },
+    {
+      "table": "doc.episode",
+      "count": 6774624
+    },
+    {
+      "table": "doc.episode_translation",
+      "count": 105536
+    },
+    {
+      "table": "doc.genre",
+      "count": 35
+    },
+    {
+      "table": "doc.imdb_episode",
+      "count": 846303
+    },
+    {
+      "table": "doc.imdb_season",
+      "count": 78663
+    },
+    {
+      "table": "doc.job",
+      "count": 940
+    },
+    {
+      "table": "doc.language",
+      "count": 187
+    },
+    {
+      "table": "doc.media_image",
+      "count": 5580452
+    },
+    {
+      "table": "doc.media_video",
+      "count": 351845
+    },
+    {
+      "table": "doc.metacritic_season",
+      "count": 23605
+    },
+    {
+      "table": "doc.movie",
+      "count": 1261590
+    },
+    {
+      "table": "doc.movie_series",
+      "count": 9565
+    },
+    {
+      "table": "doc.network",
+      "count": 5162
+    },
+    {
+      "table": "doc.person",
+      "count": 4914026
+    },
+    {
+      "table": "doc.person_appeared_in",
+      "count": 9234642
+    },
+    {
+      "table": "doc.person_worked_on",
+      "count": 9676850
+    },
+    {
+      "table": "doc.production_company",
+      "count": 247077
+    },
+    {
+      "table": "doc.release_event",
+      "count": 2029710
+    },
+    {
+      "table": "doc.rotten_tomatoes_season",
+      "count": 48167
+    },
+    {
+      "table": "doc.search_control",
+      "count": 1
+    },
+    {
+      "table": "doc.search_embedding_inputs",
+      "count": 257422
+    },
+    {
+      "table": "doc.search_embedding_state",
+      "count": 3
+    },
+    {
+      "table": "doc.search_history",
+      "count": 1366
+    },
+    {
+      "table": "doc.search_index_builds",
+      "count": 3
+    },
+    {
+      "table": "doc.search_interpretations",
+      "count": 582
+    },
+    {
+      "table": "doc.search_shadow",
+      "count": 18
+    },
+    {
+      "table": "doc.search_spending",
+      "count": 1155
+    },
+    {
+      "table": "doc.search_terms",
+      "count": 2152495
+    },
+    {
+      "table": "doc.season",
+      "count": 402437
+    },
+    {
+      "table": "doc.season_translation",
+      "count": 7332
+    },
+    {
+      "table": "doc.show",
+      "count": 234588
+    },
+    {
+      "table": "doc.social_content_quality",
+      "count": 8237
+    },
+    {
+      "table": "doc.social_ingest_run",
+      "count": 42
+    },
+    {
+      "table": "doc.social_link_report",
+      "count": 0
+    },
+    {
+      "table": "doc.social_post",
+      "count": 8241
+    },
+    {
+      "table": "doc.social_title_link",
+      "count": 634
+    },
+    {
+      "table": "doc.streaming_availability",
+      "count": 18935228
+    },
+    {
+      "table": "doc.streaming_evidence",
+      "count": 9248262
+    },
+    {
+      "table": "doc.streaming_service",
+      "count": 1666
+    },
+    {
+      "table": "doc.timezone",
+      "count": 249
+    },
+    {
+      "table": "doc.translation",
+      "count": 3958481
+    },
+    {
+      "table": "doc.trope",
+      "count": 3830141
+    },
+    {
+      "table": "doc.user_favorite",
+      "count": 72
+    },
+    {
+      "table": "doc.user_handle",
+      "count": 12
+    },
+    {
+      "table": "doc.user_import",
+      "count": 4
+    },
+    {
+      "table": "doc.user_import_item",
+      "count": 3534
+    },
+    {
+      "table": "doc.user_list",
+      "count": 8
+    },
+    {
+      "table": "doc.user_list_exposure",
+      "count": 50
+    },
+    {
+      "table": "doc.user_not_interested",
+      "count": 2
+    },
+    {
+      "table": "doc.user_profile",
+      "count": 12
+    },
+    {
+      "table": "doc.user_score",
+      "count": 9127
+    },
+    {
+      "table": "doc.user_setting",
+      "count": 1806
+    },
+    {
+      "table": "doc.user_skipped",
+      "count": 13830
+    },
+    {
+      "table": "doc.user_watch_log",
+      "count": 261300
+    },
+    {
+      "table": "doc.user_watch_state",
+      "count": 8251
+    },
+    {
+      "table": "doc.user_wishlist",
+      "count": 2074
+    },
+    {
+      "table": "doc.workflow_monitoring",
+      "count": 110898
+    }
+  ],
+  "productionBaseline": {
+    "at": 1792081149.358486,
+    "tables": [
+      {
+        "table": "backup_20260925_deleted_titles.alternative_title",
+        "count": 328,
+        "seconds": 0.0775139400000171
+      },
+      {
+        "table": "backup_20260925_deleted_titles.media_image",
+        "count": 1961,
+        "seconds": 0.07690602800005308
+      },
+      {
+        "table": "backup_20260925_deleted_titles.media_video",
+        "count": 147,
+        "seconds": 0.06532490999995844
+      },
+      {
+        "table": "backup_20260925_deleted_titles.movie",
+        "count": 279,
+        "seconds": 0.06472540899994783
+      },
+      {
+        "table": "backup_20260925_deleted_titles.person_appeared_in",
+        "count": 9252,
+        "seconds": 0.07644831700008581
+      },
+      {
+        "table": "backup_20260925_deleted_titles.person_worked_on",
+        "count": 3473,
+        "seconds": 0.0765747810000903
+      },
+      {
+        "table": "backup_20260925_deleted_titles.release_event",
+        "count": 112,
+        "seconds": 0.05689751399995657
+      },
+      {
+        "table": "backup_20260925_deleted_titles.season",
+        "count": 1428,
+        "seconds": 0.05678887399994892
+      },
+      {
+        "table": "backup_20260925_deleted_titles.show",
+        "count": 446,
+        "seconds": 0.06280064300005961
+      },
+      {
+        "table": "backup_20260925_deleted_titles.streaming_availability",
+        "count": 3628,
+        "seconds": 0.06280899099999715
+      },
+      {
+        "table": "backup_20260925_deleted_titles.streaming_evidence",
+        "count": 312,
+        "seconds": 0.06847731799996382
+      },
+      {
+        "table": "backup_20260925_deleted_titles.translation",
+        "count": 1254,
+        "seconds": 0.06859015400004864
+      },
+      {
+        "table": "backup_20260925_deleted_titles.trope",
+        "count": 11883,
+        "seconds": 0.05516396899997744
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.alternative_title",
+        "count": 4786,
+        "seconds": 0.05494859299994914
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.media_image",
+        "count": 86076,
+        "seconds": 0.06480601800001295
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.media_video",
+        "count": 2881,
+        "seconds": 0.064897631000008
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.movie",
+        "count": 458,
+        "seconds": 0.060141072000078566
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.person_appeared_in",
+        "count": 45721,
+        "seconds": 0.059714699999972254
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.person_worked_on",
+        "count": 24520,
+        "seconds": 0.05474659899994094
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.release_event",
+        "count": 10487,
+        "seconds": 0.0549190469999985
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.season",
+        "count": 1142,
+        "seconds": 0.0499855819999766
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.show",
+        "count": 461,
+        "seconds": 0.052198717999999644
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.streaming_availability",
+        "count": 5182,
+        "seconds": 0.059582314999943264
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.streaming_evidence",
+        "count": 229,
+        "seconds": 0.06478215799995724
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.translation",
+        "count": 1456,
+        "seconds": 0.05412601600005473
+      },
+      {
+        "table": "backup_20260925_stale_child_rows.trope",
+        "count": 6175,
+        "seconds": 0.06248062800000298
+      },
+      {
+        "table": "doc.age_certification",
+        "count": 596,
+        "seconds": 0.06783042600000044
+      },
+      {
+        "table": "doc.alternative_title",
+        "count": 619503,
+        "seconds": 0.07564683099997183
+      },
+      {
+        "table": "doc.buzz_pageview",
+        "count": 33557,
+        "seconds": 0.05334922600002301
+      },
+      {
+        "table": "doc.buzz_score",
+        "count": 16348,
+        "seconds": 0.0544152639999993
+      },
+      {
+        "table": "doc.buzz_snapshot",
+        "count": 34,
+        "seconds": 0.04897520800000166
+      },
+      {
+        "table": "doc.buzz_title",
+        "count": 682,
+        "seconds": 0.058440044999997554
+      },
+      {
+        "table": "doc.buzz_trending",
+        "count": 377,
+        "seconds": 0.05853763700008585
+      },
+      {
+        "table": "doc.country",
+        "count": 251,
+        "seconds": 0.0803867590000209
+      },
+      {
+        "table": "doc.crawl_priority",
+        "count": 1194248,
+        "seconds": 0.08300364499996249
+      },
+      {
+        "table": "doc.episode",
+        "count": 6774624,
+        "seconds": 0.08311364499991214
+      },
+      {
+        "table": "doc.episode_translation",
+        "count": 105536,
+        "seconds": 0.07322334200000569
+      },
+      {
+        "table": "doc.genre",
+        "count": 35,
+        "seconds": 0.06224734299996726
+      },
+      {
+        "table": "doc.imdb_episode",
+        "count": 846303,
+        "seconds": 0.05602202800002942
+      },
+      {
+        "table": "doc.imdb_season",
+        "count": 78663,
+        "seconds": 0.05160648699995818
+      },
+      {
+        "table": "doc.job",
+        "count": 940,
+        "seconds": 0.05708020299994132
+      },
+      {
+        "table": "doc.language",
+        "count": 187,
+        "seconds": 0.05743301099994369
+      },
+      {
+        "table": "doc.media_image",
+        "count": 5580453,
+        "seconds": 0.05954931400003716
+      },
+      {
+        "table": "doc.media_video",
+        "count": 351845,
+        "seconds": 0.057963642000004256
+      },
+      {
+        "table": "doc.metacritic_season",
+        "count": 23605,
+        "seconds": 0.061678585000095154
+      },
+      {
+        "table": "doc.movie",
+        "count": 1261590,
+        "seconds": 0.07923681400006899
+      },
+      {
+        "table": "doc.movie_series",
+        "count": 9565,
+        "seconds": 0.06304150899995875
+      },
+      {
+        "table": "doc.network",
+        "count": 5162,
+        "seconds": 0.901590122000016
+      },
+      {
+        "table": "doc.person",
+        "count": 4914026,
+        "seconds": 0.0558637550000185
+      },
+      {
+        "table": "doc.person_appeared_in",
+        "count": 9234642,
+        "seconds": 0.06422527100005482
+      },
+      {
+        "table": "doc.person_worked_on",
+        "count": 9676850,
+        "seconds": 0.057392718999949466
+      },
+      {
+        "table": "doc.production_company",
+        "count": 247077,
+        "seconds": 0.9555937599999424
+      },
+      {
+        "table": "doc.release_event",
+        "count": 2029710,
+        "seconds": 0.056152217999965615
+      },
+      {
+        "table": "doc.rotten_tomatoes_season",
+        "count": 48167,
+        "seconds": 0.05547159599996121
+      },
+      {
+        "table": "doc.search_control",
+        "count": 1,
+        "seconds": 0.06723251300002175
+      },
+      {
+        "table": "doc.search_embedding_inputs",
+        "count": 257422,
+        "seconds": 0.061870341999906486
+      },
+      {
+        "table": "doc.search_embedding_state",
+        "count": 3,
+        "seconds": 0.05354539899997235
+      },
+      {
+        "table": "doc.search_history",
+        "count": 1366,
+        "seconds": 0.048530218999985664
+      },
+      {
+        "table": "doc.search_index_builds",
+        "count": 3,
+        "seconds": 0.05556973600005222
+      },
+      {
+        "table": "doc.search_interpretations",
+        "count": 582,
+        "seconds": 0.05345005000003766
+      },
+      {
+        "table": "doc.search_shadow",
+        "count": 18,
+        "seconds": 0.07166587299991534
+      },
+      {
+        "table": "doc.search_spending",
+        "count": 1155,
+        "seconds": 0.07177853899997899
+      },
+      {
+        "table": "doc.search_terms",
+        "count": 2152495,
+        "seconds": 0.06945074200007184
+      },
+      {
+        "table": "doc.season",
+        "count": 402437,
+        "seconds": 0.06942352800001572
+      },
+      {
+        "table": "doc.season_translation",
+        "count": 7332,
+        "seconds": 0.07876606999991509
+      },
+      {
+        "table": "doc.show",
+        "count": 234588,
+        "seconds": 0.07853712199994334
+      },
+      {
+        "table": "doc.social_content_quality",
+        "count": 8237,
+        "seconds": 0.06993476000002374
+      },
+      {
+        "table": "doc.social_ingest_run",
+        "count": 42,
+        "seconds": 0.0689316630000576
+      },
+      {
+        "table": "doc.social_link_report",
+        "count": 0,
+        "seconds": 0.06320399399999133
+      },
+      {
+        "table": "doc.social_post",
+        "count": 8241,
+        "seconds": 0.058629656999983126
+      },
+      {
+        "table": "doc.social_title_link",
+        "count": 634,
+        "seconds": 0.060680432000026485
+      },
+      {
+        "table": "doc.streaming_availability",
+        "count": 18935194,
+        "seconds": 0.06615979499997593
+      },
+      {
+        "table": "doc.streaming_evidence",
+        "count": 9248262,
+        "seconds": 0.06392403500001365
+      },
+      {
+        "table": "doc.streaming_service",
+        "count": 1666,
+        "seconds": 0.06288179199998467
+      },
+      {
+        "table": "doc.timezone",
+        "count": 249,
+        "seconds": 0.058386093999956756
+      },
+      {
+        "table": "doc.translation",
+        "count": 3958483,
+        "seconds": 0.06367607200002112
+      },
+      {
+        "table": "doc.trope",
+        "count": 3830141,
+        "seconds": 0.5569178719999854
+      },
+      {
+        "table": "doc.user_favorite",
+        "count": 72,
+        "seconds": 0.046428933000015604
+      },
+      {
+        "table": "doc.user_handle",
+        "count": 12,
+        "seconds": 0.05486770899995008
+      },
+      {
+        "table": "doc.user_import",
+        "count": 4,
+        "seconds": 0.054201723000005586
+      },
+      {
+        "table": "doc.user_import_item",
+        "count": 3534,
+        "seconds": 0.05719349399998919
+      },
+      {
+        "table": "doc.user_list",
+        "count": 8,
+        "seconds": 0.05415021700002853
+      },
+      {
+        "table": "doc.user_list_exposure",
+        "count": 50,
+        "seconds": 0.05839866299993446
+      },
+      {
+        "table": "doc.user_not_interested",
+        "count": 2,
+        "seconds": 0.05357528199999706
+      },
+      {
+        "table": "doc.user_profile",
+        "count": 12,
+        "seconds": 0.058894969999983005
+      },
+      {
+        "table": "doc.user_score",
+        "count": 9127,
+        "seconds": 0.05732948299998952
+      },
+      {
+        "table": "doc.user_setting",
+        "count": 1806,
+        "seconds": 0.054511852000018735
+      },
+      {
+        "table": "doc.user_skipped",
+        "count": 13830,
+        "seconds": 0.0607300409999425
+      },
+      {
+        "table": "doc.user_watch_log",
+        "count": 261300,
+        "seconds": 0.060016701999984434
+      },
+      {
+        "table": "doc.user_watch_state",
+        "count": 8251,
+        "seconds": 0.06553160900000421
+      },
+      {
+        "table": "doc.user_wishlist",
+        "count": 2074,
+        "seconds": 0.058144346000062797
+      },
+      {
+        "table": "doc.workflow_monitoring",
+        "count": 110908,
+        "seconds": 0.05509131600001638
+      }
+    ]
+  },
+  "productionDriftRecheck": {
+    "at": 1792082145.537131,
+    "counts": {
+      "doc.media_image": 5580484,
+      "doc.streaming_availability": 18935100,
+      "doc.translation": 3958483,
+      "doc.workflow_monitoring": 110916
+    }
+  },
+  "restoredMetadata": {
+    "users": {
+      "count": 2,
+      "match": true
+    },
+    "privileges": {
+      "count": 4,
+      "match": true
+    },
+    "settingDifferences": [
+      {
+        "setting": "cluster.graceful_stop.timeout",
+        "production": "2h",
+        "copy": "7200000ms"
+      },
+      {
+        "setting": "cluster.routing.allocation.awareness.attributes",
+        "production": null,
+        "copy": []
+      },
+      {
+        "setting": "indices.breaker.query.limit",
+        "production": "9.5gb",
+        "copy": "460.7mb"
+      },
+      {
+        "setting": "indices.breaker.request.limit",
+        "production": "9.5gb",
+        "copy": "460.7mb"
+      },
+      {
+        "setting": "indices.breaker.total.limit",
+        "production": "15.1gb",
+        "copy": "729.5mb"
+      },
+      {
+        "setting": "indices.recovery.max_concurrent_file_chunks",
+        "production": null,
+        "copy": 2
+      },
+      {
+        "setting": "stats.breaker.log.jobs.limit",
+        "production": "819.1mb",
+        "copy": "38.3mb"
+      },
+      {
+        "setting": "stats.breaker.log.operations.limit",
+        "production": "819.1mb",
+        "copy": "38.3mb"
+      }
+    ]
+  },
+  "blobRecovery": {
+    "files": 18,
+    "bytes": 126888186,
+    "seconds": 13.400530099868774,
+    "allDigestsVerified": true,
+    "results": [
+      {
+        "sha1": "7eef817198615e93351fe35cfb4c4c0224fa76b8",
+        "bytes": 1534571,
+        "putStatus": 409
+      },
+      {
+        "sha1": "173b21043fbe2123f6744c969f093edf3cf1653d",
+        "bytes": 5078658,
+        "putStatus": 201
+      },
+      {
+        "sha1": "324f6c47bfface2a61d571ff1cbf0b9e72c94140",
+        "bytes": 259125,
+        "putStatus": 201
+      },
+      {
+        "sha1": "0788ad935727ae5e7a589a2cb276b63f1183d7b1",
+        "bytes": 603997,
+        "putStatus": 201
+      },
+      {
+        "sha1": "c49827c1b1421ab236350ac6cc5592888b42d67d",
+        "bytes": 1790875,
+        "putStatus": 201
+      },
+      {
+        "sha1": "34371984b4440f85d5f9ccc914d5cd0b4eece17f",
+        "bytes": 797122,
+        "putStatus": 201
+      },
+      {
+        "sha1": "dcd5905eec5c56687ea0bad2e5a348b71ac67f14",
+        "bytes": 3577985,
+        "putStatus": 201
+      },
+      {
+        "sha1": "b064ec055a2a67731f2467d4d58873b227b541b8",
+        "bytes": 893,
+        "putStatus": 201
+      },
+      {
+        "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+        "bytes": 60395,
+        "putStatus": 201
+      },
+      {
+        "sha1": "6fd03b133b11e42c86456a31a21cf144b2d782ed",
+        "bytes": 49720610,
+        "putStatus": 201
+      },
+      {
+        "sha1": "fbb03bc18d97955a54e832b9ee372f55b2483fe7",
+        "bytes": 1537603,
+        "putStatus": 201
+      },
+      {
+        "sha1": "8d99dade030da3c97cc07a0bf4f09e55cbc92d75",
+        "bytes": 5096525,
+        "putStatus": 201
+      },
+      {
+        "sha1": "590a1398bda8fe3a6448117c80f86ca350a566d6",
+        "bytes": 259658,
+        "putStatus": 201
+      },
+      {
+        "sha1": "f98349cb7bf356224f9ca474940d970b9076ed73",
+        "bytes": 604492,
+        "putStatus": 201
+      },
+      {
+        "sha1": "7113b876a602763975e7499d855eb952278942ee",
+        "bytes": 1791725,
+        "putStatus": 201
+      },
+      {
+        "sha1": "47f105e4543b88ab5677795e4e18bd2136c196ba",
+        "bytes": 798084,
+        "putStatus": 201
+      },
+      {
+        "sha1": "3c1fc2427957306f5d43ff08ae5679426cfa88e2",
+        "bytes": 3589671,
+        "putStatus": 201
+      },
+      {
+        "sha1": "27511ba67ea95cb017615bd4595c8b15e1b157cf",
+        "bytes": 49786197,
+        "putStatus": 201
+      }
+    ]
+  },
+  "fullGreen": {
+    "at": 1792082525.334798,
+    "utc": "2026-10-15T16:42:05Z",
+    "secondsSinceRestoreStart": 1374.4441792964935,
+    "shards": 998,
+    "health": [
+      [
+        "GREEN",
+        107
+      ]
+    ]
+  },
+  "importDryRun": {
+    "status": "planned",
+    "source": {
+      "users": 718,
+      "identities": 721,
+      "credential": 381,
+      "google": 340,
+      "verified": 493,
+      "unverified": 225
+    },
+    "before": {
+      "users": 0,
+      "accounts": 0,
+      "credential": 0,
+      "google": 0,
+      "emailClaims": 0
+    },
+    "after": {
+      "users": 0,
+      "accounts": 0,
+      "credential": 0,
+      "google": 0,
+      "emailClaims": 0
+    },
+    "created": {
+      "users": 0,
+      "accounts": 0
+    },
+    "unchanged": {
+      "users": 0,
+      "accounts": 0
+    },
+    "issues": [],
+    "elapsedMs": 87373
+  },
+  "importApply": {
+    "status": "complete",
+    "source": {
+      "users": 718,
+      "identities": 721,
+      "credential": 381,
+      "google": 340,
+      "verified": 493,
+      "unverified": 225
+    },
+    "before": {
+      "users": 0,
+      "accounts": 0,
+      "credential": 0,
+      "google": 0,
+      "emailClaims": 0
+    },
+    "after": {
+      "users": 718,
+      "accounts": 721,
+      "credential": 381,
+      "google": 340,
+      "emailClaims": 718
+    },
+    "created": {
+      "users": 718,
+      "accounts": 721
+    },
+    "unchanged": {
+      "users": 0,
+      "accounts": 0
+    },
+    "issues": [],
+    "elapsedMs": 196581
+  },
+  "importExactRerun": {
+    "status": "complete",
+    "source": {
+      "users": 718,
+      "identities": 721,
+      "credential": 381,
+      "google": 340,
+      "verified": 493,
+      "unverified": 225
+    },
+    "before": {
+      "users": 718,
+      "accounts": 721,
+      "credential": 381,
+      "google": 340,
+      "emailClaims": 718
+    },
+    "after": {
+      "users": 718,
+      "accounts": 721,
+      "credential": 381,
+      "google": 340,
+      "emailClaims": 718
+    },
+    "created": {
+      "users": 0,
+      "accounts": 0
+    },
+    "unchanged": {
+      "users": 718,
+      "accounts": 721
+    },
+    "issues": [],
+    "elapsedMs": 114084
+  },
+  "wallTimingsMs": {
+    "export": 717,
+    "dry": 87865,
+    "apply": 197143,
+    "rerun": 117378
+  },
+  "mappingAudit": {
+    "usersVerified": 718,
+    "accountsVerified": 721,
+    "bcryptHashesByteIdentical": 381,
+    "googleSubjectsAndOwnersMatch": 340,
+    "samples": [
+      {
+        "kind": "confirmed-password",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 31412
+      },
+      {
+        "kind": "google-only",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 18528
+      },
+      {
+        "kind": "linked-password-google",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 1137
+      },
+      {
+        "kind": "unconfirmed-password",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 0
+      }
+    ],
+    "realPasswordSignIn": false,
+    "realGoogleOAuth": false
+  },
+  "integrationMappingAudit": {
+    "usersVerified": 718,
+    "accountsVerified": 721,
+    "bcryptHashesByteIdentical": 381,
+    "googleSubjectsAndOwnersMatch": 340,
+    "samples": [
+      {
+        "kind": "confirmed-password",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 31412
+      },
+      {
+        "kind": "google-only",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 18528
+      },
+      {
+        "kind": "linked-password-google",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 1137
+      },
+      {
+        "kind": "unconfirmed-password",
+        "emailLookupPreservesUuid": true,
+        "emailAndVerifiedMatch": true,
+        "providerOwnershipMatches": true,
+        "memberRowsUnchanged": 0
+      }
+    ],
+    "realPasswordSignIn": false,
+    "realGoogleOAuth": false
+  },
+  "memberAndSchemaAudit": {
+    "memberTables": [
+      {
+        "table": "doc.user_favorite",
+        "before": 72,
+        "after": 72
+      },
+      {
+        "table": "doc.user_handle",
+        "before": 12,
+        "after": 12
+      },
+      {
+        "table": "doc.user_import",
+        "before": 4,
+        "after": 4
+      },
+      {
+        "table": "doc.user_import_item",
+        "before": 3534,
+        "after": 3534
+      },
+      {
+        "table": "doc.user_list",
+        "before": 8,
+        "after": 8
+      },
+      {
+        "table": "doc.user_list_exposure",
+        "before": 50,
+        "after": 50
+      },
+      {
+        "table": "doc.user_not_interested",
+        "before": 2,
+        "after": 2
+      },
+      {
+        "table": "doc.user_profile",
+        "before": 12,
+        "after": 12
+      },
+      {
+        "table": "doc.user_score",
+        "before": 9127,
+        "after": 9127
+      },
+      {
+        "table": "doc.user_setting",
+        "before": 1806,
+        "after": 1806
+      },
+      {
+        "table": "doc.user_skipped",
+        "before": 13830,
+        "after": 13830
+      },
+      {
+        "table": "doc.user_watch_log",
+        "before": 261300,
+        "after": 261300
+      },
+      {
+        "table": "doc.user_watch_state",
+        "before": 8251,
+        "after": 8251
+      },
+      {
+        "table": "doc.user_wishlist",
+        "before": 2074,
+        "after": 2074
+      }
+    ],
+    "allMemberCountsUnchanged": true,
+    "authTableSettings": [
+      [
+        "auth_account",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_jwks",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_access_token",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_client",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_client_assertion",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_client_resource",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_consent",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_refresh_token",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_oauth_resource",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_rate_limit",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_session",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_user",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_user_email",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ],
+      [
+        "auth_verification",
+        1,
+        "2",
+        "1",
+        "REQUEST",
+        -1
+      ]
+    ]
+  },
+  "productionFinal": {
+    "versions": [
+      [
+        "crate-01",
+        "5.10.9"
+      ],
+      [
+        "crate-02",
+        "5.10.16"
+      ],
+      [
+        "crate-03",
+        "5.10.16"
+      ]
+    ],
+    "health": [
+      [
+        "GREEN",
+        93
+      ]
+    ],
+    "shards": [
+      [
+        "STARTED",
+        956
+      ]
+    ],
+    "repositories": [
+      [
+        "goodwatch-db-backup",
+        "fs",
+        {
+          "compress": "true",
+          "location": "/snapshots"
+        }
+      ],
+      [
+        "goodwatch-db-backup-v2",
+        "fs",
+        {
+          "compress": "true",
+          "location": "/snapshots/v2"
+        }
+      ]
+    ]
+  },
+  "cleanup": {
+    "remote": {
+      "copyContainersRemoved": [
+        "restore-563-1",
+        "restore-563-2",
+        "restore-563-3"
+      ],
+      "copyVolumesRemoved": [
+        "gw-rehearsal-563-1",
+        "gw-rehearsal-563-2",
+        "gw-rehearsal-563-3"
+      ],
+      "copyNetworkRemoved": true,
+      "privateRemoteHelpersRemoved": true,
+      "productionCrate01StillRunning": true,
+      "at": 1792082740.8284116
+    },
+    "local": {
+      "sourceCopyContainerRemoved": true,
+      "sourceCopyVolumeRemoved": true,
+      "ownedSshForwardStopped": true,
+      "at": 1792082757.5953357
+    },
+    "verified": true,
+    "privateExportKeysSamplesAndHelpersDeleted": true,
+    "privatePathAbsent": true,
+    "at": 1792082785.3915482
+  },
+  "productionAfterCleanup": {
+    "versions": [
+      [
+        "crate-01",
+        "5.10.9"
+      ],
+      [
+        "crate-03",
+        "5.10.16"
+      ],
+      [
+        "crate-02",
+        "5.10.16"
+      ]
+    ],
+    "health": [
+      [
+        "GREEN",
+        93
+      ]
+    ],
+    "shards": [
+      [
+        "STARTED",
+        956
+      ]
+    ],
+    "repositories": [
+      [
+        "goodwatch-db-backup",
+        "fs",
+        {
+          "compress": "true",
+          "location": "/snapshots"
+        }
+      ],
+      [
+        "goodwatch-db-backup-v2",
+        "fs",
+        {
+          "compress": "true",
+          "location": "/snapshots/v2"
+        }
+      ]
+    ]
+  }
+}
