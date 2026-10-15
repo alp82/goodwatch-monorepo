@@ -259,3 +259,16 @@ test("a member keeps the twenty newest sessions and cannot evict another member"
  for(const session of sessions.slice(0,5)) assert.equal(await adapter.findOne({model:"session",where:[{field:"token",value:session.token}]}),null)
  assert.ok(await adapter.findOne({model:"session",where:[{field:"token",value:other.token}]}))
 })
+
+test("empty actor ledgers are physically purged after thirty days",async()=>{
+ await clean()
+ const {collectAuthGarbage,reconcileAuthCapacity} = await import("./maintenance.server.ts")
+ const encryptionSecret = "disposable-local-auth-integration-key-548"
+ const bounded = crateAuthAdapter({sql,populationBounds:true})({})
+ await bounded.create({model:"session",data:{userId:randomUUID(),token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
+ await collectAuthGarbage({sql,encryptionSecret,model:"session"})
+ await collectAuthGarbage({sql,encryptionSecret,model:"session",now:new Date(Date.now()+31*86400000)})
+ await reconcileAuthCapacity({sql,encryptionSecret,now:new Date(Date.now()+31*86400000)})
+ await sql("REFRESH TABLE doc.auth_capacity")
+ assert.equal((await sql("SELECT id FROM doc.auth_capacity")).rows.length,0)
+})

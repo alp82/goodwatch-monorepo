@@ -282,7 +282,7 @@ export async function collectAuthGarbage(
 		) {
             // Thirty days exceeds the database-enforced fifteen-minute insert lease.
             // CAS deletion cannot remove a concurrently recreated logical record.
-            await releaseAuthAdmission(sql,codec,id,envelope.admission)
+            await releaseAuthAdmission(sql,codec,id,envelope.admission,now)
 			const result = await sql(
 				`DELETE FROM ${name} WHERE id=? AND _seq_no=? AND _primary_term=?`,
 				[id, current[2], current[3]],
@@ -329,7 +329,7 @@ export async function collectAuthGarbage(
 			JSON.stringify(kept) === JSON.stringify(receipts) &&
 			!repaired
 		) {
-            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission)
+            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission,now)
             continue
         }
 		const compacted = kept.length < receipts.length
@@ -348,7 +348,7 @@ export async function collectAuthGarbage(
 			],
 		)
 		if (result.rowcount === 1) {
-            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission)
+            if(next.deleted || next.archived) await releaseAuthAdmission(sql,codec,id,next.admission,now)
 			if (expired) report.expired++
 			if (archiveRefresh && !expired) report.archived++
 			if (compacted) report.compacted++
@@ -382,6 +382,7 @@ export async function reconcileAuthCapacity(options: Options) {
 		skipped: 0,
 		scanned: 0,
 		released: 0,
+		purged: 0,
 		retained: 0,
 		conflicted: 0,
 		cursor: null as string | null,
@@ -397,6 +398,16 @@ export async function reconcileAuthCapacity(options: Options) {
 		const name = authModelTable(model)
 		const capacity = await readCapacity(sql, codec, bucket)
 		if (!capacity) continue
+        if(Object.keys(capacity.ledger.slots).length === 0) {
+            if(capacity.ledger.emptySince && now.getTime()-new Date(capacity.ledger.emptySince).getTime() >= 30*86400000) {
+                const result = await sql("DELETE FROM doc.auth_capacity WHERE id=? AND _seq_no=? AND _primary_term=?",[bucket,capacity.seq,capacity.term])
+                if(result.rowcount===1) report.purged++
+                else report.conflicted++
+            } else if(!capacity.ledger.emptySince) {
+                await sql("UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[codec.encode({row:{...capacity.ledger,emptySince:now.toISOString()},deleted:false},`doc.auth_capacity:${bucket}:payload`),bucket,capacity.seq,capacity.term])
+            }
+            continue
+        }
 		for (const [id, slot] of Object.entries(capacity.ledger.slots)) {
             try {
 			report.scanned++
@@ -484,7 +495,7 @@ export async function reconcileAuthCapacity(options: Options) {
 					"UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",
 					[
 						codec.encode(
-							{ row: { ...latest.ledger, slots }, deleted: false },
+							{ row: { ...latest.ledger, slots, emptySince:Object.keys(slots).length ? undefined : now.toISOString() }, deleted: false },
 							`doc.auth_capacity:${bucket}:payload`,
 						),
 						bucket,
@@ -746,7 +757,7 @@ export async function reconcileAuthRows(
             if(claim?.[0] === id && claim[1] === stored.envelope.emailClaim)
                 await sql("DELETE FROM doc.auth_user_email WHERE email_norm=? AND _seq_no=? AND _primary_term=?",[email,claim[2],claim[3]])
         }
-        if(removed) await releaseAuthAdmission(sql,codec,id,envelope.admission)
+        if(removed) await releaseAuthAdmission(sql,codec,id,envelope.admission,now)
         return removed
 	}
 	const name = authModelTable(model)

@@ -13,6 +13,7 @@ export type AuthPopulationBounds = { buckets: number; limitPerBucket: number }
 export type AuthAdmission = { bucket: string; generation: number }
 export type CapacityLedger = {
 	id: string
+	emptySince?: string
 	nextGeneration: number
 	bounds: AuthPopulationBounds
 	slots: Record<string, { generation: number; createdAt: string }>
@@ -78,7 +79,7 @@ export async function readCapacity(sql: AuthSql, codec: Codec, bucket: string) {
 }
 
 /** Caller must fence or archive the row before returning its matching generation. */
-export async function releaseAuthAdmission(sql: AuthSql, codec: Codec, id: string, admission?: AuthAdmission) {
+export async function releaseAuthAdmission(sql: AuthSql, codec: Codec, id: string, admission?: AuthAdmission, now = new Date()) {
  if (!admission) return
  for(let attempt=0;attempt<64;attempt++) {
   const current = await readCapacity(sql,codec,admission.bucket)
@@ -86,7 +87,7 @@ export async function releaseAuthAdmission(sql: AuthSql, codec: Codec, id: strin
   const slots = {...current.ledger.slots}
   delete slots[id]
   const result = await sql("UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[
-   codec.encode({row:{...current.ledger,slots},deleted:false},`doc.auth_capacity:${admission.bucket}:payload`),admission.bucket,current.seq,current.term
+   codec.encode({row:{...current.ledger,slots,emptySince:Object.keys(slots).length ? undefined : now.toISOString()},deleted:false},`doc.auth_capacity:${admission.bucket}:payload`),admission.bucket,current.seq,current.term
   ])
   if(result.rowcount===1) return
  }
