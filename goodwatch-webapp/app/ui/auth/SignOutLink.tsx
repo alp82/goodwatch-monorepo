@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { queryKeyUserData } from "~/routes/api.user-data"
 import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
-import { useSupabase } from "~/utils/auth"
+import { useAuthClient } from "~/utils/auth-client"
 
 interface SignOutLinkProps {
 	active: boolean
@@ -13,17 +13,15 @@ export const SignOutLink = React.forwardRef<HTMLButtonElement, SignOutLinkProps>
 	{ active }: SignOutLinkProps,
 	ref,
 ) {
-	const { getSupabase } = useSupabase()
+	const auth = useAuthClient()
 	const queryClient = useQueryClient()
 
 	const handleSignOut = async () => {
-		const supabase = await getSupabase()
-
 		// Clear onboarding banner state
 		sessionStorage.removeItem("onboarding-banner-dismissed")
 
-		const { error } = await supabase.auth.signOut()
-		if (error) console.error(error)
+		const result = await auth.signOut()
+		if (!result.ok) console.error(`Sign-out failed: ${result.failure}`)
 
 		queryClient.removeQueries({
 			queryKey: queryKeyUserSettings,

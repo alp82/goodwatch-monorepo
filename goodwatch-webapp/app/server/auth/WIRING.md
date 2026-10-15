@@ -41,6 +41,8 @@ at the adapter's 10,000-row population bound.
   confirmation links newest-only, single-use and valid for 24 hours. Digest
   consumption uses a narrow `user.incrementOne(id,confirmationDigest)` CAS.
   Off-origin callbacks are rejected before consumption. Confirmation signs in.
+  A browser (`Accept: text/html`) that opens a link that no longer works is
+  sent to `/verify-email?state=expired`; API callers keep the 401.
 - `sign-in/email`: Confirmation is required. Unknown address, wrong password
   and unconfirmed account share a 401 message. Imported `$2` hashes use bcrypt
   (including `$2y$`); successful sign-in upgrades to core's scrypt with a guarded
@@ -76,8 +78,21 @@ Permanent failure or overflow emits a generic Sentry error and increments
 `goodwatch_auth_mail_total{outcome="failed"}`; sent and retry outcomes have their
 own counter labels. Shutdown requests a drain, subject to the app's deadline.
 This is not a durable outbox: process loss can lose mail and an ambiguous SMTP
-acknowledgement can cause duplicate delivery. Templates are plain text; visual
-email templates remain a presentation follow-up.
+acknowledgement can cause duplicate delivery. The five account emails
+(`emails.server.ts`, #550) have an HTML part in the #534 look and a plain-text
+part with the same words and the full link.
+
+## Under remix-serve
+
+The app has no `v3_singleFetch`, so remix-serve installs `@remix-run/web-fetch`
+as the global `fetch`, `Request`, `Response` and `Headers`. With it, every
+second request to CrateDB's HTTP endpoint failed with ECONNRESET (CrateDB
+5.10.12 on Node 24.22 and 26.8), `Response.json` was missing and
+`Headers#getSetCookie` too. The transport therefore calls undici's `fetch`
+(pinned 6.21.3), JSON answers go through `jsonResponse`, and the session
+resolver reads cookies through `raw()` when `getSetCookie` is missing. The last
+wiring case runs sign-up, sign-in and the session read with the polyfill
+installed.
 
 ## Local verification
 
@@ -97,6 +112,11 @@ CrateDB uses 15548–15550 independently of #548's 15748–15750; Valkey uses
 15601–15603; SMTP/API use 15525/15580. Every published port is loopback-only.
 Ignored evidence lives in `scripts/auth-wiring/results/`. No `.env` is loaded.
 
+`bash scripts/auth-wiring/dev.sh` runs a dev server (port 3550) against the
+same images on their own loopback ports (CrateDB 15848–15850, Valkey
+15901–15903, Mailpit 15925/15980) with `AUTH_LOCAL_SERVICES=true`, which the
+runtime refuses in production. Every production setting is blanked.
+
 Google token/cert requests are redirected only in the test to a local HTTP
 fixture with signed tokens and PKCE validation. SMTP goes only to Mailpit.
 The fixture verifies state rejection, callback, replay, session and Google-only
@@ -107,7 +127,7 @@ cases run through HTTP with real stores.
 
 ## Launch boundaries
 
-Account pages, importer/rehearsal, production grants, orphan cleanup
+Importer/rehearsal, production grants, orphan cleanup
 and coordinated cut-over belong to the other map #529 tickets. The adapter's
 maintenance and multi-row protocol limitations remain. A consumed confirmation
 followed by a later failure needs a resend; no transaction spans confirmation
