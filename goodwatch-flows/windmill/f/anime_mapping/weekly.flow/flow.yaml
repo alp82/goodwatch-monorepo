@@ -9,7 +9,7 @@ value:
         input_transforms:
           dry_run:
             type: javascript
-            expr: flow_input.dry_run
+            expr: flow_input.dry_run ?? false
       retry:
         constant:
           attempts: 2
@@ -22,5 +22,5 @@ schema:
   properties:
     dry_run:
       type: boolean
-      default: true
+      default: false
   required: []

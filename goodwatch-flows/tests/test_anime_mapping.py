@@ -1,6 +1,7 @@
 """Public snapshot builder and refresh entry point; only network/Crate are replaced."""
 import importlib.util
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import unittest
 
@@ -41,10 +42,13 @@ class AnimeSnapshotTest(unittest.TestCase):
         class Db:
             def __init__(self):
                 self.writes = []
+                self.rows = []
             def select(self, sql, params=()):
-                return []
+                return self.rows
             def run(self, sql, params=()):
                 self.writes.append((sql, params))
+                if sql.startswith('INSERT'):
+                    self.rows = [{'payload': params[1], 'refreshed_at': datetime.now(timezone.utc)}]
         db = Db()
         master, crosswalk = (FIXTURES / 'master.xml').read_bytes(), (FIXTURES / 'crosswalk.json').read_bytes()
         report = refresh.refresh_snapshot(master, crosswalk, db)
@@ -83,6 +87,38 @@ class AnimeSnapshotTest(unittest.TestCase):
         crosswalk.append({'anidb_id': 69, 'mal_id': 59978})
         snapshot = refresh.build_snapshot(master, json.dumps(crosswalk).encode())
         self.assertEqual(sum(59978 in e['ids']['myanimelist'] for e in snapshot['entries']), 2)
+
+    def test_refresh_fails_if_the_published_snapshot_remains_older_than_eight_days(self):
+        master = (FIXTURES / 'master.xml').read_bytes()
+        crosswalk = (FIXTURES / 'crosswalk.json').read_bytes()
+        snapshot = refresh.build_snapshot(master, crosswalk)
+        class Db:
+            def __init__(self, age):
+                self.row = {'payload': json.dumps(snapshot), 'refreshed_at': datetime.now(timezone.utc) - timedelta(days=age)}
+            def select(self, *args):
+                return [self.row]
+            def run(self, *args):
+                pass  # Simulate publication that did not advance the stored row.
+        refresh.refresh_snapshot(master, crosswalk, Db(7))
+        for dry_run in (True, False):
+            with self.assertRaisesRegex(ValueError, 'older than 8 days'):
+                refresh.refresh_snapshot(master, crosswalk, Db(9), dry_run=dry_run)
+
+    def test_publishing_can_repair_a_stale_snapshot_and_checks_the_stored_timestamp(self):
+        master = (FIXTURES / 'master.xml').read_bytes()
+        crosswalk = (FIXTURES / 'crosswalk.json').read_bytes()
+        snapshot = refresh.build_snapshot(master, crosswalk)
+        class Db:
+            def __init__(self):
+                self.row = {'payload': json.dumps(snapshot), 'refreshed_at': '2020-01-01T00:00:00Z'}
+            def select(self, *args):
+                return [self.row]
+            def run(self, sql, params=()):
+                if sql.startswith('INSERT'):
+                    self.row = {'payload': params[1], 'refreshed_at': datetime.now(timezone.utc).timestamp() * 1000}
+        report = refresh.refresh_snapshot(master, crosswalk, Db(), dry_run=False)
+        self.assertEqual(report['entries'], 7)
+        self.assertFalse(report['dry_run'])
 
 if __name__ == '__main__':
     unittest.main()

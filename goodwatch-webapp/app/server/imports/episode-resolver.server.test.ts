@@ -11,6 +11,7 @@ function resolver(
 	data: Partial<EpisodeResolverData> & Pick<EpisodeResolverData, "episodes">,
 ) {
 	return createEpisodeResolver({
+		animeMappings: async () => [],
 		findTvdb: async () => ({ tv_episode_results: [] }),
 		groups: async () => [],
 		group: async () => {
@@ -285,7 +286,10 @@ test("an empty TVDB cache is filled with a guarded update through the database h
 		Response.json({ tv_episode_results: [{ id: 101, show_id: 1668 }] }),
 	)
 	assert.deepEqual(
-		await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }),
+		await createCatalogEpisodeResolver(async () => [])({
+			showId: 1668,
+			episodeTvdbId: 555,
+		}),
 		{
 			status: "matched",
 			episodeTmdbId: 101,
@@ -409,7 +413,7 @@ test("an empty community group does not prevent resolving a complete Netflix gro
 		assert.equal(path, "/3/tv/episode_group/netflix-parts")
 		return Response.json(netflixParts)
 	})
-	const result = await createCatalogEpisodeResolver()({
+	const result = await createCatalogEpisodeResolver(async () => [])({
 		showId: 71446,
 		episodeGroup: { label: "Part 2" },
 		episode: 1,
@@ -489,7 +493,7 @@ test("the TMDB boundary rejects malformed responses and HTTP errors, and bounds 
 		async () => new Promise<Response>(() => {}),
 	]) {
 		t.mock.method(globalThis, "fetch", response)
-		const result = await createCatalogEpisodeResolver()({
+		const result = await createCatalogEpisodeResolver(async () => [])({
 			showId: 1668,
 			episodeTvdbId: 555,
 		})
@@ -733,7 +737,10 @@ test("fresh TVDB evidence updates only the observed cache identity through datab
 		Response.json({ tv_episode_results: [{ id: 101, show_id: 1668 }] }),
 	)
 	assert.deepEqual(
-		await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }),
+		await createCatalogEpisodeResolver(async () => [])({
+			showId: 1668,
+			episodeTvdbId: 555,
+		}),
 		{
 			status: "matched",
 			episodeTmdbId: 101,

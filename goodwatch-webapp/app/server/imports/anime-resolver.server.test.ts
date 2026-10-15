@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { createCatalogAnimeLookup } from "./anime-mapping-data.server.ts"
 import {
 	type CatalogEpisode,
 	type EpisodeResolverData,
@@ -27,6 +28,7 @@ function resolver(
 	data: Partial<EpisodeResolverData> & Pick<EpisodeResolverData, "episodes">,
 ) {
 	return createEpisodeResolver({
+		animeMappings: async () => [],
 		groups: async () => [],
 		group: async () => {
 			throw new Error("Unexpected group lookup")
@@ -62,6 +64,7 @@ test("Frieren's second entry starts at TMDB episode 29, not episode 1", async ()
 			season: 1,
 			episode: 29,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 })
@@ -117,6 +120,7 @@ test("One Piece episode 62 follows the master ranges in a season-relative catalo
 			season: 2,
 			episode: 1,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 })
@@ -139,6 +143,7 @@ test("One Piece's continuous TMDB numbers stay continuous despite relative range
 			season: 2,
 			episode: 62,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 })
@@ -168,7 +173,7 @@ test("the catalog resolver joins tracker IDs from the stored snapshot and pins i
 		},
 	})
 	t.after(() => setImportDbForTest())
-	const resolve = createCatalogEpisodeResolver()
+	const resolve = createCatalogEpisodeResolver(createCatalogAnimeLookup())
 	for (const [source, id] of [
 		["myanimelist", 59978],
 		["anilist", 182255],
@@ -184,7 +189,7 @@ test("the catalog resolver joins tracker IDs from the stored snapshot and pins i
 	}
 	assert.equal(
 		(
-			await createCatalogEpisodeResolver()({
+			await createCatalogEpisodeResolver(createCatalogAnimeLookup())({
 				showId: 209867,
 				animeEntry: { source: "anilist", id: 182255 },
 				episode: 1,
@@ -230,6 +235,7 @@ test("measured Spy x Family, Attack on Titan and Bleach cours retain their TMDB 
 				season: seasonNumber,
 				episode: expected,
 				special: false,
+				datePolicy: "unknown",
 			},
 		)
 	}
@@ -283,6 +289,7 @@ test("an absolute entry without ranges requires unique regular numbers and ignor
 			season: 2,
 			episode: 62,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 	const ambiguous = resolver({
@@ -363,6 +370,7 @@ test("TMDB then TVDB IDs precede anime placement, and invalid progress cannot be
 			season: 1,
 			episode: 1,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 	assert.deepEqual(
@@ -373,6 +381,7 @@ test("TMDB then TVDB IDs precede anime placement, and invalid progress cannot be
 			season: 1,
 			episode: 2,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 	for (const episode of [undefined, 0, -1, 1.5, 11, Number.POSITIVE_INFINITY])
@@ -433,7 +442,7 @@ test("missing, expired or malformed snapshots leave anime unmatched with a retry
 			},
 		})
 		assert.deepEqual(
-			await createCatalogEpisodeResolver()({
+			await createCatalogEpisodeResolver(createCatalogAnimeLookup())({
 				showId: 209867,
 				animeEntry: { source: "anidb", id: 18886 },
 				episode: 1,
@@ -496,6 +505,7 @@ test("a TMDB range overrides a numeric default and an explicitly mapped special 
 			season: 2,
 			episode: 1,
 			special: false,
+			datePolicy: "unknown",
 		},
 	)
 	assert.deepEqual(
@@ -510,6 +520,90 @@ test("a TMDB range overrides a numeric default and an explicitly mapped special 
 			season: 0,
 			episode: 9,
 			special: true,
+			datePolicy: "unknown",
 		},
 	)
+})
+
+test("parent lookup reports missing, ambiguous and wrong-show entries consistently", async () => {
+	await import("../tracking-loader.test-support.ts")
+	const { resolveAnimeParent } = await import("./anime-mapping-data.server.ts")
+	const entry = { source: "anidb" as const, id: 18886 }
+	assert.deepEqual(await resolveAnimeParent(entry, async () => [frieren]), {
+		status: "matched",
+		mapping: frieren,
+	})
+	for (const [mappings, showId] of [
+		[[], undefined],
+		[[frieren, frieren], undefined],
+		[[frieren], 1429],
+	] as const) {
+		assert.deepEqual(
+			await resolveAnimeParent(entry, async () => [...mappings], showId),
+			{
+				status: "unmatched",
+				reason: "This anime entry is not mapped uniquely to this TMDB show.",
+			},
+		)
+	}
+	assert.deepEqual(
+		await resolveAnimeParent(entry, async () => {
+			throw new Error("Offline")
+		}),
+		{
+			status: "unmatched",
+			reason: "Anime mappings are unavailable; retry this import later.",
+		},
+	)
+})
+
+test("a completed anime entry must supply its total before any episode can match", async () => {
+	const resolve = resolver({
+		episodes: async () => season(209867, 1, 38),
+		animeMappings: async () => [frieren],
+	})
+	assert.deepEqual(
+		await resolve({
+			showId: 209867,
+			animeEntry: { source: "anidb", id: 18886, progress: 10, completed: true },
+			episode: 1,
+		}),
+		{
+			status: "unmatched",
+			reason:
+				"A completed anime entry needs its episode total to validate the whole cour.",
+		},
+	)
+	assert.equal(
+		(
+			await resolve({
+				showId: 209867,
+				animeEntry: {
+					source: "anidb",
+					id: 18886,
+					progress: 10,
+					completed: true,
+					episodeCount: 10,
+				},
+				episode: 1,
+			})
+		).status,
+		"matched",
+	)
+})
+
+test("the resolver owns unknown dates for anime progress even when an episode ID wins", async () => {
+	const resolve = resolver({
+		episodes: async () => season(209867, 1, 38),
+		animeMappings: async () => [frieren],
+	})
+	for (const episodeTmdbId of [undefined, 10029]) {
+		const result = await resolve({
+			showId: 209867,
+			animeEntry: { source: "anidb", id: 18886, progress: 10 },
+			episode: 1,
+			episodeTmdbId,
+		})
+		assert.equal(result.status === "matched" && result.datePolicy, "unknown")
+	}
 })

@@ -4,7 +4,7 @@ import {
 	timeoutSetting,
 	withBackendTimeout,
 } from "../../utils/backend-timeout.ts"
-import { createCatalogAnimeLookup } from "./anime-mapping-data.server.ts"
+import type { AnimeMappings } from "./anime-mapping-data.server.ts"
 import {
 	type CatalogEpisode,
 	EPISODE_CATALOG_LIMIT,
@@ -73,9 +73,7 @@ function memoize<K, V>(load: (key: K) => Promise<V>) {
 }
 
 /** One resolver per preview: no process-wide data or credentials retained. */
-export function createCatalogEpisodeResolver(
-	animeMappings = createCatalogAnimeLookup(),
-) {
+export function createCatalogEpisodeResolver(animeMappings: AnimeMappings) {
 	return createEpisodeResolver({
 		animeMappings,
 		episodes: memoize((showId: number) =>

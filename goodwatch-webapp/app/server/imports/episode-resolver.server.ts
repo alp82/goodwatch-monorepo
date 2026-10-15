@@ -1,4 +1,8 @@
-import type { AnimeEntry, AnimeMapping } from "../../domain/anime-mapping.ts"
+import type { AnimeEntry } from "../../domain/anime-mapping.ts"
+import {
+	type AnimeMappings,
+	resolveAnimeParent,
+} from "./anime-mapping-data.server.ts"
 export const EPISODE_CATALOG_LIMIT = 50_000
 const DIGITAL_EPISODE_GROUP = 4
 const normalize = (value: string | null | undefined) =>
@@ -31,6 +35,8 @@ export type EpisodeResolution =
 			season: number
 			episode: number
 			special: boolean
+			/** Progress carries no episode viewing dates, even with an authoritative episode ID. */
+			datePolicy?: "unknown"
 	  }
 	| { status: "unmatched"; reason: string }
 export interface EpisodeGroupSummary {
@@ -51,7 +57,7 @@ export interface EpisodeGroup {
 	}[]
 }
 export interface EpisodeResolverData {
-	animeMappings?(entry: AnimeEntry): Promise<AnimeMapping[]>
+	animeMappings: AnimeMappings
 	groups(showId: number): Promise<EpisodeGroupSummary[]>
 	group(id: string): Promise<EpisodeGroup>
 	episodes(showId: number): Promise<CatalogEpisode[]>
@@ -215,6 +221,10 @@ async function resolveAnime(
 	data: EpisodeResolverData,
 	cache: Map<string, Promise<AnimePlacement>>,
 ): Promise<EpisodeResolution> {
+	if (entry.completed && entry.episodeCount == null)
+		return unmatched(
+			"A completed anime entry needs its episode total to validate the whole cour.",
+		)
 	const positive = (n: number | null | undefined): n is number =>
 		Number.isSafeInteger(n) && Number(n) > 0
 	if (
@@ -252,17 +262,9 @@ async function mapAnimeProgress(
 	episodes: CatalogEpisode[],
 	data: EpisodeResolverData,
 ): Promise<AnimePlacement> {
-	let mappings: AnimeMapping[]
-	try {
-		mappings = (await data.animeMappings?.(entry)) ?? []
-	} catch {
-		return unmatched("Anime mappings are unavailable; retry this import later.")
-	}
-	if (mappings.length !== 1 || mappings[0].showId !== showId)
-		return unmatched(
-			"This anime entry is not mapped uniquely to this TMDB show.",
-		)
-	const mapping = mappings[0]
+	const parent = await resolveAnimeParent(entry, data.animeMappings, showId)
+	if (parent.status === "unmatched") return parent
+	const mapping = parent.mapping
 	if (mapping.unsupportedReason) return unmatched(mapping.unsupportedReason)
 	// Only a catalog with globally unique regular numbers can establish absolute order.
 	const regular = episodes.filter((e) => Number(e.season_number) > 0)
@@ -310,7 +312,7 @@ async function mapAnimeProgress(
 
 export function createEpisodeResolver(data: EpisodeResolverData) {
 	const animeCache = new Map<string, Promise<AnimePlacement>>()
-	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
+	const resolve = async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
 		const catalog = await data.episodes(row.showId)
 		if (catalog.length > EPISODE_CATALOG_LIMIT)
 			return unmatched(
@@ -365,6 +367,12 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 		return candidates.length === 1
 			? matched(candidates[0])
 			: unmatched("Season and episode did not match uniquely within this show.")
+	}
+	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
+		const result = await resolve(row)
+		return row.animeEntry && result.status === "matched"
+			? { ...result, datePolicy: "unknown" }
+			: result
 	}
 }
 

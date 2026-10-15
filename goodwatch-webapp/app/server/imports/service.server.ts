@@ -37,7 +37,7 @@ export const previewParsedImport = async (
 	(await import("./preview.server.ts")).createParsedPreview(
 		userId,
 		fileName,
-		parsed,
+		structuredClone(parsed),
 	)
 
 export const listImports = async (userId: string): Promise<ImportSummary[]> =>

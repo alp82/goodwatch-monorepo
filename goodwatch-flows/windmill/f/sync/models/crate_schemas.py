@@ -27,7 +27,7 @@ SCHEMAS = {
         "shards": 3,
     },
     # ============================
-    # ===== Core Lookups =====
+    # ===== Anime Import Reference =====
     # ============================
     # Small, atomically published server-side reference dataset. Anime-Lists + Fribb.
     "anime_mapping_snapshot": {
@@ -41,6 +41,9 @@ SCHEMAS = {
         "shards": 1,
         "timestamps": False,
     },
+    # ============================
+    # ===== Core Lookups =====
+    # ============================
     "age_certification": {
         "columns": {
             "certification_code": "TEXT",

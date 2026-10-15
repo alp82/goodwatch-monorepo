@@ -1133,11 +1133,31 @@ it("anime cour progress previews canonical episodes, keeps failed mappings on th
 				kind: "want",
 				animeEntry: { source: "myanimelist", id: 51535 },
 			},
+			...(["rating", "review"] as const).flatMap((kind) =>
+				[null, 120089].map((tmdbId) => ({
+					...base,
+					key: `anime:50602:${kind}:${tmdbId}`,
+					kind,
+					tmdbId,
+					score: 8,
+					review: "A cour review",
+				})),
+			),
 		],
 	})
 	const receipt = await getImportItems("member", preview.id, undefined, 0, 50)
 	assert.equal(preview.counts.new, 14)
 	assert.equal(preview.counts.unmatched, 2)
+	assert.equal(preview.counts.unsupported, 4)
+	assert.ok(
+		receipt.items
+			.slice(16)
+			.every(
+				(item) =>
+					item.outcome === "unsupported" &&
+					/cour.*rating|cour.*review/i.test(item.reason ?? ""),
+			),
+	)
 	assert.deepEqual(
 		receipt.items.slice(0, 13).map((x) => x.episode),
 		[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
@@ -1150,7 +1170,7 @@ it("anime cour progress previews canonical episodes, keeps failed mappings on th
 	assert.match(receipt.items[14].reason ?? "", /does not fit/)
 	await confirmImport("member", preview.id, {
 		...options,
-		kinds: ["watch", "want"],
+		kinds: ["watch", "want", "rating", "review"],
 	})
 	await waitFor(db, "done")
 	const tracked = await getShowTracking("member", 120089)

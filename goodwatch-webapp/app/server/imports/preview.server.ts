@@ -9,7 +9,10 @@ import type {
 	ParsedImport,
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
-import { createCatalogAnimeLookup } from "./anime-mapping-data.server.ts"
+import {
+	createCatalogAnimeLookup,
+	resolveAnimeParent,
+} from "./anime-mapping-data.server.ts"
 import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
 import { parseImportFile } from "./files.server.ts"
 import {
@@ -36,6 +39,14 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
+		if (row.animeEntry && (row.kind === "rating" || row.kind === "review")) {
+			row.problem = {
+				outcome: "unsupported",
+				reason:
+					"Anime cour ratings and reviews cannot be applied to the whole show.",
+			}
+			continue
+		}
 		if (
 			!row.animeEntry ||
 			row.problem ||
@@ -43,20 +54,9 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			row.tmdbId != null
 		)
 			continue
-		try {
-			const mappings = await animeMappings(row.animeEntry)
-			if (mappings.length === 1) row.tmdbId = mappings[0].showId
-			else
-				row.problem = {
-					outcome: "unmatched",
-					reason: "This anime entry is not mapped uniquely to a TMDB show.",
-				}
-		} catch {
-			row.problem = {
-				outcome: "unmatched",
-				reason: "Anime mappings are unavailable; retry this import later.",
-			}
-		}
+		const parent = await resolveAnimeParent(row.animeEntry, animeMappings)
+		if (parent.status === "matched") row.tmdbId = parent.mapping.showId
+		else row.problem = { outcome: "unmatched", reason: parent.reason }
 	}
 	const found = new Map<
 		number,
@@ -155,7 +155,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			found.delete(index)
 			row.problem = { outcome: "unmatched", reason: result.reason }
 		} else {
-			if (row.animeEntry && row.kind === "watch") {
+			if (result.datePolicy === "unknown" && row.kind === "watch") {
 				row.watchedAt = null
 				row.precision = "unknown"
 			}
@@ -441,7 +441,7 @@ export async function createParsedPreview(
 	input: ParsedImport,
 	hash = createHash("sha256").update(JSON.stringify(input)).digest("hex"),
 ): Promise<ImportSummary> {
-	const parsed = structuredClone(input)
+	const parsed = input
 	const source = parsed.source
 	const [matched, current] = await Promise.all([
 		matchCatalog(source, parsed.observations),

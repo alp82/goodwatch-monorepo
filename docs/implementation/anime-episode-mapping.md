@@ -3,7 +3,10 @@
 Built for [#646](https://github.com/alp82/goodwatch-monorepo/issues/646), under map #365.
 Episode placement is courtesy of [Anime-Lists/anime-lists](https://github.com/Anime-Lists/anime-lists).
 Tracker identities are courtesy of [Fribb/anime-lists](https://github.com/Fribb/anime-lists).
-The owner approved server-side use on 2026-10-15. The research is
+Anime-Lists and Fribb have no license. The owner approved server-side use on
+2026-10-15. User-visible credit for both datasets ships with the first adapter
+in [#647](https://github.com/alp82/goodwatch-monorepo/issues/647); this resolver
+change adds no UI. The research is
 `docs/research/imports/episode-numbering.md` on `research/episode-numbering` (#610).
 These mappings select canonical TMDB episodes; they never alter catalog numbering,
 episode presentation (ADR 0012), or stored watch identities.
@@ -34,7 +37,13 @@ TMDB mapping lists are retained as unsupported, not approximated by an offset.
 Both downloads must parse before publication. Download sizes and durations are
 bounded. Empty/malformed inputs and a greater-than-10% decline in entry or tracker
 identity counts fail the run and preserve the previous row. The script and flow
-serialize executions. Replacing the whole payload removes withdrawn mappings.
+serialize executions. The weekly flow defaults to `dry_run: false` (including
+omitted arguments); the script keeps `dry_run: true` for direct invocation.
+Every run checks the published row: if it remains older than eight days, the
+refresh fails so monitoring cannot report a successful stale dry run. A publishing
+run verifies the stored refresh time after the atomic write and can repair a stale
+snapshot. An initial dry run before any row exists is allowed. Replacing the whole
+payload removes withdrawn mappings.
 A failed download never starts publication; a failed publish leaves the previous
 row or the complete replacement, never half a dataset. The weekly schedule is
 visible to the existing schedule-based monitoring. After three weeks without a
@@ -45,21 +54,28 @@ successful refresh, the webapp leaves anime rows unmatched with a retry reason.
 `ImportObservation.animeEntry` and `EpisodeEvidence.animeEntry` contain:
 
 ```ts
-{ source: "myanimelist", id: 50602, progress: 13, episodeCount: 13 }
+{ source: "myanimelist", id: 50602, progress: 13, completed: true, episodeCount: 13 }
 ```
 
 Sources are `anidb`, `myanimelist`, `anilist`, or `kitsu`. Unknown totals must be
-omitted, not sent as zero. For reported progress `n`, an adapter emits `n` watch
+omitted, not sent as zero. Adapters set `completed: true` for a completed entry;
+anime placement rejects that entry unless `episodeCount` is provided. For reported
+progress `n`, an adapter emits `n` watch
 observations with `episode: 1` through `n`, repeating the full `progress` and
 known `episodeCount` on **every** row. The observation key must be stable per
 tracker entry, episode and explicit pass. `tmdbId` may be null; preview finds the
-parent through the same pinned crosswalk used by the episode resolver. Conflicting
-or ambiguous identities are unmatched. Explicit parent IDs must agree when anime
+parent through the same pinned crosswalk used by the episode resolver.
+`resolveAnimeParent(entry, animeMappings, showId?)` owns uniqueness and parent
+validation for both paths. The lookup dependency is required by both resolver
+constructors, so each preview explicitly supplies its one pinned snapshot.
+Conflicting or ambiguous identities are unmatched. Explicit parent IDs must agree when anime
 placement is used.
 
 File adapters still use `previewImport`; trusted server adapters may use
 `previewParsedImport(userId, fileName, parsed)` with normalized observations. Both
-share classification, journal, confirm, receipt and undo. This is a server module
+share classification, journal, confirm, receipt and undo. Ordinary file uploads
+consume their freshly parsed observations without cloning; the normalized adapter
+entry point alone copies caller-owned input. This is a server module
 boundary, not a new client endpoint. Source registration and native MAL/AniList/Kitsu
 file parsing remain their own build tickets; this branch adds no new Imports UI.
 
@@ -80,7 +96,9 @@ from a group, episode name or the source's season coordinates.
   row of the entry. This validates current catalog data, rather than caching a
   `fits` flag that could become stale. If only an individual episode number is
   known, validation covers 1 through that number.
-- Anime progress has unknown dates, even if the source gives a cour finish date.
+- The resolver returns `datePolicy: "unknown"` for anime progress, even when an
+  authoritative episode ID wins or the source gives a cour finish date. Preview
+  applies that result without making an anime-specific date decision.
   Specials mapped explicitly by the entry are flagged by the existing receipt and
   never count as regular progress.
 
@@ -88,9 +106,10 @@ A cour's completion must never be emitted as a whole-show Seen operation. A watc
 observation with `animeEntry` but no episode is unmatched. Only mapped episode
 watches reach the existing tracking writer, which derives Watching/Seen using its
 settled rules and preserves explicit member states. Want to See and genuine
-show-level observations remain independent of a failed episode placement. Per-cour
-scores are not automatically whole-show ratings; source adapters must retain
-out-of-scope season scores as unsupported.
+show-level observations remain independent of a failed episode placement. Any
+`rating` or `review` observation carrying `animeEntry` is retained as unsupported
+with a reason, even if it already has a TMDB show ID. It cannot become a whole-show
+rating or review.
 
 ## Rollout (not performed on this branch)
 
@@ -106,8 +125,8 @@ out-of-scope season scores as unsupported.
    current row's version and refresh time. Do not enable consumers before seeding.
 4. Create an enabled weekly schedule for `f/anime_mapping/weekly`, Mondays at
    03:20 UTC, with arguments `{ "dry_run": false }`. The checked-in flow defaults
-   to dry run; it does not create or enable a schedule. Confirm the first scheduled
-   job succeeds and appears in the existing scheduled-workflow health checks.
+   to publishing; the script defaults to dry run. Neither creates or enables a
+   schedule. Confirm the first scheduled job succeeds and appears in the existing scheduled-workflow health checks.
 5. Deploy the webapp with the shared resolver changes. Run an anime adapter preview,
    confirm, receipt, re-upload and undo in staging when that adapter is available.
    Verify a completed Spy x Family Part 2 creates only episodes 13–25 and does not

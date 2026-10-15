@@ -6,6 +6,10 @@ Owner approved server-side use in #646. Never substitutes TVDB placement for TMD
 """
 import json
 import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta, timezone
+
+
+PUBLISHED_MAX_AGE = timedelta(days=8)
 
 
 def integer(value, *, minimum=None):
@@ -75,7 +79,7 @@ def refresh_snapshot(master: bytes, crosswalk: bytes, db, *, dry_run: bool = Tru
         'fribb': hashlib.sha256(crosswalk).hexdigest(),
     }
     payload = json.dumps(snapshot, separators=(',', ':'), sort_keys=True)
-    previous = db.select("SELECT payload FROM anime_mapping_snapshot WHERE id = ?", ('current',))
+    previous = db.select("SELECT payload, refreshed_at FROM anime_mapping_snapshot WHERE id = ?", ('current',))
     if previous:
         old = json.loads(previous[0]['payload'])
         if len(snapshot['entries']) < len(old['entries']) * 0.9:
@@ -93,6 +97,22 @@ def refresh_snapshot(master: bytes, crosswalk: bytes, db, *, dry_run: bool = Tru
             ('current', payload, version),
         )
         db.run('REFRESH TABLE anime_mapping_snapshot')
+    published = previous if dry_run else db.select(
+        "SELECT refreshed_at FROM anime_mapping_snapshot WHERE id = ?", ('current',))
+    if not published and not dry_run:
+        raise ValueError('Anime mapping snapshot was not published')
+    if published:
+        timestamp = published[0].get('refreshed_at')
+        if isinstance(timestamp, (int, float)):
+            timestamp = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+        elif isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        if not isinstance(timestamp, datetime):
+            raise ValueError('Published anime mapping snapshot has no valid refresh time')
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) - timestamp > PUBLISHED_MAX_AGE:
+            raise ValueError('Published anime mapping snapshot is older than 8 days')
     return {'dry_run': dry_run, 'entries': len(snapshot['entries']), 'bytes': len(payload.encode()), 'version': version,
             'unsupported': sum('unsupportedReason' in e for e in snapshot['entries'])}
 
@@ -114,7 +134,7 @@ def download(url: str) -> bytes:
 
 
 def main(dry_run: bool = True):
-    # The schedule explicitly passes false after an operator reviews the first dry run.
+    # The weekly flow defaults to publishing; direct script invocation stays read-only.
     master, crosswalk = download(MASTER_URL), download(CROSSWALK_URL)
     from f.db.cratedb import CrateConnector
 
