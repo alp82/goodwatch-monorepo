@@ -28,6 +28,73 @@ class RelevanceTests(unittest.TestCase):
     def judge(self, item, title=None):
         return judge_links([item], {'movie:1': title or TITLE}, at=AT)[0]
 
+    def test_narnia_keeps_interview_reactions_and_music_analysis_beside_trailer(self):
+        sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
+        from social_relevance_eval import FIXTURE, editorial_inputs
+        data = json.loads(FIXTURE.read_text())
+        links = [p for p in editorial_inputs(data) if p['media_tmdb_id'] == 1147572]
+        labels = {v['post_id']: v['audit_id'] for v in data['verdicts']}
+        from f.social.common import stamp
+        decisions = judge_links(links, data['catalog'], at=stamp(data['at']))
+        by_id = {labels[v['post_id']]: v for v in decisions}
+        for audit_id in ('P196', 'P394', 'P424'):
+            with self.subTest(audit_id=audit_id):
+                self.assertEqual(by_id[audit_id]['status'], 'keep', by_id[audit_id]['reasons'])
+        self.assertEqual(len({by_id[k]['dup_group'] for k in ('P196', 'P394', 'P424', 'P429')}), 4)
+        # Plain release reports still collapse, and the low-reach social post fails.
+        self.assertTrue(all(by_id[k]['status'] == 'drop' for k in ('P416', 'P423', 'P425', 'P426', 'P427', 'P432', 'P105')))
+
+    def test_title_cast_discussion_needs_craft_and_preserves_reference_exclusions(self):
+        for headline in ('Example Movie Director Talks Book Changes and Production Challenges',
+                         'Example Movie Star Jane Doe on Cut Scenes and a Possible Sequel',
+                         "Example Movie's Emotional Goodbye Scene Was Inspired by Its Character Design"):
+            with self.subTest(headline=headline):
+                self.assertEqual(self.judge(piece() | {'text': headline, 'context': ''})['status'], 'keep')
+        for headline in ('Example Movie Star Jane Doe Signs With New Agency',
+                         'Example Movie Fans Celebrate an Actor’s Wedding',
+                         'Example Movie Sequel Director Reveals Production Secrets',
+                         'From the Director of Example Movie: New Film Reveals Production Secrets',
+                         'New Movie Like Example Movie Reveals Its Production Secrets'):
+            with self.subTest(headline=headline):
+                self.assertEqual(self.judge(piece() | {'text': headline, 'context': ''})['status'], 'drop')
+
+    def test_body_subject_punctuation_and_german_compounds_without_incidental_credits(self):
+        for body in ('Example Movie, which stars Jane Doe, has a new trailer.',
+                     'Der erste Trailer zum neuen Example Movie-Film ist da.',
+                     '"Example Movie" war eine Enttäuschung bei Kritik und Publikum.'):
+            with self.subTest(body=body):
+                self.assertEqual(self.judge(piece() | {'text': 'A filmmaker explains the new production',
+                    'context': body})['status'], 'keep')
+        for body in ('Her previous credits include "Example Movie". The new movie has a trailer.',
+                     'From the director of Example Movie comes a new production.',
+                     'The Example Movie-Fan talks about a different trailer.'):
+            with self.subTest(body=body):
+                self.assertEqual(self.judge(piece() | {'text': 'A filmmaker explains a new production',
+                    'context': body})['status'], 'drop')
+
+    def test_story_groups_separate_reactions_interview_and_analysis_from_trailer_release(self):
+        rows = [piece() | {'post_id': key, 'url': 'https://variety.com/' + key,
+                          'text': headline, 'context': body} for key, headline, body in (
+            ('trailer', 'Example Movie Official Trailer Revealed', ''),
+            ('repeat', 'Example Movie First Trailer Arrives', ''),
+            ('interview', 'Example Movie Trailer Debuts as Director Opens Up',
+             'The director participated in a Q&A about the film’s music choices.'),
+            ('reaction', 'Example Movie Fans Split Over New Trailer', ''),
+            ('reaction-repeat', 'Example Movie Trailer Reactions Divide Audiences', ''),
+            ('analysis', 'Why Example Movie Trailer Uses This Song', 'An analysis of the music choices.'),
+        )]
+        judged = {r['post_id']: r for r in judge_links(rows, {'movie:1': TITLE}, at=AT)}
+        self.assertEqual(sum(r['status'] == 'keep' for r in judged.values()), 4)
+        self.assertEqual(judged['trailer']['dup_group'], judged['repeat']['dup_group'])
+        self.assertEqual(judged['reaction']['dup_group'], judged['reaction-repeat']['dup_group'])
+        self.assertEqual(len({judged[k]['dup_group'] for k in ('trailer', 'interview', 'reaction', 'analysis')}), 4)
+        # URL identity still collapses a copy regardless of its headline angle.
+        copy = rows[2] | {'post_id': 'copy', 'url': rows[0]['url'] + '?utm_source=copy'}
+        result = judge_links([rows[0], copy], {'movie:1': TITLE}, at=AT)
+        self.assertEqual(sum(r['status'] == 'keep' for r in result), 1)
+        reversed_rows = judge_links(list(reversed(rows)), {'movie:1': TITLE}, at=AT)
+        self.assertEqual(judged, {r['post_id']: r for r in reversed_rows})
+
     def test_news_freshness_uses_publication_and_rejects_future_dates(self):
         item = piece()
         self.assertEqual(self.judge(item)['status'], 'keep')
@@ -232,6 +299,11 @@ class RelevanceTests(unittest.TestCase):
         self.assertEqual({v['audit_id'] for v in data['verdicts']}, {f'P{i:03}' for i in range(1, 633)})
         self.assertEqual(sum(v['relevant'] for v in data['verdicts']), 327)
         report = evaluate(data)
+        self.assertGreaterEqual(report['overall']['precision'], 252 / 272)
+        self.assertGreaterEqual(report['top20']['precision'], 40 / 41)
+        self.assertGreaterEqual(report['overall']['kept_relevant'], 268)
+        for source in ('youtube', 'bluesky'):
+            self.assertEqual(report['sources'][source]['precision'], 1)
         for source in ('youtube', 'rss', 'bluesky'):
             counts = report['sources'][source]
             with self.subTest(source=source):

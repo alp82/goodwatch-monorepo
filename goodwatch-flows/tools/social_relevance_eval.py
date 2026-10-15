@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +49,12 @@ def evaluate(data):
 
     top = {t['key'] for t in data['top20']}
     nonempty = {r['key'] for r in judged if r['status'] == 'keep'}
+    false_drops = defaultdict(list)
+    for row in judged:
+        if row['status'] == 'drop' and row['relevant']:
+            causes = tuple(sorted({'duplicate' if r.startswith('duplicate_of:') else r for r in row['reasons']
+                                   if not r.startswith(('metrics:', 'playability:'))}))
+            false_drops[causes].append(row)
     return {'playability': 'Assumed only for offline editorial regression; not measured', 'at': stamp(data['at']).isoformat(), 'overall': stats(judged),
             'sources': {s: stats([r for r in judged if r['source'] == s]) for s in SOURCES},
             'top20': stats([r for r in judged if r['key'] in top]),
@@ -57,6 +64,10 @@ def evaluate(data):
                                       key=lambda r: (bool(re.search(r'(?i)same|repeat|redundant|already (?:represented|retained|covered)', r['audit_reason'])),
                                                      -r['score'], r['audit_id']))[:10],
             'relevant_lost': [r for r in judged if r['status'] == 'drop' and r['relevant']],
+            'false_drop_causes': [{'causes': list(causes), 'count': len(rows),
+                                   'audit_ids': [r['audit_id'] for r in rows],
+                                   'sources': {s: sum(r['source'] == s for r in rows) for s in SOURCES}}
+                                  for causes, rows in sorted(false_drops.items(), key=lambda pair: (-len(pair[1]), pair[0]))],
             'judgements': judged}
 
 
@@ -68,7 +79,7 @@ def main():
     report = evaluate(json.loads(args.fixture.read_text()))
     if args.output:
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
-    print(json.dumps({k: report[k] for k in ('playability', 'overall', 'sources', 'top20', 'top20_empty')}, ensure_ascii=False, indent=2))
+    print(json.dumps({k: report[k] for k in ('playability', 'overall', 'sources', 'top20', 'top20_empty', 'false_drop_causes')}, ensure_ascii=False, indent=2))
 
 
 if __name__ == '__main__':
