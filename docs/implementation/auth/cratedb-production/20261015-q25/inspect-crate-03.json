@@ -1,0 +1,49 @@
+{
+  "sshReturncode": 0,
+  "stderr": "",
+  "result": {
+    "operation": "inspect",
+    "node": "crate-03",
+    "startedAt": "2026-10-15T03:56:21.307590+00:00",
+    "container": {
+      "name": "/crate-03",
+      "image": "crate:5.10.9",
+      "imageId": "sha256:312ad95075d9a54c9d9d3088e6e7f6b77600884037576ec940a7377c0c12cdad",
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "Restarting": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-10-14T22:28:25.317290799Z",
+        "FinishedAt": "2026-10-14T22:28:22.752818219Z"
+      },
+      "restartPolicy": {
+        "Name": "always",
+        "MaximumRetryCount": 0
+      },
+      "ports": {
+        "4200/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "4200"
+          }
+        ],
+        "4300/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "4300"
+          }
+        ],
+        "5432/tcp": [
+          {
+            "HostIp": "10.0.0.13",
+            "HostPort": "5432"
+          }
+        ]
+      }
+    },
+    "finishedAt": "2026-10-15T03:56:21.350936+00:00"
+  },
+  "failureOutput": null
+}

@@ -1,0 +1,14 @@
+{
+  "label": "shard-placement",
+  "host": 12,
+  "stmt": "SELECT table_schema, table_name, partition_ident, id, primary, node['name'], state FROM sys.shards ORDER BY table_schema, table_name, partition_ident, id, primary",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 404,
+    "errorBody": "{\"error\":{\"message\":\"ColumnUnknownException[Column table_schema unknown]\",\"code\":4043}}",
+    "elapsedSeconds": 0.006,
+    "at": "2026-10-15T03:55:05.350250+00:00"
+  }
+}

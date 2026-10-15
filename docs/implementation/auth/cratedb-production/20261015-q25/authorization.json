@@ -1,0 +1,29 @@
+{
+  "ownerGo": "Q25 (received before 2026-10-15T03:53:49Z)",
+  "recordedAt": "2026-10-15T03:55:13.518924+00:00",
+  "target": "5.10.16",
+  "nodesToUpgrade": [
+    "crate-03",
+    "crate-01"
+  ],
+  "alreadyUpgraded": "crate-02",
+  "restoreValidationWaived": true,
+  "knownLegitimateTables": [
+    "episode_translation",
+    "season_translation",
+    "user_list_exposure"
+  ],
+  "stopOn": "real health/recovery/decommission failure; known schema activity alone is not an abort",
+  "excluded": [
+    "HBA",
+    "auth user/tables",
+    "application config/code",
+    "manual firewall",
+    "table settings"
+  ],
+  "gracefulStopTimeout": "2h (verified baseline)",
+  "httpTimeoutSeconds": 7500,
+  "outerSshTimeoutSeconds": 7530,
+  "newOwnerGoSupersedesPreviousCutoff": true,
+  "clientDeployment": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9"
+}

@@ -1,0 +1,14 @@
+{
+  "label": "blob-build-manifests",
+  "host": 12,
+  "stmt": "SELECT build_id, status, manifest_json FROM doc.search_index_builds WHERE status IN ('complete', 'ready', 'active') ORDER BY created_at DESC LIMIT 10",
+  "args": [],
+  "sshReturncode": 0,
+  "stderr": "",
+  "response": {
+    "status": 404,
+    "errorBody": "{\"error\":{\"message\":\"ColumnUnknownException[Column manifest_json unknown]\",\"code\":4043}}",
+    "elapsedSeconds": 0.011,
+    "at": "2026-10-15T03:55:04.066363+00:00"
+  }
+}
