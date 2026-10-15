@@ -33,7 +33,7 @@ registerHooks({
 				),
 })
 
-const { buildSides } = await import("./sides.server")
+const { buildSides, franchiseOf } = await import("./sides.server")
 const { KEYS, K, meanOf } = await import("./person.server")
 
 const at = (key: string) => KEYS.indexOf(key)
@@ -154,6 +154,25 @@ function twoStrands() {
 	return { titles, pool }
 }
 
+describe("franchiseOf", () => {
+	it("reads a franchise's titles as one", () => {
+		assert.equal(
+			franchiseOf("The Lord of the Rings: The Two Towers"),
+			franchiseOf("The Lord of the Rings: The Return of the King"),
+		)
+		assert.equal(franchiseOf("Toy Story"), franchiseOf("Toy Story 2"))
+		assert.equal(
+			franchiseOf("The Godfather"),
+			franchiseOf("The Godfather Part II"),
+		)
+		assert.notEqual(franchiseOf("Star Wars"), franchiseOf("Star Trek"))
+		assert.notEqual(
+			franchiseOf("The Dark Knight"),
+			franchiseOf("The Dark Crystal"),
+		)
+	})
+})
+
 describe("buildSides", () => {
 	it("groups two clear strands into two sides that each hold together", () => {
 		const { titles, pool } = twoStrands()
@@ -227,6 +246,18 @@ describe("buildSides", () => {
 		titles.push(
 			rated(CRIME, 3, { origin: "KR" }),
 			rated(CRIME, 3, { origin: "KR" }),
+		)
+		const view = buildSides(person(titles, pool))
+		for (const side of view.sides)
+			assert.ok(!side.edges.some((e) => e.id.endsWith("country-KR")))
+	})
+
+	it("never offers a place rated even a little below the usual", () => {
+		const { titles, pool } = twoStrands()
+		const mu = titles.reduce((a, t) => a + t.score, 0) / titles.length
+		// Between the old tolerance (0.3 below) and the usual itself.
+		titles.push(
+			rated(CRIME, Math.round((mu - 0.1) * 10) / 10, { origin: "KR" }),
 		)
 		const view = buildSides(person(titles, pool))
 		for (const side of view.sides)

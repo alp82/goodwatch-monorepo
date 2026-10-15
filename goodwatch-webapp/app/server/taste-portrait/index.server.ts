@@ -36,7 +36,7 @@ import { FAMILIES } from "./families.server"
 import { buildFingerprint } from "./fingerprint.server"
 import { type PortraitInput, readPerson, round1 } from "./person.server"
 import { SAMPLE_RATINGS, SAMPLE_WANT_TO_SEE } from "./sample-ratings"
-import { type OrderTitles, buildSides } from "./sides.server"
+import { type OrderTitles, buildSides, franchiseOf } from "./sides.server"
 import {
 	GUEST_MIN_RATINGS,
 	type PortraitSubject,
@@ -51,6 +51,8 @@ export * from "./view"
 
 /** Reasons per suggestion, as title cards show them. */
 const CARD_REASONS = 2
+/** "You're here": four titles. */
+const HERE = 4
 const GUEST_KEEP_MS = 10 * 60_000
 const SAMPLE_KEEP_MS = 6 * 60 * 60_000
 const MAX_KEPT = 500
@@ -336,6 +338,7 @@ async function buildView(
 			? { ...built, subject, titles, services }
 			: { ...built, subject, titles }) as PortraitView,
 		(key) => titles[key] !== undefined,
+		(key) => franchiseOf(titles[key]?.title ?? ""),
 	)
 	console.info(
 		`Taste portrait ${tab} for a ${input.kind}: ${person.rated.length} rated, ${keys.size} titles, computed in ${Math.round(computedMs)} ms, ${Math.round(performance.now() - startedAt)} ms in all`,
@@ -371,25 +374,35 @@ function viewKeys(view: Built): Set<TitleKey> {
 	return keys
 }
 
-/** Leaves out the keys of titles without display fields. */
+/** Leaves out the keys of titles without display fields, and in a side's rows a franchise's second title. */
 function prune(
 	view: PortraitView,
 	has: (key: TitleKey) => boolean,
+	franchise: (key: TitleKey) => string = String,
 ): PortraitView {
 	const list = (keys: TitleKey[]) => keys.filter(has)
 	const one = (key: TitleKey | null) => (key !== null && has(key) ? key : null)
+	const onePer = (keys: TitleKey[]) => {
+		const seen = new Set<string>()
+		return list(keys).filter((key) => {
+			const name = franchise(key)
+			if (seen.has(name)) return false
+			seen.add(name)
+			return true
+		})
+	}
 	if (view.tab === "sides")
 		return {
 			...view,
 			sides: view.sides.map((side) => ({
 				...side,
-				here: list(side.here),
+				here: onePer(side.here).slice(0, HERE),
 				image: one(side.image),
-				moreOfThis: list(side.moreOfThis),
+				moreOfThis: onePer(side.moreOfThis),
 				edges: side.edges.map((edge) => ({
 					...edge,
-					rated: list(edge.rated),
-					suggestions: list(edge.suggestions),
+					rated: onePer(edge.rated),
+					suggestions: onePer(edge.suggestions),
 					image: one(edge.image),
 				})),
 			})),

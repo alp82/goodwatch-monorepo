@@ -41,7 +41,8 @@ const MAX_SIDES = 5
 const HOLDS_TOGETHER = 0.55
 // A loved title this far from its side's center fits no side and is left out.
 const FITS_NO_SIDE = 0.15
-const HERE = 4
+// Candidates for "You're here": the view keeps four after leaving out a franchise's second title.
+const HERE = 8
 // Titles above z 1.2 on an attribute carry it strongly.
 const STRONG_Z = 1.2
 const EXCLUDED_COUNTRIES = new Set(["US", "GB"])
@@ -163,7 +164,9 @@ function group(loved: RatedTitle[], person: Person) {
 			})
 			assigned = loved.map((p) => nearest(p.z, centers).index)
 		}
-		if (centers.length < 2) continue
+		// Fewer than two sides big enough to stand: this k has no sides.
+		const sizes = centers.map((_, i) => assigned.filter((a) => a === i).length)
+		if (centers.length < 2 || sizes.some((size) => size < minSize)) continue
 		const closeness = average(
 			loved.map((p, j) => cosine(p.z, centers[assigned[j]])),
 		)
@@ -252,6 +255,18 @@ function sideMoods(members: RatedTitle[]): MoodKey[] {
 		.sort((a, b) => b.share - a.share)
 		.slice(0, MAX_SIDE_MOODS)
 		.map((m) => m.mood)
+}
+
+/** "The Lord of the Rings: The Two Towers" and "...: The Return of the King" are one franchise: "lord of the". */
+export function franchiseOf(title: string): string {
+	return title
+		.toLowerCase()
+		.replace(/^(the|a|an) /, "")
+		.split(/:| part | \d| - /)[0]
+		.trim()
+		.split(/\s+/)
+		.slice(0, 3)
+		.join(" ")
 }
 
 // ---------- More of this ----------
@@ -421,7 +436,7 @@ function placeEdges(
 		)
 			continue
 		const avg = rated.length ? average(rated.map((r) => r.score)) : null
-		if (avg !== null && avg < person.mu - 0.3) continue
+		if (avg !== null && avg < person.mu) continue
 		const suggestions = edgeSuggestions(person, there.slice(0, 16))
 		if (!suggestions) continue
 		edges.push({
@@ -475,8 +490,8 @@ function stepEdges(
 	const steps = NON_CRAFT.flatMap((k) => {
 		const key = KEYS[k]
 		if (UNNAMED.has(key) || taken.has(key)) return []
-		const inSide =
-			side.members.filter((m) => m.z[k] > STRONG_Z).length / side.members.length
+		const carriers = side.members.filter((m) => m.z[k] > STRONG_Z).length
+		const inSide = carriers / side.members.length
 		if (inSide > 0.12 || side.center[k] > 0.3) return []
 		const hit = person.rated.filter(
 			(r) => r.z[k] > STRONG_Z && nearest(r.z, centers).index === index,
@@ -501,6 +516,7 @@ function stepEdges(
 			{
 				key,
 				avg,
+				carriers,
 				inSide,
 				hit,
 				suggestions,
@@ -520,7 +536,7 @@ function stepEdges(
 			name: `+ ${capitalize(word)}`,
 			tail: `but ${word}`,
 			toward: null,
-			why: `Near this side, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${share ? `only ${share}%` : "none"} of this side ${share === 1 ? "is" : "are"}.`,
+			why: `Near this side, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${step.carriers === 0 ? "none" : share < 1 ? "less than 1%" : `only ${share}%`} of this side ${share === 1 ? "is" : "are"}.`,
 			average: round1(step.avg),
 			count: step.hit.length,
 			rated: ratedKeys(step.hit),
@@ -564,7 +580,7 @@ function bridgeEdge(
 	if (!suggestions) return null
 	const rated = person.rated.filter((r) => between(r.z))
 	const avg = rated.length ? average(rated.map((r) => r.score)) : null
-	if (avg !== null && rated.length >= 3 && avg < person.mu - 0.3) return null
+	if (avg !== null && avg < person.mu) return null
 	bridged.add(pair)
 	return {
 		id: `${side.id}-toward-${other.id}`,
