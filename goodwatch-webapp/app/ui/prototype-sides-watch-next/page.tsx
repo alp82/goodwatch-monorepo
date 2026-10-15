@@ -22,7 +22,7 @@ import { AfterThat, SideChip, Tiers, sideBar, sideById, useParam } from "./bits"
 import { Grouped } from "./Grouped"
 import { Lanes } from "./Lanes"
 import { Legend } from "./Legend"
-import { Picker } from "./Picker"
+import { EmptySide, Picker } from "./Picker"
 import { VARIANTS, type SwnView } from "./model"
 
 function DataBar({ view }: { view: SwnView }) {
@@ -176,16 +176,16 @@ function Page({ view }: { view: SwnView }) {
 		)
 	else if (view.variant === "grouped")
 		body = (
-			<>
+			<TitleAsideContext.Provider value={aside}>
 				{hero}
 				<Grouped view={view} />
-			</>
+			</TitleAsideContext.Provider>
 		)
 	else if (view.variant === "picker")
 		body = (
 			<TitleAsideContext.Provider value={aside}>
 				<Picker view={view} />
-				{hero}
+				{view.side && !view.fitting.length ? <EmptySide view={view} strip={strip} /> : hero}
 				<div className={`${WRAP} pt-8`}>
 					<AfterThat
 						view={view}

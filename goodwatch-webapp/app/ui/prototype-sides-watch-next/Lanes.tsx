@@ -25,7 +25,16 @@ export function Lanes({ view, strip }: { view: SwnView; strip: ReactNode }) {
 	const shown = new Set<TitleKey>(lanes.flatMap((l) => l.keys.slice(0, 1 + NEXT)))
 	// The hero and Then are part of the steps here: the lanes replace the hero.
 	const head = [view.data.hero, ...view.data.thenColumn].flatMap((t) => (t ? [t.key] : []))
-	const tiers: SwnTier[] = view.tiers.length ? view.tiers.map((t, i) => (i === 0 ? { ...t, keys: [...head, ...t.keys] } : t)) : [{ key: "upNext", label: "Up next", note: null, size: "xl", keys: head }]
+	// The hero and Then join Up next; what the lanes show leaves every step; the first fitting step left is Up next.
+	const fitsHead = view.fitting.length > 0
+	// When nothing fits, the hero and Then are the first of what doesn't: they rejoin the first step.
+	const merged: SwnTier[] =
+		view.tiers[0]?.key === "upNext" || (!fitsHead && view.tiers.length)
+			? view.tiers.map((t, i) => (i === 0 ? { ...t, keys: [...head, ...t.keys] } : t))
+			: [{ key: "upNext", label: "Up next", note: null, size: "xl", keys: head }, ...view.tiers]
+	const left = merged.map((t) => ({ ...t, keys: t.keys.filter((k) => !shown.has(k)) })).filter((t) => t.keys.length)
+	const FITS = ["upNext", "soon", "later", "someday"]
+	const tiers = left.map((t, i) => (i === 0 && FITS.includes(t.key) && t.key !== "upNext" ? { ...t, label: "Up next" } : t))
 	const backdrop = lanes[0]?.keys[0] ? view.titles[lanes[0].keys[0]]?.backdrop_path : null
 	if (!view.data.total)
 		return (
@@ -53,7 +62,7 @@ export function Lanes({ view, strip }: { view: SwnView; strip: ReactNode }) {
 									<div className="flex items-center gap-2 border-b-2 pb-2" style={{ borderColor: side.color }}>
 										<SideFaces side={side} view={view} size="xs" />
 										<div className="min-w-0">
-											<p className="truncate text-sm font-bold text-white">{view.names ? side.name : `Side ${i + 1}`}</p>
+											<p className="line-clamp-2 text-sm font-bold text-white">{view.names ? side.name : `Side ${i + 1}`}</p>
 											<p className="text-[11px] text-gray-400">
 												{pct(side.share)} of what you love · {keys.length} fit
 											</p>
@@ -96,7 +105,7 @@ export function Lanes({ view, strip }: { view: SwnView; strip: ReactNode }) {
 			</section>
 			<div className={`${WRAP} pt-6`}>
 				<AfterThat view={view} line="Everything else, by Best match, with each title's side in its color. Each step further down gets smaller." />
-				<Tiers view={view} tiers={tiers} only={(k) => !shown.has(k)} mark={sideBar(view)} />
+				<Tiers view={view} tiers={tiers} mark={sideBar(view)} />
 			</div>
 		</>
 	)

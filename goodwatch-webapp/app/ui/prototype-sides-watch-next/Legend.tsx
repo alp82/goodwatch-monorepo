@@ -15,7 +15,7 @@ export function Legend({ view }: { view: SwnView }) {
 						<div className="flex items-center gap-3">
 							<SideFaces side={side} view={view} size="sm" />
 							<div className="min-w-0">
-								<p className="truncate text-sm font-bold text-white">{view.names ? side.name : `Side ${i + 1}`}</p>
+								<p className="line-clamp-2 text-sm font-bold text-white">{view.names ? side.name : `Side ${i + 1}`}</p>
 								<p className="text-xs text-gray-400">
 									{pct(side.share)} of what you love · {side.fitting} fit tonight
 								</p>

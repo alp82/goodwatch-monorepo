@@ -126,7 +126,9 @@ export async function swnView(request: Request, o: SwnOptions): Promise<SwnView 
 	// ---- head and tiers, as production cuts them, with "From your other sides" for the picker ----
 	const fitsAll = (e: (typeof entries)[number]) => e.fit === need && !e.over
 	const fitting = ranked.filter(fitsAll)
-	const head = (fitting.length || !ranked.length ? fitting : ranked).slice(0, 1 + THEN)
+	// With a side picked and nothing of it fitting, there is no hero: the page says so (another side's title would
+	// read as this side's pick).
+	const head = (fitting.length || !ranked.length || picked ? fitting : ranked).slice(0, 1 + THEN)
 	const inHead = new Set(head.map((e) => e.key))
 	const rest = ranked.filter((e) => !inHead.has(e.key))
 	const otherSides = picked ? rest.filter((e) => !inSide(e.key) && e.fit === need - 1 && !e.over) : []
@@ -136,7 +138,7 @@ export async function swnView(request: Request, o: SwnOptions): Promise<SwnView 
 		key,
 		size,
 		label: key === "otherSides" ? "From your other sides" : TIER_LABEL[key as WatchNextTierKey],
-		note: key === "otherSides" ? "They fit tonight, but belong to another side." : (TIER_NOTE[key as WatchNextTierKey] ?? null),
+		note: key === "otherSides" ? "They fit tonight, but belong to another side or to none." : (TIER_NOTE[key as WatchNextTierKey] ?? null),
 		keys: l.map((e) => e.key),
 	})
 	const fits = later.filter(fitsAll)

@@ -56,7 +56,7 @@ export function Grouped({ view }: { view: SwnView }) {
 								<div>
 									<h3 className={`${DISPLAY} text-xl text-white md:text-2xl`}>{view.names ? side.name : `Side ${i + 1}`}</h3>
 									<p className="text-sm text-gray-400">
-										{pct(side.share)} of what you love · {n} here, {side.fitting} fit tonight
+										{pct(side.share)} of what you love · {n} more here, {side.fitting} fit tonight
 									</p>
 								</div>
 								<MoodButton side={side} />
