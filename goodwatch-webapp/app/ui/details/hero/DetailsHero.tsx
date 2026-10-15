@@ -42,6 +42,8 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 	)
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
+			{/* PROTOTYPE (#662): the rating-moment prototype's data bar. */}
+			<div data-proto-moment="bar" className="empty:hidden" />
 			<div {...sectionProps.overview}>
 				{/* z-30 keeps the country popover above the sections below. */}
 				<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
@@ -70,6 +72,8 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 								</div>
 							</div>
 							<div className="mt-3.5 md:hidden">{sites}</div>
+							{/* PROTOTYPE (#662): the "hero" variant's band. */}
+							<div data-proto-moment="hero" className="empty:hidden" />
 						</div>
 					</div>
 					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">

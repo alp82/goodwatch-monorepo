@@ -167,7 +167,7 @@ export async function protoView(request: Request, variant: VariantKey, slot: str
 	}
 }
 
-async function enrich(person: NonNullable<Awaited<ReturnType<typeof protoPerson>>>["person"], keys: Set<TitleKey>) {
+export async function enrich(person: NonNullable<Awaited<ReturnType<typeof protoPerson>>>["person"], keys: Set<TitleKey>) {
 	const { input, snapshot } = person
 	const displays = await titleDisplays(keys)
 	const unseen = [...keys].filter((key) => !input.scores.has(key))

@@ -4,7 +4,7 @@
 // A sheet from the bottom edge on a phone, a dialog in the middle of the screen from md up. It is fixed to the
 // screen and rendered into the body, so it is inside the screen wherever the page is scrolled and whatever its
 // opener sits in.
-import { type RefObject, useEffect, useLayoutEffect, useRef } from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import type { Score } from "~/server/scores.server"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
@@ -20,6 +20,7 @@ export default function ScoreDialog({
 	onRate,
 	onClear,
 	onClose,
+	after,
 }: {
 	title: string
 	open: boolean
@@ -30,12 +31,14 @@ export default function ScoreDialog({
 	onRate: (score: Score) => void
 	onClear: () => void
 	onClose: () => void
+	/** PROTOTYPE (#662): what the sheet shows under the score strip after a score. */
+	after?: ReactNode
 }) {
 	if (!open) return null
-	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} />
+	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} after={after} />
 }
 
-function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
+function Panel({ title, value, busy, opener, onRate, onClear, onClose, after }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const closeRef = useRef(onClose)
@@ -90,7 +93,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Pa
 				aria-modal="true"
 				aria-label={`Your score for ${title}`}
 				tabIndex={-1}
-				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[30rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
+				className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[30rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
 			>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
 				<div className="mb-3 flex items-center justify-between gap-3">
@@ -108,6 +111,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Pa
 					</button>
 				</div>
 				<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
+				{after}
 			</div>
 		</div>,
 		document.body,

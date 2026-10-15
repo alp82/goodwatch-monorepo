@@ -4,6 +4,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
 import { type ScoredMedia, useScoreAction } from "~/ui/user/actions/ScoreAction"
+import { useRatingMoment } from "~/ui/prototype-rating-moment/useRatingMoment"
 import { useOpenedOnce } from "~/utils/first-use"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -25,7 +26,10 @@ export function openScorePicker() {
 }
 
 export default function OwnScore({ media, className = "" }: { media: ScoredMedia; className?: string }) {
-	const score = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	// PROTOTYPE (#662): with ?variant=toast|sheet|hero|shape in dev, scores stay in the page and the rating moment shows.
+	const moment = useRatingMoment(media)
+	const realScore = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	const score = (moment ? moment.score : realScore) as typeof realScore
 	const { rate, isPending } = useScoreAction(media)
 	const [open, setOpen] = useState(false)
 	const opened = useOpenedOnce(open)
@@ -108,15 +112,22 @@ export default function OwnScore({ media, className = "" }: { media: ScoredMedia
 						busy={isPending}
 						opener={button}
 						onRate={(value) => {
+							if (moment) {
+								moment.rate(value)
+								if (!moment.keepOpen) setOpen(false)
+								return
+							}
 							// A guest at the rating limit gets the sign-up prompt instead; either way this dialog is done.
 							rate(value)
 							setOpen(false)
 						}}
-						onClear={() => rate(null)}
+						onClear={() => (moment ? moment.clear() : rate(null))}
 						onClose={() => setOpen(false)}
+						after={moment?.sheet(() => setOpen(false))}
 					/>
 				</Suspense>
 			)}
+			{moment?.node}
 		</>
 	)
 }
