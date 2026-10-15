@@ -373,3 +373,21 @@ completes against database state after its Valkey entry is removed, while all
 10,050 unrelated expired rows remain for paged maintenance collection. The test
 then collects a bounded page without a global sweep. The adapter inventory also
 checks that both expiry find-many and delete-many calls are refused.
+
+## Re-review verification — October 15, 2026
+
+Product head `efbf5e5b` fixes both N1 and N2 from the
+[follow-up review](https://github.com/alp82/goodwatch-monorepo/pull/587#issuecomment-6181911734).
+The full local Docker suite passed **76/76** cases. The Node 24 Docker CI runs passed
+[76/76 maintenance/auth/MCP cases](https://github.com/alp82/goodwatch-monorepo/actions/runs/38664563993)
+and [287/287 adapter/conformance/failover cases](https://github.com/alp82/goodwatch-monorepo/actions/runs/38664568114).
+The 10,050-row fixture uses normal runtime writes and per-identifier ledgers,
+not direct bulk SQL seeding. Both repros failed before their respective fixes.
+
+Focused auth types, focused Biome, shell syntax, the production build with
+Sentry upload and Better Auth disabled, and 63 endpoint/cache/metrics tests pass.
+Whole-app type checking still reports exactly the same 174 baseline diagnostics:
+no added or removed diagnostics after normalizing source positions. No production
+access, deployment or merge was performed. The importer module remains byte-for-byte
+identical to #551 at `5e97cd2a`; import idempotency is checked before new-auth
+confirmation changes, as the importer rejects divergent target state.

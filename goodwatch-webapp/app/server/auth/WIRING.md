@@ -35,7 +35,7 @@ errors and malformed entries fail closed. Complete enumeration is configured
 at the adapter's 10,000-row enumeration bound. #565 scopes issuance allowances
 to each member/client, keeps the 20 newest browser sessions per member, removes evicted Valkey entries,
 bounds the cache index to 20 references, and has
-no global user/account cap. DCR is limited to 30 attempts per trusted IP per hour;
+no global user/account cap. DCR is limited to 30 attempts per trusted IP per hour.
 Unused clients expire after 24 hours. Only new-system signups receive private
 insertion provenance and qualify for unconfirmed collection after 48 hours from
 insertion/latest confirmation issuance. Imported and unmarked members never qualify;
