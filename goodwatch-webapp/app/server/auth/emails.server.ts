@@ -1,4 +1,4 @@
-// The account emails (#534, #550): one look for all five, as the prototype showed it. Every email has a plain-text
+// The account emails (#534, #550, #553): one look for all of them, as the prototype showed it. Every email has a plain-text
 // part with the same words and the full link, for mail apps that show no HTML.
 export type AuthEmail = { subject: string; text: string; html: string }
 
@@ -105,6 +105,29 @@ export const existingAccountEmail = (origin: string) =>
 		body: "Someone tried to create a GoodWatch account with this email, but there is one already. Sign in to it, or set a new password if you forgot it.",
 		button: { label: "Sign in", url: `${origin}/sign-in` },
 		footer: "Wasn't you? Ignore this email; nothing changes.",
+	})
+
+// Account deletion (#553). The link opens the site's confirmation page; nothing is deleted until the member presses
+// the button there, so a mail scanner that opens links deletes nothing.
+export const deleteAccountEmail = (address: string, url: string) =>
+	email({
+		subject: "Confirm deleting your GoodWatch account",
+		preheader: "One more step, and your account is gone for good.",
+		title: "Delete your account?",
+		body: `Someone (we hope you) asked to delete the GoodWatch account of ${address}. Deleting it removes your ratings, Want to See, watch history, lists and settings, and disconnects apps like Claude. It can't be undone.`,
+		button: { label: "Delete my account", url },
+		footer:
+			"The link works for one hour and only once. Didn't ask for this? Ignore this email; your account stays as it is.",
+	})
+
+export const accountDeletedEmail = (origin: string) =>
+	email({
+		subject: "Your GoodWatch account is deleted",
+		preheader: "Everything you saved is gone, and connected apps are disconnected.",
+		title: "Your account is deleted",
+		body: "Your GoodWatch account and everything you saved in it are deleted, and connected apps like Claude are disconnected. You can create a new account with this email at any time.",
+		button: { label: "Visit GoodWatch", url: origin },
+		footer: "Didn't delete your account? Write to hello@goodwatch.app.",
 	})
 
 export const googleOnlyEmail = (origin: string) =>

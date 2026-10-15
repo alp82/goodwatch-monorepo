@@ -121,3 +121,6 @@ goodwatch-webapp/scripts/auth-mcp/results/
 
 # Disposable auth maintenance evidence
 goodwatch-webapp/scripts/auth-maintenance/results/
+
+# Disposable account deletion evidence
+goodwatch-webapp/scripts/auth-deletion/results/

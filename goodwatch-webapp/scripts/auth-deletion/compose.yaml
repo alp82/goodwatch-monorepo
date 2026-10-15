@@ -1,0 +1,19 @@
+# Account deletion (#553): the wiring's services on their own loopback ports (16200-16299), so this suite runs beside
+# the other auth suites on one Docker daemon.
+services:
+  node1:
+    ports: !override ['127.0.0.1:16248:4200']
+  node2:
+    ports: !override ['127.0.0.1:16249:4200']
+  node3:
+    ports: !override ['127.0.0.1:16250:4200']
+  valkey1:
+    ports: !override ['127.0.0.1:16201:6379']
+  valkey2:
+    ports: !override ['127.0.0.1:16202:6379']
+  valkey3:
+    ports: !override ['127.0.0.1:16203:6379']
+  smtp:
+    ports: !override ['127.0.0.1:16225:1025', '127.0.0.1:16280:8025']
+  data-cache:
+    ports: !override ['127.0.0.1:16204:6379']

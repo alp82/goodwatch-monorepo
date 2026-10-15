@@ -1,14 +1,18 @@
-import { createHash, randomUUID } from "node:crypto"
+import { createHash, randomBytes, randomUUID } from "node:crypto"
 import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
 	APIError,
 	createAuthMiddleware,
 	createEmailVerificationToken,
 	getIP,
+	getSessionFromCtx,
 } from "@goodwatch/auth-stack/api"
 import { cimd } from "@goodwatch/auth-stack/cimd"
 import { fetchClientMetadataResource } from "@goodwatch/auth-stack/cimd-node"
-import { setSessionCookie } from "@goodwatch/auth-stack/cookies"
+import {
+	deleteSessionCookie,
+	setSessionCookie,
+} from "@goodwatch/auth-stack/cookies"
 import { hashPassword, verifyPassword } from "@goodwatch/auth-stack/crypto"
 import { mcp } from "@goodwatch/auth-stack/mcp"
 import { jwt } from "@goodwatch/auth-stack/plugins"
@@ -22,7 +26,9 @@ import {
 import type { AuthMailQueue } from "./mail.server.ts"
 import {
 	type AuthEmail,
+	accountDeletedEmail,
 	confirmEmail,
+	deleteAccountEmail,
 	existingAccountEmail,
 	googleOnlyEmail,
 	passwordChangedEmail,
@@ -63,8 +69,16 @@ export function createGoodwatchAuth(options: {
 	rateLimit?: BetterAuthOptions["rateLimit"]
 	mcp?: { resource: string; accessTokenExpiresIn?: number }
 	google: { clientId: string; clientSecret: string }
+	/**
+	 * Account deletion (#553), on only with the webapp's member data deletion: deleting the sign-in rows without the
+	 * member's data would strand it. `linkSeconds`: how long an emailed confirmation link works (one hour).
+	 */
+	accountDeletion?: {
+		deleteMemberData: (userId: string) => Promise<void>
+		linkSeconds?: number
+	}
 }) {
-	const { mail } = options
+	const { mail, accountDeletion } = options
 	const origin = new URL(options.baseURL).origin
 	const send = (to: string, message: AuthEmail) =>
 		mail.enqueue(to, message.subject, message.text, message.html)
@@ -85,6 +99,44 @@ export function createGoodwatchAuth(options: {
 	}
 	const tokenHash = (token: string) =>
 		createHash("sha256").update(token).digest("base64url")
+	const memberKey = (userId: string) =>
+		createHash("sha256").update(userId).digest("hex")
+	// Account deletion (#553), before the member's data goes: every app grant (Connected apps) with its refresh
+	// tokens, the apps the member registered, and every session, so no device or app writes while the data is
+	// deleted. Deleting refresh tokens by client and member closes the grant's version first (#565), so a token
+	// issued meanwhile cannot outlive it; the MCP verifier then refuses the grant's access tokens.
+	const revokeMemberAccess = async (userId: string) => {
+		const context = await core.$context
+		if (options.mcp) {
+			const consents = await context.adapter.findMany<{
+				id: string
+				clientId: string
+			}>({ model: "oauthConsent", where: [{ field: "userId", value: userId }] })
+			for (const consent of consents) {
+				await context.adapter.deleteMany({
+					model: "oauthRefreshToken",
+					where: [
+						{ field: "clientId", value: consent.clientId },
+						{ field: "userId", value: userId },
+					],
+				})
+				await context.adapter.delete({
+					model: "oauthConsent",
+					where: [{ field: "id", value: consent.id }],
+				})
+			}
+			const clients = await context.adapter.findMany<{ clientId: string }>({
+				model: "oauthClient",
+				where: [{ field: "userId", value: userId }],
+			})
+			for (const client of clients)
+				await context.adapter.delete({
+					model: "oauthClient",
+					where: [{ field: "clientId", value: client.clientId }],
+				})
+		}
+		await context.internalAdapter.deleteUserSessions(userId)
+	}
 	const core = betterAuth({
 		baseURL: options.baseURL,
 		secret: options.secret,
@@ -262,6 +314,37 @@ export function createGoodwatchAuth(options: {
 					returned: false,
 				},
 			},
+			// #553: `POST /delete-user` with the password deletes at once (the before hook turns a correct password into a
+			// one-minute token); without one it emails a link to /delete-account, whose button posts the token. Google-only
+			// members have no password, so they confirm by email. The GET callback is closed: opening a link never deletes.
+			deleteUser: accountDeletion
+				? {
+						enabled: true,
+						deleteTokenExpiresIn: accountDeletion.linkSeconds ?? 3600,
+						sendDeleteAccountVerification: async ({ user, token }) => {
+							send(
+								user.email,
+								deleteAccountEmail(
+									user.email,
+									`${origin}/delete-account?token=${encodeURIComponent(token)}`,
+								),
+							)
+						},
+						beforeDelete: async (user) => {
+							await revokeMemberAccess(user.id)
+							await accountDeletion.deleteMemberData(user.id)
+						},
+						afterDelete: async (user) => {
+							// The account is gone either way: a failure here leaves rows that a request already running wrote late.
+							try {
+								await accountDeletion.deleteMemberData(user.id)
+							} catch {
+								console.error("Account deletion: the second pass over member data failed")
+							}
+							send(user.email, accountDeletedEmail(origin))
+						},
+					}
+				: undefined,
 		},
 		advanced: {
 			cookiePrefix: "gw",
@@ -345,6 +428,64 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
+				if (ctx.path === "/delete-user/callback")
+					throw new APIError("NOT_FOUND")
+				if (accountDeletion && ctx.path === "/delete-user") {
+					const session = await getSessionFromCtx(ctx)
+					// Upstream answers 401 for a signed-out request. The body is changed in place: upstream reads this object.
+					if (session) {
+						const body = (
+							ctx.body && typeof ctx.body === "object" ? ctx.body : {}
+						) as { password?: unknown; token?: unknown }
+						const member = memberKey(session.user.id)
+						if (typeof body.password === "string") {
+							// A stolen session must not become a way to guess the password: ten tries an hour, right or wrong.
+							if (
+								(await options.storage.increment(
+									`delete-password:${member}`,
+									3600,
+								)) > 10
+							)
+								throw new APIError("TOO_MANY_REQUESTS", {
+									message: "Please wait before trying again.",
+								})
+							const account =
+								await ctx.context.internalAdapter.findCredentialAccount(
+									session.user.id,
+								)
+							// No password (Google only) answers the same as a wrong one.
+							if (
+								!account?.password ||
+								!(await verifyCurrentPassword(account.password, body.password))
+							)
+								throw new APIError("BAD_REQUEST", {
+									message: "Invalid password",
+									code: "INVALID_PASSWORD",
+								})
+							// The confirmed password becomes a one-minute deletion token, which upstream consumes and checks
+							// against this session, as it does an emailed one; with sendDeleteAccountVerification set it would
+							// otherwise email a link even after a correct password.
+							const token = randomBytes(32).toString("base64url")
+							await ctx.context.internalAdapter.createVerificationValue({
+								value: session.user.id,
+								identifier: `delete-account-${token}`,
+								expiresAt: new Date(Date.now() + 60_000),
+							})
+							body.password = undefined
+							body.token = token
+						} else if (typeof body.token !== "string") {
+							if (
+								(await options.storage.increment(
+									`delete-mail:${member}`,
+									3600,
+								)) > 5
+							)
+								throw new APIError("TOO_MANY_REQUESTS", {
+									message: "Please wait before requesting another email.",
+								})
+						}
+					}
+				}
 				if (options.mcp && ctx.path === "/oauth2/register") {
 					const ip = createHash("sha256")
 						.update(
@@ -564,6 +705,13 @@ export function createGoodwatchAuth(options: {
 				if (!consumed) throw invalid()
 			}),
 			after: createAuthMiddleware(async (ctx) => {
+				// Upstream deletes by token through an inner call whose cookie change never reaches the response.
+				if (
+					ctx.path === "/delete-user" &&
+					(ctx.context.returned as { message?: string } | undefined)
+						?.message === "User deleted"
+				)
+					deleteSessionCookie(ctx)
 				if (
 					ctx.path === "/change-password" &&
 					(ctx.context.returned as { token?: string })?.token &&

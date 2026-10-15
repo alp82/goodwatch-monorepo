@@ -20,7 +20,7 @@ export function smtpTransport(options: {
 	const port = options.port ?? 465
 	if (
 		options.localCatcher &&
-		(host !== "127.0.0.1" || ![15525, 15625, 15925].includes(port))
+		(host !== "127.0.0.1" || ![15525, 15625, 15925, 16225].includes(port))
 	)
 		throw new Error("Local SMTP catcher required")
 	if (

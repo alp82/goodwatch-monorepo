@@ -162,17 +162,19 @@ export async function getProfilePage(
 		: null
 }
 
-export async function resetProfileViews(userId: string): Promise<void> {
-	let handle: string | undefined
-	try {
-		const [row] = await select<{ handle: string }>(
-			"SELECT handle FROM doc.user_profile WHERE user_id = ?",
-			[userId],
-		)
-		handle = row?.handle
-	} catch (error) {
-		console.error("Looking up profile for cache reset failed:", error)
-	}
+/** `knownHandle`: the handle of a profile that is already gone, as after account deletion. */
+export async function resetProfileViews(userId: string, knownHandle?: string): Promise<void> {
+	let handle = knownHandle
+	if (!handle)
+		try {
+			const [row] = await select<{ handle: string }>(
+				"SELECT handle FROM doc.user_profile WHERE user_id = ?",
+				[userId],
+			)
+			handle = row?.handle
+		} catch (error) {
+			console.error("Looking up profile for cache reset failed:", error)
+		}
 	await resetCacheConfirmed({ name: PROFILE_CACHE.name, params: { userId } })
 	if (handle) {
 		const profilePath = `/u/${normalizeHandle(handle)}`

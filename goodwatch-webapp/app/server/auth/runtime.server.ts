@@ -22,6 +22,17 @@ export const betterAuthEnabled = () =>
 export function setAuthForTest(auth: AuthService | null) {
 	testAuth = auth
 }
+// Account deletion (#553) removes the member's rows from the webapp's own CrateDB tables. The server entry registers
+// that part (server/account-deletion.server.ts), as it does the Valkey cluster: the sign-in service imports none of
+// the app's member data modules. Until it is registered, deleting an account answers 404.
+let memberDataDeletion: ((userId: string) => Promise<void>) | null = null
+export function registerMemberDataDeletion(
+	deleteMemberData: (userId: string) => Promise<void>,
+) {
+	memberDataDeletion = deleteMemberData
+}
+const accountDeletion = () =>
+	memberDataDeletion ? { deleteMemberData: memberDataDeletion } : undefined
 function required(name: string) {
 	const value = process.env[name]
 	if (!value) throw new Error(`Missing auth configuration: ${name}`)
@@ -71,6 +82,7 @@ export async function getBetterAuth(): Promise<AuthService> {
 				clientId: required("AUTH_GOOGLE_CLIENT_ID"),
 				clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),
 			},
+			accountDeletion: accountDeletion(),
 		})
 		const maintenance = startAuthMaintenance({
 			sql,
@@ -110,6 +122,7 @@ function localAuth(): AuthService {
 			clientId: required("AUTH_GOOGLE_CLIENT_ID"),
 			clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),
 		},
+		accountDeletion: accountDeletion(),
 	})
 }
 export async function handleAuthRequest(request: Request): Promise<Response> {
