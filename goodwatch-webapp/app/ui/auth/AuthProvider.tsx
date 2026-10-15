@@ -55,10 +55,13 @@ export function AuthProvider({
 		// so the next navigation asks again.
 		if (keptLoaderData("root")) return
 		rootRevalidated()
+		// With Better Auth no client hears a signed-out page load, so the loader's "no one" ends a marker that an
+		// earlier member left in this tab. Otherwise a later sign-in as that member would skip adopting the guest's choices.
+		if (betterAuth && !initialUser) clearMediaSession()
 		setUser((current) =>
 			current && current.id === initialUser?.id ? current : initialUser,
 		)
-	}, [initialUser])
+	}, [initialUser, betterAuth])
 
 	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
 	// its auth changes, so a sign-in that follows can't be missed.
@@ -168,7 +171,6 @@ export function AuthProvider({
 		requestRootRevalidation()
 		revalidate()
 	}, [revalidate])
-
 
 	const value = useMemo(
 		() => ({

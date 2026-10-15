@@ -355,6 +355,17 @@ try {
 		await p.context().close()
 	}
 
+	// 13b. A guest tab that still holds an earlier member's media-session marker drops it on a full page load, so a
+	// later sign-in as that member moves the guest's media preferences to the account.
+	{
+		const p = await newPage("desktop")
+		await p.addInitScript(() => sessionStorage.setItem("gw_media_session_v2", "earlier-member-id"))
+		await go(p, "/sign-in")
+		check("the stale-marker sign-in page loads as a guest",(await signedInAs(p)) === null)
+		check("a guest page load clears a stale media-session marker", (await p.evaluate(() => sessionStorage.getItem("gw_media_session_v2"))) === null)
+		await p.context().close()
+	}
+
 	// 14. Google-only member asking for a reset gets the "you sign in with Google" email (made directly in CrateDB is
 	// beyond this drive; the wiring suite covers it). Render the template from a known address instead.
 } catch (error) {
