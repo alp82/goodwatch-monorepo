@@ -1,0 +1,19 @@
+{
+  "host": 12,
+  "stmt": "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'primaries'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:11:36.134944+00:00",
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 58.003574
+    },
+    "at": "2026-10-15T19:11:36.199663+00:00",
+    "elapsedSeconds": 0.065
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-15T19:16:06.208350+00:00",
+  "observerError": "The ABIO host Python does not support dict union; the log-follow thread failed before processing output. Corrected local observer to dict.update and reattached to retained current logs.",
+  "coverage": "Original ABIO f4be page container was removed by concurrent external deployment before successful collection. Its post-baseline events/counters cannot be reconstructed from Docker. Captured full-window totals are minima, not proven zeros. The vector1 old page was followed before removal and retained; both new a9aa page containers are recaptured from window start.",
+  "productionScope": "Read-only observer correction; no app changes by this operation."
+}

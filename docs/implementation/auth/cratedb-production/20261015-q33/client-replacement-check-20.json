@@ -1,0 +1,28 @@
+{
+  "gk4owk8-20261015T185942": {
+    "exists": false
+  },
+  "gk4owk8-20261015T190148": {
+    "exists": false
+  },
+  "containers": [
+    "gk4owk8-20261015T191215|ghcr.io/alp82/goodwatch-webapp:a9aa22e85ac641f2bcc17a54fff3b71fc4980d40|Up About a minute (healthy)",
+    "goodwatch-search-b|ghcr.io/alp82/goodwatch-webapp:02b3ca5bd1c2c233efa61a1cf587e07a8db57177|Up 52 minutes (healthy)",
+    "goodwatch-search-a|ghcr.io/alp82/goodwatch-webapp:02b3ca5bd1c2c233efa61a1cf587e07a8db57177|Up 52 minutes (healthy)",
+    "goodwatch-qdrant-backup-cycles-100|3d698950ee07|Exited (0) 3 days ago",
+    "coolify-proxy|traefik:v3.6|Up 4 days (healthy)",
+    "grafana-alloy|grafana/alloy:v1.7.5|Up 6 days",
+    "coolify-sentinel|coollabsio/sentinel:1.0.2|Up 8 days (healthy)",
+    "qdrant-main|qdrant/qdrant:v1.19.1|Up 2 weeks (healthy)",
+    "windmill-highperf_worker-1|windmill-highperf_worker|Up 2 weeks",
+    "windmill-default_worker-1|windmill-default_worker|Up 2 weeks",
+    "aistack-dashboard-1|ghcr.io/get-convex/convex-dashboard:latest|Up 3 months",
+    "aistack-backend-1|ghcr.io/get-convex/convex-backend:latest|Up 3 months (healthy)",
+    "node-exporter|prom/node-exporter:latest|Up 5 months",
+    "manaschmiede-dashboard-1|ghcr.io/get-convex/convex-dashboard:latest|Up 6 months",
+    "manaschmiede-backend-1|ghcr.io/get-convex/convex-backend:latest|Up 6 months (healthy)",
+    "milvus-standalone|milvusdb/milvus:v2.6.4|Exited (255) 11 months ago",
+    "milvus-minio|minio/minio:RELEASE.2024-12-18T13-15-44Z|Exited (255) 11 months ago",
+    "milvus-etcd|quay.io/coreos/etcd:v3.5.18|Exited (255) 11 months ago"
+  ]
+}
