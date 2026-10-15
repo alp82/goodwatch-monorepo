@@ -167,6 +167,8 @@ test("generic writes including increments, CAS and apparent upserts are never re
 		"INSERT INTO saved (id) VALUES (?) ON CONFLICT (id) DO UPDATE SET n = n + 1",
 		"WITH value AS (SELECT 1) DELETE FROM saved WHERE id = ?",
 		"SELECT 1; DELETE FROM saved WHERE id = ?",
+		'REFRESH TABLE "foo/*"; UPDATE saved SET n=n+1; /* */"',
+		"REFRESH TABLE saved; UPDATE saved SET n=n+1",
 	]
 	for (const sql of statements) {
 		const before = received.flat().length
@@ -304,4 +306,61 @@ test("failed attempts and recovery log redacted SQL, coordinator, request, opera
  assert.equal(new Set(events.map(e=>e.queryId)).size,1)
  assert.equal(events.at(-1)?.outcome,"recovered")
  assert.doesNotMatch(JSON.stringify(events),/private-query-text/)
+})
+
+test("a rejoining coordinator that accepts HTTP before metadata arrives does not fail known-table reads", async (t) => {
+ const received=await cluster(t,[
+  (_,__,res)=>{res.writeHead(404,{"Content-Type":"application/json"});res.end(JSON.stringify({error:{message:"RelationUnknown[Relation 'saved' unknown]",code:4041}}))},
+  (_,__,res)=>answer(res),
+  (_,__,res)=>answer(res),
+ ])
+ for(let i=0;i<10;i++)assert.deepEqual(await query("SELECT n FROM saved"),[{n:1}])
+ assert.equal(received[0].length,1,"Other coordinators proved the table exists; keep the joining host out briefly")
+})
+
+test("safe keyed writes can recover a joining coordinator's missing metadata without replaying generic writes", async (t) => {
+ const received=await cluster(t,[
+  (_,__,res)=>{res.writeHead(404,{"Content-Type":"application/json"});res.end(JSON.stringify({error:{message:"RelationUnknown[Relation 'saved' unknown]",code:4041}}))},
+  (_,__,res)=>answer(res),
+  (_,__,res)=>answer(res),
+ ])
+ assert.deepEqual(await upsert({table:"saved",data:[{id:"fixed"}],conflictColumns:["id"]}),{rowcount:1})
+ assert.equal(received.flat().filter(s=>s.stmt.includes("INSERT")).length,1)
+ setCrateClientForTest(null)
+ const before=received.flat().length
+ await assert.rejects(execute("UPDATE saved SET n=n+1 WHERE id=?",["fixed"]),e=>e instanceof CrateError&&e.code===4041)
+ assert.equal(received.flat().length,before+1)
+})
+
+test("a truly missing relation remains a typed SQL error after at most one try per coordinator", async (t) => {
+ const received=await cluster(t,Array.from({length:3},()=> (_,__,res)=>{
+  res.writeHead(404,{"Content-Type":"application/json"});res.end(JSON.stringify({error:{message:"RelationUnknown[Relation 'absent' unknown]",code:4041}}))
+ }))
+ await assert.rejects(query("SELECT * FROM absent"),e=>e instanceof CrateError&&e.code===4041)
+ assert.equal(received.flat().length,3)
+})
+
+test("a fixed-key insert refused by a rejoining coordinator is replayed only with its original keys", async (t) => {
+ const received=await cluster(t,[
+  (_,__,res)=>{res.writeHead(404,{"Content-Type":"application/json"});res.end(JSON.stringify({error:{message:"RelationUnknown[Relation 'saved' unknown]",code:4041}}))},
+  (_,__,res)=>answer(res),
+  (_,__,res)=>answer(res),
+ ])
+ await insertRows("saved",["id","n"],[["fixed",1]],{conflict:["id"]})
+ assert.deepEqual(received[1],received[0])
+ assert.equal(received.flat().length,2)
+})
+
+test("a watch's applied keyed write is not turned into failure by REFRESH on a draining coordinator", async (t) => {
+ const received=await cluster(t,[
+  (_,__,res)=>answer(res),
+  ()=>{},
+  (_,__,res)=>answer(res),
+ ])
+ process.env.CRATE_TIMEOUT_MS="300"
+ await upsert({table:"saved",data:[{id:"fixed",n:1}],conflictColumns:["id"]})
+ await execute('REFRESH TABLE "doc"."saved", user_watch_log')
+ assert.equal(received.flat().filter(s=>s.stmt.includes("INSERT")).length,1)
+ assert.deepEqual(received[1],received[2])
+ assert.equal(received[2].length,1)
 })

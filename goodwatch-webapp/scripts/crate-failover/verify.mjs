@@ -16,22 +16,26 @@ assert.match(process.env.DOCKER_HOST ?? "", /^unix:\//, "Only a local Unix Docke
 assert.ok(!process.env.DOCKER_CONTEXT, "Unset DOCKER_CONTEXT")
 Object.assign(process.env, {
 	CRATE_HOSTS: "127.0.0.1,127.0.0.2,127.0.0.3", CRATE_PORT: "17430",
-	CRATE_USER: "", CRATE_PASS: "", CRATE_TIMEOUT_MS: "10000",
+	CRATE_USER: "crate", CRATE_PASS: "", CRATE_TIMEOUT_MS: "10000",
 })
 const clientPath = process.env.CRATE_PROOF_BASELINE === "1" ? "./baseline-crate.ts" : "../../app/utils/crate.ts"
 const { query, execute, upsert, insertRows, setCrateClientForTest } = await import(clientPath)
 const report = { startedAt: new Date().toISOString(), client: clientPath,
 	clientSha256: createHash("sha256").update(await readFile(new URL(clientPath, import.meta.url))).digest("hex"),
+	baselineCommit: process.env.CRATE_PROOF_BASELINE === "1" ? "d3867c10" : null,
 	nodeVersion: process.version, endpointScope: endpoints, assertions: [], failures: [] }
+report.sourceSha256 = {}
+for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh"])
+ report.sourceSha256[path] = createHash("sha256").update(await readFile(new URL(path, import.meta.url))).digest("hex")
 const log = []
 const progress = console.log.bind(console)
 for (const method of ["log", "warn", "error", "trace"]) console[method] = (...args) => log.push(format(...args))
 const docker = async (...args) => (await exec("docker", [...compose, ...args], { timeout: 120_000 })).stdout.trim()
 const snapshot = async () => (await docker("ps", "-a", "--format", "json")).split("\n").filter(Boolean).map((line) => JSON.parse(line))
-const sql = async (stmt, args = [], endpoint = endpoints[0]) => {
+const sql = async (stmt, args = [], endpoint = endpoints[2], timeoutMs = 10_000) => {
 	const response = await fetch(`${endpoint}/_sql?types`, {
 		method: "POST", headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(10_000),
+		body: JSON.stringify({ stmt, args }), signal: AbortSignal.timeout(timeoutMs),
 	})
 	const result = await response.json()
 	if (!response.ok || result.error) throw new Error(JSON.stringify({ status: response.status, ...result.error }))
@@ -127,6 +131,7 @@ async function lostResponseProof(kind, timeout = false) {
 	}
 }
 
+let pageProof
 try {
 	progress("Waiting for isolated three-node CrateDB cluster")
 	await waitFor("three nodes", async () => (await rows("SELECT count(*) FROM sys.nodes"))[0][0] === 3)
@@ -140,15 +145,26 @@ try {
 	await waitFor("nine STARTED copies", async () => (await rows("SELECT count(*) FROM sys.shards WHERE table_name = 'client_failover_588' AND state = 'STARTED'"))[0][0] === 9)
 	report.beforeShards = await rows("SELECT id, primary, node['name'], state FROM sys.shards WHERE table_name = 'client_failover_588' ORDER BY id, primary DESC, node['name']")
 
+	if (process.env.CRATE_PROOF_PAGES === "1") {
+		const { preparePageProof } = await import("./page-proof.mjs")
+		pageProof = await preparePageProof(sql)
+		report.pageTables = pageProof.tables
+		report.pageRoutes = pageProof.stats
+		await pageProof.warm()
+		await waitFor("all fixture shards GREEN", async () => (await rows("SELECT count(*) FROM sys.health WHERE health <> 'GREEN'"))[0][0] === 0)
+		report.beforeHealth = await rows("SELECT health, count(*) FROM sys.health GROUP BY health")
+		progress("Real page loaders/actions warmed against disposable fixture tables")
+	}
 	const stats = { reads: { succeeded: 0, failed: 0, maxMs: 0 }, keyed: { succeeded: 0, failed: 0 }, upsert: { succeeded: 0, failed: 0 }, generic: { succeeded: 0, failed: 0 } }
 	const written = { keyed: [], upsert: [], generic: [] }
 	let number = 0
 	const start = Date.now()
-	const durationMs = 22_000
+	const durationMs = process.env.CRATE_PROOF_GRACEFUL === "1" ? 45_000 : 22_000
 	const error = (phase, id, exception) => {
 		stats[phase].failed++
 		report.failures.push({ phase, id, atMs: Date.now() - start, message: exception.message, code: exception.code })
 	}
+	const pages = pageProof?.load(durationMs)
 	const readers = Array.from({ length: 4 }, (_, reader) => (async () => {
 		while (Date.now() - start < durationMs) {
 			const begun = performance.now()
@@ -184,25 +200,59 @@ try {
 		})(),
 	]
 	await delay(3_000)
-	report.stop = { requestedAt: new Date().toISOString(), elapsedMs: Date.now() - start, command: "docker compose -p goodwatch-client-588 kill --signal SIGKILL node2" }
-	progress("Stopping node2 during concurrent reads and writes")
-	await docker("kill", "--signal", "SIGKILL", "node2")
+	const graceful = process.env.CRATE_PROOF_GRACEFUL === "1"
+	const target = graceful ? "node1" : "node2"
+	report.stop = { requestedAt: new Date().toISOString(), elapsedMs: Date.now() - start,
+		command: graceful ? "ALTER CLUSTER DECOMMISSION node1" : "docker compose kill --signal SIGKILL node2" }
+	if (graceful) {
+		await sql(`SET GLOBAL TRANSIENT "cluster.graceful_stop.min_availability" = 'primaries', "cluster.graceful_stop.force" = false, "cluster.graceful_stop.timeout" = '2h'`)
+		await sql(`SET GLOBAL TRANSIENT "cluster.routing.allocation.enable" = 'primaries'`)
+		report.stop.settings = await rows("SELECT settings['cluster']['graceful_stop'] FROM sys.cluster")
+		progress("Gracefully decommissioning node1 during concurrent reads and writes")
+		await sql("ALTER CLUSTER DECOMMISSION 'node1'", [], endpoints[2], 120_000)
+		report.stop.acknowledgedAt = new Date().toISOString()
+		await waitFor("normal decommission exit", async () => {
+			const [id] = (await docker("ps", "-aq", target)).split("\n")
+			const state = JSON.parse((await exec("docker", ["inspect", id])).stdout)[0].State
+			report.stop.state = state
+			return state.Status === "exited" && state.ExitCode === 0
+		}, 120_000)
+	} else {
+		progress("Stopping node2 during concurrent reads and writes")
+		await docker("kill", "--signal", "SIGKILL", target)
+	}
 	report.stop.completedAt = new Date().toISOString()
 	report.stoppedContainers = await snapshot()
-	await Promise.all([...readers, ...writers])
+	if (graceful) {
+		report.afterStopNodes = await rows("SELECT name FROM sys.nodes ORDER BY name")
+		await delay(2_000)
+		await docker("start", target)
+		await sql(`SET GLOBAL TRANSIENT "cluster.routing.allocation.enable" = 'all'`)
+		report.restartedAt = new Date().toISOString()
+	}
+	await Promise.all([...readers, ...writers, pages])
 	report.load = { durationMs: Date.now() - start, stats, acknowledgedWrites: Object.fromEntries(Object.entries(written).map(([kind, ids]) => [kind, ids.length])) }
 	await sql("REFRESH TABLE client_failover_588")
-	report.afterStopNodes = await rows("SELECT name FROM sys.nodes ORDER BY name")
+	report.afterStopNodes ??= await rows("SELECT name FROM sys.nodes ORDER BY name")
 	report.writeAudit = await rows("SELECT kind, count(*), min(n), max(n), sum(n) FROM client_failover_588 GROUP BY kind ORDER BY kind")
+	if (pageProof) check("No failed page loaders/actions", Object.values(pageProof.stats).reduce((n,s)=>n+s.failed,0),0)
 	check("No failed reads during node loss", stats.reads.failed, 0)
 	check("No keyed insert failures", stats.keyed.failed, 0)
 	check("No upsert failures", stats.upsert.failed, 0)
 	check("All acknowledged keyed rows exist", (await rows("SELECT count(*) FROM client_failover_588 WHERE kind = 'keyed'"))[0][0], written.keyed.length)
 	check("All acknowledged upsert rows exist", (await rows("SELECT count(*) FROM client_failover_588 WHERE kind = 'upsert'"))[0][0], written.upsert.length)
 	check("No row mutated twice", (await rows("SELECT count(*) FROM client_failover_588 WHERE kind <> 'seed' AND n > 1"))[0][0], 0)
-	check("Two surviving cluster members", report.afterStopNodes, [["node1"], ["node3"]])
-	progress("Restarting node2, then verifying lost-response write safety")
-	await docker("start", "node2")
+	check("Two surviving cluster members", report.afterStopNodes, graceful ? [["node2"], ["node3"]] : [["node1"], ["node3"]])
+	if (pageProof) {
+		const watches = await rows("SELECT watch_id FROM user_watch_log WHERE user_id = ?", ["proof-member"])
+		const stored = watches.map(([id]) => id)
+		check("Every acknowledged route watch stored once", stored.filter(id => pageProof.acknowledgedWatches.includes(id)).length, pageProof.acknowledgedWatches.length)
+		check("No duplicate route watch ids", new Set(stored).size, stored.length)
+		report.pageWatchAudit = { acknowledged: pageProof.acknowledgedWatches.length, stored: stored.length, unique: new Set(stored).size }
+	}
+	progress("Verifying rejoined replicas and lost-response write safety")
+	if (!graceful) await docker("start", target)
+	if (graceful) await sql(`SET GLOBAL TRANSIENT "cluster.routing.allocation.enable" = 'all'`)
 	await waitFor("restored replicas", async () => (await rows("SELECT count(*) FROM sys.shards WHERE table_name = 'client_failover_588' AND state = 'STARTED'"))[0][0] === 9)
 	report.lostResponses = []
 	for (const kind of ["increment", "upsert", "insert"]) {
@@ -217,6 +267,15 @@ try {
 	progress(`Proof failed: ${error.message}`)
 	process.exitCode = 1
 } finally {
+	await pageProof?.close()
+	const events = log.filter(line => line.startsWith('{"time":')).flatMap(line => { try { return [JSON.parse(line)] } catch { return [] } })
+	report.diagnostics = { events: events.length, byEvent: {}, byErrorClass: {}, failedQueries: [], httpOutcomes: [] }
+	for (const event of events) {
+		report.diagnostics.byEvent[event.event] = (report.diagnostics.byEvent[event.event] ?? 0) + 1
+		if (event.errorClass) report.diagnostics.byErrorClass[event.errorClass] = (report.diagnostics.byErrorClass[event.errorClass] ?? 0) + 1
+		if (event.event === "crate.query" && event.outcome === "failed") report.diagnostics.failedQueries.push(event)
+		if (event.event === "crate.http") report.diagnostics.httpOutcomes.push(event)
+	}
 	report.finishedAt = new Date().toISOString()
 	await mkdir(fileURLToPath(new URL("./results", import.meta.url)), { recursive: true })
 	await writeFile(output, `${JSON.stringify(report, null, 2)}\n`)

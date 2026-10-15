@@ -41,7 +41,7 @@ const FRANCHISE_VOTES = 2000
 
 // --- Crate access -------------------------------------------------------------------------------------------------
 
-export class BlobMissing extends Error {}
+export class BlobMissing extends Error { name = "BlobMissing" }
 
 function crateConfig() {
 	const hosts = (process.env.CRATE_HOSTS ?? "")
