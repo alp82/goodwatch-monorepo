@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import { test, type TestContext } from "node:test"
-import { query, setCrateClientForTest, upsert } from "./crate.ts"
+import { CrateAuthenticationError, execute, query, setCrateClientForTest, upsert } from "./crate.ts"
 
 type Handler = (req: IncomingMessage, res: ServerResponse, stmt: string) => void
 
@@ -11,10 +11,20 @@ const answer = (res: ServerResponse) => {
 	res.end(JSON.stringify({ cols: ["n"], col_types: [9], rows: [[1]], rowcount: 1, duration: 1 }))
 }
 
-const refuse = (res: ServerResponse) => {
+// What CrateDB sends when host-based authentication refuses a request: plain text, not its JSON error. In the local
+// cluster a node that had just restarted answered this way for valid credentials (docs/implementation/auth/
+// cratedb-credentials.md), until it had the users from the cluster state.
+const reject = (res: ServerResponse, user = "goodwatch_webapp") => {
+	res.statusCode = 401
+	res.setHeader("Content-Type", "text/plain")
+	res.end(`password authentication failed for user "${user}"`)
+}
+
+// A statement refused for a missing privilege: Crate's JSON error, after authentication.
+const missingPrivilege = (res: ServerResponse) => {
 	res.statusCode = 401
 	res.setHeader("Content-Type", "application/json")
-	res.end(JSON.stringify({ error: { message: "password authentication failed for user \"goodwatch_webapp\"", code: 4011 } }))
+	res.end(JSON.stringify({ error: { message: "MissingPrivilegeException[Missing 'DQL' privilege for user 'goodwatch_webapp']", code: 4011 } }))
 }
 
 const basic = (credentials: string) => `Basic ${Buffer.from(credentials, "utf8").toString("base64")}`
@@ -97,12 +107,43 @@ test("a read with credentials fails over from a lost coordinator and the next on
 	assert.deepEqual(authorization, [[expected], [expected]])
 })
 
-test("a rejected password is an authentication error: it reaches the caller and is not retried elsewhere", async (t) => {
-	const authorization = await cluster(t, { CRATE_USER: "goodwatch_webapp", CRATE_PASS: "wrong" }, [
-		(_, res) => refuse(res), (_, res) => answer(res), (_, res) => answer(res),
+test("a missing privilege reaches the caller at once and is not retried elsewhere", async (t) => {
+	const authorization = await cluster(t, { CRATE_USER: "goodwatch_webapp", CRATE_PASS: "s3cret" }, [
+		(_, res) => missingPrivilege(res), (_, res) => answer(res), (_, res) => answer(res),
 	])
-	await assert.rejects(query("SELECT n"), /password authentication failed/)
+	await assert.rejects(query("SELECT n"), /MissingPrivilegeException/)
 	assert.deepEqual(authorization.map((received) => received.length), [1, 0, 0])
+})
+
+test("a read refused by authentication on a starting node succeeds on the next coordinator", async (t) => {
+	const authorization = await cluster(t, { CRATE_USER: "goodwatch_webapp", CRATE_PASS: "s3cret" }, [
+		(_, res) => reject(res), (_, res) => answer(res), (_, res) => answer(res),
+	])
+	for (let i = 0; i < 4; i++) assert.deepEqual(await query("SELECT n"), [{ n: 1 }])
+	// The refusing node cools down like an unreachable one.
+	assert.deepEqual(authorization.map((received) => received.length), [1, 2, 2])
+})
+
+test("a write refused by authentication never ran, so it goes to the next coordinator", async (t) => {
+	const authorization = await cluster(t, { CRATE_USER: "goodwatch_webapp", CRATE_PASS: "s3cret" }, [
+		(_, res) => reject(res), (_, res) => answer(res),
+	])
+	assert.equal((await execute("UPDATE counter SET n = n + 1 WHERE id = ?", ["a"])).rowcount, 1)
+	assert.deepEqual(authorization.map((received) => received.length), [1, 1])
+})
+
+test("a password every coordinator refuses fails after one attempt each, as an authentication error", async (t) => {
+	const authorization = await cluster(t, { CRATE_USER: "goodwatch_webapp", CRATE_PASS: "wrong" }, [
+		(_, res) => reject(res), (_, res) => reject(res), (_, res) => reject(res),
+	])
+	await assert.rejects(query("SELECT n"), (error: Error) => {
+		assert.ok(error instanceof CrateAuthenticationError)
+		assert.match(error.message, /^CrateDB HTTP 401: password authentication failed for user "goodwatch_webapp"$/)
+		return true
+	})
+	assert.deepEqual(authorization.map((received) => received.length), [1, 1, 1])
+	await assert.rejects(execute("DELETE FROM t WHERE id = ?", ["a"]), CrateAuthenticationError)
+	assert.deepEqual(authorization.map((received) => received.length), [2, 2, 2])
 })
 
 test("the safe write helpers send the credentials on the write and on its readback", async (t) => {

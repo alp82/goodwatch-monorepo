@@ -36,6 +36,17 @@ export class CrateError extends Error {
 	}
 }
 
+// Host-based authentication refused the request before any statement ran: Crate answers HTTP 401 with plain text
+// ("password authentication failed for user ..."), not its JSON error. A wrong password is refused by every node. A
+// node that has just restarted also refuses valid credentials for a moment, until it has the users from the cluster
+// state (#562), so the client tries the next coordinator, for writes too: a refused request never ran.
+export class CrateAuthenticationError extends CrateError {
+	constructor(message: string) {
+		super(message)
+		this.name = "CrateAuthenticationError"
+	}
+}
+
 export const toCrateError = (error: unknown): Error => {
 	if (error instanceof Error) return error
 	const refused = (error ?? {}) as { message?: unknown; code?: unknown }
@@ -179,6 +190,7 @@ class CrateClient {
 			let request: ClientRequest | undefined
 			let responseError: Error | undefined
 			let statusCode: number | undefined
+			let refusal = ""
 			const previousCapture = captureRequest
 			let pending: ReturnType<typeof crate.execute>
 			// node-crate creates the request synchronously, before another statement can run.
@@ -193,6 +205,7 @@ class CrateClient {
 			request?.once("response", (response) => {
 				statusCode = response.statusCode
 				response.once("error", (error) => { responseError = error })
+				if (statusCode === 401) response.on("data", (chunk) => { if (refusal.length < 300) refusal += chunk })
 			})
 			const destroy = () => { request?.destroy(signal.reason) }
 			signal.addEventListener("abort", destroy, { once: true })
@@ -201,6 +214,10 @@ class CrateClient {
 				if (UNAVAILABLE_STATUSES.includes(statusCode ?? 0)) throw new CrateError(`CrateDB HTTP ${statusCode}`)
 				return withNullTimestamps(result)
 			} catch (error) {
+				// node-crate fails to parse the plain-text refusal; a refused statement (missing privilege) is JSON.
+				if (!responseError && statusCode === 401 && !(toCrateError(error) instanceof CrateError)) {
+					throw new CrateAuthenticationError(`CrateDB HTTP 401: ${refusal.trim().slice(0, 200)}`)
+				}
 				throw responseError ?? Object.assign(toCrateError(error), { statusCode })
 			} finally {
 				signal.removeEventListener("abort", destroy)
@@ -237,9 +254,10 @@ class CrateClient {
 				try {
 					result = await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
 				} catch (error) {
-					if (options.signal?.aborted || !isRecoverableError(error)) throw error
-					if (isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
-					if (!read) throw error
+					const refused = error instanceof CrateAuthenticationError
+					if (options.signal?.aborted || !(refused || isRecoverableError(error))) throw error
+					if (refused || isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+					if (!read && !refused) throw error
 					nodeLoss ||= isNodeLossError(error)
 					if (tried.size === this.hosts.length) {
 						if (!nodeLoss || ++round >= 10) throw error
