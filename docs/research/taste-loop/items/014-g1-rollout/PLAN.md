@@ -89,3 +89,7 @@ Fable accepted with fixes (REVIEW-fable.md). All eight fixes are adopted; they r
 6. One run for all members, per-member try/except and summary lines; reruns are idempotent.
 7. `missing-payload` fallbacks are not warned per request.
 8. The 99% gate is measured on the cohort, then serves as the rollback trigger after `on`; check Valkey maxmemory and eviction policy before the backfill.
+
+## Closing step: rename (owner, October 15, 2026)
+
+After the rollout decision, every shipped name loses the research label: flag `REC_G1_ORDER`, `app/server/g1/`, keys `g1:v2:*` and `g1:dirty`, Windmill `g1_order`, `g1_trigger`, `f/sync/g1_members`, and the `g1_*` columns of `user_list_exposure`. Research labels stay only in taste-loop docs.
