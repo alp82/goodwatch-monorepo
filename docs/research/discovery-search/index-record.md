@@ -43,7 +43,7 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 | Event | Date |
 | --- | --- |
 | Sitemap resubmitted in Search Console | 2026-10-10 |
-| Google downloads the new sitemap (`lastDownloaded` moves past 2026-09-22) | not yet |
+| Google downloads the new sitemap (`lastDownloaded` moves past 2026-09-22) | 2026-10-10 |
 | Redirect change deployed | 2026-10-10 |
 | Start page change deployed | 2026-10-10 |
 
@@ -52,6 +52,7 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 | Run | Note |
 | --- | --- |
 | 2026-10-10 | Baseline |
+| 2026-10-15 | First run after the sitemap download: 1 indexed, 3 hubs crawled and not indexed, 46 unknown |
 
 ## Baseline, 2026-10-10
 
@@ -60,3 +61,10 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 - 31 sample URLs were also inspected on 2026-10-06. All 31 have the same coverage state as then (start page indexed, 30 unknown). The only change: the start page's last crawl moved from 2026-10-04 to 2026-10-08.
 - Traffic 2026-10-01 to 2026-10-07: 119 impressions and 7 clicks, all on the start page. No other page had an impression.
 - One sitemap is submitted, `/sitemaps/sitemap.xml`: submitted 2025-03-01, last downloaded 2026-09-22, no errors or warnings.
+
+## Run 2026-10-15
+
+- Coverage: 1 of 50 "Submitted and indexed" (the start page), 3 "Crawled - currently not indexed", 46 "URL is unknown to Google".
+- The 3 crawled URLs are the hubs `/shows`, `/discover` and `/explorer`, all crawled on 2026-10-11. They were unknown at the baseline. All titles, person pages, mood and genre pages and old shapes are still unknown.
+- Traffic 2026-10-06 to 2026-10-12: 160 impressions and 1 click, all on the start page.
+- The sitemap was last downloaded on 2026-10-10, at the resubmission, with no errors or warnings.
