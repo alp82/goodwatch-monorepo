@@ -24,19 +24,40 @@ export const launchPopulationBounds: AuthPopulationBounds = {
 }
 
 /** No ledger is shared between unrelated members or anonymous registrations. */
-export function authPopulationActor(model: string, row: Record<string, unknown>): string | undefined {
- if (["user", "account", "jwks", "oauthResource", "rateLimit"].includes(model)) return undefined
- if (model === "verification") return typeof row.identifier === "string" ? row.identifier : undefined
- if (model === "oauthClient") return typeof row.userId === "string" ? row.userId : undefined
- if (["oauthClientResource", "oauthClientAssertion"].includes(model)) return typeof row.clientId === "string" ? row.clientId : undefined
- return typeof row.userId === "string" ? row.userId : undefined
+export function authPopulationActor(
+	model: string,
+	row: Record<string, unknown>,
+): string | undefined {
+	if (["user", "account", "jwks", "oauthResource", "rateLimit"].includes(model))
+		return undefined
+	if (model === "verification")
+		return typeof row.identifier === "string" ? row.identifier : undefined
+	if (model === "oauthClient")
+		return typeof row.userId === "string" ? row.userId : undefined
+	if (["oauthClientResource", "oauthClientAssertion"].includes(model))
+		return typeof row.clientId === "string" ? row.clientId : undefined
+	return typeof row.userId === "string" ? row.userId : undefined
 }
 export function authActorBounds(model: string): AuthPopulationBounds {
- return {buckets: 1, limitPerBucket: model === "session" ? 20 : ["oauthAccessToken","oauthRefreshToken"].includes(model) ? 1024 : 128}
+	return {
+		buckets: 1,
+		limitPerBucket:
+			model === "session"
+				? 20
+				: ["oauthAccessToken", "oauthRefreshToken"].includes(model)
+					? 1024
+					: 128,
+	}
 }
-export function authCapacityBucket(model: string, id: string, bounds: AuthPopulationBounds, actor: string) {
- const digest = (value: string) => createHash("sha256").update(value).digest("hex")
- return `${model}:actor:${digest(actor)}:${Number.parseInt(digest(id).slice(0,8),16)%bounds.buckets}`
+export function authCapacityBucket(
+	model: string,
+	id: string,
+	bounds: AuthPopulationBounds,
+	actor: string,
+) {
+	const digest = (value: string) =>
+		createHash("sha256").update(value).digest("hex")
+	return `${model}:actor:${digest(actor)}:${Number.parseInt(digest(id).slice(0, 8), 16) % bounds.buckets}`
 }
 
 export function validatePopulationBounds(
@@ -74,24 +95,54 @@ export async function readCapacity(sql: AuthSql, codec: Codec, bucket: string) {
 		!ledger.slots ||
 		Array.isArray(ledger.slots)
 	)
-		throw new AuthPayloadAuthenticationError(`doc.auth_capacity:${bucket}:payload`)
+		throw new AuthPayloadAuthenticationError(
+			`doc.auth_capacity:${bucket}:payload`,
+		)
 	return { ledger, seq: result[1], term: result[2] }
 }
 
 /** Caller must fence or archive the row before returning its matching generation. */
-export async function releaseAuthAdmission(sql: AuthSql, codec: Codec, id: string, admission?: AuthAdmission, now = new Date()) {
- if (!admission) return
- for(let attempt=0;attempt<64;attempt++) {
-  const current = await readCapacity(sql,codec,admission.bucket)
-  if(!current || current.ledger.slots[id]?.generation !== admission.generation) return
-  const slots = {...current.ledger.slots}
-  delete slots[id]
-  const result = await sql("UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[
-   codec.encode({row:{...current.ledger,slots,emptySince:Object.keys(slots).length ? undefined : now.toISOString()},deleted:false},`doc.auth_capacity:${admission.bucket}:payload`),admission.bucket,current.seq,current.term
-  ])
-  if(result.rowcount===1) return
- }
- throw new Error("Auth population release contention")
+export async function releaseAuthAdmission(
+	sql: AuthSql,
+	codec: Codec,
+	id: string,
+	admission?: AuthAdmission,
+	now = new Date(),
+) {
+	if (!admission) return
+	for (let attempt = 0; attempt < 64; attempt++) {
+		const current = await readCapacity(sql, codec, admission.bucket)
+		if (
+			!current ||
+			current.ledger.slots[id]?.generation !== admission.generation
+		)
+			return
+		const slots = { ...current.ledger.slots }
+		delete slots[id]
+		const result = await sql(
+			"UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",
+			[
+				codec.encode(
+					{
+						row: {
+							...current.ledger,
+							slots,
+							emptySince: Object.keys(slots).length
+								? undefined
+								: now.toISOString(),
+						},
+						deleted: false,
+					},
+					`doc.auth_capacity:${admission.bucket}:payload`,
+				),
+				admission.bucket,
+				current.seq,
+				current.term,
+			],
+		)
+		if (result.rowcount === 1) return
+	}
+	throw new Error("Auth population release contention")
 }
 
 /** Reserve before insertion. Slots include pending writes and are reclaimed only after row fencing. */
@@ -122,12 +173,20 @@ export async function admitAuthRow(
 		if (
 			current &&
 			Object.keys(current.ledger.slots).length >= bounds.limitPerBucket
-		)
-        {
-            const oldest = Object.entries(current.ledger.slots).sort((a,b)=>a[1].createdAt.localeCompare(b[1].createdAt) || a[1].generation-b[1].generation)[0]
-            if(evict && oldest && await evict(oldest[0], {bucket,generation:oldest[1].generation})) continue
-            throw new Error("Auth population capacity exhausted")
-        }
+		) {
+			const oldest = Object.entries(current.ledger.slots).sort(
+				(a, b) =>
+					a[1].createdAt.localeCompare(b[1].createdAt) ||
+					a[1].generation - b[1].generation,
+			)[0]
+			if (
+				evict &&
+				oldest &&
+				(await evict(oldest[0], { bucket, generation: oldest[1].generation }))
+			)
+				continue
+			throw new Error("Auth population capacity exhausted")
+		}
 		const generation = (current?.ledger.nextGeneration ?? 0) + 1
 		if (!Number.isSafeInteger(generation))
 			throw new Error("Auth population capacity generation exhausted")

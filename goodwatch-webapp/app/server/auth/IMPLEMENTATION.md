@@ -65,8 +65,9 @@ Deletion replaces the live payload with `{ id }` in an authenticated tombstone,
 and clears lookup metadata and created/expiry columns. This erases personal data
 and credentials from the current logical row without erasing receipt ownership.
 It does not erase older database snapshots, backups or unmerged storage-engine
-versions; those need an explicit retention and backup policy. Non-reusable token
-keys remain tombstoned to prevent replay.
+versions; those need an explicit retention and backup policy. Tombstones prevent replay for 30 days, then are physically purged; database-enforced
+15-minute insert leases prevent late creates after purge. Refresh replay metadata
+remains through its original expiry before that retention window begins.
 
 Verification identifiers and normalized email claim keys are domain-separated
 HMACs. Raw reset/deletion identifiers exist only inside authenticated ciphertext;
@@ -79,8 +80,8 @@ existing different insert. Own-receipt recovery happens before collision cleanup
 claims already adopted by the current row or with uncertain ownership remain protected. A process crash or an ambiguous multi-row
 failure can still leave an orphan claim: user and claim writes are not one
 transaction, and uncertain ownership requires reconciliation rather than unsafe
-address reuse. #565 supplies fenced claim recovery, including a permanent
-missing-user barrier against delayed inserts.
+address reuse. #565 supplies fenced claim recovery, including a missing-user barrier tied to the abandoned claim operation. A fresh
+forced-ID import may adopt that barrier by CAS; a delayed old operation cannot.
 
 ## Enumeration and contention
 
@@ -99,8 +100,11 @@ ignores limits, so a truncation exception would silently skip hooks. Other expli
 limits and offsets remain supported; an explicit limit equal to the configured
 factory default also returns the complete population. Populations over the safety
 bound refuse mutation rather than silently truncate. The #565 runtime enables
-CAS admission at 64 buckets × 128 identities (8,192 per model), and its maintenance
-streams independently bounded pages. Imports must use that admission configuration.
+per-actor CAS admission, with 20 browser sessions per member (oldest revoked)
+and separate member/client issuance allowances. Users and accounts have no global
+cap. Maintenance streams independently bounded pages and returns slots per row.
+The runtime limits DCR by trusted IP and collects unused clients/unconfirmed users;
+see the maintenance runbook for thresholds and prerelease-data migration.
 
 Plain assignments, bulk assignments and deletions retry up to 64 **proven** CAS
 version conflicts with a fresh read and all predicates rechecked. Deleted rows

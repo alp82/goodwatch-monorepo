@@ -32,9 +32,11 @@ prefix on HTTPS. Both forms bypass shared-page caching. Every cached session
 read checks the current CrateDB session and user, so a missing Valkey session
 index cannot undo revocation. Missing cache keys fall back to the DB; storage
 errors and malformed entries fail closed. Complete enumeration is configured
-at the adapter's 10,000-row enumeration bound. #565 enables CAS admission at
-8,192 live/pending identities per model; prerelease rows without admission need
-an offline rebuild/reimport. Browser sessions also carry a private credential
+at the adapter's 10,000-row enumeration bound. #565 scopes issuance allowances
+to each member/client, keeps the 20 newest browser sessions per member, and has
+no global user/account cap. DCR is limited to 30 attempts per trusted IP per hour;
+unused clients expire after 24 hours and unconfirmed signups after 48 hours.
+Older prerelease global ledgers need a coordinated rebuild/reimport. Browser sessions also carry a private credential
 version checked against the current password hash, including DB fallback.
 A password change cannot admit a login paused before session insertion.
 

@@ -213,7 +213,7 @@ test("the launch audit reports rows imported without capacity admission", async 
 		data: {
 			userId: randomUUID(),
 			token: randomUUID(),
-			expiresAt: new Date(Date.now()+86400000),
+			expiresAt: new Date(Date.now() + 86400000),
 		},
 	})
 	const report = await auditAuthPopulation({
@@ -225,50 +225,155 @@ test("the launch audit reports rows imported without capacity admission", async 
 	assert.equal(report.safe, false)
 })
 
-
 test("member and linked-account capacity has no site-wide ceiling", async () => {
- await clean()
- const adapter = crateAuthAdapter({sql,populationBounds:{buckets:1,limitPerBucket:2}})({})
- for(let i=0;i<5;i++) {
-  const user = await adapter.create({model:"user",data:{email:`${randomUUID()}@example.test`,name:"Imported",emailVerified:true}})
-  const account = await adapter.create({model:"account",data:{userId:user.id,providerId:"credential",accountId:user.id,password:"synthetic"}})
-  assert.equal((await adapter.findOne<{id:string}>({model:"account",where:[{field:"userId",value:user.id},{field:"providerId",value:"credential"},{field:"accountId",value:user.id}]}))?.id,account.id)
- }
+	await clean()
+	const adapter = crateAuthAdapter({
+		sql,
+		populationBounds: { buckets: 1, limitPerBucket: 2 },
+	})({})
+	for (let i = 0; i < 5; i++) {
+		const user = await adapter.create({
+			model: "user",
+			data: {
+				email: `${randomUUID()}@example.test`,
+				name: "Imported",
+				emailVerified: true,
+			},
+		})
+		const account = await adapter.create({
+			model: "account",
+			data: {
+				userId: user.id,
+				providerId: "credential",
+				accountId: user.id,
+				password: "synthetic",
+			},
+		})
+		assert.equal(
+			(
+				await adapter.findOne<{ id: string }>({
+					model: "account",
+					where: [
+						{ field: "userId", value: user.id },
+						{ field: "providerId", value: "credential" },
+						{ field: "accountId", value: user.id },
+					],
+				})
+			)?.id,
+			account.id,
+		)
+	}
 })
-
 
 test("one member cannot consume another member's OAuth issuance allowance", async () => {
- await clean()
- const adapter = crateAuthAdapter({sql,populationBounds:{buckets:1,limitPerBucket:2}})(authTestOptions)
- for(const userId of ["first-member","second-member"]) {
-  for(let i=0;i<2;i++) await adapter.create({model:"oauthConsent",data:{clientId:randomUUID(),userId,referenceId:null,scopes:["mcp:read"],grantVersion:randomUUID()}})
- }
- await assert.rejects(adapter.create({model:"oauthConsent",data:{clientId:randomUUID(),userId:"first-member",scopes:["mcp:read"],grantVersion:randomUUID()}}),/capacity/)
+	await clean()
+	const adapter = crateAuthAdapter({
+		sql,
+		populationBounds: { buckets: 1, limitPerBucket: 2 },
+	})(authTestOptions)
+	for (const userId of ["first-member", "second-member"]) {
+		for (let i = 0; i < 2; i++)
+			await adapter.create({
+				model: "oauthConsent",
+				data: {
+					clientId: randomUUID(),
+					userId,
+					referenceId: null,
+					scopes: ["mcp:read"],
+					grantVersion: randomUUID(),
+				},
+			})
+	}
+	await assert.rejects(
+		adapter.create({
+			model: "oauthConsent",
+			data: {
+				clientId: randomUUID(),
+				userId: "first-member",
+				scopes: ["mcp:read"],
+				grantVersion: randomUUID(),
+			},
+		}),
+		/capacity/,
+	)
 })
-
 
 test("a member keeps the twenty newest sessions and cannot evict another member", async () => {
- await clean()
- const adapter = crateAuthAdapter({sql,populationBounds:true})({})
- const other = await adapter.create({model:"session",data:{userId:"other",token:randomUUID(),expiresAt:new Date(Date.now()+86400000)}})
- const sessions: {token:string}[] = []
- for(let i=0;i<25;i++) sessions.push(await adapter.create({model:"session",data:{userId:"busy",token:randomUUID(),createdAt:new Date(Date.now()+i),expiresAt:new Date(Date.now()+86400000)}}))
- const retained = await adapter.findMany<{token:string}>({model:"session",where:[{field:"userId",value:"busy"}]})
- assert.equal(retained.length,20)
- assert.deepEqual(new Set(retained.map(row=>row.token)),new Set(sessions.slice(-20).map(row=>row.token)))
- for(const session of sessions.slice(0,5)) assert.equal(await adapter.findOne({model:"session",where:[{field:"token",value:session.token}]}),null)
- assert.ok(await adapter.findOne({model:"session",where:[{field:"token",value:other.token}]}))
+	await clean()
+	const adapter = crateAuthAdapter({ sql, populationBounds: true })({})
+	const other = await adapter.create({
+		model: "session",
+		data: {
+			userId: "other",
+			token: randomUUID(),
+			expiresAt: new Date(Date.now() + 86400000),
+		},
+	})
+	const sessions: { token: string }[] = []
+	for (let i = 0; i < 25; i++)
+		sessions.push(
+			await adapter.create({
+				model: "session",
+				data: {
+					userId: "busy",
+					token: randomUUID(),
+					createdAt: new Date(Date.now() + i),
+					expiresAt: new Date(Date.now() + 86400000),
+				},
+			}),
+		)
+	const retained = await adapter.findMany<{ token: string }>({
+		model: "session",
+		where: [{ field: "userId", value: "busy" }],
+	})
+	assert.equal(retained.length, 20)
+	assert.deepEqual(
+		new Set(retained.map((row) => row.token)),
+		new Set(sessions.slice(-20).map((row) => row.token)),
+	)
+	for (const session of sessions.slice(0, 5))
+		assert.equal(
+			await adapter.findOne({
+				model: "session",
+				where: [{ field: "token", value: session.token }],
+			}),
+			null,
+		)
+	assert.ok(
+		await adapter.findOne({
+			model: "session",
+			where: [{ field: "token", value: other.token }],
+		}),
+	)
 })
 
-test("empty actor ledgers are physically purged after thirty days",async()=>{
- await clean()
- const {collectAuthGarbage,reconcileAuthCapacity} = await import("./maintenance.server.ts")
- const encryptionSecret = "disposable-local-auth-integration-key-548"
- const bounded = crateAuthAdapter({sql,populationBounds:true})({})
- await bounded.create({model:"session",data:{userId:randomUUID(),token:randomUUID(),expiresAt:new Date(Date.now()-1000)}})
- await collectAuthGarbage({sql,encryptionSecret,model:"session"})
- await collectAuthGarbage({sql,encryptionSecret,model:"session",now:new Date(Date.now()+31*86400000)})
- await reconcileAuthCapacity({sql,encryptionSecret,now:new Date(Date.now()+31*86400000)})
- await sql("REFRESH TABLE doc.auth_capacity")
- assert.equal((await sql("SELECT id FROM doc.auth_capacity")).rows.length,0)
+test("empty actor ledgers are physically purged after thirty days", async () => {
+	await clean()
+	const { collectAuthGarbage, reconcileAuthCapacity } = await import(
+		"./maintenance.server.ts"
+	)
+	const encryptionSecret = "disposable-local-auth-integration-key-548"
+	const bounded = crateAuthAdapter({ sql, populationBounds: true })({})
+	await bounded.create({
+		model: "session",
+		data: {
+			userId: randomUUID(),
+			token: randomUUID(),
+			expiresAt: new Date(Date.now() - 1000),
+		},
+	})
+	await collectAuthGarbage({ sql, encryptionSecret, model: "session" })
+	await collectAuthGarbage({
+		sql,
+		encryptionSecret,
+		model: "session",
+		now: new Date(Date.now() + 31 * 86400000),
+	})
+	await reconcileAuthCapacity({
+		sql,
+		encryptionSecret,
+		now: new Date(Date.now() + 31 * 86400000),
+	})
+	await sql("REFRESH TABLE doc.auth_capacity")
+	assert.equal((await sql("SELECT id FROM doc.auth_capacity")).rows.length, 0)
 })

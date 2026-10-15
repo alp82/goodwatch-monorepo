@@ -317,11 +317,20 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
-                if(options.mcp && ctx.path === "/oauth2/register") {
-                    const ip = createHash("sha256").update(getIP(ctx.request ?? ctx.headers ?? new Headers(),ctx.context.options) ?? "unknown").digest("hex")
-                    if(await options.storage.increment(`dcr-ip:${ip}`,3600) > 30)
-                        throw new APIError("TOO_MANY_REQUESTS",{message:"Please wait before registering another client."})
-                }
+				if (options.mcp && ctx.path === "/oauth2/register") {
+					const ip = createHash("sha256")
+						.update(
+							getIP(
+								ctx.request ?? ctx.headers ?? new Headers(),
+								ctx.context.options,
+							) ?? "unknown",
+						)
+						.digest("hex")
+					if ((await options.storage.increment(`dcr-ip:${ip}`, 3600)) > 30)
+						throw new APIError("TOO_MANY_REQUESTS", {
+							message: "Please wait before registering another client.",
+						})
+				}
 				if (
 					options.mcp &&
 					ctx.path === "/oauth2/revoke" &&

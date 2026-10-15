@@ -28,16 +28,15 @@ within a minute.
 
 | Job | Behavior |
 | --- | --- |
-| Email claims | Gives new reservations 15 minutes. Keeps a live owner's current address. Otherwise fences the user version, or inserts a permanent missing-user tombstone, before conditionally releasing the unchanged claim. |
-| Orphan reconciliation | Removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
-| Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; archives rotated refresh parents after their retry window; retires signing keys after verification grace; collects receipts after 24 hours; repairs enumeration hints from authenticated state. |
-| Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing, deleted or archived row's slot, writes a permanent admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. |
+| Email claims | Gives new reservations 15 minutes. Keeps a live owner's current address. Otherwise fences the user version, or inserts a missing-user barrier tied to the abandoned operation, before conditionally releasing the unchanged claim. |
+| Orphan reconciliation | Collects unconfirmed users after 48 hours and releases their unchanged email claim; collects never-authorized clients after 24 hours, including partial DCR/CIMD registration leftovers; removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
+| Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; archives rotated refresh parents after their retry window; retires signing keys after verification grace; collects receipts after 24 hours; purges deleted rows after 30 days; repairs both the deleted flag and lookup hints from authenticated state. |
+| Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing, deleted or archived row's slot, writes an admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. Empty actor ledgers are physically purged after 30 days. |
 | Payload key rotation | Rewrites both encrypted columns under the active payload key with CAS, preserving logical data, indexes, claims, admission fences and receipt ownership. Competing changes are skipped and retried in later passes. |
 
 The worker emits `goodwatch_auth_maintenance_total{job,outcome}` and
 `goodwatch_auth_maintenance_last_completed_seconds`. Job/outcome labels are a
-fixed bounded vocabulary; reports contain counts and model names, not users,
-emails, IPs, tokens, keys, SQL or parameters. Failure emits a generic Sentry alert.
+fixed bounded vocabulary; reports contain counts and model names. An unreadable row is skipped and counted in `goodwatch_auth_maintenance_quarantined_total{table}`. Its table and physical row ID are logged to stderr and Sentry, without payloads, credentials, IPs, SQL or parameters. This applies to every job, including claim-parent reads, individual capacity slots and key rotation. Audit marks skipped rows unsafe. Transport failures still fail the pass; they are not misreported as corrupt rows. Capacity runs first, and deletion/archive jobs return slots as each row completes. Pass failure emits a generic Sentry alert.
 Monitor failed pages, capacity refusals and the age of the last completed pass;
 a stalled worker affects cleanup/issuance capacity, while authorization checks
 continue to fail closed. Do not interpret a failed pass as a completed sweep.
@@ -56,19 +55,27 @@ success or false proof that it lost. The ring may evict receipts sooner under
 heavy contention; that already has the same fail-closed behavior. Never retry a
 logical consume/increment automatically after an indeterminate result.
 
-Deletion erases profile/credential data from the logical row and retains an
-AEAD-protected `{id}` barrier plus necessary admission fencing metadata. User,
-session, verification, OAuth token/client/assertion and signing-key identities
-are not recycled. Admission-fenced association tombstones also stay: deleting
-one would let an arbitrarily delayed create escape its reclaimed capacity slot.
-Garbage collection removes their receipts and sensitive data, **not these replay
-or admission barriers**. Unadmitted reusable association/rate-limit tombstones
-can be physically removed after 24 hours. Retained barriers increase physical
-row count; maintenance streams them, while application bounds concern live and
-pending admitted rows.
+Deletion erases profile/credential data and retains an authenticated `{id}` barrier
+for **30 days**, then garbage collection physically removes it by row-version CAS.
+The rule includes admission-fenced rows; passes no longer retain all history forever.
+Empty capacity ledgers also expire after 30 days. New ledger reservations clear the
+empty timestamp, and a concurrent reservation makes a purge CAS lose.
+
+Adapter inserts carry a **15-minute write lease**, enforced inside CrateDB with
+`CURRENT_TIMESTAMP` and the NOT NULL encrypted-payload column. This keeps a delayed
+insert from appearing after its barrier or ledger has been purged. A duplicate insert
+still uses CrateDB's native 4091 duplicate-key outcome; conditional `INSERT SELECT`
+is deliberately avoided because CrateDB reports duplicate inserts as rowcount zero.
+Receipt-based ambiguous-write recovery remains unchanged. Recreating an association
+or unused metadata client requires a fresh reservation and CAS of its barrier.
+
+A missing-user barrier records the abandoned claim operation. A fresh email
+reservation may adopt it by CAS under the same forced Supabase ID (#551); the
+abandoned operation cannot. Successful adoption clears that privilege, so deleting
+a successfully imported member does not leave a reusable import barrier.
 
 Rotated refresh parents enter an authenticated **archived** state after their
-30-second retry window. They leave active enumerations and admission capacity,
+explicitly configured **30-second** retry window (`refreshTokenReuseInterval: 30`). They leave active enumerations and admission capacity,
 and their encrypted retry response is erased. Primary-key token lookup still
 returns revoked protocol metadata so the provider can authenticate the client
 and detect replay. That metadata lasts through the original refresh expiry,
@@ -81,44 +88,55 @@ or retained secret backups. Rollout must specify database snapshot and secret
 backup retention together. No backup-retention or infrastructure policy is
 silently changed here.
 
-## Launch population bounds
+## Per-actor issuance bounds
 
-The runtime enables CAS-backed admission for every model except `user`. Each
-model has **64 deterministic buckets with 128 live/pending identities each**:
-**8,192 admitted identities per model**, below the adapter's 10,000-row bound.
-The buckets are distributed by the physical identity hash; a single bucket can
-fill before the model total does. Full buckets refuse creation rather than
-silently truncate a later revoke/delete hook. There is no unlimited-launch
-claim and no eviction of another member's valid credentials.
+There is **no global user or account cap**, and no site-wide 8,192-member ceiling.
+Users resolve by physical ID or unique email claim; linked accounts enumerate per
+member. The runtime uses the following isolated actor ledgers:
 
-Admission happens before insertion. A reservation counts even if insertion
-crashes or its acknowledgement is lost. Reconciliation fences its physical row
-before returning that capacity. A monotonic generation survives deletion and
-recreation, so an old create cannot appear after multiple reconnect/cleanup
-cycles. Concurrent creators cannot overbook the configured buckets. Different
-bounds on different processes are rejected, not combined. Changing bounds or
-bucket count needs an offline rebuild/reimport and a new audit.
+| Model | Actor | Live/pending allowance |
+| --- | --- | --- |
+| Browser sessions | Member | 20; a new session revokes the oldest reservation's session |
+| OAuth access/refresh tokens | Member | 1,024 per model |
+| OAuth consents / owned clients | Member | 128 per model |
+| Client resources / client assertions with an owner | Client | 128 per model |
+| Verification rows | Identifier | 128 |
 
-User lookups use physical IDs or unique email claims; they never enumerate the
-entire user table. The hard model cap also bounds every launch enumeration's
-filtered subset, including global verification expiry, JWKS and resource lists.
-The database rate limiter is not used by the runtime, but the same admission
-policy applies if enabled. Bulk primary-key fan-out remains model-aware.
+Actor identifiers are SHA-256 hashes inside bucket IDs. A full allowance refuses
+only that actor. The reservation CAS includes pending inserts, so concurrent writers
+cannot overbook it. Deletion and refresh-parent archiving install a generation fence
+and return the matching slot immediately; a sweep handles crashed pending inserts
+after 15 minutes. Generations survive ordinary reconnect/cleanup cycles. The
+30-day ledger purge is safe because it outlasts the insert lease.
 
-This cap is deliberately conservative. Capacity exhaustion can refuse sign-in,
-refresh, registration or another auth operation until stale entries are
-collected. DCR clients count too; endpoint rate limits are not a guarantee that
-public registration cannot consume the cap. Monitor occupancy and plan capacity
-before approaching the limit. Raising it above 10,000 without redesigning the
-adapter's complete delete-hook enumeration is unsupported.
+Anonymous DCR/CIMD clients have **no shared admission pool**. DCR is limited to
+**30 attempts per trusted IP per hour** with Valkey's atomic expiring counter,
+independently of Better Auth's generic limiter. The configured ingress must replace
+the trusted IP header; untrusted forwarding headers do not override it. Missing IPs
+share an `unknown` budget. No global registration budget can starve other IPs.
+Never-authorized clients are collected after 24 hours; failed-registration child
+reservations are recovered too. Client authorization history is authenticated and
+written by CAS after consent creation. Collection either loses that CAS or issuance
+fails closed. A collected, never-authorized metadata URL can register afresh without
+waiting 30 days. Previously authorized clients survive grant disconnection.
 
-**Rollout requirement:** migrate the new `doc.auth_capacity` table explicitly
-along with the thirteen model tables and email claims (15 tables total). #551's
-import/rehearsal must use the same adapter `populationBounds: true` and payload
-key ring as `createGoodwatchAuth`. Users themselves need no slot; their account
-rows do. Existing prerelease rows written without admission are not silently
-adopted: runtime reads reject them, and the launch audit reports them. Rebuild
-only disposable stores here; production needs the coordinated migration plan.
+Unconfirmed signups are collected after **48 hours**, beyond the 24-hour confirmation
+window, using the user-version CAS. Their credential accounts are reconciled in the
+same pass and their unchanged email claim is released. Verification racing collection
+must win the user CAS to preserve the member.
+
+The adapter still refuses enumerations above 10,000 rather than silently truncate
+hooks. Member/client predicates are protected by their own allowances; static
+resource/signing-key populations are operational configuration. Maintenance and
+expiry scans use keyset pages independently of those application limits. No global
+census of members or linked accounts is required.
+
+**Rollout requirement:** migrate `doc.auth_capacity` with the thirteen model tables
+and email claims (15 tables total). Importing #551's users/accounts requires no
+capacity admission. Other issued auth rows must use the runtime's per-actor policy
+and key ring. Older prerelease global-ledger/session data requires a disposable
+rebuild or coordinated offline reimport; the audit rejects mismatched actor ledgers.
+Never rebuild production automatically. Bounds changes require a coordinated audit.
 
 ## Keys and recovery
 
@@ -258,8 +276,7 @@ Ignored results are under `scripts/auth-maintenance/results/`.
 nonzero unsafe results exit 2. `run-once` runs cleanup/reconciliation/rotation,
 and `rotate` rewrites every encrypted storage table. They require explicit auth
 CrateDB origins/credentials, permanent root and JSON key ring in the environment;
-no dotenv, SMTP or production startup task is loaded. Output contains only job
-counts. The manual CLI has no Valkey connection; surviving cache keys expire
+no dotenv, SMTP or production startup task is loaded. Successful output contains job counts; quarantined rows additionally log their table and physical ID. The manual CLI has no Valkey connection; surviving cache keys expire
 normally and cannot override authoritative DB checks. The runtime worker can
 also remove known orphan cache keys through its existing Valkey connection.
 
@@ -272,7 +289,7 @@ reported on #565 and draft #587. Production, hosted client relinking, root re-ke
 execution and backup restore execution remain rollout/rehearsal work, not claims
 of this local verification.
 
-## Verified result — October 14, 2026
+## Earlier verification — October 14, 2026 (before adversarial follow-up)
 
 At product-code commit `7c0c4ee3`, the clean local runner passed **53**
 maintenance/auth/MCP cases with real Docker CrateDB and Valkey. The adapter runner

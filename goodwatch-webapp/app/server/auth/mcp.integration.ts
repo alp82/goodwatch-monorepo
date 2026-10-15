@@ -682,9 +682,19 @@ test("collected refresh rotation parents release live capacity while preserving 
 	const parentHash = createHash("sha256")
 		.update(issued.token.refresh_token)
 		.digest("base64url")
-	const parent = await context.adapter.findOne<{ rotatedAt: Date; rotationReplayExpiresAt: Date }>({model: "oauthRefreshToken", where: [{field: "token", value: parentHash}]})
+	const parent = await context.adapter.findOne<{
+		rotatedAt: Date
+		rotationReplayExpiresAt: Date
+	}>({
+		model: "oauthRefreshToken",
+		where: [{ field: "token", value: parentHash }],
+	})
 	assert.ok(parent)
-	assert.equal(new Date(parent.rotationReplayExpiresAt).getTime() - new Date(parent.rotatedAt).getTime(), 30000)
+	assert.equal(
+		new Date(parent.rotationReplayExpiresAt).getTime() -
+			new Date(parent.rotatedAt).getTime(),
+		30000,
+	)
 	const currentMember = await memberAuth.api.getSession({
 		headers: new Headers({ cookie: issued.cookie }),
 	})
@@ -711,7 +721,7 @@ test("collected refresh rotation parents release live capacity while preserving 
 				encryptionSecret: "disposable-local-auth-integration-key-548",
 			})
 		).released,
-        0,
+		0,
 	)
 	const { setAuthForTest } = await import("./runtime.server.ts")
 	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")

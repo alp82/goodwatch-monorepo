@@ -177,42 +177,115 @@ test("claim recovery gives a new signup reservation fifteen minutes before fenci
 	)
 })
 
-
 test("a crashed forced-ID import can retry the same Supabase identity after claim recovery", async () => {
- const id = randomUUID()
- const email = `${id}@example.test`
- const crashed = crateAuthAdapter({encryptionSecret, sql: (statement, args) => {
-  if(statement.startsWith("INSERT INTO doc.auth_user (")) throw new Error("socket hang up")
-  return sql(statement,args)
- }})({})
- await assert.rejects(crashed.create({model:"user", data:{id,email,name:"Imported"}, forceAllowId:true}), /indeterminate/)
- await recoverEmailClaims({sql,encryptionSecret,now:new Date(Date.now()+3600000)})
- const imported = await adapter.create({model:"user", data:{id,email,name:"Imported"}, forceAllowId:true})
- assert.equal(imported.id,id)
- assert.equal((await adapter.findOne<{id:string}>({model:"user",where:[{field:"email",value:email}]}))?.id,id)
- await adapter.delete({model:"user",where:[{field:"id",value:id}]})
- await assert.rejects(adapter.create({model:"user",data:{id,email:`deleted-${email}`,name:"Cannot adopt a real deletion"},forceAllowId:true}),/duplicate key/)
-
+	const id = randomUUID()
+	const email = `${id}@example.test`
+	const crashed = crateAuthAdapter({
+		encryptionSecret,
+		sql: (statement, args) => {
+			if (statement.startsWith("INSERT INTO doc.auth_user ("))
+				throw new Error("socket hang up")
+			return sql(statement, args)
+		},
+	})({})
+	await assert.rejects(
+		crashed.create({
+			model: "user",
+			data: { id, email, name: "Imported" },
+			forceAllowId: true,
+		}),
+		/indeterminate/,
+	)
+	await recoverEmailClaims({
+		sql,
+		encryptionSecret,
+		now: new Date(Date.now() + 3600000),
+	})
+	const imported = await adapter.create({
+		model: "user",
+		data: { id, email, name: "Imported" },
+		forceAllowId: true,
+	})
+	assert.equal(imported.id, id)
+	assert.equal(
+		(
+			await adapter.findOne<{ id: string }>({
+				model: "user",
+				where: [{ field: "email", value: email }],
+			})
+		)?.id,
+		id,
+	)
+	await adapter.delete({ model: "user", where: [{ field: "id", value: id }] })
+	await assert.rejects(
+		adapter.create({
+			model: "user",
+			data: {
+				id,
+				email: `deleted-${email}`,
+				name: "Cannot adopt a real deletion",
+			},
+			forceAllowId: true,
+		}),
+		/duplicate key/,
+	)
 })
 
-
 test("a delayed create cannot resurrect a user after its thirty-day barrier is purged", async (t) => {
- const realNow = Date.now()
- const id = randomUUID()
- const email = `${id}@example.test`
- t.mock.timers.enable({apis:["Date"],now:realNow-31*86400000})
- let intercepted = false
- const delayed = crateAuthAdapter({encryptionSecret,sql:async(statement,args)=>{
-  if(!intercepted && statement.startsWith("INSERT INTO doc.auth_user (")) {
-   intercepted = true
-   await recoverEmailClaims({sql,encryptionSecret,now:new Date(realNow)})
-   const {collectAuthGarbage} = await import("./maintenance.server.ts")
-   assert.equal((await collectAuthGarbage({sql,encryptionSecret,model:"user",now:new Date(realNow)})).purged,1)
-   t.mock.timers.reset()
-  }
-  return sql(statement,args)
- }})({})
- await assert.rejects(delayed.create({model:"user",data:{id,email,name:"Delayed"},forceAllowId:true}))
- assert.equal(await adapter.findOne({model:"user",where:[{field:"id",value:id}]}),null)
- assert.equal((await adapter.create({model:"user",data:{id,email,name:"Fresh import"},forceAllowId:true})).id,id)
+	const realNow = Date.now()
+	const id = randomUUID()
+	const email = `${id}@example.test`
+	t.mock.timers.enable({ apis: ["Date"], now: realNow - 31 * 86400000 })
+	let intercepted = false
+	const delayed = crateAuthAdapter({
+		encryptionSecret,
+		sql: async (statement, args) => {
+			if (!intercepted && statement.startsWith("INSERT INTO doc.auth_user (")) {
+				intercepted = true
+				await recoverEmailClaims({
+					sql,
+					encryptionSecret,
+					now: new Date(realNow),
+				})
+				const { collectAuthGarbage } = await import("./maintenance.server.ts")
+				assert.equal(
+					(
+						await collectAuthGarbage({
+							sql,
+							encryptionSecret,
+							model: "user",
+							now: new Date(realNow),
+						})
+					).purged,
+					1,
+				)
+				t.mock.timers.reset()
+			}
+			return sql(statement, args)
+		},
+	})({})
+	await assert.rejects(
+		delayed.create({
+			model: "user",
+			data: { id, email, name: "Delayed" },
+			forceAllowId: true,
+		}),
+	)
+	assert.equal(
+		await adapter.findOne({
+			model: "user",
+			where: [{ field: "id", value: id }],
+		}),
+		null,
+	)
+	assert.equal(
+		(
+			await adapter.create({
+				model: "user",
+				data: { id, email, name: "Fresh import" },
+				forceAllowId: true,
+			})
+		).id,
+		id,
+	)
 })

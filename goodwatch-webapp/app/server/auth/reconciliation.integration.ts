@@ -246,13 +246,45 @@ test("reconciliation collects a late session bound to an obsolete password crede
 	)
 })
 
-
 test("unconfirmed signups older than forty-eight hours release their address and account", async () => {
- const user = await adapter.create({model:"user",data:{email:`${randomUUID()}@example.test`,name:"Unconfirmed",emailVerified:false,createdAt:new Date(Date.now()-49*3600000)}})
- await adapter.create({model:"account",data:{userId:user.id,providerId:"credential",accountId:user.id,password:"synthetic"}})
- await reconcileAuthRows({sql,encryptionSecret,model:"user"})
- await reconcileAuthRows({sql,encryptionSecret,model:"account"})
- assert.equal(await adapter.findOne({model:"user",where:[{field:"id",value:user.id}]}),null)
- assert.deepEqual(await adapter.findMany({model:"account",where:[{field:"userId",value:user.id}]}),[])
- assert.ok(await adapter.create({model:"user",data:{email:user.email,name:"Retry",emailVerified:false}}))
+	const user = await adapter.create({
+		model: "user",
+		data: {
+			email: `${randomUUID()}@example.test`,
+			name: "Unconfirmed",
+			emailVerified: false,
+			createdAt: new Date(Date.now() - 49 * 3600000),
+		},
+	})
+	await adapter.create({
+		model: "account",
+		data: {
+			userId: user.id,
+			providerId: "credential",
+			accountId: user.id,
+			password: "synthetic",
+		},
+	})
+	await reconcileAuthRows({ sql, encryptionSecret, model: "user" })
+	await reconcileAuthRows({ sql, encryptionSecret, model: "account" })
+	assert.equal(
+		await adapter.findOne({
+			model: "user",
+			where: [{ field: "id", value: user.id }],
+		}),
+		null,
+	)
+	assert.deepEqual(
+		await adapter.findMany({
+			model: "account",
+			where: [{ field: "userId", value: user.id }],
+		}),
+		[],
+	)
+	assert.ok(
+		await adapter.create({
+			model: "user",
+			data: { email: user.email, name: "Retry", emailVerified: false },
+		}),
+	)
 })

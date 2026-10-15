@@ -41,7 +41,7 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
   `openid`, `profile` and `email` identity scopes. Allow accepts every requested
   permission; there is no subset choice. Only read tools are in this branch.
 - Access tokens last **300 seconds**. Refresh tokens last **90 days**; the
-  provider's **30-second** rotation retry window remains enabled. The local
+  provider's **30-second** rotation retry window is explicitly configured. The local
   rehearsal alone shortens access tokens to 60 seconds.
 
 Resource routes forward the provider's metadata, including its RFC 9207 support:

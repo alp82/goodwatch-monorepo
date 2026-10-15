@@ -7,14 +7,14 @@ import {
 } from "node:crypto"
 
 export class AuthPayloadAuthenticationError extends Error {
- readonly table: string
- readonly id: string
- constructor(aad: string) {
-  super("Could not decrypt and authenticate auth payload")
-  const boundary = aad.indexOf(":")
-  this.table = aad.slice(0,boundary)
-  this.id = aad.slice(boundary+1,aad.lastIndexOf(":"))
- }
+	readonly table: string
+	readonly id: string
+	constructor(aad: string) {
+		super("Could not decrypt and authenticate auth payload")
+		const boundary = aad.indexOf(":")
+		this.table = aad.slice(0, boundary)
+		this.id = aad.slice(boundary + 1, aad.lastIndexOf(":"))
+	}
 }
 
 export function authCredentialVersion(secret: string, password: string | null) {
