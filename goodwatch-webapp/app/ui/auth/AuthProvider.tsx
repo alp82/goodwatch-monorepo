@@ -55,10 +55,12 @@ export function AuthProvider({
 		// so the next navigation asks again.
 		if (keptLoaderData("root")) return
 		rootRevalidated()
+		// A signed-out loader ends the previous member's per-tab media adoption marker.
+		if (betterAuth && !initialUser) clearMediaSession()
 		setUser((current) =>
 			current && current.id === initialUser?.id ? current : initialUser,
 		)
-	}, [initialUser])
+	}, [initialUser, betterAuth])
 
 	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
 	// its auth changes, so a sign-in that follows can't be missed.
