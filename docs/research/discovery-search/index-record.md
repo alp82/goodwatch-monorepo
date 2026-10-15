@@ -6,17 +6,27 @@ Issue #353 asks for the baseline and at least four weekly runs after Google down
 
 ## Run it
 
-Once a week, by hand (owner decision 2026-10-10: no schedule):
+The [index-record workflow](../../../.github/workflows/index-record.yml) runs automatically every Saturday at 06:00 UTC once installed on `main`. It appends the three record CSVs and commits them to `main` with the run date and `#353`. This replaces the earlier manual-only schedule. Each weekly push also triggers the accepted Coolify deployment.
+
+To trigger it by hand from the repository:
+
+```sh
+gh workflow run index-record.yml
+```
+
+Setup: add the repository Actions secret `GSC_SERVICE_ACCOUNT_JSON` containing the complete read-only Search Console service account JSON key. The workflow writes it privately under `$RUNNER_TEMP`, sets `GSC_KEY_FILE`, and removes the temporary file when sampling finishes. Do not commit the key. Actions must be enabled, repository/organization policy must allow the workflow's explicit `contents: write` permission, and `main` branch rules must permit its `GITHUB_TOKEN` push. No personal access token is needed.
+
+Manual local run is the fallback:
 
 ```
 cd goodwatch-webapp/scripts
 make index-record        # runs: uv run gsc_sample.py
 ```
 
-Then commit the three changed CSV files and add the date to "Runs" below.
+For a local run, commit the three changed record CSV files. The CSVs are the complete run history; the "Runs" table and summaries below are maintained by hand when interpreting results.
 
 - `GSC_KEY_FILE` must point at a read-only Search Console service account key. Set it in `goodwatch-webapp/scripts/.env` (ignored by git) or in the environment. Keep the key outside the repo.
-- A second run on the same date is refused. `uv run gsc_sample.py --force` appends it anyway.
+- A second run on the same date is refused (exit status 3); the workflow treats only that refusal as a successful skip. Other failures fail the job. `uv run gsc_sample.py --force` appends it anyway locally; the workflow never uses it. Workflow dates use UTC.
 - A run makes 50 URL Inspection calls (quota 2,000 per day) and takes about a minute. Nothing is written unless every call succeeds.
 
 ## Files
