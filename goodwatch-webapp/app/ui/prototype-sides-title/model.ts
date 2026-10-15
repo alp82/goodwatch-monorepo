@@ -43,6 +43,8 @@ export interface Placement {
 	member: boolean
 	/** The member's own score, when they rated it. */
 	mine: number | null
+	/** Rated, and below what counts as loved: the page says so instead of "You're here". */
+	lowRated?: boolean
 	edge: {
 		id: string
 		kind: EdgeKind

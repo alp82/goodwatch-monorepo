@@ -79,7 +79,7 @@ export function SidesSlot({ proto, at }: { proto: SidesProto | null; at: Slot })
 	const Variant = { line: LineVariant, panel: PanelVariant, strip: StripVariant, map: MapVariant }[proto.variant]
 	return (
 		<div data-proto-661={proto.variant}>
-			<Variant {...props} />
+			<Variant key={proto.view.title} {...props} />
 		</div>
 	)
 }
@@ -117,12 +117,14 @@ export function headline(view: SidesTitleView, names: boolean): { title: string;
 	const mine = names ? `your ${lowerFirst(side.name)} side` : "one of your sides"
 	if (p.kind === "on" && p.member)
 		return { title: `One of the ${side.count} titles that make ${mine}`, detail: `With ${titleList(near)} · ${share}` }
+	if (p.kind === "on" && p.lowRated)
+		return { title: `${names ? `On ${mine}` : "On one of your sides"}, though you gave it ${p.mine}`, detail: `With ${titleList(near)} · ${share}` }
 	if (p.kind === "on") return { title: names ? `On ${mine}` : "On one of your sides", detail: `With ${titleList(near)} · ${share}` }
 	if (p.edge?.kind === "bridge") {
 		const other = sideOf(view, p.edge.toward)
 		const otherNear = titlesOf(view.titles, p.nearOther)
 		return {
-			title: names && other ? `Between your ${lowerFirst(side.name)} and ${lowerFirst(other.name)} sides` : "Between two of your sides",
+			title: names && other ? `Between two of your sides: ${lowerFirst(side.name)} and ${lowerFirst(other.name)}` : "Between two of your sides",
 			detail: `Near ${titleList(near, 2)}, and near ${titleList(otherNear, 2)}`,
 		}
 	}
@@ -141,7 +143,7 @@ export function WatchNextLink({ side, names, className = "" }: { side: SideCard;
 	return (
 		<Link
 			to={watchNextHref(side)}
-			title={moods ? `Watch next: ${moods}` : "Watch next"}
+			title={names && moods ? `Watch next: ${moods}` : undefined}
 			className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 ${className}`}
 		>
 			{names && moods ? `Watch next: ${moods}` : "Watch next from this side"}
@@ -154,7 +156,7 @@ export function WatchNextLink({ side, names, className = "" }: { side: SideCard;
 export function ProtoPoster({ t, className = "", ring }: { t: PortraitTitle; className?: string; ring?: string }) {
 	return (
 		<Link to={titleHref(t)} prefetch="intent" title={t.title} className={`relative block shrink-0 overflow-hidden rounded-md bg-gray-900 ${className}`} style={ring ? { boxShadow: `0 0 0 2px ${ring}` } : undefined}>
-			<img src={posterUrl(t, "w185")} alt={`Poster for ${t.title}`} className="block aspect-[2/3] w-full object-cover" loading="lazy" draggable={false} />
+			<img src={posterUrl(t, "w185")} alt={`Poster for ${t.title}`} className="block aspect-[2/3] w-full object-cover" draggable={false} />
 		</Link>
 	)
 }

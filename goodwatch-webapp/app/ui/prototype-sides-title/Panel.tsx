@@ -27,7 +27,7 @@ export function PanelVariant({ view, names }: { view: SidesTitleView; names: boo
 			<div className={`mt-5 grid items-stretch gap-3 ${bridge ? "lg:grid-cols-[1fr_7rem_1fr]" : "lg:grid-cols-[1fr_2.5rem_1fr]"}`}>
 				<Panel image={backdrop(side.here)} tone="amber">
 					<div>
-						<p className="text-sm font-semibold text-amber-300">{p.kind === "on" ? "You're here" : "Your side"}</p>
+						<p className="text-sm font-semibold text-amber-300">{p.kind === "on" && !p.lowRated ? "You're here" : "Your side"}</p>
 						<h3 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">{sideName(side)}</h3>
 						<p className="mt-2 text-gray-200">{Math.round(side.share * 100)}% of what you love. Closest to this title:</p>
 					</div>
@@ -52,7 +52,7 @@ export function PanelVariant({ view, names }: { view: SidesTitleView; names: boo
 						<div className="flex flex-wrap items-end justify-between gap-3">
 							<div>
 								<p className="text-sm font-semibold text-amber-300">More from this side</p>
-								<p className="mt-1 text-gray-300">{p.member ? `You love this one. ${detail}.` : "Titles you haven't seen, in your personal order."}</p>
+								<p className="mt-1 text-gray-300">{p.member ? `You love this one. ${detail}.` : view.personalOrder.on ? "Titles you haven't seen, in your personal order." : "Titles you haven't seen."}</p>
 							</div>
 							<WatchNextLink side={side} names={names} />
 						</div>

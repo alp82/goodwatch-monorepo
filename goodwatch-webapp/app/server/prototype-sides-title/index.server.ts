@@ -6,9 +6,9 @@
 //
 // A title is placed, in this order:
 // 1. One of the loved titles that make a side: on that side.
-// 2. In a place just past its nearest side (the side's own place or step edge): just past it.
-// 3. As close to its nearest side as most of the side's loved titles are: on that side.
-// 4. Between two sides that have a bridge: just past the first, toward the other.
+// 2. As close to its nearest side as most of the side's loved titles are: on that side.
+// 3. A little less close, and in a place just past that side (the side's own place or step edge): just past it.
+// 4. Between its two nearest sides, when they have a bridge: just past the first, toward the other.
 // 5. Otherwise, or without a title analysis: nothing.
 // Lists of unseen titles are in the member's personal order (sides group, personal order ranks).
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
@@ -26,8 +26,12 @@ import type { TitleKey } from "~/utils/title-key"
 
 type Vec = Float64Array
 const COLORS = ["#f59e0b", "#38bdf8", "#34d399", "#e879f9", "#fb7185", "#a3e635"]
-/** On a side: at least as close to its center as this share of the side's own loved titles. */
+/** On a side: at least as close to its center as this share of the side's own loved titles, and never stricter than
+ * ON_FLOOR (a small side's few titles sit very close to their center). */
 const ON_QUANTILE = 0.35
+const ON_FLOOR = 0.6
+/** Just past a side: below its on cut by at most this much. */
+const PAST = 0.15
 /** Just past a side: the edge pools' own closeness (see placeEdges in the engine). */
 const NEAR = 0.3
 
@@ -42,6 +46,9 @@ interface Chosen {
 	place: (z: ArrayLike<number>) => { x: number; y: number }
 	moved: ((p: { x: number; y: number }) => { x: number; y: number })[]
 	loved: number
+	lovedKeys: Set<TitleKey>
+	/** The lowest score that counts as loved. */
+	lovedCut: number
 	loose: number
 }
 
@@ -87,7 +94,7 @@ function build(proto: ProtoPerson): Chosen | null {
 			return z ? [cosine(z, centers[i])] : []
 		})
 		sims.sort((a, b) => a - b)
-		return sims[Math.floor(sims.length * (1 - ON_QUANTILE))] ?? 0.5
+		return Math.min(ON_FLOOR, sims[Math.floor(sims.length * (1 - ON_QUANTILE))] ?? 0.5)
 	})
 	const { place, moved, positions, edgeSpots } = mapOf(person, built.memberKeys, sides)
 	const cards: SideCard[] = sides.map((side, i) => ({
@@ -103,7 +110,8 @@ function build(proto: ProtoPerson): Chosen | null {
 		dots: positions[i].dots,
 		edges: side.edges.map((e, j) => ({ id: e.id, kind: e.kind, chip: e.kind === "bridge" ? "Toward" : e.chip, toward: e.toward ?? null, ...edgeSpots[i][j] })),
 	}))
-	return { person, proto, sides, centers, members, onCut, cards, place, moved, loved: loved.length, loose: built.loose }
+	const lovedCut = Math.min(...loved.map((r) => r.score))
+	return { person, proto, sides, centers, members, onCut, cards, place, moved, loved: loved.length, lovedKeys: new Set(loved.map((r) => r.key)), lovedCut, loose: built.loose }
 }
 
 /** The moods most of the side's loved titles have, and more often than the rest of what the member loves. */
@@ -204,8 +212,12 @@ function placeTitle(c: Chosen, key: TitleKey): Omit<Placement, "near" | "nearOth
 	const { person, sides, centers } = c
 	const mine = person.input.scores.get(key) ?? null
 	const none = (debug: string) => ({ kind: "none" as PlacementKind, side: null, member: false, mine, edge: null, debug, index: -1, other: -1, edgeRef: null })
-	const z = person.zOf(key)
-	const facts = person.snapshot.facts(key)
+	let z: Float64Array | null = null
+	let facts: TitleFacts | null = null
+	try {
+		z = person.zOf(key)
+		facts = person.snapshot.facts(key)
+	} catch {}
 	if (!z || !facts) return none("no title analysis")
 	const memberOf = c.members.findIndex((m) => m.has(key))
 	const n = nearest(z, centers)
@@ -214,8 +226,10 @@ function placeTitle(c: Chosen, key: TitleKey): Omit<Placement, "near" | "nearOth
 	const on = (index: number, why: string) => ({ kind: "on" as PlacementKind, side: sides[index].id, member: memberOf === index, mine, edge: null, debug: `${why}; ${base}`, index, other: -1, edgeRef: null })
 	if (memberOf >= 0) return on(memberOf, "one of the loved titles that make this side")
 	// A loved title that fits no side is left out quietly.
-	if (lovedTitles(person).some((r) => r.key === key)) return none(`a loved title that fits no side; ${base}`)
-	const edgeHere = n.similarity > NEAR ? sides[n.index].edges.find((e) => e.kind !== "bridge" && inEdge(e, z, facts)) : undefined
+	if (c.lovedKeys.has(key)) return none(`a loved title that fits no side; ${base}`)
+	if (n.similarity >= c.onCut[n.index]) return on(n.index, "as close to its nearest side as most of the side's loved titles")
+	const edgeHere =
+		n.similarity > NEAR && n.similarity >= c.onCut[n.index] - PAST ? sides[n.index].edges.find((e) => e.kind !== "bridge" && inEdge(e, z, facts)) : undefined
 	const edgeOf = (index: number, edge: ProtoEdge, other: number, why: string) => ({
 		kind: "edge" as PlacementKind,
 		side: sides[index].id,
@@ -228,12 +242,17 @@ function placeTitle(c: Chosen, key: TitleKey): Omit<Placement, "near" | "nearOth
 		edgeRef: edge,
 	})
 	if (edgeHere) return edgeOf(n.index, edgeHere, -1, `in the place just past its nearest side (${edgeHere.chip})`)
-	if (n.similarity >= c.onCut[n.index]) return on(n.index, "as close to its nearest side as most of the side's loved titles")
+	// Its two nearest sides.
+	const two = centers
+		.map((center, i) => ({ i, s: cosine(z, center) }))
+		.sort((a, b) => b.s - a.s)
+		.slice(0, 2)
+		.map((x) => x.i)
 	for (let i = 0; i < sides.length; i++)
 		for (const edge of sides[i].edges) {
 			if (edge.kind !== "bridge") continue
 			const j = sides.findIndex((s) => s.id === edge.toward)
-			if (j < 0) continue
+			if (j < 0 || !two.includes(i) || !two.includes(j)) continue
 			const a = cosine(z, centers[i])
 			const b = cosine(z, centers[j])
 			if (a > 0.2 && b > 0.2 && Math.abs(a - b) < 0.12) return edgeOf(i, edge, j, "between two sides with a bridge")
@@ -272,7 +291,7 @@ export async function sidesTitleView(request: Request, title: TitleKey, slot: st
 	const c = await chosenFor(member.userId)
 	if (!c) return null
 	const placed = placeTitle(c, title)
-	const z = c.person.zOf(title)
+	const z = placed.kind === "none" ? null : c.person.zOf(title)
 	const { index, other, edgeRef } = placed
 	const near = nearestLoved(c, index, z, title)
 	const nearOther = other >= 0 ? nearestLoved(c, other, z, title, 4) : []
@@ -287,7 +306,7 @@ export async function sidesTitleView(request: Request, title: TitleKey, slot: st
 		pin = spot ? { x: spot.x, y: spot.y } : c.moved[index](c.place(z))
 	}
 	const { index: _i, other: _o, edgeRef: _e, ...rest } = placed
-	const placement: Placement = { ...rest, near, nearOther, more, pin }
+	const placement: Placement = { ...rest, near, nearOther, more, pin, lowRated: rest.mine !== null && rest.mine < c.lovedCut }
 	const keys = new Set<TitleKey>([title, ...near, ...nearOther, ...more, ...c.cards.flatMap((s) => [...s.here, ...s.dots.slice(0, 40).map((d) => d.key)])])
 	const titles = await enrich(c.person, keys)
 	return {
@@ -315,7 +334,7 @@ export async function sidesTitleSamples(request: Request, slot: string | null): 
 			const p = kindOf(k)
 			return p.kind === "on" && p.index === i
 		})
-		rows.push({ group: side.id, kind: "on", note: "Unseen, on this side (personal order)", keys: onSide.slice(0, 4) })
+		rows.push({ group: side.id, kind: "on", note: `Unseen, on this side${c.proto.personalOrder ? " (personal order)" : ""}`, keys: onSide.slice(0, 4) })
 		rows.push({ group: side.id, kind: "on", note: "Loved, one of the titles that make this side", keys: side.here.slice(0, 2) })
 		for (const edge of side.edges) {
 			const past = edge.suggestions.filter((k) => {

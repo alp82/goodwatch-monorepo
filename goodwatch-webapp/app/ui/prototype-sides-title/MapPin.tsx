@@ -11,7 +11,8 @@ const pct = (x: number) => `${(x * 100).toFixed(2)}%`
 export function MapVariant({ view, names }: { view: SidesTitleView; names: boolean }) {
 	const p = view.placement
 	const side = sideOf(view, p.side)
-	if (!side || !p.pin) return null
+	// Too few loved titles for a map worth reading: the map stays off (the other variants still answer).
+	if (!side || !p.pin || view.member.loved < 20) return null
 	const { title, detail } = headline(view, names)
 	const self = view.titles[view.title]
 	const other = p.edge?.kind === "bridge" ? sideOf(view, p.edge.toward) : null
@@ -45,7 +46,8 @@ export function MapVariant({ view, names }: { view: SidesTitleView; names: boole
 						))}
 						{titlesOf(view.titles, s.here.slice(0, 3)).map((t) => {
 							const d = s.dots.find((x) => x.key === t.key)
-							if (!d || t.key === view.title) return null
+							// Posters the pin would cover stay dots, so the pin reads on its own.
+							if (!d || t.key === view.title || Math.hypot(d.x - (p.pin?.x ?? -1), (d.y - (p.pin?.y ?? -1)) * 0.6) < 0.07) return null
 							return (
 								<img
 									key={t.key}
@@ -66,7 +68,7 @@ export function MapVariant({ view, names }: { view: SidesTitleView; names: boole
 								</span>
 							))}
 						<span
-							className="absolute max-w-[40%] -translate-x-1/2 -translate-y-[190%] truncate whitespace-nowrap rounded-full border-2 bg-gray-950/90 px-3 py-1 text-xs font-bold shadow-xl md:max-w-none md:text-sm"
+							className={`absolute max-w-[40%] -translate-x-1/2 ${p.pin && Math.abs(p.pin.x - s.x) < 0.12 && p.pin.y <= s.y + 0.02 && s.y - p.pin.y < 0.2 ? "translate-y-[140%]" : "-translate-y-[190%]"} truncate whitespace-nowrap rounded-full border-2 bg-gray-950/90 px-3 py-1 text-xs font-bold shadow-xl md:max-w-none md:text-sm`}
 							style={{ left: pct(s.x), top: pct(s.y), borderColor: s.color }}
 						>
 							{names ? s.name : `${s.count} you love`}
