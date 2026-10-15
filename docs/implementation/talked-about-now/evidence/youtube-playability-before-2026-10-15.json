@@ -1,0 +1,769 @@
+{
+  "title": {
+    "title": "Narnia: The Magician's Nephew",
+    "tmdb_id": 1147572,
+    "release_year": 2027
+  },
+  "narnia_links": [
+    {
+      "url": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+      "lane": "foreground_fuzzy",
+      "text": "‘The Magician’s Nephew’ Trailer: A Stairway to Narnia as Only Greta Gerwig Could Build It",
+      "score": 0.0,
+      "author": "Sarah Shachat",
+      "reason": "Exact match on title, director Greta Gerwig, type movie, and synopsis indicating upcoming film adaptation of The Magician's Nephew",
+      "source": "rss",
+      "status": "drop",
+      "context": "Greta Gerwig's adaptation of the C.S. Lewis fantasy series roars to life — with a little help from Led Zeppelin.",
+      "post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+      "confidence": 1.0,
+      "created_at": 1791996106653,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+      "published_at": 1791914630000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+      "duplicate_group": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=pDvjN6h-mRo",
+      "lane": "foreground_exact",
+      "text": "Nárnia: O Sobrinho do Mago | Trailer oficial | Netflix",
+      "score": 0.0,
+      "author": "Netflix Brasil",
+      "reason": "Exact match on translated title 'Nárnia: O Sobrinho do Mago' and director Greta Gerwig for 'Narnia: The Magician's Nephew'",
+      "source": "youtube",
+      "status": "drop",
+      "context": "Em 11 de fevereiro, só nos cinemas.\n\nA diretora indicada ao Oscar® Greta Gerwig leva a famosa história de \"O Sobrinho do Mago\", de C. S. Lewis, para as telas pela primeira vez, em uma aventura emocionante sobre a criação de Nárnia para sonhadores de todas as idades.\n\nAssista na Netflix: https://www.netflix.com/title/81030669\n\nInscreva-se: https://bit.ly/31ynwtw\n\nSobre a Netflix:\nA Netflix é um dos principais serviços de entretenimento do mundo com um vasto catálogo de séries, filmes, jogos e eventos ao vivo disponíveis em diversos idiomas. Nossos assinantes podem assistir, pausar e voltar a um título quantas vezes quiserem, onde quer que estejam, e alterar o plano a qualquer momento.\n\nNárnia: O Sobrinho do Mago | Trailer oficial | Netflix\nhttps://www.youtube.com/@NetflixBrasil",
+      "post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "pDvjN6h-mRo",
+      "confidence": 1.0,
+      "created_at": 1791995054651,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+      "published_at": 1791914400000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+      "duplicate_group": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+      "lane": "foreground_fuzzy",
+      "text": "First Trailer For Greta Gerwig’s ‘Narnia: The Magician’s Nephew’ Teases Punk Rock Multiverse & Cosmic Creation Of Aslan",
+      "score": 0.0,
+      "author": "Dessi Gomez",
+      "reason": "Director Greta Gerwig, cast includes Beatrice Campbell and David McKenna, upcoming 2027 film titled 'Narnia: The Magician's Nephew' matches exactly",
+      "source": "rss",
+      "status": "drop",
+      "context": "The first trailer for the Greta Gerwig-directed adaptation of Narnia: The Magician’s Nephew has arrived, plunging viewers into a modernized retelling of C.S. Lewis’ first book in The Chronicles of Narnia. The film arrives in theaters February 12 and April 2 on Netflix. Beatrice Campbell’s Polly Plummer and David McKenna’s Digory Kirke kick off the […]",
+      "post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+      "confidence": 1.0,
+      "created_at": 1791996103297,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+      "published_at": 1791916227000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+      "duplicate_group": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+      "lane": "alt_title_context",
+      "text": "Greta Gerwig Debuts ‘Narnia’ Trailer, Opens Up About Telling an Intimate Story on “the Biggest Screen You Can Imagine”",
+      "score": 0.0,
+      "author": "Hilary Lewis",
+      "reason": "Greta Gerwig directing 'Narnia' trailer and story matches 2027 film 'Narnia: The Magician's Nephew'",
+      "source": "rss",
+      "status": "drop",
+      "context": "The writer-director, who participated in a Q&A with Stephen Colbert, revealed how she landed the fitting Led Zeppelin song in the preview.",
+      "post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+      "confidence": 1.0,
+      "created_at": 1791996105758,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+      "published_at": 1791914967000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+      "duplicate_group": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=O8hR2dQGv0k",
+      "lane": "foreground_exact",
+      "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+      "score": 6.02603974,
+      "author": "Netflix",
+      "reason": "Exact match on title 'Narnia: The Magician's Nephew' with director Greta Gerwig and Netflix official trailer",
+      "source": "youtube",
+      "status": "keep",
+      "context": "Only in theaters 11 February.\n\nAcademy Award–nominated filmmaker Greta Gerwig brings C. S. Lewis’ beloved story The Magician’s Nephew to the screen for the first time in a sweeping adventure that invites dreamers of all ages to experience the creation of Narnia.\n\nWatch on Netflix: https://www.netflix.com/title/81030669\n\nAbout Netflix:\nNetflix is one of the world’s leading entertainment services offering TV series, films, games and live programming across a wide variety of genres and languages. Members can play, pause and resume watching as much as they want, anytime, anywhere, and can change their plans at any time. \n\nNARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix\nhttps://www.youtube.com/@Netflix",
+      "post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+      "reasons": [],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "O8hR2dQGv0k",
+      "confidence": 1.0,
+      "created_at": 1791995054231,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+      "published_at": 1791914403000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+      "duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+      "lane": "foreground_fuzzy",
+      "text": "‘Narnia: The Magician’s Nephew’ Trailer: Greta Gerwig’s Fantasy Epic Unveils Aslan, the White Witch and More in Dazzling Footage",
+      "score": 0.0,
+      "author": "Rebecca Rubin",
+      "reason": "Exact match on title, director Greta Gerwig, type movie, and synopsis indicating upcoming film adaptation of The Magician's Nephew",
+      "source": "rss",
+      "status": "drop",
+      "context": "Greta Gerwig is inviting audiences to enter the epic realm of Narnia with “The Magician’s Nephew,” for which the first trailer was unveiled on Tuesday. Based on the classic C.S. Lewis children’s book series “The Chronicles of Narnia,” the story follows two children, Digory and Polly, who are the first to discover the “Wood between […]",
+      "post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+      "confidence": 1.0,
+      "created_at": 1791996107059,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+      "published_at": 1791914573000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+      "duplicate_group": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+      "lane": "alt_title_context",
+      "text": "Neuer Netflix-Film schafft, was großen Hollywood-Studios in 55 Jahren Filmgeschichte nicht gelungen ist",
+      "score": 0.0,
+      "author": "Patrick Reinbott",
+      "reason": "Mention of 'new Narnia film' on Netflix and reference to a new upcoming film matches 'Narnia: The Magician's Nephew' (2027) rather than the 1979 older film",
+      "source": "rss",
+      "status": "drop",
+      "context": "Netflix hat endlich den ersten Trailer zum neuen Narnia-Film veröffentlicht. Die Vorschau überrascht vor allem mit einem besonderen Song. Moviepilot erklärt euch die Details.",
+      "post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+      "confidence": 0.98,
+      "created_at": 1792013066046,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+      "published_at": 1791995400000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+      "duplicate_group": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+      "lane": "vector_context",
+      "text": "Narnia Fans Split Over Greta Gerwig’s ‘Magicians Nephew’ Trailer: “Best in Years” to “Lost Its Soul to CGI”",
+      "score": 0.0,
+      "author": "James Hibberd",
+      "reason": "The entity is described as Greta Gerwig's adaptation of 'The Magician's Nephew', matching the candidate movie titled 'Narnia: The Magician's Nephew' directed by Greta Gerwig, upcoming in 2027, explicitly about the same work.",
+      "source": "rss",
+      "status": "drop",
+      "context": "The long-awaited trailer for Greta Gerwig's adaptation of C.S. Lewis' beloved series is getting some very split reactions, from \"best trailer I've seen in years\" to \"a bizarre, disastrous fever dream.\"",
+      "post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+      "confidence": 0.98,
+      "created_at": 1791996031770,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+      "published_at": 1791923803000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+      "duplicate_group": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=gDJ-ini7fF0",
+      "lane": "foreground_exact",
+      "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+      "score": 0.0,
+      "author": "Netflix",
+      "reason": "Exact match on title 'Narnia: The Magician's Nephew' with director Greta Gerwig and Netflix official trailer",
+      "source": "youtube",
+      "status": "drop",
+      "context": "Only in theaters February 12.\n\nAcademy Award–nominated filmmaker Greta Gerwig brings C. S. Lewis’ beloved story The Magician’s Nephew to the screen for the first time in a sweeping adventure that invites dreamers of all ages to experience the creation of Narnia.\n\nWatch on Netflix: https://www.netflix.com/title/81030669\n\nAbout Netflix:\nNetflix is one of the world’s leading entertainment services offering TV series, films, games and live programming across a wide variety of genres and languages. Members can play, pause and resume watching as much as they want, anytime, anywhere, and can change their plans at any time. \n\nNARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix\nhttps://www.youtube.com/@Netflix",
+      "post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "gDJ-ini7fF0",
+      "confidence": 1.0,
+      "created_at": 1791995055092,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+      "published_at": 1791914400000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+      "duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://bsky.app/profile/did:plc:ljimdiamagk6ut7tgjevfvh5/post/3mxuhcxdo422i",
+      "lane": "vector_context",
+      "text": "I've loved every film Greta Gerwig has made thus far, but I have to say The Magician's Nephew trailer is giving off major Quantumania vibes",
+      "score": 0.0,
+      "author": "buliaros.bsky.social",
+      "reason": "Mention 'The Magician's Nephew' trailer and director Greta Gerwig matches upcoming 2027 movie 'Narnia: The Magician's Nephew' by Greta Gerwig; exact title match and director known; context disambiguated true",
+      "source": "bluesky",
+      "status": "drop",
+      "context": "",
+      "post_id": "c20c4d2b69d1b04fe05da24a3f67fbc9ac41d429c62e55ad4894c03d800bde1d",
+      "reasons": [
+        "insufficient_reach",
+        "peripheral_title",
+        "metrics:{\"card_text\":\" \",\"followers\":172,\"likes\":1,\"observed_at\":\"2026-10-15T17:05:15.481289+00:00\",\"quotes\":0,\"replies\":1,\"reposts\":0}"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "at://did:plc:ljimdiamagk6ut7tgjevfvh5/app.bsky.feed.post/3mxuhcxdo422i",
+      "confidence": 0.98,
+      "created_at": 1792013201563,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "0a68d4920e09caf2e86a6aedf71dfdde7611ebe060359f279238d21b03e1040b",
+      "published_at": 1792012052649,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "0a68d4920e09caf2e86a6aedf71dfdde7611ebe060359f279238d21b03e1040b",
+      "duplicate_group": "c20c4d2b69d1b04fe05da24a3f67fbc9ac41d429c62e55ad4894c03d800bde1d",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.filmstarts.de/nachrichten/1000227177.html",
+      "lane": "alt_title_context",
+      "text": "Der erste Trailer zu \"Das Wunder von Narnia\" ist da: Für dieses Fantasy-Epos hat Netflix mehr als 200 Millionen Dollar ausgegeben!",
+      "score": 0.0,
+      "author": "www.filmstarts.de",
+      "reason": "German title 'Das Wunder von Narnia' and 2027 release with Greta Gerwig directing matches 'Narnia: The Magician's Nephew'",
+      "source": "rss",
+      "status": "drop",
+      "context": "17 Jahre nach dem bis dato letzten „Narnia“-Film bringt „Barbie“-Regisseurin Greta Gerwig die beliebte Fantasy-Saga 2027 zurück auf die Leinwand – und zu Netflix. Der erste Trailer verspricht ein starbesetztes Abenteuer mit epischen Ausmaßen:",
+      "post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.filmstarts.de/nachrichten/1000227177.html",
+      "confidence": 1.0,
+      "created_at": 1791996105344,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+      "published_at": 1791915300000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+      "duplicate_group": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+      "lane": "foreground_exact",
+      "text": "Narnia: The Magician's Nephew Trailer: Greta Gerwig Takes The Fantasy Classic To Netflix",
+      "score": 0.0,
+      "author": "www.slashfilm.com",
+      "reason": "Exact match on title, director Greta Gerwig, type movie, and synopsis indicating upcoming film adaptation of The Magician's Nephew",
+      "source": "rss",
+      "status": "drop",
+      "context": "Greta Gerwig is about to give us her biggest movie yet with her big Netflix adaptation of Narnia: The Magician's Nephew. Watch the trailer here.",
+      "post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+      "confidence": 1.0,
+      "created_at": 1791996107469,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+      "published_at": 1791914551000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+      "duplicate_group": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=3g28OdIj6cY",
+      "lane": "foreground_exact",
+      "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+      "score": 0.0,
+      "author": "Netflix India",
+      "reason": "Exact match on title 'Narnia: The Magician's Nephew' with director Greta Gerwig and Netflix official trailer",
+      "source": "youtube",
+      "status": "drop",
+      "context": "Only in theaters 12 February.\r\n\r\nAcademy Award–nominated filmmaker Greta Gerwig brings C. S. Lewis’ beloved story The Magician’s Nephew to the screen for the first time in a sweeping adventure that invites dreamers of all ages to experience the creation of Narnia.\r\n\r\nWatch on Netflix: https://www.netflix.com/title/81030669\r\n\r\nFollow Netflix India on:\r\nWebsite: https://www.netflix.com/\r\nYouTube: http://bit.ly/NetflixIndiaYT\r\nInstagram: http://www.instagram.com/netflix_in\r\nFacebook: http://www.facebook.com/NetflixIN\r\nTwitter: http://twitter.com/netflixindia",
+      "post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+      "reasons": [
+        "duplicate_of:85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce"
+      ],
+      "hidden_at": null,
+      "judged_at": 1792090803715,
+      "source_id": "3g28OdIj6cY",
+      "confidence": 1.0,
+      "created_at": 1791995053821,
+      "deleted_at": null,
+      "media_type": "movie",
+      "content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+      "published_at": 1791914407000,
+      "hidden_reason": null,
+      "media_tmdb_id": 1147572,
+      "relevance_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+      "duplicate_group": "8437ef72fe4c73306733bd1478391f6ae501ecad5d6fc514415edea9acaa0663",
+      "matcher_version": "foreground-context-v2-production-1",
+      "confidence_basis": "llm_self_report_not_calibrated"
+    }
+  ],
+  "counts": [
+    {
+      "n": 264,
+      "source": "rss",
+      "status": "keep"
+    },
+    {
+      "n": 133,
+      "source": "bluesky",
+      "status": "drop"
+    },
+    {
+      "n": 30,
+      "source": "youtube",
+      "status": "keep"
+    },
+    {
+      "n": 184,
+      "source": "rss",
+      "status": "drop"
+    },
+    {
+      "n": 52,
+      "source": "youtube",
+      "status": "drop"
+    },
+    {
+      "n": 4,
+      "source": "bluesky",
+      "status": "keep"
+    }
+  ],
+  "kept_youtube_probes": [
+    {
+      "video_id": "G2bQHdPU0r0",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "ox8lEnsxDag",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "iIEYfH-jg1Y",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "pgXUkeU1BS8",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "CPFkLjHfKoc",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "cT4PltL58Ts",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "AmKx3oP2nBA",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "kVOLubAG9-A",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "r0H-oWUFJbk",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "jfUUKdYd6js",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "mkJVHTBuv9Y",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "MCGTWRen488",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 248,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "PWN3UW3dmYI",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "dBxrOZsMsrI",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "2CbtUlW4Smk",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "3mzvhpHuv_8",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "vsXs3Km6UDw",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "L18ih13Bf-U",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "SO4CU9P8--8",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "DK__Vktf_ng",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "O8hR2dQGv0k",
+      "http": 200,
+      "player_status": "UNPLAYABLE",
+      "allowed_country_count": 2,
+      "countries": {
+        "DE": false,
+        "US": false,
+        "GB": false
+      },
+      "allowed_countries": [
+        "AU",
+        "NZ"
+      ]
+    },
+    {
+      "video_id": "AYkPRN874m8",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "UKaWzMf9Ybc",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "4WZO9lHgiI4",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "5f1H5Rk9l4o",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "-G8FapnfXPs",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "aqGYA4OxTLY",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "urV5GzXcXsQ",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "mFvtVPMa5ak",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    },
+    {
+      "video_id": "wl4mqPQCBnU",
+      "http": 200,
+      "player_status": "OK",
+      "allowed_country_count": 249,
+      "countries": {
+        "DE": true,
+        "US": true,
+        "GB": true
+      }
+    }
+  ],
+  "measurement_location": "Frankfurt am Main, Germany (residential egress)",
+  "worker_sample_location": "Falkenstein, Germany (Hetzner)"
+}

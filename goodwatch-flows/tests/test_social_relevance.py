@@ -19,7 +19,9 @@ def piece(**changes):
                 source='rss', source_id='article', author_id='variety.com', author='Reviewer',
                 url='https://variety.com/2026/film/reviews/example-movie-review/',
                 text='Example Movie Review: A thoughtful and moving debut', context='Original film criticism.',
-                published_at='2026-10-15T12:00:00Z', quality_evidence={}, **changes)
+                published_at='2026-10-15T12:00:00Z', quality_evidence={},
+                youtube_playability={'video_id': 'article', 'method': 'watch', 'checked_at': AT.isoformat(),
+                    'status': 'playable', 'reason': 'test_fixture', 'countries': {'DE': True}}, **changes)
 
 
 class RelevanceTests(unittest.TestCase):
@@ -257,7 +259,9 @@ class RelevanceCrateTests(unittest.TestCase):
             self.fail('Integration fixture writes require isolated localhost Crate')
         db = RelevanceCrate({'CRATE_HOSTS': target, 'CRATE_USER': 'crate', 'CRATE_PASS': ''}, apply=True)
         fixture = json.loads((Path(__file__).parent / 'fixtures/social/relevance-2026-10-15.json').read_text())
-        decisions = judge_links(fixture['links'], fixture['catalog'], at=AT)
+        sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
+        from social_relevance_eval import editorial_inputs
+        decisions = judge_links(editorial_inputs(fixture), fixture['catalog'], at=AT)
         save(db, decisions)
         self.assertEqual(db.select('SELECT COUNT(*) AS n FROM doc.social_relevance WHERE media_tmdb_id < 5000000000')[0]['n'], 632)
         first = decisions[0]

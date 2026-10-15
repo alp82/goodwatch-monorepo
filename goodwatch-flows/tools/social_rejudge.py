@@ -18,6 +18,7 @@ from f.social.settings import KEYS
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--force-playability', action='store_true', help='Recheck YouTube even with fresh cached observations')
     parser.add_argument('--env', type=Path)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
@@ -28,7 +29,7 @@ def main():
             if sep and key.strip() in KEYS:
                 settings[key.strip()] = value.strip().strip('\"\'')
     settings.update({k: os.environ[k] for k in KEYS if os.environ.get(k)})
-    result = run(RelevanceCrate(settings, apply=args.apply), apply=args.apply)
+    result = run(RelevanceCrate(settings, apply=args.apply), apply=args.apply, force_playability=args.force_playability)
     if args.output:
         args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k != 'decisions'}, indent=2))
