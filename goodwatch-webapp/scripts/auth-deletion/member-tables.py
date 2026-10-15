@@ -1,6 +1,7 @@
 """Create the member tables (user_*) on the disposable account-deletion cluster, from the repository's schemas."""
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from urllib.request import ProxyHandler, Request, build_opener
@@ -33,4 +34,10 @@ for name, schema in module.SCHEMAS.items():
     routing = f"BY ({schema['clustered_by']}) " if schema.get('clustered_by') else ''
     sql(f"CREATE TABLE IF NOT EXISTS {name} ({','.join(definitions)}) CLUSTERED {routing}INTO 1 SHARDS WITH (number_of_replicas=0)")
     created.append(name)
+# The MCP receipt table is created by hand at the cut-over (step 1.4), so it isn't in SCHEMAS.
+receipts = (Path(__file__).resolve().parents[3] / 'docs/implementation/mcp-write-tools-schema.sql').read_text()
+receipts = '\n'.join(line for line in receipts.splitlines() if not line.startswith('--')).strip().rstrip(';')
+receipts = re.sub(r'INTO \d+ SHARDS$', 'INTO 1 SHARDS WITH (number_of_replicas=0)', receipts.replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', 1))
+sql(receipts)
+created.append('user_mcp_action')
 print(f'Created {len(created)} member tables: {", ".join(created)}')
