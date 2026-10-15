@@ -1,0 +1,516 @@
+{
+  "at": "2026-10-14T20:50:29.608417+00:00",
+  "version": "content-quality-1",
+  "applied": false,
+  "before": {
+    "youtube": {
+      "posts": 94,
+      "links": 68
+    },
+    "rss": {
+      "posts": 523,
+      "links": 317
+    },
+    "bluesky": {
+      "posts": 864,
+      "links": 251
+    },
+    "mastodon": {
+      "posts": 77,
+      "links": 0
+    }
+  },
+  "predicted_after": {
+    "youtube": {
+      "posts": 94,
+      "links": 68
+    },
+    "rss": {
+      "posts": 523,
+      "links": 317
+    },
+    "bluesky": {
+      "posts": 864,
+      "links": 70
+    },
+    "mastodon": {
+      "posts": 77,
+      "links": 0
+    }
+  },
+  "hydration_errors": [],
+  "post_decisions": {
+    "rss:pass": 523,
+    "bluesky:reject": 552,
+    "bluesky:pass": 312,
+    "youtube:pass": 94,
+    "mastodon:reject": 77
+  },
+  "reasons": {
+    "unapproved_link_domain": 458,
+    "high_post_rate": 132,
+    "declared_bot": 38,
+    "no_substantive_text": 67,
+    "new_account": 43,
+    "repetitive_author": 66,
+    "stream_promotion": 41,
+    "missing_link_evidence": 77,
+    "automated_frame_post": 10,
+    "link_shortener": 51,
+    "no_profile": 1
+  },
+  "rejected_examples": [
+    {
+      "post_id": "053771e0366b80883cc3a8e210dd65df6ccf145155b8b0517bf1c923e728bcbe",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxwc4w3e2m",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 Captain Hook: The Cursed Tides (2025) ⭐ 5.0/10 / 🎭 Adventure, Action / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1511789"
+      ]
+    },
+    {
+      "post_id": "182ebbfbf647ac49566f44d404f824f30410004e9ff140c2ea4ddb1937737073",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtvvvvxkd2o",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 Turbulence (2025) ⭐ 5.5/10 / 🎭 Action, Thriller / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #Turbulence #Action #Thriller #2025",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1401778"
+      ]
+    },
+    {
+      "post_id": "2ea6617db1fd8d40b24952eb81cd34249cfb1799b149679adebf767f355b5451",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:sggcemuswbe74yefq36bkgau/post/3mxtuclydbd25",
+      "author": "techrad.ar",
+      "text": "#TechRadar #Tech How to watch Below Deck season 13 for free — stream the yacht-rockin' reality TV show from anywhere [outbound link]",
+      "reasons": [
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:50042"
+      ]
+    },
+    {
+      "post_id": "30e5281abd69ab3fd486a24aaf193065b5b3f7c39b9e0e0ab2f3b4a3a21bf28e",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtwsk34oo2l",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 Frost/Nixon (2008) ⭐ 7.3/10 / 🎭 Drama, History / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #FrostNixon #Drama #History #2008",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:11499"
+      ]
+    },
+    {
+      "post_id": "4f5cc2f8c17250c01508522904ae302b5c73a956f83187823cb392bfa7d177ab",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtwlf56b42y",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 The Good Teacher (2024) ⭐ 6.3/10 / 🎭 Drama, Thriller / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #TheGoodTeacher #Drama",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1000862"
+      ]
+    },
+    {
+      "post_id": "571c6881b528b45a8490ba5890bc8c97bdce7dd29add8677f9968ce28d51ecaa",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtvsealgi2y",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 Brute 1976 (2024) ⭐ 4.4/10 / 🎭 Horror / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #Brute1976 #Horror #2024 #WatchOnline",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1221415"
+      ]
+    },
+    {
+      "post_id": "5a83b5471e3e39d579e8af4c19c0daa4504f480c47e0972cd86cc61bc22033c4",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxaup3tm2q",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 Antigone (1961) ⭐ 7.6/10 / 🎭 History, Drama / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #Antigone #History #Drama #1961",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:98189"
+      ]
+    },
+    {
+      "post_id": "5c3f3ddfc0e8c2ab76f1845bcbab35a19f5aaeba7fc8b462eafe0db3f6f247c8",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxuiseih2y",
+      "author": "moviejounal.bsky.social",
+      "text": "📺 The King of Queens (1998) ⭐ 7.1/10 / 🎭 Comedy / 📺 All Episodes HD 🍿 Stream Free Online: [outbound link] #MovieStream #TVSeries",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:4238"
+      ]
+    },
+    {
+      "post_id": "655a8bc6c2dda5908d80171eeb210424f6c872f88fbac202fc98a82fa06038f6",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:ctcqaqa3tlbhfwmfefti346h/post/3mxttybml75v2",
+      "author": "techradar.com.web.brid.gy",
+      "text": "",
+      "reasons": [
+        "no_substantive_text",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:50042"
+      ]
+    },
+    {
+      "post_id": "682fc9fe30e1410678a7ec44b583890b856b0b930b5e17c4a9f4c40b5d55f0af",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxcmm5gu2p",
+      "author": "moviejounal.bsky.social",
+      "text": "📺 Mr. Mercedes (2017) ⭐ 7.1/10 / 🎭 Mystery, Sci-Fi & Fantasy / 📺 All Episodes HD 🍿 Stream Free Online: [outbound link] #MovieStream",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:70485"
+      ]
+    },
+    {
+      "post_id": "099bffa70d4d41c3ec8d9b2dc9650c7ffbc59af02fcdf7e00ed26f5fc0af6eca",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:35fioq3veu46cullrldtgi23/post/3mxtxsuyspj2s",
+      "author": "rngundam.bsky.social",
+      "text": "Mobile Suit Gundam Iron-Blooded Orphans (2015) Episode 14 - Vessel of Hope 22:19.779",
+      "reasons": [
+        "automated_frame_post"
+      ],
+      "title_keys": [
+        "tv:64375"
+      ]
+    },
+    {
+      "post_id": "17c2c615c0076a1ad924f06e4ef56488d02f820fb2aac99882466a87db93ba2c",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:5olkd3vuiqu75rgyfjjovvbq/post/3mxtxfq5fcr2d",
+      "author": "pkmnframes.bsky.social",
+      "text": "Pokemon - Season 2 Episode 5 - Fit to Be Tide! Frame 2450/2544 Timestamp: 00:20:37.619",
+      "reasons": [
+        "automated_frame_post",
+        "declared_bot",
+        "high_post_rate",
+        "repetitive_author"
+      ],
+      "title_keys": [
+        "tv:60572"
+      ]
+    },
+    {
+      "post_id": "6dd3211ebf01eeb183c214dfd9453f6547fb51a6c4bb60990f1e9ace60ba62e2",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:ju5nz3yfdqfyuhcqnp7ynxfk/post/3mxtxvpw2lc2l",
+      "author": "sonicframes.bsky.social",
+      "text": "Adventures of Sonic the Hedgehog - Season 1 Episode 7 - Robolympics Frame 1453/3063 Caption: Sonic the Hedgehog is moving into position Timestamp: 00:10:42",
+      "reasons": [
+        "automated_frame_post",
+        "declared_bot",
+        "high_post_rate",
+        "repetitive_author"
+      ],
+      "title_keys": [
+        "tv:44"
+      ]
+    },
+    {
+      "post_id": "7b857bac9eda917aa97aa8a6fe1b65475ebd5e386059232f5f26c9620ceb42f5",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:5olkd3vuiqu75rgyfjjovvbq/post/3mxtxc4f27q2m",
+      "author": "pkmnframes.bsky.social",
+      "text": "Pokemon - Season 2 Episode 5 - Fit to Be Tide! Frame 2449/2544 Caption: Right, Lapras? Timestamp: 00:20:37.143",
+      "reasons": [
+        "automated_frame_post",
+        "declared_bot",
+        "high_post_rate",
+        "repetitive_author"
+      ],
+      "title_keys": [
+        "tv:60572"
+      ]
+    },
+    {
+      "post_id": "01a4f9624f59f48ae9ccc19b362bb0fc529c2909b15bfc512d163145fca5cf09",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:pa2zf2gvhnfg6kegugzdq5yd/post/3mxtwqa6y7e2x",
+      "author": "airedontvtoday.bsky.social",
+      "text": "75 years ago on October 14, 1951, TV show 'What's My Line?' aired episode \"Samuel Goldwyn\"",
+      "reasons": [
+        "high_post_rate"
+      ],
+      "title_keys": [
+        "tv:26663"
+      ]
+    },
+    {
+      "post_id": "1533759a388434e3b2968fa432a9bb88755198115abd651b53ba1900178eccc1",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:pa2zf2gvhnfg6kegugzdq5yd/post/3mxtwwa23nw2v",
+      "author": "airedontvtoday.bsky.social",
+      "text": "On October 14, 1954, TV show 'Dragnet' aired episode \"The Big Bar\"",
+      "reasons": [
+        "high_post_rate"
+      ],
+      "title_keys": [
+        "tv:3716"
+      ]
+    },
+    {
+      "post_id": "1823986cd979d3f7ccbc96b6998aa9ff448957fa136370476f0985ce807bbe3b",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:rbxp2vogpilryavecvvezc7r/post/3mxtxcuwiu42q",
+      "author": "headlinesociety.bsky.social",
+      "text": "Gina Prince-Bythewood Praises “Children of Blood and Bone” Author Tomi Adeyemi amid Controversy Read more 👇 [outbound link]",
+      "reasons": [
+        "high_post_rate",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:621304"
+      ]
+    },
+    {
+      "post_id": "21f86d23e3a6124e1b2d0f3805b520256f68eb93f4fa4252f7a4ddc28ee60feb",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:pa2zf2gvhnfg6kegugzdq5yd/post/3mxtx6hsfte23",
+      "author": "airedontvtoday.bsky.social",
+      "text": "On October 14, 1967, TV show 'Shazzan' aired episode \"City of the Tombs/Demon in the Bottle Returns\"",
+      "reasons": [
+        "high_post_rate"
+      ],
+      "title_keys": [
+        "tv:10501"
+      ]
+    },
+    {
+      "post_id": "6bb88eb9492f540c9e9ffaeca000d8a585d1e01f9046842175eefcf03bb0c324",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxhyje4u2d",
+      "author": "moviejounal.bsky.social",
+      "text": "🎬 The Lost (2009) ⭐ 5.7/10 / 🎭 Mystery, Thriller / 📺 1080p HD 🍿 Watch Online Free: [outbound link] #MovieStream #TheLost #Mystery #Thriller",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:21851"
+      ]
+    },
+    {
+      "post_id": "7187b0d1754cc53ae1c0832ec03c7c2a608670747296a2cf72811c1ef8a7c348",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtwjmbifs2p",
+      "author": "moviejounal.bsky.social",
+      "text": "📺 The Big Game (2020) ⭐ 7.4/10 / 🎭 Action & Adventure / 📺 All Episodes HD 🍿 Stream Free Online: [outbound link] #MovieStream",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:107703"
+      ]
+    },
+    {
+      "post_id": "7d78a2a69adf70f073d5d1fb1b499db9e601fbb158f09a178673f4217e624d8f",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:nc2mpfbfxhzga4477wurwiug/post/3mxtxnebclq2z",
+      "author": "moviejounal.bsky.social",
+      "text": "📺 What If...? (2021) ⭐ 8.1/10 / 🎭 Animation, Action & Adventure / 📺 All Episodes HD 🍿 Stream Free Online: [outbound link] #MovieStream",
+      "reasons": [
+        "high_post_rate",
+        "new_account",
+        "repetitive_author",
+        "stream_promotion",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:91363"
+      ]
+    },
+    {
+      "post_id": "0d22d5a123e540fcb9c06925014e7c5861ff7fc59d47bee550290fc555e2fa0a",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:v3nv3i2h3fzwefctrwhmjryi/post/3mxtxa26tks2n",
+      "author": "buddyshares.bsky.social",
+      "text": "[outbound link]",
+      "reasons": [
+        "no_substantive_text",
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:286617"
+      ]
+    },
+    {
+      "post_id": "1f1542735b1b43e61b902acc39e74ef43b0ea0c16f8d471684011e3a316bf650",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:yt2q6lonaybx4qkb6kstmpuk/post/3mxtxhg7zpk2c",
+      "author": "moviemaiden.bsky.social",
+      "text": "2 days until #SenseAndSensibility!!! ✨✨✨✨✨✨✨✨✨✨ #JaneAusten #FilmSky #MovieSky",
+      "reasons": [
+        "no_substantive_text"
+      ],
+      "title_keys": [
+        "movie:4584"
+      ]
+    },
+    {
+      "post_id": "1ff96cbecf66f30af4fe1fd3fe24e5b0c9f5814e3a2562375bde25906e9eaf36",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:2oqsj6fzichmlfdaytbleyiv/post/3mxtxabcje52w",
+      "author": "entertainmentradio.bsky.social",
+      "text": "",
+      "reasons": [
+        "link_shortener",
+        "no_substantive_text"
+      ],
+      "title_keys": [
+        "tv:57243"
+      ]
+    },
+    {
+      "post_id": "37e83129bf00926acafc8c4c82a3d72e4fa950fe059e76adfc9de9ef3c97aebd",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:57rtsixgrs6aoodkp5hf2yyc/post/3mxtwgr5xih2u",
+      "author": "breakingnews06.bsky.social",
+      "text": "‘Nuisance Bear’ Trailer: In Oscar-Contending Documentary, Polar Bears And Humans Collide In Frigid North #NuisanceBear #PolarBears #Documentary #OscarContender #FilmTrailer",
+      "reasons": [
+        "declared_bot",
+        "high_post_rate",
+        "link_shortener"
+      ],
+      "title_keys": [
+        "movie:865342"
+      ]
+    },
+    {
+      "post_id": "54eed387bf2dbef019262723a0bfb8e9fb3cee99dea5d24ceeffc3ba3e48b385",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:qcialxkbt47ir2frzwhk4izx/post/3mxtxc3eyzo2n",
+      "author": "movietvtechgeeks.com",
+      "text": "Movie TV Tech Geeks #Exclusives #Elsbeth #CBS #NicholasBraun ‘Elsbeth’ Officially Puts a ‘Succession’ Star in the Hot Seat in New Season 4 Sneak Peek",
+      "reasons": [
+        "link_shortener"
+      ],
+      "title_keys": [
+        "tv:226285"
+      ]
+    },
+    {
+      "post_id": "5e47ad6508f90df9be12d9a96b09b6df9609d29cbbb19b03567ca1f0042256fa",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:bsvp5dpspq7oz5hd6n2fqqyl/post/3mxtxpabdem26",
+      "author": "wyomingpublicmedia.bsky.social",
+      "text": "The memory of world-famous Grizzly Bear 399 is enduring almost two years after her death. This week, a film about her is premiering on",
+      "reasons": [
+        "link_shortener"
+      ],
+      "title_keys": [
+        "movie:1261933"
+      ]
+    },
+    {
+      "post_id": "0064fc51b9b7a2c49a7e1e61490a5672fee6f018a20194b511b6db26174098eb",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:ih6oyonoy5see7xpdpvfkgdy/post/3mxtwd57smk2s",
+      "author": "tuttascena1.bsky.social",
+      "text": "il regista Francesco Piras presenta il suo film ZUSTISSIA (Ita, 2026) al cinema da giovedì 15 ottobre 2026 [outbound link]",
+      "reasons": [
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1639616"
+      ]
+    },
+    {
+      "post_id": "010ea373e7dd574734448861bc3ceb8d65766b61f40287c260879c6d19a107f8",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:njz53umfcb5q3i6qubgbvmgw/post/3mxtxraswdk2a",
+      "author": "imageoutroc.bsky.social",
+      "text": "HAPPENING TONIGHT: Join ImageOut on Wednesday, October 14 for Program 16: BETWEEN DREAMS AND HOPE at The Little Theatre 1. 5:30pm doors, 6:00pm program.",
+      "reasons": [
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "movie:1517202"
+      ]
+    },
+    {
+      "post_id": "05722a252cbbcf3f11ad0fb975970b64d9e6806c7707457c6da195fd73db8b0d",
+      "source": "bluesky",
+      "url": "https://bsky.app/profile/did:plc:53hesrikbly6epwgu5oqaf7g/post/3mxtwlweixx2l",
+      "author": "firstshowing.bsky.social",
+      "text": "Jaalen Best as Muhammad Ali in 'The Greatest' Series Official Trailer",
+      "reasons": [
+        "unapproved_link_domain"
+      ],
+      "title_keys": [
+        "tv:258989"
+      ]
+    }
+  ],
+  "rejected_published_posts": 176
+}

@@ -6,17 +6,27 @@ Issue #353 asks for the baseline and at least four weekly runs after Google down
 
 ## Run it
 
-Once a week, by hand (owner decision 2026-10-10: no schedule):
+The [index-record workflow](../../../.github/workflows/index-record.yml) runs automatically every Saturday at 06:00 UTC once installed on `main`. It appends the three record CSVs and commits them to `main` with the run date and `#353`. This replaces the earlier manual-only schedule. Each weekly push also triggers the accepted Coolify deployment.
+
+To trigger it by hand from the repository:
+
+```sh
+gh workflow run index-record.yml
+```
+
+Setup: add the repository Actions secret `GSC_SERVICE_ACCOUNT_JSON` containing the complete read-only Search Console service account JSON key. The workflow writes it privately under `$RUNNER_TEMP`, sets `GSC_KEY_FILE`, and removes the temporary file when sampling finishes. Do not commit the key. Actions must be enabled, repository/organization policy must allow the workflow's explicit `contents: write` permission, and `main` branch rules must permit its `GITHUB_TOKEN` push. No personal access token is needed.
+
+Manual local run is the fallback:
 
 ```
 cd goodwatch-webapp/scripts
 make index-record        # runs: uv run gsc_sample.py
 ```
 
-Then commit the three changed CSV files and add the date to "Runs" below.
+For a local run, commit the three changed record CSV files. The CSVs are the complete run history; the "Runs" table and summaries below are maintained by hand when interpreting results.
 
 - `GSC_KEY_FILE` must point at a read-only Search Console service account key. Set it in `goodwatch-webapp/scripts/.env` (ignored by git) or in the environment. Keep the key outside the repo.
-- A second run on the same date is refused. `uv run gsc_sample.py --force` appends it anyway.
+- A second run on the same date is refused (exit status 3); the workflow treats only that refusal as a successful skip. Other failures fail the job. `uv run gsc_sample.py --force` appends it anyway locally; the workflow never uses it. Workflow dates use UTC.
 - A run makes 50 URL Inspection calls (quota 2,000 per day) and takes about a minute. Nothing is written unless every call succeeds.
 
 ## Files
@@ -43,7 +53,7 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 | Event | Date |
 | --- | --- |
 | Sitemap resubmitted in Search Console | 2026-10-10 |
-| Google downloads the new sitemap (`lastDownloaded` moves past 2026-09-22) | not yet |
+| Google downloads the new sitemap (`lastDownloaded` moves past 2026-09-22) | 2026-10-10 |
 | Redirect change deployed | 2026-10-10 |
 | Start page change deployed | 2026-10-10 |
 
@@ -52,6 +62,7 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 | Run | Note |
 | --- | --- |
 | 2026-10-10 | Baseline |
+| 2026-10-15 | First run after the sitemap download: 1 indexed, 3 hubs crawled and not indexed, 46 unknown |
 
 ## Baseline, 2026-10-10
 
@@ -60,3 +71,10 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 - 31 sample URLs were also inspected on 2026-10-06. All 31 have the same coverage state as then (start page indexed, 30 unknown). The only change: the start page's last crawl moved from 2026-10-04 to 2026-10-08.
 - Traffic 2026-10-01 to 2026-10-07: 119 impressions and 7 clicks, all on the start page. No other page had an impression.
 - One sitemap is submitted, `/sitemaps/sitemap.xml`: submitted 2025-03-01, last downloaded 2026-09-22, no errors or warnings.
+
+## Run 2026-10-15
+
+- Coverage: 1 of 50 "Submitted and indexed" (the start page), 3 "Crawled - currently not indexed", 46 "URL is unknown to Google".
+- The 3 crawled URLs are the hubs `/shows`, `/discover` and `/explorer`, all crawled on 2026-10-11. They were unknown at the baseline. All titles, person pages, mood and genre pages and old shapes are still unknown.
+- Traffic 2026-10-06 to 2026-10-12: 160 impressions and 1 click, all on the start page.
+- The sitemap was last downloaded on 2026-10-10, at the resubmission, with no errors or warnings.

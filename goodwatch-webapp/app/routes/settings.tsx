@@ -37,7 +37,7 @@ export const meta: MetaFunction = () => {
 
 const navigation = [
 	{
-		name: "Country",
+		name: "Country & titles",
 		to: "/settings/country",
 		icon: FlagIcon,
 	},

@@ -1,3 +1,8 @@
+import { withMediaReadHealth } from "~/server/media-read-health.server"
+import {
+	localizeApiTitlePayload,
+	mediaApiCacheControl,
+} from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -27,7 +32,7 @@ const relatedRequests = counter(
 )
 
 // Older pages request one media type; both variants use the same card panel.
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
@@ -58,11 +63,12 @@ export const loader: LoaderFunction = async ({
 
 	relatedRequests.inc([mediaType === null ? "panel" : "legacy"])
 	try {
-		const panel = await getRelatedPanel({
+		const canonicalPanel = await getRelatedPanel({
 			tmdbId: Number.parseInt(tmdbId),
 			sourceMediaType,
 			fingerprintKey: fingerprintKey || undefined,
 		})
+		const panel = await localizeApiTitlePayload(canonicalPanel, request)
 		const result =
 			mediaType === "movie"
 				? panel.movies
@@ -70,7 +76,12 @@ export const loader: LoaderFunction = async ({
 					? panel.shows
 					: panel
 		return json(result, {
-			headers: { "Cache-Control": PUBLIC_DATA_CACHE_CONTROL },
+			headers: {
+				"Cache-Control": mediaApiCacheControl(
+					request,
+					PUBLIC_DATA_CACHE_CONTROL,
+				),
+			},
 		})
 	} catch (error) {
 		console.error("Related titles lookup failed", {
@@ -93,3 +104,6 @@ export const loader: LoaderFunction = async ({
 /** One panel of related titles. The default panel's data comes with the document. */
 export const useRelatedPanel = (params: RelatedPanelParams) =>
 	useQuery<GetRelatedPanelResult>(relatedPanelQueryOptions(params))
+
+export const loader = (args: LoaderFunctionArgs) =>
+	withMediaReadHealth(async () => canonicalLoader(args), { inheritFailure: true })

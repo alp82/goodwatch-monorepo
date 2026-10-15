@@ -1,3 +1,5 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
+import type { EpisodeTextPresentation } from "~/server/episode-text-overlay.server"
 import type { FingerprintResult } from "~/server/utils/fingerprint"
 import type { AllRatings } from "~/utils/ratings"
 
@@ -184,7 +186,7 @@ export interface Season {
 }
 
 export interface BaseDetails
-	extends Pick<
+	extends PresentedMedia, Pick<
 		AllRatings,
 		| "imdb_url"
 		| "metacritic_url"
@@ -298,6 +300,10 @@ export interface MovieSeriesResult {
 	movie_ids: number[]
 }
 export interface SeasonResult {
+	tmdb_id?: number
+	name?: string | null
+	overview?: string | null
+	textPresentation?: EpisodeTextPresentation
 	season_number: number
 	episode_count: number
 }

@@ -1,0 +1,12 @@
+{
+  "summary": "Social youtube",
+  "description": "Allowlisted official channels: uploads playlists, keyless rolling-feed fallback.",
+  "lock": "!inline f/social/youtube.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

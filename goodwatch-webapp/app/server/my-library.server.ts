@@ -1,3 +1,4 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 // My library (#385): one step of a status's list, with the counts of every status. The counts and the order are
 // made from the member data map; the catalog is read by key only: the cards of the step's 60 titles (Q6), and, for
 // the Title sort and a search, the titles of the status's keys, which are public and kept in memory
@@ -27,7 +28,7 @@ import { query } from "~/utils/crate"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
 /** A title in a list of the library, with where the member stands with it. */
-export interface LibraryItem {
+export interface LibraryItem extends PresentedMedia {
 	key: MediaKey
 	mediaType: MediaType
 	tmdbId: number

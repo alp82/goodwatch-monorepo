@@ -1,0 +1,12 @@
+{
+  "summary": "Social vector",
+  "description": "Read-only named-vector candidate retrieval; every result still faces the LLM gate.",
+  "lock": "!inline f/social/vector.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

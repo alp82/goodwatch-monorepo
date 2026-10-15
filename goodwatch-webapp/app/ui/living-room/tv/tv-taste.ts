@@ -1,3 +1,5 @@
+import type { PresentedMedia } from "../../../utils/media-presentation.ts"
+import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // What the new TV's Taste shows, and what the taste quiz says about the title it asks about. Pure, so the three
 // states, the words and the quiz's write path stay in one place and have tests.
 //
@@ -57,7 +59,7 @@ export type TvTasteOnScreen =
 	  }
 
 /** The title the quiz asks about. */
-export type TvQuizTitle = {
+export type TvQuizTitle = PresentedMedia & {
 	key: string
 	title: string
 	backdrop: string | null
@@ -107,6 +109,7 @@ export function tasteState(
 export function portraitListTitle(title: PortraitTitle): TvListTitle {
 	return {
 		key: tvKey(title.mediaType, title.tmdbId),
+		...copyMediaPresentation(title),
 		title: title.title,
 		poster: title.poster,
 		backdrop: title.backdrop,
@@ -125,6 +128,7 @@ export function portraitListTitle(title: PortraitTitle): TvListTitle {
 export function pickListTitle(pick: QuizPick): TvListTitle {
 	return {
 		key: tvKey(pick.media_type, pick.tmdb_id),
+		...copyMediaPresentation(pick),
 		title: pick.title,
 		poster: pick.poster_path || null,
 		backdrop: pick.backdrop_path || null,
@@ -186,6 +190,7 @@ export function startWords(rated: number): {
 export function quizTitle(title: ScoringMedia): TvQuizTitle {
 	return {
 		key: tvKey(title.media_type, title.tmdb_id),
+		...copyMediaPresentation(title),
 		title: title.title,
 		backdrop: title.backdrop_path || null,
 		facts: join([title.release_year, kind(title.media_type)]),
@@ -259,6 +264,7 @@ export function tasteKnown(
 	return {
 		media_type: ref.mediaType,
 		tmdb_id: ref.tmdbId,
+		...copyMediaPresentation(found),
 		title: found.title,
 		poster_path: found.poster,
 		backdrop_path: found.backdrop,

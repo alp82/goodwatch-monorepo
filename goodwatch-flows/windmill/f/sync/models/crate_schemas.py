@@ -27,6 +27,21 @@ SCHEMAS = {
         "shards": 3,
     },
     # ============================
+    # ===== Anime Import Reference =====
+    # ============================
+    # Small, atomically published server-side reference dataset. Anime-Lists + Fribb.
+    "anime_mapping_snapshot": {
+        "columns": {
+            "id": "TEXT",
+            "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "version": "TEXT",
+            "refreshed_at": "TIMESTAMP",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+    },
+    # ============================
     # ===== Core Lookups =====
     # ============================
     "age_certification": {
@@ -383,6 +398,37 @@ SCHEMAS = {
         "clustered_by": "show_id",
         "shards": 6,
     },
+    # Additive TMDB text translations, isolated from canonical episode membership.
+    "season_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
+    "episode_translation": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",
+            "language_code": "TEXT",
+            "country_code": "TEXT",
+            "name": "TEXT INDEX OFF",
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["show_id", "tmdb_id", "language_code", "country_code"],
+        "clustered_by": "show_id",
+        "shards": 6,
+        "replicas": "0-1",
+        "timestamps": False,
+    },
     # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
     # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
     "imdb_episode": {
@@ -687,6 +733,46 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # One immutable row per member list page, including later Watch next card batches (#525).
+    # The three title arrays align; positions are one-based within this page, after missing titles are removed.
+    "user_list_exposure": {
+        "columns": {
+            "user_id": "TEXT",
+            "list_id": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "surface": "TEXT NOT NULL CHECK (surface IN ('discover','watch-next'))",
+            "ordering": "TEXT NOT NULL",
+            "ordering_flags": "OBJECT(DYNAMIC)",
+            "sort": "TEXT NOT NULL",
+            "sort_requested": "TEXT",
+            "for_you": "BOOLEAN NOT NULL",
+            "for_you_applied": "BOOLEAN NOT NULL",
+            "filters": "OBJECT(IGNORED)",
+            "country": "TEXT NOT NULL",
+            "services": "ARRAY(INTEGER)",
+            "taste_key_version": "TEXT NOT NULL",
+            "page": "INTEGER",
+            "batch": "TEXT NOT NULL CHECK (batch IN ('page','cards'))",
+            "title_keys": "ARRAY(BIGINT)",
+            "positions": "ARRAY(INTEGER)",
+            "taste_matches": "ARRAY(INTEGER)",
+            "personal_order_flag_mode": "TEXT",
+            "personal_order_fallback_reason": "TEXT",
+            "personal_order_payload_build_time": "TIMESTAMP WITH TIME ZONE",
+            "personal_order_model_hash": "TEXT",
+            "personal_order_snapshot_version": "TEXT",
+            "personal_order_groups": "ARRAY(INTEGER)",
+            "personal_order_mix_placed": "ARRAY(BOOLEAN)",
+            "watch_next_tiers": "ARRAY(TEXT)",
+            "today_first_100": "ARRAY(BIGINT)",
+            "personal_order_first_100": "ARRAY(BIGINT)",
+        },
+        "primary_key": ["user_id", "list_id"],
+        "clustered_by": "user_id",
+        "shards": 6,
+        "timestamps": False,
+    },
     "user_score": {
         "columns": {
             "user_id": "TEXT",
@@ -745,8 +831,8 @@ SCHEMAS = {
     # Where a member stands with a title (docs/implementation/tracking/data-model.md, ADR 0009).
     # Only what can't be computed from user_watch_log: no counts and no dates of watches. A show's
     # state is the state machine's. A movie has a row while it has a log row, with state 'seen'
-    # and pass 1. A row with state 'not_started' exists only to remember a prompt, and every
-    # reader filters on state.
+    # and pass 1. A show's empty Not started row also retains its first-insert receipt after
+    # logical deletion, fencing delayed INSERTs. List readers filter on state; tracking reads hide empty receipts.
     # seen_press_group and seen_press_from: the Seen press that one more press takes back, and
     # the state it was pressed from. Both NULL when no press stands. seen_question: NULL (not
     # asked), 'open', 'answered'.
@@ -755,6 +841,7 @@ SCHEMAS = {
             "user_id": "TEXT",
             "tmdb_id": "INTEGER",
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "insert_token": "TEXT",  # immutable first-insert receipt; retained through logical show-state removal
             "state": "TEXT NOT NULL CHECK (state IN ('not_started','watching','on_hold','dropped','seen'))",
             "state_changed_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
             "pass": "INTEGER NOT NULL",
@@ -984,9 +1071,27 @@ SCHEMAS = {
         "replicas": "0-1",
     },
     # ============================
-    # ===== Webapp: IMDb ratings import (goodwatch-webapp/app/server/imdb-import) =====
+    # ===== Webapp: Connect import credentials (goodwatch-webapp/app/server/imports) =====
     # ============================
-    # One row per uploaded file. status: preview (nothing written to user_score yet), running, done, failed, undone.
+    # Encrypted short-lived connect credentials, separate from the import journal.
+    "user_import_connection": {
+        "columns": {
+            "id": "TEXT NOT NULL",
+            "user_id": "TEXT NOT NULL",
+            "slot": "INTEGER NOT NULL",
+            "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "cleanup_at": "TIMESTAMP WITH TIME ZONE",
+            "lease_until": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["user_id", "slot"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # ============================
+    # ===== Webapp: Import journal (IMDb and native imports) =====
+    # ============================
+    # One row per uploaded file or fetched account snapshot. status: preview (nothing written to user_score yet), running, done, failed, undone.
     # counts is the preview's outcome counts as JSON text. added, updated, kept and failed count what the apply
     # wrote. updated_at is the apply's heartbeat: the webapp instance that applies the import sets it from Crate's
     # clock every 10 seconds, and a running import whose heartbeat is older than 60 seconds has stalled and can be
@@ -1085,3 +1190,7 @@ BLOB_TABLES = {
 
 def main():
     pass
+
+# Social discovery owns these tables; its local initializer touches only these four.
+from f.social.schema import SOCIAL_SCHEMAS
+SCHEMAS.update(SOCIAL_SCHEMAS)

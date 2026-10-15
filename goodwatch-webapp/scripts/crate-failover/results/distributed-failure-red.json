@@ -1,0 +1,335 @@
+{
+  "startedAt": "2026-10-14T23:21:58.017Z",
+  "client": "../../app/utils/crate.ts",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "phase": "reads",
+      "id": 0,
+      "atMs": 8625,
+      "message": "JobKilledException[Job killed. Participating node SeYu66u5TSue3uSYV0DfsA disconnected]",
+      "code": 5030
+    },
+    {
+      "phase": "reads",
+      "id": 3,
+      "atMs": 8643,
+      "message": "NodeNotConnectedException[[node2][172.19.0.2:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "upsert",
+      "id": "upsert-27",
+      "atMs": 8706,
+      "message": "NodeNotConnectedException[[node2][172.19.0.2:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 3,
+      "atMs": 8762,
+      "message": "NodeNotConnectedException[[node2][172.19.0.2:4300] Node not connected]",
+      "code": 5000
+    },
+    {
+      "phase": "reads",
+      "id": 1,
+      "atMs": 8862,
+      "message": "NoSuchNodeException[No such node [SeYu66u5TSue3uSYV0DfsA]]",
+      "code": 5000
+    }
+  ],
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node3",
+      "STARTED"
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-14T23:22:31.356Z",
+    "elapsedMs": 3009,
+    "command": "docker compose -p goodwatch-client-588 kill --signal SIGKILL node2",
+    "completedAt": "2026-10-14T23:22:38.101Z"
+  },
+  "stoppedContainers": [
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:21:52 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "fb5eab744ed4",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=83e409a996f019f51a8ebb3b4652bacbf5653a0ffa584b23735142009a8371a8,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project=goodwatch-client-588,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.version=5.10.16,com.docker.compose.container-number=1,com.docker.compose.depends_on=,com.docker.compose.oneoff=False,com.docker.compose.service=node1,com.docker.compose.version=5.5.1,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.title=crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.created=2025-12-10T13:54:12.012567",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node1-1",
+      "Names": "goodwatch-client-588-node1-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.1:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.1",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "46 seconds ago",
+      "Service": "node1",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up 46 seconds"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:21:52 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 137,
+      "Health": "",
+      "ID": "388279b2e865",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=bf436c157529f01bab0efff3b1fe87f1d5145ec3d95872e6702f56f74a145dfd,com.docker.compose.version=5.5.1,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.depends_on=,com.docker.compose.project=goodwatch-client-588,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.title=crate,com.docker.compose.container-number=1,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.service=node2,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.source=https://github.com/crate/docker-crate,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.version=5.10.16",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node2-1",
+      "Names": "goodwatch-client-588-node2-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "",
+      "Project": "goodwatch-client-588",
+      "Publishers": [],
+      "RunningFor": "46 seconds ago",
+      "Service": "node2",
+      "Size": "0B",
+      "State": "exited",
+      "Status": "Exited (137) 1 second ago"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:21:52 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "6097ee5db1b1",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.service=node3,com.docker.compose.version=5.5.1,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.config-hash=905a9620ceef990632c0af3d1599862cd42425f66e862125184b37613e8a1356,com.docker.compose.project=goodwatch-client-588,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.source=https://github.com/crate/docker-crate,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.title=crate,org.opencontainers.image.version=5.10.16,com.docker.compose.container-number=1,com.docker.compose.depends_on=,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.vendor=Crate.io,com.docker.compose.oneoff=False",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node3-1",
+      "Names": "goodwatch-client-588-node3-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.3:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.3",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "46 seconds ago",
+      "Service": "node3",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up 45 seconds"
+    }
+  ],
+  "load": {
+    "durationMs": 22059,
+    "stats": {
+      "reads": {
+        "succeeded": 911,
+        "failed": 4,
+        "maxMs": 2004.9333049999987
+      },
+      "keyed": {
+        "succeeded": 121,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 120,
+        "failed": 1
+      },
+      "generic": {
+        "succeeded": 102,
+        "failed": 0
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 121,
+      "upsert": 120,
+      "generic": 102
+    }
+  },
+  "afterStopNodes": [
+    [
+      "node1"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      102
+    ],
+    [
+      "keyed",
+      121,
+      1,
+      1,
+      121
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      121,
+      1,
+      1,
+      121
+    ]
+  ],
+  "passed": false,
+  "error": {
+    "message": "No failed reads during node loss\n\n4 !== 0\n",
+    "stack": "AssertionError [ERR_ASSERTION]: No failed reads during node loss\n\n4 !== 0\n\n    at check (file:///home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/verify.mjs:48:9)\n    at file:///home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/verify.mjs:192:2\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  },
+  "finishedAt": "2026-10-14T23:22:50.637Z"
+}

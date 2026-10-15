@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The taste quiz: one widely seen title at a time over its picture, and the rating strip to answer with
 // (../RatingStrip.tsx, the screen "How was it?" also is). A level or an exact score stores the score and brings
 // the next title, with the focus where it was; "Haven't seen it" is a key of its own under the strip. The score
@@ -48,6 +49,7 @@ export default function Quiz({
 			backdrop={quiz.title.backdrop}
 			kicker={words.kicker}
 			question={quiz.title.title}
+			questionLanguage={mediaFieldLanguage(quiz.title)}
 			line={words.line}
 		>
 			{items.includes("skip") && (

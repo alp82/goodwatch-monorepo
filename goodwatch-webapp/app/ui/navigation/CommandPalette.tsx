@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
 // "Search for …" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
 // search mode again) when more match, then matching destinations ("Go to Taste"), then Sign up
@@ -59,6 +61,7 @@ const PALETTE_DESTINATIONS: DestinationKey[] = [
 ]
 
 interface Row {
+	language?: string
 	key: string
 	label: string
 	sub?: string
@@ -84,7 +87,8 @@ function useDebounced<T>(value: T, ms: number): T {
 function usePaletteTitles(q: string): PaletteTitles {
 	const prefix = useDebounced(normalizePrefix(q), DEBOUNCE_MS)
 	const typed = normalizePrefix(q).length >= MIN_PREFIX_CHARS
-	const query = useQuery(paletteTitlesQuery(prefix))
+	const { locale } = useLocale()
+	const query = useQuery(paletteTitlesQuery(prefix, locale.language))
 	return shownPaletteTitles(typed, query.data)
 }
 
@@ -123,6 +127,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: `title-${title.mediaType}-${title.tmdbId}`,
 				label: title.title,
+				language: title.presentation?.title.language,
 				sub: [title.mediaType === "show" ? "Series" : "Movie", title.year]
 					.filter(Boolean)
 					.join(", "),
@@ -221,11 +226,12 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					)
 				)}
 				<span className="flex min-w-0 flex-col">
-					<b
+					{/* The clipping element carries the title's language, so truncation keeps Arabic marks and ends. */}
+					<MediaText
+						as="b"
+						value={{ text: row.label, lang: row.language ?? "en" }}
 						className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
-					>
-						{row.label}
-					</b>
+					/>
 					{row.sub && (
 						<small
 							className={`truncate text-gray-400 ${row.compact ? "text-[11.5px]" : "text-[12.5px]"}`}

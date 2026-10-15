@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { getSmartTitlesForGuest, getSmartTitlesForUser } from "~/server/smart-titles.server"
@@ -5,7 +8,7 @@ import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import type { ScoringMedia } from "~/ui/scoring/types"
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
 	const { locale } = getLocaleFromRequest(request)
 	const userId = await getUserIdFromRequest({ request })
@@ -60,7 +63,9 @@ export const queryKeySmartTitles = ["smartTitles"]
 export async function fetchSmartTitles({
 	count,
 	excludeIds = [],
+	language = "en",
 }: {
+	language?: string
 	count: number
 	excludeIds?: ExcludeItem[]
 }): Promise<ScoringMedia[]> {
@@ -72,7 +77,7 @@ export async function fetchSmartTitles({
 		params.set('excludeIds', JSON.stringify(excludeIds))
 	}
 	
-	const url = `/api/smart-titles?${params}`
+	const url = mediaLanguageUrl(`/api/smart-titles?${params}`, language)
 	const response = await fetch(url)
 	
 	if (!response.ok) {
@@ -85,16 +90,19 @@ export async function fetchSmartTitles({
 
 // React Query hook for initial load (used by loader prefetch)
 export const useSmartTitles = ({ count, excludeIds = [], enabled = true }: SmartTitlesParams) => {
+	const { locale } = useLocale()
 	const excludeHash = excludeIds.length > 0 
 		? JSON.stringify(excludeIds.map(item => `${item.tmdb_id}-${item.media_type}`).sort())
 		: 'none'
 	
 	return useQuery<GetSmartTitles>({
-		queryKey: [...queryKeySmartTitles, count, excludeHash],
+		queryKey: [...queryKeySmartTitles, count, excludeHash, locale.language],
 		queryFn: async () => {
-			const smartTitles = await fetchSmartTitles({ count, excludeIds })
+			const smartTitles = await fetchSmartTitles({ count, excludeIds, language: locale.language })
 			return { smartTitles }
 		},
 		enabled,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

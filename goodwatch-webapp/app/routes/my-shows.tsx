@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // My shows (#385): a member's shows for tonight. A guest has no watch state, so they are asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
 import {
@@ -32,7 +33,7 @@ export const meta: MetaFunction = () => [
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!userId)
 		return json(
@@ -52,7 +53,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		getMyShows(
 			{
 				userId,
-				country: ctx.country,
+				language: ctx.language,				country: ctx.country,
 				services: ctx.services,
 				taste: await loadTaste(ctx.viewer),
 			},
@@ -103,3 +104,5 @@ export default function MyShowsRoute() {
 		)
 	return <MyShowsPage data={data} now={now} arrival={arrival} landed={landed} />
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true, hint: "show" })
