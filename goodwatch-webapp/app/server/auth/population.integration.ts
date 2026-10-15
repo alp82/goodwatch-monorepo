@@ -245,3 +245,17 @@ test("one member cannot consume another member's OAuth issuance allowance", asyn
  }
  await assert.rejects(adapter.create({model:"oauthConsent",data:{clientId:randomUUID(),userId:"first-member",scopes:["mcp:read"],grantVersion:randomUUID()}}),/capacity/)
 })
+
+
+test("a member keeps the twenty newest sessions and cannot evict another member", async () => {
+ await clean()
+ const adapter = crateAuthAdapter({sql,populationBounds:true})({})
+ const other = await adapter.create({model:"session",data:{userId:"other",token:randomUUID(),expiresAt:new Date(Date.now()+86400000)}})
+ const sessions: {token:string}[] = []
+ for(let i=0;i<25;i++) sessions.push(await adapter.create({model:"session",data:{userId:"busy",token:randomUUID(),createdAt:new Date(Date.now()+i),expiresAt:new Date(Date.now()+86400000)}}))
+ const retained = await adapter.findMany<{token:string}>({model:"session",where:[{field:"userId",value:"busy"}]})
+ assert.equal(retained.length,20)
+ assert.deepEqual(new Set(retained.map(row=>row.token)),new Set(sessions.slice(-20).map(row=>row.token)))
+ for(const session of sessions.slice(0,5)) assert.equal(await adapter.findOne({model:"session",where:[{field:"token",value:session.token}]}),null)
+ assert.ok(await adapter.findOne({model:"session",where:[{field:"token",value:other.token}]}))
+})

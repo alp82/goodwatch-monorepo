@@ -77,6 +77,22 @@ export async function readCapacity(sql: AuthSql, codec: Codec, bucket: string) {
 	return { ledger, seq: result[1], term: result[2] }
 }
 
+/** Caller must fence or archive the row before returning its matching generation. */
+export async function releaseAuthAdmission(sql: AuthSql, codec: Codec, id: string, admission?: AuthAdmission) {
+ if (!admission) return
+ for(let attempt=0;attempt<64;attempt++) {
+  const current = await readCapacity(sql,codec,admission.bucket)
+  if(!current || current.ledger.slots[id]?.generation !== admission.generation) return
+  const slots = {...current.ledger.slots}
+  delete slots[id]
+  const result = await sql("UPDATE doc.auth_capacity SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[
+   codec.encode({row:{...current.ledger,slots},deleted:false},`doc.auth_capacity:${admission.bucket}:payload`),admission.bucket,current.seq,current.term
+  ])
+  if(result.rowcount===1) return
+ }
+ throw new Error("Auth population release contention")
+}
+
 /** Reserve before insertion. Slots include pending writes and are reclaimed only after row fencing. */
 export async function admitAuthRow(
 	sql: AuthSql,
@@ -85,6 +101,7 @@ export async function admitAuthRow(
 	id: string,
 	bounds: AuthPopulationBounds,
 	actor: string,
+	evict?: (id: string, admission: AuthAdmission) => Promise<boolean>,
 ): Promise<AuthAdmission> {
 	const bucket = authCapacityBucket(model, id, bounds, actor)
 	const aad = `doc.auth_capacity:${bucket}`
@@ -105,7 +122,11 @@ export async function admitAuthRow(
 			current &&
 			Object.keys(current.ledger.slots).length >= bounds.limitPerBucket
 		)
-			throw new Error("Auth population capacity exhausted")
+        {
+            const oldest = Object.entries(current.ledger.slots).sort((a,b)=>a[1].createdAt.localeCompare(b[1].createdAt) || a[1].generation-b[1].generation)[0]
+            if(evict && oldest && await evict(oldest[0], {bucket,generation:oldest[1].generation})) continue
+            throw new Error("Auth population capacity exhausted")
+        }
 		const generation = (current?.ledger.nextGeneration ?? 0) + 1
 		if (!Number.isSafeInteger(generation))
 			throw new Error("Auth population capacity generation exhausted")

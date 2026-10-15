@@ -2,7 +2,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto"
 import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
-import { authPopulationActor, authActorBounds, admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
+import { releaseAuthAdmission, authPopulationActor, authActorBounds, admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
 import { authPayloadCodec, authCredentialVersion, type AuthEncryptionKeys } from "./payload-codec.server.ts"
 
 export type SqlResult = { rows: unknown[][]; rowcount: number; cols: string[] }
@@ -262,7 +262,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${authModelTable(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, admissionFence: deleting ? Math.max(original.envelope.admissionFence ?? 0, original.envelope.admission?.generation ?? 0) : original.envelope.admissionFence, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
@@ -304,7 +304,14 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					}
 					row.id = key(model, row)
 					const actor = authPopulationActor(model, row)
-					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor) : undefined
+					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
+                            model === "session" && populationBounds === true ? async (id, admission) => {
+                                const oldest = await stored("session", id)
+                                if (!oldest || oldest.envelope.admission?.generation !== admission.generation || (!oldest.deleted && oldest.row.userId !== row.userId)) return false
+                                if (!oldest.deleted && !(await mutate("session", oldest, {}, true))) return false
+                                await releaseAuthAdmission(sql,codec,id,admission)
+                                return true
+                            } : undefined) : undefined
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,?,?,?,?,?)`,
