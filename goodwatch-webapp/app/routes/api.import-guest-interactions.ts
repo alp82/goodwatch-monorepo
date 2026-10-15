@@ -1,3 +1,4 @@
+import { readMediaPreferences, writeMediaPreferences } from "~/server/media-preferences-store.server";
 import {
 	json,
 	type LoaderFunctionArgs,
@@ -56,6 +57,10 @@ async function visible<T>(
 	);
 }
 async function setting(userId: string, key: string) {
+	if (key === "country_default") {
+		const { record } = await readMediaPreferences(userId);
+		if (record) return record.country;
+	}
 	const rows = await query<{ value: string }>(
 		"SELECT value FROM user_setting WHERE user_id = ? AND key = ?",
 		[userId, key],
@@ -132,7 +137,10 @@ async function persistChange(userId: string, c: Change) {
 				throw new Error(
 					"An account preference changed since this review. Your transfer is retained; restore that preference before retrying.",
 				);
-			if (current === null)
+			const pair = c.kind === "country" ? (await readMediaPreferences(userId)).record : null;
+			if (pair)
+				await writeMediaPreferences(userId, { country: c.value, language: pair.language }, { expectedVersion: pair.version });
+			else if (current === null)
 				await upsert({
 					table: "user_setting",
 					data: [{ user_id: userId, key, value: c.value }],

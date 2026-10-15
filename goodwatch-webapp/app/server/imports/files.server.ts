@@ -1,13 +1,16 @@
 import { inflateRawSync } from "node:zlib"
+import { SaxesParser } from "saxes"
 import {
 	IMPORT_MAX_BYTES,
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
 	type ImportSource,
 	type ParsedImport,
+	isFileImportSource,
 } from "../../domain/imports.ts"
 
 const MAX_ARCHIVE_FILES = 200
+const MAX_FILTERED_ARCHIVE_FILES = 50_000
 const MAX_ENTRY_BYTES = 32 * 1024 * 1024
 const MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024
 
@@ -18,7 +21,7 @@ interface ArchiveEntry {
 	data: Uint8Array
 }
 
-function parseCsv(value: string): string[][] {
+function parseCsv(value: string, backslashQuotes = false): string[][] {
 	const rows: string[][] = []
 	let row: string[] = []
 	let field = ""
@@ -30,7 +33,18 @@ function parseCsv(value: string): string[][] {
 	) {
 		const char = value[index]
 		if (quoted) {
-			if (char === '"' && value[index + 1] === '"') {
+			if (backslashQuotes && char === "\\" && value[index + 1] === "\\") {
+				field += "\\"
+				index++
+			} else if (
+				backslashQuotes &&
+				char === "\\" &&
+				value[index + 1] === '"' &&
+				![undefined, ",", "\n", "\r"].includes(value[index + 2])
+			) {
+				field += '"'
+				index++
+			} else if (char === '"' && value[index + 1] === '"') {
 				field += '"'
 				index++
 			} else if (char === '"') quoted = false
@@ -47,6 +61,7 @@ function parseCsv(value: string): string[][] {
 			field = ""
 		} else field += char
 	}
+	if (backslashQuotes && quoted) fail("The CSV has an unclosed quote.")
 	row.push(field)
 	if (row.some((cell) => cell.trim())) rows.push(row)
 	return rows
@@ -66,10 +81,24 @@ function crc32(bytes: Uint8Array): number {
 	return (crc ^ 0xffffffff) >>> 0
 }
 
-function zipEntries(input: Uint8Array): ArchiveEntry[] {
-	if (input.byteLength === 0) fail("That file is empty.")
-	if (input.byteLength > IMPORT_MAX_BYTES)
-		fail("That ZIP file is too large. GoodWatch accepts files up to 20 MB.")
+const uploadSizeLabel = `${IMPORT_MAX_BYTES / 1024 / 1024} MB`
+const rowLimitLabel = IMPORT_MAX_ROWS.toLocaleString("en-US")
+function checkUploadSize(
+	bytes: Uint8Array,
+	message = `That export is larger than ${uploadSizeLabel}.`,
+) {
+	if (!bytes.byteLength) fail("That file is empty.")
+	if (bytes.byteLength > IMPORT_MAX_BYTES) fail(message)
+}
+
+function zipEntries(
+	input: Uint8Array,
+	include?: (name: string) => boolean,
+): ArchiveEntry[] {
+	checkUploadSize(
+		input,
+		`That ZIP file is too large. GoodWatch accepts files up to ${uploadSizeLabel}.`,
+	)
 	const bytes = Buffer.from(input.buffer, input.byteOffset, input.byteLength)
 	let eocd = -1
 	const firstPossible = Math.max(0, bytes.length - 65_557)
@@ -89,9 +118,10 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 	if (count !== bytes.readUInt16LE(eocd + 8))
 		fail("That ZIP archive is incomplete.")
 	if (count === 0xffff) fail("ZIP64 archives aren't supported.")
-	if (count > MAX_ARCHIVE_FILES)
+	const maxFiles = include ? MAX_FILTERED_ARCHIVE_FILES : MAX_ARCHIVE_FILES
+	if (count > maxFiles)
 		fail(
-			`That ZIP archive has too many files. GoodWatch accepts up to ${MAX_ARCHIVE_FILES}.`,
+			`That ZIP archive has too many files. GoodWatch accepts up to ${maxFiles}.`,
 		)
 	const directorySize = bytes.readUInt32LE(eocd + 12)
 	const directoryOffset = bytes.readUInt32LE(eocd + 16)
@@ -130,11 +160,6 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 			localOffset === 0xffffffff
 		)
 			fail("ZIP64 archives aren't supported.")
-		if (size > MAX_ENTRY_BYTES)
-			fail("A file inside that ZIP archive is too large.")
-		totalSize += size
-		if (totalSize > MAX_UNCOMPRESSED_BYTES)
-			fail("That ZIP archive expands to too much data.")
 		const rawName = bytes.subarray(cursor + 46, cursor + 46 + nameLength)
 		let name: string
 		try {
@@ -191,9 +216,18 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 				.equals(rawName)
 		)
 			fail("That ZIP archive has inconsistent file names.")
-		if (ranges.some(([from, to]) => localOffset < to && dataEnd > from))
-			fail("That ZIP archive contains overlapping files.")
 		ranges.push([localOffset, dataEnd])
+		if (directory && size)
+			fail("That ZIP archive has a malformed directory entry.")
+		if (include && !include(name)) {
+			cursor = next
+			continue
+		}
+		if (size > MAX_ENTRY_BYTES)
+			fail("A file inside that ZIP archive is too large.")
+		totalSize += size
+		if (totalSize > MAX_UNCOMPRESSED_BYTES)
+			fail("That ZIP archive expands to too much data.")
 		const compressed = bytes.subarray(dataOffset, dataEnd)
 		let data: Buffer
 		try {
@@ -214,6 +248,10 @@ function zipEntries(input: Uint8Array): ArchiveEntry[] {
 		cursor = next
 	}
 	if (cursor !== eocd) fail("That ZIP archive has a malformed directory.")
+	ranges.sort((a, b) => a[0] - b[0])
+	for (let i = 1; i < ranges.length; i++)
+		if (ranges[i][0] < ranges[i - 1][1])
+			fail("That ZIP archive contains overlapping files.")
 	return result.sort((a, b) => a.name.localeCompare(b.name, "en"))
 }
 
@@ -543,6 +581,7 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 					...(type === "episode"
 						? {
 								episodeTmdbId: validId(episodeIds?.tmdb),
+								episodeNumbering: "tmdb" as const,
 								season:
 									validId(episodeObject?.season) ??
 									(episodeObject?.season === 0 ? 0 : null),
@@ -640,11 +679,542 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 	return { source: "trakt", observations, warnings }
 }
 
-/** Reads a native Letterboxd or Trakt ZIP entirely in memory. */
+/** Reads an import entirely in memory; MovieLens can include a separate wishlist CSV. */
 export async function parseImportFile(
 	source: ImportSource,
 	bytes: Uint8Array,
+	wishlist?: Uint8Array,
 ): Promise<ParsedImport> {
+	if (!isFileImportSource(source))
+		fail("Use Connect for this source instead of uploading a file.")
+	if (source === "kodi") return kodi(bytes)
+	if (source === "movielens") return movielens(bytes, wishlist)
+	if (source === "csv") return genericCsv(bytes)
 	const entries = zipEntries(bytes)
 	return source === "letterboxd" ? letterboxd(entries) : trakt(entries)
+}
+
+function csvImdb(value: string): string | null {
+	const id = value.replace(/^tt/, "")
+	return /^\d+$/.test(id) ? `tt${id.padStart(7, "0")}` : null
+}
+
+function readCsvTable(
+	data: Uint8Array,
+	name: string,
+	remainingRows = IMPORT_MAX_ROWS,
+	compactHeaders = false,
+) {
+	checkUploadSize(data)
+	const table = parseCsv(text({ name, data }), true)
+	if (!table.length) fail("That file is empty.")
+	const [originalHeaders, ...rows] = table
+	if (rows.length > remainingRows)
+		fail(`That export has more than ${rowLimitLabel} rows.`)
+	const headers = originalHeaders.map((header) => {
+		const normalized = header.trim().toLowerCase()
+		return compactHeaders ? normalized.replace(/ /g, "") : normalized
+	})
+	if (new Set(headers).size !== headers.length)
+		fail("The CSV has duplicate columns.")
+	if (rows.some((row) => row.length !== headers.length))
+		fail("A CSV row has the wrong number of fields.")
+	return { headers, originalHeaders, rows }
+}
+
+function genericCsv(bytes: Uint8Array): ParsedImport {
+	const { headers, originalHeaders, rows } = readCsvTable(
+		bytes,
+		"CSV",
+		IMPORT_MAX_ROWS,
+		true,
+	)
+	if (
+		!headers.some((header) =>
+			["title", "name", "tmdbid", "imdbid", "letterboxduri"].includes(header),
+		)
+	)
+		fail("Include a Title, tmdbID, imdbID or LetterboxdURI column.")
+	const known = new Set([
+		"letterboxduri",
+		"tmdbid",
+		"imdbid",
+		"title",
+		"name",
+		"year",
+		"directors",
+		"rating",
+		"rating10",
+		"watcheddate",
+		"rewatch",
+		"tags",
+		"review",
+	])
+	const unknown = originalHeaders.filter(
+		(_, index) => !known.has(headers[index]),
+	)
+	const warnings = unknown.length
+		? [`Unknown columns ignored: ${unknown.join(", ")}.`]
+		: []
+	const observations: ImportObservation[] = []
+	const occurrences = new Map<string, number>()
+	if (
+		headers.includes("tags") ||
+		headers.includes("directors") ||
+		headers.includes("rewatch")
+	)
+		warnings.push(
+			"Tags, Directors and Rewatch metadata are not applied. Each dated row represents one watch; a rewatch flag does not create extra watches.",
+		)
+	if (headers.includes("letterboxduri"))
+		warnings.push(
+			"LetterboxdURI identifies source entries but is not used for catalog matching; include TMDB/IMDb IDs or an exact Title and Year.",
+		)
+	const dateColumn = headers.indexOf("watcheddate")
+	// Process dated rows newest first, so repeated titles use their latest supplied rating.
+	const sortedRows = rows.sort((a, b) =>
+		(b[dateColumn] ?? "").localeCompare(a[dateColumn] ?? ""),
+	)
+	for (const fields of sortedRows) {
+		const row = Object.fromEntries(
+			headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
+		)
+		const base = {
+			mediaType: "movie" as const,
+			title: clipped(row.title || row.name),
+			year: validYear(row.year),
+			tmdbId: validId(Number(row.tmdbid)),
+			imdbId: csvImdb(row.imdbid ?? ""),
+		}
+		const identity =
+			clipped(row.letterboxduri, 240) ||
+			(base.tmdbId
+				? `tmdb:${base.tmdbId}`
+				: base.imdbId || `${base.title.toLowerCase()}:${base.year ?? ""}`)
+		const occurrence = (occurrences.get(identity) ?? 0) + 1
+		occurrences.set(identity, occurrence)
+		const key = `csv:${identity}:${occurrence}`
+		if (row.watcheddate) {
+			const watchedAt = day(row.watcheddate)
+			observations.push({
+				...base,
+				key: `${key}:watch`,
+				kind: "watch",
+				watchedAt,
+				precision: "day",
+				pass: 1,
+				...(watchedAt
+					? {}
+					: {
+							problem: {
+								outcome: "invalid" as const,
+								reason: "WatchedDate must be a calendar date (YYYY-MM-DD).",
+							},
+						}),
+			})
+		}
+		if (!row.watcheddate && !row.rating10 && !row.rating && !row.review)
+			observations.push({
+				...base,
+				key: `${key}:empty`,
+				kind: "unsupported",
+				problem: {
+					outcome: "invalid",
+					reason: "This row has no rating or watched date.",
+				},
+			})
+		if (row.rating10 || row.rating) {
+			const rating10 = Number(row.rating10)
+			const rating = Number(row.rating) * 2
+			const validScore = (value: number) =>
+				Number.isInteger(value) && value >= 1 && value <= 10
+			const score = validScore(rating10) ? rating10 : rating
+			const valid = validScore(score)
+			observations.push({
+				...base,
+				key: `${key}:rating`,
+				kind: "rating",
+				score: valid ? score : null,
+				...(valid
+					? {}
+					: {
+							problem: {
+								outcome: "invalid" as const,
+								reason:
+									"A rating must be 0.5–5 in half steps, or Rating10 a whole number from 1 to 10.",
+							},
+						}),
+			})
+		}
+		if (row.review)
+			observations.push({
+				...base,
+				key: `${key}:review`,
+				kind: "review",
+				review: clipped(row.review, 20_000),
+			})
+	}
+	if (observations.length > IMPORT_MAX_ROWS)
+		fail(`That export produces more than ${rowLimitLabel} import items.`)
+	return { source: "csv", observations, warnings }
+}
+
+function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
+	if (bytes.byteLength + (wishlist?.byteLength ?? 0) > IMPORT_MAX_BYTES)
+		fail(`The combined export is larger than ${uploadSizeLabel}.`)
+	const warnings = [
+		"MovieLens tags and activity logs are not applied. Activity logs record rating times, not watch times. Ratings and wishlist entries have no viewing dates.",
+	]
+	const observations: ImportObservation[] = []
+	for (const [kind, data] of [
+		["rating", bytes],
+		["want", wishlist],
+	] as const) {
+		if (!data) continue
+		const { headers, rows } = readCsvTable(
+			data,
+			`MovieLens ${kind}`,
+			IMPORT_MAX_ROWS - observations.length,
+		)
+		const required = [
+			"movie_id",
+			"imdb_id",
+			"tmdb_id",
+			"title",
+			...(kind === "rating" ? ["rating"] : []),
+		]
+		if (required.some((header) => !headers.includes(header)))
+			fail(
+				`MovieLens ${kind} CSV is missing required columns: ${required.join(", ")}. Use your personal export from Settings, not a GroupLens dataset.`,
+			)
+		if (kind === "want" && headers.includes("rating"))
+			fail(
+				"Choose the wishlist CSV for the optional file, not the ratings columns.",
+			)
+		const identities = new Set<number>()
+		const known = new Set([
+			"movie_id",
+			"imdb_id",
+			"tmdb_id",
+			"rating",
+			"average_rating",
+			"title",
+		])
+		const unknown = headers.filter((header) => !known.has(header))
+		if (unknown.length)
+			warnings.push(
+				`Unknown MovieLens ${kind} columns ignored: ${unknown.join(", ")}.`,
+			)
+		for (const [index, fields] of rows.entries()) {
+			const row = Object.fromEntries(
+				headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
+			)
+			const movieId = validId(Number(row.movie_id))
+			if (movieId !== null && identities.has(movieId))
+				fail("The MovieLens file contains a duplicate movie_id.")
+			if (movieId !== null) identities.add(movieId)
+			const score = Number(row.rating) * 2
+			const validScore = Number.isInteger(score) && score >= 1 && score <= 10
+			const problem =
+				movieId === null
+					? {
+							outcome: "invalid" as const,
+							reason: "MovieLens movie_id must be a positive integer.",
+						}
+					: kind === "rating" && !validScore
+						? {
+								outcome: "invalid" as const,
+								reason: "MovieLens rating must be 0.5–5 in half-star steps.",
+							}
+						: undefined
+			const title = /^(.*) \((\d{4})\)$/.exec(row.title)
+			observations.push({
+				key: `movielens:${kind}:${movieId ?? `invalid-row:${index}`}`,
+				kind,
+				mediaType: "movie",
+				title: clipped(title?.[1] ?? row.title),
+				year: validYear(title?.[2]),
+				tmdbId: validId(Number(row.tmdb_id)),
+				imdbId: csvImdb(row.imdb_id),
+				...(kind === "rating" ? { score: validScore ? score : null } : {}),
+				...(problem ? { problem } : {}),
+			})
+		}
+	}
+	return { source: "movielens", observations, warnings }
+}
+
+const MAX_KODI_XML_ELEMENTS = 1_000_000
+const MAX_KODI_XML_DEPTH = 64
+const KODI_FIELDS = new Set([
+	"title",
+	"year",
+	"premiered",
+	"uniqueid",
+	"id",
+	"userrating",
+	"playcount",
+	"lastplayed",
+	"season",
+	"episode",
+])
+
+interface KodiElement {
+	name: string
+	attributes: Record<string, string>
+	value: string
+	children: KodiElement[]
+}
+
+/** Saxes never fetches entities. Reject DTDs entirely, and bound tree allocation. */
+function kodiXml(value: string): KodiElement {
+	const parser = new SaxesParser()
+	const stack: Array<KodiElement | null> = []
+	let root: KodiElement | undefined
+	let nodes = 0
+	let rows = 0
+	parser.on("doctype", () =>
+		fail("Kodi XML must not contain a DOCTYPE or entity declarations."),
+	)
+	parser.on("error", () => fail("That Kodi file isn't valid XML."))
+	parser.on("opentag", (tag) => {
+		if (
+			["movie", "tvshow", "episodedetails", "musicvideo"].includes(tag.name) &&
+			++rows > IMPORT_MAX_ROWS
+		)
+			fail(`That export has more than ${rowLimitLabel} rows.`)
+		if (++nodes > MAX_KODI_XML_ELEMENTS || stack.length >= MAX_KODI_XML_DEPTH)
+			fail("That Kodi XML is too complex.")
+		const parent = stack.at(-1)
+		const keep =
+			stack.length === 0 ||
+			(parent &&
+				((stack.length === 1 &&
+					["movie", "tvshow", "musicvideo"].includes(tag.name)) ||
+					(parent.name === "tvshow" && tag.name === "episodedetails") ||
+					(["movie", "tvshow", "musicvideo", "episodedetails"].includes(
+						parent.name,
+					) &&
+						KODI_FIELDS.has(tag.name))))
+		// Keep a depth marker but no object or text for artwork, actors and other unused subtrees.
+		if (!keep) {
+			stack.push(null)
+			return
+		}
+		const element: KodiElement = {
+			name: tag.name,
+			attributes:
+				tag.name === "uniqueid" ? { type: tag.attributes.type ?? "" } : {},
+			value: "",
+			children: [],
+		}
+		if (parent) parent.children.push(element)
+		else root = element
+		stack.push(element)
+	})
+	const append = (value: string) => {
+		const current = stack.at(-1)
+		if (current && KODI_FIELDS.has(current.name)) current.value += value
+	}
+	parser.on("text", append)
+	parser.on("cdata", append)
+	parser.on("closetag", () => {
+		stack.pop()
+	})
+	parser.write(value).close()
+	if (!root || root.name !== "videodb")
+		fail(
+			"Choose Kodi's Single file export (videodb.xml), not separate .nfo files.",
+		)
+	return root
+}
+
+type KodiTitle = Pick<
+	ImportObservation,
+	"mediaType" | "title" | "year" | "tmdbId" | "imdbId"
+>
+
+function kodi(bytes: Uint8Array): ParsedImport {
+	checkUploadSize(
+		bytes,
+		`That export is larger than ${uploadSizeLabel}. Upload videodb.xml by itself.`,
+	)
+	let data = bytes
+	if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
+		const libraries = zipEntries(
+			bytes,
+			(name) => name.split("/").at(-1)?.toLowerCase() === "videodb.xml",
+		)
+		if (libraries.length !== 1)
+			fail(
+				"Choose a ZIP containing exactly one videodb.xml from Kodi's Single file export.",
+			)
+		data = libraries[0].data
+	}
+	const root = kodiXml(text({ name: "videodb.xml", data }))
+	const observations: ImportObservation[] = []
+	const warnings = [
+		"Kodi play counts produce one watch per movie or episode, not a play history. Show play counts, partial plays and library dates are ignored.",
+	]
+	const value = (node: KodiElement, name: string) =>
+		node.children.find((child) => child.name === name)?.value.trim() ?? ""
+	const id = (node: KodiElement, type: string) =>
+		node.children
+			.find(
+				(child) => child.name === "uniqueid" && child.attributes.type === type,
+			)
+			?.value.trim() ?? ""
+	const baseFor = (
+		node: KodiElement,
+		mediaType: "movie" | "show",
+	): KodiTitle => ({
+		mediaType,
+		title: clipped(value(node, "title")),
+		year: validYear(
+			value(node, "year") || value(node, "premiered").slice(0, 4),
+		),
+		tmdbId: validId(Number(id(node, "tmdb"))),
+		imdbId: validImdb(id(node, "imdb")) ?? validImdb(value(node, "id")),
+	})
+	const reference = (base: KodiTitle) =>
+		base.tmdbId
+			? `tmdb:${base.tmdbId}`
+			: (base.imdbId ?? `${base.title.toLowerCase()}:${base.year}`)
+	const emit = (
+		node: KodiElement,
+		base: KodiTitle,
+		ref: string,
+		episode = false,
+	) => {
+		const score = Number(value(node, "userrating"))
+		const validScore = Number.isInteger(score) && score >= 1 && score <= 10
+		if (value(node, "userrating") && score !== 0)
+			observations.push({
+				...base,
+				key: `kodi:rating:${base.mediaType}:${ref}`,
+				kind: episode ? "unsupported" : "rating",
+				...(episode
+					? {
+							problem: {
+								outcome: "unsupported" as const,
+								reason:
+									"GoodWatch doesn't import season or episode ratings yet.",
+							},
+						}
+					: validScore
+						? { score }
+						: {
+								score: null,
+								problem: {
+									outcome: "invalid" as const,
+									reason:
+										"The Kodi rating must be a whole number from 1 to 10.",
+								},
+							}),
+			})
+		if (node.name !== "tvshow" && Number(value(node, "playcount")) > 0) {
+			const watchedAt = day(value(node, "lastplayed"))
+			if (!watchedAt && value(node, "lastplayed"))
+				warnings.push(
+					"An invalid Kodi last-played date was imported without a date.",
+				)
+			const season = value(node, "season")
+			observations.push({
+				...base,
+				key: `kodi:watch:${base.mediaType}:${ref}`,
+				kind: "watch",
+				watchedAt,
+				precision: watchedAt ? "day" : "unknown",
+				pass: 1,
+				...(episode
+					? {
+							episodeTmdbId: validId(Number(id(node, "tmdb"))),
+							episodeTvdbId: validId(Number(id(node, "tvdb"))),
+							episodeName: clipped(value(node, "title")),
+							episodeNumbering: "unknown" as const,
+							season: season === "0" ? 0 : validId(Number(season)),
+							episode: validId(Number(value(node, "episode"))),
+						}
+					: {}),
+			})
+		}
+	}
+	// Kodi versions can omit one of the IDs. Only unambiguous pairs from this export unify identities.
+	const movieIds = new Map<string, number | null>()
+	for (const node of root.children) {
+		if (node.name !== "movie") continue
+		const { tmdbId, imdbId } = baseFor(node, "movie")
+		if (tmdbId && imdbId)
+			movieIds.set(
+				imdbId,
+				!movieIds.has(imdbId) || movieIds.get(imdbId) === tmdbId
+					? tmdbId
+					: null,
+			)
+	}
+	for (const node of root.children) {
+		if (node.name === "movie" || node.name === "tvshow") {
+			const base = baseFor(node, node.name === "movie" ? "movie" : "show")
+			if (node.name === "movie" && !base.tmdbId && base.imdbId)
+				base.tmdbId = movieIds.get(base.imdbId) ?? null
+			const ref = reference(base)
+			emit(node, base, ref)
+			for (const episode of node.children.filter(
+				(child) => child.name === "episodedetails",
+			)) {
+				const episodeRef = id(episode, "tmdb")
+					? `tmdb:${id(episode, "tmdb")}`
+					: id(episode, "tvdb")
+						? `tvdb:${id(episode, "tvdb")}`
+						: `${value(episode, "season")}:${value(episode, "episode")}`
+				emit(episode, base, `${ref}:episode:${episodeRef}`, true)
+			}
+		} else if (node.name === "musicvideo")
+			observations.push({
+				...baseFor(node, "movie"),
+				key: `kodi:unsupported:musicvideo:${observations.length}`,
+				kind: "unsupported",
+				problem: {
+					outcome: "unsupported",
+					reason: "GoodWatch doesn't import music videos.",
+				},
+			})
+	}
+	if (observations.length > IMPORT_MAX_ROWS)
+		fail(`That export produces more than ${rowLimitLabel} import items.`)
+	const unique = deduplicateKodi(observations)
+	const clusterWarning = kodiSameDayWarning(unique)
+	if (clusterWarning) warnings.push(clusterWarning)
+	return {
+		source: "kodi",
+		observations: unique,
+		warnings: [...new Set(warnings)],
+	}
+}
+
+function deduplicateKodi(
+	observations: ImportObservation[],
+): ImportObservation[] {
+	const unique = new Map<string, ImportObservation>()
+	for (const observation of observations) {
+		const previous = unique.get(observation.key)
+		if (
+			!previous ||
+			(observation.kind === "watch" &&
+				(observation.watchedAt ?? "") > (previous.watchedAt ?? ""))
+		)
+			unique.set(observation.key, observation)
+	}
+	return [...unique.values()]
+}
+
+function kodiSameDayWarning(observations: ImportObservation[]): string | null {
+	const days = new Map<string, number>()
+	for (const row of observations)
+		if (row.kind === "watch" && row.watchedAt)
+			days.set(row.watchedAt, (days.get(row.watchedAt) ?? 0) + 1)
+	const largest = Math.max(0, ...days.values())
+	return largest >= 100
+		? `${largest} Kodi watches share one day. This may be a mark-as-watched date; you can import without dates.`
+		: null
 }

@@ -1,3 +1,5 @@
+import { isbot } from "isbot"
+import { apiDisplayLanguage, liveMediaLanguage } from "./media-payload.server.ts"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserData } from "~/server/userData.server"
@@ -21,6 +23,8 @@ export type Viewer =
 	| { kind: "guest"; progress: GuestProgress }
 
 export interface ViewerContext {
+	/** Absent for canonical script/static readers. */
+	language?: string
 	viewer: Viewer
 	country: string
 	services: number[] // saved, expanded through duplicateProviderMapping; [] for none
@@ -73,8 +77,10 @@ export async function getViewerContext(
 			? await getUserIdFromRequest({ request })
 			: knownUserId
 	const guessedCountry = getLocaleFromRequest(request).locale.country
-	if (!userId) return guestContext(guest, guessedCountry)
-	return getMemberViewerContext(userId, guessedCountry)
+	const ctx = !userId ? guestContext(guest, guessedCountry) : await getMemberViewerContext(userId, guessedCountry)
+	const api = new URL(request.url).pathname.startsWith("/api/")
+	const language = api ? apiDisplayLanguage(request) : await liveMediaLanguage(request, userId)
+	return { ...ctx, language: isbot(request.headers.get("user-agent")) ? undefined : language }
 }
 
 /** A member's viewer context by user id, for callers that already know the member (and scripts). */

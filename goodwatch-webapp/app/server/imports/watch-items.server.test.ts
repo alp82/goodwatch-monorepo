@@ -10,7 +10,12 @@ const callbacks = globalThis as typeof globalThis & {
 	watchApply?: (
 		plan: Record<string, unknown>,
 		checkpoint?: (plan: Record<string, unknown>) => Promise<void>,
-	) => Promise<{ added: number; kept: number; watchIds: string[] }>
+	) => Promise<{
+		added: number
+		kept: number
+		watchIds: string[]
+		statusKeys: string[]
+	}>
 	watchUndo?: (plan: Record<string, unknown>) => Promise<void>
 }
 
@@ -210,7 +215,7 @@ test("a crash after applying watches leaves the plan durable for resume and undo
 	setImportDbForTest(db)
 	callbacks.watchApply = async (plan, checkpoint) => {
 		await checkpoint?.({ ...plan, checkpointed: true })
-		return { added: 1, kept: 0, watchIds: ["i:watch:one"] }
+		return { added: 1, kept: 0, watchIds: ["i:watch:one"], statusKeys: [] }
 	}
 	let undone = 0
 	callbacks.watchUndo = async (plan) => {

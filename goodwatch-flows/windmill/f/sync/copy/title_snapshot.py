@@ -662,6 +662,15 @@ def main(force: bool = False, dry_run: bool = False):
             return crate.cur.fetchall()
 
         result = run(redis, select, force=force, dry_run=dry_run)
+        # Every successful snapshot attempt includes the nightly no-change path. Never enqueue
+        # from dry runs or when another publisher owns the lock. Personal order failure cannot fail the snapshot.
+        if not dry_run and (result.get("published") or result.get("reason") == "no title analysis changed since the current version"):
+            try:
+                from f.sync.copy.personal_order_trigger import main as start_personal_order
+                result["personal_order"] = start_personal_order()
+            except Exception as error:
+                print(f"Could not enqueue Personal order rollout: {error}", flush=True)
+                result["personal_order"] = {"started": False, "reason": str(error)}
         print(json.dumps(result), flush=True)
         return result
     finally:

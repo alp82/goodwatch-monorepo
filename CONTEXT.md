@@ -119,14 +119,14 @@ The member's stored state for a show: Not started, Watching, On hold, Dropped, o
 The show status of a show the member has not begun. Every show is in it until the member watches a regular episode, presses Seen, or an import brings another status.
 
 **Watching**:
-The show status of a show the person has started and intends to continue. The first watched episode sets it, unless that was the last aired one, which makes the show Seen.
+The show status of a show the person has started and intends to continue. The first watched episode sets it, unless that was the last aired one, which makes the show Seen. An import can also supply Watching without watches; whole-show completion stays Watching while a season is still airing.
 _Avoid_: In progress, Currently watching, Continue watching
 
 **Caught up**:
 What a Seen show is called while it is still running. It is a label, not a show status; once the show has ended it reads Seen.
 
 **On hold**:
-The show status of a show the person has set aside and may return to. Only the person sets it, from Watching or from a Seen show with new episodes.
+The show status of a show the person has set aside and may return to. The person sets it from Watching or from a Seen show with new episodes. An import can bring it without watches, while preserving an existing On hold, Dropped or Seen decision.
 _Avoid_: Paused
 
 **Dropped**:
@@ -175,6 +175,10 @@ _Avoid_: Personalized sort, Recommended sort
 **Best match**:
 The sort that orders titles by taste match, highest first, on Discover and Watch next. It needs taste.
 _Avoid_: Recommended sort, Sort by match
+
+**Personal order**:
+The order Best match uses for a member once it is on for them: titles ranked by how well the member's own ratings and everyone's ratings predict they will like them, with no franchise crowding the top, and the first places mixed toward the member's own share of shows and animation. Taste match is still shown on each title; personal order only decides the order.
+_Avoid_: G1, Smart order
 
 **Taste match filter**:
 The filter that keeps only titles with a taste match of at least 70, 80, or 90 percent.

@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Discover's results: pages of /api/discover/results for the filter bar's query and the For you switch, loaded by
 // infinite scroll; in search mode, over the search's ranked list. Members GET; a guest's progress lives in their
 // browser, so guests POST it with every request.
@@ -33,8 +35,9 @@ export const browseKey = (
 	query: string,
 	forYou: boolean,
 	ranked?: readonly TitleKey[],
+	language?: string,
 ) =>
-	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}`
+	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
 /**
  * A guest's progress and chosen country and services, read after hydration (the server can't see them); null for a
@@ -118,7 +121,8 @@ export function useDiscoverBrowse({
 	/** Partial search results get a disposable cache, never the completed list cache. */
 	provisional?: boolean
 }) {
-	const key = browseKey(query, forYou, ranked ?? undefined)
+	const { locale } = useLocale()
+	const key = browseKey(query, forYou, ranked ?? undefined, locale.language)
 	const signature = guestSignature(guest)
 	// The loader's pages answer a member, or a guest who hasn't rated or chosen anything (the server's view of any guest).
 	const initialFits =
@@ -144,7 +148,9 @@ export function useDiscoverBrowse({
 						pageParams: initial.pages.map((p) => p.page),
 					}
 				: undefined,
-		placeholderData: keepPreviousData,
+		placeholderData: (previous, previousQuery) =>
+			typeof previousQuery?.queryKey[2] === "string" &&
+			new URLSearchParams(previousQuery.queryKey[2]).get("displayLanguage") === locale.language ? previous : undefined,
 		// Guests wait until their progress is read, so the first request already carries it. A search waits for its list.
 		enabled: guest !== undefined && ranked !== null,
 	})

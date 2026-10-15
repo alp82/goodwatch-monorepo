@@ -10,6 +10,8 @@ const originalConnect = Redis.Cluster.prototype.connect
 Redis.Cluster.prototype.connect = async () => {}
 const {
 	createTitleDetailsGetters,
+	DETAILS_MOVIE_CACHE_NAME,
+	DETAILS_SHOW_CACHE_NAME,
 	DETAILS_MISSING_CACHE_NAME,
 	DETAILS_MISSING_TTL_SECONDS,
 } = await import("./title-details-cache.ts")
@@ -130,10 +132,10 @@ for (const mediaType of ["movie", "show"] as const) {
 		assert.equal((await get()).details.title, "Title")
 		assert.equal(fetches, 3)
 		assert.equal(writes.length, 3)
-		assert.ok(writes[2].key.startsWith(`cached-details-${mediaType}-v2:`))
+		assert.ok(writes[2].key.startsWith(`cached-${mediaType === "show" ? DETAILS_SHOW_CACHE_NAME : DETAILS_MOVIE_CACHE_NAME}:`))
 	})
 
-	test(`${mediaType}: existing details keep their v2 shape and hits use one read`, async () => {
+	test(`${mediaType}: existing details keep their versioned shape and hits use one read`, async () => {
 		const { reads, writes } = fakeRedis()
 		let fetches = 0
 		const get = getterFor(mediaType, async () => {
@@ -142,7 +144,7 @@ for (const mediaType of ["movie", "show"] as const) {
 		})
 		await get()
 		assert.equal(writes.length, 1)
-		assert.ok(writes[0].key.startsWith(`cached-details-${mediaType}-v2:`))
+		assert.ok(writes[0].key.startsWith(`cached-${mediaType === "show" ? DETAILS_SHOW_CACHE_NAME : DETAILS_MOVIE_CACHE_NAME}:`))
 		assert.deepEqual(
 			JSON.parse(writes[0].value).data,
 			JSON.parse(JSON.stringify(trimTitleDetails(raw, mediaType, "US"))),
@@ -150,7 +152,7 @@ for (const mediaType of ["movie", "show"] as const) {
 		const before = reads.length
 		await get()
 		assert.equal(reads.length - before, 1)
-		assert.ok(reads.at(-1)?.startsWith(`cached-details-${mediaType}-v2:`))
+		assert.ok(reads.at(-1)?.startsWith(`cached-${mediaType === "show" ? DETAILS_SHOW_CACHE_NAME : DETAILS_MOVIE_CACHE_NAME}:`))
 		assert.equal(fetches, 1)
 		assert.equal(writes.length, 1)
 	})

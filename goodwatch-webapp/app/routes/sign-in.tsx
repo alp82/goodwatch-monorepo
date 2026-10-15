@@ -8,6 +8,8 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { hasBrowserCookie, isCrawler } from "~/server/crawlers.server";
 import CustomAuthForm from "~/ui/auth/CustomAuthForm";
+import { getAuthPosters } from "~/server/auth-posters.server";
+import type { AuthPoster } from "~/ui/auth/PosterSpotlight";
 import { useUser } from "~/utils/auth";
 import { useEffect } from "react";
 import { useNavigate } from "@remix-run/react";
@@ -30,6 +32,7 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
 	redirectUri: string;
+	posters: AuthPoster[];
 };
 
 export const loader: LoaderFunction = async ({
@@ -49,11 +52,11 @@ export const loader: LoaderFunction = async ({
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || "";
 
-	return json({ redirectUri });
+	return json({ redirectUri, posters: await getAuthPosters() });
 };
 
 export default function SignInRedirectTo() {
-	const { redirectUri } = useLoaderData<LoaderData>();
+	const { redirectUri, posters } = useLoaderData<LoaderData>();
 	const { user } = useUser();
 	const navigate = useNavigate();
 
@@ -63,5 +66,5 @@ export default function SignInRedirectTo() {
 		}
 	}, [user, navigate, redirectUri]);
 
-	return <CustomAuthForm mode="sign-in" redirectTo={redirectUri} />;
+	return <CustomAuthForm mode="sign-in" redirectTo={redirectUri} posters={posters} />;
 }

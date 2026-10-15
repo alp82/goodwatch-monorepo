@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The signal that something new aired for a member's shows (#442), for the Browse button, the dock's key, the My
 // shows tile and home's Continue door. For a member with a Watching or Seen show; everyone else sends no
 // request. It refetches when the member's watch state changes, since watching the new episode takes
@@ -18,14 +20,15 @@ import { clearLanded } from "./useTonightsPick"
 const ENDPOINT = "/api/new-episodes"
 const keyOf = (userId: string) => ["new-episodes", userId] as const
 
-async function fetchNewEpisodes(): Promise<NewEpisodes> {
-	const response = await fetch(ENDPOINT)
+async function fetchNewEpisodes(language: string): Promise<NewEpisodes> {
+	const response = await fetch(mediaLanguageUrl(ENDPOINT, language))
 	if (!response.ok) throw new Error(`New episodes: ${response.status}`)
 	return (await response.json()) as NewEpisodes
 }
 
 /** What the signal is told; null for a guest and a member without such a show. */
 export function useNewEpisodesData(): NewEpisodes | null {
+	const { locale } = useLocale()
 	const { user } = useUser()
 	const { data } = useUserData()
 	const watchState = data?.watchState
@@ -40,10 +43,10 @@ export function useNewEpisodesData(): NewEpisodes | null {
 		return follows ? watchStateSignature(watchState) : null
 	}, [watchState])
 	const query = useQuery({
-		queryKey: [...keyOf(user?.id ?? ""), signature],
-		queryFn: fetchNewEpisodes,
+		queryKey: [...keyOf(user?.id ?? ""), signature, locale.language],
+		queryFn: () => fetchNewEpisodes(locale.language),
 		enabled: Boolean(user) && signature !== null,
-		placeholderData: (previous) => previous,
+		placeholderData: (previous, query) => query?.queryKey.at(-1) === locale.language ? previous : undefined,
 	})
 	return signature === null ? null : (query.data ?? null)
 }

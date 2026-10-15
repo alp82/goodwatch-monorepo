@@ -1,0 +1,53 @@
+{
+  "packages": {
+    "crate": "2.2.1",
+    "urllib3": "2.7.0",
+    "orjson": "3.13.0",
+    "verlib2": "26.2"
+  },
+  "readFailover": {
+    "fixtureOnly": true,
+    "write": false,
+    "requestsPerHost": [
+      1,
+      3,
+      2
+    ],
+    "activeHosts": 2,
+    "droppedHostExcluded": true,
+    "appliedEffects": 0,
+    "result": [
+      [
+        1
+      ]
+    ]
+  },
+  "lostWriteResponse": {
+    "fixtureOnly": true,
+    "write": true,
+    "requestsPerHost": [
+      1,
+      1,
+      0
+    ],
+    "activeHosts": 2,
+    "droppedHostExcluded": true,
+    "appliedEffects": 2,
+    "result": [
+      [
+        1
+      ]
+    ]
+  },
+  "nodeLossSql": {
+    "fixtureOnly": true,
+    "error": "NodeNotConnectedException[Node not connected]",
+    "requestsPerHost": [
+      1,
+      0,
+      0
+    ],
+    "activeHosts": 3,
+    "retried": false
+  }
+}

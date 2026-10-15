@@ -31,10 +31,10 @@ export default function PosterFullScreen({
 	onClose: () => void
 }) {
 	if (!open || !media.details.poster_path) return null
-	return <View title={media.details.title} path={media.details.poster_path} thumb={thumb} onClose={onClose} />
+	return <View language={media.details.presentation?.title.language ?? "en"} title={media.details.title} path={media.details.poster_path} thumb={thumb} onClose={onClose} />
 }
 
-function View({ title, path, thumb, onClose }: { title: string; path: string; thumb: RefObject<HTMLButtonElement | null>; onClose: () => void }) {
+function View({ title, language, path, thumb, onClose }: { title: string; language: string; path: string; thumb: RefObject<HTMLButtonElement | null>; onClose: () => void }) {
 	const picture = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const closer = useRef<HTMLButtonElement>(null)
@@ -106,7 +106,7 @@ function View({ title, path, thumb, onClose }: { title: string; path: string; th
 		>
 			<div ref={shade} className="absolute inset-0 bg-black/90" />
 			<div ref={picture} className={`relative aspect-[2/3] origin-top-left overflow-hidden rounded-xl bg-white/5 shadow-2xl ${BOX}`}>
-				<TmdbImage kind="poster" path={path} sizes={SIZES} maxWidth={500} priority="eager" alt={`Poster for ${title}`} className="h-full w-full object-cover" draggable={false} />
+				<TmdbImage kind="poster" lang={language} path={path} sizes={SIZES} maxWidth={500} priority="eager" alt={title} className="h-full w-full object-cover" draggable={false} />
 			</div>
 			<button
 				ref={closer}

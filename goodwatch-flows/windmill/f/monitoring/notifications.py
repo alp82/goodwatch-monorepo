@@ -70,6 +70,68 @@ def failure(
     }
 
 
+# Fixed copy only: raw job errors, arguments and provider responses never enter Discord.
+NAMES = {
+    "f/tmdb_web/tmdb_crawl_providers": "Streaming availability",
+    "f/priority/crawl_all": "Catalog updates",
+    "f/monitoring/country_backlog": "Streaming availability",
+    "f/monitoring/publication_backlog": "Search catalog updates",
+    "f/monitoring/crate_shards": "Database replication",
+    "f/monitoring/crate_disk": "Database storage",
+    "f/monitoring/crate_backup": "Database backups",
+}
+
+
+def format_notification(notice: dict[str, Any]) -> str:
+    path = notice["pipeline"]
+    name = NAMES.get(path, path.rsplit("/", 1)[-1].replace("_", " ").capitalize())
+    prefix = "[controlled monitor check] " if path == "f/monitoring/notification_check" else ""
+    if notice["kind"] == "recovery":
+        return f"{prefix}Resolved: {name}. Checks are back to normal."
+    causes = set(notice["causes"])
+    if "crate_checkpoint_stalled" in causes:
+        problem = "A replica has stopped catching up for at least 1 hour; retained writes can grow disk use."
+        action = "Inspect the lagging replica before disk use grows further."
+    elif causes & {"crate_checkpoint_lag", "crate_translog_oversized"}:
+        problem = "Replication is behind and retained writes are using extra disk space."
+        action = "Inspect replication progress and available disk space."
+    elif causes & {"crate_disk_near_watermark", "crate_disk_watermark"}:
+        problem = f"Disk use reached {notice.get('disk_used_percent', '?')}%; database allocation is at risk."
+        action = "Free disk space or add capacity."
+    elif causes & {"crate_backup_missing", "crate_backup_stale", "crate_backup_unreadable"}:
+        problem = "A recent successful database backup could not be confirmed."
+        action = "Check the backup job and repository."
+    elif "country_backlog_stalled" in causes:
+        problem = f"Availability refreshes stalled: {notice.get('overdue_country_count', '?')} country updates overdue."
+        action = "Inspect the provider crawler's failed work."
+    elif causes & {"publication_unacknowledged", "publication_retry_exhausted", "publication_failed"}:
+        problem = "Catalog changes are not reaching search reliably."
+        action = "Inspect the publication failure and search database connectivity."
+    elif "consecutive_failures" in causes:
+        problem = "Repeated runs or their required steps are failing."
+        action = "Inspect the failed step in the linked run."
+    elif "excessive_runtime" in causes:
+        problem = "A run has exceeded its expected time limit."
+        action = "Inspect the running step for a blocked dependency."
+    elif "missing_execution" in causes:
+        problem = "Scheduled work has not started within its allowed delay."
+        action = "Check the schedule and available Windmill workers."
+    else:
+        problem = "The monitoring delivery check needs attention."
+        action = "Review the linked check."
+    title = "Worsened" if notice["kind"] == "escalation" else "Action needed"
+    lines = [f"{prefix}{title}: {name}. {problem}", action]
+    if path in INFRASTRUCTURE_PIPELINES:
+        link = "https://github.com/alp82/goodwatch-monorepo/blob/main/docs/workflow-monitoring.md#crate-shard-and-disk-health"
+    elif notice.get("job_id"):
+        link = f"https://windmill.goodwatch.app/run/{notice['job_id']}?workspace=goodwatch"
+    else:
+        source = notice.get("source_pipeline", path)
+        link = f"https://windmill.goodwatch.app/flows/get/{source}?workspace=goodwatch"
+    lines.append(link)
+    return "\n".join(lines)
+
+
 def deliver_notification(
     webhook_url: str, notification: dict[str, Any]
 ) -> dict[str, Any]:
@@ -85,7 +147,7 @@ def deliver_notification(
     if (
         not isinstance(pipeline, str)
         or not re.fullmatch(r"[fu]/[A-Za-z0-9_/-]{1,200}", pipeline)
-        or kind not in {"incident", "reminder", "recovery"}
+        or kind not in {"incident", "escalation", "recovery"}
         or not isinstance(causes, list)
         or len(causes) > 8
         or any(
@@ -152,25 +214,7 @@ def deliver_notification(
         "unacknowledged_timestamp",
     }:
         return failure("invalid_notification", True)
-    prefix = (
-        "[controlled monitor check] "
-        if pipeline == "f/monitoring/notification_check"
-        else ""
-    )
-    content = f"{prefix}{kind}: {pipeline}\nCause: {', '.join(causes) or 'recovered'}"
-    for field, label in count_fields.items():
-        if notification.get(field) is not None:
-            content += f"\n{label}: {notification[field]}"
-    if detail:
-        content += f"\n{detail}"
-    if oldest:
-        content += f"\nOldest observed timestamp: {oldest} ({age_basis or 'unspecified'})"
-    if source_pipeline:
-        content += f"\nhttps://windmill.goodwatch.app/flows/get/{source_pipeline}?workspace=goodwatch"
-    if job_id:
-        content += f"\nhttps://windmill.goodwatch.app/run/{job_id}?workspace=goodwatch"
-    elif pipeline not in INFRASTRUCTURE_PIPELINES:
-        content += "\nNo resolved execution. https://windmill.goodwatch.app/schedules?workspace=goodwatch"
+    content = format_notification(notification)
     request = Request(
         webhook_url + "?wait=true",
         data=json.dumps(

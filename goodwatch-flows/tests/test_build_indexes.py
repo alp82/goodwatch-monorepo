@@ -6,6 +6,7 @@ import json
 import sys
 import types
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -170,6 +171,129 @@ class BuildTests(unittest.TestCase):
         labels = json.loads(gzip.decompress(a["negation_labels"]))
         self.assertEqual(labels["labels"], ["dark", "time loop"])
         self.assertEqual(labels["stems"], [["dark"], ["loop", "time"]])
+
+
+class AliasTests(unittest.TestCase):
+    TITLES = [title(MOVIE + 129, title="Spirited Away", original_title="千と千尋の神隠し"),
+              title(MOVIE + 155, title="The Dark Knight", original_title="The Dark Knight"),
+              title(SHOW + 1396, media_type="show", title="Breaking Bad", original_title="Breaking Bad")]
+
+    def test_names_are_folded_deduplicated_and_kept_once_per_title(self) -> None:
+        rows = [
+            ("movie", 129, "de", "DE", "Chihiros Reise ins Zauberland"),
+            ("movie", 129, "fr", "FR", "Le Voyage de Chihiro"),
+            ("movie", 129, "pt", "BR", "A Viagem de Chihiro"),
+            ("movie", 129, "pt", "PT", "A Viagem de Chihiro"),        # the same name in another region
+            ("movie", 129, "es", "ES", "El viaje de Chihiro"),
+            ("movie", 129, "es", "MX", "El Viaje de Chihiro"),        # the same fold
+            ("movie", 129, "ja", "JP", "千と千尋の神隠し"),               # the original title
+            ("movie", 129, "en", "US", "Spirited Away"),              # the title
+            ("movie", 129, "it", "IT", ""),
+            ("movie", 129, "it", "IT", None),
+            ("movie", 129, "nl", "NL", "De reis van Chihiro"),        # not a launch language
+            ("movie", 155, "zh", "CN", "蝙蝠侠：黑暗骑士"),
+            ("movie", 155, "zh", "TW", "黑暗騎士"),
+            ("movie", 155, "pl", "PL", "x"),                           # too short
+            ("movie", 155, "zh", "HK", "侠"),                           # one CJK character is kept
+            ("movie", 155, "de", "DE", "The Dark Knight"),
+            ("show", 1396, "ru", "RU", "Во все тяжкие"),
+            ("show", 1396, "es", "ES", "Breaking Bad"),
+            ("movie", 1396, "de", "DE", "Not an eligible title"),     # a movie, not the show
+        ]
+        doc, stats = ib.alias_table(self.TITLES, rows)
+        named = list(zip(doc["rows"], doc["names"], doc["languages"]))
+        self.assertEqual(named, [
+            (0, "Chihiros Reise ins Zauberland", "de"),
+            (0, "Le Voyage de Chihiro", "fr"),
+            (0, "El viaje de Chihiro", "es"),                     # the first region's spelling
+            (0, "A Viagem de Chihiro", "pt"),
+            (1, "侠", "zh"),
+            (1, "蝙蝠侠：黑暗骑士", "zh"),
+            (1, "黑暗騎士", "zh"),
+            (2, "Во все тяжкие", "ru"),
+        ])
+        self.assertEqual(doc["version"], ib.ALIAS_VERSION)
+        self.assertEqual(stats["aliases_read"], 17)
+        self.assertEqual(stats["aliases_empty"], 2)
+        self.assertEqual(stats["aliases_same_as_title"], 4)
+        self.assertEqual(stats["aliases_duplicate"], 2)
+        self.assertEqual(stats["aliases_too_short"], 1)
+        self.assertEqual(stats["aliases_kept"], 8)
+        self.assertEqual(stats["aliases_titles"], 3)
+        self.assertEqual(stats["aliases_per_language"]["zh"], 3)
+        self.assertEqual(list(stats["aliases_per_language"]), list(ib.ALIAS_LANGUAGES))
+
+    def test_a_name_two_languages_share_takes_the_first_language(self) -> None:
+        rows = [("movie", 129, "pl", "PL", "Chihiro"), ("movie", 129, "de", "AT", "chihiro")]
+        doc, _ = ib.alias_table(self.TITLES, rows)
+        self.assertEqual((doc["names"], doc["languages"]), (["chihiro"], ["de"]))
+
+    def test_no_translations_give_an_empty_table(self) -> None:
+        doc, stats = ib.alias_table(self.TITLES, [])
+        self.assertEqual(doc, {"version": ib.ALIAS_VERSION, "rows": [], "names": [], "languages": []})
+        self.assertEqual(stats["aliases_kept"], 0)
+
+    def test_the_build_writes_the_alias_table(self) -> None:
+        src = sources(self.TITLES)
+        src.translations = [("movie", 155, "pl", "PL", "Mroczny Rycerz")]
+        build = ib.build_indexes(src)
+        self.assertEqual(build.files["alias_table"]["names"], ["Mroczny Rycerz"])
+        self.assertEqual(build.files["alias_table"]["rows"], [1])
+        self.assertEqual(build.stats["aliases_kept"], 1)
+        self.assertEqual(ib.build_indexes(sources(self.TITLES)).files["alias_table"]["rows"], [])
+
+    def test_translations_are_read_per_media_type_in_the_alias_languages(self) -> None:
+        calls = []
+
+        class Crate:
+            def select(self, sql, params):
+                calls.append((sql, params))
+                media_type, languages, ids = params
+                return [{"media_tmdb_id": i, "language_code": "de", "country_code": "DE", "title": f"N{i}"}
+                        for i in ids]
+        rows = flow.read_translations(Crate(), self.TITLES)
+        self.assertEqual(rows, [("movie", 129, "de", "DE", "N129"), ("movie", 155, "de", "DE", "N155"),
+                                ("show", 1396, "de", "DE", "N1396")])
+        self.assertTrue(all("FROM translation" in sql and params[1] == list(ib.ALIAS_LANGUAGES)
+                            for sql, params in calls))
+
+
+class AliasFailureTests(unittest.TestCase):
+    TITLES = AliasTests.TITLES
+
+    def test_a_failed_translation_read_builds_an_empty_table_of_version_0(self) -> None:
+        class Crate:
+            def select(self, sql, params):
+                raise RuntimeError("translation is unavailable")
+        stats = {}
+        self.assertIsNone(flow.read_translations_or_none(Crate(), self.TITLES, stats))
+        self.assertIn("translation is unavailable", stats["translation_read_error"])
+        src = sources(self.TITLES)
+        src.translations = None
+        build = ib.build_indexes(src)
+        self.assertEqual(build.files["alias_table"], {"version": 0, "rows": [], "names": [], "languages": []})
+        self.assertTrue(build.stats["aliases_unavailable"])
+
+    def run_flow(self, translations) -> dict:
+        """flow.run against the fake Crate and blobs, with the sources and the intent encoder replaced; returns the
+        published manifest."""
+        crate = FakeCrate()
+        client = types.SimpleNamespace(count=lambda *a, **kw: types.SimpleNamespace(count=0),
+                                       delete=lambda *a, **kw: None)
+        src = sources(self.TITLES)
+        src.translations = translations
+        with mock.patch.object(flow, "read_sources", lambda *a: src), \
+                mock.patch.object(flow, "encode", lambda model, texts: np.zeros((len(texts), 384), np.float32)):
+            stats = flow.run(crate, crate.blobs, client, dry_run=False,
+                             now=datetime(2026, 10, 15, 2, tzinfo=timezone.utc))
+        self.assertTrue(stats["published"])
+        return json.loads(crate.rows["current"]["manifest"])
+
+    def test_the_published_manifest_carries_the_alias_version_of_its_file(self) -> None:
+        manifest = self.run_flow([("movie", 155, "pl", "PL", "Mroczny Rycerz")])
+        self.assertEqual(manifest["alias_version"], ib.ALIAS_VERSION)
+        self.assertIn("alias_table", manifest["files"])
+        self.assertEqual(self.run_flow(None)["alias_version"], 0)
 
 
 # ---- storage -------------------------------------------------------------------------------------

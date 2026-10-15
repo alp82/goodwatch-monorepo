@@ -1,5 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { useId, useState } from "react"
+import { IMPORT_SHOW_STATUS_LABELS } from "~/domain/imports"
 import type { ImportItem, ImportOutcome } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { useSourceImportItems } from "./SourceImportHooks"
@@ -120,8 +121,9 @@ function SourceItem({ item }: { item: ImportItem }) {
 			: item.mediaType === "show"
 				? "Show"
 				: "Movie"
-	const value =
-		item.score != null
+	const value = item.showStatus
+		? IMPORT_SHOW_STATUS_LABELS[item.showStatus]
+		: item.score != null
 			? `Source ${item.score}`
 			: item.watchedAt
 				? `Watched ${item.watchedAt.slice(0, 10)}`

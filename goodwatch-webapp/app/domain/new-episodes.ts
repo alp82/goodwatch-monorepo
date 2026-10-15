@@ -38,6 +38,8 @@ export function whenWords(airDate: string, today: string): string {
 
 /** An episode that has not aired, with the date it will. */
 export interface UpcomingEpisode {
+	id?: number
+	textPresentation?: import("~/utils/episode-text-overlay").EpisodeTextPresentation
 	displaySeason?: number
 	displayNumber?: number
 	season: number

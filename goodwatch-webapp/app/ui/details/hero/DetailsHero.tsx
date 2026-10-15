@@ -15,6 +15,9 @@ type Media = MovieResult | ShowResult
 export interface DetailsHeroProps {
 	media: Media
 	country: string
+	/** The header pair's country, while where-to-watch still shows `country`'s offers (see WhereToWatch). */
+	shownCountry?: string
+	preview?: "loading" | "failed" | null
 	/** The show's episode grid, when it has one: the ratings row draws its miniature from it. */
 	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
@@ -30,7 +33,7 @@ export interface DetailsHeroProps {
 // Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
 // them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
 // phone the two scores stand over each other beside the poster, each as wide as the column.
-export default function DetailsHero({ media, country, episodeGrid = null, sectionProps }: DetailsHeroProps) {
+export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps }: DetailsHeroProps) {
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
@@ -73,7 +76,7 @@ export default function DetailsHero({ media, country, episodeGrid = null, sectio
 						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
 							<ListActions media={media} />
 						</div>
-						<WhereToWatch media={media} country={country} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
+						<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
 					</div>
 				</section>
 			</div>

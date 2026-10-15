@@ -1,0 +1,9 @@
+summary: Reviewed social authors
+description: Stable author IDs reviewed in the relevance audit.
+lock: '!inline f/social/relevance_registry.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

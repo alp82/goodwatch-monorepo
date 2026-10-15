@@ -1,0 +1,947 @@
+{
+  "captured_at": "2026-10-14T16:58:50.942781+00:00",
+  "store": "production Crate, only the four new social tables mutated",
+  "counts": {
+    "posts": [
+      {
+        "source": "youtube",
+        "posts": 94,
+        "deleted": 0
+      },
+      {
+        "source": "rss",
+        "posts": 523,
+        "deleted": 0
+      },
+      {
+        "source": "mastodon",
+        "posts": 77,
+        "deleted": 0
+      },
+      {
+        "source": "bluesky",
+        "posts": 864,
+        "deleted": 0
+      }
+    ],
+    "links": [
+      {
+        "source": "youtube",
+        "links": 68,
+        "titles": 51
+      },
+      {
+        "source": "rss",
+        "links": 317,
+        "titles": 215
+      },
+      {
+        "source": "bluesky",
+        "links": 251,
+        "titles": 209
+      }
+    ],
+    "runs": [
+      {
+        "source": "youtube",
+        "status": "failed",
+        "runs": 1,
+        "processed": 8,
+        "published": 4
+      },
+      {
+        "source": "bluesky",
+        "status": "ok",
+        "runs": 2,
+        "processed": 875,
+        "published": 256
+      },
+      {
+        "source": "youtube",
+        "status": "superseded",
+        "runs": 2,
+        "processed": 0,
+        "published": 0
+      },
+      {
+        "source": "youtube",
+        "status": "ok",
+        "runs": 1,
+        "processed": 54,
+        "published": 38
+      },
+      {
+        "source": "rss",
+        "status": "superseded",
+        "runs": 1,
+        "processed": 0,
+        "published": 0
+      },
+      {
+        "source": "mastodon",
+        "status": "ok",
+        "runs": 2,
+        "processed": 77,
+        "published": 0
+      },
+      {
+        "source": "rss",
+        "status": "ok",
+        "runs": 1,
+        "processed": 523,
+        "published": 317
+      }
+    ]
+  },
+  "processing": [
+    {
+      "source": "youtube",
+      "stored": 94,
+      "processed": 94
+    },
+    {
+      "source": "rss",
+      "stored": 523,
+      "processed": 523
+    },
+    {
+      "source": "mastodon",
+      "stored": 77,
+      "processed": 77
+    },
+    {
+      "source": "bluesky",
+      "stored": 864,
+      "processed": 864
+    }
+  ],
+  "pending": {
+    "youtube": 0,
+    "rss": 0,
+    "bluesky": 0,
+    "mastodon": 0
+  },
+  "runs": [
+    {
+      "run_id": "91fd4f7e001543f58a3a61ee23e9f3db",
+      "source": "youtube",
+      "started_at": 1791994590666,
+      "finished_at": 1791994918659,
+      "status": "superseded",
+      "collected": 0,
+      "processed": 0,
+      "published": 0,
+      "inference_cost_usd": null,
+      "details": "Initial trial replaced with indexed candidate retrieval after observing slow lower(title) scans"
+    },
+    {
+      "run_id": "71b3c1df7baa483383a1f99d4037cfa5",
+      "source": "youtube",
+      "started_at": 1791994941761,
+      "finished_at": 1791995140059,
+      "status": "superseded",
+      "collected": 0,
+      "processed": 0,
+      "published": 0,
+      "inference_cost_usd": null,
+      "details": "Resumed from processed hashes with bounded concurrent matcher; partial source decisions retained"
+    },
+    {
+      "run_id": "cdf8b05b618e4be5b708bd0fe54e30e6",
+      "source": "youtube",
+      "started_at": 1791995140766,
+      "finished_at": 1791995191276,
+      "status": "failed",
+      "collected": 94,
+      "processed": 8,
+      "published": 4,
+      "inference_cost_usd": 0.0147556,
+      "details": {
+        "audit": [
+          {
+            "channel": "UCq0OueAsdxH6b8nyAspwViw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCjmJDM5pRKbUlVIzDYYWb6g",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCz97F7dMxBNOfGYu3rx8aCw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCuPivVjnfNo4mb3Oog_frZg",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCpy5dRhZd-JbZP4NsrnLt1w",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UC51KZjUZokzJfb08mzAGS2A",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCIrgJInjLS2BhlHOMDW7v0g",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCWOA1ZGywLbqmigxE4Qlvuw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCc1l5mTmAv2GC_PXrBpqyKQ",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCZSNzBgFub_WWil6TOTYwAg",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          }
+        ],
+        "errors": [],
+        "error_type": "TypeError"
+      }
+    },
+    {
+      "run_id": "8519f58aaea940b099d30fda069c8106",
+      "source": "rss",
+      "started_at": 1791995191418,
+      "finished_at": 1791995309048,
+      "status": "superseded",
+      "collected": 0,
+      "processed": 0,
+      "published": 0,
+      "inference_cost_usd": null,
+      "details": "Resumed after regression-tested nullable catalog display-title fix"
+    },
+    {
+      "run_id": "9bc7ba0518db4c8caf1964b2b4b7bf3b",
+      "source": "youtube",
+      "started_at": 1791995309890,
+      "finished_at": 1791995433989,
+      "status": "ok",
+      "collected": 93,
+      "processed": 54,
+      "published": 38,
+      "inference_cost_usd": 0.04619519999999999,
+      "details": {
+        "audit": [
+          {
+            "channel": "UCq0OueAsdxH6b8nyAspwViw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCjmJDM5pRKbUlVIzDYYWb6g",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCz97F7dMxBNOfGYu3rx8aCw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCuPivVjnfNo4mb3Oog_frZg",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCpy5dRhZd-JbZP4NsrnLt1w",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UC51KZjUZokzJfb08mzAGS2A",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCIrgJInjLS2BhlHOMDW7v0g",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCWOA1ZGywLbqmigxE4Qlvuw",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCc1l5mTmAv2GC_PXrBpqyKQ",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          },
+          {
+            "channel": "UCZSNzBgFub_WWil6TOTYwAg",
+            "route": "official_channel_feed",
+            "returned": 15,
+            "missing_api_key": true,
+            "bounded_pages": 1
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 0,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    },
+    {
+      "run_id": "56107e3ab6c54f98b5a8e723c1426f4f",
+      "source": "rss",
+      "started_at": 1791995434138,
+      "finished_at": 1791996504877,
+      "status": "ok",
+      "collected": 518,
+      "processed": 523,
+      "published": 317,
+      "inference_cost_usd": 0.4512484,
+      "details": {
+        "audit": [
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T15:15:00+00:00"
+          },
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 2,
+            "entries": 10,
+            "oldest": "2026-10-14T14:09:11+00:00"
+          },
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 3,
+            "entries": 10,
+            "oldest": "2026-10-14T12:08:54+00:00"
+          },
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 4,
+            "entries": 10,
+            "oldest": "2026-10-14T09:00:00+00:00"
+          },
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 5,
+            "entries": 10,
+            "oldest": "2026-10-14T02:00:04+00:00"
+          },
+          {
+            "feed": "https://variety.com/feed/",
+            "page": 6,
+            "entries": 10,
+            "oldest": "2026-10-13T20:53:07+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T14:34:39+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 2,
+            "entries": 10,
+            "oldest": "2026-10-14T09:52:00+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 3,
+            "entries": 10,
+            "oldest": "2026-10-13T19:53:46+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 4,
+            "entries": 10,
+            "oldest": "2026-10-13T16:52:30+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 5,
+            "entries": 10,
+            "oldest": "2026-10-13T14:20:08+00:00"
+          },
+          {
+            "feed": "https://variety.com/v/film/feed/",
+            "page": 6,
+            "entries": 10,
+            "oldest": "2026-10-13T09:59:36+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 1,
+            "entries": 12,
+            "oldest": "2026-10-14T15:45:00+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 2,
+            "entries": 12,
+            "oldest": "2026-10-14T12:00:00+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 3,
+            "entries": 12,
+            "oldest": "2026-10-14T05:00:55+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 4,
+            "entries": 12,
+            "oldest": "2026-10-13T22:10:06+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 5,
+            "entries": 12,
+            "oldest": "2026-10-13T19:00:00+00:00"
+          },
+          {
+            "feed": "https://deadline.com/feed/",
+            "page": 6,
+            "entries": 12,
+            "oldest": "2026-10-13T16:57:51+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 1,
+            "entries": 12,
+            "oldest": "2026-10-14T04:00:20+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 2,
+            "entries": 12,
+            "oldest": "2026-10-13T18:30:27+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 3,
+            "entries": 12,
+            "oldest": "2026-10-13T14:04:34+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 4,
+            "entries": 12,
+            "oldest": "2026-10-12T23:32:45+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 5,
+            "entries": 12,
+            "oldest": "2026-10-12T14:00:57+00:00"
+          },
+          {
+            "feed": "https://deadline.com/v/film/feed/",
+            "page": 6,
+            "entries": 12,
+            "oldest": "2026-10-11T17:34:59+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T15:34:44+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 2,
+            "entries": 10,
+            "oldest": "2026-10-14T13:30:00+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 3,
+            "entries": 10,
+            "oldest": "2026-10-14T02:19:24+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 4,
+            "entries": 10,
+            "oldest": "2026-10-13T21:14:33+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 5,
+            "entries": 10,
+            "oldest": "2026-10-13T19:30:00+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/feed/",
+            "page": 6,
+            "entries": 10,
+            "oldest": "2026-10-13T18:00:00+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T11:00:27+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 2,
+            "entries": 10,
+            "oldest": "2026-10-13T18:27:37+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 3,
+            "entries": 10,
+            "oldest": "2026-10-12T21:25:32+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 4,
+            "entries": 10,
+            "oldest": "2026-10-12T07:38:00+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 5,
+            "entries": 10,
+            "oldest": "2026-10-10T18:41:19+00:00"
+          },
+          {
+            "feed": "https://www.hollywoodreporter.com/c/movies/feed/",
+            "page": 6,
+            "entries": 10,
+            "oldest": "2026-10-09T22:41:08+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 1,
+            "entries": 12,
+            "oldest": "2026-10-13T20:30:00+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 2,
+            "entries": 12,
+            "oldest": "2026-10-13T00:26:03+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 3,
+            "entries": 12,
+            "oldest": "2026-10-11T13:15:00+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 4,
+            "entries": 12,
+            "oldest": "2026-10-09T19:30:00+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 5,
+            "entries": 12,
+            "oldest": "2026-10-08T22:00:00+00:00"
+          },
+          {
+            "feed": "https://www.indiewire.com/feed/",
+            "page": 6,
+            "entries": 12,
+            "oldest": "2026-10-07T21:00:00+00:00"
+          },
+          {
+            "feed": "https://collider.com/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T12:21:11+00:00"
+          },
+          {
+            "feed": "https://screenrant.com/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T15:53:35+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 1,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 2,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 3,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 4,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 5,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.slashfilm.com/feed/",
+            "page": 6,
+            "entries": 20,
+            "oldest": "2026-10-13T14:00:00+00:00"
+          },
+          {
+            "feed": "https://www.denofgeek.com/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-14T11:00:00+00:00"
+          },
+          {
+            "feed": "https://www.filmstarts.de/rss/nachrichten.xml",
+            "page": 1,
+            "entries": 20,
+            "oldest": "2026-10-14T07:15:00+00:00"
+          },
+          {
+            "feed": "https://www.filmstarts.de/rss/filme-nachrichten.xml",
+            "page": 1,
+            "entries": 20,
+            "oldest": "2026-10-13T18:00:00+00:00"
+          },
+          {
+            "feed": "https://www.filmstarts.de/rss/serien-nachrichten.xml",
+            "page": 1,
+            "entries": 20,
+            "oldest": "2026-10-12T07:30:00+00:00"
+          },
+          {
+            "feed": "https://www.moviepilot.de/news.rss",
+            "page": 1,
+            "entries": 19,
+            "oldest": "2026-10-12T07:50:00+00:00"
+          },
+          {
+            "feed": "https://www.film-rezensionen.de/feed/",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-13T12:58:11+00:00"
+          },
+          {
+            "feed": "https://www.epd-film.de/rss.xml",
+            "page": 1,
+            "entries": 10,
+            "oldest": "2026-10-08T10:30:01+00:00"
+          },
+          {
+            "feed": "https://about.netflix.com/en/feed.xml",
+            "page": 1,
+            "entries": 15,
+            "oldest": "2026-10-08T00:00:00+00:00"
+          },
+          {
+            "feed": "https://about.netflix.com/de/feed.xml",
+            "page": 1,
+            "entries": 15,
+            "oldest": "2026-01-26T00:00:00+00:00"
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 0,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    },
+    {
+      "run_id": "9a07901aca234f4d8038976f99c56105",
+      "source": "mastodon",
+      "started_at": 1791995656035,
+      "finished_at": 1791995724131,
+      "status": "ok",
+      "collected": 74,
+      "processed": 74,
+      "published": 0,
+      "inference_cost_usd": 0.014156800000000002,
+      "details": {
+        "audit": [
+          {
+            "instance": "https://mastodon.social",
+            "returned": 40,
+            "scope": "public_status_trends"
+          },
+          {
+            "instance": "https://mastodon.online",
+            "returned": 40,
+            "scope": "public_status_trends"
+          },
+          {
+            "instance": "https://fosstodon.org",
+            "returned": 31,
+            "scope": "public_status_trends"
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 0,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    },
+    {
+      "run_id": "a765de92331644dc963231171eee8e04",
+      "source": "bluesky",
+      "started_at": 1791995656037,
+      "finished_at": 1791996625556,
+      "status": "ok",
+      "collected": 635,
+      "processed": 635,
+      "published": 185,
+      "inference_cost_usd": 0.37307120000000016,
+      "details": {
+        "audit": [
+          {
+            "query": "movie",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "film",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "trailer",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "TV show",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "series",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "episode",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "netflix",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "cinema",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 229,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    },
+    {
+      "run_id": "7431ca88bdc54296a8189ae9de0736f3",
+      "source": "bluesky",
+      "started_at": 1791996505033,
+      "finished_at": 1791997011197,
+      "status": "ok",
+      "collected": 630,
+      "processed": 240,
+      "published": 71,
+      "inference_cost_usd": 0.1584635999999997,
+      "details": {
+        "audit": [
+          {
+            "query": "movie",
+            "returned": 98,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "film",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "trailer",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "TV show",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "series",
+            "returned": 98,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "episode",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "netflix",
+            "returned": 99,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          },
+          {
+            "query": "cinema",
+            "returned": 100,
+            "cursor_ignored": true,
+            "scope": "bounded_first_page"
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 0,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    },
+    {
+      "run_id": "0c187cf6af6b4fbc87f7259867c53cb8",
+      "source": "mastodon",
+      "started_at": 1791997011344,
+      "finished_at": 1791997028112,
+      "status": "ok",
+      "collected": 72,
+      "processed": 3,
+      "published": 0,
+      "inference_cost_usd": 0.0005728000000000399,
+      "details": {
+        "audit": [
+          {
+            "instance": "https://mastodon.social",
+            "returned": 40,
+            "scope": "public_status_trends"
+          },
+          {
+            "instance": "https://mastodon.online",
+            "returned": 40,
+            "scope": "public_status_trends"
+          },
+          {
+            "instance": "https://fosstodon.org",
+            "returned": 32,
+            "scope": "public_status_trends"
+          }
+        ],
+        "errors": [],
+        "pending_after_run": 0,
+        "vector_enabled": true,
+        "disabled_lanes_for_readers": []
+      }
+    }
+  ],
+  "deletion_sync_smoke": {
+    "youtube": {
+      "checked": 8,
+      "removed": 0,
+      "unknown": 0
+    },
+    "rss": {
+      "checked": 8,
+      "removed": 0,
+      "unknown": 0
+    },
+    "bluesky": {
+      "checked": 8,
+      "removed": 0,
+      "unknown": 0
+    },
+    "mastodon": {
+      "checked": 8,
+      "removed": 0,
+      "unknown": 0
+    }
+  },
+  "tests": {
+    "social_offline": 18,
+    "social_production_crate": 6,
+    "native_schema": 2,
+    "result": "passed"
+  },
+  "scope": "Seven-day requested backfill window, bounded rolling feeds/pagination and anonymous first-page search. Not an exhaustive archive.",
+  "acceptance_remaining": [
+    "Three actual production execution days",
+    "Fifty-link Mastodon sample: 77 stored trend posts produced no links"
+  ],
+  "run_notes": "Superseded trials and one nullable-title failure were retained as audit records; the regression is fixed/tested. All stored posts are now processed. Per-run published/processed counts can include upserts/retries; table counts are distinct stored rows. API cost is a lower bound because interrupted/unreturned calls may be absent."
+}

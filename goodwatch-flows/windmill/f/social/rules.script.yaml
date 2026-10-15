@@ -1,0 +1,12 @@
+{
+  "summary": "Social rules",
+  "description": "Round-two #544 frozen prompts/foreground preparation, commit f7319660.",
+  "lock": "!inline f/social/rules.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

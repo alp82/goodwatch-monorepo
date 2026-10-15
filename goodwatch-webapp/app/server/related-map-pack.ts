@@ -128,10 +128,11 @@ export const levelIn = (levels: string, key: string) => {
 }
 
 /** The plain links of the section: the most alike titles of a pack, with the address of each one's page. */
-export const packLinks = (pack: RawPack): { href: string; text: string }[] =>
-	pack.n.slice(0, LINKS).map(([key, title, year]) => ({
-		href: `/${key.charAt(0) === "m" ? "movie" : "show"}/${key.slice(1)}-${titleToDashed(title)}`,
+export const packLinks = (pack: RawPack): { href: string; text: string; language?: string }[] =>
+	pack.n.slice(0, LINKS).map(([key, title, year, _poster, _near, _levels, presentation]) => ({
+		href: `/${key.charAt(0) === "m" ? "movie" : "show"}/${key.slice(1)}-${titleToDashed(presentation?.canonicalTitle ?? title)}`,
 		text: year ? `${title} (${year})` : title,
+		...(presentation ? { language: presentation.language } : {}),
 	}))
 
 /**

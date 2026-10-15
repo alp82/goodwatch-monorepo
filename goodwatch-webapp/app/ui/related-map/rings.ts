@@ -876,7 +876,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			const items = [middle(ctx, scale)].concat(lay(ctx, list, spots, scale, coming, deco, nameOf(tokens)))
 			const rings = spots.length ? spots[spots.length - 1].b : 0
 			// What the server did not draw goes along as plain data: enough for a wide screen's first picture.
-			const rest = win ? "" : JSON.stringify(list.slice(shown, 64).map((t) => [t.k, t.t, t.y, t.p]))
+			const rest = win ? "" : JSON.stringify(list.slice(shown, 64).map((t) => [t.k, t.t, t.y, t.p, ...(t.language ? [{ language: t.language, canonicalTitle: t.canonicalTitle }] : [])]))
 			return html({
 				cls: "rm rg rg-map rg-big rg-tall",
 				rstyle: `--th:${th}px`,

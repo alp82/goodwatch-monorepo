@@ -37,6 +37,7 @@ import type { ShowResult } from "~/server/types/details-types"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
+import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import { imdbGrid } from "~/ui/prototype-episode-list-2/shared"
 import chernobyl from "~/ui/prototype-episode-list/fixtures/chernobyl.json"
 import sherlock from "~/ui/prototype-episode-list/fixtures/sherlock.json"
@@ -352,14 +353,17 @@ function Harness({
 						{show.name}{" "}
 						<span className="font-normal text-gray-400">({show.year})</span>
 					</h1>
-					<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
-						<DetailsHero
-							media={media}
-							country="DE"
-							episodeGrid={grid.seasons.length ? grid : null}
-							sectionProps={{ overview: {} } as never}
-						/>
-					</div>
+					{/* The hero's where-to-watch reads the header pair's country. */}
+					<MediaPreferenceProvider country="DE">
+						<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
+							<DetailsHero
+								media={media}
+								country="DE"
+								episodeGrid={grid.seasons.length ? grid : null}
+								sectionProps={{ overview: {} } as never}
+							/>
+						</div>
+					</MediaPreferenceProvider>
 					<div className="mt-12 flex flex-col gap-12">
 						<Episodes
 							media={media}

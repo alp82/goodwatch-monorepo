@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import "node-crate"
 import { after, test } from "node:test"
 import { MockAgent, getGlobalDispatcher, setGlobalDispatcher } from "undici"
 import "../title-filter/test-alias.ts"

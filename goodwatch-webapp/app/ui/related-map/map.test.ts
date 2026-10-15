@@ -4,7 +4,7 @@ import "../../server/title-filter/test-alias.ts"
 
 const { relatedMap } = await import("./map.ts")
 const { TRAIT_KEYS } = await import("./traits.ts")
-type RawTitle = [string, string, string, string, number, string]
+import type { RawPack, RawTitle } from "./engine"
 
 const levels = (given: Record<string, number>) =>
 	TRAIT_KEYS.map((key) => "0123456789a"[given[key] ?? 5]).join("")
@@ -184,7 +184,7 @@ const attr = (tag: string, name: string) =>
  * A browser that holds the server's HTML: as much of a document as the engine reads before it draws, with a stage
  * wider than a phone's, so that the engine draws its own picture. `answer` is what a request for a pack gets.
  */
-function browser(html: string, answer: () => Promise<unknown>) {
+function browser(html: string, answer: () => Promise<unknown>, sectionTag = '<section data-pl-root="m1" data-pl-title="The Middle">') {
 	const el = (tag: string, more: Record<string, unknown> = {}) => ({
 		getAttribute: (name: string) => attr(tag, name),
 		hasAttribute: (name: string) => attr(tag, name) !== null,
@@ -205,7 +205,7 @@ function browser(html: string, answer: () => Promise<unknown>) {
 	}
 	const rest = el(/<div class="rm [^>]*>/.exec(html)?.[0] ?? "")
 	const section = {
-		...el('<section data-pl-root="m1" data-pl-title="The Middle">'),
+		...el(sectionTag),
 		querySelector: (selector: string) =>
 			selector === "[data-pl-stage]"
 				? stage
@@ -259,4 +259,17 @@ test("the same holds while the pack is on its way", async () => {
 	assert.ok(posters(page.stage.innerHTML).length > 8)
 	assert.doesNotMatch(page.stage.innerHTML, WAITING)
 	assert.match(page.stage.innerHTML, /aria-label="The traits of The Middle\. /)
+})
+
+test("localized map SSR redraw keeps actual field languages and canonical neighbor paths before a pack arrives", async () => {
+	const local = (row: RawTitle): RawTitle => [row[0], `Traduit ${row[1]}`, row[2], row[3], row[4], row[5], { language: "fr-FR", canonicalTitle: row[1] }]
+	const translated: RawPack = { ...pack, language: "fr", c: local(center), n: around.map(local) }
+	const html = relatedMap(null).section({ root: "m1", title: translated.c[1], pack: translated, links: packLinks(translated) })
+	const page = browser(html, () => Promise.reject(new TypeError("blocked fixture")), '<section data-pl-root="m1" data-pl-title="Traduit The Middle" data-media-language="fr" data-title-language="fr-FR" data-canonical-title="The Middle">')
+	await settled()
+	assert.deepEqual(page.asked, ["/api/related-map?key=m1&displayLanguage=fr"])
+	assert.match(page.stage.innerHTML, /lang="fr-FR"/)
+	assert.ok(page.stage.innerHTML.includes("Traduit The Middle"))
+	assert.match(html, /href="\/movie\/2-neighbor2th"/)
+	assert.doesNotMatch(html, /href="\/movie\/2-traduit-/)
 })

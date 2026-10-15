@@ -1,3 +1,5 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 // My shows (#385): one list for tonight. Continue comes first, the show the member was last active on on top and the
 // Seen shows with new episodes after it; then Pick up, the Watching shows without activity for 90 days; then Start,
 // the Want to See shows not started, best taste match first. The page states that rule, each group has a label, and
@@ -58,7 +60,7 @@ const PICK_UP_STEP = 5
 const DAY_MS = 86_400_000
 
 const showHref = (show: { id: number; title: string }) =>
-	`/show/${show.id}-${titleToDashed(show.title)}`
+	`/show/${show.id}-${titleToDashed(canonicalMediaTitle(show))}`
 
 const DMY = new Intl.DateTimeFormat("en-GB", {
 	day: "numeric",
@@ -223,7 +225,7 @@ function Row({
 					<span
 						className={`mt-1 truncate font-bold text-white ${big ? `${DISPLAY} text-3xl md:text-4xl` : "text-lg"}`}
 					>
-						{row.title}
+						<span lang={mediaFieldLanguage(row)}>{row.title}</span>
 					</span>
 					<span className="truncate text-sm text-gray-200">{row.line}</span>
 					{/* On a phone the fact that places the row leads its last line; wider, it has a column of its own. */}
@@ -454,7 +456,7 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 									/>
 									<span className="min-w-0 flex-1">
 										<b className="block truncate text-sm text-white">
-											{row.title}
+											<span lang={mediaFieldLanguage(row)}>{row.title}</span>
 										</b>
 										<span className="block truncate text-xs text-gray-400">
 											{row.upcoming && (
@@ -463,7 +465,7 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 													{row.upcoming.name && (
 														<span className="hidden sm:inline">
 															{" "}
-															· {row.upcoming.name}
+															· <span lang={row.upcoming.textPresentation?.name.language ?? "en"}>{row.upcoming.name}</span>
 														</span>
 													)}
 													{" · "}

@@ -1,3 +1,5 @@
+import { copyPresentationFields, overlayTitles } from "./media-overlay.server.ts"
+import type { PresentedMedia } from "~/utils/media-presentation"
 // What a title card shows, for one page of titles: display fields from Crate plus what is personal to the viewer
 // (taste match and its reasons, the services that carry the title in the viewer's country, Seen, and Want to See).
 //
@@ -37,7 +39,7 @@ const SERVICE_NAMES_TTL_MS = 24 * 60 * 60 * 1000
 const cacheKey = (key: TitleKey) => `title-card:v1:${key}`
 
 /** The fields a card displays, the same for everyone. */
-export interface TitleDisplay {
+export interface TitleDisplay extends PresentedMedia {
 	key: TitleKey
 	tmdb_id: number
 	media_type: MediaType
@@ -117,7 +119,9 @@ export async function getTitleCards(
 			rating: badges ? badges[i] : null,
 		})
 	})
-	return keys.flatMap((key) => cards.get(key) ?? [])
+	const ordered = keys.flatMap((key) => cards.get(key) ?? [])
+	if (!viewer.language) return ordered
+	return (await overlayTitles(ordered, viewer.language)).map((presented, index) => copyPresentationFields(ordered[index], presented))
 }
 
 /** Each title's rating badge on the viewer's ladder, from the title snapshot; null without a rating anywhere. */
@@ -234,10 +238,14 @@ async function serviceNames(): Promise<Map<number, CardService>> {
  */
 export async function getDisplayFields(
 	keys: TitleKey[],
+	language?: string,
 ): Promise<Map<TitleKey, TitleDisplay>> {
 	if (keys.length > MAX_KEYS)
 		throw new Error(`getDisplayFields takes at most ${MAX_KEYS} titles`)
-	return readDisplays([...new Set(keys)])
+	const values = await readDisplays([...new Set(keys)])
+	if (!language) return values
+	const originals = [...values.values()]
+	return new Map((await overlayTitles(originals, language)).map((row, index) => [row.key, copyPresentationFields(originals[index], row)]))
 }
 
 async function readDisplays(
