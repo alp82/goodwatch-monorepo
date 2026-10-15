@@ -1,0 +1,29 @@
+{
+  "host": 12,
+  "stmt": "SELECT id, started FROM sys.jobs ORDER BY started",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:51:53.109632+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "id",
+        "started"
+      ],
+      "rows": [
+        [
+          "1b312b3b-b94e-8ec8-5435-c214d2c4a457",
+          1792093913095
+        ],
+        [
+          "7f92bac5-06ab-963d-0b41-7ede1ae9f597",
+          1792093913115
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 4.005195
+    },
+    "at": "2026-10-15T19:51:53.120423+00:00",
+    "elapsedSeconds": 0.011
+  }
+}

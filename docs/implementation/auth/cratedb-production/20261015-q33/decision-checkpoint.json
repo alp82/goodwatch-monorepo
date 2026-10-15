@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-15T19:52:42.095856+00:00",
+  "phase": "AWAITING_OWNER_DECISION_ON_STALE_CONTEXT_CANCELLATION",
+  "targetStarted": false,
+  "versionsPerNode": {
+    "crate-01": "5.10.9",
+    "crate-02": "5.10.16",
+    "crate-03": "5.10.16"
+  },
+  "greenHealthRows": 94,
+  "shardStates": [
+    [
+      "STARTED",
+      "STARTED",
+      958
+    ]
+  ],
+  "allocation": "primaries",
+  "containerRestartPolicy": {
+    "Name": "no",
+    "MaximumRetryCount": 0
+  },
+  "stagedEnvImage": "pinned5.10.16; running original5.10.9; no automatic operator target start",
+  "nativeExitWaitBoundApproximately": "2026-10-15T21:20:40Z",
+  "proposalJobCount": 69,
+  "proposalExecuted": false,
+  "snapshot": "goodwatch-db-backup-v2.pre_auth_547_20261015190551 SUCCESS",
+  "queryOutcomeCapturedMinima": {
+    "recovered": 3664,
+    "failed": 1,
+    "cancelled": 1
+  },
+  "confirmedMemberHttp5xxCapturedMinimum": 1,
+  "ambiguousReadiness503": 28,
+  "public": {
+    "responses": 1350,
+    "statusCounts": {
+      "200": 1350
+    },
+    "non200": 0
+  },
+  "observersRemainRunning": true,
+  "noHbaAuthAppFirewallOrTableSettingChanges": true
+}
