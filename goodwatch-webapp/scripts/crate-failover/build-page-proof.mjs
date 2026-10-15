@@ -16,7 +16,7 @@ const stubs = {
 	"server/title-extras.server.ts": `export const prefetchTitleExtrasState=async()=>null;`,
 	"server/taste/index.server.ts": `export * from "${app}/server/taste/taste.server.ts"; export const loadTaste=async()=>NO_TASTE; import {NO_TASTE} from "${app}/server/taste/taste.server.ts"; export const markTasteChanged=async()=>{}; export const stopTasteStore=async()=>{};`,
 	"server/taste/member.server.ts": `export const markTasteChanged=async()=>{}; export const stopTasteStore=async()=>{}; export const loadMemberTaste=async()=>null;`,
-	"server/g1/rebuild.server.ts": `export const markG1Changed=async()=>{};`,
+	"server/personal-order/rebuild.server.ts": `export const markPersonalOrderChanged=async()=>{};`,
 	"server/onboarding-media.server.ts": `export const resetOnboardingMediaCache=async()=>{};`,
 	"server/newly-available.server.ts": `export const newOnForLibrary=async()=>new Map();`,
 	"server/availability-index.server.ts": `export const availabilityLoaded=async()=>true; export const availabilityLoadedAt=()=>1; export const servicesFor=(_country,keys)=>keys.map(()=>[]);`,

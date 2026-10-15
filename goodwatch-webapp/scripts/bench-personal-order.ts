@@ -2,10 +2,10 @@
 import { performance } from "node:perf_hooks"
 import { gzipSync } from "node:zlib"
 import {
-	createG1Reader,
-	createG1OrderCache,
-	G1_MODEL_HASH,
-} from "../app/server/g1/reader.server.ts"
+	createPersonalOrderReader,
+	createPersonalOrderCache,
+	PERSONAL_ORDER_MODEL_HASH,
+} from "../app/server/personal-order/reader.server.ts"
 import type { TitleSnapshot } from "../app/server/title-snapshot/snapshot.server.ts"
 
 const count = 60_000
@@ -21,12 +21,12 @@ const snapshot = {
 } as TitleSnapshot
 const raw = JSON.stringify({
 	format: 1,
-	modelHash: G1_MODEL_HASH,
+	modelHash: PERSONAL_ORDER_MODEL_HASH,
 	snapshotVersion: snapshot.version,
 	builtAt: new Date().toISOString(),
 	pointIds: keys,
-	b3Rank: keys.map((_, i) => Math.fround(((i * 7919) % count) / count)),
-	b5TopHalf: keys.map((_, i) => i % 2 === 0),
+	ownTasteRank: keys.map((_, i) => Math.fround(((i * 7919) % count) / count)),
+	pooledRatingTopHalf: keys.map((_, i) => i % 2 === 0),
 	movieSeriesId: keys.map((_, i) => (i < count / 2 ? Math.floor(i / 3) : -1)),
 	show: keys.map((k) => k >= 2e12),
 	animation: keys.map((_, i) => i % 5 === 0),
@@ -36,11 +36,11 @@ const raw = JSON.stringify({
 })
 const compressed = gzipSync(raw)
 let gets = 0
-const read = createG1Reader(async () => {
+const read = createPersonalOrderReader(async () => {
 	gets++
 	return compressed
 })
-const order = createG1OrderCache() // Default 200,000-title bound: three full 60k compositions fit.
+const order = createPersonalOrderCache() // Default 200,000-title bound: three full 60k compositions fit.
 const stats = (values: number[]) => {
 	values.sort((a, b) => a - b)
 	return {

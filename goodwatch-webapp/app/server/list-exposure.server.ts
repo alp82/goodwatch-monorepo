@@ -4,8 +4,8 @@ import { upsert } from "../utils/crate.ts"
 import type { ViewerContext } from "./viewer.server.ts"
 import type { TitleKey } from "../utils/title-key.ts"
 
-import type { G1Exposure } from "./g1/reader.server.ts"
-import { recG1Order } from "./features.server.ts"
+import type { PersonalOrderExposure } from "./personal-order/reader.server.ts"
+import { recPersonalOrder } from "./features.server.ts"
 
 export const EXPOSURE_TITLES = 30
 // Bound work retained while Crate is unavailable. The normal Crate timeout also applies to these writes.
@@ -15,9 +15,9 @@ let pending = 0
 export interface ListExposureInput {
 	surface: "discover" | "watch-next"
 	/** The order actually used, independently of the displayed card match. */
-	ordering: "taste-v2" | "g1"
+	ordering: "taste-v2" | "personal-order"
 	flags: Record<string, boolean>
-	g1?: G1Exposure
+	personalOrder?: PersonalOrderExposure
 	watchNextTiers?: ReadonlyMap<TitleKey, string>
 	sort: string
 	sortRequested: string | null
@@ -69,20 +69,28 @@ export function recordListExposure(
 			title_keys: titles.map((title) => title.key),
 			positions: titles.map((_, i) => i + 1),
 			taste_matches: titles.map((title) => title.match),
-			g1_flag_mode: input.g1?.flag.mode ?? recG1Order(ctx.viewer.userId).mode,
-			g1_fallback_reason: input.g1?.fallbackReason ?? null,
-			g1_payload_build_time: input.g1?.payloadBuildTime ?? null,
-			g1_model_hash: input.g1?.modelHash ?? null,
-			g1_snapshot_version: input.g1?.snapshotVersion ?? null,
-			g1_groups: titles.map((t) => input.g1?.titles.get(t.key)?.group ?? null),
-			g1_mix_placed: titles.map(
-				(t) => input.g1?.titles.get(t.key)?.mixPlaced ?? null,
+			personal_order_flag_mode:
+				input.personalOrder?.flag.mode ??
+				recPersonalOrder(ctx.viewer.userId).mode,
+			personal_order_fallback_reason:
+				input.personalOrder?.fallbackReason ?? null,
+			personal_order_payload_build_time:
+				input.personalOrder?.payloadBuildTime ?? null,
+			personal_order_model_hash: input.personalOrder?.modelHash ?? null,
+			personal_order_snapshot_version:
+				input.personalOrder?.snapshotVersion ?? null,
+			personal_order_groups: titles.map(
+				(t) => input.personalOrder?.titles.get(t.key)?.group ?? null,
+			),
+			personal_order_mix_placed: titles.map(
+				(t) => input.personalOrder?.titles.get(t.key)?.mixPlaced ?? null,
 			),
 			watch_next_tiers: titles.map(
 				(t) => input.watchNextTiers?.get(t.key) ?? null,
 			),
-			today_first_100: input.g1?.todayFirst100 ?? null,
-			g1_first_100: input.g1?.g1First100 ?? null,
+			today_first_100: input.personalOrder?.todayFirst100 ?? null,
+			personal_order_first_100:
+				input.personalOrder?.personalOrderFirst100 ?? null,
 		}
 		pending++
 		setImmediate(() => {

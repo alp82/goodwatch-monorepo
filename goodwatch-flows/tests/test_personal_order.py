@@ -12,7 +12,8 @@ from types import SimpleNamespace
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
-from f.sync.copy import g1_order as job
+from f.sync.copy import personal_order as job
+from personal_order_source import MAPPING, original_math
 
 
 def records():
@@ -46,11 +47,12 @@ def tables():
 
 class Arrays(unittest.TestCase):
     def test_copied_math_has_the_frozen_source_digest(self):
-        copied = Path(job.__file__).read_text().split("# BEGIN COPIED B5", 1)[1].split("# END COPIED B3", 1)[0]
+        copied = original_math(Path(job.__file__).read_text())
         self.assertEqual(sha256(copied.encode()).hexdigest(),
                          "0f77aa86e764cf193ae1a2c70e4c248dd25839ae4bcea4dabe79f28299dd2517")
         self.assertEqual(job.MODEL_HASH,
                          "e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1")
+        self.assertEqual(job.MODEL_HASH, MAPPING["sourceSha256"])
 
     def test_missing_values_pool_and_all_ratings_mix(self):
         t = job.build_titles(records(), ["a", "b"], [10**12 + 5])
@@ -67,10 +69,10 @@ class Arrays(unittest.TestCase):
         np.testing.assert_array_equal(v["me"]["ratings"]["title"], [3])  # Outside pool stays history.
         np.testing.assert_array_equal(v["others"]["want_to_see"]["title"], [])
         np.testing.assert_array_equal(v["others"]["skip"]["title"], [1])
-        with patch.object(job, "b5_predict", return_value={"rank": np.array([1.0, 1.0])}):
+        with patch.object(job, "pooled_rating_predict", return_value={"rank": np.array([1.0, 1.0])}):
             c = job.components(v)
-        self.assertEqual(c["b3Rank"].dtype, np.float32)
-        np.testing.assert_array_equal(c["b5TopHalf"], [True, True])
+        self.assertEqual(c["ownTasteRank"].dtype, np.float32)
+        np.testing.assert_array_equal(c["pooledRatingTopHalf"], [True, True])
         self.assertEqual(c["ownShares"], [1.0, 1.0])
 
     def test_candidates_and_missing_rated_titles_are_checked(self):
@@ -110,12 +112,12 @@ class Request(unittest.TestCase):
         self.assertEqual(filtered["groups"].tolist(), [2, 0])
 
     def test_committed_stage_two_fixtures(self):
-        fixtures = json.loads((Path(__file__).parent / "fixtures/g1_order.json").read_text())
+        fixtures = json.loads((Path(__file__).parent / "fixtures/personal_order.json").read_text())
         self.assertEqual(fixtures["modelHash"], job.MODEL_HASH)
         for case in fixtures["cases"]:
             with self.subTest(case=case["name"]):
                 columns = case["components"]
-                result = job.request_order(columns["b3Rank"], columns["b5TopHalf"], columns["movieSeriesId"],
+                result = job.request_order(columns["ownTasteRank"], columns["pooledRatingTopHalf"], columns["movieSeriesId"],
                                            columns["show"], columns["animation"], case["ownShares"])
                 self.assertEqual(result["groups"].tolist(), case["groups"])
                 self.assertEqual([columns["pointIds"][i] for i in result["order"]], case["order"])
@@ -134,7 +136,7 @@ class Publication(unittest.TestCase):
         kwargs.setdefault("dry_run", False)
         with patch.object(job, "read_members", return_value=(tables(), {"preview": 0})), \
              patch.object(job, "read_titles", return_value=self.t), \
-             patch.object(job, "b5_predict", return_value={"rank": np.array([0.0, 1.0])}), \
+             patch.object(job, "pooled_rating_predict", return_value={"rank": np.array([0.0, 1.0])}), \
              patch.object(job, "taste_vector", return_value=np.array([1.0, 0.0])):
             return job.run(self.redis, self.select, ["preview"], ["a", "b"], now=self.now, **kwargs)
 
@@ -142,7 +144,7 @@ class Publication(unittest.TestCase):
         self.run_job(ttl_seconds=600)
         self.redis.set.assert_called_once()
         args, kwargs = self.redis.set.call_args
-        self.assertEqual(args[0], "g1:v2:preview")
+        self.assertEqual(args[0], "personal-order:v1:preview")
         self.assertEqual(kwargs, {"ex": 600})
         data = json.loads(gzip.decompress(args[1]))
         self.assertEqual(data["pointIds"], sorted(data["pointIds"]))
@@ -179,14 +181,14 @@ class Rollout(unittest.TestCase):
     def setUp(self):
         self.redis = Mock()
         self.redis.get.return_value = json.dumps({"version": "snapshot-test", "keyOrder": ["a", "b"]})
-        self.redis.scan_iter.return_value = [b"g1:v2:orphan"]
+        self.redis.scan_iter.return_value = [b"personal-order:v1:orphan"]
         self.t = job.build_titles(records(), ["a", "b"])
 
     def run_job(self, members="all", **kwargs):
         with patch.object(job, "read_members", return_value=(tables(), {"eligible": 0, "ineligible": 1})) as read_members, \
              patch.object(job, "read_titles", return_value=self.t) as read_titles, \
              patch.object(job, "taste_vector", side_effect=lambda v: np.ones(2) if len(v["me"]["ratings"]["title"]) and v["titles"]["key"][v["me"]["ratings"]["title"][0]] == 2 * 10**12 + 3 else None), \
-             patch.object(job, "b5_predict", return_value={"rank": np.array([0.0, 1.0])}):
+             patch.object(job, "pooled_rating_predict", return_value={"rank": np.array([0.0, 1.0])}):
             result = job.run(self.redis, Mock(), members, ["a", "b"], **kwargs)
             read_members.assert_called_once()
             read_titles.assert_called_once()
@@ -196,9 +198,9 @@ class Rollout(unittest.TestCase):
         result = self.run_job(dry_run=False)
         self.assertEqual([s["status"] for s in result["members"]], ["built", "ineligible", "ineligible"])
         self.redis.set.assert_called_once()
-        self.assertEqual(self.redis.set.call_args.args[0], "g1:v2:eligible")
+        self.assertEqual(self.redis.set.call_args.args[0], "personal-order:v1:eligible")
         self.assertEqual(self.redis.set.call_args.kwargs, {"ex": job.TTL_SECONDS})
-        self.assertEqual({c.args[0] for c in self.redis.delete.call_args_list}, {"g1:v2:ineligible", "g1:v2:orphan"})
+        self.assertEqual({c.args[0] for c in self.redis.delete.call_args_list}, {"personal-order:v1:ineligible", "personal-order:v1:orphan"})
 
     def test_dry_run_computes_eligibility_without_any_writes(self):
         self.run_job()  # run() also defaults to dry run.
@@ -210,15 +212,15 @@ class Rollout(unittest.TestCase):
         self.redis.set.side_effect = RuntimeError("publish failed")
         result = self.run_job(dry_run=False)
         self.assertEqual([s["status"] for s in result["members"]], ["failed", "ineligible", "ineligible"])
-        self.redis.sadd.assert_called_once_with("g1:dirty", "eligible")
+        self.redis.sadd.assert_called_once_with("personal-order:dirty", "eligible")
         self.assertEqual(self.redis.delete.call_count, 2)
 
     def test_dirty_run_claims_once_and_leaves_members_outside_rollout(self):
         self.redis.scard.return_value = 3
         self.redis.spop.return_value = [b"eligible", b"ineligible", b"outsider"]
         result = self.run_job(["eligible", "ineligible"], dirty_only=True, dry_run=False)
-        self.redis.spop.assert_called_once_with("g1:dirty", 3)
-        self.redis.sadd.assert_called_once_with("g1:dirty", "outsider")
+        self.redis.spop.assert_called_once_with("personal-order:dirty", 3)
+        self.redis.sadd.assert_called_once_with("personal-order:dirty", "outsider")
         self.assertEqual([s["member"] for s in result["members"]], ["eligible", "ineligible"])
         self.redis.scan_iter.assert_not_called()
 
@@ -309,7 +311,7 @@ class Rollout(unittest.TestCase):
                      patch.object(job, "taste_vector", return_value=None):
                     with self.assertRaises(RuntimeError):
                         job.run(self.redis, Mock(), "all", ["a", "b"], dirty_only=True, dry_run=False)
-                self.redis.sadd.assert_called_with("g1:dirty", b"eligible")
+                self.redis.sadd.assert_called_with("personal-order:dirty", b"eligible")
                 self.redis.set.assert_not_called()
                 self.redis.delete.assert_not_called()
 
@@ -341,13 +343,13 @@ class Rollout(unittest.TestCase):
         with patch.dict(job._POOL, clear=True), \
              patch.object(job, "read_members", return_value=(data, {"eligible": 0})), \
              patch.object(job, "read_titles", side_effect=[first, second]), \
-             patch.object(job, "b5_predict", return_value={"rank": np.array([1.0])}):
+             patch.object(job, "pooled_rating_predict", return_value={"rank": np.array([1.0])}):
             results = [job.run(self.redis, Mock(), ["eligible"], ["a", "b"], dry_run=False)
                        for _ in range(2)]
         self.assertEqual([r["members"][0]["status"] for r in results], ["ineligible", "built"])
-        self.redis.delete.assert_called_once_with("g1:v2:eligible")
+        self.redis.delete.assert_called_once_with("personal-order:v1:eligible")
         self.redis.set.assert_called_once()
-        self.assertEqual(self.redis.set.call_args.args[0], "g1:v2:eligible")
+        self.assertEqual(self.redis.set.call_args.args[0], "personal-order:v1:eligible")
 
 
 class Reads(unittest.TestCase):

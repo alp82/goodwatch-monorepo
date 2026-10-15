@@ -1,7 +1,7 @@
 """Explicit offline pack check and benchmark; never imports a database connector.
 
 Run with --research pointing at taste-loop's lab, --pack at the open pack, and
---scratch at ~/goodwatch-research/taste/work/g1-job. --write-fixtures refreshes
+--scratch at a dedicated writable directory. --write-fixtures refreshes
 the small public-title/component fixture, with no member ids or member rows.
 """
 import argparse
@@ -25,7 +25,8 @@ sys.dont_write_bytecode = True
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
-from f.sync.copy import g1_order as job
+from f.sync.copy import personal_order as job
+from personal_order_source import MAPPING, copied_block, original_math, renamed_reference
 
 
 def equal_arrays(a, b):
@@ -69,24 +70,24 @@ def pack_tables(p):
 
 
 def request(c):
-    return job.request_order(c["b3Rank"], c["b5TopHalf"], c["movieSeriesId"],
+    return job.request_order(c["ownTasteRank"], c["pooledRatingTopHalf"], c["movieSeriesId"],
                              c["show"], c["animation"], c["ownShares"])
 
 
 def fixture_case(ref, view, c, indices, name, no_mix=False):
-    """Harness F3/mix with frozen global B5 bits, as the adopted request contract requires."""
+    """Harness franchise grouping/mix with frozen global pooled rating predictor bits, as the adopted request contract requires."""
     cols = {k: v[indices] for k, v in c.items() if k != "ownShares"}
     sample = {**view, "targets": {"title": view["targets"]["title"][indices]}}
     if no_mix:
         sample["me"] = {**view["me"], "ratings": {"title": np.zeros(0, np.int32)}}
     shares = None if no_mix else c["ownShares"]
-    with patch.object(ref, "b3_predict", return_value={"rank": cols["b3Rank"]}), \
-         patch.object(ref, "b5_predict", return_value={"rank": cols["b5TopHalf"].astype(float), "score": None, "p_low": None}), \
-         patch.object(ref, "view_percentile", return_value=np.where(cols["b5TopHalf"], .75, .25)):
-        f3 = ref.f3_predict(sample)
+    with patch.object(ref, "own_taste_predict", return_value={"rank": cols["ownTasteRank"]}), \
+         patch.object(ref, "pooled_rating_predict", return_value={"rank": cols["pooledRatingTopHalf"].astype(float), "score": None, "p_low": None}), \
+         patch.object(ref, "view_percentile", return_value=np.where(cols["pooledRatingTopHalf"], .75, .25)):
+        franchise_groups = ref.franchise_grouping_predict(sample)
         final = ref.predict(sample)
     order = np.argsort(-final["rank"], kind="stable")
-    groups = np.floor(f3["rank"] / 2).astype(np.int64)
+    groups = np.floor(franchise_groups["rank"] / 2).astype(np.int64)
     actual = request({**cols, "ownShares": shares})
     np.testing.assert_array_equal(actual["order"], order)
     np.testing.assert_array_equal(actual["groups"], groups)
@@ -96,8 +97,8 @@ def fixture_case(ref, view, c, indices, name, no_mix=False):
 
 
 def make_fixtures(ref, view, c):
-    f3 = request({**c, "ownShares": None})["order"]
-    selected = list(f3[:110])
+    franchise_groups = request({**c, "ownShares": None})["order"]
+    selected = list(franchise_groups[:110])
     # Include all four kinds, all three groups, and both members of several franchises.
     codes = c["show"].astype(int) * 2 + c["animation"]
     for code in range(4):
@@ -131,20 +132,21 @@ def main():
     parser.add_argument("--write-fixtures", action="store_true")
     parser.add_argument("--benchmark-only", action="store_true")
     args = parser.parse_args()
-    assert args.scratch.resolve() == Path("~/goodwatch-research/taste/work/g1-job").expanduser().resolve()
+    assert args.scratch.resolve() not in (args.research.resolve(), args.pack.resolve())
     args.scratch.mkdir(parents=True, exist_ok=True)
-    source = args.research / "candidates/009/g1_mix.py"
+    source = args.research / MAPPING["source"]
     assert sha256(source.read_bytes()).hexdigest() == job.MODEL_HASH, "Research source SHA-256 changed"
-    copied = source.read_text().split("# BEGIN COPIED B5", 1)[1].split("# END COPIED B3", 1)[0]
-    product = Path(job.__file__).read_text().split("# BEGIN COPIED B5", 1)[1].split("# END COPIED B3", 1)[0]
-    assert product == copied, "Copied B3/B5 changed"
+    copied = copied_block(source.read_text(), MAPPING["originalMarkers"])
+    product = original_math(Path(job.__file__).read_text())
+    assert product == copied, "Copied predictor math changed"
     sys.path.insert(0, str(args.research))
     from pack import Pack
     import views
 
-    spec = importlib.util.spec_from_file_location("g1_reference", source)
+    spec = importlib.util.spec_from_file_location("personal_order_reference", source)
     ref = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(ref)
+    # Adapt the reference's names in memory only; the source hash above checks its original bytes.
+    exec(compile(renamed_reference(source.read_text()), str(source), "exec"), ref.__dict__)
     began = time.monotonic()
     p = Pack(args.pack)
     # Loading core and title files is counted separately from the product array builder.
@@ -157,11 +159,11 @@ def main():
     array_seconds = time.monotonic() - started
     started = time.monotonic()
     job._POOL.clear()
-    b3 = job.b3_predict(job_view)
-    b3_seconds = time.monotonic() - started
+    own_taste_rank = job.own_taste_predict(job_view)
+    own_taste_seconds = time.monotonic() - started
     started = time.monotonic()
-    b5 = job.b5_predict(job_view)
-    b5_seconds = time.monotonic() - started
+    pooled_rating_rank = job.pooled_rating_predict(job_view)
+    pooled_rating_seconds = time.monotonic() - started
     # Measure the actual entrypoint's per-member compute + encoding, without I/O.
     started = time.monotonic()
     data = job.payload(job_view, "offline-pack", datetime(2026, 10, 14, tzinfo=timezone.utc))
@@ -171,7 +173,7 @@ def main():
               "candidates": len(job_view["targets"]["title"]), "own_ratings": len(job_view["me"]["ratings"]["title"]),
               "others_ratings": len(job_view["others"]["ratings"]["title"]),
               "pack_load_seconds": load_seconds, "array_seconds": array_seconds,
-              "b3_seconds": b3_seconds, "b5_seconds": b5_seconds,
+              "own_taste_seconds": own_taste_seconds, "pooled_rating_seconds": pooled_rating_seconds,
               "payload_seconds": payload_seconds, "job_compute_seconds": array_seconds + payload_seconds,
               "payload_bytes": len(encoded.encode()),
               "peak_rss_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}
@@ -201,18 +203,18 @@ def main():
     equal_arrays(product["targets"], harness["targets"])
     ref._POOL.clear()
     job._POOL.clear()
-    expected_b3 = ref.b3_predict(harness)["rank"]
-    expected_b5 = ref.b5_predict(harness)["rank"]
-    np.testing.assert_array_equal(job.b3_predict(product)["rank"], expected_b3)
-    np.testing.assert_array_equal(job.b5_predict(product)["rank"], expected_b5)
+    expected_own_taste = ref.own_taste_predict(harness)["rank"]
+    expected_pooled_rating = ref.pooled_rating_predict(harness)["rank"]
+    np.testing.assert_array_equal(job.own_taste_predict(product)["rank"], expected_own_taste)
+    np.testing.assert_array_equal(job.pooled_rating_predict(product)["rank"], expected_pooled_rating)
     c = job.components(product)
-    np.testing.assert_array_equal(c["b3Rank"], expected_b3.astype(np.float32))
-    np.testing.assert_array_equal(c["b5TopHalf"], ref.view_percentile(expected_b5) >= .5)
-    expected_f3 = ref.f3_predict(harness)
+    np.testing.assert_array_equal(c["ownTasteRank"], expected_own_taste.astype(np.float32))
+    np.testing.assert_array_equal(c["pooledRatingTopHalf"], ref.view_percentile(expected_pooled_rating) >= .5)
+    expected_franchise_groups = ref.franchise_grouping_predict(harness)
     actual = request(c)
-    np.testing.assert_array_equal(actual["groups"], np.floor(expected_f3["rank"] / 2).astype(np.int64))
+    np.testing.assert_array_equal(actual["groups"], np.floor(expected_franchise_groups["rank"] / 2).astype(np.int64))
     np.testing.assert_array_equal(request({**c, "ownShares": None})["order"],
-                                  np.argsort(-expected_f3["rank"], kind="stable"))
+                                  np.argsort(-expected_franchise_groups["rank"], kind="stable"))
     expected = np.argsort(-ref.predict(harness)["rank"], kind="stable")
     np.testing.assert_array_equal(actual["order"][:100], expected[:100])
     np.testing.assert_array_equal(actual["order"][100:], expected[100:])
@@ -227,14 +229,14 @@ def main():
     np.testing.assert_array_equal(request(canonical)["order"],
                                   np.argsort(-ref.predict(sorted_harness)["rank"], kind="stable"))
     fixtures = make_fixtures(ref, harness, c)
-    fixture_path = Path(__file__).parent / "fixtures/g1_order.json"
+    fixture_path = Path(__file__).parent / "fixtures/personal_order.json"
     if args.write_fixtures:
         fixture_path.write_text(json.dumps(fixtures, indent=2) + "\n")
     else:
         assert json.loads(fixture_path.read_text()) == fixtures, "Stage 2 fixtures differ"
     result = {"model_hash": job.MODEL_HASH, "arrays": "exact, including dtypes",
-              "b3": "exact float64 source and float32 payload", "b5_rank": "exact",
-              "b5_top_half": "exact", "f3_groups_and_order": "exact", "mix_first_100": "exact",
+              "own_taste_rank": "exact float64 source and float32 payload", "pooled_rating_rank": "exact",
+              "pooled_rating_top_half": "exact", "franchise_groups_and_order": "exact", "mix_first_100": "exact",
               "mix_suffix": "exact", "json_roundtrip": "exact", "sorted_product_order": "exact",
               "fixture_cases": len(fixtures["cases"]), "timing": timing,
               "parity_process_peak_rss_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}

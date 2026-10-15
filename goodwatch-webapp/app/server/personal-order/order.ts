@@ -1,8 +1,8 @@
-// Port of stage 1 request_order. B5 membership stays global; F3 franchise picks use this list.
-export interface G1Components {
+// Pooled rating top-half membership stays global; franchise leaders are chosen from this list.
+export interface PersonalOrderComponents {
 	pointIds: number[]
-	b3Rank: number[]
-	b5TopHalf: boolean[]
+	ownTasteRank: number[]
+	pooledRatingTopHalf: boolean[]
 	movieSeriesId: number[]
 	show: boolean[]
 	animation: boolean[]
@@ -60,25 +60,31 @@ export function refill(
 	}
 }
 
-export function requestOrder(c: G1Components, own: OwnShares) {
-	const n = c.b3Rank.length
+export function requestOrder(c: PersonalOrderComponents, own: OwnShares) {
+	const n = c.ownTasteRank.length
 	if (
-		[c.pointIds, c.b5TopHalf, c.movieSeriesId, c.show, c.animation].some(
-			(a) => a.length !== n,
-		)
+		[
+			c.pointIds,
+			c.pooledRatingTopHalf,
+			c.movieSeriesId,
+			c.show,
+			c.animation,
+		].some((a) => a.length !== n)
 	)
 		throw new Error("Component columns have different lengths")
-	const groups = c.b5TopHalf.map((bit) => Number(bit))
+	const groups = c.pooledRatingTopHalf.map((bit) => Number(bit))
 	const seen = new Set<number>()
 	const indices = Array.from({ length: n }, (_, i) => i)
-	for (const i of [...indices].sort((a, b) => c.b3Rank[b] - c.b3Rank[a])) {
+	for (const i of [...indices].sort(
+		(a, b) => c.ownTasteRank[b] - c.ownTasteRank[a],
+	)) {
 		const series = c.movieSeriesId[i] > 0 ? c.movieSeriesId[i] : -1 - i
-		if (c.b5TopHalf[i] && !seen.has(series)) {
+		if (c.pooledRatingTopHalf[i] && !seen.has(series)) {
 			groups[i] = 2
 			seen.add(series)
 		}
 	}
-	const rank = groups.map((g, i) => 2 * g + c.b3Rank[i])
+	const rank = groups.map((g, i) => 2 * g + c.ownTasteRank[i])
 	const order = indices.sort((a, b) => rank[b] - rank[a])
 	return { ...refill(order, rank, c.show, c.animation, own), groups, rank }
 }
