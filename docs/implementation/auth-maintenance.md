@@ -29,7 +29,7 @@ within a minute.
 | Job | Behavior |
 | --- | --- |
 | Email claims | Gives new reservations 15 minutes. Keeps a live owner's current address. Otherwise fences the user version, or inserts a missing-user barrier tied to the abandoned operation, before conditionally releasing the unchanged claim. |
-| Orphan reconciliation | Collects unconfirmed users after 48 hours and releases their unchanged email claim; collects never-authorized clients after 24 hours, including partial DCR/CIMD registration leftovers; removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
+| Orphan reconciliation | Collects marked new-system unconfirmed signups after 48 hours from insertion/latest confirmation and releases their unchanged email claim; collects never-authorized clients after 24 hours, including partial DCR/CIMD registration leftovers; removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
 | Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; archives rotated refresh parents after their retry window; retires signing keys after verification grace; collects receipts after 24 hours; purges deleted rows after 30 days; repairs both the deleted flag and lookup hints from authenticated state. |
 | Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing, deleted or archived row's slot, writes an admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. Empty actor ledgers are physically purged after 30 days. |
 | Payload key rotation | Rewrites both encrypted columns under the active payload key with CAS, preserving logical data, indexes, claims, admission fences and receipt ownership. Competing changes are skipped and retried in later passes. |
@@ -124,8 +124,12 @@ written by CAS after consent creation. Collection either loses that CAS or issua
 fails closed. A collected, never-authorized metadata URL can register afresh without
 waiting 30 days. Previously authorized clients survive grant disconnection.
 
-Unconfirmed signups are collected after **48 hours**, beyond the 24-hour confirmation
-window, using the user-version CAS. Their credential accounts are reconciled in the
+Only signups inserted through the new `/sign-up/email` endpoint carry a private,
+authenticated `pendingSignupAt` insertion timestamp. Unconfirmed signups with that
+marker are collected after **48 hours** from insertion or the newest confirmation
+issuance, using the user-version CAS. Logical `createdAt` never determines signup
+eligibility or age. Imported and legacy unmarked members never qualify, even if
+unconfirmed for years or subsequently requesting confirmation. Their credential accounts are reconciled in the
 same pass and their unchanged email claim is released. Verification racing collection
 must win the user CAS to preserve the member.
 
@@ -270,7 +274,7 @@ npm run test:auth:maintenance
 
 The runner forces a local Unix Docker socket and fresh project
 `goodwatch-auth-565`, with three CrateDB 5.10.12 nodes, three Valkey 8.1.10 masters,
-a separate local data cache and Mailpit. Ports 15648–15650, 15701–15704 and
+a separate local data cache, Mailpit and a pinned disposable Postgres import source. Ports 15648–15650, 15652, 15701–15704 and
 15625/15680 bind only loopback. It refuses to reuse an existing project and
 removes only its containers, volumes and network on exit. It loads no dotenv.
 Each serial maintenance test suite resets only this runner's fixture rows.
@@ -340,3 +344,15 @@ disabled. Whole-app types still match all **174** normalized baseline diagnostic
 from #581 / `b91ae3b0`, with zero additions or removals. Local Node was 26.8.1;
 CI used Node 24. Owned fixture containers, volumes and network were removed.
 No production operation, deployment or merge was performed.
+
+## Re-review N1 — October 15, 2026
+
+The importer/maintenance regression runs the unchanged `importSupabaseAuth` module
+from #551 (`auth/supabase-importer`, `5e97cd2a`) against disposable Postgres and
+the three-node local CrateDB cluster. Its old unconfirmed Supabase member retains
+the original UUID, bcrypt credential, claim and existing wishlist data after an
+immediate pass, a confirmation request and a pass 60 days later. Rerunning the
+import creates no replacement member. The importer CLI/rehearsal remains in #551;
+only its existing module and pinned `pg` dependency are included here for the
+real cross-feature regression. New signup tests cover 47h retention, 49h
+collection/retry, historical logical dates and a link resent at 47h used at 49h.

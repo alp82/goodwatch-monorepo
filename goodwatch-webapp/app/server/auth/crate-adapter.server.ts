@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomUUID } from "node:crypto"
-import { createAdapterFactory } from "@goodwatch/auth-stack/adapters"
+import { createAdapterFactory, tryGetCurrentAuthEndpointContext } from "@goodwatch/auth-stack/adapters"
 import type { CleanedWhere, CustomAdapter } from "@goodwatch/auth-stack/adapters"
 import { assertAuthShape, assertAuthMutation } from "./call-shapes.server.ts"
 import { releaseAuthAdmission, authPopulationActor, authActorBounds, admitAuthRow, validatePopulationBounds, launchPopulationBounds, type AuthPopulationBounds, type AuthAdmission } from "./population.server.ts"
@@ -114,6 +114,9 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
+	// Private insertion provenance: direct adapter writes (including imports) never
+	// qualify for abandoned-signup collection, regardless of their logical dates.
+	const pendingSignupAt = (model: string) => model === "user" && tryGetCurrentAuthEndpointContext()?.path === "/sign-up/email" ? new Date().toISOString() : undefined
 	const payloadSecret = encryptionSecret ?? localAuthEncryptionSecret
 	const codec = authPayloadCodec(payloadSecret, encryptionKeys)
 	const bounds = populationBounds === true ? launchPopulationBounds : populationBounds
@@ -266,7 +269,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				let response: SqlResult | undefined
 				try {
 					response = await sql(`UPDATE ${authModelTable(model)} SET payload=?, deleted=?, receipts=?, lookup=?, created_at=?, expires_at=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, abandonedClaim: replacing ? undefined : original.envelope.abandonedClaim, unusedClient: replacing ? undefined : original.envelope.unusedClient, authorizedAt: replacing ? undefined : original.envelope.authorizedAt, admissionFence: deleting ? Math.max(original.envelope.admissionFence ?? 0, original.envelope.admission?.generation ?? 0) : original.envelope.admissionFence, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
+						[codec.encode({ ...original.envelope, admission: replacing ? admission : original.envelope.admission, row: deleting ? { id } : result, abandonedClaim: replacing ? undefined : original.envelope.abandonedClaim, unusedClient: replacing ? undefined : original.envelope.unusedClient, authorizedAt: replacing ? undefined : original.envelope.authorizedAt, pendingSignupAt: replacing ? pendingSignupAt(model) : original.envelope.pendingSignupAt, confirmationIssuedAt: replacing ? undefined : original.envelope.pendingSignupAt && typeof update.confirmationDigest === "string" ? new Date().toISOString() : original.envelope.confirmationIssuedAt, admissionFence: deleting ? Math.max(original.envelope.admissionFence ?? 0, original.envelope.admission?.generation ?? 0) : original.envelope.admissionFence, deleted: deleting, deletedAt: deleting ? new Date().toISOString() : undefined, emailClaim: deleting ? undefined : emailClaim }, `${authModelTable(model)}:${id}:payload`), deleting || !replacing && original.envelope.archived === true, codec.encode(receipts, `${authModelTable(model)}:${id}:receipts`), lookup(model, deleting ? {} : result), deleting ? null : result.createdAt ?? null, deleting ? null : result.expiresAt ?? null, id, original.seq, original.term])
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
@@ -331,7 +334,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE NULL END,?,?,?,?)`,
-							[row.id, writeDeadline, codec.encode({ row, deleted: false, emailClaim, admission }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
+							[row.id, writeDeadline, codec.encode({ row, deleted: false, emailClaim, admission, pendingSignupAt: pendingSignupAt(model) }, `${authModelTable(model)}:${row.id}:payload`), row.createdAt ?? null, row.expiresAt ?? null, codec.encode([{ operation, baseSeq: -1, at: new Date().toISOString() }], `${authModelTable(model)}:${row.id}:receipts`), lookup(model, row)])
 						if (inserted.rowcount !== 1) throw new IndeterminateAuthWriteError()
 					}
 					catch (error) {

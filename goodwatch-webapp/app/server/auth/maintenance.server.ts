@@ -40,6 +40,8 @@ type Envelope = {
 	deleted: boolean
 	archived?: boolean
 	authorizedAt?: string
+	pendingSignupAt?: string
+	confirmationIssuedAt?: string
 	unusedClient?: boolean
 	emailClaim?: string
 	deletedAt?: string
@@ -906,8 +908,16 @@ export async function reconcileAuthRows(
 			if (model === "user")
 				orphan =
 					row.emailVerified === false &&
-					typeof row.createdAt === "string" &&
-					now.getTime() - new Date(row.createdAt).getTime() >= 48 * 3600000
+					typeof current.envelope.pendingSignupAt === "string" &&
+					now.getTime() -
+						Math.max(
+							new Date(current.envelope.pendingSignupAt).getTime(),
+							new Date(
+								current.envelope.confirmationIssuedAt ??
+									current.envelope.pendingSignupAt,
+							).getTime(),
+						) >=
+						48 * 3600000
 			if (model === "oauthClient" && typeof row.userId === "string")
 				orphan = !user || user.envelope.deleted
 			if (

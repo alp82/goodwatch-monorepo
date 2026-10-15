@@ -22,6 +22,7 @@
 		"auth:maintenance": "node scripts/auth-maintenance/cli.ts"
 	},
 	"dependencies": {
+		"@goodwatch/auth-stack": "file:packages/auth-stack",
 		"@headlessui/react": "^2.2.0",
 		"@heroicons/react": "^2.1.5",
 		"@huggingface/tokenizers": "0.2.0",
@@ -58,6 +59,7 @@
 		"nodemailer": "10.1.1",
 		"onnxruntime-node": "1.30.0",
 		"patch-package": "^8.0.1",
+		"pg": "8.23.1",
 		"posthog-js": "^1.295.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
@@ -73,8 +75,7 @@
 		"undici": "6.21.3",
 		"use-dehydrated-state": "^0.1.0",
 		"zod": "^3.25.76",
-		"zod4": "npm:zod@4.6.7",
-		"@goodwatch/auth-stack": "file:packages/auth-stack"
+		"zod4": "npm:zod@4.6.7"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
@@ -84,6 +85,7 @@
 		"@tanstack/eslint-plugin-query": "^5.60.1",
 		"@types/node-crate": "^2.0.5",
 		"@types/nodemailer": "8.0.2",
+		"@types/pg": "8.23.1",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
 		"eslint": "^8.57.1",

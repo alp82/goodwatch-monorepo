@@ -246,7 +246,7 @@ test("reconciliation collects a late session bound to an obsolete password crede
 	)
 })
 
-test("unconfirmed signups older than forty-eight hours release their address and account", async () => {
+test("unmarked old unconfirmed members retain their address and account", async () => {
 	const user = await adapter.create({
 		model: "user",
 		data: {
@@ -267,22 +267,23 @@ test("unconfirmed signups older than forty-eight hours release their address and
 	})
 	await reconcileAuthRows({ sql, encryptionSecret, model: "user" })
 	await reconcileAuthRows({ sql, encryptionSecret, model: "account" })
-	assert.equal(
+	assert.ok(
 		await adapter.findOne({
 			model: "user",
 			where: [{ field: "id", value: user.id }],
 		}),
-		null,
 	)
-	assert.deepEqual(
-		await adapter.findMany({
-			model: "account",
-			where: [{ field: "userId", value: user.id }],
-		}),
-		[],
+	assert.equal(
+		(
+			await adapter.findMany({
+				model: "account",
+				where: [{ field: "userId", value: user.id }],
+			})
+		).length,
+		1,
 	)
-	assert.ok(
-		await adapter.create({
+	await assert.rejects(
+		adapter.create({
 			model: "user",
 			data: { email: user.email, name: "Retry", emailVerified: false },
 		}),
