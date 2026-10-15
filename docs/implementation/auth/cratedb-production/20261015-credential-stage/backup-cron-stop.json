@@ -1,0 +1,24 @@
+{
+  "utc": "2026-10-15T22:44:51.438936+00:00",
+  "host": "10.0.0.11",
+  "install_command": "crontab -",
+  "install_exit_code": 0,
+  "exact_readback_match": false,
+  "current_crontab_list_exit_code": 0,
+  "current_crontab_list_stdout_length": 0,
+  "spool_total_lines": 3,
+  "spool_noncomment_nonempty_lines": 0,
+  "spool_mtime_utc": "2026-10-15T22:44:05.606753+00:00",
+  "protected_original": "/root/.config/goodwatch/crate-rollout-562/crontab.before",
+  "original_lines": 2,
+  "original_jobs": 1,
+  "original_backup_jobs": 1,
+  "other_noncomment_lines_unchanged": true,
+  "backup_password_mode": "0600",
+  "backup_password_matches_role_file": true,
+  "deployed_sha256": {
+    "backup.py": "0b65e8241c8b4474e6efaabfc6f15573caf60950ca2989c333d9e21208ff77b1",
+    "cleanup_legacy.py": "e474f619e6d65b41e6d4cd29a6b57ae1f3ffa3279e438882c9a46fc99bb53d92"
+  },
+  "production_mutations_stopped": true
+}
