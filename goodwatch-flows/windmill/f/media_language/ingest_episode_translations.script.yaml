@@ -2,11 +2,24 @@ summary: Additive TMDB season and episode translations
 description: Bounded companion ingestion; dry-run by default. Never changes canonical membership.
 lock: '!inline f/media_language/ingest_episode_translations.script.lock'
 kind: script
+timeout: 10800
+concurrent_limit: 1
+concurrency_time_window_s: 0
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
+    nightly:
+      type: boolean
+      default: false
+      description: Durable daily ingestion; canonical additions, capped backlog, then untranslated shows
+    max_seconds:
+      type: integer
+      default: 10800
+      minimum: 1
+      maximum: 10800
     tmdb_ids:
+      default: []
       type: array
       items:
         type: integer
@@ -39,5 +52,4 @@ schema:
       items:
         type: object
       description: The continuation list of a previous result, to continue where it stopped
-  required:
-    - tmdb_ids
+  required: []

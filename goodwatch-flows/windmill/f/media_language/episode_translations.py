@@ -95,7 +95,7 @@ def resume_cursors(resume, ids):
 
 
 def ingest_titles(tmdb_ids, get, connector=None, *, dry_run=True, bounds=Bounds(), sleep=time.sleep,
-                  resume=None):
+                  resume=None, preserve_existing=False):
     """Explicit IDs in caller priority order. Bounded, serial and additive; no DELETE.
 
     A title cut short by a bound gets a cursor in `continuation` naming the first
@@ -217,10 +217,10 @@ def ingest_titles(tmdb_ids, get, connector=None, *, dry_run=True, bounds=Bounds(
                 # Stage this title before publication. Any failure or bound hit
                 # preserves prior nonblank values, even for earlier successful
                 # endpoints. A complete cohort may refresh returned fields.
-                preserve_existing = result['truncated'] or len(result['failures']) > failures_before
+                keep_existing = preserve_existing or result['truncated'] or len(result['failures']) > failures_before
                 if not dry_run:
                     for table, rows in pending.items():
-                        publish_rows(connector, table, rows, preserve_existing=preserve_existing)
+                        publish_rows(connector, table, rows, preserve_existing=keep_existing)
         except StopIteration:
             if at is not None:
                 stop(show_id, *at)

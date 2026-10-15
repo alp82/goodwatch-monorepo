@@ -2,10 +2,13 @@
 from f.media_language.episode_translations import Bounds, ingest_titles
 
 
-def main(tmdb_ids: list[int], dry_run: bool = True, max_requests: int = 250,
+def main(tmdb_ids: list[int] = [], dry_run: bool = True, max_requests: int = 250,
          max_seasons: int = 10, max_episodes: int = 100,
          max_seasons_per_title: int | None = None, max_episodes_per_title: int | None = None,
-         resume: list[dict] | None = None):
+         resume: list[dict] | None = None, nightly: bool = False, max_seconds: int = 10800):
+    if nightly is True:
+        from f.media_language.nightly_episode_translations import main as run_nightly
+        return run_nightly(dry_run=dry_run, max_seconds=max_seconds)
     # Windmill can pass None for omitted arguments; omission always stays read-only.
     dry_run = dry_run is not False
     tmdb_ids = tmdb_ids or []
