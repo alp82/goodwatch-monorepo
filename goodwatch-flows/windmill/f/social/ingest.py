@@ -13,10 +13,9 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 from f.social import bluesky, mastodon, rss, youtube, quality
 from f.social.common import SOURCES, now, stamp
-from f.social.matcher import Matcher, OpenRouter
+from f.social.deterministic import DeterministicMatcher
 from f.social.settings import load
 from f.social.store import Crate, Store
-from f.social.vector import VectorCandidates
 
 ADAPTERS = {'youtube': youtube, 'rss': rss, 'bluesky': bluesky, 'mastodon': mastodon}
 
@@ -31,12 +30,12 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
     db = Crate(settings)
     store = Store(db)
     store.initialize()
-    llm = OpenRouter(settings.get('OPENROUTER_API_KEY'))
-    vector = VectorCandidates(settings) if vector_enabled and settings.get('QDRANT_URL') else None
-    matcher = Matcher(db.select, llm=llm, vector=vector)
+    # LLM-free (owner, #556): no model calls, no inference cost. vector_enabled is
+    # still accepted from the scheduled flow inputs but no longer used.
+    matcher = DeterministicMatcher(db.select)
     results = []
     for name in SOURCES if source == 'all' else (source,):
-        run_id, started, cost = uuid4().hex, now().isoformat(), llm.cost
+        run_id, started = uuid4().hex, now().isoformat()
         counts = {'collected': 0, 'processed': 0, 'published': 0}
         status, details = 'running', {}
         record = {'source': name, 'started_at': started, 'window_start': start.isoformat(), 'window_end': end.isoformat()}
@@ -69,22 +68,22 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
                         store.run_record(run_id, **record, status='running', **counts)
                         print(json.dumps({'source': name, **counts}), flush=True)
             details['pending_after_run'] = len(store.pending(name, 10000))
-            details['vector_enabled'] = vector is not None
+            details['matcher'] = 'deterministic'
             details['disabled_lanes_for_readers'] = list(disabled_lanes)
         except Exception as exc:
             status = 'failed'
             # No raw exception URLs/bodies: may contain provider credentials or post text.
             details['error_type'] = type(exc).__name__
             message = str(exc)
-            for key in ('CRATE_PASS', 'OPENROUTER_API_KEY', 'YOUTUBE_API_KEY', 'QDRANT_API_KEY'):
+            for key in ('CRATE_PASS', 'YOUTUBE_API_KEY', 'QDRANT_API_KEY'):
                 if settings.get(key):
                     message = message.replace(settings[key], '[redacted]')
             details['error'] = message[:500]
             print(json.dumps({'source': name, 'status': status, 'error_type': type(exc).__name__}), flush=True)
         store.run_record(run_id, **record, finished_at=now().isoformat(), status=status, **counts,
-                         details=json.dumps(details, ensure_ascii=False), inference_cost_usd=llm.cost - cost)
+                         details=json.dumps(details, ensure_ascii=False), inference_cost_usd=0.0)
         result = {'run_id': run_id, 'source': name, 'status': status, **counts,
-                  'inference_cost_usd': round(llm.cost - cost, 6), 'details': details}
+                  'inference_cost_usd': 0.0, 'details': details}
         results.append(result)
     store.refresh()
     return {'window_start': start.isoformat(), 'window_end': end.isoformat(), 'sources': results}
