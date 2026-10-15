@@ -25,5 +25,9 @@
   "httpTimeoutSeconds": 7500,
   "outerSshTimeoutSeconds": 7530,
   "newOwnerGoSupersedesPreviousCutoff": true,
-  "clientDeployment": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9"
+  "clientDeployment": "ebe8581f44fa58dc27da8ee55738c5a07794bbb9",
+  "hardDeadline": "2026-10-15T04:14:00Z",
+  "deadlineInstruction": "Finish in-progress crate-03 to GREEN; do not start another restart without recovery margin",
+  "remainingNodeDeferred": "crate-01",
+  "reason": "Local private-network access shuts down; cloud cannot continue private production operations"
 }
