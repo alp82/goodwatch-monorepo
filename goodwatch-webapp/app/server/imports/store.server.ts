@@ -1,3 +1,4 @@
+import type { StoredUndoOutcome } from "~/domain/import-result"
 import {
 	IMPORT_SOURCES,
 	type ImportItem,
@@ -179,6 +180,16 @@ export async function claim(row: ImportRow, set: string, params: Param[]) {
 }
 export const refreshImports = () => run("REFRESH TABLE doc.user_import")
 export const refreshItems = () => run("REFRESH TABLE doc.user_import_item")
+/** Records what Undo did with one row, so the result can say it and a resumed Undo leaves the row alone. */
+export const recordUndo = (
+	importId: string,
+	rowIndex: number,
+	outcome: StoredUndoOutcome,
+) =>
+	run(
+		"UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index = ?",
+		[outcome, importId, rowIndex],
+	)
 
 interface ItemRow {
 	row_index: number
@@ -192,14 +203,22 @@ interface ItemRow {
 	current_score: number | null
 	apply_state: ImportItem["applyState"]
 }
+/** What Undo did with a row it had to take back. */
 export async function itemRows(
 	userId: string,
 	id: string,
 	pendingOnly = false,
-): Promise<(ImportItem & { payload: Record<string, unknown> })[]> {
+): Promise<
+	(ImportItem & {
+		payload: Record<string, unknown>
+		undoOutcome: StoredUndoOutcome | null
+	})[]
+> {
 	await getImportRow(userId, id)
-	const rows = await select<ItemRow>(
-		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
+	const rows = await select<
+		ItemRow & { undo_outcome: StoredUndoOutcome | null }
+	>(
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
 		[id, userId],
 	)
 	return rows.map((row) => ({
@@ -214,6 +233,7 @@ export async function itemRows(
 		currentScore: row.current_score === null ? null : Number(row.current_score),
 		applyState: row.apply_state,
 		payload: parse(row.payload, {}),
+		undoOutcome: row.undo_outcome ?? null,
 	}))
 }
 export async function listItems(

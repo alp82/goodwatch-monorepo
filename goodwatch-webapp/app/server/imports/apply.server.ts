@@ -1,3 +1,4 @@
+import type { UndoOutcome } from "~/domain/import-result"
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
 import { canImportWantToSee } from "../../domain/imports.ts"
 import {
@@ -8,6 +9,7 @@ import {
 	claim,
 	getImportRow,
 	itemRows,
+	recordUndo,
 	refreshImports,
 	refreshItems,
 	run,
@@ -24,7 +26,18 @@ type Snapshot = {
 	seq?: number
 	term?: number
 }
-type Journal = { before: Snapshot; after: Snapshot; stamp: string }
+/** A list choice the row's write took away, as it was: Undo can't put it back, so the result names it. */
+type Cleared = {
+	table: "user_not_interested"
+	createdAt: string | null
+	updatedAt: string | null
+}
+type Journal = {
+	before: Snapshot
+	after: Snapshot
+	stamp: string
+	cleared?: Cleared[]
+}
 const isWant = (item: ImportItem) =>
 	item.kind === "want" ||
 	(item.kind === "show_status" && item.showStatus === "plan_to_watch")
@@ -55,25 +68,54 @@ async function settleRatings(userId: string, movieIds: number[]) {
 	await settleMovies(userId, [...new Set(movieIds)])
 }
 
-async function clearNotInterestedForWant(userId: string, item: ImportItem) {
+const isoOrNull = (value: Date | string | number | null) =>
+	value === null ? null : new Date(value).toISOString()
+
+async function clearNotInterestedForWant(
+	userId: string,
+	importId: string,
+	item: ImportItem & { payload: Record<string, unknown> },
+) {
 	await run("REFRESH TABLE user_not_interested")
 	const row = (
-		await select<{ _seq_no: number; _primary_term: number }>(
-			"SELECT _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+		await select<{
+			created_at: Date | string | number | null
+			updated_at: Date | string | number | null
+			_seq_no: number
+			_primary_term: number
+		}>(
+			"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 			[userId, item.tmdbId, item.mediaType],
 		)
 	)[0]
-	if (row)
-		await run(
-			"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-			[
-				userId,
-				item.tmdbId,
-				item.mediaType,
-				Number(row._seq_no),
-				Number(row._primary_term),
+	if (!row) return
+	const journal = item.payload.journal as Journal
+	// Write-ahead, like the rest of the journal: a resumed import still names the choice it took away.
+	const named = !!journal.cleared?.length
+	if (!named)
+		await persistJournal(importId, item, {
+			...journal,
+			cleared: [
+				{
+					table: "user_not_interested",
+					createdAt: isoOrNull(row.created_at),
+					updatedAt: isoOrNull(row.updated_at),
+				},
 			],
-		)
+		})
+	const removed = await run(
+		"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+		[
+			userId,
+			item.tmdbId,
+			item.mediaType,
+			Number(row._seq_no),
+			Number(row._primary_term),
+		],
+	)
+	// The member changed it in between: the import took nothing away.
+	if (removed.rowcount === 0 && !named)
+		await persistJournal(importId, item, journal)
 }
 
 async function scoreSnapshot(
@@ -293,7 +335,7 @@ async function applySet(
 			new Date(own.updated_at).toISOString() === journal.stamp
 		) {
 			if (table === "user_wishlist")
-				await clearNotInterestedForWant(userId, item)
+				await clearNotInterestedForWant(userId, importId, item)
 			return "added" as const
 		}
 		if (own) return "kept" as const
@@ -312,7 +354,7 @@ async function applySet(
 		],
 	)
 	if (result.rowcount === 1 && table === "user_wishlist")
-		await clearNotInterestedForWant(userId, item)
+		await clearNotInterestedForWant(userId, importId, item)
 	return result.rowcount === 1 ? ("added" as const) : ("kept" as const)
 }
 
@@ -520,24 +562,46 @@ export async function confirmImport(
 	return summarize(await getImportRow(userId, id))
 }
 
+type UndoItem = Awaited<ReturnType<typeof itemRows>>[number]
+
+/** Takes back one rating or review row. It is left as it is when the member changed it after the import. */
 async function undoScore(
 	userId: string,
-	item: ImportItem & { payload: Record<string, unknown> },
-) {
+	importId: string,
+	item: UndoItem,
+): Promise<UndoOutcome> {
 	const journal = item.payload.journal as Journal | undefined
+	if (!journal) return "not_restored"
 	const current = await scoreSnapshot(userId, item)
-	if (!journal || !sameScore(current, journal.after)) return
-	if (current.seq === undefined || current.term === undefined) return
+	// As before the import already: an earlier, interrupted Undo got this far if it marked the row; otherwise
+	// the member changed it back, or removed it.
+	if (
+		journal.before.exists
+			? current.exists &&
+				current.score === (journal.before.score ?? null) &&
+				current.review === (journal.before.review ?? null)
+			: !current.exists
+	)
+		return item.undoOutcome === "reverting" ? "reverted" : "left"
+	if (!sameScore(current, journal.after)) return "left"
+	if (current.seq === undefined || current.term === undefined) return "left"
+	// An older journal without the earlier dates can't put the earlier rating back exactly.
+	if (
+		journal.before.exists &&
+		(!journal.before.createdAt || !journal.before.updatedAt)
+	)
+		return "not_restored"
+	await recordUndo(importId, item.index, "reverting")
+	let result: { rowcount?: number }
 	if (!journal.before.exists)
-		await run(
+		result = await run(
 			"DELETE FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 			[userId, item.tmdbId, item.mediaType, current.seq, current.term],
 		)
 	else {
-		const createdAt = journal.before.createdAt
-		const updatedAt = journal.before.updatedAt
-		if (!createdAt || !updatedAt) return
-		await run(
+		const createdAt = journal.before.createdAt ?? ""
+		const updatedAt = journal.before.updatedAt ?? ""
+		result = await run(
 			"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 			[
 				journal.before.score ?? null,
@@ -552,15 +616,18 @@ async function undoScore(
 			],
 		)
 	}
+	return result.rowcount === 0 ? "left" : "reverted"
 }
 
+/** Takes back one Want to See or favorite row, unless the member changed it after the import. */
 async function undoSet(
 	userId: string,
-	item: ImportItem & { payload: Record<string, unknown> },
+	importId: string,
+	item: UndoItem,
 	table: "user_wishlist" | "user_favorite",
-) {
+): Promise<UndoOutcome> {
 	const journal = item.payload.journal as Journal | undefined
-	if (!journal) return
+	if (!journal) return "not_restored"
 	await run(`REFRESH TABLE ${table}`)
 	const current = (
 		await select<{
@@ -573,13 +640,15 @@ async function undoSet(
 			[userId, item.tmdbId, item.mediaType],
 		)
 	)[0]
+	// Gone already: an earlier, interrupted Undo took it off if it marked the row; otherwise the member did.
+	if (!current) return item.undoOutcome === "reverting" ? "reverted" : "left"
 	if (
-		!current ||
 		new Date(current.created_at).toISOString() !== journal.after.createdAt ||
 		new Date(current.updated_at).toISOString() !== journal.stamp
 	)
-		return
-	await run(
+		return "left"
+	await recordUndo(importId, item.index, "reverting")
+	const result = await run(
 		`DELETE FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
 		[
 			userId,
@@ -589,6 +658,7 @@ async function undoSet(
 			Number(current._primary_term),
 		],
 	)
+	return result.rowcount === 0 ? "left" : "reverted"
 }
 
 export async function undoImport(
@@ -653,17 +723,23 @@ export async function undoImport(
 			)
 		})
 		for (const item of undoOrder) {
-			if (!item.applyState || !["added", "updated"].includes(item.applyState))
+			if (
+				!item.applyState ||
+				!["added", "updated"].includes(item.applyState) ||
+				(item.undoOutcome && item.undoOutcome !== "reverting")
+			)
 				continue
+			let outcome: UndoOutcome | null = null
 			if (item.kind === "rating" || item.kind === "review")
-				await undoScore(userId, item)
-			else if (isWant(item) || item.kind === "favorite") {
-				await undoSet(
+				outcome = await undoScore(userId, id, item)
+			else if (isWant(item) || item.kind === "favorite")
+				outcome = await undoSet(
 					userId,
+					id,
 					item,
 					isWant(item) ? "user_wishlist" : "user_favorite",
 				)
-			}
+			if (outcome) await recordUndo(id, item.index, outcome)
 		}
 		const movieRatings = items.filter(
 			(x) =>

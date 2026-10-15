@@ -27,17 +27,22 @@ const supportedImportSql = new Set([
 	"REFRESH TABLE user_wishlist",
 	"REFRESH TABLE user_wishlist, user_watch_log",
 	"SELECT DISTINCT tmdb_id, media_type FROM user_watch_log WHERE user_id = ? LIMIT 100000",
-	"SELECT _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+	"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT 100001",
+	"SELECT tmdb_id, title, release_year, poster_path FROM movie WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, title, release_year, poster_path FROM show WHERE tmdb_id IN (?)",
+	"UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index = ?",
 	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' GROUP BY apply_state",
 	"SELECT created_at, updated_at FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE user_id = ? AND source IN (?) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
-	"SELECT row_index, source_key, payload, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
+	"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
 	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
@@ -77,6 +82,7 @@ export class ImportDb {
 	items: Row[] = []
 	favorites: Row[] = []
 	wishlist: Row[] = []
+	notInterested: Row[] = []
 	catalog: Row[] = []
 	episodes: Row[] = []
 	catalogQueries: { sql: string; params: Param[] }[] = []
@@ -84,6 +90,8 @@ export class ImportDb {
 	failWishlistDeleteOnce = false
 	failFavoriteOnce = false
 	failScoreOnce = false
+	/** Throws once when Undo records this outcome, as a crash right after its write would. */
+	failUndoOutcomeOnce: string | null = null
 	private version = 10
 
 	seed(userId = "member") {
@@ -179,6 +187,15 @@ export class ImportDb {
 			return rows as T[]
 		}
 		if (s.includes("FROM user_watch_log")) return []
+		if (s.includes("FROM user_not_interested"))
+			return this.notInterested
+				.filter(
+					(x) =>
+						x.user_id === params[0] &&
+						x.tmdb_id === params[1] &&
+						x.media_type === params[2],
+				)
+				.map((x) => ({ ...x })) as T[]
 		if (s.includes("FROM doc.user_import WHERE user_id = ?"))
 			return this.imports
 				.filter(
@@ -364,6 +381,19 @@ export class ImportDb {
 			row.payload = params[0]
 			return { rowcount: 1 }
 		}
+		if (s.startsWith("UPDATE doc.user_import_item SET undo_outcome = ?")) {
+			if (this.failUndoOutcomeOnce === params[0]) {
+				this.failUndoOutcomeOnce = null
+				throw new Error("injected interruption")
+			}
+			const row = requiredRow(
+				this.items.find(
+					(x) => x.import_id === params[1] && x.row_index === params[2],
+				),
+			)
+			row.undo_outcome = params[0]
+			return { rowcount: 1 }
+		}
 		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = 'added'")) {
 			const row = requiredRow(
 				this.items.find(
@@ -462,6 +492,20 @@ export class ImportDb {
 					),
 			)
 			return { rowcount: before - this[name].length }
+		}
+		if (s.startsWith("DELETE FROM user_not_interested")) {
+			const before = this.notInterested.length
+			this.notInterested = this.notInterested.filter(
+				(x) =>
+					!(
+						x.user_id === params[0] &&
+						x.tmdb_id === params[1] &&
+						x.media_type === params[2] &&
+						x._seq_no === params[3] &&
+						x._primary_term === params[4]
+					),
+			)
+			return { rowcount: before - this.notInterested.length }
 		}
 		if (s.startsWith("INSERT INTO user_score")) {
 			if (this.failScoreOnce) {
