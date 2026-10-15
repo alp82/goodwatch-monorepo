@@ -3,7 +3,7 @@ import { z } from "zod"
 import {
 	IMPORT_MAX_BYTES,
 	IMPORT_SOURCES,
-	IMPORT_SOURCE_FILE,
+	IMPORT_SOURCE_UPLOAD,
 	isFileImportSource,
 } from "~/domain/imports"
 import { withMember } from "~/server/imports/http.server"
@@ -87,7 +87,7 @@ export const action = ({ request }: ActionFunctionArgs) =>
 						.replace(/\s+/g, " ")
 						.trim()
 						.slice(0, 200) ||
-						`${source.data}.${IMPORT_SOURCE_FILE[source.data]}`,
+						`${source.data}${IMPORT_SOURCE_UPLOAD[source.data].extensions[0]}`,
 					bytes,
 					wishlist instanceof File
 						? new Uint8Array(await wishlist.arrayBuffer())
