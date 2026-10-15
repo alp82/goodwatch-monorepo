@@ -4,6 +4,7 @@ import {
 	requireBearerAuth,
 } from "@modelcontextprotocol/server"
 import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
+import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
 import { createReadToolServer } from "./tools.server.ts"
 
@@ -32,6 +33,8 @@ export function createReadMcpHandler(
 			: undefined,
 	})
 	return async (request: Request): Promise<Response> => {
+		// The SDK's challenge and answers call Response.json(), which remix-serve's polyfill lacks.
+		fillWebFetchGaps()
 		const response = await handle(request)
 		response.headers.set("Cache-Control", "private, no-store, no-transform")
 		return response
