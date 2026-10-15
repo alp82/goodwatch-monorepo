@@ -1,12 +1,9 @@
+import useLocale from "~/utils/locale"
 // The Explorer's page: one map with every grouping's islands, each grouping in a region of its own around a middle
 // kept free. The Viewing menu flies to a region; a tap picks an island, which sails to the middle, and two to five
 // picked islands raise their combination there.
 import { useSearchParams } from "@remix-run/react"
-import {
-	keepPreviousData,
-	useQuery,
-	useQueryClient,
-} from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
 	useCallback,
@@ -113,10 +110,12 @@ const sideOf = (island: MapIsland) => ({
  */
 export function ExplorerMap({
 	initialWorld,
+	initialLanguage = "en",
 	fallback,
 }: {
 	/** The world the server rendered (a member's own; a guest's comes from their browser's progress). */
 	initialWorld: ExplorerWorld | null
+	initialLanguage?: string
 	/** What shows until the page runs: the islands as a list, for no JavaScript and search engines. */
 	fallback?: ReactNode
 }) {
@@ -124,6 +123,7 @@ export function ExplorerMap({
 	const filters = useMemo(() => filtersOf(params), [params])
 	const { user, loading: userLoading } = useUser()
 	const member = !!user
+	const { locale } = useLocale()
 	const viewer = user?.id ?? "guest"
 	const queryClient = useQueryClient()
 
@@ -131,17 +131,21 @@ export function ExplorerMap({
 
 	const initialFilters = useRef(filters)
 	const worldQuery = useQuery({
-		queryKey: explorerKeys.world(viewer, filters),
+		queryKey: [...explorerKeys.world(viewer, filters), locale.language],
 		// Each answer carries the filters it answers: while the next one loads, the previous world stays up.
 		queryFn: async () => ({
 			filters,
-			maps: (await fetchWorld(filters, member)).maps,
+			maps: (await fetchWorld(filters, member, locale.language)).maps,
 		}),
 		enabled: !userLoading,
-		placeholderData: keepPreviousData,
+		placeholderData: (previous, query) =>
+			query?.queryKey.at(-1) === locale.language ? previous : undefined,
 		// The server rendered the member's own world; a guest's depends on the progress their browser holds.
 		initialData:
-			member && initialWorld && filters === initialFilters.current
+			member &&
+			initialWorld &&
+			initialLanguage === locale.language &&
+			filters === initialFilters.current
 				? { filters, maps: initialWorld.maps }
 				: undefined,
 	})
@@ -343,8 +347,8 @@ export function ExplorerMap({
 		return () => clearTimeout(t)
 	}, [active?.key, active?.pinned])
 	const cardQuery = useQuery({
-		queryKey: explorerKeys.card(viewer, cardKey ?? 0),
-		queryFn: () => fetchCard(cardKey as number, member),
+		queryKey: [...explorerKeys.card(viewer, cardKey ?? 0), locale.language],
+		queryFn: () => fetchCard(cardKey as number, member, locale.language),
 		enabled: cardKey != null && !userLoading,
 	})
 	const card =
@@ -398,8 +402,12 @@ export function ExplorerMap({
 
 	/** What every other island would hold with the picked ones, for the counts on the islands. */
 	const sharesQuery = useQuery({
-		queryKey: explorerKeys.picked("shares", viewer, shown ?? filters, picks),
-		queryFn: () => fetchShares(shown as Filters, picks, member),
+		queryKey: [
+			...explorerKeys.picked("shares", viewer, shown ?? filters, picks),
+			locale.language,
+		],
+		queryFn: () =>
+			fetchShares(shown as Filters, picks, member, locale.language),
 		enabled:
 			!!shown && !userLoading && picks.length > 0 && picks.length < MAX_PICKS,
 	})
@@ -411,8 +419,11 @@ export function ExplorerMap({
 	}, [sharesQuery.data, picks])
 	/** What each picked island does to the combination, for its row in the selection. */
 	const partsQuery = useQuery({
-		queryKey: explorerKeys.picked("parts", viewer, shown ?? filters, picks),
-		queryFn: () => fetchParts(shown as Filters, picks, member),
+		queryKey: [
+			...explorerKeys.picked("parts", viewer, shown ?? filters, picks),
+			locale.language,
+		],
+		queryFn: () => fetchParts(shown as Filters, picks, member, locale.language),
 		enabled: !!shown && !userLoading && picks.length > 1,
 	})
 	const parts =
@@ -467,8 +478,11 @@ export function ExplorerMap({
 		}
 		const tree = await queryClient
 			.fetchQuery({
-				queryKey: explorerKeys.picked("combination", viewer, q, next),
-				queryFn: () => fetchCombination(q, next, member),
+				queryKey: [
+					...explorerKeys.picked("combination", viewer, q, next),
+					locale.language,
+				],
+				queryFn: () => fetchCombination(q, next, member, locale.language),
 			})
 			.catch(() => null)
 		// Still the combination that's waiting: not changed since.
@@ -535,7 +549,10 @@ export function ExplorerMap({
 
 	// ------------------------------------------------------------ the title nearest the focus
 
-	const pending = useRef<{ key: number | null; t: number }>({ key: null, t: 0 })
+	const pending = useRef<{ key: number | null; t: number }>({
+		key: null,
+		t: 0,
+	})
 	const lastCaptions = useRef("")
 	/** Each frame: the title nearest the focus becomes active after a short wait, and the captions near it. */
 	const compute = () => {
@@ -777,14 +794,14 @@ export function ExplorerMap({
 		if (!shown || island.bridge) return
 		const q: MapQuery = { ...shown, grouping: groupingOf(island.id) }
 		const local = localId(island.id)
-		const keyOf = explorerKeys.island(viewer, q, local)
+		const keyOf = [...explorerKeys.island(viewer, q, local), locale.language]
 		const id = keyOf.join("|")
 		if (asked.current.has(id)) return
 		asked.current.add(id)
 		queryClient
 			.fetchQuery({
 				queryKey: keyOf,
-				queryFn: () => fetchIsland(q, local, member),
+				queryFn: () => fetchIsland(q, local, member, locale.language),
 			})
 			.then((tree) => {
 				const e = engineRef.current
@@ -839,7 +856,7 @@ export function ExplorerMap({
 	goRef.current = goRegion
 	useEffect(() => {
 		if (!engine || !world || !shown) return
-		engine.setWorld(world, inputs, filterKey(shown))
+		engine.setWorld(world, inputs, `${filterKey(shown)}:${locale.language}`)
 		setActive(null)
 		picksRef.current = []
 		setPicksState([])

@@ -1,3 +1,4 @@
+import { presentationLanguage } from "../../../utils/media-presentation.ts"
 // What the TV's search says, and the search it asks for. Pure.
 //
 // The search is the one the Discover page behind the Expand key runs for the same person (`/discover?q=`), so the
@@ -146,12 +147,12 @@ export const tvSearchBody = (q: string, filters: SearchFilters) => ({
  * The key the Discover page keeps a search's answer under (`useDiscoverSearch`). The TV keeps its answer under the
  * same one, so the page behind the Expand key draws from it and does not search a second time.
  */
-export function tvSearchKey(q: string, filters: SearchFilters): string[] {
+export function tvSearchKey(q: string, filters: SearchFilters, language?: string): string[] {
 	const streaming = filters.streaming
 	const key = streaming?.providerIds.length
 		? `s=${streaming.country}:${[...streaming.providerIds].sort((a, b) => a - b).join(",")}`
 		: ""
-	return ["discover-search", `${q}|${key}|0`]
+	return ["discover-search", `${language ? `${presentationLanguage(language)}:` : ""}${q}|${key}|0`]
 }
 
 /** A search's answer as the Discover page keeps it: the ranked list as title keys, in the ranking's order. */

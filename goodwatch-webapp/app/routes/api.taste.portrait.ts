@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -46,11 +47,11 @@ async function respond(request: Request, guest?: GuestProgress) {
 	return json(await getTastePortrait(who, tab), { headers })
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	return respond(request)
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+async function canonicalAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const text = await request.text()
@@ -70,3 +71,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+export const action = presentCatalogLoader(canonicalAction, { live: true })

@@ -1,14 +1,78 @@
-/** Shared contract for native Letterboxd and Trakt exports. IMDb keeps its existing API. */
-export const IMPORT_SOURCES = ["letterboxd", "trakt"] as const
+import type { AnimeEntry } from "./anime-mapping.ts"
+
+/** Shared import contract. IMDb keeps its existing API. */
+export const IMPORT_SOURCES = [
+	"letterboxd",
+	"trakt",
+	"csv",
+	"movielens",
+	"kodi",
+	"tmdb",
+] as const
+export const IMPORT_SOURCE_NAMES = {
+	letterboxd: "Letterboxd",
+	trakt: "Trakt",
+	csv: "Generic CSV",
+	movielens: "MovieLens",
+	kodi: "Kodi",
+	tmdb: "TMDB",
+} as const
+export const IMPORT_SOURCE_FILE = {
+	letterboxd: "zip",
+	trakt: "zip",
+	csv: "csv",
+	movielens: "csv",
+	kodi: "xml",
+	tmdb: null,
+} as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
+export type FileImportSource = {
+	[Source in ImportSource]: (typeof IMPORT_SOURCE_FILE)[Source] extends string
+		? Source
+		: never
+}[ImportSource]
+export const isFileImportSource = (
+	source: ImportSource,
+): source is FileImportSource => IMPORT_SOURCE_FILE[source] !== null
 export const IMPORT_KINDS = [
 	"rating",
 	"watch",
 	"want",
 	"favorite",
 	"review",
+	"show_status",
 ] as const
 export type ImportKind = (typeof IMPORT_KINDS)[number]
+export const IMPORT_SHOW_STATUS_LABELS = {
+	watching: "Watching",
+	on_hold: "On hold",
+	dropped: "Dropped",
+	plan_to_watch: "Plan to watch → Want to See",
+	completed: "Completed → Seen",
+} as const
+export type ImportShowStatus =
+	| "watching"
+	| "on_hold"
+	| "dropped"
+	| "plan_to_watch"
+	| "completed"
+export function isApplicableStatus(
+	status: unknown,
+): status is Exclude<ImportShowStatus, "plan_to_watch"> {
+	return (
+		status === "watching" ||
+		status === "on_hold" ||
+		status === "dropped" ||
+		status === "completed"
+	)
+}
+
+/** Plan to watch is an intention, and must never replace tracking or existing watches. */
+export const canImportWantToSee = (
+	state: string | null | undefined,
+	hasWatches: boolean,
+) => (!state || state === "not_started") && !hasWatches
+
 export type ImportMediaType = "movie" | "show"
 export type ImportOutcome =
 	| "new"
@@ -30,16 +94,33 @@ export interface ImportObservation {
 	year: number | null
 	tmdbId: number | null
 	imdbId: string | null
+	/** Tracker entry scope; progress expands to episode watches, never a whole-show Seen. */
+	animeEntry?: AnimeEntry
 	episodeTmdbId?: number | null
+	episodeTvdbId?: number | null
+	episodeName?: string | null
+	/** Coordinates are usable only when the adapter explicitly knows their numbering. */
+	episodeNumbering?: "tmdb" | "unknown"
+	/** Explicit TMDB group, or a Netflix/part-count hint; label names its part/volume. */
+	episodeGroup?: { id?: string; label: string; groupCount?: number }
+	/** Special: applied, but never contributes to regular progress. */
+	episodeSpecial?: boolean
 	season?: number | null
 	episode?: number | null
+	/** Show-level source status; never an episode or season status. */
+	showStatus?: ImportShowStatus
+	/** Completed only means Seen with explicit coverage of the whole matched TMDB show. */
+	completionScope?: "show" | "part"
 	score?: number | null
 	review?: string | null
 	watchedAt?: string | null
 	precision?: "moment" | "day" | "unknown"
 	pass?: number
 	addedAt?: string | null
-	problem?: { outcome: "invalid" | "unsupported"; reason: string }
+	problem?: {
+		outcome: "invalid" | "unsupported" | "unmatched"
+		reason: string
+	}
 }
 
 export interface ParsedImport {
@@ -84,10 +165,14 @@ export interface ImportSummary {
 	operation?: "apply" | "undo"
 }
 
-// POST /api/imports/preview: multipart FormData { source, file }; returns { import }.
+// POST /api/imports/preview: multipart FormData { source, file, wishlist? } (wishlist is MovieLens only); returns { import }.
 // GET /api/imports: { imports }; GET /api/imports/:id: { import }.
 // GET /api/imports/:id/items?offset=0&limit=50&outcome=unmatched: { items, total }.
 // POST /api/imports/:id/confirm: ImportOptions JSON; returns { import }.
 // POST /api/imports/:id/undo: returns { import }.
 // GET /api/imports/:id/skipped: CSV of unapplied rows and reasons.
 // All errors: { error: string }, all routes require a member and private/no-store responses.
+
+/** Opaque IDs used in import return URLs and connect cookies. */
+export const IMPORT_ID_PATTERN =
+	/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/

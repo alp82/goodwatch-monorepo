@@ -19,7 +19,7 @@ FROM user_watch_log
 WHERE user_id = ?
 GROUP BY tmdb_id, media_type, pass`
 
-/** QS. The member's states. A Not started row only remembers a prompt, so no list reads it. */
+/** QS. The member's states. Not started prompts and empty first-insert receipts belong to no list. */
 export const STATES_QUERY = `
 SELECT tmdb_id, media_type, state, pass, state_changed_at
 FROM user_watch_state
@@ -28,7 +28,7 @@ WHERE user_id = ? AND state <> 'not_started'`
 /** Q1. The member's row for one title. Whole key: real-time, no refresh needed. */
 export const STATE_ROW_QUERY = `
 SELECT state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question,
-       updated_at, _seq_no, _primary_term
+       insert_token, updated_at, _seq_no, _primary_term
 FROM user_watch_state
 WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`
 
@@ -58,7 +58,7 @@ export const EPISODE_LIST_WITHOUT_OVERVIEW_QUERY = episodeListQuery("")
  * statement for all of them; the last parameter is midnight UTC of today. Public data.
  */
 export const upcomingEpisodesQuery = (shows: number) => `
-SELECT show_id, season_number, episode_number, name, air_date
+SELECT show_id, tmdb_id, season_number, episode_number, name, air_date
 FROM episode
 WHERE show_id IN (${Array.from({ length: shows }, () => "?").join(", ")})
   AND season_number > 0 AND removed_at IS NULL AND air_date > ?

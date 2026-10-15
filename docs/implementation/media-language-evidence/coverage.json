@@ -1,0 +1,1442 @@
+{
+  "date": "2026-10-14",
+  "source": "Crate production on 10.0.0.11, SELECT only; 10 named movies + 10 named shows",
+  "queries": {
+    "schemas": {
+      "sql": "SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='doc' AND table_name IN ('translation','media_image','episode','season','user_setting') ORDER BY table_name,ordinal_position",
+      "rows": [
+        {
+          "table_name": "episode",
+          "column_name": "show_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "tmdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "season_tmdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "season_number",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "episode_number",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "air_date",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "runtime",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "still_path",
+          "data_type": "text"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "episode_type",
+          "data_type": "text"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "tmdb_user_score_original",
+          "data_type": "double precision"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "tmdb_user_score_rating_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "imdb_id",
+          "data_type": "text"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "tvdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "removed_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "episode",
+          "column_name": "overview",
+          "data_type": "text"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "media_tmdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "media_type",
+          "data_type": "text"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "image_type",
+          "data_type": "text"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "url_path",
+          "data_type": "text"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "language_code",
+          "data_type": "text"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "aspect_ratio",
+          "data_type": "double precision"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "width",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "height",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "tmdb_vote_average",
+          "data_type": "double precision"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "tmdb_vote_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "media_image",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "season",
+          "column_name": "tmdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "season",
+          "column_name": "show_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "season",
+          "column_name": "name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "season",
+          "column_name": "season_number",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "season",
+          "column_name": "air_date",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "season",
+          "column_name": "episode_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "season",
+          "column_name": "overview",
+          "data_type": "text"
+        },
+        {
+          "table_name": "season",
+          "column_name": "poster_path",
+          "data_type": "text"
+        },
+        {
+          "table_name": "season",
+          "column_name": "vote_average",
+          "data_type": "double precision"
+        },
+        {
+          "table_name": "season",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "season",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "media_tmdb_id",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "media_type",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "language_code",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "country_code",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "english_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "title",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "overview",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "tagline",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "homepage",
+          "data_type": "text"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "runtime",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "translation",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "user_setting",
+          "column_name": "user_id",
+          "data_type": "text"
+        },
+        {
+          "table_name": "user_setting",
+          "column_name": "key",
+          "data_type": "text"
+        },
+        {
+          "table_name": "user_setting",
+          "column_name": "value",
+          "data_type": "text"
+        },
+        {
+          "table_name": "user_setting",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "user_setting",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        }
+      ]
+    },
+    "translation_tables": {
+      "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND (table_name LIKE '%translation%' OR table_name LIKE '%locale%') ORDER BY table_name",
+      "rows": [
+        {
+          "table_name": "translation"
+        }
+      ]
+    },
+    "movies": {
+      "sql": "SELECT tmdb_id,title,original_language_code FROM movie WHERE tmdb_id IN (550,278,238,155,27205,157336,603,13,129,496243) ORDER BY tmdb_id",
+      "rows": [
+        {
+          "tmdb_id": 13,
+          "title": "Forrest Gump",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 129,
+          "title": "Spirited Away",
+          "original_language_code": "ja"
+        },
+        {
+          "tmdb_id": 155,
+          "title": "The Dark Knight",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 238,
+          "title": "The Godfather",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 278,
+          "title": "The Shawshank Redemption",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 550,
+          "title": "Fight Club",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 603,
+          "title": "The Matrix",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 27205,
+          "title": "Inception",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 157336,
+          "title": "Interstellar",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 496243,
+          "title": "Parasite",
+          "original_language_code": "ko"
+        }
+      ]
+    },
+    "shows": {
+      "sql": "SELECT tmdb_id,title,original_language_code FROM show WHERE tmdb_id IN (1396,1399,66732,42009,1668,2316,1398,100088,119051,93405) ORDER BY tmdb_id",
+      "rows": [
+        {
+          "tmdb_id": 1396,
+          "title": "Breaking Bad",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 1398,
+          "title": "The Sopranos",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 1399,
+          "title": "Game of Thrones",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 1668,
+          "title": "Friends",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 2316,
+          "title": "The Office",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 42009,
+          "title": "Black Mirror",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 66732,
+          "title": "Stranger Things",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 93405,
+          "title": "Squid Game",
+          "original_language_code": "ko"
+        },
+        {
+          "tmdb_id": 100088,
+          "title": "The Last of Us",
+          "original_language_code": "en"
+        },
+        {
+          "tmdb_id": 119051,
+          "title": "Wednesday",
+          "original_language_code": "en"
+        }
+      ]
+    },
+    "text_coverage": {
+      "sql": "SELECT language_code,country_code,COUNT(*) AS rows,SUM(CASE WHEN trim(coalesce(title,'')) <> '' THEN 1 ELSE 0 END) AS titles,SUM(CASE WHEN trim(coalesce(overview,'')) <> '' THEN 1 ELSE 0 END) AS overviews,SUM(CASE WHEN trim(coalesce(tagline,'')) <> '' THEN 1 ELSE 0 END) AS taglines FROM translation WHERE ((media_type='movie' AND media_tmdb_id IN (550,278,238,155,27205,157336,603,13,129,496243)) OR (media_type='show' AND media_tmdb_id IN (1396,1399,66732,42009,1668,2316,1398,100088,119051,93405))) GROUP BY language_code,country_code ORDER BY language_code,country_code",
+      "rows": [
+        {
+          "language_code": "ab",
+          "country_code": "AB",
+          "rows": 1,
+          "titles": 0,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "ar",
+          "country_code": "AE",
+          "rows": 9,
+          "titles": 7,
+          "overviews": 8,
+          "taglines": 3
+        },
+        {
+          "language_code": "ar",
+          "country_code": "SA",
+          "rows": 20,
+          "titles": 18,
+          "overviews": 20,
+          "taglines": 17
+        },
+        {
+          "language_code": "as",
+          "country_code": "AS",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "az",
+          "country_code": "AZ",
+          "rows": 9,
+          "titles": 8,
+          "overviews": 6,
+          "taglines": 0
+        },
+        {
+          "language_code": "be",
+          "country_code": "BY",
+          "rows": 9,
+          "titles": 9,
+          "overviews": 7,
+          "taglines": 3
+        },
+        {
+          "language_code": "bg",
+          "country_code": "BG",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 14
+        },
+        {
+          "language_code": "bn",
+          "country_code": "BD",
+          "rows": 5,
+          "titles": 4,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "bo",
+          "country_code": "BO",
+          "rows": 1,
+          "titles": 0,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "bs",
+          "country_code": "BS",
+          "rows": 13,
+          "titles": 4,
+          "overviews": 11,
+          "taglines": 3
+        },
+        {
+          "language_code": "ca",
+          "country_code": "ES",
+          "rows": 16,
+          "titles": 12,
+          "overviews": 16,
+          "taglines": 13
+        },
+        {
+          "language_code": "cs",
+          "country_code": "CZ",
+          "rows": 20,
+          "titles": 16,
+          "overviews": 20,
+          "taglines": 12
+        },
+        {
+          "language_code": "cv",
+          "country_code": "CV",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "da",
+          "country_code": "DK",
+          "rows": 20,
+          "titles": 6,
+          "overviews": 20,
+          "taglines": 4
+        },
+        {
+          "language_code": "de",
+          "country_code": "AT",
+          "rows": 9,
+          "titles": 2,
+          "overviews": 4,
+          "taglines": 1
+        },
+        {
+          "language_code": "de",
+          "country_code": "CH",
+          "rows": 2,
+          "titles": 1,
+          "overviews": 2,
+          "taglines": 1
+        },
+        {
+          "language_code": "de",
+          "country_code": "DE",
+          "rows": 20,
+          "titles": 7,
+          "overviews": 20,
+          "taglines": 17
+        },
+        {
+          "language_code": "el",
+          "country_code": "GR",
+          "rows": 20,
+          "titles": 10,
+          "overviews": 20,
+          "taglines": 13
+        },
+        {
+          "language_code": "en",
+          "country_code": "US",
+          "rows": 20,
+          "titles": 3,
+          "overviews": 20,
+          "taglines": 20
+        },
+        {
+          "language_code": "eo",
+          "country_code": "EO",
+          "rows": 4,
+          "titles": 3,
+          "overviews": 4,
+          "taglines": 1
+        },
+        {
+          "language_code": "es",
+          "country_code": "ES",
+          "rows": 20,
+          "titles": 12,
+          "overviews": 20,
+          "taglines": 18
+        },
+        {
+          "language_code": "es",
+          "country_code": "MX",
+          "rows": 20,
+          "titles": 14,
+          "overviews": 20,
+          "taglines": 15
+        },
+        {
+          "language_code": "et",
+          "country_code": "EE",
+          "rows": 18,
+          "titles": 17,
+          "overviews": 18,
+          "taglines": 3
+        },
+        {
+          "language_code": "eu",
+          "country_code": "ES",
+          "rows": 7,
+          "titles": 6,
+          "overviews": 6,
+          "taglines": 1
+        },
+        {
+          "language_code": "fa",
+          "country_code": "IR",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 7
+        },
+        {
+          "language_code": "fi",
+          "country_code": "FI",
+          "rows": 20,
+          "titles": 10,
+          "overviews": 20,
+          "taglines": 3
+        },
+        {
+          "language_code": "fr",
+          "country_code": "CA",
+          "rows": 20,
+          "titles": 13,
+          "overviews": 19,
+          "taglines": 11
+        },
+        {
+          "language_code": "fr",
+          "country_code": "FR",
+          "rows": 20,
+          "titles": 9,
+          "overviews": 20,
+          "taglines": 18
+        },
+        {
+          "language_code": "gl",
+          "country_code": "ES",
+          "rows": 3,
+          "titles": 2,
+          "overviews": 3,
+          "taglines": 2
+        },
+        {
+          "language_code": "he",
+          "country_code": "IL",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 15
+        },
+        {
+          "language_code": "hi",
+          "country_code": "IN",
+          "rows": 17,
+          "titles": 11,
+          "overviews": 10,
+          "taglines": 0
+        },
+        {
+          "language_code": "hr",
+          "country_code": "HR",
+          "rows": 20,
+          "titles": 18,
+          "overviews": 20,
+          "taglines": 14
+        },
+        {
+          "language_code": "ht",
+          "country_code": "HT",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "hu",
+          "country_code": "HU",
+          "rows": 20,
+          "titles": 16,
+          "overviews": 20,
+          "taglines": 11
+        },
+        {
+          "language_code": "hy",
+          "country_code": "AM",
+          "rows": 4,
+          "titles": 3,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "id",
+          "country_code": "ID",
+          "rows": 17,
+          "titles": 5,
+          "overviews": 15,
+          "taglines": 1
+        },
+        {
+          "language_code": "is",
+          "country_code": "IS",
+          "rows": 3,
+          "titles": 3,
+          "overviews": 2,
+          "taglines": 0
+        },
+        {
+          "language_code": "it",
+          "country_code": "IT",
+          "rows": 20,
+          "titles": 12,
+          "overviews": 20,
+          "taglines": 14
+        },
+        {
+          "language_code": "ja",
+          "country_code": "JP",
+          "rows": 20,
+          "titles": 19,
+          "overviews": 20,
+          "taglines": 11
+        },
+        {
+          "language_code": "ka",
+          "country_code": "GE",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 14,
+          "taglines": 3
+        },
+        {
+          "language_code": "kk",
+          "country_code": "KZ",
+          "rows": 7,
+          "titles": 7,
+          "overviews": 3,
+          "taglines": 0
+        },
+        {
+          "language_code": "kn",
+          "country_code": "IN",
+          "rows": 3,
+          "titles": 3,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "ko",
+          "country_code": "KR",
+          "rows": 20,
+          "titles": 18,
+          "overviews": 20,
+          "taglines": 13
+        },
+        {
+          "language_code": "ku",
+          "country_code": "TR",
+          "rows": 3,
+          "titles": 3,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "ky",
+          "country_code": "KG",
+          "rows": 3,
+          "titles": 3,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "lb",
+          "country_code": "LB",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 1,
+          "taglines": 0
+        },
+        {
+          "language_code": "lt",
+          "country_code": "LT",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 1
+        },
+        {
+          "language_code": "lv",
+          "country_code": "LV",
+          "rows": 18,
+          "titles": 18,
+          "overviews": 16,
+          "taglines": 2
+        },
+        {
+          "language_code": "mk",
+          "country_code": "MK",
+          "rows": 8,
+          "titles": 7,
+          "overviews": 4,
+          "taglines": 2
+        },
+        {
+          "language_code": "ml",
+          "country_code": "IN",
+          "rows": 7,
+          "titles": 7,
+          "overviews": 4,
+          "taglines": 0
+        },
+        {
+          "language_code": "mn",
+          "country_code": "MN",
+          "rows": 2,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "mr",
+          "country_code": "IN",
+          "rows": 2,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "ms",
+          "country_code": "MY",
+          "rows": 7,
+          "titles": 2,
+          "overviews": 6,
+          "taglines": 0
+        },
+        {
+          "language_code": "ms",
+          "country_code": "SG",
+          "rows": 1,
+          "titles": 0,
+          "overviews": 1,
+          "taglines": 0
+        },
+        {
+          "language_code": "my",
+          "country_code": "MY",
+          "rows": 8,
+          "titles": 1,
+          "overviews": 5,
+          "taglines": 0
+        },
+        {
+          "language_code": "nb",
+          "country_code": "NO",
+          "rows": 7,
+          "titles": 3,
+          "overviews": 5,
+          "taglines": 0
+        },
+        {
+          "language_code": "ne",
+          "country_code": "NP",
+          "rows": 3,
+          "titles": 3,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "nl",
+          "country_code": "BE",
+          "rows": 8,
+          "titles": 0,
+          "overviews": 5,
+          "taglines": 0
+        },
+        {
+          "language_code": "nl",
+          "country_code": "NL",
+          "rows": 20,
+          "titles": 6,
+          "overviews": 20,
+          "taglines": 2
+        },
+        {
+          "language_code": "nn",
+          "country_code": "NN",
+          "rows": 2,
+          "titles": 0,
+          "overviews": 2,
+          "taglines": 0
+        },
+        {
+          "language_code": "no",
+          "country_code": "NO",
+          "rows": 20,
+          "titles": 9,
+          "overviews": 20,
+          "taglines": 1
+        },
+        {
+          "language_code": "pa",
+          "country_code": "IN",
+          "rows": 2,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "pl",
+          "country_code": "PL",
+          "rows": 20,
+          "titles": 14,
+          "overviews": 20,
+          "taglines": 13
+        },
+        {
+          "language_code": "pt",
+          "country_code": "BR",
+          "rows": 20,
+          "titles": 14,
+          "overviews": 20,
+          "taglines": 20
+        },
+        {
+          "language_code": "pt",
+          "country_code": "PT",
+          "rows": 20,
+          "titles": 15,
+          "overviews": 20,
+          "taglines": 14
+        },
+        {
+          "language_code": "ro",
+          "country_code": "RO",
+          "rows": 20,
+          "titles": 15,
+          "overviews": 20,
+          "taglines": 17
+        },
+        {
+          "language_code": "ru",
+          "country_code": "RU",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 19
+        },
+        {
+          "language_code": "sa",
+          "country_code": "SA",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "si",
+          "country_code": "LK",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "sk",
+          "country_code": "SK",
+          "rows": 19,
+          "titles": 14,
+          "overviews": 19,
+          "taglines": 8
+        },
+        {
+          "language_code": "sl",
+          "country_code": "SI",
+          "rows": 20,
+          "titles": 18,
+          "overviews": 20,
+          "taglines": 14
+        },
+        {
+          "language_code": "so",
+          "country_code": "SO",
+          "rows": 4,
+          "titles": 3,
+          "overviews": 4,
+          "taglines": 3
+        },
+        {
+          "language_code": "sq",
+          "country_code": "AL",
+          "rows": 1,
+          "titles": 0,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "sr",
+          "country_code": "RS",
+          "rows": 20,
+          "titles": 19,
+          "overviews": 20,
+          "taglines": 11
+        },
+        {
+          "language_code": "sv",
+          "country_code": "SE",
+          "rows": 20,
+          "titles": 7,
+          "overviews": 20,
+          "taglines": 12
+        },
+        {
+          "language_code": "ta",
+          "country_code": "IN",
+          "rows": 4,
+          "titles": 4,
+          "overviews": 1,
+          "taglines": 0
+        },
+        {
+          "language_code": "te",
+          "country_code": "IN",
+          "rows": 2,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "th",
+          "country_code": "TH",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 6
+        },
+        {
+          "language_code": "tl",
+          "country_code": "PH",
+          "rows": 6,
+          "titles": 2,
+          "overviews": 5,
+          "taglines": 0
+        },
+        {
+          "language_code": "tr",
+          "country_code": "TR",
+          "rows": 20,
+          "titles": 12,
+          "overviews": 20,
+          "taglines": 15
+        },
+        {
+          "language_code": "tt",
+          "country_code": "TT",
+          "rows": 2,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "tw",
+          "country_code": "TW",
+          "rows": 4,
+          "titles": 2,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "ug",
+          "country_code": "UG",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "uk",
+          "country_code": "UA",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 18
+        },
+        {
+          "language_code": "ur",
+          "country_code": "PK",
+          "rows": 8,
+          "titles": 7,
+          "overviews": 4,
+          "taglines": 0
+        },
+        {
+          "language_code": "uz",
+          "country_code": "UZ",
+          "rows": 15,
+          "titles": 14,
+          "overviews": 5,
+          "taglines": 0
+        },
+        {
+          "language_code": "vi",
+          "country_code": "VN",
+          "rows": 20,
+          "titles": 19,
+          "overviews": 20,
+          "taglines": 13
+        },
+        {
+          "language_code": "vo",
+          "country_code": "VO",
+          "rows": 1,
+          "titles": 1,
+          "overviews": 0,
+          "taglines": 0
+        },
+        {
+          "language_code": "zh",
+          "country_code": "CN",
+          "rows": 20,
+          "titles": 19,
+          "overviews": 20,
+          "taglines": 16
+        },
+        {
+          "language_code": "zh",
+          "country_code": "HK",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 3
+        },
+        {
+          "language_code": "zh",
+          "country_code": "SG",
+          "rows": 9,
+          "titles": 7,
+          "overviews": 6,
+          "taglines": 2
+        },
+        {
+          "language_code": "zh",
+          "country_code": "TW",
+          "rows": 20,
+          "titles": 20,
+          "overviews": 20,
+          "taglines": 11
+        }
+      ]
+    },
+    "poster_coverage": {
+      "sql": "SELECT language_code,COUNT(DISTINCT media_type || '-' || CAST(media_tmdb_id AS TEXT)) AS titles FROM media_image WHERE ((media_type='movie' AND media_tmdb_id IN (550,278,238,155,27205,157336,603,13,129,496243)) OR (media_type='show' AND media_tmdb_id IN (1396,1399,66732,42009,1668,2316,1398,100088,119051,93405))) AND image_type='posters' AND trim(coalesce(url_path,'')) <> '' GROUP BY language_code ORDER BY language_code",
+      "rows": [
+        {
+          "language_code": "",
+          "titles": 20
+        },
+        {
+          "language_code": "ar",
+          "titles": 20
+        },
+        {
+          "language_code": "be",
+          "titles": 5
+        },
+        {
+          "language_code": "bg",
+          "titles": 20
+        },
+        {
+          "language_code": "bn",
+          "titles": 2
+        },
+        {
+          "language_code": "ca",
+          "titles": 10
+        },
+        {
+          "language_code": "cs",
+          "titles": 14
+        },
+        {
+          "language_code": "da",
+          "titles": 7
+        },
+        {
+          "language_code": "de",
+          "titles": 13
+        },
+        {
+          "language_code": "ee",
+          "titles": 1
+        },
+        {
+          "language_code": "el",
+          "titles": 11
+        },
+        {
+          "language_code": "en",
+          "titles": 20
+        },
+        {
+          "language_code": "eo",
+          "titles": 1
+        },
+        {
+          "language_code": "es",
+          "titles": 19
+        },
+        {
+          "language_code": "et",
+          "titles": 1
+        },
+        {
+          "language_code": "eu",
+          "titles": 2
+        },
+        {
+          "language_code": "fa",
+          "titles": 18
+        },
+        {
+          "language_code": "fi",
+          "titles": 5
+        },
+        {
+          "language_code": "fj",
+          "titles": 1
+        },
+        {
+          "language_code": "fo",
+          "titles": 1
+        },
+        {
+          "language_code": "fr",
+          "titles": 19
+        },
+        {
+          "language_code": "gl",
+          "titles": 3
+        },
+        {
+          "language_code": "gn",
+          "titles": 1
+        },
+        {
+          "language_code": "he",
+          "titles": 20
+        },
+        {
+          "language_code": "hi",
+          "titles": 5
+        },
+        {
+          "language_code": "hr",
+          "titles": 14
+        },
+        {
+          "language_code": "hu",
+          "titles": 16
+        },
+        {
+          "language_code": "id",
+          "titles": 1
+        },
+        {
+          "language_code": "is",
+          "titles": 1
+        },
+        {
+          "language_code": "it",
+          "titles": 15
+        },
+        {
+          "language_code": "ja",
+          "titles": 15
+        },
+        {
+          "language_code": "ka",
+          "titles": 10
+        },
+        {
+          "language_code": "kk",
+          "titles": 8
+        },
+        {
+          "language_code": "ko",
+          "titles": 17
+        },
+        {
+          "language_code": "ks",
+          "titles": 1
+        },
+        {
+          "language_code": "ku",
+          "titles": 3
+        },
+        {
+          "language_code": "la",
+          "titles": 1
+        },
+        {
+          "language_code": "lo",
+          "titles": 1
+        },
+        {
+          "language_code": "lt",
+          "titles": 2
+        },
+        {
+          "language_code": "mk",
+          "titles": 6
+        },
+        {
+          "language_code": "ml",
+          "titles": 1
+        },
+        {
+          "language_code": "mn",
+          "titles": 2
+        },
+        {
+          "language_code": "mo",
+          "titles": 1
+        },
+        {
+          "language_code": "nl",
+          "titles": 5
+        },
+        {
+          "language_code": "nn",
+          "titles": 1
+        },
+        {
+          "language_code": "no",
+          "titles": 5
+        },
+        {
+          "language_code": "oc",
+          "titles": 1
+        },
+        {
+          "language_code": "pl",
+          "titles": 17
+        },
+        {
+          "language_code": "ps",
+          "titles": 1
+        },
+        {
+          "language_code": "pt",
+          "titles": 19
+        },
+        {
+          "language_code": "ro",
+          "titles": 17
+        },
+        {
+          "language_code": "ru",
+          "titles": 20
+        },
+        {
+          "language_code": "sk",
+          "titles": 10
+        },
+        {
+          "language_code": "sl",
+          "titles": 7
+        },
+        {
+          "language_code": "sq",
+          "titles": 1
+        },
+        {
+          "language_code": "sr",
+          "titles": 10
+        },
+        {
+          "language_code": "sv",
+          "titles": 7
+        },
+        {
+          "language_code": "sw",
+          "titles": 1
+        },
+        {
+          "language_code": "ta",
+          "titles": 2
+        },
+        {
+          "language_code": "te",
+          "titles": 1
+        },
+        {
+          "language_code": "th",
+          "titles": 15
+        },
+        {
+          "language_code": "tr",
+          "titles": 11
+        },
+        {
+          "language_code": "uk",
+          "titles": 20
+        },
+        {
+          "language_code": "uz",
+          "titles": 3
+        },
+        {
+          "language_code": "ve",
+          "titles": 1
+        },
+        {
+          "language_code": "vi",
+          "titles": 18
+        },
+        {
+          "language_code": "za",
+          "titles": 1
+        },
+        {
+          "language_code": "zh",
+          "titles": 20
+        }
+      ]
+    }
+  }
+}

@@ -1,3 +1,7 @@
+import {
+	apiDisplayLanguage,
+	localizeTitlePayload,
+} from "../media-payload.server.ts"
 // The `/api/explorer/*` endpoints share this: members send GET and are read from the session; guests send POST with
 // the guest progress their browser holds ({ guest: { interactions, country, services } }), and a signed-in member's
 // POST ignores it.
@@ -11,6 +15,9 @@ import {
 import type { TasteInteraction } from "~/ui/taste/types"
 import { ExplorerUnavailable } from "./index.server"
 
+// The production world held 502 unique titles for a new guest and 704 for a guest with ten ratings (2026-10-15), so
+// 200 left most groupings in English. 800 covers both in four overlay batches; anything beyond stays canonical.
+export const EXPLORER_OVERLAY_MAX_TITLES = 800
 const MAX_BODY_CHARS = 256 * 1024
 const headers = { "Cache-Control": "private, no-store" }
 
@@ -61,12 +68,20 @@ export async function explorerResponse(
 		const result = await answer(ctx, new URL(request.url).searchParams)
 		if (result === null) return fail(404, "Not found")
 		const totalMs = performance.now() - startedAt
-		return json(result, {
-			headers: {
-				...headers,
-				"Server-Timing": `viewer;dur=${viewerMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,
+		const language = apiDisplayLanguage(request)
+		return json(
+			language
+				? await localizeTitlePayload(result, language, undefined, undefined, {
+						maxTitles: EXPLORER_OVERLAY_MAX_TITLES,
+					})
+				: result,
+			{
+				headers: {
+					...headers,
+					"Server-Timing": `viewer;dur=${viewerMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,
+				},
 			},
-		})
+		)
 	} catch (error) {
 		if (error instanceof ExplorerUnavailable)
 			return json(

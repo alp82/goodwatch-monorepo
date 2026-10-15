@@ -50,7 +50,7 @@ export interface ShowSessionOptions {
 	episodes: readonly ListedEpisode[]
 	/** What the server holds for the member and this show. */
 	copy: ShowCopy
-	/** Sends one action. Rejects when the request fails. */
+	/** Sends one action. Rejects when the request fails, with `ActionConflict` when another action got in between. */
 	send: (sent: SentAction) => Promise<ActionAnswer>
 	/** Called after every change of what the page shows. */
 	onChange?: () => void
@@ -62,6 +62,20 @@ export interface ShowSessionOptions {
 
 export const FAILED =
 	"That didn't reach us, so the last change was taken back. Please try again."
+export const CONFLICT =
+	"Another change to this show came in at the same time, so yours was taken back. Check where it stands and try again."
+
+/**
+ * The server did not apply the action because another action on the show came in between, maybe the member undoing
+ * this one on another device. The page is taken back and read again, and the action is not sent again over that later
+ * choice. The page says it in its own words, never in the words of the response.
+ */
+export class ActionConflict extends Error {
+	constructor() {
+		super(CONFLICT)
+		this.name = "ActionConflict"
+	}
+}
 
 export class ShowSession {
 	private options: ShowSessionOptions
@@ -150,7 +164,9 @@ export class ShowSession {
 					actionId: item.actionId,
 					restore: item.restore,
 				})
-			} catch {}
+			} catch (error) {
+				if (error instanceof ActionConflict) message = CONFLICT
+			}
 			if (answer?.status === "applied") {
 				this.base = confirmed(this.base, answer)
 				this.waiting.shift()

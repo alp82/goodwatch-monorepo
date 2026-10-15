@@ -53,7 +53,7 @@ function Clamshell({ item, rank, t }: { item: CardTitle; rank: number; t: Theme 
 						textTransform: "uppercase",
 					})}
 				>
-					{item.title}
+					<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 				</div>
 			)}
 			<div
@@ -128,7 +128,7 @@ function ShelfLabel({ item, rank, t }: { item: CardTitle; rank: number; t: Theme
 	return (
 		<div style={flex({ width: BOX_W, height: 40, backgroundColor: "#f4f1e8", alignItems: "center", color: "#1a1a1a" })}>
 			<div style={flex({ width: 46, height: 40, backgroundColor: t.accent, alignItems: "center", justifyContent: "center", fontFamily: "Anton", fontSize: 24, color: t.ink })}>{String(rank + 1).padStart(2, "0")}</div>
-			<div style={{ display: "block", flex: 1, minWidth: 0, paddingLeft: 10, fontFamily: "Space Mono", fontWeight: 700, fontSize: 15, textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+			<div style={{ display: "block", flex: 1, minWidth: 0, paddingLeft: 10, fontFamily: "Space Mono", fontWeight: 700, fontSize: 15, textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 			<div style={{ display: "flex", paddingRight: 10, paddingLeft: 6, fontFamily: "Space Mono", fontSize: 13, color: "#6a6a6a" }}>{item.year ?? ""}</div>
 		</div>
 	)

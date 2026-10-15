@@ -1,0 +1,12 @@
+{
+  "summary": "Social rss",
+  "description": "The nineteen verified publisher feeds; bounded WordPress backfill pages.",
+  "lock": "!inline f/social/rss.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

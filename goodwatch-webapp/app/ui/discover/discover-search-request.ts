@@ -55,8 +55,10 @@ export async function runDiscoverSearch(
 	signal: AbortSignal,
 	onReading: (chips: ReadingChip[]) => void,
 	onProgress?: (result: DiscoverSearchResult) => void,
+	language?: string,
 ): Promise<DiscoverSearchResult> {
 	const batch = await requestSearch({
+		language,
 		// discover: the whole ranked list (up to 100 titles), which the results endpoint filters and counts.
 		body: { q, filters, allTitles, discover: true },
 		signal,

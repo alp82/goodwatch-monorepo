@@ -1,6 +1,7 @@
 // Finds what a query refers to: people, teams and studios by name, or a "like X" title. A reference brings its own
 // titles (weighted by credit), the seed titles its profile is built from, an intent, and the residual query: the
 // words that remain once the names and filler words are removed ("funny" in "funny brad pitt shows").
+import { aliasReference } from "./aliases.server.ts"
 import { looksForeign, spell, splitNegation } from "./query-parsing.server.ts"
 import type { NameEntity, SearchIndex } from "./search-index.server.ts"
 import {
@@ -237,6 +238,14 @@ const NOT_LIKE = new Set(
 )
 const NOT_AFTER_BUT = new Set("not no without never less".split(" "))
 const TITLE_MAX_WORDS = 8
+// The shortest "like X" key: 3 characters, 2 for a Chinese, Japanese or Korean name ("教父", "대부"), where two
+// characters are a whole title.
+const MIN_KEY_LENGTH = 3
+const MIN_CJK_KEY_LENGTH = 2
+const CJK =
+	/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+const keyTooShort = (key: string) =>
+	key.length < (CJK.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH)
 
 /**
  * The longest title (up to 8 words) right after a like-marker, or at the start of the query running up to "but"
@@ -258,24 +267,49 @@ function findReference(
 	const but = toks.indexOf("but", 1)
 	if (but > 0 && but + 1 < toks.length && !NOT_AFTER_BUT.has(toks[but + 1]))
 		starts.push([0, 0, but])
-	for (const [markerStart, s, end] of starts) {
-		for (let k = Math.min(toks.length - s, TITLE_MAX_WORDS); k >= 1; k--) {
-			const key = toks.slice(s, s + k).join(" ")
-			if (
-				key.length < 3 ||
-				STOPWORDS.has(key) ||
-				(end !== null && s + k !== end)
-			)
-				continue
-			const row = index.referenceTitles.get(key)
-			if (row !== undefined) {
-				const used = new Set<number>()
-				for (let p = markerStart; p < s + k; p++) used.add(p)
-				return { row, used }
+	// The titles first, over every span; a localized name only when no title matched at all (aliases.server.ts), and
+	// never with the key of a title, even one below the reference vote floor.
+	const lookups: ((key: string) => number | undefined)[] = [
+		(key) => index.referenceTitles.get(key),
+		(key) =>
+			titleKeys(index).has(key) ? undefined : aliasReference(index, key),
+	]
+	for (const lookup of lookups) {
+		for (const [markerStart, s, end] of starts) {
+			for (let k = Math.min(toks.length - s, TITLE_MAX_WORDS); k >= 1; k--) {
+				const key = toks.slice(s, s + k).join(" ")
+				if (
+					keyTooShort(key) ||
+					STOPWORDS.has(key) ||
+					(end !== null && s + k !== end)
+				)
+					continue
+				const row = lookup(key)
+				if (row !== undefined) {
+					const used = new Set<number>()
+					for (let p = markerStart; p < s + k; p++) used.add(p)
+					return { row, used }
+				}
 			}
 		}
 	}
 	return null
+}
+
+const titleKeysByIndex = new WeakMap<SearchIndex, Set<string>>()
+
+/** Every title's and original title's "like X" keys (normalized, also without a leading "the"), whatever its votes. */
+function titleKeys(index: SearchIndex): Set<string> {
+	let keys = titleKeysByIndex.get(index)
+	if (!keys) {
+		keys = new Set()
+		for (const { name } of index.titleNames) {
+			keys.add(name)
+			if (name.startsWith("the ")) keys.add(name.slice(4))
+		}
+		titleKeysByIndex.set(index, keys)
+	}
+	return keys
 }
 
 /** The reference and the titles whose title contains its the-less title, when that is distinctive. */

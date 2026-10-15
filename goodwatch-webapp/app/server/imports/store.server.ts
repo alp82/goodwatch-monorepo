@@ -1,9 +1,10 @@
-import type {
-	ImportItem,
-	ImportKind,
-	ImportOutcome,
-	ImportSource,
-	ImportSummary,
+import {
+	IMPORT_SOURCES,
+	type ImportItem,
+	type ImportKind,
+	type ImportOutcome,
+	type ImportSource,
+	type ImportSummary,
 } from "~/domain/imports"
 import { execute, query } from "~/utils/crate"
 import { csvLine } from "../import-csv.ts"
@@ -74,7 +75,7 @@ export interface ImportRow {
 const COLUMNS =
 	"id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 const native = (source: string): source is ImportSource =>
-	source === "letterboxd" || source === "trakt"
+	IMPORT_SOURCES.some((value) => value === source)
 const parse = <T>(value: string | null, fallback: T): T => {
 	try {
 		return value ? (JSON.parse(value) as T) : fallback
@@ -89,7 +90,14 @@ export const isStalled = (row: ImportRow) =>
 	ms(row.read_at) - ms(row.updated_at) > STALL_MS
 
 export function summarize(row: ImportRow): ImportSummary {
-	const emptyKinds = { rating: 0, watch: 0, want: 0, favorite: 0, review: 0 }
+	const emptyKinds = {
+		rating: 0,
+		watch: 0,
+		want: 0,
+		favorite: 0,
+		review: 0,
+		show_status: 0,
+	}
 	const storedOptions = parse<
 		| ({ direction?: "apply" | "undo" } & NonNullable<ImportSummary["options"]>)
 		| null
@@ -111,7 +119,7 @@ export function summarize(row: ImportRow): ImportSummary {
 			unsupported: 0,
 			invalid: 0,
 		}),
-		kinds: parse(row.kinds, emptyKinds),
+		kinds: { ...emptyKinds, ...parse(row.kinds, emptyKinds) },
 		warnings: parse(row.warnings, []),
 		options: storedOptions
 			? {
@@ -159,8 +167,8 @@ export async function getImportRow(
 }
 export const listImportRows = (userId: string) =>
 	select<ImportRow>(
-		`SELECT ${COLUMNS} FROM doc.user_import WHERE user_id = ? AND source IN ('letterboxd','trakt') AND status <> 'preview' ORDER BY created_at DESC LIMIT 100`,
-		[userId],
+		`SELECT ${COLUMNS} FROM doc.user_import WHERE user_id = ? AND source IN (${marks(IMPORT_SOURCES.length)}) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100`,
+		[userId, ...IMPORT_SOURCES],
 	)
 export async function claim(row: ImportRow, set: string, params: Param[]) {
 	const result = await run(
@@ -222,10 +230,15 @@ export async function listItems(
 	)
 	const items = rows.map((row): ImportItem => {
 		const payload = parse<
-			ImportItem & { _preview?: unknown; journal?: unknown }
+			ImportItem & {
+				_preview?: unknown
+				_previewStatus?: unknown
+				journal?: unknown
+			}
 		>(row.payload, {} as ImportItem)
 		const {
 			_preview: _privatePreview,
+			_previewStatus: _privateStatus,
 			journal: _privateJournal,
 			...observation
 		} = payload

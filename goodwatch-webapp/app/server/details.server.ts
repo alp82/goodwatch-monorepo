@@ -1,3 +1,4 @@
+import { overlayTitles } from "./media-overlay.server.ts"
 import { CREW_ROLES } from "~/ui/details/crew-roles"
 import { query } from "~/utils/crate"
 import { CAST_DOCUMENT_SIZE } from "~/utils/title-cast"
@@ -68,7 +69,8 @@ const _fetchFromDB = async (
 						? `seasons AS (
 								SELECT {
 										season_number = s.season_number,
-										episode_count = s.episode_count
+										episode_count = s.episode_count,
+                                        tmdb_id = s.tmdb_id
 								} AS val
 								FROM season s
 								WHERE s.show_id = (SELECT tmdb_id FROM media_data) 
@@ -316,5 +318,34 @@ const _fetchFromDB = async (
 	return media
 }
 
-export const { getDetailsForMovie, getDetailsForShow } =
-	createTitleDetailsGetters(_fetchFromDB)
+const canonicalDetails = createTitleDetailsGetters(_fetchFromDB)
+export async function getDetailsForMovie(
+	params: import("./types/details-types").DetailsMovieParams,
+	options?: { bypassCache?: boolean; canonical?: boolean },
+) {
+	const media = await canonicalDetails.getDetailsForMovie(
+		{ ...params, language: "en" },
+		{ bypassCache: !!options?.bypassCache },
+	)
+	if (options?.canonical) return media
+	const [details] = await overlayTitles(
+		[{ ...media.details, media_type: "movie" as const }],
+		params.language,
+	)
+	return { ...media, details }
+}
+export async function getDetailsForShow(
+	params: import("./types/details-types").DetailsShowParams,
+	options?: { bypassCache?: boolean; canonical?: boolean },
+) {
+	const media = await canonicalDetails.getDetailsForShow(
+		{ ...params, language: "en" },
+		{ bypassCache: !!options?.bypassCache },
+	)
+	if (options?.canonical) return media
+	const [details] = await overlayTitles(
+		[{ ...media.details, media_type: "show" as const }],
+		params.language,
+	)
+	return { ...media, details }
+}

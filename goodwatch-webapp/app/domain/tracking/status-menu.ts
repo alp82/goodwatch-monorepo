@@ -24,6 +24,10 @@ import type { DateWords } from "./seen-press.ts"
  * instead.
  */
 export const MENU_PLACE: Record<TableEvent, "menu" | (string & {})> = {
+	import_watching: "The import preview and receipt.",
+	import_on_hold: "The import preview and receipt.",
+	import_dropped: "The import preview and receipt.",
+	import_completed: "The import preview and receipt.",
 	pressSeen: "menu",
 	undoSeen: "menu",
 	restoreSeen: "The Undo in the toast that follows Take back Seen.",

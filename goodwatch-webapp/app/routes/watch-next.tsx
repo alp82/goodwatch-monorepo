@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // Watch next: the top of the Wishlist under the person's chosen sort and moods, then the rest of the Wishlist in a
 // stepped grid.
 // A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
@@ -40,7 +41,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	// A member picks a movie on My movies and a show on My shows (#385); the sort, moods and services choice in the
 	// URL go along. Guests keep Watch next, which their browser fills: their Wishlist lives there.
@@ -60,3 +61,5 @@ export default function WatchNextRoute() {
 	}
 	return <WatchNextPage initial={initial} />
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl, canonicalMediaTitle } from "~/utils/media-presentation"
 // The title on the TV's title screen and on the rating after Seen it: what the screens show of it, and the effects
 // the machine names for it.
 //
@@ -47,9 +49,10 @@ import {
 async function fetchCards(
 	keys: number[],
 	member: boolean,
+	language: string,
 ): Promise<TitleCardsAnswer> {
 	const response = await fetch(
-		`/api/title-cards?keys=${keys.join(",")}`,
+		mediaLanguageUrl(`/api/title-cards?keys=${keys.join(",")}`, language),
 		member
 			? undefined
 			: {
@@ -88,11 +91,12 @@ export function useTvTitle({
 	const key =
 		screen.name === "title" || screen.name === "rate" ? screen.title : null
 	const ref = useMemo(() => (key ? parseTvTitleKey(key) : null), [key])
+	const { locale } = useLocale()
 	const cards = useQuery({
-		queryKey: ["tv-title-card", member ? "member" : "guest", key],
+		queryKey: ["tv-title-card", member ? "member" : "guest", key, locale.language],
 		enabled: Boolean(ref),
 		queryFn: () =>
-			fetchCards(ref ? [titleKey(ref.mediaType, ref.tmdbId)] : [], member),
+			fetchCards(ref ? [titleKey(ref.mediaType, ref.tmdbId)] : [], member, locale.language),
 	})
 	const card = cards.data?.cards[0] ?? null
 	const mine = cards.data?.services
@@ -143,7 +147,7 @@ export function useTvTitle({
 					const shown = now.title.title
 					// "Not streaming" does nothing; without the title's name its page has no address to scroll in.
 					if (!shown || !watchKey(shown, now.title.mine).goes) return true
-					const href = watchHref(effect.title, { titleName: shown.title })
+					const href = watchHref(effect.title, { titleName: canonicalMediaTitle(shown) })
 					const arrival: StreamingArrival = { highlight: STREAMING_BLOCK }
 					if (href) leave(href, arrival)
 					return true
@@ -182,7 +186,7 @@ export function useTvTitle({
 	)
 
 	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
-	const titleName = title?.title?.title ?? null
+	const titleName = title?.title ? canonicalMediaTitle(title.title) : null
 	return useMemo(
 		() => ({ title, titleName, onEffect }),
 		[title, titleName, onEffect],

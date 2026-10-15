@@ -1,9 +1,10 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { json, type LoaderFunctionArgs } from "@remix-run/node"
 import { query } from "~/utils/crate"
 import type { DiscoverResult } from "~/server/discover.server"
 
 // Public title metadata only; account membership stays in /api/user-data.
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const keys = (new URL(request.url).searchParams.get("keys") || "").split(",")
 	if (
 		keys.length > 100 ||
@@ -24,3 +25,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	)
 	return json({ titles: groups.flat() })
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

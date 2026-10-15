@@ -1,0 +1,12 @@
+{
+  "summary": "Social common",
+  "description": "Normalized content and bounded HTTP shared by source adapters. No app/cache imports.",
+  "lock": "!inline f/social/common.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

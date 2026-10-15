@@ -1,3 +1,4 @@
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // One request to the combined search, for Discover's free-text search and the TV's search: what kind of answer came
 // back, and the ranked stream read to its batch. Every failure is an Error whose message the page shows next to Retry.
 // Nothing here retries.
@@ -47,6 +48,7 @@ export async function classifySearchResponse(
 
 export async function requestSearch({
 	body,
+	language,
 	signal,
 	onReading,
 	onProgress,
@@ -54,6 +56,7 @@ export async function requestSearch({
 }: {
 	/** The JSON body of the search request. */
 	body: unknown
+	language?: string
 	signal: AbortSignal
 	/** The reading of the query, which arrives before the results. */
 	onReading: (chips: ReadingChip[]) => void
@@ -68,7 +71,7 @@ export async function requestSearch({
 		signal.aborted ? error : new Error(SEARCH_BUSY_MESSAGE)
 	let response: Response
 	try {
-		response = await fetch("/api/combined-search", {
+		response = await fetch(language ? mediaLanguageUrl("/api/combined-search", language) : "/api/combined-search", {
 			method: "POST",
 			signal,
 			headers: { "Content-Type": "application/json" },

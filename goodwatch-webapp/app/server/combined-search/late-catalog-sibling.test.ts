@@ -4,6 +4,7 @@
 // title-lookup.test.ts. The catalog's HTTP is answered by a dispatcher in this process: each request stays open until
 // the test answers it, and an aborted one ends through the handler's own error path. Nothing reaches a host.
 import assert from "node:assert/strict"
+import "node-crate"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { after, test } from "node:test"

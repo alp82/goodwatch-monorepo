@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { displaySeason, displayNumber } from "~/domain/tracking/machine"
 // One show's tracking on its page, for a member (#384). The hero box and the episode list are separate chunks that
 // load at different times, so what they share lives here, outside React: the show's session (the browser's copy
@@ -18,7 +20,7 @@ import {
 	viewOf,
 	watchStateEntryOf,
 } from "~/domain/tracking/show-page"
-import { ShowSession } from "~/domain/tracking/show-session"
+import { ActionConflict, ShowSession } from "~/domain/tracking/show-session"
 import type { LogRow } from "~/domain/tracking/storage"
 import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
@@ -65,8 +67,13 @@ export function newActionId(): string {
 
 const ENDPOINT = "/api/tracking/show"
 
-async function readShow(showId: number): Promise<ShowTrackingPage> {
-	const response = await fetch(`${ENDPOINT}?id=${showId}`)
+async function readShow(
+	showId: number,
+	language = "en",
+): Promise<ShowTrackingPage> {
+	const response = await fetch(
+		mediaLanguageUrl(`${ENDPOINT}?id=${showId}`, language),
+	)
 	if (!response.ok)
 		throw new Error(`Reading the show's tracking failed: ${response.status}`)
 	return response.json()
@@ -77,6 +84,8 @@ async function sendAction(showId: number, body: object): Promise<ActionAnswer> {
 		method: "POST",
 		body: JSON.stringify({ id: showId, ...body }),
 	})
+	// Another action on the show came in between. Its body is not read: the page has its own words for it.
+	if (response.status === 409) throw new ActionConflict()
 	if (!response.ok)
 		throw new Error(`The action was not applied: ${response.status}`)
 	return response.json()
@@ -155,6 +164,8 @@ export class ShowStore {
 	load(page: ShowTrackingPage) {
 		if (this.session?.busy) {
 			this.session.load(page)
+			// Presentation can change while the same mutation queue remains optimistic.
+			this.set({ page })
 			return
 		}
 		const session: ShowSession = new ShowSession({
@@ -239,7 +250,7 @@ export class ShowStore {
 
 const stores = new Map<string, ShowStore>()
 
-function storeOf(userId: string, showId: number): ShowStore {
+export function getShowStore(userId: string, showId: number): ShowStore {
 	const key = `${userId}:${showId}`
 	let store = stores.get(key)
 	if (!store) {
@@ -281,11 +292,12 @@ export const queryKeyShowTracking = (userId: string, showId: number) =>
 export function useShowTracking(showId: number): ShowTracking {
 	const { user } = useUser()
 	const userId = user?.id ?? ""
-	const store = storeOf(userId, showId)
+	const { locale } = useLocale()
+	const store = getShowStore(userId, showId)
 	const queryClient = useQueryClient()
 	const query = useQuery({
-		queryKey: queryKeyShowTracking(userId, showId),
-		queryFn: () => readShow(showId),
+		queryKey: [...queryKeyShowTracking(userId, showId), locale.language],
+		queryFn: () => readShow(showId, locale.language),
 		enabled: Boolean(userId),
 	})
 	const snapshot = useSyncExternalStore(

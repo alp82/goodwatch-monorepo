@@ -6,7 +6,13 @@
 // - Up to five islands are picked (`setLit`); their combination rises in the middle (`raiseMix`). A picked island
 //   sails to the middle and sits against the combination. Nothing else moves.
 import type { BridgeKind, ExplorerTitle, ExplorerTree } from "~/domain/explorer"
-import { type Cam, nextStop, settleStop, zoomAbout } from "./camera"
+import {
+	type Cam,
+	nextStop,
+	overviewStep,
+	settleStop,
+	zoomAbout,
+} from "./camera"
 import { type Rgb, luminous, mixRgb } from "./color"
 import { beginImageFrame, onImageReady } from "./images"
 import {
@@ -716,11 +722,11 @@ export function createMapEngine(
 		const st = stopsOf(island)
 		const base = flight ? flight.to.s : tgt.s
 		// Out at the world: a step in frames the region there, a step out shows the whole world.
-		if (base < baseS * 0.9) {
-			if (dir < 0) return glideTo(homeCam())
+		const frame = overviewStep(base, baseS, dir, homeCam, () => {
 			const at = toWorld(sx, sy)
-			return glideTo(camAt(at.x, at.y))
-		}
+			return camAt(at.x, at.y)
+		})
+		if (frame) return glideTo(frame)
 		const next = nextStop(st, base, dir) ?? (dir > 0 ? base * 1.7 : base / 1.7)
 		if (dir < 0 && base <= baseS * 1.05) return glideTo(homeCam())
 		if (dir < 0 && next <= baseS * 1.01 && !anchored) {

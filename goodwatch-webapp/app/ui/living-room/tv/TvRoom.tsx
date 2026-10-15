@@ -81,6 +81,8 @@ export type TvRoomProps = {
 	renderScreen?: (canvas: TvCanvas) => ReactNode
 	/** The titles the section below the room links to. */
 	startTitles: StartTitle[]
+	/** "Talked about now" below the room (#557). */
+	talked?: boolean
 	/** The person's own two streaming services: the Remotes' two keys, in their order. */
 	services: readonly RemoteService[]
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */
@@ -105,6 +107,7 @@ export function TvRoom({
 	tv,
 	renderScreen,
 	startTitles,
+	talked,
 	services,
 	want,
 }: TvRoomProps) {
@@ -417,6 +420,7 @@ export function TvRoom({
 			</div>
 			<StillBelowRoom
 				titles={startTitles}
+				talked={talked}
 				onDown={travel.onDown}
 				onBack={travel.onBack}
 			/>

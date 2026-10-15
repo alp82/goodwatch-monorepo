@@ -1,0 +1,12 @@
+{
+  "summary": "Social inventory",
+  "description": "Verified #539 inventory; Netflix additions verified in #544 round two.",
+  "lock": "!inline f/social/inventory.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
