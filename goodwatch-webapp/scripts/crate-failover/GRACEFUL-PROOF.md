@@ -1,6 +1,6 @@
 # Graceful CrateDB restart: real route proof, 2026-10-15
 
-#604 released catalog/index failover and redacted diagnostics as `dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59`. The local follow-up here addresses additional failures demonstrated against that released client. It is not deployed. No production CrateDB node was restarted or decommissioned during this work.
+#604 released catalog/index failover and redacted diagnostics as `dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59`. This document records the development proof for the follow-up in #607. Final-head validation and deployment results are recorded in that PR's comments. No production CrateDB node was restarted or decommissioned during this work.
 
 ## Run it
 
@@ -51,9 +51,11 @@ Final proof: **0 / 1378 route HTTP failures**, **2247 successful probe reads**, 
 - A joining HTTP coordinator may lack cluster table metadata. Reads try other coordinators once for exact `RelationUnknown`/4041. A success elsewhere proves metadata mismatch and triggers a short coordinator cooldown. A table missing everywhere remains a typed error after one pass. Fixed-key helpers can use their existing readback/replay guard for this refusal.
 - `REFRESH TABLE` changes visibility and can be repeated. Only a strict table-list grammar receives bounded failover; comments, additional statements and all other generic writes retain their existing policy.
 - `ECONNREFUSED` means TCP did not connect and no SQL was sent. Another coordinator may receive the statement once. Resets, broken pipes and timeouts do not receive this generic permission.
-- Tracking's state writer owns its key, original sequence/primary-term condition, timestamp and intended values. On an availability failure it reads the key back. An observed intended update (or completed delete) succeeds; an unchanged row permits one replay of exactly the original CAS. Even a delayed first request can apply at most once. Another row version goes through the existing optimistic-conflict loop. Recovery emits redacted operation/readback/replay events.
+- Tracking's state writer owns its key, original sequence/primary-term condition, timestamp and intended values. On an availability failure it reads the key back. An observed intended update (or completed delete) succeeds; an unchanged row permits one replay of exactly the original CAS. Even a delayed first request can apply at most once. After a lost response, a different row version is indeterminate and throws: the original may have landed before that other writer, so rerunning the event could overwrite newer state. Recovery emits redacted operation/readback/replay events.
 
 The tracking regressions cover applied, unapplied and still-pending lost responses for updates and deletes. Other client tests retain the no-replay guarantee for unsafe/compound SQL and truly absent relations.
+
+The review fix originally committed as `ebbbce09` additionally covers a lost CAS update superseded by Resume and a lost CAS delete superseded by re-watch. Neither event is reapplied over the newer state. The review's pre-existing first-insert replay issue is outside #607 and remains unchanged.
 
 ## Validation
 
@@ -65,4 +67,4 @@ Release verification is on [#604](https://github.com/alp82/goodwatch-monorepo/pu
 
 Axiom storage is unverified: query-read access was skipped and the ingest token returned 403. Vector1 currently uses json-file logging with no Coolify drain. Production Crate container IDs, start times, PIDs and restart counts matched before/after.
 
-**#604 alone does not make crate-01 maintenance safe for these page workloads:** this released-client red control still produced nine route 500s. Hold crate-01 until the follow-up recovery changes have been reviewed and deployed. These local classes are demonstrated restart hazards; they cannot be assigned retrospectively to the original 27 production failed-query lines because those incident logs were lost. This proof does not establish full production workload coverage or Valkey resilience.
+**#604 alone does not make crate-01 maintenance safe for these page workloads:** this released-client red control still produced nine route 500s. Final maintenance guidance after #607's validation and deployment is recorded in its release report. These local classes are demonstrated restart hazards; they cannot be assigned retrospectively to the original 27 production failed-query lines because those incident logs were lost. This proof does not establish full production workload coverage or Valkey resilience.
