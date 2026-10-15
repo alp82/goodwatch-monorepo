@@ -6,6 +6,7 @@ import json
 import sys
 import types
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -255,6 +256,44 @@ class AliasTests(unittest.TestCase):
                                 ("show", 1396, "de", "DE", "N1396")])
         self.assertTrue(all("FROM translation" in sql and params[1] == list(ib.ALIAS_LANGUAGES)
                             for sql, params in calls))
+
+
+class AliasFailureTests(unittest.TestCase):
+    TITLES = AliasTests.TITLES
+
+    def test_a_failed_translation_read_builds_an_empty_table_of_version_0(self) -> None:
+        class Crate:
+            def select(self, sql, params):
+                raise RuntimeError("translation is unavailable")
+        stats = {}
+        self.assertIsNone(flow.read_translations_or_none(Crate(), self.TITLES, stats))
+        self.assertIn("translation is unavailable", stats["translation_read_error"])
+        src = sources(self.TITLES)
+        src.translations = None
+        build = ib.build_indexes(src)
+        self.assertEqual(build.files["alias_table"], {"version": 0, "rows": [], "names": [], "languages": []})
+        self.assertTrue(build.stats["aliases_unavailable"])
+
+    def run_flow(self, translations) -> dict:
+        """flow.run against the fake Crate and blobs, with the sources and the intent encoder replaced; returns the
+        published manifest."""
+        crate = FakeCrate()
+        client = types.SimpleNamespace(count=lambda *a, **kw: types.SimpleNamespace(count=0),
+                                       delete=lambda *a, **kw: None)
+        src = sources(self.TITLES)
+        src.translations = translations
+        with mock.patch.object(flow, "read_sources", lambda *a: src), \
+                mock.patch.object(flow, "encode", lambda model, texts: np.zeros((len(texts), 384), np.float32)):
+            stats = flow.run(crate, crate.blobs, client, dry_run=False,
+                             now=datetime(2026, 10, 15, 2, tzinfo=timezone.utc))
+        self.assertTrue(stats["published"])
+        return json.loads(crate.rows["current"]["manifest"])
+
+    def test_the_published_manifest_carries_the_alias_version_of_its_file(self) -> None:
+        manifest = self.run_flow([("movie", 155, "pl", "PL", "Mroczny Rycerz")])
+        self.assertEqual(manifest["alias_version"], ib.ALIAS_VERSION)
+        self.assertIn("alias_table", manifest["files"])
+        self.assertEqual(self.run_flow(None)["alias_version"], 0)
 
 
 # ---- storage -------------------------------------------------------------------------------------

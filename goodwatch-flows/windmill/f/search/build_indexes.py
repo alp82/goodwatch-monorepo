@@ -204,6 +204,17 @@ def read_translations(crate, titles: list[ib.Title]) -> list[tuple]:
     return out
 
 
+def read_translations_or_none(crate, titles: list[ib.Title], stats: dict) -> list[tuple] | None:
+    """read_translations, or None when the read fails: the localized names are extra recall, so
+    the build goes on and writes an empty alias_table (version 0)."""
+    try:
+        return read_translations(crate, titles)
+    except Exception as error:  # noqa: BLE001 - any failure of this read only drops the aliases
+        stats["translation_read_error"] = f"{type(error).__name__}: {error}"
+        print(f"translation read failed, building without aliases: {stats['translation_read_error']}", flush=True)
+        return None
+
+
 def read_sources(crate, client: QdrantClient, stats: dict) -> ib.Sources:
     started = time.monotonic()
     payloads, vectors = read_points(client, stats)
@@ -226,9 +237,9 @@ def read_sources(crate, client: QdrantClient, stats: dict) -> ib.Sources:
     for t in titles:
         terms |= ib.title_terms(t)
     term_ids = read_term_ids(crate, terms)
-    translations = read_translations(crate, titles)
+    translations = read_translations_or_none(crate, titles, stats)
     stats |= {"eligible_points": len(payloads), "crew_rows": len(crew), "cast_rows": len(cast), "people": len(people),
-              "translation_rows": len(translations),
+              "translation_rows": None if translations is None else len(translations),
               "read_seconds": round(time.monotonic() - started, 1)}
     keep = np.array(keep, np.int64)
     return ib.Sources(
@@ -468,7 +479,7 @@ def run(crate, blobs, client: QdrantClient, *, dry_run: bool, now: datetime | No
         "created_at": now.isoformat(),
         "previous_build_id": previous,
         "files": entries,
-        "alias_version": ib.ALIAS_VERSION,
+        "alias_version": build.files["alias_table"]["version"],
         "profiles": {"collection": REFERENCE_PROFILES_COLLECTION, "points": len(build.profiles)},
         "stats": build.stats,
     }

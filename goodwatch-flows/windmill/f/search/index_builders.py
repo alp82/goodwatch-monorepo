@@ -187,8 +187,9 @@ class Sources:
     company_names: dict             # company id -> name
     network_names: dict             # network id -> name
     term_ids: dict                  # term -> id in search_terms
-    # (media_type, tmdb_id, language_code, country_code, title) rows of `translation`, the localized names
-    translations: list = field(default_factory=list)
+    # (media_type, tmdb_id, language_code, country_code, title) rows of `translation`, the localized
+    # names; None when they couldn't be read (an empty alias table of version 0)
+    translations: list | None = field(default_factory=list)
 
 
 # === credits ===================================================================================
@@ -683,12 +684,16 @@ def _cjk(s: str) -> bool:
     return bool(_CJK.search(s))
 
 
-def alias_table(titles: list[Title], translations: list) -> tuple[dict, dict]:
+def alias_table(titles: list[Title], translations: list | None) -> tuple[dict, dict]:
     """The localized names of the eligible titles, from `translation` rows
     (media_type, tmdb_id, language_code, country_code, title), as the `alias_table` file and its
     counts. A name is kept once per title (by its fold, whatever the region or language, the
     first in ALIAS_LANGUAGES order) and only when it differs from the title and the original
-    title. A Latin-script name needs 2 characters after folding; a CJK name may be one."""
+    title. A Latin-script name needs 2 characters after folding; a CJK name may be one.
+    Without translations (None: the read failed), an empty table of version 0."""
+    if translations is None:
+        return ({"version": 0, "rows": [], "names": [], "languages": []},
+                {"aliases_kept": 0, "aliases_unavailable": True})
     row_of = {(t.media_type, t.tmdb_id): r for r, t in enumerate(titles)}
     order = {lang: i for i, lang in enumerate(ALIAS_LANGUAGES)}
     stats = Counter()
