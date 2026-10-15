@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import { createHash, createHmac } from "node:crypto"
 import {
 	type AuthSql,
 	CrateAuthRequestError,
@@ -29,11 +29,16 @@ export const launchPopulationBounds: AuthPopulationBounds = {
 export function authPopulationActor(
 	model: string,
 	row: Record<string, unknown>,
+	secret: string,
 ): string | undefined {
 	if (["user", "account", "jwks", "oauthResource", "rateLimit"].includes(model))
 		return undefined
 	if (model === "verification")
-		return typeof row.identifier === "string" ? row.identifier : undefined
+		return typeof row.identifier === "string"
+			? createHmac("sha256", secret)
+					.update(JSON.stringify(["verification-identifier", row.identifier]))
+					.digest("hex")
+			: undefined
 	if (model === "oauthClient")
 		return typeof row.userId === "string" ? row.userId : undefined
 	if (["oauthClientResource", "oauthClientAssertion"].includes(model))

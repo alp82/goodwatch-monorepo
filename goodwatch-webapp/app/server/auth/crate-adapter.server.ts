@@ -172,7 +172,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				const [payload, seq, term, , receipts] = result.rows[0]
 				const envelope = codec.decode(payload, `${authModelTable(model)}:${id}:payload`)
 				if (typeof envelope.deleted !== "boolean" || envelope.row?.id !== id) throw new Error("Invalid authenticated auth row")
-				if (bounds && authPopulationActor(model, envelope.row) !== undefined && !envelope.deleted && !envelope.admission) throw new Error("Unadmitted prerelease auth row; offline rebuild/import required")
+				if (bounds && authPopulationActor(model, envelope.row, payloadSecret) !== undefined && !envelope.deleted && !envelope.admission) throw new Error("Unadmitted prerelease auth row; offline rebuild/import required")
 				return { envelope, row: decodeRow(model, envelope.row), seq: Number(seq), term: Number(term), deleted: envelope.deleted, receipts: codec.decode(receipts, `${authModelTable(model)}:${id}:receipts`), emailClaim: envelope.emailClaim }
 			}
 			const key = (model: string, row: Row): string => {
@@ -319,7 +319,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					// Uncapped accounts still need a pre-insert version fence: a paused
 					// create may only replace the exact tombstone it already observed.
 					const accountBase = model === "account" ? await stored(model, row.id) : undefined
-					const actor = authPopulationActor(model, row)
+					const actor = authPopulationActor(model, row, payloadSecret)
 					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
 							model === "session" && populationBounds === true ? async (id, admission) => {
 								const oldest = await stored("session", id)

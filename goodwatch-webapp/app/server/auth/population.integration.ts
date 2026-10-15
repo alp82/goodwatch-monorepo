@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { test } from "node:test"
 import { crateAuthAdapter } from "./crate-adapter.server.ts"
 import { authTestOptions } from "./fixtures.integration.ts"
@@ -414,4 +414,28 @@ test("an uncapped account create paused across unlink cannot restore the removed
 		[],
 	)
 	assert.ok(await healthy.create({ model: "account", data }))
+})
+
+test("verification actor ledger IDs do not reveal an unkeyed identifier hash", async () => {
+	await clean()
+	const identifier = "private-member-address@example.test"
+	const bounded = crateAuthAdapter({ sql, populationBounds: true })({})
+	await bounded.create({
+		model: "verification",
+		data: {
+			identifier,
+			value: "synthetic one-time value",
+			expiresAt: new Date(Date.now() + 86400000),
+		},
+	})
+	await sql("REFRESH TABLE doc.auth_capacity")
+	const buckets = (await sql("SELECT id FROM doc.auth_capacity")).rows.map(
+		(row) => String(row[0]),
+	)
+	const dictionaryHash = createHash("sha256").update(identifier).digest("hex")
+	assert.ok(buckets.length > 0)
+	assert.equal(
+		buckets.some((bucket) => bucket.includes(dictionaryHash)),
+		false,
+	)
 })

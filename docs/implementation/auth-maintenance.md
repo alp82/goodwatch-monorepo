@@ -103,7 +103,9 @@ its insert attempt, so removing its quota does not let a paused create undo unli
 | Client resources / client assertions with an owner | Client | 128 per model |
 | Verification rows | Identifier | 128 |
 
-Actor identifiers are SHA-256 hashes inside bucket IDs. A full allowance refuses
+Actor identifiers are SHA-256 hashes inside bucket IDs. Verification identifiers
+first use their permanent-root HMAC lookup key, so ledger IDs do not reveal
+dictionary hashes of email addresses or verification identifiers. A full allowance refuses
 only that actor. The Valkey active-session index is also clamped to 20 entries;
 a missing cache index still falls back to the authoritative database. The reservation CAS includes pending inserts, so concurrent writers
 cannot overbook it. Deletion and refresh-parent archiving install a generation fence

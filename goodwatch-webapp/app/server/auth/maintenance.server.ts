@@ -632,7 +632,11 @@ export async function auditAuthPopulation(
 				report.inconsistent++
 			if (envelope.deleted || envelope.archived) continue
 			report.live++
-			const actor = authPopulationActor(model, envelope.row)
+			const actor = authPopulationActor(
+				model,
+				envelope.row,
+				options.encryptionSecret,
+			)
 			if (actor === undefined) continue // No site-wide member or anonymous-registration ceiling.
 			if (!envelope.admission) {
 				report.unadmitted++
