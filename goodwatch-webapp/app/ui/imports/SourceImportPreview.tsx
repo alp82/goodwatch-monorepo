@@ -7,6 +7,7 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { FocusHeading } from "./FocusHeading"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import { sourceImportRequirements } from "./SourceImportPreviewModel"
 import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
@@ -17,6 +18,7 @@ const KIND_LABELS: Record<ImportKind, string> = {
 	want: "Want to See",
 	favorite: "Favorites",
 	review: "Reviews",
+	show_status: "Show statuses",
 }
 const OUTCOMES: ImportOutcome[] = [
 	"new",
@@ -42,6 +44,7 @@ export function SourceImportPreview({
 	onConfirm: (options: ImportOptions) => void
 	onBack: () => void
 }) {
+	const copy = sourceImportCopy(summary.source)
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
 	const [kinds, setKinds] = useState<ImportKind[]>(available)
 	const [conflictChoice, setConflictChoice] =
@@ -79,7 +82,7 @@ export function SourceImportPreview({
 					// biome-ignore lint/a11y/useSemanticElements: a warning group contains block content
 					role="status"
 				>
-					<p className="font-semibold">Check these export details</p>
+					<p className="font-semibold">{copy.details}</p>
 					<ul className="mt-2 list-disc space-y-1 pl-5">
 						{summary.warnings.map((warning) => (
 							<li key={warning}>{warning}</li>
@@ -129,7 +132,7 @@ export function SourceImportPreview({
 						),
 					)}
 					<li className="flex items-center justify-between border-t-2 border-slate-600 bg-slate-800/60 px-4 py-3 font-semibold">
-						<span>Rows in your export</span>
+						<span>Rows in your {copy.data}</span>
 						<span className="tabular-nums">
 							{formatCount(summary.counts.rows)}
 						</span>
@@ -151,8 +154,8 @@ export function SourceImportPreview({
 					name="source-conflict"
 					checked={conflictChoice === "source"}
 					onChange={() => setConflictChoice("source")}
-					label="Use the export instead"
-					detail="Replaces conflicting ratings and reviews with the source export."
+					label={copy.conflict}
+					detail={copy.conflictDetail}
 				/>
 			</fieldset>
 			{importsWatches && (
@@ -168,8 +171,8 @@ export function SourceImportPreview({
 						name="watch-dates"
 						checked={watchDates === "preserve"}
 						onChange={() => setWatchDates("preserve")}
-						label="Preserve dates from the export"
-						detail="Uses each exported watch date with its stated precision."
+						label={`Preserve dates from the ${copy.data}`}
+						detail={copy.watchDates}
 					/>
 					<Radio
 						name="watch-dates"
@@ -178,12 +181,23 @@ export function SourceImportPreview({
 						label="Import watches with unknown dates"
 						detail="Imports the watches but stores no date for them."
 					/>
-					<p className="text-sm text-gray-400">
-						Importing a watch can remove that title from Want to See or Not
-						interested. Undoing the import later does not restore those earlier
-						choices.
-					</p>
 				</fieldset>
+			)}
+			{(importsWatches || kinds.includes("show_status")) && (
+				<p className="text-sm text-gray-400">
+					Importing watches or show statuses can remove titles from Want to See
+					or Not interested. Without added watches, Undo restores those choices
+					when it restores the earlier status. Undo of added watches does not
+					restore those choices.
+				</p>
+			)}
+			{kinds.includes("show_status") && (
+				<p className="text-sm text-gray-400">
+					Your On hold, Dropped and Seen decisions are kept. Plan to watch
+					becomes Want to See. Whole-show completion marks aired regular
+					episodes with unknown dates and stays Watching while a season is still
+					airing. Completion of a part does not mark the whole show Seen.
+				</p>
 			)}
 			{!canImport && (
 				<p id="source-import-required" className="text-sm text-gray-300">
@@ -215,7 +229,7 @@ export function SourceImportPreview({
 					disabled={confirming}
 					onClick={onBack}
 				>
-					Choose another file
+					{copy.restart}
 				</button>
 			</div>
 			<div aria-live="assertive">

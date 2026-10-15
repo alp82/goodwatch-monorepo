@@ -45,6 +45,15 @@ identities and must survive redeploys. Reuse existing `CRATE_*`, `REDIS_*`,
 Only configure `SEARCH_TRUSTED_IP_HEADER` for a header overwritten by trusted
 ingress that supplies one valid IP; otherwise guests share a conservative scope.
 
+The same header keys the per-visitor search limit
+(`app/server/search-runtime/rate-limit.server.ts`): 10 searches in 30 seconds
+and 60 in 10 minutes per IPv4 address or IPv6 /64, members included, answered
+with 429 and `Retry-After`. It runs after the origin guard and before the
+session check and admission. The count is in Valkey, which the page instances
+and both search roles share (`REDIS_HOST`); without Valkey each process counts
+in memory. Without the header (production sets `X-Real-Ip`) nobody is limited.
+Discover and the TV show "Too many searches right now. Try again in a moment."
+
 Each paid attempt appends a conservative estimate before dispatch. Known usage
 appends one adjustment under a deterministic primary key; repeated settlement
 cannot double-charge. Unknown billing retains its estimate until evidence-based

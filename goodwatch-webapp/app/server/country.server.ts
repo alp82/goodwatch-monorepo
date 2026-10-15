@@ -27,5 +27,6 @@ export const resolveCountry = ({
 		asCountryCode(countryDefault)
 	if (explicit) return { country: explicit, countryIsFallback: false }
 
-	return { country: requestLocale(request).country, countryIsFallback: true }
+	const locale = requestLocale(request)
+	return { country: locale.country, countryIsFallback: locale.source !== "cookie" }
 }

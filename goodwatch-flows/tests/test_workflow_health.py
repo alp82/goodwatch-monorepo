@@ -247,6 +247,7 @@ class WorkflowHealthTests(unittest.TestCase):
         delivered = {
             **state,
             "pending_notification": None,
+            "announced_causes": report["causes"],
             "last_notified_at": NOW.isoformat(),
         }
         self.assertIsNone(
@@ -343,31 +344,17 @@ class WorkflowHealthTests(unittest.TestCase):
         self.assertNotIn("consecutive_failures", report["causes"])
         self.assertEqual(report["status"], "unhealthy")
 
-    def test_reminder_is_deduplicated_until_delivery_is_acknowledged(
-        self,
-    ) -> None:
+    def test_new_failure_cause_escalates_once_until_delivery(self) -> None:
         from datetime import timedelta
-
-        report = {
-            "path": "daily",
-            "status": "unhealthy",
-            "causes": ["excessive_runtime"],
-            "latest_job_id": "root",
-        }
-        state = {
-            "active": True,
-            "opened_at": START.isoformat(),
-            "last_notified_at": START.isoformat(),
-            "pending_notification": None,
-        }
+        report = {"path": "daily", "status": "unhealthy",
+                  "causes": ["excessive_runtime", "consecutive_failures"]}
+        state = {"active": True, "opened_at": START.isoformat(),
+                 "last_notified_at": START.isoformat(), "pending_notification": None,
+                 "announced_causes": ["excessive_runtime"]}
         planned = incident_transition(state, report, NOW)
-        self.assertEqual(planned["notification"]["kind"], "reminder")
-        repeated = incident_transition(
-            planned["state"], report, NOW + timedelta(minutes=5)
-        )
-        self.assertEqual(
-            repeated["notification"]["id"], planned["notification"]["id"]
-        )
+        self.assertEqual(planned["notification"]["kind"], "escalation")
+        repeated = incident_transition(planned["state"], report, NOW + timedelta(minutes=5))
+        self.assertEqual(repeated["notification"]["id"], planned["notification"]["id"])
 
     def test_semantic_failure_and_material_outcome_errors_are_not_empty_success(
         self,

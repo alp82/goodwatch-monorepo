@@ -1,3 +1,5 @@
+import { personBestCredit } from "../utils/person-best.ts"
+import type { PresentedMedia } from "~/utils/media-presentation"
 import {
 	type CoreScores,
 	DISTINCT_FINGERPRINT_KEYS,
@@ -17,7 +19,7 @@ import { query } from "~/utils/crate"
 
 type MediaType = "movie" | "show"
 
-export interface PersonCredit {
+export interface PersonCredit extends PresentedMedia {
 	key: string
 	tmdb_id: number
 	media_type: MediaType
@@ -82,14 +84,16 @@ export interface PersonProfile {
 		lastYear: number | null
 		perYear: { year: number; count: number }[]
 		avgScore: number | null
-		best: {
-			title: string
-			score: number
-			poster_path: string | null
-			media_type: MediaType
-			tmdb_id: number
-			release_year: number | null
-		} | null
+		best:
+			| (PresentedMedia & {
+					title: string
+					score: number
+					poster_path: string | null
+					media_type: MediaType
+					tmdb_id: number
+					release_year: number | null
+			  })
+			| null
 	}
 }
 
@@ -574,16 +578,7 @@ async function loadPersonProfile(id: number): Promise<PersonProfile | null> {
 			avgScore: scored.length
 				? scored.reduce((s, c) => s + (c.score ?? 0), 0) / scored.length
 				: null,
-			best: best
-				? {
-						title: best.title,
-						score: best.score ?? 0,
-						poster_path: best.poster_path,
-						media_type: best.media_type,
-						tmdb_id: best.tmdb_id,
-						release_year: best.release_year,
-					}
-				: null,
+			best: personBestCredit(best),
 		},
 	}
 }

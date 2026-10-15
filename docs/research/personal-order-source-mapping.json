@@ -1,0 +1,81 @@
+{
+  "source": "candidates/009/g1_mix.py",
+  "sourceSha256": "e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1",
+  "copiedSha256": "0f77aa86e764cf193ae1a2c70e4c248dd25839ae4bcea4dabe79f28299dd2517",
+  "originalMarkers": [
+    "# BEGIN COPIED B5",
+    "# END COPIED B3"
+  ],
+  "productMarkers": [
+    "# BEGIN COPIED POOLED RATING",
+    "# END COPIED OWN TASTE"
+  ],
+  "mathRenames": [
+    [
+      "# BEGIN COPIED B5",
+      "# BEGIN COPIED POOLED RATING"
+    ],
+    [
+      "# END COPIED B5",
+      "# END COPIED POOLED RATING"
+    ],
+    [
+      "# BEGIN COPIED B3",
+      "# BEGIN COPIED OWN TASTE"
+    ],
+    [
+      "# END COPIED B3",
+      "# END COPIED OWN TASTE"
+    ],
+    [
+      "b5_predict",
+      "pooled_rating_predict"
+    ],
+    [
+      "b3_predict",
+      "own_taste_predict"
+    ],
+    [
+      "b4_consensus.py",
+      "the research consensus source"
+    ],
+    [
+      "b5_pooled.py",
+      "the research pooled rating predictor"
+    ],
+    [
+      "b2_taste_today.py",
+      "the research unstandardized taste model"
+    ],
+    [
+      "b3_taste_standardized.py",
+      "the research standardized own taste model"
+    ],
+    [
+      "B5",
+      "Pooled rating predictor"
+    ],
+    [
+      "B3",
+      "Standardized own taste"
+    ],
+    [
+      "B4",
+      "pooled consensus"
+    ],
+    [
+      "B2",
+      "unstandardized own taste"
+    ],
+    [
+      "B1",
+      "public score with member offset"
+    ]
+  ],
+  "referenceRenames": [
+    [
+      "f3_predict",
+      "franchise_grouping_predict"
+    ]
+  ]
+}

@@ -55,6 +55,21 @@ The repository must have:
 - a `WMILL_TOKEN` Actions secret containing a Windmill user token with permission
   to sync the workspace
 
+## Daily buzz score
+
+`f/buzz/daily.flow` collects Wikipedia pageviews for balanced movie/show
+candidates and publishes a shared top-20 snapshot in new Crate `buzz_*` tables.
+It backfills 60 complete UTC days and never accesses Valkey. The table contract,
+local production driver and post-merge schedule are documented in
+[buzz-score.md](../docs/implementation/talked-about-now/buzz-score.md).
+
+Run its offline behavior tests:
+
+```sh
+python -m pip install -r tests/requirements-buzz.txt
+python -m unittest discover -s tests -p 'test_buzz.py'
+```
+
 ## DNA generation tests
 
 Run without live HTTP requests, credentials, or MongoDB:
@@ -97,3 +112,13 @@ return zero fingerprints without accessing MongoDB or the inference service.
 The key expires automatically. If the owner changes the provider budget before
 the deadline, deleting this key from the configured Redis cluster allows selection
 to resume. Redis errors remain visible rather than permitting unguarded inference.
+
+## Social discovery
+
+`f/social/discover` and `f/social/deletion_sync` collect and match YouTube, RSS,
+Bluesky and Mastodon content in new Crate tables. See the
+[store/API contract and operations guide](../docs/implementation/talked-about-now/social.md)
+for local backfills, the content-quality gate, tests, deletion/opt-out handling
+and post-merge schedules. Re-screen existing rows with
+`scripts/social_quality.py` (read-only preview by default, `--apply` unpublishes
+failures). Title reads must require a current passing quality verdict.

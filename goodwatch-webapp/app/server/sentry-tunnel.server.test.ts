@@ -18,8 +18,17 @@ const header = (host = SENTRY_HOST, projectId = PROJECT_ID) =>
 const envelope = (first = header()) =>
 	`${first}\n{"type":"event"}\n{"message":"test"}\n`
 
+// The tunnel answers only the site's own pages (site-origin.server.ts); a test process has no origin by default.
+process.env.APP_ORIGIN = "https://goodwatch.app"
+// What a browser adds to the SDK's fetch from one of the site's pages.
+const FROM_PAGE = { Origin: "https://goodwatch.app", "Sec-Fetch-Site": "same-origin" }
+
 const post = (body: BodyInit, headers: Record<string, string> = {}) =>
-	new Request("https://goodwatch.app/api/e", { method: "POST", body, headers })
+	new Request("https://goodwatch.app/api/e", {
+		method: "POST",
+		body,
+		headers: { ...FROM_PAGE, ...headers },
+	})
 
 const neverSend: typeof fetch = () => {
 	throw new Error("the tunnel must not call the upstream")
@@ -141,6 +150,7 @@ test("stops reading a body that grows over the cap", async () => {
 	const request = new Request("https://goodwatch.app/api/e", {
 		method: "POST",
 		body,
+		headers: FROM_PAGE,
 		duplex: "half",
 	} as RequestInit)
 
@@ -341,4 +351,66 @@ test("answers 405 to another method", async () => {
 	const response = await tunnel(new Request("https://goodwatch.app/api/e"))
 	assert.equal(response.status, 405)
 	assertNotCacheable(response)
+})
+
+// The SDK's envelopes as each sender sends them. Only the site's own pages get through; nothing else reads the body
+// or reaches the upstream.
+const senders: [string, Record<string, string>, number][] = [
+	["the SDK's fetch from a page", FROM_PAGE, 200],
+	["the same fetch in a browser that leaves out Sec-Fetch-Site", { Origin: "https://goodwatch.app" }, 200],
+	[
+		"a same-origin fetch without Origin (older browsers), with the SDK's strict-origin Referer",
+		{ "Sec-Fetch-Site": "same-origin", Referer: "https://goodwatch.app/" },
+		200,
+	],
+	["curl or a script without browser headers", {}, 403],
+	["another site's page", { Origin: "https://example.com", "Sec-Fetch-Site": "cross-site" }, 403],
+	["a forged Origin from another site's page", { Origin: "https://goodwatch.app", "Sec-Fetch-Site": "cross-site" }, 403],
+	["a subdomain", { Origin: "https://static.goodwatch.app", "Sec-Fetch-Site": "same-site" }, 403],
+]
+for (const [name, headers, status] of senders)
+	test(`origin check: ${name} gets ${status}`, async () => {
+		respond = (res) => res.writeHead(200).end()
+		const tunnel = sinkTunnel()
+		const response = await tunnel(
+			new Request("https://goodwatch.app/api/e", { method: "POST", body: envelope(), headers }),
+		)
+		assert.equal(response.status, status)
+		assertNotCacheable(response)
+		assert.equal(received.length, status === 200 ? 1 : 0)
+	})
+
+test("origin check: a page's envelope for another project is still refused", async () => {
+	const tunnel = sinkTunnel()
+	const response = await tunnel(post(envelope(header(SENTRY_HOST, "1"))))
+	assert.equal(response.status, 400)
+	assert.equal(received.length, 0)
+})
+
+test("origin check: without a configured origin outside production nothing is forwarded", async () => {
+	const saved = process.env.APP_ORIGIN
+	Reflect.deleteProperty(process.env, "APP_ORIGIN")
+	try {
+		const tunnel = createSentryTunnel({ fetch: neverSend, log: () => {} })
+		const response = await tunnel(post(envelope()))
+		assert.equal(response.status, 403)
+	} finally {
+		process.env.APP_ORIGIN = saved
+	}
+})
+
+test("origin check: a refused request is answered before its body is read", async () => {
+	const tunnel = createSentryTunnel({ fetch: neverSend, log: () => {} })
+	let pulled = 0
+	const body = new ReadableStream<Uint8Array>({
+		pull(controller) {
+			pulled++
+			controller.enqueue(new Uint8Array(10))
+		},
+	})
+	const response = await tunnel(
+		new Request("https://goodwatch.app/api/e", { method: "POST", body, duplex: "half" } as RequestInit),
+	)
+	assert.equal(response.status, 403)
+	assert.equal(pulled <= 1, true, "the body isn't read beyond what the stream pulls ahead")
 })

@@ -1,0 +1,14 @@
+summary: Collect pageviews and publish daily buzz
+description: Backfill 60 complete UTC days and rank balanced catalog/trending
+  titles by Wikipedia lift. New buzz tables only; shared snapshot for the start
+  page.
+lock: '!inline f/buzz/daily.script.lock'
+concurrency_time_window_s: 0
+concurrent_limit: 1
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
+timeout: 7200

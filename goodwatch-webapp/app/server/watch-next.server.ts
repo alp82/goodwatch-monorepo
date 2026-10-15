@@ -12,6 +12,7 @@ import {
 } from "~/domain/watch-next"
 import { type Misfit, minutesOver, misfitOf } from "~/domain/my-movies"
 import { isOnServices } from "~/server/availability-index.server"
+import { recordListExposure } from "~/server/list-exposure.server"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import {
@@ -30,6 +31,17 @@ import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import type { ViewerContext } from "~/server/viewer.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
+
+import { recPersonalOrder } from "./features.server.ts"
+import { createWatchNextPlanStore } from "./watch-next-plans.server.ts"
+import {
+	loadPersonalOrder,
+	personalOrderExposure,
+	orderPersonalOrder,
+	mixPersonalOrderFitting,
+	logPersonalOrder,
+	type PersonalOrderRead,
+} from "./personal-order/reader.server.ts"
 
 export interface WatchNextOptions {
 	/** Null or unavailable (Best match without taste): the default sort. */
@@ -68,6 +80,10 @@ export interface WatchNextTier {
 }
 
 export interface WatchNext {
+	/** Opaque identity of the ordering plan used for all later member card batches. */
+	planId: string | null
+	/** Exposure record for the cards in this member's initial view; null for guests or a dropped write. */
+	listId: string | null
 	sort: WatchNextSort
 	defaultSort: WatchNextSort
 	moods: MoodKey[]
@@ -112,6 +128,16 @@ const SUGGEST_MIN_SCORE = 70
 const SUGGEST_MIN_VOTES = 1000
 
 type Plan = ReturnType<typeof planWatchNext>
+const plans = createWatchNextPlanStore<Plan>()
+const planChoice = (options: WatchNextOptions) =>
+	JSON.stringify([
+		options.sort ?? null,
+		options.moods ?? [],
+		options.onMyServices ?? true,
+		options.notTonight ?? [],
+		options.kind ?? null,
+		options.time ?? null,
+	])
 
 interface Entry {
 	key: TitleKey
@@ -263,6 +289,7 @@ export function planWatchNext(
 	outside: ReadonlyMap<TitleKey, SortFacts | null> = new Map(),
 	/** Minutes per movie, for My movies with a time chosen (see movieRuntimes). */
 	runtimes: ReadonlyMap<TitleKey, number | null> = new Map(),
+	personalOrderRead?: PersonalOrderRead,
 ) {
 	const movies = options.kind === "movie"
 	const time = movies ? (options.time ?? null) : null
@@ -324,12 +351,87 @@ export function planWatchNext(
 	]
 	// Titles that fit come first, then those one condition short, then the rest; each in the sort's order. On My
 	// movies a movie that runs over the chosen time comes after every movie that doesn't, the least over first.
-	const ranked = [...order].sort(
+	let ranked = [...order].sort(
 		(a, b) =>
-			Math.sign(a.over) - Math.sign(b.over) ||
-			b.fit - a.fit ||
-			a.over - b.over,
+			Math.sign(a.over) - Math.sign(b.over) || b.fit - a.fit || a.over - b.over,
 	)
+	// The snapshot may reload while planFor awaits Valkey; never use mapping from another version.
+	if (
+		personalOrderRead?.data &&
+		personalOrderRead.data.payload.snapshotVersion !== snapshot?.version
+	)
+		personalOrderRead = {
+			data: null,
+			fallbackReason: snapshot ? "snapshot-mismatch" : "snapshot-unavailable",
+		}
+	const flag = recPersonalOrder(
+		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
+	)
+	const personalOrder = personalOrderExposure(
+		flag,
+		personalOrderRead ?? { data: null, fallbackReason: null },
+	)
+	if (sort === "match" && personalOrderRead && (flag.enabled || flag.shadow)) {
+		const today = ranked.map((e) => e.key)
+		if (personalOrderRead.data && snapshot) {
+			const franchiseGroups = orderPersonalOrder(
+				entries.map((e) => e.key),
+				personalOrderRead.data,
+				snapshot,
+				false,
+			)
+			const byKey = new Map(entries.map((e) => [e.key, e]))
+			let next = franchiseGroups.keys
+				.map((k) => byKey.get(k)!)
+				.sort(
+					(a, b) =>
+						Math.sign(a.over) - Math.sign(b.over) ||
+						b.fit - a.fit ||
+						a.over - b.over ||
+						Number(passed.has(a.key)) - Number(passed.has(b.key)),
+				)
+			const fittingKeys = next
+				.filter((e) => e.fit === need && !e.over && !passed.has(e.key))
+				.map((e) => e.key)
+			const mix = mixPersonalOrderFitting(
+				fittingKeys,
+				personalOrderRead.data,
+				snapshot,
+				franchiseGroups.ranks,
+			)
+			const replace = new Set(fittingKeys)
+			let i = 0
+			next = next.map((e) =>
+				replace.has(e.key) ? byKey.get(mix.keys[i++])! : e,
+			)
+			// The composed franchise grouping metadata is cached. This plan's fitting mix must not mutate it.
+			personalOrder.titles = new Map(
+				[...franchiseGroups.titles].map(([key, value]) => [key, { ...value }]),
+			)
+			for (const key of mix.placed)
+				personalOrder.titles.get(key)!.mixPlaced = true
+			logPersonalOrder(
+				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
+				"watch-next",
+				personalOrder,
+				today,
+				next.map((e) => e.key),
+			)
+			if (flag.enabled) {
+				personalOrder.todayFirst100 = today.slice(0, 100)
+				ranked = next
+			} else
+				personalOrder.personalOrderFirst100 = next
+					.slice(0, 100)
+					.map((e) => e.key)
+		} else
+			logPersonalOrder(
+				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
+				"watch-next",
+				personalOrder,
+				today,
+			)
+	}
 	const fitting = ranked.filter((e) => e.fit === need && !e.over)
 	const heroFits = fitting.length > 0 || ranked.length === 0
 	const head = (heroFits ? fitting : ranked).slice(0, 1 + THEN)
@@ -409,6 +511,7 @@ export function planWatchNext(
 
 	return {
 		sort,
+		personalOrder,
 		defaultSort,
 		moods,
 		onMyServices,
@@ -530,7 +633,12 @@ export function worthwhileSuggestions(
 		const key = keys[i]
 		if (moodMask && !(moodMasks[i] & moodMask)) continue
 		if (options.kind && parseTitleKey(key).mediaType !== options.kind) continue
-		if (ctx.hidden.has(key) || ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
+		if (
+			ctx.hidden.has(key) ||
+			ctx.wishlist.has(key) ||
+			ctx.seen.has(key) ||
+			ctx.skipped.has(key)
+		)
 			continue
 		// While the country's availability loads, services don't narrow.
 		if (onMyServices && isOnServices(ctx.country, ctx.services, key) === false)
@@ -589,8 +697,7 @@ function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 	const misfit = misfitOf({
 		over: entry.over,
 		inMood:
-			!plan.moods.length ||
-			Boolean(entry.moodMask & maskOfMoods(plan.moods)),
+			!plan.moods.length || Boolean(entry.moodMask & maskOfMoods(plan.moods)),
 		onServices: !plan.onMyServices || entry.onServices !== false,
 	})
 	return misfit ? { ...title, misfit } : title
@@ -607,7 +714,23 @@ async function planFor(
 		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
 		timed ? movieRuntimes(ctx.wishlist.keys()) : undefined,
 	])
-	return planWatchNext(ctx, taste, options, outside, runtimes)
+	const member = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
+	const flag = recPersonalOrder(member)
+	const match =
+		(!options.sort || options.sort === "match") &&
+		bestMatchOf(ctx, taste).available
+	const personalOrderRead =
+		member && match && (flag.enabled || flag.shadow)
+			? await loadPersonalOrder(member, getTitleSnapshot())
+			: undefined
+	return planWatchNext(
+		ctx,
+		taste,
+		options,
+		outside,
+		runtimes,
+		personalOrderRead,
+	)
 }
 
 /** Watch next for the viewer: the hero, its Then column, the tiers, mood counts and pictures, and suggestions. */
@@ -656,8 +779,36 @@ export async function getWatchNext(
 		.map((key) => cardOf.get(key))
 		.filter((card): card is TitleCard => !!card)
 	const start = plan.total === 0 ? (suggested[0] ?? null) : null
+	const tiers = plan.tiers.map((t, i) => ({
+		...t,
+		titles: i < 2 ? titles(shown[i]) : null,
+	}))
+	const worthAdding = suggested.filter((card) => card !== start)
+	const listId = watchNextExposure(
+		ctx,
+		options,
+		plan,
+		[
+			...headTitles,
+			...tiers.flatMap((t) => t.titles ?? []),
+			...(start ? [start] : []),
+			...worthAdding,
+		],
+		"page",
+	)
 
 	return {
+		listId,
+		planId:
+			ctx.viewer.kind === "member" &&
+			(plan.personalOrder.flag.enabled || plan.personalOrder.flag.shadow)
+				? plans.put(
+						ctx.viewer.userId,
+						planChoice(options),
+						plan,
+						plan.entries.size,
+					)
+				: null,
 		sort: plan.sort,
 		defaultSort: plan.defaultSort,
 		moods: plan.moods,
@@ -671,10 +822,7 @@ export async function getWatchNext(
 		hero: headTitles[0] ?? null,
 		heroNote: plan.heroNote,
 		thenColumn: headTitles.slice(1),
-		tiers: plan.tiers.map((t, i) => ({
-			...t,
-			titles: i < 2 ? titles(shown[i]) : null,
-		})),
+		tiers,
 		moodCounts: plan.moodCounts,
 		moodPictures: Object.fromEntries(
 			MOOD_KEYS.map((mood) => {
@@ -688,7 +836,7 @@ export async function getWatchNext(
 			}),
 		) as WatchNext["moodPictures"],
 		start,
-		worthAdding: suggested.filter((card) => card !== start),
+		worthAdding,
 		...(plan.movies ? { time: plan.time } : {}),
 	}
 }
@@ -700,9 +848,93 @@ export async function getWatchNextTitles(
 	options: WatchNextOptions,
 	givenTaste?: Taste,
 ): Promise<WatchNextTitle[]> {
+	return (await readWatchNextTitles(ctx, keys, options, givenTaste)).titles
+}
+
+/** One later batch for /api/watch-next/cards, with its own exposure id. */
+export async function getWatchNextCardsPage(
+	ctx: ViewerContext,
+	keys: TitleKey[],
+	options: WatchNextOptions,
+	planId?: string | null,
+): Promise<{
+	titles: WatchNextTitle[]
+	listId: string | null
+	refreshRequired: boolean
+}> {
+	let retained: Plan | null = null
+	const flag = recPersonalOrder(
+		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
+	)
+	if (ctx.viewer.kind === "member" && (planId || flag.enabled || flag.shadow)) {
+		retained = planId
+			? plans.get(planId, ctx.viewer.userId, planChoice(options))
+			: null
+		// Fail closed: never attach a newly composed plan's provenance to old browser keys.
+		if (!retained || keys.some((key) => !retained!.entries.has(key)))
+			return { titles: [], listId: null, refreshRequired: true }
+	}
+	const { plan, titles } = await readWatchNextTitles(
+		ctx,
+		keys,
+		options,
+		undefined,
+		retained ?? undefined,
+	)
+	return {
+		titles,
+		listId: watchNextExposure(ctx, options, plan, titles, "cards"),
+		refreshRequired: false,
+	}
+}
+
+async function readWatchNextTitles(
+	ctx: ViewerContext,
+	keys: TitleKey[],
+	options: WatchNextOptions,
+	givenTaste?: Taste,
+	retained?: Plan,
+) {
 	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
-	const plan = await planFor(ctx, taste, options)
-	const wanted = keys.filter((key) => plan.entries.has(key)).slice(0, MAX_KEYS)
+	const plan = retained ?? (await planFor(ctx, taste, options))
+	const wanted = keys
+		.filter((key) => plan.entries.has(key) && ctx.wishlist.has(key))
+		.slice(0, MAX_KEYS)
 	const cards = await getTitleCards(wanted, ctx, taste)
-	return cards.map((card) => wishlistTitle(plan, card))
+	return { plan, titles: cards.map((card) => wishlistTitle(plan, card)) }
+}
+
+function watchNextExposure(
+	ctx: ViewerContext,
+	options: WatchNextOptions,
+	plan: Plan,
+	titles: TitleCard[],
+	batch: "page" | "cards",
+) {
+	return recordListExposure(ctx, {
+		surface: "watch-next",
+		ordering: plan.personalOrder.todayFirst100 ? "personal-order" : "taste-v2",
+		flags: { REC_G1_ORDER: plan.personalOrder.flag.enabled },
+		personalOrder: plan.personalOrder,
+		watchNextTiers: new Map([
+			...plan.head.map((e, i) => [e.key, i === 0 ? "hero" : "then"] as const),
+			...plan.tiers.flatMap((t) => t.keys.map((k) => [k, t.key] as const)),
+		]),
+		sort: plan.sort,
+		sortRequested: options.sort ?? null,
+		// Watch next has no For you switch: its Best match sort already orders by taste.
+		forYou: false,
+		forYouApplied: false,
+		filters: {
+			type: options.kind ?? "all",
+			onMyServices: plan.onMyServices,
+			moods: plan.moods,
+			minMatch: 0,
+			notTonight: options.notTonight ?? [],
+			time: plan.time,
+		},
+		page: null,
+		batch,
+		titles,
+	})
 }

@@ -1,6 +1,7 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 import type { Score } from "~/server/scores.server"
 
-export interface ScoringMedia {
+export interface ScoringMedia extends PresentedMedia {
 	tmdb_id: number
 	media_type: "movie" | "show"
 	title: string

@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Tonight's pick for the dock, the header, and the hub sheet's Watch next tile. Members read it with a GET; a guest's
 // Wishlist lives in their browser, so their pick comes from a POST with the guest progress, and a guest with an empty
 // Wishlist sends no request. It refetches when the
@@ -22,14 +24,14 @@ export interface Tonight {
 /** The key of every answer kept for a viewer, whatever their Wishlist was. */
 export const tonightKey = (userId: string) => ["tonights-pick", userId] as const
 
-async function fetchTonight(guest: boolean): Promise<Tonight> {
+async function fetchTonight(guest: boolean, language: string): Promise<Tonight> {
 	const response = guest
-		? await fetch("/api/tonight", {
+		? await fetch(mediaLanguageUrl("/api/tonight", language), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ guest: snapshotGuestProgress() }),
 			})
-		: await fetch("/api/tonight")
+		: await fetch(mediaLanguageUrl("/api/tonight", language))
 	if (!response.ok) throw new Error(`Tonight's pick: ${response.status}`)
 	return (await response.json()) as Tonight
 }
@@ -41,6 +43,7 @@ export function useTonightsPick(): {
 	/** A member's titles that landed on one of their services; null when none did. */
 	landed: NewOnServices | null
 } {
+	const { locale } = useLocale()
 	const { user, loading } = useUser()
 	const { data } = useUserData()
 	const signature = useMemo(() => {
@@ -53,10 +56,10 @@ export function useTonightsPick(): {
 	// and asking the server would only return null. That is every first-time visitor.
 	const guestWithoutWishlist = !user && wishlistCount === 0
 	const query = useQuery({
-		queryKey: [...tonightKey(user?.id ?? "guest"), signature],
-		queryFn: () => fetchTonight(!user),
+		queryKey: [...tonightKey(user?.id ?? "guest"), signature, locale.language],
+		queryFn: () => fetchTonight(!user, locale.language),
 		enabled: !loading && !guestWithoutWishlist,
-		placeholderData: (previous) => previous,
+		placeholderData: (previous, query) => query?.queryKey.at(-1) === locale.language ? previous : undefined,
 	})
 	return {
 		// Without the check, a guest who empties their Wishlist would keep seeing the previous pick as placeholder.

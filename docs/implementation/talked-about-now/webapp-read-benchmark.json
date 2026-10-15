@@ -1,0 +1,13 @@
+{
+  "host": "abusive",
+  "samples": 50,
+  "includes_payload_decode": true,
+  "first_read_ms": 11.090832995250821,
+  "roundtrip_ms_min": 4.353592987172306,
+  "roundtrip_ms_median": 7.397747482173145,
+  "roundtrip_ms_p95": 11.161581031046808,
+  "roundtrip_ms_max": 14.232521993108094,
+  "crate_ms_median": 3.1836244999999996,
+  "payload_bytes": 25109,
+  "score_day": "2026-10-13"
+}

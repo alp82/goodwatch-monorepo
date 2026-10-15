@@ -1,3 +1,6 @@
+import { localizeTitlePayload } from "./media-payload.server.ts"
+import { overlayEpisodeTextGroups } from "./episode-text-overlay.server.ts"
+import type { PresentedMedia } from "~/utils/media-presentation"
 // My shows (#385): a member's shows for tonight. Nothing here scans the watch log: the member's side of every show
 // is its `watchState` entry in the member data map, the catalog's side is one read of `show` by key (Q5), and the
 // Next episode's name comes from the show's cached episode list. Only a show whose Next episode is in a gap (nothing
@@ -30,7 +33,7 @@ import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
 
 /** What a row shows of its show: the catalog's display fields. */
-export interface ShowCard {
+export interface ShowCard extends PresentedMedia {
 	id: number
 	title: string
 	poster_path: string | null
@@ -38,6 +41,8 @@ export interface ShowCard {
 }
 
 export interface NextEpisode {
+	id?: number
+	textPresentation?: import("./episode-text-overlay.server").EpisodeTextPresentation
 	displaySeason?: number
 	displayNumber?: number
 	season: number
@@ -81,6 +86,7 @@ export interface MyShows {
 }
 
 export interface MyShowsViewer {
+	language?: string
 	userId: string
 	country: string
 	services: number[]
@@ -158,6 +164,7 @@ async function readWatchedEpisodes(
 		if (!row.season_number || row.episode_number === null) continue
 		const list = found.get(Number(row.tmdb_id)) ?? []
 		list.push({
+			...(row.tmdb_id ? { id: row.tmdb_id } : {}),
 			season: row.season_number,
 			number: row.episode_number,
 			pass: row.pass,
@@ -194,6 +201,7 @@ async function readUpcomingEpisodes(
 	if (!ids.length) return new Map()
 	const rows = await query<{
 		show_id: number
+		tmdb_id: number
 		season_number: number
 		episode_number: number
 		name: string | null
@@ -205,6 +213,7 @@ async function readUpcomingEpisodes(
 	for (const row of rows) {
 		const list = listed.get(Number(row.show_id)) ?? []
 		list.push({
+			...(row.tmdb_id ? { id: row.tmdb_id } : {}),
 			season: row.season_number,
 			number: row.episode_number,
 			name: row.name,
@@ -261,6 +270,7 @@ const listed = (
 				? { displaySeason: e.displaySeason, displayNumber: e.displayNumber }
 				: {}
 		})(),
+		id: row.tmdb_id,
 		season: row.season_number,
 		number: row.episode_number,
 		name: row.name,
@@ -431,7 +441,7 @@ export async function getMyShows(
 			next: next.get(row.id)?.next ?? null,
 			upcoming: null,
 		}))
-	return {
+	const page: MyShows = {
 		continue: rows(shows.continue),
 		start: shows.start.map((row, i) => {
 			const show = catalog.get(row.id)
@@ -456,6 +466,17 @@ export async function getMyShows(
 		dropped: rows(shows.dropped),
 		total: shows.total,
 	}
+	if (!viewer.language) return page
+	const localized = await localizeTitlePayload(page, viewer.language, "show")
+	const items = [...localized.continue, ...localized.pickUp, ...localized.waiting, ...localized.onHold, ...localized.dropped]
+	const nextGroups = await overlayEpisodeTextGroups("episode", items.map(show => ({ showId: show.id, rows: [show.next, show.upcoming].filter((episode): episode is NextEpisode => episode !== null) })), viewer.language)
+	const byShow = new Map(nextGroups.map(group => [group.showId, new Map(group.rows.filter(episode => episode.id).map(episode => [episode.id, episode]))]))
+	const textFor = <T extends { id?: number; name: string | null }>(row: T | null, showId: number) => {
+		const text = row?.id ? byShow.get(showId)?.get(row.id) : null
+		return row && text ? { ...row, name: text.name ?? row.name, textPresentation: text.textPresentation } : row
+	}
+	const copy = (rows: MyShowsRow[]) => rows.map(show => ({ ...show, next: textFor(show.next, show.id), upcoming: textFor(show.upcoming, show.id) }))
+	return { ...localized, continue: copy(localized.continue), pickUp: copy(localized.pickUp), waiting: copy(localized.waiting), onHold: copy(localized.onHold), dropped: copy(localized.dropped) }
 }
 
 export type { MyShowsPlan }

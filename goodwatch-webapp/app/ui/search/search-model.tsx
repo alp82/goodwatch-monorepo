@@ -9,7 +9,13 @@ export type Title = {
 	poster: string | null;
 	popularity: number;
 	adult?: boolean;
+	/** The localized name the search matched, when the lookup matched one (see aliases.server.ts). */
+	matchedAlias?: MatchedAlias;
 };
+/** A localized name (alias) a title matched by: the name as stored, and its language. */
+export type MatchedAlias = { text: string; language: string };
+// How far a match by a localized name sits below a title match of the same kind (aliases.server.ts ALIAS_STEP).
+const ALIAS_STEP = 0.01;
 export type Description = { results: Result[] };
 const words = (s: string): string[] =>
 	s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
@@ -27,6 +33,8 @@ export type Row = {
 	discovery?: Description["results"][number];
 	lexical: number;
 	match: string;
+	/** The localized name the row matched by, when that beat its title and original title. */
+	matchedAlias?: MatchedAlias;
 	score: number;
 	// With the new filter bar, for members: the taste match (50 to 99, null without one) and how many places For you
 	// moves the row (positive: up; 0 when For you is off). Rows stay in the ranking's order.
@@ -55,6 +63,24 @@ export function titleMatch(title: string, query: string) {
 		return { lexical: 0.15, match: "Partial word in title" };
 	return { lexical: 0, match: "Catalog suggestion" };
 }
+/**
+ * The match by a localized name, one step below a title match of the same kind, when it beats `lexical` (the title's
+ * and original title's best); else null.
+ */
+export function aliasMatch(
+	alias: MatchedAlias | undefined,
+	q: string,
+	lexical: number,
+): { lexical: number; match: string; matchedAlias: MatchedAlias } | null {
+	if (!alias) return null;
+	const m = titleMatch(alias.text, q);
+	if (!m.lexical || m.lexical - ALIAS_STEP <= lexical) return null;
+	return {
+		lexical: m.lexical - ALIAS_STEP,
+		match: `${m.match} (localized name)`,
+		matchedAlias: alias,
+	};
+}
 export function blend(
 	titles: Title[],
 	description: Description | null,
@@ -75,6 +101,7 @@ export function blend(
 			adult: t.adult,
 			popularity: t.popularity,
 			...titleMatch(t.title, q),
+			matchedAlias: t.matchedAlias,
 			score: 0,
 		});
 	}
@@ -99,6 +126,9 @@ export function blend(
 			row.lexical = original.lexical;
 			row.match = `${original.match} (original name)`;
 		}
+		const alias = aliasMatch(row.matchedAlias, q, row.lexical);
+		if (alias) Object.assign(row, alias);
+		else delete row.matchedAlias;
 		// Rank fusion avoids pretending that text relevance and fingerprint scores share a scale.
 		const fingerprint = row.discovery ? 10 / (9 + row.discovery.rank) : 0;
 		const titleWeight =

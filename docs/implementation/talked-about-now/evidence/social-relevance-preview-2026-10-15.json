@@ -1,0 +1,47 @@
+{
+  "job_id": "01a1407d-623b-191d-902b-cc740ed92c57",
+  "success": true,
+  "production_writes": false,
+  "method": "In-memory candidate modules; RelevanceCrate apply=false permits only SELECT; public Bluesky hydration.",
+  "result": {
+    "apply": false,
+    "counts": {
+      "rss": {
+        "drop": 179,
+        "keep": 246
+      },
+      "bluesky": {
+        "drop": 132,
+        "keep": 4
+      },
+      "youtube": {
+        "drop": 51,
+        "keep": 30
+      },
+      "mastodon": {
+        "drop": 0,
+        "keep": 0
+      }
+    },
+    "judged": 642,
+    "reasons": {
+      "missing_metrics": 1,
+      "peripheral_title": 149,
+      "insufficient_reach": 124,
+      "no_editorial_angle": 31,
+      "generic_social_prompt": 2,
+      "countdown_or_activation": 2,
+      "fewer_than_12_own_words": 24,
+      "new_version_of_old_title": 2,
+      "routine_or_personal_news": 55,
+      "outside_publication_window": 9,
+      "social_revalidation_failed": 1,
+      "no_substantive_video_format": 42,
+      "archive_without_current_hook": 19,
+      "no_concrete_official_announcement": 3
+    },
+    "version": "relevance-1",
+    "judged_at": "2026-10-15T16:55:22.302135+00:00",
+    "hydration_errors": []
+  }
+}

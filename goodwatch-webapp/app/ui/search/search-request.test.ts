@@ -8,12 +8,13 @@ import { SEARCH_BUSY_MESSAGE as SERVER_BUSY_MESSAGE } from "../../server/search-
 import {
 	busyAnswer,
 	gatewayAnswers,
+	limitedAnswer,
 	networkError,
 	streamAnswer,
 	stubFetch,
 } from "./search-test-answers.ts"
 
-const { SEARCH_BUSY_MESSAGE, requestSearch } = await import(
+const { SEARCH_BUSY_MESSAGE, SEARCH_LIMITED_MESSAGE, requestSearch } = await import(
 	"./search-client.ts"
 )
 const { classifySearchResponse } = await import("./search-request.ts")
@@ -59,6 +60,19 @@ for (const [name, answer] of Object.entries(gatewayAnswers))
 		assert.equal(status, SEARCH_BUSY_MESSAGE)
 		assert.equal(fetched.mock.callCount(), 1, "no automatic retry")
 	})
+
+test("the search limit's 429 shows the calm limit message, not an error, and isn't retried", async (t) => {
+	for (const answer of [
+		limitedAnswer,
+		// A 429 from anywhere else on the way (no JSON body) reads the same.
+		() => new Response(null, { status: 429, headers: { "Retry-After": "30" } }),
+		() => new Response("Too Many Requests", { status: 429 }),
+	]) {
+		const fetched = stubFetch(t, answer)
+		assert.equal(await statusOf(oneSearch().batch), SEARCH_LIMITED_MESSAGE)
+		assert.equal(fetched.mock.callCount(), 1, "no automatic retry")
+	}
+})
 
 test("a request without an answer shows the busy message", async (t) => {
 	const fetched = stubFetch(t, () => {
@@ -138,8 +152,9 @@ test("an error inside the stream shows its message", async (t) => {
 	assert.equal(await statusOf(oneSearch().batch), "Search is unavailable right now.")
 })
 
-test("each answer is one of four kinds", async () => {
+test("each answer is one of five kinds", async () => {
 	assert.deepEqual(await classifySearchResponse(streamAnswer()), { kind: "stream" })
+	assert.deepEqual(await classifySearchResponse(limitedAnswer()), { kind: "limited" })
 	assert.deepEqual(await classifySearchResponse(busyAnswer()), {
 		kind: "busy",
 		message: SERVER_BUSY_MESSAGE,

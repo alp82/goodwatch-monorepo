@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -18,7 +20,7 @@ export type GetSimilarMediaResult = {
 	shows: SimilarTV[]
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
@@ -56,15 +58,19 @@ export const useSimilarMedia = ({
 	searchTerm = "",
 	withSimilar,
 }: UseSimilarMediaParams) => {
+	const { locale } = useLocale()
 	const withSimilarJson = JSON.stringify(withSimilar)
 
 	const url = new URL("/api/similar-media", "https://goodwatch.app")
+	url.searchParams.set("displayLanguage", locale.language)
 	url.searchParams.append("searchTerm", searchTerm)
 	url.searchParams.append("withSimilarJson", withSimilarJson)
 
 	return useQuery<GetSimilarMediaResult>({
-		queryKey: queryKeySimilarMedia.concat([searchTerm, withSimilarJson]),
+		queryKey: queryKeySimilarMedia.concat([searchTerm, withSimilarJson, locale.language]),
 		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
 		placeholderData: (previousData) => previousData,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

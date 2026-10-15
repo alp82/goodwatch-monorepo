@@ -11,7 +11,8 @@
 // Prime Video, read from nowhere, so a guest's HTML stays the same for every guest. A member's are their first two
 // saved services (`loadTvServices`), filled up with Netflix and Prime Video.
 import { json } from "@remix-run/node"
-import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { presentCatalogLoader } from "~/server/media-payload.server"
+import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { getTonightParts } from "~/server/home-doors.server"
 import type { Taste } from "~/server/taste/index.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
@@ -24,7 +25,7 @@ import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import {
 	type ViewerContext,
-	getMemberViewerContext,
+	getViewerContext,
 } from "~/server/viewer.server"
 import type { TvHomeData, TvService } from "~/ui/living-room/tv/tv-home"
 import { titleKey } from "~/utils/title-key"
@@ -81,12 +82,16 @@ export async function loadTvHome(request: Request) {
 			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
 		return start
 	})
-	if (!user) return { data: guestHome(await start), headers }
+	// "Talked about now" below the room (#557): only whether it is there. The row asks for its data itself once the
+	// visitor goes below, so with it on a guest's HTML stays the same for every guest, and grows by one field.
+	const talked = talkedAboutNowEnabled("row", user?.id)
+		? { talked: true as const }
+		: {}
+	if (!user) return { data: { ...guestHome(await start), ...talked }, headers }
 
 	// A member's home works without Tonight and My shows: the tiles are there and Tonight falls back to the pool's
 	// best, as for a guest. So a failed read leaves that, not an error page.
-	const country = getLocaleFromRequest(request).locale.country
-	const viewer = getMemberViewerContext(user.id, country)
+	const viewer = getViewerContext(request, undefined, user.id)
 	// A member's own services; without their settings, Netflix and Prime Video.
 	const services = viewer
 		.then((v) => loadTvServices(v.services))
@@ -109,11 +114,14 @@ export async function loadTvHome(request: Request) {
 		...guestHome(await start, await services),
 		member: true,
 		...(await own),
+		...talked,
 	}
 	return { data, headers }
 }
 
-export async function tvHomeLoader({ request }: { request: Request }) {
+async function canonicalHomeLoader({ request }: { request: Request }) {
 	const { data, headers } = await loadTvHome(request)
 	return json(data, { headers })
 }
+
+export const tvHomeLoader = presentCatalogLoader(canonicalHomeLoader, { live: true })

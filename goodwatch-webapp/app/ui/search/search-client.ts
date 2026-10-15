@@ -1,6 +1,6 @@
-// What Discover's free-text search and the TV's search keep close at hand for a search: the words of the busy answer,
-// and a `requestSearch` that loads the code for the request itself (search-request.ts) with the first search, so the
-// request and its stream reading stay out of the pages' first view.
+// What Discover's free-text search and the TV's search keep close at hand for a search: the words of the busy answer
+// and of the limit answer, and a `requestSearch` that loads the code for the request itself (search-request.ts) with
+// the first search, so the request and its stream reading stay out of the pages' first view.
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 /**
@@ -9,6 +9,13 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
  */
 export const SEARCH_BUSY_MESSAGE =
 	"Search is busy right now. Try again in a moment."
+
+/**
+ * The words of the server's answer to a visitor over the search limit (SEARCH_LIMITED_MESSAGE in
+ * server/search-runtime/rate-limit.server.ts). A test compares the two.
+ */
+export const SEARCH_LIMITED_MESSAGE =
+	"Too many searches right now. Try again in a moment."
 
 type SearchRequest = typeof import("./search-request")
 

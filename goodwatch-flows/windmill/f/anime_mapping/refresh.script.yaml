@@ -1,0 +1,16 @@
+summary: Refresh Anime-Lists episode mappings and Fribb tracker identities
+description: Downloads both public sources, validates and atomically replaces the small Crate snapshot. Credits Anime-Lists/anime-lists and Fribb/anime-lists. Dry run by default; enable weekly only after reviewed rollout.
+lock: '!inline f/anime_mapping/refresh.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+      description: Validate and report without publishing the snapshot.
+  required: []
+timeout: 300
+concurrent_limit: 1
+concurrency_time_window_s: 0

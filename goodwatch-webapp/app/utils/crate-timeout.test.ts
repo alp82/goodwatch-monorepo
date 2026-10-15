@@ -65,4 +65,21 @@ test("real Crate requests close on timeout without affecting other statements or
 	assert.ok(statements.some((stmt) => stmt.includes("SELECT count(*)")))
 	assert.equal(closures.length, 2)
 	await withBackendTimeout("Socket close", 700, async () => { await closures[1] })
+	await assert.rejects(query("SELECT stall_overlay", undefined, { timeoutMs: 100 }), (error) => {
+		assert.ok(error instanceof CrateTimeoutError)
+		assert.equal(error.timeoutMs, 100)
+		return true
+	})
+	assert.equal(process.env.CRATE_TIMEOUT_MS, "200")
+	if (closures.length > 2) await withBackendTimeout("Overlay socket close", 1000, async () => { await closures[2] })
+	const controller = new AbortController()
+	const cancelled = query("SELECT stall_cancelled", undefined, { timeoutMs: 5000, signal: controller.signal })
+	await withBackendTimeout("Statement arrival", 1000, async () => {
+		while (!statements.includes("SELECT stall_cancelled")) await new Promise(resolve => setImmediate(resolve))
+	})
+	const closure = closures.at(-1)!
+	controller.abort(new Error("Cancel overlay"))
+	await assert.rejects(cancelled, /Cancel overlay/)
+	await withBackendTimeout("Cancelled socket close", 1000, async () => { await closure })
+	assert.deepEqual(await query("SELECT after_overlay"), [{ n: 1 }])
 })

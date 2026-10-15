@@ -48,7 +48,7 @@ export function recordSearchHistoryWrite(recorded: boolean) {
 	} catch { /* The history result remains available when the logging sink fails. */ }
 }
 
-export function recordSearchRejection(reason: "wrong_role" | "busy") {
+export function recordSearchRejection(reason: "wrong_role" | "busy" | "rate_limited") {
 	try {
 		console.info(JSON.stringify({ event: "search.rejection.v1", at: new Date().toISOString(), reason }))
 	} catch { /* Admission behavior does not depend on the logging sink. */ }

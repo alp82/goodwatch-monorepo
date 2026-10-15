@@ -11,6 +11,7 @@ import type { MapCore, MapCtx, MapForm, MapTitle } from "./engine"
 import { chipsKit } from "./level-chips"
 import { ringsKit } from "./rings"
 import { type TraitWords, chipTokens } from "./traits"
+import { mediaTextHtml } from "../media-text/media-text"
 
 /** The most chips that can be on at once: one color each (level-chips.ts). */
 const MAX_ON = 3
@@ -40,7 +41,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 	const steps = (ctx: MapCtx, from: number, label: string, say: string) => {
 		let rows = ""
 		for (let i = last(ctx) - 1; i >= from; i--)
-			rows += `<li>${to(ctx, i, `<i>${i === 0 ? "Start" : i}</i>${thumb(at(ctx, i))}<span>${esc(at(ctx, i).t)}</span>`)}</li>`
+			rows += `<li>${to(ctx, i, `<i>${i === 0 ? "Start" : i}</i>${thumb(at(ctx, i))}<span${mediaTextHtml(at(ctx, i).language ?? "en")}>${esc(at(ctx, i).t)}</span>`)}</li>`
 		return `<details class="fn-hs" data-pl-hist=""><summary aria-label="${esc(say)}">${label}</summary><ol class="fn-pop">${rows}</ol></details>`
 	}
 
@@ -83,7 +84,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		const go = own
 			? '<span class="fn-this">This page</span>'
 			: `<a class="fn-open" data-pl-nav="" data-pl-open="" href="${esc(core.href(c))}"><span>Open<span class="fn-ow"> page</span><span class="pl-sr"> of ${esc(c.t)}</span></span>${RIGHT}</a>`
-		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b data-pl-here="" data-r-nm="">${esc(
+		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b${mediaTextHtml(ctx.root.language ?? "en")}>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b${mediaTextHtml(c.language ?? "en")} data-pl-here="" data-r-nm="">${esc(
 			c.t,
 		)}</b><small data-r-yr="">${kit.when(c)}</small></p><p class="fn-df" data-pl-why="" data-r-df="">${diff(ctx, c)}</p><div class="fn-go">${go}<span class="fn-mv">Tap it to move here</span></div><p class="fn-nt" data-r-nt="">${note}</p></div>`
 	}
