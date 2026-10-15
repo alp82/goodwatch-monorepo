@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.request import Request, build_opener, ProxyHandler
 
 port = os.environ.get('MCP_LOCAL_CRATE_PORT', '15767')
-assert port in ('15767', '15548', '15848'), 'Dedicated local MCP or account-page rehearsal port required'
+assert port in ('15767', '15548', '15848', '16248'), 'Dedicated local MCP, account-page or account-deletion rehearsal port required'
 cluster = 'gw-mcp-567' if port == '15767' else 'goodwatch-local-auth-548'
 member = os.environ.get('MCP_LOCAL_MEMBER_ID', 'mcp-member-A')
 url = f'http://127.0.0.1:{port}/_sql'

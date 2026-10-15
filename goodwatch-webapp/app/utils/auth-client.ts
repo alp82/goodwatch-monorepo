@@ -232,6 +232,28 @@ export function useAuthClient() {
 				return supabaseOutcome((await client.auth.updateUser({ password: next })).error)
 			},
 
+			/**
+			 * Account deletion (#553), Better Auth only. With the password the account is deleted at once; a wrong password,
+			 * or a member without one, is "invalid". Signs this device out.
+			 */
+			async deleteAccount(password: string): Promise<AuthResult> {
+				const result = outcome(await call("/delete-user", { password }))
+				if (result.ok) refreshUser()
+				return result
+			},
+
+			/** Emails the member a link to /delete-account that works for one hour and once. Better Auth only. */
+			async requestAccountDeletionLink(): Promise<AuthResult> {
+				return outcome(await call("/delete-user", {}))
+			},
+
+			/** The emailed link's token. "invalid": it expired, was used, or belongs to another member. Signs out. */
+			async confirmAccountDeletion(token: string): Promise<AuthResult> {
+				const result = outcome(await call("/delete-user", { token }))
+				if (result.ok) refreshUser()
+				return result
+			},
+
 			/** How the member signs in: "email" (a password), "google", or both. */
 			async signInMethods(): Promise<("email" | "google")[] | null> {
 				if (betterAuth) {

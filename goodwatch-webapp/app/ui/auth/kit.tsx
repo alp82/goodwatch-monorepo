@@ -159,12 +159,15 @@ export function PrimaryButton({
 	disabled,
 	onClick,
 	type = "submit",
+	danger,
 }: {
 	children: ReactNode
 	busy?: boolean
 	disabled?: boolean
 	onClick?: () => void
 	type?: "submit" | "button"
+	/** Red, for the one button that deletes something for good. */
+	danger?: boolean
 }) {
 	return (
 		<button
@@ -172,7 +175,7 @@ export function PrimaryButton({
 			onClick={onClick}
 			disabled={busy || disabled}
 			aria-busy={busy || undefined}
-			className="flex w-full cursor-pointer items-center justify-center rounded-lg bg-amber-700 px-4 py-3 font-semibold text-white transition duration-200 hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-400"
+			className={`flex w-full cursor-pointer items-center justify-center rounded-lg px-4 py-3 font-semibold text-white transition duration-200 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-400 ${danger ? "bg-red-700 hover:bg-red-600" : "bg-amber-700 hover:bg-amber-600"}`}
 		>
 			{busy ? <Spinner size="small" /> : children}
 		</button>

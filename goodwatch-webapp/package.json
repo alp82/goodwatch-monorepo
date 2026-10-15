@@ -19,6 +19,7 @@
 		"test:auth:mcp": "bash scripts/auth-mcp/run.sh",
 		"test:auth:mcp:clients": "bash scripts/auth-mcp/run.sh clients",
 		"test:auth:maintenance": "bash scripts/auth-maintenance/run.sh",
+		"test:auth:deletion": "bash scripts/auth-deletion/run.sh",
 		"auth:maintenance": "node scripts/auth-maintenance/cli.ts"
 	},
 	"dependencies": {

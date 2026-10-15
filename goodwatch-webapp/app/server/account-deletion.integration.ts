@@ -409,7 +409,7 @@ async function seedMemberRows(userId: string, handle: string) {
 			...stamps,
 		},
 		user_list: {
-			id: `L${userId.replaceAll("-", "").slice(0, 9)}`,
+			id: `L${userId.replace(/-/g, "").slice(0, 9)}`,
 			user_id: userId,
 			title: "My top 5",
 			design: "manifesto",

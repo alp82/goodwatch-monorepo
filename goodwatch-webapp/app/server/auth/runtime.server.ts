@@ -100,18 +100,23 @@ export async function getBetterAuth(): Promise<AuthService> {
 }
 // A dev server against the disposable Docker services of `scripts/auth-wiring/dev.sh`: the wiring's CrateDB,
 // Valkey and SMTP catcher on loopback. Never in production, and never the site's own Valkey.
+// AUTH_LOCAL_PROFILE=deletion uses the account-deletion suite's services instead (scripts/auth-deletion/dev.sh).
 function localAuth(): AuthService {
 	if (process.env.NODE_ENV === "production")
 		throw new Error("Local auth services are for development only")
-	const valkey = new Redis.Cluster([{ host: "127.0.0.1", port: 15901 }], {
+	const ports =
+		process.env.AUTH_LOCAL_PROFILE === "deletion"
+			? { crate: 16248, valkey: 16201, smtp: 16225 }
+			: { crate: 15848, valkey: 15901, smtp: 15925 }
+	const valkey = new Redis.Cluster([{ host: "127.0.0.1", port: ports.valkey }], {
 		natMap: JSON.parse(process.env.AUTH_LOCAL_VALKEY_NAT ?? "{}"),
 		redisOptions: { maxRetriesPerRequest: 0, commandTimeout: 3000 },
 	})
 	return createGoodwatchAuth({
-		sql: localCrateTransport(["http://127.0.0.1:15848"]),
+		sql: localCrateTransport([`http://127.0.0.1:${ports.crate}`]),
 		storage: new ValkeyAuthStorage(() => valkey),
 		mail: new AuthMailQueue(
-			smtpTransport({ host: "127.0.0.1", port: 15925, localCatcher: true }),
+			smtpTransport({ host: "127.0.0.1", port: ports.smtp, localCatcher: true }),
 		),
 		baseURL: required("BETTER_AUTH_URL"),
 		secret: required("BETTER_AUTH_SECRET"),

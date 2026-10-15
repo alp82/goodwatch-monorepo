@@ -1,0 +1,54 @@
+name: Better Auth account deletion
+
+on:
+  pull_request:
+    paths:
+      - 'goodwatch-webapp/app/server/auth/**'
+      - 'goodwatch-webapp/app/server/account-deletion*'
+      - 'goodwatch-webapp/app/server/share-lists/**'
+      - 'goodwatch-webapp/app/server/tracking.server.ts'
+      - 'goodwatch-webapp/app/server/mcp/actions.server.ts'
+      - 'goodwatch-webapp/scripts/auth-deletion/**'
+      - 'goodwatch-webapp/scripts/auth-cratedb/**'
+      - 'goodwatch-webapp/scripts/auth-mcp/compose.yaml'
+      - 'goodwatch-webapp/packages/auth-stack/**'
+      - 'goodwatch-webapp/package*.json'
+      - 'goodwatch-flows/windmill/f/sync/models/crate_schemas.py'
+      - '.github/workflows/auth-deletion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auth-deletion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install locked dependencies
+        working-directory: goodwatch-webapp
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix scripts/auth-cratedb/conformance
+      - name: Configure disposable runner for CrateDB
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Account deletion with local Docker stores only
+        working-directory: goodwatch-webapp
+        run: npm run test:auth:deletion
+      - name: Keep sanitized test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-deletion-results
+          path: |
+            goodwatch-webapp/scripts/auth-deletion/results/unit.log
+            goodwatch-webapp/scripts/auth-deletion/results/integration.log
+            goodwatch-webapp/scripts/auth-deletion/results/typecheck.log
+            goodwatch-webapp/scripts/auth-deletion/results/containers.log

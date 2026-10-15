@@ -1,5 +1,7 @@
+import { TrashIcon } from "@heroicons/react/24/outline";
 import { EnvelopeIcon } from "@heroicons/react/24/solid";
 import type { MetaFunction } from "@remix-run/node";
+import { Link } from "@remix-run/react";
 import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import SubmitButton from "~/ui/button/SubmitButton";
@@ -208,6 +210,31 @@ export default function SettingsAccount() {
 				<p className="max-w-80 py-2 px-5 text-sm border-l-8 border-blue-700 text-blue-200 bg-blue-900">
 					Don't worry, you won't lose any previously saved settings.
 				</p>
+
+				{betterAuth && (
+					<section aria-labelledby="delete-account">
+						<h3
+							id="delete-account"
+							className="mt-8 mb-4 font-bold tracking-tight text-gray-100 text-base md:text-lg lg:text-xl"
+						>
+							Delete Account
+						</h3>
+						<div className="flex max-w-xl flex-col items-start gap-3 rounded-lg border border-red-900/70 bg-red-950/20 p-4">
+							<p className="text-sm leading-relaxed text-gray-300">
+								Deleting your account removes your ratings, Want to See, watch
+								history, lists and settings, and disconnects apps like Claude.
+								It can't be undone.
+							</p>
+							<Link
+								to="/delete-account"
+								className="flex items-center gap-2 whitespace-nowrap rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-gray-200 hover:border-red-500 hover:text-red-300"
+							>
+								<TrashIcon className="h-4 w-4" aria-hidden="true" />
+								Delete account
+							</Link>
+						</div>
+					</section>
+				)}
 			</div>
 		</div>
 	);
