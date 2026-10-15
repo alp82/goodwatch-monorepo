@@ -25,6 +25,7 @@ const makeAuth = (extra: BetterAuthOptions = {}) => {
 		secret,
 		baseURL: "http://localhost:3000",
 		emailAndPassword: { enabled: true },
+		verification: { disableCleanup: true },
 		...extra,
 	}
 	return betterAuth(options)

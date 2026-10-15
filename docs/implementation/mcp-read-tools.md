@@ -1,5 +1,7 @@
 # Member MCP read tools (#567)
 
+The write extension built on #577 is documented in [Member MCP write tools](mcp-write-tools.md).
+
 The Remix resource route `goodwatch-webapp/app/routes/mcp.ts` serves a stateless MCP SDK **2.3.1** handler at `/mcp`, including stateless legacy clients. It shares the webapp's server readers and tracking state machine; it does not import the spike's fixture store or OAuth server. Schemas use the exact **Zod 4.6.7** `zod4` package alias; existing webapp schemas keep Zod 3.
 
 ## Authorization handoff to #566

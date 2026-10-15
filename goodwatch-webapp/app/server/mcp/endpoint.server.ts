@@ -1,11 +1,16 @@
 import {
+	OAuthError,
 	type OAuthTokenVerifier,
+	bearerAuthChallengeResponse,
 	createMcpHandler,
+	readRequestBody,
 	requireBearerAuth,
 } from "@modelcontextprotocol/server"
 import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
-import { createReadToolServer } from "./tools.server.ts"
+import type { RankedSearch } from "./ranked.server.ts"
+import { createToolServer } from "./tools.server.ts"
+import { isWriteCall } from "./write-names.ts"
 
 interface Limiter {
 	take(
@@ -20,6 +25,7 @@ export function createReadMcpHandler(
 		resource?: string
 		authorization?: OAuthTokenVerifier
 		limiter?: Limiter
+		rankedSearch?: RankedSearch
 	} = {},
 ) {
 	const resource = options.resource ?? process.env.MCP_RESOURCE_URL
@@ -52,6 +58,39 @@ export function createReadMcpHandler(
 		const userId = auth.extra?.userId
 		if (typeof userId !== "string" || !userId.trim())
 			return new Response("Missing member subject", { status: 403 })
+		let body: unknown = null
+		if (request.method === "POST") {
+			const read = await readRequestBody(request.clone())
+			if (read.tooLarge)
+				return Response.json({ error: "request_too_large" }, { status: 413 })
+			try {
+				body = JSON.parse(read.text)
+			} catch {
+				return Response.json(
+					{
+						jsonrpc: "2.0",
+						id: null,
+						error: { code: -32700, message: "Invalid JSON" },
+					},
+					{ status: 400 },
+				)
+			}
+		}
+		if (
+			!auth.scopes.includes("mcp:write") &&
+			(Array.isArray(body) ? body : [body]).some(isWriteCall)
+		) {
+			return bearerAuthChallengeResponse(
+				new OAuthError(
+					"insufficient_scope",
+					"This operation requires mcp:write",
+				),
+				{
+					requiredScopes: ["mcp:write"],
+					resourceMetadataUrl: auth.resourceMetadataUrl,
+				},
+			)
+		}
 		const limiter =
 			options.limiter ?? (await import("../rate-limit.server.ts")).rateLimiter
 		const verdict = await limiter.take("mcp-read", userId, [
@@ -68,7 +107,13 @@ export function createReadMcpHandler(
 				},
 			})
 		const handler = createMcpHandler(
-			() => createReadToolServer(userId, new URL(resource).origin),
+			() =>
+				createToolServer(
+					userId,
+					new URL(resource).origin,
+					auth.scopes.includes("mcp:write"),
+					options.rankedSearch,
+				),
 			{ legacy: "stateless" },
 		)
 		try {

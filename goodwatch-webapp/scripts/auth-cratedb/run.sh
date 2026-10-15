@@ -24,7 +24,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 "${compose[@]}" up -d
 node --input-type=module <<'JS'
-import { localCrateTransport, migrateAuthTables } from './app/server/auth/crate-adapter.server.ts'
+import { localCrateTransport, migrateAuthTables, authModels } from './app/server/auth/crate-adapter.server.ts'
 const sql = localCrateTransport(['http://127.0.0.1:15748'], 5000)
 const deadline = Date.now() + 180000
 let ready = false
@@ -41,7 +41,7 @@ const copiesDeadline = Date.now() + 90000
 let copiesReady = false
 while (Date.now() < copiesDeadline) {
   const copies = await sql("SELECT table_name,count(*) FROM sys.shards WHERE table_name LIKE 'auth_%' AND state='STARTED' GROUP BY table_name")
-  if (copies.rows.length === 14 && copies.rows.every(row => row[1] === 3)) { copiesReady = true; break }
+  if (copies.rows.length === authModels.length + 2 && copies.rows.every(row => row[1] === 3)) { copiesReady = true; break }
   await new Promise(resolve => setTimeout(resolve, 500))
 }
 if (!copiesReady) throw new Error('Auth tables did not acquire three started shard copies')

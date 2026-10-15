@@ -261,7 +261,7 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 		user: { findOne: ["id", "email"], update: ["id", "email"], delete: ["id"] },
 		account: { findMany: ["providerId+accountId", "userId", "id"], findOne: ["userId+providerId+accountId"], updateMany: ["userId+providerId+accountId"], update: ["id"], delete: ["id"], deleteMany: ["userId"] },
 		session: { findOne: ["token", "id"], update: ["token"], findMany: ["userId", "userId+expiresAt:gt", "token+expiresAt:gt", "token:in+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
-		verification: { findOne: ["id"], findMany: ["identifier"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier", "expiresAt:lt"] },
+		verification: { findOne: ["id"], findMany: ["identifier"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier"] },
 		jwks: { findMany: [""], findOne: ["id"] },
 		oauthClient: { findOne: ["clientId"], findMany: ["referenceId", "userId", "clientId:in"], update: ["clientId", "clientId+clientDiscoveryId"], delete: ["clientId"] },
 		oauthResource: { findOne: ["identifier"], findMany: ["", "identifier:in"], update: ["identifier"], delete: ["identifier"] },
@@ -290,6 +290,9 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 	for (const model of Object.keys(inventory)) {
 		await assert.rejects(adapter.findMany<Record<string, any>>({ model, where: [{ field: "id", value: "x", operator: "contains" }] }), /Unsupported auth shape/)
 	}
+	for (const action of ["findMany", "deleteMany"] as const)
+		await assert.rejects(adapter[action]({ model: "verification", where: [{ field: "expiresAt", operator: "lt", value: new Date() }] }), /Unsupported auth shape/)
+
 	await assert.rejects(adapter.findMany<Record<string, any>>({ model: "user", where: [] }), /Unsupported auth shape/)
 	await assert.rejects(adapter.count({ model: "user" }), /Unsupported auth shape/)
 })
@@ -317,6 +320,57 @@ test("refresh rotation including empty increments races revocation with exactly 
 	})))
 	assert.equal(results.filter(Boolean).length, 1)
 	assert.ok((await adapter.findOne<Record<string, any>>({ model: "oauthRefreshToken", where: [{ field: "token", value: token.token }] }))?.revoked)
+})
+
+// Primary-key reads may be served by any shard copy. A replica can acknowledge a
+// rejected CAS before it applies the earlier winning write, so the read-back right
+// after rowcount 0 can still show the version the CAS was based on. Replay that
+// lagging copy for the first `staleReads` read-backs after the CAS.
+async function laggingReplicaRace(staleReads: number, appliedButUnacknowledged = false) {
+	const transport = localCrateTransport(endpoints)
+	const healthy = crateAuthAdapter({ sql: transport })(authTestOptions)
+	const token = await healthy.create({ model: "oauthRefreshToken", data: { token: randomUUID(), clientId: "client", userId: "member", revoked: null } })
+	const where = [{ field: "id", value: token.id }, { field: "revoked", value: null }]
+	let snapshot: Awaited<ReturnType<typeof transport>> | undefined, lagging = 0, competitor: Record<string, any> | null | undefined
+	const sql = async (statement: string, args?: unknown[]) => {
+		if (statement.startsWith("SELECT payload,") && lagging > 0) { lagging--; return snapshot! }
+		if (statement.startsWith("UPDATE doc.auth_oauth_refresh_token ")) {
+			if (appliedButUnacknowledged) {
+				// Like #530's primary loss: applied, but the retried request reports 0 rows.
+				assert.equal((await transport(statement, args)).rowcount, 1)
+				lagging = staleReads
+				return { rows: [], cols: [], rowcount: 0 }
+			}
+			competitor = await healthy.incrementOne<Record<string, any>>({ model: "oauthRefreshToken", where, increment: {}, set: { revoked: new Date() } })
+			const result = await transport(statement, args)
+			lagging = staleReads
+			return result
+		}
+		const result = await transport(statement, args)
+		if (statement.startsWith("SELECT payload,")) snapshot = result
+		return result
+	}
+	const racing = crateAuthAdapter({ sql, encryptionSecret: "disposable-local-auth-integration-key-548" })(authTestOptions)
+	const outcome = await racing.incrementOne<Record<string, any>>({ model: "oauthRefreshToken", where, increment: {}, set: { revoked: new Date(), rotatedAt: new Date() } })
+	return { outcome, competitor, stored: await healthy.findOne<Record<string, any>>({ model: "oauthRefreshToken", where: [{ field: "token", value: token.token }] }) }
+}
+
+test("a rejected rotation whose read-back lags on a replica loses to the proven winner instead of failing indeterminate", async () => {
+	const { outcome, competitor, stored } = await laggingReplicaRace(2)
+	assert.equal(outcome, null)
+	assert.ok(competitor?.revoked)
+	assert.equal(stored?.rotatedAt, undefined, "only the competing revocation applied")
+	assert.ok(stored?.revoked)
+})
+
+test("an applied rotation acknowledged as 0 rows recovers its own receipt once a lagging read-back catches up", async () => {
+	const { outcome, stored } = await laggingReplicaRace(2, true)
+	assert.ok(outcome?.rotatedAt)
+	assert.equal(stored?.rotatedAt?.getTime(), outcome.rotatedAt.getTime())
+})
+
+test("a read-back that never shows a newer version than the rejected CAS base still fails closed", async () => {
+	await assert.rejects(laggingReplicaRace(Number.MAX_SAFE_INTEGER), IndeterminateAuthWriteError)
 })
 
 test("24 code redemptions across three coordinators have one winner and the token stays invisible", async () => {

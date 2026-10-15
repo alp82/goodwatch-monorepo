@@ -36,13 +36,14 @@ All are environment variables of the webapp, read while the process runs. A chan
 | People index | No | Yes | Yes |
 | Open connections for the reading call | No | Yes | Yes |
 | `POST /api/combined-search` | The busy answer: 503 with `Retry-After` | Search | Search |
+| `/mcp` | Cheap reads/writes; ranked calls refuse work | Reads/writes and opt-in ranked search | Reads/writes and opt-in ranked search |
 | `GET /api/command-palette` | Titles from the TMDB title search | Titles from the search index | Titles from the search index |
 | Readiness waits for the search index | No | Yes | Yes |
 | Title snapshot, page cache, static files | Yes | Yes | Yes |
 | Metrics port | Yes | Yes | Yes |
 
 - **A page instance does no search work.** Its memory is about 1.76 GB lower than with search. The proxy is meant
-  to send the two search paths to the search roles. The answers in the table are what a page instance gives when a
+  to send the three search/MCP paths to the search roles. The answers in the table are what a page instance gives when a
   request for them arrives anyway.
 - **A search role is a whole webapp.** It answers every route. Only the proxy's rule keeps pages away from it.
 - **A search role becomes ready without a title snapshot.** The ranking doesn't read the snapshot. Without one,
@@ -57,7 +58,7 @@ In production, two search roles run on vector1 from a compose file,
 [`goodwatch-search/docker-compose.yml`](../goodwatch-search/docker-compose.yml), not as Coolify applications.
 
 - **Names:** the containers `goodwatch-search-a` and `goodwatch-search-b` on the `coolify` network. vector1's proxy
-  balances the two search paths across them and asks `/health/ready` every 2 seconds.
+  balances search traffic across them and asks `/health/ready` every 2 seconds.
 - **Image:** the one that Coolify builds and pushes for every deploy of the webapp, tagged with the commit. The
   compose file sets `WEBAPP_ROLE=search`, `SEARCH_MAX_IN_FLIGHT=4`, and `SOURCE_COMMIT`. The rest comes from a
   `.env` file on the host.
@@ -93,3 +94,9 @@ during a deploy ([webapp-deploys.md](webapp-deploys.md)). Point the cache settin
 when that write isn't wanted. A search role then still starts, as described above.
 
 A ranked search writes a history row to the Crate that `.env` names.
+
+## MCP ranked search
+
+The proxy configuration now includes exact `/mcp` routing to search roles. Deploy the MCP-capable search-role image before installing the updated routing files; until then the configuration is only a repository change. Both OAuth verification and `MCP_RESOURCE_URL` must be configured on those roles when #566 lands. OAuth/metadata routes keep their existing page routing.
+
+Ranked MCP calls use the same `searchAdmission` and `combinedSearch` spending path as browser searches. The additional member quota and cached pagination are described in [the MCP ranked-search runbook](implementation/mcp-ranked-search.md). They need shared Valkey and a stable `SEARCH_STORAGE_KEY`; coordination failure refuses new ranked work. Cheap write-tool name lookup continues to use only the catalog.
