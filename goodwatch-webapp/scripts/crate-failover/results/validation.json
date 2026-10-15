@@ -1,0 +1,97 @@
+{
+  "recordedAt": "2026-10-14T23:48:05.531836+00:00",
+  "branch": "fix/crate-client-failover",
+  "baseCommit": "a05bbf3fa47a3f4659d6d5fabbf8948895c0b3ee",
+  "implementationCommit": "84f06d0f",
+  "implementationSha256": "05c5b3c128b5f506265a3e86dc6f07e0f007687a662dd913c0bddfc3bed45587",
+  "targetedCrateTests": {
+    "tests": 25,
+    "passed": 25,
+    "failed": 0
+  },
+  "fullSuite": {
+    "command": "node --test --test-concurrency=1 'app/**/*.test.ts'",
+    "tests": 2651,
+    "passed": 2650,
+    "failed": 0,
+    "skipped": 1,
+    "durationMs": 266836.574874,
+    "skippedTest": "cross-process cache reset guards on a throwaway Valkey cluster"
+  },
+  "strictScopedTypecheck": {
+    "passed": true,
+    "files": [
+      "app/utils/crate.ts",
+      "app/utils/crate-failover.test.ts",
+      "app/utils/crate-timeout.test.ts",
+      "app/utils/crate-insert-rows.test.ts",
+      "app/utils/crate-null-timestamp.test.ts"
+    ],
+    "command": "npx --no-install tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution bundler --skipLibCheck --allowImportingTsExtensions --esModuleInterop <files>"
+  },
+  "repositoryTypecheck": {
+    "passed": false,
+    "diagnosticCount": 174,
+    "changedCrateFileDiagnostics": 0,
+    "scope": "Diagnostics are in unchanged files; no unrelated fixes made"
+  },
+  "otherChecks": {
+    "gitDiffCheck": true,
+    "bashSyntax": true,
+    "composeConfig": true,
+    "evidenceJsonParsing": true,
+    "githubChecks": "No checks reported on the draft PR"
+  },
+  "finalProof": "fixed-keys-proof.json",
+  "cleanup": "fixed-keys-proof-cleanup.json",
+  "pythonAssessment": "python-assessment.json",
+  "earlierSuiteObservations": [
+    {
+      "label": "Before repository dependency patches",
+      "tests": 2647,
+      "passed": 2639,
+      "failed": 7,
+      "skipped": 1
+    },
+    {
+      "label": "Patched, four-way concurrency before final guards",
+      "tests": 2648,
+      "passed": 2647,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "label": "Alongside Docker, before fixture deadline adjustment",
+      "tests": 2649,
+      "passed": 2645,
+      "failed": 3,
+      "skipped": 1,
+      "cause": "New fixture deadlines of 150\u2013300 ms under CPU contention; fixtures now use default budget outside dedicated timing cases"
+    },
+    {
+      "label": "After fixture deadline adjustment",
+      "tests": 2649,
+      "passed": 2648,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "label": "Final guards, four-way concurrency",
+      "tests": 2651,
+      "passed": 2649,
+      "failed": 1,
+      "skipped": 1,
+      "failure": "Existing lifecycle timed throughput assertion: seven requests in 700 ms, requires eight"
+    },
+    {
+      "label": "Unchanged lifecycle file alone",
+      "tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "productionAccess": false,
+  "merged": false,
+  "deployed": false
+}

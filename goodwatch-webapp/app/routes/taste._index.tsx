@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -47,7 +48,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { userId } = await tastePageViewer(request)
 	return loadTasteTab(request, "sides", userId)
 }
@@ -105,3 +106,5 @@ function Sides({
 		/>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

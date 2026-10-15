@@ -70,13 +70,13 @@ export async function computeShowcaseExamples(
 						movieId: item.id,
 						country,
 						language,
-					}, options)
+					}, { ...options, canonical: true })
 				} else {
 					media = await getDetailsForShow({
 						showId: item.id,
 						country,
 						language,
-					}, options)
+					}, { ...options, canonical: true })
 				}
 
 				return transformToShowcaseExample(media)

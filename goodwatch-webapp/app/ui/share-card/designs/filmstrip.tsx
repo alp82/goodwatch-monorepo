@@ -112,7 +112,7 @@ function FilmstripCard({ title, items, name, theme, date, editing }: CardProps) 
 									</div>
 									<div style={flex({ height: 64, alignItems: "center", justifyContent: "space-between", gap: 20, color: "#f4efe6" })}>
 										<div style={{ display: "flex", flex: 1, fontWeight: 700, fontSize: fit(item.title, [[24, 32], [34, 26], [999, 22]]), lineHeight: 1.1, overflow: "hidden", maxHeight: 54 }}>
-											{item.title}
+											<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 										</div>
 										<div style={{ display: "flex", fontFamily: "Space Mono", fontSize: 22, color: alpha("#f4efe6", 0.55) }}>{item.year ? String(item.year) : ""}</div>
 									</div>

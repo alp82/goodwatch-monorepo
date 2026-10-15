@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "~/utils/media-presentation"
 // What the start page with the new TV shows a guest and a member, shaped from what the loader read
 // (tv-loader.server.ts). Pure: no request, no read.
 import { episodeCode, tonightsPickOf } from "~/domain/my-shows"
@@ -107,7 +108,7 @@ export function memberHome(
 				card,
 				href: DOOR_HREF.continue,
 				...(next && {
-					episode: { code: episodeCode(next), name: next.name },
+					episode: { code: episodeCode(next), name: next.name, ...(next.textPresentation ? { language: next.textPresentation.name.language } : {}) },
 				}),
 			})
 	}
@@ -125,12 +126,14 @@ export function memberHome(
 		shows: {
 			next: started.slice(0, SHOWS_PER_GROUP).map((row) => ({
 				id: row.id,
+				...copyMediaPresentation(row),
 				title: row.title,
 				poster_path: row.poster_path,
 				backdrop_path: row.backdrop_path,
 				episode: row.next && {
 					code: episodeCode(row.next),
 					name: row.next.name,
+					...(row.next.textPresentation ? { language: row.next.textPresentation.name.language } : {}),
 					runtime: row.next.runtime,
 				},
 				// My shows (slice 9).
@@ -139,6 +142,7 @@ export function memberHome(
 			})),
 			start: shows.start.slice(0, SHOWS_PER_GROUP).map((show) => ({
 				id: show.id,
+				...copyMediaPresentation(show),
 				title: show.title,
 				poster_path: show.poster_path,
 				backdrop_path: show.backdrop_path,

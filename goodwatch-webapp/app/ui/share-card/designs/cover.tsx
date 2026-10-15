@@ -53,7 +53,7 @@ const CoverArt = ({ item, w, h, color }: { item: CardTitle; w: number; h: number
 		<Img src={item.poster} w={w} h={h} />
 	) : (
 		<div style={col({ width: w, height: h, backgroundColor: color, padding: w * 0.08, justifyContent: "flex-end" })}>
-			<div style={{ display: "flex", fontFamily: "Instrument Serif", fontStyle: "italic", fontSize: w * 0.16, lineHeight: 0.95, color: onColor(color) }}>{item.title}</div>
+			<div style={{ display: "flex", fontFamily: "Instrument Serif", fontStyle: "italic", fontSize: w * 0.16, lineHeight: 0.95, color: onColor(color) }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 		</div>
 	)
 
@@ -154,7 +154,7 @@ export function CoverCard({ title, items, name, theme, date, editing }: CardProp
 					{items.slice(0, 5).map((item, i) => (
 						<div key={item.key} style={flex({ gap: 10, alignItems: "center" })}>
 							<div style={flex({ width: 30, height: 30, alignItems: "center", justifyContent: "center", backgroundColor: i === 0 ? t.accent : ink, color: i === 0 ? onField : paper, fontSize: 18 })}>{i + 1}</div>
-							<div style={{ display: "flex" }}>{item.title}</div>
+							<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 						</div>
 					))}
 				</div>

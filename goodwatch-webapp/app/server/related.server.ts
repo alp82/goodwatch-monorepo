@@ -1,3 +1,4 @@
+import { localizeTitlePayload } from "./media-payload.server.ts"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 import { counter } from "~/server/metrics/registry.server"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
@@ -403,6 +404,7 @@ export interface StreamingAvailability {
 }
 
 export interface RelatedTitle {
+	tmdb_id: number
 	title: string
 	release_year: string
 	link: string
@@ -430,7 +432,7 @@ export interface RelatedByCategoryParams {
 
 export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 	// Create a cache key that includes countries and streaming_ids for proper invalidation
-	const cacheKey = `related-by-category-${params.countries.join(",")}-${params.streaming_ids?.join(",") || "all"}`
+	const cacheKey = `related-by-category-v2-${params.countries.join(",")}-${params.streaming_ids?.join(",") || "all"}`
 
 	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
@@ -592,6 +594,7 @@ async function _getRelatedByCategory({
 					const title = Array.isArray(m.title) ? m.title[0] : m.title
 					return {
 						title,
+						tmdb_id: m.tmdb_id,
 						release_year: m.release_year,
 						link: `https://goodwatch.app${titlePath("movie", m.tmdb_id, title)}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
@@ -610,6 +613,7 @@ async function _getRelatedByCategory({
 					const title = Array.isArray(s.title) ? s.title[0] : s.title
 					return {
 						title,
+						tmdb_id: s.tmdb_id,
 						release_year: s.release_year,
 						link: `https://goodwatch.app${titlePath("show", s.tmdb_id, title)}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,

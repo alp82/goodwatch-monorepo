@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "~/utils/media-presentation"
 // Mini Discover. Its first screen is three tabs, Moods, Themes and Styles, with six options each; one choice leads
 // to the first titles of Discover's own results for it, and a title to its title screen. Change leads back to the
 // tabs. Choices never combine on the TV: combining is the Discover page's, one Expand away, with the choice
@@ -208,6 +209,7 @@ function List({
 }) {
 	const titles: TvListTitle[] = (list?.cards ?? []).map((card) => ({
 		key: tvTitleKey(card),
+		...copyMediaPresentation(card),
 		title: card.title,
 		poster: card.poster_path,
 		backdrop: card.backdrop_path,

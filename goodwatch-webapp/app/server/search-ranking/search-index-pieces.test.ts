@@ -1,6 +1,7 @@
 // Exercise every index field through the actual transferable transport.
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { aliasTable } from "./aliases.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
 import {
 	createAssembler,
@@ -105,6 +106,15 @@ function fixture(): SearchIndex {
 			{ name: "a", row: 0 },
 			{ name: "bb", row: 1 },
 		],
+		aliases: aliasTable(
+			{
+				version: 1,
+				rows: [0, 1, 1],
+				names: ["Das A", "B-Film", "ビー"],
+				languages: ["de", "de", "ja"],
+			},
+			2,
+		),
 		timings: { total: 42, title_table: 12 },
 	}
 }

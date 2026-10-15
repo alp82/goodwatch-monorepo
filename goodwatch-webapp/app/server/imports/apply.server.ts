@@ -1,4 +1,5 @@
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
+import { canImportWantToSee } from "../../domain/imports.ts"
 import {
 	HEARTBEAT_MS,
 	NativeImportError,
@@ -24,6 +25,9 @@ type Snapshot = {
 	term?: number
 }
 type Journal = { before: Snapshot; after: Snapshot; stamp: string }
+const isWant = (item: ImportItem) =>
+	item.kind === "want" ||
+	(item.kind === "show_status" && item.showStatus === "plan_to_watch")
 const ref = (item: ImportItem) => `${item.mediaType}:${item.tmdbId}`
 async function defaultImportEffects(userId: string) {
 	const [{ resetUserDataCache }, { markTasteChanged }] = await Promise.all([
@@ -235,6 +239,12 @@ async function applySet(
 	table: "user_wishlist" | "user_favorite",
 ) {
 	let journal = item.payload.journal as Journal | undefined
+	if (item.kind === "show_status" && item.tmdbId !== null) {
+		const { getShowTracking } = await import("../tracking.server.ts")
+		const copy = await getShowTracking(userId, item.tmdbId)
+		if (!canImportWantToSee(copy.state?.state, copy.log.length > 0))
+			return "kept" as const
+	}
 	if (!journal) {
 		await run(
 			`REFRESH TABLE ${table}${table === "user_wishlist" ? ", user_watch_log" : ""}`,
@@ -397,8 +407,7 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 					options.conflictChoice === "keep"
 				)
 					state = "kept"
-				else if (item.kind === "want" && watchRefs.has(ref(item)))
-					state = "kept"
+				else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
 				else if (item.kind === "rating" || item.kind === "review") {
 					state = await applyScoreLike(
 						userId,
@@ -412,12 +421,12 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 							...(ownScores.get(ref(item)) ?? []),
 							journal.after,
 						])
-				} else if (item.kind === "want")
+				} else if (isWant(item))
 					state = await applySet(userId, id, item, "user_wishlist")
 				else if (item.kind === "favorite")
 					state = await applySet(userId, id, item, "user_favorite")
 				// Watch rows are applied by the tracking phase below. Until a plan is available, leave them pending.
-				else if (item.kind === "watch") continue
+				else if (item.kind === "watch" || item.kind === "show_status") continue
 			} catch {
 				state = "failed"
 			}
@@ -428,7 +437,7 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 		// tracking.server.ts completes watch items and stores its plans; imported lazily to keep parser-only tests light.
 		await refreshItems()
 		const watchPending = (await itemRows(userId, id, true)).filter(
-			(item) => item.kind === "watch",
+			(item) => item.kind === "watch" || item.kind === "show_status",
 		)
 		if (watchPending.length) {
 			const tracking = await import("./watch-items.server.ts")
@@ -627,7 +636,9 @@ export async function undoImport(
 		if (
 			items.some(
 				(item) =>
-					item.kind === "watch" || String(item.key).startsWith("state:"),
+					item.kind === "watch" ||
+					item.kind === "show_status" ||
+					String(item.key).startsWith("state:"),
 			)
 		) {
 			const tracking = await import("./watch-items.server.ts")
@@ -646,11 +657,11 @@ export async function undoImport(
 				continue
 			if (item.kind === "rating" || item.kind === "review")
 				await undoScore(userId, item)
-			else if (item.kind === "want" || item.kind === "favorite") {
+			else if (isWant(item) || item.kind === "favorite") {
 				await undoSet(
 					userId,
 					item,
-					item.kind === "want" ? "user_wishlist" : "user_favorite",
+					isWant(item) ? "user_wishlist" : "user_favorite",
 				)
 			}
 		}

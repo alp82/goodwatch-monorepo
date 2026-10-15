@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getPaletteTitles } from "~/server/command-palette.server"
 import type { PaletteTitles } from "~/utils/command-palette"
@@ -8,7 +9,7 @@ import type { PaletteTitles } from "~/utils/command-palette"
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const started = performance.now()
 	const q = new URL(request.url).searchParams.get("q") ?? ""
 	let answer: PaletteTitles = { titles: [], more: 0 }
@@ -25,3 +26,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

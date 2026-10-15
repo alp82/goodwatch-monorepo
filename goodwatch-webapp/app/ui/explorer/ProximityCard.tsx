@@ -1,3 +1,5 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import {
 	ArrowsPointingOutIcon,
 	ChevronRightIcon,
@@ -23,7 +25,7 @@ import { matchColor } from "./color"
 import { TMDB } from "./images"
 
 export const titlePath = (t: ExplorerTitle) =>
-	`/${t.mediaType}/${t.tmdbId}-${titleToDashed(t.title)}`
+	`/${t.mediaType}/${t.tmdbId}-${titleToDashed(canonicalMediaTitle(t))}`
 
 interface ProximityCardProps {
 	title: ExplorerTitle
@@ -115,7 +117,7 @@ export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 							{where.name}
 						</span>
 						<h2 className="ex-card-t">
-							{title.title}
+							<span lang={mediaFieldLanguage(title)}>{title.title}</span>
 							{door && (
 								<ChevronRightIcon className="ex-door-arrow" aria-hidden />
 							)}

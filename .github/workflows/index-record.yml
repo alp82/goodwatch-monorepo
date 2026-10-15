@@ -1,0 +1,81 @@
+name: Weekly Search Console index record
+
+on:
+  schedule:
+    - cron: '0 6 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: index-record
+  cancel-in-progress: false
+
+env:
+  TZ: UTC
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: '3.12'
+          enable-cache: false
+
+      - name: Record the sample
+        id: sample
+        working-directory: goodwatch-webapp/scripts
+        env:
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$GSC_SERVICE_ACCOUNT_JSON" ]; then
+            echo '::error::GSC_SERVICE_ACCOUNT_JSON is not configured.'
+            exit 1
+          fi
+          umask 077
+          GSC_KEY_FILE=$(mktemp "$RUNNER_TEMP/gsc-key.XXXXXX.json")
+          export GSC_KEY_FILE
+          trap 'rm -f "$GSC_KEY_FILE"' EXIT
+          printf '%s' "$GSC_SERVICE_ACCOUNT_JSON" > "$GSC_KEY_FILE"
+          unset GSC_SERVICE_ACCOUNT_JSON
+
+          run_date=$(date -u +%F)
+          status=0
+          uv run gsc_sample.py || status=$?
+          case "$status" in
+            0) echo "run_date=$run_date" >> "$GITHUB_OUTPUT" ;;
+            3) echo 'This date is already recorded; nothing to commit.' ;;
+            *) exit "$status" ;;
+          esac
+
+      - name: Commit and push the record
+        if: steps.sample.outputs.run_date != ''
+        env:
+          RUN_DATE: ${{ steps.sample.outputs.run_date }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- \
+            docs/research/discovery-search/index-record.csv \
+            docs/research/discovery-search/index-record-traffic.csv \
+            docs/research/discovery-search/index-record-sitemaps.csv
+          if git diff --cached --quiet; then
+            echo 'No CSV changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "docs(research): record the index sample on $RUN_DATE (#353)"
+          # Fail visibly if main moved during sampling; never force-push evidence.
+          git push origin HEAD:main

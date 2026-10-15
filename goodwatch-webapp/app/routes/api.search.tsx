@@ -1,3 +1,6 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -14,7 +17,7 @@ type GetSearchResults = {
 	searchResults: Awaited<SearchResults>
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
@@ -29,7 +32,7 @@ export const loader: LoaderFunction = async ({
 	})
 
 	return json<GetSearchResults>({
-		searchResults: sortedResults,
+		searchResults: sortedResults.map(row => ({ ...row, ...(!/^en(?:[-_]|$)/i.test(language) ? { canonical_language: "und" } : {}) })),
 	})
 }
 
@@ -38,10 +41,13 @@ export const loader: LoaderFunction = async ({
 export const queryKeySearch = ["search"]
 
 export const useSearch = ({ language, query }: SearchParams) => {
-	const url = `/api/search?language=${language}&query=${query}`
+	const { locale } = useLocale()
+	const url = mediaLanguageUrl(`/api/search?language=${language}&query=${encodeURIComponent(query)}`, locale.language)
 	return useQuery<GetSearchResults>({
-		queryKey: [...queryKeySearch, language, query],
+		queryKey: [...queryKeySearch, language, query, locale.language],
 		queryFn: async () => await (await fetch(url)).json(),
 		placeholderData: (previousData) => previousData,
 	})
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, {})

@@ -158,12 +158,12 @@ async function loadDetails(type: "movie" | "show", id: number) {
 					movieId: String(id),
 					country: "US",
 					language: "en",
-				})
+				}, { canonical: true })
 			: await getDetailsForShow({
 					showId: String(id),
 					country: "US",
 					language: "en",
-				})
+				}, { canonical: true })
 	} catch (error) {
 		if (error instanceof Response && error.status === 404) return null
 		throw error

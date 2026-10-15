@@ -1,0 +1,12 @@
+{
+  "summary": "Social bluesky",
+  "description": "Bounded first-page search, with post AND author opt-out checks before storage.",
+  "lock": "!inline f/social/bluesky.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

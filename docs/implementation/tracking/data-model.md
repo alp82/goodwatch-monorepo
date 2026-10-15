@@ -163,6 +163,10 @@ whatever the count is.
 
 ### `user_watch_state`
 
+The Q32 recovery draft adds an immutable first-insert receipt and retains an empty physical show row after logical
+removal; see [first-insert recovery](first-insert-recovery.md) for the storage invariant, migration and proof.
+The logical state and the state machine below are unchanged.
+
 ```python
     # Where a member stands with a title (docs/implementation/tracking/data-model.md, ADR 0009). Only what can't be
     # computed from user_watch_log: no counts and no dates of watches. A show's state is the state machine's. A
@@ -772,7 +776,7 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 8 | Unwatch, no watch remains; from Watching, Seen | The same | → `not_started`, `seen_press_*` → NULL; then deleted unless a prompt column is set | None |
 | 9 | Unwatch, a watch remains; from On hold, Dropped | The same | Unchanged | None |
 | 10 | Unwatch, no watch remains; from On hold, Dropped | The same | Unchanged: On hold or Dropped with no log row | None |
-| 11 | Press Seen; from Not started, Watching, On hold, Dropped | +N, origin `seen`, group G, no date (N is 0 for a show without an episode list) | → `seen`, `seen_press_group = G`, `seen_press_from` = the state before. `seen_question` open → answered | Want to See and Not interested deleted |
+| 11 | Member presses Seen; from Not started, Watching, On hold, Dropped. Whole-show Completed from an import uses rows 38–39 instead and stays Watching while a season is airing | +N, origin `seen`, group G, no date (N is 0 for a show without an episode list) | → `seen`, `seen_press_group = G`, `seen_press_from` = the state before. `seen_question` open → answered | Want to See and Not interested deleted |
 | 12 | Press Seen on a Seen show with new episodes | +N, group G2 | Stays `seen`. `seen_press_group = G2`, `seen_press_from = 'seen'`. The earlier group's rows stay and can no longer be taken back together | Not interested deleted. Want to See stays: it is Want to rewatch |
 | 13 | Press Seen again, the press was made on a Seen show | − group | Stays `seen`, `seen_press_*` → NULL. The episodes read as new again, because they are no longer in L | None |
 | 15 | Press Seen again, the press was made on an On hold show | − group | → `on_hold`, `seen_press_*` → NULL | None |
@@ -793,6 +797,11 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 29 | Drop; from Seen, episodes aired since | None | `seen` → `dropped`, `seen_press_*` → NULL | Want to See and Not interested deleted |
 | 30 | Put a Seen press back (the Undo of rows 13 to 17); from the state that row left | + the group, as it was: ids, dates, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 17) | Want to See and Not interested deleted |
 | 31 | Want to See on a Seen show (Want to rewatch) | None | None | `user_wishlist` row added or deleted; Not interested deleted. The row lasts while the show stays Seen: every row that leaves Seen deletes it (13 to 17 unless the show stays Seen, 26, 28, 29, and a removed watch that takes row 8) |
+| 35 | Import Watching; Not started or Watching | None | → `watching`, no standing Seen press | Observed intentions cleared |
+| 36 | Import On hold; Not started or Watching | None | → `on_hold`, no standing Seen press | Observed intentions cleared |
+| 37 | Import Dropped; Not started or Watching | None | → `dropped`, no standing Seen press | Observed intentions cleared |
+| 38 | Import whole-show Completed; Not started or Watching, a started season still airing | Missing aired regular episodes, origin `import`, unknown dates | → `watching`, no standing Seen press | Observed intentions cleared |
+| 39 | Import whole-show Completed; Not started or Watching, no started season still airing | Missing aired regular episodes, origin `import`, unknown dates | → `seen`, no standing Seen press | Observed intentions cleared |
 
 | 32 | Put an unmarked season back (the Undo of Unmark season), it was unmarked on a Seen show; from Watching, Not started | + the season's rows, as they were: ids, dates, origins, groups, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 8) | Want to See and Not interested deleted |
 | 33 | The same, it was unmarked on a Watching show; from Watching, Not started | The same | → `watching`; after row 8 a new row with `state_changed_at` as it was | The same |
@@ -987,8 +996,10 @@ Decided with the review, or found while mapping. The first three change or add t
 With nothing stored twice, no invariant compares a stored count or date with the log. What is left relates the state
 to the log rows.
 
-1. For a show: Not started ⇒ no log row of a regular episode. Watching ⇒ at least one, in any pass. So a show with a
-   log row of a regular episode has a row whose state is not Not started.
+1. For a show: Not started ⇒ no log row of a regular episode. A show with a log row of a regular episode has a
+   row whose state is not Not started. Since #645, Watching may have no watches when supplied by an import,
+   identified by `state_changed_at = 0`. All other Watching rows still require a regular watch; the check catches
+   interrupted unwatches. Resume with nothing watched goes to Not started (row 21).
 2. A Seen press stands only on a Seen show: `seen_press_group` and `seen_press_from` are both set or both NULL, and
    set only with `state = 'seen'`.
 3. A movie has a row exactly while it has a log row, and the row has `state = 'seen'` and `pass = 1`.
@@ -1018,7 +1029,8 @@ LEFT JOIN (
 ) w ON w.tmdb_id = s.tmdb_id AND w.media_type = s.media_type
 WHERE s.user_id = ?
   AND ((s.media_type = 'show' AND s.state = 'not_started' AND coalesce(w.regular, 0) > 0)
-       OR (s.media_type = 'show' AND s.state = 'watching' AND coalesce(w.regular, 0) = 0)
+       OR (s.media_type = 'show' AND s.state = 'watching' AND coalesce(w.regular, 0) = 0
+           AND s.state_changed_at <> 0) -- Exempt only source-only Watching, never a member tick.
        OR (s.media_type = 'movie' AND (s.state <> 'seen' OR s.pass <> 1 OR coalesce(w.n, 0) = 0))
        OR coalesce(w.top_pass, 1) > s.pass
        OR (coalesce(w.by_score, 0) > 0 AND (s.media_type = 'show' OR w.n > 1)))
@@ -1227,10 +1239,14 @@ a source's watches, statuses and Want to See have a place.
      by rows 2 and 3: to Watching, or to Seen when every aired episode is then watched. If the show is On hold,
      Dropped or Seen here, the rows are inserted and the state row is not touched: what the member decided here is
      newer than what the file says. The counts follow by themselves, because they are computed.
-  2. Then the source's status, only if the show had no row here before this import: dropped is row 19 (allowed with
-     nothing watched), completed is row 11 with the import as the origin of its watches and no standing press (it is
-     taken back by undoing the import, not by the button), on hold is row 18 and so needs a watch, plan to watch is
-     Want to See if nothing was watched. A status that can't be applied is reported in the preview with its reason.
+  2. Then the source’s status, only if the show is still Not started or Watching after those watches and
+     has not changed since preview. Seen produced by those watches is protected too. Issue #645 extends this rule to statuses without watches: Watching, On hold
+     and Dropped need no watch. Completed uses rows 38–39 only with explicit whole-TMDB-show scope: Watching
+     while a started regular season still has unaired episodes, Seen otherwise. Its watches have import
+     ownership and no standing press; a cour or part alone is unsupported. Plan to watch is Want to See only for a
+     not-started show with no watches. A status that cannot apply is reported with its reason. The source status
+     and selected watches share one undo journal; undo can restore an earlier Watching status without watches.
+     See [the show status contract](../native-imports.md#show-status-observations).
   3. Scores last. They never change a show's state and do not open "Have you seen all of it?". A movie's score
      settles the movie by the rule of section 4: the score's watch is written only if the file brought no watch.
 - **The pass.** A show without a row gets the source's highest pass as its current pass. On a show that has a row,
@@ -1242,6 +1258,9 @@ a source's watches, statuses and Want to See have a place.
   undated imported watch not at all, and the time of the import never. The grouped query's `last_activity_at` does
   this by itself for the watches. The state an import writes carries the import's time in `state_changed_at`;
   `watchingSince` leaves it out, because the import's watches were recorded no earlier (section 10, "Activity").
+  A new Watching state supplied as a status uses zero for `state_changed_at` (no dated member move); both activity
+  readers ignore zero. Its real `updated_at` still identifies the write for undo. The first member tick dates
+  Watching with that tick’s time instead of retaining zero. No schema change is needed.
 
 **Duplicates,** decided in the preview and shown there before anything is written:
 
@@ -1261,9 +1280,12 @@ status, and `watch_id` names the row it wrote. `outcome` and `apply_state` keep 
 **Undo** removes only the import's own rows and leaves later edits alone:
 
 1. `DELETE FROM user_watch_log WHERE user_id = ? AND import_id = ?`. One statement, one shard.
-2. For every show with a `state` item: if the row's state is still the `applied_state`, restore `prior_state`. Then
-   invariant 1 for every show in the import's items: Watching or Seen with no regular watch left becomes Not
-   started. A state the member chose since the import stays. No count is recomputed, because none is stored.
+2. For every show with a `state` item: if the row is still owned by the import's write, restore `prior_state`.
+   For watch-only plans, Watching or Seen with no regular watch left becomes Not started, except a prior
+   imported Watching status identified by its zero timestamp. Status-only plans restore cleared Want to See
+   and Not interested rows with their original timestamps before releasing state ownership, so interrupted
+   Undo can retry. Inserts preserve any later intention. A state the member chose since the import stays.
+   No count is recomputed, because none is stored.
 3. Scores as today, then every movie in the import's items is settled by the rule of section 4. Items become
    `undone`.
 

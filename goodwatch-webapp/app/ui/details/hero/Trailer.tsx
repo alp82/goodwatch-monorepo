@@ -121,6 +121,7 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 				<TmdbImage
 					imgRef={impressionRef}
 					kind="poster"
+					lang={media.details.presentation?.title.language ?? "en"}
 					path={media.details.poster_path}
 					sizes={HERO_POSTER_SIZES}
 					maxWidth={128}
