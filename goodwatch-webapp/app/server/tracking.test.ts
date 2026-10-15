@@ -3351,3 +3351,54 @@ test("undoing the import that made a show Seen leaves it Watching by the import 
 	assert.deepEqual([entry?.state, entry?.count], ["watching", 1])
 	assert.equal(entry?.watchingSince, null)
 })
+
+for (const mutation of ["update", "delete"] as const) for (const outcome of ["applied", "not-applied", "pending"] as const) {
+ test(`a tracking CAS ${mutation} with a ${outcome} lost response converges without applying its state twice`, async () => {
+  await tick(1,1,"initial-watch")
+  const original = db.execute.bind(db)
+  let calls=0
+  db.execute=async (sql,params=[])=>{
+   if(/(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+    calls++
+    if(calls===1) {
+     if(outcome==="applied") await original(sql,params)
+     throw Object.assign(new Error("fixture response lost"),{code:"ECONNRESET"})
+    }
+    if(calls===2 && outcome==="pending") await original(sql,params)
+   }
+   return original(sql,params)
+  }
+  setCrateClientForTest(db)
+  const result=await act(mutation==="update"?{type:"drop"}:{type:"unwatch",season:1,number:1})
+  assert.equal(result.status,"applied")
+  assert.deepEqual(ticks(),mutation==="update"?["1.1"]:[])
+  assert.equal(stateOf()?.state,mutation==="update"?"dropped":undefined)
+  assert.equal(calls,outcome==="applied"?1:2)
+ })
+}
+
+for (const [mutation, first, second] of [
+	["update", { type: "drop" }, { type: "resume" }],
+	["delete", { type: "unwatch", season: 1, number: 1 }, { type: "watch", season: 1, number: 1 }],
+] as const) {
+	test(`a lost CAS ${mutation} response superseded by the next action fails rather than applying again over it`, async () => {
+		await tick(1, 1, "initial-watch")
+		const original = db.execute.bind(db)
+		let lost = false
+		db.execute = async (sql, params = []) => {
+			if (!lost && /^\s*(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+				// The first action lands and its response is lost. The member's next action reads that result and
+				// applies before the readback.
+				lost = true
+				await original(sql, params)
+				assert.equal((await act(second)).status, "applied")
+				throw Object.assign(new Error("fixture response lost"), { code: "ECONNRESET" })
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await assert.rejects(act(first), /fixture response lost/)
+		assert.equal(stateOf()?.state, "watching")
+		assert.deepEqual(ticks(), ["1.1"])
+	})
+}
