@@ -87,7 +87,7 @@ function PrintArt({ className = "" }: { className?: string }) {
 }
 
 /** The image files of an app's picture, at the size it is drawn: the whole picture, or a tile. */
-function artFiles(art: TvAppArt, backdrop: string, poster: string): string[] {
+export function artFiles(art: TvAppArt, backdrop: string, poster: string): string[] {
 	if (art.kind === "backdrop")
 		return art.path ? [tmdbImageUrl(art.path, backdrop)] : []
 	if (art.kind === "posters")
@@ -96,7 +96,7 @@ function artFiles(art: TvAppArt, backdrop: string, poster: string): string[] {
 }
 
 /** An app's picture. Fills its box. */
-function AppArt({
+export function AppArt({
 	art,
 	files,
 	className,
