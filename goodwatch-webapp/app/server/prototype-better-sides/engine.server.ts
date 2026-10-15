@@ -425,8 +425,9 @@ export function buildTighter(person: Person): Built {
 		side.name = contrastName(contrast(side.center, sides.filter((s) => s !== side).map((s) => s.center)), taken)
 	}
 	const sideCenters = sides.map((s) => s.center)
+	const used = new Set<string>()
 	sides.forEach((side, i) => {
-		side.edges = withSteps(person, side, sideCenters, i, placeEdges(person, side, sideCenters, i))
+		side.edges = withSteps(person, side, sideCenters, i, placeEdges(person, side, sideCenters, i), used)
 	})
 	return {
 		sides: sides.map(({ center, members, ...side }) => side),
@@ -474,7 +475,10 @@ export function buildAnchored(person: Person): Built {
 			if (!t.facts.hasPoster || anchors.includes(t)) return
 			if (anchors.some((a) => cosine(a.z, t.z) > 0.25)) return
 			const fresh = neighbours[i].filter((b) => !covered.has(b.key))
-			const value = fresh.reduce((s, b) => s + 1 + 0.15 * (b.score - person.mu), 0) * (1 + 0.1 * (t.score - person.mu))
+			// Dense, rated high, and widely known, so the name says something to the reader.
+			const known = Math.log10(10 + t.facts.votes)
+			const typicality = cosine(t.z, meanOf(fresh.map((b) => b.z)))
+			const value = fresh.reduce((s, b) => s + 1 + 0.15 * (b.score - person.mu), 0) * (1 + 0.1 * (t.score - person.mu)) * known * Math.max(0.2, typicality)
 			if (fresh.length >= minSize && value > bestValue) {
 				bestValue = value
 				best = i
@@ -526,8 +530,16 @@ export function buildAnchored(person: Person): Built {
 			return side
 		})
 	const sideCenters = sides.map((s) => s.center)
+	const used = new Set<string>()
+	const bridged = new Set<string>()
 	sides.forEach((side, i) => {
-		side.edges = [...stepEdges(person, side, sideCenters, i), ...bridgeEdges(person, sides, i)]
+		const bridges = bridgeEdges(person, sides, i).filter((b) => {
+			const pair = [side.id, b.toward].sort().join("|")
+			if (bridged.has(pair)) return false
+			bridged.add(pair)
+			return true
+		})
+		side.edges = [...stepEdges(person, side, sideCenters, i, used), ...bridges]
 	})
 	return {
 		sides: sides.map(({ center, members, ...side }) => side),
@@ -540,23 +552,25 @@ export function buildAnchored(person: Person): Built {
 }
 
 /** Fewer than two edges: add steps ("this side, but darkly funny"), headlined with the side's name. */
-function withSteps(person: Person, side: { id: string; name: string; members: RatedTitle[]; center: Vec }, centers: Vec[], index: number, edges: ProtoEdge[]) {
+function withSteps(person: Person, side: { id: string; name: string; members: RatedTitle[]; center: Vec }, centers: Vec[], index: number, edges: ProtoEdge[], used: Set<string>) {
 	if (edges.length >= 2) return edges
-	const steps = stepEdges(person, side, centers, index)
+	const steps = stepEdges(person, side, centers, index, used)
 		.slice(0, 2 - edges.length)
 		.map((e) => ({ ...e, line: `${side.name}, ${e.line}` }))
 	return [...edges, ...steps]
 }
 
 /** "This side, but darkly funny": attributes the person rates up when they get them, rare in this side. */
-function stepEdges(person: Person, side: { id: string; members: RatedTitle[]; center: Vec }, centers: Vec[], index: number): ProtoEdge[] {
+function stepEdges(person: Person, side: { id: string; members: RatedTitle[]; center: Vec }, centers: Vec[], index: number, used?: Set<string>): ProtoEdge[] {
 	const candidates = NON_CRAFT.flatMap((k) => {
 		const key = KEYS[k]
 		if (UNNAMED.has(key)) return []
 		const inSide = side.members.filter((m) => m.z[k] > STRONG_Z).length / side.members.length
 		if (inSide > 0.12 || side.center[k] > 0.3) return []
-		const hit = person.rated.filter((r) => r.z[k] > STRONG_Z)
-		if (hit.length < 3) return []
+		if (used?.has(key)) return []
+		// Evidence from this side's neighbourhood: rated titles closest to this side that carry it.
+		const hit = person.rated.filter((r) => r.z[k] > STRONG_Z && nearest(r.z, centers).index === index)
+		if (hit.length < 2) return []
 		const lift = average(hit.map((r) => r.score)) - person.mu
 		if (lift < 0.2) return []
 		const direction = new Float64Array(side.center).map((x, d) => (d === k ? x + 1.5 : x))
@@ -569,12 +583,13 @@ function stepEdges(person: Person, side: { id: string; members: RatedTitle[]; ce
 	})
 		.sort((a, b) => b.strength - a.strength)
 		.slice(0, 2)
+	for (const c of candidates) used?.add(c.key)
 	return candidates.map((c) => ({
 		id: `${side.id}-step-${c.key}`,
 		kind: "step" as const,
 		chip: `+ ${capitalize(adjective(c.key))}`,
 		line: `but ${adjective(c.key)}`,
-		evidence: `When a title is ${adjective(c.key)}, you rate it ${round1(person.mu + c.lift)} on average (usually ${round1(person.mu)}), ${c.inSide === 0 ? "yet none of this side is" : `yet only ${Math.round(c.inSide * 100)}% of this side is`}.`,
+		evidence: `Near this side, when a title is ${adjective(c.key)} you rate it ${round1(person.mu + c.lift)} on average (usually ${round1(person.mu)}), ${c.inSide === 0 ? "yet none of this side is" : `yet only ${Math.round(c.inSide * 100)}% of this side is`}.`,
 		average: round1(person.mu + c.lift),
 		count: c.hit.length,
 		rated: c.hit.filter((r) => r.facts.hasPoster).sort((a, b) => b.score - a.score).slice(0, 4).map((r) => r.key),
@@ -683,9 +698,10 @@ export function buildMoods(person: Person): Built {
 		side.shared = c.members.filter((m) => chosen.filter((o) => o.members.includes(m)).length > 1).length
 		return side
 	})
+	const used = new Set<string>()
 	sides.forEach((side, i) => {
 		const moodEdges = addMoodEdges(person, side, has)
-		side.edges = withSteps(person, side, centers, i, [...moodEdges, ...placeEdges(person, side, centers, i, 3 - moodEdges.length)])
+		side.edges = withSteps(person, side, centers, i, [...moodEdges, ...placeEdges(person, side, centers, i, 3 - moodEdges.length)], used)
 	})
 	return {
 		sides: sides.map(({ center, members, ...side }) => side),
@@ -712,6 +728,7 @@ function addMoodEdges(
 			if (pool.length < 15) return []
 			const rated = person.rated.filter((r) => has(r, moods))
 			if (rated.length > 3) return []
+			if (rated.length && average(rated.map((r) => r.score)) < person.mu - 0.3) return []
 			const overall = person.rated.filter((r) => r.facts.moods.includes(m))
 			const lift = overall.length ? average(overall.map((r) => r.score)) - person.mu : 0
 			if (overall.length >= 5 && lift < -0.4) return []

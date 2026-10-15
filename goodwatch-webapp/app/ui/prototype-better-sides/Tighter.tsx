@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { type ReactNode, useState } from "react"
 import type { PortraitTitle } from "~/server/taste-portrait/view"
 import { RatedPoster, ServicesSwitch, SuggestionCard, backdropUrl, posterUrl, titlesOf, useServicesFilter } from "~/ui/taste/tabs/parts"
-import { AttributeChips, EdgeChips, PosterRow, edgePicks, lift } from "./bits"
+import { AttributeChips, EdgeChips, PosterRow, edgePicks } from "./bits"
 import type { ProtoEdge, ProtoSide, ProtoView } from "./model"
 
 export function Tighter({ view }: { view: ProtoView }) {
@@ -59,7 +59,7 @@ export function Tighter({ view }: { view: ProtoView }) {
 								<p className="text-sm font-semibold text-amber-300">You're here</p>
 								<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">{side.name}</h2>
 								<p className="mt-2 text-gray-200">
-									{side.count} titles you love, rated {side.average} on average: {lift(side.lift)} on your usual {view.member.usual}.
+									{Math.round(side.share * 100)}% of what you love: {side.count} titles.
 								</p>
 							</div>
 							<PosterRow keys={side.here} titles={view.titles} n={4} className="mt-6 grid-cols-4" />

@@ -5,7 +5,7 @@
 import { useState } from "react"
 import { RatedPoster, SuggestionCard, ServicesSwitch, posterUrl, titleHref, titlesOf, useServicesFilter } from "~/ui/taste/tabs/parts"
 import { Link } from "@remix-run/react"
-import { EdgeChips, PosterRow, edgePicks, lift } from "./bits"
+import { EdgeChips, PosterRow, edgePicks } from "./bits"
 import type { ProtoEdge, ProtoSide, ProtoView } from "./model"
 
 export function Anchored({ view }: { view: ProtoView }) {
@@ -73,7 +73,7 @@ function Band({ side, view, services, anchorName }: { side: ProtoSide; view: Pro
 						<h2 className="text-2xl font-bold leading-tight md:text-4xl">{name} side</h2>
 						<p className="mt-1 text-sm text-gray-300">{side.line}</p>
 						<p className="mt-2 text-sm text-gray-400">
-							{side.count} titles you love · {lift(side.lift)} on your usual
+							{Math.round(side.share * 100)}% of what you love ({side.count} titles)
 							{side.shared > 0 && ` · ${side.shared} shared with another side`}
 						</p>
 						<PosterRow keys={side.here.filter((k) => k !== side.anchor)} titles={view.titles} n={5} className="mt-4 grid-cols-5" />

@@ -4,7 +4,7 @@
 // a side to light it up and read it below. Posters, scores and cards are the site's own; only the map is new.
 import { useState } from "react"
 import { RatedPoster, posterUrl, titlesOf, useServicesFilter } from "~/ui/taste/tabs/parts"
-import { AttributeChips, PosterRow, edgePicks, lift } from "./bits"
+import { AttributeChips, PosterRow, edgePicks } from "./bits"
 import type { ProtoSide, ProtoView } from "./model"
 import { MoreOfThis } from "./Tighter"
 
@@ -114,7 +114,7 @@ export function MapOfYou({ view }: { view: ProtoView }) {
 					</p>
 					<h2 className="text-3xl font-bold leading-tight md:text-4xl">{focus.name}</h2>
 					<p className="mt-2 text-gray-300">
-						{focus.count} titles you love, {lift(focus.lift)} on your usual {view.member.usual}.
+						{Math.round(focus.share * 100)}% of what you love ({focus.count} titles).
 					</p>
 					<AttributeChips side={focus} className="mt-3" />
 					<PosterRow keys={focus.here} titles={view.titles} n={6} className="mt-5 grid-cols-3 sm:grid-cols-6" />

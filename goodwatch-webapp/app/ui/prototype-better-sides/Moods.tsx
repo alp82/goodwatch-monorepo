@@ -5,7 +5,7 @@
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import { RatedPoster, posterUrl, titlesOf, useServicesFilter } from "~/ui/taste/tabs/parts"
-import { AttributeChips, PosterRow, edgePicks, lift } from "./bits"
+import { AttributeChips, PosterRow, edgePicks } from "./bits"
 import type { ProtoSide, ProtoView } from "./model"
 import { MoreOfThis } from "./Tighter"
 
@@ -45,7 +45,7 @@ export function Moods({ view }: { view: ProtoView }) {
 							<span className="min-w-0">
 								<span className="block text-lg font-bold leading-tight">{s.name}</span>
 								<span className="mt-1 block text-sm text-gray-400">
-									{s.count} titles you love · {lift(s.lift)} on your usual
+									{Math.round(s.share * 100)}% of what you love ({s.count} titles)
 								</span>
 								<span className="mt-2 block h-1.5 w-40 overflow-hidden rounded-full bg-gray-800">
 									<span className="block h-full rounded-full" style={{ width: `${Math.round(s.share * 100)}%`, background: stripe(s) }} />

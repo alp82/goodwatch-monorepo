@@ -13,7 +13,7 @@ export interface ProtoMember {
 }
 
 // Ratings counts to look for: the most, then the members closest to these.
-const TARGETS = [400, 150, 60, 25]
+const TARGETS = [450, 300, 120, 55, 25]
 let picked: { at: number; members: ProtoMember[] } | null = null
 
 export async function protoMembers(): Promise<ProtoMember[]> {
@@ -29,10 +29,11 @@ export async function protoMembers(): Promise<ProtoMember[]> {
 		used.add(row.user_id)
 		return row
 	}
-	// The owner: the member with a published personal order (the only member in its group today).
-	const owner = (await personalOrderMembers())[0]
-	const ownerRow = owner ? (rows.find((r) => r.user_id === owner) ?? { user_id: owner, n: 0 }) : undefined
-	const chosen = ownerRow ? [take(ownerRow), take(rows.find((r) => r.user_id !== owner))] : [take(rows[0])]
+	// The owner: of the members with a published personal order (the owner and a small test group), the one with the
+	// most ratings (the owner wrote the most ratings of anyone, see the taste-loop census).
+	const withOrder = new Set(await personalOrderMembers())
+	const ownerRow = rows.find((r) => withOrder.has(r.user_id))
+	const chosen = [take(ownerRow)]
 	for (const target of TARGETS) {
 		const row = [...rows]
 			.filter((r) => !used.has(r.user_id))
@@ -42,8 +43,8 @@ export async function protoMembers(): Promise<ProtoMember[]> {
 	const members = chosen
 		.filter((r): r is { user_id: string; n: number } => r !== null)
 		.map((r, i) => ({
-			slot: ownerRow && i === 0 ? "owner" : `m${ownerRow ? i : i + 1}`,
-			label: ownerRow && i === 0 ? "Owner" : `Member ${ownerRow ? i : i + 1}`,
+			slot: i === 0 && ownerRow ? "owner" : `m${ownerRow ? i : i + 1}`,
+			label: i === 0 && ownerRow ? "Owner" : `Member ${ownerRow ? i : i + 1}`,
 			userId: r.user_id,
 			ratings: Number(r.n),
 		}))
