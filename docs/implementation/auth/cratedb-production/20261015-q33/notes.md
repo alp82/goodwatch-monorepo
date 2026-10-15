@@ -19,3 +19,9 @@ Observed per-host timeouts are not automatically member failures: classify final
 ## #547 scope/closure
 
 Original #547 completion requires goodwatch_auth, still absent in read-only prechecks; #562 is open and Q33 does not authorize creating it. Upgrade completion alone does not fulfill that criterion; keep #547 open unless it is independently fulfilled. SQL/runbook/firewall/local-rehearsal work is already prepared.
+
+## SQL acknowledgement passed; independent exit still pending
+
+Decommission acknowledged SUCCESS at **2026-10-15T19:20:39.690256+00:00**, **542.78s** after 19:11:36.910 UTC. Crate-01 reached zero primaries and all 958 copies were STARTED. Its original daemon still logs active requests delaying shutdown; SQL job sampling shows only current observer SELECT jobs. This does not expose all internal task contexts: tagged 5.10.9 source requires both JobsLogs.activeRequests==0 and TasksService.numActive==0, polling every five seconds, with a separate two-hour wait after SQL acknowledgement. **No target has started yet, no forced stop or job cancellation.** Wait for normal exit; if the server aborts/times out, restore original staged config/restart policy and allocation per runbook and report.
+
+One classified final failed SQL so far: **/api/poster-impressions POST**, CrateTimeoutError on first attempt to crate-01, about 10,003ms, additive INSERT/ON CONFLICT demand increment. Marked indeterminate and not replayed; correlated request HTTP503/hadCrateFailure=true. It is background poster demand telemetry, not an auth-state mutation by the operator. One cancelled read is recorded separately. Other captured SQL queries recover via surviving nodes; HTTP503 events with hadCrateFailure=false have separate attribution. Full-window totals remain minima due removed original ABIO logs.

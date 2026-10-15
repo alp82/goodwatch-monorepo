@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-15T19:22:23.912685+00:00",
+  "decommissionLifecycleMessages": [
+    "[2026-10-15T19:21:49,695][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:21:54,695][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:21:59,696][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:22:04,696][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:22:09,697][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:22:14,697][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown",
+    "[2026-10-15T19:22:19,697][INFO ][i.c.c.g.DecommissioningService] [crate-01] There are still active requests on this node, delaying graceful shutdown"
+  ],
+  "logReturncode": 0
+}

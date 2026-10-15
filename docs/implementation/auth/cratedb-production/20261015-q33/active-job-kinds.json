@@ -1,0 +1,32 @@
+{
+  "host": 12,
+  "stmt": "SELECT id, started, CASE WHEN stmt LIKE 'SELECT%' THEN 'SELECT' WHEN stmt LIKE 'INSERT%' THEN 'INSERT' WHEN stmt LIKE 'UPDATE%' THEN 'UPDATE' WHEN stmt LIKE 'DELETE%' THEN 'DELETE' ELSE 'OTHER' END AS kind FROM sys.jobs ORDER BY started",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:22:24.692800+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "id",
+        "started",
+        "kind"
+      ],
+      "rows": [
+        [
+          "41778061-e17d-c369-3387-a99d79869380",
+          1792092144701,
+          "SELECT"
+        ],
+        [
+          "7cba6b23-764f-fe78-0226-bd936a5912d3",
+          1792092144702,
+          "SELECT"
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 10.557873
+    },
+    "at": "2026-10-15T19:22:24.708885+00:00",
+    "elapsedSeconds": 0.016
+  }
+}

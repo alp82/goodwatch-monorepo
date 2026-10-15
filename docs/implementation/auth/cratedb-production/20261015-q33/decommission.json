@@ -1,0 +1,21 @@
+{
+  "host": 12,
+  "stmt": "ALTER CLUSTER DECOMMISSION ?",
+  "args": [
+    "xlclgwGeSHe18p5J4WvfFA"
+  ],
+  "response": {
+    "startedAt": "2026-10-15T19:11:36.910531+00:00",
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 542772.1
+    },
+    "at": "2026-10-15T19:20:39.690256+00:00",
+    "elapsedSeconds": 542.78
+  }
+}
