@@ -77,3 +77,15 @@ This is a repository-only plan. No production queries or file edits were made. S
    Proposed promotion gates: **≥99% G1 success on eligible Best match requests outside snapshot transitions**, no unexplained tier violations, interaction rebuild p95 below five minutes, and no sustained loader-latency/RSS regression. Separately monitor cold/warm cache latency, event-loop delay, queue age, worker RSS, Valkey bytes/evictions and exposure-write failures. Exposure logging drops writes after 1,000 pending operations and catches failures, so table rows alone cannot establish completeness. ([Logging bounds/failures](goodwatch-webapp/app/server/list-exposure.server.ts:44))
 
    **Rollback:** set `REC_G1_ORDER=off` across webapp instances and disable expanded triggers. New list compositions return to today’s ordering; refresh existing Watch next pages to discard retained G1 plans. Leave payloads to expire, or delete only G1 keys. Preserve the prior reader during migration, and budget temporary v1/v2 coexistence explicitly. Off-mode request gates and retained-plan behavior support this rollback. ([Discover gate](goodwatch-webapp/app/server/title-filter/index.server.ts:259), [Watch next gate](goodwatch-webapp/app/server/watch-next.server.ts:702), [retained plans](goodwatch-webapp/app/server/watch-next.server.ts:847))
+## Adopted after review (orchestrator, October 15, 2026)
+
+Fable accepted with fixes (REVIEW-fable.md). All eight fixes are adopted; they replace the matching parts above:
+
+1. Rebuilds: the webapp adds the member to a Valkey set `g1:dirty`; a scheduled job every 3 minutes rebuilds the dirty set in one run with one shared read. No one-member jobs, priority jobs or resumable progress.
+2. No revision key: the reader revalidates a member's payload at most every 45 seconds.
+3. Payload: gzip of the existing JSON under a new key namespace `g1:v2`, decoded into typed arrays; `raw` is not retained. The binary layout is built only if measured size or decode time misses budget. The reader ships first.
+4. Caches: count LRU of 50 prepared payloads; raise the Watch next plan cache before `on`; benchmark cold composition at the order cache's bound.
+5. Eligibility: the job builds for every member whose taste vector exists and deletes the others' keys; one rollout variable (`f/sync/g1_members`: a list for the cohort, or "all") replaces the preview allowlist in trigger and job.
+6. One run for all members, per-member try/except and summary lines; reruns are idempotent.
+7. `missing-payload` fallbacks are not warned per request.
+8. The 99% gate is measured on the cohort, then serves as the rollback trigger after `on`; check Valkey maxmemory and eviction policy before the backfill.
