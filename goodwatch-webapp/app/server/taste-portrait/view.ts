@@ -1,3 +1,4 @@
+import type { MoodKey } from "~/domain/moods"
 import type { PresentedMedia } from "~/utils/media-presentation"
 // What the Taste page's three tabs render: one view model per tab, as getTastePortrait and /api/taste/portrait return
 // it. Types and fixed words only, so browser code can import them.
@@ -70,42 +71,59 @@ interface ViewBase {
 
 export interface SideEdge {
 	id: string
-	kind: "country" | "language" | "attribute" | "decade"
-	/** "South Korea", "The 1940s", "Slow burns". */
+	/** A place (country, language, decade, show or film, animation), a step (the side plus an attribute), or the way
+	 * toward another side (bridge). */
+	kind:
+		| "country"
+		| "language"
+		| "decade"
+		| "format"
+		| "animation"
+		| "step"
+		| "bridge"
+	/** The chip: "From South Korea", "+ Darkly funny", "Toward hopeful, heartwarming stories". */
 	name: string
-	/** The copy's two halves: "You've barely been to" + "South Korea", "You rarely go back to" + "the 1940s". */
-	lead: string
-	place: string
-	/** The person's average rating there, 1 decimal ("When you go, you rate it 8.1. Usually you give 6.9."). */
-	average: number
+	/** What follows the side's name in the headline: "from South Korea", "but darkly funny"; null for a bridge. */
+	tail: string | null
+	/** A bridge's other side (its id); null otherwise. */
+	toward: string | null
+	/** Why it's just past the side, in one sentence with true counts. */
+	why: string
+	/** The person's average rating of what they rated there, 1 decimal; null when they've rated none. */
+	average: number | null
 	/** How many titles they rated there. */
 	count: number
 	/** What they rated there, best first. */
 	rated: TitleKey[]
-	/** Unseen titles from there, best first, match at least 56. */
+	/** Unseen titles from there, match at least 56, in personal order when it is on. */
 	suggestions: TitleKey[]
-	/** The backdrop to show: the first suggestion with one, else a rated title with one. */
+	/** The backdrop to show: the first suggestion with one. */
 	image: TitleKey | null
 }
 
 export interface Side {
 	id: string
-	/** "Slow-burning crime stories": an adjective from its second attribute, a noun from its first. */
+	/** "Bleak stories about crime and justice": from the two attributes that most set it apart from the other sides. */
 	name: string
-	/** The four attributes that set it apart, strongest first (fingerprint keys). */
+	/** The four attributes that set it apart from the other sides, strongest first (fingerprint keys). */
 	attributes: { key: string; label: string }[]
 	/** Share of the loved titles, 0 to 1. */
 	share: number
+	/** How many loved titles it holds. */
+	count: number
 	/** The person's average rating of its titles, 1 decimal. */
 	average: number
-	/** "You're here": its titles rated 7 or more (all of them when fewer than 2), best first, up to four. */
+	/** "You're here": its most typical titles rated 7 or more (all of them when fewer than 2), one per franchise, up to
+	 * four. */
 	here: TitleKey[]
-	/** The first loved title with a backdrop. */
+	/** A typical loved title with a backdrop. */
 	image: TitleKey | null
-	/** "Just past it", closest first. */
+	/** The Watch next moods most of its titles carry (up to two); empty when none does. */
+	moods: MoodKey[]
+	/** "Just past it": places first, steps when it has fewer than two, then the way toward its closest other side. */
 	edges: SideEdge[]
-	/** "More of this": unseen titles, best first, match at least 65. Holds the first 12 everywhere and the first 12 on
-	 * the person's services; show the ones with onMyServices, or the first 12 for Everywhere. */
+	/** "More of this": unseen titles, match at least 65, in personal order when it is on. Holds the first 12 everywhere
+	 * and the first 12 on the person's services; show the ones with onMyServices, or the first 12 for Everywhere. */
 	moreOfThis: TitleKey[]
 }
 
@@ -115,7 +133,7 @@ export interface SidesView extends ViewBase {
 	/** The ids of the two sides least alike: "You love {first's name}, and just as much {second's name}." Null with
 	 * fewer than 2 sides. */
 	headline: { first: string; second: string } | null
-	/** The side the picker opens first: the one with the highest average rating. */
+	/** The side the picker opens first: the largest. */
 	openFirst: string | null
 	/** Whether the person has saved services, so On my services applies. */
 	hasServices: boolean

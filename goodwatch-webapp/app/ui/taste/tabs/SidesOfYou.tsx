@@ -1,12 +1,14 @@
 // Sides of you: the contradiction in the person's taste as the first line, the sides picked from poster chips, each
-// side as "You're here" next to "Just past it" (a place they've barely tried but rate above their usual), then
-// "More of this" on their services. The route says which side opens first (the address's `?side=`).
+// side as "You're here" next to "Just past it" (a place right next to it they've barely tried, a step from it, or the
+// way toward another side), then "More of this" on their services and a way into Watch next with the side's moods.
+// The route says which side opens first (the address's `?side=`).
+import { Link } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { type KeyboardEvent, type ReactNode, useRef, useState } from "react"
+import { MOOD_BY_KEY } from "~/domain/moods"
 import type {
 	PortraitTitle,
 	Side,
-	SideEdge,
 	SidesView,
 } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
@@ -16,8 +18,8 @@ import {
 	ServicesSwitch,
 	SuggestionCard,
 	type Titles,
-	YourScore,
 	backdropUrl,
+	lowerFirst,
 	percent,
 	posterUrl,
 	titlesOf,
@@ -46,7 +48,6 @@ export function SidesOfYou({
 	const services = useServicesFilter(view.hasServices)
 	const reduceMotion = useReducedMotion()
 	if (!side) return null
-	const usual = view.subject.usual ?? 0
 	// The headline names the two sides least alike, by id.
 	const nameOf = (id: string) =>
 		view.sides.find((s) => s.id === id)?.name.toLowerCase()
@@ -64,8 +65,7 @@ export function SidesOfYou({
 				)}
 				<p className="mt-3 max-w-2xl text-gray-400">
 					{view.sides.length} sides of what you rate highly, and for each one,
-					the place just past it you've barely tried but rate above your usual{" "}
-					{usual}.
+					the places just past it you've barely tried.
 				</p>
 				<SidePicker
 					sides={view.sides}
@@ -97,10 +97,10 @@ export function SidesOfYou({
 						</div>
 						{side.edges.length ? (
 							<JustPastIt
-								edges={side.edges}
+								side={side}
+								sides={view.sides}
 								titles={view.titles}
 								services={services}
-								usual={usual}
 							/>
 						) : (
 							<div className="flex items-center rounded-2xl border border-dashed border-gray-700 p-8 text-gray-400">
@@ -109,6 +109,9 @@ export function SidesOfYou({
 						)}
 					</div>
 					<SideChips side={side} className="mt-6" />
+					{side.moods.length > 0 && (
+						<InWatchNext side={side} className="mt-4" />
+					)}
 					<MoreOfThis
 						side={side}
 						view={view}
@@ -238,8 +241,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 					{side.name}
 				</h2>
 				<p className="mt-2 text-gray-200">
-					{percent(side.share)} of what you love, rated {side.average} on
-					average.
+					{percent(side.share)} of what you love: {side.count} titles.
 				</p>
 			</div>
 			<div className="mt-6 grid grid-cols-4 gap-2">
@@ -266,19 +268,21 @@ function edgeSuggestions(
 }
 
 function JustPastIt({
-	edges,
+	side,
+	sides,
 	titles,
 	services,
-	usual,
 }: {
-	edges: SideEdge[]
+	side: Side
+	sides: Side[]
 	titles: Titles
 	services: ServicesFilter
-	usual: number
 }) {
+	const edges = side.edges
 	const [id, setId] = useState(edges[0].id)
 	const edge = edges.find((e) => e.id === id) ?? edges[0]
 	const picks = edgeSuggestions(titlesOf(titles, edge.suggestions), services, 4)
+	const toward = sides.find((s) => s.id === edge.toward)
 	return (
 		<Panel image={titlesOf(titles, [edge.image])[0]} tone="sky">
 			<div>
@@ -298,11 +302,18 @@ function JustPastIt({
 						))}
 				</div>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
-					{edge.lead} {edge.place}
+					{toward ? (
+						<>
+							Between {lowerFirst(side.name)} and{" "}
+							<span className="text-sky-200">{lowerFirst(toward.name)}</span>
+						</>
+					) : (
+						<>
+							{side.name}, <span className="text-sky-200">{edge.tail}</span>
+						</>
+					)}
 				</h2>
-				<p className="mt-2 text-gray-200">
-					When you go, you rate it {edge.average}. Usually you give {usual}.
-				</p>
+				<p className="mt-2 text-gray-200">{edge.why}</p>
 			</div>
 			{picks.length ? (
 				<div className="mt-6 grid grid-cols-4 gap-2">
@@ -319,14 +330,24 @@ function JustPastIt({
 	)
 }
 
-/** The person's average on a side and the attributes that hold it together. */
+/** The side's moods in Watch next: "Open Heavy + Mind-bending in Watch next". */
+function InWatchNext({ side, className }: { side: Side; className: string }) {
+	const names = side.moods.map((mood) => MOOD_BY_KEY[mood].name).join(" + ")
+	return (
+		<Link
+			to={`/watch-next?moods=${side.moods.join(",")}`}
+			prefetch="intent"
+			className={`inline-flex min-h-11 items-center rounded-full border-2 border-amber-600/70 bg-amber-900/30 px-4 text-sm font-semibold text-amber-100 transition hover:border-amber-400 md:min-h-9 ${className}`}
+		>
+			Open {names} in Watch next
+		</Link>
+	)
+}
+
+/** The attributes that set the side apart. */
 function SideChips({ side, className }: { side: Side; className: string }) {
 	return (
 		<div className={`flex flex-wrap items-center gap-2 md:gap-3 ${className}`}>
-			<YourScore
-				score={Math.round(side.average)}
-				label={`Your average here: ${side.average}`}
-			/>
 			{side.attributes.map((a) => (
 				<span
 					key={a.key}

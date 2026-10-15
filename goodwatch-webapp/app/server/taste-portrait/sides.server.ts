@@ -1,6 +1,9 @@
-// Sides of you: clusters of what the person loves, each named from the word table, with the place just past it they've
-// barely tried but rate above their usual (its edges), and More of this.
+// Sides of you: the fewest groups of what the person loves (2 to 5) that each hold together, named by what sets each
+// apart from the others, each with the places just past it (its edges) and More of this. Lists of unseen titles inside
+// a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
+import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { TitleKey } from "~/server/title-snapshot/index.server"
+import { familyOf } from "./families.server"
 import {
 	K,
 	KEYS,
@@ -21,21 +24,43 @@ import { adjective, capitalize, label, noun } from "./words.server"
 // The person's services with their logos are added with the titles (index.server.ts).
 type SidesResult = Omit<SidesView, "titles" | "subject" | "services">
 
+/** Orders unseen titles for the person (personal order); without it, the order given. */
+export type OrderTitles = (keys: TitleKey[]) => TitleKey[]
+
 const MORE_OF_THIS = 12
+// More of this draws its titles from this many of the side's closest, then personal order picks the first 12.
+const MORE_OF_THIS_POOL = 48
 // The least rank step (Person.rankSteps, 50 to 99) of a suggestion: 65 is the top 70 percent of the person's range, 56
 // the top 89 percent.
 const MORE_OF_THIS_STEP = 65
 const EDGE_STEP = 56
 const EDGE_SUGGESTIONS = 8
 const EDGE_MIN_SUGGESTIONS = 4
-const MAX_EDGES = 6
-const MAX_EDGES_PER_KIND = 2
-// Titles above z 1.2 on an attribute carry it strongly, for the "rarely picked" attributes.
+const MAX_SIDES = 5
+// A side holds together when its titles are, on average, at least this close to its center.
+const HOLDS_TOGETHER = 0.55
+// A loved title this far from its side's center fits no side and is left out.
+const FITS_NO_SIDE = 0.15
+const HERE = 4
+// Titles above z 1.2 on an attribute carry it strongly.
 const STRONG_Z = 1.2
 const EXCLUDED_COUNTRIES = new Set(["US", "GB"])
-// Region names that read with "the": "You've barely been to the Netherlands".
+// Region names that read with "the": "from the Netherlands".
 const WITH_THE = new Set(["NL", "PH", "AE", "DO", "BS", "GM", "CD", "CF", "CZ"])
 const LANGUAGE_NAMES: Record<string, string> = { cn: "Cantonese" }
+// Attributes about how a title sounds or is told: they make poor names and steps.
+const UNNAMED = new Set([
+	"sound_centrality",
+	"music_centrality",
+	"dialogue_centrality",
+	"rewatchability",
+	"narrative_structure",
+	"dialogue_quality",
+	"character_depth",
+])
+// A side opens Watch next with the moods that most of its titles carry.
+const MOOD_SHARE = 0.4
+const MAX_SIDE_MOODS = 2
 
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" })
 const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
@@ -47,6 +72,8 @@ const displayName = (names: Intl.DisplayNames, code: string) => {
 	}
 }
 
+type Vec = Float64Array
+
 /** Loved titles: rated at least max(8, round(usual + 0.6 spread)), or all rated at least the usual when fewer than 6. */
 export function lovedTitles(person: Person): RatedTitle[] {
 	const cut = Math.max(8, Math.round(person.mu + 0.6 * person.sigma))
@@ -56,23 +83,37 @@ export function lovedTitles(person: Person): RatedTitle[] {
 		: person.rated.filter((r) => r.score >= person.mu)
 }
 
-interface Cluster {
-	center: Float64Array
-	members: RatedTitle[]
+// Without taste there is no match to hold suggestions to, so every suggestion passes.
+const passes = (step: number | null | undefined, least: number) =>
+	step === null || step === undefined || step >= least
+
+/** The closest center to z, how close, and how close the next one is. */
+function nearest(z: ArrayLike<number>, centers: Vec[]) {
+	let index = 0
+	let best = Number.NEGATIVE_INFINITY
+	centers.forEach((c, i) => {
+		const similarity = cosine(z, c)
+		if (similarity > best) {
+			best = similarity
+			index = i
+		}
+	})
+	return { index, similarity: best }
 }
 
-/** k-means by cosine over the non-craft attributes, 20 iterations, seeded farthest-first from the title closest to the
- * person's signature. */
-function clusters(points: RatedTitle[], k: number, seed: Float64Array) {
+// ---------- grouping ----------
+
+/** Rating-weighted k-means by cosine, 25 iterations, seeded farthest-first from the title closest to the seed. */
+function kmeans(points: RatedTitle[], weights: number[], k: number, seed: Vec) {
 	const start = [...points].sort(
 		(a, b) => cosine(b.z, seed) - cosine(a.z, seed) || a.key - b.key,
 	)[0]
-	const centers: Float64Array[] = [start.z]
+	const centers: Vec[] = [start.z]
 	while (centers.length < k) {
 		let best = points[0]
 		let bestSimilarity = Number.POSITIVE_INFINITY
 		for (const p of points) {
-			const similarity = Math.max(...centers.map((c) => cosine(p.z, c)))
+			const similarity = nearest(p.z, centers).similarity
 			if (similarity < bestSimilarity) {
 				bestSimilarity = similarity
 				best = p
@@ -81,220 +122,475 @@ function clusters(points: RatedTitle[], k: number, seed: Float64Array) {
 		centers.push(best.z)
 	}
 	let assigned: number[] = []
-	for (let iteration = 0; iteration < 20; iteration++) {
-		assigned = points.map((p) => {
-			let bestIndex = 0
-			let bestSimilarity = Number.NEGATIVE_INFINITY
-			centers.forEach((c, i) => {
-				const similarity = cosine(p.z, c)
-				if (similarity > bestSimilarity) {
-					bestSimilarity = similarity
-					bestIndex = i
-				}
-			})
-			return bestIndex
-		})
+	for (let iteration = 0; iteration < 25; iteration++) {
+		assigned = points.map((p) => nearest(p.z, centers).index)
 		for (let i = 0; i < centers.length; i++) {
-			const members = points.filter((_, j) => assigned[j] === i)
-			if (members.length) centers[i] = meanOf(members.map((m) => m.z))
+			const mean = new Float64Array(K)
+			let total = 0
+			points.forEach((p, j) => {
+				if (assigned[j] !== i) return
+				total += weights[j]
+				for (let d = 0; d < K; d++) mean[d] += weights[j] * p.z[d]
+			})
+			if (total) centers[i] = mean.map((x) => x / total)
 		}
 	}
-	return centers.map(
-		(center, i): Cluster => ({
-			center,
-			members: points.filter((_, j) => assigned[j] === i),
-		}),
+	return { centers, assigned }
+}
+
+/** The fewest sides that each hold together, with sides too small to stand folded into their neighbours. */
+function group(loved: RatedTitle[], person: Person) {
+	const n = loved.length
+	const weights = loved.map(
+		(r) => 1 + Math.max(0, (r.score - person.mu) / person.sigma),
 	)
-}
-
-// Without taste there is no match to hold suggestions to, so every suggestion passes.
-const passes = (step: number | null | undefined, least: number) =>
-	step === null || step === undefined || step >= least
-
-// ---------- edges: just past it ----------
-
-interface EdgeCandidate extends SideEdge {
-	strength: number
-	/** Genre profile of what's rated and suggested there. */
-	genres: Map<string, number>
-}
-
-function genreProfile(person: Person, keys: TitleKey[]) {
-	const profile = new Map<string, number>()
-	for (const key of keys)
-		for (const genre of person.snapshot.facts(key)?.genres ?? [])
-			profile.set(genre, (profile.get(genre) ?? 0) + 1)
-	return profile
-}
-
-function genreCosine(a: Map<string, number>, b: Map<string, number>) {
-	let dot = 0
-	let na = 0
-	let nb = 0
-	for (const [genre, x] of a) {
-		dot += x * (b.get(genre) ?? 0)
-		na += x * x
-	}
-	for (const x of b.values()) nb += x * x
-	return na && nb ? dot / Math.sqrt(na * nb) : 0
-}
-
-function edgeCandidates(person: Person): EdgeCandidate[] {
-	const { rated, mu } = person
-	const candidates: EdgeCandidate[] = []
-	const add = (
-		kind: SideEdge["kind"],
-		id: string,
-		names: { name: string; lead: string; place: string },
-		items: RatedTitle[],
-		keep: (t: PoolTitle) => boolean,
-	) => {
-		// Each edge needs a few titles to go to: unseen ones from there, close to the person, with a good match.
-		const ranked = rankUnseen(person, person.signature, 0.4, keep).slice(0, 10)
-		const steps = person.rankSteps(ranked.map((t) => t.key))
-		const suggestions = ranked
-			.filter((t) => passes(steps.get(t.key), EDGE_STEP))
-			.slice(0, EDGE_SUGGESTIONS)
-		if (suggestions.length < EDGE_MIN_SUGGESTIONS) return
-		const itemsAverage = average(items.map((r) => r.score))
-		const top = suggestions.slice(0, 4).map((t) => steps.get(t.key) ?? 0)
-		const ratedKeys = items.map((r) => r.key)
-		const suggestionKeys = suggestions.map((t) => t.key)
-		candidates.push({
-			id: `${kind}-${id}`,
-			kind,
-			...names,
-			average: round1(itemsAverage),
-			count: items.length,
-			rated: ratedKeys
-				.filter((key) => person.ratedByKey.get(key)?.facts.hasPoster)
-				.slice(0, 4),
-			suggestions: suggestionKeys,
-			image:
-				suggestions.find((t) => t.facts.hasBackdrop)?.key ??
-				items.find((r) => r.facts.hasBackdrop)?.key ??
-				null,
-			strength:
-				(itemsAverage - mu) * Math.sqrt(Math.max(1, items.length)) +
-				average(top) / 40,
-			genres: genreProfile(person, [...ratedKeys, ...suggestionKeys]),
-		})
-	}
-
-	const groups = (keyOf: (r: RatedTitle) => string | null) => {
-		const map = new Map<string, RatedTitle[]>()
-		for (const r of rated) {
-			const key = keyOf(r)
-			if (key !== null) map.set(key, [...(map.get(key) ?? []), r])
+	const maxK = Math.min(MAX_SIDES, n < 20 ? 2 : n < 50 ? 3 : n < 120 ? 4 : 5)
+	const minSize = Math.max(3, Math.ceil(0.07 * n))
+	let best: { centers: Vec[]; assigned: number[]; closeness: number } | null =
+		null
+	for (let k = 2; k <= maxK; k++) {
+		let { centers, assigned } = kmeans(loved, weights, k, person.signature)
+		for (let round = 0; round < 3; round++) {
+			const sizes = centers.map(
+				(_, i) => assigned.filter((a) => a === i).length,
+			)
+			const kept = centers.filter((_, i) => sizes[i] >= minSize)
+			if (kept.length === centers.length || kept.length < 2) break
+			assigned = loved.map((p) => nearest(p.z, kept).index)
+			centers = kept.map((c, i) => {
+				const members = loved.filter((_, j) => assigned[j] === i)
+				return members.length ? meanOf(members.map((m) => m.z)) : c
+			})
+			assigned = loved.map((p) => nearest(p.z, centers).index)
 		}
-		return map
-	}
-	// Barely tried: at least two rated titles there, and only a small share of all.
-	const few = (n: number, share: number) =>
-		n >= 2 && n <= Math.max(5, rated.length * share)
-	const liftOf = (items: RatedTitle[]) =>
-		average(items.map((r) => r.score)) - mu
-
-	// Origins: the snapshot's origin is the first production country, else the original language.
-	const origins = groups((r) => r.facts.origin)
-	for (const [code, items] of origins) {
-		if (/^[A-Z]{2}$/.test(code)) {
-			if (EXCLUDED_COUNTRIES.has(code) || !few(items.length, 0.008)) continue
-			if (liftOf(items) < 0.3) continue
-			const name = displayName(regionNames, code)
-			add(
-				"country",
-				code,
-				{
-					name,
-					lead: "You've barely been to",
-					place: WITH_THE.has(code) ? `the ${name}` : name,
-				},
-				items,
-				(t) => t.facts.origin === code,
-			)
-		} else if (/^[a-z]{2}$/.test(code) && code !== "en") {
-			if (!few(items.length, 0.012) || liftOf(items) < 0.2) continue
-			const name = LANGUAGE_NAMES[code] ?? displayName(languageNames, code)
-			add(
-				"language",
-				code,
-				{ name, lead: "You rarely watch in", place: name },
-				items,
-				(t) => t.facts.origin === code,
-			)
-		}
-	}
-
-	// Attributes they rarely choose, but rate above their usual when they do.
-	NON_CRAFT.map((k) => {
-		const hit = rated.filter((r) => r.z[k] > STRONG_Z)
-		return { k, hit, selection: person.selection[k], lift: liftOf(hit) }
-	})
-		.filter((a) => a.selection < 0.05 && a.hit.length >= 2 && a.lift > 0.15)
-		.sort((a, b) => b.lift - b.selection - (a.lift - a.selection))
-		.slice(0, 4)
-		.forEach((a) => {
-			const key = KEYS[a.k]
-			add(
-				"attribute",
-				key,
-				{
-					name: capitalize(noun(key)),
-					lead: "You rarely pick",
-					place: noun(key),
-				},
-				a.hit,
-				(t) => t.z[a.k] > STRONG_Z,
-			)
-		})
-
-	const decades = groups((r) => {
-		const year = yearOf(r.facts)
-		return year === null ? null : String(Math.floor(year / 10) * 10)
-	})
-	for (const [decade, items] of decades) {
-		if (items.length < 2 || items.length > Math.max(6, rated.length * 0.01))
-			continue
-		if (liftOf(items) < 0.3) continue
-		const from = Number(decade)
-		add(
-			"decade",
-			decade,
-			{
-				name: `The ${decade}s`,
-				lead: "You rarely go back to",
-				place: `the ${decade}s`,
-			},
-			items,
-			(t) => {
-				const year = yearOf(t.facts)
-				return year !== null && year >= from && year < from + 10
-			},
+		if (centers.length < 2) continue
+		const closeness = average(
+			loved.map((p, j) => cosine(p.z, centers[assigned[j]])),
 		)
+		if (
+			!best ||
+			(best.closeness < HOLDS_TOGETHER && closeness > best.closeness)
+		)
+			best = { centers, assigned, closeness }
+		if (closeness >= HOLDS_TOGETHER) break
 	}
+	if (!best) return []
+	const { centers, assigned } = best
+	return centers
+		.map((center, i) => ({
+			center,
+			members: loved.filter(
+				(r, j) => assigned[j] === i && cosine(r.z, center) >= FITS_NO_SIDE,
+			),
+		}))
+		.filter((g) => g.members.length >= 2)
+		.sort((a, b) => b.members.length - a.members.length)
+}
 
-	// Keep it varied: strongest first, at most two of a kind and six in all, none sharing three suggestions with one
-	// already chosen.
-	const chosen: EdgeCandidate[] = []
-	const perKind = new Map<string, number>()
-	for (const c of candidates.sort(
+// ---------- naming ----------
+
+/** Attribute keys by how much the center stands out from the other sides' centers, most first. */
+function standout(center: Vec, others: Vec[]) {
+	const base = others.length ? meanOf(others) : new Float64Array(K)
+	return NON_CRAFT.filter((k) => !UNNAMED.has(KEYS[k]))
+		.map((k) => ({ key: KEYS[k], weight: center[k] - base[k] }))
+		.sort((a, b) => b.weight - a.weight || a.key.localeCompare(b.key))
+}
+
+/**
+ * From the two attributes that most set the side apart: "Bleak stories about crime and justice" when one is a World
+ * attribute (an adjective from the other, the noun from the World one), else "Hopeful, heartwarming stories", and two
+ * kinds of humor as one: "Physically and situationally funny stories".
+ */
+function sideName(order: ReturnType<typeof standout>, taken: Set<string>) {
+	for (let shift = 0; shift < 4; shift++) {
+		const a = order[0]
+		const b = order[1 + shift]
+		if (!a || !b) break
+		const world = [a, b].find((x) => familyOf(x.key) === "world")
+		const other = world === a ? b : a
+		const [x, y] = [adjective(a.key), adjective(b.key)]
+		const name = world
+			? `${capitalize(adjective(other.key))} ${noun(world.key)}`
+			: x.endsWith(" funny") && y.endsWith(" funny")
+				? `${capitalize(x.replace(/ funny$/, ""))} and ${y.replace(/ funny$/, "")} funny stories`
+				: `${capitalize(x)}, ${y} stories`
+		if (!taken.has(name)) {
+			taken.add(name)
+			return name
+		}
+	}
+	const fallback = capitalize(noun(order[0].key))
+	taken.add(fallback)
+	return fallback
+}
+
+/** The most typical titles among the best rated, one per franchise (a franchise's films read alike). */
+function typical(members: RatedTitle[], center: Vec, mu: number) {
+	const value = (r: RatedTitle) =>
+		cosine(r.z, center) * (1 + 0.08 * (r.score - mu))
+	const ranked = [...members]
+		.filter((r) => r.facts.hasPoster)
+		.sort((a, b) => value(b) - value(a) || a.key - b.key)
+	const picked: RatedTitle[] = []
+	for (const r of ranked) {
+		if (picked.some((p) => cosine(p.z, r.z) > 0.88)) continue
+		picked.push(r)
+	}
+	return picked
+}
+
+/** The moods most of the side's titles carry, most common first. */
+function sideMoods(members: RatedTitle[]): MoodKey[] {
+	return MOOD_KEYS.map((mood) => ({
+		mood,
+		share:
+			members.filter((r) => r.facts.moods.includes(mood)).length /
+			members.length,
+	}))
+		.filter((m) => m.share >= MOOD_SHARE)
+		.sort((a, b) => b.share - a.share)
+		.slice(0, MAX_SIDE_MOODS)
+		.map((m) => m.mood)
+}
+
+// ---------- More of this ----------
+
+/** Unseen titles toward the side and the person's taste as a whole, at least a 65 rank step, in personal order. */
+function moreOfThis(person: Person, center: Vec, order: OrderTitles) {
+	const direction = new Float64Array(K).map(
+		(_, k) => 0.45 * center[k] + 0.55 * person.signature[k],
+	)
+	const ranked = rankUnseen(person, direction, 0.8)
+	const steps = person.rankSteps(ranked.map((t) => t.key))
+	const everywhere: TitleKey[] = []
+	const onServices: TitleKey[] = []
+	for (const t of ranked) {
+		if (
+			everywhere.length >= MORE_OF_THIS_POOL &&
+			(onServices.length >= MORE_OF_THIS_POOL || !person.input.services.length)
+		)
+			break
+		if (!passes(steps.get(t.key), MORE_OF_THIS_STEP)) continue
+		if (everywhere.length < MORE_OF_THIS_POOL) everywhere.push(t.key)
+		if (onServices.length < MORE_OF_THIS_POOL && person.onMyServices(t.key))
+			onServices.push(t.key)
+	}
+	const first = order(everywhere).slice(0, MORE_OF_THIS)
+	const firstOnServices = order(onServices).slice(0, MORE_OF_THIS)
+	return order([...new Set([...first, ...firstOnServices])])
+}
+
+// ---------- edges ----------
+
+type Edge = SideEdge & { strength: number }
+type SideDraft = {
+	id: string
+	name: string
+	center: Vec
+	members: RatedTitle[]
+}
+
+const ratedKeys = (items: RatedTitle[]) =>
+	items
+		.filter((r) => r.facts.hasPoster)
+		.sort((a, b) => b.score - a.score || a.key - b.key)
+		.slice(0, 4)
+		.map((r) => r.key)
+
+const imageOf = (titles: PoolTitle[]) =>
+	titles.find((t) => t.facts.hasBackdrop)?.key ?? null
+
+const titles = (n: number) => `${n} ${n === 1 ? "title" : "titles"}`
+
+interface Place {
+	kind: "country" | "language" | "decade" | "format" | "animation"
+	id: string
+	/** "From South Korea". */
+	name: string
+	/** "from South Korea", after the side's name. */
+	tail: string
+	has: (facts: RatedTitle["facts"]) => boolean
+}
+
+function placesOf(facts: RatedTitle["facts"]): Place[] {
+	const places: Place[] = []
+	const origin = facts.origin
+	if (origin && /^[A-Z]{2}$/.test(origin) && !EXCLUDED_COUNTRIES.has(origin)) {
+		const region = displayName(regionNames, origin)
+		const place = WITH_THE.has(origin) ? `the ${region}` : region
+		places.push({
+			kind: "country",
+			id: origin,
+			name: `From ${place}`,
+			tail: `from ${place}`,
+			has: (f) => f.origin === origin,
+		})
+	} else if (origin && /^[a-z]{2}$/.test(origin) && origin !== "en") {
+		const language =
+			LANGUAGE_NAMES[origin] ?? displayName(languageNames, origin)
+		places.push({
+			kind: "language",
+			id: origin,
+			name: `In ${language}`,
+			tail: `in ${language}`,
+			has: (f) => f.origin === origin,
+		})
+	}
+	const year = yearOf(facts)
+	if (year !== null) {
+		const decade = Math.floor(year / 10) * 10
+		places.push({
+			kind: "decade",
+			id: String(decade),
+			name: `From the ${decade}s`,
+			tail: `from the ${decade}s`,
+			has: (f) => {
+				const y = yearOf(f)
+				return y !== null && y >= decade && y < decade + 10
+			},
+		})
+	}
+	const show = facts.mediaType === "show"
+	places.push({
+		kind: "format",
+		id: facts.mediaType,
+		name: show ? "As a show" : "As a film",
+		tail: show ? "as a show" : "as a film",
+		has: (f) => f.mediaType === facts.mediaType,
+	})
+	const animated = (f: RatedTitle["facts"]) =>
+		f.anime || f.genres.includes("Animation")
+	if (animated(facts))
+		places.push({
+			kind: "animation",
+			id: "animated",
+			name: "Animated",
+			tail: "animated",
+			has: animated,
+		})
+	return places
+}
+
+/** The first suggestions of ranked titles that pass the edge's rank step; null when too few. */
+function edgeSuggestions(person: Person, ranked: PoolTitle[]) {
+	const steps = person.rankSteps(ranked.map((t) => t.key))
+	const suggestions = ranked
+		.filter((t) => passes(steps.get(t.key), EDGE_STEP))
+		.slice(0, EDGE_SUGGESTIONS)
+	return suggestions.length >= EDGE_MIN_SUGGESTIONS ? suggestions : null
+}
+
+/**
+ * Places common right next to the side in the catalog that the person has barely rated there, and never ones they rate
+ * below their usual: at most three, one per kind. "There" is the person's rated titles closest to this side.
+ */
+function placeEdges(
+	person: Person,
+	side: SideDraft,
+	centers: Vec[],
+	index: number,
+): Edge[] {
+	const near = person.rated.filter((r) => {
+		const n = nearest(r.z, centers)
+		return n.index === index && n.similarity > 0.1
+	})
+	const pool = rankUnseen(person, side.center, 0.4, (t) => {
+		const n = nearest(t.z, centers)
+		return n.index === index && n.similarity > 0.3
+	}).slice(0, 700)
+	if (pool.length < 40) return []
+	const counted = new Map<string, { place: Place; there: PoolTitle[] }>()
+	for (const t of pool)
+		for (const place of placesOf(t.facts)) {
+			const id = `${place.kind}-${place.id}`
+			const entry = counted.get(id) ?? { place, there: [] }
+			entry.there.push(t)
+			counted.set(id, entry)
+		}
+	const edges: Edge[] = []
+	for (const [id, { place, there }] of counted) {
+		const shareHere = there.length / pool.length
+		if (there.length < 10 || shareHere < 0.025) continue
+		const rated = near.filter((r) => place.has(r.facts))
+		const shareRated = near.length ? rated.length / near.length : 0
+		// Barely tried: a third or less of how common it is next to the side, and only a handful.
+		if (
+			shareRated > shareHere / 3 ||
+			rated.length > Math.max(3, near.length * 0.05)
+		)
+			continue
+		const avg = rated.length ? average(rated.map((r) => r.score)) : null
+		if (avg !== null && avg < person.mu - 0.3) continue
+		const suggestions = edgeSuggestions(person, there.slice(0, 16))
+		if (!suggestions) continue
+		edges.push({
+			id: `${side.id}-${id}`,
+			kind: place.kind,
+			name: place.name,
+			tail: place.tail,
+			toward: null,
+			why:
+				avg === null
+					? "Common right next to this side, and you haven't rated any of it yet."
+					: `You've rated ${titles(rated.length)} like this, ${round1(avg)} on average. Usually you give ${round1(person.mu)}.`,
+			average: avg === null ? null : round1(avg),
+			count: rated.length,
+			rated: ratedKeys(rated),
+			suggestions: suggestions.map((t) => t.key),
+			image: imageOf(suggestions),
+			strength:
+				shareHere - shareRated + (avg === null ? 0 : (avg - person.mu) * 0.03),
+		})
+	}
+	const chosen: Edge[] = []
+	const kinds = new Set<string>()
+	for (const edge of edges.sort(
 		(a, b) => b.strength - a.strength || a.id.localeCompare(b.id),
 	)) {
-		if (chosen.length >= MAX_EDGES) break
-		if ((perKind.get(c.kind) ?? 0) >= MAX_EDGES_PER_KIND) continue
-		const shared = (other: EdgeCandidate) =>
-			other.suggestions.filter((key) => c.suggestions.includes(key)).length
+		if (chosen.length >= 3) break
+		if (kinds.has(edge.kind)) continue
+		const shared = (other: Edge) =>
+			other.suggestions.filter((key) => edge.suggestions.includes(key)).length
 		if (chosen.some((other) => shared(other) >= 3)) continue
-		perKind.set(c.kind, (perKind.get(c.kind) ?? 0) + 1)
-		chosen.push(c)
+		kinds.add(edge.kind)
+		chosen.push(edge)
 	}
 	return chosen
 }
 
+/**
+ * Steps: the side plus an attribute the person rates above their usual near this side, though few of the side's own
+ * titles carry it. A step taken by one side is not offered to another (`taken`).
+ */
+function stepEdges(
+	person: Person,
+	side: SideDraft,
+	centers: Vec[],
+	index: number,
+	wanted: number,
+	taken: Set<string>,
+): Edge[] {
+	if (wanted <= 0) return []
+	const steps = NON_CRAFT.flatMap((k) => {
+		const key = KEYS[k]
+		if (UNNAMED.has(key) || taken.has(key)) return []
+		const inSide =
+			side.members.filter((m) => m.z[k] > STRONG_Z).length / side.members.length
+		if (inSide > 0.12 || side.center[k] > 0.3) return []
+		const hit = person.rated.filter(
+			(r) => r.z[k] > STRONG_Z && nearest(r.z, centers).index === index,
+		)
+		if (hit.length < 2) return []
+		const avg = average(hit.map((r) => r.score))
+		if (avg - person.mu < 0.2) return []
+		const direction = new Float64Array(side.center).map((x, d) =>
+			d === k ? x + 1.5 : x,
+		)
+		const suggestions = edgeSuggestions(
+			person,
+			rankUnseen(
+				person,
+				direction,
+				0.4,
+				(t) => t.z[k] > STRONG_Z && nearest(t.z, centers).index === index,
+			).slice(0, 14),
+		)
+		if (!suggestions) return []
+		return [
+			{
+				key,
+				avg,
+				inSide,
+				hit,
+				suggestions,
+				strength: (avg - person.mu) * (1 - inSide),
+			},
+		]
+	})
+		.sort((a, b) => b.strength - a.strength || a.key.localeCompare(b.key))
+		.slice(0, wanted)
+	for (const step of steps) taken.add(step.key)
+	return steps.map((step) => {
+		const word = adjective(step.key)
+		const share = Math.round(step.inSide * 100)
+		return {
+			id: `${side.id}-step-${step.key}`,
+			kind: "step" as const,
+			name: `+ ${capitalize(word)}`,
+			tail: `but ${word}`,
+			toward: null,
+			why: `Near this side, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${share ? `only ${share}%` : "none"} of this side ${share === 1 ? "is" : "are"}.`,
+			average: round1(step.avg),
+			count: step.hit.length,
+			rated: ratedKeys(step.hit),
+			suggestions: step.suggestions.map((t) => t.key),
+			image: imageOf(step.suggestions),
+			strength: step.strength,
+		}
+	})
+}
+
+/** The way toward the closest other side: unseen titles about as close to both. One per pair of sides. */
+function bridgeEdge(
+	person: Person,
+	sides: SideDraft[],
+	index: number,
+	bridged: Set<string>,
+): Edge | null {
+	const side = sides[index]
+	const other = sides
+		.filter((_, i) => i !== index)
+		.sort(
+			(a, b) =>
+				cosine(b.center, side.center) - cosine(a.center, side.center) ||
+				a.id.localeCompare(b.id),
+		)[0]
+	if (!other) return null
+	const pair = [side.id, other.id].sort().join("|")
+	if (bridged.has(pair)) return null
+	const between = (z: ArrayLike<number>) => {
+		const a = cosine(z, side.center)
+		const b = cosine(z, other.center)
+		return a > 0.2 && b > 0.2 && Math.abs(a - b) < 0.12
+	}
+	const middle = new Float64Array(K).map(
+		(_, d) => 0.5 * side.center[d] + 0.5 * other.center[d],
+	)
+	const suggestions = edgeSuggestions(
+		person,
+		rankUnseen(person, middle, 0.4, (t) => between(t.z)).slice(0, 14),
+	)
+	if (!suggestions) return null
+	const rated = person.rated.filter((r) => between(r.z))
+	const avg = rated.length ? average(rated.map((r) => r.score)) : null
+	if (avg !== null && rated.length >= 3 && avg < person.mu - 0.3) return null
+	bridged.add(pair)
+	return {
+		id: `${side.id}-toward-${other.id}`,
+		kind: "bridge",
+		name: `Toward ${other.name.toLowerCase()}`,
+		tail: null,
+		toward: other.id,
+		why:
+			avg === null
+				? "Titles right between these two sides. You haven't rated any yet."
+				: `You've rated ${titles(rated.length)} between these two sides, ${round1(avg)} on average. Usually you give ${round1(person.mu)}.`,
+		average: avg === null ? null : round1(avg),
+		count: rated.length,
+		rated: ratedKeys(rated),
+		suggestions: suggestions.map((t) => t.key),
+		image: imageOf(suggestions),
+		strength: 0,
+	}
+}
+
 // ---------- the view ----------
 
-export function buildSides(person: Person): SidesResult {
+export function buildSides(
+	person: Person,
+	order: OrderTitles = (keys) => keys,
+): SidesResult {
 	const empty: SidesResult = {
 		tab: "sides",
 		status: "empty",
@@ -305,141 +601,89 @@ export function buildSides(person: Person): SidesResult {
 	}
 	const loved = lovedTitles(person)
 	const n = loved.length
-	const k = Math.min(n >= 60 ? 4 : 3, Math.floor(n / 2.5))
-	if (k < 2) return empty
-	const minMembers = n >= 30 ? 3 : 2
-	const found = clusters(loved, k, person.signature).filter(
-		(c) => c.members.length >= minMembers,
-	)
-	if (found.length < 2) return empty
+	if (n < 5) return empty
+	const groups = group(loved, person)
+	if (groups.length < 2) return empty
 
-	const lovedMean = meanOf(loved.map((r) => r.z))
-	const names = new Set<string>()
-	const sides = found
-		.map((cluster) => {
-			// What sets the side apart from the rest of what they love.
-			const distinct = NON_CRAFT.map((k) => ({
-				key: KEYS[k],
-				weight: cluster.center[k] - 0.5 * lovedMean[k],
-			})).sort((a, b) => b.weight - a.weight)
-			let name = `${capitalize(adjective(distinct[1].key))} ${noun(distinct[0].key)}`
-			if (names.has(name))
-				name = `${capitalize(adjective(distinct[2].key))} ${noun(distinct[0].key)}`
-			names.add(name)
-			const members = [...cluster.members].sort(
-				(a, b) =>
-					b.score - a.score ||
-					cosine(b.z, cluster.center) - cosine(a.z, cluster.center) ||
-					a.key - b.key,
-			)
-			const high = members.filter((r) => r.score >= 7)
-			const shown = (high.length >= 2 ? high : members).filter(
-				(r) => r.facts.hasPoster,
-			)
-			// More of this: toward the side, and toward the person's taste as a whole.
-			const direction = new Float64Array(K).map(
-				(_, k) => 0.45 * cluster.center[k] + 0.55 * person.signature[k],
-			)
-			const ranked = rankUnseen(person, direction, 0.8)
-			const steps = person.rankSteps(ranked.map((t) => t.key))
-			const everywhere: TitleKey[] = []
-			const onServices: TitleKey[] = []
-			for (const t of ranked) {
-				if (
-					everywhere.length >= MORE_OF_THIS &&
-					onServices.length >= MORE_OF_THIS
-				)
-					break
-				if (!passes(steps.get(t.key), MORE_OF_THIS_STEP)) continue
-				if (everywhere.length < MORE_OF_THIS) everywhere.push(t.key)
-				if (onServices.length < MORE_OF_THIS && person.onMyServices(t.key))
-					onServices.push(t.key)
-				if (!person.input.services.length && everywhere.length >= MORE_OF_THIS)
-					break
-			}
-			const moreOfThis = ranked
-				.map((t) => t.key)
-				.filter((key) => everywhere.includes(key) || onServices.includes(key))
-			return {
-				id: "",
-				name,
-				attributes: distinct
-					.slice(0, 4)
-					.map((d) => ({ key: d.key, label: label(d.key) })),
-				share: Math.round((cluster.members.length / n) * 1000) / 1000,
-				average: round1(average(cluster.members.map((r) => r.score))),
-				here: shown.slice(0, 4).map((r) => r.key),
-				image: members.find((r) => r.facts.hasBackdrop)?.key ?? null,
-				edges: [] as SideEdge[],
-				moreOfThis,
-				center: cluster.center,
-				genreKeys: [...members.slice(0, 10).map((r) => r.key), ...everywhere],
-			}
-		})
-		.sort((a, b) => b.share - a.share || a.name.localeCompare(b.name))
-	sides.forEach((side, i) => {
-		side.id = `side-${i + 1}`
-	})
+	const centers = groups.map((g) => g.center)
+	const taken = new Set<string>()
+	const drafts: SideDraft[] = groups.map((g, i) => ({
+		id: `side-${i + 1}`,
+		name: sideName(
+			standout(
+				g.center,
+				centers.filter((_, j) => j !== i),
+			),
+			taken,
+		),
+		center: g.center,
+		members: g.members,
+	}))
 
-	// Every side first claims its closest unclaimed edge by genre profile; the rest go to their closest side.
-	const edges = edgeCandidates(person)
-	const sideGenres = sides.map((s) => genreProfile(person, s.genreKeys))
-	const owner = new Map<number, number>()
-	sides.forEach((_, si) => {
-		let best = -1
-		let bestSimilarity = -1
-		edges.forEach((edge, ei) => {
-			if (owner.has(ei)) return
-			const similarity = genreCosine(sideGenres[si], edge.genres)
-			if (similarity > bestSimilarity) {
-				best = ei
-				bestSimilarity = similarity
-			}
-		})
-		if (best >= 0) owner.set(best, si)
-	})
-	edges.forEach((edge, ei) => {
-		if (owner.has(ei)) return
-		let best = 0
-		sideGenres.forEach((genres, si) => {
-			if (
-				genreCosine(genres, edge.genres) >
-				genreCosine(sideGenres[best], edge.genres)
-			)
-				best = si
-		})
-		owner.set(ei, best)
-	})
-	sides.forEach((side, si) => {
-		side.edges = edges
-			.filter((_, ei) => owner.get(ei) === si)
-			.sort(
-				(a, b) =>
-					genreCosine(sideGenres[si], b.genres) -
-					genreCosine(sideGenres[si], a.genres),
-			)
-			.map(({ strength, genres, ...edge }) => edge)
+	const stepsTaken = new Set<string>()
+	const bridged = new Set<string>()
+	const sides = drafts.map((draft, i): Side => {
+		const places = placeEdges(person, draft, centers, i)
+		const steps = stepEdges(
+			person,
+			draft,
+			centers,
+			i,
+			2 - places.length,
+			stepsTaken,
+		)
+		const bridge = bridgeEdge(person, drafts, i, bridged)
+		const edges = [...places, ...steps, ...(bridge ? [bridge] : [])].map(
+			({ strength, ...edge }) => ({
+				...edge,
+				suggestions: order(edge.suggestions),
+			}),
+		)
+		const here = typical(draft.members, draft.center, person.mu)
+		const attributes = standout(
+			draft.center,
+			centers.filter((_, j) => j !== i),
+		)
+			.slice(0, 4)
+			.map((a) => ({ key: a.key, label: label(a.key) }))
+		const high = here.filter((r) => r.score >= 7)
+		return {
+			id: draft.id,
+			name: draft.name,
+			attributes,
+			share: Math.round((draft.members.length / n) * 1000) / 1000,
+			count: draft.members.length,
+			average: round1(average(draft.members.map((r) => r.score))),
+			here: (high.length >= 2 ? high : here).slice(0, HERE).map((r) => r.key),
+			image:
+				here.find((r) => r.facts.hasBackdrop)?.key ??
+				draft.members.find((r) => r.facts.hasBackdrop)?.key ??
+				null,
+			moods: sideMoods(draft.members),
+			edges,
+			moreOfThis: moreOfThis(person, draft.center, order),
+		}
 	})
 
 	// The headline: the two sides whose centers are least alike.
 	let headline: SidesResult["headline"] = null
 	let least = Number.POSITIVE_INFINITY
-	for (const a of sides)
-		for (const b of sides) {
-			if (a === b) continue
+	drafts.forEach((a, i) =>
+		drafts.forEach((b, j) => {
+			if (i >= j) return
 			const similarity = cosine(a.center, b.center)
 			if (similarity < least) {
 				least = similarity
 				headline = { first: a.id, second: b.id }
 			}
-		}
+		}),
+	)
 
-	const openFirst = [...sides].sort((a, b) => b.average - a.average)[0].id
 	return {
 		...empty,
 		status: "ready",
-		sides: sides.map(({ center, genreKeys, ...side }): Side => side),
+		sides,
 		headline,
-		openFirst,
+		openFirst: sides[0].id,
 	}
 }

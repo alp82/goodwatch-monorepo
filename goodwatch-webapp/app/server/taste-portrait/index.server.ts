@@ -9,6 +9,11 @@
 // - Too few ratings for a tab: that tab's empty state, never an error.
 import { createHash } from "node:crypto"
 import { isOnServices } from "~/server/availability-index.server"
+import { recPersonalOrder } from "~/server/features.server"
+import {
+	loadPersonalOrder,
+	orderPersonalOrder,
+} from "~/server/personal-order/reader.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import { getCardServices, getServiceList } from "~/server/title-cards.server"
 import {
@@ -31,7 +36,7 @@ import { FAMILIES } from "./families.server"
 import { buildFingerprint } from "./fingerprint.server"
 import { type PortraitInput, readPerson, round1 } from "./person.server"
 import { SAMPLE_RATINGS, SAMPLE_WANT_TO_SEE } from "./sample-ratings"
-import { buildSides } from "./sides.server"
+import { type OrderTitles, buildSides } from "./sides.server"
 import {
 	GUEST_MIN_RATINGS,
 	type PortraitSubject,
@@ -104,7 +109,12 @@ async function memberPortrait(
 	if (cached) return cached
 	const taste = await loadTaste(who.viewer)
 	const input = inputOf("member", ctx, taste)
-	const view = await buildView(snapshot, input, tab)
+	const view = await buildView(
+		snapshot,
+		input,
+		tab,
+		tab === "sides" ? await personalOrderOf(userId, snapshot) : undefined,
+	)
 	// While the person's country loads into the availability index, On my services can't be told yet: keep that view
 	// for a minute only.
 	writeCachedPortrait(
@@ -115,6 +125,22 @@ async function memberPortrait(
 		hiddenKey,
 	)
 	return view
+}
+
+/**
+ * The member's personal order for the lists inside a side, when it is on for them and its payload loads (sides
+ * group, personal order ranks). Without the mix of shows and animation, which is for whole lists.
+ */
+async function personalOrderOf(
+	userId: string,
+	snapshot: TitleSnapshot,
+): Promise<OrderTitles | undefined> {
+	if (!recPersonalOrder(userId).enabled) return undefined
+	const read = await loadPersonalOrder(userId, snapshot).catch(() => null)
+	const data = read?.data
+	if (!data) return undefined
+	return (keys) =>
+		keys.length ? orderPersonalOrder(keys, data, snapshot, false).keys : keys
 }
 
 // ---------- guests ----------
@@ -251,6 +277,7 @@ async function buildView(
 	snapshot: TitleSnapshot,
 	input: PortraitInput,
 	tab: PortraitTab,
+	order?: OrderTitles,
 ): Promise<PortraitView> {
 	const startedAt = performance.now()
 	const person = readPerson(snapshot, input)
@@ -261,7 +288,7 @@ async function buildView(
 	}
 	const built =
 		tab === "sides"
-			? buildSides(person)
+			? buildSides(person, order)
 			: tab === "everyone"
 				? buildEveryone(person)
 				: buildFingerprint(person)
