@@ -11,7 +11,7 @@ import { errorBox, primaryButton, stepHeading } from "./shared"
 
 const sourceName = (source: ImportSource) => IMPORT_SOURCE_NAMES[source]
 
-export function SourceImportUploadPanel({
+function SingleFileUploadPanel({
 	source,
 	onPreview,
 }: { source: ImportSource; onPreview: (summary: ImportSummary) => void }) {
@@ -126,6 +126,88 @@ export function SourceImportUploadPanel({
 			<p className="text-sm text-gray-400">
 				You will review everything before GoodWatch changes your library.
 			</p>
+			<div aria-live="assertive">
+				{preview.isError && <p className={errorBox}>{preview.error.message}</p>}
+			</div>
+		</section>
+	)
+}
+
+export function SourceImportUploadPanel(props: {
+	source: ImportSource
+	onPreview: (summary: ImportSummary) => void
+}) {
+	return props.source === "movielens" ? (
+		<MovieLensUploadPanel onPreview={props.onPreview} />
+	) : (
+		<SingleFileUploadPanel {...props} />
+	)
+}
+
+function MovieLensUploadPanel({
+	onPreview,
+}: { onPreview: (summary: ImportSummary) => void }) {
+	const [ratings, setRatings] = useState<File>()
+	const [wishlist, setWishlist] = useState<File>()
+	const preview = usePreviewSourceImport()
+	return (
+		<section
+			aria-labelledby="source-upload-heading"
+			className="flex flex-col gap-4"
+		>
+			<h3 id="source-upload-heading" className={stepHeading}>
+				Upload your MovieLens export
+			</h3>
+			<p className="text-gray-400">
+				Sign in to MovieLens, open Settings → Import or export, and download
+				your ratings and, optionally, wishlist. Choose the original CSV files
+				below. Combined maximum size: 20 MB.
+			</p>
+			<a
+				href="https://movielens.org/profile/settings/import-export"
+				target="_blank"
+				rel="noopener noreferrer"
+				className="text-indigo-300 underline hover:text-indigo-200"
+			>
+				Open MovieLens export settings (new tab)
+			</a>
+			<label className="flex flex-col gap-2">
+				MovieLens ratings CSV
+				<input
+					type="file"
+					accept=".csv,text/csv"
+					disabled={preview.isPending}
+					onChange={(event) => setRatings(event.target.files?.[0])}
+				/>
+			</label>
+			<label className="flex flex-col gap-2">
+				MovieLens wishlist CSV (optional)
+				<input
+					type="file"
+					accept=".csv,text/csv"
+					disabled={preview.isPending}
+					onChange={(event) => setWishlist(event.target.files?.[0])}
+				/>
+			</label>
+			<p className="text-sm text-gray-400">
+				Ratings and Want to See are imported without viewing dates. Tags and
+				activity logs are not applied. You will review everything before
+				GoodWatch changes your library.
+			</p>
+			<button
+				type="button"
+				className={primaryButton}
+				disabled={!ratings || preview.isPending}
+				onClick={() => {
+					if (ratings)
+						preview.mutate(
+							{ source: "movielens", file: ratings, wishlist },
+							{ onSuccess: (response) => onPreview(response.import) },
+						)
+				}}
+			>
+				{preview.isPending ? "Checking your export…" : "Preview import"}
+			</button>
 			<div aria-live="assertive">
 				{preview.isError && <p className={errorBox}>{preview.error.message}</p>}
 			</div>

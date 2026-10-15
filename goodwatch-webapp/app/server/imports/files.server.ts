@@ -644,11 +644,13 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 	return { source: "trakt", observations, warnings }
 }
 
-/** Reads a native Letterboxd or Trakt ZIP entirely in memory. */
+/** Reads an import entirely in memory; MovieLens can include a separate wishlist CSV. */
 export async function parseImportFile(
 	source: ImportSource,
 	bytes: Uint8Array,
+	wishlist?: Uint8Array,
 ): Promise<ParsedImport> {
+	if (source === "movielens") return movielens(bytes, wishlist)
 	if (source === "csv") return genericCsv(bytes)
 	const entries = zipEntries(bytes)
 	return source === "letterboxd" ? letterboxd(entries) : trakt(entries)
@@ -786,4 +788,93 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 	if (observations.length > IMPORT_MAX_ROWS)
 		fail("That export produces more than 50,000 import items.")
 	return { source: "csv", observations, warnings }
+}
+
+function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
+	if (bytes.byteLength + (wishlist?.byteLength ?? 0) > IMPORT_MAX_BYTES)
+		fail("The combined export is larger than 20 MB.")
+	const warnings = [
+		"MovieLens tags and activity logs are not applied. Activity logs record rating times, not watch times. Ratings and wishlist entries have no viewing dates.",
+	]
+	const observations: ImportObservation[] = []
+	for (const [kind, data] of [
+		["rating", bytes],
+		["want", wishlist],
+	] as const) {
+		if (!data) continue
+		if (!data.byteLength) fail("That MovieLens file is empty.")
+		const table = parseCsv(text({ name: `MovieLens ${kind}`, data }))
+		if (!table.length) fail("That MovieLens file is empty.")
+		if (observations.length + table.length - 1 > IMPORT_MAX_ROWS)
+			fail("That export has more than 50,000 rows.")
+		const headers = table[0].map((header) => header.trim().toLowerCase())
+		if (new Set(headers).size !== headers.length)
+			fail("The MovieLens CSV has duplicate columns.")
+		const required = [
+			"movie_id",
+			"imdb_id",
+			"tmdb_id",
+			"title",
+			...(kind === "rating" ? ["rating"] : []),
+		]
+		if (required.some((header) => !headers.includes(header)))
+			fail(
+				`MovieLens ${kind} CSV is missing required columns: ${required.join(", ")}. Use your personal export from Settings, not a GroupLens dataset.`,
+			)
+		if (kind === "want" && headers.includes("rating"))
+			fail(
+				"Choose the wishlist CSV for the optional file, not the ratings columns.",
+			)
+		if (table.slice(1).some((row) => row.length !== headers.length))
+			fail("A MovieLens CSV row has the wrong number of fields.")
+		const identities = new Set<string>()
+		const known = new Set([
+			"movie_id",
+			"imdb_id",
+			"tmdb_id",
+			"rating",
+			"average_rating",
+			"title",
+		])
+		const unknown = headers.filter((header) => !known.has(header))
+		if (unknown.length)
+			warnings.push(
+				`Unknown MovieLens ${kind} columns ignored: ${unknown.join(", ")}.`,
+			)
+		for (const fields of table.slice(1)) {
+			const row = Object.fromEntries(
+				headers.map((header, index) => [header, fields[index]?.trim() ?? ""]),
+			)
+			if (identities.has(row.movie_id))
+				fail("The MovieLens file contains a duplicate movie_id.")
+			identities.add(row.movie_id)
+			const score = Number(row.rating) * 2
+			const validScore = Number.isInteger(score) && score >= 1 && score <= 10
+			const problem = !validId(Number(row.movie_id))
+				? {
+						outcome: "invalid" as const,
+						reason: "MovieLens movie_id must be a positive integer.",
+					}
+				: kind === "rating" && !validScore
+					? {
+							outcome: "invalid" as const,
+							reason: "MovieLens rating must be 0.5–5 in half-star steps.",
+						}
+					: undefined
+			const title = /^(.*) \((\d{4})\)$/.exec(row.title)
+			const imdb = row.imdb_id.replace(/^tt/, "")
+			observations.push({
+				key: `movielens:${kind}:${row.movie_id}`,
+				kind,
+				mediaType: "movie",
+				title: clipped(title?.[1] ?? row.title),
+				year: validYear(title?.[2]),
+				tmdbId: validId(Number(row.tmdb_id)),
+				imdbId: /^\d+$/.test(imdb) ? `tt${imdb.padStart(7, "0")}` : null,
+				...(kind === "rating" ? { score: validScore ? score : null } : {}),
+				...(problem ? { problem } : {}),
+			})
+		}
+	}
+	return { source: "movielens", observations, warnings }
 }

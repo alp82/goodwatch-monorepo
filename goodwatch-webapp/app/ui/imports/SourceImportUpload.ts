@@ -1,27 +1,34 @@
 import { IMPORT_MAX_BYTES, type ImportSource } from "~/domain/imports"
 
-/** Builds the native import endpoint's multipart request after browser-side validation. */
+/** Builds the import endpoint's multipart request after browser-side validation. */
 export function buildSourceImportUpload(
 	source: ImportSource,
 	file: File,
+	wishlist?: File,
 ): FormData {
-	if (source === "csv" && !/\.csv$/i.test(file.name))
-		throw new Error("Choose a CSV file in Letterboxd import format.")
-	if (
-		source !== "csv" &&
-		!/\.zip$/i.test(file.name) &&
-		!["application/zip", "application/x-zip-compressed"].includes(file.type)
-	)
-		throw new Error(
-			"Choose the ZIP file you downloaded from Letterboxd or Trakt.",
+	const csv = source === "csv" || source === "movielens"
+	if (wishlist && source !== "movielens")
+		throw new Error("Only MovieLens accepts an optional wishlist file.")
+	for (const upload of wishlist ? [file, wishlist] : [file]) {
+		if (csv && !/\.csv$/i.test(upload.name))
+			throw new Error("Choose a CSV export file.")
+		if (
+			!csv &&
+			!/\.zip$/i.test(upload.name) &&
+			!["application/zip", "application/x-zip-compressed"].includes(upload.type)
 		)
-	if (file.size > IMPORT_MAX_BYTES)
+			throw new Error(
+				"Choose the ZIP file you downloaded from Letterboxd or Trakt.",
+			)
+		if (!upload.size) throw new Error("That file is empty.")
+	}
+	if (file.size + (wishlist?.size ?? 0) > IMPORT_MAX_BYTES)
 		throw new Error(
-			`That file is larger than ${Math.round(IMPORT_MAX_BYTES / 1024 / 1024)} MB. Choose a smaller export file.`,
+			"The combined export is larger than 20 MB. Choose a smaller export.",
 		)
-	if (file.size === 0) throw new Error("That file is empty.")
 	const body = new FormData()
 	body.append("source", source)
 	body.append("file", file)
+	if (wishlist) body.append("wishlist", wishlist)
 	return body
 }

@@ -51,7 +51,19 @@ export const action = ({ request }: ActionFunctionArgs) =>
 				400,
 				"Choose an import source and export file.",
 			)
-		if (file.size > IMPORT_MAX_BYTES)
+		const wishlist = form.get("wishlist")
+		if (
+			wishlist !== null &&
+			(!(wishlist instanceof File) || source.data !== "movielens")
+		)
+			throw new NativeImportError(
+				400,
+				"Only MovieLens accepts an optional wishlist CSV file.",
+			)
+		if (
+			file.size + (wishlist instanceof File ? wishlist.size : 0) >
+			IMPORT_MAX_BYTES
+		)
 			throw new NativeImportError(413, "That export is larger than 20 MB.")
 		const bytes = new Uint8Array(await file.arrayBuffer())
 		return json(
@@ -59,9 +71,16 @@ export const action = ({ request }: ActionFunctionArgs) =>
 				import: await previewImport(
 					userId,
 					source.data,
-					file.name.replace(/\s+/g, " ").trim().slice(0, 200) ||
-						`${source.data}.${source.data === "csv" ? "csv" : "zip"}`,
+					[file.name, ...(wishlist instanceof File ? [wishlist.name] : [])]
+						.join(" + ")
+						.replace(/\s+/g, " ")
+						.trim()
+						.slice(0, 200) ||
+						`${source.data}.${source.data === "csv" || source.data === "movielens" ? "csv" : "zip"}`,
 					bytes,
+					wishlist instanceof File
+						? new Uint8Array(await wishlist.arrayBuffer())
+						: undefined,
 				),
 			},
 			{ headers },

@@ -1,6 +1,6 @@
-# Letterboxd and Trakt imports
+# Native and CSV imports
 
-The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
+The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside generic CSV, MovieLens ratings/wishlist CSV and the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
 
 ## Member flow
 
@@ -63,3 +63,13 @@ Choose **Generic CSV** on Imports and upload a UTF-8 CSV in [Letterboxd import f
 `Rating10` takes priority over `Rating` regardless of column order. Ratings without a watched date do not invent a viewing date. Each dated row supplies a day-precision watch; invalid dates and scores remain visible as invalid items. Reviews use the existing review importer. Tags, Directors and Rewatch metadata are not applied; Rewatch does not invent extra viewings. The normal kind selection, conflict policy, date choice, receipts, resume and undo apply.
 
 CSV supports both backslash-escaped and doubled quotes. Limits are 20 MB, 50,000 rows and 50,000 observations. Generic files without stable entry URLs use per-title occurrence identities; historical edits or adding/removing repeated viewings may change those identities, as with older Letterboxd exports. Matching review improvements remain deferred to #374.
+
+## MovieLens
+
+Choose **MovieLens** on Imports. In MovieLens, open Settings → Import or export and download `movielens-ratings.csv` and, optionally, `movielens-wishlist.csv`. Select both before pressing Preview import. This is the personal export, not the anonymized GroupLens research dataset.
+
+Ratings use `movie_id,imdb_id,tmdb_id,rating,average_rating,title`; wishlist uses the same columns without `rating`. Reordered and additional columns are accepted. `average_rating` is ignored. The member's half-star rating is doubled exactly; no rating or watch date is invented. Wishlist entries become Want to See. Matching uses TMDB, then IMDb (adding `tt` and padding short numeric IDs to seven digits); there is no title-only fallback. Duplicate movie IDs within one file are rejected. Both files share the 20 MB and 50,000-item limits.
+
+Preview and receipt always explain that tags and activity logs are not applied: activity times describe ratings, not viewings. The shared import journal owns both files' observations and keeps the existing selection, conflict, resume and undo behavior. No migration is needed beyond the shipped native import schema.
+
+MovieLens fixtures are synthetic, based on the research note on `research/criticker-movielens-sofa-exports`; they are not represented as a current member export. Parser, service and rendered upload tests cover the two CSV adapters alongside the existing imports. These changes affect only the Imports settings route and server modules, not a landing surface or app shell, so the landing render-budget trigger does not apply.

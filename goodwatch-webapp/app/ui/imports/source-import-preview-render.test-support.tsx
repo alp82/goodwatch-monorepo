@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import type { ImportSummary } from "~/domain/imports"
 import { SourceImportPreview } from "./SourceImportPreview"
+import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
 const summary = (watch: number): ImportSummary => ({
 	id: "00000000-0000-4000-8000-000000000001",
@@ -42,8 +44,19 @@ const render = (watch: number, confirming: boolean, error: string | null) =>
 		}),
 	)
 
+const upload = (source: "csv" | "movielens") =>
+	renderToStaticMarkup(
+		createElement(
+			QueryClientProvider,
+			{ client: new QueryClient() },
+			createElement(SourceImportUploadPanel, { source, onPreview: () => {} }),
+		),
+	)
+
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
+		csvUpload: upload("csv"),
+		movielensUpload: upload("movielens"),
 		ratingOnly: render(0, false, "Preview could not start."),
 		withWatches: render(2, true, null),
 	})}`,

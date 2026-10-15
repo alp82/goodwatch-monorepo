@@ -405,8 +405,9 @@ export async function createPreview(
 	source: ImportSource,
 	fileName: string,
 	bytes: Uint8Array,
+	wishlist?: Uint8Array,
 ): Promise<ImportSummary> {
-	const parsed: ParsedImport = await parseImportFile(source, bytes)
+	const parsed: ParsedImport = await parseImportFile(source, bytes, wishlist)
 	const [matched, current] = await Promise.all([
 		matchCatalog(source, parsed.observations),
 		currentValues(userId),
@@ -433,7 +434,10 @@ export async function createPreview(
 	}
 	for (const item of items) if (item.kind !== "unsupported") kinds[item.kind]++
 	const now = new Date()
-	const hash = createHash("sha256").update(bytes).digest("hex")
+	const fileHash = createHash("sha256").update(bytes)
+	if (wishlist)
+		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
+	const hash = fileHash.digest("hex")
 	try {
 		await insertItems(id, userId, items)
 		await refreshItems()

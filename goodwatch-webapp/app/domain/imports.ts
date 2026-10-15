@@ -1,9 +1,15 @@
 /** Shared import contract. IMDb keeps its existing API. */
-export const IMPORT_SOURCES = ["letterboxd", "trakt", "csv"] as const
+export const IMPORT_SOURCES = [
+	"letterboxd",
+	"trakt",
+	"csv",
+	"movielens",
+] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
 	trakt: "Trakt",
 	csv: "Generic CSV",
+	movielens: "MovieLens",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_KINDS = [
@@ -89,7 +95,7 @@ export interface ImportSummary {
 	operation?: "apply" | "undo"
 }
 
-// POST /api/imports/preview: multipart FormData { source, file }; returns { import }.
+// POST /api/imports/preview: multipart FormData { source, file, wishlist? } (wishlist is MovieLens only); returns { import }.
 // GET /api/imports: { imports }; GET /api/imports/:id: { import }.
 // GET /api/imports/:id/items?offset=0&limit=50&outcome=unmatched: { items, total }.
 // POST /api/imports/:id/confirm: ImportOptions JSON; returns { import }.

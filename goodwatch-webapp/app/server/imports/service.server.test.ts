@@ -25,6 +25,7 @@ class ImportDb {
 	imports: Row[] = []
 	items: Row[] = []
 	favorites: Row[] = []
+	wishlist: Row[] = []
 	catalog: Row[] = []
 	scores: Row[] = []
 	failFavoriteOnce = false
@@ -141,8 +142,11 @@ class ImportDb {
 			}
 			return rows.map((x) => ({ ...x })) as T[]
 		}
-		if (s.includes("FROM user_favorite")) {
-			const row = this.favorites.find(
+		if (s.includes("FROM user_favorite") || s.includes("FROM user_wishlist")) {
+			const list = s.includes("FROM user_wishlist")
+				? this.wishlist
+				: this.favorites
+			const row = list.find(
 				(x) =>
 					x.user_id === params[0] &&
 					x.tmdb_id === params[1] &&
@@ -272,20 +276,26 @@ class ImportDb {
 					row.apply_state = "undone"
 			return { rowcount: 1 }
 		}
-		if (s.startsWith("INSERT INTO user_favorite")) {
+		if (
+			s.startsWith("INSERT INTO user_favorite") ||
+			s.startsWith("INSERT INTO user_wishlist")
+		) {
+			const list = s.startsWith("INSERT INTO user_wishlist")
+				? this.wishlist
+				: this.favorites
 			if (this.failFavoriteOnce) {
 				this.failFavoriteOnce = false
 				throw new Error("injected interruption")
 			}
 			if (
-				!this.favorites.some(
+				!list.some(
 					(x) =>
 						x.user_id === params[0] &&
 						x.tmdb_id === params[1] &&
 						x.media_type === params[2],
 				)
 			)
-				this.favorites.push({
+				list.push({
 					user_id: params[0],
 					tmdb_id: params[1],
 					media_type: params[2],
@@ -296,9 +306,15 @@ class ImportDb {
 				})
 			return { rowcount: 1 }
 		}
-		if (s.startsWith("DELETE FROM user_favorite")) {
-			const before = this.favorites.length
-			this.favorites = this.favorites.filter(
+		if (
+			s.startsWith("DELETE FROM user_favorite") ||
+			s.startsWith("DELETE FROM user_wishlist")
+		) {
+			const name = s.startsWith("DELETE FROM user_wishlist")
+				? "wishlist"
+				: "favorites"
+			const before = this[name].length
+			this[name] = this[name].filter(
 				(x) =>
 					!(
 						x.user_id === params[0] &&
@@ -308,7 +324,7 @@ class ImportDb {
 						x._primary_term === params[4]
 					),
 			)
-			return { rowcount: before - this.favorites.length }
+			return { rowcount: before - this[name].length }
 		}
 		if (s.startsWith("INSERT INTO user_score")) {
 			if (this.failScoreOnce) {
@@ -618,4 +634,69 @@ it("CSV preview matches IDs in priority order and only unique exact title/year, 
 	assert.match(receipt.warnings.join(" "), /Extra/)
 	await undoImport("member", preview.id)
 	assert.equal((await getImport("member", preview.id)).status, "undone")
+})
+
+it("MovieLens combined upload matches only IDs and applies and undoes ratings and Want to See with receipt notes", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+		{
+			tmdb_id: 655,
+			imdb_id: "tt0087884",
+			title: "Paris, Texas",
+			release_year: 1984,
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = await previewImport(
+		"member",
+		"movielens",
+		"ratings.csv + wishlist.csv",
+		Buffer.from(
+			"movie_id,imdb_id,tmdb_id,rating,title\n1,0087884,862,4.5,Toy Story (1995)\n2,,,3,Toy Story (1995)\n",
+		),
+		Buffer.from(
+			'movie_id,imdb_id,tmdb_id,title\n3,87884,999,"Paris, Texas (1984)"\n',
+		),
+	)
+	assert.equal(preview.counts.new, 2)
+	assert.equal(preview.counts.unmatched, 1)
+	assert.equal(preview.kinds.watch, 0)
+	assert.equal(preview.kinds.want, 1)
+	const items = await getImportItems("member", preview.id, undefined, 0, 50)
+	assert.deepEqual(
+		items.items.map((x) => x.tmdbId),
+		[862, null, 655],
+	)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["rating", "want"],
+	})
+	await waitFor(db, "done")
+	const receipt = await getImport("member", preview.id)
+	assert.equal(receipt.applied.added, 2)
+	assert.match(
+		receipt.warnings.join(" "),
+		/tags and activity logs are not applied/,
+	)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+	const again = await previewImport(
+		"member",
+		"movielens",
+		"ratings.csv",
+		Buffer.from(
+			"movie_id,imdb_id,tmdb_id,rating,title\n1,0114709,862,4.5,Toy Story (1995)\n",
+		),
+	)
+	assert.equal(again.counts.new, 1)
 })

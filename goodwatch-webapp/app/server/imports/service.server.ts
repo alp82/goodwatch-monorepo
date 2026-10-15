@@ -18,12 +18,14 @@ export const previewImport = async (
 	source: ImportSource,
 	fileName: string,
 	bytes: Uint8Array,
+	wishlist?: Uint8Array,
 ) =>
 	(await import("./preview.server.ts")).createPreview(
 		userId,
 		source,
 		fileName,
 		bytes,
+		wishlist,
 	)
 export const listImports = async (userId: string): Promise<ImportSummary[]> =>
 	(await listImportRows(userId)).map(summarize)

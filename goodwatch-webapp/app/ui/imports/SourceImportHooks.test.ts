@@ -48,10 +48,17 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	const rendered = JSON.parse(
 		output.split("__SOURCE_IMPORT_RENDER__").at(-1) ?? "",
 	) as {
+		csvUpload: string
+		movielensUpload: string
 		ratingOnly: string
 		withWatches: string
 	}
 
+	assert.match(rendered.csvUpload, /Letterboxd import format/)
+	assert.match(rendered.movielensUpload, /MovieLens ratings CSV/)
+	assert.match(rendered.movielensUpload, /MovieLens wishlist CSV/)
+	assert.match(rendered.movielensUpload, /optional/i)
+	assert.match(rendered.movielensUpload, /Preview import/)
 	assert.match(rendered.ratingOnly, /type="checkbox"[^>]*checked=""/)
 	assert.doesNotMatch(rendered.ratingOnly, /How should watch dates be handled/)
 	assert.doesNotMatch(
@@ -85,5 +92,40 @@ test("generic CSV upload uses the existing multipart endpoint and rejects archiv
 	assert.throws(
 		() => buildSourceImportUpload("csv", new File(["zip"], "export.zip")),
 		/CSV/,
+	)
+})
+
+test("MovieLens uploads ratings with an optional wishlist under one combined limit", () => {
+	const ratings = new File(["ratings"], "movielens-ratings.csv")
+	const wishlist = new File(["wishlist"], "movielens-wishlist.csv")
+	const body = buildSourceImportUpload("movielens", ratings, wishlist)
+	assert.equal(body.get("source"), "movielens")
+	assert.equal(body.get("file"), ratings)
+	assert.equal(body.get("wishlist"), wishlist)
+	assert.equal(
+		buildSourceImportUpload("movielens", ratings).get("wishlist"),
+		null,
+	)
+	assert.throws(
+		() =>
+			buildSourceImportUpload(
+				"movielens",
+				ratings,
+				new File(["bad"], "archive.zip"),
+			),
+		/CSV/,
+	)
+	assert.throws(
+		() =>
+			buildSourceImportUpload(
+				"movielens",
+				ratings,
+				new File([new Uint8Array(IMPORT_MAX_BYTES)], "wishlist.csv"),
+			),
+		/20 MB/,
+	)
+	assert.throws(
+		() => buildSourceImportUpload("csv", ratings, wishlist),
+		/MovieLens/,
 	)
 })
