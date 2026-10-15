@@ -59,13 +59,8 @@ export { confirmImport, undoImport }
 export type { ImportOptions }
 
 /** Fetch adapters return only observations, never credentials or raw API responses. */
-export const previewFetchedImport = async (
+export const previewFetchedImport = (
 	userId: string,
 	displayName: string,
 	observations: ParsedImport,
-) =>
-	(await import("./preview.server.ts")).createObservationPreview(
-		userId,
-		displayName,
-		observations,
-	)
+) => previewParsedImport(userId, displayName, observations)

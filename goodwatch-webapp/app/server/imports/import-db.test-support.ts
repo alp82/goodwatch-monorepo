@@ -234,7 +234,8 @@ export class ImportDb {
 			return (row ? [{ ...row }] : []) as T[]
 		}
 		if (s.includes("FROM user_score")) {
-            if (params.length === 1) return this.scores.filter(x => x.user_id === params[0]) as T[]
+			if (params.length === 1)
+				return this.scores.filter((x) => x.user_id === params[0]) as T[]
 			const row = this.scores.find(
 				(x) =>
 					x.user_id === params[0] &&
@@ -528,4 +529,3 @@ export class ImportDb {
 		throw new Error(`Unexpected run: ${s}`)
 	}
 }
-

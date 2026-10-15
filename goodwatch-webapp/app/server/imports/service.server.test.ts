@@ -1534,6 +1534,7 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 		await read(),
 	)
 	assert.deepEqual(preview.kinds, {
+		show_status: 0,
 		rating: 3,
 		watch: 0,
 		want: 2,

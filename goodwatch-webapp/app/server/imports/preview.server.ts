@@ -1,4 +1,3 @@
-import { IMPORT_MAX_ROWS } from "../../domain/imports.ts"
 import { createHash, randomUUID } from "node:crypto"
 import type {
 	ImportItem,
@@ -11,15 +10,19 @@ import type {
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
 import {
-	createCatalogAnimeLookup,
-	resolveAnimeParent,
-} from "./anime-mapping-data.server.ts"
-import { canImportWantToSee, isApplicableStatus } from "../../domain/imports.ts"
+	IMPORT_MAX_ROWS,
+	canImportWantToSee,
+	isApplicableStatus,
+} from "../../domain/imports.ts"
 import { PROTECTED_STATES } from "../../domain/tracking/machine.ts"
 import type {
 	ImportStatusItem,
 	ImportTrackingPlan,
 } from "../tracking.server.ts"
+import {
+	createCatalogAnimeLookup,
+	resolveAnimeParent,
+} from "./anime-mapping-data.server.ts"
 import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
 import { ImportFileError, parseImportFile } from "./files.server.ts"
 import {
@@ -455,7 +458,10 @@ export async function createParsedPreview(
 	hash = createHash("sha256").update(JSON.stringify(input)).digest("hex"),
 ): Promise<ImportSummary> {
 	const parsed = input
-    if (parsed.observations.length > IMPORT_MAX_ROWS) throw new ImportFileError("That source produces more than 50,000 import items.")
+	if (parsed.observations.length > IMPORT_MAX_ROWS)
+		throw new ImportFileError(
+			"That source produces more than 50,000 import items.",
+		)
 	for (const row of parsed.observations) {
 		if (row.kind !== "show_status") continue
 		if (row.mediaType !== "show")
@@ -615,6 +621,3 @@ async function classifyShowStatuses(
 		}
 	}
 }
-
-/** File and fetched sources enter the same normalized observation pipeline. */
-export const createObservationPreview = createParsedPreview
