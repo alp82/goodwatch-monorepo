@@ -1,0 +1,55 @@
+name: Better Auth MCP authorization
+
+on:
+  pull_request:
+    paths:
+      - 'goodwatch-webapp/app/server/auth/**'
+      - 'goodwatch-webapp/app/server/mcp/**'
+      - 'goodwatch-webapp/app/routes/*mcp*'
+      - 'goodwatch-webapp/app/routes/*well-known*'
+      - 'goodwatch-webapp/app/routes/api.auth.*'
+      - 'goodwatch-webapp/packages/auth-stack/**'
+      - 'goodwatch-webapp/scripts/auth-mcp/**'
+      - 'goodwatch-webapp/scripts/mcp-read/**'
+      - 'goodwatch-webapp/package*.json'
+      - 'goodwatch-webapp/.npmrc'
+      - '.github/workflows/auth-mcp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auth-mcp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install locked dependencies
+        working-directory: goodwatch-webapp
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix scripts/auth-cratedb/conformance
+      - name: Configure disposable runner for CrateDB
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: OAuth authorization and auth HTTP regression with local stores
+        working-directory: goodwatch-webapp
+        run: npm run test:auth:mcp
+      - name: MCP endpoint and cache regression
+        working-directory: goodwatch-webapp
+        run: node --test app/server/mcp/endpoint.test.ts app/server/page-cache.test.ts app/server/metrics/registry.test.ts
+      - name: Keep sanitized test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-mcp-results
+          path: |
+            goodwatch-webapp/scripts/auth-mcp/results/integration.log
+            goodwatch-webapp/scripts/auth-mcp/results/typecheck.log
+            goodwatch-webapp/scripts/auth-mcp/results/containers.log

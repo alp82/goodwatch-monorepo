@@ -1,16 +1,12 @@
+import { captureMessage } from "@sentry/remix"
 import type { User } from "@supabase/auth-js"
 import Redis, { type Cluster } from "ioredis"
-import { createGoodwatchAuth, jsonResponse } from "./auth.server.ts"
-import {
-	crateAuthTransport,
-	localCrateTransport,
-} from "./crate-adapter.server.ts"
-
+import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
+import { onShutdown } from "../lifecycle.server.ts"
+import { createGoodwatchAuth, jsonResponse, setCookiesOf } from "./auth.server.ts"
+import { crateAuthTransport, localCrateTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
-import { onShutdown } from "../lifecycle.server.ts"
-import { captureMessage } from "@sentry/remix"
-import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
 let instance: Promise<AuthService> | null = null
@@ -58,6 +54,7 @@ export async function getBetterAuth(): Promise<AuthService> {
 			encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
 			secret: required("BETTER_AUTH_SECRET"),
 			baseURL: required("BETTER_AUTH_URL"),
+			mcp: { resource: required("MCP_RESOURCE_URL") },
 			trustedIpHeader: required("AUTH_TRUSTED_IP_HEADER"),
 			storage: new ValkeyAuthStorage(() => clusterProvider()),
 			mail,
@@ -112,12 +109,6 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 		}
 	response.headers.set("Cache-Control", "private, no-store")
 	return response
-}
-// remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
-function setCookiesOf(headers: Headers): string[] {
-	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
-	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
-	return raw?.["set-cookie"] ?? []
 }
 export async function resolveBetterAuthSession(cookieHeader: string | null) {
 	const auth = await getBetterAuth()

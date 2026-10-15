@@ -115,3 +115,6 @@ __pycache__
 tmp
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Disposable MCP auth credentials and evidence
+goodwatch-webapp/scripts/auth-mcp/results/

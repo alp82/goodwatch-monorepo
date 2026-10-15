@@ -11,8 +11,8 @@ Auth and MCP launch together after migration rehearsal.
 `AuthMailQueue`, the canonical origin, stable independent secrets and Google
 credentials. The server entry registers the existing Cluster getter and the
 resolver, keeping database/SMTP code out of shared client utilities. The Remix
-splat route returns private, no-store responses. No MCP, CIMD or JWT plugins are
-registered here. Schema migration is explicit and never runs at app startup.
+splat route returns private, no-store responses. The MCP, CIMD and JWT plugins are registered by the runtime with
+`MCP_RESOURCE_URL`; see [MCP authorization](../../../../docs/implementation/mcp-authorization.md). Schema migration is explicit and never runs at app startup.
 
 `.env.example` lists the required configuration. CrateDB uses its own username
 and password, private HTTP origins and payload encryption secret. Better Auth's
@@ -127,7 +127,7 @@ cases run through HTTP with real stores.
 
 ## Launch boundaries
 
-MCP plugins, importer/rehearsal, production grants, orphan cleanup
+Importer/rehearsal, production grants, orphan cleanup
 and coordinated cut-over belong to the other map #529 tickets. The adapter's
 maintenance and multi-row protocol limitations remain. A consumed confirmation
 followed by a later failure needs a resend; no transaction spans confirmation

@@ -1,5 +1,5 @@
 import type { Cluster } from "ioredis"
-import type { SecondaryStorage } from "better-auth"
+import type { SecondaryStorage } from "@goodwatch/auth-stack"
 
 /** Single-key operations route correctly through ioredis Cluster. Never SCAN. */
 export class ValkeyAuthStorage implements SecondaryStorage {
