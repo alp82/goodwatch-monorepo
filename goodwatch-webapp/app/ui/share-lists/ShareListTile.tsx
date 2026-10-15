@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 // One share list in a grid: its card, scaled into a fixed-height frame so portrait, square, and story designs line up,
 // with the list title and date below. The card links to the public list page.
 import { Link } from "@remix-run/react"
@@ -57,7 +58,7 @@ export function ShareListTile({
 					to={shareListPath(handle, list.id)}
 					className="block truncate font-bold text-gray-100 hover:text-white"
 				>
-					{list.title}
+					<span lang={mediaFieldLanguage(list)}>{list.title}</span>
 				</Link>
 				<p className="text-sm text-gray-400">
 					{design.name} · {list.date}

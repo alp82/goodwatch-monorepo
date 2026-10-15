@@ -1,3 +1,6 @@
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
 import { Link } from "@remix-run/react"
 import type React from "react"
 import type { RatingBadge } from "~/domain/age-content"
@@ -77,7 +80,7 @@ export function MovieTvCard({
 				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
 				${actions ? "" : `${SCALE} group`}
 			`}
-			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
 		>
@@ -100,6 +103,7 @@ export function MovieTvCard({
 				<Poster
 					path={details.poster_path}
 					title={details.title}
+					lang={details.presentation?.title.language ?? "en"}
 					mediaType={mediaType}
 					tmdbId={details.tmdb_id}
 					sizes={posterSizes}
@@ -130,7 +134,8 @@ export function MovieTvCard({
 							transition-transform duration-200 group-hover:-translate-y-1
 						"
 					>
-						{details.title}
+						{/* The title in its own language and direction; the year after it stays interface text. */}
+						<MediaText value={presentedText(details, "title", details.title)} />
 						{details.release_year ? ` (${details.release_year})` : ""}
 					</span>
 				</div>

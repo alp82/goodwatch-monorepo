@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -69,7 +70,7 @@ interface LoaderData {
 	discoverParams: DiscoverParams
 }
 
-export const loader: LoaderFunction = async ({
+const canonicalLoader: LoaderFunction = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
@@ -204,3 +205,5 @@ export default function MoviesCategoryPage() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

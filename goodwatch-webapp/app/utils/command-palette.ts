@@ -1,3 +1,5 @@
+import { canonicalMediaTitle } from "./media-presentation"
+import type { PresentedMedia } from "~/utils/media-presentation"
 // What the command palette's server lookup and the palette in the browser share: the title row, and how typed text
 // becomes the prefix the lookup (and its cache) keys on.
 import type { MediaType } from "~/types/user-data"
@@ -7,12 +9,14 @@ import { titleToDashed } from "~/utils/helpers"
 export const MIN_PREFIX_CHARS = 2
 const MAX_PREFIX_CHARS = 80
 
-export interface PaletteTitle {
+export interface PaletteTitle extends PresentedMedia {
 	mediaType: MediaType
 	tmdbId: number
 	title: string
 	year: string
 	posterPath: string | null
+	/** The localized name the text matched, when it matched by one and not by the title. */
+	matchedAlias?: { text: string; language: string }
 }
 
 /** The lookup's answer: the titles to show, and about how many more match (a guess, for "Show 120 more"). */
@@ -34,4 +38,4 @@ export function normalizePrefix(text: string): string {
 
 /** The title page. */
 export const paletteTitlePath = (title: PaletteTitle) =>
-	`/${title.mediaType}/${title.tmdbId}-${titleToDashed(title.title)}`
+	`/${title.mediaType}/${title.tmdbId}-${titleToDashed(canonicalMediaTitle(title))}`

@@ -1,0 +1,417 @@
+{
+  "startedAt": "2026-10-15T18:44:39.332Z",
+  "finishedAt": "2026-10-15T18:48:25.371Z",
+  "passed": true,
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "clientSha256": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+  "sourceSha256": {
+    "../../app/utils/crate.ts": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+    "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+    "../../app/server/tracking.server.ts": "6e840b82a3f2ece569c21dae1a1d8383075a2523c4083dc954ac5e089316d066",
+    "../../app/server/combined-search/catalog.server.ts": "fe39f57efc8af5032624d4637254d48a0aa35687af4e846c854a7adb5aae9800",
+    "../../app/server/search-ranking/search-index-build.server.ts": "555bff358dafa0aec1f5714078d7d366c4764160efdc4f8d7f307fa818688776",
+    "../../app/server/page-cache.server.ts": "c2dbf91e0ec380c5306cc6ce373ea603236a7081af019e756647238901e1fcb4",
+    "./verify.mjs": "c577d399c8f2d3be44e2abaabc1c04c547c5ade2dc967e77d4e76acc25fac04b",
+    "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+    "./page-proof.mjs": "779c2e81bc00c1e8f4c952f2ca95adf682f1418ce3348ba11ddd7c4598497245",
+    "./build-page-proof.mjs": "c7d4412499ff80af2b1e970c259fbeaa489db42b6813583242edb01bea4689f7",
+    "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+    "./compose.yaml": "f10623e22b45f15205cbb89c6e15527d14e49e0831f936ab42286f7c5de35355",
+    "./run.sh": "4cc542cbbd698c6c95703aa35c534c48546c52a0bfc92b29fb925efaf5f35bc4",
+    "./page-loaders.generated.mjs": "d9c21540a4578965030117d061ddc339f91857824a598f1a8a9254e7541a5990"
+  },
+  "trackingBaselineCommit": null,
+  "trackingRuntimeSha256": "6e840b82a3f2ece569c21dae1a1d8383075a2523c4083dc954ac5e089316d066",
+  "trackingMigration": {
+    "legacyRowsPreserved": true,
+    "insertTokenNullable": true,
+    "backfillNeeded": false
+  },
+  "stop": {
+    "requestedAt": "2026-10-15T18:45:37.730Z",
+    "elapsedMs": 3010,
+    "command": "ALTER CLUSTER DECOMMISSION node1",
+    "settings": [
+      [
+        {
+          "min_availability": "PRIMARIES",
+          "force": false,
+          "timeout": "2h"
+        }
+      ]
+    ],
+    "acknowledgedAt": "2026-10-15T18:45:59.684Z",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-15T18:44:38.379787813Z",
+      "FinishedAt": "2026-10-15T18:46:05.844182262Z"
+    },
+    "completedAt": "2026-10-15T18:46:07.067Z"
+  },
+  "rejoinedDuringLoad": {
+    "elapsedMs": 50313,
+    "reads": 1080,
+    "pages": {
+      "movie": 67,
+      "show": 92,
+      "person": 68,
+      "library": 73,
+      "explore": 132,
+      "watch": 30,
+      "score": 36,
+      "catalog": 239
+    }
+  },
+  "load": {
+    "durationMs": 77056,
+    "stats": {
+      "reads": {
+        "succeeded": 1848,
+        "failed": 0,
+        "maxMs": 4898.4636089999985
+      },
+      "keyed": {
+        "succeeded": 255,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 246,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 249,
+        "failed": 2
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 255,
+      "upsert": 246,
+      "generic": 249
+    }
+  },
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      249
+    ],
+    [
+      "keyed",
+      255,
+      1,
+      1,
+      255
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      246,
+      1,
+      1,
+      246
+    ]
+  ],
+  "lostResponses": [
+    {
+      "id": "lost-increment-reset",
+      "timeout": false,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 379,
+      "appliedSeq": 380,
+      "seqAfter": 380,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-increment-timeout",
+      "timeout": true,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 401,
+      "appliedSeq": 402,
+      "seqAfter": 402,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-upsert-reset",
+      "timeout": false,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 381,
+      "appliedSeq": 382,
+      "seqAfter": 382,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-upsert-timeout",
+      "timeout": true,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 403,
+      "appliedSeq": 404,
+      "seqAfter": 404,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-insert-reset",
+      "timeout": false,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 405,
+      "appliedSeq": 407,
+      "seqAfter": 407,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-insert-timeout",
+      "timeout": true,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 430,
+      "appliedSeq": 432,
+      "seqAfter": 432,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-tracking-cas-reset",
+      "timeout": false,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 56,
+      "appliedSeq": 57,
+      "seqAfter": 57,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    },
+    {
+      "id": "lost-tracking-cas-timeout",
+      "timeout": true,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 57,
+      "appliedSeq": 58,
+      "seqAfter": 58,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    }
+  ],
+  "restartedAt": "2026-10-15T18:46:09.927Z",
+  "afterStopNodes": [
+    [
+      "node2"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "pageRoutes": {
+    "movie": {
+      "succeeded": 118,
+      "failed": 0,
+      "maxMs": 7358.195896000005,
+      "examples": []
+    },
+    "show": {
+      "succeeded": 140,
+      "failed": 0,
+      "maxMs": 3350.034169999999,
+      "examples": []
+    },
+    "person": {
+      "succeeded": 113,
+      "failed": 0,
+      "maxMs": 5416.399437,
+      "examples": []
+    },
+    "library": {
+      "succeeded": 120,
+      "failed": 0,
+      "maxMs": 3653.8542559999914,
+      "examples": []
+    },
+    "explore": {
+      "succeeded": 201,
+      "failed": 0,
+      "maxMs": 3367.442689999996,
+      "examples": []
+    },
+    "watch": {
+      "succeeded": 48,
+      "failed": 0,
+      "maxMs": 7663.614268999998,
+      "examples": []
+    },
+    "score": {
+      "succeeded": 57,
+      "failed": 0,
+      "maxMs": 12495.605186,
+      "examples": []
+    },
+    "catalog": {
+      "succeeded": 418,
+      "failed": 0,
+      "maxMs": 2939.9243390000047,
+      "examples": []
+    },
+    "tracking": {
+      "succeeded": 18,
+      "failed": 0,
+      "maxMs": 10219.848364999983,
+      "examples": []
+    }
+  },
+  "pageWatchAudit": {
+    "acknowledged": 48,
+    "stored": 48,
+    "unique": 48
+  },
+  "firstInserts": [
+    {
+      "id": "first-insert-unwatch-reset",
+      "timeout": false,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 60,
+      "finalActionVersion": 60,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 62,
+      "finalActionVersion": 62,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unchanged-reset",
+      "timeout": false,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 63,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unchanged-timeout",
+      "timeout": true,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 64,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-and-rewatch-reset",
+      "timeout": false,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 67,
+      "finalActionVersion": 67,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-and-rewatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 70,
+      "finalActionVersion": 70,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-not-applied-reset",
+      "timeout": false,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 71,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-not-applied-timeout",
+      "timeout": true,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 72,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-pending-after-readback-reset",
+      "timeout": false,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 74,
+      "finalActionVersion": 74,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-pending-after-readback-timeout",
+      "timeout": true,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 76,
+      "finalActionVersion": 76,
+      "receiptConfirmed": true
+    }
+  ],
+  "existingLostResponseCases": 8,
+  "cleanup": {
+    "verifiedAt": "2026-10-15T18:48:26.774Z",
+    "project": "goodwatch-client-588",
+    "containersRemaining": 0,
+    "volumesRemaining": 0,
+    "networksRemaining": 0
+  }
+}

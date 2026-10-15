@@ -1,0 +1,8 @@
+summary: Nightly episode translation seed
+description: Preserve-existing ingestion with durable canonical-crawl state.
+lock: ''
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

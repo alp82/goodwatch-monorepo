@@ -1,0 +1,58 @@
+[
+  {
+    "post_id": "700ca550936fc036e346e65cabae2dcb652afc150e518cf7ac0ba5520d9a8585",
+    "source": "rss",
+    "source_id": "https://www.indiewire.com/features/commentary/other-mommy-box-office-viral-marketing-blumhouse-1235221347/",
+    "url": "https://www.indiewire.com/features/commentary/other-mommy-box-office-viral-marketing-blumhouse-1235221347/",
+    "author": "Alison Foreman",
+    "published_at": 1791811800000,
+    "text": "‘Other Mommy’ Scared Up $27.5 Million with Marketing Better Than the Movie. What Now?",
+    "lane": "foreground_exact",
+    "confidence": 0.97,
+    "confidence_basis": "llm_self_report_not_calibrated",
+    "duplicate_group": "700ca550936fc036e346e65cabae2dcb652afc150e518cf7ac0ba5520d9a8585",
+    "duplicate_rank": 1
+  },
+  {
+    "post_id": "312557c1944303bb78e03554c40076aba49d48a2c822b9adeeae15ae28090207",
+    "source": "youtube",
+    "source_id": "cT4PltL58Ts",
+    "url": "https://www.youtube.com/watch?v=cT4PltL58Ts",
+    "author": "Universal Pictures",
+    "published_at": 1791589636000,
+    "text": "My Universal Story: Molly Miller | Other Mommy",
+    "lane": "foreground_exact",
+    "confidence": 0.99,
+    "confidence_basis": "llm_self_report_not_calibrated",
+    "duplicate_group": "312557c1944303bb78e03554c40076aba49d48a2c822b9adeeae15ae28090207",
+    "duplicate_rank": 1
+  },
+  {
+    "post_id": "445990ff7a7901fe448aee3050c903bb2415d39c0e5cef7ddb4726039d8d8ce8",
+    "source": "rss",
+    "source_id": "https://www.indiewire.com/criticism/movies/other-mommy-review-jessica-chastain-1235220984/",
+    "url": "https://www.indiewire.com/criticism/movies/other-mommy-review-jessica-chastain-1235220984/",
+    "author": "Alison Foreman",
+    "published_at": 1791576552000,
+    "text": "‘Other Mommy’ Review: Jessica Chastain’s Acting Personas Collide in Freaky Dreamcore Horror",
+    "lane": "foreground_exact",
+    "confidence": 1.0,
+    "confidence_basis": "llm_self_report_not_calibrated",
+    "duplicate_group": "445990ff7a7901fe448aee3050c903bb2415d39c0e5cef7ddb4726039d8d8ce8",
+    "duplicate_rank": 1
+  },
+  {
+    "post_id": "7bf51cb35f255002507fca275c9a38d50bb5bd22886d41aff8c4174254976a25",
+    "source": "youtube",
+    "source_id": "idkLYLw284Y",
+    "url": "https://www.youtube.com/watch?v=idkLYLw284Y",
+    "author": "Universal Pictures",
+    "published_at": 1791486050000,
+    "text": "Mommy's laugh is contagious 🖤 | 🎬 Other Mommy (2026)",
+    "lane": "foreground_exact",
+    "confidence": 1.0,
+    "confidence_basis": "llm_self_report_not_calibrated",
+    "duplicate_group": "7bf51cb35f255002507fca275c9a38d50bb5bd22886d41aff8c4174254976a25",
+    "duplicate_rank": 1
+  }
+]

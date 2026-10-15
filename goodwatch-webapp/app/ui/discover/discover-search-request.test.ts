@@ -7,6 +7,7 @@ import "../../server/title-filter/test-alias.ts"
 import {
 	busyAnswer,
 	gatewayAnswers,
+	limitedAnswer,
 	networkError,
 	streamAnswer,
 	stubFetch,
@@ -41,6 +42,12 @@ for (const [name, answer] of Object.entries(gatewayAnswers))
 		assert.equal(await shown(discover()), BUSY)
 		assert.equal(fetched.mock.callCount(), 1, "no automatic retry")
 	})
+
+test("the search limit's 429 shows the calm limit line next to Retry, and nothing is retried", async (t) => {
+	const fetched = stubFetch(t, limitedAnswer)
+	assert.equal(await shown(discover()), "Too many searches right now. Try again in a moment.")
+	assert.equal(fetched.mock.callCount(), 1)
+})
 
 test("a request without an answer shows the busy message", async (t) => {
 	const fetched = stubFetch(t, () => {

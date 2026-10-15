@@ -436,6 +436,59 @@ test("the command palette's titles join TMDB's once each, and the people stay TM
 	}
 })
 
+test("a title the palette found by a localized name keeps that name, also when TMDB found it too", async () => {
+	for (const query of ["ranked chihiros reise", "basic chihiros reise"]) {
+		page(query, 1, {
+			total_pages: 1,
+			results: [
+				{
+					id: 129,
+					title: "Spirited Away",
+					original_title: "千と千尋の神隠し",
+					media_type: "movie",
+				},
+			],
+		})
+		const alias = { text: "Chihiros Reise ins Zauberland", language: "de" }
+		probe.palette[query] = [
+			{
+				id: 129,
+				title: "Spirited Away",
+				original: "千と千尋の神隠し",
+				type: "movie",
+				year: "2001",
+				poster: null,
+				popularity: 1,
+				matchedAlias: alias,
+			},
+			{
+				id: 130,
+				title: "Another Title",
+				type: "movie",
+				year: "2002",
+				poster: null,
+				popularity: 1,
+				matchedAlias: { text: "Chihiros Reise zurück", language: "de" },
+			},
+		]
+		const result = await combinedSearch(
+			query,
+			policy,
+			visitor,
+			new AbortController().signal,
+		)
+		const spirited = result.rows.find((row) => row.key === "movie:129")
+		assert.deepEqual(spirited?.matchedAlias, alias, query)
+		assert.match(spirited?.match ?? "", /\(localized name\)$/, query)
+		assert.ok((spirited?.lexical ?? 0) > 0, query)
+		assert.equal(
+			result.rows.find((row) => row.key === "movie:130")?.matchedAlias?.text,
+			"Chihiros Reise zurück",
+			query,
+		)
+	}
+})
+
 test("slow primary lookup emits provisional results then completes the original search", async () => {
 	const query = "ranked delayed primary"
 	await new Promise((resolve) => setImmediate(resolve))

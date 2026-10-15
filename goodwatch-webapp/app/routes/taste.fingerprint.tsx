@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import {
@@ -23,7 +24,7 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { userId } = await tastePageViewer(request)
 	return loadTasteTab(request, "fingerprint", userId)
 }
@@ -36,3 +37,5 @@ export default function TasteFingerprintRoute() {
 		</TasteTabFrame>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

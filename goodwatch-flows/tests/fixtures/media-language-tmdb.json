@@ -1,0 +1,98 @@
+{
+  "tv/1396": {
+    "id": 1396,
+    "name": "Breaking Bad",
+    "seasons": [
+      {
+        "id": 13960,
+        "season_number": 1
+      }
+    ]
+  },
+  "tv/1396/season/1": {
+    "id": 13960,
+    "season_number": 1,
+    "episodes": [
+      {
+        "id": 139600,
+        "show_id": 1396,
+        "season_number": 1,
+        "episode_number": 1
+      }
+    ]
+  },
+  "tv/1396/season/1/translations": {
+    "id": 13960,
+    "translations": [
+      {
+        "iso_639_1": "de",
+        "iso_3166_1": "DE",
+        "data": {
+          "name": "Staffel 1",
+          "overview": "Die erste Staffel."
+        }
+      }
+    ]
+  },
+  "tv/1396/season/1/episode/1/translations": {
+    "id": 139600,
+    "translations": [
+      {
+        "iso_639_1": "de",
+        "iso_3166_1": "DE",
+        "data": {
+          "name": "Folge 1",
+          "overview": "Die erste Folge."
+        }
+      }
+    ]
+  },
+  "tv/1399": {
+    "id": 1399,
+    "name": "Game of Thrones",
+    "seasons": [
+      {
+        "id": 13990,
+        "season_number": 1
+      }
+    ]
+  },
+  "tv/1399/season/1": {
+    "id": 13990,
+    "season_number": 1,
+    "episodes": [
+      {
+        "id": 139900,
+        "show_id": 1399,
+        "season_number": 1,
+        "episode_number": 1
+      }
+    ]
+  },
+  "tv/1399/season/1/translations": {
+    "id": 13990,
+    "translations": [
+      {
+        "iso_639_1": "de",
+        "iso_3166_1": "DE",
+        "data": {
+          "name": "Staffel 1",
+          "overview": "Die erste Staffel."
+        }
+      }
+    ]
+  },
+  "tv/1399/season/1/episode/1/translations": {
+    "id": 139900,
+    "translations": [
+      {
+        "iso_639_1": "de",
+        "iso_3166_1": "DE",
+        "data": {
+          "name": "Folge 1",
+          "overview": "Die erste Folge."
+        }
+      }
+    ]
+  }
+}

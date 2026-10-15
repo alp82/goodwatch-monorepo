@@ -1,6 +1,7 @@
 import ExploreBar from "~/ui/explore/ExploreBar"
 import React, { useEffect, useRef } from "react"
 import ShareButton from "~/ui/button/ShareButton"
+import PreferencePair from "~/ui/media-preference/PreferencePair"
 import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
 import { publishHeaderHeight } from "~/ui/details/header-height"
 import type { ActiveSections, Section } from "~/utils/scroll"
@@ -16,12 +17,16 @@ import Genres from "~/ui/details/Genres"
 import { HEADER_GENRE_COUNT } from "~/utils/title-extras"
 import Cycle from "~/ui/list/Cycle"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
 
 interface DetailsHeaderProps {
 	media: MovieResult | ShowResult
 	country: string
 	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
+	/** A picked titles language whose text is still on its way (or did not come): the title stays as it was. */
+	textPreview?: "loading" | "failed" | null
 }
 
 const DetailsHeader: React.FC<DetailsHeaderProps> = ({
@@ -29,6 +34,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	country,
 	activeSections,
 	navigateToSection,
+	textPreview = null,
 }) => {
 	const headerRef = useRef<HTMLDivElement>(null)
 	useEffect(() => {
@@ -63,12 +69,17 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 		>
 			<ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />
 
-			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
+			{/* Not positioned: the pair's question anchors under the whole header. */}
+			<div className="m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex flex-col gap-2 min-w-0">
-						<h1 className="text-xl sm:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
-							{title}
-						</h1>
+						<MediaText
+							as="h1"
+							value={presentedText(details, "title", title)}
+							aria-busy={textPreview === "loading" || undefined}
+							data-text-preview={textPreview ?? undefined}
+							className="text-xl sm:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis"
+						/>
 						<div className="text-xs md:text-sm lg:text-base text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
 							<div className="flex items-center">
 								{release_year && (
@@ -116,7 +127,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 							</div>
 						</div>
 					</div>
-					<div className="flex items-center gap-4 shrink-0">
+					<div className="flex items-center gap-2 sm:gap-4 shrink-0">
 						{/*<button*/}
 						{/*	type="button"*/}
 						{/*	aria-label={*/}
@@ -143,6 +154,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						{/*>*/}
 						{/*	<HandThumbUpIcon className="h-7 w-7 stroke-blue-400" />*/}
 						{/*</button>*/}
+						<PreferencePair media={media} />
 						<ShareButton />
 					</div>
 				</div>

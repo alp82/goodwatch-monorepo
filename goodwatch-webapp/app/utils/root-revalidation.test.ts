@@ -52,3 +52,11 @@ test("a sign-in or sign-out reloads the root even during a navigation, until its
 	rootRevalidated()
 	assert.equal(decide("/sign-in", "/discover?genre=action"), false)
 })
+
+
+test("a country view override revalidates effective context on entry, change and exit", () => {
+	assert.equal(decide("/movie/603", "/movie/603?country=DE"), true)
+	assert.equal(decide("/movie/603?country=DE", "/show/1396?country=JP"), true)
+	assert.equal(decide("/movie/603?country=DE", "/show/1396"), true)
+	assert.equal(decide("/movie/603?country=DE", "/show/1396?country=DE"), false)
+})

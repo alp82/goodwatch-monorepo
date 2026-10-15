@@ -1,6 +1,10 @@
 // The Sentry tunnel: the browser's SDK posts its envelopes here, and the server forwards them to Sentry.
-// Anyone can post to this route, so every step has a bound: the body's size, the time the upstream may take,
-// and the number of requests in flight. No answer is cacheable.
+// Only the site's own pages may post (isSiteRequest in site-origin.server.ts): the SDK sends every envelope with
+// `fetch` (POST, keepalive, never sendBeacon), so the browser adds Origin and Sec-Fetch-Site, which a page can't
+// change. A script can still send them, so every step also has a bound: the body's size, the time the upstream may
+// take, and the number of requests in flight. No answer is cacheable.
+
+import { isSiteRequest } from "./site-origin.server.ts"
 
 export const SENTRY_HOST = "o4507456417169408.ingest.de.sentry.io"
 export const SENTRY_PROJECT_IDS = ["4507456420184144"]
@@ -43,9 +47,12 @@ export interface SentryTunnelOptions {
 	fetch?: typeof fetch
 	log?: (line: string) => void
 	now?: () => number
+	/** Whether the request comes from the site's own pages. */
+	fromSite?: (request: Request) => boolean
 }
 
 type Outcome =
+	| "foreign-origin"
 	| "bad-envelope"
 	| "too-large"
 	| "busy"
@@ -64,6 +71,7 @@ export function createSentryTunnel(options: SentryTunnelOptions = {}) {
 	const send = options.fetch ?? fetch
 	const log = options.log ?? ((line: string) => console.warn(line))
 	const now = options.now ?? Date.now
+	const fromSite = options.fromSite ?? isSiteRequest
 	// A base URL that doesn't parse turns the tunnel off: falling back to Sentry would create the events that
 	// the override is there to avoid.
 	const upstreamBase = parseBaseUrl(
@@ -169,6 +177,11 @@ export function createSentryTunnel(options: SentryTunnelOptions = {}) {
 
 	return async (request: Request): Promise<Response> => {
 		if (request.method !== "POST") return answer(405, { Allow: "POST" })
+		// The SDK drops an envelope on a 4xx other than 429 and doesn't retry it.
+		if (!fromSite(request)) {
+			note("foreign-origin")
+			return answer(403)
+		}
 		// The bound comes before the body is read: when the upstream stalls, the requests beyond it hold
 		// neither a body nor a socket to Sentry.
 		if (inFlight >= maxInFlight) return retryLater(429, "busy")

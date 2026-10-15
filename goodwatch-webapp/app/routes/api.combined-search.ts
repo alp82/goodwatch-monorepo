@@ -1,15 +1,17 @@
+import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import { json, type ActionFunctionArgs } from "@remix-run/node";
-import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch, type SearchBatch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { runsSearch } from "~/server/role.server";
+import { isSiteRequest } from "~/server/site-origin.server";
 import {
 	searchAdmission,
 	searchBusyResponse,
 } from "~/server/search-runtime/admission.server";
 import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
 import { beginSearchTelemetry, recordSearchRejection } from "~/server/search-runtime/telemetry.server";
+import { checkSearchRate, trustedClientAddress } from "~/server/search-runtime/rate-limit.server";
 import {
 	searchTaste,
 	withTaste,
@@ -22,18 +24,14 @@ export async function action({ request }: ActionFunctionArgs) {
 	});
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers });
-	// Coolify terminates TLS; remix-serve sees HTTP. Match the configured public
-	// origin, as in poster impressions, without trusting caller-supplied proxies.
-	const expectedOrigin = process.env.APP_ORIGIN || (
-		process.env.NODE_ENV === "production" ? "https://goodwatch.app" : "http://localhost:3003"
-	);
-	if (
-		request.headers.get("Origin") &&
-		request.headers.get("Origin") !== expectedOrigin
-	)
+	// A search costs money and writes a history row: only the site's own pages may start one (site-origin.server.ts).
+	if (!isSiteRequest(request))
 		return json({ error: "Invalid origin" }, { status: 403, headers });
 	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
 	if (!runsSearch()) { recordSearchRejection("wrong_role"); return searchBusyResponse(); }
+	// The per-visitor limit (rate-limit.server.ts), before the session check and before a search slot is taken.
+	const limited = await checkSearchRate(request);
+	if (limited) { recordSearchRejection("rate_limited"); return limited; }
 	const release = searchAdmission.enter();
 	if (!release) { recordSearchRejection("busy"); return searchBusyResponse(); }
 	let handedOver = false;
@@ -69,11 +67,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		telemetry = beginSearchTelemetry();
 		// Deployment must explicitly configure a header overwritten by its trusted ingress.
 		// Without that contract, all guests share a conservative scope; cookies cannot evade it.
-		const address = process.env.SEARCH_TRUSTED_IP_HEADER
-			? request.headers.get(process.env.SEARCH_TRUSTED_IP_HEADER)?.trim()
-			: null;
 		const networkIdentity =
-			address && isIP(address) ? address : "shared-unverified-ingress";
+			trustedClientAddress(request) ?? "shared-unverified-ingress";
 		// The session check (Supabase getUser, a network call for signed-in people) runs while the search starts. The
 		// search waits for the account only before a paid Jev call and for the history row. If the check fails, the
 		// search stops and the response is the error below, as before.
@@ -115,9 +110,10 @@ export async function action({ request }: ActionFunctionArgs) {
 				};
 				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
 					const memberTaste = await taste;
-					const sent = send({ kind, batch: memberTaste
+					const displayed = await localizeApiTitlePayload(memberTaste
 						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
-						: batch });
+						: batch, request);
+					const sent = send({ kind, batch: displayed });
 					if (sent) telemetry?.delivered(kind === "batch", Boolean(batch.rows.length || batch.people?.length), batch.elapsedMs, batch.errors ?? []);
 					// False when the stream had closed: the search then counts no delivery (see BatchDelivery).
 					return sent;

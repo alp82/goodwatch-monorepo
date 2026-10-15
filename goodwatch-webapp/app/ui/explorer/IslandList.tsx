@@ -1,3 +1,4 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 import {
 	type ExplorerTitle,
 	type ExplorerWorld,
@@ -10,7 +11,7 @@ const TitleLinks = ({ titles }: { titles: ExplorerTitle[] }) => (
 		{titles.map((t) => (
 			<li key={t.key}>
 				<a href={titlePath(t)}>
-					{t.title}
+					<span lang={mediaFieldLanguage(t)}>{t.title}</span>
 					{t.year ? <span className="ex-list-year"> ({t.year})</span> : null}
 				</a>
 			</li>

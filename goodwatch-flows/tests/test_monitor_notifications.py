@@ -159,10 +159,9 @@ class NotificationTests(unittest.TestCase):
             result = deliver_notification(WEBHOOK, pending)
         self.assertTrue(result["delivered"])
         content = json.loads(opener.open.call_args.args[0].data)["content"]
-        self.assertIn("Overdue countries: 12", content)
-        self.assertIn("Overdue titles: 4", content)
-        self.assertIn("Unacknowledged titles: 9", content)
-        self.assertIn("2026-09-11T08:00:00+00:00", content)
+        self.assertIn("12 country updates overdue", content)
+        self.assertEqual(len(content.splitlines()), 3)
+        self.assertIn("Inspect the provider crawler", content)
         self.assertIn(
             "https://windmill.goodwatch.app/flows/get/f/tmdb_web/tmdb_crawl_providers?workspace=goodwatch",
             content,
@@ -196,13 +195,11 @@ class NotificationTests(unittest.TestCase):
             result = deliver_notification(WEBHOOK, pending)
         self.assertTrue(result["delivered"])
         content = json.loads(opener.open.call_args.args[0].data)["content"]
-        self.assertIn("incident: f/monitoring/crate_shards", content)
-        self.assertIn("crate_checkpoint_lag, crate_translog_oversized", content)
-        self.assertIn("Largest checkpoint lag (ops): 5407389", content)
-        self.assertIn("Largest translog (MB): 7210", content)
-        self.assertIn(
-            "doc.movie#8 lag 5407389 translog 7210MB replica crate-03", content
-        )
+        self.assertIn("Action needed: Database replication", content)
+        self.assertIn("extra disk space", content)
+        self.assertIn("Inspect replication progress", content)
+        self.assertEqual(len(content.splitlines()), 3)
+        self.assertNotIn("crate_checkpoint_lag", content)
         self.assertNotIn("No resolved execution", content)
         self.assertNotIn("must-not-appear", content)
 
@@ -222,8 +219,8 @@ class NotificationTests(unittest.TestCase):
         ):
             self.assertTrue(deliver_notification(WEBHOOK, notice)["delivered"])
             content = json.loads(opener.open.call_args.args[0].data)["content"]
-            self.assertIn("Highest disk use (%): 88", content)
-            self.assertIn("crate-03 88%", content)
+            self.assertIn("Disk use reached 88%", content)
+            self.assertIn("Free disk space or add capacity", content)
             opener.open.reset_mock()
             for detail in ["@everyone <script>", "x" * 400, 7]:
                 with self.subTest(detail=detail):

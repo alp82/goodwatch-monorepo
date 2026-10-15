@@ -11,6 +11,7 @@ export function presentationGrid(
 			.filter((e) => e.displaySeason === s.number)
 			.map((e) => ({
 				number: e.displayNumber,
+				tmdbId: e.id,
 				name: e.name ?? "",
 				score: e.rating ?? 0,
 				votes: e.votes,
@@ -45,7 +46,7 @@ export function presentationGrid(
 		seasons,
 		specials: presentation.episodes
 			.filter((e) => e.season === 0)
-			.map((e) => ({ name: e.name ?? "", score: 0, votes: 0, unrated: true })),
+			.map((e) => ({ tmdbId: e.id, name: e.name ?? "", score: 0, votes: 0, unrated: true })),
 		maxEpisodeNumber: Math.max(0, ...seasons.map((s) => s.maxEpisodeNumber)),
 		hasEpisodeZero: false,
 		providers: seasons.some((s) => s.scores.imdb) ? ["imdb"] : [],

@@ -1,0 +1,6 @@
+summary: Daily attention signals and buzz scores
+display_name: buzz
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

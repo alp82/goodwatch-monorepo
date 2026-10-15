@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react"
-import type { ImportSource, ImportSummary } from "~/domain/imports"
+import {
+	IMPORT_SOURCE_NAMES,
+	type ImportSource,
+	type ImportSummary,
+	isFileImportSource,
+} from "~/domain/imports"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
+import { TmdbConnectPanel } from "./TmdbConnectPanel"
 import {
 	card,
 	formatCount,
@@ -13,8 +20,7 @@ import {
 	textLink,
 } from "./shared"
 
-const sourceName = (source: ImportSource) =>
-	source === "letterboxd" ? "Letterboxd" : "Trakt"
+const sourceName = (source: ImportSource) => IMPORT_SOURCE_NAMES[source]
 const outcome = (item: ImportSummary) =>
 	item.status === "undone"
 		? "Undone"
@@ -27,13 +33,20 @@ const outcome = (item: ImportSummary) =>
 export function SourceImportFlow({
 	source,
 	initial,
-}: { source: ImportSource; initial: ImportListResponse }) {
+	connectState,
+	initialId,
+}: {
+	source: ImportSource
+	initial: ImportListResponse
+	connectState?: string
+	initialId?: string
+}) {
 	const query = useSourceImports(initial)
 	const history = (query.data?.imports ?? []).filter(
 		(item) => item.source === source && item.status !== "preview",
 	)
 	const latest = history[0]
-	const [openId, setOpenId] = useState<string | null>(null)
+	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
 	const [uploadOpen, setUploadOpen] = useState(!latest)
 	const [acted, setActed] = useState(false)
 	const shownId =
@@ -82,7 +95,7 @@ export function SourceImportFlow({
 										className={primaryButton}
 										onClick={upload}
 									>
-										Upload a newer export
+										{sourceImportCopy(source).newer}
 									</button>
 								)}
 								<button
@@ -95,12 +108,15 @@ export function SourceImportFlow({
 							</div>
 						</section>
 					)}
-					{(!latest || uploadOpen) && (
-						<SourceImportUploadPanel
-							source={source}
-							onPreview={(summary) => open(summary.id)}
-						/>
-					)}
+					{(!latest || uploadOpen || connectState) &&
+						(!isFileImportSource(source) ? (
+							<TmdbConnectPanel state={connectState} />
+						) : (
+							<SourceImportUploadPanel
+								source={source}
+								onPreview={(summary) => open(summary.id)}
+							/>
+						))}
 				</>
 			)}
 			{others.length > 0 && (

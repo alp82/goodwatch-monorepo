@@ -1,0 +1,12 @@
+{
+  "summary": "Social deterministic matcher",
+  "description": "LLM-free title matching (#556): explicit mentions, exact catalog names, second signals.",
+  "lock": "!inline f/social/deterministic.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

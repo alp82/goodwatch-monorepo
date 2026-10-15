@@ -1,0 +1,2956 @@
+{
+  "at": "2026-10-15T16:15:46.451000+00:00",
+  "playability": "Assumed only for offline editorial regression; not measured",
+  "before": {
+    "overall": {
+      "total": 632,
+      "keep": 272,
+      "drop": 360,
+      "relevant": 327,
+      "kept_relevant": 252,
+      "kept_not_relevant": 20,
+      "relevant_lost": 75,
+      "precision": 0.9264705882352942,
+      "recall": 0.7706422018348624,
+      "agreement": 0.8496835443037974
+    },
+    "sources": {
+      "youtube": {
+        "total": 79,
+        "keep": 30,
+        "drop": 49,
+        "relevant": 35,
+        "kept_relevant": 30,
+        "kept_not_relevant": 0,
+        "relevant_lost": 5,
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "agreement": 0.9367088607594937
+      },
+      "rss": {
+        "total": 417,
+        "keep": 238,
+        "drop": 179,
+        "relevant": 286,
+        "kept_relevant": 218,
+        "kept_not_relevant": 20,
+        "relevant_lost": 68,
+        "precision": 0.9159663865546218,
+        "recall": 0.7622377622377622,
+        "agreement": 0.7889688249400479
+      },
+      "bluesky": {
+        "total": 136,
+        "keep": 4,
+        "drop": 132,
+        "relevant": 6,
+        "kept_relevant": 4,
+        "kept_not_relevant": 0,
+        "relevant_lost": 2,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "agreement": 0.9852941176470589
+      },
+      "mastodon": {
+        "total": 0,
+        "keep": 0,
+        "drop": 0,
+        "relevant": 0,
+        "kept_relevant": 0,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": null,
+        "recall": null,
+        "agreement": null
+      }
+    },
+    "top20": {
+      "total": 85,
+      "keep": 41,
+      "drop": 44,
+      "relevant": 53,
+      "kept_relevant": 40,
+      "kept_not_relevant": 1,
+      "relevant_lost": 13,
+      "precision": 0.975609756097561,
+      "recall": 0.7547169811320755,
+      "agreement": 0.8352941176470589
+    },
+    "top20_sources": {
+      "youtube": {
+        "total": 12,
+        "keep": 4,
+        "drop": 8,
+        "relevant": 4,
+        "kept_relevant": 4,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "agreement": 1.0
+      },
+      "rss": {
+        "total": 60,
+        "keep": 36,
+        "drop": 24,
+        "relevant": 48,
+        "kept_relevant": 35,
+        "kept_not_relevant": 1,
+        "relevant_lost": 13,
+        "precision": 0.9722222222222222,
+        "recall": 0.7291666666666666,
+        "agreement": 0.7666666666666667
+      },
+      "bluesky": {
+        "total": 13,
+        "keep": 1,
+        "drop": 12,
+        "relevant": 1,
+        "kept_relevant": 1,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "agreement": 1.0
+      },
+      "mastodon": {
+        "total": 0,
+        "keep": 0,
+        "drop": 0,
+        "relevant": 0,
+        "kept_relevant": 0,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": null,
+        "recall": null,
+        "agreement": null
+      }
+    },
+    "top20_empty": [
+      {
+        "rank": 4,
+        "key": "tv:289892",
+        "title": "Helluva Boss"
+      },
+      {
+        "rank": 7,
+        "key": "tv:289423",
+        "title": "Take Charge of My Heart"
+      },
+      {
+        "rank": 9,
+        "key": "movie:1489932",
+        "title": "Always Lalisa"
+      },
+      {
+        "rank": 15,
+        "key": "tv:255752",
+        "title": "Haunted Hotel"
+      },
+      {
+        "rank": 16,
+        "key": "movie:1058424",
+        "title": "Hope"
+      }
+    ]
+  },
+  "after": {
+    "overall": {
+      "total": 632,
+      "keep": 287,
+      "drop": 345,
+      "relevant": 327,
+      "kept_relevant": 268,
+      "kept_not_relevant": 19,
+      "relevant_lost": 59,
+      "precision": 0.9337979094076655,
+      "recall": 0.8195718654434251,
+      "agreement": 0.8765822784810127
+    },
+    "sources": {
+      "youtube": {
+        "total": 79,
+        "keep": 30,
+        "drop": 49,
+        "relevant": 35,
+        "kept_relevant": 30,
+        "kept_not_relevant": 0,
+        "relevant_lost": 5,
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "agreement": 0.9367088607594937
+      },
+      "rss": {
+        "total": 417,
+        "keep": 253,
+        "drop": 164,
+        "relevant": 286,
+        "kept_relevant": 234,
+        "kept_not_relevant": 19,
+        "relevant_lost": 52,
+        "precision": 0.924901185770751,
+        "recall": 0.8181818181818182,
+        "agreement": 0.829736211031175
+      },
+      "bluesky": {
+        "total": 136,
+        "keep": 4,
+        "drop": 132,
+        "relevant": 6,
+        "kept_relevant": 4,
+        "kept_not_relevant": 0,
+        "relevant_lost": 2,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "agreement": 0.9852941176470589
+      },
+      "mastodon": {
+        "total": 0,
+        "keep": 0,
+        "drop": 0,
+        "relevant": 0,
+        "kept_relevant": 0,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": null,
+        "recall": null,
+        "agreement": null
+      }
+    },
+    "top20": {
+      "total": 85,
+      "keep": 47,
+      "drop": 38,
+      "relevant": 53,
+      "kept_relevant": 46,
+      "kept_not_relevant": 1,
+      "relevant_lost": 7,
+      "precision": 0.9787234042553191,
+      "recall": 0.8679245283018868,
+      "agreement": 0.9058823529411765
+    },
+    "top20_sources": {
+      "youtube": {
+        "total": 12,
+        "keep": 4,
+        "drop": 8,
+        "relevant": 4,
+        "kept_relevant": 4,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "agreement": 1.0
+      },
+      "rss": {
+        "total": 60,
+        "keep": 42,
+        "drop": 18,
+        "relevant": 48,
+        "kept_relevant": 41,
+        "kept_not_relevant": 1,
+        "relevant_lost": 7,
+        "precision": 0.9761904761904762,
+        "recall": 0.8541666666666666,
+        "agreement": 0.8666666666666667
+      },
+      "bluesky": {
+        "total": 13,
+        "keep": 1,
+        "drop": 12,
+        "relevant": 1,
+        "kept_relevant": 1,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "agreement": 1.0
+      },
+      "mastodon": {
+        "total": 0,
+        "keep": 0,
+        "drop": 0,
+        "relevant": 0,
+        "kept_relevant": 0,
+        "kept_not_relevant": 0,
+        "relevant_lost": 0,
+        "precision": null,
+        "recall": null,
+        "agreement": null
+      }
+    },
+    "top20_empty": [
+      {
+        "rank": 4,
+        "key": "tv:289892",
+        "title": "Helluva Boss"
+      },
+      {
+        "rank": 7,
+        "key": "tv:289423",
+        "title": "Take Charge of My Heart"
+      },
+      {
+        "rank": 9,
+        "key": "movie:1489932",
+        "title": "Always Lalisa"
+      },
+      {
+        "rank": 15,
+        "key": "tv:255752",
+        "title": "Haunted Hotel"
+      },
+      {
+        "rank": 16,
+        "key": "movie:1058424",
+        "title": "Hope"
+      }
+    ]
+  },
+  "before_false_drop_causes": [
+    {
+      "causes": [
+        "peripheral_title"
+      ],
+      "count": 39,
+      "audit_ids": [
+        "P119",
+        "P134",
+        "P151",
+        "P159",
+        "P171",
+        "P177",
+        "P178",
+        "P196",
+        "P264",
+        "P265",
+        "P266",
+        "P321",
+        "P327",
+        "P343",
+        "P374",
+        "P375",
+        "P380",
+        "P384",
+        "P394",
+        "P412",
+        "P413",
+        "P447",
+        "P453",
+        "P455",
+        "P457",
+        "P474",
+        "P478",
+        "P486",
+        "P507",
+        "P513",
+        "P515",
+        "P520",
+        "P544",
+        "P549",
+        "P550",
+        "P562",
+        "P572",
+        "P580",
+        "P599"
+      ]
+    },
+    {
+      "causes": [
+        "no_editorial_angle"
+      ],
+      "count": 11,
+      "audit_ids": [
+        "P038",
+        "P116",
+        "P139",
+        "P155",
+        "P315",
+        "P329",
+        "P330",
+        "P336",
+        "P359",
+        "P498",
+        "P512"
+      ]
+    },
+    {
+      "causes": [
+        "outside_publication_window"
+      ],
+      "count": 6,
+      "audit_ids": [
+        "P616",
+        "P617",
+        "P620",
+        "P623",
+        "P628",
+        "P630"
+      ]
+    },
+    {
+      "causes": [
+        "duplicate"
+      ],
+      "count": 5,
+      "audit_ids": [
+        "P007",
+        "P287",
+        "P323",
+        "P424",
+        "P503"
+      ]
+    },
+    {
+      "causes": [
+        "no_substantive_video_format"
+      ],
+      "count": 4,
+      "audit_ids": [
+        "P262",
+        "P495",
+        "P546",
+        "P622"
+      ]
+    },
+    {
+      "causes": [
+        "no_editorial_angle",
+        "peripheral_title"
+      ],
+      "count": 2,
+      "audit_ids": [
+        "P313",
+        "P409"
+      ]
+    },
+    {
+      "causes": [
+        "routine_or_personal_news"
+      ],
+      "count": 2,
+      "audit_ids": [
+        "P020",
+        "P404"
+      ]
+    },
+    {
+      "causes": [
+        "archive_without_current_hook",
+        "no_substantive_video_format"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P318"
+      ]
+    },
+    {
+      "causes": [
+        "fewer_than_12_own_words"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P042"
+      ]
+    },
+    {
+      "causes": [
+        "fewer_than_12_own_words",
+        "peripheral_title"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P045"
+      ]
+    },
+    {
+      "causes": [
+        "no_concrete_official_announcement"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P601"
+      ]
+    },
+    {
+      "causes": [
+        "no_editorial_angle",
+        "peripheral_title",
+        "routine_or_personal_news"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P354"
+      ]
+    },
+    {
+      "causes": [
+        "outside_publication_window",
+        "peripheral_title"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P619"
+      ]
+    }
+  ],
+  "after_false_drop_causes": [
+    {
+      "causes": [
+        "peripheral_title"
+      ],
+      "count": 30,
+      "audit_ids": [
+        "P119",
+        "P151",
+        "P171",
+        "P177",
+        "P178",
+        "P265",
+        "P266",
+        "P321",
+        "P327",
+        "P343",
+        "P380",
+        "P384",
+        "P412",
+        "P413",
+        "P447",
+        "P453",
+        "P455",
+        "P457",
+        "P474",
+        "P478",
+        "P507",
+        "P513",
+        "P515",
+        "P520",
+        "P544",
+        "P549",
+        "P562",
+        "P572",
+        "P580",
+        "P599"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 30,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "no_editorial_angle"
+      ],
+      "count": 6,
+      "audit_ids": [
+        "P315",
+        "P329",
+        "P330",
+        "P336",
+        "P498",
+        "P512"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 6,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "outside_publication_window"
+      ],
+      "count": 6,
+      "audit_ids": [
+        "P616",
+        "P617",
+        "P620",
+        "P623",
+        "P628",
+        "P630"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 6,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "duplicate"
+      ],
+      "count": 4,
+      "audit_ids": [
+        "P007",
+        "P287",
+        "P323",
+        "P503"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 4,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "no_substantive_video_format"
+      ],
+      "count": 4,
+      "audit_ids": [
+        "P262",
+        "P495",
+        "P546",
+        "P622"
+      ],
+      "sources": {
+        "youtube": 4,
+        "rss": 0,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "routine_or_personal_news"
+      ],
+      "count": 2,
+      "audit_ids": [
+        "P020",
+        "P404"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 2,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "archive_without_current_hook",
+        "no_substantive_video_format"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P318"
+      ],
+      "sources": {
+        "youtube": 1,
+        "rss": 0,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "fewer_than_12_own_words"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P042"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 0,
+        "bluesky": 1,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "fewer_than_12_own_words",
+        "peripheral_title"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P045"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 0,
+        "bluesky": 1,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "no_concrete_official_announcement"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P601"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 1,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "no_editorial_angle",
+        "peripheral_title"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P409"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 1,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "no_editorial_angle",
+        "peripheral_title",
+        "routine_or_personal_news"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P354"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 1,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    },
+    {
+      "causes": [
+        "outside_publication_window",
+        "peripheral_title"
+      ],
+      "count": 1,
+      "audit_ids": [
+        "P619"
+      ],
+      "sources": {
+        "youtube": 0,
+        "rss": 1,
+        "bluesky": 0,
+        "mastodon": 0
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "audit_id": "P038",
+      "source": "rss",
+      "title": "Avengers: Doomsday",
+      "text": "Marvel Officially Loses Another Original Avenger for ‘Avengers: Doomsday’",
+      "url": "https://collider.com/avengers-doomsday-jeremy-renner-hawkeye-not-returning/",
+      "relevant": true,
+      "audit_reason": "A named cast member confirms he will not appear in the actual upcoming film.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle"
+        ],
+        "dup_group": "cafe6693e09f5d47648d32b2f908f614c86cef6aa0aa3add3d25f3899667ac42"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "cafe6693e09f5d47648d32b2f908f614c86cef6aa0aa3add3d25f3899667ac42"
+      }
+    },
+    {
+      "audit_id": "P116",
+      "source": "rss",
+      "title": "The Dark Tower",
+      "text": "Mike Flanagan Officially Confirms The Dark Tower TV Series' Book Adaptation Order & Structure",
+      "url": "https://screenrant.com/mike-flanagan-the-dark-tower-show-book-adaptation-order/",
+      "relevant": true,
+      "audit_reason": "Named showrunner confirms the actual adaptation's structure and book order.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle"
+        ],
+        "dup_group": "17a0541b5dd845312bf9f4b835ad283e045dee505eb9c4146ace9033d14f6aea"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "17a0541b5dd845312bf9f4b835ad283e045dee505eb9c4146ace9033d14f6aea"
+      }
+    },
+    {
+      "audit_id": "P134",
+      "source": "rss",
+      "title": "Whalefall",
+      "text": "‘Whalefall’ Director Brian Duffield Talks Book Changes, Test Screening Challenges and How Those ‘Alien’ Rumors Started",
+      "url": "https://www.hollywoodreporter.com/movies/movie-features/whalefall-brian-duffield-test-screening-challenges-alien-1236730147/",
+      "relevant": true,
+      "audit_reason": "Original director interview covers adaptation changes and production challenges.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "dcb80e540f0f903473e17f460c4063df792c15ed0e92ec9907cf1bfa9e5f9076"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "dcb80e540f0f903473e17f460c4063df792c15ed0e92ec9907cf1bfa9e5f9076"
+      }
+    },
+    {
+      "audit_id": "P139",
+      "source": "rss",
+      "title": "Justice League",
+      "text": "Ben Affleck Hating Justice League Just Confirms He’s the Perfect Batman",
+      "url": "https://www.denofgeek.com/movies/ben-affleck-hating-justice-league-confirms-hes-batman/",
+      "relevant": true,
+      "audit_reason": "Title-focused editorial discusses its lead's current remarks and the film's failure.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle"
+        ],
+        "dup_group": "d1d8c075b46c00467a7d5aa4c8a063ccbb7c0b7651dbe1db0508b695d74e6fc9"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "d1d8c075b46c00467a7d5aa4c8a063ccbb7c0b7651dbe1db0508b695d74e6fc9"
+      }
+    },
+    {
+      "audit_id": "P155",
+      "source": "rss",
+      "title": "VisionQuest",
+      "text": "Who Plays Paladin On Marvel's VisionQuest?",
+      "url": "https://www.slashfilm.com/2285932/paladin-marvel-visionquest-actor-todd-stashwick/",
+      "relevant": true,
+      "audit_reason": "Current-series character/performer explainer addresses a specific newly introduced role.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle"
+        ],
+        "dup_group": "fb83e23368e0b3ec7067aa2ad76a44fd9f221f2051d18c8b473ecee8711c0a4c"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "fb83e23368e0b3ec7067aa2ad76a44fd9f221f2051d18c8b473ecee8711c0a4c"
+      }
+    },
+    {
+      "audit_id": "P159",
+      "source": "rss",
+      "title": "Matchbox the Movie",
+      "text": "John Cena's 126-Minute Action Movie Is Officially Apple TV's Biggest Streaming Hit",
+      "url": "https://www.slashfilm.com/2286845/john-cena-action-movie-matchbox-streaming-apple-tv-october-2026/",
+      "relevant": true,
+      "audit_reason": "Reports the actual film's current top streaming performance, despite inflated headline wording.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "ce1bdbb6c1e021da6955f12d3eb30108f7cfd5663bc188416038e29388c4efed"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "ce1bdbb6c1e021da6955f12d3eb30108f7cfd5663bc188416038e29388c4efed"
+      }
+    },
+    {
+      "audit_id": "P196",
+      "source": "rss",
+      "title": "Narnia: The Magician's Nephew",
+      "text": "Neuer Netflix-Film schafft, was großen Hollywood-Studios in 55 Jahren Filmgeschichte nicht gelungen ist",
+      "url": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+      "relevant": true,
+      "audit_reason": "Analyzes a distinctive music choice in this film's newly released trailer.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "95a22e066429c99327afd6d60a9884c2d4836bcc61ea6707ccf4d57efdfc4214"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "95a22e066429c99327afd6d60a9884c2d4836bcc61ea6707ccf4d57efdfc4214"
+      }
+    },
+    {
+      "audit_id": "P264",
+      "source": "rss",
+      "title": "Obsession",
+      "text": "‘Obsession’ Star Inde Navarrette on Sudden Fame, Cut Scenes, Relationship Takeaways, a Possible Sequel and Going Rogue for Marvel",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/obsession-star-inde-navarrette-marvel-rogue-awards-chatter-1236727817/",
+      "relevant": true,
+      "audit_reason": "Extensive actor interview discusses this film's cut scenes, reception and possible sequel.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "de495bafeb2ea57fec48da17588480fbf34fe85fad6a28c21bea90a7bb96ff23"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "de495bafeb2ea57fec48da17588480fbf34fe85fad6a28c21bea90a7bb96ff23"
+      }
+    },
+    {
+      "audit_id": "P313",
+      "source": "rss",
+      "title": "Justice League",
+      "text": "\"Es war der Tiefpunkt meiner Karriere\": Ben Affleck rechnet radikal mit einem der umstrittensten DC-Blockbuster ab",
+      "url": "https://www.filmstarts.de/nachrichten/1000227353.html",
+      "relevant": true,
+      "audit_reason": "Fresh lead-actor comments address this exact film's production problems.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle",
+          "peripheral_title"
+        ],
+        "dup_group": "b13065f1ddbf9a46086b4831b6a972945d294cc84de65ee619a6c9c549e9ac97"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "b13065f1ddbf9a46086b4831b6a972945d294cc84de65ee619a6c9c549e9ac97"
+      }
+    },
+    {
+      "audit_id": "P359",
+      "source": "rss",
+      "title": "VisionQuest",
+      "text": "When Does VisionQuest Take Place In The Marvel Timeline?",
+      "url": "https://www.slashfilm.com/2285543/visionquest-marvel-timeline-explained/",
+      "relevant": true,
+      "audit_reason": "Current-show analysis explains the actual series' placement and story clues.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "no_editorial_angle"
+        ],
+        "dup_group": "14fbba2d8b3c7738625f5cbe71e2771ed78c85ec9886df054f4256cecb6e98de"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "14fbba2d8b3c7738625f5cbe71e2771ed78c85ec9886df054f4256cecb6e98de"
+      }
+    },
+    {
+      "audit_id": "P374",
+      "source": "rss",
+      "title": "Project Hail Mary",
+      "text": "Project Hail Mary's Emotional Goodbye Scene Was Inspired By Rocky's Mysterious Markings [Exclusive]",
+      "url": "https://www.slashfilm.com/2283787/project-hail-mary-goodbye-scene-inspiration-rocky-markings/",
+      "relevant": true,
+      "audit_reason": "An exclusive interview supplies new behind-the-scenes detail about a specific scene.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "d2d2467f08240d7b129e94a33d4d9b4fe5b6a9a67067cc10e150dfebc44da11b"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "d2d2467f08240d7b129e94a33d4d9b4fe5b6a9a67067cc10e150dfebc44da11b"
+      }
+    },
+    {
+      "audit_id": "P375",
+      "source": "rss",
+      "title": "Tommy & Tuppence",
+      "text": "‘Tommy & Tuppence’ Stars Josh Dylan and Antonia Thomas on That ‘Intense’ Finale, Why the Detective Duo ‘Keep Missing Each Other’ Romantically and a Potential Season 2",
+      "url": "https://variety.com/2026/tv/global/tommy-tuppence-finale-josh-dylan-antonia-thomas-romance-season-2-1236909902/",
+      "relevant": true,
+      "audit_reason": "The stars discuss the season finale, character relationships and prospects for another season.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "a6b5896cbbc02aff16fe097604c20e2c93a91ed040cb79e44fbc6bf2c40e6ee6"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "a6b5896cbbc02aff16fe097604c20e2c93a91ed040cb79e44fbc6bf2c40e6ee6"
+      }
+    },
+    {
+      "audit_id": "P394",
+      "source": "rss",
+      "title": "Narnia: The Magician's Nephew",
+      "text": "Narnia Fans Split Over Greta Gerwig’s ‘Magicians Nephew’ Trailer: “Best in Years” to “Lost Its Soul to CGI”",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+      "relevant": true,
+      "audit_reason": "A title-focused report describes contrasting public reactions to the new trailer, a distinct angle from its release.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "5eb6836825de6dc07e1322c911269d9f12e2bba89d4a5b52ceb8933a391166c5"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "5eb6836825de6dc07e1322c911269d9f12e2bba89d4a5b52ceb8933a391166c5"
+      }
+    },
+    {
+      "audit_id": "P424",
+      "source": "rss",
+      "title": "Narnia: The Magician's Nephew",
+      "text": "Greta Gerwig Debuts ‘Narnia’ Trailer, Opens Up About Telling an Intimate Story on “the Biggest Screen You Can Imagine”",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+      "relevant": true,
+      "audit_reason": "This trailer-event report adds the director's Q&A and explanation of her creative and music choices.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "duplicate_of:fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26"
+        ],
+        "dup_group": "610b8f9c7020476047259103b7e45ffa0b50339b4ffa89a1da8d03cb7db33b4b"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "interview",
+        "reasons": [],
+        "dup_group": "69e6509482ced6f47bdbafdd5144ed7d6a80b85b480b2a275d95d327050ff010"
+      }
+    },
+    {
+      "audit_id": "P486",
+      "source": "rss",
+      "title": "White Tiger Column",
+      "text": "Amsterdam’s IDFA Sets Int’l, Envision Competition Lineups, Adds ‘Musk,’ ‘You Can See Everything’",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/amsterdam-idfa-2026-international-envision-competition-musk-1236728520/",
+      "relevant": true,
+      "audit_reason": "The festival names this film as its opening-night selection, a concrete premiere development.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "c25fdcd5cbc7e77f8df61ee246c6a997ed08c6f015295cf95e6b336c8b7e1492"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "c25fdcd5cbc7e77f8df61ee246c6a997ed08c6f015295cf95e6b336c8b7e1492"
+      }
+    },
+    {
+      "audit_id": "P489",
+      "source": "rss",
+      "title": "White Tiger Column",
+      "text": "IDFA Announces Competition Lineups, Adds ‘Musk’ And Elizabeth Holmes Documentary ‘You Can See Everything’",
+      "url": "https://deadline.com/2026/10/idfa-2026-competition-lineups-you-can-see-everything-musk-1237155402/",
+      "relevant": false,
+      "audit_reason": "This repeats the IDFA opening-film announcement already retained in #486.",
+      "before": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "babb5d2e7579ba16ea77d823cc25c1082e3f3a755046a74b34016763cf088508"
+      },
+      "after": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "duplicate_of:f4520d5f0b169fda8d17ea1afad2e3994fd2462d9345bcd8f9e02ab6e2b3cb25"
+        ],
+        "dup_group": "c25fdcd5cbc7e77f8df61ee246c6a997ed08c6f015295cf95e6b336c8b7e1492"
+      }
+    },
+    {
+      "audit_id": "P550",
+      "source": "rss",
+      "title": "Artificial",
+      "text": "‘Artificial’s Ike Barinholtz Teases What Makes His “Menacing” Elon Musk Performance “A Little Ridiculous”",
+      "url": "https://deadline.com/2026/10/artificial-ike-barinholtz-menacing-elon-musk-performance-1237154451/",
+      "relevant": true,
+      "audit_reason": "A cast member discusses the creative choices behind his portrayal in the film.",
+      "before": {
+        "status": "drop",
+        "kind": "news",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "dup_group": "e93a7ad86b600a40e2e82bfe937583dbbe224c34e88d20ea6d22e83f130c9143"
+      },
+      "after": {
+        "status": "keep",
+        "kind": "news",
+        "reasons": [],
+        "dup_group": "e93a7ad86b600a40e2e82bfe937583dbbe224c34e88d20ea6d22e83f130c9143"
+      }
+    }
+  ],
+  "baseline_false_drops": [
+    {
+      "audit_id": "P007",
+      "title": "In a Holidaze",
+      "key": "movie:1588626",
+      "source": "rss",
+      "text": "Maddie Ziegler Finds Herself Stuck in a Christmas Time Loop in Trailer for Netflix’s ‘In A Holidaze’",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/maddie-ziegler-in-a-holidaze-netflix-trailer-1236730980/",
+      "relevant": true,
+      "audit_reason": "A real outlet covers the newly released trailer for the actual film.",
+      "media_type": "movie",
+      "media_tmdb_id": 1588626,
+      "post_id": "65a309a639d910f67b7bdf0c0ef43ceefc5a7aa63d2b78dc2a5d7b2df62ef5e0",
+      "content_hash": "051603a41f282cca28a5bdeb8b28662af3eb2fbe0626c2879086be632198ca7d",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "8e0decdadde98b62ac1ff66e8c2de5d47ddfbdeca5c89bcab35216218e631a7a",
+      "reasons": [
+        "duplicate_of:163c4545b262653219ba371fb0cb90881570ece476801818d126651ad7d30eae"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P020",
+      "title": "The Pitt",
+      "key": "tv:250307",
+      "source": "rss",
+      "text": "Easterseals Disability Arts & Culture Awards Honor ‘The Pitt’, PBS Docuseries ‘Renegades’, ‘Facts of Life’ Trailblazer Geri Jewell & More",
+      "url": "https://deadline.com/2026/10/easterseals-disability-arts-culture-awards-2026-1237157814/",
+      "relevant": true,
+      "audit_reason": "The series itself receives a current disability-representation award.",
+      "media_type": "tv",
+      "media_tmdb_id": 250307,
+      "post_id": "53f9efaf4f85c50c03352f2fa963e6928bc3a3204ec6363db1a66dbb8e3d5223",
+      "content_hash": "0d904c0cba9233dd1153d3cc1183f215f40d674648b5ffb268e6b88a7be974fb",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "1ec5e7633761ef17ad98f039bceae34c80b7d6dcd520a0c727773323884e21fe",
+      "reasons": [
+        "routine_or_personal_news"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P038",
+      "title": "Avengers: Doomsday",
+      "key": "movie:1003596",
+      "source": "rss",
+      "text": "Marvel Officially Loses Another Original Avenger for ‘Avengers: Doomsday’",
+      "url": "https://collider.com/avengers-doomsday-jeremy-renner-hawkeye-not-returning/",
+      "relevant": true,
+      "audit_reason": "A named cast member confirms he will not appear in the actual upcoming film.",
+      "media_type": "movie",
+      "media_tmdb_id": 1003596,
+      "post_id": "437c48b3d5b57d1b6e96f596768103c76b30d35395bf0d4364af47666a04f4ca",
+      "content_hash": "5aae6a74499a5d407235924af3c4c0043b38d0902d82ff5de1a310cd2fe10727",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "cafe6693e09f5d47648d32b2f908f614c86cef6aa0aa3add3d25f3899667ac42",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P042",
+      "title": "The Diplomat",
+      "key": "tv:203857",
+      "source": "bluesky",
+      "text": "I’ve reviewed the return of the absurd & excellent The Diplomat.",
+      "url": "https://bsky.app/profile/did:plc:ja5m5qsq5uwqokumcvrjt2sf/post/3mxvnflidss2z",
+      "relevant": true,
+      "audit_reason": "Guardian reviewer Sarah Dempster shares her own current Diplomat review; 79 likes, 9 reposts and 8 quotes.",
+      "media_type": "tv",
+      "media_tmdb_id": 203857,
+      "post_id": "a63b14d9699450da450dffe9cc14197cd8c66394519b16c07fbd9b0d0e3c0e36",
+      "content_hash": "1d991fedc24d4e3dfce487bce4c9c167fdb167664530fa9abc1833a831ba298a",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "social",
+      "score": 0.0,
+      "dup_group": "ee5ff4536ecc26997feb64f3c78baa98043102cd89cef0c3159d084df53b5ed5",
+      "reasons": [
+        "fewer_than_12_own_words",
+        "metrics:{\"card_text\":null,\"followers\":12605,\"likes\":79,\"observed_at\":\"2026-10-15T16:17:51.631Z\",\"quotes\":8,\"replies\":14,\"reposts\":9}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P045",
+      "title": "I See Buildings Fall Like Lightning",
+      "key": "movie:1455247",
+      "source": "bluesky",
+      "text": "I See Buildings is a fabulous film\nwww.theguardian.com/film/2026/oc...",
+      "url": "https://bsky.app/profile/did:plc:tpa4khyiq4jrqlke2a7gvcdk/post/3mxvis5mtwc2g",
+      "relevant": true,
+      "audit_reason": "Established Guardian film critic Xan Brooks recommends a current film with a substantive new interview link.",
+      "media_type": "movie",
+      "media_tmdb_id": 1455247,
+      "post_id": "6d06366c67f442484311532a29226e8dd4a635c4dc85206f708d78b39604d959",
+      "content_hash": "dfaa8607c2503d9821515afb901dd41e4ab2e6b579922da6259deb8863ad4cfd",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "social",
+      "score": 0.0,
+      "dup_group": "e55d9dc0530ca2d305dc8df1180347d75125b6107deabcaee99aa8c9fc1eced4",
+      "reasons": [
+        "fewer_than_12_own_words",
+        "peripheral_title",
+        "metrics:{\"card_text\":null,\"followers\":742,\"likes\":2,\"observed_at\":\"2026-10-15T16:17:51.631Z\",\"quotes\":0,\"replies\":0,\"reposts\":1}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P116",
+      "title": "The Dark Tower",
+      "key": "tv:327207",
+      "source": "rss",
+      "text": "Mike Flanagan Officially Confirms The Dark Tower TV Series' Book Adaptation Order & Structure",
+      "url": "https://screenrant.com/mike-flanagan-the-dark-tower-show-book-adaptation-order/",
+      "relevant": true,
+      "audit_reason": "Named showrunner confirms the actual adaptation's structure and book order.",
+      "media_type": "tv",
+      "media_tmdb_id": 327207,
+      "post_id": "a380f7838e282135409e032ee012e48dd0df49948fb11f914accea90fec6e439",
+      "content_hash": "cdb68a5c8a013639b32eb54e6cafdaaaaad1673a491ae99574902e01791924bb",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "17a0541b5dd845312bf9f4b835ad283e045dee505eb9c4146ace9033d14f6aea",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P119",
+      "title": "Bass X Machina",
+      "key": "tv:314271",
+      "source": "rss",
+      "text": "Taylor Sheridan Meets 'Ex Machina' in New Trailer for Netflix's Sci-Fi Western",
+      "url": "https://collider.com/netflix-sci-fi-bass-x-machina-trailer/",
+      "relevant": true,
+      "audit_reason": "Reports an actual new Bass x Machina trailer, despite a comparison-heavy headline.",
+      "media_type": "tv",
+      "media_tmdb_id": 314271,
+      "post_id": "0c25a3fe35c1f00b0c46fe156a2c6f468531286e4fe23f7c36a91f8e94d4eb3d",
+      "content_hash": "c1568e5b30ca66f2c3b46bceb83ce1668095afc1a5bf3117ce40b4996a94acef",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "59c1931734b51f824fbc2fa703e4e7b08eb1febcb1ff2d33b510ddf7306d1fbb",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P134",
+      "title": "Whalefall",
+      "key": "movie:1255833",
+      "source": "rss",
+      "text": "‘Whalefall’ Director Brian Duffield Talks Book Changes, Test Screening Challenges and How Those ‘Alien’ Rumors Started",
+      "url": "https://www.hollywoodreporter.com/movies/movie-features/whalefall-brian-duffield-test-screening-challenges-alien-1236730147/",
+      "relevant": true,
+      "audit_reason": "Original director interview covers adaptation changes and production challenges.",
+      "media_type": "movie",
+      "media_tmdb_id": 1255833,
+      "post_id": "307c993dd76f7b3a1f0394e92d2c2b18a0a0a105229fb288fc1228a5bac37e17",
+      "content_hash": "51ce983cea6d13d493ed4d3bc5164e075fc5cbf6866a7e8b364fd0aa744358d5",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "dcb80e540f0f903473e17f460c4063df792c15ed0e92ec9907cf1bfa9e5f9076",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P139",
+      "title": "Justice League",
+      "key": "movie:141052",
+      "source": "rss",
+      "text": "Ben Affleck Hating Justice League Just Confirms He’s the Perfect Batman",
+      "url": "https://www.denofgeek.com/movies/ben-affleck-hating-justice-league-confirms-hes-batman/",
+      "relevant": true,
+      "audit_reason": "Title-focused editorial discusses its lead's current remarks and the film's failure.",
+      "media_type": "movie",
+      "media_tmdb_id": 141052,
+      "post_id": "764fc7aa8fb8fb4a09f6b3ffb51d13991f1bc6cbde62b08afb542a1834d4fdc1",
+      "content_hash": "27fc617e518b1bd6e769e71727f2dc8a57e64e95c83894111962fe554b5dab13",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "d1d8c075b46c00467a7d5aa4c8a063ccbb7c0b7651dbe1db0508b695d74e6fc9",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P151",
+      "title": "Whalefall",
+      "key": "movie:1255833",
+      "source": "rss",
+      "text": "Box Office: ‘Street Fighter’ Aims for $30 Million Opening, ‘You Can See Everything’ Could Score $8 Million Start",
+      "url": "https://variety.com/2026/film/box-office/street-fighter-box-office-opening-weekend-projections-1236910614/",
+      "relevant": true,
+      "audit_reason": "Current opening-weekend report gives this film an actual release/forecast news peg.",
+      "media_type": "movie",
+      "media_tmdb_id": 1255833,
+      "post_id": "530f4ce988a559dee3922bf9a66a7bc7ed860ba5be93e13ee54619105e33b8f7",
+      "content_hash": "4dd373afb720a6b7e8747b66e205315928faa16a153e70ad8ee14a2ba8eedcd0",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "a745c67375c37fabfae4e5736f3b7205dca667a0d85d7d596eeac9acab2b441d",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P155",
+      "title": "VisionQuest",
+      "key": "tv:213375",
+      "source": "rss",
+      "text": "Who Plays Paladin On Marvel's VisionQuest?",
+      "url": "https://www.slashfilm.com/2285932/paladin-marvel-visionquest-actor-todd-stashwick/",
+      "relevant": true,
+      "audit_reason": "Current-series character/performer explainer addresses a specific newly introduced role.",
+      "media_type": "tv",
+      "media_tmdb_id": 213375,
+      "post_id": "c6c7cd8b8be88fc54e1f43bd4eb656b1bd6eb672b88239ec358bf408cba7631f",
+      "content_hash": "d6050eef31c07432548ba951ec60aae6322227d24cb00fec39178681e4b0504e",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "fb83e23368e0b3ec7067aa2ad76a44fd9f221f2051d18c8b473ecee8711c0a4c",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P159",
+      "title": "Matchbox the Movie",
+      "key": "movie:1148365",
+      "source": "rss",
+      "text": "John Cena's 126-Minute Action Movie Is Officially Apple TV's Biggest Streaming Hit",
+      "url": "https://www.slashfilm.com/2286845/john-cena-action-movie-matchbox-streaming-apple-tv-october-2026/",
+      "relevant": true,
+      "audit_reason": "Reports the actual film's current top streaming performance, despite inflated headline wording.",
+      "media_type": "movie",
+      "media_tmdb_id": 1148365,
+      "post_id": "9953b0b0754e4f6f9a9b290cf80e6724fd224af86cf4f687157353f3bca9b2a4",
+      "content_hash": "606b0381d6c6107016ab0ca547fb31af511c0630594f45a9989715ba539775ed",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "ce1bdbb6c1e021da6955f12d3eb30108f7cfd5663bc188416038e29388c4efed",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P171",
+      "title": "Band of Brothers",
+      "key": "tv:4613",
+      "source": "rss",
+      "text": "James McAvoy Got Bullied by Famous Co-Star on His First Day of Being a Professional Actor: I Got Laughed at For Three Minutes",
+      "url": "https://variety.com/2026/tv/news/james-mcavoy-bullied-band-of-brothers-actor-first-day-set-1236912034/",
+      "relevant": true,
+      "audit_reason": "Actor makes a fresh, first-hand disclosure about working on this exact series.",
+      "media_type": "tv",
+      "media_tmdb_id": 4613,
+      "post_id": "70c256343da759c8f6cf35f51bf3c48d580aa81c3badf60dd39d819a8d0e506f",
+      "content_hash": "e091e3bbfca828b7e10921f1be3746361e00d097e3b07e61257ee1bae7e6549c",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "545e486e3b05a41a89144ced1cf64ebd4c8b28f983ab66806738abca7f0f6a38",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P177",
+      "title": "Soul Patrol",
+      "key": "movie:1591604",
+      "source": "rss",
+      "text": "Doc Stories Unveils 12th Annual Film Lineup (EXCLUSIVE)",
+      "url": "https://variety.com/2026/film/news/doc-stories-film-lineup-14th-1236910719/",
+      "relevant": true,
+      "audit_reason": "Actual documentary receives a current, named festival selection.",
+      "media_type": "movie",
+      "media_tmdb_id": 1591604,
+      "post_id": "7f03ca8a571730066ca7dfe581730dbd915a257d92d54348c20902727787f162",
+      "content_hash": "41ee0a47a4d60ae1797b9322738a06a7a2fc5b2700a31d0c7269ac96fd40b464",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "1faa6cc6df9b7a04cc0a78ab0ab52d18305db7bb0eaebdd6f0ebe51b114c53cf",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P178",
+      "title": "Tutu",
+      "key": "movie:1616135",
+      "source": "rss",
+      "text": "Doc Stories Unveils 12th Annual Film Lineup (EXCLUSIVE)",
+      "url": "https://variety.com/2026/film/news/doc-stories-film-lineup-14th-1236910719/",
+      "relevant": true,
+      "audit_reason": "Actual documentary receives a current, named festival selection.",
+      "media_type": "movie",
+      "media_tmdb_id": 1616135,
+      "post_id": "7f03ca8a571730066ca7dfe581730dbd915a257d92d54348c20902727787f162",
+      "content_hash": "41ee0a47a4d60ae1797b9322738a06a7a2fc5b2700a31d0c7269ac96fd40b464",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "a41fb6cb5699bb14ff91297759b6289bed0cb43e449bc18361d724370e7098fa",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P196",
+      "title": "Narnia: The Magician's Nephew",
+      "key": "movie:1147572",
+      "source": "rss",
+      "text": "Neuer Netflix-Film schafft, was großen Hollywood-Studios in 55 Jahren Filmgeschichte nicht gelungen ist",
+      "url": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+      "relevant": true,
+      "audit_reason": "Analyzes a distinctive music choice in this film's newly released trailer.",
+      "media_type": "movie",
+      "media_tmdb_id": 1147572,
+      "post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+      "content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "95a22e066429c99327afd6d60a9884c2d4836bcc61ea6707ccf4d57efdfc4214",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P262",
+      "title": "The Great Indian Kapil Show",
+      "key": "tv:247769",
+      "source": "youtube",
+      "text": "Saif Ali Khan & Kareena Kapoor Make The Hansi Ka TyoHAHAar More GRAND Ft. Kapil Sharma ✨ #TGIKS",
+      "url": "https://www.youtube.com/watch?v=jCUWuGdBNvU",
+      "relevant": true,
+      "audit_reason": "Official upcoming-episode preview identifies the guests and dated premiere.",
+      "media_type": "tv",
+      "media_tmdb_id": 247769,
+      "post_id": "9895bb07fff4be4f9d09f14fe6c1c843f8d139ad5473aecdd96c61bcef063fc4",
+      "content_hash": "64895ad60debb4928616d18cdee5e48e47d22c387a3b1d676c70cb3cf0fcbd1a",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "official_video",
+      "score": 0.0,
+      "dup_group": "2deeed281eb2212c9e90cfca7e172ad6754eb80f76740aabea110d66303b97ff",
+      "reasons": [
+        "no_substantive_video_format",
+        "playability:{\"checked_at\":1792080946451,\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"offline_editorial_assumption\",\"status\":\"playable\",\"video_id\":\"jCUWuGdBNvU\"}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P264",
+      "title": "Obsession",
+      "key": "movie:1339713",
+      "source": "rss",
+      "text": "‘Obsession’ Star Inde Navarrette on Sudden Fame, Cut Scenes, Relationship Takeaways, a Possible Sequel and Going Rogue for Marvel",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/obsession-star-inde-navarrette-marvel-rogue-awards-chatter-1236727817/",
+      "relevant": true,
+      "audit_reason": "Extensive actor interview discusses this film's cut scenes, reception and possible sequel.",
+      "media_type": "movie",
+      "media_tmdb_id": 1339713,
+      "post_id": "c812574cfc9bfb49c8d481ddd59b79090eddfadfb54d66c82b2e58834192dae0",
+      "content_hash": "becf7ea83e4fff0deef34b03f77f59905c82ef40be7c2684b64dcd77df203837",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "de495bafeb2ea57fec48da17588480fbf34fe85fad6a28c21bea90a7bb96ff23",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P265",
+      "title": "You Can See Everything",
+      "key": "movie:1765072",
+      "source": "rss",
+      "text": "‘American Doctor,’ ‘NAZA,’ ‘Musk,’ Elizabeth Holmes Doc And More Make DOC NYC’s Prestigious Short List",
+      "url": "https://deadline.com/2026/10/doc-nyc-2026-short-lists-announcement-1237156501/",
+      "relevant": true,
+      "audit_reason": "Actual film makes a current documentary awards-season shortlist.",
+      "media_type": "movie",
+      "media_tmdb_id": 1765072,
+      "post_id": "c0f7b758ee6c1fb36e17accc1eba434becea04ee327c59924a89b92d451af6f7",
+      "content_hash": "dfc4a344f26f4f69c2955452ef6254891d92d6fe33e635e844d80d9e68b66117",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "d6b7cea1d7f71f36d4216257f97286ba83be67f117a55c6fe445e45d769d9f0b",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P266",
+      "title": "14th",
+      "key": "movie:1732479",
+      "source": "rss",
+      "text": "‘American Doctor,’ ‘NAZA,’ ‘Musk,’ Elizabeth Holmes Doc And More Make DOC NYC’s Prestigious Short List",
+      "url": "https://deadline.com/2026/10/doc-nyc-2026-short-lists-announcement-1237156501/",
+      "relevant": true,
+      "audit_reason": "Actual film makes a current documentary awards-season shortlist.",
+      "media_type": "movie",
+      "media_tmdb_id": 1732479,
+      "post_id": "c0f7b758ee6c1fb36e17accc1eba434becea04ee327c59924a89b92d451af6f7",
+      "content_hash": "dfc4a344f26f4f69c2955452ef6254891d92d6fe33e635e844d80d9e68b66117",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "e6a7af357a2387e962de53230a2f12de61090be84cefc5030c13067b13324792",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P287",
+      "title": "Guarding Stars",
+      "key": "movie:1551025",
+      "source": "rss",
+      "text": "‘Guarding Stars’ Trailer: Leighton Meester, Jared Padalecki Star in Fake-Dating Holiday Romance",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/guarding-stars-trailer-leighton-meester-jared-padalecki-1236729835/",
+      "relevant": true,
+      "audit_reason": "Actual trailer for the upcoming adaptation from an established film outlet.",
+      "media_type": "movie",
+      "media_tmdb_id": 1551025,
+      "post_id": "f4dd6ac9030593f87614adc97eab0e14e2460a86605bdd3a84ce962bc828f772",
+      "content_hash": "f0556034726ee527cbfa5220bee967ee79d68123e4e28d9418195da19625e577",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "70964df4471a16bcafe75b4d533e5f8535d0ef769b2c149cf4e790851521f3df",
+      "reasons": [
+        "duplicate_of:40a0783f67b6f93b887a2fc7253773d3d6d8d6226375312eda75e6793290d0e0"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P313",
+      "title": "Justice League",
+      "key": "movie:141052",
+      "source": "rss",
+      "text": "\"Es war der Tiefpunkt meiner Karriere\": Ben Affleck rechnet radikal mit einem der umstrittensten DC-Blockbuster ab",
+      "url": "https://www.filmstarts.de/nachrichten/1000227353.html",
+      "relevant": true,
+      "audit_reason": "Fresh lead-actor comments address this exact film's production problems.",
+      "media_type": "movie",
+      "media_tmdb_id": 141052,
+      "post_id": "ad078b46962497b87e659e2dbadbb69124dbf1887dfedd10458eee687a0f803f",
+      "content_hash": "6ed7b21681820c10ac54c31d4f29c82513aec8381cd02d2cb28a3b5292bcc6f1",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "b13065f1ddbf9a46086b4831b6a972945d294cc84de65ee619a6c9c549e9ac97",
+      "reasons": [
+        "no_editorial_angle",
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P315",
+      "title": "Street Fighter",
+      "key": "movie:1153576",
+      "source": "rss",
+      "text": "Ich habe nichts von Street Fighter erwartet, jetzt will ich sofort Nachschub: Er liefert erstklassige Action und Humor",
+      "url": "https://www.moviepilot.de/news/ich-habe-nichts-von-street-fighter-erwartet-jetzt-freue-ich-mich-auf-teil-2-er-liefert-erstklassige-action-und-humor-1165014",
+      "relevant": true,
+      "audit_reason": "Original film criticism assesses action, humor and the reviewer's changed expectations.",
+      "media_type": "movie",
+      "media_tmdb_id": 1153576,
+      "post_id": "86e894c9bbba4cf15e688a49ff0e21e4e04d6eb56cdd84c05d14edff67a7cf36",
+      "content_hash": "95fff110a5aac4c01f9e007b7a103eb502ca68abf854b2a271a70faf8dd68404",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "19ca4f7c013de91d835e94150d8a47bd471cdca94f5d3bd273542d57b64b7e52",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P318",
+      "title": "The Great Indian Kapil Show",
+      "key": "tv:247769",
+      "source": "youtube",
+      "text": "Sunil Grover’s FUNNIEST Aamir Khan Act With Rani Mukerji 🤣 | TGIKS | Netflix India",
+      "url": "https://www.youtube.com/watch?v=BMp0uLX_0sQ",
+      "relevant": true,
+      "audit_reason": "Official comedy sketch excerpt identifies the performance and participants.",
+      "media_type": "tv",
+      "media_tmdb_id": 247769,
+      "post_id": "acc690fddecb26cac54efbf2c5de7bf6217f40f2533498498f40a474170346c1",
+      "content_hash": "2842d7572f8f752bbb5e07a5af6ecbd8d8ab6d414dcb3a53439dd457dd70c0ba",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "official_video",
+      "score": 0.0,
+      "dup_group": "011a3077ebe41afbccc73022220edced43b7673900a4c92c6667583f462762a9",
+      "reasons": [
+        "no_substantive_video_format",
+        "archive_without_current_hook",
+        "playability:{\"checked_at\":1792080946451,\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"offline_editorial_assumption\",\"status\":\"playable\",\"video_id\":\"BMp0uLX_0sQ\"}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P321",
+      "title": "Juntos hasta la muerte",
+      "key": "movie:1178615",
+      "source": "rss",
+      "text": "Danny Trejo Joins Spanish Horror-Comedy ‘Together Until Death’ Alongside Sandra Escacena, Aria Bedmar, Nira Osahia & More",
+      "url": "https://deadline.com/2026/10/danny-trejo-sandra-escacena-aria-bedmar-spanish-horror-film-1237156575/",
+      "relevant": true,
+      "audit_reason": "Concrete Danny Trejo casting announcement as actual film photography begins.",
+      "media_type": "movie",
+      "media_tmdb_id": 1178615,
+      "post_id": "16cf2f97412b21ce3bc4111c778cf4b7c3f6d8ed7e59ce782376bf3cea9c690a",
+      "content_hash": "ee046a82411ad9e5262f6cbd6ab46db781f5f544028c84219cd7c3b2b2b838df",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "9386b98a76df6359825ac665a96d00a7a8e25451d0b65848fea337bb365c791b",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P323",
+      "title": "Street Fighter",
+      "key": "movie:1153576",
+      "source": "rss",
+      "text": "First Street Fighter (2026) Reactions Are Here, And Critics Have A Lot To Say",
+      "url": "https://www.slashfilm.com/2286315/street-fighter-2026-movie-reactions/",
+      "relevant": true,
+      "audit_reason": "Current first-reaction coverage of the actual film, preceding its release.",
+      "media_type": "movie",
+      "media_tmdb_id": 1153576,
+      "post_id": "95c23c7e3580773d2b06f63acb5224f34f2b475818fda3fa27caf4eb67acfea5",
+      "content_hash": "87d43b8ec05a74b915aaecef303ad363d90f0c13e87cbea5f9a36388f9cf78cf",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "c61ac230fcdec1450d14cdd23d274974ef9cf1c60b8bfa056df92364a29e0296",
+      "reasons": [
+        "duplicate_of:2ebac46f21e67b30a70cbbd2090590609063e2994ea03e2c99f72313595016a0"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P327",
+      "title": "Confession",
+      "key": "movie:1772726",
+      "source": "rss",
+      "text": "Er bescherte uns einen der grausamsten Filme der letzten Jahre – im Trailer zu seinem neuen Werk legt der \"The Painted Bird\"-Macher nun nach",
+      "url": "https://www.filmstarts.de/nachrichten/1000227298.html",
+      "relevant": true,
+      "audit_reason": "Browsed page discusses this film's trailer, release plan, cast and production context.",
+      "media_type": "movie",
+      "media_tmdb_id": 1772726,
+      "post_id": "0e656235eed190e5e2eb169f144059e4339bfb6452f4de6ed3867660080e4edc",
+      "content_hash": "d9034279bce5ab0560bf49d96a76b52e118cd7c57f1c774a8474d58daa7c3022",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "1eae84d550a4b4350305cfc2acf471981b6349bc1303c92c395d35a917e1575e",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P329",
+      "title": "Whalefall",
+      "key": "movie:1255833",
+      "source": "rss",
+      "text": "Neuer Survival-Thriller: Whalefall ist unfassbar eklig und fesselt bis zur letzten Sekunde",
+      "url": "https://www.moviepilot.de/news/neuer-survival-thriller-whalefall-ist-unfassbar-eklig-und-fesselt-bis-zur-letzten-sekunde-1164956",
+      "relevant": true,
+      "audit_reason": "Original current review assesses this film's execution and sustained suspense.",
+      "media_type": "movie",
+      "media_tmdb_id": 1255833,
+      "post_id": "76bfcf540a27e672dc2ac85b28a58cf6fdb3551ae4b1171d45727c80daffd817",
+      "content_hash": "ff1726febdac6df424f788a4e5f740c2e65ace9dbf7b8c8f240e8346a2c9a6b3",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "9f3cb5b20432031fc656510402ebef34cd75257131c0a28c62bd1123bc313408",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P330",
+      "title": "Two and a Half Men",
+      "key": "tv:2691",
+      "source": "rss",
+      "text": "750.000 Dollar pro Folge und völlig neue Regeln: Für diesen Star sollte \"Two And A Half Men\" umgebaut werden",
+      "url": "https://www.filmstarts.de/nachrichten/1000227309.html",
+      "relevant": true,
+      "audit_reason": "Browsed page cites newly published creator memoir with substantive casting/production revelations.",
+      "media_type": "tv",
+      "media_tmdb_id": 2691,
+      "post_id": "1930c2b207bca1ded26fd7d39fbaca3218e596756e5d431dc22423d6fb4cf037",
+      "content_hash": "6804a0687e992130ec93eadb23e7401f8eea79977129d57c05562b3814cf4347",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "6db0edaa2674b8db6208161c1ba41cae4bd967ccb6da9a3c0304e5dc7e17a449",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P336",
+      "title": "NCIS",
+      "key": "tv:4614",
+      "source": "rss",
+      "text": "Nach 10 Jahren gibt es endlich das große \"NCIS\"-Wiedersehen: Zwei absolute Fanlieblinge kehren zurück",
+      "url": "https://www.filmstarts.de/nachrichten/1000227289.html",
+      "relevant": true,
+      "audit_reason": "Specific return of two actual series regulars is current casting/story news.",
+      "media_type": "tv",
+      "media_tmdb_id": 4614,
+      "post_id": "fd30f0f4d00c5f59f8b1a18986407f66a795285cd4c71f0ab2aec63ec87dca4e",
+      "content_hash": "e459fa8614e2ee3309ff4dc093ddc05a005b177ef23997f74075c1dcddda47a8",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "0a657371312e0955416a78b622b3fd8057dfd82d8092bf218799973c4e9b5e8a",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P343",
+      "title": "Below",
+      "key": "tv:285322",
+      "source": "rss",
+      "text": "17 Millionen Views in nur 4 Tagen: Monster-Horror sorgt für Netflix-Rekord – das gab es noch nie!",
+      "url": "https://www.filmstarts.de/nachrichten/1000227264.html",
+      "relevant": true,
+      "audit_reason": "Reports a specific new Netflix viewing record for this actual series.",
+      "media_type": "tv",
+      "media_tmdb_id": 285322,
+      "post_id": "59488eeb46ef973c147bd3b54daff03cb46952ec159cdc6d4c8436ba30f9375c",
+      "content_hash": "846dacf1ca8784ecf97a2ea122d02e1d5dcd4c4a2bc3f46aa40243924152fb7e",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "a5e04a509891e8c258ad41b25141c60107f723b0970006d5685dfdb5f8aed937",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P354",
+      "title": "VisionQuest",
+      "key": "tv:213375",
+      "source": "rss",
+      "text": "Neu auf Disney+: Die Fortsetzung der vielleicht besten Marvel-Serie",
+      "url": "https://www.filmstarts.de/nachrichten/1000227107.html",
+      "relevant": true,
+      "audit_reason": "Browsed page includes the writer's first-hand four-episode assessment and specific new-series analysis.",
+      "media_type": "tv",
+      "media_tmdb_id": 213375,
+      "post_id": "98e7aa19d6f47c258ced7add522a94009677ac1dbceffeb81cf4ffb3ea5dcd50",
+      "content_hash": "2838c607fdbe6d2eb9d8a0946d6a54a1b54ee604d34d9004810ae2c4ab1cf4ee",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "e6a24f3fd8a2e4fd090c53319161353fbd1ea13784a64735cec36a333822aa59",
+      "reasons": [
+        "routine_or_personal_news",
+        "no_editorial_angle",
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P359",
+      "title": "VisionQuest",
+      "key": "tv:213375",
+      "source": "rss",
+      "text": "When Does VisionQuest Take Place In The Marvel Timeline?",
+      "url": "https://www.slashfilm.com/2285543/visionquest-marvel-timeline-explained/",
+      "relevant": true,
+      "audit_reason": "Current-show analysis explains the actual series' placement and story clues.",
+      "media_type": "tv",
+      "media_tmdb_id": 213375,
+      "post_id": "e40af52c0ec6dee2414da75c604144fc3d17a901bea602f96add535e70479597",
+      "content_hash": "497cf432fa401eca40efb5372e4ec1d1526495e7aaf8f6d15bdcac1fe5c34bfa",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "14fbba2d8b3c7738625f5cbe71e2771ed78c85ec9886df054f4256cecb6e98de",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P374",
+      "title": "Project Hail Mary",
+      "key": "movie:687163",
+      "source": "rss",
+      "text": "Project Hail Mary's Emotional Goodbye Scene Was Inspired By Rocky's Mysterious Markings [Exclusive]",
+      "url": "https://www.slashfilm.com/2283787/project-hail-mary-goodbye-scene-inspiration-rocky-markings/",
+      "relevant": true,
+      "audit_reason": "An exclusive interview supplies new behind-the-scenes detail about a specific scene.",
+      "media_type": "movie",
+      "media_tmdb_id": 687163,
+      "post_id": "a7d7e4bab5523096359ab5e18d8123fc60ebb07116e11cf6a3a0057bf539bcec",
+      "content_hash": "1786ed67abb2b37f3a49ec19db23f6084cee2f869064edcf5416956a210ee1f7",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "d2d2467f08240d7b129e94a33d4d9b4fe5b6a9a67067cc10e150dfebc44da11b",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P375",
+      "title": "Tommy & Tuppence",
+      "key": "tv:318312",
+      "source": "rss",
+      "text": "‘Tommy & Tuppence’ Stars Josh Dylan and Antonia Thomas on That ‘Intense’ Finale, Why the Detective Duo ‘Keep Missing Each Other’ Romantically and a Potential Season 2",
+      "url": "https://variety.com/2026/tv/global/tommy-tuppence-finale-josh-dylan-antonia-thomas-romance-season-2-1236909902/",
+      "relevant": true,
+      "audit_reason": "The stars discuss the season finale, character relationships and prospects for another season.",
+      "media_type": "tv",
+      "media_tmdb_id": 318312,
+      "post_id": "8820935152efa1554f3712a12ad8ed945ca43f129bb35798855604c7ecd56b26",
+      "content_hash": "31d8fd6e4b5962524e2d05f16305c1509e3e02107be79dd1b4e22ad61e7100b3",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "a6b5896cbbc02aff16fe097604c20e2c93a91ed040cb79e44fbc6bf2c40e6ee6",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P380",
+      "title": "Dancing with the Stars",
+      "key": "tv:1508",
+      "source": "rss",
+      "text": "Tyler Cameron on ‘DWTS’ and Rebuilding His Career, One House (and One Dance) at a Time",
+      "url": "https://www.hollywoodreporter.com/tv/tv-features/tyler-cameron-dancing-with-the-stars-hgtv-interview-1236728232/",
+      "relevant": true,
+      "audit_reason": "A current contestant discusses his participation and performance in this season.",
+      "media_type": "tv",
+      "media_tmdb_id": 1508,
+      "post_id": "4bb66cca287d84a77620f1d37e7d13cfa2271310b3d6c82f6a016bf2fe0bc542",
+      "content_hash": "1a7d2c974fef746aa5287360558687991e87b26158dbcc9c81c8d4276adffe6f",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "24362b3633291d0ea6d9e7bb6358030aff3d7d81f805ec315a124336d0c0c12d",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P384",
+      "title": "La bola negra",
+      "key": "movie:1422041",
+      "source": "rss",
+      "text": "Has Hollywood Softened Toward Netflix?",
+      "url": "https://www.indiewire.com/awards/industry/hollywood-soften-netflix-best-picture-oscars-la-bola-negra-1235221518/",
+      "relevant": true,
+      "audit_reason": "The film's theatrical strategy and Best Picture prospects are the concrete case at the center of this analysis.",
+      "media_type": "movie",
+      "media_tmdb_id": 1422041,
+      "post_id": "15240923b643ac67b79b75dd0b31c8cdce83027736e7baeeb6af4bc3bad3dd7f",
+      "content_hash": "b66389ba10f91f9bd039293fb2d2d14e5ea61e791f667cc70c5d55756557fa04",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "1aae4ad0f91171d2bbdab97e6635997f32d0b850ca741922fa8fefa5f5a9b3eb",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P394",
+      "title": "Narnia: The Magician's Nephew",
+      "key": "movie:1147572",
+      "source": "rss",
+      "text": "Narnia Fans Split Over Greta Gerwig’s ‘Magicians Nephew’ Trailer: “Best in Years” to “Lost Its Soul to CGI”",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+      "relevant": true,
+      "audit_reason": "A title-focused report describes contrasting public reactions to the new trailer, a distinct angle from its release.",
+      "media_type": "movie",
+      "media_tmdb_id": 1147572,
+      "post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+      "content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "5eb6836825de6dc07e1322c911269d9f12e2bba89d4a5b52ceb8933a391166c5",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P404",
+      "title": "Digger",
+      "key": "movie:1248832",
+      "source": "rss",
+      "text": "20 Great Films That Flopped At The Box Office From ‘Digger’ To ‘Fight Club’ And ‘Citizen Kane’",
+      "url": "https://deadline.com/gallery/20-great-movies-that-flopped-at-the-box-office/",
+      "relevant": true,
+      "audit_reason": "The current film's disappointing opening is the news peg and analytical focus of this comparison.",
+      "media_type": "movie",
+      "media_tmdb_id": 1248832,
+      "post_id": "3a1598cab12a06f4a8662ec6c33e2c12aaf3ffda1d10e2552a3576c65ae10b74",
+      "content_hash": "d5e33e390d05b1ca8ff77c0617e08ee0d0faaae69316aa0f67c358a1896deab2",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "a9a895dc3ee886ab0d3697ce9bd20163ed43cfa6802257b40c435054255cd346",
+      "reasons": [
+        "routine_or_personal_news"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P409",
+      "title": "Dumbo",
+      "key": "movie:329996",
+      "source": "rss",
+      "text": "7 Years Ago, Disney Released A Star-Studded Fantasy Movie That Left Much To Be Desired",
+      "url": "https://www.slashfilm.com/2284074/disney-start-studded-fantasy-movie-dumbo/",
+      "relevant": true,
+      "audit_reason": "The full page contains fresh, title-focused criticism of Dumbo's themes and commercial failure, despite its older release.",
+      "media_type": "movie",
+      "media_tmdb_id": 329996,
+      "post_id": "76e6ead6e15e323233bf119711d113bb945ff92103b3c37a21bf0df13bc5e3e7",
+      "content_hash": "8ab14d05ce6a4b127bed98db420e68fed492a2c9dd92c54b76001e8322f3f6fc",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "cedcf4b9b4ff7e5fde88ae03e9d84108960d09c877ec97cb00b8f23f2f81c010",
+      "reasons": [
+        "no_editorial_angle",
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P412",
+      "title": "NAZA",
+      "key": "movie:1755291",
+      "source": "rss",
+      "text": "Audiences Want to See Documentaries About Gaza, Israel, and Palestine — Why Are Distributors Still Scared?",
+      "url": "https://www.indiewire.com/news/analysis/audiences-want-documentaries-gaza-distributors-nervous-naza-no-other-land-1235221493/",
+      "relevant": true,
+      "audit_reason": "This title is a central example in substantive reporting about documentary distribution and audience demand.",
+      "media_type": "movie",
+      "media_tmdb_id": 1755291,
+      "post_id": "ab4b89cf5460e92f01fefcb9b384ea72e7c208d732f77e5519c5eedcb88447ca",
+      "content_hash": "c067670b15a44058bb31061589a82016a2e14f05986d1f0756914dea023b43f3",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "91379cb8b5789a9f3dee871071749caec455c68442a92d675307ec5226d7a3dd",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P413",
+      "title": "No Other Land",
+      "key": "movie:1232493",
+      "source": "rss",
+      "text": "Audiences Want to See Documentaries About Gaza, Israel, and Palestine — Why Are Distributors Still Scared?",
+      "url": "https://www.indiewire.com/news/analysis/audiences-want-documentaries-gaza-distributors-nervous-naza-no-other-land-1235221493/",
+      "relevant": true,
+      "audit_reason": "This title is a central example in substantive reporting about documentary distribution and audience demand.",
+      "media_type": "movie",
+      "media_tmdb_id": 1232493,
+      "post_id": "ab4b89cf5460e92f01fefcb9b384ea72e7c208d732f77e5519c5eedcb88447ca",
+      "content_hash": "c067670b15a44058bb31061589a82016a2e14f05986d1f0756914dea023b43f3",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "b89bfd0392b0c7ebd715fdcb97a37dcdf16f92b08e70aecf9b7bc408b331c8c7",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P424",
+      "title": "Narnia: The Magician's Nephew",
+      "key": "movie:1147572",
+      "source": "rss",
+      "text": "Greta Gerwig Debuts ‘Narnia’ Trailer, Opens Up About Telling an Intimate Story on “the Biggest Screen You Can Imagine”",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+      "relevant": true,
+      "audit_reason": "This trailer-event report adds the director's Q&A and explanation of her creative and music choices.",
+      "media_type": "movie",
+      "media_tmdb_id": 1147572,
+      "post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+      "content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "610b8f9c7020476047259103b7e45ffa0b50339b4ffa89a1da8d03cb7db33b4b",
+      "reasons": [
+        "duplicate_of:fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P447",
+      "title": "Ce qui nous mène à toi",
+      "key": "movie:1608590",
+      "source": "rss",
+      "text": "Khalil Cherti’s ‘Our Way to You,’ Selected by Cairo Film Festival, Boarded by Salaud Morisset (EXCLUSIVE)",
+      "url": "https://variety.com/2026/film/global/khalil-cherti-our-way-to-you-cairo-salaud-morisset-1236910212/",
+      "relevant": true,
+      "audit_reason": "An exclusive rights-acquisition report documents this film's concrete international-sales development.",
+      "media_type": "movie",
+      "media_tmdb_id": 1608590,
+      "post_id": "a4fec0198fdd4c0288be696a95802035447117273218713789b24c2b12d5f4b3",
+      "content_hash": "f14c898dd4b48fbc3e902d4f9b0836cb7bd7c4dbcd18892b23677df8f67d1370",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "c29fc4cbc4633d1aeb30838b934848fa9a22ac6938612ddfe8002af3af637a31",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P453",
+      "title": "Nuisance Bear",
+      "key": "movie:865342",
+      "source": "rss",
+      "text": "’14th,’ ‘You Can See Everything’ and ‘Once Upon a Time in Harlem’ Lead Critics Choice Documentary Awards Nominations",
+      "url": "https://variety.com/2026/film/awards/critics-choice-documentary-awards-nominations-2026-1236909304/",
+      "relevant": true,
+      "audit_reason": "The film is a leading nominee with five current documentary-awards nominations.",
+      "media_type": "movie",
+      "media_tmdb_id": 865342,
+      "post_id": "bbea9f4b33e917c3870681261a4a757d178490238df5a10a02dfc0fa14cdc04e",
+      "content_hash": "6797cf7822853e48876d90f4575eeb2e6d2ba68dcccd4ef55e07dbf2b0fb3fc7",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "6bd1add3499ea764eeb03fb70a6f39a74fa377aff941a245ba9c839a8c96ab29",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P455",
+      "title": "Once Upon a Time in Harlem",
+      "key": "movie:1596300",
+      "source": "rss",
+      "text": "‘14th’ Leads Critics Choice Documentary Awards Nominations",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/2026-critics-choice-documentary-awards-nominations-list-1236728472/",
+      "relevant": true,
+      "audit_reason": "The film's five nominations are a material current awards development.",
+      "media_type": "movie",
+      "media_tmdb_id": 1596300,
+      "post_id": "b930b4a8e4cb965765b0185cd93adb9a8a57547987d79e745985f10bc9505982",
+      "content_hash": "1deca89764be37a72dd7eeee2fd166b2f9736fb576b1ae0a630b408b686488d2",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "07579de17fbb619333d4fc1738fd9cd1aaee85482fe20915970fa6cfc2d4bc5b",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P457",
+      "title": "Project Hail Mary",
+      "key": "movie:687163",
+      "source": "rss",
+      "text": "Project Hail Mary's Rocky Actor Points Out A Subtle Detail You May Have Missed [Exclusive]",
+      "url": "https://www.slashfilm.com/2282856/project-hail-mary-movie-rocky-voice-actor-detail/",
+      "relevant": true,
+      "audit_reason": "The actor provides original performance insight about the film's central nonhuman character.",
+      "media_type": "movie",
+      "media_tmdb_id": 687163,
+      "post_id": "9346a36c55ba0fbf873b420bb82f816545858b32f1582a7142f2dc70a7a6e155",
+      "content_hash": "c6b4cb95991898ef549588b7af4141f9218545410e9bd2b7991330f8287445d0",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "cea8760ed5c9851ad1a20fbe8b9292d0eff2f7f1475bc50027bc1c1316e25e6a",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P474",
+      "title": "VisionQuest",
+      "key": "tv:213375",
+      "source": "rss",
+      "text": "Meet Terry Matalas, the New King of Sci-Fi TV",
+      "url": "https://www.indiewire.com/features/interviews/terry-matalas-king-of-sci-fi-tv-visionquest-1235220300/",
+      "relevant": true,
+      "audit_reason": "A substantial showrunner profile connects his creative approach to his current series.",
+      "media_type": "tv",
+      "media_tmdb_id": 213375,
+      "post_id": "cd052486969d094fcb63e02d1e82a99b54070fd746d71468ad3a1f2584c81ee6",
+      "content_hash": "4c8964d359965b6e94a88a5a094b7682ebaf714af98483f9596ab93541bfd318",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "interview",
+      "score": 0.0,
+      "dup_group": "725c4e33e1fb00bfded155e20968dd10ddbe48fbbc877cf9dad92e539ab17bf2",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P478",
+      "title": "The Jewel of the Nile",
+      "key": "movie:10303",
+      "source": "rss",
+      "text": "Michael Douglas on His Affair and Legal Battle with Kathleen Turner, and Nearly Landing in Moroccan Jail During ‘Jewel of the Nile’",
+      "url": "https://www.indiewire.com/features/interviews/michael-douglas-kathleen-turner-affair-interview-1235221560/",
+      "relevant": true,
+      "audit_reason": "A fresh memoir-event interview supplies specific recollections about making this film.",
+      "media_type": "movie",
+      "media_tmdb_id": 10303,
+      "post_id": "7653869f903ec260b0c4d89531c4aec1b5ae80cc0ce5c8b29e92f379ddbdcecd",
+      "content_hash": "4ae3e0bf3e5d33822f9c36864313f80d42b14ff4bd467d3b290a0e1786e18f95",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "interview",
+      "score": 0.0,
+      "dup_group": "2e9d0647b0db27b9a4f9c99ba3803212731f90b26fbf2562ea981476f9695e0b",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P486",
+      "title": "White Tiger Column",
+      "key": "movie:1796548",
+      "source": "rss",
+      "text": "Amsterdam’s IDFA Sets Int’l, Envision Competition Lineups, Adds ‘Musk,’ ‘You Can See Everything’",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/amsterdam-idfa-2026-international-envision-competition-musk-1236728520/",
+      "relevant": true,
+      "audit_reason": "The festival names this film as its opening-night selection, a concrete premiere development.",
+      "media_type": "movie",
+      "media_tmdb_id": 1796548,
+      "post_id": "f4520d5f0b169fda8d17ea1afad2e3994fd2462d9345bcd8f9e02ab6e2b3cb25",
+      "content_hash": "5169b9bfc3ba1e39e69bdfdd20ff271a779ca78711ff9f9513ad603bc534a4f2",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "c25fdcd5cbc7e77f8df61ee246c6a997ed08c6f015295cf95e6b336c8b7e1492",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P495",
+      "title": "Anaganaga Oka Raju",
+      "key": "movie:1407432",
+      "source": "youtube",
+      "text": "Naveen Polishetty is Hilarious | Anaganaga Oka Raju | Netflix India",
+      "url": "https://www.youtube.com/watch?v=CfT9GNAlS_E",
+      "relevant": true,
+      "audit_reason": "Official excerpt identifies a current movie performance, rather than an archive reupload.",
+      "media_type": "movie",
+      "media_tmdb_id": 1407432,
+      "post_id": "fc6b7a110cc7d0a051d58e8bec16a9b4de3b5c2e8158439280bf7c317e047f12",
+      "content_hash": "e51fa81b3a2589022b70518aec9099e7e2dbd3e5feaa15bc8fa5cce1fcd23405",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "official_video",
+      "score": 0.0,
+      "dup_group": "a80b9301c81e984b0ce50f7fa9848e43faf69d444cd8db9e69e144c36974950a",
+      "reasons": [
+        "no_substantive_video_format",
+        "playability:{\"checked_at\":1792080946451,\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"offline_editorial_assumption\",\"status\":\"playable\",\"video_id\":\"CfT9GNAlS_E\"}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P498",
+      "title": "The Trap",
+      "key": "tv:283371",
+      "source": "rss",
+      "text": "3 Jahre nach dem größten deutschen Netflix-Serien-Hit gibt es jetzt Nachschub: Ist \"Die Falle\" genauso gut wie \"Liebes Kind\"?",
+      "url": "https://www.filmstarts.de/nachrichten/1000227004.html",
+      "relevant": true,
+      "audit_reason": "The outlet directly evaluates the new series and compares it with its creator's earlier success.",
+      "media_type": "tv",
+      "media_tmdb_id": 283371,
+      "post_id": "60d14ec66b1b2cf6f7e96337c264d7e271d29ef4476c8a419cf512791eeb60f5",
+      "content_hash": "42bea66911aaf0675b209e611f443728993fdd7b64cc1bf1416d6034f0650c6f",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "20fd196d59545d530d1a7ca9f9dc0ec1c13d8371802391de46cd7f9c40833425",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P503",
+      "title": "The Child",
+      "key": "movie:1506401",
+      "source": "rss",
+      "text": "Netflix Unveils the Official Trailer for 'The Child'",
+      "url": "https://about.netflix.com/en/news/netflix-unveils-the-official-trailer-for-the-child",
+      "relevant": true,
+      "audit_reason": "The distributor publishes the film's official trailer and identifies its principal creators.",
+      "media_type": "movie",
+      "media_tmdb_id": 1506401,
+      "post_id": "08ecab8840638db01445bf744426c30656943e5271b5cb1d6952ed4fa52bd923",
+      "content_hash": "7efb9aeb6733776eebda85ed9d6de9043e446aeea6c4c03bba1a2ca24a2821c0",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "580aced2d4eefa418cbcdeb1ddeb987b1656612c468528deef42e4d2aa79154e",
+      "reasons": [
+        "duplicate_of:f6365390276cb3baa6503279f49843fe8f62b6eff335726f2631a42a3724d894"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P507",
+      "title": "Breaking Bad",
+      "key": "tv:1396",
+      "source": "rss",
+      "text": "‘There Will Never Be Another Like RJ Mitte’: Fellow Actors Remember the Late ‘Breaking Bad’ Star",
+      "url": "https://www.indiewire.com/news/obituary/rj-mitte-dead-tributes-1235221547/",
+      "relevant": true,
+      "audit_reason": "A focused reported obituary-and-tributes article addresses the death of the show's principal cast member.",
+      "media_type": "tv",
+      "media_tmdb_id": 1396,
+      "post_id": "89c99458dc1dd8d0b15186fff35c8a525c4c053197e66dc2dcf58730eed6183a",
+      "content_hash": "50cc5b5906238e851bcd792b0ca0d8e4675db369cc1334e9e263dc5426403221",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "e62f1d65c07178b84404966237dcb6782bb2b9a081679719ce066056c2f3fbbc",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P512",
+      "title": "Spider-Noir",
+      "key": "tv:220102",
+      "source": "rss",
+      "text": "Nach \"Spider-Noir\"-Aus hat Nicolas Cage genug von Amazon: Das ist der wahre Grund",
+      "url": "https://www.filmstarts.de/nachrichten/1000227015.html",
+      "relevant": true,
+      "audit_reason": "The full page reports Cage's refusal of an AI clause during this series' production, a concrete first-hand disclosure.",
+      "media_type": "tv",
+      "media_tmdb_id": 220102,
+      "post_id": "b39cb38c849963455dc08b1246edbbf7dd4688fad8da50641a7900d593264d33",
+      "content_hash": "e4a4095488990af0c3cfa0da08d9ccae4e5e7887f35971295dcb3ef518f32d78",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "2f406f9d61c8de7cd276017f4b07024a3417dd2c02f8c7b9f0d781fbd2058a01",
+      "reasons": [
+        "no_editorial_angle"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P513",
+      "title": "The Rookie",
+      "key": "tv:79744",
+      "source": "rss",
+      "text": "Doppelt gute Nachrichten für \"The Rookie\"-Fans: So geht es 2027 mit dem Serien-Hit weiter",
+      "url": "https://www.filmstarts.de/nachrichten/1000227024.html",
+      "relevant": true,
+      "audit_reason": "A season-return announcement and accompanying teaser supply a concrete current series development.",
+      "media_type": "tv",
+      "media_tmdb_id": 79744,
+      "post_id": "6a02adf477cfbd29495d105406493fd91a275940934e858e26a6f82bcf305bee",
+      "content_hash": "8e983ab3a80c0c86723bbf5a7f3dd1c1467164017cb81b8dc680b327949fe8b6",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "c738f129592e2209f4875c65868db6647b69a8ce2c10be69c4280b4d21ef779e",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P515",
+      "title": "Robocop",
+      "key": "tv:329324",
+      "source": "rss",
+      "text": "Fast 40 Jahre nach dem Sci-Fi-Kultfilm: Amazon holt für Serien-Reboot den Original-Regisseur zurück!",
+      "url": "https://www.filmstarts.de/nachrichten/1000227013.html",
+      "relevant": true,
+      "audit_reason": "The article reports the original filmmaker joining the new series, a concrete production development.",
+      "media_type": "tv",
+      "media_tmdb_id": 329324,
+      "post_id": "0eeba762943bc840d60eb68c12f43a947f99172ba5cd3dcdc0d15fec577d9e61",
+      "content_hash": "6488226bf58841ce3357dd46f4d3b8ac483aee0a73e1d164e3b6fc4f4bee8934",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "cbfccfd314d325ff73a1128e111f1b816bba9f155f11e7e23a2aa3cb2c42463e",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P520",
+      "title": "Rust",
+      "key": "movie:710258",
+      "source": "rss",
+      "text": "Director Rory Kennedy On ‘The Trial Of Alec Baldwin,’ And Why ‘Rust’ Star At First Reacted Negatively To Her Film",
+      "url": "https://deadline.com/2026/10/the-trial-of-alec-baldwin-director-rory-kennedy-interview-1237154646/",
+      "relevant": true,
+      "audit_reason": "A director interview directly examines the fatal incident on this film's set and its unresolved production questions.",
+      "media_type": "movie",
+      "media_tmdb_id": 710258,
+      "post_id": "5bea928b68caa80fb9d60fa8dea688223b05eb2a3c5047f759bfa77c6cfc773f",
+      "content_hash": "83bb648e4697703e746cd6ac7957ce4e0ec35291a5b8883b0df8b696613e51cb",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "8245aea963d6b9cc4aa5b1323702abe5ff2d776413614d6184440161fc706156",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P544",
+      "title": "Gnome Alone 2: Game of Gnomes",
+      "key": "movie:1795251",
+      "source": "rss",
+      "text": "‘Gnome Alone’ Sequel ‘Game Of Gnomes’ From ‘The Nut Job’ Director Launching Ahead Of AFM",
+      "url": "https://deadline.com/2026/10/gnome-alone-sequel-game-of-gnomes-launching-afm-1237154639/",
+      "relevant": true,
+      "audit_reason": "Exclusive reporting announces production, returning director and international-sales plans for the sequel.",
+      "media_type": "movie",
+      "media_tmdb_id": 1795251,
+      "post_id": "1b6928b5dcdc87f092123d4b1453ebaad040c153e2071d9df3df4b51937ab4b9",
+      "content_hash": "7f46ae1c3107a7e875719abe7ca8a0151ddcd0a40c2bb150dde98bd8aad88a28",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "815c94c63e35b7109d99a40b60529e8d95c32b20897cdb24595380cd520a3832",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P546",
+      "title": "Zakir Khan: Papa Yaar",
+      "key": "movie:1760576",
+      "source": "youtube",
+      "text": "Zakir Khan ROASTS Desi Mothers 🤣 | Papa Yaar | @ZakirKhan | Netflix India",
+      "url": "https://www.youtube.com/watch?v=yjMLk6F-ZLA",
+      "relevant": true,
+      "audit_reason": "Official current-special excerpt identifies a substantive stand-up routine.",
+      "media_type": "movie",
+      "media_tmdb_id": 1760576,
+      "post_id": "4fcb547952c51012af26ae5e83044ca89cfea0bef54f8b6a66c8307d8950f6b0",
+      "content_hash": "25253f23772ce7b0660d17cca85d1af396594ae0a8bbbde723229d44dbcecc1e",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "official_video",
+      "score": 0.0,
+      "dup_group": "1ec9f12421831d642b003a0b4dc09438e737f6cd39c919cba45b787a0e3eca3a",
+      "reasons": [
+        "no_substantive_video_format",
+        "playability:{\"checked_at\":1792080946451,\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"offline_editorial_assumption\",\"status\":\"playable\",\"video_id\":\"yjMLk6F-ZLA\"}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P549",
+      "title": "Ali G: Who Iz I?",
+      "key": "movie:1727734",
+      "source": "rss",
+      "text": "Sacha Baron Cohen and 300 Ali G Look-Alikes Descend on London Ahead of New Movie ‘Who Iz I?’",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/sacha-baron-cohen-ali-g-look-alikes-london-who-iz-i-amazon-1236727280/",
+      "relevant": true,
+      "audit_reason": "A title-focused report covers a new in-character launch event and imminent limited theatrical release.",
+      "media_type": "movie",
+      "media_tmdb_id": 1727734,
+      "post_id": "65a288155c9d68ae187261a26e602d9118f1d67e4d49d7a6fba8f008341507ed",
+      "content_hash": "feb1ebfd726040e182121460c068dcef35aa76ee9864768b91dcfa8f222edbd7",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "b24933fe596a1c4f8a634fb3e17e3bc2f95aa68563442d3da576b2f9e70f1188",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P550",
+      "title": "Artificial",
+      "key": "movie:1492198",
+      "source": "rss",
+      "text": "‘Artificial’s Ike Barinholtz Teases What Makes His “Menacing” Elon Musk Performance “A Little Ridiculous”",
+      "url": "https://deadline.com/2026/10/artificial-ike-barinholtz-menacing-elon-musk-performance-1237154451/",
+      "relevant": true,
+      "audit_reason": "A cast member discusses the creative choices behind his portrayal in the film.",
+      "media_type": "movie",
+      "media_tmdb_id": 1492198,
+      "post_id": "e023e6e0470aaad88ec7fccd843cd1bde1d3a1ef82b1c4215eb44297695deb75",
+      "content_hash": "45594dcb1b680156a5a61fc05872f19a2a00a65e7a4c6fc9ed292687786ec351",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "e93a7ad86b600a40e2e82bfe937583dbbe224c34e88d20ea6d22e83f130c9143",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "keep"
+    },
+    {
+      "audit_id": "P562",
+      "title": "The Social Reckoning",
+      "key": "movie:1281331",
+      "source": "rss",
+      "text": "‘Social Reckoning’ Goes Dark With $5.5M as ‘Other Mommy’ Delivers at Box Office",
+      "url": "https://www.hollywoodreporter.com/movies/movie-news/other-mommy-box-office-social-reckoning-opening-1236726908/",
+      "relevant": true,
+      "audit_reason": "The story reports the movie's current opening gross and commercial underperformance.",
+      "media_type": "movie",
+      "media_tmdb_id": 1281331,
+      "post_id": "ca7d28f6b3b7840798f96cf065d0028b81ccb54ee95c746986d1ac8f3880da46",
+      "content_hash": "313131899849c477eb6d30cc3b1d203fee7caf818885cc45fb51c29294dec9dd",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "0868400a4c7c9bef89f1df780d0d57f5f93ebde29483a2145ad0bb562b354517",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P572",
+      "title": "Visitation",
+      "key": "movie:1477572",
+      "source": "rss",
+      "text": "Heimsuchung",
+      "url": "https://www.epd-film.de/filmkritiken/heimsuchung",
+      "relevant": true,
+      "audit_reason": "The stored full review directly evaluates the film and its German theatrical release.",
+      "media_type": "movie",
+      "media_tmdb_id": 1477572,
+      "post_id": "d138d383066c236f36ce86636d7513cdc77480d781d207862cc62448ae842883",
+      "content_hash": "c2d4b1ffa0924ec738d7c6f4ba7e1b7b02c30f615a2e94dbaebac8a8c312008d",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "96a4f6bd7ff9acd95838a6226f9e63386025c5979989c15d076141b964bb2f33",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P580",
+      "title": "Bedford Park",
+      "key": "movie:1470198",
+      "source": "rss",
+      "text": "‘Bedford Park’ Star Moon Choi Charts Her Own Path Between Korea and Hollywood",
+      "url": "https://www.hollywoodreporter.com/movies/movie-features/bedford-park-moon-choi-korea-hollywood-1236726874/",
+      "relevant": true,
+      "audit_reason": "The lead actress discusses this film and its festival presentation in an original profile.",
+      "media_type": "movie",
+      "media_tmdb_id": 1470198,
+      "post_id": "65520cf68acb039f65e7d4375e14b74c7d2c8dab411c5878bcd63ab1997f5bc9",
+      "content_hash": "c8d6197ff8473588efaebf8c3873ccdfedffbfa77ea0fc7e114cff0148d0df05",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "f5bc2016d249c3e5ade839c1af58b18dd907a2ddf8bf27ece12c2f753aa7ae8e",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P599",
+      "title": "Sense and Sensibility",
+      "key": "movie:1503762",
+      "source": "rss",
+      "text": "Sinn und Sinnlichkeit",
+      "url": "https://www.epd-film.de/filmkritiken/sinn-und-sinnlichkeit",
+      "relevant": true,
+      "audit_reason": "A full named-critic review evaluates this new adaptation's performances and interpretation.",
+      "media_type": "movie",
+      "media_tmdb_id": 1503762,
+      "post_id": "85e4b9443fe0f33a6e6aeffbf1392f41061672909365b6a6f604f4ab9e3b9d53",
+      "content_hash": "78225af932b7d76b94a971b821e0a735267bc0c01ac76ec272e256087c4e0b88",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "d35e0f9dd58cfecd836d95d07f1c71a2c280e0b9d26289eb2f311ba87fd1d213",
+      "reasons": [
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P601",
+      "title": "Under Siege",
+      "key": "tv:135117",
+      "source": "rss",
+      "text": "'Under Siege' Arrives on Netflix on November 6",
+      "url": "https://about.netflix.com/en/news/under-siege-arrives-on-netflix-on-november-6",
+      "relevant": true,
+      "audit_reason": "The distributor announces a specific premiere date and describes the new series' historical subject.",
+      "media_type": "tv",
+      "media_tmdb_id": 135117,
+      "post_id": "dc999c37f5244eb8f99ce0312ab251d8e06e3b69db71080de387408a460e79e2",
+      "content_hash": "71014faca581018dc9d391d49f9089cd0077714eda2712434e73e49da4d14c47",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "ec04236864402c629e7b3b61ab2aa3f71765fdc03411c0de698814a615c8c7a1",
+      "reasons": [
+        "no_concrete_official_announcement"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P616",
+      "title": "Sacrifice",
+      "key": "movie:1284186",
+      "source": "rss",
+      "text": "Sacrifice",
+      "url": "https://www.epd-film.de/filmkritiken/sacrifice",
+      "relevant": true,
+      "audit_reason": "The stored full review evaluates the film's satirical ambition, writing and execution.",
+      "media_type": "movie",
+      "media_tmdb_id": 1284186,
+      "post_id": "ab6120da1081a7c1ddca61984f1d74cf4eedc0fb2c64ba2a84af15cd192cef8e",
+      "content_hash": "419232f3084ef1e10656ba9a0e6993b9922f1e009a0d92ed64801cf4416be3d2",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "b2e4f55162d88da7bfba0603641b2836eec1ebd7e6d52136d155584acdbe7514",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P617",
+      "title": "Matchbox the Movie",
+      "key": "movie:1148365",
+      "source": "rss",
+      "text": "‘Matchbox: The Movie’ Review: If Skydance’s Theatrical Releases Are as Blandly Algorithmic as Its Streaming Ones, Hollywood Is Already Dead",
+      "url": "https://www.indiewire.com/criticism/movies/matchbox-the-movie-review-apple-tv-1235220594/",
+      "relevant": true,
+      "audit_reason": "A dedicated critic provides substantive evaluation of this action film and its formula.",
+      "media_type": "movie",
+      "media_tmdb_id": 1148365,
+      "post_id": "52382a879eba5a360cafae8d903d1369220d97d18538355abdd891ac8b857428",
+      "content_hash": "bbcd4423842ce3f304e664a9b1a681c5dc057fecf19839e1d13b08f5a87f99cc",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "a66ca7ca99cb3d891f15bdcd7481f636b3f8245f3fe5c95f2a4402b0c572d303",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P619",
+      "title": "Run Hide Fight: Pawn Shop",
+      "key": "movie:1786433",
+      "source": "rss",
+      "text": "Crew Members on Ben Shapiro’s Pro-ICE Film Were Surprised by the Movie’s MAGA Politics. What Did They Deserve to Know?",
+      "url": "https://www.indiewire.com/features/interviews/pawn-shop-crew-script-disclosure-pro-ice-movie-1235220533/",
+      "relevant": true,
+      "audit_reason": "Original crew testimony concerns this film's script disclosure and production politics.",
+      "media_type": "movie",
+      "media_tmdb_id": 1786433,
+      "post_id": "60c52155c00d29efc6f59116f5e84ad49411d8b0f512e16df554e25976eda6df",
+      "content_hash": "328290a8514b9c08cd8a802d7d4cffa7ae76806da28725ba354732a21c6f6af9",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "interview",
+      "score": 0.0,
+      "dup_group": "1e02adabd1edacd193baa9d32207cb85a2d29f58802cecc76fa3cb9ad21ab409",
+      "reasons": [
+        "outside_publication_window",
+        "peripheral_title"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P620",
+      "title": "Musk",
+      "key": "movie:1096228",
+      "source": "rss",
+      "text": "‘Musk’ Review: Alex Gibney’s Distressing Biography of an Uber-Wealthy Tech Bro Is Less Bombshell Than Summary of How We Got Here",
+      "url": "https://www.indiewire.com/criticism/movies/musk-documentary-review-alex-gibney-elon-musk-1235215433/",
+      "relevant": true,
+      "audit_reason": "A dedicated critic assesses the documentary's research, structure and access limitations.",
+      "media_type": "movie",
+      "media_tmdb_id": 1096228,
+      "post_id": "f1eae7a48d52b8958d3e26457260f92144bc4e9a1a330db05a4b4bbc33f3db9b",
+      "content_hash": "c0e88972ecda89b330d27be2f3ae6bb4e3b67d64217fe07a3d5653e790ddd559",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "d674332490e5bfa8cb248a6aef3d64425b36d28c8c86f159b9edacad99d5f5ec",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P622",
+      "title": "Spider-Man: Brand New Day",
+      "key": "movie:969681",
+      "source": "youtube",
+      "text": "Spider-Man: Brand New Day | Fans Unite Around The World ft. Destin Daniel Cretton",
+      "url": "https://www.youtube.com/watch?v=CPzqXzpH-p8",
+      "relevant": true,
+      "audit_reason": "Official premiere feature includes the director and fan event, supplying a concrete release hook.",
+      "media_type": "movie",
+      "media_tmdb_id": 969681,
+      "post_id": "7c6fed63fdcdded6ff3fbe25ae0e29a3788ea36fea3bdf60036edb6e59c09cc6",
+      "content_hash": "909b6212dc955cf1f4638270cf44878e031b1055cd615c3e6e4d43270b88e0b3",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "official_video",
+      "score": 0.0,
+      "dup_group": "34856dfb7e51f94b55aed3ca124f66406c57fdd1fdfa9993e85147773ca6e433",
+      "reasons": [
+        "no_substantive_video_format",
+        "playability:{\"checked_at\":1792080946451,\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"watch\",\"reason\":\"offline_editorial_assumption\",\"status\":\"playable\",\"video_id\":\"CPzqXzpH-p8\"}"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P623",
+      "title": "Ben'Imana",
+      "key": "movie:1405200",
+      "source": "rss",
+      "text": "Cannes Prize Winner ‘Ben’Imana’ Becomes First Best International Feature Oscar Submission for Rwanda",
+      "url": "https://www.indiewire.com/awards/industry/benimana-first-best-international-feature-oscar-rwanda-1235220779/",
+      "relevant": true,
+      "audit_reason": "The film becomes its country's first Oscar submission, a concrete current awards development.",
+      "media_type": "movie",
+      "media_tmdb_id": 1405200,
+      "post_id": "430ed23bdf2765536f6a1e12285bb4d8178706be3cf2d3d870907b8a7f59472e",
+      "content_hash": "4a5a23a396d87c558e440ffbb61c23290836e96ab8193b689f1ab4f556bfc31a",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "44b00df1e77438f8412b3532c29f3375da849aba6d56368274dec492917bff34",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P628",
+      "title": "Overacting",
+      "key": "movie:1630420",
+      "source": "rss",
+      "text": "The Bigger, The Better: Netflix Releases Main Trailer for ‘Overacting’ When Fake Missions Spiral Beyond Control",
+      "url": "https://about.netflix.com/en/news/overacting-trailer",
+      "relevant": true,
+      "audit_reason": "The distributor supplies the film's official main trailer and premiere date.",
+      "media_type": "movie",
+      "media_tmdb_id": 1630420,
+      "post_id": "68d646cb3308085dd8f8d5ecfcac7bde2df63d41249b2744ad3fe30f611c5345",
+      "content_hash": "98f5e8e11002f547f52911c5cf4f5e88dfc3cc2737bcc99442a2c9590547c5bb",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "news",
+      "score": 0.0,
+      "dup_group": "98d28c822f1c5fb2fe50b6ab10dbca11cd0b8b3740c824763bb5dd3ed6ec6dd2",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    },
+    {
+      "audit_id": "P630",
+      "title": "Ted Lasso",
+      "key": "tv:97546",
+      "source": "rss",
+      "text": "‘Ted Lasso’ Season 4 Found Its Way by Settling for Less",
+      "url": "https://www.indiewire.com/criticism/shows/ted-lasso-season-4-finale-review-new-season-5-spoilers-1235220582/",
+      "relevant": true,
+      "audit_reason": "A substantial season-finale review evaluates the current season's creative choices and results.",
+      "media_type": "tv",
+      "media_tmdb_id": 97546,
+      "post_id": "60e48f0fe210e1ba4e0a5b4ef59182c0429b5e169bff2df413b97f2c190bae27",
+      "content_hash": "d8ccee17360db8a0be950caabbe32d96deda3a1cea06294aa06f8a61228d98be",
+      "version": "relevance-1",
+      "status": "drop",
+      "kind": "review",
+      "score": 0.0,
+      "dup_group": "cb1ac7a11132b1719ea1d751d8923ef1eeb98880463cc7824738595e8a167abc",
+      "reasons": [
+        "outside_publication_window"
+      ],
+      "judged_at": "2026-10-15T16:15:46.451000+00:00",
+      "after_status": "drop"
+    }
+  ]
+}
