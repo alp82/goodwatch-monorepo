@@ -43,6 +43,15 @@ class DeterministicTests(unittest.TestCase):
         self.assertTrue(reference_only('Ted Lasso', '‘Ted Lasso’s Cristo Fernández To Host'))
         self.assertFalse(reference_only('Elsbeth', '‘Elsbeth’ Puts a ‘Succession’ Star in the Hot Seat'))
 
+    def test_german_references_stage_and_reboots_are_not_linked(self):
+        self.assertTrue(reference_only('Top Gun: Maverick', 'Sci-Fi mit Tom Cruise – vom Regisseur von "Top Gun: Maverick"'))
+        self.assertTrue(reference_only('Below', '"Below"-Star Josh Hartnett'))
+        catalog = {'a few good men': [row('movie', 4, 'A Few Good Men', 1992)]}
+        self.assertEqual(self.decide(post('Broadway Box Office: ‘A Few Good Men,’ ‘860’ Draw Crowds'), catalog), [])
+        catalog = {'baywatch': [row('tv', 5, 'Baywatch', 1989)]}
+        p = post('Die Serie wird neu aufgelegt: Erster Trailer zur "Baywatch"-Serie 1989', context='David Hasselhoff')
+        self.assertEqual(self.decide(p, catalog, {'tv:5': {'David Hasselhoff'}}), [])
+
     def test_only_first_title_unless_headline_lists_works(self):
         catalog = {'elsbeth': [row('tv', 1, 'Elsbeth', 2024)], 'the mentor': [row('movie', 2, 'The Mentor', 2026)]}
         p = post('‘Elsbeth’ Welcomes Guest From ‘The Mentor’ in Season 4')

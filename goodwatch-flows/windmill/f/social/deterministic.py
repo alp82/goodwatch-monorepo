@@ -27,6 +27,9 @@ FURNITURE = re.compile(r'(?i)^(?:official\s+)?(?:(?:final|teaser|first|new|main|
                        r'season \d+|episode \d+|part \d+|now streaming|in theaters.*|only in theaters.*)$')
 TV_WORDS = re.compile(r'(?i)\b(?:series|season|seasons|episode|episodes|showrunner|miniseries|docuseries|sitcom|'
                       r'staffel|folge|serie|temporada|saison|s\d{1,2}\s?e\d{1,2}|tv show)\b')
+# Stage productions and announced new versions never resolve to the old screen work.
+STAGE_WORDS = re.compile(r'(?i)\b(?:broadway|west end|stage|musical|theatre production|play)\b')
+NEW_VERSION = re.compile(r'(?i)\b(?:reboot|remake|redo|revival|neu aufgelegt|neuauflage|neuverfilmung|neue version)\b')
 GAME_WORDS = re.compile(r'(?i)\b(?:video ?games?|gaming|gamers?|playstation|xbox|nintendo|steam|shoot-?.em-?up)\b')
 MOVIE_WORDS = re.compile(r'(?i)\b(?:film|films|movie|movies|feature|box office|director\'s cut|in theaters|'
                          r'kino|película|pelicula|filme)\b')
@@ -39,11 +42,12 @@ STOP = {'the', 'a', 'an', 'of', 'and', 'in', 'on', 'to', 'for', 'at', 'by', 'is'
 
 
 # A title named only as a reference point ("a 'Succession' star", "from the director of X").
-REFERENCE_AFTER = re.compile(r"(?i)^[’'\"”»]*\s*(?:'s\s+|’s\s+)?(?:(?:co-?)?stars?|actor|actress|alum|veteran|(?:co-?)?creators?|director|"
+REFERENCE_AFTER = re.compile(r"(?i)^[’'\"”»]*-?\s*(?:'s\s+|’s\s+)?(?:(?:co-?)?stars?|actor|actress|alum|veteran|(?:co-?)?creators?|director|"
                              r"maker|makers|-?macherin|-?macher|spinoff|spin-off|sequel|prequel|remake|reboot|musical|stage|"
                              r"franchise|universe|writer|showrunner|producer|team|fame|fans?)\b")
 REFERENCE_BEFORE = re.compile(r"(?i)(?:from the (?:director|creator|creators|makers|writer|producers?) of|since|than|like|"
-                              r"in the vein of|after|second|third|fourth|fifth|follow-up to|sequel to|spinoff of|star of|creator of)\s*[‘'\"“«]*$")
+                              r"in the vein of|after|second|third|fourth|fifth|vom regisseur von|von den machern von|vom macher von|"
+                              r"kontrastprogramm zu|im stil von|wie|follow-up to|sequel to|spinoff of|star of|creator of)\s*[‘'\"“«]*$")
 
 
 # "'Ted Lasso's Cristo Fernández" is about the person, not the show.
@@ -235,7 +239,8 @@ class DeterministicMatcher:
         plain_text = ' ' + norm(text) + ' '
         slug = slug_words(post)
         published = str(post.get('published_at') or '')[:4]
-        years = {int(y) for y in YEAR.findall(text) if y != published}
+        years = {int(y) for y in YEAR.findall(headline) if y != published}
+        stage, renewed = bool(STAGE_WORDS.search(headline)), bool(NEW_VERSION.search(headline))
         season = bool(SEASON.search(text))
         tv_hint, movie_hint = bool(TV_WORDS.search(text)), bool(MOVIE_WORDS.search(text))
         resolved = [m for m in found if catalog.get(m['key']) and m['where'] == 'headline']
@@ -244,7 +249,11 @@ class DeterministicMatcher:
                                              for o in resolved)]
         accepted = {}
         for m in sorted(found, key=lambda m: (-m['rank'], headline.lower().find(m['raw'].lower()), -len(m['key']))):
-            rows = catalog.get(m['key'], [])
+            rows = [r for r in catalog.get(m['key'], []) if r.get('title')]
+            if renewed and published.isdigit():
+                rows = [r for r in rows if not r.get('release_year') or r['release_year'] >= int(published) - 1]
+            if stage:
+                continue
             # The title must be named in the headline (the article card for Bluesky).
             if not rows or len(rows) > MAX_SHARED or m['where'] != 'headline' or reference_only(m['raw'], headline):
                 continue
