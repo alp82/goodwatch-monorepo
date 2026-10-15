@@ -46,6 +46,10 @@ interface AuthContext {
 	getSupabase: () => Promise<SupabaseClient>
 	user: User | null
 	loading: boolean
+	/** Better Auth is on (BETTER_AUTH_ENABLED): there is no Supabase client, and the member comes from the root loader. */
+	betterAuth: boolean
+	/** Asks the server who is signed in now, after a sign-in or sign-out through Better Auth. */
+	refreshUser: () => void
 }
 
 export const AuthContext = createContext<AuthContext>({
@@ -53,6 +57,8 @@ export const AuthContext = createContext<AuthContext>({
 	getSupabase: () => Promise.reject(new Error("No auth provider")),
 	user: null,
 	loading: true,
+	betterAuth: false,
+	refreshUser: () => {},
 })
 
 export function useSupabase() {
