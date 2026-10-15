@@ -251,12 +251,21 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				}
 				let current: Stored | null
 				try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
+				// A primary-key read may be served by a replica that has acknowledged our
+				// rejected CAS but not yet applied the version that rejected it. Such a
+				// read-back (no newer version, no receipt) proves nothing either way: read
+				// again, bounded. The decision below still needs our receipt or a newer version.
+				for (let attempt = 0; response?.rowcount === 0 && attempt < 10 && current && current.seq <= original.seq && !current.receipts.some(r => r.operation === operation); attempt++) {
+					await new Promise(resolve => setTimeout(resolve, Math.min(5 * 2 ** attempt, 200)))
+					try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
+				}
 				const receipt = current?.receipts.find(r => r.operation === operation)
 				if (receipt) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
 					return result
 				}
-				if (response?.rowcount === 0 && current && current.seq !== original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) {
+				// Only a newer version proves a competitor: a lagging copy can be older than our base.
+				if (response?.rowcount === 0 && current && current.seq > original.seq && original.seq >= (current.receipts[0]?.baseSeq ?? Infinity)) {
 					if (model === "user" && emailClaim !== original.emailClaim && current.emailClaim !== emailClaim) await releaseEmail(update.email, original.row.id, emailClaim)
 					return null
 				}
