@@ -199,13 +199,17 @@ Two choices made while building, both on the side of the canonical names:
   scores `ALIAS_STEP` (0.01) below a title match of the same kind: an exact alias is 1.99, below an exact title (2)
   and above a phrase match (1.05).
 
+One owner decision after the first evaluation: **"like X" takes a 2-character key when it is Chinese, Japanese or
+Korean** ("like 教父", "like 대부" find The Godfather). Every other key still needs 3 characters, so "like up" and
+"like pa" resolve nothing.
+
 **Evaluation**, `scripts/search-alias-eval.ts` with `app/server/search-ranking/alias-eval.fixture.json`, top-1 / top-5
-before → after. The palette is its 8 rows; the title lookup + blend is the palette's 20 rows through
+before → after, rerun with the 2-character CJK keys. The palette is its 8 rows; the title lookup + blend is the palette's 20 rows through
 `title-blend.server.ts`, without TMDB and without the ranked list.
 
 | queries | n | palette | title lookup + blend | "like X" top-1 |
 |---|---|---|---|---|
-| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% |
+| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 92% |
 | localized, first word | 52 | 0% / 2% → 37% / 56% | 0% / 2% → 21% / 56% | |
 | localized, first 3 characters | 51 | 0% / 0% → 20% / 35% | 0% / 2% → 10% / 37% | |
 | canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% |
@@ -216,9 +220,12 @@ before → after. The palette is its 8 rows; the title lookup + blend is the pal
 Every canonical hit rate is unchanged. Canonical top-5 lists change only where aliases fill places after the titles,
 and in the blend for "Dune", where exact aliases (1.99) pass canonical rows the blend scores 0. The canonical and
 ambiguous misses are the same before and after (the palette orders by votes, the blend by TMDB popularity). The
-shared German name "Das Ding aus einer anderen Welt" resolves to The Thing (1982) by votes. "Like X" misses come from
-existing rules: keys shorter than 3 characters ("教父", "대부"), titles below 10,000 votes, and names that resolve to
-a person first ("Spade" in "Il Trono di Spade"). Prefixes of localized names miss mostly on their first word
+shared German name "Das Ding aus einer anderen Welt" resolves to The Thing (1982) by votes. With the 2-character CJK
+keys, "like X" finds every Chinese and Korean name (80% → 100% each; 88% → 92% over the localized set). The 7
+remaining "like X" misses come from existing rules: two titles below 10,000 votes ("Cranberry Sorbet", "The Blood
+Lands"), the 2-letter Latin key "up", and names that resolve to a person or team first: "Krieg der Sterne" (Jim
+Krieg), "Der Pate" (Jonas and Josh Pate), "Il Trono di Spade" (David Spade) and, before aliases too, "Forrest Gump"
+(Frederic Forrest). Prefixes of localized names miss mostly on their first word
 ("Le", "El", "Der", "Il"), which many titles share. The set types names from their start; its CJK names
 and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
 
