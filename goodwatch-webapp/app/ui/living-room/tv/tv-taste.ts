@@ -1,5 +1,3 @@
-import type { PresentedMedia } from "../../../utils/media-presentation.ts"
-import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // What the new TV's Taste shows, and what the taste quiz says about the title it asks about. Pure, so the three
 // states, the words and the quiz's write path stay in one place and have tests.
 //
@@ -18,6 +16,8 @@ import type {
 } from "~/server/taste-portrait/view"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import type { QuizPick } from "~/ui/taste-quiz/use-quiz-picks"
+import type { PresentedMedia } from "../../../utils/media-presentation.ts"
+import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import type { TvListTitle } from "./TitleList.tsx"
 import {
@@ -151,7 +151,7 @@ export function sideLine(side: Pick<Side, "attributes">): string {
 	return `${[first, ...rest.map((label) => label.toLowerCase())].join(", ")}.`
 }
 
-/** The sides as the TV shows them: at most four, each with the titles of it the person rated. */
+/** The sides as the TV shows them: every one (two to five), each with the titles of it the person rated. */
 export function tvSides(view: Pick<SidesView, "sides" | "titles">): TvSide[] {
 	return view.sides.slice(0, TASTE_SIDES).map((side) => ({
 		id: side.id,

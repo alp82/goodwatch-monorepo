@@ -160,7 +160,7 @@ function Foot({ children }: { children?: ReactNode }) {
 }
 
 /** A side's colour: a tint over its picture, so the tiles read as different sides. */
-const SIDE_HUES = [215, 28, 265, 160]
+const SIDE_HUES = [215, 28, 265, 160, 340]
 
 function Sides({
 	items,
@@ -175,6 +175,8 @@ function Sides({
 	if (at) last.current = at.id
 	const shown = sides.find((side) => side.id === last.current) ?? sides[0]
 	const many = sides.length > 3
+	// Five tiles are narrow: smaller words with more room, broken at syllables where the browser can, else at the edge.
+	const five = sides.length > 4
 	const tile = (side: TvSide, n: number) => (
 		<Item
 			key={side.id}
@@ -195,15 +197,17 @@ function Sides({
 				}}
 			/>
 			<span
-				className={`absolute ${P ? "inset-x-3 bottom-3" : "inset-x-5 bottom-5"}`}
+				className={`absolute ${P ? "inset-x-3 bottom-3" : five ? "inset-x-3.5 bottom-4" : "inset-x-5 bottom-5"}`}
 			>
 				<span
-					className={`line-clamp-3 font-bold leading-[1.05] ${P ? (many ? "text-[20px]" : "text-[22px]") : many ? "text-[30px]" : "text-[36px]"}`}
+					className={`line-clamp-3 font-bold leading-[1.05] ${five ? "hyphens-auto [overflow-wrap:break-word]" : ""} ${P ? (five ? "text-[17px]" : many ? "text-[20px]" : "text-[22px]") : five ? "text-[21px]" : many ? "text-[30px]" : "text-[36px]"}`}
 				>
 					{side.name}
 				</span>
 				{!P && (
-					<span className="mt-2 line-clamp-2 text-[22px] leading-tight text-white/85">
+					<span
+						className={`mt-2 line-clamp-2 leading-tight text-white/85 ${five ? "text-[18px]" : "text-[22px]"}`}
+					>
 						{side.line}
 					</span>
 				)}
@@ -219,7 +223,8 @@ function Sides({
 			: undefined,
 		dim: 0.86,
 	}
-	// The phone: the sides side by side (four stand two by two), the focused one's line over them, and Rate more
+	// The phone: the sides side by side (four stand two by two, five three over two), the focused one's line over
+	// them, and Rate more
 	// beside the Expand key's corner.
 	if (P)
 		return (
@@ -234,7 +239,7 @@ function Sides({
 					<div
 						className="mt-2.5 grid min-h-0 flex-1 gap-3"
 						style={{
-							gridTemplateColumns: `repeat(${many ? 2 : sides.length}, minmax(0, 1fr))`,
+							gridTemplateColumns: `repeat(${five ? 3 : many ? 2 : sides.length}, minmax(0, 1fr))`,
 						}}
 					>
 						{sides.map(tile)}

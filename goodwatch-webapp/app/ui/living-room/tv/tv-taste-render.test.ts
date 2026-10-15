@@ -30,6 +30,7 @@ const rendered = JSON.parse(
 		| "two"
 		| "three"
 		| "four"
+		| "five"
 		| "threeSecond"
 		| "threeOnBar"
 		| "picks"
@@ -149,12 +150,13 @@ test("Taste while the portrait is read keeps its one key", () => {
 	}
 })
 
-test("the sides are tiles, two to four of them, counted in the bar, with Rate more after them", () => {
-	const { two, three, four } = rendered.taste
+test("the sides are tiles, two to five of them, counted in the bar, with Rate more after them", () => {
+	const { two, three, four, five } = rendered.taste
 	for (const [screen, word, sides] of [
 		[two, "Two", 2],
 		[three, "Three", 3],
 		[four, "Four", 4],
+		[five, "Five", 5],
 	] as const)
 		for (const edition of EDITIONS) {
 			const { html, items } = screen[edition]
@@ -190,11 +192,16 @@ test("the picture and the phone's line follow the focused side, and stay while t
 	assert.equal(count(three.desktop.html, "/t/p/w780/side-"), 3)
 })
 
-test("four sides stand two by two on the phone, and side by side on the desktop", () => {
-	const { three, four } = rendered.taste
+test("four sides stand two by two on the phone and five three over two, and side by side on the desktop", () => {
+	const { three, four, five } = rendered.taste
 	assert.match(four.phone.html, /grid-template-columns:repeat\(2,/)
+	assert.match(five.phone.html, /grid-template-columns:repeat\(3,/)
 	assert.match(three.phone.html, /grid-template-columns:repeat\(3,/)
 	assert.match(four.desktop.html, /grid-template-columns:repeat\(4,/)
+	assert.match(five.desktop.html, /grid-template-columns:repeat\(5,/)
+	// Five tiles are narrow: their names are drawn smaller than four's.
+	assert.match(five.desktop.html, /text-\[21px\]/)
+	assert.ok(!four.desktop.html.includes("text-[21px]"))
 	// Two sides keep a tile's width: they do not stretch over the picture.
 	assert.match(
 		rendered.taste.two.desktop.html,

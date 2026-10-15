@@ -2,8 +2,8 @@
 // quiz and the rating the way they are drawn once their code is there, and prints the HTML with the item ids the
 // machine lists for each.
 import { renderToStaticMarkup } from "react-dom/server"
-import { TvScreen } from "./TvScreen"
 import type { TvListTitle } from "./TitleList"
+import { TvScreen } from "./TvScreen"
 import { Layer, TvViewProvider } from "./kit"
 import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
 import type { TvCanvas } from "./room-tv"
@@ -12,8 +12,8 @@ import Rate from "./screens/Rate"
 import Taste from "./screens/Taste"
 import {
 	EMPTY_CONTEXT,
-	type TvContext,
 	type TvScreen as Screen,
+	type TvContext,
 	type TvState,
 	focusedItem,
 	tvItems,
@@ -67,6 +67,7 @@ const SIDES = [
 	side("gentle-comedy", "Warm comedies", 2, 2),
 	side("big-ideas", "Mind-bending futures", 3),
 	side("true-stories", "Quiet true stories", 4),
+	side("odd-comedy", "Physically and situationally funny stories", 5),
 ]
 const PICKS = [1, 2, 3, 4, 5].map((n) => listTitle(`show-${900 + n}`, n))
 const ASKED = {
@@ -240,6 +241,7 @@ console.log(
 			two: tasteOf(sidesOf(2)),
 			three: tasteOf(sidesOf(3)),
 			four: tasteOf(sidesOf(4)),
+			five: tasteOf(sidesOf(5)),
 			threeSecond: tasteOf(sidesOf(3), TASTE, "side:gentle-comedy"),
 			threeOnBar: tasteOf(sidesOf(3), TASTE, "bar:menu"),
 			picks: tasteOf(picks),
