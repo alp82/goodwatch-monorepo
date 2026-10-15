@@ -7,7 +7,7 @@ description: "Reads every movie and show with a title analysis from Crate and
   (title-snapshot:<version>:ratings:<n> and the manifest's ratings field); a
   failure there is logged and the snapshot is published without it. Publishes
   only when an analysis was added, changed or removed since the current
-  version. Started after each scheduled vector copy, nightly, and on demand. Successful publish and no-change runs enqueue G1 for the explicit preview list via g1_trigger; dry runs never enqueue."
+  version. Started after each scheduled vector copy, nightly, and on demand. Successful publish and no-change runs enqueue personal order for the configured rollout via personal_order_trigger; dry runs never enqueue."
 lock: '!inline f/sync/copy/title_snapshot.script.lock'
 kind: script
 schema:

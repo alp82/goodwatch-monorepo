@@ -69,16 +69,16 @@ async function cluster(t: TestContext, env: { CRATE_USER?: string; CRATE_PASS?: 
 	return authorization
 }
 
-test("without CRATE_USER no coordinator receives credentials, as before", async (t) => {
+test("without CRATE_USER the default crate identity reaches every coordinator", async (t) => {
 	const authorization = await cluster(t, {}, [(_, res) => answer(res), (_, res) => answer(res)])
 	for (let i = 0; i < 4; i++) await query("SELECT n")
-	assert.deepEqual(authorization, [[undefined, undefined], [undefined, undefined]])
+	assert.deepEqual(authorization, [[basic("crate:"), basic("crate:")], [basic("crate:"), basic("crate:")]])
 })
 
-test("an empty CRATE_USER and CRATE_PASS send no credentials either", async (t) => {
+test("an empty CRATE_USER uses the default crate identity", async (t) => {
 	const authorization = await cluster(t, { CRATE_USER: "", CRATE_PASS: "" }, [(_, res) => answer(res)])
 	await query("SELECT n")
-	assert.deepEqual(authorization, [[undefined]])
+	assert.deepEqual(authorization, [[basic("crate:")]])
 })
 
 test("a password with URL characters reaches every coordinator unchanged", async (t) => {

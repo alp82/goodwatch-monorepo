@@ -9,7 +9,7 @@ import {
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
-import { recG1Order } from "./features.server.ts"
+import { recPersonalOrder } from "./features.server.ts"
 import { recordListExposure } from "~/server/list-exposure.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
 import {
@@ -40,7 +40,7 @@ export const GUEST_FOR_YOU_RATINGS = 5
 export type ForYouStatus = "ready" | "needsTaste" | "signUp"
 
 export interface DiscoverResults
-	extends Omit<FilterResult, "keys" | "moved" | "g1"> {
+	extends Omit<FilterResult, "keys" | "moved" | "personalOrder"> {
 	/** Exposure record for this member's page; null for guests or a dropped write. */
 	listId: string | null
 	page: number
@@ -129,7 +129,7 @@ export async function getDiscoverResults(
 	const from = (page - 1) * DISCOVER_PAGE_SIZE
 	const keys = result.keys.slice(from, from + DISCOVER_PAGE_SIZE)
 	const onPage = new Set(keys)
-	const { keys: _all, moved, g1, ...counts } = result
+	const { keys: _all, moved, personalOrder, ...counts } = result
 	const cards = await getTitleCards(
 		keys,
 		ctx,
@@ -138,13 +138,13 @@ export async function getDiscoverResults(
 	)
 	const listId = recordListExposure(ctx, {
 		surface: "discover",
-		ordering: g1?.todayFirst100 ? "g1" : "taste-v2",
+		ordering: personalOrder?.todayFirst100 ? "personal-order" : "taste-v2",
 		flags: {
-			REC_G1_ORDER: recG1Order(
+			REC_G1_ORDER: recPersonalOrder(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
 			).enabled,
 		},
-		g1,
+		personalOrder,
 		sort: result.sortUsed,
 		sortRequested: sort,
 		forYou: input.forYou,

@@ -1,0 +1,272 @@
+[
+  {
+    "host": 20,
+    "at": "2026-10-15T17:07:26.475621+00:00",
+    "since": "2026-10-15T17:02:54Z",
+    "clients": [
+      {
+        "name": "goodwatch-search-b",
+        "id": "8d14e099ea263eb8e9d143e8a6ebb37823cee9f45f5034c35fcc3eca43328d1f",
+        "image": "ghcr.io/alp82/goodwatch-webapp:dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "imageId": "sha256:910e5ea80fc1408a8f90b23b5d55771d9daf2633cd3468e16be8f1a27f709bfc",
+        "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "role": "search",
+        "startedAt": "2026-10-15T17:06:59.279382529Z",
+        "restarts": 0,
+        "health": "healthy",
+        "loggingType": "json-file",
+        "logReadReturncode": 0,
+        "counts": {
+          "failedQueries": 0,
+          "timeouts": 0,
+          "nativeConnection": 0,
+          "attemptFailures": 0,
+          "terminalFailures": 0,
+          "logged5xx": 0
+        },
+        "samples": [
+          {
+            "time": "2026-10-15T17:07:02.793Z",
+            "event": "crate.diagnostics_ready",
+            "build": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+            "role": "search",
+            "requestId": null,
+            "route": "background",
+            "synthetic": true,
+            "sqlShape": "SELECT ? AS crate_diagnostics_probe",
+            "sqlShapeId": "df2741e0f9d08321",
+            "host": null,
+            "errorClass": null,
+            "attempt": 0,
+            "outcome": "ready",
+            "redactionVerified": true
+          }
+        ],
+        "probe": {
+          "live": 200,
+          "ready": 200,
+          "metricsStatus": 200,
+          "metrics": [
+            "goodwatch_http_responses_total{route=\"/api/command-palette\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 3",
+            "goodwatch_http_responses_total{route=\"/api/combined-search\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_build_info{commit=\"dd7ab0a9\"} 1"
+          ]
+        }
+      },
+      {
+        "name": "goodwatch-search-a",
+        "id": "728703fb93ac1778ca85a341fc6fa7a22ae6bafda7f3e7e608f5f6157234ba11",
+        "image": "ghcr.io/alp82/goodwatch-webapp:dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "imageId": "sha256:910e5ea80fc1408a8f90b23b5d55771d9daf2633cd3468e16be8f1a27f709bfc",
+        "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "role": "search",
+        "startedAt": "2026-10-15T17:06:34.363847705Z",
+        "restarts": 0,
+        "health": "healthy",
+        "loggingType": "json-file",
+        "logReadReturncode": 0,
+        "counts": {
+          "failedQueries": 0,
+          "timeouts": 0,
+          "nativeConnection": 0,
+          "attemptFailures": 0,
+          "terminalFailures": 0,
+          "logged5xx": 0
+        },
+        "samples": [
+          {
+            "time": "2026-10-15T17:06:37.711Z",
+            "event": "crate.diagnostics_ready",
+            "build": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+            "role": "search",
+            "requestId": null,
+            "route": "background",
+            "synthetic": true,
+            "sqlShape": "SELECT ? AS crate_diagnostics_probe",
+            "sqlShapeId": "df2741e0f9d08321",
+            "host": null,
+            "errorClass": null,
+            "attempt": 0,
+            "outcome": "ready",
+            "redactionVerified": true
+          }
+        ],
+        "probe": {
+          "live": 200,
+          "ready": 200,
+          "metricsStatus": 200,
+          "metrics": [
+            "goodwatch_http_responses_total{route=\"/api/command-palette\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 7",
+            "goodwatch_http_responses_total{route=\"/api/combined-search\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_build_info{commit=\"dd7ab0a9\"} 1"
+          ]
+        }
+      },
+      {
+        "name": "gk4owk8-20261015T170509",
+        "id": "8de04b1a3cdb18c9b4dee9fad3a2ea8ce0001788a34123c53c68a1c45bf73fde",
+        "image": "ghcr.io/alp82/goodwatch-webapp:dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "imageId": "sha256:910e5ea80fc1408a8f90b23b5d55771d9daf2633cd3468e16be8f1a27f709bfc",
+        "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "role": "page",
+        "startedAt": "2026-10-15T17:05:43.846397814Z",
+        "restarts": 0,
+        "health": "healthy",
+        "loggingType": "json-file",
+        "logReadReturncode": 0,
+        "counts": {
+          "failedQueries": 0,
+          "timeouts": 0,
+          "nativeConnection": 0,
+          "attemptFailures": 0,
+          "terminalFailures": 0,
+          "logged5xx": 0
+        },
+        "samples": [
+          {
+            "time": "2026-10-15T17:05:47.041Z",
+            "event": "crate.diagnostics_ready",
+            "build": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+            "role": "page",
+            "requestId": null,
+            "route": "background",
+            "synthetic": true,
+            "sqlShape": "SELECT ? AS crate_diagnostics_probe",
+            "sqlShapeId": "df2741e0f9d08321",
+            "host": null,
+            "errorClass": null,
+            "attempt": 0,
+            "outcome": "ready",
+            "redactionVerified": true
+          }
+        ],
+        "probe": {
+          "live": 200,
+          "ready": 200,
+          "metricsStatus": 200,
+          "metrics": [
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 104",
+            "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 37",
+            "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 15",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 87",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 132",
+            "goodwatch_http_responses_total{route=\"/\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 14",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 26",
+            "goodwatch_http_responses_total{route=\"/tv/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 22",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 9",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 9",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+            "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/og/:first/:second\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 2",
+            "goodwatch_http_responses_total{route=\"static\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 3",
+            "goodwatch_http_responses_total{route=\"/:type\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+            "goodwatch_http_responses_total{route=\"/:type/:category\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/tv-shows\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/tv-shows/:category/:page\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/sitemaps/:file\",status_class=\"4xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/related\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/search-config\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/living-room/picks\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_build_info{commit=\"dd7ab0a9\"} 1"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "host": 21,
+    "at": "2026-10-15T17:07:26.394111+00:00",
+    "since": "2026-10-15T17:02:54Z",
+    "clients": [
+      {
+        "name": "gk4owk8-20261015T170256",
+        "id": "c99a8d91f758edc9e8d49148ff4e4916a47e1c81f76ca70dbbb8042ca934139c",
+        "image": "ghcr.io/alp82/goodwatch-webapp:dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "imageId": "sha256:910e5ea80fc1408a8f90b23b5d55771d9daf2633cd3468e16be8f1a27f709bfc",
+        "commit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+        "role": "page",
+        "startedAt": "2026-10-15T17:04:48.955821782Z",
+        "restarts": 0,
+        "health": "healthy",
+        "loggingType": "fluentd",
+        "logReadReturncode": 0,
+        "counts": {
+          "failedQueries": 0,
+          "timeouts": 0,
+          "nativeConnection": 0,
+          "attemptFailures": 0,
+          "terminalFailures": 0,
+          "logged5xx": 0
+        },
+        "samples": [
+          {
+            "time": "2026-10-15T17:04:51.892Z",
+            "event": "crate.diagnostics_ready",
+            "build": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+            "role": "page",
+            "requestId": null,
+            "route": "background",
+            "synthetic": true,
+            "sqlShape": "SELECT ? AS crate_diagnostics_probe",
+            "sqlShapeId": "df2741e0f9d08321",
+            "host": null,
+            "errorClass": null,
+            "attempt": 0,
+            "outcome": "ready",
+            "redactionVerified": true
+          }
+        ],
+        "probe": {
+          "live": 200,
+          "ready": 200,
+          "metricsStatus": 200,
+          "metrics": [
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"private\"} 2",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 214",
+            "goodwatch_http_responses_total{route=\"static\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 15",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 174",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 179",
+            "goodwatch_http_responses_total{route=\"/tv/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 33",
+            "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 69",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 42",
+            "goodwatch_http_responses_total{route=\"/\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 19",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 20",
+            "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/show/:showKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 20",
+            "goodwatch_http_responses_total{route=\"/discover/:type?\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 2",
+            "goodwatch_http_responses_total{route=\"/u/:handle/lists/:id\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/og/:first/:second\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 2",
+            "goodwatch_http_responses_total{route=\"/:type\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+            "goodwatch_http_responses_total{route=\"/:type/:category\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/:type/:category/:page\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/tv-shows\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/tv-shows/:category/:page\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/explore/:type/:category/:text\",status_class=\"4xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_http_responses_total{route=\"/sitemaps/:file\",status_class=\"4xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/related\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/search-config\",status_class=\"2xx\",audience=\"anon\",cache_control=\"private\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/living-room/picks\",status_class=\"2xx\",audience=\"anon\",cache_control=\"keyed\"} 1",
+            "goodwatch_http_responses_total{route=\"/\",status_class=\"4xx\",audience=\"anon\",cache_control=\"private\"} 2",
+            "goodwatch_http_responses_total{route=\"static\",status_class=\"3xx\",audience=\"anon\",cache_control=\"shared\"} 18",
+            "goodwatch_http_responses_total{route=\"/person/:personKey\",status_class=\"3xx\",audience=\"anon\",cache_control=\"none\"} 12",
+            "goodwatch_http_responses_total{route=\"/movie/:movieKey\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 10",
+            "goodwatch_http_responses_total{route=\"/api/related-map\",status_class=\"2xx\",audience=\"anon\",cache_control=\"shared\"} 1",
+            "goodwatch_http_responses_total{route=\"/api/poster-impressions\",status_class=\"2xx\",audience=\"anon\",cache_control=\"none\"} 1",
+            "goodwatch_build_info{commit=\"dd7ab0a9\"} 1"
+          ]
+        }
+      }
+    ]
+  }
+]

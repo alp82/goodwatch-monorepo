@@ -2,11 +2,20 @@
 from f.media_language.episode_translations import Bounds, ingest_titles
 
 
-def main(tmdb_ids: list[int], dry_run: bool = True, max_requests: int = 250):
+def main(tmdb_ids: list[int] = [], dry_run: bool = True, max_requests: int = 250,
+         max_seasons: int = 10, max_episodes: int = 100,
+         max_seasons_per_title: int | None = None, max_episodes_per_title: int | None = None,
+         resume: list[dict] | None = None, nightly: bool = False, max_seconds: int = 10800):
+    if nightly is True:
+        from f.media_language.nightly_episode_translations import main as run_nightly
+        return run_nightly(dry_run=dry_run, max_seconds=max_seconds)
     # Windmill can pass None for omitted arguments; omission always stays read-only.
     dry_run = dry_run is not False
     tmdb_ids = tmdb_ids or []
     max_requests = max_requests or 250
+    bounds = Bounds(titles=100, seasons=max_seasons or 10, episodes=max_episodes or 100,
+                    requests=max_requests, seasons_per_title=max_seasons_per_title,
+                    episodes_per_title=max_episodes_per_title)
     import requests
     import wmill
     token = wmill.get_variable('u/Alp/TMDB_API_KEY')
@@ -22,8 +31,7 @@ def main(tmdb_ids: list[int], dry_run: bool = True, max_requests: int = 250):
         if not dry_run:
             from f.db.cratedb import CrateConnector
             connector = CrateConnector()
-        return ingest_titles(tmdb_ids, get, connector, dry_run=dry_run,
-                             bounds=Bounds(titles=100, requests=max_requests))
+        return ingest_titles(tmdb_ids, get, connector, dry_run=dry_run, bounds=bounds, resume=resume)
     finally:
         if connector:
             connector.disconnect()

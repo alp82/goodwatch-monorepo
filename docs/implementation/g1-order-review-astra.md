@@ -1,5 +1,9 @@
 **Verdict: request changes before preview.** Three P2 findings; no P0/P1 found.
 
+> Naming note (2026-10-15): G1 ships as **personal order**; B3 = own taste rank,
+> B5 = pooled rating predictor, F3 = franchise grouping. Historical names below are retained.
+> See [the mapping and current deploy order](personal-order-rename.md).
+
 1. **P2 — Repeated catalogue-wide CPU cost:** [reader.server.ts:202](/home/alper/projects/goodwatch-monorepo/.claude/worktrees/g1-order/goodwatch-webapp/app/server/g1/reader.server.ts:202). Every page rebuilds arrays, sorts twice and creates full-title Maps; the cache saves only validation. A synthetic 60k-title run took **176–544ms/request**, excluding filtering and network. **Fix:** cache ordered results and metadata with bounded storage keyed by member, payload identity/build, snapshot, ordered filtered candidates and mix mode; retain freshness checks.
 
 2. **P2 — Watch next batches log the wrong ordering provenance after refresh:** [watch-next.server.ts:826](/home/alper/projects/goodwatch-monorepo/.claude/worktrees/g1-order/goodwatch-webapp/app/server/watch-next.server.ts:826). Lazy cards preserve the browser’s earlier key order but record the latest plan’s payload, groups and tiers. Publication/deletion between requests produces incorrect exposure records. **Fix:** pass an opaque initial-plan identifier with card batches and retain that plan’s metadata; refresh the complete list if unavailable. Test publication and deletion between requests.

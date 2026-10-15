@@ -1,0 +1,193 @@
+{
+  "implementationCommit": "a4f803a0c736cc0b436272a5a0a68e66abba3ec2",
+  "base": "511e4be329d9b381e2b824dd52cea161537cabd5",
+  "testsPassed": 2720,
+  "skipped": 1,
+  "newRegressionTests": 13,
+  "flowsTestsPassed": 44,
+  "typecheck": {
+    "main": 174,
+    "branch": 174,
+    "new": []
+  },
+  "productionBuild": "passed",
+  "runtimeSourcesVerified": true,
+  "proof": {
+    "passed": true,
+    "requests": 1233,
+    "routeFailures": 0,
+    "reads": 1848,
+    "load": {
+      "reads": {
+        "succeeded": 1848,
+        "failed": 0,
+        "maxMs": 4898.4636089999985
+      },
+      "keyed": {
+        "succeeded": 255,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 246,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 249,
+        "failed": 2
+      }
+    },
+    "rejoinedDuringLoad": {
+      "elapsedMs": 50313,
+      "reads": 1080,
+      "pages": {
+        "movie": 67,
+        "show": 92,
+        "person": 68,
+        "library": 73,
+        "explore": 132,
+        "watch": 30,
+        "score": 36,
+        "catalog": 239
+      }
+    },
+    "watchAudit": {
+      "acknowledged": 48,
+      "stored": 48,
+      "unique": 48
+    },
+    "firstInsertCases": [
+      {
+        "id": "first-insert-unwatch-reset",
+        "timeout": false,
+        "disposition": "unwatch",
+        "writes": 1,
+        "state": "not_started",
+        "watches": 0,
+        "version": 60,
+        "finalActionVersion": 60,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-unwatch-timeout",
+        "timeout": true,
+        "disposition": "unwatch",
+        "writes": 1,
+        "state": "not_started",
+        "watches": 0,
+        "version": 62,
+        "finalActionVersion": 62,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-unchanged-reset",
+        "timeout": false,
+        "disposition": "unchanged",
+        "writes": 1,
+        "state": "watching",
+        "watches": 1,
+        "version": 63,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-unchanged-timeout",
+        "timeout": true,
+        "disposition": "unchanged",
+        "writes": 1,
+        "state": "watching",
+        "watches": 1,
+        "version": 64,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-unwatch-and-rewatch-reset",
+        "timeout": false,
+        "disposition": "unwatch-and-rewatch",
+        "writes": 1,
+        "state": "watching",
+        "watches": 1,
+        "version": 67,
+        "finalActionVersion": 67,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-unwatch-and-rewatch-timeout",
+        "timeout": true,
+        "disposition": "unwatch-and-rewatch",
+        "writes": 1,
+        "state": "watching",
+        "watches": 1,
+        "version": 70,
+        "finalActionVersion": 70,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-not-applied-reset",
+        "timeout": false,
+        "disposition": "not-applied",
+        "writes": 2,
+        "state": "watching",
+        "watches": 1,
+        "version": 71,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-not-applied-timeout",
+        "timeout": true,
+        "disposition": "not-applied",
+        "writes": 2,
+        "state": "watching",
+        "watches": 1,
+        "version": 72,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-pending-after-readback-reset",
+        "timeout": false,
+        "disposition": "pending-after-readback",
+        "writes": 2,
+        "state": "not_started",
+        "watches": 0,
+        "version": 74,
+        "finalActionVersion": 74,
+        "receiptConfirmed": true
+      },
+      {
+        "id": "first-insert-pending-after-readback-timeout",
+        "timeout": true,
+        "disposition": "pending-after-readback",
+        "writes": 2,
+        "state": "not_started",
+        "watches": 0,
+        "version": 76,
+        "finalActionVersion": 76,
+        "receiptConfirmed": true
+      }
+    ],
+    "existingLostResponseCases": 8,
+    "trackingMigration": {
+      "legacyRowsPreserved": true,
+      "insertTokenNullable": true,
+      "backfillNeeded": false
+    },
+    "trackingRuntimeSha256": "6e840b82a3f2ece569c21dae1a1d8383075a2523c4083dc954ac5e089316d066",
+    "cleanup": {
+      "verifiedAt": "2026-10-15T18:48:26.774Z",
+      "project": "goodwatch-client-588",
+      "containersRemaining": 0,
+      "volumesRemaining": 0,
+      "networksRemaining": 0
+    }
+  },
+  "redControl": {
+    "trackingBaselineCommit": "511e4be329d9b381e2b824dd52cea161537cabd5",
+    "trackingRuntimeSha256": "0385cabb532067930b9389994fb531ac6cbcee6593977c65901716b6ab8fc3bc",
+    "error": "first-insert-unwatch-reset: returned logical state\n\n'watching' !== null\n",
+    "cleanup": {
+      "verifiedAt": "2026-10-15T18:40:32.155Z",
+      "project": "goodwatch-client-588",
+      "containersRemaining": 0,
+      "volumesRemaining": 0,
+      "networksRemaining": 0
+    }
+  }
+}

@@ -8,11 +8,12 @@ Each run appends to three files in docs/research/discovery-search/:
     index-record-traffic.csv   impressions and clicks per URL shape, last 7 complete days
     index-record-sitemaps.csv  one row per submitted sitemap
 
-Needs GSC_KEY_FILE like gsc.py. Run by hand once a week:
+Needs GSC_KEY_FILE like gsc.py. Runs weekly in GitHub Actions; manual fallback:
     uv run gsc_sample.py            (or: make index-record)
     uv run gsc_sample.py --force    (append a second run for the same date)
 
 See docs/research/discovery-search/index-record.md.
+Exit status 3 means the date is already recorded (without --force).
 """
 import csv
 import datetime
@@ -188,7 +189,8 @@ def main():
     recorded = already_recorded(run_date, files)
     if recorded and "--force" not in args:
         names = ", ".join(os.path.basename(path) for path in recorded)
-        raise SystemExit(f"{run_date} is already recorded in {names}. Pass --force to append a second run.")
+        print(f"{run_date} is already recorded in {names}. Pass --force to append a second run.", file=sys.stderr)
+        raise SystemExit(3)
 
     sample = read_sample()
     site = urllib.parse.quote(gsc.SITE, safe="")

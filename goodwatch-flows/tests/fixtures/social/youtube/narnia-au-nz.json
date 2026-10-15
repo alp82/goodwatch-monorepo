@@ -1,0 +1,25 @@
+{
+  "playabilityStatus": {
+    "status": "UNPLAYABLE",
+    "reason": "Video unavailable",
+    "errorScreen": {
+      "playerErrorMessageRenderer": {
+        "subreason": {
+          "simpleText": "The uploader has not made this video available in your country"
+        }
+      }
+    }
+  },
+  "videoDetails": {
+    "videoId": "O8hR2dQGv0k"
+  },
+  "microformat": {
+    "playerMicroformatRenderer": {
+      "externalVideoId": "O8hR2dQGv0k",
+      "availableCountries": [
+        "AU",
+        "NZ"
+      ]
+    }
+  }
+}

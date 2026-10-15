@@ -1,13 +1,13 @@
 {
   "firstView": {
-    "requests": 174,
+    "requests": 229,
     "rowRequests": [],
     "slotInHtml": false,
-    "locked": "locked"
+    "locked": null
   },
   "desktop": {
-    "lead": 804,
-    "board": 804,
+    "lead": 765,
+    "board": 765,
     "page": 1425,
     "viewport": {
       "width": 1440,
@@ -22,23 +22,19 @@
     "iframe": "https://www.youtube-nocookie.com/embed/3g28OdIj6cY?autoplay=1&rel=0&playsinline=1",
     "hosts": [
       "fonts.gstatic.com",
-      "i.ytimg.com",
       "image.tmdb.org",
-      "rr8---sn-u0g3jxaa-n5fl.googlevideo.com",
       "www.google.com",
       "www.googletagmanager.com",
-      "www.gstatic.com",
-      "www.youtube-nocookie.com",
-      "yt3.ggpht.com"
+      "www.youtube-nocookie.com"
     ]
   },
   "desktop-second": {
-    "lead": 809,
-    "board": 809
+    "lead": 676,
+    "board": 676
   },
   "phone": {
-    "lead": 750,
-    "board": 1417,
+    "lead": 538,
+    "board": 1224,
     "page": 390,
     "viewport": {
       "width": 390,
@@ -50,7 +46,7 @@
     ]
   },
   "phone-second": {
-    "lead": 552,
-    "board": 1220
+    "lead": 496,
+    "board": 1182
   }
 }

@@ -76,7 +76,13 @@ for (const [name, viewport, mobile] of [
 	await p.locator(".tn").screenshot({ path: join(out, `${name}.png`) })
 	// The press loads the player, and only then its host.
 	if (name === "desktop") {
-		await p.locator('.tn-lead [data-social-item] button').first().click()
+		// The first featured title may have no player: feature the first one that has.
+		const press = p.locator(".tn-lead [data-social-item] button")
+		for (let i = 0; !(await press.count()) && i < (await p.locator(".tn-row").count()); i++) {
+			await p.locator(".tn-row").nth(i).click()
+			await p.waitForTimeout(800)
+		}
+		await press.first().click()
 		await p.waitForSelector(".tn-lead iframe", { timeout: 30_000 })
 		await p.waitForTimeout(2000)
 		report.afterPress = {

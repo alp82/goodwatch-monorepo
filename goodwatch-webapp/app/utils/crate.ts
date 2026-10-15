@@ -3,6 +3,8 @@ import { setTimeout as delay } from "node:timers/promises"
 import { BackendTimeoutError, withBackendTimeout } from "./backend-timeout.ts"
 import crate from "node-crate"
 import pc from "picocolors"
+import { randomUUID } from "node:crypto"
+import { crateEvent, crateErrorFields, redactedSqlShape, sqlShapeId, withCrateOperation } from "./crate-diagnostics.ts"
 
 // node-crate has no request timeout: a request whose response never arrives awaits forever. Every call is capped at
 // CRATE_TIMEOUT_MS (default 10 s; webapp queries finish in well under 2 s). Timeout closes the HTTP request.
@@ -98,11 +100,11 @@ const HOST_COOLDOWN_MS = 5_000
 const UNAVAILABLE_STATUSES = [502, 503, 504]
 
 const isConnectionError = (error: unknown): boolean =>
-	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN"]
+	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN", "UND_ERR_SOCKET", "UND_ERR_CONNECT_TIMEOUT"]
 		.includes((error as NodeJS.ErrnoException).code ?? "")
 
 const isAvailabilityError = (error: unknown): boolean =>
-	isConnectionError(error) || error instanceof CrateTimeoutError ||
+	isConnectionError(error) || error instanceof CrateAuthenticationError || error instanceof CrateTimeoutError ||
 	(error instanceof Error && UNAVAILABLE_STATUSES.includes((error as Error & { statusCode?: number }).statusCode ?? 0))
 
 // A healthy coordinator can briefly retain shard routes to a node that just
@@ -112,7 +114,21 @@ const isNodeLossError = (error: unknown): boolean => error instanceof CrateError
 	/^JobKilledException\[Job killed\. Participating node .+ disconnected\]$/.test(error.message)
 )
 
-const isRecoverableError = (error: unknown): boolean => isAvailabilityError(error) || isNodeLossError(error)
+// During restart the HTTP listener can answer before the coordinator has the cluster's table metadata.
+// Try another coordinator once. A relation absent everywhere must still reach the caller as a SQL error.
+const isCoordinatorStateError = (error: unknown): boolean => error instanceof CrateError &&
+	error.code === 4041 && /^RelationUnknown\[/.test(error.message)
+
+const isRecoverableError = (error: unknown): boolean =>
+	isAvailabilityError(error) || isNodeLossError(error) || isCoordinatorStateError(error)
+
+/** Eligible for caller-owned readback recovery; this does not authorize replaying a generic write. */
+export const isCrateRecoveryError = isRecoverableError
+
+// A refused TCP connection cannot have sent SQL. Trying another host is safe even for a CAS or increment.
+// Do not extend this to resets, broken pipes or timeouts: those may happen after a write was applied.
+const wasNotDispatched = (error: unknown): boolean => error instanceof CrateAuthenticationError ||
+	(error instanceof Error && (error as NodeJS.ErrnoException).code === "ECONNREFUSED")
 
 // Conservative recognition only: never infer replay safety for a write from its
 // ON CONFLICT text. Helpers below own the keys and values that make replay safe.
@@ -122,6 +138,13 @@ const isRead = (sql: string): boolean => {
 		!/\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|COPY|REFRESH|SET|RESET|GRANT|REVOKE|KILL)\b/i.test(tokens) &&
 		!/;\s*\S/.test(tokens)
 }
+
+// REFRESH changes search visibility, not durable row values. These statements occur after guarded member writes.
+// Recognize only a table list (optionally schema-qualified/quoted) and an optional final semicolon. No comment
+// stripping: a comment marker inside a quoted identifier must never hide a second, unsafe statement.
+const REFRESH_IDENTIFIER = '(?:"(?:""|[^"])+"|[a-z_][a-z0-9_$]*)'
+const REFRESH_TABLE = `${REFRESH_IDENTIFIER}(?:\\.${REFRESH_IDENTIFIER})?`
+const SAFE_REFRESH = new RegExp(`^\\s*REFRESH\\s+TABLE\\s+${REFRESH_TABLE}(?:\\s*,\\s*${REFRESH_TABLE})*\\s*;?\\s*$`, "i")
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -144,15 +167,20 @@ const capLog = (value: unknown, indent?: number): string => {
 export interface CrateReadOptions {
 	timeoutMs?: number
 	signal?: AbortSignal
+	/** Search keeps its undici transport and never prints raw SQL/search text. The retry policy is shared. */
+	transport?: (url: string, signal: AbortSignal, authorization: string | undefined) => ReturnType<typeof crate.execute>
+	source?: "catalog"
 }
 
 class CrateClient {
-	private readonly hosts: { driver: NodeCrate; unavailableUntil: number }[]
+	private readonly hosts: { driver: NodeCrate; url: string; address: string; unavailableUntil: number }[]
 	private nextHost = 0
+	private readonly authorization: string | undefined
 
 	// `auth` is "user:password" for a Basic header, or null for none. node-crate would take it from a URL, but sends it
 	// percent-encoded there, and a password with "#", "/" or "?" is no valid URL (#562).
 	constructor(hosts: string[], auth: string | null = null) {
+		this.authorization = auth === null ? undefined : `Basic ${Buffer.from(auth).toString("base64")}`
 		this.hosts = hosts.map((host) => {
 			const driver = (crate as NodeCrate).getNewInstance()
 			driver.connect(host)
@@ -164,7 +192,7 @@ class CrateClient {
 				captureRequest?.(request)
 				return request
 			}
-			return { driver, unavailableUntil: 0 }
+			return { driver, url: host, address: new URL(host).host, unavailableUntil: 0 }
 		})
 	}
 
@@ -231,11 +259,17 @@ class CrateClient {
 		options: CrateReadOptions = {},
 	) {
 		const startTime = performance.now()
+		const queryId = randomUUID()
+		const sqlShape = redactedSqlShape(query)
+		const details = { queryId, sqlShape, sqlShapeId: sqlShapeId(sqlShape), source: options.source ?? "crate" }
+		let attempts = 0
+		let lastHost: string | undefined
 		try {
 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
 			const deadline = performance.now() + timeoutMs
-			const read = isRead(query)
+			const replaySafe = isRead(query) || SAFE_REFRESH.test(query)
 			const tried = new Set<number>()
+			const missingMetadata = new Set<number>()
 			let nodeLoss = false
 			let round = 0
 			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
@@ -244,20 +278,33 @@ class CrateClient {
 				if (index === undefined) throw new Error("No CrateDB host available")
 				tried.add(index)
 				const host = this.hosts[index]
+				lastHost = host.address
 				// Reserve time for the other coordinators rather than spending the entire
 				// caller budget waiting for the first dead socket.
 				const remaining = deadline - performance.now()
 				if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
-				const attemptTimeoutMs = read && (this.hosts.length > 1 || round > 0)
+				const attemptTimeoutMs = replaySafe && (this.hosts.length > 1 || round > 0)
 					? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
-					: timeoutMs
+					: Math.max(1, Math.ceil(remaining))
+				attempts++
+				const attempt = { ...details, host: host.address, attempt: attempts, timeoutMs: attemptTimeoutMs }
+				const attemptStart = performance.now()
+				if (attempts > 1) crateEvent("crate.failover_attempt", { ...attempt, outcome: "started" })
 				try {
-					result = await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
+					result = options.transport
+						? await withBackendTimeout("CrateDB", attemptTimeoutMs, (signal) => options.transport!(host.url, signal, this.authorization),
+							{ error: () => new CrateTimeoutError(attemptTimeoutMs), signal: options.signal })
+						: await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
 				} catch (error) {
-					const refused = error instanceof CrateAuthenticationError
-					if (options.signal?.aborted || !(refused || isRecoverableError(error))) throw error
-					if (refused || isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
-					if (!read && !refused) throw error
+					crateEvent("crate.attempt_failed", { ...attempt, ...crateErrorFields(error), durationMs: performance.now() - attemptStart,
+						outcome: options.signal?.aborted ? "cancelled" : wasNotDispatched(error) ? "not_sent" : replaySafe ? "failed" : "indeterminate",
+						recoverable: isRecoverableError(error),
+						failureKind: options.signal?.aborted ? "cancelled" : isAvailabilityError(error) ? "availability" : isNodeLossError(error) ? "node_loss" : isCoordinatorStateError(error) ? "coordinator_metadata" : "statement",
+						cooldownMs: !options.signal?.aborted && isAvailabilityError(error) ? HOST_COOLDOWN_MS : 0 })
+					if (options.signal?.aborted || !isRecoverableError(error)) throw error
+					if (isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+					if (!replaySafe && !wasNotDispatched(error)) throw error
+					if (isCoordinatorStateError(error)) missingMetadata.add(index)
 					nodeLoss ||= isNodeLossError(error)
 					if (tried.size === this.hosts.length) {
 						if (!nodeLoss || ++round >= 10) throw error
@@ -270,8 +317,16 @@ class CrateClient {
 					}
 				}
 			}
+			// Success elsewhere proves this is coordinator state, rather than a genuinely missing table.
+			for (const index of missingMetadata) {
+				this.hosts[index].unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+				crateEvent("crate.coordinator_cooldown", { ...details, host: this.hosts[index].address,
+					attempt: attempts, cooldownMs: HOST_COOLDOWN_MS, reason: "metadata_mismatch", outcome: "excluded" })
+			}
 			const duration = performance.now() - startTime
-			const querySummary = this.getQuerySummary(query)
+			if (attempts > 1) crateEvent("crate.query", { ...details, host: lastHost, attempt: attempts, outcome: "recovered", durationMs: duration })
+			if (options.source === "catalog") return result
+			const querySummary = this.getQuerySummary(sqlShape)
 			const formattedLog = this.formatLog(querySummary, duration)
 			console.log(formattedLog)
 			
@@ -282,15 +337,11 @@ class CrateClient {
 			return result
 		} catch (error) {
 			const duration = performance.now() - startTime
-			const querySummary = this.getQuerySummary(query)
+			crateEvent("crate.query", { ...details, host: lastHost ?? null, attempt: attempts,
+				outcome: options.signal?.aborted ? "cancelled" : "failed", durationMs: duration, ...crateErrorFields(error) })
+			const querySummary = this.getQuerySummary(sqlShape)
 			const formattedLog = this.formatLog(querySummary, duration, true)
-			console.error('====================')
 			console.error(formattedLog)
-			console.error('Query:', capLog(query))
-			console.error('Params:', capLog(params))
-			console.error('Error:', error)
-			console.error('Stack trace:')
-			console.trace()
 			throw toCrateError(error)
 		}
 	}
@@ -305,11 +356,7 @@ class CrateClient {
 
 	private logSlowQueryDetails(query: string, params: (string | number | Date)[] | undefined, duration: number, result: any): void {
 		console.warn(pc.yellow('  ⚠ Slow query details:'))
-		console.warn(pc.dim('  Query:'), query.trim().replace(/\s+/g, ' ').substring(0, 200) + (query.length > 200 ? '...' : ''))
-		
-		if (params && params.length > 0) {
-			console.warn(pc.dim('  Params:'), capLog(params.length > 5 ? `${params.slice(0, 5).join(', ')}... (${params.length} total)` : params.join(', ')))
-		}
+		console.warn(pc.dim('  Query shape:'), redactedSqlShape(query))
 		
 		if (result.rowcount !== undefined) {
 			console.warn(pc.dim('  Rows affected:'), result.rowcount)
@@ -417,11 +464,10 @@ export const getCrateClient = () => {
 	if (!client) {
 		const hosts = (process.env.CRATE_HOSTS || "").split(",")
 		const port = Number.parseInt(process.env.CRATE_PORT || "4200")
-		const user = process.env.CRATE_USER || ""
+		const user = process.env.CRATE_USER || "crate"
 		const pass = process.env.CRATE_PASS || ""
-		const urls = hosts.map((host) => `http://${host}:${port}`)
-		// Without CRATE_USER no credentials are sent, as before.
-		client = new CrateClient(urls, user ? `${user}:${pass}` : null)
+		const urls = hosts.map((host) => `http://${host.trim()}:${port}`)
+		client = new CrateClient(urls, `${user}:${pass}`)
 	}
 	return client
 }
@@ -451,7 +497,7 @@ interface UpsertOptions {
 	ignoreUpdate?: boolean
 }
 
-export const upsert = async ({
+const upsertRows = async ({
 	table,
 	data,
 	conflictColumns,
@@ -524,7 +570,11 @@ export const upsert = async ({
 			}
 			// The response was lost but the write may have landed. Primary key lookups are real-time in CrateDB.
 			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
-			if (n > 0) return { rowcount: 1 }
+			if (n > 0) {
+				crateEvent("crate.readback", { outcome: "confirmed", attempt })
+				return { rowcount: 1 }
+			}
+			crateEvent("crate.readback", { outcome: "absent", attempt })
 		}
 		throw new Error(`Saving to ${table} could not be confirmed after two attempts. Please try again.`)
 	}
@@ -544,6 +594,8 @@ export const upsert = async ({
 		return { rowcount: totalRowcount }
 	}
 }
+
+export const upsert = (options: UpsertOptions) => withCrateOperation("upsert", () => upsertRows(options))
 
 /**
  * Rows with every timestamp as epoch milliseconds, for a reader that compares or subtracts them: two Dates of the
@@ -579,7 +631,7 @@ interface InsertRowsOptions {
  *
  * `rowcount` is the number of rows Crate says it inserted, so rows that were already stored do not count.
  */
-export const insertRows = async (
+const insertFixedRows = async (
 	table: string,
 	columns: string[],
 	rows: CrateValue[][],
@@ -607,6 +659,7 @@ export const insertRows = async (
 			result = await client.execute(sql, params)
 		} catch (error) {
 			if (!fixedKeys || !isRecoverableError(error)) throw error
+			crateEvent("crate.replay", { outcome: "started", attempt: 2 })
 			result = await client.execute(sql, params)
 		}
 		rowcount += result.rowcount || 0
@@ -614,3 +667,6 @@ export const insertRows = async (
 	}
 	return { rowcount, statements }
 }
+
+export const insertRows = (...args: Parameters<typeof insertFixedRows>) =>
+	withCrateOperation("insertRows", () => insertFixedRows(...args))

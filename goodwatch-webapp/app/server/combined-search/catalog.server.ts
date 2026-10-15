@@ -3,33 +3,41 @@ import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server"
 import type { Eligibility } from "./reading-retrieval.server"
 import type { Title } from "~/ui/search/search-model"
 import { withBackendTimeout } from "../../utils/backend-timeout.ts"
+import { CrateAuthenticationError, getCrateClient, toCrateError } from "../../utils/crate.ts"
 
 // Search text never passes through the general-purpose SQL logger.
 export async function searchStatement(
 	stmt: string,
 	args: unknown[] = [],
 	signal = AbortSignal.timeout(8000),
-) {
-	const host = process.env.CRATE_HOSTS?.split(",")[0]
-	if (!host) throw new Error("Catalog unavailable")
-	const response = await fetch(
-		`http://${host}:${process.env.CRATE_PORT || "4200"}/_sql`,
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Basic ${Buffer.from(`${process.env.CRATE_USER || ""}:${process.env.CRATE_PASS || ""}`).toString("base64")}`,
-			},
-			body: JSON.stringify({ stmt, args }),
-			signal,
+): Promise<{ cols: string[]; rows: unknown[][]; rowcount: number }> {
+	if (!process.env.CRATE_HOSTS) throw new Error("Catalog unavailable")
+	return getCrateClient().execute(stmt, undefined, {
+		timeoutMs: METADATA_TIMEOUT_MS, signal, source: "catalog",
+		transport: async (host, attemptSignal, authorization) => {
+			const url = new URL(host)
+			url.pathname = "/_sql"
+			try {
+				const response = await fetch(url, {
+					method: "POST", headers: { "Content-Type": "application/json", ...(authorization ? { Authorization: authorization } : {}) },
+					body: JSON.stringify({ stmt, args }), signal: attemptSignal,
+				})
+				const data = await response.json().catch((error) => {
+					if (response.status === 401) throw new CrateAuthenticationError("CrateDB HTTP 401")
+					if (response.ok) throw error
+					return {}
+				}) as { cols: string[]; rows: object[][]; rowcount: number; duration: number; error?: unknown }
+				if (!response.ok || data.error) throw Object.assign(
+					toCrateError(data.error ?? new Error("Catalog unavailable")), { statusCode: response.status },
+				)
+				return { ...data, json: [] }
+			} catch (error) {
+				// undici's TypeError hides the transport code in cause. The shared policy needs that original code.
+				const cause = (error as { cause?: unknown })?.cause
+				throw cause instanceof Error && "code" in cause ? cause : error
+			}
 		},
-	)
-	if (!response.ok) throw new Error("Catalog unavailable")
-	return (await response.json()) as {
-		cols: string[]
-		rows: unknown[][]
-		rowcount: number
-	}
+	})
 }
 export async function searchQuery<T extends object>(
 	stmt: string,
