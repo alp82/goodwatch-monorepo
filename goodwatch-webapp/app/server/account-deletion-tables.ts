@@ -14,6 +14,7 @@ export const MEMBER_TABLES = [
 	"user_watch_state",
 	"user_import",
 	"user_import_item",
+	"user_import_connection",
 	"user_mcp_action",
 	"user_list_exposure",
 	"user_list",

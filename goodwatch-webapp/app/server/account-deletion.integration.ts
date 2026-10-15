@@ -393,6 +393,14 @@ async function seedMemberRows(userId: string, handle: string) {
 			failed: 0,
 			...stamps,
 		},
+		user_import_connection: {
+			id: `tmdb-${userId}`,
+			user_id: userId,
+			slot: 0,
+			payload: "disposable-encrypted-tmdb-session",
+			cleanup_at: now + 60000,
+			lease_until: now + 60000,
+		},
 		user_import_item: {
 			import_id: importId,
 			row_index: 0,
