@@ -410,7 +410,7 @@ export const getCrateClient = () => {
 	if (!client) {
 		const hosts = (process.env.CRATE_HOSTS || "").split(",")
 		const port = Number.parseInt(process.env.CRATE_PORT || "4200")
-		const user = process.env.CRATE_USER || ""
+		const user = process.env.CRATE_USER || "crate"
 		const pass = process.env.CRATE_PASS || ""
 		const urls = hosts.map((host) => `http://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host.trim()}:${port}`)
 		client = new CrateClient(urls)
