@@ -19,6 +19,8 @@ import {
 } from "~/ui/media-preference/MediaPreference"
 import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
 import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
+// PROTOTYPE - throwaway (#661): Sides of you on the title page, on with ?variant= in development only.
+import { SidesProtoBar, SidesSlot, useSidesPrototype } from "~/ui/prototype-sides-title/SidesProto"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -62,6 +64,7 @@ function DetailsPage({
 	const country = preview.offers ? loadedCountry : preference.shown.country
 	const { details } = media
 	const { backdrop_path } = details
+	const sidesProto = useSidesPrototype(media.mediaType, details.tmdb_id)
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
 	const backdropUrl = backdrop_path ? tmdbImageUrl(backdrop_path, "w300") : ""
 
@@ -119,7 +122,10 @@ function DetailsPage({
 				preview={preview.offers}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
+				sidesSlot={<SidesSlot proto={sidesProto} at="hero" />}
 			/>
+
+			<SidesSlot proto={sidesProto} at="afterHero" />
 
 			<div className="isolate">
 				<DetailsFingerprint
@@ -127,6 +133,9 @@ function DetailsPage({
 					sectionProps={sectionProps.fingerprint}
 				/>
 			</div>
+
+			<SidesSlot proto={sidesProto} at="afterFingerprint" />
+			<SidesProtoBar proto={sidesProto} />
 
 			{talkedAboutNow && <TalkedAboutNowSlot media={media} />}
 

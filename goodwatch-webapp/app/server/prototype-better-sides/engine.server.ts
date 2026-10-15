@@ -39,7 +39,7 @@ for (const f of FAMILIES) for (const key of f.keys) FAMILY.set(key, f.id)
 const EDGE_STEP = 56
 const MORE_STEP = 65
 const MORE = 18
-const STRONG_Z = 1.2
+export const STRONG_Z = 1.2
 const EXCLUDED_COUNTRIES = new Set(["US", "GB"])
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" })
 const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
@@ -101,7 +101,7 @@ function kmeans(points: RatedTitle[], weights: number[], k: number, seed: Vec) {
 	return { centers, assigned }
 }
 
-function nearest(z: ArrayLike<number>, centers: Vec[]) {
+export function nearest(z: ArrayLike<number>, centers: Vec[]) {
 	let index = 0
 	let best = Number.NEGATIVE_INFINITY
 	let second = Number.NEGATIVE_INFINITY
@@ -599,7 +599,7 @@ function stepEdges(person: Person, side: { id: string; members: RatedTitle[]; ce
 }
 
 /** Unseen titles between this side and its closest other side. */
-function bridgeEdges(person: Person, sides: { id: string; center: Vec; anchor: TitleKey | null }[], index: number): ProtoEdge[] {
+export function bridgeEdges(person: Person, sides: { id: string; center: Vec; anchor: TitleKey | null }[], index: number): ProtoEdge[] {
 	const side = sides[index]
 	const other = sides
 		.map((s, i) => ({ s, i, similarity: cosine(s.center, side.center) }))

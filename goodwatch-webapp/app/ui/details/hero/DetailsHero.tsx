@@ -1,3 +1,4 @@
+import type React from "react"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
@@ -21,6 +22,8 @@ export interface DetailsHeroProps {
 	/** The show's episode grid, when it has one: the ratings row draws its miniature from it. */
 	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
+	/** PROTOTYPE - throwaway (#661): the Sides of you line, between the banner and the actions. */
+	sidesSlot?: React.ReactNode
 }
 
 // The title page's overview, one card under the page's header (which has the title).
@@ -33,7 +36,7 @@ export interface DetailsHeroProps {
 // Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
 // them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
 // phone the two scores stand over each other beside the poster, each as wide as the column.
-export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps }: DetailsHeroProps) {
+export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sidesSlot }: DetailsHeroProps) {
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
@@ -72,6 +75,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 							<div className="mt-3.5 md:hidden">{sites}</div>
 						</div>
 					</div>
+					{sidesSlot}
 					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
 						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
 							<ListActions media={media} />
