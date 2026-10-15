@@ -141,16 +141,18 @@ test("no auth cookie creates no client or requests", async () => {
 	assert.equal(requests.size, 0)
 	assert.equal(authCheckCounts.none, 1)
 })
-test("HS256 concurrent and subsequent callers share the server result", async () => {
+test("HS256 concurrent and subsequent callers share the server result", async (t) => {
 	const jwt = await token("one", { hs: true })
 	accepted.set(jwt, "one")
-	const first = resolveSession(cookie(jwt))
-	const second = resolveSession(cookie(jwt))
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	// A browser resends the same cookie, including expires_at; regenerating it across a second changes the memo key.
+	const header = cookie(jwt)
+	const first = resolveSession(header)
+	const second = resolveSession(header)
 	assert.equal(first, second)
-	const results = [
-		...(await Promise.all([first, second])),
-		await resolveSession(cookie(jwt)),
-	]
+	const results = await Promise.all([first, second])
+	t.mock.timers.tick(1000)
+	results.push(await resolveSession(header))
 	for (const result of results) assert.equal(result.user?.id, "one")
 	assert.equal(count("user"), 1)
 	assert.equal(count(".well-known/jwks.json"), 0)
