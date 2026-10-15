@@ -391,7 +391,9 @@ async function writeState(
 			if (!isCrateRecoveryError(error)) throw error
 			const checked = await inspect()
 			if (checked.applied) return true
-			if (!checked.stillBefore) return false
+			// Another version without ours is ambiguous: ours may have landed and then been superseded by that
+			// writer. False would make the caller apply this event again over the newer state, so fail instead.
+			if (!checked.stillBefore) throw error
 			crateEvent("crate.replay", { attempt: 2, outcome: "started", guard: "original_version" })
 			try {
 				if (((await submit()).rowcount || 0) >= 1) return true
@@ -400,9 +402,10 @@ async function writeState(
 				if ((await inspect()).applied) return true
 				throw retryError
 			}
-			// The original may have applied between readback and replay. A different writer still goes through
-			// the caller's existing optimistic-conflict loop, rather than overwriting its newer state.
-			return (await inspect()).applied
+			// The version moved after the readback: the original landed in between, or another writer did, possibly
+			// after ours. Only our own row proves the outcome. Anything else is indeterminate, not a conflict.
+			if ((await inspect()).applied) return true
+			throw error
 		}
 	})
 }

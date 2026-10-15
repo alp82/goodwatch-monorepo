@@ -3376,3 +3376,29 @@ for (const mutation of ["update", "delete"] as const) for (const outcome of ["ap
   assert.equal(calls,outcome==="applied"?1:2)
  })
 }
+
+for (const [mutation, first, second] of [
+	["update", { type: "drop" }, { type: "resume" }],
+	["delete", { type: "unwatch", season: 1, number: 1 }, { type: "watch", season: 1, number: 1 }],
+] as const) {
+	test(`a lost CAS ${mutation} response superseded by the next action fails rather than applying again over it`, async () => {
+		await tick(1, 1, "initial-watch")
+		const original = db.execute.bind(db)
+		let lost = false
+		db.execute = async (sql, params = []) => {
+			if (!lost && /^\s*(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+				// The first action lands and its response is lost. The member's next action reads that result and
+				// applies before the readback.
+				lost = true
+				await original(sql, params)
+				assert.equal((await act(second)).status, "applied")
+				throw Object.assign(new Error("fixture response lost"), { code: "ECONNRESET" })
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await assert.rejects(act(first), /fixture response lost/)
+		assert.equal(stateOf()?.state, "watching")
+		assert.deepEqual(ticks(), ["1.1"])
+	})
+}
