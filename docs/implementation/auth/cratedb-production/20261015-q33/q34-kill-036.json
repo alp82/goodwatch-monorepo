@@ -1,0 +1,19 @@
+{
+  "host": 12,
+  "stmt": "KILL '85b70659-506c-6060-afca-ce4c4503bba7'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:31:41.248446+00:00",
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 0,
+      "duration": 1.74892
+    },
+    "at": "2026-10-15T20:31:41.256974+00:00",
+    "elapsedSeconds": 0.009
+  }
+}

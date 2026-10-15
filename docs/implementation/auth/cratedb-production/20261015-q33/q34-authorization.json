@@ -1,0 +1,5 @@
+{
+  "at": "2026-10-15T20:31:08.303547+00:00",
+  "decision": "Owner Q34 option 1",
+  "scope": "Revalidate and individually KILL only 69 exact approved UUIDs through crate-02; never KILL ALL. Allow about five minutes for normal old exit; if still running authorize normal docker stop with generous grace, then staged target start/rejoin/allocation all/GREEN STARTED. Continue observers, verify scheduled backup. No other changes."
+}

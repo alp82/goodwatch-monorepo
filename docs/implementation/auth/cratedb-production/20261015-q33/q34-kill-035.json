@@ -1,0 +1,19 @@
+{
+  "host": 12,
+  "stmt": "KILL '7e6d32ac-3e33-7204-41db-ee2179b348d6'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T20:31:40.498562+00:00",
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 0,
+      "duration": 2.086612
+    },
+    "at": "2026-10-15T20:31:40.506989+00:00",
+    "elapsedSeconds": 0.008
+  }
+}

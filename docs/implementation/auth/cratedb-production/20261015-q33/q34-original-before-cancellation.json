@@ -1,0 +1,21 @@
+{
+  "id": "9681cc1407a560804fbfca49bf432f4ab38e148ec5f36cde826b6ecbd9566471",
+  "image": "crate:5.10.9",
+  "state": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 371694,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-09-27T10:40:07.329664004Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "restart": {
+    "Name": "no",
+    "MaximumRetryCount": 0
+  }
+}
