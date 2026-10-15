@@ -175,7 +175,9 @@ export function SourceImportCurrent({
 							className={secondaryButton}
 							onClick={onUploadAnother}
 						>
-							Choose another file
+							{summary.source === "tmdb"
+								? "Connect TMDB again"
+								: "Choose another file"}
 						</button>
 					)}
 				</div>
@@ -261,7 +263,9 @@ function Receipt({
 					className={secondaryButton}
 					onClick={onUploadAnother}
 				>
-					Import another export
+					{summary.source === "tmdb"
+						? "Connect TMDB again"
+						: "Import another export"}
 				</button>
 			</div>
 			{summary.canUndo &&

@@ -197,3 +197,29 @@ test("oversized Kodi uploads explain how to omit artwork", () => {
 		/Upload videodb\.xml by itself/,
 	)
 })
+
+test("TMDB offers Connect and an explicit return/cancel step without a file input", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/tmdb-connect-render.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const rendered = JSON.parse(output.split("__TMDB_RENDER__").at(-1) ?? "")
+	assert.match(rendered.start, /Connect TMDB/)
+	assert.match(rendered.start, /\/api\/imports\/tmdb\/start/)
+	assert.match(rendered.start, /read and write/)
+	assert.doesNotMatch(rendered.start, /type="file"/)
+	assert.match(rendered.returned, /Preview TMDB import/)
+	assert.match(rendered.returned, /\/api\/imports\/tmdb\/return/)
+	assert.match(rendered.returned, /\/api\/imports\/tmdb\/abandon/)
+	assert.match(rendered.returned, /name="state" value="flow-id"/)
+	assert.match(rendered.busy, /disabled=""/)
+	assert.match(rendered.failed, /role="alert"/)
+	assert.match(rendered.failed, /Please try again/)
+	assert.match(rendered.failed, /Start a new connection/)
+	assert.match(rendered.failed, /\/api\/imports\/tmdb\/start/)
+})

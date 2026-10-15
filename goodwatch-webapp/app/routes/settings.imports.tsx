@@ -29,6 +29,9 @@ export const meta: MetaFunction = () => [
 // the page still offers the upload.
 interface LoaderData extends ImdbImportListResponse {
 	sourceImports: ImportSummary[]
+	connectState?: string
+	openImport?: string
+	initialSource?: "tmdb"
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -48,7 +51,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			return []
 		}),
 	])
-	return json<LoaderData>({ imports: imdb, sourceImports: native }, { headers })
+	const url = new URL(request.url)
+	const connectState = url.searchParams.get("connect") ?? ""
+	const openImport = url.searchParams.get("import") ?? ""
+	return json<LoaderData>(
+		{
+			imports: imdb,
+			sourceImports: native,
+			initialSource:
+				url.searchParams.get("source") === "tmdb" ? "tmdb" : undefined,
+			connectState: /^[a-f0-9-]{36}$/.test(connectState)
+				? connectState
+				: undefined,
+			openImport: native.some(
+				(item) => item.source === "tmdb" && item.id === openImport,
+			)
+				? openImport
+				: undefined,
+		},
+		{ headers },
+	)
 }
 
 type ImportTab = "imdb" | ImportSource
@@ -59,11 +81,12 @@ const TABS: { id: ImportTab; label: string }[] = [
 	{ id: "csv", label: "Generic CSV" },
 	{ id: "movielens", label: "MovieLens" },
 	{ id: "kodi", label: "Kodi" },
+	{ id: "tmdb", label: "TMDB" },
 ]
 
 export default function SettingsImports() {
 	const data = useLoaderData<typeof loader>()
-	const [source, setSource] = useState<ImportTab>("imdb")
+	const [source, setSource] = useState<ImportTab>(data.initialSource ?? "imdb")
 	const tabsId = useId()
 	const chooseByKey = (
 		event: KeyboardEvent<HTMLButtonElement>,
@@ -125,9 +148,11 @@ export default function SettingsImports() {
 						<ImdbImportFlow initial={{ imports: data.imports }} />
 					) : (
 						<SourceImportFlow
-							key={source}
+							key={`${source}:${data.openImport ?? ""}:${data.connectState ?? ""}`}
 							source={source}
 							initial={{ imports: data.sourceImports }}
+							connectState={source === "tmdb" ? data.connectState : undefined}
+							initialId={source === "tmdb" ? data.openImport : undefined}
 						/>
 					)}
 				</div>

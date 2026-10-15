@@ -7,6 +7,7 @@ export const IMPORT_SOURCES = [
 	"csv",
 	"movielens",
 	"kodi",
+	"tmdb",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
@@ -14,6 +15,7 @@ export const IMPORT_SOURCE_NAMES = {
 	csv: "Generic CSV",
 	movielens: "MovieLens",
 	kodi: "Kodi",
+	tmdb: "TMDB",
 } as const
 export const IMPORT_SOURCE_FILE = {
 	letterboxd: "zip",
@@ -21,8 +23,17 @@ export const IMPORT_SOURCE_FILE = {
 	csv: "csv",
 	movielens: "csv",
 	kodi: "xml",
+	tmdb: null,
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
+export type FileImportSource = {
+	[Source in ImportSource]: (typeof IMPORT_SOURCE_FILE)[Source] extends string
+		? Source
+		: never
+}[ImportSource]
+export const isFileImportSource = (
+	source: ImportSource,
+): source is FileImportSource => IMPORT_SOURCE_FILE[source] !== null
 export const IMPORT_KINDS = [
 	"rating",
 	"watch",

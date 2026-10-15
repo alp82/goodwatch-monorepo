@@ -6,6 +6,7 @@ import {
 	type ImportObservation,
 	type ImportSource,
 	type ParsedImport,
+	isFileImportSource,
 } from "../../domain/imports.ts"
 
 const MAX_ARCHIVE_FILES = 200
@@ -684,6 +685,8 @@ export async function parseImportFile(
 	bytes: Uint8Array,
 	wishlist?: Uint8Array,
 ): Promise<ParsedImport> {
+	if (!isFileImportSource(source))
+		fail("Use Connect for this source instead of uploading a file.")
 	if (source === "kodi") return kodi(bytes)
 	if (source === "movielens") return movielens(bytes, wishlist)
 	if (source === "csv") return genericCsv(bytes)

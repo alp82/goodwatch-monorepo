@@ -4,6 +4,7 @@ import {
 	IMPORT_MAX_BYTES,
 	IMPORT_SOURCES,
 	IMPORT_SOURCE_FILE,
+	isFileImportSource,
 } from "~/domain/imports"
 import { withMember } from "~/server/imports/http.server"
 import { previewImport } from "~/server/imports/service.server"
@@ -55,6 +56,11 @@ export const action = ({ request }: ActionFunctionArgs) =>
 			throw new NativeImportError(
 				400,
 				"Choose an import source and export file.",
+			)
+		if (!isFileImportSource(source.data))
+			throw new NativeImportError(
+				400,
+				"Use Connect for this source instead of uploading a file.",
 			)
 		const wishlist = form.get("wishlist")
 		if (

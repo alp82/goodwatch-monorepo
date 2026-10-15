@@ -1,21 +1,21 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
 import {
+	type FileImportSource,
 	IMPORT_SOURCE_FILE,
 	IMPORT_SOURCE_NAMES,
-	type ImportSource,
 	type ImportSummary,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { usePreviewSourceImport } from "./SourceImportHooks"
 import { errorBox, primaryButton, stepHeading } from "./shared"
 
-const sourceName = (source: ImportSource) => IMPORT_SOURCE_NAMES[source]
+const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
 function SingleFileUploadPanel({
 	source,
 	onPreview,
-}: { source: ImportSource; onPreview: (summary: ImportSummary) => void }) {
+}: { source: FileImportSource; onPreview: (summary: ImportSummary) => void }) {
 	const fileType = IMPORT_SOURCE_FILE[source]
 	const fileLabel = source === "kodi" ? "XML or ZIP" : fileType.toUpperCase()
 	const inputRef = useRef<HTMLInputElement>(null)
@@ -152,7 +152,7 @@ function SingleFileUploadPanel({
 }
 
 export function SourceImportUploadPanel(props: {
-	source: ImportSource
+	source: FileImportSource
 	onPreview: (summary: ImportSummary) => void
 }) {
 	return props.source === "movielens" ? (

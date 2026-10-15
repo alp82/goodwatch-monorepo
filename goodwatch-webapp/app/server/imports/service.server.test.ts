@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { afterEach, describe, it } from "node:test"
 import type { ImportOptions } from "../../domain/imports.ts"
 import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
-import type { Param } from "./store.server.ts"
+import { ImportDb } from "./import-db.test-support.ts"
 
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = ""
@@ -34,519 +34,6 @@ const options: ImportOptions = {
 	kinds: ["favorite"],
 	conflictChoice: "source",
 	watchDates: "preserve",
-}
-
-// The fake implements only these statement shapes. Reject changed predicates or columns
-// instead of silently returning empty rows/success. Placeholder lists may vary in length.
-const supportedImportSql = new Set([
-	"SELECT payload, refreshed_at FROM anime_mapping_snapshot WHERE id = ?",
-	"UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-	"DELETE FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-	"DELETE FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-	"DELETE FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-	"INSERT INTO doc.user_import (id,user_id,source,status,file_name,counts,processed,total,added,updated,kept,failed,error,created_at,updated_at,warnings,kinds,file_hash) VALUES (?,'preview',?,0,?,0,0,0,0,NULL,?)",
-	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,imdb_id,title,year,outcome,reason,tmdb_id,media_type,current_score,season_number,episode_number,episode_tmdb_id,watched_at,watched_at_precision,pass) VALUES (?)",
-	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome,reason,tmdb_id,media_type) VALUES (?, ?, ?, 'state', ?, ?, 'new', NULL, ?, ?) ON CONFLICT (import_id,row_index) DO NOTHING",
-	"INSERT INTO user_favorite (user_id,tmdb_id,media_type,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
-	"INSERT INTO user_score (user_id,tmdb_id,media_type,score,review,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
-	"INSERT INTO user_wishlist (user_id,tmdb_id,media_type,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,media_type) DO NOTHING",
-	"REFRESH TABLE doc.user_import",
-	"REFRESH TABLE doc.user_import_item",
-	"REFRESH TABLE user_favorite",
-	"REFRESH TABLE user_not_interested",
-	"REFRESH TABLE user_score",
-	"REFRESH TABLE user_score, user_wishlist, user_favorite, user_watch_log, user_watch_state",
-	"REFRESH TABLE user_wishlist",
-	"REFRESH TABLE user_wishlist, user_watch_log",
-	"SELECT DISTINCT tmdb_id, media_type FROM user_watch_log WHERE user_id = ? LIMIT 100000",
-	"SELECT _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' GROUP BY apply_state",
-	"SELECT created_at, updated_at FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
-	"SELECT row_index, source_key, payload, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
-	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
-	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
-	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE tmdb_id IN (?)",
-	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE tmdb_id IN (?)",
-	"SELECT tmdb_id, media_type FROM user_favorite WHERE user_id = ? LIMIT 100000",
-	"SELECT tmdb_id, media_type FROM user_wishlist WHERE user_id = ? LIMIT 100000",
-	"SELECT tmdb_id, media_type, score, review, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? LIMIT 100000",
-	"SELECT tmdb_id, show_id, season_number, episode_number, name, tvdb_id FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
-	"SELECT watch_id FROM user_watch_log WHERE user_id = ? AND tmdb_id = ? AND media_type = ? LIMIT 1",
-	"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-	"UPDATE doc.user_import SET status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
-	"UPDATE doc.user_import SET status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
-	"UPDATE doc.user_import SET status = 'undone', updated_at = CURRENT_TIMESTAMP, finished_at = CURRENT_TIMESTAMP WHERE id = ?",
-	"UPDATE doc.user_import SET status = ?, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?",
-	"UPDATE doc.user_import_item SET apply_state = 'added', applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state IS NULL",
-	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
-	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
-	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
-	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
-	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
-	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id = ?",
-	"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-])
-function assertSupportedImportSql(sql: string) {
-	const shape = sql
-		.replace(/\?(?:,\?)+/g, "?")
-		.replace(/\(\?\)(?:,\(\?\))+/g, "(?)")
-	if (!supportedImportSql.has(shape))
-		throw new Error(`Unexpected import SQL: ${sql}`)
-}
-
-class ImportDb {
-	animeSnapshot: unknown = null
-	imports: Row[] = []
-	items: Row[] = []
-	favorites: Row[] = []
-	wishlist: Row[] = []
-	catalog: Row[] = []
-	episodes: Row[] = []
-	catalogQueries: { sql: string; params: Param[] }[] = []
-	scores: Row[] = []
-	failWishlistDeleteOnce = false
-	failFavoriteOnce = false
-	failScoreOnce = false
-	private version = 10
-
-	seed(userId = "member") {
-		const now = new Date("2026-10-09T12:00:00Z")
-		this.imports.push({
-			id: "11111111-1111-4111-8111-111111111111",
-			user_id: userId,
-			source: "letterboxd",
-			status: "preview",
-			file_name: "export.zip",
-			counts: JSON.stringify({
-				rows: 1,
-				new: 1,
-				unchanged: 0,
-				conflict: 0,
-				unmatched: 0,
-				unsupported: 0,
-				invalid: 0,
-			}),
-			processed: 0,
-			total: 1,
-			added: 0,
-			updated: 0,
-			kept: 0,
-			failed: 0,
-			error: null,
-			created_at: now,
-			updated_at: now,
-			confirmed_at: null,
-			finished_at: null,
-			options: null,
-			warnings: "[]",
-			kinds: JSON.stringify({
-				rating: 0,
-				watch: 0,
-				want: 0,
-				favorite: 1,
-				review: 0,
-			}),
-			_seq_no: 1,
-			_primary_term: 1,
-		})
-		this.items.push({
-			import_id: this.imports[0].id,
-			row_index: 0,
-			user_id: userId,
-			kind: "favorite",
-			source_key: "letterboxd:favorite:one",
-			payload: JSON.stringify({
-				key: "letterboxd:favorite:one",
-				kind: "favorite",
-				mediaType: "movie",
-				title: "One",
-				year: 2024,
-				tmdbId: 42,
-				imdbId: null,
-				index: 0,
-				outcome: "new",
-				reason: null,
-			}),
-			outcome: "new",
-			reason: null,
-			tmdb_id: 42,
-			media_type: "movie",
-			current_score: null,
-			apply_state: null,
-		})
-	}
-
-	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
-		const s = sql.replace(/\s+/g, " ").trim()
-		assertSupportedImportSql(s)
-		if (s.includes("FROM anime_mapping_snapshot"))
-			return [
-				{
-					payload: JSON.stringify(this.animeSnapshot),
-					refreshed_at: Date.now(),
-				},
-			] as unknown as T[]
-		if (s.includes("FROM episode WHERE"))
-			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
-		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
-			this.catalogQueries.push({ sql: s, params: [...params] })
-			const rows = this.catalog.filter((row) =>
-				s.includes("tmdb_id IN")
-					? params.includes(Number(row.tmdb_id))
-					: s.includes("imdb_id IN")
-						? params.includes(String(row.imdb_id))
-						: String(row.title).toLowerCase() ===
-								String(params[0]).toLowerCase() &&
-							row.release_year === params[1],
-			)
-			return rows as T[]
-		}
-		if (s.includes("FROM user_watch_log")) return []
-		if (s.includes("FROM doc.user_import WHERE id = ?")) {
-			const row = this.imports.find((x) => x.id === params[0])
-			return (row ? [{ ...row, read_at: new Date() }] : []) as unknown as T[]
-		}
-		if (s.includes("FROM doc.user_import_item")) {
-			let rows = this.items.filter(
-				(x) =>
-					x.import_id === params[0] && (!params[1] || x.user_id === params[1]),
-			)
-			if (s.includes("kind = 'state'"))
-				rows = rows.filter((x) => x.kind === "state")
-			if (s.includes("kind <> 'state'"))
-				rows = rows.filter((x) => x.kind !== "state")
-			if (s.includes("apply_state IS NULL OR apply_state = 'failed'"))
-				rows = rows.filter(
-					(x) => x.apply_state == null || x.apply_state === "failed",
-				)
-			if (s.includes("GROUP BY apply_state")) {
-				const counts = new Map<unknown, number>()
-				for (const row of rows)
-					counts.set(row.apply_state, (counts.get(row.apply_state) ?? 0) + 1)
-				return [...counts].map(([apply_state, n]) => ({
-					apply_state,
-					n,
-				})) as unknown as T[]
-			}
-			return rows.map((x) => ({ ...x })) as T[]
-		}
-		if (s.includes("FROM user_favorite") || s.includes("FROM user_wishlist")) {
-			const list = s.includes("FROM user_wishlist")
-				? this.wishlist
-				: this.favorites
-			if (params.length === 1)
-				return list
-					.filter((x) => x.user_id === params[0])
-					.map((x) => ({ ...x })) as T[]
-			const row = list.find(
-				(x) =>
-					x.user_id === params[0] &&
-					x.tmdb_id === params[1] &&
-					x.media_type === params[2],
-			)
-			return (row ? [{ ...row }] : []) as T[]
-		}
-		if (s.includes("FROM user_score")) {
-			const row = this.scores.find(
-				(x) =>
-					x.user_id === params[0] &&
-					x.tmdb_id === params[1] &&
-					x.media_type === params[2],
-			)
-			return (row ? [{ ...row }] : []) as T[]
-		}
-		if (
-			s.includes("FROM user_wishlist") ||
-			s.includes("FROM user_not_interested")
-		)
-			return []
-		throw new Error(`Unexpected select: ${s}`)
-	}
-
-	async run(sql: string, params: Param[]) {
-		const s = sql.replace(/\s+/g, " ").trim()
-		assertSupportedImportSql(s)
-		if (s.startsWith("INSERT INTO doc.user_import (")) {
-			this.imports.push({
-				id: params[0],
-				user_id: params[1],
-				source: params[2],
-				status: "preview",
-				file_name: params[3],
-				counts: params[4],
-				total: params[5],
-				created_at: params[6],
-				updated_at: params[7],
-				warnings: params[8],
-				kinds: params[9],
-				processed: 0,
-				added: 0,
-				updated: 0,
-				kept: 0,
-				failed: 0,
-				finished_at: null,
-				options: null,
-				_seq_no: 1,
-				_primary_term: 1,
-			})
-			return { rowcount: 1 }
-		}
-		if (
-			s.startsWith("INSERT INTO doc.user_import_item (") &&
-			s.includes("'state'")
-		) {
-			this.items.push({
-				import_id: params[0],
-				row_index: params[1],
-				user_id: params[2],
-				kind: "state",
-				source_key: params[3],
-				payload: params[4],
-				outcome: "new",
-				tmdb_id: params[5],
-				media_type: params[6],
-				apply_state: null,
-			})
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("INSERT INTO doc.user_import_item (")) {
-			const columns = s.slice(s.indexOf("(") + 1, s.indexOf(")")).split(",")
-			for (let i = 0; i < params.length; i += columns.length)
-				this.items.push(
-					Object.fromEntries(
-						columns.map((column, j) => [column, params[i + j]]),
-					),
-				)
-			return { rowcount: params.length / columns.length }
-		}
-		if (s.startsWith("UPDATE episode SET")) return { rowcount: 0 }
-		if (s.startsWith("REFRESH TABLE")) return { rowcount: 1 }
-		if (s.startsWith("UPDATE doc.user_import SET")) {
-			if (s.includes("_seq_no = ?")) {
-				const seq = Number(params.at(-2))
-				const term = Number(params.at(-1))
-				const claimId = String(params.at(-3))
-				const claim = this.imports.find((x) => x.id === claimId)
-				if (!claim || claim._seq_no !== seq || claim._primary_term !== term)
-					return { rowcount: 0 }
-				if (s.includes("options = ?")) claim.options = params[0]
-				claim.status = "running"
-				claim.error = null
-				claim.updated_at = new Date()
-				claim._seq_no = ++this.version
-				return { rowcount: 1 }
-			}
-			const id = String(params.at(-1))
-			const row = this.imports.find((x) => x.id === id)
-			if (!row) return { rowcount: 0 }
-			if (s.includes("processed = ?"))
-				Object.assign(row, {
-					processed: params[0],
-					added: params[1],
-					updated: params[2],
-					kept: params[3],
-					failed: params[4],
-				})
-			else if (s.includes("status = ?"))
-				Object.assign(row, {
-					status: params[0],
-					error: params[1],
-					finished_at: new Date(),
-				})
-			else if (s.includes("status = 'undone'"))
-				Object.assign(row, { status: "undone", finished_at: new Date() })
-			else if (s.includes("status = 'failed'"))
-				Object.assign(row, { status: "failed", error: params[0] })
-			else if (
-				s !==
-				"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?"
-			)
-				throw new Error(`Unexpected import update: ${s}`)
-			row.updated_at = new Date()
-			row._seq_no = ++this.version
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("UPDATE doc.user_import_item SET payload")) {
-			const row = requiredRow(
-				this.items.find(
-					(x) => x.import_id === params[1] && x.row_index === params[2],
-				),
-			)
-			row.payload = params[0]
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = 'added'")) {
-			const row = requiredRow(
-				this.items.find(
-					(x) => x.import_id === params[0] && x.row_index === params[1],
-				),
-			)
-			row.apply_state = "added"
-			return { rowcount: 1 }
-		}
-		if (
-			s.startsWith("UPDATE doc.user_import_item SET apply_state = ?") &&
-			s.includes("watch_id = ?")
-		) {
-			const row = requiredRow(
-				this.items.find(
-					(x) => x.import_id === params[2] && x.row_index === params[3],
-				),
-			)
-			row.apply_state = params[0]
-			row.watch_id = params[1]
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = ?")) {
-			const row = requiredRow(
-				this.items.find(
-					(x) => x.import_id === params[1] && x.row_index === params[2],
-				),
-			)
-			row.apply_state = params[0]
-			return { rowcount: 1 }
-		}
-		if (s.includes("UPDATE doc.user_import_item SET apply_state = 'undone'")) {
-			for (const row of this.items)
-				if (
-					row.import_id === params[0] &&
-					["added", "updated", "kept"].includes(String(row.apply_state)) &&
-					(!s.includes("kind IN") ||
-						(s.includes("'show_status'")
-							? ["watch", "show_status", "state"]
-							: ["watch", "state"]
-						).includes(String(row.kind)))
-				)
-					row.apply_state = "undone"
-			return { rowcount: 1 }
-		}
-		if (
-			s.startsWith("INSERT INTO user_favorite") ||
-			s.startsWith("INSERT INTO user_wishlist")
-		) {
-			const list = s.startsWith("INSERT INTO user_wishlist")
-				? this.wishlist
-				: this.favorites
-			if (this.failFavoriteOnce) {
-				this.failFavoriteOnce = false
-				throw new Error("injected interruption")
-			}
-			if (
-				!list.some(
-					(x) =>
-						x.user_id === params[0] &&
-						x.tmdb_id === params[1] &&
-						x.media_type === params[2],
-				)
-			)
-				list.push({
-					user_id: params[0],
-					tmdb_id: params[1],
-					media_type: params[2],
-					created_at: params[3],
-					updated_at: params[4],
-					_seq_no: ++this.version,
-					_primary_term: 1,
-				})
-			return { rowcount: 1 }
-		}
-		if (
-			s.startsWith("DELETE FROM user_favorite") ||
-			s.startsWith("DELETE FROM user_wishlist")
-		) {
-			const name = s.startsWith("DELETE FROM user_wishlist")
-				? "wishlist"
-				: "favorites"
-			if (this.failWishlistDeleteOnce && name === "wishlist") {
-				this.failWishlistDeleteOnce = false
-				throw new Error("injected interruption")
-			}
-			const before = this[name].length
-			this[name] = this[name].filter(
-				(x) =>
-					!(
-						x.user_id === params[0] &&
-						x.tmdb_id === params[1] &&
-						x.media_type === params[2] &&
-						x._seq_no === params[3] &&
-						x._primary_term === params[4]
-					),
-			)
-			return { rowcount: before - this[name].length }
-		}
-		if (s.startsWith("INSERT INTO user_score")) {
-			if (this.failScoreOnce) {
-				this.failScoreOnce = false
-				throw new Error("injected score interruption")
-			}
-			if (
-				!this.scores.some(
-					(x) =>
-						x.user_id === params[0] &&
-						x.tmdb_id === params[1] &&
-						x.media_type === params[2],
-				)
-			)
-				this.scores.push({
-					user_id: params[0],
-					tmdb_id: params[1],
-					media_type: params[2],
-					score: params[3],
-					review: params[4],
-					created_at: params[5],
-					updated_at: params[6],
-					_seq_no: ++this.version,
-					_primary_term: 1,
-				})
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("UPDATE user_score SET score")) {
-			const restore = s.includes("created_at = ?")
-			const at = restore ? 4 : 3
-			const row = this.scores.find(
-				(x) =>
-					x.user_id === params[at] &&
-					x.tmdb_id === params[at + 1] &&
-					x.media_type === params[at + 2] &&
-					x._seq_no === params[at + 3] &&
-					x._primary_term === params[at + 4],
-			)
-			if (!row) return { rowcount: 0 }
-			Object.assign(row, {
-				score: params[0],
-				review: params[1],
-				...(restore
-					? { created_at: params[2], updated_at: params[3] }
-					: { updated_at: params[2] }),
-				_seq_no: ++this.version,
-			})
-			return { rowcount: 1 }
-		}
-		if (s.startsWith("DELETE FROM user_score")) {
-			const before = this.scores.length
-			this.scores = this.scores.filter(
-				(x) =>
-					!(
-						x.user_id === params[0] &&
-						x.tmdb_id === params[1] &&
-						x.media_type === params[2] &&
-						x._seq_no === params[3] &&
-						x._primary_term === params[4]
-					),
-			)
-			return { rowcount: before - this.scores.length }
-		}
-
-		throw new Error(`Unexpected run: ${s}`)
-	}
 }
 
 async function waitFor(db: ImportDb, status: string) {
@@ -1946,4 +1433,126 @@ it("re-importing Dropped after Resume explains the replacement in this show's pr
 	const receipt = await getImportItems("member", again.id, undefined, 0, 50)
 	assert.equal(receipt.items[0].applyState, "added")
 	assert.equal(receipt.items[0].reason, before.items[0].reason)
+})
+
+it("a fetched source uses the shared preview, receipt and undo without a file", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const { previewFetchedImport } = await import("./service.server.ts")
+	const preview = await previewFetchedImport(
+		"member",
+		"TMDB account",
+		async () => ({
+			source: "tmdb",
+			warnings: ["Half steps round up: 7.5 becomes 8."],
+			observations: [
+				{
+					key: "tmdb:rating:movie:862",
+					kind: "rating",
+					mediaType: "movie",
+					title: "Toy Story",
+					year: 1995,
+					tmdbId: 862,
+					imdbId: null,
+					score: 8,
+					addedAt: "2020-02-01T12:00:00.000Z",
+				},
+			],
+		}),
+	)
+	assert.equal(preview.fileName, "TMDB account")
+	assert.equal(preview.source, "tmdb")
+	assert.equal(preview.counts.new, 1)
+	assert.equal(preview.kinds.watch, 0)
+	assert.equal(
+		(await getImportItems("member", preview.id, undefined, 0, 50)).items[0]
+			.addedAt,
+		"2020-02-01T12:00:00.000Z",
+	)
+	await assert.rejects(getImport("someone-else", preview.id))
+	await confirmImport("member", preview.id, { ...options, kinds: ["rating"] })
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 1)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+})
+
+it("TMDB's six fetched lists share kind selection, skipped receipts, repeat preview and undo", async () => {
+	const db = new ImportDb()
+	db.catalog = [1, 2, 3].map((tmdb_id) => ({
+		tmdb_id,
+		imdb_id: null,
+		title: "Synthetic title",
+		release_year: 2000,
+	}))
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const { createTmdbClient } = await import("./tmdb-client.server.ts")
+	const { previewFetchedImport, getSkippedCsv } = await import(
+		"./service.server.ts"
+	)
+	const client = createTmdbClient({
+		appToken: "app",
+		sleep: async () => {},
+		fetch: async (url) => {
+			const path = new URL(String(url)).pathname
+			const id = path.endsWith("rated") ? 1 : path.endsWith("watchlist") ? 2 : 3
+			const results = [
+				{
+					id,
+					title: "Synthetic title",
+					name: "Synthetic show",
+					account_rating: { value: 8.5, created_at: "2020-01-01T12:00:00Z" },
+				},
+				...(path.endsWith("movie/rated")
+					? [{ id: 99, title: "Missing title" }]
+					: []),
+			]
+			return Response.json({
+				page: 1,
+				total_pages: 1,
+				total_results: results.length,
+				results,
+			})
+		},
+	})
+	const read = () => client.readAccount("account", "member-token")
+	const preview = await previewFetchedImport("member", "TMDB account", read)
+	assert.deepEqual(preview.kinds, {
+		rating: 3,
+		watch: 0,
+		want: 2,
+		favorite: 2,
+		review: 0,
+	})
+	assert.equal(preview.counts.invalid, 1)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["rating", "want", "favorite"],
+	})
+	await waitFor(db, "done")
+	const receipt = await getImport("member", preview.id)
+	assert.equal(receipt.applied.added, 6)
+	assert.match(await getSkippedCsv("member", preview.id), /Missing title/)
+	const repeat = await previewFetchedImport("member", "TMDB account", read)
+	assert.equal(repeat.counts.unchanged, 6)
+	await undoImport("member", preview.id)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+	const afterUndo = await previewFetchedImport("member", "TMDB account", read)
+	assert.equal(afterUndo.counts.new, 6)
 })

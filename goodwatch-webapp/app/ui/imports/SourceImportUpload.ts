@@ -1,12 +1,12 @@
 import {
+	type FileImportSource,
 	IMPORT_MAX_BYTES,
 	IMPORT_SOURCE_FILE,
-	type ImportSource,
 } from "~/domain/imports"
 
 /** Builds the import endpoint's multipart request after browser-side validation. */
 export function buildSourceImportUpload(
-	source: ImportSource,
+	source: FileImportSource,
 	file: File,
 	wishlist?: File,
 ): FormData {

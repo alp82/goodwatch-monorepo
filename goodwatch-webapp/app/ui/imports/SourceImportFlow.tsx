@@ -7,6 +7,7 @@ import {
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
+import { TmdbConnectPanel } from "./TmdbConnectPanel"
 import {
 	card,
 	formatCount,
@@ -30,13 +31,20 @@ const outcome = (item: ImportSummary) =>
 export function SourceImportFlow({
 	source,
 	initial,
-}: { source: ImportSource; initial: ImportListResponse }) {
+	connectState,
+	initialId,
+}: {
+	source: ImportSource
+	initial: ImportListResponse
+	connectState?: string
+	initialId?: string
+}) {
 	const query = useSourceImports(initial)
 	const history = (query.data?.imports ?? []).filter(
 		(item) => item.source === source && item.status !== "preview",
 	)
 	const latest = history[0]
-	const [openId, setOpenId] = useState<string | null>(null)
+	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
 	const [uploadOpen, setUploadOpen] = useState(!latest)
 	const [acted, setActed] = useState(false)
 	const shownId =
@@ -85,7 +93,9 @@ export function SourceImportFlow({
 										className={primaryButton}
 										onClick={upload}
 									>
-										Upload a newer export
+										{source === "tmdb"
+											? "Connect TMDB again"
+											: "Upload a newer export"}
 									</button>
 								)}
 								<button
@@ -98,12 +108,15 @@ export function SourceImportFlow({
 							</div>
 						</section>
 					)}
-					{(!latest || uploadOpen) && (
-						<SourceImportUploadPanel
-							source={source}
-							onPreview={(summary) => open(summary.id)}
-						/>
-					)}
+					{(!latest || uploadOpen || connectState) &&
+						(source === "tmdb" ? (
+							<TmdbConnectPanel state={connectState} />
+						) : (
+							<SourceImportUploadPanel
+								source={source}
+								onPreview={(summary) => open(summary.id)}
+							/>
+						))}
 				</>
 			)}
 			{others.length > 0 && (

@@ -57,3 +57,15 @@ export const getSkippedCsv = (userId: string, id: string) =>
 	skippedCsv(userId, id)
 export { confirmImport, undoImport }
 export type { ImportOptions }
+
+/** Fetch adapters return only observations, never credentials or raw API responses. */
+export const previewFetchedImport = async (
+	userId: string,
+	displayName: string,
+	fetchObservations: () => Promise<ParsedImport>,
+) =>
+	(await import("./preview.server.ts")).createObservationPreview(
+		userId,
+		displayName,
+		await fetchObservations(),
+	)

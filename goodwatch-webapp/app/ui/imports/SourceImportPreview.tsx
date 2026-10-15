@@ -227,7 +227,9 @@ export function SourceImportPreview({
 					disabled={confirming}
 					onClick={onBack}
 				>
-					Choose another file
+					{summary.source === "tmdb"
+						? "Connect TMDB again"
+						: "Choose another file"}
 				</button>
 			</div>
 			<div aria-live="assertive">

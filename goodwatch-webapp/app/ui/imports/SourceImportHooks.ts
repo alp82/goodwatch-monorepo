@@ -6,10 +6,10 @@ import {
 } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
 import type {
+	FileImportSource,
 	ImportItem,
 	ImportOptions,
 	ImportOutcome,
-	ImportSource,
 	ImportStatus,
 	ImportSummary,
 } from "~/domain/imports"
@@ -140,7 +140,7 @@ export function usePreviewSourceImport() {
 	return useMutation<
 		ImportResponse,
 		Error,
-		{ source: ImportSource; file: File; wishlist?: File }
+		{ source: FileImportSource; file: File; wishlist?: File }
 	>({
 		mutationFn: ({ source, file, wishlist }) =>
 			request<ImportResponse>(`${API}/preview`, {
