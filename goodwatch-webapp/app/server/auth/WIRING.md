@@ -39,7 +39,8 @@ no global user/account cap. DCR is limited to 30 attempts per trusted IP per hou
 Unused clients expire after 24 hours. Only new-system signups receive private
 insertion provenance and qualify for unconfirmed collection after 48 hours from
 insertion/latest confirmation issuance. Imported and unmarked members never qualify;
-logical `createdAt` is ignored.
+logical `createdAt` is ignored. Confirmation permanently retires signup provenance
+in the user CAS, so later email reverification cannot make the member collectable.
 Older prerelease global ledgers need a coordinated rebuild/reimport. Browser sessions also carry a private credential
 version checked against the current password hash, including DB fallback.
 A password change cannot admit a login paused before session insertion.

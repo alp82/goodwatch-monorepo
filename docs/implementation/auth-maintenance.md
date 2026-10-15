@@ -132,7 +132,10 @@ eligibility or age. Imported and legacy unmarked members never qualify, even if
 unconfirmed for years or subsequently requesting confirmation. When an eligible
 signup is collected, its credential accounts are reconciled in the same pass and
 its unchanged email claim is released. Verification racing collection
-must win the user CAS to preserve the member.
+must win the user CAS to preserve the member. Confirmation permanently clears both
+private signup timestamps in that user CAS. Already-confirmed rows also retire
+those timestamps on their next mutation. Later email reverification cannot restore
+signup-collection eligibility.
 
 The adapter still refuses enumerations above 10,000 rather than silently truncate
 hooks. Member/client predicates are protected by their own allowances; static

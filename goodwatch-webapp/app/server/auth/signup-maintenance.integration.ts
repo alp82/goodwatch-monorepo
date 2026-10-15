@@ -267,3 +267,61 @@ test("a confirmation resent at hour forty-seven remains usable at hour forty-nin
 		t.mock.timers.reset()
 	}
 })
+
+test("a once-confirmed signup survives later email reverification and maintenance", async () => {
+	const adapter = (await auth.$context).adapter
+	const email = `${randomUUID()}@example.test`
+	const signup = await post("/sign-up/email", {
+		email,
+		name: "Established member",
+		password: "local secure signup password",
+	})
+	assert.equal(signup.status, 200, await signup.clone().text())
+	await mail.drain()
+	const link = deliveries
+		.at(-1)
+		?.match(/http:\/\/127\.0\.0\.1:3360\/api\/auth\/\S+/)?.[0]
+	assert.ok(link)
+	const confirmation = await auth.handler(new Request(link))
+	assert.ok(
+		[200, 302].includes(confirmation.status),
+		await confirmation.clone().text(),
+	)
+	const member = await adapter.findOne<{ id: string; emailVerified: boolean }>({
+		model: "user",
+		where: [{ field: "email", value: email }],
+	})
+	assert.ok(member)
+	assert.equal(member.emailVerified, true)
+
+	// Model a later change-email flow requiring the established member to verify again.
+	const replacement = `${randomUUID()}@example.test`
+	await adapter.update({
+		model: "user",
+		where: [{ field: "id", value: member.id }],
+		update: { email: replacement, emailVerified: false },
+	})
+	const resend = await post("/send-verification-email", { email: replacement })
+	assert.equal(resend.status, 200, await resend.clone().text())
+	await mail.drain()
+	await pass(new Date(Date.now() + 60 * 86400000))
+
+	const retained = await adapter.findOne<{
+		id: string
+		emailVerified: boolean
+	}>({
+		model: "user",
+		where: [{ field: "email", value: replacement }],
+	})
+	assert.equal(retained?.id, member.id)
+	assert.equal(retained.emailVerified, false)
+	assert.equal(
+		(
+			await adapter.findMany({
+				model: "account",
+				where: [{ field: "userId", value: member.id }],
+			})
+		).length,
+		1,
+	)
+})
