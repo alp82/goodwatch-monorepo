@@ -29,6 +29,17 @@ As with a watch recorded in GoodWatch, imported watches can clear an existing Wa
 
 Rating-only imports preserve existing intention lists, following the existing IMDb importer rather than the interactive rating action. A newly imported Want to See entry clears an unchanged Not interested entry.
 
+## Import and Undo result
+
+After an import finishes, and again after its Undo, the Imports page shows what changed per title (#664, variation A of #651): a success message with a one-line summary, then one list per kind of change. After an import: ratings added, ratings replaced (old and new value), reviews, watches with their days or "Date unknown" and the show status they set, show statuses, Want to See, favorites, what was taken off a list, what was kept, and the rows not imported with their reasons. After Undo: the list choices Undo could not put back come first, with buttons that add the title to Want to See or Not interested again (now, without the original date); then ratings removed and put back, reviews, watches removed, show statuses put back, Want to See and favorites removed, lists put back, and what was left as the member changed it. Every source uses this screen, IMDb included.
+
+`GET /api/imports/:id/items?by=title` and `GET /api/imdb-import/:id/items?by=title` serve it (`ImportResult` in `app/domain/import-result.ts`) with the first 25 titles of each section; `&section=…&offset=…&limit=…` serves the rest. Native imports read the journal in each row's payload and each title's watch plan; IMDb imports read `prior_score`, `applied_score` and `undo_outcome`. Titles, years and posters come from the catalog, only for the titles on the page.
+
+- Importing Want to See records the Not interested choice it clears in the row's journal (`cleared`), before deleting it. Undo does not put it back; the result lists it.
+- Undo records per row what it did in `undo_outcome`: `reverted`, or `left` where the member changed the rating, review, list entry or show status after the import. A resumed Undo skips rows that already have an outcome, and a row already back to its earlier value counts as reverted. Watch plans record theirs on the title's `state` row. Imports undone before this change have no outcome; their rows count as reverted.
+
+Apply the additive [migration](imports/import-undo-outcome.sql) (`ALTER TABLE doc.user_import_item ADD COLUMN undo_outcome TEXT`) before deploying: Undo writes the column and the import routes read it, so without it they answer "Importing isn't available yet".
+
 ## Show status observations
 
 Issue #645 adds `kind: "show_status"` with `showStatus: "watching" | "on_hold" | "dropped" | "plan_to_watch" | "completed"`. The MyAnimeList/Kitsu adapter emits this kind. Adapters can submit a `ParsedImport` through `previewParsedImport(userId, fileName, parsed, fileHash?)`; uploads delegate to the same boundary after parsing and hashing their original bytes. All observations still pass through catalog matching, preview, selection, the durable receipt, resume and undo.
@@ -84,7 +95,7 @@ The archive reader works in memory with bounded compressed size, expanded size, 
 Synthetic tests cover archive parsing, rendered preview controls, service ownership and receipts, interrupted writes, later edits, dependent rating/review writes, duplicate watches, concurrent tracking and undo ordering. Run them from `goodwatch-webapp`:
 
 ```sh
-node --test app/server/imports/*.test.ts app/server/tracking.test.ts app/server/imdb-import/*.test.ts app/ui/imports/SourceImportHooks.test.ts
+node --test app/server/imports/*.test.ts app/server/tracking.test.ts app/server/imdb-import/*.test.ts app/ui/imports/*.test.ts
 ```
 
 The service tests inject the database boundary; they do not replace a live CrateDB rollout check. The supplied private archives were read directly outside the repository; their contents are not committed. These establish real export shapes, not complete coverage of every export variant.

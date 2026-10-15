@@ -1,0 +1,207 @@
+// The result screen of a finished or undone import, for every source: it loads the result grouped by title from
+// the import's items API and draws it with ImportResultView.
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { type ReactNode, useState } from "react"
+import type {
+	ImportResult as ImportResultData,
+	ImportResultPage,
+	ImportResultSection,
+} from "~/domain/import-result"
+import {
+	useNotInterestedMutation,
+	useWishlistMutation,
+} from "~/hooks/useUserDataMutations"
+import { Spinner } from "~/ui/wait/Spinner"
+import {
+	ImportResultView,
+	type PutBack,
+	ResultRows,
+	plural,
+	resultList,
+} from "./ImportResultView"
+import { errorBox, secondaryButton, textLink } from "./shared"
+
+/** The import routes whose items API serves `?by=title`. */
+export type ImportResultApi = "/api/imports" | "/api/imdb-import"
+const PAGE = 100
+
+async function request<T>(url: string): Promise<T> {
+	let response: Response
+	try {
+		response = await fetch(url)
+	} catch {
+		throw new Error(
+			"We couldn't reach GoodWatch. Check your connection and try again.",
+		)
+	}
+	const body = await response.json().catch(() => null)
+	if (!response.ok || body === null)
+		throw new Error(
+			typeof body?.error === "string" && body.error
+				? body.error
+				: "Something went wrong on our side. Please try again.",
+		)
+	return body as T
+}
+const itemsUrl = (api: ImportResultApi, id: string) =>
+	`${api}/${encodeURIComponent(id)}/items?by=title`
+
+/** The status is part of the key: Undo turns the import's result into the Undo result. */
+const resultKey = (api: ImportResultApi, id: string, status: string) =>
+	["import-result", api, id, status] as const
+
+function MoreRows({
+	api,
+	id,
+	status,
+	section,
+}: {
+	api: ImportResultApi
+	id: string
+	status: string
+	section: ImportResultSection
+}) {
+	const [open, setOpen] = useState(false)
+	const query = useInfiniteQuery({
+		queryKey: [...resultKey(api, id, status), section.key],
+		enabled: open,
+		initialPageParam: section.rows.length,
+		queryFn: ({ pageParam }) =>
+			request<ImportResultPage>(
+				`${itemsUrl(api, id)}&section=${section.key}&offset=${pageParam}&limit=${PAGE}`,
+			),
+		getNextPageParam: (last, pages) => {
+			const loaded =
+				section.rows.length + pages.reduce((n, page) => n + page.rows.length, 0)
+			return last.rows.length > 0 && loaded < last.total ? loaded : undefined
+		},
+	})
+	const rows = query.data?.pages.flatMap((page) => page.rows) ?? []
+	const left = section.total - section.rows.length - rows.length
+	return (
+		<>
+			{rows.length > 0 && (
+				<ul
+					aria-label={`More of ${section.key.replace(/_/g, " ")}`}
+					className={`${resultList} mt-2 border-slate-700`}
+				>
+					<ResultRows rows={rows} />
+				</ul>
+			)}
+			{query.isError && (
+				<p className={`${errorBox} mt-2`}>{query.error.message}</p>
+			)}
+			{left > 0 && (
+				<button
+					type="button"
+					className={`${textLink} mt-2 inline-flex min-h-11 items-center gap-2`}
+					disabled={query.isFetching}
+					onClick={() => (open ? query.fetchNextPage() : setOpen(true))}
+				>
+					{query.isFetching && <Spinner size="small" />}
+					{open
+						? `Show ${plural(Math.min(left, PAGE), "more title", "more titles")}`
+						: `Show all ${section.total.toLocaleString()}`}
+				</button>
+			)}
+		</>
+	)
+}
+
+/** Puts a title back on Want to See or Not interested, now, without the date it had before the import. */
+function PutBackButton({ title, list }: PutBack) {
+	const wishlist = useWishlistMutation()
+	const notInterested = useNotInterestedMutation()
+	const mutation = list === "Want to See" ? wishlist : notInterested
+	const done = mutation.isSuccess && mutation.data?.status === "success"
+	const failed =
+		mutation.isError ||
+		(mutation.isSuccess && mutation.data?.status !== "success")
+	return (
+		<div className="flex flex-col items-start gap-1">
+			<button
+				type="button"
+				disabled={mutation.isPending || done}
+				onClick={() =>
+					mutation.mutate({
+						mediaType: title.mediaType,
+						tmdbId: title.tmdbId,
+						action: "add",
+					})
+				}
+				className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-3 py-1 text-sm font-semibold disabled:cursor-default ${done ? "border-emerald-700 bg-emerald-950 text-emerald-200" : "border-slate-600 bg-slate-800 text-gray-200 hover:bg-slate-700"}`}
+			>
+				{mutation.isPending && <Spinner size="small" />}
+				{done
+					? `Back on ${list}`
+					: list === "Want to See"
+						? "Add back to Want to See"
+						: "Mark Not interested again"}
+			</button>
+			{failed && (
+				<p className="text-sm text-red-200" role="alert">
+					That didn't work. Try again.
+				</p>
+			)}
+		</div>
+	)
+}
+
+export function ImportResult({
+	api,
+	id,
+	status,
+	from,
+	focus,
+	children,
+}: {
+	api: ImportResultApi
+	id: string
+	/** "done" or "undone". */
+	status: string
+	/** Where the import came from: the file's name, or "your TMDB account". */
+	from: string
+	focus: boolean
+	/** Export notes and the actions, after the lists. */
+	children?: ReactNode
+}) {
+	const query = useQuery({
+		queryKey: resultKey(api, id, status),
+		queryFn: () => request<ImportResultData>(itemsUrl(api, id)),
+	})
+	if (!query.data)
+		return (
+			<section className="flex flex-col gap-4">
+				{query.isError ? (
+					<div className="flex flex-col items-start gap-3">
+						<p className={errorBox}>{query.error.message}</p>
+						<button
+							type="button"
+							className={secondaryButton}
+							onClick={() => query.refetch()}
+						>
+							Try again
+						</button>
+					</div>
+				) : (
+					<div className="flex items-center gap-2 text-gray-400">
+						<Spinner size="small" /> Loading what changed
+					</div>
+				)}
+				{children}
+			</section>
+		)
+	return (
+		<ImportResultView
+			result={query.data}
+			from={from}
+			focus={focus}
+			putBack={(put) => <PutBackButton {...put} />}
+			more={(section) => (
+				<MoreRows api={api} id={id} status={status} section={section} />
+			)}
+		>
+			{children}
+		</ImportResultView>
+	)
+}

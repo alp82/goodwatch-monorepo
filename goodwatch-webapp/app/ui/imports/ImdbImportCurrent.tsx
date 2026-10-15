@@ -4,13 +4,12 @@ import { Link } from "@remix-run/react"
 import { type ReactNode, useState } from "react"
 import type {
 	ImdbConflictChoice,
-	ImdbImportOutcome,
 	ImdbImportSummary,
 } from "~/domain/imdb-import"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
-import { CountList, CountRow, OutcomeRow } from "./ImdbImportCounts"
 import { ImdbImportPreview } from "./ImdbImportPreview"
+import { ImportResult } from "./ImportResult"
 import {
 	skippedDownloadUrl,
 	useConfirmImdbImport,
@@ -136,19 +135,13 @@ export function ImdbImportCurrent({
 
 	if (summary.status === "undone")
 		return (
-			<section className="flex flex-col gap-4">
-				<FocusHeading focus={focus || undo.isSuccess}>
-					This import was undone
-				</FocusHeading>
-				<p>
-					The import of{" "}
-					<span className="font-semibold text-gray-100 break-all">
-						{summary.fileName}
-					</span>{" "}
-					from {formatDate(summary.createdAt)} was undone. The ratings it added
-					or changed are back to what they were before, except the ones you
-					changed yourself since then.
-				</p>
+			<ImportResult
+				api="/api/imdb-import"
+				id={summary.id}
+				status={summary.status}
+				from={summary.fileName}
+				focus={focus || undo.isSuccess}
+			>
 				<Actions>
 					<button
 						type="button"
@@ -161,7 +154,7 @@ export function ImdbImportCurrent({
 						Back to Taste
 					</Link>
 				</Actions>
-			</section>
+			</ImportResult>
 		)
 
 	return (
@@ -258,13 +251,6 @@ function Progress({
 
 // ------------------------------------------------------------- receipt
 
-const SKIPPED_ORDER: ImdbImportOutcome[] = [
-	"unchanged",
-	"unmatched",
-	"unsupported",
-	"invalid",
-]
-
 function Receipt({
 	summary,
 	focus,
@@ -280,64 +266,21 @@ function Receipt({
 	onUndo: () => void
 	onUploadAnother: () => void
 }) {
-	const { applied, counts, withoutFingerprint } = summary
+	const { applied, withoutFingerprint } = summary
 	const [askUndo, setAskUndo] = useState(false)
-	const written = applied.added + applied.updated
 	const skipped = skippedCount(summary)
-	// The receipt only draws the sum when its rows really add up to the file.
-	const addsUp =
-		applied.added +
-			applied.updated +
-			applied.kept +
-			applied.failed +
-			counts.unchanged +
-			skipped ===
-		counts.rows
 
 	return (
-		<section className="flex flex-col gap-5">
-			<div className="flex flex-col gap-2">
-				<FocusHeading focus={focus}>
-					Imported on {formatDate(summary.finishedAt ?? summary.createdAt)}
-				</FocusHeading>
-				<p>
-					{written > 0
-						? `${ratings(written)} from `
-						: "No ratings needed saving from "}
-					<span className="font-semibold text-gray-100 break-all">
-						{summary.fileName}
-					</span>
-					{written > 0
-						? ` ${written === 1 ? "is" : "are"} now in GoodWatch. The titles count as Seen.`
-						: "."}
-				</p>
-			</div>
-
-			<CountList>
-				<CountRow label="Ratings added" count={applied.added} />
-				{applied.updated > 0 && (
-					<CountRow label="Ratings updated" count={applied.updated} />
-				)}
-				{applied.kept > 0 && (
-					<CountRow label="GoodWatch ratings kept" count={applied.kept} />
-				)}
-				{applied.failed > 0 && (
-					<CountRow label="Couldn't be saved" count={applied.failed} />
-				)}
-				{SKIPPED_ORDER.filter((outcome) => counts[outcome] > 0).map(
-					(outcome) => (
-						<OutcomeRow
-							key={outcome}
-							importId={summary.id}
-							outcome={outcome}
-							count={counts[outcome]}
-						/>
-					),
-				)}
-				{addsUp && (
-					<CountRow label="Rows in your file" count={counts.rows} total />
-				)}
-			</CountList>
+		<ImportResult
+			api="/api/imdb-import"
+			id={summary.id}
+			status={summary.status}
+			from={summary.fileName}
+			focus={focus}
+		>
+			{applied.added + applied.updated > 0 && (
+				<p>Titles with a rating count as Seen.</p>
+			)}
 
 			{applied.failed > 0 && (
 				<p className={infoBox}>
@@ -425,6 +368,6 @@ function Receipt({
 					</div>
 				</div>
 			)}
-		</section>
+		</ImportResult>
 	)
 }

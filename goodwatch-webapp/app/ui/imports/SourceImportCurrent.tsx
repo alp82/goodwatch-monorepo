@@ -1,15 +1,16 @@
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
 import {
+	IMPORT_SOURCE_NAMES,
 	IMPORT_SOURCE_UPLOAD,
 	type ImportOptions,
-	type ImportOutcome,
 	type ImportSummary,
+	isFileImportSource,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
+import { ImportResult } from "./ImportResult"
 import { sourceImportCopy } from "./SourceImportCopy"
-import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	sourceSkippedDownloadUrl,
 	useConfirmSourceImport,
@@ -27,14 +28,6 @@ import {
 	textLink,
 } from "./shared"
 
-const OUTCOMES: ImportOutcome[] = [
-	"new",
-	"unchanged",
-	"conflict",
-	"unmatched",
-	"unsupported",
-	"invalid",
-]
 const skippedCount = (summary: ImportSummary) =>
 	summary.counts.unmatched + summary.counts.unsupported + summary.counts.invalid
 
@@ -212,31 +205,17 @@ function Receipt({
 	const [askUndo, setAskUndo] = useState(false)
 	const skipped = skippedCount(summary)
 	return (
-		<section className="flex flex-col gap-4">
-			<FocusHeading focus>
-				{" "}
-				{summary.status === "undone" ? "Import undone" : "Import complete"}
-			</FocusHeading>
-			<p>
-				{summary.status === "undone"
-					? "The changes made by this import were removed."
-					: `${formatCount(summary.applied.added)} added, ${formatCount(summary.applied.updated)} updated, ${formatCount(summary.applied.kept)} kept, and ${formatCount(summary.applied.failed)} failed.`}
-			</p>
-			<div>
-				<h4 className="mb-2 font-semibold text-gray-100">Preview comparison</h4>
-				<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700 bg-slate-900/60">
-					{OUTCOMES.filter((outcome) => summary.counts[outcome] > 0).map(
-						(outcome) => (
-							<SourceOutcomeRow
-								key={outcome}
-								importId={summary.id}
-								outcome={outcome}
-								count={summary.counts[outcome]}
-							/>
-						),
-					)}
-				</ul>
-			</div>
+		<ImportResult
+			api="/api/imports"
+			id={summary.id}
+			status={summary.status}
+			from={
+				isFileImportSource(summary.source)
+					? summary.fileName
+					: `your ${IMPORT_SOURCE_NAMES[summary.source]} account`
+			}
+			focus
+		>
 			{(IMPORT_SOURCE_UPLOAD[summary.source]?.credits ?? []).map((credit) => (
 				<p key={credit.url} className="text-sm text-gray-400">
 					{credit.purpose} courtesy of{" "}
@@ -262,7 +241,7 @@ function Receipt({
 				</div>
 			)}
 			<div className="flex flex-wrap items-center gap-3">
-				{skipped > 0 && (
+				{skipped > 0 && summary.status !== "undone" && (
 					<a
 						href={sourceSkippedDownloadUrl(summary.id)}
 						download
@@ -289,7 +268,8 @@ function Receipt({
 							statuses. Later status, rating and list changes stay protected.
 							Without added watches, restoring a status also restores its
 							cleared Want to See or Not interested choices. Undo of added
-							watches does not restore those choices.
+							watches and Want to See does not restore those choices; the result
+							lists them so you can put them back.
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button
@@ -322,6 +302,6 @@ function Receipt({
 					</button>
 				))}
 			{undoError && <p className={errorBox}>{undoError}</p>}
-		</section>
+		</ImportResult>
 	)
 }
