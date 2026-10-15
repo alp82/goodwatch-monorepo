@@ -7,6 +7,8 @@ on:
       - 'goodwatch-webapp/scripts/auth-maintenance/**'
       - 'goodwatch-webapp/scripts/auth-cratedb/**'
       - 'goodwatch-webapp/scripts/auth-mcp/**'
+      - 'goodwatch-webapp/scripts/auth-integration/**'
+      - 'goodwatch-webapp/app/server/web-fetch-gaps.server.ts'
       - 'goodwatch-webapp/packages/auth-stack/**'
       - 'goodwatch-webapp/package*.json'
       - 'goodwatch-webapp/.env.example'
@@ -37,7 +39,7 @@ jobs:
         run: sudo sysctl -w vm.max_map_count=262144
       - name: Test maintenance and auth with local Docker stores only
         working-directory: goodwatch-webapp
-        run: npm run test:auth:maintenance
+        run: NODE_OPTIONS="--import=$PWD/scripts/auth-integration/web-fetch.mjs" npm run test:auth:maintenance
       - name: Keep sanitized test evidence
         if: always()
         uses: actions/upload-artifact@v7
