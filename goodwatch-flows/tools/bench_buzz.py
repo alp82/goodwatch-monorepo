@@ -16,8 +16,11 @@ import time
 
 headers = {'Content-Type': 'application/json'}
 user = os.environ.get('CRATE_USER', '')
-password = (Path(os.environ['CRATE_PASSWORD_FILE']).read_text().removesuffix('\n')
+password = (Path(os.environ['CRATE_PASSWORD_FILE']).read_text()
             if os.environ.get('CRATE_PASSWORD_FILE') else os.environ.get('CRATE_PASS', ''))
+# Production's system python3 is 3.8; str.removesuffix starts in 3.9.
+if os.environ.get('CRATE_PASSWORD_FILE') and password.endswith('\n'):
+    password = password[:-1]
 if user:
     headers['Authorization'] = 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
 connection = http.client.HTTPConnection('10.0.0.11', 4200, timeout=30)
