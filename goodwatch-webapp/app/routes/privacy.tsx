@@ -2,7 +2,6 @@ import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { isEnabled } from "~/server/features.server";
 import { AccountAndAppsPolicy } from "~/ui/privacy/AccountAndAppsPolicy";
-import { OwnerCheck } from "~/ui/privacy/OwnerCheck";
 import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -38,10 +37,7 @@ export default function Privacy() {
 		>
 			<h1 className="mb-8 text-3xl font-semibold">Privacy Policy</h1>
 			{updated ? (
-				<p>
-					Last updated: [date of the cut-over]
-					<OwnerCheck>The date this version takes effect.</OwnerCheck>
-				</p>
+				<p>Last updated: October 15, 2026</p>
 			) : (
 				<p>Last updated: June 15, 2024</p>
 			)}
@@ -232,15 +228,9 @@ export default function Privacy() {
 				Service through the following Third-party Social Media Services:
 			</p>
 			{updated ? (
-				<>
-					<ul>
-						<li>Google</li>
-					</ul>
-					<OwnerCheck>
-						Google is the only sign-in GoodWatch offers, so Facebook, Instagram,
-						Twitter and LinkedIn are left out of this version. Confirm.
-					</OwnerCheck>
-				</>
+				<ul>
+					<li>Google</li>
+				</ul>
 			) : (
 				<ul>
 					<li>Google</li>

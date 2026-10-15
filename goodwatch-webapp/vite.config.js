@@ -204,6 +204,13 @@ const FEATURE_CHUNKS = [
 		"title-actions",
 		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction)\.tsx?$/,
 	],
+	// Two icons on the first view of every title page that Rollup gave a file each (0.5 and 1.1 KB), because other
+	// pages share them too: the fingerprint's back arrow and the questions' sparkles. As two files they put the title
+	// page one script over its budget of 20.
+	[
+		"title-icons",
+		/\/node_modules\/@heroicons\/react\/24\/outline\/esm\/(ChevronLeftIcon|SparklesIcon)\.js$/,
+	],
 ]
 
 // Rule 5: small modules that several late parts share and that must not ride with every page. Rule 3 would put them

@@ -1,0 +1,509 @@
+{
+  "startedAt": "2026-10-14T23:38:21.563Z",
+  "client": "../../app/utils/crate.ts",
+  "clientSha256": "05c5b3c128b5f506265a3e86dc6f07e0f007687a662dd913c0bddfc3bed45587",
+  "nodeVersion": "v26.8.1",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    },
+    {
+      "label": "No failed reads during node loss",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No keyed insert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No upsert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "All acknowledged keyed rows exist",
+      "actual": 198,
+      "expected": 198
+    },
+    {
+      "label": "All acknowledged upsert rows exist",
+      "actual": 183,
+      "expected": 183
+    },
+    {
+      "label": "No row mutated twice",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "Two surviving cluster members",
+      "actual": [
+        [
+          "node1"
+        ],
+        [
+          "node3"
+        ]
+      ],
+      "expected": [
+        [
+          "node1"
+        ],
+        [
+          "node3"
+        ]
+      ]
+    },
+    {
+      "label": "lost-increment-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-reset: no second application after lost response",
+      "actual": 268,
+      "expected": 268
+    },
+    {
+      "label": "lost-increment-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: no second application after lost response",
+      "actual": 351,
+      "expected": 351
+    },
+    {
+      "label": "lost-increment-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: no second application after lost response",
+      "actual": 270,
+      "expected": 270
+    },
+    {
+      "label": "lost-upsert-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: no second application after lost response",
+      "actual": 353,
+      "expected": 353
+    },
+    {
+      "label": "lost-upsert-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: no second application after lost response",
+      "actual": 356,
+      "expected": 356
+    },
+    {
+      "label": "lost-insert-reset: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "lost-insert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-timeout: no second application after lost response",
+      "actual": 372,
+      "expected": 372
+    },
+    {
+      "label": "lost-insert-timeout: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "No proxy errors",
+      "actual": [],
+      "expected": []
+    }
+  ],
+  "failures": [],
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-14T23:38:52.933Z",
+    "elapsedMs": 3004,
+    "command": "docker compose -p goodwatch-client-588 kill --signal SIGKILL node2",
+    "completedAt": "2026-10-14T23:38:54.250Z"
+  },
+  "stoppedContainers": [
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:38:16 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "5de0a4cb45ad",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.oneoff=False,com.docker.compose.project=goodwatch-client-588,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.version=5.10.16,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,com.docker.compose.config-hash=83e409a996f019f51a8ebb3b4652bacbf5653a0ffa584b23735142009a8371a8,com.docker.compose.depends_on=,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.service=node1,com.docker.compose.version=5.5.1,maintainer=Crate.io <office@crate.io>,com.docker.compose.container-number=1,org.opencontainers.image.title=crate,org.opencontainers.image.vendor=Crate.io,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node1-1",
+      "Names": "goodwatch-client-588-node1-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.1:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.1",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "39 seconds ago",
+      "Service": "node1",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up 37 seconds"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:38:16 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 137,
+      "Health": "",
+      "ID": "bcaecc21dc19",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "org.opencontainers.image.vendor=Crate.io,com.docker.compose.config-hash=bf436c157529f01bab0efff3b1fe87f1d5145ec3d95872e6702f56f74a145dfd,com.docker.compose.project=goodwatch-client-588,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover,com.docker.compose.version=5.5.1,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.title=crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.service=node2,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.version=5.10.16,com.docker.compose.depends_on=,com.docker.compose.oneoff=False,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.created=2025-12-10T13:54:12.012567",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node2-1",
+      "Names": "goodwatch-client-588-node2-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "",
+      "Project": "goodwatch-client-588",
+      "Publishers": [],
+      "RunningFor": "39 seconds ago",
+      "Service": "node2",
+      "Size": "0B",
+      "State": "exited",
+      "Status": "Exited (137) 2 seconds ago"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 01:38:16 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "baaf9760083d",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "org.opencontainers.image.vendor=Crate.io,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.oneoff=False,com.docker.compose.project=goodwatch-client-588,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-monorepo-770a4672/goodwatch-webapp/scripts/crate-failover,com.docker.compose.service=node3,com.docker.compose.version=5.5.1,com.docker.compose.config-hash=905a9620ceef990632c0af3d1599862cd42425f66e862125184b37613e8a1356,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.version=5.10.16,com.docker.compose.depends_on=,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.title=crate",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node3-1",
+      "Names": "goodwatch-client-588-node3-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.3:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.3",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "39 seconds ago",
+      "Service": "node3",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up 38 seconds"
+    }
+  ],
+  "load": {
+    "durationMs": 22037,
+    "stats": {
+      "reads": {
+        "succeeded": 1917,
+        "failed": 0,
+        "maxMs": 1426.4180039999992
+      },
+      "keyed": {
+        "succeeded": 198,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 183,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 146,
+        "failed": 0
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 198,
+      "upsert": 183,
+      "generic": 146
+    }
+  },
+  "afterStopNodes": [
+    [
+      "node1"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      146
+    ],
+    [
+      "keyed",
+      198,
+      1,
+      1,
+      198
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      183,
+      1,
+      1,
+      183
+    ]
+  ],
+  "lostResponses": [
+    {
+      "id": "lost-increment-reset",
+      "timeout": false,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 267,
+      "appliedSeq": 268,
+      "seqAfter": 268,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-increment-timeout",
+      "timeout": true,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 350,
+      "appliedSeq": 351,
+      "seqAfter": 351,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-upsert-reset",
+      "timeout": false,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 269,
+      "appliedSeq": 270,
+      "seqAfter": 270,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-upsert-timeout",
+      "timeout": true,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 352,
+      "appliedSeq": 353,
+      "seqAfter": 353,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-insert-reset",
+      "timeout": false,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 354,
+      "appliedSeq": 356,
+      "seqAfter": 356,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-insert-timeout",
+      "timeout": true,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 370,
+      "appliedSeq": 372,
+      "seqAfter": 372,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-10-14T23:40:10.464Z"
+}
