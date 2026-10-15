@@ -53,7 +53,8 @@ export async function protoMembers(): Promise<ProtoMember[]> {
 }
 
 /** Members with a personal order payload, found by scanning the primaries for its keys. */
-async function personalOrderMembers(): Promise<string[]> {
+// PROTOTYPE (#659): exported for /prototype/sides-watch-next.
+export async function personalOrderMembers(): Promise<string[]> {
 	const cluster = getRedisCluster() as unknown as { nodes(role: string): { scan(...args: unknown[]): Promise<[string, string[]]> }[] } | null
 	if (!cluster) return []
 	const found: string[] = []

@@ -127,7 +127,7 @@ const MISSING_SCORE = 255
 const SUGGEST_MIN_SCORE = 70
 const SUGGEST_MIN_VOTES = 1000
 
-type Plan = ReturnType<typeof planWatchNext>
+export type Plan = ReturnType<typeof planWatchNext>
 const plans = createWatchNextPlanStore<Plan>()
 const planChoice = (options: WatchNextOptions) =>
 	JSON.stringify([
@@ -658,7 +658,8 @@ export function worthwhileSuggestions(
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-function pictureKeys(plan: Plan, snapshot: TitleSnapshot | null) {
+// PROTOTYPE (#659): exported for /prototype/sides-watch-next.
+export function pictureKeys(plan: Plan, snapshot: TitleSnapshot | null) {
 	const pictures: Partial<Record<MoodKey, TitleKey>> = {}
 	const used = new Set<TitleKey>()
 	const fallback = snapshot ? suggestionPool(snapshot) : null
@@ -684,7 +685,8 @@ const isoDay = (day: number | null) =>
 	day === null ? null : new Date(day * DAY_MS).toISOString().slice(0, 10)
 
 // The card of a title on the Wishlist, with what Watch next knows about it.
-function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
+// PROTOTYPE (#659): exported for /prototype/sides-watch-next.
+export function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 	const entry = plan.entries.get(card.key) as Entry
 	const title: WatchNextTitle = {
 		...card,
