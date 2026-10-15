@@ -1,6 +1,6 @@
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
-import { Outlet, useLocation } from "@remix-run/react"
+import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
 import Footer from "~/ui/Footer"
@@ -14,6 +14,7 @@ import {
 import { TvWayBackHost } from "~/ui/living-room/TvWayBackHost"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
+import { STANDALONE } from "~/utils/standalone"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
@@ -52,8 +53,13 @@ export function loadShellCode({
 export default function App() {
 	const location = useLocation()
 	const { user } = useUser()
+	const standalone = useMatches().some(
+		(match) => (match.handle as { chrome?: string } | undefined)?.chrome === STANDALONE.chrome,
+	)
 
 	useInvalidateOnVisibility()
+
+	if (standalone) return <Outlet />
 
 	return (
 		<NavigationProvider>

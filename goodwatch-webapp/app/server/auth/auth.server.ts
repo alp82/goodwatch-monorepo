@@ -100,7 +100,8 @@ export function createGoodwatchAuth(options: {
 			? [
 					jwt({ jwks: { rotationInterval: 30 * 86400, gracePeriod: 86400 } }),
 					mcp({
-						loginPage: "/auth/mcp/login",
+						// The site's sign-in page; it sends the signed query back with the sign-in (#570).
+						loginPage: "/sign-in",
 						consentPage: "/auth/mcp/consent",
 						resource: options.mcp.resource,
 						scopes: [

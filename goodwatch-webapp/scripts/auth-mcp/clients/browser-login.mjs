@@ -20,19 +20,28 @@ page.on("response", (r) => {
 })
 try {
 	await page.goto(authUrl)
+	// The site's sign-in page (#570) signs in from its script: wait until the form is the page's own.
+	await page.waitForFunction(
+		() => {
+			const form = document.querySelector("form")
+			return form && Object.keys(form).some((key) => key.startsWith("__react"))
+		},
+		null,
+		{ timeout: 60000 },
+	)
 	await page.locator('input[name="email"]').fill(fixture.email)
 	await page.locator('input[name="password"]').fill(fixture.password)
 	await page.getByRole("button", { name: "Sign in", exact: true }).click()
 	await page
-		.getByRole("button", { name: "Allow", exact: true })
+		.getByRole("button", { name: /^Allow\b/ })
 		.waitFor({ timeout: 10000 })
 	const unverified = await page
 		.locator("body")
 		.innerText()
-		.then((text) => text.includes("Unverified app."))
+		.then((text) => text.includes("GoodWatch can't check who made this app"))
 	if (process.env.EXPECT_DCR === "1") assert.equal(unverified, true)
 	if (process.env.EXPECT_CIMD === "1") assert.equal(unverified, false)
-	await page.getByRole("button", { name: "Allow", exact: true }).click()
+	await page.getByRole("button", { name: /^Allow\b/ }).click()
 	await page.waitForURL((url) => [6276, 6277].includes(Number(url.port)), {
 		timeout: 30000,
 	})

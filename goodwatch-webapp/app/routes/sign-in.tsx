@@ -8,7 +8,7 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
 import { hasBrowserCookie, isCrawler } from "~/server/crawlers.server";
 import { useUser } from "~/utils/auth";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { type PageMeta, buildMeta } from "~/utils/meta";
 import { type AuthFailure, useAuthClient } from "~/utils/auth-client";
 import { useAuthHref } from "~/utils/auth-href";
@@ -27,6 +27,9 @@ import {
 } from "~/ui/auth/kit";
 import { Link } from "@remix-run/react";
 import { SIGN_IN_AGAIN_REASON } from "~/ui/auth/SignInAgainBanner";
+import { connectingApp } from "~/server/auth/mcp-flow.server";
+import type { ConnectState } from "~/utils/mcp-connect";
+import { ConnectAside, ConnectNote } from "~/ui/auth/connect";
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -45,6 +48,8 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
 	redirectUri: string;
+	/** An app such as Claude waits for this sign-in (#570): the provider sent the member here with a signed query. */
+	connecting: ConnectState | null;
 };
 
 export const loader: LoaderFunction = async ({
@@ -63,12 +68,17 @@ export const loader: LoaderFunction = async ({
 			});
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || "";
+	const connecting = await connectingApp(request);
 
-	return json({ redirectUri });
+	return json<LoaderData>(
+		{ redirectUri, connecting },
+		// The signed query is the member's own request: never shared by a cache.
+		connecting ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
+	);
 };
 
 export default function SignIn() {
-	const { redirectUri } = useLoaderData<LoaderData>();
+	const { redirectUri, connecting } = useLoaderData<LoaderData>();
 	const [params] = useSearchParams();
 	const again = params.get("reason") === SIGN_IN_AGAIN_REASON;
 	const { user } = useUser();
@@ -86,17 +96,35 @@ export default function SignIn() {
 		params.has("error") ? "google" : null,
 	);
 
+	// A member who is signed in already goes on: an app's request leads to its consent page.
+	const leaving = useRef(false);
 	useEffect(() => {
-		if (user?.id) {
-			navigate(discoveryReturnTo(redirectUri));
-		}
-	}, [user, navigate, redirectUri]);
+		if (!user?.id || leaving.current) return;
+		if (connecting) window.location.assign(connecting.continueUrl);
+		else navigate(discoveryReturnTo(redirectUri));
+	}, [user, navigate, redirectUri, connecting]);
 
 	const submit = async (event: FormEvent) => {
 		event.preventDefault();
 		if (busy) return;
 		setBusy(true);
 		setFailure(null);
+		if (connecting) {
+			leaving.current = true;
+			const answer = await auth.signInToConnect({
+				email,
+				password,
+				remember: stay,
+				oauthQuery: connecting.oauthQuery,
+			});
+			if (answer.ok) window.location.assign(answer.next);
+			else {
+				leaving.current = false;
+				setFailure(answer.failure);
+				setBusy(false);
+			}
+			return;
+		}
 		const result = await auth.signIn({
 			email,
 			password,
@@ -113,7 +141,7 @@ export default function SignIn() {
 	const google = async () => {
 		setGoogleBusy(true);
 		setFailure(null);
-		const result = await auth.google(redirectUri);
+		const result = await auth.google(redirectUri, connecting?.oauthQuery);
 		if (!result.ok) {
 			setFailure(result.failure);
 			setGoogleBusy(false);
@@ -121,7 +149,8 @@ export default function SignIn() {
 	};
 
 	return (
-		<AuthSplit>
+		<AuthSplit aside={connecting ? <ConnectAside app={connecting.app} /> : undefined}>
+			{connecting && <ConnectNote app={connecting.app} />}
 			<Heading
 				title={again ? "Sign in again" : "Sign in"}
 				sub={again ? undefined : "Welcome back to GoodWatch"}
@@ -186,7 +215,12 @@ export default function SignIn() {
 			</form>
 			<p className="text-center text-gray-400">
 				New to GoodWatch?{" "}
-				<Link rel="nofollow" to={authHref("sign-up", redirectUri || undefined)} className={textLink}>
+				<Link
+					rel="nofollow"
+					// An app's request survives the sign-up: the confirmed account continues it.
+					to={authHref("sign-up", connecting?.continueUrl ?? (redirectUri || undefined))}
+					className={textLink}
+				>
 					Create an account
 				</Link>
 			</p>

@@ -45,7 +45,8 @@ function Confirmed({ returnTo }: { returnTo: string }) {
 	return (
 		<AuthSplit>
 			<Heading icon={<ShieldCheckIcon className="h-7 w-7 text-emerald-400" />} title="Email confirmed" sub="You're signed in. Welcome to GoodWatch." />
-			<PrimaryButton type="button" onClick={() => navigate(returnTo)}>
+			{/* An app's request (/api/auth/oauth2/authorize, #570) is not a page of the site: the browser goes there itself. */}
+			<PrimaryButton type="button" onClick={() => (returnTo.startsWith("/api/") ? window.location.assign(returnTo) : navigate(returnTo))}>
 				Continue
 			</PrimaryButton>
 		</AuthSplit>

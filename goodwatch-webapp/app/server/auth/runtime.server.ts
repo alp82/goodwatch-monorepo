@@ -105,6 +105,7 @@ function localAuth(): AuthService {
 		secret: required("BETTER_AUTH_SECRET"),
 		encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
 		trustedIpHeader: "x-forwarded-for",
+		mcp: { resource: required("MCP_RESOURCE_URL") },
 		google: {
 			clientId: required("AUTH_GOOGLE_CLIENT_ID"),
 			clientSecret: required("AUTH_GOOGLE_CLIENT_SECRET"),

@@ -21,6 +21,8 @@ export type AuthFailure =
 	/** The password is too short. */
 	| "password"
 export type AuthResult = { ok: true } | { ok: false; failure: AuthFailure }
+/** A sign-in for an app that is waiting: where the provider sends the member next (its consent page). */
+export type ConnectResult = { ok: true; next: string } | { ok: false; failure: AuthFailure }
 
 const OK: AuthResult = { ok: true }
 const fail = (failure: AuthFailure): AuthResult => ({ ok: false, failure })
@@ -32,6 +34,8 @@ export function confirmedHref(returnTo: string) {
 
 // What a Better Auth route answered: its status and its JSON, when it had any.
 type Answer = { status: number; data: { url?: unknown; code?: unknown } | unknown[] | null }
+
+const urlIn = (answer: Answer) => (answer.data && !Array.isArray(answer.data) && typeof answer.data.url === "string" ? answer.data.url : null)
 
 async function call(
 	path: string,
@@ -132,7 +136,25 @@ export function useAuthClient() {
 			},
 
 			/** Leaves for Google; the answer comes back to `returnTo`, or to the sign-in page when it failed. */
-			async google(returnTo: string): Promise<AuthResult> {
+			/**
+			 * A sign-in while an app waits (#570): `oauthQuery` is the provider's signed query from the sign-in page's address.
+			 * The member stays on the page until the browser leaves for `next`. Better Auth only.
+			 */
+			async signInToConnect(input: { email: string; password: string; remember: boolean; oauthQuery: string }): Promise<ConnectResult> {
+				const answer = await call("/sign-in/email", {
+					email: input.email,
+					password: input.password,
+					rememberMe: input.remember,
+					oauth_query: input.oauthQuery,
+				})
+				const result = outcome(answer)
+				if (!result.ok) return result
+				forgetSupabaseSignIn()
+				const next = urlIn(answer)
+				return next ? { ok: true, next } : { ok: false, failure: "unavailable" }
+			},
+
+			async google(returnTo: string, oauthQuery?: string): Promise<AuthResult> {
 				const back = discoveryReturnTo(returnTo)
 				beginAuthentication("oauth", back)
 				if (betterAuth) {
@@ -140,8 +162,10 @@ export function useAuthClient() {
 						provider: "google",
 						callbackURL: back,
 						errorCallbackURL: "/sign-in?error=google",
+						// With an app waiting, the provider takes the member from Google's answer to its consent page.
+						...(oauthQuery ? { oauth_query: oauthQuery } : {}),
 					})
-					const url = answer.data && !Array.isArray(answer.data) ? answer.data.url : undefined
+					const url = urlIn(answer)
 					if (typeof url !== "string") return outcome({ ...answer, status: answer.status === 200 ? 500 : answer.status })
 					forgetSupabaseSignIn()
 					window.location.assign(url)
