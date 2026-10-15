@@ -29,6 +29,13 @@ export function jsonResponse(body: unknown, init: ResponseInit = {}) {
 	return new Response(JSON.stringify(body), { ...init, headers })
 }
 
+// Not Response.json: remix-serve's polyfilled Response (no v3_singleFetch) has no static json().
+export function jsonResponse(body: unknown, init: ResponseInit = {}) {
+	const headers = new Headers(init.headers)
+	headers.set("Content-Type", "application/json")
+	return new Response(JSON.stringify(body), { ...init, headers })
+}
+
 export function createGoodwatchAuth(options: {
 	sql: AuthSql
 	storage: ValkeyAuthStorage
