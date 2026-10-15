@@ -19,6 +19,9 @@ def main():
     parser.add_argument('--max-episodes', type=int, default=100)
     parser.add_argument('--max-requests', type=int, default=250)
     parser.add_argument('--requests-per-second', type=float, default=2)
+    parser.add_argument('--max-seasons-per-title', type=int, help='Optional per-title season cap')
+    parser.add_argument('--max-episodes-per-title', type=int, help='Optional per-title episode cap')
+    parser.add_argument('--resume', type=Path, help="JSON file holding a previous result's continuation list")
     parser.add_argument('--fixture', type=Path, help='Offline JSON path-to-response fixture; dry-run only')
     parser.add_argument('--apply', action='store_true', help='Publish translations to the configured Windmill Crate resource')
     args = parser.parse_args()
@@ -27,6 +30,7 @@ def main():
     if args.fixture and args.apply:
         parser.error('--fixture cannot publish')
     fixture = json.loads(args.fixture.read_text()) if args.fixture else None
+    resume = json.loads(args.resume.read_text()) if args.resume else None
     if fixture is None and not token and not key:
         parser.error('Set TMDB_ACCESS_TOKEN or TMDB_API_KEY locally; no secrets are printed')
 
@@ -51,7 +55,9 @@ def main():
         result = ingest_titles([int(i) for i in args.titles.split(',')], get, connector,
                                dry_run=not args.apply,
                                bounds=Bounds(args.max_titles, args.max_seasons, args.max_episodes,
-                                             args.max_requests, args.requests_per_second))
+                                             args.max_requests, args.requests_per_second,
+                                             args.max_seasons_per_title, args.max_episodes_per_title),
+                               resume=resume)
         print(json.dumps(result, indent=2))
     finally:
         if connector:

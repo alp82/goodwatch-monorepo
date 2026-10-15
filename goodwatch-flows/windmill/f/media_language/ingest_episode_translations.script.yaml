@@ -17,5 +17,27 @@ schema:
     max_requests:
       type: integer
       default: 250
+    max_seasons:
+      type: integer
+      default: 10
+      description: Run-wide season cap; at most 100
+    max_episodes:
+      type: integer
+      default: 100
+      description: Run-wide episode cap; at most 1000
+    max_seasons_per_title:
+      type: integer
+      default: null
+      description: Optional per-title season cap; empty means only the run-wide cap
+    max_episodes_per_title:
+      type: integer
+      default: null
+      description: Optional per-title episode cap; empty means only the run-wide cap
+    resume:
+      type: array
+      default: null
+      items:
+        type: object
+      description: The continuation list of a previous result, to continue where it stopped
   required:
     - tmdb_ids
