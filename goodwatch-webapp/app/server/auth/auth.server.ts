@@ -148,6 +148,7 @@ export function createGoodwatchAuth(options: {
 						allowUnauthenticatedClientRegistration: true,
 						accessTokenExpiresIn: options.mcp.accessTokenExpiresIn ?? 300,
 						refreshTokenExpiresIn: 90 * 86400,
+						refreshTokenReuseInterval: 30,
 					}),
 					cimd({
 						metadataProfile: "mcp-2026-07-28",

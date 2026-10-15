@@ -320,6 +320,14 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						const receipt = existing?.receipts.find(r => r.operation === operation)
 						if (receipt) return row as typeof data
 						if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
+						if ((error as {code?: number}).code === 4091 && model === "user" && existing?.deleted && existing.envelope.abandonedClaim && existing.envelope.abandonedClaim !== emailClaim) {
+                            const claim = (await sql("SELECT user_id,operation_id FROM doc.auth_user_email WHERE email_norm=?", [emailKey(row.email)])).rows[0]
+                            if (claim?.[0] === row.id && claim[1] === emailClaim) {
+                                const adopted = await mutate(model, existing, row, false, true)
+                                if (adopted) return adopted as typeof data
+                                throw new AuthMutationConflictError()
+                            }
+                        }
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && ["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model)) {
 							const recreated = await mutate(model, existing, row, false, true, admission)
 							if (recreated) return recreated as typeof data

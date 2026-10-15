@@ -132,8 +132,8 @@ export async function recoverEmailClaims(options: Options) {
 				continue
 			}
 		} else {
-			// A permanent user tombstone prevents a paused INSERT from appearing
-			// after release. User ids must never be recycled, including by GC.
+			// Fence the abandoned operation. A fresh reservation may adopt this
+			// missing-user barrier by CAS, including a forced Supabase id.
 			try {
 				const fenced = await sql(
 					"INSERT INTO doc.auth_user (id,payload,deleted,receipts) VALUES (?,?,true,?)",
@@ -144,6 +144,7 @@ export async function recoverEmailClaims(options: Options) {
 								row: { id },
 								deleted: true,
 								deletedAt: new Date().toISOString(),
+								abandonedClaim: String(claim[1]),
 							},
 							`${aad}:payload`,
 						),
