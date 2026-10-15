@@ -190,6 +190,16 @@ class WatchDb {
 			row.watch_id = params[1]
 			return { rowcount: 1 }
 		}
+		if (sql.includes("SET undo_outcome = ?")) {
+			const row = requiredRow(
+				this.items.find(
+					(item) =>
+						item.import_id === params[1] && item.row_index === params[2],
+				),
+			)
+			row.undo_outcome = params[0]
+			return { rowcount: 1 }
+		}
 		if (sql.includes("SET apply_state = 'undone'")) {
 			for (const row of this.items)
 				if (
