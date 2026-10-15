@@ -1,4 +1,5 @@
 import type { ClientRequest, IncomingMessage } from "node:http"
+import { setTimeout as delay } from "node:timers/promises"
 import { BackendTimeoutError, withBackendTimeout } from "./backend-timeout.ts"
 import crate from "node-crate"
 import pc from "picocolors"
@@ -73,7 +74,40 @@ const withNullTimestamps = <R extends { cols: string[]; rows: unknown[][]; col_t
 }
 
 let captureRequest: ((request: ClientRequest) => void) | undefined
-let requestCaptureInstalled = false
+
+type NodeCrate = typeof crate & {
+	getNewInstance(): NodeCrate
+	connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
+}
+
+const HOST_COOLDOWN_MS = 5_000
+const UNAVAILABLE_STATUSES = [502, 503, 504]
+
+const isConnectionError = (error: unknown): boolean =>
+	error instanceof Error && ["ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ENOTFOUND", "EAI_AGAIN"]
+		.includes((error as NodeJS.ErrnoException).code ?? "")
+
+const isAvailabilityError = (error: unknown): boolean =>
+	isConnectionError(error) || error instanceof CrateTimeoutError ||
+	(error instanceof Error && UNAVAILABLE_STATUSES.includes((error as Error & { statusCode?: number }).statusCode ?? 0))
+
+// A healthy coordinator can briefly retain shard routes to a node that just
+// disappeared. These SQL failures do not make that coordinator unhealthy.
+const isNodeLossError = (error: unknown): boolean => error instanceof CrateError && (
+	/^(NodeNotConnectedException|NoSuchNodeException)\[/.test(error.message) ||
+	/^JobKilledException\[Job killed\. Participating node .+ disconnected\]$/.test(error.message)
+)
+
+const isRecoverableError = (error: unknown): boolean => isAvailabilityError(error) || isNodeLossError(error)
+
+// Conservative recognition only: never infer replay safety for a write from its
+// ON CONFLICT text. Helpers below own the keys and values that make replay safe.
+const isRead = (sql: string): boolean => {
+	const tokens = sql.replace(/--[^\r\n]*|\/\*[\s\S]*?\*\/|'(?:''|[^'])*'|"(?:""|[^"])*"/g, " ").trim()
+	return /^(SELECT|WITH)\b/i.test(tokens) &&
+		!/\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|COPY|REFRESH|SET|RESET|GRANT|REVOKE|KILL)\b/i.test(tokens) &&
+		!/;\s*\S/.test(tokens)
+}
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -99,20 +133,73 @@ export interface CrateReadOptions {
 }
 
 class CrateClient {
+	private readonly hosts: { driver: NodeCrate; unavailableUntil: number }[]
+	private nextHost = 0
+
 	constructor(hosts: string[]) {
-		crate.connect(hosts.join(" "))
-		if (!requestCaptureInstalled) {
-			const pool = (crate as typeof crate & {
-				connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
-			}).connectionPool
+		this.hosts = hosts.map((host) => {
+			const driver = (crate as NodeCrate).getNewInstance()
+			driver.connect(host)
+			const pool = driver.connectionPool
 			const getSqlRequest = pool.getSqlRequest
 			pool.getSqlRequest = function(this: typeof pool, callback: (response: IncomingMessage) => void) {
 				const request = getSqlRequest.call(this, callback)
 				captureRequest?.(request)
 				return request
 			}
-			requestCaptureInstalled = true
-		}
+			return { driver, unavailableUntil: 0 }
+		})
+	}
+
+	private takeHost(tried: Set<number>): number | undefined {
+		const remaining = this.hosts.map((_, i) => (this.nextHost + i) % this.hosts.length)
+			.filter((i) => !tried.has(i))
+		// When all hosts are cooling down, probe the earliest due once. Each round
+		// visits a host at most once, and one-node installations can recover.
+		const index = remaining.find((i) => this.hosts[i].unavailableUntil <= Date.now())
+			?? remaining.sort((a, b) => this.hosts[a].unavailableUntil - this.hosts[b].unavailableUntil)[0]
+		if (index !== undefined) this.nextHost = (index + 1) % this.hosts.length
+		return index
+	}
+
+	private executeOnHost(
+		driver: NodeCrate,
+		query: string,
+		params: (string | number | Date)[] | undefined,
+		timeoutMs: number,
+		callerSignal?: AbortSignal,
+	) {
+		return withBackendTimeout("CrateDB", timeoutMs, async (signal) => {
+			let request: ClientRequest | undefined
+			let responseError: Error | undefined
+			let statusCode: number | undefined
+			const previousCapture = captureRequest
+			let pending: ReturnType<typeof crate.execute>
+			// node-crate creates the request synchronously, before another statement can run.
+			captureRequest = (created) => { request = created }
+			try {
+				pending = driver.execute(query, params)
+			} finally {
+				captureRequest = previousCapture
+			}
+			// node-crate wraps response stream errors in a new Error and loses their
+			// connection code. Retain the original so interrupted bodies can fail over.
+			request?.once("response", (response) => {
+				statusCode = response.statusCode
+				response.once("error", (error) => { responseError = error })
+			})
+			const destroy = () => { request?.destroy(signal.reason) }
+			signal.addEventListener("abort", destroy, { once: true })
+			try {
+				const result = await pending
+				if (UNAVAILABLE_STATUSES.includes(statusCode ?? 0)) throw new CrateError(`CrateDB HTTP ${statusCode}`)
+				return withNullTimestamps(result)
+			} catch (error) {
+				throw responseError ?? Object.assign(toCrateError(error), { statusCode })
+			} finally {
+				signal.removeEventListener("abort", destroy)
+			}
+		}, { error: () => new CrateTimeoutError(timeoutMs), signal: callerSignal })
 	}
 
 	async execute(
@@ -123,25 +210,42 @@ class CrateClient {
 		const startTime = performance.now()
 		try {
 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
-			const result = await withBackendTimeout("CrateDB", timeoutMs, async (signal) => {
-				let request: ClientRequest | undefined
-				const previousCapture = captureRequest
-				let pending: ReturnType<typeof crate.execute>
-				// node-crate creates the request synchronously, before another statement can run.
-				captureRequest = (created) => { request = created }
+			const deadline = performance.now() + timeoutMs
+			const read = isRead(query)
+			const tried = new Set<number>()
+			let nodeLoss = false
+			let round = 0
+			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
+			while (result === undefined) {
+				const index = this.takeHost(tried)
+				if (index === undefined) throw new Error("No CrateDB host available")
+				tried.add(index)
+				const host = this.hosts[index]
+				// Reserve time for the other coordinators rather than spending the entire
+				// caller budget waiting for the first dead socket.
+				const remaining = deadline - performance.now()
+				if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
+				const attemptTimeoutMs = read && (this.hosts.length > 1 || round > 0)
+					? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
+					: timeoutMs
 				try {
-					pending = crate.execute(query, params)
-				} finally {
-					captureRequest = previousCapture
+					result = await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
+				} catch (error) {
+					if (options.signal?.aborted || !isRecoverableError(error)) throw error
+					if (isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+					if (!read) throw error
+					nodeLoss ||= isNodeLossError(error)
+					if (tried.size === this.hosts.length) {
+						if (!nodeLoss || ++round >= 10) throw error
+						const waitMs = Math.min(100 * round, 500)
+						if (performance.now() + waitMs >= deadline) throw new CrateTimeoutError(timeoutMs)
+						try { await delay(waitMs, undefined, { signal: options.signal }) }
+						catch (error) { options.signal?.throwIfAborted(); throw error }
+						tried.clear()
+						nodeLoss = false
+					}
 				}
-				const destroy = () => { request?.destroy(signal.reason) }
-				signal.addEventListener("abort", destroy, { once: true })
-				try {
-					return withNullTimestamps(await pending)
-				} finally {
-					signal.removeEventListener("abort", destroy)
-				}
-			}, { error: () => new CrateTimeoutError(timeoutMs), signal: options.signal })
+			}
 			const duration = performance.now() - startTime
 			const querySummary = this.getQuerySummary(query)
 			const formattedLog = this.formatLog(querySummary, duration)
@@ -382,6 +486,7 @@ export const upsert = async ({
 	`
 	const writeRow = async (row: (typeof rows)[number]) => {
 		const record = Object.fromEntries(allColumns.map((col, i) => [col, row[i]]))
+		const fixedKey = conflictColumns.length > 0 && conflictColumns.every((col) => record[col] != null)
 		const readBackParams = [
 			...conflictColumns.map(col => record[col]),
 			...(updateClause === "NOTHING" ? [] : [now]),
@@ -390,13 +495,13 @@ export const upsert = async ({
 			try {
 				return await client.execute(sql, row)
 			} catch (error) {
-				if (!(error instanceof CrateTimeoutError)) throw error
+				if (!fixedKey || !isRecoverableError(error)) throw error
 			}
-			// The write timed out but may still have landed. Primary key lookups are real-time in CrateDB.
+			// The response was lost but the write may have landed. Primary key lookups are real-time in CrateDB.
 			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
 			if (n > 0) return { rowcount: 1 }
 		}
-		throw new Error(`Saving to ${table} timed out twice and the row is not stored. Please try again.`)
+		throw new Error(`Saving to ${table} could not be confirmed after two attempts. Please try again.`)
 	}
 
 	// Execute the query
@@ -467,13 +572,16 @@ export const insertRows = async (
 	let statements = 0
 	for (let start = 0; start < rows.length; start += chunk) {
 		const batch = rows.slice(start, start + chunk)
+		const keyIndexes = conflict.map((name) => columns.indexOf(name))
+		const fixedKeys = keyIndexes.length > 0 && keyIndexes.every((index) => index >= 0) &&
+			batch.every((row) => keyIndexes.every((index) => row[index] != null))
 		const sql = `INSERT INTO ${table} (${quoted(columns)}) VALUES ${batch.map(() => tuple).join(", ")} ON CONFLICT (${quoted(conflict)}) DO NOTHING`
 		const params = batch.flat() as (string | number | Date)[]
 		let result: { rowcount?: number }
 		try {
 			result = await client.execute(sql, params)
 		} catch (error) {
-			if (!(error instanceof CrateTimeoutError)) throw error
+			if (!fixedKeys || !isRecoverableError(error)) throw error
 			result = await client.execute(sql, params)
 		}
 		rowcount += result.rowcount || 0
