@@ -16,6 +16,7 @@ from f.social.common import SOURCES, now, stamp
 from f.social.deterministic import DeterministicMatcher
 from f.social.settings import load
 from f.social.store import Crate, Store
+from f.social.rejudge import RelevanceCrate, run as rejudge
 
 ADAPTERS = {'youtube': youtube, 'rss': rss, 'bluesky': bluesky, 'mastodon': mastodon}
 
@@ -34,6 +35,7 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
     # still accepted from the scheduled flow inputs but no longer used.
     matcher = DeterministicMatcher(db.select)
     results = []
+    fresh_posts = []
     for name in SOURCES if source == 'all' else (source,):
         run_id, started = uuid4().hex, now().isoformat()
         counts = {'collected': 0, 'processed': 0, 'published': 0}
@@ -42,6 +44,7 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
         store.run_record(run_id, **record, status=status, **counts)
         try:
             collected = ADAPTERS[name].collect(settings, start, end, pages=pages)
+            fresh_posts.extend(collected['posts'])
             status = collected['status']
             details = {k: v for k, v in collected.items() if k not in ('posts', 'status')}
             counts['collected'] = len(collected['posts'])
@@ -86,7 +89,12 @@ def run(settings, *, source='all', days=2, pages=2, max_posts=400, window_end=No
                   'inference_cost_usd': 0.0, 'details': details}
         results.append(result)
     store.refresh()
-    return {'window_start': start.isoformat(), 'window_end': end.isoformat(), 'sources': results}
+    # Judge only current quality-passing links, after matching/publication. The
+    # new writer cannot mutate existing tables; metrics stay out of quality rows.
+    relevance = rejudge(RelevanceCrate(settings, apply=True), apply=True,
+                        hydrate=False, fresh_posts=fresh_posts)
+    return {'window_start': start.isoformat(), 'window_end': end.isoformat(), 'sources': results,
+            'relevance': {k: v for k, v in relevance.items() if k != 'decisions'}}
 
 
 def main(source: str = 'all', days: int = 2, pages: int = 2, max_posts: int = 400,
