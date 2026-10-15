@@ -1,0 +1,2370 @@
+{
+  "startedAt": "2026-10-15T19:09:49.216Z",
+  "client": "../../app/utils/crate.ts",
+  "clientSha256": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+  "baselineCommit": null,
+  "nodeVersion": "v26.8.1",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    },
+    {
+      "label": "No failed page loaders/actions",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No failed reads during node loss",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No keyed insert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No upsert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "All acknowledged keyed rows exist",
+      "actual": 258,
+      "expected": 258
+    },
+    {
+      "label": "All acknowledged upsert rows exist",
+      "actual": 274,
+      "expected": 274
+    },
+    {
+      "label": "No row mutated twice",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "Two surviving cluster members",
+      "actual": [
+        [
+          "node2"
+        ],
+        [
+          "node3"
+        ]
+      ],
+      "expected": [
+        [
+          "node2"
+        ],
+        [
+          "node3"
+        ]
+      ]
+    },
+    {
+      "label": "Every acknowledged route watch stored once",
+      "actual": 35,
+      "expected": 35
+    },
+    {
+      "label": "No duplicate route watch ids",
+      "actual": 35,
+      "expected": 35
+    },
+    {
+      "label": "lost-increment-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-reset: no second application after lost response",
+      "actual": 370,
+      "expected": 370
+    },
+    {
+      "label": "lost-increment-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: no second application after lost response",
+      "actual": 408,
+      "expected": 408
+    },
+    {
+      "label": "lost-increment-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: no second application after lost response",
+      "actual": 372,
+      "expected": 372
+    },
+    {
+      "label": "lost-upsert-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: no second application after lost response",
+      "actual": 410,
+      "expected": 410
+    },
+    {
+      "label": "lost-upsert-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: no second application after lost response",
+      "actual": 413,
+      "expected": 413
+    },
+    {
+      "label": "lost-insert-reset: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "lost-insert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-timeout: no second application after lost response",
+      "actual": 443,
+      "expected": 443
+    },
+    {
+      "label": "lost-insert-timeout: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "lost-tracking-cas-reset: no second application after lost CAS response",
+      "actual": 40,
+      "expected": 40
+    },
+    {
+      "label": "lost-tracking-cas-reset: one dispatched CAS",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-tracking-cas-timeout: no second application after lost CAS response",
+      "actual": 41,
+      "expected": 41
+    },
+    {
+      "label": "lost-tracking-cas-timeout: one dispatched CAS",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unwatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unwatch-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "first-insert-unwatch-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "first-insert-unwatch-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unwatch-reset: immutable receipt",
+      "actual": "cf05bce5-d3bd-4e2f-8720-ad7a4ed706a0",
+      "expected": "cf05bce5-d3bd-4e2f-8720-ad7a4ed706a0"
+    },
+    {
+      "label": "first-insert-unwatch-reset: no write after the next action",
+      "actual": 43,
+      "expected": 43
+    },
+    {
+      "label": "first-insert-unwatch-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "first-insert-unwatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unwatch-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "first-insert-unwatch-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "first-insert-unwatch-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unwatch-timeout: immutable receipt",
+      "actual": "2b444996-d676-4a3b-87d8-36af9e2f703f",
+      "expected": "2b444996-d676-4a3b-87d8-36af9e2f703f"
+    },
+    {
+      "label": "first-insert-unwatch-timeout: no write after the next action",
+      "actual": 45,
+      "expected": 45
+    },
+    {
+      "label": "first-insert-unwatch-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "first-insert-unchanged-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unchanged-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unchanged-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unchanged-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unchanged-reset: stored watches",
+      "actual": [
+        "first-insert-unchanged-reset-first"
+      ],
+      "expected": [
+        "first-insert-unchanged-reset-first"
+      ]
+    },
+    {
+      "label": "first-insert-unchanged-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unchanged-reset: immutable receipt",
+      "actual": "e0c15aef-d3bd-4c1d-8569-9681ec322d94",
+      "expected": "e0c15aef-d3bd-4c1d-8569-9681ec322d94"
+    },
+    {
+      "label": "first-insert-unchanged-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unchanged-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unchanged-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unchanged-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unchanged-timeout: stored watches",
+      "actual": [
+        "first-insert-unchanged-timeout-first"
+      ],
+      "expected": [
+        "first-insert-unchanged-timeout-first"
+      ]
+    },
+    {
+      "label": "first-insert-unchanged-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unchanged-timeout: immutable receipt",
+      "actual": "da79b0ff-cfc8-4884-acd4-bd645e2ed4ae",
+      "expected": "da79b0ff-cfc8-4884-acd4-bd645e2ed4ae"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: stored watches",
+      "actual": [
+        "first-insert-unwatch-and-rewatch-reset-later"
+      ],
+      "expected": [
+        "first-insert-unwatch-and-rewatch-reset-later"
+      ]
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: immutable receipt",
+      "actual": "fc9cfe5b-bf7e-49bb-8ded-d80fdcadbca3",
+      "expected": "fc9cfe5b-bf7e-49bb-8ded-d80fdcadbca3"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-reset: no write after the next action",
+      "actual": 50,
+      "expected": 50
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: stored watches",
+      "actual": [
+        "first-insert-unwatch-and-rewatch-timeout-later"
+      ],
+      "expected": [
+        "first-insert-unwatch-and-rewatch-timeout-later"
+      ]
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: immutable receipt",
+      "actual": "8dac7789-7cae-4d8b-af1d-e89435c67d1e",
+      "expected": "8dac7789-7cae-4d8b-af1d-e89435c67d1e"
+    },
+    {
+      "label": "first-insert-unwatch-and-rewatch-timeout: no write after the next action",
+      "actual": 53,
+      "expected": 53
+    },
+    {
+      "label": "first-insert-not-applied-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-not-applied-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-not-applied-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-not-applied-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-not-applied-reset: stored watches",
+      "actual": [
+        "first-insert-not-applied-reset-first"
+      ],
+      "expected": [
+        "first-insert-not-applied-reset-first"
+      ]
+    },
+    {
+      "label": "first-insert-not-applied-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "first-insert-not-applied-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-not-applied-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-not-applied-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-not-applied-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "first-insert-not-applied-timeout: stored watches",
+      "actual": [
+        "first-insert-not-applied-timeout-first"
+      ],
+      "expected": [
+        "first-insert-not-applied-timeout-first"
+      ]
+    },
+    {
+      "label": "first-insert-not-applied-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: immutable receipt",
+      "actual": "17ee2039-6b7f-4916-a793-d6d041b90c88",
+      "expected": "17ee2039-6b7f-4916-a793-d6d041b90c88"
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: no write after the next action",
+      "actual": 57,
+      "expected": 57
+    },
+    {
+      "label": "first-insert-pending-after-readback-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: immutable receipt",
+      "actual": "00dc1f99-7e2f-4ca1-8666-2afed3fb2a41",
+      "expected": "00dc1f99-7e2f-4ca1-8666-2afed3fb2a41"
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: no write after the next action",
+      "actual": 59,
+      "expected": 59
+    },
+    {
+      "label": "first-insert-pending-after-readback-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "No proxy errors",
+      "actual": [],
+      "expected": []
+    }
+  ],
+  "failures": [
+    {
+      "phase": "generic",
+      "id": "generic-45",
+      "atMs": 25344,
+      "message": "CrateDB did not respond within 10000 ms"
+    }
+  ],
+  "sourceSha256": {
+    "../../app/utils/crate.ts": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+    "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+    "../../app/server/tracking.server.ts": "c9173afe90e6a32d058df75fdb3953e81ae5ec4c26a38a735ed0c5b062457b23",
+    "../../app/server/combined-search/catalog.server.ts": "fe39f57efc8af5032624d4637254d48a0aa35687af4e846c854a7adb5aae9800",
+    "../../app/server/search-ranking/search-index-build.server.ts": "555bff358dafa0aec1f5714078d7d366c4764160efdc4f8d7f307fa818688776",
+    "../../app/server/page-cache.server.ts": "c2dbf91e0ec380c5306cc6ce373ea603236a7081af019e756647238901e1fcb4",
+    "./verify.mjs": "c577d399c8f2d3be44e2abaabc1c04c547c5ade2dc967e77d4e76acc25fac04b",
+    "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+    "./page-proof.mjs": "779c2e81bc00c1e8f4c952f2ca95adf682f1418ce3348ba11ddd7c4598497245",
+    "./build-page-proof.mjs": "c7d4412499ff80af2b1e970c259fbeaa489db42b6813583242edb01bea4689f7",
+    "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+    "./compose.yaml": "f10623e22b45f15205cbb89c6e15527d14e49e0831f936ab42286f7c5de35355",
+    "./run.sh": "4cc542cbbd698c6c95703aa35c534c48546c52a0bfc92b29fb925efaf5f35bc4",
+    "./page-loaders.generated.mjs": "e4d6d6f3e213dd0be88b4eeed17ad75dcdba35e0537593375695402be8480e87"
+  },
+  "trackingBaselineCommit": null,
+  "trackingRuntimeSha256": "c9173afe90e6a32d058df75fdb3953e81ae5ec4c26a38a735ed0c5b062457b23",
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node3",
+      "STARTED"
+    ]
+  ],
+  "pageTables": [
+    "crawl_priority",
+    "age_certification",
+    "country",
+    "job",
+    "language",
+    "timezone",
+    "genre",
+    "streaming_service",
+    "movie",
+    "show",
+    "movie_series",
+    "season",
+    "episode",
+    "season_translation",
+    "episode_translation",
+    "imdb_episode",
+    "imdb_season",
+    "rotten_tomatoes_season",
+    "metacritic_season",
+    "media_image",
+    "media_video",
+    "trope",
+    "alternative_title",
+    "translation",
+    "release_event",
+    "production_company",
+    "network",
+    "person",
+    "person_appeared_in",
+    "person_worked_on",
+    "streaming_evidence",
+    "streaming_availability",
+    "user_setting",
+    "user_skipped",
+    "user_not_interested",
+    "user_wishlist",
+    "user_list_exposure",
+    "user_score",
+    "user_favorite",
+    "user_watch_log",
+    "user_watch_state",
+    "search_terms",
+    "search_embedding_inputs",
+    "search_embedding_state",
+    "search_index_builds",
+    "search_control",
+    "search_interpretations",
+    "search_spending",
+    "search_history",
+    "search_shadow",
+    "user_list",
+    "user_profile",
+    "user_handle",
+    "user_import",
+    "user_import_item",
+    "social_relevance",
+    "social_content_quality",
+    "social_post",
+    "social_title_link",
+    "social_link_report",
+    "social_ingest_run"
+  ],
+  "trackingMigration": {
+    "legacyRowsPreserved": true,
+    "insertTokenNullable": true,
+    "backfillNeeded": false
+  },
+  "pageRoutes": {
+    "movie": {
+      "succeeded": 102,
+      "failed": 0,
+      "maxMs": 7162.214727999999,
+      "examples": []
+    },
+    "show": {
+      "succeeded": 107,
+      "failed": 0,
+      "maxMs": 7465.197270999997,
+      "examples": []
+    },
+    "person": {
+      "succeeded": 82,
+      "failed": 0,
+      "maxMs": 7438.991697999998,
+      "examples": []
+    },
+    "library": {
+      "succeeded": 98,
+      "failed": 0,
+      "maxMs": 7466.292355999998,
+      "examples": []
+    },
+    "explore": {
+      "succeeded": 161,
+      "failed": 0,
+      "maxMs": 7387.805979999997,
+      "examples": []
+    },
+    "watch": {
+      "succeeded": 35,
+      "failed": 0,
+      "maxMs": 10066.104179000002,
+      "examples": []
+    },
+    "score": {
+      "succeeded": 40,
+      "failed": 0,
+      "maxMs": 10228.858279000007,
+      "examples": []
+    },
+    "catalog": {
+      "succeeded": 325,
+      "failed": 0,
+      "maxMs": 3535.240399999995,
+      "examples": []
+    },
+    "tracking": {
+      "succeeded": 18,
+      "failed": 0,
+      "maxMs": 10249.99906599999,
+      "examples": []
+    }
+  },
+  "beforeHealth": [
+    [
+      "GREEN",
+      62
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-15T19:10:31.723Z",
+    "elapsedMs": 3013,
+    "command": "ALTER CLUSTER DECOMMISSION node1",
+    "settings": [
+      [
+        {
+          "min_availability": "PRIMARIES",
+          "force": false,
+          "timeout": "2h"
+        }
+      ]
+    ],
+    "acknowledgedAt": "2026-10-15T19:10:50.435Z",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-15T19:09:48.607414141Z",
+      "FinishedAt": "2026-10-15T19:10:54.695909703Z"
+    },
+    "completedAt": "2026-10-15T19:10:55.070Z"
+  },
+  "stoppedContainers": [
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 21:09:48 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "8179e2bf977f",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.title=crate,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project.config_files=./goodwatch-webapp/scripts/crate-failover/compose.yaml,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.oneoff=False,com.docker.compose.project=goodwatch-client-588,com.docker.compose.version=5.5.1,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,com.docker.compose.config-hash=83e409a996f019f51a8ebb3b4652bacbf5653a0ffa584b23735142009a8371a8,com.docker.compose.depends_on=,com.docker.compose.project.working_dir=./goodwatch-webapp/scripts/crate-failover,com.docker.compose.service=node1,org.opencontainers.image.version=5.10.16",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node1-1",
+      "Names": "goodwatch-client-588-node1-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "",
+      "Project": "goodwatch-client-588",
+      "Publishers": [],
+      "RunningFor": "About a minute ago",
+      "Service": "node1",
+      "Size": "0B",
+      "State": "exited",
+      "Status": "Exited (0) Less than a second ago"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 21:09:48 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "6af7874e37db",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=bf436c157529f01bab0efff3b1fe87f1d5145ec3d95872e6702f56f74a145dfd,com.docker.compose.depends_on=,com.docker.compose.project.config_files=./goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.project.working_dir=./goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.title=crate,org.opencontainers.image.version=5.10.16,com.docker.compose.project=goodwatch-client-588,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.oneoff=False,com.docker.compose.version=5.5.1,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.vendor=Crate.io,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.service=node2,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node2-1",
+      "Names": "goodwatch-client-588-node2-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.2:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.2",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node2",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 21:09:48 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "445e59bb8a8a",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.version=5.5.1,maintainer=Crate.io <office@crate.io>,com.docker.compose.project=goodwatch-client-588,com.docker.compose.project.config_files=./goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.project.working_dir=./goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.version=5.10.16,com.docker.compose.container-number=1,com.docker.compose.depends_on=,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,com.docker.compose.oneoff=False,org.opencontainers.image.title=crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.config-hash=905a9620ceef990632c0af3d1599862cd42425f66e862125184b37613e8a1356,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.service=node3",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node3-1",
+      "Names": "goodwatch-client-588-node3-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.3:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.3",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node3",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    }
+  ],
+  "afterStopNodes": [
+    [
+      "node2"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "restartedAt": "2026-10-15T19:10:57.926Z",
+  "rejoinedDuringLoad": {
+    "elapsedMs": 43710,
+    "reads": 749,
+    "pages": {
+      "movie": 57,
+      "show": 58,
+      "person": 40,
+      "library": 49,
+      "explore": 83,
+      "watch": 19,
+      "score": 20,
+      "catalog": 172
+    }
+  },
+  "load": {
+    "durationMs": 75375,
+    "stats": {
+      "reads": {
+        "succeeded": 1418,
+        "failed": 0,
+        "maxMs": 7001.581815999998
+      },
+      "keyed": {
+        "succeeded": 258,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 274,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 225,
+        "failed": 1
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 258,
+      "upsert": 274,
+      "generic": 225
+    }
+  },
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      225
+    ],
+    [
+      "keyed",
+      258,
+      1,
+      1,
+      258
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      274,
+      1,
+      1,
+      274
+    ]
+  ],
+  "pageWatchAudit": {
+    "acknowledged": 35,
+    "stored": 35,
+    "unique": 35
+  },
+  "lostResponses": [
+    {
+      "id": "lost-increment-reset",
+      "timeout": false,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 369,
+      "appliedSeq": 370,
+      "seqAfter": 370,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-increment-timeout",
+      "timeout": true,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 407,
+      "appliedSeq": 408,
+      "seqAfter": 408,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-upsert-reset",
+      "timeout": false,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 371,
+      "appliedSeq": 372,
+      "seqAfter": 372,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-upsert-timeout",
+      "timeout": true,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 409,
+      "appliedSeq": 410,
+      "seqAfter": 410,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-insert-reset",
+      "timeout": false,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 411,
+      "appliedSeq": 413,
+      "seqAfter": 413,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-insert-timeout",
+      "timeout": true,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 441,
+      "appliedSeq": 443,
+      "seqAfter": 443,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-tracking-cas-reset",
+      "timeout": false,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 39,
+      "appliedSeq": 40,
+      "seqAfter": 40,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    },
+    {
+      "id": "lost-tracking-cas-timeout",
+      "timeout": true,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 40,
+      "appliedSeq": 41,
+      "seqAfter": 41,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    }
+  ],
+  "firstInserts": [
+    {
+      "id": "first-insert-unwatch-reset",
+      "timeout": false,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 43,
+      "finalActionVersion": 43,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 45,
+      "finalActionVersion": 45,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unchanged-reset",
+      "timeout": false,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 46,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unchanged-timeout",
+      "timeout": true,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 47,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-and-rewatch-reset",
+      "timeout": false,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 50,
+      "finalActionVersion": 50,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-unwatch-and-rewatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 53,
+      "finalActionVersion": 53,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-not-applied-reset",
+      "timeout": false,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 54,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-not-applied-timeout",
+      "timeout": true,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 55,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-pending-after-readback-reset",
+      "timeout": false,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 57,
+      "finalActionVersion": 57,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "first-insert-pending-after-readback-timeout",
+      "timeout": true,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 59,
+      "finalActionVersion": 59,
+      "receiptConfirmed": true
+    }
+  ],
+  "passed": true,
+  "diagnostics": {
+    "events": 415,
+    "byEvent": {
+      "crate.attempt_failed": 124,
+      "crate.failover_attempt": 100,
+      "crate.query": 95,
+      "crate.http": 48,
+      "crate.replay": 8,
+      "crate.recovery": 21,
+      "crate.readback": 19
+    },
+    "byErrorClass": {
+      "CrateTimeoutError": 75,
+      "Error": 50,
+      "SocketError": 1,
+      "NodeNotConnectedException": 20,
+      "JobKilledException": 1,
+      "NoSuchNodeException": 1
+    },
+    "failedQueries": [
+      {
+        "time": "2026-10-15T19:10:54.055Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "2d292d4d-0425-48ef-8ef4-cf7731e2d0fe",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.761499,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:10:54.193Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "5f43a350-5319-4021-8565-dfa7068d4d26",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "8409e437-61f7-41be-935b-e823782a9b7e",
+        "operation": "insertRows",
+        "queryId": "ebd8c20b-1320-4947-86e8-93ded7c831a1",
+        "sqlShape": "INSERT INTO user_watch_log (\"user_id\", \"watch_id\", \"media_type\", \"tmdb_id\", \"episode_tmdb_id\", \"season_number\", \"episode_number\", \"watched_at\", \"watched_at_precision\", \"origin\", \"group_id\", \"import_id\", \"pass\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"watch_id\") DO NOTHING",
+        "sqlShapeId": "8e45b489e0680b80",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10002.175519000004,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:10:54.472Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "511f173e-68a8-4df3-8f3d-f8d1519c3425",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "operationId": "6fb712d5-671f-4a3f-906d-d256e71b0ed0",
+        "operation": "upsert",
+        "queryId": "b1613b1e-ff89-4986-aa12-d0c429a270f9",
+        "sqlShape": "INSERT INTO user_score (\"user_id\", \"tmdb_id\", \"media_type\", \"score\", \"review\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO UPDATE SET \"score\" = excluded.\"score\", \"review\" = excluded.\"review\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "7c391ffde48a45d0",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 1379.7367969999978,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:10:54.474Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "e14b8eec-9afd-4cf3-be98-0e37c202d251",
+        "operation": "insertRows",
+        "queryId": "3fddee6c-e2fb-4b71-ac63-1ea3ae7d8af0",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9478.601498999997,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:10:54.475Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "873ca6b0-52a1-4b33-9262-1d65afd2e74d",
+        "operation": "upsert",
+        "queryId": "25261f21-cb18-45cf-9f32-6fce7898bd94",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9416.507839999998,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:11:10.151Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "a8b35ace-b825-4c77-b1a2-2850b508bd76",
+        "operation": "upsert",
+        "queryId": "121134ae-8d50-4958-83bd-ef7378673756",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 8.136966999998549,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:11:44.384Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "dd1329e1-ad9a-4286-be74-a6fb802a58b6",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:46383",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 33.520527000000584,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:11:54.442Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "20b43d40-3911-452d-81cd-14d0c7b9c21e",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:38915",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9999.946673999992,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:11:54.489Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "a78012ce-64d5-4b91-bec5-0d9b308e7acd",
+        "operation": "upsert",
+        "queryId": "0455226b-7655-458f-9038-78fe4aa465a8",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:44677",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 18.824811000013142,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:04.517Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "bce389b2-e817-46e7-87e8-e1e4e54195f7",
+        "operation": "upsert",
+        "queryId": "d2cd97d4-f17e-4e8c-9750-d59a00f103a5",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:39919",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9999.770448999989,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:04.597Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "aae77e06-f948-4eed-a786-c5ece8e85f09",
+        "operation": "insertRows",
+        "queryId": "61c268f3-dd8d-4c13-8016-0b8546b132d5",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:33095",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 26.77581900000223,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:14.649Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "90bcc0a6-f55c-4cab-b710-ac018713b0ef",
+        "operation": "insertRows",
+        "queryId": "0cea5993-4918-4172-88e6-d172a1452c80",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:33525",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10003.137701,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:15.089Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "952d0037-4389-43b5-813a-cc4b517b553b",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "operationId": "6f50c34c-84e5-419f-9aaf-b4d16f778e11",
+        "operation": "tracking.writeState",
+        "queryId": "a65165ca-7c78-4862-86e2-4e56411a55c3",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.1:41121",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 55.07109699997818,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:25.724Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "a172becc-094f-42b8-9ec1-d64897244eee",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "operationId": "5ef432c6-3099-4c59-9e04-82badde1f6a6",
+        "operation": "tracking.writeState",
+        "queryId": "2b8b1db5-2dd8-4b75-a2ee-43728814755d",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.1:34061",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.410774000018,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:26.046Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "ec38b22a-ea7e-40b5-b6d4-d358122d3ebf",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "b0067a10-a3e3-4381-ba98-721c401ced08",
+        "operation": "tracking.insertState",
+        "queryId": "85c59fc0-4e31-4519-9ee9-741fed5ca80e",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:44299",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 204.0116379999963,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:36.256Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "0c32fb34-1f91-4e20-9bb2-a68ea9aeb594",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "1937412a-194c-46c4-b3c0-818452597f26",
+        "operation": "tracking.insertState",
+        "queryId": "ea26f2fd-848e-4a94-9662-ecc1bc217586",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:33061",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.149981000024,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:36.443Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "0c73e9e7-2c3d-4422-9199-d18c5bf7669f",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "377addd3-6308-4d40-8cfa-36ec5b00d6e9",
+        "operation": "tracking.insertState",
+        "queryId": "da3ca9d1-7ff1-45ab-9803-eeb98669a70e",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:40039",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 15.12098100001458,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:46.680Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "adf4413b-c29f-4ed7-8a65-d59d1272c4de",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "08e705ee-4d3e-4837-a0dc-7fd5658787f9",
+        "operation": "tracking.insertState",
+        "queryId": "97943a19-fe6b-4416-a85c-a9c9ccd15a42",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:35531",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.603790000023,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:47.119Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "e2feeca4-ff8e-4aac-9278-c6cf29d7fad2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "5a35cf97-0170-4f75-9d2b-10e587b61d39",
+        "operation": "tracking.insertState",
+        "queryId": "5880634f-1255-4c21-8bc8-1045f28f84cb",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:36631",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 294.5233550000121,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:12:57.267Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "cfaf8c7b-0800-47f0-a3f3-605227e6754a",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "2ee8aaa3-9e3c-4188-96ae-a2c470d75eb5",
+        "operation": "tracking.insertState",
+        "queryId": "ef6b08b6-832a-4158-951c-39c6ecd0a374",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:39063",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.684550999984,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:12:57.389Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "dcf0d89e-7511-4fb2-9c84-4aeda1803566",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "64d54182-6e91-48b3-846b-0756be091092",
+        "operation": "tracking.insertState",
+        "queryId": "2cb1521a-943d-47a2-8a0b-11bacd2d1aa5",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:40243",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 1.0174579999875277,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:13:07.786Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "554a486b-2471-411f-ba40-ede1fe50d428",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "4a4b862e-607a-4f08-8eec-d12b997e1502",
+        "operation": "tracking.insertState",
+        "queryId": "aec72e73-cd2c-4bd2-baa8-a5058ec4082f",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:44057",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.027575999993,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T19:13:07.938Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "703ea426-a3b0-41a4-88f2-6a2ba0306655",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "87f18a87-30be-4116-b773-cb5c890d0e06",
+        "operation": "tracking.insertState",
+        "queryId": "84da3423-85fa-4cd4-adfa-1c80a46186f7",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:35879",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 0.7859489999827929,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T19:13:18.327Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "86fae3ba-c5e8-41c5-990b-56a9f6d30d39",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "666761ec-05ed-436c-8269-060c253da8bd",
+        "operation": "tracking.insertState",
+        "queryId": "198eb0a9-d08d-44c5-a41a-ef89764f1648",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:46309",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.00215700001,
+        "errorClass": "CrateTimeoutError"
+      }
+    ],
+    "httpOutcomes": [
+      {
+        "time": "2026-10-15T19:10:33.414Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "bbbc65c4-a937-4710-82ba-9af981cbf361",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2838.5567200000005
+      },
+      {
+        "time": "2026-10-15T19:10:34.436Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "014de83f-60e7-4811-8dcb-03a82aab6a9d",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 4254.972816000001
+      },
+      {
+        "time": "2026-10-15T19:10:37.941Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "9bf7dab9-b179-4d34-be28-d919ad0cbccd",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7437.367308000001
+      },
+      {
+        "time": "2026-10-15T19:10:37.944Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "962c4db0-29fa-4bbf-bb7a-64168ca2788e",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7451.884362999997
+      },
+      {
+        "time": "2026-10-15T19:10:37.951Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8c783f2a-ce54-496f-8931-87c18333efaa",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7379.945007000002
+      },
+      {
+        "time": "2026-10-15T19:10:37.954Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0f1abee5-0fb4-4833-8ccd-9b666b61f439",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7456.468815
+      },
+      {
+        "time": "2026-10-15T19:10:38.747Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "9292af7f-c392-4903-adb3-50d4c790688c",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10009.909161999996
+      },
+      {
+        "time": "2026-10-15T19:10:39.123Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "d5eaa164-4d8f-47ab-ac43-94d82d21ff11",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 4159.746124999998
+      },
+      {
+        "time": "2026-10-15T19:10:46.539Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "047ae6c0-e3db-42c1-b93e-1fad5c4ca98c",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2683.6436840000024
+      },
+      {
+        "time": "2026-10-15T19:10:47.049Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "aed43c67-e6d3-489a-9cda-8c61606591ab",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3381.182292999998
+      },
+      {
+        "time": "2026-10-15T19:10:47.219Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "84ddefb6-0787-4415-8ba8-b89b2f9a672a",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3550.1167819999973
+      },
+      {
+        "time": "2026-10-15T19:10:47.247Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "083e8408-c5d6-4dd7-aec6-2f67a86a4ae8",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3474.6461899999995
+      },
+      {
+        "time": "2026-10-15T19:10:48.781Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "55a31610-ab50-4209-b958-def8c4f65f8b",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 5115.775848999998
+      },
+      {
+        "time": "2026-10-15T19:10:51.227Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "618d2d39-9d0c-4d09-9171-3f4922fd6c2c",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3530.2241180000055
+      },
+      {
+        "time": "2026-10-15T19:10:51.370Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "56bf13c2-bb8d-4254-ad2c-acda4626acf4",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 8485.040754000001
+      },
+      {
+        "time": "2026-10-15T19:10:51.821Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "9d5aea19-1528-4b53-983d-ebcbc79d915e",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7151.486614999994
+      },
+      {
+        "time": "2026-10-15T19:10:54.254Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "5f43a350-5319-4021-8565-dfa7068d4d26",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10063.717404000003
+      },
+      {
+        "time": "2026-10-15T19:10:54.740Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8efd31dd-664c-48b0-864f-77e78115b4d7",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1466.7315180000078
+      },
+      {
+        "time": "2026-10-15T19:10:54.741Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "727d3baf-f743-4300-8de9-d75c9bc1069b",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1648.1323869999978
+      },
+      {
+        "time": "2026-10-15T19:10:55.047Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "64df69c2-4d91-4d4e-abd5-f5591f937bd5",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 267.00080200000957
+      },
+      {
+        "time": "2026-10-15T19:10:55.226Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "41dbee85-870b-47f5-840a-cbab71a3aabc",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2037.5597159999961
+      },
+      {
+        "time": "2026-10-15T19:10:55.323Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "12137cf6-887f-49bc-893a-9330bbd9a45f",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 539.9574040000007
+      },
+      {
+        "time": "2026-10-15T19:10:55.335Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3d43ca66-9347-46fd-b866-c6fd904e0482",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2244.0195819999935
+      },
+      {
+        "time": "2026-10-15T19:10:55.524Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "a52c3c63-168b-4f1c-9824-ff63301471da",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2747.296881000002
+      },
+      {
+        "time": "2026-10-15T19:10:55.830Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "ce08a338-77dd-423e-87b6-c79c52c8961d",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2379.799377000003
+      },
+      {
+        "time": "2026-10-15T19:10:56.735Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "511f173e-68a8-4df3-8f3d-f8d1519c3425",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3643.1497029999955
+      },
+      {
+        "time": "2026-10-15T19:11:00.530Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "262959c5-2a3a-4cd9-a122-e2824cb989f8",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 868.5047930000001
+      },
+      {
+        "time": "2026-10-15T19:11:00.546Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e44a8048-0f18-46d9-96d7-520d3ff3b29e",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1256.8139010000014
+      },
+      {
+        "time": "2026-10-15T19:11:05.445Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "59118600-9172-4bfc-8e32-10062b6e94c4",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1362.839844000002
+      },
+      {
+        "time": "2026-10-15T19:11:18.919Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "dd8fe7f4-7a23-4e9f-88ea-8d735e202974",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3608.2478279999923
+      },
+      {
+        "time": "2026-10-15T19:11:19.542Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "5dfaeac8-448d-47e8-82c7-9fca63d9c804",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3413.3171079999884
+      },
+      {
+        "time": "2026-10-15T19:11:19.617Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "4a18d657-fb4d-41b3-91a5-89ad289cd7af",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3604.3744660000084
+      },
+      {
+        "time": "2026-10-15T19:11:19.620Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "6b38f65e-8988-4ea1-9d23-852a6ce08372",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3572.9124969999975
+      },
+      {
+        "time": "2026-10-15T19:11:20.055Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "b5708f9d-9730-42db-9b3f-8f688ac20130",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 6597.999747000009
+      },
+      {
+        "time": "2026-10-15T19:11:20.225Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "92412469-0419-4f7e-a1ea-caca8a38f76f",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2693.092902000004
+      },
+      {
+        "time": "2026-10-15T19:11:21.920Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "b3179cf0-2c01-4eea-8748-57773f78e58d",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7818.673663000009
+      },
+      {
+        "time": "2026-10-15T19:12:15.417Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "952d0037-4389-43b5-813a-cc4b517b553b",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 637.7364139999845
+      },
+      {
+        "time": "2026-10-15T19:12:25.753Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "a172becc-094f-42b8-9ec1-d64897244eee",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10225.287649000005
+      },
+      {
+        "time": "2026-10-15T19:12:26.116Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "ec38b22a-ea7e-40b5-b6d4-d358122d3ebf",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 307.3330469999928
+      },
+      {
+        "time": "2026-10-15T19:12:36.296Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0c32fb34-1f91-4e20-9bb2-a68ea9aeb594",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10076.368384000001
+      },
+      {
+        "time": "2026-10-15T19:12:36.532Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0c73e9e7-2c3d-4422-9199-d18c5bf7669f",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 144.49013099999866
+      },
+      {
+        "time": "2026-10-15T19:12:46.720Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "adf4413b-c29f-4ed7-8a65-d59d1272c4de",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10069.753441000008
+      },
+      {
+        "time": "2026-10-15T19:12:47.155Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e2feeca4-ff8e-4aac-9278-c6cf29d7fad2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 372.9896660000086
+      },
+      {
+        "time": "2026-10-15T19:12:57.300Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "cfaf8c7b-0800-47f0-a3f3-605227e6754a",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10070.449336999998
+      },
+      {
+        "time": "2026-10-15T19:12:57.512Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "dcf0d89e-7511-4fb2-9c84-4aeda1803566",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 153.58831900000223
+      },
+      {
+        "time": "2026-10-15T19:13:07.847Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "554a486b-2471-411f-ba40-ede1fe50d428",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10094.203658000013
+      },
+      {
+        "time": "2026-10-15T19:13:08.188Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "703ea426-a3b0-41a4-88f2-6a2ba0306655",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 283.3257900000026
+      },
+      {
+        "time": "2026-10-15T19:13:18.524Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "86fae3ba-c5e8-41c5-990b-56a9f6d30d39",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10248.056142999994
+      }
+    ]
+  },
+  "finishedAt": "2026-10-15T19:13:18.555Z"
+}

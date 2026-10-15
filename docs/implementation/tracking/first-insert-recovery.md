@@ -146,3 +146,17 @@ from the proof's working directory reproduces its exact hash (esbuild source com
 Receipts: [red control](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-red.json),
 [final proof](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-final.json),
 and [validation](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-validation.json).
+
+### Conflict guard, 2026-10-15
+
+The conflict-loop guard is implementation commit `940fc6db`. Two new cases (first INSERT and CAS UPDATE) fail on
+`865d7539`, where the rerun restores the removed tick, and pass with the guard. The statement counts of the
+existing conflict tests are unchanged. Full suite: **2,722 passed, one optional skip, one todo (the movie
+residual), zero failed**. Typecheck: still **174** diagnostics, none in tracking files.
+
+The same graceful proof on that runtime (`trackingRuntimeSha256` `c9173afe…`) passed: **10 / 10 first-insert
+scenarios**, **0 / 968 page-route failures**, 35 acknowledged watches stored uniquely, and cleanup verified. An
+earlier attempt stopped before the tracking scenarios: a generic read during node loss received CrateDB's
+internal `NullPointerException` (code 5000, `ClusterService.state()` null) while the node shut down. Receipt:
+[conflict guard](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-conflict-guard.json).
+
