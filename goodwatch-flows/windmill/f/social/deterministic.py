@@ -7,7 +7,7 @@ signal: a release year, a cast/crew name from our own data, a season number, the
 article's URL slug, or an official channel video ID.
 """
 import re
-from f.social.common import norm
+from f.social.common import norm, stamp
 from f.social.rules import foreground
 
 VERSION = 'deterministic-1'
@@ -238,9 +238,11 @@ class DeterministicMatcher:
         text = headline + '\n' + description
         plain_text = ' ' + norm(text) + ' '
         slug = slug_words(post)
-        published = str(post.get('published_at') or '')[:4]
-        years = {int(y) for y in YEAR.findall(headline) if y != published}
-        stage, renewed = bool(STAGE_WORDS.search(headline)), bool(NEW_VERSION.search(headline))
+        if STAGE_WORDS.search(headline):
+            return []
+        published = publication_year(post)
+        years = {int(y) for y in YEAR.findall(headline) if int(y) != published}
+        renewed = bool(NEW_VERSION.search(headline))
         season = bool(SEASON.search(text))
         tv_hint, movie_hint = bool(TV_WORDS.search(text)), bool(MOVIE_WORDS.search(text))
         resolved = [m for m in found if catalog.get(m['key']) and m['where'] == 'headline']
@@ -250,10 +252,8 @@ class DeterministicMatcher:
         accepted = {}
         for m in sorted(found, key=lambda m: (-m['rank'], headline.lower().find(m['raw'].lower()), -len(m['key']))):
             rows = [r for r in catalog.get(m['key'], []) if r.get('title')]
-            if renewed and published.isdigit():
-                rows = [r for r in rows if not r.get('release_year') or r['release_year'] >= int(published) - 1]
-            if stage:
-                continue
+            if renewed and published:
+                rows = [r for r in rows if not r.get('release_year') or r['release_year'] >= published - 1]
             # The title must be named in the headline (the article card for Bluesky).
             if not rows or len(rows) > MAX_SHARED or m['where'] != 'headline' or reference_only(m['raw'], headline):
                 continue
@@ -305,6 +305,13 @@ class DeterministicMatcher:
         if len(accepted) > MAX_LINKS:
             return []
         return list(accepted.values())[:1] if len(accepted) > 1 and not listing(headline) else list(accepted.values())
+
+
+def publication_year(post):
+    try:
+        return stamp(post['published_at']).year
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return None
 
 
 def subtitled(raw, headline):

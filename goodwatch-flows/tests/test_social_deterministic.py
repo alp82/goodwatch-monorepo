@@ -52,6 +52,13 @@ class DeterministicTests(unittest.TestCase):
         p = post('Die Serie wird neu aufgelegt: Erster Trailer zur "Baywatch"-Serie 1989', context='David Hasselhoff')
         self.assertEqual(self.decide(p, catalog, {'tv:5': {'David Hasselhoff'}}), [])
 
+    def test_publication_year_is_not_a_release_year_signal(self):
+        catalog = {'josephine': [row('movie', 1, 'Josephine', 2026), row('movie', 2, 'Josephine', 2001)]}
+        p = post('‘Josephine’ Trailer Arrives Before the 2026 Festival Run', published_at=1791993610000)
+        self.assertEqual(self.decide(p, catalog), [])
+        p = post('‘Josephine’ Trailer Arrives Before the 2026 Festival Run', published_at=1760000000000)
+        self.assertEqual(self.decide(p, catalog), ['movie:1'])
+
     def test_only_first_title_unless_headline_lists_works(self):
         catalog = {'elsbeth': [row('tv', 1, 'Elsbeth', 2024)], 'the mentor': [row('movie', 2, 'The Mentor', 2026)]}
         p = post('‘Elsbeth’ Welcomes Guest From ‘The Mentor’ in Season 4')
