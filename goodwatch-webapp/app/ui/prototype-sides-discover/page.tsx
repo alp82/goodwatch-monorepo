@@ -34,6 +34,9 @@ export function SidesDiscoverPage({ view }: { view: SDView | null }) {
 	const fitting = view.sides.map((s) => top.filter((t) => view.sideOf[t.card.key] === s.index).length)
 	const none = top.filter((t) => view.sideOf[t.card.key] == null).length
 	const props = { view, names, places }
+	// The side filter narrows the list: the bar's count follows it.
+	const chosen = variant === "filter" && params.get("side") !== null ? view.totals[Number(params.get("side"))] : undefined
+	const counts = chosen === undefined ? view.counts : { ...view.counts, total: chosen, hidden: view.counts.hidden + view.listTotal - chosen }
 	return (
 		<div className="pb-40 text-white">
 			<div className="border-b border-fuchsia-500/30 bg-fuchsia-950/20">
@@ -62,14 +65,14 @@ export function SidesDiscoverPage({ view }: { view: SDView | null }) {
 					<span className="w-full text-gray-400">
 						{view.member.rated} rated, {view.member.loved} loved, {view.sides.length} sides ({view.loose} loved titles fit none) · order:{" "}
 						{view.order === "personal" ? "personal order" : view.order === "best-match" ? `Best match (personal order not loaded: ${view.personalOrderNote ?? "no payload"})` : `${view.sortUsed}${view.forYou ? " with For you" : ""}`} · first{" "}
-						{view.list} of {count(view.listTotal)}: {fitting.map((n, i) => `side ${i + 1} ${n}`).join(", ")}, no side {none} · whole list: {view.totals.map((n, i) => `side ${i + 1} ${count(n)}`).join(", ")}, no side {count(view.noSide)} (fit at closeness ≥ {view.fit}){view.servicesDropped ? " · On my services starts off: this member's services carry nothing where they watch" : ""} · {view.computedMs} ms
+						{view.list} of {count(view.listTotal)}: {fitting.map((n, i) => `side ${i + 1} ${n}`).join(", ")}, no side {none} · whole list: {view.totals.map((n, i) => `side ${i + 1} ${count(n)}`).join(", ")}, no side {count(view.noSide)} (fit: closeness ≥ {view.fit.bars.join(" / ")} per side and {view.fit.margin} over the next side){view.servicesDropped ? " · On my services starts off: this member's services carry nothing where they watch" : ""} · {view.computedMs} ms
 					</span>
 				</div>
 			</div>
 			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
 				<DiscoverHeading q={null} onSearch={(text) => text && navigate(`/discover?q=${encodeURIComponent(text)}`)} onClear={() => {}} explanation={null} />
 				<div className="lg:mt-7">
-					<FilterBar filters={filters} counts={view.counts} forYou={forYou} taste="ready" />
+					<FilterBar filters={filters} counts={counts} forYou={forYou} taste="ready" />
 				</div>
 				<div className="mt-5 lg:mt-7">
 					{variant === "today" && <Today {...props} />}

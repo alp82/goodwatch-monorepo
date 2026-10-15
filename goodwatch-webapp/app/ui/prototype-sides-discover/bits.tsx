@@ -46,7 +46,7 @@ export function SideHeader({ side, view, names, inList, compact = false }: { sid
 					<h2 className={`${compact ? "text-base" : "text-lg md:text-xl"} truncate font-bold text-white`}>{sideLabel(side, names)}</h2>
 				</div>
 				<p className="text-sm text-gray-400">
-					{pct(side.share)} of what you love · {inList} here
+					{pct(side.share)} of what you love · {count(inList)} in this list
 				</p>
 				{names && !compact && <p className="text-xs text-gray-500">{side.line}</p>}
 			</div>
@@ -77,10 +77,13 @@ export function topOf(view: SDView) {
 	return view.cards.flatMap((card) => (view.place[card.key] < view.list ? [{ card, place: view.place[card.key] }] : []))
 }
 
-/** Sides in the order their first title comes in the list: personal order decides which side leads. */
-export function sidesInListOrder(view: SDView) {
-	const first = (i: number) => titlesOf(view, i)[0]?.place ?? Number.POSITIVE_INFINITY
-	return [...view.sides].sort((a, b) => first(a.index) - first(b.index))
+/**
+ * The sides and the no-side group (null) in the order their first title comes in the list: personal order decides
+ * which group leads, so titles that fit no side are never pushed behind the sides.
+ */
+export function groupsInListOrder(view: SDView): (number | null)[] {
+	const first = (g: number | null) => titlesOf(view, g)[0]?.place ?? Number.POSITIVE_INFINITY
+	return [...view.sides.map((s) => s.index as number | null), null].sort((a, b) => first(a) - first(b))
 }
 
 export const count = (n: number) => n.toLocaleString("en-US")

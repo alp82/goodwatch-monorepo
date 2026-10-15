@@ -28,6 +28,12 @@ const LIST = 240
 const PER_SIDE = 48
 /** A title fits a side at this closeness to its center, the bar a loved title must clear to stay in its side. */
 const FIT = 0.15
+/**
+ * The stricter rule from the cross-check: a title fits a side when it is at least half as close to the center as the
+ * side's own loved titles are on average, and closer to it than to the next side by MARGIN. Near-ties fit no side.
+ */
+const BAR_SHARE = 0.5
+const MARGIN = 0.05
 
 export async function sidesDiscoverView(request: Request, slot: string | null): Promise<SDView | null> {
 	const startedAt = performance.now()
@@ -65,7 +71,18 @@ export async function sidesDiscoverView(request: Request, slot: string | null): 
 	const personal = result.sortUsed === "match" && proto.personalOrder
 	const ordered = personal ? proto.order(result.keys) : result.keys
 
-	// Every title's side, over the whole list: the nearest center, if the title is close enough to it. The prototype
+	// Each side's bar: half its loved titles' average closeness to its center (never below FIT).
+	const bars = centers.map((c, i) => {
+		const list = built.memberKeys[i].flatMap((key) => {
+			const z = person.zOf(key)
+			return z ? [cosine(z, c)] : []
+		})
+		const mean = list.reduce((a, b) => a + b, 0) / Math.max(1, list.length)
+		return Math.max(FIT, Math.round(BAR_SHARE * mean * 100) / 100)
+	})
+
+	// Every title's side, over the whole list: the nearest center, if the title clears that side's bar and the margin
+	// over the next side. The prototype
 	// loads the list's first LIST titles plus each side's own first PER_SIDE, as a side filter or row would.
 	const sideOf: Record<string, number | null> = {}
 	const closeness: Record<string, number> = {}
@@ -78,15 +95,17 @@ export async function sidesDiscoverView(request: Request, slot: string | null): 
 		const z = person.zOf(key)
 		let best = -1
 		let similarity = Number.NEGATIVE_INFINITY
+		let second = Number.NEGATIVE_INFINITY
 		if (z)
 			centers.forEach((c, i) => {
 				const s = cosine(z, c)
 				if (s > similarity) {
+					second = similarity
 					similarity = s
 					best = i
-				}
+				} else if (s > second) second = s
 			})
-		const side = best >= 0 && similarity >= FIT ? best : null
+		const side = best >= 0 && similarity >= bars[best] && similarity - second >= MARGIN ? best : null
 		if (side === null) noSide++
 		else totals[side]++
 		const take = side === null ? perNone++ < PER_SIDE : perSide[side]++ < PER_SIDE
@@ -163,7 +182,7 @@ export async function sidesDiscoverView(request: Request, slot: string | null): 
 		movedUp: result.movedUp ?? 0,
 		order: personal ? "personal" : result.sortUsed === "match" ? "best-match" : "sort",
 		personalOrderNote: proto.personalOrderNote,
-		fit: FIT,
+		fit: { bars, margin: MARGIN },
 		computedMs: Math.round(performance.now() - startedAt),
 	}
 }

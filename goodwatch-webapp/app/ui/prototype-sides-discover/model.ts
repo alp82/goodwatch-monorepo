@@ -62,7 +62,8 @@ export interface SDView {
 	movedUp: number
 	order: "personal" | "best-match" | "sort"
 	personalOrderNote: string | null
-	fit: number
+	/** Each side's closeness bar and the margin over the next side a title needs to fit it. */
+	fit: { bars: number[]; margin: number }
 	computedMs: number
 }
 

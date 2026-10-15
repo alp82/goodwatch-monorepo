@@ -2,13 +2,13 @@
 // the list's order (personal order under Best match) inside a side; sides only group or mark titles.
 //
 // - filter: a row of side chips under the filter bar; choosing one narrows the grid to the titles that fit that side.
-// - rows:   a row per side, the side whose best title comes first leading; a last row for titles that fit no side.
+// - rows:   a row per side, and one for titles that fit no side, each placed by where its first title is in the list.
 // - labels: today's grid, untouched order, each card marked with its side; the legend highlights one side.
-// - lanes:  (bolder) the sides side by side as lanes, each a column of its titles; on phones, one lane per swipe.
+// - lanes:  (bolder) the sides (and the titles that fit none) side by side as lanes; on phones, one lane per swipe.
 import { useSearchParams } from "@remix-run/react"
 import { useState } from "react"
 import { DISCOVER_GRID } from "~/ui/discover/DiscoverGrid"
-import { Card, LovedStack, SideHeader, count, hue, pct, sideLabel, sidesInListOrder, titlesOf, topOf } from "./bits"
+import { Card, LovedStack, SideHeader, count, groupsInListOrder, hue, pct, sideLabel, titlesOf, topOf } from "./bits"
 import type { SDSide, SDView } from "./model"
 
 interface Props {
@@ -39,7 +39,7 @@ export function SideFilter({ view, names, places }: Props) {
 		const p = new URLSearchParams(params)
 		if (i === null) p.delete("side")
 		else p.set("side", String(i))
-		setParams(p, { replace: true, preventScrollReset: true })
+		setParams(p, { preventScrollReset: true })
 	}
 	const list = chosen === null ? topOf(view) : titlesOf(view, chosen)
 	const side = chosen === null ? null : view.sides[chosen]
@@ -102,7 +102,6 @@ function Chip({ on, onClick, hueOf, children }: { on: boolean; onClick: () => vo
 
 export function Rows({ view, names, places }: Props) {
 	const [, setParams] = useSearchParams()
-	const rest = titlesOf(view, null)
 	const seeAll = (i: number) =>
 		setParams(
 			(p) => {
@@ -115,30 +114,36 @@ export function Rows({ view, names, places }: Props) {
 		)
 	return (
 		<div className="flex flex-col gap-10">
-			{sidesInListOrder(view).map((side) => {
-				const list = titlesOf(view, side.index)
+			{groupsInListOrder(view).map((group) => {
+				const list = titlesOf(view, group)
 				if (!list.length) return null
+				const side = group === null ? null : view.sides[group]
 				return (
-					<section key={side.index}>
-						<div className="mb-3 flex items-end justify-between gap-3">
-							<SideHeader side={side} view={view} names={names} inList={view.totals[side.index]} />
-							<button type="button" onClick={() => seeAll(side.index)} className="shrink-0 cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300">
-								See all {count(view.totals[side.index])}
-							</button>
-						</div>
+					<section key={group ?? "none"}>
+						{side ? (
+							<div className="mb-3 flex items-end justify-between gap-3">
+								<SideHeader side={side} view={view} names={names} inList={view.totals[side.index]} />
+								<button type="button" onClick={() => seeAll(side.index)} className="shrink-0 cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300">
+									See all {count(view.totals[side.index])}
+								</button>
+							</div>
+						) : (
+							<NoSideHeader view={view} />
+						)}
 						<Row list={list} places={places} />
 					</section>
 				)
 			})}
-			{rest.length > 0 && (
-				<section>
-					<div className="mb-3">
-						<h2 className="text-lg font-bold text-white md:text-xl">More for you</h2>
-						<p className="text-sm text-gray-400">Titles that fit none of your sides · {count(view.noSide)} here</p>
-					</div>
-					<Row list={rest} places={places} />
-				</section>
-			)}
+		</div>
+	)
+}
+
+/** The titles that fit no side, as a group of their own: no posters stand for it. */
+function NoSideHeader({ view, compact = false }: { view: SDView; compact?: boolean }) {
+	return (
+		<div className={compact ? "" : "mb-3"}>
+			<h2 className={`${compact ? "text-base" : "text-lg md:text-xl"} font-bold text-white`}>More for you</h2>
+			<p className="text-sm text-gray-400">Fits none of your sides · {count(view.noSide)} in this list</p>
 		</div>
 	)
 }
@@ -190,10 +195,11 @@ export function Labels({ view, names, places }: Props) {
 								{s ? (
 									<>
 										<span className="h-2 w-2 shrink-0 rounded-full" style={{ background: hue(s) }} aria-hidden />
-										<LovedStack side={s} view={view} n={2} size="h-5" />
 										<span className="truncate">{sideLabel(s, names)}</span>
 									</>
-								) : null}
+								) : (
+									<span className="font-normal text-gray-500">No side</span>
+								)}
 							</div>
 							<Card card={card} index={i} place={places ? place : null} />
 						</div>
@@ -207,29 +213,30 @@ export function Labels({ view, names, places }: Props) {
 // ---------- lanes ----------
 
 export function Lanes({ view, names, places }: Props) {
-	const sides = sidesInListOrder(view)
-	const n = sides.length
-	const desktopCols = ["", "md:grid-cols-1", "md:grid-cols-2", "md:grid-cols-3", "md:grid-cols-4", "md:grid-cols-5"][n] ?? "md:grid-cols-5"
-	const inner = n <= 2 ? "grid-cols-2 lg:grid-cols-3" : n === 3 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-1 xl:grid-cols-2"
-	const rest = view.noSide
-	const go = (i: number) => document.getElementById(`lane-${i}`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+	const groups = groupsInListOrder(view).filter((g) => titlesOf(view, g).length > 0)
+	const n = groups.length
+	const desktopCols = ["", "md:grid-cols-1", "md:grid-cols-2", "md:grid-cols-3", "md:grid-cols-4", "md:grid-cols-5", "md:grid-cols-6"][n] ?? "md:grid-cols-6"
+	// Wide enough lanes keep the card titles: two columns only with three lanes or fewer.
+	const inner = n <= 2 ? "grid-cols-2 lg:grid-cols-3" : n === 3 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-1"
+	const go = (id: string) => document.getElementById(`lane-${id}`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
 	return (
 		<>
 			<div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 md:hidden">
-				{sides.map((side) => (
-					<button key={side.index} type="button" onClick={() => go(side.index)} className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-gray-900 px-2.5 py-1 text-xs font-semibold text-gray-200">
-						<span className="h-2 w-2 rounded-full" style={{ background: hue(side) }} aria-hidden />
-						{sideLabel(side, names)}
+				{groups.map((g) => (
+					<button key={g ?? "none"} type="button" onClick={() => go(String(g ?? "none"))} className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-gray-900 px-2.5 py-1 text-xs font-semibold text-gray-200">
+						<span className="h-2 w-2 rounded-full" style={{ background: g === null ? "#9ca3af" : hue(g) }} aria-hidden />
+						{g === null ? "More for you" : sideLabel(view.sides[g], names)}
 					</button>
 				))}
 			</div>
 			<div className={`-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 md:mx-0 md:grid md:overflow-visible md:px-0 ${desktopCols}`}>
-				{sides.map((side) => {
-					const list = titlesOf(view, side.index)
+				{groups.map((g) => {
+					const list = titlesOf(view, g)
+					const side = g === null ? null : view.sides[g]
 					return (
-						<section key={side.index} id={`lane-${side.index}`} className="w-[86vw] shrink-0 snap-center md:w-auto">
-							<div className="z-20 -mx-1 mb-3 rounded-lg border-t-4 bg-gray-950/95 px-2 py-2 md:sticky md:top-14" style={{ borderTopColor: hue(side) }}>
-								<SideHeader side={side} view={view} names={names} inList={view.totals[side.index]} compact />
+						<section key={g ?? "none"} id={`lane-${g ?? "none"}`} className="w-[86vw] shrink-0 snap-center md:w-auto">
+							<div className="z-20 -mx-1 mb-3 rounded-lg border-t-4 bg-gray-950/95 px-2 py-2 md:sticky md:top-14" style={{ borderTopColor: side ? hue(side) : "#9ca3af" }}>
+								{side ? <SideHeader side={side} view={view} names={names} inList={view.totals[side.index]} compact /> : <NoSideHeader view={view} compact />}
 							</div>
 							<div className={`grid gap-3 ${inner}`}>
 								{list.slice(0, 40).map(({ card, place }, i) => (
@@ -240,7 +247,6 @@ export function Lanes({ view, names, places }: Props) {
 					)
 				})}
 			</div>
-			{rest > 0 && <p className="mt-6 text-sm text-gray-400">{count(rest)} of the {count(view.listTotal)} titles fit none of your sides and don't show in a lane.</p>}
 		</>
 	)
 }
