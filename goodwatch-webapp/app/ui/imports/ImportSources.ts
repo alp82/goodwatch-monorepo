@@ -85,6 +85,16 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		connect: true,
 	},
 	{
+		id: "plex",
+		logo: null,
+		tile: { text: "Px", className: "bg-amber-500 text-black" },
+		// Each play from the member's own server, and Want to See from the personal watchlist feed.
+		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
+		wait: "About a minute",
+		aliases: "plex.tv plex media server",
+		connect: true,
+	},
+	{
 		id: "myanimelist",
 		// MyAnimeList allows its marks only with written permission; Kitsu publishes no usage terms.
 		logo: null,

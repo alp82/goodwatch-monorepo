@@ -27,6 +27,7 @@ test("the page lists every live source, most common first, and hides sources not
 			"Letterboxd",
 			"Trakt",
 			"TMDB",
+			"Plex",
 			"MyAnimeList / Kitsu",
 			"Kodi",
 			"MovieLens",
@@ -34,7 +35,7 @@ test("the page lists every live source, most common first, and hides sources not
 		],
 	)
 	assert.ok(runs.list.rows.every((row) => !row.open))
-	assert.doesNotMatch(runs.list.text, /Netflix|Simkl|Plex|coming later/i)
+	assert.doesNotMatch(runs.list.text, /Netflix|Simkl|Jellyfin|coming later/i)
 })
 
 test("a source with a finished import says when; an undone import doesn't count", () => {
@@ -44,6 +45,7 @@ test("a source with a finished import says when; an undone import doesn't count"
 	assert.equal(label("Letterboxd"), "Imported October 11, 2026")
 	assert.equal(label("Trakt"), null)
 	assert.equal(label("TMDB"), "Connect")
+	assert.equal(label("Plex"), "Connect")
 })
 
 test("TV Time members are pointed to Trakt, which imports a saved TV Time file", () => {
@@ -194,7 +196,7 @@ test("the notices cover every logo in the list, TMDB's included", () => {
 test("the box's help names the sources from the list itself", () => {
 	assert.match(
 		runs.list.text,
-		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, and Generic CSV\. To bring TMDB, open it in the list and connect your account\./,
+		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, and Generic CSV\. To bring TMDB or Plex, open it in the list and connect your account\./,
 	)
 })
 
@@ -202,4 +204,12 @@ test("the server's HTML says Imported without a date, which only the member's br
 	const markup = runs.serverMarkup as unknown as string
 	assert.match(markup, /data-source-label="[^"]*"[^>]*>Imported<\/span>/)
 	assert.doesNotMatch(markup, /October/)
+})
+
+test("a return from Plex opens Plex's connection, and no other connect source takes its state", () => {
+	assert.deepEqual(openRows(runs.plexReturn), ["Plex"])
+	assert.match(runs.plexReturn.text, /Return from Plex/)
+	assert.deepEqual(openRows(runs.plexReturnThenTmdb), ["TMDB"])
+	assert.match(runs.plexReturnThenTmdb.text, /Connect TMDB/)
+	assert.doesNotMatch(runs.plexReturnThenTmdb.text, /Return from TMDB/)
 })

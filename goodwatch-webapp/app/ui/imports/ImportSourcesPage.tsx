@@ -4,7 +4,7 @@ import { ChevronDownIcon, ClockIcon } from "@heroicons/react/20/solid"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useId, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
-import { type ImportSummary, isFileImportSource } from "~/domain/imports"
+import type { ImportSummary } from "~/domain/imports"
 import { useHydrated } from "~/utils/hydrated"
 import { ImdbImportFlow } from "./ImdbImportFlow"
 import {
@@ -150,12 +150,11 @@ export function ImportSourcesPage({
 								source={source.id}
 								handoff={handed}
 								initial={{ imports: sourceImports }}
+								// Only the source the address names takes its connection and import.
 								connectState={
-									!isFileImportSource(source.id) ? connectState : undefined
+									source.id === initialSource ? connectState : undefined
 								}
-								initialId={
-									!isFileImportSource(source.id) ? openImport : undefined
-								}
+								initialId={source.id === initialSource ? openImport : undefined}
 							/>
 						)}
 					</div>

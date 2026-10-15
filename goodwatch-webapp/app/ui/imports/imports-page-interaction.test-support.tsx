@@ -135,7 +135,9 @@ const { createRoot } = await import("react-dom/client")
 const { QueryClient, QueryClientProvider } = await import(
 	"@tanstack/react-query"
 )
-const { MemoryRouter } = await import("react-router-dom")
+const { MemoryRouter, RouterProvider, createMemoryRouter } = await import(
+	"react-router-dom"
+)
 const { ImportSourcesPage } = await import("./ImportSourcesPage")
 
 type PageProps = Parameters<typeof ImportSourcesPage>[0]
@@ -157,15 +159,19 @@ async function page(props: Partial<PageProps> = {}) {
 			h(
 				QueryClientProvider,
 				{ client },
-				h(
-					MemoryRouter,
-					null,
-					h(ImportSourcesPage, {
-						imdbImports: [],
-						sourceImports: [],
-						...props,
-					}),
-				),
+				// A data router, as in the app: the connect panels submit through a fetcher.
+				h(RouterProvider, {
+					router: createMemoryRouter([
+						{
+							path: "/",
+							element: h(ImportSourcesPage, {
+								imdbImports: [],
+								sourceImports: [],
+								...props,
+							}),
+						},
+					]),
+				}),
 			),
 		),
 	)
@@ -432,6 +438,17 @@ const movielens = (wishlist: boolean) =>
 		text: view.text(),
 		sent: [...sent],
 	}
+	await view.unmount()
+}
+
+{
+	const view = await page({
+		initialSource: "plex",
+		connectState: "00000000-0000-4000-8000-0000000000dd",
+	})
+	results.plexReturn = { rows: view.rows(), text: view.text() }
+	await view.click("TMDB")
+	results.plexReturnThenTmdb = { rows: view.rows(), text: view.text() }
 	await view.unmount()
 }
 
