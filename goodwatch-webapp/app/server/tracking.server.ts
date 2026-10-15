@@ -1978,13 +1978,18 @@ export async function applyImportTrackingPlan(
 	}
 }
 
+/**
+ * Takes back one title's import plan and says what it did with the show status: "reverted" when it is as it was
+ * before the import (or the plan didn't change it), "left" when the member changed it after the import.
+ */
 export async function undoImportTrackingPlan(
 	userId: string,
 	plan: ImportTrackingPlan,
-): Promise<void> {
+): Promise<"reverted" | "left"> {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length && !plan.statusItem) return
+	if (!plan.watches.length && !plan.statusItem) return "reverted"
+	let outcome: "reverted" | "left" = "reverted"
 	await run("REFRESH TABLE user_watch_log")
 	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
 	const log = await readImportLog(userId, plan.title)
@@ -2001,11 +2006,19 @@ export async function undoImportTrackingPlan(
 		await settleMovie(userId, plan.title.tmdbId)
 	else {
 		const current = await readState(userId, plan.title)
-		if (
+		const owned =
 			current &&
 			current.updated_at === plan.now &&
 			current.state === plan.afterState?.state
-		) {
+		const before = plan.beforeState?.state ?? null
+		// An earlier, interrupted Undo may already have put it back.
+		if (
+			!owned &&
+			(plan.afterState?.state ?? null) !== before &&
+			(current?.state ?? null) !== before
+		)
+			outcome = "left"
+		if (owned) {
 			await run("REFRESH TABLE user_watch_log")
 			const remaining = await readImportLog(userId, plan.title)
 			const hasRegular = remaining.some((row) => (row.season_number ?? 0) > 0)
@@ -2083,4 +2096,5 @@ export async function undoImportTrackingPlan(
 		}
 	}
 	await finish(userId)
+	return outcome
 }

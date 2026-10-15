@@ -1172,6 +1172,9 @@ SCHEMAS = {
             "watch_id": "TEXT",
             "prior_state": "TEXT",
             "applied_state": "TEXT",
+            # What Undo did with a row it had to take back: 'reverted', or 'left' where the member changed it after
+            # the import. NULL before Undo, and for imports undone before Undo recorded it (#664).
+            "undo_outcome": "TEXT",
         },
         "primary_key": ["import_id", "row_index"],
         "shards": 1,

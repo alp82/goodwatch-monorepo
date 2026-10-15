@@ -1,3 +1,4 @@
+import type { ImportResultSectionKey } from "~/domain/import-result"
 import type {
 	ImportOptions,
 	ImportOutcome,
@@ -53,6 +54,23 @@ export const getImportItems = (
 	offset: number,
 	limit: number,
 ) => listItems(userId, id, outcome, offset, limit)
+/** What the import changed, or what its Undo changed back, grouped by title. */
+export const getImportResult = async (userId: string, id: string) =>
+	(await import("./result.server.ts")).importResult(userId, id)
+export const getImportResultPage = async (
+	userId: string,
+	id: string,
+	section: ImportResultSectionKey,
+	offset: number,
+	limit: number,
+) =>
+	(await import("./result.server.ts")).importResultPage(
+		userId,
+		id,
+		section,
+		offset,
+		limit,
+	)
 export const getSkippedCsv = (userId: string, id: string) =>
 	skippedCsv(userId, id)
 export { confirmImport, undoImport }

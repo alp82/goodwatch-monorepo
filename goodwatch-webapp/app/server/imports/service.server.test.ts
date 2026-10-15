@@ -21,6 +21,8 @@ const {
 	confirmImport,
 	getImport,
 	undoImport,
+	getImportResult,
+	getImportResultPage,
 } = await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
@@ -228,6 +230,995 @@ describe("native import service", () => {
 			["favorite"],
 		)
 		assert.equal(db.items[1].apply_state, null)
+	})
+})
+
+describe("import and Undo result", () => {
+	type Observation = {
+		kind: string
+		tmdbId: number | null
+		title: string
+		year?: number | null
+		mediaType?: "movie" | "show"
+		outcome?: string
+		reason?: string | null
+		[field: string]: unknown
+	}
+	/** One confirmed-ready import of `observations`, in file order. */
+	function seedImport(db: ImportDb, observations: Observation[]) {
+		db.seed()
+		const id = String(db.imports[0].id)
+		db.imports[0].source = "csv"
+		db.imports[0].file_name = "my-movies.csv"
+		db.imports[0].total = observations.length
+		db.items = observations.map(
+			(
+				{
+					kind,
+					tmdbId,
+					title,
+					year = 2024,
+					mediaType = "movie",
+					outcome = "new",
+					reason = null,
+					...rest
+				},
+				index,
+			) => ({
+				import_id: id,
+				row_index: index,
+				user_id: "member",
+				kind,
+				source_key: `csv:${kind}:${index}`,
+				payload: JSON.stringify({
+					key: `csv:${kind}:${index}`,
+					kind,
+					mediaType,
+					title,
+					year,
+					tmdbId,
+					imdbId: null,
+					index,
+					outcome,
+					reason,
+					...rest,
+				}),
+				outcome,
+				reason,
+				tmdb_id: tmdbId,
+				media_type: mediaType,
+				current_score: null,
+				apply_state: null,
+			}),
+		)
+		return id
+	}
+	const section = (result: { sections: { key: string }[] }, key: string) => {
+		const found = result.sections.find((s) => s.key === key)
+		if (!found)
+			assert.fail(
+				`no ${key} section in ${result.sections.map((s) => s.key).join(", ")}`,
+			)
+		return found as Extract<
+			(typeof result.sections)[number],
+			{ key: string }
+		> & {
+			count: number
+			total: number
+			rows: {
+				title: {
+					title: string
+					year: number | null
+					posterPath: string | null
+				} | null
+				changes: unknown[]
+			}[]
+		}
+	}
+
+	it("lists ratings added and replaced with their old and new values, under the catalog's titles and posters", async () => {
+		const db = new ImportDb()
+		const id = seedImport(db, [
+			{
+				kind: "rating",
+				tmdbId: 693134,
+				title: "dune part two",
+				score: 9,
+				_preview: null,
+			},
+			{
+				kind: "rating",
+				tmdbId: 329865,
+				title: "Arrival",
+				year: 2016,
+				score: 9,
+				outcome: "conflict",
+				_preview: {
+					score: 7,
+					review: null,
+					updatedAt: "2026-01-01T00:00:00.000Z",
+					seq: 3,
+					term: 1,
+				},
+			},
+		])
+		db.scores.push({
+			user_id: "member",
+			tmdb_id: 329865,
+			media_type: "movie",
+			score: 7,
+			review: null,
+			created_at: new Date("2026-01-01T00:00:00Z"),
+			updated_at: new Date("2026-01-01T00:00:00Z"),
+			_seq_no: 3,
+			_primary_term: 1,
+		})
+		db.catalog = [
+			{
+				tmdb_id: 693134,
+				imdb_id: null,
+				title: "Dune: Part Two",
+				release_year: 2024,
+				poster_path: "/dune.jpg",
+			},
+			{
+				tmdb_id: 329865,
+				imdb_id: null,
+				title: "Arrival",
+				release_year: 2016,
+				poster_path: "/arrival.jpg",
+			},
+		]
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, { ...options, kinds: ["rating"] })
+		await waitFor(db, "done")
+
+		const result = await getImportResult("member", id)
+		assert.equal(result.operation, "import")
+		assert.equal(result.titles, 2)
+		assert.deepEqual(
+			section(result, "ratings_added").rows.map((row) => [
+				row.title?.title,
+				row.title?.year,
+				row.title?.posterPath,
+				row.changes,
+			]),
+			[
+				[
+					"Dune: Part Two",
+					2024,
+					"/dune.jpg",
+					[{ type: "rating-added", score: 9 }],
+				],
+			],
+		)
+		assert.deepEqual(
+			section(result, "ratings_replaced").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[["Arrival", [{ type: "rating-replaced", from: 7, to: 9 }]]],
+		)
+	})
+
+	it("records the Not interested choice that importing Want to See clears, and lists both", async () => {
+		const db = new ImportDb()
+		const id = seedImport(db, [
+			{ kind: "want", tmdbId: 1064213, title: "Anora" },
+			{ kind: "want", tmdbId: 1100, title: "Conclave" },
+		])
+		db.notInterested.push({
+			user_id: "member",
+			tmdb_id: 1064213,
+			media_type: "movie",
+			created_at: new Date("2025-03-01T00:00:00Z"),
+			updated_at: new Date("2025-03-02T00:00:00Z"),
+			_seq_no: 4,
+			_primary_term: 1,
+		})
+		setImportDbForTest(db)
+		setImportEffectsForTest(async () => {})
+		await confirmImport("member", id, { ...options, kinds: ["want"] })
+		await waitFor(db, "done")
+		assert.equal(db.notInterested.length, 0)
+
+		const result = await getImportResult("member", id)
+		assert.deepEqual(
+			section(result, "want_added").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				["Anora", [{ type: "list-added", list: "Want to See" }]],
+				["Conclave", [{ type: "list-added", list: "Want to See" }]],
+			],
+		)
+		assert.deepEqual(
+			section(result, "lists_cleared").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				[
+					"Anora",
+					[
+						{
+							type: "list-cleared",
+							list: "Not interested",
+							because: "want",
+							undoRestores: false,
+						},
+					],
+				],
+			],
+		)
+		assert.equal(result.titles, 2)
+	})
+
+	/** Dune and Past Lives (movies) and The Bear (a show with eight aired episodes), in both fakes. */
+	function watchFixture() {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 693134,
+				imdb_id: null,
+				title: "Dune: Part Two",
+				release_year: 2024,
+				poster_path: "/dune.jpg",
+			},
+			{
+				tmdb_id: 666277,
+				imdb_id: null,
+				title: "Past Lives",
+				release_year: 2023,
+				poster_path: null,
+			},
+			{
+				tmdb_id: 136315,
+				imdb_id: null,
+				title: "The Bear",
+				release_year: 2022,
+				poster_path: "/bear.jpg",
+			},
+		]
+		db.episodes = Array.from({ length: 8 }, (_, i) => ({
+			show_id: 136315,
+			tmdb_id: 9001 + i,
+			season_number: 1,
+			episode_number: i + 1,
+			name: `Episode ${i + 1}`,
+			tvdb_id: null,
+			air_date: Date.UTC(2022, 5, 23),
+			removed_at: null,
+		}))
+		const trackingDb = new FakeTrackingCrate()
+		trackingDb.seed("episode", db.episodes)
+		trackingDb.seed("user_wishlist", [
+			{
+				user_id: "member",
+				tmdb_id: 693134,
+				media_type: "movie",
+				created_at: Date.UTC(2024, 0, 1),
+				updated_at: Date.UTC(2024, 0, 1),
+			},
+		])
+		trackingDb.seed("user_not_interested", [
+			{
+				user_id: "member",
+				tmdb_id: 136315,
+				media_type: "show",
+				created_at: Date.UTC(2024, 0, 2),
+				updated_at: Date.UTC(2024, 0, 2),
+			},
+		])
+		setImportDbForTest(db)
+		setCrateClientForTest(trackingDb)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const watch = (
+			key: string,
+			tmdbId: number,
+			mediaType: "movie" | "show",
+			watchedAt: string | null,
+			episode?: number,
+		) => ({
+			key,
+			kind: "watch" as const,
+			mediaType,
+			title: mediaType === "movie" ? "Movie" : "The Bear",
+			year: null,
+			tmdbId,
+			imdbId: null,
+			watchedAt,
+			precision: watchedAt ? ("day" as const) : ("unknown" as const),
+			...(episode
+				? {
+						episodeTmdbId: 9000 + episode,
+						season: 1,
+						episode,
+						episodeNumbering: "tmdb" as const,
+					}
+				: {}),
+		})
+		const parsed = {
+			source: "trakt" as const,
+			warnings: [],
+			observations: [
+				watch("dune", 693134, "movie", "2024-03-09T00:00:00.000Z"),
+				watch("past-lives", 666277, "movie", null),
+				watch("bear-1", 136315, "show", "2023-06-23T00:00:00.000Z", 1),
+				watch("bear-2", 136315, "show", "2023-06-23T00:00:00.000Z", 2),
+				watch("bear-3", 136315, "show", "2023-06-24T00:00:00.000Z", 3),
+			],
+		}
+		return { db, trackingDb, parsed }
+	}
+
+	it("lists watches per title with their days, the show status they set and the lists they cleared", async () => {
+		const { db, parsed } = watchFixture()
+		const preview = await previewParsedImport(
+			"member",
+			"history.json",
+			parsed,
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, { ...options, kinds: ["watch"] })
+		await waitFor(db, "done")
+
+		const result = await getImportResult("member", preview.id)
+		const watches = section(result, "watches_added")
+		assert.equal(watches.count, 5)
+		assert.deepEqual(
+			watches.rows.map((row) => [row.title?.title, row.changes]),
+			[
+				[
+					"Dune: Part Two",
+					[
+						{
+							type: "watches-added",
+							watches: {
+								count: 1,
+								first: null,
+								last: null,
+								firstDay: "2024-03-09",
+								lastDay: "2024-03-09",
+								undated: 0,
+							},
+							status: null,
+						},
+					],
+				],
+				[
+					"Past Lives",
+					[
+						{
+							type: "watches-added",
+							watches: {
+								count: 1,
+								first: null,
+								last: null,
+								firstDay: null,
+								lastDay: null,
+								undated: 1,
+							},
+							status: null,
+						},
+					],
+				],
+				[
+					"The Bear",
+					[
+						{
+							type: "watches-added",
+							watches: {
+								count: 3,
+								first: { season: 1, episode: 1 },
+								last: { season: 1, episode: 3 },
+								firstDay: "2023-06-23",
+								lastDay: "2023-06-24",
+								undated: 0,
+							},
+							status: { from: null, to: "watching" },
+						},
+					],
+				],
+			],
+		)
+		assert.deepEqual(
+			section(result, "lists_cleared").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				[
+					"Dune: Part Two",
+					[
+						{
+							type: "list-cleared",
+							list: "Want to See",
+							because: "watched",
+							undoRestores: false,
+						},
+					],
+				],
+				[
+					"The Bear",
+					[
+						{
+							type: "list-cleared",
+							list: "Not interested",
+							because: "watched",
+							undoRestores: false,
+						},
+					],
+				],
+			],
+		)
+		assert.equal(result.titles, 3)
+	})
+
+	it("lists what stayed as it was and the rows it couldn't import, with their reasons", async () => {
+		const db = new ImportDb()
+		const id = seedImport(db, [
+			{
+				kind: "rating",
+				tmdbId: 496243,
+				title: "Parasite",
+				score: 10,
+				outcome: "unchanged",
+			},
+			{ kind: "want", tmdbId: 872585, title: "Oppenheimer" },
+			{
+				kind: "rating",
+				tmdbId: null,
+				title: "Kurzfilmnacht Vol. 3",
+				year: 2021,
+				score: 6,
+				outcome: "unmatched",
+				reason:
+					"This title could not be matched uniquely in the GoodWatch catalog.",
+			},
+			{
+				kind: "watch",
+				tmdbId: null,
+				title: "Heat",
+				year: 1995,
+				outcome: "invalid",
+				reason: "WatchedDate must be a calendar date (YYYY-MM-DD).",
+			},
+			{
+				kind: "favorite",
+				tmdbId: 157336,
+				title: "Interstellar",
+				outcome: "unchanged",
+			},
+		])
+		db.wishlist.push({
+			user_id: "member",
+			tmdb_id: 872585,
+			media_type: "movie",
+			created_at: new Date("2025-01-01T00:00:00Z"),
+			updated_at: new Date("2025-01-01T00:00:00Z"),
+			_seq_no: 2,
+			_primary_term: 1,
+		})
+		db.catalog = [
+			{
+				tmdb_id: 496243,
+				imdb_id: null,
+				title: "Parasite",
+				release_year: 2019,
+				poster_path: "/parasite.jpg",
+			},
+		]
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, {
+			...options,
+			kinds: ["rating", "want", "watch"],
+		})
+		await waitFor(db, "done")
+
+		const result = await getImportResult("member", id)
+		assert.equal(result.titles, 0)
+		assert.deepEqual(
+			section(result, "kept").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				[
+					"Parasite",
+					[
+						{
+							type: "kept",
+							kind: "rating",
+							reason: "Already the same in GoodWatch.",
+						},
+					],
+				],
+				[
+					"Oppenheimer",
+					[
+						{
+							type: "kept",
+							kind: "want",
+							reason: "Already on Want to See, or already watched.",
+						},
+					],
+				],
+			],
+		)
+		assert.deepEqual(
+			section(result, "skipped").rows.map((row) => [row.title, row.changes]),
+			[
+				[
+					null,
+					[
+						{
+							type: "skipped",
+							kind: "rating",
+							label: "Kurzfilmnacht Vol. 3 (2021)",
+							row: 3,
+							reason:
+								"This title could not be matched uniquely in the GoodWatch catalog.",
+						},
+					],
+				],
+				[
+					null,
+					[
+						{
+							type: "skipped",
+							kind: "watch",
+							label: "Heat (1995)",
+							row: 4,
+							reason: "WatchedDate must be a calendar date (YYYY-MM-DD).",
+						},
+					],
+				],
+			],
+		)
+	})
+
+	/** Anora to Want to See (clearing Not interested), Dune and Shōgun rated, Arrival's 7 replaced by a 9. */
+	async function importForUndo(db: ImportDb) {
+		const id = seedImport(db, [
+			{ kind: "want", tmdbId: 1064213, title: "Anora" },
+			{
+				kind: "rating",
+				tmdbId: 693134,
+				title: "Dune: Part Two",
+				score: 9,
+				_preview: null,
+			},
+			{
+				kind: "rating",
+				tmdbId: 329865,
+				title: "Arrival",
+				year: 2016,
+				score: 9,
+				outcome: "conflict",
+				_preview: {
+					score: 7,
+					review: null,
+					updatedAt: "2026-01-01T00:00:00.000Z",
+					seq: 3,
+					term: 1,
+				},
+			},
+			{
+				kind: "rating",
+				tmdbId: 126308,
+				title: "Shōgun",
+				mediaType: "show",
+				score: 9,
+				_preview: null,
+			},
+		])
+		db.scores.push({
+			user_id: "member",
+			tmdb_id: 329865,
+			media_type: "movie",
+			score: 7,
+			review: null,
+			created_at: new Date("2026-01-01T00:00:00Z"),
+			updated_at: new Date("2026-01-01T00:00:00Z"),
+			_seq_no: 3,
+			_primary_term: 1,
+		})
+		db.notInterested.push({
+			user_id: "member",
+			tmdb_id: 1064213,
+			media_type: "movie",
+			created_at: new Date("2025-03-01T00:00:00Z"),
+			updated_at: new Date("2025-03-01T00:00:00Z"),
+			_seq_no: 4,
+			_primary_term: 1,
+		})
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, { ...options, kinds: ["rating", "want"] })
+		await waitFor(db, "done")
+		// The member rates Shōgun again after the import.
+		Object.assign(requiredRow(db.scores.find((x) => x.tmdb_id === 126308)), {
+			score: 10,
+			updated_at: new Date("2027-01-01T00:00:00Z"),
+			_seq_no: 999,
+		})
+		return id
+	}
+	const undoResult = (result: Awaited<ReturnType<typeof getImportResult>>) =>
+		result.sections.map((s) => [
+			s.key,
+			s.rows.map((row) => [row.title?.title, row.changes]),
+		])
+
+	it("lists reviews the import added or replaced, and that Undo took back", async () => {
+		const db = new ImportDb()
+		const id = seedImport(db, [
+			{
+				kind: "review",
+				tmdbId: 693134,
+				title: "Dune: Part Two",
+				review: "Sand.",
+				_preview: null,
+			},
+			{
+				kind: "review",
+				tmdbId: 329865,
+				title: "Arrival",
+				review: "Language.",
+				outcome: "conflict",
+				_preview: {
+					score: 7,
+					review: "Old",
+					updatedAt: "2026-01-01T00:00:00.000Z",
+					seq: 3,
+					term: 1,
+				},
+			},
+		])
+		db.scores.push({
+			user_id: "member",
+			tmdb_id: 329865,
+			media_type: "movie",
+			score: 7,
+			review: "Old",
+			created_at: new Date("2026-01-01T00:00:00Z"),
+			updated_at: new Date("2026-01-01T00:00:00Z"),
+			_seq_no: 3,
+			_primary_term: 1,
+		})
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, { ...options, kinds: ["review"] })
+		await waitFor(db, "done")
+		assert.deepEqual(
+			section(await getImportResult("member", id), "reviews").rows.map(
+				(row) => [row.title?.title, row.changes],
+			),
+			[
+				["Dune: Part Two", [{ type: "review-added" }]],
+				["Arrival", [{ type: "review-replaced" }]],
+			],
+		)
+		await undoImport("member", id)
+		assert.deepEqual(
+			section(await getImportResult("member", id), "reviews_reverted").rows.map(
+				(row) => [row.title?.title, row.changes],
+			),
+			[
+				["Dune: Part Two", [{ type: "review-removed" }]],
+				["Arrival", [{ type: "review-restored" }]],
+			],
+		)
+	})
+
+	it("serves the first titles of each section, and the rest a page at a time", async () => {
+		const db = new ImportDb()
+		const id = seedImport(
+			db,
+			Array.from({ length: 30 }, (_, i) => ({
+				kind: "rating",
+				tmdbId: 100 + i,
+				title: `Film ${i + 1}`,
+				score: 8,
+				_preview: null,
+			})),
+		)
+		db.catalog = [
+			{
+				tmdb_id: 128,
+				imdb_id: null,
+				title: "Film 29 (catalog)",
+				release_year: 2001,
+				poster_path: "/29.jpg",
+			},
+		]
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		await confirmImport("member", id, { ...options, kinds: ["rating"] })
+		await waitFor(db, "done")
+
+		const first = section(await getImportResult("member", id), "ratings_added")
+		assert.equal(first.total, 30)
+		assert.equal(first.count, 30)
+		assert.deepEqual(
+			first.rows.map((row) => row.title?.title),
+			Array.from({ length: 25 }, (_, i) => `Film ${i + 1}`),
+		)
+		const page = await getImportResultPage("member", id, "ratings_added", 25, 3)
+		assert.equal(page.total, 30)
+		assert.deepEqual(
+			page.rows.map((row) => [row.title?.title, row.title?.posterPath]),
+			[
+				["Film 26", null],
+				["Film 27", null],
+				["Film 28", null],
+			],
+		)
+		const last = await getImportResultPage(
+			"member",
+			id,
+			"ratings_added",
+			28,
+			50,
+		)
+		assert.deepEqual(
+			last.rows.map((row) => [row.title?.title, row.title?.posterPath]),
+			[
+				["Film 29 (catalog)", "/29.jpg"],
+				["Film 30", null],
+			],
+		)
+	})
+
+	it("records what Undo did per row and leads with what it couldn't put back", async () => {
+		const db = new ImportDb()
+		const id = await importForUndo(db)
+		await undoImport("member", id)
+		assert.deepEqual(
+			db.scores.map((x) => [x.tmdb_id, x.score]),
+			[
+				[329865, 7],
+				[126308, 10],
+			],
+		)
+
+		const result = await getImportResult("member", id)
+		assert.equal(result.operation, "undo")
+		assert.equal(result.titles, 3)
+		assert.deepEqual(undoResult(result), [
+			[
+				"not_restored",
+				[["Anora", [{ type: "not-restored", list: "Not interested" }]]],
+			],
+			[
+				"ratings_removed",
+				[["Dune: Part Two", [{ type: "rating-removed", score: 9 }]]],
+			],
+			[
+				"ratings_restored",
+				[["Arrival", [{ type: "rating-restored", from: 9, to: 7 }]]],
+			],
+			[
+				"want_removed",
+				[["Anora", [{ type: "list-removed", list: "Want to See" }]]],
+			],
+			["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
+		])
+	})
+
+	it("after Undo lists the watches it removed and leaves a show status the member changed", async () => {
+		const { db, trackingDb, parsed } = watchFixture()
+		const preview = await previewParsedImport(
+			"member",
+			"history.json",
+			parsed,
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, { ...options, kinds: ["watch"] })
+		await waitFor(db, "done")
+		// The member puts The Bear on hold after the import.
+		const bear = requiredRow(
+			trackingDb
+				.table("user_watch_state")
+				.find((row) => row.tmdb_id === 136315),
+		)
+		Object.assign(bear, {
+			state: "on_hold",
+			updated_at: Number(bear.updated_at) + 1000,
+			_seq_no: 999,
+		})
+		await undoImport("member", preview.id)
+		assert.equal(
+			(await getShowTracking("member", 136315)).state?.state,
+			"on_hold",
+		)
+		assert.deepEqual((await getShowTracking("member", 136315)).log, [])
+
+		const result = await getImportResult("member", preview.id)
+		const watches = section(result, "watches_removed")
+		assert.equal(watches.count, 5)
+		assert.deepEqual(
+			watches.rows.map((row) => [
+				row.title?.title,
+				(row.changes[0] as { status: unknown }).status,
+			]),
+			[
+				["Dune: Part Two", null],
+				["Past Lives", null],
+				["The Bear", null],
+			],
+		)
+		assert.deepEqual(
+			section(result, "not_restored").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[
+				["Dune: Part Two", [{ type: "not-restored", list: "Want to See" }]],
+				["The Bear", [{ type: "not-restored", list: "Not interested" }]],
+			],
+		)
+		assert.deepEqual(
+			section(result, "left").rows.map((row) => [
+				row.title?.title,
+				row.changes,
+			]),
+			[["The Bear", [{ type: "left", kind: "show_status" }]]],
+		)
+		assert.equal(result.titles, 3)
+	})
+
+	it("after Undo of a show status without watches lists the status and the Want to See it put back", async () => {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 1668,
+				imdb_id: null,
+				title: "Friends",
+				release_year: 1994,
+				poster_path: null,
+			},
+		]
+		const trackingDb = new FakeTrackingCrate()
+		trackingDb.seed("user_wishlist", [
+			{
+				user_id: "member",
+				tmdb_id: 1668,
+				media_type: "show",
+				created_at: Date.UTC(2024, 0, 1),
+				updated_at: Date.UTC(2024, 0, 1),
+			},
+		])
+		setImportDbForTest(db)
+		setCrateClientForTest(trackingDb)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const preview = await previewParsedImport(
+			"member",
+			"statuses.json",
+			{
+				source: "trakt",
+				warnings: [],
+				observations: [
+					{
+						key: "status:1668",
+						kind: "show_status",
+						mediaType: "show",
+						title: "Friends",
+						year: 1994,
+						tmdbId: 1668,
+						imdbId: null,
+						showStatus: "dropped",
+					},
+				],
+			},
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["show_status"],
+		})
+		await waitFor(db, "done")
+		const imported = await getImportResult("member", preview.id)
+		assert.deepEqual(
+			imported.sections.map((s) => [s.key, s.rows.map((row) => row.changes)]),
+			[
+				[
+					"statuses_set",
+					[[{ type: "status-set", status: { from: null, to: "dropped" } }]],
+				],
+				[
+					"lists_cleared",
+					[
+						[
+							{
+								type: "list-cleared",
+								list: "Want to See",
+								because: "status",
+								undoRestores: true,
+							},
+						],
+					],
+				],
+			],
+		)
+
+		await undoImport("member", preview.id)
+		const undone = await getImportResult("member", preview.id)
+		assert.deepEqual(
+			undone.sections.map((s) => [s.key, s.rows.map((row) => row.changes)]),
+			[
+				[
+					"statuses_restored",
+					[
+						[
+							{
+								type: "status-restored",
+								status: { from: "dropped", to: null },
+							},
+						],
+					],
+				],
+				["lists_restored", [[{ type: "list-restored", list: "Want to See" }]]],
+			],
+		)
+		assert.equal(undone.titles, 1)
+	})
+
+	it("keeps what Undo did when an interrupted Undo is resumed", async () => {
+		const db = new ImportDb()
+		const id = await importForUndo(db)
+		db.failWishlistDeleteOnce = true
+		await assert.rejects(
+			() => undoImport("member", id),
+			/injected interruption/,
+		)
+		assert.equal(db.imports[0].status, "failed")
+		await undoImport("member", id)
+		assert.equal(db.imports[0].status, "undone")
+		assert.deepEqual(undoResult(await getImportResult("member", id)), [
+			[
+				"not_restored",
+				[["Anora", [{ type: "not-restored", list: "Not interested" }]]],
+			],
+			[
+				"ratings_removed",
+				[["Dune: Part Two", [{ type: "rating-removed", score: 9 }]]],
+			],
+			[
+				"ratings_restored",
+				[["Arrival", [{ type: "rating-restored", from: 9, to: 7 }]]],
+			],
+			[
+				"want_removed",
+				[["Anora", [{ type: "list-removed", list: "Want to See" }]]],
+			],
+			["left", [["Shōgun", [{ type: "left", kind: "rating" }]]]],
+		])
 	})
 })
 
