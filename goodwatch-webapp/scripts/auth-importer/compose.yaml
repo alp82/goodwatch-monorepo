@@ -1,0 +1,38 @@
+name: goodwatch-auth-importer-551
+services:
+  source:
+    image: postgres:16.10@sha256:21f6013073bc6b92830a2129570e2f5ec42a6c734b5a985a41e83aa58f54c3c1
+    environment:
+      POSTGRES_USER: importer
+      POSTGRES_PASSWORD: local-fake-only
+      POSTGRES_DB: auth_copy
+    ports: ["127.0.0.1:15651:5432"]
+    mem_limit: 256m
+    volumes: ["source-data:/var/lib/postgresql/data"]
+  target:
+    image: crate:5.10.12@sha256:cfce7e180eafa1eb57ebda20a7b3678d65fbac2bbd08ba7e5a7b0dbf553d7696
+    environment:
+      CRATE_HEAP_SIZE: 384m
+    mem_limit: 1g
+    cpus: 1
+    command:
+      - crate
+      - -Cdiscovery.type=single-node
+      - -Ccluster.name=goodwatch-local-importer-551
+      - -Cnode.name=importer-551
+      - -Cnetwork.host=0.0.0.0
+      # auth-importer-551: fake admin setup and password-authenticated copy role.
+      - -Cauth.host_based.enabled=true
+      - -Cauth.host_based.config.0.user=crate
+      - -Cauth.host_based.config.0.method=trust
+      - -Cauth.host_based.config.0.protocol=http
+      - -Cauth.host_based.config.0.address=0.0.0.0/0
+      - -Cauth.host_based.config.1.user=importer_551
+      - -Cauth.host_based.config.1.method=password
+      - -Cauth.host_based.config.1.protocol=http
+      - -Cauth.host_based.config.1.address=0.0.0.0/0
+    ports: ["127.0.0.1:15648:4200"]
+    volumes: ["target-data:/data"]
+volumes:
+  source-data:
+  target-data:

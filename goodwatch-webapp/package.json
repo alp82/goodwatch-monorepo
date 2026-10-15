@@ -19,7 +19,9 @@
 		"test:auth:mcp": "bash scripts/auth-mcp/run.sh",
 		"test:auth:mcp:clients": "bash scripts/auth-mcp/run.sh clients",
 		"test:auth:maintenance": "bash scripts/auth-maintenance/run.sh",
-		"auth:maintenance": "node scripts/auth-maintenance/cli.ts"
+		"auth:maintenance": "node scripts/auth-maintenance/cli.ts",
+		"typecheck:auth-importer": "tsc -p scripts/auth-importer/tsconfig.json",
+		"test:auth-importer": "bash scripts/auth-importer/run.sh"
 	},
 	"dependencies": {
 		"@goodwatch/auth-stack": "file:packages/auth-stack",
