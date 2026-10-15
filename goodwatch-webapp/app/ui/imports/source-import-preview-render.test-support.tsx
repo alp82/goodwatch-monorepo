@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import type { ImportSummary } from "~/domain/imports"
+import type { FileImportSource, ImportSummary } from "~/domain/imports"
+import { SourceImportCurrent } from "./SourceImportCurrent"
+import { sourceImportKeys } from "./SourceImportHooks"
 import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
@@ -56,9 +58,7 @@ const render = (
 		}),
 	)
 
-const upload = (
-	source: "csv" | "movielens" | "letterboxd" | "trakt" | "kodi",
-) =>
+const upload = (source: FileImportSource) =>
 	renderToStaticMarkup(
 		createElement(
 			QueryClientProvider,
@@ -67,6 +67,28 @@ const upload = (
 		),
 	)
 
+const receipt = () => {
+	const client = new QueryClient()
+	const item: ImportSummary = {
+		...summary(2),
+		source: "myanimelist",
+		status: "done",
+		warnings: ["Comments and tags are not imported."],
+	}
+	client.setQueryData(sourceImportKeys.detail(item.id), { import: item })
+	return renderToStaticMarkup(
+		createElement(
+			QueryClientProvider,
+			{ client },
+			createElement(SourceImportCurrent, {
+				id: item.id,
+				focus: false,
+				onUploadAnother: () => {},
+			}),
+		),
+	)
+}
+
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
 		letterboxdUpload: upload("letterboxd"),
@@ -74,6 +96,8 @@ process.stdout.write(
 		csvUpload: upload("csv"),
 		movielensUpload: upload("movielens"),
 		kodiUpload: upload("kodi"),
+		malUpload: upload("myanimelist"),
+		malReceipt: receipt(),
 		ratingOnly: render(0, false, "Preview could not start."),
 		statusOnly: render(0, false, null, 3),
 		withWatches: render(2, true, null),

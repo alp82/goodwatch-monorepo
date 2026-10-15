@@ -8,6 +8,9 @@ export interface AnimeEntry {
 	progress?: number
 	/** Completed cours must include episodeCount; completion never means whole-show Seen. */
 	completed?: boolean
+	/** Entry-level dates are evidence, not dates to copy onto each episode. */
+	startedAt?: string | null
+	finishedAt?: string | null
 	/** The source's total when known; never guessed from the TMDB season. */
 	episodeCount?: number
 }

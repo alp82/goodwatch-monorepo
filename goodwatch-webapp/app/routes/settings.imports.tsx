@@ -29,6 +29,7 @@ const TABS: { id: ImportTab; label: string }[] = [
 	{ id: "movielens", label: "MovieLens" },
 	{ id: "kodi", label: "Kodi" },
 	{ id: "tmdb", label: "TMDB" },
+	{ id: "myanimelist", label: "MyAnimeList / Kitsu" },
 ]
 
 export default function SettingsImports() {

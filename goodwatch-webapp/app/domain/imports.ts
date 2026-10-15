@@ -8,6 +8,7 @@ export const IMPORT_SOURCES = [
 	"movielens",
 	"kodi",
 	"tmdb",
+	"myanimelist",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
@@ -16,6 +17,7 @@ export const IMPORT_SOURCE_NAMES = {
 	movielens: "MovieLens",
 	kodi: "Kodi",
 	tmdb: "TMDB",
+	myanimelist: "MyAnimeList / Kitsu",
 } as const
 export const IMPORT_SOURCE_FILE = {
 	letterboxd: "zip",
@@ -24,6 +26,7 @@ export const IMPORT_SOURCE_FILE = {
 	movielens: "csv",
 	kodi: "xml",
 	tmdb: null,
+	myanimelist: "xml",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export type FileImportSource = {
@@ -111,6 +114,8 @@ export interface ImportObservation {
 	showStatus?: ImportShowStatus
 	/** Completed only means Seen with explicit coverage of the whole matched TMDB show. */
 	completionScope?: "show" | "part"
+	/** Explicit adapter policy for treating an anime entry score as a show rating. */
+	ratingScope?: "show"
 	score?: number | null
 	review?: string | null
 	watchedAt?: string | null

@@ -18,10 +18,13 @@ export function buildSourceImportUpload(
 			throw new Error(
 				"Choose videodb.xml or a ZIP from Kodi’s Single file export, not separate .nfo files.",
 			)
+		if (source === "myanimelist" && !/\.(xml|gz)$/i.test(upload.name))
+			throw new Error("Choose a MyAnimeList or Kitsu anime XML or gzip export.")
 		if (csv && !/\.csv$/i.test(upload.name))
 			throw new Error("Choose a CSV export file.")
 		if (
 			source !== "kodi" &&
+			source !== "myanimelist" &&
 			!csv &&
 			!/\.zip$/i.test(upload.name) &&
 			!["application/zip", "application/x-zip-compressed"].includes(upload.type)

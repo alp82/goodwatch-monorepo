@@ -4,9 +4,8 @@ Built for [#646](https://github.com/alp82/goodwatch-monorepo/issues/646), under 
 Episode placement is courtesy of [Anime-Lists/anime-lists](https://github.com/Anime-Lists/anime-lists).
 Tracker identities are courtesy of [Fribb/anime-lists](https://github.com/Fribb/anime-lists).
 Anime-Lists and Fribb have no license. The owner approved server-side use on
-2026-10-15. User-visible credit for both datasets ships with the first adapter
-in [#647](https://github.com/alp82/goodwatch-monorepo/issues/647); this resolver
-change adds no UI. The research is
+2026-10-15. User-visible credit for both datasets appears on the MyAnimeList / Kitsu receipt
+([#647](https://github.com/alp82/goodwatch-monorepo/issues/647)). The research is
 `docs/research/imports/episode-numbering.md` on `research/episode-numbering` (#610).
 These mappings select canonical TMDB episodes; they never alter catalog numbering,
 episode presentation (ADR 0012), or stored watch identities.
@@ -76,8 +75,8 @@ File adapters still use `previewImport`; trusted server adapters may use
 share classification, journal, confirm, receipt and undo. Ordinary file uploads
 consume their freshly parsed observations without cloning; the normalized adapter
 entry point alone copies caller-owned input. This is a server module
-boundary, not a new client endpoint. Source registration and native MAL/AniList/Kitsu
-file parsing remain their own build tickets; this branch adds no new Imports UI.
+boundary, not a new client endpoint. MyAnimeList and Kitsu XML uploads use this boundary through `previewImport`;
+AniList file parsing remains a separate build.
 
 Resolution uses TMDB episode ID, then TVDB episode ID, then anime placement.
 Once anime placement is attempted, failure is final: the resolver does not guess
@@ -97,8 +96,13 @@ from a group, episode name or the source's season coordinates.
   `fits` flag that could become stale. If only an individual episode number is
   known, validation covers 1 through that number.
 - The resolver returns `datePolicy: "unknown"` for anime progress, even when an
-  authoritative episode ID wins or the source gives a cour finish date. Preview
-  applies that result without making an anime-specific date decision.
+  authoritative episode ID wins or the source gives only a cour finish date.
+  Issue #647 adds optional `startedAt` and `finishedAt` date evidence: only a
+  completed entry with progress equal to its known total and identical valid
+  calendar dates establishes one viewing day for all its episodes. That case
+  returns `datePolicy: "day"` and `watchedAt`; spans, partial dates and missing
+  dates remain unknown. Preview applies the result without making an
+  anime-specific date decision, and the member can still discard all dates.
   Specials mapped explicitly by the entry are flagged by the existing receipt and
   never count as regular progress.
 
@@ -107,9 +111,12 @@ observation with `animeEntry` but no episode is unmatched. Only mapped episode
 watches reach the existing tracking writer, which derives Watching/Seen using its
 settled rules and preserves explicit member states. Want to See and genuine
 show-level observations remain independent of a failed episode placement. Any
-`rating` or `review` observation carrying `animeEntry` is retained as unsupported
-with a reason, even if it already has a TMDB show ID. It cannot become a whole-show
-rating or review.
+`review` observation carrying `animeEntry` is retained as unsupported with a
+reason, even if it already has a TMDB show ID. Ratings are also unsupported unless
+an adapter explicitly sets `ratingScope: "show"`. The MAL/Kitsu adapter does so
+under #647's show-score rule; identity still resolves through the shared crosswalk.
+Different entry scores mapped to one show remain invalid rather than choosing by
+file order. This does not grant a cour whole-show completion scope.
 
 ## Rollout (not performed on this branch)
 

@@ -17,7 +17,12 @@ function SingleFileUploadPanel({
 	onPreview,
 }: { source: FileImportSource; onPreview: (summary: ImportSummary) => void }) {
 	const fileType = IMPORT_SOURCE_FILE[source]
-	const fileLabel = source === "kodi" ? "XML or ZIP" : fileType.toUpperCase()
+	const fileLabel =
+		source === "myanimelist"
+			? "XML or gzip"
+			: source === "kodi"
+				? "XML or ZIP"
+				: fileType.toUpperCase()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
@@ -41,7 +46,34 @@ function SingleFileUploadPanel({
 			<h3 id="source-upload-heading" className={stepHeading}>
 				Upload your {sourceName(source)} export
 			</h3>
-			{source === "kodi" ? (
+			{source === "myanimelist" ? (
+				<>
+					<p className="text-gray-400">
+						Sign in to MyAnimeList, open its export page, select Export my:
+						Anime List, and choose Export My List. Upload animelist_*.xml.gz as
+						downloaded, or the extracted .xml. Maximum size: 20 MB.
+					</p>
+					<a
+						href="https://myanimelist.net/panel.php?go=export"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-indigo-300 underline hover:text-indigo-200"
+					>
+						Open MyAnimeList export settings (new tab)
+					</a>
+					<p className="text-gray-400">
+						For Kitsu, try Settings → Export → Download Anime Library and upload
+						kitsu-&lt;slug&gt;-anime.xml. This download is not available to
+						every member.
+					</p>
+					<p className="text-sm text-gray-400">
+						GoodWatch imports show ratings, show statuses and episode progress.
+						Comments, tags and rewatch counts are not imported. Episode dates
+						stay unknown unless a completed entry starts and finishes on the
+						same day.
+					</p>
+				</>
+			) : source === "kodi" ? (
 				<p className="text-gray-400">
 					In Kodi, switch the settings level to Advanced, then open Settings →
 					Media → Library → Export library → Single file. Upload videodb.xml
@@ -108,11 +140,13 @@ function SingleFileUploadPanel({
 				<p id="source-upload-hint" aria-live="polite">
 					{preview.isPending
 						? "Uploading and checking your export. This can take a moment."
-						: source === "kodi"
-							? "Drop videodb.xml or its ZIP here, or choose it from your device."
-							: fileType === "csv"
-								? "Drop your CSV file here, or choose it from your device."
-								: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
+						: source === "myanimelist"
+							? "Drop your anime XML or gzip file here, or choose it from your device."
+							: source === "kodi"
+								? "Drop videodb.xml or its ZIP here, or choose it from your device."
+								: fileType === "csv"
+									? "Drop your CSV file here, or choose it from your device."
+									: `Drop the ZIP file from ${sourceName(source)} here, or choose it from your device.`}
 				</p>
 				<button
 					type="button"
@@ -128,11 +162,13 @@ function SingleFileUploadPanel({
 					type="file"
 					aria-label={`Choose ${sourceName(source)} export ${fileLabel} file`}
 					accept={
-						source === "kodi"
-							? ".xml,application/xml,text/xml,.zip,application/zip,application/x-zip-compressed"
-							: fileType === "csv"
-								? ".csv,text/csv"
-								: ".zip,application/zip,application/x-zip-compressed"
+						source === "myanimelist"
+							? ".xml,application/xml,text/xml,.gz,application/gzip,application/x-gzip"
+							: source === "kodi"
+								? ".xml,application/xml,text/xml,.zip,application/zip,application/x-zip-compressed"
+								: fileType === "csv"
+									? ".csv,text/csv"
+									: ".zip,application/zip,application/x-zip-compressed"
 					}
 					className="sr-only"
 					onChange={(event) => {

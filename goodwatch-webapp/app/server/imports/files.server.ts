@@ -1,9 +1,10 @@
-import { inflateRawSync } from "node:zlib"
+import { gunzipSync, inflateRawSync } from "node:zlib"
 import { SaxesParser } from "saxes"
 import {
 	IMPORT_MAX_BYTES,
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
+	type ImportShowStatus,
 	type ImportSource,
 	type ParsedImport,
 	isFileImportSource,
@@ -687,6 +688,7 @@ export async function parseImportFile(
 ): Promise<ParsedImport> {
 	if (!isFileImportSource(source))
 		fail("Use Connect for this source instead of uploading a file.")
+	if (source === "myanimelist") return myanimelist(bytes)
 	if (source === "kodi") return kodi(bytes)
 	if (source === "movielens") return movielens(bytes, wishlist)
 	if (source === "csv") return genericCsv(bytes)
@@ -1217,4 +1219,214 @@ function kodiSameDayWarning(observations: ImportObservation[]): string | null {
 	return largest >= 100
 		? `${largest} Kodi watches share one day. This may be a mark-as-watched date; you can import without dates.`
 		: null
+}
+
+const MAL_FIELDS = new Set([
+	"series_animedb_id",
+	"series_title",
+	"series_type",
+	"series_episodes",
+	"my_watched_episodes",
+	"my_status",
+	"my_score",
+	"my_start_date",
+	"my_finish_date",
+])
+const MAL_STATUSES: Record<string, ImportShowStatus> = {
+	Watching: "watching",
+	Completed: "completed",
+	"On-Hold": "on_hold",
+	"On Hold": "on_hold",
+	Dropped: "dropped",
+	"Plan to Watch": "plan_to_watch",
+}
+
+/** MAL and Kitsu share this format. Retain only direct, supported fields of one entry at a time. */
+function myanimelist(bytes: Uint8Array): ParsedImport {
+	checkUploadSize(bytes)
+	let data = bytes
+	if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+		try {
+			data = gunzipSync(bytes, { maxOutputLength: MAX_ENTRY_BYTES })
+		} catch {
+			fail("That gzip export is corrupt or expands beyond 32 MB.")
+		}
+	}
+	const observations: ImportObservation[] = []
+	const parser = new SaxesParser()
+	const stack: string[] = []
+	let row: Record<string, string> = {}
+	let exportType = ""
+	let nodes = 0
+	let rows = 0
+	const ids = new Set<number>()
+	const append = (value: string) => {
+		if (stack.length === 3 && stack[1] === "anime" && MAL_FIELDS.has(stack[2]))
+			row[stack[2]] = (row[stack[2]] ?? "") + value
+		if (stack.join("/") === "myanimelist/myinfo/user_export_type")
+			exportType += value
+	}
+	parser.on("doctype", () =>
+		fail("MyAnimeList XML must not contain a DOCTYPE or entity declarations."),
+	)
+	parser.on("error", () => fail("That MyAnimeList file isn't valid XML."))
+	parser.on("opentag", (tag) => {
+		if (++nodes > 1_000_000 || stack.length >= 64)
+			fail("That MyAnimeList XML is too complex.")
+		if (!stack.length && tag.name !== "myanimelist")
+			fail("Choose a MyAnimeList or Kitsu anime XML export.")
+		if (stack.length === 1 && tag.name === "manga")
+			fail("Manga lists are not supported. Export your Anime List instead.")
+		if (
+			stack.length === 2 &&
+			stack[1] === "anime" &&
+			MAL_FIELDS.has(tag.name)
+		) {
+			if (Object.prototype.hasOwnProperty.call(row, tag.name))
+				fail("The anime export contains a duplicate field.")
+			row[tag.name] = ""
+		}
+		if (stack.length === 1 && tag.name === "anime") {
+			if (++rows > IMPORT_MAX_ROWS)
+				fail(`That export has more than ${rowLimitLabel} rows.`)
+			row = {}
+		}
+		stack.push(tag.name)
+	})
+	parser.on("text", append)
+	parser.on("cdata", append)
+	parser.on("closetag", () => {
+		if (stack.length === 2 && stack[1] === "anime") {
+			for (const key of Object.keys(row)) row[key] = row[key].trim()
+			const id = Number(row.series_animedb_id)
+			if (ids.has(id))
+				fail("The anime export contains a duplicate MyAnimeList id.")
+			if (Number.isSafeInteger(id) && id > 0) ids.add(id)
+			const progress = Number(row.my_watched_episodes || 0)
+			const total = Number(row.series_episodes || 0)
+			const status = Object.prototype.hasOwnProperty.call(
+				MAL_STATUSES,
+				row.my_status,
+			)
+				? MAL_STATUSES[row.my_status]
+				: undefined
+			const base = {
+				mediaType: "show" as const,
+				title: row.series_title || `MyAnimeList #${id}`,
+				year: null,
+				tmdbId: null,
+				imdbId: null,
+				animeEntry: {
+					source: "myanimelist" as const,
+					id,
+					progress,
+					startedAt: day(row.my_start_date || ""),
+					finishedAt: day(row.my_finish_date || ""),
+					completed: status === "completed",
+					...(total > 0 ? { episodeCount: total } : {}),
+				},
+			}
+			const invalid =
+				!/^\d+$/.test(row.series_animedb_id ?? "") ||
+				!Number.isSafeInteger(id) ||
+				id <= 0
+					? "This entry has no valid MyAnimeList id."
+					: !/^\d+$/.test(row.my_watched_episodes || "0") ||
+							!Number.isSafeInteger(progress)
+						? "This entry has invalid episode progress."
+						: !/^\d+$/.test(row.series_episodes || "0") ||
+								!Number.isSafeInteger(total)
+							? "This entry has an invalid episode count."
+							: null
+			const unsupported =
+				row.series_type &&
+				!["TV", "OVA", "ONA", "Special", "TV Special"].includes(row.series_type)
+					? `${row.series_type} entries are not supported by the anime-to-show mapping.`
+					: null
+			if (invalid || unsupported) {
+				observations.push({
+					...base,
+					key: `myanimelist:invalid:${rows}`,
+					kind: "unsupported",
+					problem: {
+						outcome: invalid ? "invalid" : "unsupported",
+						reason: invalid || unsupported || "Unsupported entry.",
+					},
+				})
+				if (observations.length > IMPORT_MAX_ROWS)
+					fail(`That export has more than ${rowLimitLabel} observations.`)
+				stack.pop()
+				return
+			}
+			observations.push({
+				...base,
+				key: `myanimelist:status:${id}`,
+				kind: "show_status",
+				showStatus: status,
+				...(!status
+					? {
+							problem: {
+								outcome: "invalid" as const,
+								reason: "This entry has an unknown show status.",
+							},
+						}
+					: {}),
+				...(status === "completed" ? { completionScope: "part" as const } : {}),
+			})
+			const score = Number(row.my_score || 0)
+			if (score !== 0)
+				observations.push({
+					...base,
+					key: `myanimelist:rating:${id}`,
+					kind: "rating",
+					score: Number.isFinite(score) ? score : null,
+					ratingScope: "show",
+					...(!/^\d+$/.test(row.my_score) ||
+					!Number.isInteger(score) ||
+					score < 1 ||
+					score > 10
+						? {
+								problem: {
+									outcome: "invalid" as const,
+									reason:
+										"The score must be a whole number from 1 to 10 (0 means no score).",
+								},
+							}
+						: {}),
+				})
+			if (
+				progress > IMPORT_MAX_ROWS ||
+				observations.length + progress > IMPORT_MAX_ROWS
+			)
+				fail(`That export has more than ${rowLimitLabel} observations.`)
+			for (let episode = 1; episode <= progress; episode++)
+				observations.push({
+					...base,
+					key: `myanimelist:watch:${id}:1:${episode}`,
+					kind: "watch",
+					episode,
+					episodeNumbering: "unknown",
+					pass: 1,
+					watchedAt: null,
+					precision: "unknown",
+				})
+		}
+		stack.pop()
+	})
+	parser.write(text({ name: "animelist.xml", data })).close()
+	if (exportType.trim() === "2")
+		fail("Manga lists are not supported. Export your Anime List instead.")
+	if (exportType.trim() !== "1")
+		fail(
+			"Choose a MyAnimeList or Kitsu Anime List export (user_export_type 1).",
+		)
+	return {
+		source: "myanimelist",
+		observations,
+		warnings: [
+			"Comments and tags are not imported. Rewatch counts do not add watches.",
+			"Episode dates are unknown unless a completed entry has matching full start and finish dates, establishing one viewing day. Dates are never spread across episodes.",
+			"Anime entry scores are imported as show ratings. Completed parts never mark the whole show Seen; only reported episode progress is imported.",
+		],
+	}
 }

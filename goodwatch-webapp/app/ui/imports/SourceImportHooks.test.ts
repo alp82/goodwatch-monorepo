@@ -55,12 +55,30 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		traktUpload: string
 		csvUpload: string
 		movielensUpload: string
+		malUpload: string
+		malReceipt: string
 		kodiUpload: string
 		statusOnly: string
 		ratingOnly: string
 		withWatches: string
 	}
 
+	assert.match(rendered.malUpload, /Export my: Anime List/)
+	assert.match(rendered.malUpload, /Export My List/)
+	assert.match(rendered.malUpload, /panel.php\?go=export/)
+	assert.match(rendered.malUpload, /Kitsu.*Settings → Export/)
+	assert.match(rendered.malUpload, /not available to every member/)
+	assert.match(rendered.malUpload, /accept="[^"]*\.xml[^"]*\.gz/)
+	assert.doesNotMatch(rendered.malUpload, /Sign in to Trakt/)
+	assert.match(
+		rendered.malReceipt,
+		/href="https:\/\/github.com\/Anime-Lists\/anime-lists"[^>]*>Anime-Lists/,
+	)
+	assert.match(
+		rendered.malReceipt,
+		/href="https:\/\/github.com\/Fribb\/anime-lists"[^>]*>Fribb/,
+	)
+	assert.match(rendered.malReceipt, /Comments and tags are not imported/)
 	assert.match(rendered.statusOnly, /Show statuses/)
 	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)
 	assert.match(
@@ -237,4 +255,38 @@ test("TMDB offers Connect and an explicit return/cancel step without a file inpu
 	assert.match(rendered.filePreview, /Use the export instead/)
 	assert.match(rendered.filePreview, /Choose another file/)
 	assert.match(rendered.failed, /\/api\/imports\/tmdb\/start/)
+})
+
+test("MAL and Kitsu uploads send the original XML or gzip and reject unrelated files", () => {
+	for (const name of [
+		"animelist_123.xml.gz",
+		"animelist_123.gz",
+		"animelist.xml",
+		"kitsu-member-anime.xml",
+	]) {
+		const file = new File(["export"], name)
+		const body = buildSourceImportUpload("myanimelist", file)
+		assert.equal(body.get("source"), "myanimelist")
+		assert.equal(body.get("file"), file)
+	}
+	assert.throws(
+		() =>
+			buildSourceImportUpload(
+				"myanimelist",
+				new File(["export"], "export.zip"),
+			),
+		/XML or gzip/,
+	)
+	assert.throws(
+		() => buildSourceImportUpload("myanimelist", new File([], "export.xml")),
+		/empty/,
+	)
+	assert.throws(
+		() =>
+			buildSourceImportUpload(
+				"myanimelist",
+				new File([new Uint8Array(IMPORT_MAX_BYTES + 1)], "export.gz"),
+			),
+		/20 MB/,
+	)
 })

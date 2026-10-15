@@ -236,6 +236,29 @@ function Receipt({
 					)}
 				</ul>
 			</div>
+			{summary.source === "myanimelist" && (
+				<p className="text-sm text-gray-400">
+					Anime episode mapping courtesy of{" "}
+					<a
+						href="https://github.com/Anime-Lists/anime-lists"
+						target="_blank"
+						rel="noopener noreferrer"
+						className={textLink}
+					>
+						Anime-Lists
+					</a>
+					; anime identities courtesy of{" "}
+					<a
+						href="https://github.com/Fribb/anime-lists"
+						target="_blank"
+						rel="noopener noreferrer"
+						className={textLink}
+					>
+						Fribb
+					</a>
+					.
+				</p>
+			)}
 			{summary.warnings.length > 0 && (
 				<div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4">
 					<p className="font-semibold text-amber-100">Export notes</p>

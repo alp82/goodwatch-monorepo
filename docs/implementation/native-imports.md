@@ -1,8 +1,8 @@
 # Native and CSV imports
 
-The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside generic CSV, MovieLens ratings/wishlist CSV, Kodi library XML/ZIP and the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
+The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongside generic CSV, MovieLens ratings/wishlist CSV, Kodi library XML/ZIP, MyAnimeList/Kitsu anime XML/gzip and the existing IMDb ratings CSV flow. The new routes live at `/api/imports`; the IMDb routes remain at `/api/imdb-import` and reject imports belonging to another source.
 
-Anime entry offsets and crosswalk lookup are available to server adapters through the shared resolver. See [anime episode placement](anime-episode-mapping.md) for the observation contract, Anime-Lists/Fribb attribution, snapshot refresh and rollout. Native anime source adapters are separate builds.
+Anime entry offsets and crosswalk lookup are available to server adapters through the shared resolver. See [anime episode placement](anime-episode-mapping.md) for the observation contract, Anime-Lists/Fribb attribution, snapshot refresh and rollout. MyAnimeList and Kitsu XML share the `myanimelist` adapter; AniList remains a separate build.
 
 ## Member flow
 
@@ -31,7 +31,7 @@ Rating-only imports preserve existing intention lists, following the existing IM
 
 ## Show status observations
 
-Issue #645 adds `kind: "show_status"` with `showStatus: "watching" | "on_hold" | "dropped" | "plan_to_watch" | "completed"`. No shipped source adapter emits it yet. Adapters can submit a `ParsedImport` through `previewParsedImport(userId, fileName, parsed, fileHash?)`; uploads delegate to the same boundary after parsing and hashing their original bytes. All observations still pass through catalog matching, preview, selection, the durable receipt, resume and undo.
+Issue #645 adds `kind: "show_status"` with `showStatus: "watching" | "on_hold" | "dropped" | "plan_to_watch" | "completed"`. The MyAnimeList/Kitsu adapter emits this kind. Adapters can submit a `ParsedImport` through `previewParsedImport(userId, fileName, parsed, fileHash?)`; uploads delegate to the same boundary after parsing and hashing their original bytes. All observations still pass through catalog matching, preview, selection, the durable receipt, resume and undo.
 
 - Watching, On hold and Dropped can arrive without any watches. Only Not started or Watching may change; On hold, Dropped and Seen already in GoodWatch are kept, even with “Use the export instead”. A state version changed after preview is also kept. One applicable status per matched TMDB show is required; multiple applicable statuses are invalid with a reason.
 - Plan to watch remains a selectable show status observation and writes Want to See through the existing list journal, only when the show has not started and has no watches. It does not create a tracking state or a watch.
@@ -163,3 +163,52 @@ Failed remote deletion retains encrypted credentials. After eight failed cleanup
 7. **Rollback:** Drain active/paused connections with a cleanup-capable process and both needed keys before removing this code. Keep the table and keys available while any row remains. Neither reverting the UI nor removing environment variables revokes remote access.
 
 Validation runs at the TMDB HTTP boundary, server endpoints, settings loader, shared import service and rendered controls, using synthetic data. Every connect scenario uses the real encrypted store over `ConnectDb`, including return/abandon races, slot reservations, lease expiry, key rotation and cleanup failure. No live TMDB request, real-account write, live schema migration or browser approval was exercised during implementation. The required regression command includes these tests. No landing-page script, stylesheet, font or image changed; the server entry starts only the cleanup timer, so the landing asset-budget trigger does not apply.
+
+## MyAnimeList and Kitsu
+
+Built for #647 from the synthetic shapes in `docs/research/imports/anime-tracker-exports.md`
+on `research/anime-tracker-exports` (#614). Select **MyAnimeList / Kitsu** on the
+existing Imports page. MyAnimeList: sign in at
+<https://myanimelist.net/panel.php?go=export>, select **Export my: Anime List**, then
+**Export My List**. Upload the original `animelist_*.xml.gz` (or `.gz`) or its plain
+`.xml`. For Kitsu, try **Settings → Export → Download Anime Library** and upload
+`kitsu-<slug>-anime.xml`; availability depends on Kitsu's member feature flag.
+No credentials, API access, scripts or conversion are needed.
+
+The adapter sets MAL identity, progress, known episode total, completion and date
+evidence on every observation. Kitsu's omitted title/type is accepted, with a
+`MyAnimeList #id` label when the file has no title. Kitsu XML already contains MAL
+ids and integer scores; no second score conversion is applied. Parent matching
+and episode placement use the shared pinned crosswalk and resolver. Movies and
+unsupported media types remain visible as unsupported; the current crosswalk only
+provides TMDB shows. Missing or ambiguous mappings remain unmatched.
+
+- `my_score` 1–10 becomes a show rating via explicit `ratingScope: "show"`; 0 is
+  unset. Malformed scores are invalid. If several entries supply different scores
+  for one show, all those ratings remain invalid with an explanation.
+- Watching, On-Hold (including Kitsu's On Hold), Dropped and Plan to Watch use the
+  existing show-status kind, selection, conflict and protection rules. Multiple
+  applicable statuses for one show remain invalid. Completed carries `part`
+  scope and remains unsupported as a status: only its reported episode watches
+  may make the show Seen. It never fills the rest of a TMDB show.
+- Progress N emits exactly N observations, numbered 1…N within the tracker entry,
+  with stable MAL-id/episode/pass keys. Rewatch counts create no additional watches.
+  The resolver establishes dates only for a completed entry whose progress equals
+  its known total and whose full start and finish dates are the same valid day.
+  Other progress is “don't know when”; no interpolation or endpoint guesses.
+  The member's “without dates” choice also discards that single-day evidence.
+- Comments and tags are not retained or imported, and receipt notes say so.
+  The receipt visibly links **Anime-Lists** for episode mapping and **Fribb** for
+  tracker identities. Their server-side use was approved on 2026-10-15.
+
+Saxes rejects DTDs/entities, malformed XML, manga (`user_export_type` 2 or manga
+entries), duplicate entry ids and duplicate supported fields. Parsing retains only
+one entry's supported fields at a time; metadata is ignored. Limits are 20 MB
+uploaded, 32 MB expanded gzip, 50,000 entries/observations, 64 nested elements and
+one million total elements. Gzip integrity is checked by the bounded decoder.
+
+Tests exercise public parsing, the real import service and tracking writer with
+fake database boundaries, and rendered upload/receipt controls. Preview, apply,
+repeat receipts, status/rating conflicts, date selection, completed cours and Undo
+are covered. Real member exports, browser interaction and live Crate verification
+remain untested. No schema or landing-surface changes are required.

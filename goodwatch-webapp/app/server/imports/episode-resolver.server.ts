@@ -35,8 +35,9 @@ export type EpisodeResolution =
 			season: number
 			episode: number
 			special: boolean
-			/** Progress carries no episode viewing dates, even with an authoritative episode ID. */
-			datePolicy?: "unknown"
+			/** Entry date spans do not establish episode dates; a complete single-day entry does. */
+			datePolicy?: "unknown" | "day"
+			watchedAt?: string
 	  }
 	| { status: "unmatched"; reason: string }
 export interface EpisodeGroupSummary {
@@ -370,9 +371,22 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 	}
 	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
 		const result = await resolve(row)
-		return row.animeEntry && result.status === "matched"
-			? { ...result, datePolicy: "unknown" }
-			: result
+		if (!row.animeEntry || result.status !== "matched") return result
+		const entry = row.animeEntry
+		const day = entry.startedAt
+		if (
+			entry.completed &&
+			entry.progress &&
+			entry.progress === entry.episodeCount &&
+			day &&
+			day === entry.finishedAt &&
+			/^\d{4}-\d{2}-\d{2}$/.test(day) &&
+			Number.isFinite(Date.parse(day)) &&
+			new Date(day).toISOString().slice(0, 10) === day
+		) {
+			return { ...result, datePolicy: "day", watchedAt: day }
+		}
+		return { ...result, datePolicy: "unknown" }
 	}
 }
 

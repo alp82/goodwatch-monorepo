@@ -49,7 +49,11 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
-		if (row.animeEntry && (row.kind === "rating" || row.kind === "review")) {
+		if (
+			row.animeEntry &&
+			(row.kind === "review" ||
+				(row.kind === "rating" && row.ratingScope !== "show"))
+		) {
 			row.problem = {
 				outcome: "unsupported",
 				reason:
@@ -165,9 +169,9 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			found.delete(index)
 			row.problem = { outcome: "unmatched", reason: result.reason }
 		} else {
-			if (result.datePolicy === "unknown" && row.kind === "watch") {
-				row.watchedAt = null
-				row.precision = "unknown"
+			if (result.datePolicy && row.kind === "watch") {
+				row.watchedAt = result.watchedAt ?? null
+				row.precision = result.datePolicy
 			}
 			row.episodeTmdbId = result.episodeTmdbId
 			row.season = result.season
@@ -503,6 +507,28 @@ export async function createParsedPreview(
 		currentValues(userId),
 	])
 	const items = classify(parsed.observations, matched, current)
+	// Several MAL cours can share a show. Never choose its score by export order.
+	const animeScores = new Map<number, ImportItem[]>()
+	for (const item of items) {
+		if (
+			item.animeEntry &&
+			item.kind === "rating" &&
+			item.tmdbId !== null &&
+			["new", "unchanged", "conflict"].includes(item.outcome)
+		) {
+			const group = animeScores.get(item.tmdbId) ?? []
+			group.push(item)
+			animeScores.set(item.tmdbId, group)
+		}
+	}
+	for (const group of animeScores.values()) {
+		if (new Set(group.map((item) => item.score)).size <= 1) continue
+		for (const item of group) {
+			item.outcome = "invalid"
+			item.reason =
+				"Multiple anime entry scores resolve to this show. No show rating was chosen."
+		}
+	}
 	const specials = items.filter((item) => item.episodeSpecial).length
 	if (specials)
 		parsed.warnings.push(
