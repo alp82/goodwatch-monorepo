@@ -237,7 +237,8 @@ export default function CustomAuthForm({ mode, redirectTo, posters }: CustomAuth
 
 					<button
 						type="submit"
-						disabled={loading || (mode === "sign-up" && password.length < 6)}
+						// A short password is caught by the field itself and the hint under it, so the button keeps its color.
+						disabled={loading}
 						className={AUTH_SUBMIT_CLASS}
 					>
 						{loading ? <Spinner size="small" /> : mode === "sign-up" ? "Sign Up" : "Sign In"}

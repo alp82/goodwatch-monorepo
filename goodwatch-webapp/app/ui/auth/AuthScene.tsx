@@ -11,7 +11,7 @@ const HEADLINE = "Somewhere in here is your next favorite."
 export const AUTH_INPUT_CLASS =
 	"w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white placeholder-white/30 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-amber-400/70"
 export const AUTH_SUBMIT_CLASS =
-	"flex w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-amber-900/40 transition duration-200 hover:from-amber-500 hover:to-orange-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700"
+	"flex w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-amber-900/40 transition duration-200 hover:from-amber-500 hover:to-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
 const EASE = [0.22, 1, 0.36, 1] as const
 
 const SCENE_CSS = `
