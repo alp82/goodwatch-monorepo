@@ -13,6 +13,8 @@
 // (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import { createHash } from "node:crypto"
+import { isDeepStrictEqual } from "node:util"
+import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import type { ImportItem, ImportSource } from "~/domain/imports"
 import {
 	type ListedEpisode,
@@ -65,6 +67,7 @@ import { cached } from "~/utils/cache"
 import {
 	type CrateValue,
 	execute,
+	isCrateRecoveryError,
 	insertRows,
 	query,
 	timestampsAsMillis,
@@ -359,17 +362,49 @@ async function writeState(
 	]
 	const unchanged =
 		"WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?"
-	const result =
+	// Keep this statement, its values, timestamp and version unchanged through recovery. The version predicate
+	// permits at most one application, including when the first response is lost while its request still runs.
+	const submit = () =>
 		write === "update" && row
-			? await run(
+			? run(
 					`UPDATE user_watch_state
 					 SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?,
 					     rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ?
 					 ${unchanged}`,
 					[...stateValues(row), new Date(now), ...key],
 				)
-			: await run(`DELETE FROM user_watch_state ${unchanged}`, key)
-	return (result.rowcount || 0) >= 1
+			: run(`DELETE FROM user_watch_state ${unchanged}`, key)
+	return withCrateOperation("tracking.writeState", async () => {
+		const inspect = async () => {
+			const current = await readState(userId, title)
+			const applied = write === "delete" ? current === null : Boolean(
+				current && current._seq_no !== before._seq_no && current.updated_at === now &&
+				isDeepStrictEqual(stateOnly(current), row),
+			)
+			const stillBefore = current?._seq_no === before._seq_no && current?._primary_term === before._primary_term
+			crateEvent("crate.readback", { outcome: applied ? "applied" : stillBefore ? "unchanged" : "conflict" })
+			return { applied, stillBefore }
+		}
+		try {
+			return ((await submit()).rowcount || 0) >= 1
+		} catch (error) {
+			if (!isCrateRecoveryError(error)) throw error
+			const checked = await inspect()
+			if (checked.applied) return true
+			if (!checked.stillBefore) return false
+			crateEvent("crate.replay", { attempt: 2, outcome: "started", guard: "original_version" })
+			try {
+				if (((await submit()).rowcount || 0) >= 1) return true
+			} catch (retryError) {
+				if (!isCrateRecoveryError(retryError)) throw retryError
+				if ((await inspect()).applied) return true
+				throw retryError
+			}
+			// The original may have applied between readback and replay. A different writer still goes through
+			// the caller's existing optimistic-conflict loop, rather than overwriting its newer state.
+			return (await inspect()).applied
+		}
+	})
 }
 
 /**

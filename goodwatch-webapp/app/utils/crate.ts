@@ -100,7 +100,21 @@ const isNodeLossError = (error: unknown): boolean => error instanceof CrateError
 	/^JobKilledException\[Job killed\. Participating node .+ disconnected\]$/.test(error.message)
 )
 
-const isRecoverableError = (error: unknown): boolean => isAvailabilityError(error) || isNodeLossError(error)
+// During restart the HTTP listener can answer before the coordinator has the cluster's table metadata.
+// Try another coordinator once. A relation absent everywhere must still reach the caller as a SQL error.
+const isCoordinatorStateError = (error: unknown): boolean => error instanceof CrateError &&
+	error.code === 4041 && /^RelationUnknown\[/.test(error.message)
+
+const isRecoverableError = (error: unknown): boolean =>
+	isAvailabilityError(error) || isNodeLossError(error) || isCoordinatorStateError(error)
+
+/** Eligible for caller-owned readback recovery; this does not authorize replaying a generic write. */
+export const isCrateRecoveryError = isRecoverableError
+
+// A refused TCP connection cannot have sent SQL. Trying another host is safe even for a CAS or increment.
+// Do not extend this to resets, broken pipes or timeouts: those may happen after a write was applied.
+const wasNotDispatched = (error: unknown): boolean => error instanceof Error &&
+	(error as NodeJS.ErrnoException).code === "ECONNREFUSED"
 
 // Conservative recognition only: never infer replay safety for a write from its
 // ON CONFLICT text. Helpers below own the keys and values that make replay safe.
@@ -110,6 +124,13 @@ const isRead = (sql: string): boolean => {
 		!/\b(INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|COPY|REFRESH|SET|RESET|GRANT|REVOKE|KILL)\b/i.test(tokens) &&
 		!/;\s*\S/.test(tokens)
 }
+
+// REFRESH changes search visibility, not durable row values. These statements occur after guarded member writes.
+// Recognize only a table list (optionally schema-qualified/quoted) and an optional final semicolon. No comment
+// stripping: a comment marker inside a quoted identifier must never hide a second, unsafe statement.
+const REFRESH_IDENTIFIER = '(?:"(?:""|[^"])+"|[a-z_][a-z0-9_$]*)'
+const REFRESH_TABLE = `${REFRESH_IDENTIFIER}(?:\\.${REFRESH_IDENTIFIER})?`
+const SAFE_REFRESH = new RegExp(`^\\s*REFRESH\\s+TABLE\\s+${REFRESH_TABLE}(?:\\s*,\\s*${REFRESH_TABLE})*\\s*;?\\s*$`, "i")
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -221,8 +242,9 @@ class CrateClient {
 		try {
 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
 			const deadline = performance.now() + timeoutMs
-			const read = isRead(query)
+			const replaySafe = isRead(query) || SAFE_REFRESH.test(query)
 			const tried = new Set<number>()
+			const missingMetadata = new Set<number>()
 			let nodeLoss = false
 			let round = 0
 			let result: Awaited<ReturnType<typeof crate.execute>> | undefined
@@ -236,9 +258,9 @@ class CrateClient {
 				// caller budget waiting for the first dead socket.
 				const remaining = deadline - performance.now()
 				if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
-				const attemptTimeoutMs = read && (this.hosts.length > 1 || round > 0)
+				const attemptTimeoutMs = replaySafe && (this.hosts.length > 1 || round > 0)
 					? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
-					: timeoutMs
+					: Math.max(1, Math.ceil(remaining))
 				attempts++
 				const attempt = { ...details, host: host.address, attempt: attempts, timeoutMs: attemptTimeoutMs }
 				const attemptStart = performance.now()
@@ -250,13 +272,14 @@ class CrateClient {
 						: await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
 				} catch (error) {
 					crateEvent("crate.attempt_failed", { ...attempt, ...crateErrorFields(error), durationMs: performance.now() - attemptStart,
-						outcome: options.signal?.aborted ? "cancelled" : read ? "failed" : "indeterminate",
+						outcome: options.signal?.aborted ? "cancelled" : wasNotDispatched(error) ? "not_sent" : replaySafe ? "failed" : "indeterminate",
 						recoverable: isRecoverableError(error),
-						failureKind: options.signal?.aborted ? "cancelled" : isAvailabilityError(error) ? "availability" : isNodeLossError(error) ? "node_loss" : "statement",
+						failureKind: options.signal?.aborted ? "cancelled" : isAvailabilityError(error) ? "availability" : isNodeLossError(error) ? "node_loss" : isCoordinatorStateError(error) ? "coordinator_metadata" : "statement",
 						cooldownMs: !options.signal?.aborted && isAvailabilityError(error) ? HOST_COOLDOWN_MS : 0 })
 					if (options.signal?.aborted || !isRecoverableError(error)) throw error
 					if (isAvailabilityError(error)) host.unavailableUntil = Date.now() + HOST_COOLDOWN_MS
-					if (!read) throw error
+					if (!replaySafe && !wasNotDispatched(error)) throw error
+					if (isCoordinatorStateError(error)) missingMetadata.add(index)
 					nodeLoss ||= isNodeLossError(error)
 					if (tried.size === this.hosts.length) {
 						if (!nodeLoss || ++round >= 10) throw error
@@ -268,6 +291,12 @@ class CrateClient {
 						nodeLoss = false
 					}
 				}
+			}
+			// Success elsewhere proves this is coordinator state, rather than a genuinely missing table.
+			for (const index of missingMetadata) {
+				this.hosts[index].unavailableUntil = Date.now() + HOST_COOLDOWN_MS
+				crateEvent("crate.coordinator_cooldown", { ...details, host: this.hosts[index].address,
+					attempt: attempts, cooldownMs: HOST_COOLDOWN_MS, reason: "metadata_mismatch", outcome: "excluded" })
 			}
 			const duration = performance.now() - startTime
 			if (attempts > 1) crateEvent("crate.query", { ...details, host: lastHost, attempt: attempts, outcome: "recovered", durationMs: duration })

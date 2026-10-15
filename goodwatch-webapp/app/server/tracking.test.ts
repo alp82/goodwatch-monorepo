@@ -3351,3 +3351,28 @@ test("undoing the import that made a show Seen leaves it Watching by the import 
 	assert.deepEqual([entry?.state, entry?.count], ["watching", 1])
 	assert.equal(entry?.watchingSince, null)
 })
+
+for (const mutation of ["update", "delete"] as const) for (const outcome of ["applied", "not-applied", "pending"] as const) {
+ test(`a tracking CAS ${mutation} with a ${outcome} lost response converges without applying its state twice`, async () => {
+  await tick(1,1,"initial-watch")
+  const original = db.execute.bind(db)
+  let calls=0
+  db.execute=async (sql,params=[])=>{
+   if(/(?:UPDATE|DELETE FROM) user_watch_state/.test(sql)) {
+    calls++
+    if(calls===1) {
+     if(outcome==="applied") await original(sql,params)
+     throw Object.assign(new Error("fixture response lost"),{code:"ECONNRESET"})
+    }
+    if(calls===2 && outcome==="pending") await original(sql,params)
+   }
+   return original(sql,params)
+  }
+  setCrateClientForTest(db)
+  const result=await act(mutation==="update"?{type:"drop"}:{type:"unwatch",season:1,number:1})
+  assert.equal(result.status,"applied")
+  assert.deepEqual(ticks(),mutation==="update"?["1.1"]:[])
+  assert.equal(stateOf()?.state,mutation==="update"?"dropped":undefined)
+  assert.equal(calls,outcome==="applied"?1:2)
+ })
+}
