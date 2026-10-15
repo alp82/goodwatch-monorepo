@@ -181,7 +181,8 @@ test("missing script methods are Redis failures, never unguarded fallbacks", asy
 	assert.equal(await resetCacheConfirmed(options), false)
 	assert.deepEqual(redis.calls, [])
 })
-test("pending resets bypass Redis and the timer confirms a retry", async () => {
+test("pending resets bypass Redis and the timer confirms a retry", async (t) => {
+	t.mock.timers.enable({ apis: ["Date", "setInterval"], now: Date.now() })
 	setResetRetryMsForTest(10)
 	redis.failDelete = true
 	assert.equal(await resetCacheConfirmed(options), false)
@@ -196,8 +197,8 @@ test("pending resets bypass Redis and the timer confirms a retry", async () => {
 		/requests_total\{cache="reset-test",result="reset_pending"\} 1/,
 	)
 	redis.failDelete = false
-	for (let i = 0; i < 50 && pendingResetCount(); i++)
-		await new Promise((resolve) => setTimeout(resolve, 10))
+	t.mock.timers.tick(10)
+	await tick()
 	assert.equal(pendingResetCount(), 0)
 	event("retry_confirmed")
 })
