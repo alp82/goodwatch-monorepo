@@ -8,11 +8,17 @@ This supersedes the old document's production inventory/order and its statement 
 
 ## Credential staging outcome — 2026-10-15 22:45 UTC
 
-**Stopped: backup cron installation returned success but readback was empty. The hourly Crate backup is currently
-unscheduled.** No further production mutations were made. The protected original crontab exists on crate-01 at
-`/root/.config/goodwatch/crate-rollout-562/crontab.before`. The [execution record](cratedb-production/20261015-credential-stage/)
-contains the exact proposed recovery command, safe receipts and unfinished work. Resuming after this unexpected
-result requires the owner decision specified by Q35.
+**Owner restored the original backup crontab at 22:49 UTC and authorized resumption.** Read-only verification
+confirmed an exact match with the protected original. The failure was a typo in the operator updater: after a
+successful install it called `crontab -` again instead of `crontab -l`. Inherited EOF silently installed an empty
+schedule. This was reproduced with real crontab in a disposable local container; it was not an Ansible or stdin
+transport failure. See the [staging record](cratedb-production/20261015-credential-stage/) for historical receipts.
+
+The corrected, tested `goodwatch-crate/configure_backup_cron.py` installs a protected named file, lists with
+`crontab -l`, verifies exact readback, preserves unrelated entries and refuses changed/duplicate/missing backup
+jobs. Ansible keeps the provisioned role/file in `host_vars/db1.yml`, validates file ownership/mode, backs up cron
+and verifies the installed entry. **Do not touch production cron until the restored 23:05 UTC run succeeds.**
+No restart, KILL or HBA change is authorized pending the owner's stale-context answer.
 
 The owner separately authorized credential-only staging before stale-context resolution: six users/secrets/grants
 now exist; search-a then search-b were rolled and checked; Windmill variables and Kuma 16–18 were configured and
@@ -99,7 +105,7 @@ No blanket grant on every schema. Auth-table migration must apply DENY to every 
    if required; no inherited Q34 KILL or SIGTERM approval. Require empty stale-context results before rollout.
 2. Six role secrets/users/grants are now created. Do not regenerate them. Files are mode 0600 under
    `/root/.config/goodwatch/crate-credentials/` on crate-01. Transfer the webapp secret to owner custody through a
-   secure channel; never put values in chat, logs, shell arguments or issues. Resolve the backup-cron stop first.
+   secure channel; never put values in chat, logs, shell arguments or issues. Confirm the restored 23:05 UTC backup succeeds, then apply the corrected credential schedule.
 3. In **Coolify UI only**, application **Goodwatch Webapp / gk4owk8**, production environment, covering **abio .21 and
    vector1 .20**: set runtime **CRATE_USER=goodwatch_webapp** and secret runtime **CRATE_PASS** from
    `/root/.config/goodwatch/crate-credentials/goodwatch_webapp` on crate-01. Preserve `CRATE_HOSTS` and `CRATE_PORT` above.
@@ -219,14 +225,28 @@ install -m 600 /root/.config/goodwatch/crate-credentials/goodwatch_backup \
   /root/.config/goodwatch/crate-backup-password
 ```
 
-Replace only the existing Crate backup cron job (preserve every other entry) with:
+After the restored **23:05 UTC** backup reports success, deploy the reviewed `configure_backup_cron.py` to
+`/root/goodwatch/goodwatch-monorepo/goodwatch-crate/` on crate-01. Run the dry run first, then apply once:
+
+```bash
+ssh root@10.0.0.11 python3 /root/goodwatch/goodwatch-monorepo/goodwatch-crate/configure_backup_cron.py
+ssh root@10.0.0.11 python3 /root/goodwatch/goodwatch-monorepo/goodwatch-crate/configure_backup_cron.py --apply
+```
+
+The helper retains root-only before/staged files under `/root/.config/goodwatch/crate-rollout-562/`, uses a named
+file for installation and `crontab -l` for exact readback. **Never use `crontab -` to inspect a schedule.** Any mismatch
+stops without automatic retry/rollback. It replaces only the named existing backup entry, preserving all other bytes:
+
 
 ```cron
 5 * * * * CRATE_BACKUP_USER=goodwatch_backup CRATE_BACKUP_PASSWORD_FILE=/root/.config/goodwatch/crate-backup-password /root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1
 ```
 
-The Ansible task accepts inventory `crate_backup_user=goodwatch_backup` and
-`crate_backup_password_file=/root/.config/goodwatch/crate-backup-password`; set both so later reconciliation retains them.
+The Ansible inventory now retains `crate_backup_user=goodwatch_backup` and
+`crate_backup_password_file=/root/.config/goodwatch/crate-backup-password` in `goodwatch-hq/ansible/host_vars/db1.yml`.
+Deploy the reviewed `cron.yml` and that inventory file on hq. For a scoped reconciliation use
+`ansible-playbook -i hosts.ini cron.yml --limit db1 --tags crate-backup-cron`; never run the other cron plays as a rollout probe.
+The task checks the root-only secret, keeps a cron backup and verifies exactly one intended entry using `crontab -l`.
 Observe a successful scheduled run and one full day of ordinary jobs before enforcement. Exercise infrequent job
 classes through approved non-destructive canaries or their normal schedules. Do not invoke cleanup_legacy as a test.
 

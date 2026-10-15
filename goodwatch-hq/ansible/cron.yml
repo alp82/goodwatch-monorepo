@@ -14,6 +14,9 @@
 - name: Configure Backup Cron Job for CrateDB
   hosts: db1
   become: yes
+  tags: [crate-backup-cron]
+  vars:
+    crate_backup_command: "{{ ('CRATE_BACKUP_USER=' ~ (crate_backup_user | quote) ~ ' CRATE_BACKUP_PASSWORD_FILE=' ~ (crate_backup_password_file | quote) ~ ' ') if (crate_backup_user | default('') | length > 0) else '' }}/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
   tasks:
     # Set both in the db1 inventory only after the dedicated user and protected
     # password file exist. Unset keeps the existing credentialless cron unchanged.
@@ -23,12 +26,48 @@
           - (crate_backup_user | default('') | length > 0) == (crate_backup_password_file | default('') | length > 0)
         fail_msg: "Set crate_backup_user and crate_backup_password_file together"
 
+    - name: Inspect provisioned backup password file
+      stat:
+        path: "{{ crate_backup_password_file }}"
+      register: crate_backup_secret_stat
+      when: crate_backup_user | default('') | length > 0
+
+    - name: Require the provisioned root-only backup password file
+      assert:
+        that:
+          - crate_backup_secret_stat.stat.exists
+          - crate_backup_secret_stat.stat.isreg
+          - crate_backup_secret_stat.stat.uid == 0
+          - crate_backup_secret_stat.stat.mode == '0600'
+        fail_msg: "Provision the root-only backup secret before configuring cron"
+      when: crate_backup_user | default('') | length > 0
+
+    # cron installs a temporary file; never replace it with `crontab -` readback.
+    # The latter silently installs an empty schedule when stdin is at EOF (#562).
     - name: "Cron: CrateDB Backup (Hourly at :05)"
       cron:
         name: "CrateDB Backup"
         minute: "5"
         hour: "*"
-        job: "{{ ('CRATE_BACKUP_USER=' ~ (crate_backup_user | quote) ~ ' CRATE_BACKUP_PASSWORD_FILE=' ~ (crate_backup_password_file | quote) ~ ' ') if (crate_backup_user | default('') | length > 0) else '' }}/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
+        job: "{{ crate_backup_command }}"
+        backup: true
+
+    - name: Read back the installed root crontab without modifying it
+      command:
+        argv: [crontab, -l]
+      register: crate_backup_crontab
+      changed_when: false
+      check_mode: false
+      no_log: true  # Other jobs may contain secrets.
+
+    - name: Verify exactly one credential-bearing backup entry
+      assert:
+        that:
+          - "crate_backup_crontab.stdout_lines | select('equalto', '5 * * * * ' ~ crate_backup_command) | list | length == 1"
+          - "crate_backup_crontab.stdout_lines | reject('match', '^#') | select('search', '/goodwatch-crate/backup.py') | list | length == 1"
+        fail_msg: "STOP: backup cron readback differs; inspect before retrying"
+      when: not ansible_check_mode
+      no_log: true
 
 - name: Configure Backup Cron Job for Qdrant
   hosts: vector1

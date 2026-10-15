@@ -1,5 +1,10 @@
 # Credential staging execution — 2026-10-15 22:36–22:45 UTC
 
+**Historical stop, resolved by owner restoration at 22:49 UTC.** The operator updater accidentally used `crontab -`
+for its second, supposed readback call; inherited EOF emptied the schedule after a successful first install. A real
+crontab fixture reproduced this sequence. Current recovery method and authorization are in the
+[runbook](../../cratedb-production-rollout.md). The original observation below is retained as an audit record.
+
 **Stopped on an unexpected backup-cron readback. The hourly Crate backup is currently unscheduled.**
 The updater installed the reviewed backup files and password, then `crontab -` returned exit 0, but immediate
 readback was empty. A separate read confirmed the root spool has only three generated comments, no jobs.
