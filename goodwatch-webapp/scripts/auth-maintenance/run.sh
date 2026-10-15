@@ -72,6 +72,7 @@ else
   app/server/auth/revocation.integration.ts \
   app/server/auth/reconciliation.integration.ts \
   app/server/auth/signup-maintenance.integration.ts \
+  app/server/auth/verification-maintenance.integration.ts \
   app/server/auth/maintenance-worker.integration.ts \
   app/server/auth/registration.integration.ts \
   app/server/auth/mcp.integration.ts \

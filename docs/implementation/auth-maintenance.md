@@ -129,15 +129,20 @@ authenticated `pendingSignupAt` insertion timestamp. Unconfirmed signups with th
 marker are collected after **48 hours** from insertion or the newest confirmation
 issuance, using the user-version CAS. Logical `createdAt` never determines signup
 eligibility or age. Imported and legacy unmarked members never qualify, even if
-unconfirmed for years or subsequently requesting confirmation. Their credential accounts are reconciled in the
-same pass and their unchanged email claim is released. Verification racing collection
+unconfirmed for years or subsequently requesting confirmation. When an eligible
+signup is collected, its credential accounts are reconciled in the same pass and
+its unchanged email claim is released. Verification racing collection
 must win the user CAS to preserve the member.
 
 The adapter still refuses enumerations above 10,000 rather than silently truncate
 hooks. Member/client predicates are protected by their own allowances; static
 resource/signing-key populations are operational configuration. Maintenance and
 expiry scans use keyset pages independently of those application limits. No global
-census of members or linked accounts is required.
+census of members or linked accounts is required. Better Auth is explicitly
+configured with `verification.disableCleanup: true`. Verification lookups never
+sweep unrelated expired rows; `expiresAt < now` find/delete-many shapes are
+rejected by the strict adapter. Expiry checks still reject expired tokens, while
+maintenance garbage collection returns their slots in bounded pages.
 
 **Rollout requirement:** migrate `doc.auth_capacity` with the thirteen model tables
 and email claims (15 tables total). Importing #551's users/accounts requires no
@@ -356,3 +361,15 @@ import creates no replacement member. The importer CLI/rehearsal remains in #551
 only its existing module and pinned `pg` dependency are included here for the
 real cross-feature regression. New signup tests cover 47h retention, 49h
 collection/retry, historical logical dates and a link resent at 47h used at 49h.
+
+## Re-review N2 — October 15, 2026
+
+The regression creates **10,050 expired verification rows** through the real
+runtime's `internalAdapter.createVerificationValue`, including per-identifier
+capacity admission. Before the fix, an invalid-token `/reset-password` request
+changes from HTTP 400 `INVALID_TOKEN` to HTTP 503 with an enumeration-bound error.
+With request-time cleanup disabled, it remains 400; a Google OAuth callback also
+completes against database state after its Valkey entry is removed, while all
+10,050 unrelated expired rows remain for paged maintenance collection. The test
+then collects a bounded page without a global sweep. The adapter inventory also
+checks that both expiry find-many and delete-many calls are refused.

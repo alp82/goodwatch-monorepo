@@ -87,6 +87,8 @@ forced-ID import may adopt that barrier by CAS; a delayed old operation cannot.
 
 The manifest follows #531's exact-version calls, including hook pre-reads,
 renamed schema fields, batches, and gated verification/rate-limit/session modes.
+Verification expiry find/delete-many is excluded: the runtime disables Better
+Auth's per-request cleanup and delegates expiry sweeps to paged maintenance.
 Unlisted predicates, OR, insensitive matching, ownership changes, invalid
 rotation fields and sorting fail closed. Google sign-in's unchanged `providerId`
 assignment is accepted; changing the actual identity key is rejected. Batch PK
@@ -103,7 +105,9 @@ bound refuse mutation rather than silently truncate. The #565 runtime enables
 per-actor CAS admission, with 20 browser sessions per member (oldest revoked)
 and separate member/client issuance allowances. Users and accounts have no global
 cap. Maintenance streams independently bounded pages and returns slots per row.
-The runtime limits DCR by trusted IP and collects unused clients/unconfirmed users;
+The runtime limits DCR by trusted IP and collects unused clients and only
+unconfirmed signups bearing private new-system insertion provenance; imported or
+unmarked members never qualify, and logical creation dates do not determine age;
 see the maintenance runbook for thresholds and prerelease-data migration.
 
 Plain assignments, bulk assignments and deletions retry up to 64 **proven** CAS

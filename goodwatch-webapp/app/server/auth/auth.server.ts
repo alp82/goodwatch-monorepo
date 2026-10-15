@@ -219,7 +219,12 @@ export function createGoodwatchAuth(options: {
 			getAndDelete: (key) => options.storage.getAndDelete(key),
 			increment: (key, ttl) => options.storage.increment(key, ttl),
 		},
-		verification: { storeInDatabase: true, storeIdentifier: "hashed" },
+		// Expiry cleanup is paged by maintenance, never by a login/reset request.
+		verification: {
+			storeInDatabase: true,
+			storeIdentifier: "hashed",
+			disableCleanup: true,
+		},
 		user: {
 			additionalFields: {
 				confirmationDigest: {

@@ -60,7 +60,9 @@ A password change cannot admit a login paused before session insertion.
   be overwritten by the rehash; a stale sign-in is revoked and rejected.
 - `request-password-reset`: Known and unknown addresses share the response.
   Google-only members receive Google sign-in guidance, with no reset link.
-  DB verification identifiers are hashed.
+  DB verification identifiers are hashed. Better Auth request-time verification
+  cleanup is disabled; bounded maintenance owns expiry cleanup, so an expired
+  backlog cannot make login/reset requests enumerate unrelated rows.
 - `reset-password`: Minimum ten characters, one-use token, password-changed
   notice, other-device sign-out and direct sign-in.
 - `change-password`: Other-device sign-out is forced even when the caller

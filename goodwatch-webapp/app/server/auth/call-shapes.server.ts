@@ -41,11 +41,11 @@ const rules: Record<string, Record<string, string[]>> = {
 	},
 	verification: {
 		findOne: ["id"],
-		findMany: ["identifier", "expiresAt:lt"],
+		findMany: ["identifier"],
 		update: ["identifier"],
 		consumeOne: ["id"],
 		delete: ["identifier"],
-		deleteMany: ["identifier", "expiresAt:lt"],
+		deleteMany: ["identifier"],
 	},
 	jwks: { findMany: [""], findOne: ["id"] },
 	oauthClient: {

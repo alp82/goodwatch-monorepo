@@ -261,7 +261,7 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 		user: { findOne: ["id", "email"], update: ["id", "email"], delete: ["id"] },
 		account: { findMany: ["providerId+accountId", "userId", "id"], findOne: ["userId+providerId+accountId"], updateMany: ["userId+providerId+accountId"], update: ["id"], delete: ["id"], deleteMany: ["userId"] },
 		session: { findOne: ["token", "id"], update: ["token"], findMany: ["userId", "userId+expiresAt:gt", "token+expiresAt:gt", "token:in+expiresAt:gt"], delete: ["token"], deleteMany: ["userId", "token:in"], updateMany: ["token+expiresAt:gt", "userId+expiresAt:gt", "token:in+expiresAt:gt"] },
-		verification: { findOne: ["id"], findMany: ["identifier"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier", "expiresAt:lt"] },
+		verification: { findOne: ["id"], findMany: ["identifier"], update: ["identifier"], consumeOne: ["id"], deleteMany: ["identifier"] },
 		jwks: { findMany: [""], findOne: ["id"] },
 		oauthClient: { findOne: ["clientId"], findMany: ["referenceId", "userId", "clientId:in"], update: ["clientId", "clientId+clientDiscoveryId"], delete: ["clientId"] },
 		oauthResource: { findOne: ["identifier"], findMany: ["", "identifier:in"], update: ["identifier"], delete: ["identifier"] },
@@ -290,6 +290,9 @@ test("every inventoried call shape and hook pre-read is accepted; other shapes a
 	for (const model of Object.keys(inventory)) {
 		await assert.rejects(adapter.findMany<Record<string, any>>({ model, where: [{ field: "id", value: "x", operator: "contains" }] }), /Unsupported auth shape/)
 	}
+	for (const action of ["findMany", "deleteMany"] as const)
+		await assert.rejects(adapter[action]({ model: "verification", where: [{ field: "expiresAt", operator: "lt", value: new Date() }] }), /Unsupported auth shape/)
+
 	await assert.rejects(adapter.findMany<Record<string, any>>({ model: "user", where: [] }), /Unsupported auth shape/)
 	await assert.rejects(adapter.count({ model: "user" }), /Unsupported auth shape/)
 })
