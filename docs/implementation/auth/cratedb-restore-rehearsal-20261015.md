@@ -10,8 +10,10 @@ Importer: [PR #576](https://github.com/alp82/goodwatch-monorepo/pull/576),
 
 The source was production `crate-cluster`, nodes `crate-01` 5.10.9 and
 `crate-02`/`crate-03` 5.10.16. Only SELECTs and BLOB GETs were issued to production.
-No production repository registration/settings, tables, users, services or firewall
-rules were changed. Scheduled production activity continued independently.
+No production CrateDB repository registration/settings, tables, users or service
+configuration were changed. No manual firewall edits were made; Docker managed
+the temporary internal copy network. Scheduled production activity continued
+independently.
 
 The target was a fresh, three-node Docker cluster on private host `10.0.0.11`,
 cluster `goodwatch-restore-563-551`, nodes `restore-563-1` through `restore-563-3`,
