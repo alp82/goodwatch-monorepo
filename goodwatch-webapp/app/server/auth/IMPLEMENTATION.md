@@ -115,6 +115,16 @@ version conflicts with a fresh read and all predicates rechecked. Deleted rows
 are never resurrected. `consumeOne` and `incrementOne` make one logical attempt;
 computed deltas and guarded rotation/consumption are never blindly retried.
 
+After a CAS reports 0 rows, the read-back decides the outcome: its own receipt
+returns the invocation's result, and only a **newer** version without that
+receipt proves a competing winner. Primary-key reads can be served by any shard
+copy, and a replica can acknowledge the rejected CAS before it applies the
+version that rejected it. A read-back showing the CAS base version (or an older
+one) without the receipt is therefore no proof: the adapter rereads up to ten
+times with short backoff (about 1.1 s in total), then fails indeterminate. This
+was the cause of the intermittent indeterminate outcome in the 24-way refresh
+race; it never replays the write and never accepts a lagging read as proof.
+
 ## Running and CI
 
 Use Node 24+, Docker Compose, about 3 GiB of cluster memory, loopback ports
