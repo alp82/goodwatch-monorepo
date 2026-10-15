@@ -29,8 +29,22 @@ export const IMPORT_KINDS = [
 	"want",
 	"favorite",
 	"review",
+	"show_status",
 ] as const
 export type ImportKind = (typeof IMPORT_KINDS)[number]
+export const IMPORT_SHOW_STATUS_LABELS = {
+	watching: "Watching",
+	on_hold: "On hold",
+	dropped: "Dropped",
+	plan_to_watch: "Plan to watch → Want to See",
+	completed: "Completed",
+} as const
+export type ImportShowStatus =
+	| "watching"
+	| "on_hold"
+	| "dropped"
+	| "plan_to_watch"
+	| "completed"
 export type ImportMediaType = "movie" | "show"
 export type ImportOutcome =
 	| "new"
@@ -65,6 +79,10 @@ export interface ImportObservation {
 	episodeSpecial?: boolean
 	season?: number | null
 	episode?: number | null
+	/** Show-level source status; never an episode or season status. */
+	showStatus?: ImportShowStatus
+	/** Completed only means Seen with explicit coverage of the whole matched TMDB show. */
+	completionScope?: "show" | "part"
 	score?: number | null
 	review?: string | null
 	watchedAt?: string | null

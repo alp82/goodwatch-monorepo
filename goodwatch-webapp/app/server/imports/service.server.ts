@@ -33,11 +33,13 @@ export const previewParsedImport = async (
 	userId: string,
 	fileName: string,
 	parsed: ParsedImport,
+	fileHash?: string,
 ) =>
 	(await import("./preview.server.ts")).createParsedPreview(
 		userId,
 		fileName,
 		structuredClone(parsed),
+		fileHash,
 	)
 
 export const listImports = async (userId: string): Promise<ImportSummary[]> =>

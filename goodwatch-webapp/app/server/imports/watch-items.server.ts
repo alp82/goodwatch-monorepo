@@ -43,7 +43,7 @@ export async function applyPendingImportWatches(
 ) {
 	const importRow = await getImportRow(userId, importId)
 	const pending = (await itemRows(userId, importId, true)).filter(
-		(item) => item.kind === "watch",
+		(item) => item.kind === "watch" || item.kind === "show_status",
 	)
 	if (!pending.length) return
 	const existingPlans = await plans(importId, userId)
@@ -113,14 +113,18 @@ export async function applyPendingImportWatches(
 		)
 		const addedIds = new Set(result.watchIds)
 		for (const item of items) {
-			const state = addedIds.has(importWatchId(importRow.source, item.key))
-				? "added"
-				: "kept"
+			const state =
+				result.statusKeys.includes(item.key) ||
+				addedIds.has(importWatchId(importRow.source, item.key))
+					? "added"
+					: "kept"
 			await run(
 				"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
 				[
 					state,
-					state === "added" ? importWatchId(importRow.source, item.key) : null,
+					state === "added" && item.kind === "watch"
+						? importWatchId(importRow.source, item.key)
+						: null,
 					importId,
 					item.index,
 				],
@@ -141,7 +145,7 @@ export async function undoAppliedImportWatches(
 	for (const row of stored.reverse())
 		await undoImportTrackingPlan(userId, row.plan)
 	await run(
-		"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
+		"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','show_status','state') AND apply_state IN ('added','kept')",
 		[importId, userId],
 	)
 }

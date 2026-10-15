@@ -17,6 +17,7 @@ const KIND_LABELS: Record<ImportKind, string> = {
 	want: "Want to See",
 	favorite: "Favorites",
 	review: "Reviews",
+	show_status: "Show statuses",
 }
 const OUTCOMES: ImportOutcome[] = [
 	"new",
@@ -178,12 +179,22 @@ export function SourceImportPreview({
 						label="Import watches with unknown dates"
 						detail="Imports the watches but stores no date for them."
 					/>
-					<p className="text-sm text-gray-400">
-						Importing a watch can remove that title from Want to See or Not
-						interested. Undoing the import later does not restore those earlier
-						choices.
-					</p>
 				</fieldset>
+			)}
+			{(importsWatches || kinds.includes("show_status")) && (
+				<p className="text-sm text-gray-400">
+					Importing watches or show statuses can remove titles from Want to See
+					or Not interested. Undoing the import later does not restore those
+					earlier choices.
+				</p>
+			)}
+			{kinds.includes("show_status") && (
+				<p className="text-sm text-gray-400">
+					Your On hold, Dropped and Seen decisions are kept. Plan to watch
+					becomes Want to See. Whole-show completion marks aired regular
+					episodes with unknown dates; completion of a part does not mark the
+					whole show Seen.
+				</p>
 			)}
 			{!canImport && (
 				<p id="source-import-required" className="text-sm text-gray-300">

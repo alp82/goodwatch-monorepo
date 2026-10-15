@@ -3602,3 +3602,198 @@ for (const write of ["INSERT", "UPDATE"] as const) {
 		assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
 	})
 }
+
+test("a status-only import is not recent activity and undo restores an earlier Watching status without watches", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "status",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "watching" as const,
+	}
+	const start = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "start",
+		source: "trakt",
+		...short,
+		items: [item],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, start)
+	assert.deepEqual(
+		[
+			(await entryOf(short))?.watchingSince,
+			(await entryOf(short))?.lastActivityAt,
+		],
+		[null, null],
+	)
+	const drop = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "drop",
+		source: "trakt",
+		...short,
+		items: [{ ...item, showStatus: "dropped" }],
+		watchDates: "unknown",
+		now: Date.now(),
+	})
+	await imports.applyImportTrackingPlan(user, drop)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "dropped")
+	await imports.undoImportTrackingPlan(user, drop)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "watching")
+	await imports.undoImportTrackingPlan(user, start)
+	assert.equal((await getShowTracking(user, SHORT)).state, null)
+})
+
+test("imported Dropped clears intentions without watches; a later member move survives undo", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	db.seed("user_wishlist", [
+		{
+			user_id: user,
+			tmdb_id: SHORT,
+			media_type: "show",
+			created_at: LONG_AGO,
+			updated_at: LONG_AGO,
+		},
+	])
+	db.seed("user_not_interested", [
+		{
+			user_id: user,
+			tmdb_id: SHORT,
+			media_type: "show",
+			created_at: LONG_AGO,
+			updated_at: LONG_AGO,
+		},
+	])
+	const item = {
+		key: "dropped",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "dropped" as const,
+	}
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "drop",
+		source: "trakt",
+		...short,
+		items: [item],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	const dropped = await getShowTracking(user, SHORT)
+	assert.equal(dropped.state?.state, "dropped")
+	assert.deepEqual(dropped.log, [])
+	const watched = await act(
+		{ type: "watch", season: 1, number: 1 },
+		newId(),
+		short,
+	)
+	assert.deepEqual(watched.cleared, {
+		wantToSeeAddedAt: null,
+		notInterested: false,
+	})
+	await imports.undoImportTrackingPlan(user, plan)
+	const later = await getShowTracking(user, SHORT)
+	assert.equal(later.state?.state, "watching")
+	assert.equal(later.log.length, 1)
+})
+
+test("a source status follows the imported watches in one plan and keeps their pass", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "held",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 2,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "on_hold" as const,
+	}
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "held",
+		source: "trakt",
+		...short,
+		items: [
+			{ ...nativeWatch("one", 1), pass: 2 },
+			{ ...nativeWatch("two", 2), pass: 2 },
+			item,
+		],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	const held = await getShowTracking(user, SHORT)
+	assert.equal(held.state?.state, "on_hold")
+	assert.equal(held.state?.pass, 2)
+	assert.equal(held.log.length, 2)
+	await imports.undoImportTrackingPlan(user, plan)
+	assert.equal((await getShowTracking(user, SHORT)).state, null)
+	assert.deepEqual((await getShowTracking(user, SHORT)).log, [])
+})
+
+test("whole-show completion fills the current pass without reusing the prior pass's imported watches", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "completed",
+		kind: "show_status" as const,
+		mediaType: "show" as const,
+		title: "Show",
+		year: null,
+		tmdbId: SHORT,
+		imdbId: null,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+		showStatus: "completed" as const,
+		completionScope: "show" as const,
+	}
+	const input = {
+		userId: user,
+		source: "trakt" as const,
+		...short,
+		items: [item],
+		watchDates: "unknown" as const,
+	}
+	const first = await imports.prepareImportTrackingPlan({
+		...input,
+		importId: "first",
+		now: Date.now() - 2000,
+	})
+	await imports.applyImportTrackingPlan(user, first)
+	await act({ type: "watchAgain" }, newId(), short)
+	const second = await imports.prepareImportTrackingPlan({
+		...input,
+		importId: "second",
+		now: Date.now() + 1,
+	})
+	await imports.applyImportTrackingPlan(user, second)
+	const completed = await getShowTracking(user, SHORT)
+	assert.equal(completed.state?.pass, 2)
+	assert.equal(completed.state?.state, "seen")
+	assert.equal(completed.log.filter((w) => w.pass === 2).length, 2)
+	await imports.undoImportTrackingPlan(user, second)
+	const restored = await getShowTracking(user, SHORT)
+	assert.equal(restored.state?.state, "watching")
+	assert.equal(restored.state?.pass, 2)
+	assert.equal(restored.log.length, 2)
+})

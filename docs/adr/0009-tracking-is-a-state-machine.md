@@ -68,8 +68,11 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
 - **Watch again needs at least one watched regular episode.** It starts the next pass and makes the show Watching.
   Without the guard, a show marked Seen while it had no episode list would become Watching with nothing watched.
 - **An import never changes On hold, Dropped or Seen set here.** It adds its watches to the log. It sets the state
-  only for a show that had no state before the import (from the watches, then from the source's status) or that is
-  Not started or Watching (from the watches). What the member decided here is newer than what a file says.
+  only for a show that had no state before the import or is Not started or Watching. Watches are applied first,
+  then an explicit source status. Issue #645 (2026-10-15) extends source statuses to Not started and Watching
+  and permits Watching, On hold and Dropped without watches. Completed needs explicit whole-TMDB-show scope;
+  completing a cour or part never establishes that scope. A member edit since preview is kept. What the member
+  decided here is newer than what a file says. See [the import contract](../implementation/native-imports.md#show-status-observations).
 - **The server reads the calendar in UTC.** Which episodes have aired, and so "up to date" and how many are new,
   goes by the UTC date. The browser decides what can be ticked by the date on the device, and the server accepts a
   watch for an episode that airs up to one day after the UTC date.

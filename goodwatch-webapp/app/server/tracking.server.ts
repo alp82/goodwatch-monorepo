@@ -14,18 +14,18 @@
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import { createHash, randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
-import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import type { ImportItem, ImportSource } from "~/domain/imports"
 import {
 	type ListedEpisode,
 	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
-	groupWatchId,
 	facts,
-	showAiredBy,
+	groupWatchId,
+	importShowStatus,
 	isDay,
 	serverShow,
+	showAiredBy,
 	utcDay,
 } from "~/domain/tracking/machine"
 import {
@@ -41,9 +41,9 @@ import {
 	movieLogRow,
 	movieStateRow,
 	recordFromRows,
-	stateRowOf,
 	scoreWatchId,
 	settleMovieRows,
+	stateRowOf,
 	titleTotals,
 	watchStateOf,
 	watchedAt,
@@ -67,11 +67,12 @@ import { cached } from "~/utils/cache"
 import {
 	type CrateValue,
 	execute,
-	isCrateRecoveryError,
 	insertRows,
+	isCrateRecoveryError,
 	query,
 	timestampsAsMillis,
 } from "~/utils/crate"
+import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1483,6 +1484,10 @@ export async function getMovieTracking(
 export const importWatchId = (source: ImportSource, key: string) =>
 	`i-${createHash("sha1").update(`${source}:${key}`).digest("hex").slice(0, 32)}`
 
+export type ImportStatusItem = ImportItem & {
+	_previewStatus?: { _seq_no: number; _primary_term: number } | null
+}
+
 export interface ImportTrackingPlan {
 	userId: string
 	importId: string
@@ -1490,6 +1495,7 @@ export interface ImportTrackingPlan {
 	now: number
 	beforeState: StoredState | null
 	afterState: StateRow | null
+	statusItem?: ImportItem
 	watches: LogRow[]
 	addedKeys: string[]
 	keptKeys: string[]
@@ -1596,7 +1602,7 @@ export async function prepareImportTrackingPlan(input: {
 	)
 	for (const row of candidates)
 		if (exact.has(row.watch_id)) used.add(row.watch_id)
-	for (const item of input.items) {
+	for (const item of input.items.filter((item) => item.kind === "watch")) {
 		const watchId = importWatchId(input.source, item.key)
 		if (
 			existing.some((row) => row.watch_id === watchId) ||
@@ -1649,7 +1655,33 @@ export async function prepareImportTrackingPlan(input: {
 		plan.watches.push(row)
 		plan.addedKeys.push(item.key)
 	}
-	if (!plan.watches.length) return plan
+
+	const statusItem: ImportStatusItem | undefined = input.items.find(
+		(item) => item.kind === "show_status",
+	)
+	if (
+		statusItem &&
+		title.mediaType === "show" &&
+		["watching", "on_hold", "dropped", "completed"].includes(
+			statusItem.showStatus ?? "",
+		)
+	) {
+		const preview = statusItem._previewStatus
+		const changed =
+			preview !== undefined &&
+			(preview?._seq_no !== beforeState?._seq_no ||
+				preview?._primary_term !== beforeState?._primary_term)
+		if (
+			changed ||
+			(beforeState &&
+				((beforeState.state === statusItem.showStatus &&
+					!plan.watches.length) ||
+					["seen", "on_hold", "dropped"].includes(beforeState.state)))
+		)
+			plan.keptKeys.push(statusItem.key)
+		else plan.statusItem = statusItem
+	}
+	if (!plan.watches.length && !plan.statusItem) return plan
 	if (
 		title.mediaType === "show" &&
 		(!beforeState ||
@@ -1674,9 +1706,78 @@ export async function prepareImportTrackingPlan(input: {
 			plan.afterState = stateRowOf(current, stateOnly(beforeState), input.now)
 		}
 	}
+
+	if (plan.statusItem) {
+		const record = recordFromRows(
+			stateOnly(beforeState),
+			[...existing, ...plan.watches],
+			{ score: null, wantToSee: false, notInterested: false },
+		)
+		if (!beforeState)
+			record.pass = Math.max(1, ...plan.watches.map((row) => row.pass))
+		const status = plan.statusItem.showStatus
+		if (
+			status === "watching" ||
+			status === "on_hold" ||
+			status === "dropped" ||
+			status === "completed"
+		) {
+			const show = showAiredBy(
+				listed(await getEpisodeList(title.tmdbId)),
+				utcDay(input.now),
+			)
+			const result = importShowStatus(
+				{ show, record },
+				status,
+				plan.statusItem.completionScope,
+				importWatchId(input.source, plan.statusItem.key),
+			)
+			if (result.refused) {
+				plan.keptKeys.push(plan.statusItem.key)
+				plan.statusItem = undefined
+			} else {
+				plan.afterState = stateRowOf(
+					result.world.record,
+					stateOnly(beforeState),
+					input.now,
+				)
+				// Zero denotes no member move for a source-only Watching status. No watch exists to carry
+				// the import provenance used by the activity readers; updated_at still owns the undo.
+				if (
+					plan.afterState?.state === "watching" &&
+					beforeState?.state !== "watching"
+				)
+					plan.afterState.state_changed_at = 0
+				const known = new Set(record.watches.map((w) => w.id))
+				for (const watch of result.world.record.watches.filter(
+					(w) => !known.has(w.id),
+				)) {
+					plan.watches.push({
+						watch_id: importWatchId(
+							input.source,
+							`${statusItem?.key}:pass:${watch.pass}:episode:${watch.episodeId}`,
+						),
+						media_type: "show",
+						tmdb_id: title.tmdbId,
+						episode_tmdb_id: watch.episodeId,
+						season_number: watch.season,
+						episode_number: watch.number,
+						watched_at: null,
+						watched_at_precision: "unknown",
+						origin: "import",
+						group_id: null,
+						import_id: input.importId,
+						pass: watch.pass,
+						created_at: input.now,
+					})
+				}
+			}
+		}
+	}
 	// Only clear the intentions observed while preparing this plan. A later edit gets a new version.
 	if (
 		title.mediaType === "movie" ||
+		plan.statusItem !== undefined ||
 		plan.watches.some((row) => (row.season_number ?? 0) > 0)
 	) {
 		for (const table of ["user_wishlist", "user_not_interested"] as const) {
@@ -1710,8 +1811,13 @@ export async function applyImportTrackingPlan(
 ) {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length)
-		return { added: 0, kept: plan.keptKeys.length, watchIds: [] }
+	if (!plan.watches.length && !plan.statusItem)
+		return {
+			added: 0,
+			kept: plan.keptKeys.length,
+			watchIds: [],
+			statusKeys: [],
+		}
 	await insertLog(userId, plan.watches, plan.now)
 	await run("REFRESH TABLE user_watch_log")
 	const log = await readImportLog(userId, plan.title)
@@ -1720,12 +1826,14 @@ export async function applyImportTrackingPlan(
 		(row) => row.import_id === plan.importId && plannedIds.has(row.watch_id),
 	)
 	// A simultaneous upload can have won every insert. It owns the state transition as well as the watches.
-	if (!ours.length)
+	if (!ours.length && !plan.statusItem)
 		return {
 			added: 0,
 			kept: plan.keptKeys.length + plan.watches.length,
 			watchIds: [],
+			statusKeys: [],
 		}
+	let statusApplied = false
 	if (plan.title.mediaType === "movie")
 		await settleMovie(userId, plan.title.tmdbId)
 	else {
@@ -1735,8 +1843,33 @@ export async function applyImportTrackingPlan(
 			if (
 				current?.updated_at === plan.now &&
 				current.state === plan.afterState?.state
-			)
+			) {
+				statusApplied = !!plan.statusItem
 				break
+			}
+			if (plan.statusItem) {
+				// Any edit since planning wins, including another move to Watching.
+				if (
+					current?._seq_no !== plan.beforeState?._seq_no ||
+					current?._primary_term !== plan.beforeState?._primary_term
+				)
+					break
+				if (
+					await writeState(
+						userId,
+						plan.title,
+						current ? "update" : "insert",
+						plan.afterState,
+						current,
+						plan.now,
+					)
+				) {
+					statusApplied = true
+					break
+				}
+				if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
+				continue
+			}
 			if (current && ["seen", "on_hold", "dropped"].includes(current.state))
 				break
 			await run("REFRESH TABLE user_watch_log")
@@ -1786,7 +1919,7 @@ export async function applyImportTrackingPlan(
 			if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
 		}
 	}
-	for (const clear of plan.clear)
+	for (const clear of statusApplied || ours.length ? plan.clear : [])
 		await run(
 			`DELETE FROM ${clear.table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
 			[userId, plan.title.tmdbId, plan.title.mediaType, clear.seq, clear.term],
@@ -1798,6 +1931,7 @@ export async function applyImportTrackingPlan(
 		added: ours.length,
 		kept: plan.keptKeys.length + plan.watches.length - ours.length,
 		watchIds: ours.map((row) => row.watch_id),
+		statusKeys: statusApplied && plan.statusItem ? [plan.statusItem.key] : [],
 	}
 }
 
@@ -1807,7 +1941,7 @@ export async function undoImportTrackingPlan(
 ): Promise<void> {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length) return
+	if (!plan.watches.length && !plan.statusItem) return
 	await run("REFRESH TABLE user_watch_log")
 	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
 	const log = await readImportLog(userId, plan.title)
@@ -1836,6 +1970,7 @@ export async function undoImportTrackingPlan(
 			// Another import may already have been undone, or may have added watches while this show was Seen.
 			// Restore the earlier choice only where it still satisfies the watch/state invariant.
 			if (
+				!plan.statusItem &&
 				!hasRegular &&
 				restored &&
 				["watching", "seen"].includes(restored.state)

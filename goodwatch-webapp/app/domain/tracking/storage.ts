@@ -47,6 +47,7 @@ export interface LogRow {
 /** One row of `user_watch_state`, without its key. */
 export interface StateRow {
 	state: State
+	/** Zero for a source-only Watching status: no dated member move. */
 	state_changed_at: number
 	pass: number
 	seen_press_group: string | null
@@ -521,7 +522,7 @@ const moment = (value: number | Date | null | undefined) =>
 
 /**
  * C3: a member's own move to Watching counts as activity, an import's does not. The state row does not say who
- * wrote it, so an import is told by its watches: it records them no later than it changes the state.
+ * wrote it. A source-only Watching status uses zero; otherwise an import is told by its watches: it records them no later than it changes the state.
  */
 function watchingSinceOf(
 	state: TitleState | undefined,
@@ -529,7 +530,7 @@ function watchingSinceOf(
 ): number | null {
 	if (state?.state !== "watching") return null
 	const changed = moment(state.state_changed_at)
-	if (changed === null) return null
+	if (changed === null || changed === 0) return null
 	const imported = largest(groups.map((g) => moment(g.last_import_at)))
 	return imported !== null && changed <= imported ? null : changed
 }

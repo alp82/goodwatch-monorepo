@@ -103,6 +103,54 @@ export const newRecord = (): TrackingRecord => ({
 	seenQuestion: "not_asked",
 })
 
+/** Source status without episode evidence. Import-only: never offered as a member action. */
+export function importShowStatus(
+	world: World,
+	status: "watching" | "on_hold" | "dropped" | "completed",
+	completionScope?: "show" | "part",
+	identity = "import-status",
+): { world: World; refused: string | null } {
+	if (["on_hold", "dropped", "seen"].includes(world.record.state))
+		return { world, refused: "Your GoodWatch show status is kept." }
+	if (status === "completed") {
+		if (completionScope !== "show")
+			return {
+				world,
+				refused:
+					"Completed does not establish completion of the whole TMDB show.",
+			}
+		const completed = step(world, { type: "pressSeen" }, identity)
+		if (completed.refused) return completed
+		const existing = new Set(world.record.watches.map((w) => w.id))
+		return {
+			world: {
+				...world,
+				record: {
+					...completed.world.record,
+					seenPress: null,
+					watches: completed.world.record.watches.map((w) =>
+						existing.has(w.id) ? w : { ...w, origin: "import", group: null },
+					),
+				},
+			},
+			refused: null,
+		}
+	}
+	return {
+		world: {
+			...world,
+			record: {
+				...world.record,
+				state: status,
+				wantToSee: false,
+				notInterested: false,
+				seenPress: null,
+			},
+		},
+		refused: null,
+	}
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // Events
 // ---------------------------------------------------------------------------------------------------------

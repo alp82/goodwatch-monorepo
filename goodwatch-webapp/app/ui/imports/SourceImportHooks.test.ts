@@ -53,10 +53,14 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		csvUpload: string
 		movielensUpload: string
 		kodiUpload: string
+		statusOnly: string
 		ratingOnly: string
 		withWatches: string
 	}
 
+	assert.match(rendered.statusOnly, /Show statuses/)
+	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)
+	assert.match(rendered.statusOnly, /does not restore those earlier choices/)
 	assert.match(rendered.kodiUpload, /Advanced/)
 	assert.match(rendered.kodiUpload, /Choose Kodi export XML or ZIP file/)
 	assert.match(rendered.kodiUpload, /Choose XML or ZIP file/)

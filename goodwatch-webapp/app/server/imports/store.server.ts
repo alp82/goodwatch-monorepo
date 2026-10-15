@@ -90,7 +90,14 @@ export const isStalled = (row: ImportRow) =>
 	ms(row.read_at) - ms(row.updated_at) > STALL_MS
 
 export function summarize(row: ImportRow): ImportSummary {
-	const emptyKinds = { rating: 0, watch: 0, want: 0, favorite: 0, review: 0 }
+	const emptyKinds = {
+		rating: 0,
+		watch: 0,
+		want: 0,
+		favorite: 0,
+		review: 0,
+		show_status: 0,
+	}
 	const storedOptions = parse<
 		| ({ direction?: "apply" | "undo" } & NonNullable<ImportSummary["options"]>)
 		| null
@@ -112,7 +119,7 @@ export function summarize(row: ImportRow): ImportSummary {
 			unsupported: 0,
 			invalid: 0,
 		}),
-		kinds: parse(row.kinds, emptyKinds),
+		kinds: { ...emptyKinds, ...parse(row.kinds, emptyKinds) },
 		warnings: parse(row.warnings, []),
 		options: storedOptions
 			? {
@@ -223,10 +230,15 @@ export async function listItems(
 	)
 	const items = rows.map((row): ImportItem => {
 		const payload = parse<
-			ImportItem & { _preview?: unknown; journal?: unknown }
+			ImportItem & {
+				_preview?: unknown
+				_previewStatus?: unknown
+				journal?: unknown
+			}
 		>(row.payload, {} as ImportItem)
 		const {
 			_preview: _privatePreview,
+			_previewStatus: _privateStatus,
 			journal: _privateJournal,
 			...observation
 		} = payload

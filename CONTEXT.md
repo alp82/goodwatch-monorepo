@@ -126,7 +126,7 @@ _Avoid_: In progress, Currently watching, Continue watching
 What a Seen show is called while it is still running. It is a label, not a show status; once the show has ended it reads Seen.
 
 **On hold**:
-The show status of a show the person has set aside and may return to. Only the person sets it, from Watching or from a Seen show with new episodes.
+The show status of a show the person has set aside and may return to. The person sets it from Watching or from a Seen show with new episodes. An import can bring it without watches, while preserving an existing On hold, Dropped or Seen decision.
 _Avoid_: Paused
 
 **Dropped**:

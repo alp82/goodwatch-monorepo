@@ -29,6 +29,19 @@ As with a watch recorded in GoodWatch, imported watches can clear an existing Wa
 
 Rating-only imports preserve existing intention lists, following the existing IMDb importer rather than the interactive rating action. A newly imported Want to See entry clears an unchanged Not interested entry.
 
+## Show status observations
+
+Issue #645 adds `kind: "show_status"` with `showStatus: "watching" | "on_hold" | "dropped" | "plan_to_watch" | "completed"`. No shipped source adapter emits it yet. Adapters can submit a `ParsedImport` through `previewParsedImport(userId, fileName, parsed, fileHash)`; uploads delegate to the same boundary after parsing and hashing their original bytes. All observations still pass through catalog matching, preview, selection, the durable receipt, resume and undo.
+
+- Watching, On hold and Dropped can arrive without any watches. Only Not started or Watching may change; On hold, Dropped and Seen already in GoodWatch are kept, even with “Use the export instead”. A state version changed after preview is also kept. One applicable status per matched TMDB show is required; multiple applicable statuses are invalid with a reason.
+- Plan to watch remains a selectable show status observation and writes Want to See through the existing list journal, only when the show has not started and has no watches. It does not create a tracking state or a watch.
+- Completed requires `completionScope: "show"`, meaning the adapter has established completion of the **whole matched TMDB show**. `"part"` and missing scope are unsupported and remain visible in the receipt. Episode/season coordinates on a status are unsupported. An anime cour or part must never claim whole-show scope merely because its title matches a show.
+- Whole-show completion follows the machine's Seen press: mark missing aired regular episodes in the current pass, with unknown dates and import ownership. Specials and unaired episodes are excluded. There is no standing Seen press; the import's Undo owns these watches. Completion scope does not change the ordinary episode-watch state rules.
+- A source status follows any selected watches in the same per-show journal. Statuses that start Watching, put On hold, Drop or complete a show clear the observed Want to See and Not interested entries. Dropped uses the existing state, so recommendation exclusion remains the existing rule and is not a taste signal. Cleared intentions are not restored by Undo, as for imported watches; preview and Undo explain this.
+- Undo restores the previous status, including Watching without watches, while leaving later member edits alone. The journal lives in the existing payload column: no schema migration. A source-only move to Watching stores `state_changed_at = 0` as “no dated member move”; both activity readers ignore that sentinel. `updated_at` retains the real write timestamp for undo ownership. Watches keep their source dates and imports never manufacture recent activity.
+
+This extends the earlier import-status restriction in ADR 0009 and tracking model section 7, which required an absent state and a watch for On hold. The ticket explicitly permits statuses without watches; `CONTEXT.md` permits imports to change Not started and Watching. Interactive member actions keep their existing guards. The old diagnostic “Watching must have a watch” no longer applies to a status-only import or a member resuming one.
+
 ## Shared episode resolver
 
 `app/server/imports/episode-resolver.server.ts` resolves evidence within an already matched show. `episode-resolver-data.server.ts` connects it to the existing import database helpers and TMDB; `preview.server.ts` uses it for every episode observation. Trakt keeps TMDB IDs first and retains canonical positions for successful ID matches. A stale ID can now fall through to the remaining evidence. Kodi also supplies episode evidence to this resolver.

@@ -1598,3 +1598,63 @@ test("every row of the table was walked, except the catalog's, which no code tak
 	const missed = TABLE.filter((row) => !used.has(row.id)).map((row) => row.id)
 	assert.deepEqual(missed, ["27"])
 })
+
+test("an import can start Watching, put On hold or Drop a show without inventing watches", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	for (const status of ["watching", "on_hold", "dropped"] as const) {
+		const world = {
+			show: { running: true, episodes: [] },
+			record: { ...newRecord(), wantToSee: true },
+		}
+		const result = importShowStatus(world, status)
+		assert.equal(result.refused, null)
+		assert.equal(result.world.record.state, status)
+		assert.deepEqual(result.world.record.watches, [])
+		assert.equal(result.world.record.wantToSee, false)
+		assert.equal(
+			derive(result.world).hiddenFromRecommendations,
+			status === "dropped",
+		)
+	}
+})
+
+test("import statuses preserve On hold, Dropped and Seen decisions", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	for (const state of ["on_hold", "dropped", "seen"] as const) {
+		const world = {
+			show: { running: true, episodes: [] },
+			record: { ...newRecord(), state },
+		}
+		const result = importShowStatus(world, "watching")
+		assert.ok(result.refused)
+		assert.equal(result.world, world)
+	}
+})
+
+test("Completed requires whole-show evidence and uses only aired regular episodes with no standing Seen press", async () => {
+	const { importShowStatus } = await import("./machine.ts")
+	const world = {
+		show: {
+			running: true,
+			episodes: [
+				{ id: 1, season: 1, number: 1, aired: true },
+				{ id: 2, season: 1, number: 2, aired: false },
+				{ id: 3, season: 0, number: 1, aired: true },
+			],
+		},
+		record: newRecord(),
+	}
+	for (const scope of [undefined, "part"] as const) {
+		const result = importShowStatus(world, "completed", scope)
+		assert.ok(result.refused)
+		assert.equal(result.world, world)
+	}
+	const completed = importShowStatus(world, "completed", "show")
+	assert.equal(completed.refused, null)
+	assert.equal(completed.world.record.state, "seen")
+	assert.equal(completed.world.record.seenPress, null)
+	assert.deepEqual(
+		completed.world.record.watches.map((w) => [w.episodeId, w.origin]),
+		[[1, "import"]],
+	)
+})

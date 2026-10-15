@@ -67,7 +67,7 @@ export function SourceImportCurrent({
 			return
 		}
 		const options: ImportOptions = summary.options ?? {
-			kinds: ["rating", "watch", "want", "favorite", "review"],
+			kinds: ["rating", "watch", "want", "favorite", "review", "show_status"],
 			conflictChoice: "keep",
 			watchDates: "preserve",
 		}
@@ -269,9 +269,10 @@ function Receipt({
 					<div className="rounded-lg border border-red-900 bg-red-950/40 p-4">
 						<p className="text-gray-100">
 							Undo this import? GoodWatch removes watches this import added,
-							even if you edited their dates later. Later rating and list
-							changes stay protected. Want to See or Not interested choices that
-							the import cleared are not restored.
+							even if you edited their dates later, and restores earlier show
+							statuses. Later status, rating and list changes stay protected.
+							Want to See or Not interested choices that the import cleared are
+							not restored.
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button

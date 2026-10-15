@@ -5,7 +5,7 @@ import type { ImportSummary } from "~/domain/imports"
 import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
-const summary = (watch: number): ImportSummary => ({
+const summary = (watch: number, showStatuses = 0): ImportSummary => ({
 	id: "00000000-0000-4000-8000-000000000001",
 	source: "letterboxd",
 	fileName: "export.zip",
@@ -21,7 +21,14 @@ const summary = (watch: number): ImportSummary => ({
 		invalid: 0,
 		rows: 1,
 	},
-	kinds: { rating: 1, watch, want: 0, favorite: 0, review: 0 },
+	kinds: {
+		rating: 1,
+		watch,
+		want: 0,
+		favorite: 0,
+		review: 0,
+		show_status: showStatuses,
+	},
 	warnings: [],
 	options: null,
 	processed: 0,
@@ -32,10 +39,15 @@ const summary = (watch: number): ImportSummary => ({
 	error: null,
 })
 
-const render = (watch: number, confirming: boolean, error: string | null) =>
+const render = (
+	watch: number,
+	confirming: boolean,
+	error: string | null,
+	showStatuses = 0,
+) =>
 	renderToStaticMarkup(
 		createElement(SourceImportPreview, {
-			summary: summary(watch),
+			summary: summary(watch, showStatuses),
 			focus: false,
 			confirming,
 			error,
@@ -63,6 +75,7 @@ process.stdout.write(
 		movielensUpload: upload("movielens"),
 		kodiUpload: upload("kodi"),
 		ratingOnly: render(0, false, "Preview could not start."),
+		statusOnly: render(0, false, null, 3),
 		withWatches: render(2, true, null),
 	})}`,
 )
