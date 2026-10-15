@@ -68,3 +68,11 @@ Release verification is on [#604](https://github.com/alp82/goodwatch-monorepo/pu
 Axiom storage is unverified: query-read access was skipped and the ingest token returned 403. Vector1 currently uses json-file logging with no Coolify drain. Production Crate container IDs, start times, PIDs and restart counts matched before/after.
 
 **#604 alone does not make crate-01 maintenance safe for these page workloads:** this released-client red control still produced nine route 500s. Final maintenance guidance after #607's validation and deployment is recorded in its release report. These local classes are demonstrated restart hazards; they cannot be assigned retrospectively to the original 27 production failed-query lines because those incident logs were lost. This proof does not establish full production workload coverage or Valkey resilience.
+
+## Q32 first-insert follow-up
+
+The reviewed first-insert race is addressed on `fix/tracking-first-insert-retry`, pending review and deployment.
+See [first-insert recovery](../../../docs/implementation/tracking/first-insert-recovery.md) for the retained-key
+receipt design, nullable-column migration, main red control and final 10-case lost-response proof.
+Run with `CRATE_PROOF_FIRST_INSERT=1` in addition to the graceful/page flags above. The ordinary proof stays
+compatible without that flag. This draft does not change #607's production release or perform maintenance.

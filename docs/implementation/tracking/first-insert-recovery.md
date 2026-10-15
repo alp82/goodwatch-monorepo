@@ -82,3 +82,26 @@ CRATE_PROOF_TRACKING_BASELINE_COMMIT=511e4be329d9b381e2b824dd52cea161537cabd5 \
 Measured results and source hashes are recorded with the PR evidence. The HTTP proof replaces auth, cache/Valkey
 and external-service boundaries; CrateDB queries, tracking recovery and Remix actions are real. It does not
 establish browser, Valkey, account-deletion or all possible concurrent-action resilience.
+
+## Measured results, 2026-10-15
+
+The final runtime is implementation commit `a4f803a0c736cc0b436272a5a0a68e66abba3ec2`; subsequent evidence commits change
+only documentation and JSON receipts. All recorded source hashes match that runtime. Rebuilding the route bundle
+from the proof's working directory reproduces its exact hash (esbuild source comments depend on that directory).
+
+- Main control (`511e4be329d9b381e2b824dd52cea161537cabd5`): the real HTTP action returns Watching after the intervening unwatch; the exact
+  assertion is `first-insert-unwatch-reset: returned logical state: 'watching' !== null`.
+- Fixed: **0 / 1233 route failures**, **1848 probe reads**, **501 guarded writes**,
+  and **48 acknowledged watches stored uniquely**. Decommission exited normally and the node rejoined during load.
+- All **10 first-insert scenarios** and **8 existing lost-response cases** passed. The later action's sequence
+  number stays unchanged by recovery, including the absent-readback/late-original/unwatch/resend case.
+- The migration preserved the existing row and version with a NULL token. Both red and fixed runs verified
+  removal of every owned Docker container, volume and network.
+- Full suite: **2,720 passed, one optional Valkey-cluster skip, zero failed**. **44 flow tests** passed.
+  Typecheck: **174 identical diagnostics on main and branch**. Production build/precompression: **814 files**.
+  An earlier full run hit an unchanged auth-session assertion (two server calls instead of one); its isolated
+  14-test run and the final full suite passed. No auth files were changed.
+
+Receipts: [red control](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-red.json),
+[final proof](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-final.json),
+and [validation](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-validation.json).
