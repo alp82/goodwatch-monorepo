@@ -152,6 +152,7 @@ const agent = new MockAgent()
 agent.disableNetConnect()
 let fetchAborts = 0
 let bodyAborts = 0
+let observePageAbort: (() => void) | undefined
 // A minimal dispatcher can expose separate response-header and response-body stalls, unlike MockAgent.delay.
 setGlobalDispatcher({
 	dispatch(options, handler) {
@@ -164,6 +165,7 @@ setGlobalDispatcher({
 			handler.onConnect?.((error) => {
 				if (query === "stalled body") bodyAborts++
 				else fetchAborts++
+				observePageAbort?.()
 				handler.onError?.(error ?? new Error("TMDB request aborted"))
 			})
 			if (query === "stalled body") {
@@ -262,8 +264,9 @@ test("ranked composition preserves exact title while a later TMDB page stalls", 
 	)
 })
 
-test("optional-page deadline aborts pending fetch and body decoding", async () => {
+test("optional-page deadline aborts pending fetch and body decoding", { timeout: 5000 }, async () => {
 	for (const query of ["stalled fetch", "stalled body"]) {
+		const aborted = new Promise<void>((resolve) => { observePageAbort = resolve })
 		page(query, 1, { total_pages: 2, results: [fixture] })
 		const started = performance.now()
 		const result = await combinedSearch(
@@ -274,6 +277,10 @@ test("optional-page deadline aborts pending fetch and body decoding", async () =
 		)
 		assert.equal(result.rows[0].key, "movie:42")
 		assert.ok(performance.now() - started < 350)
+		// The timeout race settles before undici finishes cancelling a response body. Observe the actual
+		// dispatcher cancellation instead of assuming its callback ran in the same microtask.
+		await aborted
+		observePageAbort = undefined
 	}
 	assert.equal(fetchAborts, 1)
 	assert.equal(bodyAborts, 1)
