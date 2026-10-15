@@ -108,3 +108,5 @@ list plausible.
 ## 014 G1 rollout (October 15, 2026)
 
 Plan, Fable review and adopted fixes in items/014-g1-rollout/. Built by Sol, Astra review (2 × P2) fixed and passed; merged as PR #632 (`a9aa22e8`). Waiting for the owner's word on the production steps: create `f/sync/g1_members` = [owner], deploy the scripts, owner redeploys the webapp, backfill the owner's `g1:v2`, add the 3-minute dirty schedule. Then the 5–10 member cohort (second owner decision), then `on`, then the rename.
+
+October 15, 21:20 UTC: renamed to "personal order" (PR #648, `13038e85`; flag `REC_G1_ORDER` kept). Production: exposure columns renamed (64 rows), `f/sync/personal_order_members` = [owner], owner payload `personal-order:v1:<owner>` published (737 KB), schedule `f/sync/copy/personal_order_dirty` every 3 minutes (empty runs take 1 ms), old `g1_order`/`g1_trigger` archived. Merges to main deploy Windmill scripts automatically. Waiting: owner redeploys the webapp; old variable `f/sync/g1_preview_members` still to delete.
