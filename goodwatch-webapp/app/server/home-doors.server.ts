@@ -49,6 +49,7 @@ export async function getTonightParts(
 				country: ctx.country,
 				services: ctx.services,
 				taste,
+				language: ctx.language,
 			},
 			// The first three Continue rows' Next episodes are shown (the new TV's My shows; home's Continue door shows
 			// the first), and no waiting show.

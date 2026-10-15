@@ -15,6 +15,7 @@ import {
 } from "~/utils/title-extras"
 
 export interface TitleExtrasParams {
+	language?: string
 	/** The title's genre names. */
 	genres: readonly string[] | null | undefined
 	/** A movie's collection, when it is part of one. */
@@ -48,6 +49,7 @@ export function titleExtrasEmbedded(
 
 export async function prefetchTitleExtras({
 	genres: names,
+	language,
 	movieSeries,
 	budgetMs,
 	lookups,
@@ -81,7 +83,7 @@ export async function prefetchTitleExtras({
 				.then(() => lookups.collection({ collectionId, movieIds }))
 				.then((collection) =>
 					client.setQueryData(
-						movieCollectionQueryKey(collectionId, movieIds),
+						movieCollectionQueryKey(collectionId, movieIds, language ?? "en"),
 						collection,
 					),
 				)

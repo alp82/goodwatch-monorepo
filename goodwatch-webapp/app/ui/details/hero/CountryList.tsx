@@ -69,6 +69,7 @@ export default function CountryList({
 	current,
 	verb,
 	onChoose,
+	listClassName = "max-h-80",
 }: {
 	mediaType: "movie" | "show"
 	titleId: number
@@ -77,6 +78,8 @@ export default function CountryList({
 	current: string
 	verb: string
 	onChoose: (code: string) => void
+	/** The scrolling list's height. */
+	listClassName?: string
 }) {
 	const offers = useStreamingCountries(mediaType, titleId, current)
 	const catalog = new Map(
@@ -129,7 +132,7 @@ export default function CountryList({
 					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-gray-500"
 				/>
 			</label>
-			<div className="mt-2 max-h-80 overflow-y-auto overscroll-contain pr-1">
+			<div className={`mt-2 overflow-y-auto overscroll-contain pr-1 ${listClassName}`}>
 				{withOffers.length > 0 && (
 					<ul>
 						{withOffers.map((r) => (

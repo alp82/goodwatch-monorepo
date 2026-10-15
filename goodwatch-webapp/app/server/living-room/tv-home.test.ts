@@ -94,6 +94,56 @@ const parts = (
 
 const cardsFor = (p: TonightParts) =>
 	tonightShowIds(p).map((id) => card("show", id))
+
+test("replacement home DTO retains media provenance and Next episode language after canonical selection", async () => {
+	const { overlayMediaRow } = await import("../../utils/media-overlay-core.ts")
+	const { knownShow } = await import("../../ui/living-room/tv/tv-home.ts")
+	const base = {
+		media_type: "show" as const,
+		tmdb_id: 10,
+		title: "Canonical show",
+	}
+	const localized = overlayMediaRow(base, "ja", {
+		canonical: [base],
+		posters: [],
+		translations: [
+			{
+				media_type: "show",
+				media_tmdb_id: 10,
+				language_code: "ja",
+				country_code: "JP",
+				title: "日本語の番組",
+				overview: null,
+				tagline: null,
+			},
+		],
+	})
+	const next = row(10)
+	const p = parts({
+		continue: [
+			{
+				...next,
+				title: localized.title,
+				canonical_title: localized.canonical_title,
+				presentation: localized.presentation,
+				next: next.next && {
+					...next.next,
+					name: "始まり",
+					textPresentation: {
+						name: { language: "ja-JP", source: "localized", fallback: false },
+						overview: { language: "en", source: "canonical", fallback: true },
+					},
+				},
+			},
+		],
+	})
+	const result = memberHome(p, [{ ...card("show", 10), ...localized }])
+	assert.equal(result.shows?.next[0].presentation?.title.language, "ja-JP")
+	assert.equal(result.shows?.next[0].episode?.language, "ja-JP")
+	assert.equal(result.tonight[0].episode?.language, "ja-JP")
+	assert.equal(knownShow(result, "show-10")?.canonical_title, "Canonical show")
+	assert.equal(p.shows.continue[0].next?.name, "始まり")
+})
 const tonightOf = (p: TonightParts) =>
 	memberHome(p, cardsFor(p)).tonight.map((pick) => [
 		`${pick.card.media_type}-${pick.card.tmdb_id}`,

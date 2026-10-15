@@ -1,0 +1,540 @@
+/* "Talked about now" below the start page's room (StartRow.tsx). Loaded with the row's own chunk, never with
+   the start page's first view: the global stylesheet and living-room.css stay as they are. Inside `.lrb`, so its
+   font (`--lrb-font`), its eyebrow (`.lrb-eye`) and its link focus ring apply. */
+.tn {
+	margin-bottom: 3.5rem;
+	--tn-amber: #fcd34d;
+	--tn-line: rgba(255, 255, 255, 0.1);
+}
+.tn .tn-row {
+	background: none;
+	border: 0;
+	padding: 0;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.tn .tn-row:focus-visible {
+	outline: 2px solid var(--tn-amber);
+	outline-offset: 2px;
+}
+.tn-wait {
+	min-height: 1400px;
+}
+@media (min-width: 1024px) {
+	.tn-wait {
+		min-height: 880px;
+	}
+}
+
+/* The head: the name, and what the ranking is (the source and the window), with the platforms in it. */
+.tn-top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 0.5rem 1.5rem;
+}
+.tn-top h2 {
+	margin-top: 0.375rem;
+	font-size: clamp(1.6rem, 4vw, 2.25rem);
+}
+.tn-note {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 0.75rem;
+	max-width: 36rem;
+	font-size: 12px;
+	color: #737373;
+}
+.tn-sources {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.tn-platform {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #d4d4d4;
+	white-space: nowrap;
+}
+.tn-mark {
+	display: inline-block;
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+}
+.tn-mark-youtube {
+	width: 14px;
+	height: 10px;
+	border-radius: 3px;
+	background: #ff3b30 no-repeat center / 6px 6px
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M2 1v6l5-3z' fill='%23fff'/%3E%3C/svg%3E");
+}
+.tn-mark-bluesky {
+	background: #1185fe;
+}
+.tn-mark-mastodon {
+	background: #6364ff;
+}
+.tn-mark-rss {
+	width: 10px;
+	height: 6px;
+	border-radius: 2px;
+	background: rgba(125, 211, 252, 0.8);
+}
+
+/* The featured title beside the board from 1024 px. The two stretch to the taller one: the board's rows share the
+   extra height, or the featured title's picture takes it. */
+.tn-grid {
+	margin-top: 1.25rem;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1.25rem;
+}
+@media (min-width: 1024px) {
+	.tn-grid {
+		grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+		align-items: stretch;
+	}
+	.tn-grid > .tn-lead {
+		display: flex;
+		flex-direction: column;
+	}
+	.tn-grid > .tn-lead > .tn-lead-head {
+		flex: 1 0 auto;
+	}
+	.tn-board {
+		display: flex;
+		flex-direction: column;
+	}
+	.tn-board > li {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+	}
+	.tn-board .tn-row {
+		flex: 1 1 auto;
+	}
+}
+
+/* The board. */
+.tn-board {
+	border-radius: 1rem;
+	background: rgba(255, 255, 255, 0.03);
+	box-shadow: inset 0 0 0 1px var(--tn-line);
+	padding: 0.25rem 0.5rem;
+}
+@media (min-width: 640px) {
+	.tn-board {
+		padding: 0.25rem 0.75rem;
+	}
+}
+.tn-board > li {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.tn-board > li:last-child {
+	border-bottom: 0;
+}
+.tn .tn-row {
+	display: grid;
+	grid-template-columns: 1.5rem 32px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	padding: 0.625rem 0.5rem;
+	border-radius: 0.75rem;
+	text-align: left;
+}
+@media (min-width: 640px) {
+	.tn .tn-row {
+		grid-template-columns: 1.75rem 34px minmax(0, 1fr) 96px 3.25rem;
+	}
+}
+.tn .tn-row:hover {
+	background: rgba(255, 255, 255, 0.04);
+}
+.tn .tn-row[aria-pressed="true"] {
+	background: rgba(252, 211, 77, 0.08);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.4);
+}
+.tn-n {
+	align-self: start;
+	padding-top: 0.25rem;
+	text-align: right;
+	font-family: var(--lrb-font);
+	font-size: 18px;
+	font-variant-numeric: tabular-nums;
+	color: rgba(255, 255, 255, 0.3);
+}
+.tn-row img,
+.tn-noposter {
+	align-self: start;
+	width: 32px;
+	height: 48px;
+	border-radius: 4px;
+	object-fit: cover;
+	background: #262626;
+}
+@media (min-width: 640px) {
+	.tn-row img,
+	.tn-noposter {
+		width: 34px;
+		height: 51px;
+	}
+}
+.tn-row-text {
+	min-width: 0;
+}
+.tn-row-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-family: var(--lrb-font);
+	font-size: 15px;
+	color: #fff;
+}
+.tn-row-title > span:first-child,
+.tn-row-why > span,
+.tn-preview-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.tn-row:hover .tn-row-title {
+	color: var(--tn-amber);
+}
+.tn-row-why {
+	margin-top: 0.125rem;
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 12px;
+	color: #a3a3a3;
+}
+.tn-row-why .tn-icon {
+	color: #d4d4d4;
+}
+.tn-preview {
+	margin-top: 0.375rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	font-size: 12px;
+}
+.tn-marks {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 0.25rem;
+}
+.tn-preview-text {
+	color: #d4d4d4;
+}
+.tn-preview-text b {
+	font-weight: 600;
+	color: rgba(125, 211, 252, 0.9);
+}
+.tn-preview-text small {
+	font-size: 12px;
+	color: #737373;
+}
+.tn-row-spark {
+	display: none;
+}
+.tn-row-lift {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+.tn-row-lift b {
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+	color: #fff;
+}
+@media (min-width: 640px) {
+	.tn-row-spark {
+		display: block;
+	}
+	.tn-row-spark-small {
+		display: none;
+	}
+}
+.tn-inline {
+	padding: 0.25rem 0 0.75rem;
+}
+
+.tn-icon {
+	width: 12px;
+	height: 12px;
+	flex-shrink: 0;
+}
+.tn-move {
+	font-size: 11px;
+	font-weight: 700;
+	color: #737373;
+	white-space: nowrap;
+}
+.tn-up {
+	color: #34d399;
+}
+.tn-new {
+	border-radius: 4px;
+	background: var(--tn-amber);
+	padding: 0.125rem 0.375rem;
+	font-size: 10px;
+	font-weight: 900;
+	letter-spacing: 0.05em;
+	color: #000;
+}
+
+/* The curve. */
+.tn-spark {
+	display: block;
+	overflow: visible;
+}
+.tn-tip {
+	border-radius: 6px;
+	background: rgba(10, 10, 10, 0.95);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+	padding: 0.25rem 0.5rem;
+	text-align: center;
+	font-size: 11px;
+	line-height: 1.25;
+	color: #e5e5e5;
+	white-space: nowrap;
+}
+.tn-tip b {
+	color: #fff;
+}
+
+/* The featured title. */
+.tn-lead {
+	overflow: hidden;
+	border-radius: 1rem;
+	background: #0a0a0a;
+	box-shadow: inset 0 0 0 1px var(--tn-line);
+}
+.tn-lead-head {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	aspect-ratio: 16 / 7;
+	padding: 0 1rem 0.75rem;
+}
+.tn-lead-head > img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	opacity: 0.7;
+}
+.tn-lead-head::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, #0a0a0a, rgba(10, 10, 10, 0.4) 50%, transparent);
+}
+.tn-lead-head > div {
+	position: relative;
+}
+.tn-lead-head.tn-faint {
+	aspect-ratio: auto;
+	padding: 1rem 1rem 0.25rem;
+}
+.tn-faint > img {
+	opacity: 0.2;
+	-webkit-mask-image: linear-gradient(#000, transparent);
+	mask-image: linear-gradient(#000, transparent);
+}
+.tn-faint::before {
+	content: none;
+}
+.tn-lead-body {
+	padding: 0 1rem 1rem;
+}
+@media (min-width: 640px) {
+	.tn-lead-head {
+		padding: 0 1.25rem 0.75rem;
+	}
+	.tn-lead-head.tn-faint {
+		padding: 1.25rem 1.25rem 0.25rem;
+	}
+	.tn-lead-body {
+		padding: 0 1.25rem 1.25rem;
+	}
+}
+.tn-rank {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--tn-amber);
+}
+.lrb .tn-name {
+	display: block;
+	margin-top: 0.125rem;
+	font-family: var(--lrb-font);
+	font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+	font-weight: 800;
+	line-height: 1.05;
+	color: #fff;
+}
+.lrb .tn-name:hover {
+	color: var(--tn-amber);
+}
+.tn-kind {
+	margin-top: 0.25rem;
+	font-size: 12px;
+	color: #a3a3a3;
+}
+.tn-why {
+	margin-top: 0.75rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+	font-size: 14px;
+	color: #d4d4d4;
+}
+.tn-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	height: 28px;
+	padding: 0 0.625rem;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.tn-chip-trailer {
+	background: rgba(244, 63, 94, 0.15);
+	color: #ffe4e6;
+	box-shadow: inset 0 0 0 1px rgba(251, 113, 133, 0.35);
+}
+.tn-chip-netflix_top10 {
+	background: rgba(251, 191, 36, 0.15);
+	color: #fef3c7;
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.4);
+}
+.tn-chip-new_season {
+	background: rgba(139, 92, 246, 0.15);
+	color: #ede9fe;
+	box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.35);
+}
+.tn-chip-new_release {
+	background: rgba(16, 185, 129, 0.15);
+	color: #d1fae5;
+	box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.35);
+}
+.tn-buzz {
+	margin-top: 1rem;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: end;
+	gap: 0 1rem;
+}
+.tn-label {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: #737373;
+}
+.tn-lift {
+	margin-top: 0.25rem;
+	white-space: nowrap;
+	font-family: var(--lrb-font);
+	font-size: 30px;
+	font-weight: 800;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+	color: #fff;
+}
+.tn-lift small {
+	margin-left: 0.375rem;
+	font-size: 14px;
+	font-weight: 600;
+	color: #a3a3a3;
+}
+.tn-when {
+	margin-top: 0.125rem;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 11px;
+	color: #737373;
+	white-space: nowrap;
+}
+.tn-when .tn-icon {
+	color: #d4d4d4;
+}
+.tn-buzz-curve {
+	min-width: 0;
+}
+
+/* What is said: the video on top, the cards side by side from 640 px (a strip to swipe on a phone). The pieces are
+   the shared facade's (ui/social-embed). */
+.tn-said {
+	margin-top: 1.25rem;
+}
+.tn-rule {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.625rem;
+}
+.tn-rule::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--tn-line);
+}
+.tn-cards {
+	display: flex;
+	gap: 0.75rem;
+	margin: 0 -1rem;
+	padding: 0 1rem 0.25rem;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+.tn-said > * + .tn-cards {
+	margin-top: 0.75rem;
+}
+.tn-cards > * {
+	flex-shrink: 0;
+	width: 100%;
+	scroll-snap-align: start;
+}
+.tn-cards-two > * {
+	width: 78%;
+}
+@media (min-width: 640px) {
+	.tn-cards {
+		display: grid;
+		margin: 0;
+		padding: 0;
+		overflow: visible;
+	}
+	.tn-cards > *,
+	.tn-cards-two > * {
+		width: auto;
+	}
+	.tn-cards-two {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}

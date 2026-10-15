@@ -1,3 +1,5 @@
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The Watch next page's state and data. The sort, moods, and On my services live in the URL (`sort=waiting&
 // moods=funny,scary&services=all`, defaults left out) so a view can be shared and reloaded; titles passed over with
 // Not tonight live only in this visit. Members read /api/watch-next with GET; a guest's Wishlist and ratings live in
@@ -79,8 +81,9 @@ async function request<T>(
 	path: string,
 	query: string,
 	guest: TasteInteraction[] | null,
+	language = "en",
 ): Promise<T> {
-	const url = query ? `${path}?${query}` : path
+	const url = mediaLanguageUrl(query ? `${path}?${query}` : path, language)
 	const response = guest
 		? await fetch(url, {
 				method: "POST",
@@ -113,20 +116,22 @@ export function useWatchNext(
 	const interactions = useGuestInteractions()
 	const guest = !user
 	const query = apiQuery(choice, passed)
+	const { locale } = useLocale()
 	const viewer = user?.id ?? "guest"
 
 	const result = useQuery<WatchNext>({
 		queryKey: [
 			...watchNextQueryKey,
 			viewer,
+			locale.language,
 			query,
 			guest ? interactions : null,
 		],
 		queryFn: () =>
-			request<WatchNext>("/api/watch-next", query, guest ? interactions : null),
+			request<WatchNext>("/api/watch-next", query, guest ? interactions : null, locale.language),
 		enabled: !loading,
 		initialData:
-			!guest && initial.data && query === initial.query
+			!guest && initial.data && query === initial.query && (!initial.data.hero?.presentation || initial.data.hero.presentation.language === locale.language)
 				? initial.data
 				: undefined,
 		placeholderData: keepPreviousData,
@@ -139,7 +144,10 @@ export function useWatchNext(
 		(next: Partial<PageChoice>) =>
 			setParams(
 				(current) =>
-					choiceToParams({ ...pageChoiceOf(current, movies), ...next }, current),
+					choiceToParams(
+						{ ...pageChoiceOf(current, movies), ...next },
+						current,
+					),
 				{ replace: true, preventScrollReset: true },
 			),
 		[setParams, movies],
@@ -160,6 +168,7 @@ export function useWatchNext(
 		query,
 		guest,
 		viewer,
+		language: locale.language,
 		interactions: guest ? interactions : null,
 		data: result.data ?? null,
 		isLoading: result.isLoading || loading,
@@ -189,25 +198,32 @@ export function useTierCards(
 		chunks.push(keys.slice(i, i + CARDS_PER_REQUEST))
 	const results = useQueries({
 		queries: chunks.map((chunk) => {
-			const query = `${state.query}${state.query ? "&" : ""}keys=${chunk.join(",")}`
+			const plan = state.data?.planId
+			const query = `${state.query}${state.query ? "&" : ""}keys=${chunk.join(",")}${plan ? `&plan=${encodeURIComponent(plan)}` : ""}`
 			return {
 				queryKey: [
 					...watchNextQueryKey,
 					"cards",
 					state.viewer,
+					state.language,
 					query,
 					state.interactions,
 				],
 				queryFn: () =>
-					request<{ titles: WatchNextTitle[] }>(
+					request<{ titles: WatchNextTitle[]; refreshRequired: boolean }>(
 						"/api/watch-next/cards",
 						query,
 						state.interactions,
+						state.language,
 					),
 				enabled,
 			}
 		}),
 	})
+	const refreshRequired = results.some((result) => result.data?.refreshRequired)
+	useEffect(() => {
+		if (refreshRequired) void state.refetch()
+	}, [refreshRequired, state.refetch])
 	const found = new Map<TitleKey, WatchNextTitle>()
 	for (const result of results)
 		for (const title of result.data?.titles ?? []) found.set(title.key, title)

@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-14",
+  "runner": "node:test and node:assert/strict",
+  "full_suite": {
+    "command": "npm test",
+    "passed": 1816,
+    "failed": 0,
+    "skipped": 1,
+    "skipped_check": "cross-process cache reset guards on a throwaway Valkey cluster",
+    "stage": "After cache/order/conflict changes; before the final public-origin/Secure-cookie proxy adjustment"
+  },
+  "final_focused": {
+    "command": "node --test app/utils/media-language.test.ts app/utils/legacy-country.test.ts app/server/media-context.test.ts app/server/cache-identity.test.ts app/server/page-cache.test.ts app/server/cache-headers-script.test.ts app/server/userData.test.ts app/utils/root-revalidation.test.ts app/utils/crate-timeout.test.ts app/server/title-details-cache.test.ts app/server/title-details-missing.test.ts app/server/title-details-concurrent-errors.test.ts app/server/share-lists/page-loaders.test.ts app/utils/guest-progress.test.ts",
+    "passed": 217,
+    "failed": 0,
+    "skipped": 0,
+    "stage": "Final code, including the public-origin/Secure-cookie proxy check"
+  },
+  "typecheck": {
+    "baseline_diagnostics": 212,
+    "patch_diagnostics": 212,
+    "added_diagnostics": [],
+    "removed_diagnostics": []
+  },
+  "packages_match_head": {
+    "goodwatch-webapp/package.json": true,
+    "goodwatch-webapp/package-lock.json": true
+  },
+  "limitations": [
+    "No real member writes or browser cookie delivery exercised",
+    "No full server build, F/settings UI, multilingual rendering or landing budgets",
+    "Guest save-order guard is process-local with incoming-cookie checks; UI must still serialize saves",
+    "Server cannot recall already-sent Set-Cookie bytes or control network response delivery order"
+  ]
+}

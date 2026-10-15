@@ -47,27 +47,9 @@ export const episodeSlots = (
 	return slots
 }
 
-/** Where an episode sits, in words. `season` is null for a special. */
-export const episodeWhere = (
-	season: number | null,
-	episode: GridEpisode | GridSpecial,
-) =>
-	season === null
-		? "Special"
-		: season < 0
-			? (episode.canonicalLabel ?? "Additional episode")
-			: `Season ${season}, episode ${(episode as GridEpisode).number}`
-
-/** The accessible name of an episode cell: everything the tip shows. */
-export const episodeLabel = (
-	season: number | null,
-	episode: GridEpisode | GridSpecial,
-) => {
-	if (episode.unrated)
-		return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. No IMDb rating.`
-	const votes = `${formatCount(episode.votes)} IMDb vote${episode.votes === 1 ? "" : "s"}`
-	return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. Rated ${episode.unrated ? "—" : formatScore(episode.score)}, ${votes}${isLowVotes(episode.votes) ? ", few votes" : ""}.`
-}
+import MediaText from "~/ui/media-text/MediaText"
+export { episodeLabel, episodeWhere } from "./labels"
+import { episodeWhere } from "./labels"
 
 /** The accessible name of a season trigger: every site's season score. */
 export const seasonLabel = (season: GridSeason, providers: ProviderKey[]) => {
@@ -249,7 +231,7 @@ export function EpisodeTip({
 	const vibe = imdbVibe(episode.score)
 	const low = isLowVotes(episode.votes)
 	return (
-		<div className="flex items-start gap-2.5">
+		<div data-episode-tip className="flex items-start gap-2.5">
 			<span
 				className="mt-0.5 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-bold tabular-nums text-white"
 				style={{ background: vibeTileColor(vibe) }}
@@ -258,7 +240,13 @@ export function EpisodeTip({
 			</span>
 			<span className="min-w-0">
 				<span className="block font-semibold leading-snug text-gray-50">
-					{episode.name || "Untitled"}
+					<MediaText
+						value={
+							episode.name
+								? { text: episode.name, lang: episode.nameLanguage ?? "und" }
+								: { text: "Untitled", lang: "en" }
+						}
+					/>
 				</span>
 				<span className="block text-xs text-gray-400">
 					{episodeWhere(season, episode)} ·{" "}

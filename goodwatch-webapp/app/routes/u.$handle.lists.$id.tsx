@@ -1,3 +1,6 @@
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
 // viewer's country. Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
@@ -40,7 +43,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 // Offers shown per title before the rest collapse into "+N".
 const OFFERS_SHOWN = 4
 
-export const loader = createShareListPageLoader({
+const canonicalLoader = createShareListPageLoader({
 	getListView,
 	ensureShareCard,
 	getUserIdFromRequest,
@@ -100,7 +103,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 const titlePath = (item: CardTitle) =>
-	`/${item.type}/${item.key.split(":")[1]}-${titleToDashed(item.title)}`
+	`/${item.type}/${item.key.split(":")[1]}-${titleToDashed(canonicalMediaTitle(item))}`
 
 export default function ShareListPage() {
 	const { list, items, availability, owned, country, owner, isOwner } =
@@ -160,7 +163,7 @@ export default function ShareListPage() {
 							)}
 						</p>
 						<h1 className="text-3xl font-black break-words sm:text-5xl">
-							{list.title}
+							<span lang={mediaFieldLanguage(list)}>{list.title}</span>
 						</h1>
 						<p className="text-gray-300">
 							By{" "}
@@ -258,7 +261,7 @@ export default function ShareListPage() {
 												prefetch="intent"
 												className="block truncate font-bold hover:underline hover:underline-offset-4"
 											>
-												{item.title}
+												<span lang={mediaFieldLanguage(item)}>{item.title}</span>
 											</Link>
 											<p className="text-xs text-gray-400">
 												{[item.year, item.type === "movie" ? "Movie" : "Series"]
@@ -394,3 +397,5 @@ function Availability({
 		</div>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

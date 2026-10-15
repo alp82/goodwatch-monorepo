@@ -81,7 +81,7 @@ export function PodiumCard({ title, items, name, theme, editing }: CardProps) {
 								)}
 								{item && (
 									<div style={{ display: "flex", fontSize: fit(item.title, [[16, 26], [28, 22], [999, 19]]), fontWeight: 700, lineHeight: 1.15, height: 60, overflow: "hidden" }}>
-										{item.title}
+										<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 									</div>
 								)}
 								<div

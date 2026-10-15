@@ -4,6 +4,7 @@
 // - The HTML goes out in one chunk per React pass instead of about 2 KB at a time (see html-stream.server.ts).
 // - The abort timer is cleared when the response is done. The default entry leaves it running, so every request keeps
 //   its render and loader data alive for 5 seconds.
+
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
 import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
@@ -18,11 +19,13 @@ import {
 } from "~/server/asset-address.server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
+import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtime.server"
 import { startLifecycle } from "~/server/lifecycle.server"
 import { capLogLines } from "~/server/log-cap.server"
-import { startHotCards } from "~/server/og-image/hot-cards.server"
+import { protectMediaResponse } from "~/server/media-read-health.server"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
+import { startHotCards } from "~/server/og-image/hot-cards.server"
 import {
 	configurePageCache,
 	pageCacheWants,
@@ -32,6 +35,7 @@ import { startProcessStats } from "~/server/process-stats.server"
 import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
+import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 
 registerAuthCluster(getRedisCluster)
 
@@ -43,7 +47,9 @@ registerAuthCluster(getRedisCluster)
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
 logProcessRole()
+startCrateDiagnostics()
 startLifecycle()
+startTmdbConnectionCleanup()
 startMetrics()
 // The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other
 // roles keep the root loader's start, so they log what they did before roles.
@@ -106,6 +112,7 @@ function renderDocument(
 		const send = () => {
 			shellRendered = true
 			responseHeaders.set("Content-Type", "text/html")
+			protectMediaResponse(responseHeaders)
 			const routePolicy = responseHeaders.get("Cache-Control")
 			const decision = applyCachePolicy(request, status, responseHeaders)
 			const offer = pageCacheWants(
@@ -163,6 +170,7 @@ export function handleDataRequest(
 	response: Response,
 	{ request }: { request: Request },
 ) {
+	protectMediaResponse(response.headers)
 	applyCachePolicy(request, response.status, response.headers)
 	return response
 }

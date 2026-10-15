@@ -85,7 +85,7 @@ const Art = ({ src, w, h, item, t }: { src: string | null; w: number; h: number;
 				letterSpacing: -1,
 			})}
 		>
-			<div style={{ display: "flex" }}>{item.title}</div>
+			<div style={{ display: "flex" }} lang={item.presentation?.title.language ?? "en"}>{item.title}</div>
 		</div>
 	)
 
@@ -115,7 +115,7 @@ function RankTile({ item, rank, w, h, t, wide }: { item: CardTitle; rank: number
 					<Badge n={rank} t={t} size={wide ? 44 : 38} />
 					<div style={col({ flex: 1, minWidth: 0 })}>
 						<div style={{ display: "flex", fontSize: wide ? fit(item.title, [[22, 30], [40, 25], [999, 21]]) : fit(item.title, [[12, 21], [24, 18], [999, 16]]), fontWeight: 900, lineHeight: 1.1 }}>
-							{item.title}
+							<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 						</div>
 						{(wide || item.year) && (
 							<div style={{ display: "flex", fontSize: wide ? 19 : 15, fontWeight: 700, color: "rgba(255,255,255,0.65)" }}>
@@ -141,7 +141,7 @@ function HeroTile({ item, t }: { item: CardTitle; t: Theme }) {
 			</div>
 			<div style={col({ position: "absolute", left: 30, right: 30, bottom: 28, gap: 12 })}>
 				<div style={{ display: "flex", fontSize: fit(item.title, [[14, 58], [24, 48], [40, 38], [999, 30]]), fontWeight: 900, lineHeight: 1, letterSpacing: -1.5, color: "#fff", textShadow: "0 4px 24px rgba(0,0,0,0.5)" }}>
-					{item.title}
+					<span lang={item.presentation?.title.language ?? "en"}>{item.title}</span>
 				</div>
 				<div style={flex({ gap: 10 })}>
 					{[item.year, kind(item), item.genre].filter(Boolean).map((x) => (

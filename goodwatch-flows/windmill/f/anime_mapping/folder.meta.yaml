@@ -1,0 +1,6 @@
+summary: Anime episode placement reference data
+display_name: anime_mapping
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

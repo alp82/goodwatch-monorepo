@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // The editor for a new share list. ?remix=<list id> starts from another list's prompt and titles.
 // ?from=ratings starts from the person's highest-rated titles ("Share your top 5" on Taste): signed-in people's
 // come from their ratings, guests send their ranked ratings as ?titles=movie:603,show:1399.
@@ -63,7 +64,7 @@ async function ratedEntries(
 		.filter((e): e is ListEntry => !!e)
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const params = new URL(request.url).searchParams
 	const remixId = params.get("remix")
 	const fromRatings = !remixId && params.get("from") === "ratings"
@@ -171,3 +172,5 @@ export default function NewShareList() {
 		</>
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

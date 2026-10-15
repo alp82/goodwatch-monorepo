@@ -1,0 +1,466 @@
+{
+  "baseline_job": "01a1414a-a4ad-215a-040d-dc7c81e5ac0f",
+  "candidate_preview_job": "01a1414b-6d82-a80b-3593-581e3cb6f32e",
+  "baseline": {
+    "active_links": 666,
+    "stored_decisions": 667,
+    "active_counts": {
+      "rss:drop": 185,
+      "rss:keep": 262,
+      "bluesky:drop": 133,
+      "bluesky:keep": 4,
+      "youtube:drop": 52,
+      "youtube:keep": 30
+    },
+    "youtube_statuses": {
+      "blocked": 3,
+      "playable": 79
+    },
+    "missing_or_stale_hash": [],
+    "narnia_decisions": [
+      {
+        "url": "https://www.youtube.com/watch?v=gDJ-ini7fF0",
+        "lane": "foreground_exact",
+        "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+        "score": 6.01026665,
+        "author": "Netflix",
+        "source": "youtube",
+        "status": "keep",
+        "post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"gDJ-ini7fF0\"}"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "gDJ-ini7fF0",
+        "published_at": 1791914400000
+      },
+      {
+        "url": "https://bsky.app/profile/did:plc:ljimdiamagk6ut7tgjevfvh5/post/3mxuhcxdo422i",
+        "lane": "vector_context",
+        "text": "I've loved every film Greta Gerwig has made thus far, but I have to say The Magician's Nephew trailer is giving off major Quantumania vibes",
+        "score": 0.0,
+        "author": "buliaros.bsky.social",
+        "source": "bluesky",
+        "status": "drop",
+        "post_id": "c20c4d2b69d1b04fe05da24a3f67fbc9ac41d429c62e55ad4894c03d800bde1d",
+        "reasons": [
+          "insufficient_reach",
+          "peripheral_title",
+          "metrics:{\"card_text\":\" \",\"followers\":172,\"likes\":1,\"observed_at\":\"2026-10-15T20:37:53.459864+00:00\",\"quotes\":0,\"replies\":1,\"reposts\":0}"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "at://did:plc:ljimdiamagk6ut7tgjevfvh5/app.bsky.feed.post/3mxuhcxdo422i",
+        "published_at": 1792012052649
+      },
+      {
+        "url": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+        "lane": "alt_title_context",
+        "text": "Neuer Netflix-Film schafft, was großen Hollywood-Studios in 55 Jahren Filmgeschichte nicht gelungen ist",
+        "score": 0.0,
+        "author": "Patrick Reinbott",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.moviepilot.de/news/neuer-netflix-film-schafft-was-grosses-1165050",
+        "published_at": 1791995400000
+      },
+      {
+        "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+        "lane": "vector_context",
+        "text": "Narnia Fans Split Over Greta Gerwig’s ‘Magicians Nephew’ Trailer: “Best in Years” to “Lost Its Soul to CGI”",
+        "score": 0.0,
+        "author": "James Hibberd",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+        "reasons": [
+          "peripheral_title"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-netflix-magicians-nephew-trailer-reaction-1236729096/",
+        "published_at": 1791923803000
+      },
+      {
+        "url": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+        "lane": "foreground_fuzzy",
+        "text": "First Trailer For Greta Gerwig’s ‘Narnia: The Magician’s Nephew’ Teases Punk Rock Multiverse & Cosmic Creation Of Aslan",
+        "score": 0.0,
+        "author": "Dessi Gomez",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://deadline.com/2026/10/narnia-magicians-nephew-trailer-aslan-jadis-greta-gerwig-1237155940/",
+        "published_at": 1791916227000
+      },
+      {
+        "url": "https://www.filmstarts.de/nachrichten/1000227177.html",
+        "lane": "alt_title_context",
+        "text": "Der erste Trailer zu \"Das Wunder von Narnia\" ist da: Für dieses Fantasy-Epos hat Netflix mehr als 200 Millionen Dollar ausgegeben!",
+        "score": 0.0,
+        "author": "www.filmstarts.de",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.filmstarts.de/nachrichten/1000227177.html",
+        "published_at": 1791915300000
+      },
+      {
+        "url": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+        "lane": "alt_title_context",
+        "text": "Greta Gerwig Debuts ‘Narnia’ Trailer, Opens Up About Telling an Intimate Story on “the Biggest Screen You Can Imagine”",
+        "score": 0.0,
+        "author": "Hilary Lewis",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.hollywoodreporter.com/movies/movie-news/narnia-magicians-nephew-trailer-greta-gerwig-behind-scenes-1236728979/",
+        "published_at": 1791914967000
+      },
+      {
+        "url": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+        "lane": "foreground_fuzzy",
+        "text": "‘The Magician’s Nephew’ Trailer: A Stairway to Narnia as Only Greta Gerwig Could Build It",
+        "score": 0.0,
+        "author": "Sarah Shachat",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.indiewire.com/news/trailers/narnia-magicians-nephew-trailer-greta-gerwig-netflix-1235221687/",
+        "published_at": 1791914630000
+      },
+      {
+        "url": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+        "lane": "foreground_fuzzy",
+        "text": "‘Narnia: The Magician’s Nephew’ Trailer: Greta Gerwig’s Fantasy Epic Unveils Aslan, the White Witch and More in Dazzling Footage",
+        "score": 0.0,
+        "author": "Rebecca Rubin",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://variety.com/2026/film/news/narnia-the-magicians-nephew-trailer-greta-gerwig-netflix-1236909994/",
+        "published_at": 1791914573000
+      },
+      {
+        "url": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+        "lane": "foreground_exact",
+        "text": "Narnia: The Magician's Nephew Trailer: Greta Gerwig Takes The Fantasy Classic To Netflix",
+        "score": 0.0,
+        "author": "www.slashfilm.com",
+        "source": "rss",
+        "status": "drop",
+        "post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "https://www.slashfilm.com/2285664/narnia-magicians-nephew-trailer-greta-gerwig-netflix/",
+        "published_at": 1791914551000
+      },
+      {
+        "url": "https://www.youtube.com/watch?v=3g28OdIj6cY",
+        "lane": "foreground_exact",
+        "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+        "score": 0.0,
+        "author": "Netflix India",
+        "source": "youtube",
+        "status": "drop",
+        "post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"3g28OdIj6cY\"}",
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "3g28OdIj6cY",
+        "published_at": 1791914407000
+      },
+      {
+        "url": "https://www.youtube.com/watch?v=O8hR2dQGv0k",
+        "lane": "foreground_exact",
+        "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+        "score": 0.0,
+        "author": "Netflix",
+        "source": "youtube",
+        "status": "drop",
+        "post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+        "reasons": [
+          "youtube_region_blocked_DE",
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":false},\"method\":\"api\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"O8hR2dQGv0k\"}"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "O8hR2dQGv0k",
+        "published_at": 1791914403000
+      },
+      {
+        "url": "https://www.youtube.com/watch?v=pDvjN6h-mRo",
+        "lane": "foreground_exact",
+        "text": "Nárnia: O Sobrinho do Mago | Trailer oficial | Netflix",
+        "score": 0.0,
+        "author": "Netflix Brasil",
+        "source": "youtube",
+        "status": "drop",
+        "post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"pDvjN6h-mRo\"}",
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "judged_at": 1792096671220,
+        "source_id": "pDvjN6h-mRo",
+        "published_at": 1791914400000
+      }
+    ]
+  },
+  "candidate_preview": {
+    "version": "relevance-1",
+    "apply": false,
+    "judged_at": "2026-10-15T20:40:25.674128+00:00",
+    "judged": 666,
+    "counts": {
+      "rss": {
+        "drop": 170,
+        "keep": 277
+      },
+      "bluesky": {
+        "drop": 133,
+        "keep": 4
+      },
+      "youtube": {
+        "drop": 52,
+        "keep": 30
+      },
+      "mastodon": {
+        "drop": 0,
+        "keep": 0
+      }
+    },
+    "hydration_errors": [],
+    "youtube_playability": {
+      "cached": 82,
+      "checked": 82,
+      "statuses": {
+        "blocked": 3,
+        "unknown": 0,
+        "playable": 79
+      }
+    },
+    "narnia_decisions": [
+      {
+        "kind": "news",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "18beaee4f93cbd44c992de75a7c2996bbf08aea086a4d221de0be2ad4111da37",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "31b7be257c80b25da93a609255bca8eac99396bc9ba5fe3b49d9f8ffeec6b523",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "official_video",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "1d11ee3310360a0a3b8f7c6cf2401ba699eb21fc4bcca94bcf8d0236bc8e2ca2",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"pDvjN6h-mRo\"}",
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "7d258d06a608b1c08d5026c737fee8d6aae96441555a904022cbbb7a9c2d721d",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "1fc360054d51956c4c136ff62783aaef934b82277b548f97c574f8a499350b9f",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "9f719d3ed716dc946520c4067e74afb5a262e9b1aa1ea764d3195e9bb06a095e",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "interview",
+        "score": 4.07833859,
+        "status": "keep",
+        "post_id": "65f02b5fc16831d96538488ec7890a581461707ab45158046a535682b35d418f",
+        "reasons": [],
+        "version": "relevance-1",
+        "dup_group": "69e6509482ced6f47bdbafdd5144ed7d6a80b85b480b2a275d95d327050ff010",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "199c348402db3ba21ef7d610bf2a2febeb5572f745afac0b8b9a25cd47761f47",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "official_video",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "85ba9d4ebf6a0824312c1aeb4a9817121a2eaa15fcb4ad9f91c94a32235a40ce",
+        "reasons": [
+          "youtube_region_blocked_DE",
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":false,\"GB\":false,\"US\":false},\"method\":\"api\",\"reason\":\"region_blocked\",\"status\":\"blocked\",\"video_id\":\"O8hR2dQGv0k\"}"
+        ],
+        "version": "relevance-1",
+        "dup_group": "f044d3f2653d15bb9ed3a4f60aec0110e5e2e526ebc973e04c3170153911a648",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "88173c734409060c72884aa3b92966ff6cc04b6dd3dced11c92477ed65bead65",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "86bdc756e12665d263e87f5d23c48b33d946e40228e49d224e627f6477df7264",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "9d71d407f95c08febe6c83b1a92f82234a7d86e76e832deacd21b62cbcd4129a",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 2.74844823,
+        "status": "keep",
+        "post_id": "ae28e30037557aeabedf742d7a7af9ea230657acc7b169ff238b634d56bf8c57",
+        "reasons": [],
+        "version": "relevance-1",
+        "dup_group": "95a22e066429c99327afd6d60a9884c2d4836bcc61ea6707ccf4d57efdfc4214",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "736054ac53e4c383b2c1daa3e02ec96ec154c5bf9ec739f7746ed2e849bad88a",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 3.42783507,
+        "status": "keep",
+        "post_id": "bc551affe5a825b596d48d3dac64e7731a748f8892ef598edf7f2d882e37ed4f",
+        "reasons": [],
+        "version": "relevance-1",
+        "dup_group": "5eb6836825de6dc07e1322c911269d9f12e2bba89d4a5b52ceb8933a391166c5",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "649004813028dce533588b257564cbc9d2889f078e2e6da494da06d0b2b3f3f0",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "official_video",
+        "score": 6.00985165,
+        "status": "keep",
+        "post_id": "bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"gDJ-ini7fF0\"}"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "1c5b496f6b9c7349a316b6aaa9725f23f2b407e03cc0375514b4b2e6f3e20b17",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "social",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "c20c4d2b69d1b04fe05da24a3f67fbc9ac41d429c62e55ad4894c03d800bde1d",
+        "reasons": [
+          "insufficient_reach",
+          "peripheral_title",
+          "metrics:{\"card_text\":\" \",\"followers\":172,\"likes\":1,\"observed_at\":\"2026-10-15T20:40:26.981452+00:00\",\"quotes\":0,\"replies\":1,\"reposts\":0}"
+        ],
+        "version": "relevance-1",
+        "dup_group": "a108580612c0e00ae128b642b9b4f3d4fef57199b17958d7de39f55bf18b9d1e",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "0a68d4920e09caf2e86a6aedf71dfdde7611ebe060359f279238d21b03e1040b",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "cfed8c57dcdd6811e137a1b6aca25f2adfceea65584c89c1bd309c26a82c9c95",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "b019274b6f0926726823fe613751f194847d58ed64a3aabf587feb2055171eed",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "news",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "e8805e0526302cd88946e0036878fd20d6b9d0a3d534b02b76395f6d64d5621b",
+        "reasons": [
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "d19a1e92aa2a842dfe6b647385ca3dbec8cbbb238db3d192200a33e9dd5d6d32",
+        "media_tmdb_id": 1147572
+      },
+      {
+        "kind": "official_video",
+        "score": 0.0,
+        "status": "drop",
+        "post_id": "fdb6ecd0db92ccbd3c0e42eae2e2d0755c8f6a224cb946a8cb475980cc157f26",
+        "reasons": [
+          "playability:{\"checked_at\":\"2026-10-15T20:37:20.740684+00:00\",\"countries\":{\"DE\":true,\"GB\":true,\"US\":true},\"method\":\"api\",\"reason\":\"available\",\"status\":\"playable\",\"video_id\":\"3g28OdIj6cY\"}",
+          "duplicate_of:bdf811033f5e218ae8ac14e41327486c19bae4925ddfab8bc4ef0753ff56be21"
+        ],
+        "version": "relevance-1",
+        "dup_group": "10969cdaf9628b1413839ab52cc36c35fd7c04c9c239d5013acd18fe349401d6",
+        "judged_at": "2026-10-15T20:40:25.674128+00:00",
+        "media_type": "movie",
+        "content_hash": "4712bcc1df662c75e35e008b7e8550cb5d5aaef32bc1c0390fd791c0d92732f6",
+        "media_tmdb_id": 1147572
+      }
+    ]
+  }
+}

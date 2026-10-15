@@ -1,0 +1,12 @@
+{
+  "summary": "Social store",
+  "description": "Crate persistence restricted to social-owned tables, with fail-closed quality and report visibility.",
+  "lock": "!inline f/social/store.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

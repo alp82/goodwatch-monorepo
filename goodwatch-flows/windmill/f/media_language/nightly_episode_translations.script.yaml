@@ -1,0 +1,8 @@
+summary: Nightly episode translation runner
+description: Preserve-existing ingestion with durable canonical-crawl state.
+lock: '!inline f/media_language/nightly_episode_translations.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

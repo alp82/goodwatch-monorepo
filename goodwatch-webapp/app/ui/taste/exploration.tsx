@@ -1,3 +1,5 @@
+import { explorationForLanguage } from "./exploration-cache"
+import { canonicalMediaTitle, mediaFieldLanguage } from "~/utils/media-presentation"
 import { Link, type LinkProps } from "@remix-run/react"
 import { createContext, useContext } from "react"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -25,7 +27,7 @@ export type TasteExploration = {
 	filters?: ExploreFilters
 }
 const storageKey = "taste_exploration"
-export function readExploration(): TasteExploration {
+export function readExploration(language = "en"): TasteExploration {
 	if (typeof window === "undefined") return {}
 	try {
 		const value = JSON.parse(
@@ -33,7 +35,7 @@ export function readExploration(): TasteExploration {
 				sessionStorage.getItem(storageKey) ||
 				"{}",
 		)
-		return value && typeof value === "object" ? value : {}
+		return value && typeof value === "object" ? explorationForLanguage(value, language) : {}
 	} catch {
 		return {}
 	}
@@ -42,7 +44,7 @@ export function rememberExploration(update: Partial<TasteExploration>) {
 	try {
 		localStorage.setItem(
 			storageKey,
-			JSON.stringify({ ...readExploration(), ...update }),
+			JSON.stringify({ ...readExploration(update.selectedMedia?.presentation?.language ?? update.titles?.[0]?.presentation?.language ?? update.ratingQueue?.[0]?.presentation?.language ?? "en"), ...update }),
 		)
 	} catch {
 		/* Navigation remains available without storage. */
@@ -56,8 +58,8 @@ export function uniqueTitles(titles: ScoringMedia[]) {
 	)
 }
 export const detailsHref = (
-	media: Pick<ScoringMedia, "media_type" | "tmdb_id" | "title">,
-) => titlePath(media.media_type, media.tmdb_id, media.title)
+	media: Pick<ScoringMedia, "media_type" | "tmdb_id" | "title" | "canonical_title">,
+) => titlePath(media.media_type, media.tmdb_id, canonicalMediaTitle(media))
 export const TasteExplorationContext = createContext<(() => void) | null>(null)
 
 export function TasteTitleLink({

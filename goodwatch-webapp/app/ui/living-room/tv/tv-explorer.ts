@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // The mini Explorer on the TV: a small map of six islands, an island's titles, and "Sail to" its two nearest
 // islands. Pure, so the choice of the six, their places and the words have tests.
 //
@@ -322,7 +323,8 @@ export function explorerView(
 						...asTvIsland(on),
 						titles: on.titles.slice(0, LIST_TITLES).map((title) => ({
 							key: tvKey(title),
-							title: title.title,
+							...copyMediaPresentation(title),
+				title: title.title,
 							facts: islandTitleFacts(title, map.services),
 							poster: title.poster,
 							backdrop: title.backdrop,
@@ -355,6 +357,7 @@ export function knownOnMap(
 			return {
 				media_type: title.mediaType,
 				tmdb_id: title.tmdbId,
+				...copyMediaPresentation(title),
 				title: title.title,
 				poster_path: title.poster,
 				backdrop_path: title.backdrop,
