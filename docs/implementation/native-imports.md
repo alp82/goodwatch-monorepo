@@ -10,7 +10,7 @@ The Imports settings page accepts native Letterboxd and Trakt ZIP exports alongs
 4. Confirm and follow progress. A stopped operation can resume. Its original choices stay fixed.
 5. Review the receipt and download unmatched, unsupported and invalid rows. Undo reverses the import's changes where later member edits have not superseded them. Imported watches remain owned by their import even if their dates were edited, and the undo confirmation explains this.
 
-Only an unambiguous catalog match is imported. Trakt uses external IDs; Letterboxd can use exact title and year. Ambiguous or missing titles are left out with a reason. No scraper or external API connection is involved.
+Only an unambiguous catalog match is imported. Trakt uses external IDs; Letterboxd can use exact title and year. Ambiguous or missing titles are left out with a reason. Letterboxd and Trakt previews need no scraper or external API connection; the shared episode resolver can use TMDB for other adapters’ TVDB IDs and episode groups.
 
 ## Source semantics
 
@@ -26,6 +26,25 @@ Watch writes use the existing tracking writer and the rules in [the tracking dat
 As with a watch recorded in GoodWatch, imported watches can clear an existing Want to See or Not interested entry. Import undo follows section 7 of the tracking model: it removes imported watches and restores owned states and scores, but does not put those cleared intentions back. Preview and undo explain this limitation.
 
 Rating-only imports preserve existing intention lists, following the existing IMDb importer rather than the interactive rating action. A newly imported Want to See entry clears an unchanged Not interested entry.
+
+## Shared episode resolver
+
+`app/server/imports/episode-resolver.server.ts` resolves evidence within an already matched show. `episode-resolver-data.server.ts` connects it to the existing import database helpers and TMDB; `preview.server.ts` uses it for every episode observation. Trakt retains its existing ID-first behavior and canonical positions. No additional upload adapter is enabled.
+
+Evidence order:
+
+1. **TMDB episode ID:** exactly one live catalog episode of the matched show.
+2. **TVDB episode ID:** the catalog cache first, then TMDB `find` with `external_source=tvdb_id`. Only `tv_episode_results` counts; the returned show and live catalog episode must match. The conditional update of an empty `episode.tvdb_id` goes through `store.server.ts`'s `run`, never overwriting another ID or updating a removed episode.
+3. **Episode group:** `episodeGroup` carries an optional explicit group `id`, a required part/volume `label`, and optional source `groupCount`. The group must be listed for this show. Without an ID, only Netflix digital groups or Part/Volume groups with the supplied part count qualify. Labels match group names exactly, ignoring case and surrounding whitespace. Source episode numbers are one-based positions in the group's zero-based episode order.
+4. **Season and episode:** only with `episodeNumbering: "tmdb"` (Trakt defaults to this). Rows without an episode number may match an exact, case-insensitive catalog name within the show, selected group, or trusted season.
+
+A supplied provider ID that is missing, ambiguous or foreign stays unmatched rather than falling through to a positional guess. This preserves Trakt's stale-ID behavior. Groups likewise never fall through to aired-order coordinates. Receipts name the failed evidence. Specials retain their canonical IDs, carry `episodeSpecial`, and produce a row explanation and preview warning; the normal tracking writer still applies them.
+
+Group validation checks the entire alternative cut: declared counts, dense group and episode positions, unique live episode IDs, and complete regular-season coverage through the latest catalog season. A cut containing specials may replace leading regular seasons, as Money Heist's Netflix Parts 1 and 2 do; all regular seasons from its first represented regular season onward must be complete. Specials absent from a cut are not required. This validates structure, not the editorial correspondence of community cuts, and does not change the reviewed display presentations in ADR 0012.
+
+Catalog reads and TMDB requests are memoized per preview, including lookup failures. TMDB responses are schema-checked and use the existing timeout helper (`TMDB_TIMEOUT_MS`, five seconds by default). HTTP errors, malformed responses and timeouts leave episodes unmatched with a retry explanation. Database errors stop preview. A catalog read reaching the 50,001-row sentinel is rejected rather than used to infer uniqueness.
+
+Tests use synthetic episode IDs with Friends, The Office and Money Heist numbering/count examples from `docs/research/imports/episode-numbering.md` on `research/episode-numbering`. Database and TMDB boundaries are faked locally. Anime offsets, translated-name lookups and new source parsers remain out of scope.
 
 ## Getting an export
 

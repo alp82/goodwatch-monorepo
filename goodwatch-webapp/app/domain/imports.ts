@@ -48,6 +48,14 @@ export interface ImportObservation {
 	tmdbId: number | null
 	imdbId: string | null
 	episodeTmdbId?: number | null
+	episodeTvdbId?: number | null
+	episodeName?: string | null
+	/** Coordinates are usable only when the adapter explicitly knows their numbering. */
+	episodeNumbering?: "tmdb" | "unknown"
+	/** Explicit TMDB group, or a Netflix/part-count hint; label names its part/volume. */
+	episodeGroup?: { id?: string; label: string; groupCount?: number }
+	/** Canonical season zero: applied, but never contributes to regular progress. */
+	episodeSpecial?: boolean
 	season?: number | null
 	episode?: number | null
 	score?: number | null
@@ -56,7 +64,7 @@ export interface ImportObservation {
 	precision?: "moment" | "day" | "unknown"
 	pass?: number
 	addedAt?: string | null
-	problem?: { outcome: "invalid" | "unsupported"; reason: string }
+	problem?: { outcome: "invalid" | "unsupported" | "unmatched"; reason: string }
 }
 
 export interface ParsedImport {

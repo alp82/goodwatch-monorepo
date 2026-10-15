@@ -9,6 +9,7 @@ import type {
 	ParsedImport,
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
+import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
 import { parseImportFile } from "./files.server.ts"
 import {
 	type Param,
@@ -105,60 +106,36 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					})
 			}
 	}
-	// An episode is accepted only when it belongs to the matched show. TMDB ID wins; season/number is a fallback
-	// only when it identifies exactly one current catalog episode.
-	const shows = [
-		...new Set(
-			rows
-				.map((row, index) => ({ row, index }))
-				.filter(
-					(x) =>
-						found.get(x.index)?.mediaType === "show" &&
-						(x.row.episodeTmdbId != null ||
-							x.row.season != null ||
-							x.row.episode != null),
-				)
-				.flatMap((x) => {
-					const match = found.get(x.index)
-					return match ? [match.tmdbId] : []
-				}),
-		),
-	]
-	for (const showId of shows) {
-		const episodes = await select<{
-			tmdb_id: number
-			season_number: number
-			episode_number: number
-		}>(
-			"SELECT tmdb_id, season_number, episode_number FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
-			[showId],
+	const resolveEpisode = createCatalogEpisodeResolver()
+	for (const [index, title] of found) {
+		const row = rows[index]
+		if (
+			title.mediaType !== "show" ||
+			(row.episodeTmdbId == null &&
+				row.episodeTvdbId == null &&
+				!row.episodeGroup &&
+				!row.episodeName &&
+				row.season == null &&
+				row.episode == null)
 		)
-		for (const [index, title] of found) {
-			const row = rows[index]
-			if (
-				title.mediaType !== "show" ||
-				title.tmdbId !== showId ||
-				(row.episodeTmdbId == null && row.season == null && row.episode == null)
-			)
-				continue
-			const candidates =
-				row.episodeTmdbId != null
-					? episodes.filter(
-							(episode) => Number(episode.tmdb_id) === row.episodeTmdbId,
-						)
-					: episodes.filter(
-							(episode) =>
-								Number(episode.season_number) === row.season &&
-								Number(episode.episode_number) === row.episode,
-						)
-			if (candidates.length !== 1) found.delete(index)
-			else {
-				row.episodeTmdbId = Number(candidates[0].tmdb_id)
-				row.season = Number(candidates[0].season_number)
-				row.episode = Number(candidates[0].episode_number)
-			}
+			continue
+		const result = await resolveEpisode({
+			...row,
+			showId: title.tmdbId,
+			numbering:
+				row.episodeNumbering ?? (source === "trakt" ? "tmdb" : "unknown"),
+		})
+		if (result.status === "unmatched") {
+			found.delete(index)
+			row.problem = { outcome: "unmatched", reason: result.reason }
+		} else {
+			row.episodeTmdbId = result.episodeTmdbId
+			row.season = result.season
+			row.episode = result.episode
+			row.episodeSpecial = result.special
 		}
 	}
+
 	return found
 }
 
@@ -256,11 +233,19 @@ function classify(
 	current: Awaited<ReturnType<typeof currentValues>>,
 ): ImportItem[] {
 	return rows.map((row, index): ImportItem => {
-		const base = { ...row, index, reason: null, currentScore: null }
+		const base = {
+			...row,
+			index,
+			reason: row.episodeSpecial
+				? "This episode maps to a TMDB special. It is imported but does not count toward regular show progress."
+				: null,
+			currentScore: null,
+		}
 		if (row.problem)
 			return {
 				...base,
 				outcome: row.problem.outcome,
+				...(row.problem.outcome === "unmatched" ? { tmdbId: null } : {}),
 				reason: row.problem.reason,
 			}
 		const title = matched.get(index)
@@ -413,6 +398,11 @@ export async function createPreview(
 		currentValues(userId),
 	])
 	const items = classify(parsed.observations, matched, current)
+	const specials = items.filter((item) => item.episodeSpecial).length
+	if (specials)
+		parsed.warnings.push(
+			`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
+		)
 	const id = randomUUID()
 	await classifyWatchDuplicates(userId, source, id, items)
 	const countRecord = {
