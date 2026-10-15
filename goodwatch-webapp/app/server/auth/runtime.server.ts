@@ -3,6 +3,7 @@ import type { User } from "@supabase/auth-js"
 import Redis, { type Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 import { onShutdown } from "../lifecycle.server.ts"
+import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
 import { createGoodwatchAuth, jsonResponse, setCookiesOf } from "./auth.server.ts"
 import { crateAuthTransport, localCrateTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
@@ -95,6 +96,7 @@ function localAuth(): AuthService {
 	})
 }
 export async function handleAuthRequest(request: Request): Promise<Response> {
+	fillWebFetchGaps()
 	let response: Response
 	if (!betterAuthEnabled()) response = new Response(null, { status: 404 })
 	else

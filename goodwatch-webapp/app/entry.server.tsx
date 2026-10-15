@@ -4,7 +4,8 @@
 // - The HTML goes out in one chunk per React pass instead of about 2 KB at a time (see html-stream.server.ts).
 // - The abort timer is cleared when the response is done. The default entry leaves it running, so every request keeps
 //   its render and loader data alive for 5 seconds.
-// First: what remix-serve's fetch polyfill lacks, before any other module can need it.
+// First: what remix-serve's fetch polyfill lacks. Under remix-serve this runs before the polyfill exists, so the MCP and
+// auth handlers fill the gaps again per request (see web-fetch-gaps.server.ts).
 import "~/server/web-fetch-gaps.server"
 
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
