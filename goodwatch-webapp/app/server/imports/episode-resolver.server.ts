@@ -1,3 +1,4 @@
+import type { AnimeEntry, AnimeMapping } from "../../domain/anime-mapping.ts"
 export const EPISODE_CATALOG_LIMIT = 50_000
 const DIGITAL_EPISODE_GROUP = 4
 const normalize = (value: string | null | undefined) =>
@@ -14,6 +15,7 @@ export interface CatalogEpisode {
 }
 export interface EpisodeEvidence {
 	showId: number
+	animeEntry?: AnimeEntry
 	numbering?: "tmdb" | "unknown"
 	episodeGroup?: { id?: string; label: string; groupCount?: number }
 	episodeTvdbId?: number | null
@@ -49,6 +51,7 @@ export interface EpisodeGroup {
 	}[]
 }
 export interface EpisodeResolverData {
+	animeMappings?(entry: AnimeEntry): Promise<AnimeMapping[]>
 	groups(showId: number): Promise<EpisodeGroupSummary[]>
 	group(id: string): Promise<EpisodeGroup>
 	episodes(showId: number): Promise<CatalogEpisode[]>
@@ -62,7 +65,9 @@ export interface EpisodeResolverData {
 		expectedTvdbId: number | null,
 	): Promise<boolean>
 }
-const unmatched = (reason: string): EpisodeResolution => ({
+const unmatched = (
+	reason: string,
+): { status: "unmatched"; reason: string } => ({
 	status: "unmatched",
 	reason,
 })
@@ -201,7 +206,110 @@ async function resolveGroup(
 		: unmatched("Episode group did not match uniquely within this show.")
 }
 
+// Episode placement courtesy of Anime-Lists (https://github.com/Anime-Lists/anime-lists).
+type AnimePlacement = { status: "unmatched"; reason: string } | CatalogEpisode[]
+async function resolveAnime(
+	row: EpisodeEvidence,
+	entry: AnimeEntry,
+	episodes: CatalogEpisode[],
+	data: EpisodeResolverData,
+	cache: Map<string, Promise<AnimePlacement>>,
+): Promise<EpisodeResolution> {
+	const positive = (n: number | null | undefined): n is number =>
+		Number.isSafeInteger(n) && Number(n) > 0
+	if (
+		!positive(entry.id) ||
+		!positive(row.episode) ||
+		(entry.progress != null &&
+			(!positive(entry.progress) || row.episode > entry.progress)) ||
+		(entry.episodeCount != null &&
+			(!positive(entry.episodeCount) ||
+				row.episode > entry.episodeCount ||
+				(entry.progress ?? 0) > entry.episodeCount))
+	)
+		return unmatched("Invalid anime entry episode or progress.")
+	const extent = Math.max(
+		row.episode,
+		entry.progress ?? 0,
+		entry.episodeCount ?? 0,
+	)
+	if (extent > EPISODE_CATALOG_LIMIT)
+		return unmatched("Anime progress exceeds the supported episode limit.")
+	const key = JSON.stringify([row.showId, entry.source, entry.id, extent])
+	let pending = cache.get(key)
+	if (!pending) {
+		pending = mapAnimeProgress(row.showId, entry, extent, episodes, data)
+		cache.set(key, pending)
+	}
+	const result = await pending
+	return Array.isArray(result) ? matched(result[row.episode - 1]) : result
+}
+
+async function mapAnimeProgress(
+	showId: number,
+	entry: AnimeEntry,
+	extent: number,
+	episodes: CatalogEpisode[],
+	data: EpisodeResolverData,
+): Promise<AnimePlacement> {
+	let mappings: AnimeMapping[]
+	try {
+		mappings = (await data.animeMappings?.(entry)) ?? []
+	} catch {
+		return unmatched("Anime mappings are unavailable; retry this import later.")
+	}
+	if (mappings.length !== 1 || mappings[0].showId !== showId)
+		return unmatched(
+			"This anime entry is not mapped uniquely to this TMDB show.",
+		)
+	const mapping = mappings[0]
+	if (mapping.unsupportedReason) return unmatched(mapping.unsupportedReason)
+	// Only a catalog with globally unique regular numbers can establish absolute order.
+	const regular = episodes.filter((e) => Number(e.season_number) > 0)
+	const absolute =
+		mapping.season === "a" &&
+		new Set(regular.map((e) => Number(e.episode_number))).size ===
+			regular.length
+	const byCoordinate = new Map<string, CatalogEpisode[]>()
+	const byAbsolute = new Map<number, CatalogEpisode[]>()
+	for (const e of episodes) {
+		const key = `${e.season_number}:${e.episode_number}`
+		byCoordinate.set(key, [...(byCoordinate.get(key) ?? []), e])
+		if (Number(e.season_number) > 0)
+			byAbsolute.set(Number(e.episode_number), [
+				...(byAbsolute.get(Number(e.episode_number)) ?? []),
+				e,
+			])
+	}
+	const selected: CatalogEpisode[] = []
+	for (let n = 1; n <= extent; n++) {
+		const ranges = mapping.ranges.filter((r) => n >= r.start && n <= r.end)
+		if (ranges.length > 1)
+			return unmatched("This anime mapping has overlapping TMDB ranges.")
+		const range = ranges[0]
+		const targetSeason = range?.season ?? mapping.season
+		const targetNumber =
+			n + (absolute ? mapping.offset : (range?.offset ?? mapping.offset))
+		const candidates = absolute
+			? (byAbsolute.get(targetNumber) ?? []).filter(
+					(e) => !range || Number(e.season_number) === range.season,
+				)
+			: (byCoordinate.get(`${targetSeason}:${targetNumber}`) ?? [])
+		if (candidates.length !== 1)
+			return unmatched(
+				"This anime mapping does not fit the current TMDB episode catalog.",
+			)
+		selected.push(candidates[0])
+	}
+	if (new Set(selected.map((e) => Number(e.tmdb_id))).size !== selected.length)
+		return unmatched(
+			"This anime mapping assigns several source episodes to the same TMDB episode.",
+		)
+	return selected
+}
+
 export function createEpisodeResolver(data: EpisodeResolverData) {
+	const animeCache = new Map<string, Promise<AnimePlacement>>()
 	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
 		const catalog = await data.episodes(row.showId)
 		if (catalog.length > EPISODE_CATALOG_LIMIT)
@@ -225,6 +333,8 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 			if (result.status === "matched") return result
 			reason = result.reason
 		}
+		if (row.animeEntry)
+			return resolveAnime(row, row.animeEntry, episodes, data, animeCache)
 		if (row.episodeGroup) {
 			const result = await resolveGroup(row, row.episodeGroup, episodes, data)
 			if (result.status === "matched") return result

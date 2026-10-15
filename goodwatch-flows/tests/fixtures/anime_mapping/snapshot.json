@@ -1,0 +1,222 @@
+{
+	"schemaVersion": 1,
+	"entries": [
+		{
+			"anidbId": 69,
+			"showId": 37854,
+			"season": "a",
+			"offset": 0,
+			"ranges": [
+				{
+					"start": 1,
+					"end": 61,
+					"season": 1,
+					"offset": 0
+				},
+				{
+					"start": 62,
+					"end": 77,
+					"season": 2,
+					"offset": -61
+				},
+				{
+					"start": 78,
+					"end": 91,
+					"season": 3,
+					"offset": -77
+				},
+				{
+					"start": 92,
+					"end": 130,
+					"season": 4,
+					"offset": -91
+				},
+				{
+					"start": 131,
+					"end": 143,
+					"season": 5,
+					"offset": -130
+				},
+				{
+					"start": 144,
+					"end": 195,
+					"season": 6,
+					"offset": -143
+				},
+				{
+					"start": 196,
+					"end": 228,
+					"season": 7,
+					"offset": -195
+				},
+				{
+					"start": 229,
+					"end": 263,
+					"season": 8,
+					"offset": -228
+				},
+				{
+					"start": 264,
+					"end": 336,
+					"season": 9,
+					"offset": -263
+				},
+				{
+					"start": 337,
+					"end": 381,
+					"season": 10,
+					"offset": -336
+				},
+				{
+					"start": 382,
+					"end": 407,
+					"season": 11,
+					"offset": -381
+				},
+				{
+					"start": 408,
+					"end": 421,
+					"season": 12,
+					"offset": -407
+				},
+				{
+					"start": 422,
+					"end": 522,
+					"season": 13,
+					"offset": -421
+				},
+				{
+					"start": 523,
+					"end": 580,
+					"season": 14,
+					"offset": -522
+				},
+				{
+					"start": 581,
+					"end": 642,
+					"season": 15,
+					"offset": -580
+				},
+				{
+					"start": 643,
+					"end": 692,
+					"season": 16,
+					"offset": -642
+				},
+				{
+					"start": 693,
+					"end": 748,
+					"season": 17,
+					"offset": -692
+				},
+				{
+					"start": 749,
+					"end": 803,
+					"season": 18,
+					"offset": -748
+				},
+				{
+					"start": 804,
+					"end": 877,
+					"season": 19,
+					"offset": -803
+				},
+				{
+					"start": 878,
+					"end": 891,
+					"season": 20,
+					"offset": -877
+				},
+				{
+					"start": 892,
+					"end": 1088,
+					"season": 21,
+					"offset": -891
+				},
+				{
+					"start": 1089,
+					"end": 1155,
+					"season": 22,
+					"offset": -1088
+				}
+			],
+			"ids": {
+				"myanimelist": [21],
+				"anilist": [21],
+				"kitsu": [12]
+			}
+		},
+		{
+			"anidbId": 14444,
+			"showId": 1429,
+			"season": 3,
+			"offset": 12,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [38524],
+				"anilist": [104578],
+				"kitsu": [41982]
+			}
+		},
+		{
+			"anidbId": 17061,
+			"showId": 120089,
+			"season": 1,
+			"offset": 12,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [50602],
+				"anilist": [142838],
+				"kitsu": [45619]
+			}
+		},
+		{
+			"anidbId": 17303,
+			"showId": 1429,
+			"season": 4,
+			"offset": 28,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [51535],
+				"anilist": [146984],
+				"kitsu": [46038]
+			}
+		},
+		{
+			"anidbId": 17765,
+			"showId": 30984,
+			"season": 2,
+			"offset": 13,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [53998],
+				"anilist": [159322],
+				"kitsu": [46903]
+			}
+		},
+		{
+			"anidbId": 18220,
+			"showId": 30984,
+			"season": 2,
+			"offset": 26,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [56784],
+				"anilist": [169755],
+				"kitsu": [48015]
+			}
+		},
+		{
+			"anidbId": 18886,
+			"showId": 209867,
+			"season": 1,
+			"offset": 28,
+			"ranges": [],
+			"ids": {
+				"myanimelist": [59978],
+				"anilist": [182255],
+				"kitsu": [49240]
+			}
+		}
+	]
+}

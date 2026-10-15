@@ -1,3 +1,5 @@
+import type { AnimeEntry } from "./anime-mapping.ts"
+
 /** Shared import contract. IMDb keeps its existing API. */
 export const IMPORT_SOURCES = [
 	"letterboxd",
@@ -50,6 +52,8 @@ export interface ImportObservation {
 	year: number | null
 	tmdbId: number | null
 	imdbId: string | null
+	/** Tracker entry scope; progress expands to episode watches, never a whole-show Seen. */
+	animeEntry?: AnimeEntry
 	episodeTmdbId?: number | null
 	episodeTvdbId?: number | null
 	episodeName?: string | null
@@ -67,7 +71,10 @@ export interface ImportObservation {
 	precision?: "moment" | "day" | "unknown"
 	pass?: number
 	addedAt?: string | null
-	problem?: { outcome: "invalid" | "unsupported" | "unmatched"; reason: string }
+	problem?: {
+		outcome: "invalid" | "unsupported" | "unmatched"
+		reason: string
+	}
 }
 
 export interface ParsedImport {

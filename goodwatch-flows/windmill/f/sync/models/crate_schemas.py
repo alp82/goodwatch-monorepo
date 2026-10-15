@@ -29,6 +29,18 @@ SCHEMAS = {
     # ============================
     # ===== Core Lookups =====
     # ============================
+    # Small, atomically published server-side reference dataset. Anime-Lists + Fribb.
+    "anime_mapping_snapshot": {
+        "columns": {
+            "id": "TEXT",
+            "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "version": "TEXT",
+            "refreshed_at": "TIMESTAMP",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+    },
     "age_certification": {
         "columns": {
             "certification_code": "TEXT",

@@ -14,8 +14,14 @@ holdTasteRebuildsForTest()
 const { getMovieTracking, getShowTracking } = await import(
 	"../tracking.server.ts"
 )
-const { previewImport, getImportItems, confirmImport, getImport, undoImport } =
-	await import("./service.server.ts")
+const {
+	previewImport,
+	previewParsedImport,
+	getImportItems,
+	confirmImport,
+	getImport,
+	undoImport,
+} = await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
 
@@ -33,6 +39,7 @@ const options: ImportOptions = {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT payload, refreshed_at FROM anime_mapping_snapshot WHERE id = ?",
 	"DELETE FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 	"DELETE FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 	"DELETE FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
@@ -95,6 +102,7 @@ function assertSupportedImportSql(sql: string) {
 }
 
 class ImportDb {
+	animeSnapshot: unknown = null
 	imports: Row[] = []
 	items: Row[] = []
 	favorites: Row[] = []
@@ -177,6 +185,13 @@ class ImportDb {
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
 		assertSupportedImportSql(s)
+		if (s.includes("FROM anime_mapping_snapshot"))
+			return [
+				{
+					payload: JSON.stringify(this.animeSnapshot),
+					refreshed_at: Date.now(),
+				},
+			] as unknown as T[]
 		if (s.includes("FROM episode WHERE"))
 			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
 		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
@@ -1018,4 +1033,132 @@ it("Kodi ratings prefer TMDB then IMDb, keep missing IDs unmatched, and apply an
 		(await previewImport("member", "kodi", "videodb.xml", file)).counts.new,
 		2,
 	)
+})
+
+it("anime cour progress previews canonical episodes, keeps failed mappings on the receipt, and applies and undoes only its cour", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 120089,
+			title: "Spy x Family",
+			imdb_id: null,
+			release_year: 2022,
+		},
+		{
+			tmdb_id: 1429,
+			title: "Attack on Titan",
+			imdb_id: null,
+			release_year: 2013,
+		},
+	]
+	db.episodes = Array.from({ length: 25 }, (_, i) => ({
+		show_id: 120089,
+		tmdb_id: 10001 + i,
+		season_number: 1,
+		episode_number: i + 1,
+		name: null,
+		tvdb_id: null,
+		removed_at: null,
+		air_date: Date.UTC(2022, 0, 1),
+	}))
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 17061,
+				showId: 120089,
+				season: 1,
+				offset: 12,
+				ranges: [],
+				ids: { myanimelist: [50602], anilist: [142838], kitsu: [45619] },
+			},
+			{
+				anidbId: 17303,
+				showId: 1429,
+				season: 4,
+				offset: 28,
+				ranges: [],
+				ids: { myanimelist: [51535], anilist: [146984], kitsu: [46038] },
+			},
+		],
+	}
+	const trackingDb = new FakeTrackingCrate()
+	trackingDb.seed("episode", db.episodes)
+	setCrateClientForTest(trackingDb)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const base = {
+		kind: "watch" as const,
+		mediaType: "show" as const,
+		title: "Spy x Family Part 2",
+		year: 2022,
+		tmdbId: null,
+		imdbId: null,
+		animeEntry: {
+			source: "myanimelist" as const,
+			id: 50602,
+			progress: 13,
+			episodeCount: 13,
+		},
+	}
+	const preview = await previewParsedImport("member", "normalized-anime", {
+		source: "csv",
+		warnings: [],
+		observations: [
+			...Array.from({ length: 13 }, (_, i) => ({
+				...base,
+				key: `anime:50602:${i + 1}`,
+				episode: i + 1,
+				watchedAt: "2022-12-24",
+				precision: "day" as const,
+			})),
+			{ ...base, key: "anime:50602:completed" },
+			{
+				...base,
+				key: "anime:51535:1",
+				animeEntry: {
+					source: "myanimelist",
+					id: 51535,
+					progress: 2,
+					episodeCount: 2,
+				},
+				episode: 1,
+			},
+			{
+				...base,
+				key: "anime:51535:want",
+				kind: "want",
+				animeEntry: { source: "myanimelist", id: 51535 },
+			},
+		],
+	})
+	const receipt = await getImportItems("member", preview.id, undefined, 0, 50)
+	assert.equal(preview.counts.new, 14)
+	assert.equal(preview.counts.unmatched, 2)
+	assert.deepEqual(
+		receipt.items.slice(0, 13).map((x) => x.episode),
+		[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+	)
+	assert.ok(
+		receipt.items
+			.slice(0, 13)
+			.every((x) => x.watchedAt === null && x.precision === "unknown"),
+	)
+	assert.match(receipt.items[14].reason ?? "", /does not fit/)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["watch", "want"],
+	})
+	await waitFor(db, "done")
+	const tracked = await getShowTracking("member", 120089)
+	assert.equal(tracked.log.length, 13)
+	assert.equal(tracked.state?.state, "watching")
+	assert.ok(tracked.log.every((x) => x.watched_at === null))
+	assert.equal((await getShowTracking("member", 1429)).log.length, 0)
+	assert.equal((await getImport("member", preview.id)).applied.added, 14)
+	await undoImport("member", preview.id)
+	assert.equal((await getShowTracking("member", 120089)).log.length, 0)
 })

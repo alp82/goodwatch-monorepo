@@ -1,0 +1,26 @@
+summary: Weekly Anime-Lists and Fribb reference refresh
+description: Schedule for Mondays at 03:20 UTC after the schema, dry run and first publish are verified. No schedule is enabled by this file.
+value:
+  modules:
+    - id: refresh
+      value:
+        type: script
+        path: f/anime_mapping/refresh
+        input_transforms:
+          dry_run:
+            type: javascript
+            expr: flow_input.dry_run
+      retry:
+        constant:
+          attempts: 2
+          seconds: 60
+  concurrent_limit: 1
+  concurrency_time_window_s: 0
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

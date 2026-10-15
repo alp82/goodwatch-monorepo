@@ -3,6 +3,7 @@ import type {
 	ImportOutcome,
 	ImportSource,
 	ImportSummary,
+	ParsedImport,
 } from "~/domain/imports"
 import { confirmImport, undoImport } from "./apply.server.ts"
 import {
@@ -27,6 +28,18 @@ export const previewImport = async (
 		bytes,
 		wishlist,
 	)
+/** Server-only normalized adapter boundary, sharing the upload preview/apply/receipt/undo. */
+export const previewParsedImport = async (
+	userId: string,
+	fileName: string,
+	parsed: ParsedImport,
+) =>
+	(await import("./preview.server.ts")).createParsedPreview(
+		userId,
+		fileName,
+		parsed,
+	)
+
 export const listImports = async (userId: string): Promise<ImportSummary[]> =>
 	(await listImportRows(userId)).map(summarize)
 export const getImport = async (userId: string, id: string) =>

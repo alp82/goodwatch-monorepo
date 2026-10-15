@@ -9,6 +9,7 @@ import type {
 	ParsedImport,
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
+import { createCatalogAnimeLookup } from "./anime-mapping-data.server.ts"
 import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
 import { parseImportFile } from "./files.server.ts"
 import {
@@ -32,6 +33,31 @@ type CatalogRow = {
 }
 
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
+	const animeMappings = createCatalogAnimeLookup()
+	// Tracker identities locate the parent; episode placement is validated separately below.
+	for (const row of rows) {
+		if (
+			!row.animeEntry ||
+			row.problem ||
+			row.mediaType !== "show" ||
+			row.tmdbId != null
+		)
+			continue
+		try {
+			const mappings = await animeMappings(row.animeEntry)
+			if (mappings.length === 1) row.tmdbId = mappings[0].showId
+			else
+				row.problem = {
+					outcome: "unmatched",
+					reason: "This anime entry is not mapped uniquely to a TMDB show.",
+				}
+		} catch {
+			row.problem = {
+				outcome: "unmatched",
+				reason: "Anime mappings are unavailable; retry this import later.",
+			}
+		}
+	}
 	const found = new Map<
 		number,
 		{ tmdbId: number; mediaType: "movie" | "show" }
@@ -106,12 +132,13 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					})
 			}
 	}
-	const resolveEpisode = createCatalogEpisodeResolver()
+	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
 	for (const [index, title] of found) {
 		const row = rows[index]
 		if (
 			title.mediaType !== "show" ||
 			(row.episodeTmdbId == null &&
+				!(row.animeEntry && row.kind === "watch") &&
 				row.episodeTvdbId == null &&
 				!row.episodeGroup &&
 				!row.episodeName &&
@@ -128,6 +155,10 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			found.delete(index)
 			row.problem = { outcome: "unmatched", reason: result.reason }
 		} else {
+			if (row.animeEntry && row.kind === "watch") {
+				row.watchedAt = null
+				row.precision = "unknown"
+			}
 			row.episodeTmdbId = result.episodeTmdbId
 			row.season = result.season
 			row.episode = result.episode
@@ -397,6 +428,21 @@ export async function createPreview(
 	wishlist?: Uint8Array,
 ): Promise<ImportSummary> {
 	const parsed: ParsedImport = await parseImportFile(source, bytes, wishlist)
+	const fileHash = createHash("sha256").update(bytes)
+	if (wishlist)
+		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
+	return createParsedPreview(userId, fileName, parsed, fileHash.digest("hex"))
+}
+
+/** Trusted server adapters can preview normalized observations without inventing an upload format. */
+export async function createParsedPreview(
+	userId: string,
+	fileName: string,
+	input: ParsedImport,
+	hash = createHash("sha256").update(JSON.stringify(input)).digest("hex"),
+): Promise<ImportSummary> {
+	const parsed = structuredClone(input)
+	const source = parsed.source
 	const [matched, current] = await Promise.all([
 		matchCatalog(source, parsed.observations),
 		currentValues(userId),
@@ -428,10 +474,7 @@ export async function createPreview(
 	}
 	for (const item of items) if (item.kind !== "unsupported") kinds[item.kind]++
 	const now = new Date()
-	const fileHash = createHash("sha256").update(bytes)
-	if (wishlist)
-		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
-	const hash = fileHash.digest("hex")
+
 	try {
 		await insertItems(id, userId, items)
 		await refreshItems()
