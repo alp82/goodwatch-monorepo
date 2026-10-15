@@ -1,16 +1,16 @@
 BEGIN
- workspace_id |       path        | is_secret |   safe_value   
+ workspace_id |       path        | is_secret |   safe_value
 --------------+-------------------+-----------+----------------
  goodwatch    | u/Alp/CRATE_USER  | f         | admin
  goodwatch    | u/Alp/CRATE_PASS  | t         | [present=true]
  goodwatch    | u/Alp/CRATE_HOSTS | t         | [present=true]
 (3 rows)
 
- workspace_id | path | resource_type | keys 
+ workspace_id | path | resource_type | keys
 --------------+------+---------------+------
 (0 rows)
 
- workspace_id |                       path                       |          created_at           | uses_user | uses_password | connector 
+ workspace_id |                       path                       |          created_at           | uses_user | uses_password | connector
 --------------+--------------------------------------------------+-------------------------------+-----------+---------------+-----------
  goodwatch    | f/anime_mapping/refresh                          | 2026-10-15 21:40:48.502022+00 | f         | f             | t
  goodwatch    | f/buzz/daily                                     | 2026-10-14 16:37:22.090446+00 | f         | f             | t
@@ -87,7 +87,7 @@ BEGIN
  goodwatch    | f/vector/test_crate_centroid                     | 2026-09-26 21:49:14.652618+00 | f         | f             | t
 (73 rows)
 
- workspace_id |                      path                       |                   script_path                   | enabled 
+ workspace_id |                      path                       |                   script_path                   | enabled
 --------------+-------------------------------------------------+-------------------------------------------------+---------
  goodwatch    | f/anime_mapping/weekly                          | f/anime_mapping/weekly                          | t
  goodwatch    | f/buzz/daily                                    | f/buzz/daily                                    | t
