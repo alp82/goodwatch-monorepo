@@ -169,6 +169,59 @@ Rollback: deploy the earlier search commit. The alias file stays in place and is
 - No UI copy for "Also known as".
 - Person names and collection names.
 
+## Phase 1 results (2026-10-15)
+
+Phase 1 is built: `alias_table` in `build_indexes.py` and `index_builders.py` (`alias_table`), and in the webapp
+`search-ranking/aliases.server.ts` (the decoded table), `name-prefix.server.ts` (the palette's tiers),
+`title-blend.server.ts` (lexical score and fuzzy match), `references.server.ts` ("like X") and
+`combined-search/search.server.ts` (lookup cache key, `matchedAlias` on the rows). Measured against production,
+read-only, on build `20261015T041503Z`:
+
+- **Rows.** 43,133 eligible titles; 512,016 `translation` rows in the 12 languages, 103,950 of them without a title.
+  Kept 319,960 aliases for 41,379 titles (46,555 equal the title or original title, 41,498 duplicates across regions
+  and languages, 53 too short). Per language: zh 75,260, pt 36,391, ru 36,042, es 33,966, ko 30,125, fr 23,713,
+  pl 21,933, de 19,289, ja 18,224, it 18,162, ar 6,812, en 43. More than the "few per title" guessed above: about 7.7.
+- **File.** 4.2 MB gzipped, 11.3 MB JSON. The builder step takes 3 seconds for the rows.
+- **Memory per search role.** +34.5 MB heap and +29.3 MB typed arrays, about 64 MB, under the +100 MB ceiling. The
+  process RSS grew 47 MB in the measurement, which also parsed the file on the main thread; a role parses it in its
+  load worker. Fuzzy entries for aliases stay in: their character counts are 20 MB of the typed arrays.
+- **Lookup time with aliases** (p50 / p90, ms): palette 3.5 / 5.5 before, 3.9 / 6.3 after; title blend with the
+  fuzzy match 0.6 / 2.6 before, 0.7 / 4.4 after. A two-character index of word starts keeps the palette from scanning
+  every alias.
+
+Two choices made while building, both on the side of the canonical names:
+
+- **The palette puts every title tier before every alias tier**: title start, title word, alias start, alias word.
+  Interleaving them (an alias start above a title's later word) pushed title matches out of the 20 rows the search's
+  title lookup takes from the palette, and changed the first result for "Pul". With the titles first, aliases only
+  fill the places the titles leave.
+- **In the title blend, a row found only by an alias ranks after the titles of the same score.** An alias match
+  scores `ALIAS_STEP` (0.01) below a title match of the same kind: an exact alias is 1.99, below an exact title (2)
+  and above a phrase match (1.05).
+
+**Evaluation**, `scripts/search-alias-eval.ts` with `app/server/search-ranking/alias-eval.fixture.json`, top-1 / top-5
+before → after. The palette is its 8 rows; the title lookup + blend is the palette's 20 rows through
+`title-blend.server.ts`, without TMDB and without the ranked list.
+
+| queries | n | palette | title lookup + blend | "like X" top-1 |
+|---|---|---|---|---|
+| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% |
+| localized, first word | 52 | 0% / 2% → 37% / 56% | 0% / 2% → 21% / 56% | |
+| localized, first 3 characters | 51 | 0% / 0% → 20% / 35% | 0% / 2% → 10% / 37% | |
+| canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% |
+| canonical, first word | 12 | 67% / 92% → 67% / 92% | 17% / 67% → 17% / 67% | |
+| canonical, first 3 characters | 19 | 74% / 95% → 74% / 95% | 32% / 74% → 32% / 74% | |
+| ambiguous names | 10 | 80% / 90% → 90% / 100% | 60% / 90% → 70% / 100% | |
+
+Every canonical hit rate is unchanged. Canonical top-5 lists change only where aliases fill places after the titles,
+and in the blend for "Dune", where exact aliases (1.99) pass canonical rows the blend scores 0. The canonical and
+ambiguous misses are the same before and after (the palette orders by votes, the blend by TMDB popularity). The
+shared German name "Das Ding aus einer anderen Welt" resolves to The Thing (1982) by votes. "Like X" misses come from
+existing rules: keys shorter than 3 characters ("教父", "대부"), titles below 10,000 votes, and names that resolve to
+a person first ("Spade" in "Il Trono di Spade"). Prefixes of localized names miss mostly on their first word
+("Le", "El", "Der", "Il"), which many titles share. The set types names from their start; its CJK names
+and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
+
 ## Owner decisions (2026-10-15)
 
 1. Phase 1 languages: only the 12 launch base languages for now.
