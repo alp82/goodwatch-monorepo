@@ -8,6 +8,7 @@ export const IMPORT_SOURCES = [
 	"movielens",
 	"kodi",
 	"tmdb",
+	"plex",
 	"myanimelist",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
@@ -17,6 +18,7 @@ export const IMPORT_SOURCE_NAMES = {
 	movielens: "MovieLens",
 	kodi: "Kodi",
 	tmdb: "TMDB",
+	plex: "Plex",
 	myanimelist: "MyAnimeList / Kitsu",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
@@ -153,6 +155,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 		],
 	},
 	tmdb: null,
+	plex: null,
 } satisfies Record<ImportSource, ImportUploadDescriptor | null>
 export type FileImportSource = {
 	[Source in ImportSource]: (typeof IMPORT_SOURCE_UPLOAD)[Source] extends ImportUploadDescriptor
