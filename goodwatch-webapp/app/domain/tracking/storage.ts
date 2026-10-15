@@ -115,9 +115,7 @@ export function stateRowOf(
 	return {
 		state: record.state,
 		state_changed_at:
-			before && before.state === record.state && before.state_changed_at > 0
-				? before.state_changed_at
-				: now,
+			before && before.state === record.state ? before.state_changed_at : now,
 		pass: record.pass,
 		seen_press_group: record.seenPress?.group ?? null,
 		seen_press_from: record.seenPress?.from ?? null,
@@ -321,6 +319,8 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 			}
 		})
 	const row = stateRowOf(after, state, now)
+	// An import’s undated Watching state gains a date with a member’s first watch, not a rating or prompt action.
+	if (row?.state_changed_at === 0 && insert.length) row.state_changed_at = now
 	// The show is Seen since the time it was before the press was taken back, not since this Undo. And a show whose
 	// season is put back has its state since the time it had it before.
 	const restored =

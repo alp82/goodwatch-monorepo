@@ -3914,3 +3914,61 @@ for (const scenario of ["normal", "interrupted", "later intention"] as const)
 			notInterested: true,
 		})
 	})
+
+for (const event of [
+	{ type: "rate", score: 8 },
+	{ type: "dismissRatePrompt" },
+	{ type: "answerSeenQuestion", answer: "just_rating" },
+] satisfies TrackingAction[]) {
+	test(`${event.type} keeps imported Watching undated without watches`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		const plan = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "undated-watching",
+			source: "trakt",
+			...short,
+			items: [
+				{
+					...nativeWatch("status", 1),
+					kind: "show_status",
+					showStatus: "watching",
+				},
+			],
+			watchDates: "unknown",
+			now: Date.now() - 1000,
+		})
+		await imports.applyImportTrackingPlan(user, plan)
+		const result = await act(event, undefined, short)
+		assert.equal(result.status, "applied")
+		const tracked = await getShowTracking(user, SHORT)
+		assert.equal(tracked.state?.state, "watching")
+		assert.equal(tracked.state?.state_changed_at, 0)
+		assert.deepEqual(tracked.log, [])
+		const entry = await entryOf(short)
+		assert.equal(entry?.watchingSince, null)
+		assert.equal(entry?.lastActivityAt, null)
+		if (event.type === "dismissRatePrompt")
+			assert.ok(tracked.state?.rate_prompt_dismissed_at)
+		if (event.type === "answerSeenQuestion")
+			assert.equal(tracked.state?.seen_question, "answered")
+		// A later watch-only import and its Undo retain the undated Watching choice.
+		const watches = await imports.prepareImportTrackingPlan({
+			userId: user,
+			importId: "later-watches",
+			source: "trakt",
+			...short,
+			items: [nativeWatch("one", 1), nativeWatch("two", 2)],
+			watchDates: "unknown",
+			now: Date.now(),
+		})
+		await imports.applyImportTrackingPlan(user, watches)
+		await imports.undoImportTrackingPlan(user, watches)
+		assert.deepEqual(await getShowTracking(user, SHORT), tracked)
+		// A state change still receives its own date even when no watch exists.
+		await act({ type: "hold" }, undefined, short)
+		const held = await getShowTracking(user, SHORT)
+		assert.equal(held.state?.state, "on_hold")
+		assert.ok((held.state?.state_changed_at ?? 0) > 0)
+		assert.deepEqual(held.log, [])
+	})
+}
