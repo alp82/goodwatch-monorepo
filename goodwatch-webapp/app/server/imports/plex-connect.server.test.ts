@@ -176,3 +176,109 @@ test("Plex pending approval can retry, concurrent return cannot fetch twice, and
 	assert.equal(g.db.connections.size, 0)
 	assert.equal(g.db.imports.length, 0)
 })
+
+test("Plex sweep isolates undecryptable rows and wipes an issued credential before a failed delete", async () => {
+	const f = fixture()
+	const store = createConnectionStore(
+		() => "11".repeat(32),
+		() => "",
+		"plex",
+	)
+	await store.create(
+		{
+			id: "broken",
+			source: "plex",
+			userId: "broken-member",
+			requestToken: "old-pin",
+			expiresAt: 0,
+		},
+		0,
+	)
+	const broken = f.db.connections.get("broken")
+	assert.ok(broken)
+	broken.payload = "unreadable"
+	await store.create(
+		{
+			id: "retry",
+			source: "plex",
+			userId: "retry-member",
+			requestToken: "old-pin",
+			accessToken: "legacy-token",
+			expiresAt: 0,
+		},
+		0,
+	)
+	await store.create(
+		{
+			id: "healthy",
+			source: "plex",
+			userId: "healthy-member",
+			requestToken: "old-pin",
+			expiresAt: 0,
+		},
+		0,
+	)
+	const run = f.db.run.bind(f.db)
+	let failDelete = true
+	f.db.run = async (sql, params) => {
+		if (
+			sql.startsWith("DELETE FROM doc.user_import_connection") &&
+			params[0] === "retry" &&
+			failDelete
+		)
+			throw new Error("delete unavailable")
+		return run(sql, params)
+	}
+	await f.flow.sweep()
+	assert.equal(f.db.connections.has("healthy"), false)
+	assert.equal(broken.cleanup_at, null)
+	const retained = await store.claim(
+		"retry",
+		undefined,
+		Date.now() + 11 * 60_000,
+	)
+	assert.ok(retained)
+	assert.equal(retained.requestToken, "")
+	assert.equal(retained.accessToken, undefined)
+	assert.equal(retained.canceled, true)
+	await store.save(retained, 0)
+	failDelete = false
+	await f.flow.sweep()
+	assert.equal(f.db.connections.has("retry"), false)
+})
+
+test("Plex stores a PIN ID and a replay marker, never the issued token even while reading", async () => {
+	const f = fixture()
+	const store = createConnectionStore(
+		() => "11".repeat(32),
+		() => "",
+		"plex",
+	)
+	const start = await f.request("start")
+	const state = [...f.db.connections.keys()][0]
+	const pending = await store.claim(state, undefined, Date.now())
+	assert.ok(pending)
+	assert.equal("pinId" in pending && pending.pinId, "123")
+	assert.equal(pending.requestToken, "")
+	await store.save(pending, pending.expiresAt)
+	f.client.readImport = async (token) => {
+		assert.equal(token, "member-secret")
+		const issued = await store.claim(state, undefined, Date.now() + 11 * 60_000)
+		assert.ok(issued)
+		assert.equal("consumed" in issued && issued.consumed, true)
+		assert.equal(issued.accessToken, undefined)
+		assert.doesNotMatch(JSON.stringify(issued), /member-secret/)
+		assert.equal(
+			await store.claim(state, "member", Date.now() + 22 * 60_000),
+			null,
+		)
+		return { source: "plex", observations: [], warnings: [] }
+	}
+	const result = await f.request(
+		"return",
+		state,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	assert.equal(result.status, 303)
+	assert.equal(f.db.connections.size, 0)
+})

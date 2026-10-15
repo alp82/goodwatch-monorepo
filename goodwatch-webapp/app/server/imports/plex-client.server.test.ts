@@ -17,8 +17,7 @@ function fixture() {
 		const url = new URL(input)
 		calls.push({ url, token: options?.headers?.["X-Plex-Token"] })
 		let data: unknown
-		if (url.pathname === "/api/v2/user") data = { id: 42 }
-		else if (url.pathname === "/api/v2/resources")
+		if (url.pathname === "/api/v2/resources")
 			data = [
 				{
 					owned: true,
@@ -109,7 +108,6 @@ test("episodes carry parent show IDs and episode evidence, never trust Plex numb
 	const client = createPlexClient({
 		http: async (input, options) => {
 			const url = new URL(input)
-			if (url.pathname === "/api/v2/user") return reply({ id: 42 })
 			if (url.pathname === "/api/v2/resources")
 				return reply([
 					{
@@ -179,7 +177,6 @@ test("documented watchlist RSS imports Want to See and reports its limited cover
 					headers: {},
 				}
 			}
-			if (url.pathname === "/api/v2/user") return reply({ id: 42 })
 			if (url.pathname === "/api/v2/resources") return reply([])
 			throw new Error("Unexpected route")
 		},
@@ -201,6 +198,7 @@ test("documented watchlist RSS imports Want to See and reports its limited cover
 	assert.equal(parsed.observations[0].addedAt, undefined)
 	assert.match(parsed.observations[2].problem?.reason ?? "", /TMDB or IMDb/)
 	assert.match(parsed.warnings.join(" "), /feed.*complete/i)
+	assert.match(parsed.warnings.join(" "), /Sign in.*owns.*Plex Media Server/)
 	assert.doesNotMatch(JSON.stringify(parsed), /private-feed|secret/)
 })
 
@@ -208,7 +206,6 @@ test("unreachable server history becomes an actionable receipt and still permits
 	const client = createPlexClient({
 		http: async (input) => {
 			const url = new URL(input)
-			if (url.pathname === "/api/v2/user") return reply({ id: 42 })
 			if (url.pathname === "/api/v2/resources")
 				return reply([
 					{
@@ -260,7 +257,6 @@ test("private server URLs are blocked by the real Plex network boundary and expl
 	const client = createPlexClient({
 		http: async (input, options) => {
 			const url = new URL(input)
-			if (url.pathname === "/api/v2/user") return reply({ id: 42 })
 			if (url.pathname === "/api/v2/resources")
 				return reply([
 					{
@@ -311,7 +307,7 @@ test("Plex finishes all history pages and rejects duplicate, changing, oversized
 	for (const mode of [
 		"normal",
 		"duplicate",
-		"changed",
+		"shrunk",
 		"empty",
 		"oversized",
 	] as const) {
@@ -327,8 +323,8 @@ test("Plex finishes all history pages and rejects duplicate, changing, oversized
 						totalSize:
 							mode === "oversized"
 								? 50001
-								: mode === "changed" && offset
-									? 3
+								: mode === "shrunk" && offset
+									? 1
 									: 2,
 						size: mode === "empty" && offset ? 0 : 1,
 						Metadata:
@@ -456,22 +452,156 @@ test("Plex PIN uses the documented forwarding endpoints and keeps the access tok
 	])
 })
 
-test("an owned server uses its local owner account 1 rather than the Plex account ID", async () => {
+test("a growing Plex history imports only the initial snapshot, including when a page crosses its end", async () => {
 	const f = fixture()
-	f.history.forEach((row) => {
-		row.accountID = 1
-	})
+	const offsets: number[] = []
 	const client = createPlexClient({
 		http: async (input, options) => {
-			if (input.includes("/status/sessions/history/all")) {
-				assert.equal(new URL(input).searchParams.get("accountID"), "1")
-				return reply({ MediaContainer: { size: 2, Metadata: f.history } })
-			}
+			if (!input.includes("/status/sessions/history/all"))
+				return f.http(input, options)
+			const offset = Number(options?.headers?.["X-Plex-Container-Start"])
+			offsets.push(offset)
+			assert.ok(offset < 2, "must stop at the first total")
+			return reply({
+				MediaContainer: {
+					offset,
+					totalSize: offset ? 3 : 2,
+					size: offset ? 2 : 1,
+					Metadata: offset
+						? [
+								f.history[1],
+								{ ...f.history[1], historyKey: "/status/sessions/history/3" },
+							]
+						: [f.history[0]],
+				},
+			})
+		},
+	})
+	const parsed = await client.readImport("secret", "client")
+	assert.equal(parsed.observations.length, 2)
+	assert.deepEqual(offsets, [0, 1])
+})
+
+test("deleted and malformed history rows are unmatched without losing good plays or the RSS feed", async () => {
+	const f = fixture()
+	const rows = [
+		f.history[0],
+		{ ...f.history[1], ratingKey: undefined },
+		{ ...f.history[1], historyKey: "/status/sessions/history/3", title: 123 },
+		{
+			...f.history[1],
+			historyKey: "/status/sessions/history/4",
+			viewedAt: 1e20,
+		},
+		null,
+		{ ...f.history[1], historyKey: "broken", accountID: 99 },
+	]
+	const client = createPlexClient({
+		http: async (input, options) => {
+			if (input.includes("/status/sessions/history/all"))
+				return reply({ MediaContainer: { size: rows.length, Metadata: rows } })
+			if (input.startsWith("https://rss.plex.tv/"))
+				return {
+					text: "<rss><channel><item><title>Friends</title><category>show</category><guid>tmdb://1668</guid></item></channel></rss>",
+					headers: {},
+				}
 			return f.http(input, options)
 		},
 	})
-	assert.equal(
-		(await client.readImport("owner-token", "client")).observations.length,
-		2,
+	const parsed = await client.readImport(
+		"secret",
+		"client",
+		"https://rss.plex.tv/watchlist/feed",
 	)
+	assert.equal(parsed.observations.length, 6)
+	assert.equal(parsed.observations[0].tmdbId, 862)
+	assert.equal(parsed.observations.at(-1)?.kind, "want")
+	assert.deepEqual(
+		parsed.observations.slice(1, 5).map((row) => row.problem?.outcome),
+		["unmatched", "unmatched", "unmatched", "unmatched"],
+	)
+	assert.equal(
+		parsed.observations[1].key,
+		"plex:watch:server-1:/status/sessions/history/2",
+	)
+})
+
+test("metadata requests include GUIDs and legacy agents supply fallback movie identities", async () => {
+	for (const [guid, expected] of [
+		["com.plexapp.agents.imdb://tt0114709?lang=en", [null, "tt0114709"]],
+		["com.plexapp.agents.themoviedb://862?lang=en", [862, null]],
+		["com.plexapp.agents.themoviedb://862/1/2?lang=en", [null, null]],
+	] as const) {
+		const f = fixture()
+		const client = createPlexClient({
+			http: async (input, options) => {
+				const url = new URL(input)
+				if (url.pathname === "/library/metadata/10") {
+					assert.equal(url.searchParams.get("includeGuids"), "1")
+					return reply({
+						MediaContainer: {
+							Metadata: [{ type: "movie", title: "Toy Story", guid }],
+						},
+					})
+				}
+				return f.http(input, options)
+			},
+		})
+		const [row] = (await client.readImport("secret", "client")).observations
+		assert.equal(row.problem, undefined)
+		assert.deepEqual([row.tmdbId, row.imdbId], expected)
+	}
+})
+
+test("RSS enforces shared XML complexity bounds and reports an item limit distinctly", async () => {
+	for (const [xml, warning] of [
+		[`<rss>${"<x/>".repeat(1_000_000)}</rss>`, /XML is too complex/],
+		[
+			`<rss>${"<x>".repeat(64)}${"</x>".repeat(64)}</rss>`,
+			/XML is too complex/,
+		],
+		[
+			`<rss><channel>${"<item><title>X</title><category>movie</category><guid>tmdb://1</guid></item>".repeat(
+				50_001,
+			)}</channel></rss>`,
+			/exceeds 50,000 items/,
+		],
+	] as const) {
+		const client = createPlexClient({
+			http: async (input) =>
+				input.startsWith("https://rss.plex.tv/")
+					? { text: xml, headers: {} }
+					: reply([]),
+		})
+		const parsed = await client.readImport(
+			"secret",
+			"client",
+			"https://rss.plex.tv/watchlist/feed",
+		)
+		assert.deepEqual(parsed.observations, [])
+		assert.match(parsed.warnings.join(" "), warning)
+	}
+})
+
+test("new plays beyond the import limit do not invalidate an already bounded history snapshot", async () => {
+	const f = fixture()
+	const client = createPlexClient({
+		http: async (input, options) => {
+			if (!input.includes("/status/sessions/history/all"))
+				return f.http(input, options)
+			const offset = Number(options?.headers?.["X-Plex-Container-Start"])
+			return reply({
+				MediaContainer: {
+					offset,
+					totalSize: offset ? 50_001 : 2,
+					size: offset ? 50_000 : 1,
+					Metadata: offset
+						? [f.history[1], ...Array(49_999).fill(null)]
+						: [f.history[0]],
+				},
+			})
+		},
+	})
+	const parsed = await client.readImport("secret", "client")
+	assert.equal(parsed.observations.length, 2)
 })

@@ -4,22 +4,47 @@ import {
 	createHash,
 	randomBytes,
 } from "node:crypto"
+import { CONNECTION_WINDOW_MS } from "./connect-request.server.ts"
 import { run, select } from "./store.server.ts"
-import {
-	CONNECTION_WINDOW_MS,
-	type Connection,
-	type ConnectionStore,
-} from "./tmdb-connect.server.ts"
 
+export type ConnectionSource = "tmdb" | "plex"
+
+export interface Connection {
+	source?: ConnectionSource
+	id: string
+	userId: string
+	requestToken: string
+	pinId?: string
+	consumed?: boolean
+	expiresAt: number
+	accessToken?: string
+	accountId?: string
+	canceled?: boolean
+	cleanupAttempts?: number
+}
+export interface ConnectionStore {
+	create(value: Connection, available: number): Promise<boolean>
+	/** Atomic lease, enforcing ownership when requested. A lease lasts ten minutes. */
+	claim(
+		id: string,
+		userId: string | undefined,
+		now: number,
+	): Promise<Connection | null>
+	/** Omitted: retain the lease. A time releases for retry; null pauses for operator recovery. */
+	save(value: Connection, available?: number | null): Promise<void>
+	pause(id: string): Promise<void>
+	remove(id: string): Promise<void>
+	due(now: number): Promise<string[]>
+}
 /** Credentials never enter SQL parameters in plaintext (the DB client logs parameters). */
 export function createConnectionStore(
 	secret: () => string,
 	previousSecret: () => string = () => "",
-	source: "tmdb" | "plex" = "tmdb",
+	source: ConnectionSource = "tmdb",
 ): ConnectionStore {
 	const key = (value: string) => {
 		if (!/^[a-f0-9]{64}$/i.test(value))
-			throw new Error("TMDB Connect encryption key is not configured")
+			throw new Error("Import connection encryption key is not configured")
 		return Buffer.from(value, "hex")
 	}
 	const keyId = (bytes: Buffer) =>
@@ -40,7 +65,7 @@ export function createConnectionStore(
 		const keys = [secret(), previousSecret()].filter(Boolean).map(key)
 		const selected = keys.find((value) => keyId(value) === idKey)
 		if (version !== "v1" || !selected || !encoded)
-			throw new Error("TMDB Connect encryption key is unavailable")
+			throw new Error("Import connection encryption key is unavailable")
 		const bytes = Buffer.from(encoded, "base64")
 		const decipher = createDecipheriv(
 			"aes-256-gcm",
@@ -103,7 +128,12 @@ export function createConnectionStore(
 			const value = open(id, row.payload)
 			if ((value.source ?? "tmdb") !== source) return null
 			const interactive = userId === undefined ? null : value
-			if (interactive?.canceled || interactive?.accessToken) return null
+			if (
+				interactive?.canceled ||
+				interactive?.consumed ||
+				interactive?.accessToken
+			)
+				return null
 			const result = await run(
 				"UPDATE doc.user_import_connection SET lease_until = ? WHERE user_id = ? AND slot = ? AND _seq_no = ? AND _primary_term = ?",
 				[

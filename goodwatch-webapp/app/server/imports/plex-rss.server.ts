@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto"
-import { SaxesParser } from "saxes"
+import type { SaxesTagPlain } from "saxes"
 import {
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
 } from "../../domain/imports.ts"
+import { ImportFileError, boundedXml } from "./files.server.ts"
 import { PlexError } from "./plex-http.server.ts"
 
 export function plexFeedUrl(input: string): string {
@@ -31,33 +32,23 @@ export function plexFeedUrl(input: string): string {
 
 export function readPlexRss(xml: string): ImportObservation[] {
 	const rows: ImportObservation[] = []
-	const parser = new SaxesParser()
 	const stack: string[] = []
 	let item: Record<string, string[]> | undefined
 	let text = ""
 	let root = ""
-	parser.on("doctype", () => {
-		throw new PlexError("Plex RSS must not contain a document type.")
-	})
-	parser.on("opentag", (tag) => {
+	const open = (tag: SaxesTagPlain) => {
 		stack.push(tag.name)
-		if (stack.length > 20) throw new PlexError()
 		if (stack.length === 1) root = tag.name
 		if (tag.name === "item" && stack.join("/") === "rss/channel/item") item = {}
 		text = ""
-	})
-	parser.on("text", (value) => {
-		text += value
-	})
-	parser.on("cdata", (value) => {
-		text += value
-	})
-	parser.on("closetag", (tag) => {
+	}
+	const close = () => {
+		const name = stack.at(-1) ?? ""
 		if (item && stack.length === 4) {
-			item[tag.name] ??= []
-			item[tag.name].push(text.trim())
+			item[name] ??= []
+			item[name].push(text.trim())
 		}
-		if (item && tag.name === "item") {
+		if (item && name === "item") {
 			const guids = item.guid ?? []
 			const tmdbId =
 				Number(guids.find((v) => /^tmdb:\/\/[1-9]\d*$/.test(v))?.slice(7)) ||
@@ -108,10 +99,19 @@ export function readPlexRss(xml: string): ImportObservation[] {
 		}
 		stack.pop()
 		text = ""
-	})
+	}
 	try {
-		parser.write(xml).close()
-	} catch {
+		boundedXml(xml, "Plex RSS", {
+			open,
+			text: (value) => {
+				text += value
+			},
+			close,
+		})
+	} catch (error) {
+		if (error instanceof PlexError) throw error
+		if (error instanceof ImportFileError)
+			throw new PlexError(error.message, 400)
 		throw new PlexError("Plex returned an unreadable watchlist RSS feed.")
 	}
 	if (root !== "rss")

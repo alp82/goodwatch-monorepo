@@ -107,3 +107,62 @@ test("Plex pins DNS for the actual socket and refuses redirects without forwardi
 	await assert.rejects(http("https://member.example/history"), /public HTTPS/)
 	assert.equal(requests, 1)
 })
+
+test("Plex DNS uses a bounded cancellable resolver and checks both address families", async (t) => {
+	const dns = await import("node:dns/promises")
+	const { syncBuiltinESMExports } = await import("node:module")
+	const OriginalResolver = dns.Resolver
+	let mode = "mixed"
+	let canceled = 0
+	const queried: string[] = []
+	const resolverMock = t.mock.method(
+		dns.default,
+		"Resolver",
+		class extends OriginalResolver {
+			constructor(options: import("node:dns").ResolverOptions) {
+				super(options)
+				assert.deepEqual(options, { timeout: 2000, tries: 2 })
+			}
+		},
+	)
+	t.mock.method(
+		OriginalResolver.prototype,
+		"resolve4",
+		async (hostname: string) => {
+			queried.push(`${hostname}:4`)
+			return ["8.8.8.8"]
+		},
+	)
+	t.mock.method(
+		OriginalResolver.prototype,
+		"resolve6",
+		async (hostname: string) => {
+			queried.push(`${hostname}:6`)
+			if (mode === "timeout")
+				throw Object.assign(new Error("private hostname"), { code: "ETIMEOUT" })
+			return ["fc00::1"]
+		},
+	)
+	t.mock.method(OriginalResolver.prototype, "cancel", () => {
+		canceled++
+	})
+	syncBuiltinESMExports()
+	t.after(() => {
+		resolverMock.mock.restore()
+		syncBuiltinESMExports()
+	})
+	const http = createPlexHttp()
+	await assert.rejects(http("https://member.example/identity"), /public HTTPS/)
+	mode = "timeout"
+	await assert.rejects(
+		http("https://member.example/identity"),
+		/^Error: Plex could not be read/,
+	)
+	assert.deepEqual(queried, [
+		"member.example:4",
+		"member.example:6",
+		"member.example:4",
+		"member.example:6",
+	])
+	assert.equal(canceled, 2)
+})

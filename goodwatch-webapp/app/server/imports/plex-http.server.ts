@@ -1,4 +1,4 @@
-import { lookup } from "node:dns/promises"
+import { Resolver } from "node:dns/promises"
 import { request } from "node:https"
 import { BlockList, isIP } from "node:net"
 import { networkInterfaces } from "node:os"
@@ -62,6 +62,36 @@ export type PlexHttp = (
 	options?: { method?: "GET" | "POST"; headers?: Record<string, string> },
 ) => Promise<PlexReply>
 
+// c-ares DNS queries do not occupy libuv's filesystem/crypto worker pool.
+// Each request owns its resolver so cancellation cannot interrupt other imports.
+async function resolveAddresses(hostname: string) {
+	const resolver = new Resolver({ timeout: 2000, tries: 2 })
+	const timer = setTimeout(() => resolver.cancel(), 10_000)
+	timer.unref()
+	const absent = (error: unknown): string[] => {
+		if (
+			error instanceof Error &&
+			"code" in error &&
+			["ENODATA", "ENOTFOUND"].includes(String(error.code))
+		)
+			return []
+		throw error
+	}
+	try {
+		const [v4, v6] = await Promise.all([
+			resolver.resolve4(hostname).catch(absent),
+			resolver.resolve6(hostname).catch(absent),
+		])
+		return [
+			...v4.map((address) => ({ address, family: 4 })),
+			...v6.map((address) => ({ address, family: 6 })),
+		]
+	} finally {
+		clearTimeout(timer)
+		resolver.cancel()
+	}
+}
+
 /** No global fetch, proxy, redirect or second DNS lookup can bypass this boundary. */
 export function createPlexHttp(
 	options: {
@@ -70,8 +100,7 @@ export function createPlexHttp(
 		) => Promise<{ address: string; family: number }[]>
 	} = {},
 ): PlexHttp {
-	const resolve =
-		options.resolve ?? ((hostname) => lookup(hostname, { all: true }))
+	const resolve = options.resolve ?? resolveAddresses
 	return async (input, options = {}) => {
 		let url: URL
 		try {
@@ -83,21 +112,12 @@ export function createPlexHttp(
 			throw unsafe()
 		const hostname = url.hostname.replace(/^\[|\]$/g, "")
 		let addresses: { address: string; family: number }[]
-		let dnsTimer: ReturnType<typeof setTimeout> | undefined
 		try {
 			addresses = isIP(hostname)
 				? [{ address: hostname, family: isIP(hostname) }]
-				: await Promise.race([
-						resolve(hostname),
-						new Promise<never>((_, reject) => {
-							dnsTimer = setTimeout(() => reject(new PlexError()), 10_000)
-							dnsTimer.unref()
-						}),
-					])
+				: await resolve(hostname)
 		} catch {
 			throw new PlexError()
-		} finally {
-			clearTimeout(dnsTimer)
 		}
 		if (!addresses.length || addresses.some(({ address }) => !allowed(address)))
 			throw unsafe()

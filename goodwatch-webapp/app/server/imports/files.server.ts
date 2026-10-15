@@ -950,8 +950,8 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 const MAX_XML_ELEMENTS = 1_000_000
 const MAX_XML_DEPTH = 64
 
-/** Saxes cannot fetch entities; both XML adapters share these mandatory bounds. */
-function boundedXml(
+/** Saxes cannot fetch entities; XML adapters share these mandatory bounds. */
+export function boundedXml(
 	value: string,
 	source: string,
 	handlers: {

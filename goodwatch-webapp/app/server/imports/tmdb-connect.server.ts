@@ -1,41 +1,15 @@
 import { randomUUID } from "node:crypto"
-import { createCookie } from "@remix-run/node"
-import { IMPORT_ID_PATTERN, type ParsedImport } from "../../domain/imports.ts"
+import type { ParsedImport } from "../../domain/imports.ts"
+import {
+	CONNECTION_WINDOW_MS,
+	createConnectCookie,
+	isConnectOrigin,
+	readConnectState,
+} from "./connect-request.server.ts"
 import { type TmdbClient, TmdbError } from "./tmdb-client.server.ts"
 
-export const CONNECTION_WINDOW_MS = 10 * 60_000
-
-export interface Connection {
-	source?: "tmdb" | "plex"
-	id: string
-	userId: string
-	requestToken: string
-	expiresAt: number
-	accessToken?: string
-	accountId?: string
-	canceled?: boolean
-	cleanupAttempts?: number
-}
-export interface ConnectionStore {
-	create(value: Connection, available: number): Promise<boolean>
-	/** Atomic lease, enforcing ownership when requested. A lease lasts ten minutes. */
-	claim(
-		id: string,
-		userId: string | undefined,
-		now: number,
-	): Promise<Connection | null>
-	/** Omitted: retain the lease. A time releases for retry; null pauses for operator recovery. */
-	save(value: Connection, available?: number | null): Promise<void>
-	pause(id: string): Promise<void>
-	remove(id: string): Promise<void>
-	due(now: number): Promise<string[]>
-}
-const cookie = createCookie("tmdb-connect", {
-	httpOnly: true,
-	sameSite: "lax",
-	path: "/api/imports/tmdb",
-	maxAge: 15 * 60,
-})
+import type { Connection, ConnectionStore } from "./connect-store.server.ts"
+const cookie = createConnectCookie("tmdb")
 const invalid = () =>
 	new TmdbError(
 		"Connection expired, start again from Imports, or wait for the current connection to finish.",
@@ -135,7 +109,7 @@ export function createTmdbConnect(deps: {
 			if (!userId) return fail("Sign in to connect your TMDB account.", 401)
 			if (request.method !== "POST") return fail("Method not allowed", 405)
 			const origin = deps.origin()
-			if (!origin || request.headers.get("Origin") !== origin)
+			if (!isConnectOrigin(request, origin))
 				return fail("Open Imports on GoodWatch to connect TMDB.", 403)
 			const redirect = (location: string) => {
 				headers.set("Location", location)
@@ -176,13 +150,8 @@ export function createTmdbConnect(deps: {
 				if (step !== "return" && step !== "abandon")
 					return fail("Not found", 404)
 				const form = await request.formData()
-				const id = form.get("state")
-				if (
-					typeof id !== "string" ||
-					!IMPORT_ID_PATTERN.test(id) ||
-					(await cookie.parse(request.headers.get("Cookie"))) !== id
-				)
-					throw invalid()
+				const id = await readConnectState(request, form, cookie)
+				if (!id) throw invalid()
 				const connection = await store.claim(id, userId, now())
 				if (!connection) throw invalid()
 				let failure: Error | undefined

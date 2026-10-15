@@ -1,21 +1,17 @@
 import { randomUUID } from "node:crypto"
-import { createCookie } from "@remix-run/node"
-import { IMPORT_ID_PATTERN, type ParsedImport } from "../../domain/imports.ts"
+import type { ParsedImport } from "../../domain/imports.ts"
+import {
+	CONNECTION_WINDOW_MS,
+	createConnectCookie,
+	isConnectOrigin,
+	readConnectState,
+} from "./connect-request.server.ts"
+import type { Connection, ConnectionStore } from "./connect-store.server.ts"
 import type { PlexClient } from "./plex-client.server.ts"
 import { PlexError } from "./plex-http.server.ts"
 import { plexFeedUrl } from "./plex-rss.server.ts"
-import {
-	CONNECTION_WINDOW_MS,
-	type Connection,
-	type ConnectionStore,
-} from "./tmdb-connect.server.ts"
 
-const cookie = createCookie("plex-connect", {
-	httpOnly: true,
-	sameSite: "lax",
-	path: "/api/imports/plex",
-	maxAge: 15 * 60,
-})
+const cookie = createConnectCookie("plex")
 const invalid = () =>
 	new PlexError(
 		"Connection expired or already used. Start again from Imports.",
@@ -32,11 +28,34 @@ export function createPlexConnect(deps: {
 }) {
 	const now = deps.now ?? Date.now
 	const { store, client } = deps
+	async function discard(connection: Connection) {
+		connection.requestToken = ""
+		connection.pinId = undefined
+		connection.accessToken = undefined
+		connection.canceled = true
+		try {
+			await store.save(connection)
+		} finally {
+			await store.remove(connection.id)
+		}
+	}
 	return {
 		async sweep() {
 			for (const id of await store.due(now())) {
-				const value = await store.claim(id, undefined, now())
-				if (value) await store.remove(id)
+				let value: Connection | null = null
+				try {
+					value = await store.claim(id, undefined, now())
+					if (value) await discard(value)
+				} catch {
+					if (value) await store.save(value, now() + 60_000).catch(() => {})
+					else {
+						await store.pause(id).catch(() => {})
+						console.error(
+							"Plex connection cleanup paused; operator action required.",
+							{ connectionId: id },
+						)
+					}
+				}
 			}
 		},
 		async handle(request: Request, step: string): Promise<Response> {
@@ -52,7 +71,7 @@ export function createPlexConnect(deps: {
 			if (!userId) return fail("Sign in to connect Plex.", 401)
 			if (request.method !== "POST") return fail("Method not allowed", 405)
 			const origin = deps.origin()
-			if (!origin || request.headers.get("Origin") !== origin)
+			if (!isConnectOrigin(request, origin))
 				return fail("Open Imports on GoodWatch to connect Plex.", 403)
 			try {
 				if (step === "start") {
@@ -71,7 +90,7 @@ export function createPlexConnect(deps: {
 					let code: string
 					try {
 						const pin = await client.createPin(connection.id)
-						connection.requestToken = pin.id
+						connection.pinId = pin.id
 						code = pin.code
 						await store.save(connection, connection.expiresAt)
 					} catch {
@@ -91,13 +110,8 @@ export function createPlexConnect(deps: {
 				if (step !== "return" && step !== "abandon")
 					return fail("Not found", 404)
 				const form = await request.formData()
-				const id = form.get("state")
-				if (
-					typeof id !== "string" ||
-					!IMPORT_ID_PATTERN.test(id) ||
-					(await cookie.parse(request.headers.get("Cookie"))) !== id
-				)
-					throw invalid()
+				const id = await readConnectState(request, form, cookie)
+				if (!id) throw invalid()
 				const feed = form.get("feed")
 				const feedUrl =
 					typeof feed === "string" && feed.trim() && step === "return"
@@ -111,7 +125,7 @@ export function createPlexConnect(deps: {
 					if (step === "return") {
 						if (connection.expiresAt <= now()) throw invalid()
 						const token = await client.claimPin(
-							connection.requestToken,
+							connection.pinId ?? connection.requestToken,
 							connection.id,
 						)
 						if (!token) {
@@ -122,21 +136,14 @@ export function createPlexConnect(deps: {
 								409,
 							)
 						}
-						connection.accessToken = token
+						connection.consumed = true
 						await store.save(connection)
 						parsed = await client.readImport(token, connection.id, feedUrl)
 					}
 				} finally {
 					if (!pending) {
 						// Wipe the encrypted payload before deleting, so a failed delete retains no credential.
-						connection.requestToken = ""
-						connection.accessToken = undefined
-						connection.canceled = true
-						try {
-							await store.save(connection)
-						} finally {
-							await store.remove(id)
-						}
+						await discard(connection)
 						headers.append(
 							"Set-Cookie",
 							await cookie.serialize("", {
