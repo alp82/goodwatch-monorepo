@@ -11,8 +11,8 @@ Built on October 14, 2026 on `auth/connector-help-pages`, branched from `origin/
   first in its section: see and change on Business, Enterprise and Edu, see only on Pro, web only ([#532](https://github.com/alp82/goodwatch-monorepo/issues/532)).
 - **`/privacy`**: with the flag on, an "In short" box and four plain-language sections before the old policy:
   signing in and your account, emails we send, the move from Supabase, connected apps (`#connected-apps`). The old
-  text stays, with one change: the sign-in list names only Google. Every statement the owner still has to settle is
-  a pink "Owner to confirm" box (16 on the page). They are visible on purpose: remove each one before the flag goes on.
+  text stays, with one change: the sign-in list names only Google. The draft marked 16 statements for the owner; on
+  October 15, 2026 the owner kept all of them as written, with no added disclaimers, and the markers were removed.
 - **`app/ui/connector/`** for [#570](https://github.com/alp82/goodwatch-monorepo/issues/570): the address, paths
   and the can see / can change / can never lists in one place (`connector.ts`), and `ConnectorAddressCard`, the
   "Connect a new app" box with the address and the "Step by step for Claude and ChatGPT" link, ready to drop under
