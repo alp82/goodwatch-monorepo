@@ -1,0 +1,30 @@
+name: Auth stack webapp tests
+
+on:
+  pull_request:
+    paths:
+      - 'goodwatch-webapp/**'
+      - '.github/workflows/auth-stack-webapp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webapp-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install locked dependencies and transport patches
+        working-directory: goodwatch-webapp
+        run: npm ci
+      - name: Run webapp unit and tracking recovery regressions
+        working-directory: goodwatch-webapp
+        run: npm test
