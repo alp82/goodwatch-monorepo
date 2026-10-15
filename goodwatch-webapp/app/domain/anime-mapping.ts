@@ -8,6 +8,9 @@ export interface AnimeEntry {
 	progress?: number
 	/** Completed cours must include episodeCount; completion never means whole-show Seen. */
 	completed?: boolean
+	/** Entry-level dates are evidence, not dates to copy onto each episode. */
+	startedAt?: string | null
+	finishedAt?: string | null
 	/** The source's total when known; never guessed from the TMDB season. */
 	episodeCount?: number
 }
@@ -36,3 +39,11 @@ export const animeMappingSchema = z.object({
 })
 
 export type AnimeMapping = z.infer<typeof animeMappingSchema>
+
+/** Durable receipt evidence for an entry score; never a whole-show rating. */
+export interface AnimeScorePlacement {
+	mapping?: AnimeMapping
+	ranges: { season: number; firstEpisode: number; lastEpisode: number }[] | null
+	/** Why a complete range could not be established; raw entry evidence is still retained. */
+	reason?: string
+}
