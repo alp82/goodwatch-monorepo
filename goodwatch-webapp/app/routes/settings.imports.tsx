@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, MovieLens or CSV into GoodWatch.",
+			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, TMDB, Kodi, MovieLens, MyAnimeList, Kitsu or CSV into GoodWatch.",
 	},
 	{ name: "robots", content: "noindex, nofollow" },
 ]
@@ -68,7 +68,7 @@ export default function SettingsImports() {
 				<div
 					role="tablist"
 					aria-label="Import source"
-					className="grid grid-cols-3 rounded-lg border border-slate-700 bg-slate-900 p-1"
+					className="grid grid-cols-2 sm:grid-cols-4 rounded-lg border border-slate-700 bg-slate-900 p-1"
 				>
 					{TABS.map((tab, index) => (
 						<button

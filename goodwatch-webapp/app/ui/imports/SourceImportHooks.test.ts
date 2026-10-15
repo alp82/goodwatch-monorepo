@@ -68,6 +68,7 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	assert.match(rendered.malUpload, /panel.php\?go=export/)
 	assert.match(rendered.malUpload, /Kitsu.*Settings → Export/)
 	assert.match(rendered.malUpload, /not available to every member/)
+	assert.match(rendered.malUpload, /Kitsu watches are always undated/)
 	assert.match(rendered.malUpload, /accept="[^"]*\.xml[^"]*\.gz/)
 	assert.doesNotMatch(rendered.malUpload, /Sign in to Trakt/)
 	assert.match(
@@ -79,6 +80,10 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		/href="https:\/\/github.com\/Fribb\/anime-lists"[^>]*>Fribb/,
 	)
 	assert.match(rendered.malReceipt, /Comments and tags are not imported/)
+	assert.match(
+		rendered.malReceipt,
+		/Season scores are kept for later and not applied/,
+	)
 	assert.match(rendered.statusOnly, /Show statuses/)
 	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)
 	assert.match(

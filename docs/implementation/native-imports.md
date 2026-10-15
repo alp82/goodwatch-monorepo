@@ -33,7 +33,7 @@ Rating-only imports preserve existing intention lists, following the existing IM
 
 Issue #645 adds `kind: "show_status"` with `showStatus: "watching" | "on_hold" | "dropped" | "plan_to_watch" | "completed"`. The MyAnimeList/Kitsu adapter emits this kind. Adapters can submit a `ParsedImport` through `previewParsedImport(userId, fileName, parsed, fileHash?)`; uploads delegate to the same boundary after parsing and hashing their original bytes. All observations still pass through catalog matching, preview, selection, the durable receipt, resume and undo.
 
-- Watching, On hold and Dropped can arrive without any watches. Only Not started or Watching may change; On hold, Dropped and Seen already in GoodWatch are kept, even with “Use the export instead”. A state version changed after preview is also kept. One applicable status per matched TMDB show is required; multiple applicable statuses are invalid with a reason.
+- Watching, On hold and Dropped can arrive without any watches. Only Not started or Watching may change; On hold, Dropped and Seen already in GoodWatch are kept, even with “Use the export instead”. A state version changed after preview is also kept. Identical statuses for a matched TMDB show collapse to one applicable change; the other rows remain on the receipt. Different statuses (including Completed) are invalid with a reason naming them.
 - Plan to watch remains a selectable show status observation and writes Want to See through the existing list journal, only when the show has not started and has no watches. It does not create a tracking state or a watch.
 - Completed requires `completionScope: "show"`, meaning the adapter has established completion of the **whole matched TMDB show**. `"part"` and missing scope are unsupported and remain visible in the receipt. Episode/season coordinates on a status are unsupported. An anime cour or part must never claim whole-show scope merely because its title matches a show.
 - Whole-show completion uses the machine’s import transitions (rows 38–39): mark missing aired regular episodes in the current pass, with unknown dates and import ownership. Specials and unaired episodes are excluded. There is no standing Seen press; the import's Undo owns these watches. It stays Watching when a started regular season still has unaired episodes; otherwise it becomes Seen. A wholly future season does not count as still airing. Completion scope does not change the ordinary episode-watch state rules.
@@ -132,7 +132,7 @@ Issue [#619](https://github.com/alp82/goodwatch-monorepo/issues/619) adds a one-
 
 The member chooses TMDB → Connect TMDB, approves on themoviedb.org, then chooses Preview TMDB import on returning. The return loader reads the owned import directly, since previews are absent from import history. The existing selection, conflict policy, confirm, receipt, skipped CSV and undo follow. Movie and show ratings round half steps up (7.5 → 8, 0.5 → 1). Original rating timestamps stay in the observation/receipt; the score writer retains its own GoodWatch mutation timestamps for ownership and undo. Rating dates never become watch dates. Watchlists become Want to See; favorites become favorites, both without source dates. A cluster of 100 or more ratings on one UTC calendar day warns about possible migration dates without changing those dates. Episode ratings, custom lists and ongoing sync are excluded; no v3 session is created.
 
-`previewFetchedImport(member, displayName, observations)` accepts the `ParsedImport` returned by a fetch adapter. File adapters and fetched sources enter the same `createParsedPreview`; connections fabricate neither files nor archives. The shared 50,000-observation limit, catalog-ID matching, classification, journal and later operations apply. `IMPORT_SOURCE_FILE` distinguishes file sources. Missing catalog titles remain unapplied.
+`previewFetchedImport(member, displayName, observations)` accepts the `ParsedImport` returned by a fetch adapter. File adapters and fetched sources enter the same `createParsedPreview`; connections fabricate neither files nor archives. The shared 50,000-observation limit, catalog-ID matching, classification, journal and later operations apply. `IMPORT_SOURCE_UPLOAD` supplies each file source’s extensions, accept value, upload instructions and receipt credits; its null TMDB descriptor distinguishes connections from file sources. Missing catalog titles remain unapplied.
 
 The client reads all six v4 lists sequentially, with at least 30 ms between pages. A shortfall or changing count warns and retains the data read; duplicate IDs and unexpected page numbers still fail. Page estimates (`total_pages * 20`) and reported totals cannot exceed 50,000. Each request uses `TMDB_TIMEOUT_MS` (five seconds by default), with a five-minute account-read budget. HTTP 429 honors `Retry-After` (seconds or HTTP date), with exponential fallback and at most three retries per request. Waits over 30 seconds defer cleanup instead of holding an interactive request. The panel includes the [required notice and approved TMDB logo](https://developer.themoviedb.org/docs/faq#what-are-the-attribution-requirements); `public/tmdb-logo.svg` is an unchanged copy of TMDB's blue short logo from its [branding page](https://www.themoviedb.org/about/logos-attribution).
 
@@ -183,12 +183,22 @@ and episode placement use the shared pinned crosswalk and resolver. Movies and
 unsupported media types remain visible as unsupported; the current crosswalk only
 provides TMDB shows. Missing or ambiguous mappings remain unmatched.
 
-- `my_score` 1–10 becomes a show rating via explicit `ratingScope: "show"`; 0 is
-  unset. Malformed scores are invalid. If several entries supply different scores
-  for one show, all those ratings remain invalid with an explanation.
+- `my_score` 1–10 is retained as a score for that entry/cour, never as a show
+  rating; 0 is unset and malformed scores are invalid. Per the owner decision of
+  2026-10-16, each score remains an unsupported observation in the existing
+  `doc.user_import_item.payload` journal, the same durable container used for
+  unapplied Trakt season/episode ratings. The payload retains `score`,
+  `animeEntry.source`/`id`, the TMDB show, and `animeScorePlacement`: the pinned
+  snapshot mapping plus resolved season/first-episode/last-episode ranges for the
+  **full entry**, independent of watched progress. Missing totals or unavailable,
+  ambiguous or incompatible mappings retain the evidence and a reason with null
+  ranges; no range is guessed. Apply and Undo keep this receipt evidence. Scores
+  never enter `user_score` or mark a show Seen. The receipt says season scores are
+  kept for later and not applied. **DDL: none**; the existing payload is durable.
 - Watching, On-Hold (including Kitsu's On Hold), Dropped and Plan to Watch use the
-  existing show-status kind, selection, conflict and protection rules. Multiple
-  applicable statuses for one show remain invalid. Completed carries `part`
+  existing show-status kind, selection, conflict and protection rules. Identical
+  statuses collapse to one change; differing statuses are invalid with a reason
+  naming them, including Completed. Completed carries `part`
   scope and remains unsupported as a status: only its reported episode watches
   may make the show Seen. It never fills the rest of a TMDB show.
 - Progress N emits exactly N observations, numbered 1…N within the tracker entry,
@@ -196,12 +206,18 @@ provides TMDB shows. Missing or ambiguous mappings remain unmatched.
   The resolver establishes dates only for a completed entry whose progress equals
   its known total and whose full start and finish dates are the same valid day.
   Other progress is “don't know when”; no interpolation or endpoint guesses.
-  The member's “without dates” choice also discards that single-day evidence.
+  Kitsu is recognized by `kitsu-*-anime.xml[.gz]` or absent MAL identity and titles;
+  all Kitsu episode watches are undated because its dates can be completion click
+  times. A cluster of 100 or more entries sharing a start/finish day warns about
+  migration or click dates. The member's “without dates” choice also discards
+  MyAnimeList single-day evidence.
 - Comments and tags are not retained or imported, and receipt notes say so.
   The receipt visibly links **Anime-Lists** for episode mapping and **Fribb** for
   tracker identities. Their server-side use was approved on 2026-10-15.
 
-Saxes rejects DTDs/entities, malformed XML, manga (`user_export_type` 2 or manga
+The shared `boundedXml()` used by Kodi and MyAnimeList enforces `MAX_XML_DEPTH`
+and `MAX_XML_ELEMENTS`; Saxes rejects DTDs/entities and malformed XML. The adapter
+rejects manga (`user_export_type` 2 or manga
 entries), duplicate entry ids and duplicate supported fields. Parsing retains only
 one entry's supported fields at a time; metadata is ignored. Limits are 20 MB
 uploaded, 32 MB expanded gzip, 50,000 entries/observations, 64 nested elements and
@@ -209,6 +225,7 @@ one million total elements. Gzip integrity is checked by the bounded decoder.
 
 Tests exercise public parsing, the real import service and tracking writer with
 fake database boundaries, and rendered upload/receipt controls. Preview, apply,
-repeat receipts, status/rating conflicts, date selection, completed cours and Undo
+repeat receipts, identical/conflicting statuses, retained season scores and their
+pinned placement, date selection, completed cours and Undo
 are covered. Real member exports, browser interaction and live Crate verification
 remain untested. No schema or landing-surface changes are required.

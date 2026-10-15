@@ -1,4 +1,7 @@
-import type { AnimeEntry } from "../../domain/anime-mapping.ts"
+import type {
+	AnimeEntry,
+	AnimeScorePlacement,
+} from "../../domain/anime-mapping.ts"
 import {
 	type AnimeMappings,
 	resolveAnimeParent,
@@ -369,7 +372,9 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 			? matched(candidates[0])
 			: unmatched("Season and episode did not match uniquely within this show.")
 	}
-	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
+	const withDates = async (
+		row: EpisodeEvidence,
+	): Promise<EpisodeResolution> => {
 		const result = await resolve(row)
 		if (!row.animeEntry || result.status !== "matched") return result
 		const entry = row.animeEntry
@@ -388,6 +393,67 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 		}
 		return { ...result, datePolicy: "unknown" }
 	}
+	return Object.assign(withDates, {
+		animeEntryPlacement: async (
+			entry: AnimeEntry,
+		): Promise<AnimeScorePlacement> => {
+			const parent = await resolveAnimeParent(entry, data.animeMappings)
+			if (parent.status === "unmatched")
+				return { ranges: null, reason: parent.reason }
+			const mapping = parent.mapping
+			const total = entry.episodeCount
+			if (
+				!total ||
+				!Number.isSafeInteger(total) ||
+				total < 1 ||
+				total > EPISODE_CATALOG_LIMIT
+			)
+				return {
+					mapping,
+					ranges: null,
+					reason:
+						"The entry needs a supported episode total to retain its full season score range.",
+				}
+			const catalog = await data.episodes(mapping.showId)
+			if (catalog.length > EPISODE_CATALOG_LIMIT)
+				return {
+					mapping,
+					ranges: null,
+					reason:
+						"The episode catalog is too large to establish a unique score range.",
+				}
+			const key = JSON.stringify([
+				mapping.showId,
+				entry.source,
+				entry.id,
+				total,
+			])
+			let pending = animeCache.get(key)
+			if (!pending) {
+				pending = mapAnimeProgress(
+					mapping.showId,
+					entry,
+					total,
+					catalog.filter((e) => Number(e.show_id) === mapping.showId),
+					data,
+				)
+				animeCache.set(key, pending)
+			}
+			const result = await pending
+			if (!Array.isArray(result))
+				return { mapping, ranges: null, reason: result.reason }
+			const ranges: NonNullable<AnimeScorePlacement["ranges"]> = []
+			for (const episode of result) {
+				const last = ranges.at(-1)
+				const season = Number(episode.season_number)
+				const number = Number(episode.episode_number)
+				if (last && last.season === season && last.lastEpisode + 1 === number)
+					last.lastEpisode = number
+				else ranges.push({ season, firstEpisode: number, lastEpisode: number })
+			}
+			return { mapping, ranges }
+		},
+	})
 }
 
 // Validate the entire alternative cut, not just the requested part. It may replace

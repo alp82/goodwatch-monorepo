@@ -39,3 +39,11 @@ export const animeMappingSchema = z.object({
 })
 
 export type AnimeMapping = z.infer<typeof animeMappingSchema>
+
+/** Durable receipt evidence for an entry score; never a whole-show rating. */
+export interface AnimeScorePlacement {
+	mapping?: AnimeMapping
+	ranges: { season: number; firstEpisode: number; lastEpisode: number }[] | null
+	/** Why a complete range could not be established; raw entry evidence is still retained. */
+	reason?: string
+}

@@ -11,13 +11,17 @@ const xml = (rows: string) =>
 		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${rows}</myanimelist>`,
 	)
 
-test("MAL plain XML and original gzip yield a show score, status and only reported progress with stable entry evidence", async () => {
+test("MAL plain XML and original gzip retain a season score, status and only reported progress with stable entry evidence", async () => {
 	const plain = await parseImportFile("myanimelist", xml(entry))
 	assert.deepEqual(
 		await parseImportFile("myanimelist", gzipSync(xml(entry))),
 		plain,
 	)
 	assert.equal(plain.source, "myanimelist")
+	assert.match(
+		plain.observations.find((row) => row.score === 8)?.problem?.reason ?? "",
+		/season score.*kept for later.*not applied/i,
+	)
 	assert.deepEqual(
 		plain.observations.map((row) => [
 			row.kind,
@@ -27,7 +31,7 @@ test("MAL plain XML and original gzip yield a show score, status and only report
 		]),
 		[
 			["show_status", undefined, "on_hold", undefined],
-			["rating", 8, undefined, undefined],
+			["unsupported", 8, undefined, undefined],
 			["watch", undefined, undefined, 1],
 			["watch", undefined, undefined, 2],
 		],
@@ -160,8 +164,9 @@ test("invalid entry numbers and scores stay visible and movie/music entries cann
 			xml(entry.replace("<my_score>8", `<my_score>${score}`)),
 		)
 		assert.equal(
-			parsed.observations.find((row) => row.kind === "rating")?.problem
-				?.outcome,
+			parsed.observations.find((row) =>
+				row.key.startsWith("myanimelist:rating:"),
+			)?.problem?.outcome,
 			"invalid",
 		)
 		assert.equal(
@@ -177,5 +182,50 @@ test("invalid entry numbers and scores stay visible and movie/music entries cann
 		badStatus.observations.find((row) => row.kind === "show_status")?.problem
 			?.outcome,
 		"invalid",
+	)
+})
+
+test("Kitsu XML never supplies viewing dates, even when its completion click set both dates to one day", async () => {
+	const kitsu =
+		"<anime><series_animedb_id>50602</series_animedb_id><series_episodes>13</series_episodes><my_watched_episodes>13</my_watched_episodes><my_status>Completed</my_status><my_start_date>2022-12-24</my_start_date><my_finish_date>2022-12-24</my_finish_date></anime>"
+	const parsed = await parseImportFile("myanimelist", xml(kitsu))
+	assert.ok(
+		parsed.observations.every(
+			(row) => !row.animeEntry?.startedAt && !row.animeEntry?.finishedAt,
+		),
+	)
+	assert.match(parsed.warnings.join(" "), /Kitsu.*click.*undated/i)
+	const renamedShape = await parseImportFile(
+		"myanimelist",
+		xml(
+			kitsu.replace(
+				"<series_episodes>",
+				"<series_title>Title</series_title><series_episodes>",
+			),
+		),
+		undefined,
+		"kitsu-member-anime.xml",
+	)
+	assert.ok(
+		renamedShape.observations.every((row) => !row.animeEntry?.startedAt),
+	)
+})
+
+test("many entries sharing one start/finish day warn about click or migration dates without adding watches", async () => {
+	const rows = Array.from({ length: 100 }, (_, index) =>
+		entry
+			.replace(">50602<", `>${index + 1}<`)
+			.replace("On-Hold", "Completed")
+			.replace("2022-10-01", "2022-12-24")
+			.replace("0000-00-00", "2022-12-24"),
+	).join("")
+	const parsed = await parseImportFile("myanimelist", xml(rows))
+	assert.match(
+		parsed.warnings.join(" "),
+		/100 anime entries share.*day.*click or migration/i,
+	)
+	assert.equal(
+		parsed.observations.filter((row) => row.kind === "watch").length,
+		200,
 	)
 })

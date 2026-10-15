@@ -73,7 +73,10 @@ const receipt = () => {
 		...summary(2),
 		source: "myanimelist",
 		status: "done",
-		warnings: ["Comments and tags are not imported."],
+		warnings: [
+			"Comments and tags are not imported.",
+			"Season scores are kept for later and not applied as show ratings.",
+		],
 	}
 	client.setQueryData(sourceImportKeys.detail(item.id), { import: item })
 	return renderToStaticMarkup(

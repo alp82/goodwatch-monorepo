@@ -1,9 +1,10 @@
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
-import type {
-	ImportOptions,
-	ImportOutcome,
-	ImportSummary,
+import {
+	IMPORT_SOURCE_UPLOAD,
+	type ImportOptions,
+	type ImportOutcome,
+	type ImportSummary,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
@@ -236,29 +237,20 @@ function Receipt({
 					)}
 				</ul>
 			</div>
-			{summary.source === "myanimelist" && (
-				<p className="text-sm text-gray-400">
-					Anime episode mapping courtesy of{" "}
+			{(IMPORT_SOURCE_UPLOAD[summary.source]?.credits ?? []).map((credit) => (
+				<p key={credit.url} className="text-sm text-gray-400">
+					{credit.purpose} courtesy of{" "}
 					<a
-						href="https://github.com/Anime-Lists/anime-lists"
+						href={credit.url}
 						target="_blank"
 						rel="noopener noreferrer"
 						className={textLink}
 					>
-						Anime-Lists
-					</a>
-					; anime identities courtesy of{" "}
-					<a
-						href="https://github.com/Fribb/anime-lists"
-						target="_blank"
-						rel="noopener noreferrer"
-						className={textLink}
-					>
-						Fribb
+						{credit.name}
 					</a>
 					.
 				</p>
-			)}
+			))}
 			{summary.warnings.length > 0 && (
 				<div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4">
 					<p className="font-semibold text-amber-100">Export notes</p>

@@ -103,6 +103,8 @@ from a group, episode name or the source's season coordinates.
   returns `datePolicy: "day"` and `watchedAt`; spans, partial dates and missing
   dates remain unknown. Preview applies the result without making an
   anime-specific date decision, and the member can still discard all dates.
+  The file adapter strips Kitsu click-time dates before resolving; all Kitsu
+  episode watches remain undated.
   Specials mapped explicitly by the entry are flagged by the existing receipt and
   never count as regular progress.
 
@@ -111,12 +113,20 @@ observation with `animeEntry` but no episode is unmatched. Only mapped episode
 watches reach the existing tracking writer, which derives Watching/Seen using its
 settled rules and preserves explicit member states. Want to See and genuine
 show-level observations remain independent of a failed episode placement. Any
-`review` observation carrying `animeEntry` is retained as unsupported with a
-reason, even if it already has a TMDB show ID. Ratings are also unsupported unless
-an adapter explicitly sets `ratingScope: "show"`. The MAL/Kitsu adapter does so
-under #647's show-score rule; identity still resolves through the shared crosswalk.
-Different entry scores mapped to one show remain invalid rather than choosing by
-file order. This does not grant a cour whole-show completion scope.
+`rating` or `review` observation carrying `animeEntry` is retained as unsupported,
+even if it already has a TMDB show ID. There is no adapter override to apply a
+cour score as a whole-show rating.
+
+MyAnimeList/Kitsu scores are unsupported observations with their numeric `score`
+and source entry evidence retained. The shared resolver’s `animeEntryPlacement`
+uses the same snapshot and catalog validation as watch placement to resolve the
+full entry, independent of watched progress. Preview persists the mapping and
+concrete season/episode ranges in `animeScorePlacement` in the existing durable
+import-item payload (the container also used for unapplied Trakt ratings). A
+missing total or unresolved placement retains the available evidence, null ranges
+and a reason. Receipt evidence survives apply and Undo without a `user_score`
+write. No DDL is needed. See [native imports](native-imports.md#myanimelist-and-kitsu)
+for the owner’s 2026-10-16 entry-score decision.
 
 ## Rollout (not performed on this branch)
 
