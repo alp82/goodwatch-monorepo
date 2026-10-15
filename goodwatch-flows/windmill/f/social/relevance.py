@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 from collections import defaultdict
 from f.social.common import digest, norm, now, stamp
-from f.social.deterministic import mentions, reference_only
+from f.social.deterministic import mentions, reference_only, REFERENCE_BEFORE
 from f.social.inventory import CHANNELS
 from f.social.quality import host_of
 from f.social.rules import foreground
@@ -27,7 +27,8 @@ EDITORIAL = re.compile(r'(?i)\b(?:review|rezension|kritik|lohnt|lohnen|interview
                        r'first look|sneak peek|cast|casting|joins|stars|starring|season|staffel|renew\w*|cancel\w*|'
                        r'premiere|release|start\w*|sequel|reboot|revival|finale|box.office|ratings|viewers|record|'
                        r'rekord|director|regisseur|behind|production|dreh\w*|festival|award\w*|oscar\w*|restor\w*|'
-                       r'animatronic|effects|vfx|analysis|explains?|explained|characters?|how|why)\b')
+                       r'animatronic|effects|vfx|analysis|explains?|explained|confirms?|reactions?|timeline|'
+                       r'who plays|characters?|how|why|best[aä]tigt|erkl[aä]rt|produktions\w*|entt[aä]uschung)\b')
 ANALYSIS = re.compile(r'(?i)\b(?:review|kritik|rezension|analysis|anatomy|interview|q.?a|explains?|explained|why|how)\b')
 RSS_NOISE = re.compile(r'(?i)\b(?:where to watch|how to watch|leaving (?:netflix|prime|hulu|peacock)|'
                        r'leaves (?:netflix|prime|hulu|peacock)|says goodbye|tonight on|heute (?:im|abend|startet)|'
@@ -45,6 +46,28 @@ PERSONAL_NEWS = re.compile(r'(?i)\b(?:signs? with|signs? (?:overall|deal)|signs?
 REPUBLISHED = re.compile(r'(?i)\b(?:republish\w*|re.published|republication|originally published|'
                          r'dieser (?:artikel|beitrag) (?:ist|wurde|erschien) (?:bereits|urspr[uü]nglich)|'
                          r'aktualisierte (?:fassung|version) eines|erneut ver[oö]ffentlicht|wiederver[oö]ffentlich\w*)\b')
+CRAFT = re.compile(r'(?i)\b(?:book changes|cut scenes|finale|character design|performance|'
+                   r'production|adapting|music choices|song choice|goodbye scene)\b')
+DISCUSSION = re.compile(r'(?i)\b(?:talks|discuss\w*|explains?|reveals?|teases|inspired|points out|spoke with)\b|'
+                        r'\b(?:stars?|director|actor|actress)\b.{0,65}\bon\b')
+INTERVIEW = re.compile(r'(?i)\b(?:interview|q\s*[&.]\s*a)\b')
+TRAILER_REACTION = re.compile(r'(?i)\b(?:fans?|audiences?)\b.{0,90}\b(?:split|react\w*)\b|'
+                             r'\btrailer\b.{0,45}\b(?:reactions|divides|divided)\b')
+TITLE_PARTICIPANT = re.compile(r'''(?ix)^[’'"”]*-?\s*(?:[’']s\s+|(?:stars?|director|actor|actress|fans?)\b)''')
+
+
+def trailer_reaction(text):
+    return bool(TRAILER_REACTION.search(text) and re.search(r'(?i)\b(?:trailer|teaser)\b', text))
+
+
+def title_discussion(headline, lead):
+    """A named work's cast/fans can be the subject, rather than a mere credit.
+
+    Require a concrete craft discussion or trailer audience response. A cast
+    member's unrelated career announcement still supplies no title coverage.
+    """
+    combined = headline + '\n' + lead[:500]
+    return bool((CRAFT.search(headline) and DISCUSSION.search(combined)) or trailer_reaction(headline))
 
 
 def title_names(title):
@@ -73,7 +96,10 @@ def foreground_title(item, title, *, social=False):
             pattern = r'(?<!\w)' + r'[\W_]+'.join(map(re.escape, name.split())) + r'(?!\w)'
             for hit in re.finditer(pattern, text, re.I):
                 raw = hit.group()
-                if reference_only(raw, text):
+                if reference_only(raw, text) and not (
+                        not social and where == 'headline' and TITLE_PARTICIPANT.match(text[hit.end():])
+                        and not REFERENCE_BEFORE.search(text[max(0, hit.start() - 40):hit.start()])
+                        and title_discussion(text, body)):
                     continue
                 # An explicit sequel suffix cannot stand in for the linked original.
                 if re.match(r'[’\'"”]*\s+\d+\b', text[hit.end():]) and not re.search(r'\d$', name):
@@ -90,9 +116,14 @@ def foreground_title(item, title, *, social=False):
                 # long excerpt's unrelated production vocabulary is insufficient.
                 prefix = text[max(0, hit.start() - 45):hit.start()]
                 suffix = text[hit.end():hit.end() + 100]
-                subject = re.search(r'(?i)\b(?:in|on|about|for|with|new|upcoming|series|film|movie)\s*[‘\'"“]*$', prefix) or re.match(
-                    r'(?i)^[’\'"”]*\s*(?:[,;:]|is|has|will|wins?|won|leads?|gets?|makes?|premier\w*|season|staffel|trailer|review|kritik)\b', suffix)
+                subject = re.search(r'(?i)\b(?:in|on|about|for|with|new|upcoming|series|film|movie|zum|neuen|neue|mit|serie)\s*[‘\'"“]*$', prefix) or re.match(
+                    r'(?i)^[’\'"”]*\s*(?:[,;:]|(?:is|has|will|wins?|won|leads?|gets?|makes?|premier\w*|'
+                    r'season|staffel|trailer|review|kritik|war|ist|hat|wird|kehrt|start\w*)\b)', suffix)
                 mention = any(m['key'] == name and m['where'] == where and m['rank'] >= 1 for m in found)
+                # German compounds ("Narnia-Film") are explicit subjects even
+                # though the matcher extracts the entire compound as a mention.
+                compound = re.match(r'(?i)^-(?:film|serie)(?!\w)', suffix)
+                mention = mention or bool(compound)
                 if subject and mention and EDITORIAL.search(sentence):
                     return True
     return False
@@ -172,7 +203,7 @@ def editorial_kind(item):
     if re.search(r'(?i)\b(?:review|kritik|rezension)\b', text) or re.search(r'/(?:reviews?|criticism|filmkritiken|rezensionen)/', path) or (
             host == 'film-rezensionen.de' and '/news/' not in path):
         return 'review'
-    if re.search(r'(?i)\b(?:interview|q.?a)\b', text) or '/interviews/' in path:
+    if INTERVIEW.search(text + '\n' + (item.get('context') or '')[:500]) or '/interviews/' in path:
         return 'interview'
     return 'news'
 
@@ -209,9 +240,13 @@ def outgoing(item, title):
 
 def event(item):
     t = norm(item['text'])
-    if ANALYSIS.search(t) or (item['source'] == 'rss' and editorial_kind(item) in ('review', 'interview')):
+    independent = item['source'] == 'rss' and (editorial_kind(item) in ('review', 'interview') or (
+        title_discussion(item['text'], item.get('context') or '') and not trailer_reaction(item['text'])))
+    if ANALYSIS.search(t) or independent:
         return None
-    if re.search(r'\b(?:first reactions|early reactions|erste reaktionen|first .*reactions)\b', t):
+    if trailer_reaction(item['text']):
+        kind = 'trailer-reactions'
+    elif re.search(r'\b(?:first reactions|early reactions|erste reaktionen|first .*reactions)\b', t):
         kind = 'first-reactions'
     elif re.search(r'\b(?:trailer|teaser|first look)\b', t):
         kind = 'teaser' if 'teaser' in t else ('first-look' if 'first look' in t and 'trailer' not in t else 'trailer')
@@ -257,7 +292,10 @@ def collapse_duplicates(links, decisions, catalog):
                 within = abs((stamp(item['published_at']) - stamp(other['published_at'])).total_seconds()) <= 72 * 3600
                 repeated_event = within and ev is not None and ev == event(other)
                 near = False
-                if within and item['source'] == other['source'] == 'rss' and verdict['kind'] == other_verdict['kind'] == 'news' and not ANALYSIS.search(item['text'] + ' ' + other['text']):
+                distinct_angle = any(ANALYSIS.search(p['text']) or title_discussion(p['text'], p.get('context') or '')
+                                     for p in (item, other))
+                if (within and item['source'] == other['source'] == 'rss'
+                        and verdict['kind'] == other_verdict['kind'] == 'news' and not distinct_angle):
                     b = set(norm(other['text']).split())
                     near = len(tokens) >= 6 and len(b) >= 6 and len(tokens & b) / len(tokens | b) >= .8
                 if exact or repeated_event or near:
