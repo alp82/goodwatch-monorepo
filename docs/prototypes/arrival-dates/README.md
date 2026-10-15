@@ -52,6 +52,21 @@ Files: `goodwatch-webapp/app/routes/prototype.arrival-dates.tsx` and `goodwatch-
 | **E. Mix by popularity** | 5. Popular titles daily, the long tail weekly | Days for the titles people care about | One ranked list: "New on Netflix **today**" next to "New on Netflix last week". Line: "Popular titles are checked daily, the rest once a week." |
 | **F. No days (control)** | Any option | The ranking is the answer, days do not matter | Prototype C's wording: "On Netflix", best first, no day anywhere |
 
+The data options of the research ([`docs/research/offer-arrival-everywhere.md`](https://github.com/alp82/goodwatch-monorepo/blob/research/offer-arrival-everywhere/docs/research/offer-arrival-everywhere.md),
+branch `research/offer-arrival-everywhere`) map to the variations like this:
+
+| Research option | Variation |
+| --- | --- |
+| 0. Today: the 30-day cycle | F, with "found in the last 30 days" |
+| 1. Discover every list; 5. Recheck 539,000 titles daily | A |
+| 2. Discover the 15 brands and every list up to 1,000; 3. Discover the 15 brands | C (by service) |
+| 4. Discover the 12 largest countries | D (by country), with "in the last 30 days" instead of "this week" in the other countries |
+| 6. Recheck popular and recent titles daily, the rest weekly | E |
+| 7. Recheck 539,000 titles weekly | B |
+
+Under options 2 to 4 the pages that are not watched daily fall back to the 30-day cycle, so they can say "in the
+last 30 days", not "this week".
+
 A title a member waits for is checked every day under every option. So every variation says "On Netflix since
 yesterday" for it, in sky blue, and the hero says "You want to see it, so GoodWatch checks it every day" where the rest
 of the page has no day.
