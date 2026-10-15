@@ -3,7 +3,7 @@ import { test } from "node:test"
 import type { OAuthTokenVerifier } from "@modelcontextprotocol/server"
 import { createMcpHandler } from "@modelcontextprotocol/server"
 import { renderMetrics } from "../metrics/registry.server.ts"
-import { createReadToolServer } from "./tools.server.ts"
+import { createReadToolServer, createToolServer } from "./tools.server.ts"
 
 const { createReadMcpHandler } = await import("./endpoint.server.ts")
 
@@ -34,6 +34,14 @@ const verifier: OAuthTokenVerifier = {
 const unlimited = {
 	async take() {
 		return { allowed: true as const, store: "memory" as const }
+	},
+}
+const writer: OAuthTokenVerifier = {
+	async verifyAccessToken(token) {
+		return {
+			...(await verifier.verifyAccessToken(token)),
+			scopes: ["mcp:read", "mcp:write"],
+		}
 	},
 }
 const rpc = (method: string, params: Record<string, unknown> = {}) =>
@@ -122,6 +130,27 @@ test("MCP rate limiting returns a retry delay before dispatch", async () => {
 	)
 	assert.equal(response.status, 429)
 	assert.equal(response.headers.get("Retry-After"), "17")
+})
+
+test("Read-only tokens cannot force a write and receive an HTTP scope challenge", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const response = await handle(
+		rpc("tools/call", {
+			name: "log_watch",
+			arguments: { title_id: "movie:2000", action_id: "local-watch" },
+		}),
+	)
+	assert.equal(response.status, 403)
+	assert.match(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/insufficient_scope/,
+	)
+	assert.match(response.headers.get("WWW-Authenticate") ?? "", /mcp:write/)
+	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
 })
 
 test("MCP rejects cross-origin requests before authorization", async () => {
@@ -224,4 +253,120 @@ test("tools/list and the rate-limit answer work under remix-serve's fetch polyfi
 	} finally {
 		Object.assign(globalThis, original)
 	}
+})
+
+test("Write scopes expose seven writes with conservative destructive hints and no approval-token schema", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: writer,
+		limiter: unlimited,
+	})
+	const listed = (await result(await handle(rpc("tools/list")))).result.tools
+	assert.equal(listed.length, 14)
+	const writes = listed.filter(
+		(tool: { annotations: { readOnlyHint: boolean } }) =>
+			!tool.annotations.readOnlyHint,
+	)
+	assert.deepEqual(
+		writes.map((tool: { name: string }) => tool.name),
+		[
+			"log_watch",
+			"rate_title",
+			"set_want_to_see",
+			"set_not_interested",
+			"set_show_status",
+			"undo_watch",
+			"set_my_services",
+		],
+	)
+	for (const tool of writes) {
+		assert.equal(tool.annotations.destructiveHint, tool.name !== "log_watch")
+		assert.equal(tool.annotations.idempotentHint, true)
+		assert.equal(tool.inputSchema.required.includes("action_id"), true)
+		assert.equal(
+			JSON.stringify(tool.inputSchema).includes("confirmation_id"),
+			false,
+		)
+	}
+	assert.equal(
+		writes.find((tool: { name: string }) => tool.name === "undo_watch").title,
+		"Remove a watch",
+	)
+})
+
+test("Write policy is checked again after a tool was registered", async () => {
+	const server = createToolServer("member-A", new URL(resource).origin, true)
+	const handler = createMcpHandler(() => server, { legacy: "stateless" })
+	process.env.REC_MCP_WRITE = "off"
+	try {
+		const called = (
+			await result(
+				await handler.fetch(
+					rpc("tools/call", {
+						name: "log_watch",
+						arguments: {
+							title_id: "movie:2000",
+							action_id: "write-policy-probe",
+						},
+					}),
+				),
+			)
+		).result
+		assert.equal(called.isError, true)
+		assert.equal(called.structuredContent.outcome, "disabled")
+	} finally {
+		Reflect.deleteProperty(process.env, "REC_MCP_WRITE")
+		await handler.close()
+	}
+})
+
+test("A read-only batch containing a write is rejected before any dispatch", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const request = new Request(resource, {
+		method: "POST",
+		headers: {
+			Authorization: "Bearer local",
+			"Content-Type": "application/json",
+			Accept: "application/json, text/event-stream",
+		},
+		body: JSON.stringify([
+			{ jsonrpc: "2.0", id: 1, method: "tools/list" },
+			{
+				jsonrpc: "2.0",
+				id: 2,
+				method: "tools/call",
+				params: {
+					name: "set_my_services",
+					arguments: { country: "US", services: [], action_id: "batch-denied" },
+				},
+			},
+		]),
+	})
+	assert.equal((await handle(request)).status, 403)
+})
+
+test("The write-scope preflight bounds the body and rejects malformed JSON", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: writer,
+		limiter: unlimited,
+	})
+	const oversized = rpc("tools/list")
+	oversized.headers.set("Content-Length", String(4 * 1024 * 1024 + 1))
+	assert.equal((await handle(oversized)).status, 413)
+	const malformed = new Request(resource, {
+		method: "POST",
+		headers: {
+			Authorization: "Bearer local",
+			"Content-Type": "application/json",
+		},
+		body: "{",
+	})
+	const response = await handle(malformed)
+	assert.equal(response.status, 400)
+	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
 })

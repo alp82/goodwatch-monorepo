@@ -672,6 +672,21 @@ SCHEMAS = {
     # ============================
     # ===== User Data ============
     # ============================
+    # Durable MCP retry receipts. A pending action is never automatically run by a second caller.
+    "user_mcp_action": {
+        "columns": {
+            "user_id": "TEXT",
+            "action_id": "TEXT",
+            "request_hash": "TEXT NOT NULL",
+            "owner_id": "TEXT NOT NULL",
+            "result": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
+        },
+        "primary_key": ["user_id", "action_id"],
+        "clustered_by": "user_id",
+        "shards": 3,
+    },
     # init/cratedb adds created_at and updated_at to every table; the user tables declare them
     # because the webapp reads them (the Wishlist sorts by created_at, the time a title was added).
     "user_setting": {

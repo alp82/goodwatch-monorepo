@@ -6,42 +6,22 @@ import {
 	histogram,
 } from "../metrics/registry.server.ts"
 import { readToolEnabled } from "./policy.server.ts"
+import { paging, selected } from "./schemas.ts"
+import { registerWriteTools } from "./write-tools.server.ts"
 
 const calls = counter(
 	"goodwatch_mcp_tool_calls_total",
-	"MCP read tool calls by outcome.",
+	"MCP tool calls by outcome.",
 	["tool", "outcome"],
 	50,
 )
 const durations = histogram(
 	"goodwatch_mcp_tool_duration_seconds",
-	"MCP read tool duration.",
+	"MCP tool duration.",
 	["tool"],
 	durationBuckets,
-	7,
+	14,
 )
-const paging = {
-	cursor: z
-		.string()
-		.regex(/^offset:[0-9]{1,8}$/)
-		.optional(),
-	limit: z.number().int().min(1).max(20).default(20),
-}
-const selector = {
-	title_id: z
-		.string()
-		.regex(/^(movie|show):[1-9]\d{0,9}$/)
-		.optional(),
-	title_name: z.string().trim().min(2).max(120).optional(),
-	year: z.number().int().min(1800).max(2100).optional(),
-}
-const selected = z
-	.object(selector)
-	.strict()
-	.refine(
-		(value) => Boolean(value.title_id) !== Boolean(value.title_name),
-		"Exactly one title_id or title_name is required",
-	)
 export type ReadToolName =
 	| "search_titles"
 	| "get_title"
@@ -135,7 +115,11 @@ const definitions: {
 	},
 ]
 
-export function createReadToolServer(userId: string, origin: string) {
+export function createToolServer(
+	userId: string,
+	origin: string,
+	writes = false,
+) {
 	const server = new McpServer({ name: "goodwatch", version: "1.0.0" })
 	for (const tool of definitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
@@ -200,5 +184,12 @@ export function createReadToolServer(userId: string, origin: string) {
 			},
 		)
 	}
+	if (writes)
+		registerWriteTools(server, userId, origin, (name, outcome, elapsed) => {
+			calls.inc([name, outcome])
+			durations.observe([name], elapsed)
+		})
 	return server
 }
+export const createReadToolServer = (userId: string, origin: string) =>
+	createToolServer(userId, origin)

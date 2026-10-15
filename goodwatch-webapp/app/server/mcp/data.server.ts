@@ -22,13 +22,13 @@ import { getUserData } from "../userData.server"
 import { getMemberViewerContext } from "../viewer.server"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
-interface CatalogTitle {
+export interface CatalogTitle {
 	media_type: "movie" | "show"
 	tmdb_id: number
 	title: string
 	release_year: number | null
 }
-const summary = (title: CatalogTitle, origin: string) => ({
+export const summary = (title: CatalogTitle, origin: string) => ({
 	id: `${title.media_type}:${title.tmdb_id}`,
 	name: title.title,
 	year: title.release_year,
@@ -143,7 +143,7 @@ async function lookup(
 	)
 }
 
-async function resolve(
+export async function resolve(
 	args: ReadArgs,
 	origin: string,
 ): Promise<{ title: CatalogTitle } | { result: Record<string, unknown> }> {
