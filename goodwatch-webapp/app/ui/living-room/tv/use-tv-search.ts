@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 // The TV's search results: the full search for the query in the address, then the first four cards of Discover's
 // own results over its ranked list. Two requests, the two the Discover page makes for `/discover?q=`:
 // - `POST /api/combined-search` through `requestSearch`, with the page's body. It spends the paid inference
@@ -55,6 +56,7 @@ export function useTvSearch({
 	/** A member's country and saved services, from the page's loader. A guest's are in their browser. */
 	scope: TvSearchScope | null
 }): TvSearchReport {
+	const { locale } = useLocale()
 	const q = screen.name === "search" ? tvSearchText(screen.query) : null
 	// A guest's progress as it is when the search is asked for. The three parts the Discover page sends, no more.
 	const guest = useMemo(() => {
@@ -67,12 +69,13 @@ export function useTvSearch({
 		[guest, scope],
 	)
 	const search = useQuery({
-		queryKey: tvSearchKey(q ?? "", filters),
+		queryKey: tvSearchKey(q ?? "", filters, locale.language),
 		queryFn: async ({ signal }) =>
 			tvSearchResult(
 				q ?? "",
 				await requestSearch({
 					body: tvSearchBody(q ?? "", filters),
+					language: locale.language,
 					signal,
 					onReading: () => {},
 					unavailable: SEARCH_UNAVAILABLE,

@@ -1,3 +1,4 @@
+import { overlayEpisodeText } from "./episode-text-overlay.server.ts"
 // Episode tracking on the show page, on the server (#384): what a member's show page reads, and the actions it
 // sends. Both go through tracking.server.ts; this adds what the page needs around them: IMDb's episode ratings
 // beside the episodes, whether the show still runs, the stored rows of an action for the browser to take over, and
@@ -62,6 +63,7 @@ export async function getShowTrackingPage(
 	userId: string,
 	showId: number,
 	grid: GridLoader = loadGrid,
+	language?: string,
 ): Promise<ShowTrackingPage> {
 	const id = canonicalTitleId("show", showId)
 	const [tracking, presentation, running] = await Promise.all([
@@ -103,7 +105,7 @@ export async function getShowTrackingPage(
 		seasons,
 	)
 	const presented = new Map(presentation?.episodes.map((e) => [e.id, e]) ?? [])
-	return {
+	const page: ShowTrackingPage = {
 		...(presentation
 			? {
 					presentation: {
@@ -221,6 +223,7 @@ export async function getShowTrackingPage(
 					[...matched.notes].map(([season, note]) => [String(season), note]),
 				),
 	}
+	return language ? { ...page, episodes: await overlayEpisodeText("episode", id, page.episodes, language) } : page
 }
 
 // ---------------------------------------------------------------------------------------------------------

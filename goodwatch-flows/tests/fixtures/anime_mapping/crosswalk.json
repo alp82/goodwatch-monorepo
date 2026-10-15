@@ -1,0 +1,44 @@
+[
+	{
+		"anidb_id": 69,
+		"mal_id": 21,
+		"anilist_id": 21,
+		"kitsu_id": 12
+	},
+	{
+		"anidb_id": 14444,
+		"mal_id": 38524,
+		"anilist_id": 104578,
+		"kitsu_id": 41982
+	},
+	{
+		"anidb_id": 17061,
+		"mal_id": 50602,
+		"anilist_id": 142838,
+		"kitsu_id": 45619
+	},
+	{
+		"anidb_id": 17303,
+		"mal_id": 51535,
+		"anilist_id": 146984,
+		"kitsu_id": 46038
+	},
+	{
+		"anidb_id": 17765,
+		"mal_id": 53998,
+		"anilist_id": 159322,
+		"kitsu_id": 46903
+	},
+	{
+		"anidb_id": 18220,
+		"mal_id": 56784,
+		"anilist_id": 169755,
+		"kitsu_id": 48015
+	},
+	{
+		"anidb_id": 18886,
+		"mal_id": 59978,
+		"anilist_id": 182255,
+		"kitsu_id": 49240
+	}
+]

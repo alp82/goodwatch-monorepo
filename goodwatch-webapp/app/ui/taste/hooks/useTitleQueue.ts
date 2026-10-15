@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { queryKeySmartTitles } from "~/routes/api.smart-titles"
@@ -38,6 +39,8 @@ export function useTitleQueue({
 	prefetchThreshold = DEFAULT_PREFETCH_THRESHOLD,
 	batchSize = DEFAULT_BATCH_SIZE,
 }: UseTitleQueueParams): TitleQueueState {
+	const { locale } = useLocale()
+	const activeLanguage = useRef(locale.language)
 	// Stable queue that only grows, never shrinks or reorders
 	const [queue, setQueue] = useState<ScoringMedia[]>([])
 	const [currentIndex, setCurrentIndex] = useState(0)
@@ -82,19 +85,25 @@ export function useTitleQueue({
 		[makeKey, interactedIds],
 	)
 
+	useEffect(() => {
+		if (activeLanguage.current === locale.language) return
+		activeLanguage.current = locale.language
+		setQueue([]); setCurrentIndex(0); seenIds.current.clear(); hasInitialized.current = false
+	}, [locale.language])
+
 	// Initialize queue from initial titles (only once)
 	useEffect(() => {
 		if (hasInitialized.current || initialTitles.length === 0) return
 
-		const saved = resume ? readExploration().ratingQueue : undefined
-		const filtered = saved?.length ? saved : filterNewTitles(initialTitles)
+		const saved = resume ? readExploration(locale.language).ratingQueue : undefined
+		const filtered = saved?.length ? saved : filterNewTitles(initialTitles.filter(title => (title.presentation?.language ?? "en") === locale.language))
 		if (filtered.length > 0) {
 			// Mark all as seen
 			filtered.forEach((t) => seenIds.current.add(makeKey(t)))
 			setQueue(filtered)
 			hasInitialized.current = true
 		}
-	}, [initialTitles, filterNewTitles, makeKey, resume])
+	}, [initialTitles, filterNewTitles, makeKey, resume, locale.language])
 
 	// Prefetch more titles when queue is running low
 	const prefetchMore = useCallback(async () => {
@@ -105,7 +114,9 @@ export function useTitleQueue({
 		setExhausted(false)
 
 		try {
+			const language = locale.language
 			const newTitles = await fetchMoreTitles()
+			if (language !== activeLanguage.current) return
 			const filtered = filterNewTitles(newTitles)
 
 			if (filtered.length > 0) {
@@ -122,7 +133,7 @@ export function useTitleQueue({
 			setIsPrefetching(false)
 			fetchInProgress.current = false
 		}
-	}, [fetchMoreTitles, filterNewTitles, makeKey, isPrefetching])
+	}, [fetchMoreTitles, filterNewTitles, makeKey, isPrefetching, locale.language])
 
 	// Check if we need to prefetch
 	useEffect(() => {

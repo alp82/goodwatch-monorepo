@@ -1,0 +1,47 @@
+{
+  "title": "movie:1400837",
+  "rows": [
+    {
+      "post_id": "6363404f8e71432f0a2976f007894a945c6793ff61377728d3af29f2b4c1260a",
+      "source": "bluesky",
+      "source_id": "at://did:plc:cprmjjchmrr572plgfm76vix/app.bsky.feed.post/3mxtxwvig5k2y",
+      "url": "https://bsky.app/profile/did:plc:cprmjjchmrr572plgfm76vix/post/3mxtxwvig5k2y",
+      "author": "crich1999.bsky.social",
+      "published_at": 1791995541924,
+      "text": "Not great, but fun. It’s Jessica Chastain being evil. What’s there not to enjoy? \n\n14 down, 17 to go.\n\nboxd.it/gM0hZZ",
+      "lane": "foreground_exact",
+      "confidence": 1.0,
+      "confidence_basis": "llm_self_report_not_calibrated",
+      "duplicate_group": "6363404f8e71432f0a2976f007894a945c6793ff61377728d3af29f2b4c1260a",
+      "duplicate_rank": 1
+    },
+    {
+      "post_id": "312557c1944303bb78e03554c40076aba49d48a2c822b9adeeae15ae28090207",
+      "source": "youtube",
+      "source_id": "cT4PltL58Ts",
+      "url": "https://www.youtube.com/watch?v=cT4PltL58Ts",
+      "author": "Universal Pictures",
+      "published_at": 1791589636000,
+      "text": "My Universal Story: Molly Miller | Other Mommy",
+      "lane": "foreground_exact",
+      "confidence": 0.99,
+      "confidence_basis": "llm_self_report_not_calibrated",
+      "duplicate_group": "312557c1944303bb78e03554c40076aba49d48a2c822b9adeeae15ae28090207",
+      "duplicate_rank": 1
+    },
+    {
+      "post_id": "7bf51cb35f255002507fca275c9a38d50bb5bd22886d41aff8c4174254976a25",
+      "source": "youtube",
+      "source_id": "idkLYLw284Y",
+      "url": "https://www.youtube.com/watch?v=idkLYLw284Y",
+      "author": "Universal Pictures",
+      "published_at": 1791486050000,
+      "text": "Mommy's laugh is contagious 🖤 | 🎬 Other Mommy (2026)",
+      "lane": "foreground_exact",
+      "confidence": 1.0,
+      "confidence_basis": "llm_self_report_not_calibrated",
+      "duplicate_group": "7bf51cb35f255002507fca275c9a38d50bb5bd22886d41aff8c4174254976a25",
+      "duplicate_rank": 1
+    }
+  ]
+}

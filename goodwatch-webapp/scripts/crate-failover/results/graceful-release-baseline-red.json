@@ -1,0 +1,1403 @@
+{
+  "startedAt": "2026-10-15T17:18:13.169Z",
+  "client": "./baseline-crate.ts",
+  "clientSha256": "f4a99118f4138c8e22dabe3aceb1b86b8b090fcc7cf8fd60116882b26c69a9eb",
+  "baselineCommit": "dd7ab0a9c07fb2f6e933a2d53da69bb11f4ddd59",
+  "nodeVersion": "v26.8.1",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "phase": "generic",
+      "id": "generic-20",
+      "atMs": 14207,
+      "message": "CrateDB did not respond within 10000 ms"
+    },
+    {
+      "phase": "generic",
+      "id": "generic-56",
+      "atMs": 28069,
+      "message": "socket hang up",
+      "code": "ECONNRESET"
+    },
+    {
+      "phase": "reads",
+      "id": 0,
+      "atMs": 50077,
+      "message": "RelationUnknown[Relation 'client_failover_588' unknown]",
+      "code": 4041
+    },
+    {
+      "phase": "reads",
+      "id": 1,
+      "atMs": 50148,
+      "message": "RelationUnknown[Relation 'client_failover_588' unknown]",
+      "code": 4041
+    },
+    {
+      "phase": "reads",
+      "id": 1,
+      "atMs": 50260,
+      "message": "RelationUnknown[Relation 'client_failover_588' unknown]",
+      "code": 4041
+    }
+  ],
+  "sourceSha256": {
+    "../../app/utils/crate.ts": "fce263c3862456d63393fee42bfcafa80d954b576707d8b4faac10b714087627",
+    "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+    "../../app/server/combined-search/catalog.server.ts": "fe39f57efc8af5032624d4637254d48a0aa35687af4e846c854a7adb5aae9800",
+    "../../app/server/search-ranking/search-index-build.server.ts": "9689e434bcdf6f3fd1569283be4a4ca0ed0cc592834ef3cc0bfbc655396bfcd6",
+    "../../app/server/page-cache.server.ts": "c2dbf91e0ec380c5306cc6ce373ea603236a7081af019e756647238901e1fcb4",
+    "./verify.mjs": "cbec615b5d42483117d8f130f4f50cfbaaf5e7dc66e3d601d9fcb4f58d442efd",
+    "./page-proof.mjs": "0e3a57e30320cb26bbfcd3f07d6224e0cb96b0f32eedae099b4b474111b85f88",
+    "./build-page-proof.mjs": "e66f48d3b7b76c2431aecac00657087fb59c9d77d2e33e9157a938ff8115aa6d",
+    "./page-loaders.ts": "90002519d551019f3a02ce8d78c80589a5cefc3957a4156620270c04b38686da",
+    "./compose.yaml": "f10623e22b45f15205cbb89c6e15527d14e49e0831f936ab42286f7c5de35355",
+    "./run.sh": "4cc542cbbd698c6c95703aa35c534c48546c52a0bfc92b29fb925efaf5f35bc4"
+  },
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ]
+  ],
+  "pageTables": [
+    "crawl_priority",
+    "age_certification",
+    "country",
+    "job",
+    "language",
+    "timezone",
+    "genre",
+    "streaming_service",
+    "movie",
+    "show",
+    "movie_series",
+    "season",
+    "episode",
+    "season_translation",
+    "episode_translation",
+    "imdb_episode",
+    "imdb_season",
+    "rotten_tomatoes_season",
+    "metacritic_season",
+    "media_image",
+    "media_video",
+    "trope",
+    "alternative_title",
+    "translation",
+    "release_event",
+    "production_company",
+    "network",
+    "person",
+    "person_appeared_in",
+    "person_worked_on",
+    "streaming_evidence",
+    "streaming_availability",
+    "user_setting",
+    "user_skipped",
+    "user_not_interested",
+    "user_wishlist",
+    "user_list_exposure",
+    "user_score",
+    "user_favorite",
+    "user_watch_log",
+    "user_watch_state",
+    "search_terms",
+    "search_embedding_inputs",
+    "search_embedding_state",
+    "search_index_builds",
+    "search_control",
+    "search_interpretations",
+    "search_spending",
+    "search_history",
+    "search_shadow",
+    "user_list",
+    "user_profile",
+    "user_handle",
+    "user_import",
+    "user_import_item",
+    "social_relevance",
+    "social_content_quality",
+    "social_post",
+    "social_title_link",
+    "social_link_report",
+    "social_ingest_run"
+  ],
+  "pageRoutes": {
+    "movie": {
+      "succeeded": 129,
+      "failed": 0,
+      "maxMs": 3726.993599999987,
+      "examples": []
+    },
+    "show": {
+      "succeeded": 126,
+      "failed": 0,
+      "maxMs": 3597.8295970000036,
+      "examples": []
+    },
+    "person": {
+      "succeeded": 103,
+      "failed": 0,
+      "maxMs": 3951.3204759999935,
+      "examples": []
+    },
+    "library": {
+      "succeeded": 113,
+      "failed": 3,
+      "maxMs": 4083.3598330000095,
+      "examples": [
+        {
+          "status": 500,
+          "text": "{\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'movie' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'movie' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:7146:20\\n    at async Promise.all (index 0)\\n    at async readCards (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:7143:3)\"}}}",
+          "error": "library: HTTP 500 {\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'movie' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'movie' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/\n\n500 !== 200\n"
+        },
+        {
+          "status": 500,
+          "text": "{\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_wishlist' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_wishlist' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async Promise.all (index 1)\\n    at async _getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2357:81)\\n    at async getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2456:20)\"}}}",
+          "error": "library: HTTP 500 {\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_wishlist' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_wishlist' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/g\n\n500 !== 200\n"
+        },
+        {
+          "status": 500,
+          "text": "{\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_state' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_state' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async Promise.all (index 2)\\n    at async _getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2357:81)\\n    at async getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2456:20)\"}}}",
+          "error": "library: HTTP 500 {\"data\":{},\"errors\":{\"library\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_state' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_state' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-reco\n\n500 !== 200\n"
+        }
+      ]
+    },
+    "explore": {
+      "succeeded": 172,
+      "failed": 1,
+      "maxMs": 3560.6927709999873,
+      "examples": [
+        {
+          "status": 500,
+          "text": "{\"data\":{},\"errors\":{\"explore\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_wishlist' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_wishlist' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async Promise.all (index 1)\\n    at async _getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2357:81)\\n    at async getUserData (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:2456:20)\"}}}",
+          "error": "explore: HTTP 500 {\"data\":{},\"errors\":{\"explore\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_wishlist' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_wishlist' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/g\n\n500 !== 200\n"
+        }
+      ]
+    },
+    "watch": {
+      "succeeded": 40,
+      "failed": 3,
+      "maxMs": 5089.444384000002,
+      "examples": [
+        {
+          "status": 500,
+          "text": "{\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_state' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_state' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async readState (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5337:18)\\n    at async Promise.all (index 0)\\n    at async settleMovie (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5778:35)\"}}}",
+          "error": "watch: HTTP 500 {\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_state' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_state' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-gra\n\n500 !== 200\n"
+        },
+        {
+          "status": 500,
+          "text": "{\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async insertFixedRows (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:605:13)\\n    at async file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/app/utils/crate-diagnostics.ts:112:19\\n    at async applyMovieEvent (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5838:28)\\n    at async applyWatchLogAction (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:8732:18)\\n    at async action (file:///home/alper/projects/goo",
+          "error": "watch: HTTP 500 {\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async insertFixedRows (file:///home/alper/projects/goodwatch-crate-graceful-r\n\n500 !== 200\n"
+        },
+        {
+          "status": 500,
+          "text": "{\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async insertFixedRows (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:605:13)\\n    at async file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/app/utils/crate-diagnostics.ts:112:19\\n    at async applyMovieEvent (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5838:28)\\n    at async applyWatchLogAction (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:8732:18)\\n    at async action (file:///home/alper/projects/goo",
+          "error": "watch: HTTP 500 {\"data\":{\"watch\":null},\"errors\":{\"watch\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async insertFixedRows (file:///home/alper/projects/goodwatch-crate-graceful-r\n\n500 !== 200\n"
+        }
+      ]
+    },
+    "score": {
+      "succeeded": 42,
+      "failed": 1,
+      "maxMs": 6600.777424,
+      "examples": [
+        {
+          "status": 500,
+          "text": "{\"data\":{\"score\":null},\"errors\":{\"score\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:375:52)\\n    at async query (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:427:19)\\n    at async readLog (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5362:16)\\n    at async Promise.all (index 1)\\n    at async applyShowEventStored (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:5722:37)\"}}}",
+          "error": "score: HTTP 500 {\"data\":{\"score\":null},\"errors\":{\"score\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'user_watch_log' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'user_watch_log' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at withBackendTimeout.error (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:203:42)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:250:9)\\n    at async CrateClient.select (file:///home/alper/projects/goodwatch-crate-gracefu\n\n500 !== 200\n"
+        }
+      ]
+    },
+    "catalog": {
+      "succeeded": 330,
+      "failed": 1,
+      "maxMs": 3107.426059000005,
+      "examples": [
+        {
+          "status": 500,
+          "text": "{\"data\":{},\"errors\":{\"catalog\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'movie' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'movie' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at Object.transport (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:8943:11)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:248:9)\\n    at async Module.searchQuery (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:8955:16)\\n    at async /home/alper/projects/goodwatch-crate-restart-errors/goodwatch-webapp/node_modules/@remix-run/router/dist/router.cjs.js:4764:19\\n    at async callLoaderOrAction (/home/alper/projects/goodwatch-crate-restart-errors/goodwatch-webapp/node_modules/@remix-run/router/dist/router.cjs.js:4830:16)\\n    at async Promise.all (index 0)\\n    at async defaultDataStrategy (/home/alper/projects/goodwatch-crate-restart-errors/goodwatch-webapp/node_modules/@remix-run/router/dist/router.cjs.js:4689:17)\"}}}",
+          "error": "catalog: HTTP 500 {\"data\":{},\"errors\":{\"catalog\":{\"name\":\"CrateError\",\"message\":\"RelationUnknown[Relation 'movie' unknown]\",\"stack\":\"CrateError: RelationUnknown[Relation 'movie' unknown]\\n    at toCrateError (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:44:9)\\n    at Object.transport (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/page-loaders.generated.mjs:8943:11)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async withBackendTimeout (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/backend-timeout.ts:44:10)\\n    at async CrateClient.execute (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/baseline-crate.ts:248:9)\\n    at async Module.searchQuery (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webap\n\n500 !== 200\n"
+        }
+      ]
+    }
+  },
+  "beforeHealth": [
+    [
+      "GREEN",
+      62
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-15T17:19:13.296Z",
+    "elapsedMs": 3003,
+    "command": "ALTER CLUSTER DECOMMISSION node1",
+    "settings": [
+      [
+        {
+          "min_availability": "PRIMARIES",
+          "force": false,
+          "timeout": "2h"
+        }
+      ]
+    ],
+    "acknowledgedAt": "2026-10-15T17:19:33.346Z",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-15T17:18:11.732318683Z",
+      "FinishedAt": "2026-10-15T17:19:38.946933661Z"
+    },
+    "completedAt": "2026-10-15T17:19:39.993Z"
+  },
+  "stoppedContainers": [
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:18:10 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "50c6e8b9f1c8",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.version=5.10.16,com.docker.compose.depends_on=,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.title=crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project=goodwatch-client-588,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.created=2025-12-10T13:54:12.012567,com.docker.compose.config-hash=83e409a996f019f51a8ebb3b4652bacbf5653a0ffa584b23735142009a8371a8,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.vendor=Crate.io,com.docker.compose.service=node1,com.docker.compose.version=5.5.1",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node1-1",
+      "Names": "goodwatch-client-588-node1-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "",
+      "Project": "goodwatch-client-588",
+      "Publishers": [],
+      "RunningFor": "About a minute ago",
+      "Service": "node1",
+      "Size": "0B",
+      "State": "exited",
+      "Status": "Exited (0) 1 second ago"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:18:10 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "a46eb208ffb8",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "org.opencontainers.image.version=5.10.16,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.source=https://github.com/crate/docker-crate,com.docker.compose.config-hash=bf436c157529f01bab0efff3b1fe87f1d5145ec3d95872e6702f56f74a145dfd,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.oneoff=False,com.docker.compose.version=5.5.1,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.title=crate,org.opencontainers.image.vendor=Crate.io,com.docker.compose.container-number=1,com.docker.compose.project=goodwatch-client-588,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.depends_on=,com.docker.compose.service=node2",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node2-1",
+      "Names": "goodwatch-client-588-node2-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.2:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.2",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node2",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:18:10 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "86af5063aead",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=905a9620ceef990632c0af3d1599862cd42425f66e862125184b37613e8a1356,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.service=node3,com.docker.compose.version=5.5.1,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,com.docker.compose.depends_on=,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project=goodwatch-client-588,com.docker.compose.container-number=1,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.title=crate,org.opencontainers.image.vendor=Crate.io,maintainer=Crate.io <office@crate.io>,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.version=5.10.16",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node3-1",
+      "Names": "goodwatch-client-588-node3-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.3:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.3",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node3",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    }
+  ],
+  "afterStopNodes": [
+    [
+      "node2"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "restartedAt": "2026-10-15T17:19:44.721Z",
+  "rejoinedDuringLoad": {
+    "elapsedMs": 50555,
+    "reads": 1092,
+    "pages": {
+      "movie": 88,
+      "show": 84,
+      "person": 68,
+      "library": 76,
+      "explore": 115,
+      "watch": 27,
+      "score": 28,
+      "catalog": 230
+    }
+  },
+  "load": {
+    "durationMs": 75280,
+    "stats": {
+      "reads": {
+        "succeeded": 1662,
+        "failed": 3,
+        "maxMs": 4171.241860000009
+      },
+      "keyed": {
+        "succeeded": 220,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 272,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 213,
+        "failed": 2
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 220,
+      "upsert": 272,
+      "generic": 213
+    }
+  },
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      213
+    ],
+    [
+      "keyed",
+      220,
+      1,
+      1,
+      220
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      272,
+      1,
+      1,
+      272
+    ]
+  ],
+  "passed": false,
+  "error": {
+    "message": "No failed page loaders/actions\n\n9 !== 0\n",
+    "stack": "AssertionError [ERR_ASSERTION]: No failed page loaders/actions\n\n9 !== 0\n\n    at check (file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/verify.mjs:55:9)\n    at file:///home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/verify.mjs:247:17\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  },
+  "diagnostics": {
+    "events": 330,
+    "byEvent": {
+      "crate.attempt_failed": 112,
+      "crate.failover_attempt": 91,
+      "crate.query": 83,
+      "crate.http": 36,
+      "crate.replay": 2,
+      "crate.recovery": 5,
+      "crate.readback": 1
+    },
+    "byErrorClass": {
+      "CrateTimeoutError": 46,
+      "Error": 21,
+      "NodeNotConnectedException": 36,
+      "RelationUnknown": 32
+    },
+    "failedQueries": [
+      {
+        "time": "2026-10-15T17:19:24.163Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "4d3564b8-a8be-4ab2-aa78-59b7233e6dbc",
+        "operation": "insertRows",
+        "queryId": "b14bc5e2-8d68-413d-a015-519c53d4d45a",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10099.764354999992,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:19:24.498Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "0f8b315c-e247-4692-8b7e-47680b9566a4",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10009.068591999996,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:19:33.202Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "d8cdfd1e-c5f5-4a87-be68-7c15911726e7",
+        "operation": "upsert",
+        "queryId": "40b47463-114d-43b8-ad49-ac4bccb58492",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.727553000004,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:19:38.360Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "cead18aa-5a95-44bf-aceb-7fb054bd2b7b",
+        "operation": "insertRows",
+        "queryId": "a98088d6-47e2-49dd-a9eb-918ffcae0971",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 5908.359020999997,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:19:38.361Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "61cdb3e8-156d-4254-af9c-5aee56fe6eb3",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 5897.9830070000025,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:19:38.362Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "84c68b5e-2a06-4b55-b6af-18f8744d64ce",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "queryId": "85c7fa56-fe79-4e32-976d-6173d2064722",
+        "sqlShape": "REFRESH TABLE user_score, user_wishlist, user_watch_log, user_watch_state, user_favorite, user_skipped",
+        "sqlShapeId": "47ab5baf19042b23",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 5690.166105000011,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:20:00.333Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "d4b35c6c-20f1-42c4-8cf2-612c8076cddf",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "queryId": "ec331462-0fb8-4a8b-8ca7-6f6a628074a4",
+        "sqlShape": "SELECT state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question, updated_at, _seq_no, _primary_term FROM user_watch_state WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+        "sqlShapeId": "906edff80451a411",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 776.7536649999965,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.353Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "b73d2cd9-f546-484b-b5dc-2e16cb7e3c45",
+        "route": "/api/my-library",
+        "method": "GET",
+        "queryId": "dc073f7d-1727-4ca6-944b-3a619251240c",
+        "sqlShape": "SELECT tmdb_id, title, poster_path, release_year FROM movie WHERE tmdb_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "sqlShapeId": "8b3d2abe5926efad",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 784.7696370000049,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.370Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "ba9186ec-1339-4e44-a917-6d07544cd6de",
+        "sqlShape": "SELECT n FROM client_failover_588 WHERE id = ?",
+        "sqlShapeId": "4e5d2fb50d4a6e6f",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 789.4959159999999,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.441Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "b55bc227-e7ae-4e66-bc2a-03860176a45c",
+        "sqlShape": "SELECT sum(n) AS n FROM client_failover_588 WHERE kind = ?",
+        "sqlShapeId": "49155fe6f8cbd10e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 858.0004459999909,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.453Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "3cf435ed-9bb8-4db0-9cce-5ac52e7fc758",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "78fcbc8f-6cba-4f1e-9c9f-a63d0cf92e47",
+        "operation": "insertRows",
+        "queryId": "3d6e091b-4c97-4053-a3b6-b812c42021ec",
+        "sqlShape": "INSERT INTO user_watch_log (\"user_id\", \"watch_id\", \"media_type\", \"tmdb_id\", \"episode_tmdb_id\", \"season_number\", \"episode_number\", \"watched_at\", \"watched_at_precision\", \"origin\", \"group_id\", \"import_id\", \"pass\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"watch_id\") DO NOTHING",
+        "sqlShapeId": "8e45b489e0680b80",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 77.00806400000874,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.517Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "8d715eca-f96b-42b2-86c7-2451f2beffe8",
+        "route": "/api/my-library",
+        "method": "GET",
+        "queryId": "e3cc50f4-d4f2-41ca-a49d-a9f328166bd1",
+        "sqlShape": "SELECT tmdb_id, media_type, created_at, updated_at FROM user_wishlist WHERE user_id = ?",
+        "sqlShapeId": "8e47006fb00c0399",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 125.71344000000681,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.524Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "8d715eca-f96b-42b2-86c7-2451f2beffe8",
+        "route": "/api/my-library",
+        "method": "GET",
+        "queryId": "3823af69-4373-400e-bbdf-c5bfc471c2ca",
+        "sqlShape": "SELECT tmdb_id, media_type, updated_at FROM user_favorite WHERE user_id = ?",
+        "sqlShapeId": "90a2c722d1e9195c",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 133.20343599999615,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.524Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "dc07542b-e91b-439e-9172-97110c28c77b",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "queryId": "4f213213-71b9-4d9f-900c-3fd73374604a",
+        "sqlShape": "SELECT tmdb_id, media_type, created_at, updated_at FROM user_wishlist WHERE user_id = ?",
+        "sqlShapeId": "8e47006fb00c0399",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 917.303310000003,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.536Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "af39d23c-8ce6-4b4e-81b5-4ab72a9daebb",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "53e3296e-a5dd-4db6-a778-90f080830a12",
+        "operation": "insertRows",
+        "queryId": "d25e098f-46e9-42c8-a3d7-4d7f8bbdbfe5",
+        "sqlShape": "INSERT INTO user_watch_log (\"user_id\", \"watch_id\", \"media_type\", \"tmdb_id\", \"episode_tmdb_id\", \"season_number\", \"episode_number\", \"watched_at\", \"watched_at_precision\", \"origin\", \"group_id\", \"import_id\", \"pass\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"watch_id\") DO NOTHING",
+        "sqlShapeId": "8e45b489e0680b80",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 43.812810999996145,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.538Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "dc07542b-e91b-439e-9172-97110c28c77b",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "queryId": "0bc798dc-a25f-4905-8947-03b71c75ee04",
+        "sqlShape": "SELECT tmdb_id, media_type, updated_at FROM user_favorite WHERE user_id = ?",
+        "sqlShapeId": "90a2c722d1e9195c",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 930.797664999991,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.550Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "9f7b9730-bf6d-4847-952f-5f043b7bf522",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "queryId": "f7c628e6-6fe8-447a-912f-092061e8454a",
+        "sqlShape": "SELECT tmdb_id,title FROM movie WHERE tmdb_id = ?",
+        "sqlShapeId": "2deed8d2943c05bf",
+        "source": "catalog",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 938.6664160000073,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.553Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "39934315-a782-4797-a44d-b67731decd80",
+        "sqlShape": "SELECT sum(n) AS n FROM client_failover_588 WHERE kind = ?",
+        "sqlShapeId": "49155fe6f8cbd10e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9.825542999999016,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.620Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "dc408011-6d89-4ced-9d9f-a16b4954ef44",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "queryId": "fb21fa6b-102c-42ba-9a55-f0139a7333dc",
+        "sqlShape": "SELECT watch_id, episode_tmdb_id, season_number, episode_number, watched_at, watched_at_precision, origin, group_id, import_id, pass, created_at FROM user_watch_log WHERE user_id = ? AND media_type = ? AND tmdb_id = ? ORDER BY season_number, episode_number, watched_at DESC NULLS LAST LIMIT ?",
+        "sqlShapeId": "451eacd4d7d24812",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 964.3324810000049,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.629Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "d21cb8ec-bb94-4099-a955-7ec13ed2ec80",
+        "route": "/api/my-library",
+        "method": "GET",
+        "queryId": "622a31f6-ddbe-40c7-af0b-8aad5a740aa7",
+        "sqlShape": "SELECT tmdb_id, media_type, state, pass, state_changed_at FROM user_watch_state WHERE user_id = ? AND state <> ?",
+        "sqlShapeId": "c362999515464f9e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 72.26799599999504,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      },
+      {
+        "time": "2026-10-15T17:20:00.633Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "d21cb8ec-bb94-4099-a955-7ec13ed2ec80",
+        "route": "/api/my-library",
+        "method": "GET",
+        "queryId": "f5addd7e-ebee-472b-be6e-302f9f0f393e",
+        "sqlShape": "SELECT tmdb_id, media_type, updated_at FROM user_skipped WHERE user_id = ?",
+        "sqlShapeId": "88dd97a0162d6d61",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 75.63186500000302,
+        "errorClass": "RelationUnknown",
+        "errorCode": 4041,
+        "httpStatus": 404
+      }
+    ],
+    "httpOutcomes": [
+      {
+        "time": "2026-10-15T17:19:17.571Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "89953c6a-b339-4e60-baef-59b192a8bc87",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3571.091690000001
+      },
+      {
+        "time": "2026-10-15T17:19:17.755Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "40a15b27-b383-4bc6-8e19-728bb5d09e9a",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3394.151751999998
+      },
+      {
+        "time": "2026-10-15T17:19:26.776Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "88f2f429-89ea-40cd-9266-fd64fa56c806",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3410.429157000006
+      },
+      {
+        "time": "2026-10-15T17:19:26.836Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "78a044cf-d6a4-48ab-97b8-3e85ff71b275",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3547.708114000008
+      },
+      {
+        "time": "2026-10-15T17:19:35.453Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "aa483089-f4db-42cb-b5bb-6b31958711ac",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2694.6564999999973
+      },
+      {
+        "time": "2026-10-15T17:19:35.967Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "5caceec4-ac1d-429b-b88d-76124f9d1bcf",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3494.0048810000008
+      },
+      {
+        "time": "2026-10-15T17:19:36.030Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "ac139e6e-b704-4a3f-9e6c-b2dc3d24ce11",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3555.09460099999
+      },
+      {
+        "time": "2026-10-15T17:19:36.055Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "74c86348-42a7-4d40-94f6-0bc5b57b1816",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3577.936823000011
+      },
+      {
+        "time": "2026-10-15T17:19:36.058Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "787ded20-56e4-4c8a-9965-830cbc647247",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3586.9929659999907
+      },
+      {
+        "time": "2026-10-15T17:19:36.849Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "1fc4ce7a-42b8-4e84-97cb-6c94578e5e93",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 4949.373897000012
+      },
+      {
+        "time": "2026-10-15T17:19:38.362Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "84c68b5e-2a06-4b55-b6af-18f8744d64ce",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 6595.588613999993
+      },
+      {
+        "time": "2026-10-15T17:19:38.657Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "f5aacc5c-d12b-462d-8838-5ac6ad21c1ad",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 327.74840300000506
+      },
+      {
+        "time": "2026-10-15T17:19:39.047Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "6227ec71-3b54-48d3-ae77-c3881650c030",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 354.57038000000466
+      },
+      {
+        "time": "2026-10-15T17:19:39.056Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0c586b61-d80a-4101-8ce5-c38088617fbb",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 689.3912910000072
+      },
+      {
+        "time": "2026-10-15T17:19:39.229Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "39914a0d-20d9-45ac-b7db-4baa60301b29",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 533.5247739999904
+      },
+      {
+        "time": "2026-10-15T17:19:39.237Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "82c9924f-32f8-42f2-959b-92cb346d2bb9",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 543.8063140000013
+      },
+      {
+        "time": "2026-10-15T17:19:39.646Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "49638f10-9516-4a96-82d2-37a52044bbbd",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 370.25182700000005
+      },
+      {
+        "time": "2026-10-15T17:19:39.988Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8c2da2fe-36bc-4f37-aa38-2a4decfe01b3",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 902.7013579999912
+      },
+      {
+        "time": "2026-10-15T17:19:40.155Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e1f35bf0-07fe-4974-b67e-b53cc1e9d2b6",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1764.005971999999
+      },
+      {
+        "time": "2026-10-15T17:19:40.164Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "839cfed4-144d-4490-8c3a-a145bdd0968f",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 478.72155499999644
+      },
+      {
+        "time": "2026-10-15T17:19:40.379Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8b912538-6118-4291-8649-f35ec631357b",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 1282.361631000007
+      },
+      {
+        "time": "2026-10-15T17:20:00.335Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "d4b35c6c-20f1-42c4-8cf2-612c8076cddf",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 1056.5643989999953
+      },
+      {
+        "time": "2026-10-15T17:20:00.353Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "b73d2cd9-f546-484b-b5dc-2e16cb7e3c45",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 1070.9534029999922
+      },
+      {
+        "time": "2026-10-15T17:20:00.454Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3cf435ed-9bb8-4db0-9cce-5ac52e7fc758",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 78.33556499998667
+      },
+      {
+        "time": "2026-10-15T17:20:00.517Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8d715eca-f96b-42b2-86c7-2451f2beffe8",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 126.48163900000509
+      },
+      {
+        "time": "2026-10-15T17:20:00.525Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "dc07542b-e91b-439e-9172-97110c28c77b",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 917.9725020000042
+      },
+      {
+        "time": "2026-10-15T17:20:00.536Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "af39d23c-8ce6-4b4e-81b5-4ab72a9daebb",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 44.72311000000627
+      },
+      {
+        "time": "2026-10-15T17:20:00.551Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "9f7b9730-bf6d-4847-952f-5f043b7bf522",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 940.0311340000044
+      },
+      {
+        "time": "2026-10-15T17:20:00.630Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "d21cb8ec-bb94-4099-a955-7ec13ed2ec80",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 73.190282999989
+      },
+      {
+        "time": "2026-10-15T17:20:03.286Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3594aa62-cc23-4830-91b2-04b9635fc189",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3592.3224590000027
+      },
+      {
+        "time": "2026-10-15T17:20:03.494Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "a3a7d0ef-8513-4902-9cea-58a59686dca0",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3831.7512109999952
+      },
+      {
+        "time": "2026-10-15T17:20:03.706Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "f0203b8d-9475-48f7-95c5-dbcc3423d327",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3020.8196200000093
+      },
+      {
+        "time": "2026-10-15T17:20:04.297Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "dc408011-6d89-4ced-9d9f-a16b4954ef44",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 4922.085389
+      },
+      {
+        "time": "2026-10-15T17:20:04.745Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "a1aba4ae-3cb6-4f5c-9dd5-f54cfb5a2134",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 4077.991624000002
+      },
+      {
+        "time": "2026-10-15T17:20:05.233Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "97f7fa4e-8536-4c0a-a913-9459c15ca202",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3720.383916999999
+      },
+      {
+        "time": "2026-10-15T17:20:05.660Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "2f9f0a35-33ce-436d-929e-8ba10675162f",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 5085.92074300001
+      }
+    ]
+  },
+  "finishedAt": "2026-10-15T17:20:25.743Z"
+}

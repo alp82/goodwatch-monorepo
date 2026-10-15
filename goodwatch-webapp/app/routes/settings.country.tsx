@@ -1,77 +1,33 @@
 import type { MetaFunction } from "@remix-run/node"
-import { useFetcher } from "@remix-run/react"
-import React, { useEffect, useState } from "react"
-import { useUserSettings } from "~/routes/api.user-settings.get"
-import { useSetUserSettings } from "~/routes/api.user-settings.set"
-import FilterCountries from "~/ui/filter/FilterCountries"
-import { useSupabase, useUser } from "~/utils/auth"
+import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
+import SettingsPair from "~/ui/media-preference/SettingsPair"
+import useLocale from "~/utils/locale"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => {
 	return [
-		{ title: "Country Settings | GoodWatch" },
+		{ title: "Country and Titles Settings | GoodWatch" },
 		{
 			description:
-				"Change your GoodWatch country settings. All movie and tv show ratings and streaming providers on the same page",
+				"Change your GoodWatch country and the language of titles and descriptions. All movie and tv show ratings and streaming providers on the same page",
 		},
 	]
 }
 
+// The country and titles language, saved as one pair (see ui/media-preference/SettingsPair.tsx). The effective pair
+// of the request is where the page starts; the private read says what is on record.
 export default function SettingsCountry() {
-	const { data: userSettings } = useUserSettings()
-
-	// pre-selection
-
-	const storedCountry =
-		userSettings?.country_default ||
-		(typeof window !== "undefined"
-			? localStorage.getItem("country")
-			: undefined)
-
-	// selection
-
-	const [selectedCountry, setSelectedCountry] = useState<string | undefined>()
-	const handleSelectCountry = (country: string) => {
-		setSelectedCountry(country)
-	}
-
-	const setUserSettings = useSetUserSettings()
-	
-	const handleSubmit = () => {
-		if (!selectedCountry) return
-		setUserSettings.mutate({
-			settings: {
-				country_default: selectedCountry,
-			},
-		})
-	}
-
+	const { locale } = useLocale()
 	return (
 		<div className="px-2 md:px-4 lg:px-8">
-			<div className="flex flex-col gap-4 text-lg lg:text-2xl text-gray-300">
+			<div className="flex flex-col gap-4 text-gray-300">
 				<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
-					Country
+					Country and titles
 				</h2>
-
-				<FilterCountries
-					mediaType="movie"
-					selectedCountry={selectedCountry || storedCountry || ""}
-					onChange={handleSelectCountry}
-				/>
-
-				<button
-					type="submit"
-					className="
-							flex items-center gap-2 px-4 py-2 w-72
-							border border-indigo-700 rounded-md bg-indigo-700 hover:bg-indigo-800
-							text-center text-base font-medium text-gray-200 hover:text-white
-							cursor-pointer
-						"
-					onClick={handleSubmit}
-				>
-					Confirm Country
-				</button>
+				<MediaPreferenceProvider country={locale.country}>
+					<SettingsPair />
+				</MediaPreferenceProvider>
 			</div>
 		</div>
 	)

@@ -14,7 +14,7 @@
 //   lower: at 85 with 5, at 99 from 100. The scale is in ~/domain/taste-match.ts. It replaced
 //   round(50 + 0.49 * percentile), under which 90 was the top 18 percent: too sure for a signal whose holdout AUC
 //   the research measured at about 0.635.
-// A change to the vector or the quantile table changes stored values: bump TASTE_KEY_VERSION in member.server.ts. The
+// A change to the vector or the quantile table changes stored values: bump TASTE_KEY_VERSION in version.server.ts. The
 // scale is applied on every read, so tuning it needs no bump.
 import { shownMatch } from "~/domain/taste-match"
 import type {

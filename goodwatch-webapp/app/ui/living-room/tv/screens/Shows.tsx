@@ -1,3 +1,4 @@
+import { copyMediaPresentation } from "~/utils/media-presentation"
 // My shows, a member's: the shows with a Next episode, then the Want to See shows to start, in the list every app
 // shows its titles in (../TitleList.tsx). The show with the focus is named above the row, with its Next episode or
 // what starting it takes, and its backdrop is the picture. A show opens its title screen, where Seen it marks the
@@ -50,10 +51,12 @@ export default function Shows({
 	const news = signal ?? NO_SIGNAL
 	const titles: TvListTitle[] = showRows(shows, news).map((row) => ({
 		key: row.key,
+		...copyMediaPresentation(row),
 		title: row.title,
 		poster: row.poster_path,
 		backdrop: row.backdrop_path,
 		facts: row.facts,
+		factMedia: row.factMedia,
 		label: row.label,
 		mark: row.fresh ? "New" : undefined,
 		says: showSays(row),

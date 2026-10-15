@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
@@ -11,7 +12,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 
 const headers = { "Cache-Control": "private, no-store" }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!userId) return json({ error: "Sign in" }, { status: 401, headers })
 	const params = new URL(request.url).searchParams
@@ -32,3 +33,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		{ headers },
 	)
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

@@ -1,3 +1,4 @@
+import { presentCatalogLoader } from "~/server/media-payload.server"
 // Public profile: /u/:handle. The person's handle and public share lists, newest first. Handles are permanent, so
 // there are no renamed handles to redirect; a differently cased handle redirects to the lowercase one, and unknown
 // and deleted handles answer 404. For the owner, this page is also My lists: it shows their unlisted lists too, marked,
@@ -25,7 +26,7 @@ import { pluralize } from "~/utils/helpers"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-export const loader = createProfilePageLoader({
+const canonicalLoader = createProfilePageLoader({
 	getProfilePage,
 	getUserIdFromRequest,
 	listsByUser,
@@ -206,3 +207,5 @@ function useOwnerLists(loaded: ShareListSummary[]) {
 
 	return { lists, patch, removed }
 }
+
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })

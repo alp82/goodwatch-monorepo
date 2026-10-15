@@ -7,6 +7,7 @@ import type {
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	sourceSkippedDownloadUrl,
@@ -67,7 +68,7 @@ export function SourceImportCurrent({
 			return
 		}
 		const options: ImportOptions = summary.options ?? {
-			kinds: ["rating", "watch", "want", "favorite", "review"],
+			kinds: ["rating", "watch", "want", "favorite", "review", "show_status"],
 			conflictChoice: "keep",
 			watchDates: "preserve",
 		}
@@ -175,7 +176,7 @@ export function SourceImportCurrent({
 							className={secondaryButton}
 							onClick={onUploadAnother}
 						>
-							Choose another file
+							{sourceImportCopy(summary.source).restart}
 						</button>
 					)}
 				</div>
@@ -261,7 +262,7 @@ function Receipt({
 					className={secondaryButton}
 					onClick={onUploadAnother}
 				>
-					Import another export
+					{sourceImportCopy(summary.source).another}
 				</button>
 			</div>
 			{summary.canUndo &&
@@ -269,9 +270,11 @@ function Receipt({
 					<div className="rounded-lg border border-red-900 bg-red-950/40 p-4">
 						<p className="text-gray-100">
 							Undo this import? GoodWatch removes watches this import added,
-							even if you edited their dates later. Later rating and list
-							changes stay protected. Want to See or Not interested choices that
-							the import cleared are not restored.
+							even if you edited their dates later, and restores earlier show
+							statuses. Later status, rating and list changes stay protected.
+							Without added watches, restoring a status also restores its
+							cleared Want to See or Not interested choices. Undo of added
+							watches does not restore those choices.
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button

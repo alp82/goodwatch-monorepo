@@ -1,3 +1,4 @@
+import type { PresentedMedia } from "~/utils/media-presentation"
 // What the Taste page's three tabs render: one view model per tab, as getTastePortrait and /api/taste/portrait return
 // it. Types and fixed words only, so browser code can import them.
 import type { TitleKey } from "~/utils/title-key"
@@ -12,7 +13,7 @@ export const isPortraitTab = (value: unknown): value is PortraitTab =>
 	PORTRAIT_TABS.includes(value as PortraitTab)
 
 /** A title a tab shows. Titles are listed once per view in `titles` and referred to by key. */
-export interface PortraitTitle {
+export interface PortraitTitle extends PresentedMedia {
 	key: TitleKey
 	mediaType: "movie" | "show"
 	anime: boolean
