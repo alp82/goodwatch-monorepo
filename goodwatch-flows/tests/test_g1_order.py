@@ -156,6 +156,11 @@ class Publication(unittest.TestCase):
         self.assertFalse(self.run_job(dry_run=True)["published"])
         self.redis.set.assert_not_called()
 
+    def test_none_ttl_uses_default_expiry(self):
+        result = self.run_job(ttl_seconds=None)
+        self.assertEqual(result["members"][0]["status"], "built")
+        self.assertEqual(self.redis.set.call_args.kwargs, {"ex": job.TTL_SECONDS})
+
     def test_changed_snapshot_fails_before_publication(self):
         self.redis.get.side_effect = [self.redis.get.return_value, '{"version":"new"}']
         with self.assertRaises(RuntimeError):
@@ -238,6 +243,50 @@ class Rollout(unittest.TestCase):
         self.redis.set.assert_not_called()
         self.redis.delete.assert_not_called()
 
+    def test_none_dry_run_inspects_without_consuming_or_writing(self):
+        self.redis.scard.return_value = 2
+        self.redis.smembers.return_value = {b"eligible", b"ineligible"}
+        self.redis.spop.return_value = [b"eligible", b"ineligible"]
+        result = self.run_job(dirty_only=True, dry_run=None)
+        self.assertFalse(result["published"])
+        self.assertEqual([s["status"] for s in result["members"]], ["built", "ineligible"])
+        self.redis.spop.assert_not_called()
+        self.redis.sadd.assert_not_called()
+        self.redis.set.assert_not_called()
+        self.redis.delete.assert_not_called()
+
+    def test_complete_raw_dirty_claim_is_restored_after_any_post_pop_failure(self):
+        for stage in ("decode", "excluded", "read"):
+            with self.subTest(stage=stage):
+                claim = {b"eligible", b"outsider"}
+                if stage == "decode":
+                    claim.add(b"\xff")
+                dirty = claim.copy()
+                redis = Mock()
+                redis.scard.side_effect = lambda _key: len(dirty)
+
+                def pop(_key, _count):
+                    members = sorted(dirty)
+                    dirty.clear()
+                    return members
+
+                def restore(_key, *members):
+                    if stage == "excluded" and redis.sadd.call_count == 1:
+                        raise RuntimeError("restore failed")
+                    dirty.update(m.encode() if isinstance(m, str) else m for m in members)
+
+                redis.spop.side_effect = pop
+                redis.sadd.side_effect = restore
+                redis.get.return_value = self.redis.get.return_value
+                with patch.object(job, "read_members", side_effect=RuntimeError("read failed")):
+                    error = UnicodeDecodeError if stage == "decode" else RuntimeError
+                    with self.assertRaises(error):
+                        job.run(redis, Mock(), ["eligible"], ["a", "b"], dirty_only=True, dry_run=False)
+                self.assertEqual(dirty, claim)
+                self.assertEqual(set(redis.sadd.call_args.args[1:]), claim)
+                redis.set.assert_not_called()
+                redis.delete.assert_not_called()
+
     def test_empty_dirty_set_does_not_load_shared_inputs(self):
         self.redis.scard.return_value = 0
         with patch.object(job, "read_members") as read:
@@ -260,7 +309,7 @@ class Rollout(unittest.TestCase):
                      patch.object(job, "taste_vector", return_value=None):
                     with self.assertRaises(RuntimeError):
                         job.run(self.redis, Mock(), "all", ["a", "b"], dirty_only=True, dry_run=False)
-                self.redis.sadd.assert_called_with("g1:dirty", "eligible")
+                self.redis.sadd.assert_called_with("g1:dirty", b"eligible")
                 self.redis.set.assert_not_called()
                 self.redis.delete.assert_not_called()
 
@@ -276,6 +325,29 @@ class Rollout(unittest.TestCase):
                 data["ratings"] = {"member": np.zeros(liked, np.int32), "title_key": np.arange(1, liked + 1) + 10**12,
                                    "score": np.full(liked, 8, np.int8)}
                 self.assertEqual(job.taste_vector(job.build_view(titles, data, 0)) is not None, eligible)
+
+    def test_consecutive_runs_use_new_title_statistics_before_eligibility(self):
+        recs = [{"key": 10**12 + i, "has_poster": True,
+                 "fingerprint_scores": {"a": 8, "b": 2},
+                 "goodwatch_overall_score_normalized_percent": 80,
+                 "goodwatch_overall_score_voting_count": 1000} for i in range(1, 7)]
+        first = job.build_titles(recs, ["a", "b"])
+        recs[-1]["fingerprint_scores"] = {"a": 2, "b": 8}
+        second = job.build_titles(recs, ["a", "b"])
+        data = {name: {"member": np.zeros(0, np.int32), "title_key": np.zeros(0, np.int64)}
+                for name in job.TABLES}
+        data["ratings"] = {"member": np.zeros(5, np.int32),
+                           "title_key": np.arange(1, 6) + 10**12, "score": np.full(5, 8, np.int8)}
+        with patch.dict(job._POOL, clear=True), \
+             patch.object(job, "read_members", return_value=(data, {"eligible": 0})), \
+             patch.object(job, "read_titles", side_effect=[first, second]), \
+             patch.object(job, "b5_predict", return_value={"rank": np.array([1.0])}):
+            results = [job.run(self.redis, Mock(), ["eligible"], ["a", "b"], dry_run=False)
+                       for _ in range(2)]
+        self.assertEqual([r["members"][0]["status"] for r in results], ["ineligible", "built"])
+        self.redis.delete.assert_called_once_with("g1:v2:eligible")
+        self.redis.set.assert_called_once()
+        self.assertEqual(self.redis.set.call_args.args[0], "g1:v2:eligible")
 
 
 class Reads(unittest.TestCase):

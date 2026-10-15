@@ -571,19 +571,6 @@ def validate_members(member_ids):
         validate(member_ids)
 
 
-def dirty_members(redis, rollout, *, dry_run):
-    """Claim one bounded snapshot of the set; never consume writes made during compute."""
-    from f.sync.copy.g1_trigger import DIRTY_KEY
-    count = redis.scard(DIRTY_KEY)
-    raw = (redis.smembers(DIRTY_KEY) if dry_run else redis.spop(DIRTY_KEY, count)) if count else []
-    members = sorted(m.decode() if isinstance(m, bytes) else m for m in raw)
-    selected = members if rollout == "all" else [m for m in members if m in rollout]
-    excluded = set(members) - set(selected)
-    if excluded and not dry_run:
-        redis.sadd(DIRTY_KEY, *sorted(excluded))
-    return selected
-
-
 class SnapshotChanged(RuntimeError):
     pass
 
@@ -591,14 +578,25 @@ class SnapshotChanged(RuntimeError):
 def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
         dry_run=True, dirty_only=False, now=None):
     from f.sync.copy.g1_trigger import DIRTY_KEY
+    ttl_seconds, dry_run = main_defaults(ttl_seconds, dry_run)
     validate_members(member_ids)
     if not isinstance(ttl_seconds, int) or ttl_seconds <= 0:
         raise ValueError("TTL must be a positive number of seconds")
     started = time.monotonic()
-    selected = dirty_members(redis, member_ids, dry_run=dry_run) if dirty_only else member_ids
-    if selected == []:
-        return {"published": False, "members": [], "seconds": round(time.monotonic() - started, 3)}
+    claimed = []
     try:
+        selected = member_ids
+        if dirty_only:
+            # Retain the full raw claim so even decoding or excluded-member restoration can fail safely.
+            count = redis.scard(DIRTY_KEY)
+            claimed = (redis.smembers(DIRTY_KEY) if dry_run else redis.spop(DIRTY_KEY, count)) if count else []
+            members = sorted(m.decode() if isinstance(m, bytes) else m for m in claimed)
+            selected = members if member_ids == "all" else [m for m in members if m in member_ids]
+            excluded = set(members) - set(selected)
+            if excluded and not dry_run:
+                redis.sadd(DIRTY_KEY, *sorted(excluded))
+        if selected == []:
+            return {"published": False, "members": [], "seconds": round(time.monotonic() - started, 3)}
         manifest = json.loads(redis.get("title-snapshot:current") or "null")
         if not manifest or not manifest.get("version"):
             raise ValueError("A current title snapshot is required")
@@ -606,6 +604,7 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
             raise ValueError("Snapshot fingerprint order differs from the G1 input")
         tables, member_at = read_members(select)
         titles = read_titles(select, tables, fingerprint_keys)
+        _POOL.clear()  # Eligibility must use statistics from this dataset, even in a reused worker.
         if selected == "all":
             # Include orphaned payloads after a member removes their last interaction.
             existing = [k.decode() if isinstance(k, bytes) else k
@@ -649,8 +648,8 @@ def run(redis, select, member_ids, fingerprint_keys, *, ttl_seconds=TTL_SECONDS,
                                          "dry_run": dry_run, "seconds": result["seconds"]}), flush=True)
         return result
     except Exception:
-        if dirty_only and selected and not dry_run:
-            redis.sadd(DIRTY_KEY, *selected)
+        if claimed and not dry_run:
+            redis.sadd(DIRTY_KEY, *claimed)
         raise
 
 
