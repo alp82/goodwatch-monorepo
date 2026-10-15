@@ -377,3 +377,41 @@ test("empty actor ledgers are physically purged after thirty days", async () => 
 	await sql("REFRESH TABLE doc.auth_capacity")
 	assert.equal((await sql("SELECT id FROM doc.auth_capacity")).rows.length, 0)
 })
+
+test("an uncapped account create paused across unlink cannot restore the removed login", async () => {
+	const healthy = crateAuthAdapter({ sql, populationBounds: true })({})
+	const data = {
+		userId: randomUUID(),
+		providerId: "google",
+		accountId: randomUUID(),
+		accessToken: "local synthetic token",
+	}
+	const account = await healthy.create({ model: "account", data })
+	let paused = false
+	const delayed = crateAuthAdapter({
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		populationBounds: true,
+		sql: async (statement, args) => {
+			if (!paused && statement.startsWith("INSERT INTO doc.auth_account (")) {
+				paused = true
+				await healthy.delete({
+					model: "account",
+					where: [{ field: "id", value: account.id }],
+				})
+			}
+			return sql(statement, args)
+		},
+	})({})
+	await assert.rejects(
+		delayed.create({ model: "account", data }),
+		/fenced|duplicate key/,
+	)
+	assert.deepEqual(
+		await healthy.findMany({
+			model: "account",
+			where: [{ field: "userId", value: data.userId }],
+		}),
+		[],
+	)
+	assert.ok(await healthy.create({ model: "account", data }))
+})

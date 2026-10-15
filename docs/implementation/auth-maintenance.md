@@ -92,7 +92,8 @@ silently changed here.
 
 There is **no global user or account cap**, and no site-wide 8,192-member ceiling.
 Users resolve by physical ID or unique email claim; linked accounts enumerate per
-member. The runtime uses the following isolated actor ledgers:
+member. An account create may only replace the exact tombstone it observed before
+its insert attempt, so removing its quota does not let a paused create undo unlink. The runtime uses the following isolated actor ledgers:
 
 | Model | Actor | Live/pending allowance |
 | --- | --- | --- |

@@ -316,6 +316,9 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						emailClaim = await reserveEmail(row.email, row.id, randomUUID(), -1, true)
 					}
 					row.id = key(model, row)
+					// Uncapped accounts still need a pre-insert version fence: a paused
+					// create may only replace the exact tombstone it already observed.
+					const accountBase = model === "account" ? await stored(model, row.id) : undefined
 					const actor = authPopulationActor(model, row)
 					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
 							model === "session" && populationBounds === true ? async (id, admission) => {
@@ -351,6 +354,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 							}
 						}
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && (["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model) || model === "oauthClient" && existing.envelope.unusedClient === true)) {
+							if (model === "account" && (!accountBase?.deleted || accountBase.seq !== existing.seq || accountBase.term !== existing.term))
+								throw new Error("Auth account creation was fenced by unlink; retry a fresh operation")
 							const recreated = await mutate(model, existing, row, false, true, admission)
 							if (recreated) return recreated as typeof data
 							throw Object.assign(new Error("duplicate key: auth association"), { code: "23505" })
