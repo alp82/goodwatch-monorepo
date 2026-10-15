@@ -14,8 +14,19 @@ from f.social.relevance import judge_links
 FIXTURE = ROOT / 'tests/fixtures/social/relevance-2026-10-15.json'
 
 
+def editorial_inputs(data):
+    """The frozen audit measured relevance, not playability. Assume availability
+    only inside this offline editorial regression; never claim these are checks.
+    Production has no such default and drops missing observations.
+    """
+    return [p | {'youtube_playability': {'video_id': p['source_id'], 'method': 'watch',
+             'checked_at': data['at'], 'status': 'playable', 'reason': 'offline_editorial_assumption',
+             'countries': {'DE': True, 'US': True, 'GB': True}}}
+            if p['source'] == 'youtube' else p for p in data['links']]
+
+
 def evaluate(data):
-    decisions = judge_links(data['links'], data['catalog'], at=stamp(data['at']))
+    decisions = judge_links(editorial_inputs(data), data['catalog'], at=stamp(data['at']))
     labels = {(v['media_type'], v['media_tmdb_id'], v['post_id']): v for v in data['verdicts']}
     judged = []
     for post, decision in zip(data['links'], decisions):
@@ -37,7 +48,7 @@ def evaluate(data):
 
     top = {t['key'] for t in data['top20']}
     nonempty = {r['key'] for r in judged if r['status'] == 'keep'}
-    return {'at': stamp(data['at']).isoformat(), 'overall': stats(judged),
+    return {'playability': 'Assumed only for offline editorial regression; not measured', 'at': stamp(data['at']).isoformat(), 'overall': stats(judged),
             'sources': {s: stats([r for r in judged if r['source'] == s]) for s in SOURCES},
             'top20': stats([r for r in judged if r['key'] in top]),
             'top20_sources': {s: stats([r for r in judged if r['source'] == s and r['key'] in top]) for s in SOURCES},
@@ -57,7 +68,7 @@ def main():
     report = evaluate(json.loads(args.fixture.read_text()))
     if args.output:
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
-    print(json.dumps({k: report[k] for k in ('overall', 'sources', 'top20', 'top20_empty')}, ensure_ascii=False, indent=2))
+    print(json.dumps({k: report[k] for k in ('playability', 'overall', 'sources', 'top20', 'top20_empty')}, ensure_ascii=False, indent=2))
 
 
 if __name__ == '__main__':

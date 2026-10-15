@@ -12,6 +12,7 @@ from f.social.quality import host_of
 from f.social.rules import foreground
 from f.social.relevance_registry import AUTHORS
 from f.social.quality import URL
+from f.social.youtube_playability import gate_reasons
 
 VERSION = 'relevance-1'
 VIDEO_FORMAT = re.compile(r'(?i)\b(?:trailer|teaser|sneak peek|first look|featurette|behind.the.scenes|'
@@ -320,6 +321,7 @@ def judge_links(links, catalog, *, at=None):
             reasons.append('missing_publication_time')
         if item['source'] == 'youtube':
             reasons += video_reasons(item, title, at)
+            reasons += gate_reasons(item, at)
         elif item['source'] == 'rss':
             reasons += editorial_reasons(item, title, at)
             kind = editorial_kind(item)
@@ -337,6 +339,8 @@ def judge_links(links, catalog, *, at=None):
             metrics = {k: (item.get('relevance_evidence') or {}).get(k)
                        for k in ('likes', 'reposts', 'quotes', 'replies', 'followers', 'observed_at', 'card_text')}
             reasons.append('metrics:' + json.dumps(metrics, sort_keys=True, separators=(',', ':')))
+        if item['source'] == 'youtube' and item.get('youtube_playability'):
+            reasons.append('playability:' + json.dumps(item['youtube_playability'], sort_keys=True, separators=(',', ':')))
         decisions.append({k: item[k] for k in ('media_type', 'media_tmdb_id', 'post_id', 'content_hash')} |
                          dict(version=VERSION, status=status, kind=kind,
                               score=0.0 if status == 'drop' else rank_score(item, kind, age, title), dup_group=digest(f"{item['media_type']}:{item['media_tmdb_id']}:{item['post_id']}"),

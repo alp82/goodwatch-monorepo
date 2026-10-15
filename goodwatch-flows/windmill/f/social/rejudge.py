@@ -4,7 +4,7 @@
 """Preview by default. Apply can write only doc.social_relevance, never links/cache."""
 import json
 from collections import Counter
-from f.social import bluesky, quality
+from f.social import bluesky, quality, youtube_playability
 from f.social.common import SOURCES, now, stamp
 from f.social.relevance import VERSION, judge_links
 from f.social.schema import SOCIAL_SCHEMAS
@@ -65,11 +65,11 @@ def read_catalog(db, links):
     return catalog
 
 
-def previous_metrics(db):
+def previous_evidence(db):
     exists = db.select("SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name='social_relevance'")
     if not exists:
-        return {}
-    out = {}
+        return {}, {}
+    out, playability = {}, {}
     rows = db.select('SELECT post_id,content_hash,reasons FROM doc.social_relevance WHERE version=? LIMIT ?', [VERSION, MAX_LINKS + 1])
     if len(rows) > MAX_LINKS:
         raise ValueError('Stored relevance cap exceeded')
@@ -77,7 +77,9 @@ def previous_metrics(db):
         for reason in row['reasons'] or []:
             if reason.startswith('metrics:'):
                 out[row['post_id'], row['content_hash']] = json.loads(reason[len('metrics:'):])
-    return out
+            elif reason.startswith('playability:'):
+                playability[row['post_id'], row['content_hash']] = json.loads(reason[len('playability:'):])
+    return out, playability
 
 
 def save(db, decisions):
@@ -96,11 +98,11 @@ def save(db, decisions):
     db.execute('REFRESH TABLE doc.social_relevance')
 
 
-def run(db, *, apply=False, at=None, hydrate=True, fresh_posts=()):
+def run(db, *, apply=False, at=None, hydrate=True, fresh_posts=(), force_playability=False):
     at = stamp(at) if at is not None else now()
     links = read_links(db)
     catalog = read_catalog(db, links)
-    prior = previous_metrics(db)
+    prior, prior_playability = previous_evidence(db)
     fresh = {p['post_id']: p for p in fresh_posts}
     for row in links:
         p = fresh.get(row['post_id']) or {}
@@ -117,18 +119,22 @@ def run(db, *, apply=False, at=None, hydrate=True, fresh_posts=()):
                 evidence = hydrated['quality_evidence']
                 row['revalidation_failed'] = (not evidence.get('links_complete') or
                     not evidence.get('profile') or evidence.get('opted_out') or evidence.get('source_content_changed'))
+    # Always check YouTube, including ingestion's hydrate=False path. That flag
+    # controls only the existing Bluesky API refresh. Never bypass playability.
+    playability = youtube_playability.hydrate(links, settings=getattr(db, 'settings', {}),
+        prior=prior_playability, at=at, force=force_playability)
     decisions = judge_links(links, catalog, at=at)
     if apply:
         save(db, decisions)
     counts = {source: {status: sum(p['source'] == source and v['status'] == status for p, v in zip(links, decisions))
                        for status in ('keep', 'drop')} for source in SOURCES}
     return {'version': VERSION, 'apply': apply, 'judged_at': at.isoformat(), 'judged': len(decisions),
-            'counts': counts, 'hydration_errors': errors,
-            'reasons': dict(Counter(r for v in decisions for r in v['reasons'] if not r.startswith(('metrics:', 'duplicate_of:')))),
+            'counts': counts, 'hydration_errors': errors, 'youtube_playability': playability,
+            'reasons': dict(Counter(r for v in decisions for r in v['reasons'] if not r.startswith(('metrics:', 'duplicate_of:', 'playability:')))),
             'decisions': decisions}
 
 
-def main(apply: bool = False):
-    result = run(RelevanceCrate(load(), apply=apply), apply=apply)
+def main(apply: bool = False, force_playability: bool = False):
+    result = run(RelevanceCrate(load(), apply=apply), apply=apply, force_playability=force_playability)
     # Full rows are available in the table / local CLI output. Keep job results bounded.
     return {k: v for k, v in result.items() if k != 'decisions'}
