@@ -17,10 +17,11 @@ A new nullable `insert_token TEXT` holds a random token for the first physical s
 tracking update and logical deletion preserves it. The first insert owns its SQL, values and token instead of
 using `insertRows`' unconditional replay:
 
-1. A successful response succeeds; a known zero-row conflict follows the existing conflict loop.
+1. A successful response succeeds; a known zero-row conflict follows the existing conflict loop (see below).
 2. On a recoverable lost response, read the whole key in real time. Our token proves our insert landed, including
    when it has since been unwatched, put on hold, dropped or watched again. Return success without another insert
-   or another application of the event. The token itself is never logged or sent to the member.
+   or another application of the event. The token is never logged or returned to the member; an import's
+   write-ahead plan journals it server-side with the prior row.
 3. Only an absent key permits one resend of the identical insert. If the original lands after that readback and
    is then unwatched, the retained key makes the resend a no-op. A zero-row resend is read back and our retained
    token proves the outcome. The same applies if the second response is lost.
@@ -29,6 +30,12 @@ using `insertRows`' unconditional replay:
    Ordinary applied and unapplied lost responses recover silently; a conflicting creator without our receipt
    cannot be silently claimed as our successful insert.
 
+The same reasoning holds for a known conflict. The conflict loop runs the event again from the new state, after
+taking out the log rows of its last round. If the action that came first took one of those rows away, it had read
+it, so the member undid this event on another device: running it again would put the tick back over that later
+choice. The loop then answers `TrackingConflictError` (HTTP 409, "please try again") instead, for a first insert
+and for a CAS update alike. Rows that are still there are taken out and written again as before.
+
 A token on a row that is physically deleted is insufficient: absence cannot distinguish an unapplied insert
 from an applied-then-deleted insert. A separate receipt table with a check before resend also leaves a gap,
 because CrateDB cannot atomically commit that receipt with the title row. Retaining the title's unique key closes
@@ -36,23 +43,57 @@ the gap at the actual SQL mutation, including delayed original requests.
 
 ## Migration and rollout, after review
 
-No production schema or deployment change is part of this draft.
+No production schema or deployment change is part of this draft. In order:
 
-- Add the nullable column before starting this webapp version:
-  `ALTER TABLE doc.user_watch_state ADD COLUMN insert_token TEXT;`
-  It is also declared in `f/sync/models/crate_schemas.py`; the existing schema initializer adds missing columns.
-- Check the column through every coordinator before rollout. Existing rows keep NULL: no backfill is needed.
-  Their later changes use the existing version guard and retain their key on logical removal.
-- Roll all page and search writers and drain the old containers/requests before a CrateDB restart. Old code still
-  physically deletes show-state rows, so a mixed deployment does not establish the retained-key guarantee.
-- Do not garbage-collect empty show receipts while a delayed write could still exist. There is at most one
-  physical row per member/title key that has had a state. Receipt rows carry no watch history and stay excluded
-  from lists and filters.
+1. **Every build that will serve tracking contains #607 and this change.** `auth/integration` and the
+   `auth/mcp-*` branches still carry the pre-#607 writer; deploying one of them unmerged is an old writer (step 5).
+2. **Add the column, before any new container starts.** The new `STATE_ROW_QUERY` selects `insert_token`, so a
+   new container without it fails every show tracking read and write. Old containers keep working with it: their
+   statements name their columns, and their rows get NULL.
+   `ALTER TABLE doc.user_watch_state ADD COLUMN insert_token TEXT;`
+   It is declared in `f/sync/models/crate_schemas.py` too, so `f/sync/init/cratedb` reports nothing missing
+   afterwards. Prefer the single statement over the initializer, which also adds any other missing column.
+3. **Check it through every coordinator**, each node's HTTP endpoint in turn:
+   `SELECT data_type FROM information_schema.columns WHERE table_schema = 'doc' AND table_name = 'user_watch_state' AND column_name = 'insert_token';`
+   (one row, `text`) and `SELECT insert_token FROM doc.user_watch_state LIMIT 1;` (no error). Existing rows keep
+   NULL: no backfill. Their later changes use the existing version guard and retain their key on logical removal.
+4. **Deploy the flows and the webapp.** The flows change is the schema declaration and a test fixture only; its
+   order does not matter after step 2.
+5. **Drain the old containers.** Until no old request runs, an old writer still physically deletes a show's row,
+   so the original Q32 window stays open exactly as on main. That is no regression, but do not restart or
+   decommission a CrateDB node in that window. Wait at least the longest tracking request (the Crate timeout)
+   after the last old container stopped.
+6. **Watch.** `crate.readback` events with `guard: "insert_token"` and outcome `conflict`, and 409 answers from
+   `/api/tracking/show`, should stay rare. Empty receipts grow by at most one row per member and show:
+   `SELECT count(*) FROM doc.user_watch_state WHERE media_type = 'show' AND state = 'not_started' AND pass = 1 AND rate_prompt_dismissed_at IS NULL AND seen_question IS NULL;`
+
+Other rules:
+
+- Do not garbage-collect empty show receipts while a delayed write could still exist. Receipt rows carry no
+  watch history and stay excluded from lists and filters; every reader of the table filters on `state`.
 - Account deletion still hard-purges tracking rows and receipts for privacy. This fix governs ordinary tracking
   actions within the account lifetime; coordinating account deletion with already-running authenticated writes
-  is a separate pre-existing concern. Movie settling and generic watch-log insert retry behavior are unchanged.
-- Rolling back code is possible, but the first-insert protection stops once an older writer can delete keys.
-  Keep the nullable column; do not drop or reset receipts as part of rollback.
+  is a separate pre-existing concern.
+
+Rollback:
+
+- Redeploy the previous image (at least `511e4be`, which has #607). Keep the column: old code never names it, and
+  dropping it while any new container runs breaks all show tracking reads.
+- Old code reads a retained receipt as a Not started row with nothing to remember. Lists already exclude it, the
+  state machine treats it like no row, and the show page treats `null` and Not started alike. The old writer
+  deletes it on the next logical removal. No cleanup is needed, and none should run while a new container may
+  still have a write in flight.
+- The first-insert protection stops as soon as an old writer can delete keys, as on main.
+
+Known residuals, unchanged by this fix:
+
+- **Movies.** `settleMovie` resends its state INSERT through the generic helper and physically deletes the row.
+  A lost INSERT followed by the member deleting the watch leaves Seen without a watch, until the next settle of
+  that movie. A delayed original can do the same without any resend. A `todo` test in `tracking.test.ts` records
+  it; closing it needs a retained movie key as well.
+- **A rerun after a removal.** If an unwatch loses its CAS to another device that saw the episode unticked and
+  ticked it again, the rerun takes away the new tick. Only the insert side is guarded above.
+- The generic watch-log insert retry behavior is unchanged.
 
 ## Verification
 

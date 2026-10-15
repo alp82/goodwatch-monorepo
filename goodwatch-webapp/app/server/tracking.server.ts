@@ -908,18 +908,25 @@ async function applyShowEventStored(
 	// Log rows an earlier round of this call inserted. They were worked out from a state that has changed since.
 	let stale: string[] = []
 	for (let round = 0; round <= STATE_RETRIES; round++) {
-		if (stale.length) {
-			await deleteLog(userId, stale)
-			stale = []
-		}
 		// 1. So that the read below sees the rows of the member's previous action.
 		await run("REFRESH TABLE user_watch_log")
 		// 2. The state row (real-time), the show's log rows, the cached episode list.
-		const [before, log, episodes] = await Promise.all([
+		const [before, stored, episodes] = await Promise.all([
 			readState(userId, title),
 			readLog(userId, title),
 			getEpisodeList(title.tmdbId),
 		])
+		// An action that took away a row of the last round had read it: the member undid this event, and running it
+		// again would put that watch back over their later choice. Rows still there are taken out and written again.
+		if (stale.some((id) => !stored.some((r) => r.watch_id === id))) {
+			await finish(userId)
+			throw new TrackingConflictError()
+		}
+		const log = stored.filter((r) => !stale.includes(r.watch_id))
+		if (stale.length) {
+			await deleteLog(userId, stale)
+			stale = []
+		}
 		// 3. The machine, in memory. The server can't tell a first request from one sent again, so it always runs
 		// with `resend`. Which lists the title is on is not read: the event says which ones it clears.
 		const now = Date.now()

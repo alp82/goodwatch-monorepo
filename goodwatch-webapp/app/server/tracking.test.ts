@@ -3554,3 +3554,51 @@ test("an indeterminate first INSERT never reruns its event over a different crea
 	assert.equal((await getShowTracking(user, SHOW)).state?.state, "dropped")
 	assert.deepEqual(ticks(), ["1.1", "1.2"])
 })
+
+// Q32 for movies, out of this fix's scope (first-insert-recovery.md): `settleMovie` resends its state INSERT
+// through the generic helper, and a movie's state row is physically deleted. A delayed original alone can also
+// land after the delete, so a resend policy cannot close it; the next settle of the movie removes the row.
+test("a lost movie state INSERT never leaves Seen without a watch once the member deleted the watch", {
+	todo: "movie state rows have no retained key yet",
+}, async () => {
+	const original = db.execute.bind(db)
+	let intercepted = false
+	db.execute = async (sql, params = []) => {
+		if (!intercepted && /^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+			intercepted = true
+			await original(sql, params)
+			assert.equal(
+				(await act({ type: "deleteWatch", watchId: "movie-watch" }, newId(), movie)).status,
+				"applied",
+			)
+			throw Object.assign(new Error("fixture movie INSERT response lost"), { code: "ECONNRESET" })
+		}
+		return original(sql, params)
+	}
+	setCrateClientForTest(db)
+	await act({ type: "watch" }, "movie-watch", movie).catch(() => null)
+	assert.deepEqual(logOf(movie), [])
+	assert.equal(stateOf(movie), null, "a movie without a log row has no state row")
+})
+
+// No lost response: another device reads this device's new tick and the member unticks it there, all before this
+// device's state write arrives. The known conflict must not run the tick again over that later choice.
+for (const write of ["INSERT", "UPDATE"] as const) {
+	test(`a ${write} state conflict never restores a tick the member removed on another device`, async () => {
+		if (write === "UPDATE") assert.equal((await tick(2, 1, "earlier-watch")).status, "applied")
+		const original = db.execute.bind(db)
+		let intercepted = false
+		db.execute = async (sql, params = []) => {
+			if (!intercepted && new RegExp(`^\\s*${write} (INTO )?user_watch_state\\b`).test(sql)) {
+				intercepted = true
+				if (write === "INSERT") assert.equal((await tick(1, 2, "device-b")).status, "applied")
+				assert.equal((await act({ type: "unwatch", season: 1, number: 1 })).status, "applied")
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await assert.rejects(tick(1, 1, "device-a"), TrackingConflictError)
+		assert.deepEqual(ticks(), write === "INSERT" ? ["1.2"] : ["2.1"])
+		assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+	})
+}
